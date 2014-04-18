@@ -792,7 +792,7 @@ function wsUpdateVideoTime(wsio, data) {
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance) {
-	
+		
 	});
 	
 	/*
@@ -1959,7 +1959,6 @@ function pointerRelease(address, pointerX, pointerY) {
 				var app = findAppById(remoteInteraction[address].selectedMoveItem.id);
 				remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
 				var updatedItem = remoteInteraction[address].releaseItem(false);
-				console.log(updatedItem);
 				if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 			}
 		}
