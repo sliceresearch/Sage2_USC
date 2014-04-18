@@ -1949,14 +1949,9 @@ function pointerRelease(address, pointerX, pointerY) {
 				remoteInteraction[address].releaseItem(true);
 			}
 			else{
-				var source = remoteInteraction[address].selectedMoveItem.url;
-				if(source === null) source = remoteInteraction[address].selectedMoveItem.src;
-				if(source !== null){
-					console.log("Transfering to " + remoteSites[remoteIdx].name + ": " + remoteInteraction[address].selectedMoveItem.title);
-					//remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {type: remoteInteraction[address].selectedMoveItem.type, id: remoteInteraction[address].selectedMoveItem.id, src: source, title: remoteInteraction[address].selectedMoveItem.title});
-					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {app: remoteInteraction[address].selectedMoveItem.application, url: remoteInteraction[address].selectedMoveItem.url, strictSSL: false});
-				}
+				remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {app: remoteInteraction[address].selectedMoveItem.application, url: remoteInteraction[address].selectedMoveItem.url, strictSSL: false});
 				var updatedItem = remoteInteraction[address].releaseItem(false);
+				console.log(updatedItem);
 				if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 			}
 		}
