@@ -542,8 +542,8 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		mediaStreams[data.id].clients[key] = false;
 	}
 	
-	var streamItem = findAppById(data.id);
-	if(streamItem !== null) streamItem.src = data.state.src;
+	var stream = findAppById(data.id);
+	if(stream !== null) streamItem.state = data.state;
 
 	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
 }
@@ -790,6 +790,12 @@ function wsUpdateVideoTime(wsio, data) {
 
 /******************** Remote Server Content ****************************/
 function wsAddNewElementFromRemoteServer(wsio, data) {
+	console.log("add element from remote server");
+	appLoader.loadApplicationFromRemoteServer(data, function(appInstance) {
+	
+	});
+	
+	/*
 	appLoader.loadFileFromWebURL(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
@@ -808,6 +814,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			}
 		}
 	});
+	*/
 	
 	
 	/*
@@ -1949,7 +1956,8 @@ function pointerRelease(address, pointerX, pointerY) {
 				remoteInteraction[address].releaseItem(true);
 			}
 			else{
-				remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {app: remoteInteraction[address].selectedMoveItem.application, url: remoteInteraction[address].selectedMoveItem.url, strictSSL: false});
+				var app = findAppById(remoteInteraction[address].selectedMoveItem.id);
+				remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
 				var updatedItem = remoteInteraction[address].releaseItem(false);
 				console.log(updatedItem);
 				if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
