@@ -8,7 +8,7 @@
 /* jshint -W083 */
 
 // JSLint options
-/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveItemToFront, pointerPosition, findItemUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, initializeSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
+/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findItemUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, initializeSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
 /*jslint node: true, ass: false, plusplus: true, vars: true, white: true, newcap: true, unparam: true, eqeq: true */
 
 // require variables to be declared
@@ -275,7 +275,7 @@ function initializeExistingApps(wsio) {
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var i;
 	for(i=0; i<applications.length; i++){
-		wsio.emit('createAppWindowPositionSizeOnly', app[i]);
+		wsio.emit('createAppWindowPositionSizeOnly', applications[i]);
 	}
 	
 	/*
@@ -389,7 +389,7 @@ function wsPointerScrollStart(wsio, data) {
 
 	if(elem !== null){
 		remoteInteraction[uniqueID].selectScrollItem(elem);
-		var newOrder = moveItemToFront(elem.id);
+		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 }
@@ -462,7 +462,7 @@ function wsKeyUp(wsio, data) {
 	if(elem !== null){
 		if(remoteInteraction[uniqueID].windowManagementMode()){
 			if(data.code == "8" || data.code == "46"){ // backspace or delete
-				deleteElement(elem);
+				deleteApplication(elem);
 			}
 		}
 		else if(remoteInteraction[uniqueID].appInteractionMode()) {	//only send special keys
@@ -541,7 +541,8 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	for(var key in mediaStreams[data.id].clients){
 		mediaStreams[data.id].clients[key] = false;
 	}
-	var streamItem = findItemById(data.id);
+	
+	var streamItem = findAppById(data.id);
 	if(streamItem !== null) streamItem.src = data.state.src;
 
 	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
@@ -557,9 +558,9 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 }
 
 function wsStopMediaStream(wsio, data) {
-	var elem = findItemById(data.id);
+	var elem = findAppById(data.id);
 
-	if(elem !== null) deleteElement( elem );
+	if(elem !== null) deleteApplication( elem );
 }
 
 
@@ -586,12 +587,25 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	appAnimations[data.id].clients[uniqueID] = true;
-	if(allTrueDict(appAnimations[data.id].clients) && appAnimations[data.id].ready){
+	if(allTrueDict(appAnimations[data.id].clients)){
 		var key;
 		for(key in appAnimations[data.id].clients){
 			appAnimations[data.id].clients[key] = false;
 		}
-		broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
+		
+		// animate max 60 fps
+		var now = new Date();
+		var elapsed = now.getTime() - appAnimations[data.id].date.getTime();
+		if(elapsed > 16){
+			appAnimations[data.id].date = new Date();
+			broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
+		}
+		else{
+			setTimeout(function() {
+				appAnimations[data.id].date = new Date();
+				broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
+			}, 16-elapsed);
+		}
 	}
 }
 
@@ -606,7 +620,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 		
 		if(appInstance.animation){
 			var i;
-			appAnimations[appInstance.id] = {ready: true, clients: {}};
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].messages.requiresFullApps){
 					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -700,7 +714,7 @@ function wsAddNewWebElement(wsio, data) {
 		
 		if(appInstance.animation){
 			var i;
-			appAnimations[appInstance.id] = {ready: true, clients: {}};
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].messages.requiresFullApps){
 					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -881,7 +895,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 }
 
 function wsRequestNextRemoteFrame(wsio, data) {
-	var stream = findItemById(data.id);
+	var stream = findAppById(data.id);
 	var remote_id = "remote" + config.host + ":" + config.port + "|" + data.id;
 
 	if(stream !== null) wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, src: stream.src});
@@ -893,7 +907,7 @@ function wsUpdateRemoteMediaStreamFrame(wsio, data) {
 	for(var key in mediaStreams[data.id].clients){
 		mediaStreams[data.id].clients[key] = false;
 	}
-	var streamItem = findItemById(data.id);
+	var streamItem = findAppById(data.id);
 	if(streamItem !== null) streamItem.src = data.src;
 	
 	broadcast('updateRemoteMediaStreamFrame', data, 'receivesMediaStreamFrames');
@@ -1163,7 +1177,7 @@ function manageUploadedFiles(files) {
 			
 			if(appInstance.animation){
 				var i;
-				appAnimations[appInstance.id] = {ready: true, clients: {}};
+				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 				for(i=0; i<clients.length; i++){
 					if(clients[i].messages.requiresFullApps){
 						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -1583,7 +1597,7 @@ if( config.omicronServerIP )
 							// Remove element
 							if( elem !== null )
 							{
-								deleteElement( elem );
+								deleteApplication( elem );
 							}
 						}
 						else if( e.flags == FLAG_THREE_FINGER_HOLD )
@@ -1678,35 +1692,36 @@ function findItemUnderPointer(pointerX, pointerY) {
 	*/
 }
 
-function findItemById(id) {
-	for(var i=0; i<items.length; i++){
-		if(items[i].id == id) return items[i];
+function findAppById(id) {
+	var i;
+	for(i=0; i<applications.length; i++){
+		if(applications[i].id === id) return applications[i];
 	}
 	return null;
 }
 
-function moveItemToFront(id) {
+function moveAppToFront(id) {
 	var selectedIndex;
-	var selectedItem;
-	var itemIds = [];
+	var selectedApp;
+	var appIds = [];
 	var i;
 
-	for(i=0; i<items.length; i++){
-		if(items[i].id == id){
+	for(i=0; i<applications.length; i++){
+		if(applications[i].id === id){
 			selectedIndex = i;
-			selectedItem = items[selectedIndex];
+			selectedApp = applications[selectedIndex];
 			break;
 		}
-		itemIds.push(items[i].id);
+		appIds.push(applications[i].id);
 	}
-	for(i=selectedIndex; i<items.length-1; i++){
-		items[i] = items[i+1];
-		itemIds.push(items[i].id);
+	for(i=selectedIndex; i<applications.length-1; i++){
+		applications[i] = applications[i+1];
+		appIds.push(applications[i].id);
 	}
-	items[items.length-1] = selectedItem;
-	itemIds.push(id);
+	applications[applications.length-1] = selectedApp;
+	appIds.push(id);
 
-	return itemIds;
+	return appIds;
 }
 
 function initializeArray(size, val) {
@@ -1725,7 +1740,8 @@ function allNonBlank(arr) {
 }
 
 function allTrueDict(dict) {
-	for(var key in dict){
+	var key;
+	for(key in dict){
 		if(dict[key] === false) return false;
 	}
 	return true;
@@ -1739,8 +1755,10 @@ function removeElement(list, elem) {
 }
 
 function moveElementToEnd(list, elem) {
+	var i;
 	var pos = list.indexOf(elem);
-	for(var i=pos; i<list.length-1; i++){
+	if(pos < 0) return;
+	for(i=pos; i<list.length-1; i++){
 		list[i] = list[i+1];
 	}
 	list[list.length-1] = elem;
@@ -1872,7 +1890,7 @@ function pointerPress( address, pointerX, pointerY ) {
 				broadcast('eventInItem', {eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
 			}
 
-			var newOrder = moveItemToFront(elem.id);
+			var newOrder = moveAppToFront(elem.id);
 			broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 		}
 }
@@ -1957,7 +1975,7 @@ function pointerScrollStart( address, pointerX, pointerY ) {
 
 	if(elem !== null){
 		remoteInteraction[address].selectScrollItem(elem, pointerX, pointerY);
-		var newOrder = moveItemToFront(elem.id);
+		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', newOrder, 'receivesWindowModification');
 	}
 }
@@ -2001,10 +2019,10 @@ function pointerScroll( address, data ) {
 	}
 }
 
-function deleteElement( elem ) {
+function deleteApplication( elem ) {
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
-	if(elem.type == "screen"){
+	if(elem.application === "media_stream"){
 		var broadcastWS = null;
 		var mediaStreamData = elem.id.split("|");
 		var broadcastAddress = mediaStreamData[0];
@@ -2016,6 +2034,5 @@ function deleteElement( elem ) {
 
 		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
 	}
-	//removeElement(items, elem);
 	removeElement(applications, elem);
 }

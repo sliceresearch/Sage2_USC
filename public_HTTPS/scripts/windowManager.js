@@ -8,7 +8,7 @@ function windowManager(id, ws) {
 	this.resolution = [];
 	this.scale = 1.0;
 	this.titleBarHeight = 0;
-	this.items = [];
+	this.applications = [];
 	this.mouseX = 0;
 	this.mouseY = 0;
 	
@@ -49,7 +49,7 @@ function windowManager(id, ws) {
         
         
 		/* draw all items */
-		for(i=0; i<this.items.length; i++){
+		for(i=0; i<this.applications.length; i++){
 			// item
 			this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
 			this.ctx.lineWidth = 2;
@@ -60,10 +60,10 @@ function windowManager(id, ws) {
 			this.ctx.shadowBlur = 12;
 			this.ctx.shadowColor = "#222222";
 			
-			var eLeft = this.items[i].left * this.scale;
-			var eTop = (this.items[i].top+this.titleBarHeight) * this.scale;
-			var eWidth = this.items[i].width * this.scale;
-			var eHeight = this.items[i].height * this.scale;
+			var eLeft = this.applications[i].left * this.scale;
+			var eTop = (this.applications[i].top+this.titleBarHeight) * this.scale;
+			var eWidth = this.applications[i].width * this.scale;
+			var eHeight = this.applications[i].height * this.scale;
 			
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			
@@ -77,25 +77,33 @@ function windowManager(id, ws) {
 			var size = 0.8*Math.min(eWidth, eHeight);
 			var x = eLeft + (eWidth/2) - (size/2);
 			var y = eTop + (eHeight/2) - (size/2);
-			if(this.items[i].type == "canvas") this.ctx.drawImage(this.canvasImg, x, y, size, size);
-			else if(this.items[i].type == "img") this.ctx.drawImage(this.imageImg, x, y, size, size);
-			else if(this.items[i].type == "kineticjs") this.ctx.drawImage(this.kineticjsImg, x, y, size, size);
-			else if(this.items[i].type == "pdf") this.ctx.drawImage(this.pdfImg, x, y, size, size);
-			else if(this.items[i].type == "screen") this.ctx.drawImage(this.screenImg, x, y, size, size);
-			else if(this.items[i].type == "threejs") this.ctx.drawImage(this.threejsImg, x, y, size, size);
-			else if(this.items[i].type == "video") this.ctx.drawImage(this.videoImg, x, y, size, size);
-			else if(this.items[i].type == "webgl") this.ctx.drawImage(this.webglImg, x, y, size, size);
-			else if(this.items[i].type == "youtube") this.ctx.drawImage(this.youtubeImg, x, y, size, size);
 			
+			if(this.applications[i].application === "image_viewer") this.ctx.drawImage(this.imageImg, x, y, size, size);
+			else if(this.applications[i].application === "movie_player") this.ctx.drawImage(this.videoImg, x, y, size, size);
+			else if(this.applications[i].application === "pdf_viewer") this.ctx.drawImage(this.pdfImg, x, y, size, size);
+			else if(this.applications[i].application === "media_stream") this.ctx.drawImage(this.screenImg, x, y, size, size);
+			else this.ctx.drawImage(this.canvasImg, x, y, size, size);
+			
+			/*
+			if(this.applications[i].type == "canvas") this.ctx.drawImage(this.canvasImg, x, y, size, size);
+			else if(this.applications[i].type == "img") this.ctx.drawImage(this.imageImg, x, y, size, size);
+			else if(this.applications[i].type == "kineticjs") this.ctx.drawImage(this.kineticjsImg, x, y, size, size);
+			else if(this.applications[i].type == "pdf") this.ctx.drawImage(this.pdfImg, x, y, size, size);
+			else if(this.applications[i].type == "screen") this.ctx.drawImage(this.screenImg, x, y, size, size);
+			else if(this.applications[i].type == "threejs") this.ctx.drawImage(this.threejsImg, x, y, size, size);
+			else if(this.applications[i].type == "video") this.ctx.drawImage(this.videoImg, x, y, size, size);
+			else if(this.applications[i].type == "webgl") this.ctx.drawImage(this.webglImg, x, y, size, size);
+			else if(this.applications[i].type == "youtube") this.ctx.drawImage(this.youtubeImg, x, y, size, size);
+			*/
 			
 			// title bar
 			this.ctx.fillStyle = "rgba(102, 102, 102, 1.0)";
 			this.ctx.lineWidth = 2;
 			this.ctx.strokeStyle = "rgba(90, 90, 90, 1.0)";
 			
-			var eLeft = this.items[i].left * this.scale;
-			var eTop = (this.items[i].top) * this.scale;
-			var eWidth = this.items[i].width * this.scale;
+			var eLeft = this.applications[i].left * this.scale;
+			var eTop = (this.applications[i].top) * this.scale;
+			var eWidth = this.applications[i].width * this.scale;
 			var eHeight = this.titleBarHeight * this.scale;
 			
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
@@ -231,8 +239,13 @@ function windowManager(id, ws) {
 	
 	
 	this.addNewElement = function(elem_data) {
-		this.items.push(elem_data);
+		this.applications.push(elem_data);
 		console.log("added: " + elem_data.id + "(" + elem_data.type + ")");
+		this.draw();
+	};
+	
+	this.addAppWindow = function(data) {
+		this.applications.push(data);
 		this.draw();
 	};
 	
@@ -240,18 +253,18 @@ function windowManager(id, ws) {
 		var selectedIndex;
 		var selectedItem;
 		
-		for(var i=0; i<this.items.length; i++){
-			if(this.items[i].id == elemId){
+		for(var i=0; i<this.applications.length; i++){
+			if(this.applications[i].id == elemId){
 				selectedIndex = i;
-				selectedItem = this.items[i];
+				selectedItem = this.applications[i];
 				break;
 			}
 		}
-		for(var i=selectedIndex; i<this.items.length-1; i++){
-			this.items[i] = this.items[i+1];
+		for(var i=selectedIndex; i<this.applications.length-1; i++){
+			this.applications[i] = this.applications[i+1];
 		}
-		this.items[this.items.length-1] = selectedItem;
-		this.items.pop();
+		this.applications[this.applications.length-1] = selectedItem;
+		this.applications.pop();
 		this.draw();
 	};
 	
@@ -289,11 +302,11 @@ function windowManager(id, ws) {
 		var i;
 		var j;
 		for(i=0; i<idList.length; i++){
-			for(j=0; j<this.items.length; j++){
-				if(this.items[j].id == idList[i]){
-					var tmp = this.items[i];
-					this.items[i] = this.items[j];
-					this.items[j] = tmp;
+			for(j=0; j<this.applications.length; j++){
+				if(this.applications[j].id == idList[i]){
+					var tmp = this.applications[i];
+					this.applications[i] = this.applications[j];
+					this.applications[j] = tmp;
 				}
 			}
 		}
@@ -303,10 +316,10 @@ function windowManager(id, ws) {
 	
 	this.setItemPosition = function(position_data) {
 		var i;
-		for(i=0; i<this.items.length; i++){
-			if(this.items[i].id == position_data.elemId){
-				this.items[i].left = position_data.elemLeft;
-				this.items[i].top = position_data.elemTop;
+		for(i=0; i<this.applications.length; i++){
+			if(this.applications[i].id == position_data.elemId){
+				this.applications[i].left = position_data.elemLeft;
+				this.applications[i].top = position_data.elemTop;
 				break;
 			}
 		}
@@ -315,12 +328,12 @@ function windowManager(id, ws) {
 	
 	this.setItemPositionAndSize = function(position_data) {
 		var i;
-		for(i=0; i<this.items.length; i++){
-			if(this.items[i].id == position_data.elemId){
-				this.items[i].left = position_data.elemLeft;
-				this.items[i].top = position_data.elemTop;
-				this.items[i].width = position_data.elemWidth;
-				this.items[i].height = position_data.elemHeight;
+		for(i=0; i<this.applications.length; i++){
+			if(this.applications[i].id == position_data.elemId){
+				this.applications[i].left = position_data.elemLeft;
+				this.applications[i].top = position_data.elemTop;
+				this.applications[i].width = position_data.elemWidth;
+				this.applications[i].height = position_data.elemHeight;
 				break;
 			}
 		}
