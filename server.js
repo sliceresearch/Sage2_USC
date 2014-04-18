@@ -790,6 +790,27 @@ function wsUpdateVideoTime(wsio, data) {
 
 /******************** Remote Server Content ****************************/
 function wsAddNewElementFromRemoteServer(wsio, data) {
+	appLoader.loadFileFromWebURL(data, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+		
+		applications.push(appInstance);
+		
+		if(appInstance.animation){
+			var i;
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[appInstance.id].clients[clientAddress] = false;
+				}
+			}
+		}
+	});
+	
+	
+	/*
 	if(data.type == "img"){
 		request({url: data.src, encoding: null, strictSSL: false}, function(err, response, body) {
 			if(err) throw err;
@@ -892,6 +913,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 	else{
 		console.log("unknown type: " + data.type);
 	}
+	*/
 }
 
 function wsRequestNextRemoteFrame(wsio, data) {
@@ -1931,7 +1953,8 @@ function pointerRelease(address, pointerX, pointerY) {
 				if(source === null) source = remoteInteraction[address].selectedMoveItem.src;
 				if(source !== null){
 					console.log("Transfering to " + remoteSites[remoteIdx].name + ": " + remoteInteraction[address].selectedMoveItem.title);
-					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {type: remoteInteraction[address].selectedMoveItem.type, id: remoteInteraction[address].selectedMoveItem.id, src: source, title: remoteInteraction[address].selectedMoveItem.title});
+					//remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {type: remoteInteraction[address].selectedMoveItem.type, id: remoteInteraction[address].selectedMoveItem.id, src: source, title: remoteInteraction[address].selectedMoveItem.title});
+					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', {app: remoteInteraction[address].selectedMoveItem.application, url: remoteInteraction[address].selectedMoveItem.url, strictSSL: false});
 				}
 				var updatedItem = remoteInteraction[address].releaseItem(false);
 				if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
