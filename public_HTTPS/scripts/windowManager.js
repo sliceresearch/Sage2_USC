@@ -237,12 +237,13 @@ function windowManager(id, ws) {
 		event.preventDefault();
 	}
 	
-	
+	/*
 	this.addNewElement = function(elem_data) {
 		this.applications.push(elem_data);
 		console.log("added: " + elem_data.id + "(" + elem_data.type + ")");
 		this.draw();
 	};
+	*/
 	
 	this.addAppWindow = function(data) {
 		this.applications.push(data);

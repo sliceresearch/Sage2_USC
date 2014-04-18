@@ -118,6 +118,7 @@
 			if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 		});
 		
+		/*
 		wsio.on('addNewElement', function(elem_data) {
 			var main = document.getElementById("main");
 			
@@ -162,6 +163,7 @@
 				main.appendChild(vid);
 			}
 		});
+		*/
 		
 		wsio.on('deleteElement', function(elem_data) {
 			var deleteElem = document.getElementById(elem_data.elemId);
