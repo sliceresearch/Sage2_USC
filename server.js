@@ -664,8 +664,8 @@ function wsUpdateVideoTime(wsio, data) {
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance) {
-		console.log("Remote App: " + appInstance.applicaiton);
-		if(appInstance.applicaiton === "media_stream"){
+		console.log("Remote App: " + appInstance.application);
+		if(appInstance.application === "media_stream"){
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
 			mediaStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
 			for(var i=0; i<clients.length; i++){
