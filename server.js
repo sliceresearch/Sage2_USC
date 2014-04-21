@@ -546,6 +546,8 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	var i;
 	
+	console.log(mediaStreams);
+	
 	mediaStreams[data.id].clients[uniqueID] = true;
 	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
@@ -674,6 +676,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 					mediaStreams[appInstance.id].clients[clientAddress] = false;
 				}
 			}
+			console.log(mediaStreams);
 		}
 		else {
 			appInstance.id = getUniqueAppId();
