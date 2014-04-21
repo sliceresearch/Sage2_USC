@@ -499,7 +499,7 @@ function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: " + data.id);
 	mediaStreams[data.id] = {ready: true, chunks: [], clients: {}};
 	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages.requiresFullApps){
+		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
 			mediaStreams[data.id].clients[clientAddress] = false;
 		}
@@ -521,7 +521,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	}
 	
 	var stream = findAppById(data.id);
-	if(stream !== null) streamItem.state = data.state;
+	if(stream !== null) stream.state = data.state;
 
 	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
 }
@@ -963,9 +963,6 @@ function manageUploadedFiles(files) {
 		});
 	});
 }
-
-
-
 
 
 
