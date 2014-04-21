@@ -545,10 +545,6 @@ function wsStopMediaStream(wsio, data) {
 function wsReceivedMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	var i;
-	
-	console.log("RECEIVED STREAM FRAME");
-	console.log(mediaStreams);
-	
 	mediaStreams[data.id].clients[uniqueID] = true;
 	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
@@ -668,6 +664,7 @@ function wsUpdateVideoTime(wsio, data) {
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance) {
+		console.log("Remote App: " + appInstance.applicaiton);
 		if(appInstance.applicaiton === "media_stream"){
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
 			mediaStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
