@@ -8,7 +8,7 @@
 /* jshint -W083 */
 
 // JSLint options
-/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findItemUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, initializeSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
+/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, initializeSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
 /*jslint node: true, ass: false, plusplus: true, vars: true, white: true, newcap: true, unparam: true, eqeq: true */
 
 // require variables to be declared
@@ -49,7 +49,6 @@ var uploadsFolder = path.join(public_https, "uploads"); // directory where files
 
 // global variables to manage items
 var itemCount = 0;
-var items = [];
 
 // global variables to manage clients
 var clients = [];
@@ -264,12 +263,6 @@ function initializeExistingApps(wsio) {
 			appAnimations[key].clients[uniqueID] = false;
 		}
 	}
-	
-	/*
-	for(var i=0; i<items.length; i++){
-		wsio.emit('addNewElement', items[i]);
-	}
-	*/
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
@@ -277,12 +270,6 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindowPositionSizeOnly', applications[i]);
 	}
-	
-	/*
-	for(var i=0; i<items.length; i++){
-		wsio.emit('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(items[i]));
-	}
-	*/
 }
 
 function initializeRemoteServerInfo(wsio) {
@@ -344,7 +331,7 @@ function wsPointerDblClick(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	var elem     = findItemUnderPointer(pointerX, pointerY);
+	var elem     = findAppUnderPointer(pointerX, pointerY);
 	var updatedItem;
 
 	if (elem !== null) {
@@ -385,7 +372,7 @@ function wsPointerScrollStart(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	var elem = findItemUnderPointer(pointerX, pointerY);
+	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
 		remoteInteraction[uniqueID].selectScrollItem(elem);
@@ -424,7 +411,7 @@ function wsKeyDown(wsio, data) {
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
 
-		var elem = findItemUnderPointer(pointerX, pointerY);
+		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if(elem !== null){
 			var itemRelX = pointerX - elem.left;
@@ -441,7 +428,7 @@ function wsKeyUp(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	var elem = findItemUnderPointer(pointerX, pointerY);
+	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(data.code == 16){ // shift
 		remoteInteraction[uniqueID].SHIFT = false;
@@ -469,7 +456,7 @@ function wsKeyUp(wsio, data) {
 			pointerX = sagePointers[uniqueID].left;
 			pointerY = sagePointers[uniqueID].top;
 
-			elem = findItemUnderPointer(pointerX, pointerY);
+			elem = findAppUnderPointer(pointerX, pointerY);
 
 			if( elem !== null ){
 				var itemRelX = pointerX - elem.left;
@@ -494,7 +481,7 @@ function wsKeyPress(wsio, data) {
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
 
-		var elem = findItemUnderPointer(pointerX, pointerY);
+		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if( elem !== null ){
 			var itemRelX = pointerX - elem.left;
@@ -525,15 +512,6 @@ function wsStartNewMediaStream(wsio, data) {
 			
 		applications.push(appInstance);
 	});
-	/*
-	loader.loadScreenCapture(data.src, data.id, data.title, data.width, data.height, function(newItem) {
-		broadcast('addNewElement', newItem, 'requiresFullApps');
-		broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-		items.push(newItem);
-		itemCount++;
-	});
-	*/
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
@@ -634,73 +612,6 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 		
 		applications.push(appInstance);
 	});
-	
-	
-	/*
-	var url = path.join("uploads", file.dir, file.name);
-	var external_url = hostOrigin + encodeURI(url);
-	var localPath = path.join(public_https, url);
-
-	if(file.dir == "images"){
-		fs.readFile(localPath, function (err, data) {
-			if(err) throw err;
-
-			itemCount++;
-			loader.loadImage(data, external_url, "item"+itemCount.toString(), path.basename(localPath), function(newItem) {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-				items.push(newItem);
-			});
-		});
-	}
-	else if(file.dir == "videos"){
-		itemCount++;
-		loader.loadVideo(localPath, url, external_url, "item"+itemCount.toString(), path.basename(localPath), function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-		});
-	}
-	else if(file.dir == "pdfs"){
-		itemCount++;
-		loader.loadPdf(localPath, url, external_url, "item"+itemCount.toString(), path.basename(localPath), function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-		});
-	}
-	else if(file.dir == "apps"){
-		itemCount++;
-		var id = "item"+itemCount.toString();
-		loader.loadApp(localPath, url, external_url, id, function(newItem, instructions) {
-			// add resource scripts to clients
-			for(var i=0; i<instructions.resources.length; i++){
-				if(instructions.resources[i].type == "script"){
-					broadcast('addScript', {source: path.join(url, instructions.resources[i].src)}, 'requiresFullApps');
-				}
-			}
-
-			// add item to clients (after waiting 1 second to ensure resources have loaded)
-			setTimeout(function() {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-				items.push(newItem);
-
-				// set interval timer if specified
-				if(instructions.animation == "timer"){
-					setInterval(function() {
-						var now = new Date();
-						broadcast('animateCanvas', {elemId: id, type: instructions.type, date: now}, 'requiresFullApps');
-					}, instructions.interval);
-				}
-			}, 1000);
-		});
-	}
-	*/
 }
 
 /******************** Adding Web Content (URL) ********************/
@@ -723,59 +634,6 @@ function wsAddNewWebElement(wsio, data) {
 			}
 		}
 	});
-	
-	/*
-	if(data.type == "img"){
-		request({url: data.src, encoding: null, strictSSL: false}, function(err, response, body) {
-			if(err) throw err;
-
-			itemCount++;
-			loader.loadImage(body, data.src, "item"+itemCount.toString(), decodeURI(data.src.substring(data.src.lastIndexOf("/")+1)), function(newItem) {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-				items.push(newItem);
-			});
-		});
-	}
-	else if(data.type == "video"){
-		itemCount++;
-		loader.loadVideo(data.src, data.src, data.src, "item"+itemCount.toString(), decodeURI(data.src.substring(data.src.lastIndexOf("/")+1)), function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-		});
-	}
-	else if(data.type == "youtube"){
-		itemCount++;
-		loader.loadYoutube(data.src, "item"+itemCount.toString(), function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-		});
-	}
-	else if(data.type == "pdf"){
-		var filename = decodeURI(data.src.substring(data.src.lastIndexOf("/")+1));
-		var url = path.join("uploads", "pdfs", filename);
-		var localPath = path.join(public_https, url);
-		var tmp = fs.createWriteStream(localPath);
-		tmp.on('error', function(err) {
-			if(err) throw err;
-		});
-		tmp.on('close', function() {
-			itemCount++;
-			loader.loadPdf(localPath, url, data.src, "item"+itemCount.toString(), path.basename(localPath), function(newItem) {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-				items.push(newItem);
-			});
-		});
-		request({url: data.src, strictSSL: false}).pipe(tmp);
-	}
-	*/
 }
 
 /*********************** Launching Web Browser ************************/
@@ -809,133 +667,6 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			}
 		}
 	});
-	
-	/*
-	appLoader.loadFileFromWebURL(data, function(appInstance) {
-		appInstance.id = getUniqueAppId();
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-		
-		applications.push(appInstance);
-		
-		if(appInstance.animation){
-			var i;
-			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[appInstance.id].clients[clientAddress] = false;
-				}
-			}
-		}
-	});
-	*/
-	
-	
-	/*
-	if(data.type == "img"){
-		request({url: data.src, encoding: null, strictSSL: false}, function(err, response, body) {
-			if(err) throw err;
-
-			itemCount++;
-			loader.loadImage(body, data.src, "item"+itemCount.toString(), decodeURI(data.src.substring(data.src.lastIndexOf("/")+1)), function(newItem) {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-				items.push(newItem);
-			});
-		});
-	}
-	else if(data.type == "video"){
-		itemCount++;
-		loader.loadVideo(data.src, data.src, data.src, "item"+itemCount.toString(), decodeURI(data.src.substring(data.src.lastIndexOf("/")+1)), function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-		});
-	}
-	else if(data.type == "youtube"){
-		itemCount++;
-		loader.loadYoutube(data.src, "item"+itemCount.toString(), function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-		});
-	}
-	else if(data.type == "pdf"){
-		var filename = decodeURI(data.src.substring(data.src.lastIndexOf("/")+1));
-		var url = path.join("uploads", "pdfs", filename);
-		var localPath = path.join(public_https, url);
-		var tmp = fs.createWriteStream(localPath);
-		tmp.on('error', function(err) {
-			if(err) throw err;
-		});
-		tmp.on('close', function() {
-			itemCount++;
-			loader.loadPdf(localPath, url, data.src, "item"+itemCount.toString(), path.basename(localPath), function(newItem) {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-				items.push(newItem);
-			});
-		});
-		request({url: data.src, strictSSL: false}).pipe(tmp);
-	}
-	else if(data.type == "canvas" || data.type == "webgl" || data.type == "kineticjs" || data.type == "threejs"){
-		console.log("remote app: " + data.src);
-		
-		itemCount++;
-		var id = "item"+itemCount.toString();
-		loader.loadRemoteApp(data.src, id, function(newItem, instructions) {
-			// add resource scripts to clients
-			for(var i=0; i<instructions.resources.length; i++){
-				if(instructions.resources[i].type == "script"){
-					broadcast('addScript', {source: data.src + "/" + instructions.resources[i].src}, 'requiresFullApps');
-				}
-			}
-
-			// add item to clients (after waiting 1 second to ensure resources have loaded)
-			setTimeout(function() {
-				broadcast('addNewElement', newItem, 'requiresFullApps');
-				broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-				
-				items.push(newItem);
-
-				// set interval timer if specified
-				if(instructions.animation == "timer"){
-					setInterval(function() {
-						var now = new Date();
-						broadcast('animateCanvas', {elemId: id, type: instructions.type, date: now}, 'requiresFullApps');
-					}, instructions.interval);
-				}
-			}, 1000);
-		});
-	}
-	else if(data.type == "screen"){
-		var remote_id = "remote" + wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
-
-		mediaStreams[remote_id] = {ready: true, clients: {}};
-		for(var i=0; i<clients.length; i++){
-			if(clients[i].messages.requiresFullApps){
-				var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-				mediaStreams[remote_id].clients[clientAddress] = false;
-			}
-		}
-
-		loader.loadRemoteScreen(data.src, remote_id, data.title, function(newItem) {
-			broadcast('addNewElement', newItem, 'requiresFullApps');
-			broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-			items.push(newItem);
-			itemCount++;
-		});
-	}
-	else{
-		console.log("unknown type: " + data.type);
-	}
-	*/
 }
 
 function wsRequestNextRemoteFrame(wsio, data) {
@@ -1230,113 +961,6 @@ function manageUploadedFiles(files) {
 				}
 			}
 		});
-		
-		/*
-		if(type == "image/jpeg" || type == "image/png"){
-			console.log("uploaded image: " + file.originalFilename);
-			url = path.join("uploads", "images", file.originalFilename);
-			external_url = hostOrigin + encodeURI(url);
-			localPath = path.join(public_https, url);
-			fs.rename(file.path, localPath, function(err) {
-				if(err) throw err;
-
-				fs.readFile(localPath, function (err, data) {
-					if(err) throw err;
-
-					itemCount++;
-					loader.loadImage(data, external_url, "item"+itemCount.toString(), file.originalFilename, function(newItem) {
-						broadcast('addNewElement', newItem, 'requiresFullApps');
-						broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-						items.push(newItem);
-
-						if(savedFiles.image.indexOf(file.originalFilename) < 0) savedFiles.image.push(file.originalFilename);
-					});
-				});
-			});
-		}
-		else if(type == "video/mp4"){
-			console.log("uploaded video: " + file.originalFilename);
-			url = path.join("uploads", "videos", file.originalFilename);
-			external_url = hostOrigin + encodeURI(url);
-			localPath = path.join(public_https, url);
-			fs.rename(file.path, localPath, function(err) {
-				if(err) throw err;
-
-				itemCount++;
-				loader.loadVideo(localPath, url, external_url, "item"+itemCount.toString(), file.originalFilename, function(newItem) {
-					broadcast('addNewElement', newItem, 'requiresFullApps');
-					broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-					items.push(newItem);
-
-					if(savedFiles.video.indexOf(file.originalFilename) < 0) savedFiles.video.push(file.originalFilename);
-				});
-			});
-		}
-		else if(type == "application/pdf"){
-			console.log("uploaded pdf: " + file.originalFilename);
-			url = path.join("uploads", "pdfs", file.originalFilename);
-			external_url = hostOrigin + encodeURI(url);
-			localPath = path.join(public_https, url);
-			fs.rename(file.path, localPath, function(err) {
-				if(err) throw err;
-
-				itemCount++;
-				loader.loadPdf(localPath, url, external_url, "item"+itemCount.toString(), path.basename(localPath), function(newItem) {
-					broadcast('addNewElement', newItem, 'requiresFullApps');
-					broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-					items.push(newItem);
-
-					if(savedFiles.pdf.indexOf(file.originalFilename) < 0) savedFiles.pdf.push(file.originalFilename);
-				});
-			});
-		}
-		else if(type == "application/zip" || type == "application/x-zip-compressed" ){
-			console.log("uploaded app: " + file.originalFilename);
-			ext = path.extname(file.originalFilename);
-			url = path.join("uploads", "apps", path.basename(file.originalFilename, ext));
-			external_url = hostOrigin + encodeURI(url);
-			localPath = path.join(public_https, url) + ext;
-			fs.rename(file.path, localPath, function(err) {
-				if(err) throw err;
-
-				itemCount++;
-				var id = "item"+itemCount.toString();
-				loader.loadZipApp(localPath, url, external_url, id, function(newItem, instructions) {
-					// add resource scripts to clients
-					for(var i=0; i<instructions.resources.length; i++){
-						if(instructions.resources[i].type == "script"){
-							broadcast('addScript', {source: path.join(url, instructions.resources[i].src)}, 'requiresFullApps');
-						}
-					}
-
-					// add item to clients (after waiting 1 second to ensure resources have loaded)
-					setTimeout(function() {
-						broadcast('addNewElement', newItem, 'requiresFullApps');
-						broadcast('addNewElementPositionSizeTypeOnly', getItemPositionSizeType(newItem), 'requiresAppPositionSizeTypeOnly');
-
-						items.push(newItem);
-
-						var appName = path.basename(file.originalFilename, ext);
-						if(savedFiles.app.indexOf(appName) < 0) savedFiles.app.push(appName);
-
-						// set interval timer if specified
-						if(instructions.animation == "timer"){
-							setInterval(function() {
-								var now = new Date();
-								broadcast('animateCanvas', {elemId: id, type: instructions.type, date: now}, 'requiresFullApps');
-							}, instructions.interval);
-						}
-					}, 1000);
-				});
-			});
-		}
-		else{
-			console.log("uploaded unknown type: " + type);
-		}
-		*/
 	});
 }
 
@@ -1636,7 +1260,7 @@ if( config.omicronServerIP )
 						{
 							console.log("Touch gesture: Five finger hold");
 
-							var elem = findItemUnderPointer(posX, posY);
+							var elem = findAppUnderPointer(posX, posY);
 
 							// Remove element
 							if( elem !== null )
@@ -1717,7 +1341,7 @@ function findRemoteSiteByConnection(wsio) {
 	else               return null;
 }
 
-function findItemUnderPointer(pointerX, pointerY) {
+function findAppUnderPointer(pointerX, pointerY) {
 	var i;
 	for(i=applications.length-1; i>=0; i--){
 		if(pointerX >= applications[i].left && pointerX <= (applications[i].left+applications[i].width) && pointerY >= applications[i].top && pointerY <= (applications[i].top+applications[i].height+config.titleBarHeight)){
@@ -1725,15 +1349,6 @@ function findItemUnderPointer(pointerX, pointerY) {
 		}
 	}
 	return null;
-	
-	/*
-	for(var i=items.length-1; i>=0; i--){
-		if(pointerX >= items[i].left && pointerX <= (items[i].left+items[i].width) && pointerY >= items[i].top && pointerY <= (items[i].top+items[i].height+config.titleBarHeight)){
-			return items[i];
-		}
-	}
-	return null;
-	*/
 }
 
 function findAppById(id) {
@@ -1870,7 +1485,7 @@ function pointerMove(uniqueID, data) {
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
 		}
 		else{
-			elem = findItemUnderPointer(pointerX, pointerY);
+			elem = findAppUnderPointer(pointerX, pointerY);
 			if(elem !== null){
 				var localX = pointerX - elem.left;
 				var localY = pointerY - (elem.top+config.titleBarHeight);
@@ -1898,7 +1513,7 @@ function pointerMove(uniqueID, data) {
 		pointerX = sagePointers[uniqueID].left;
 		pointerY = sagePointers[uniqueID].top;
 
-		elem = findItemUnderPointer(pointerX, pointerY);
+		elem = findAppUnderPointer(pointerX, pointerY);
 
 		if(elem !== null){
 			var itemRelX = pointerX - elem.left;
@@ -1912,7 +1527,7 @@ function pointerMove(uniqueID, data) {
 function pointerPress( address, pointerX, pointerY ) {
 	if( sagePointers[address] === undefined ) return;
 
-	var elem = findItemUnderPointer(pointerX, pointerY);
+	var elem = findAppUnderPointer(pointerX, pointerY);
 		if(elem !== null){
 			if( remoteInteraction[address].windowManagementMode() ){
 				var localX = pointerX - elem.left;
@@ -1979,7 +1594,7 @@ function pointerRelease(address, pointerX, pointerY) {
 		}
 	}
 	else if ( remoteInteraction[address].appInteractionMode() ) {
-		var elem = findItemUnderPointer(pointerX, pointerY);
+		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if( elem !== null ){
 			var itemRelX = pointerX - elem.left;
@@ -2011,7 +1626,7 @@ function pointerScrollStart( address, pointerX, pointerY ) {
 	if( sagePointers[address] === undefined )
 		return;
 
-	var elem = findItemUnderPointer(pointerX, pointerY);
+	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
 		remoteInteraction[address].selectScrollItem(elem, pointerX, pointerY);
@@ -2043,7 +1658,7 @@ function pointerScroll( address, data ) {
 	else if ( remoteInteraction[address].appInteractionMode() ) {
 		var pointerX = sagePointers[address].left;
 		var pointerY = sagePointers[address].top;
-		var elem = findItemUnderPointer(pointerX, pointerY);
+		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if( elem !== null ){
 			var itemRelX = pointerX - elem.left;
