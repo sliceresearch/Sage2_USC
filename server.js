@@ -522,13 +522,13 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	
 	var stream = findAppById(data.id);
 	if(stream !== null) {
-		if(stream.state.src !== data.state.src){
+		if(stream.data.src !== data.state.src){
 			console.log("stream src changed");
 		}
-		stream.state = data.state;
+		stream.data = data.state;
 		
 		var stream2 = findAppById(data.id);
-		if(stream2.state.src !== data.state.src){
+		if(stream2.data.src !== data.state.src){
 			console.log("stream src change NOT SAVED");
 		}
 	}
