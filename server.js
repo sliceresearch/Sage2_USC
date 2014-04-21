@@ -544,19 +544,34 @@ function wsStopMediaStream(wsio, data) {
 
 function wsReceivedMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	var i;
 	
 	mediaStreams[data.id].clients[uniqueID] = true;
 	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
 		var broadcastWS = null;
 		var mediaStreamData = data.id.split("|");
-		var broadcastAddress = mediaStreamData[0];
-		var broadcastID = parseInt(mediaStreamData[1]);
-		for(var i=0; i<clients.length; i++){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			if(clientAddress == broadcastAddress) broadcastWS = clients[i];
+		if(mediaStreamData.length === 2){ // local stream --> client | stream_id
+			var broadcastAddress = mediaStreamData[0];
+			var broadcastID = parseInt(mediaStreamData[1]);
+			for(var i=0; i<clients.length; i++){
+				var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+				if(clientAddress == broadcastAddress) broadcastWS = clients[i];
+			}
+			if(broadcastWS !== null) broadcastWS.emit('requestNextFrame', {streamId: broadcastID});
 		}
-		if(broadcastWS !== null) broadcastWS.emit('requestNextFrame', {streamId: broadcastID});
+		else if(mediaStreamData.length === 3){ // remote stream --> remote_server | client | stream_id
+			var serverAddress = mediaStreamData[0];
+			var broadcastAddress = mediaStreamData[1];
+			var broadcastID = mediaStreamData[2];
+		
+			for(i=0; i<clients.length; i++){
+				var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+				if(clientAddress == serverAddress) { broadcastWS = clients[i]; break; }
+			}
+		
+			if(broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress, streamId: broadcastID});
+		}
 	}
 }
 
@@ -650,12 +665,25 @@ function wsUpdateVideoTime(wsio, data) {
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance) {
-		appInstance.id = getUniqueAppId();
+		if(appInstance.applicaiton === "media_stream"){
+			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
+			mediaStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
+			for(var i=0; i<clients.length; i++){
+				if(clients[i].messages.receivesMediaStreamFrames){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					mediaStreams[data.id].clients[clientAddress] = false;
+				}
+			}
+		}
+		else {
+			appInstance.id = getUniqueAppId();
+		}
+		
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-		
+	
 		applications.push(appInstance);
-		
+	
 		if(appInstance.animation){
 			var i;
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
@@ -671,10 +699,16 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 
 function wsRequestNextRemoteFrame(wsio, data) {
 	var stream = findAppById(data.id);
+
+	if(stream !== null) wsio.emit('updateRemoteMediaStreamFrame', {id: data.id, src: stream.src});
+	else wsio.emit('stopMediaStream', {id: data.id});
+	/*
+	var stream = findAppById(data.id);
 	var remote_id = "remote" + config.host + ":" + config.port + "|" + data.id;
 
 	if(stream !== null) wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, src: stream.src});
 	else wsio.emit('stopMediaStream', {id: remote_id});
+	*/
 }
 
 function wsUpdateRemoteMediaStreamFrame(wsio, data) {
