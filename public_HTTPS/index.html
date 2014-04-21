@@ -276,6 +276,7 @@
 			wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
 			var app = applications[data.id];
+			console.log(app);
 			if(app !== undefined && app !== null){
 				app.load(data.state);
 			}

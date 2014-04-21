@@ -563,8 +563,6 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 			var serverAddress = mediaStreamData[0];
 			var broadcastAddress = mediaStreamData[1];
 			var broadcastID = mediaStreamData[2];
-			
-			console.log("request remote stream: " + serverAddress + ", " + broadcastAddress + ", " + broadcastID);
 		
 			for(i=0; i<clients.length; i++){
 				var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
