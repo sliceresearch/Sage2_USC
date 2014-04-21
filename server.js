@@ -671,7 +671,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			for(var i=0; i<clients.length; i++){
 				if(clients[i].messages.receivesMediaStreamFrames){
 					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					mediaStreams[data.id].clients[clientAddress] = false;
+					mediaStreams[appInstance.id].clients[clientAddress] = false;
 				}
 			}
 		}
