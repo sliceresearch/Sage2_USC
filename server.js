@@ -58,7 +58,7 @@ var remoteInteraction = {};
 var mediaStreams = {};
 
 
-var appLoader = new loader(public_https, hostOrigin);
+var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight);
 var applications = [];
 var appAnimations = {};
 
