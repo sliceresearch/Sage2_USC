@@ -327,11 +327,6 @@
 			
 			// load all resources
 			var i;
-			var resources = {};
-			for(i=0; i<data.resrc.length; i++){
-				resources[data.resrc[i]] = false;
-			}
-			
 			function loadApplication() {
 				// load new app
 				if(window[data.application] === undefined) {
@@ -360,22 +355,28 @@
 				}
 			};
 			
-			data.resrc.forEach(function(element, index, array) {
-				var js = document.createElement("script");
-				js.addEventListener('load', function(event) {
-					resources[element] = true;
-					if(allTrueDict(resources)){
-						console.log("all resources loaded");
-						loadApplication();
-					}
-				}, false);
-				js.type = "text/javascript";
-				js.src = data.url + "/" + element;
-				document.head.appendChild(js);
-			});
-			
 			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
 				loadApplication();
+			}
+			else {
+				var resources = {};
+				for(i=0; i<data.resrc.length; i++){
+					resources[data.resrc[i]] = false;
+				}
+			
+				data.resrc.forEach(function(element, index, array) {
+					var js = document.createElement("script");
+					js.addEventListener('load', function(event) {
+						resources[element] = true;
+						if(allTrueDict(resources)){
+							console.log("all resources loaded");
+							loadApplication();
+						}
+					}, false);
+					js.type = "text/javascript";
+					js.src = data.url + "/" + element;
+					document.head.appendChild(js);
+				});
 			}
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;
