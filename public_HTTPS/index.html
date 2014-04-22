@@ -13,7 +13,7 @@
 
 <script type="text/javascript" src="scripts/pointer.js"></script>
 <script type="text/javascript" src="scripts/pdf.js"></script>
-<script type="text/javascript" src="scripts/glMatrix-0.9.5.min.js"></script>
+<!-- <script type="text/javascript" src="scripts/glMatrix-0.9.5.min.js"></script> -->
 <script type="text/javascript" src="scripts/kinetic-v4.7.4.min.js"></script>
 <script type="text/javascript" src="scripts/three.min.js"></script>
 
@@ -325,29 +325,58 @@
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
-			if(window[data.application] === undefined) {
-				var js = document.createElement("script");
-				js.addEventListener('load', function(event) {
+			// load all resources
+			var i;
+			var resources = {};
+			for(i=0; i<data.resrc.length; i++){
+				resources[data.resrc[i]] = false;
+			}
+			
+			function loadApplication() {
+				// load new app
+				if(window[data.application] === undefined) {
+					var js = document.createElement("script");
+					js.addEventListener('load', function(event) {
+						var app = new window[data.application];
+						app.init(data.id, data.width, data.height, data.url, date);
+						app.load(data.data, date);
+						app.draw(date);
+						applications[data.id] = app;
+						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+					}, false);
+					js.type = "text/javascript";
+					js.src = data.url + "/" + data.application + ".js";
+					document.head.appendChild(js);
+				}
+			
+				// load existing app
+				else {
 					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, data.resrc, date);
+					app.init(data.id, data.width, data.height, data.url, date);
 					app.load(data.data, date);
 					app.draw(date);
 					applications[data.id] = app;
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				}
+			};
+			
+			data.resrc.forEach(function(element, index, array) {
+				var js = document.createElement("script");
+				js.addEventListener('load', function(event) {
+					resources[element] = true;
+					if(allTrueDict(resources)){
+						console.log("all resources loaded");
+						loadApplication();
+					}
 				}, false);
 				js.type = "text/javascript";
-				js.src = data.resrc + "/" + data.application + ".js";
+				js.src = data.url + "/" + element;
 				document.head.appendChild(js);
+			});
+			
+			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
+				loadApplication();
 			}
-			else {
-				var app = new window[data.application];
-				app.init(data.id, data.width, data.height, data.resrc, date);
-				app.load(data.data, date);
-				app.draw(date);
-				applications[data.id] = app;
-				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-			}
-			//
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;
             var dragCorner = document.createElement("div");
@@ -619,6 +648,14 @@
     	}
     	return sum / l;
     }
+    
+    function allTrueDict(dict) {
+		var key;
+		for(key in dict){
+			if(dict[key] !== true) return false;
+		}
+		return true;
+	}
     
 	function getParameterByName(name) {
 		name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");

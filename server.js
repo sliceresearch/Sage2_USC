@@ -1428,7 +1428,7 @@ function allNonBlank(arr) {
 function allTrueDict(dict) {
 	var key;
 	for(key in dict){
-		if(dict[key] === false) return false;
+		if(dict[key] !== true) return false;
 	}
 	return true;
 }
