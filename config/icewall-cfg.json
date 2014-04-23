@@ -1,7 +1,7 @@
 {
 	"host": "thor.evl.uic.edu",
-	"port": 9090,
-	"index_port": 9292,
+	"port": 443,
+	"index_port": 80,
 	"clock": 12,
 	"background": { 
 		"image": "images/background/chicago_skyline_thor.jpg",
@@ -36,12 +36,12 @@
 		{
 			"name": "Cyber-Commons",
 			"host": "iridium.evl.uic.edu",
-			"port": 9090
+			"port": 443
 		},
 		{
 			"name": "CAVE2",
 			"host": "lyra.evl.uic.edu",
-			"port": 9090
+			"port": 443
 		}
 	]
 }
