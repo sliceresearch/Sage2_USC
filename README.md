@@ -1,14 +1,13 @@
-WebSAGE
+SAGE2
 =======
 
 Browser based implementation of SAGE. A cluster-based html viewer used for displaying elements across multiple browser windows.
 
 ### Requirements ###
+* node.js
 * ffmpeg
 * poppler
 * graphicsmagick
-* openmp-devel (linux)
-* nodejs-devel (linux)
 
 ##### For Windows: #####
 
@@ -40,7 +39,7 @@ Set Environment
 Open 'keys/GO-windows.bat'
 Add lines with list of hostnames for your server
 ```
-cd <WebSAGE_directory>
+cd <SAGE2_directory>
 npm install
 cd keys\
 .\GO-windows.bat
@@ -50,20 +49,17 @@ cd keys\
 
 * Download and install [Node.js](http://nodejs.org/)
 * Download and install [homebrew](http://brew.sh/)
-* Download and install [Awesomium](http://www.awesomium.com)
 ```
 brew install ffmpeg 
 brew install poppler --without-glib
 brew install graphicsmagick
-brew install libjpeg-turbo
-brew install openmp
 ```
 
 ###### Setup Node js: ######
 Open 'keys/GO-mac'
 Edit ```servers``` to be a list of hostnames for your server
 ```
-cd <WebSAGE_directory>
+cd <SAGE2_directory>
 npm install
 cd keys/
 ./GO-mac
@@ -71,9 +67,8 @@ cd keys/
 
 =======
 
-##### Run WebSAGE: #####
+##### Run SAGE2: #####
 ```
-cd <WebSAGE_directory>
+cd <SAGE2_directory>
 node server.js
 ```
-
