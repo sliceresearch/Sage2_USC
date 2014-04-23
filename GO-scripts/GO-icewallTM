@@ -26,16 +26,19 @@ arr=($result)
 aLen=${#arr[@]}
 lastElem=`expr $aLen - 1`
 
-xdotool windowmove ${arr[$lastElem]} 0 0
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
 
 
 # Move Display Client to the proper screen
-result="$(xdotool search --name 'Node Test - Google Chrome')"
+result="$(xdotool search --name 'SAGE2: Display - Google Chrome')"
 arr=($result)
 aLen=${#arr[@]}
 lastElem=`expr $aLen - 1`
 
-xdotool windowmove ${arr[$lastElem]} 0 0
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
+
 xdotool mousemove --sync 10 10
 xdotool mousemove --sync 0 0
 

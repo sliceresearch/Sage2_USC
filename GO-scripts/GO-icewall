@@ -19,7 +19,7 @@ env DISPLAY=:0.1 google-chrome $param 'https://localhost:9090?clientID=0' &
 sleep 1.5
 export DISPLAY=:0.1
 
-result="$(xdotool search --name 'Node Test - Google Chrome')"
+result="$(xdotool search --name 'SAGE2: Display - Google Chrome')"
 arr=($result)
 aLen=${#arr[@]}
 lastElem=`expr $aLen - 1`
@@ -53,7 +53,7 @@ xdotool windowmove ${arr[0]} 0 0
 
 
 # Move Display Client to the proper screen
-result="$(xdotool search --name 'Node Test - Google Chrome')"
+result="$(xdotool search --name 'SAGE2: Display - Google Chrome')"
 arr=($result)
 aLen=${#arr[@]}
 lastElem=`expr $aLen - 1`
