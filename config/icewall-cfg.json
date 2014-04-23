@@ -3,7 +3,7 @@
 	"port": 9090,
 	"index_port": 9292,
 	"clock": 12,
-	"background": 
+	"background": { 
 		"image": "images/background/chicago_skyline_thor.jpg",
 		"style": "fit"
 	},
