@@ -18,10 +18,24 @@ env DISPLAY=:0.0 google-chrome $param 'https://localhost:7070?clientID=0' &
 
 
 sleep 1.5
-
 export DISPLAY=:0.0
 
-# Move mouse around
+# Move Audio Manager to the proper screen
+result="$(xdotool search --name 'Audio Manager - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+
+xdotool windowmove ${arr[$lastElem]} 0 0
+
+
+# Move Display Client to the proper screen
+result="$(xdotool search --name 'Node Test - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+
+xdotool windowmove ${arr[$lastElem]} 0 0
 xdotool mousemove --sync 10 10
 xdotool mousemove --sync 0 0
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-
+# 3072x1360
 global_param="--new-window --window-size=3072,1360 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files"
 
 # Launch Audio Manager
@@ -9,14 +9,28 @@ mkdir -p $UDD/Default
 audio_param="--new-window --window-size=768,1360 --allow-file-access-from-files --user-data-dir=$UDD"
 env DISPLAY=:0.0 google-chrome $audio_param 'https://localhost:9090/audioManager.html' &
 
-sleep 1.5
-
-
 # Launch Display (client 0)
 UDD=$HOME/.config/chrome-nfs/thor0
 mkdir -p $UDD/Default
 param="$global_param --user-data-dir=$UDD"
 env DISPLAY=:0.1 google-chrome $param 'https://localhost:9090?clientID=0' &
+
+# Move Display Client to the proper screen
+sleep 1.5
+export DISPLAY=:0.1
+
+result="$(xdotool search --name 'Node Test - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+echo "First: ${arr[0]}, Last: ${arr[$lastElem]}"
+
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
+
+xdotool mousemove --sync 10 10
+xdotool mousemove --sync 0 0
+
 
 # Launch Display (client 1)
 UDD=$HOME/.config/chrome-nfs/thor1
@@ -24,11 +38,30 @@ mkdir -p $UDD/Default
 param="$global_param --user-data-dir=$UDD"
 env DISPLAY=:0.0 google-chrome $param 'https://localhost:9090?clientID=1' &
 
-sleep 3
+sleep 1.5
 export DISPLAY=:0.0
-xdotool mousemove --sync 10 10
-xdotool mousemove --sync 0 0
-export DISPLAY=:0.1
+
+# Move Audio Manager to the proper screen
+result="$(xdotool search --name 'Audio Manager - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+echo "First: ${arr[0]}, Last: ${arr[$lastElem]}"
+
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
+
+
+# Move Display Client to the proper screen
+result="$(xdotool search --name 'Node Test - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+echo "First: ${arr[0]}, Last: ${arr[$lastElem]}"
+
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
+
 xdotool mousemove --sync 10 10
 xdotool mousemove --sync 0 0
 
