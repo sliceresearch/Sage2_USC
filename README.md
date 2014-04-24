@@ -15,7 +15,14 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * [OpenSUSE Install](https://github.com/uic-evl/SAGE2/wiki/Install-(openSUSE))
 * [Ubuntu Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Ubuntu))
 
-##### Run SAGE2 #####
+##### Run #####
 * Open Terminal / Cmd
  * ```cd <SAGE2_directory>```
  * ```node server.js```
+* Open Google Chrome
+ * Point browser to host and port defined in config file
+  * Table of Contents: ```http://<host>:<index_port>```
+  * Display Client: ```https://<host>:<port>/?clientID=<ID>```
+  * Audio Client: ```https://<host>:<port>/audioManager.html```
+  * SAGE UI: ```https://<host>:<port>/sageUI.html```
+  * SAGE Pointer: ```https://<host>:<port>/sagePointer.html``` (Allow pop-ups)
