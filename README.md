@@ -25,3 +25,7 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
  * Audio Client: ```https://<host>:<port>/audioManager.html```
  * SAGE UI: ```https://<host>:<port>/sageUI.html```
  * SAGE Pointer: ```https://<host>:<port>/sagePointer.html``` (Allow pop-ups)
+
+
+##### Notice #####
+SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees. (SAGE2 and SAGE2™)
