@@ -34,4 +34,4 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
  * SAGE Pointer: ```https://<host>:<port>/sagePointer.html``` (Allow pop-ups)
 
 ##### Notice #####
-SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees. (SAGE2 and SAGE2™)
+SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees. (SAGE™ and SAGE2™)
