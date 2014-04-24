@@ -15,7 +15,7 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * [OpenSUSE Install](https://github.com/uic-evl/SAGE2/wiki/Install-(openSUSE))
 * [Ubuntu Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Ubuntu))
 
-##### Run SAGE2: #####
+##### Run SAGE2 #####
 * Open Terminal / Cmd
  * ```cd <SAGE2_directory>```
  * ```node server.js```
