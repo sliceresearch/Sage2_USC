@@ -3,72 +3,35 @@ SAGE2
 
 Browser based implementation of SAGE. A cluster-based html viewer used for displaying elements across multiple browser windows.
 
-### Requirements ###
+##### Dependencies #####
 * node.js
 * ffmpeg
 * poppler
 * graphicsmagick
 
-##### For Windows: #####
+##### Install #####
+* [Windows Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Windows))
+* [Mac OSX Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Mac-OSX))
+* [OpenSUSE Install](https://github.com/uic-evl/SAGE2/wiki/Install-(openSUSE))
+* [Ubuntu Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Ubuntu))
 
-* Download and install [Node.js](http://nodejs.org/)
-* Download and install [7-Zip](http://www.7-zip.org/)
-* Download and install [Awesomium](http://www.awesomium.com)
-* Download [FFMpeg](http://ffmpeg.zeranoe.com/builds/)
-* Download [Poppler-utils](http://manifestwebdesign.com/2013/01/09/xpdf-and-poppler-utils-on-windows/)
-* Download [GraphicsMagick (Q8)](ftp://ftp.graphicsmagick.org/pub/GraphicsMagick/windows/)
+##### Configure #####
+* Create a [config file](https://github.com/uic-evl/SAGE2/wiki/Configuration) for your display environment
+* Save file in &lt;SAGE2_directory&gt;/config
+* Select your configuration file
+ * Option 1: name your config file ```<host_until_first_dot>-cfg.json``` <br />(eg. host = iridium.evl.uic.edu, config file is ```iridium-cfg.json```)
+ * Option 2: create a file ```config.txt``` in &lt;SAGE2_directory&gt;. Specify the path to your config file in ```config.txt```.
 
-Install FFMpeg
-* Move the FFMpeg 7-zip file to "C:\"
-* Right-click, go to 7-Zip > Extract Here
-* Rename extracted folder to "FFMpeg"
+##### Run #####
+* Open Terminal / Cmd
+ * ```cd <SAGE2_directory>```
+ * ```node server.js```
+* Open Google Chrome (point browser to host and port defined in config file)
+ * Table of Contents: ```http://<host>:<index_port>```
+ * Display Client: ```https://<host>:<port>/?clientID=<ID>```
+ * Audio Client: ```https://<host>:<port>/audioManager.html```
+ * SAGE UI: ```https://<host>:<port>/sageUI.html```
+ * SAGE Pointer: ```https://<host>:<port>/sagePointer.html``` (Allow pop-ups)
 
-Install Poppler
-* Create Folder "C:\Poppler"
-* Move the Poppler-utils zip file to "C:\Poppler"
-* Right-click, go to 7-Zip > Extract Here
-
-Install GraphicsMagick
-* Create Folder "C:\GraphicsMacgick"
-* Move the GraphicsMagick Q8 executable to "C:\GraphicsMacgick"
-
-Set Environment
-* Add "C:\FFMpeg", "C:\Poppler" and "C:\GraphicsMacgick" to you PATH variable
-
-###### Setup Node js: ######
-Open 'keys/GO-windows.bat'
-Add lines with list of hostnames for your server
-```
-cd <SAGE2_directory>
-npm install
-cd keys\
-.\GO-windows.bat
-```
-
-##### For Mac OSX: #####
-
-* Download and install [Node.js](http://nodejs.org/)
-* Download and install [homebrew](http://brew.sh/)
-```
-brew install ffmpeg 
-brew install poppler --without-glib
-brew install graphicsmagick
-```
-
-###### Setup Node js: ######
-Open 'keys/GO-mac'
-Edit ```servers``` to be a list of hostnames for your server
-```
-cd <SAGE2_directory>
-npm install
-cd keys/
-./GO-mac
-```
-
-=======
-
-##### Run SAGE2: #####
-```
-cd <SAGE2_directory>
-node server.js
-```
+##### Notice #####
+SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGE™ and SAGE2™).
