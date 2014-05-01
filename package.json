@@ -43,15 +43,15 @@
 		"decompress-zip": "latest",
 		"gm": "latest",
 		"imageinfo": "latest",
-		"json5": "lastest",
+		"json5": "latest",
 		"mime": "latest",
 		"multiparty": "latest",
 		"node-ffprobe": "latest",
 		"request": "latest",
 		"ws": "latest",
 		"ytdl": "latest",
-		"jshint": "lastest",
-		"jslint": "lastest"
+		"jshint": "latest",
+		"jslint": "latest"
 	},
 	"bundledDependencies": [],
 	"devDependencies": {},
