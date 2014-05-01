@@ -10,13 +10,13 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * graphicsmagick
 
 ##### Install #####
-* [Windows Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Windows))
-* [Mac OSX Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Mac-OSX))
-* [OpenSUSE Install](https://github.com/uic-evl/SAGE2/wiki/Install-(openSUSE))
-* [Ubuntu Install](https://github.com/uic-evl/SAGE2/wiki/Install-(Ubuntu))
+* [Windows Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows))
+* [Mac OSX Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Mac%20OSX))
+* [OpenSUSE Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(openSUSE))
+* [Ubuntu Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Ubuntu))
 
 ##### Configure #####
-* Create a [config file](https://github.com/uic-evl/SAGE2/wiki/Configuration) for your display environment
+* Create a [config file](https://bitbucket.org/sage2/sage2/wiki/Configuration) for your display environment
 * Save file in <SAGE2_directory>/config
 * Select your configuration file
  * Option 1: name your config file `<host_until_first_dot>-cfg.json`  
