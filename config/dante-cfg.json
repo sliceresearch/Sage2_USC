@@ -1,0 +1,21 @@
+{
+		"host": "dante.evl.uic.edu",
+		"alternate_hosts" : [ "localhost" ],
+        "config": "dante",
+        "port": 9090,
+        "resolution": {
+                "width": 4098,
+                "height": 2304
+        },
+        "layout": {
+                "rows": 1,
+                "columns": 1
+        },
+        "displays": [
+                {
+                        "ID": 0,
+                        "row": 0,
+                        "column": 0
+                }
+        ]
+}
