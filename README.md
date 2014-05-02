@@ -20,8 +20,9 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * Save file in <SAGE2_directory>/config
 * Select your configuration file
     * Option 1: name your configuration file '<host_until_first_dot>-cfg.json'  
- (eg. host = thor.evl.uic.edu, config file is 'thor-cfg.json')
-    * Option 2: create a file 'config.txt' in <SAGE2_directory>. Specify the path to your configuration file in 'config.txt'
+(eg. host = thor.evl.uic.edu, config file is 'thor-cfg.json')
+    * Option 2: create a file 'config.txt' in <SAGE2_directory>  
+Specify the path to your configuration file in 'config.txt'
 
 ##### Run #####
 * Open Terminal / Cmd
