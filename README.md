@@ -16,12 +16,12 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * [Ubuntu Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Ubuntu))
 
 ##### Configure #####
-* Create a [config file](https://bitbucket.org/sage2/sage2/wiki/Configuration) for your display environment
+* Create a [configuration file](https://bitbucket.org/sage2/sage2/wiki/Configuration) for your display environment
 * Save file in <SAGE2_directory>/config
 * Select your configuration file
-    * Option 1: name your config file '<host_until_first_dot>-cfg.json'  
+    * Option 1: name your configuration file '<host_until_first_dot>-cfg.json'  
  (eg. host = thor.evl.uic.edu, config file is 'thor-cfg.json')
-    * Option 2: create a file 'config.txt' in <SAGE2_directory>. Specify the path to your config file in 'config.txt'
+    * Option 2: create a file 'config.txt' in <SAGE2_directory>. Specify the path to your configuration file in 'config.txt'
 
 ##### Run #####
 * Open Terminal / Cmd
