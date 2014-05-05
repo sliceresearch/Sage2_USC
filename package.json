@@ -43,15 +43,15 @@
 		"decompress-zip": "latest",
 		"gm": "latest",
 		"imageinfo": "latest",
-		"json5": "^0.2.0",
+		"json5": "latest",
 		"mime": "latest",
 		"multiparty": "latest",
 		"node-ffprobe": "latest",
 		"request": "latest",
 		"ws": "latest",
 		"ytdl": "latest",
-		"jshint": "^2.4.4",
-		"jslint": "^0.3.1"
+		"jshint": "latest",
+		"jslint": "latest"
 	},
 	"bundledDependencies": [],
 	"devDependencies": {},
@@ -63,10 +63,5 @@
 		"lint":  "./node_modules/jslint/bin/jslint.js server.js",
 		"hint":  "./node_modules/jshint/bin/jshint --verbose server.js node_modules/node-*.js"
 	},
-	"licenses": [
-		{
-			"type": "BSD",
-			"url": "http://opensource.org/licenses/BSD-3-Clause"
-		}
-	]
+	"license": "BSD-3-Clause"
 }
