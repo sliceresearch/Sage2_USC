@@ -9,24 +9,36 @@ clock.prototype.init = function(id, date, resrc) {
 	this.appInit(id,date,resrc);
 	this.minDim = Math.min(this.element.width, this.element.height);
 	this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+	this.text = "";
+	this.ctx.font= "16px Arial";
 	this.enableControls = true;
 
-	this.controls.addButton({type:"play-pause", align:"left", action:function(appObj){
+	this.controls.addButton({type:"play-pause", action:function(appObj){
 		appObj.ctx.fillStyle = "rgba(200, 155, 255, 1.0)";
 	}});
-	this.controls.addButton({type:"play-stop", align:"right", action:function(appObj){
+	this.controls.addButton({type:"play-stop", action:function(appObj){
 		appObj.ctx.fillStyle = "rgba(120, 155, 200, 1.0)";
 	}});
-	this.controls.addButton({type:"prev", align:"center", action:function(appObj){
+
+	this.controls.addTextInput({width:300, action:function(appObj, text){
+		console.log(text);
+		appObj.text = text;
+	}});
+
+	this.controls.addButton({type:"prev", action:function(appObj){
 		appObj.ctx.fillStyle = "rgba(200, 180, 100, 1.0)";
 	}});
-	this.controls.addButton({type:"next", align:"left", action:function(appObj){
+	this.controls.addButton({type:"next", action:function(appObj){
 		appObj.ctx.fillStyle = "rgba(160, 200, 255, 1.0)";
 	}});
+	this.controls.addTextInput({width:100, action:function(appObj, text){
+		appObj.text = text;
+	}});
+
 }
 	
 clock.prototype.draw = function(date) {
-	// clear canvas		
+	// clear canvas
 	this.ctx.clearRect(0,0, this.element.width, this.element.height);
 	
 	this.ctx.fillRect(0,0, this.element.width, this.element.height);
@@ -42,6 +54,7 @@ clock.prototype.draw = function(date) {
 	this.ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
 	this.ctx.closePath();
 	this.ctx.stroke();
+
 	
 	// tick marks
 	var theta = 0;
@@ -139,6 +152,13 @@ clock.prototype.draw = function(date) {
     this.ctx.moveTo(x, y);
     this.ctx.closePath();
     this.ctx.stroke();
+    if (this.text !== ""){
+    	var temp = this.ctx.fillStyle ;
+    	this.ctx.fillStyle = "rgba(0,0,0,1.0)";
+		this.ctx.fillText(this.text,centerX-20,centerY/2);
+		this.ctx.fillStyle = temp;
+    }
+	
 };
 	
 clock.prototype.resize = function(date) {

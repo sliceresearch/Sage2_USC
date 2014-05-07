@@ -301,6 +301,7 @@ wsioServer.onconnection(function(wsio) {
 				var itemRelY = pointerY - elem.top - config.titleBarHeight;
 				var now = new Date();
 				broadcast( 'eventInItem', { eventType: "pointerMove", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {}, date: now }, "display");  
+
 			}
 		}
 	});
@@ -336,6 +337,17 @@ wsioServer.onconnection(function(wsio) {
 		}
 		else if(data.code == 91 || data.code == 92 || data.code == 93){ // command
 			remoteInteraction[address].CMD = true;
+		}
+
+		console.log("keyDown!");
+		var lockedControl = remoteInteraction[address].keyboardLockedToControl();
+		if (lockedControl != null){
+			var event = {code: parseInt(data.code), printable:false,state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+			broadcast('eventInControl', event ,"display");
+			if (data.code == 13){ //Enter key
+				remoteInteraction[address].releaseKeyboard();
+			} 
+			return;
 		}
 
 		//SEND SPECIAL KEY EVENT only will come here
@@ -407,7 +419,16 @@ wsioServer.onconnection(function(wsio) {
 			remoteInteraction[address].toggleModes();
 			broadcast('changeSagePointerMode', {id: sagePointers[address].id, mode: remoteInteraction[address].interactionMode}, "display");
 		}
-		
+		console.log("keyPress!");
+		var lockedControl = remoteInteraction[address].keyboardLockedToControl();
+		if (lockedControl != null){
+			var event = {code: parseInt(data.code), printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+			broadcast('eventInControl', event ,"display");
+			if (data.code == 13){ //Enter key
+				remoteInteraction[address].releaseKeyboard();
+			} 
+			return;
+		}
 		if ( remoteInteraction[address].appInteractionMode() ) {
 			var pointerX = sagePointers[address].left
 			var pointerY = sagePointers[address].top
@@ -588,10 +609,13 @@ wsioServer.onconnection(function(wsio) {
 	});
 
 	wsio.on('selectedControlId',function(data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
-		var reg = /_controls/;
+		var regTI = /textInput/;
 		console.log(data);
 		if (data.ctrlId!=null){ // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 			remoteInteraction[data.addr].releaseControl();
+		}
+		if (regTI.test(data.ctrlId)){
+			remoteInteraction[data.addr].lockKeyboardToControl({ctrlId:data.ctrlId,appId:data.appId});
 		}
 		
 	});
@@ -1083,7 +1107,9 @@ function hidePointer( address ) {
 
 function pointerPress( address, pointerX, pointerY ) {
 	if( sagePointers[address] == undefined ) return;
+	remoteInteraction[address].releaseKeyboard();
 	var ct = findControlsUnderPointer(pointerX, pointerY);
+
 	if (ct != null){
 		remoteInteraction[address].selectMoveControl(ct, pointerX, pointerY);
 		broadcast('requestControlId', {addr:address, ptrId:sagePointers[address].id, x:pointerX, y:pointerY}, 'display');

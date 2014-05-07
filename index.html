@@ -612,15 +612,18 @@
 			var regC = /_controls/;
 			var regB = /button/;
 			var regS = /slider/;
+			var regTI = /textInput/;
 			
 
-			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId)){
+			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
 				var temp = regC.test(ctrId)? null:ctrId;
+				var aId = ctrl.data("appId");
 				wsio.emit('selectedControlId', { 
 					addr:data.addr,
 					pointerX: data.x,
 					pointerY: data.y,
-					ctrlId: temp
+					ctrlId: temp,
+					appId: aId
 				});
 				lockedControlElements[data.ptrId] = temp; 
 			}
@@ -642,7 +645,6 @@
 				var flag = false;
 				var aId = ctrl.data("appId");
 				if(lockedControlElements[data.ptrId] === temp && temp !== null){
-					lockedControlElements[data.ptrId] = null;
 					flag = true;
 				}
 				wsio.emit('releasedControlId', { 
@@ -654,6 +656,7 @@
 					activateControl: flag
 				});
 			}
+			lockedControlElements[data.ptrId] = null;
 		});
 		wsio.on('executeControlFunction', function(data){
 			var lst = Snap.selectAll('*');
@@ -687,6 +690,28 @@
 				
 			}
 			
+		});
+
+		wsio.on('eventInControl', function(data){
+			var lst = Snap.selectAll('*');
+			var ctrl = null;
+			for(var l in lst){
+				if (lst[l].attr("id") === data.ctrlId && lst[l].data("appId") === data.appId){
+					ctrl = lst[l];
+					break;
+				}
+			}
+			var buf = "";
+			if (ctrl){
+				var textInput = ctrl.parent();
+				if (data.code != 13){
+					insertText(textInput, data.code, data.printable);
+				}
+				else{
+					var func = textInput.data("call");
+					func(canvasItems[textInput.data("appId")],getText(textInput));
+				}		
+			}
 		});
 	}
 	
