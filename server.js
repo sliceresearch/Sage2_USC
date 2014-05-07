@@ -905,10 +905,9 @@ function setupHttpsOptions() {
 		}).context;
 	}
 	catch (e) {
-		console.log("\n");
-		console.log(e);
 		console.log("\n----------");
-		console.log("Cannot open certificate for default host: ", config.host);
+		console.log("Cannot open certificate for default host:");
+		console.log(" \"" + config.host + "\" needs file: " + e.path);
 		console.log(" --> Please generate the appropriate certificate in the 'keys' folder");
 		console.log("----------\n\n");
 		process.exit(1);
@@ -924,13 +923,12 @@ function setupHttpsOptions() {
 			}).context;
 		}
 		catch (e) {
-			console.log("\n");
-			console.log(e);
 			console.log("\n----------");
 			console.log("Cannot open certificate for the alternate host: ", config.alternate_hosts[h]);
+			console.log(" needs file: \"" + e.path + "\"");
 			console.log(" --> Please generate the appropriate certificates in the 'keys' folder");
-			console.log("----------\n\n");
-			process.exit(1);
+			console.log(" Ignoring alternate host: ", config.alternate_hosts[h]);
+			console.log("----------\n");
 		}
 	}
 
@@ -947,7 +945,7 @@ function setupHttpsOptions() {
 				return certs[servername];
 			}
 			else{
-				console.log("Unknown host, cannot find a certificate for ", servername);
+				console.log("SNI> Unknown host, cannot find a certificate for ", servername);
 				return null;
 			}
 		}
