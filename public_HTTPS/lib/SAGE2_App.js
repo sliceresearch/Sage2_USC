@@ -27,8 +27,13 @@ var SAGE2_App = Class.extend( {
 		this.div = document.getElementById(id);
 		this.element = document.createElement(elem);
 		this.element.className = "sageItem";
-		this.element.width = width;
-		this.element.height = height;
+                if (elem === "div") {
+                        this.element.style.width = width + "px";
+                        this.element.style.height = height + "px";
+                } else {
+                        this.element.width = width;
+                        this.element.height = height;
+                }
 		this.div.appendChild(this.element);
 		
 		this.resrcPath = resrc + "/";
