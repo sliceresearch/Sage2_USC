@@ -841,7 +841,7 @@ function setupDisplayBackground() {
 				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
 				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 		
-				gm(bg_file).command("convert").in("-gravity", "center").in("-background", "rgba(255,255,255,255)").in("-extent", out_res).write(tmpImg, function(err) {
+				gm(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(255,255,255,255)").in("-extent", out_res).write(tmpImg, function(err) {
 					if(err) throw err;
 			
 					sliceBackgroundImage(tmpImg, bg_file);
