@@ -95,7 +95,7 @@ var options = setupHttpsOptions();
 
 
 // initializes HTTP and HTTPS servers
-var index = http.createServer(httpServerIndex.onrequest);
+var index  = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
 
 
@@ -1352,14 +1352,69 @@ if( config.omicronServerIP )
 
 	});
 }
+
 /***************************************************************************************/
 
-// Start the https server
+// Place callback for success in the 'listen' call for HTTPS
+server.on('listening', function (e) {
+	// Success
+	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
+});
+
+// Place callback for errors in the 'listen' call for HTTP
+index.on('error', function (e) {
+	if (e.code == 'EACCES') {
+		console.log("HTTP_server> You are not allowed to use the port: ", config.index_port);
+		console.log("HTTP_server>   use a different port or get authorization (sudo, setcap, ...)");
+		console.log(" ")
+		process.exit(1);
+	}
+	else if (e.code == 'EADDRINUSE') {
+		console.log('HTTP_server> The port is already in use by another process:', config.index_port);
+		console.log("HTTP_server>   use a different port or stop the offending process");
+		console.log(" ")
+		process.exit(1);
+	}
+	else {
+		console.log("HTTP_server> Error in the listen call: ", e.code);
+		console.log(" ")
+		process.exit(1);
+	}
+});
+
+// Place callback for success in the 'listen' call for HTTP
+index.on('listening', function (e) {
+	// Success
+	console.log('Now serving SAGE2 index at http://' + config.host + ':' + config.index_port);
+});
+
+
+// Odly the HTTPS modules doesnt throw the same exceptions than HTTP
+//  catching errors at the process level
+process.on('uncaughtException', function (e) {
+	if (e.code == 'EACCES') {
+		console.log("HTTPS_server> You are not allowed to use the port: ", config.port);
+		console.log("HTTPS_server>   use a different port or get authorization (sudo, setcap, ...)");
+		console.log(" ")
+		process.exit(1);
+	}
+	else if (e.code == 'EADDRINUSE') {
+		console.log('HTTPS_server> The port is already in use by another process:', config.port);
+		console.log("HTTPS_server>   use a different port or stop the offending process");
+		console.log(" ")
+		process.exit(1);
+	}
+	else {
+		console.log("Process> uncaught exception: ", e);
+		console.log(" ")
+		process.exit(1);
+	}
+});
+
+// Start the HTTP server
 index.listen(config.index_port);
+// Start the HTTPS server
 server.listen(config.port);
-
-console.log('Now serving the app at https://localhost:' + config.port);
-
 
 
 /***************************************************************************************/
