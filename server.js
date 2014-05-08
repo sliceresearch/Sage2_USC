@@ -18,7 +18,7 @@
 /* jshint -W083 */
 
 // JSLint options
-/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, initializeSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
+/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, getSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
 /*jslint node: true, ass: false, plusplus: true, vars: true, white: true, newcap: true, unparam: true, eqeq: true */
 
 // require variables to be declared
@@ -71,9 +71,6 @@ var mediaStreams = {};
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight);
 var applications = [];
 var appAnimations = {};
-
-// arrays of files on the server (used for media browser)
-var savedFiles = initializeSavedFilesList();
 
 
 // sets up the background for the display clients (image or color)
@@ -616,6 +613,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 
 /******************** Server File Functions ********************/
 function wsRequestStoredFiles(wsio, data) {
+	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
 }
 
@@ -808,7 +806,7 @@ function getUniqueAppId() {
 	return id;	
 }
 
-function initializeSavedFilesList() {
+function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: []};
 	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
 	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
