@@ -55,14 +55,24 @@
 	],
 	"remote_sites": [
 		{
-			"name": "IceWall",
-			"host": "thor.evl.uic.edu",
-			"port": 9090
-		},
-		{
 			"name": "CAVE2",
 			"host": "lyra.evl.uic.edu",
-			"port": 9090
+			"port": 443
+		},
+		{
+			"name": "IceWall",
+			"host": "thor.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "PhD Room",
+			"host": "dante.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "Green Room",
+			"host": "mesaverde.evl.uic.edu",
+			"port": 443
 		}
 	]
 }
