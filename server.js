@@ -796,6 +796,10 @@ function loadConfiguration() {
 	userConfig.pointerWidth   = Math.round(0.200 * userConfig.totalHeight);
 	userConfig.pointerHeight  = Math.round(0.050 * userConfig.totalHeight);
 	
+	// Set default values if missing
+	if (userConfig.port === undefined) userConfig.port = 443;
+	if (userConfig.index_port === undefined) userConfig.index_port = 80;
+
 	return userConfig;
 }
 
