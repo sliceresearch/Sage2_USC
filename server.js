@@ -988,6 +988,11 @@ function manageUploadedFiles(files) {
 		var file = files[key][0];
 		
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
+			if(appInstance === null){
+				console.log("unrecognized file type: " + file.headers['content-type']);
+				return;
+			}
+			
 			appInstance.id = getUniqueAppId();
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
