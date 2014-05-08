@@ -1096,7 +1096,7 @@ setTimeout(function() {
 /******** Omicron section ****************************************************************/
 if( config.experimental.omicron.enable )
 {
-	var omicronManager = new omicron( config.experimental.omicron );
+	var omicronManager = new omicron( config );
 	omicronManager.runTracker( this, sagePointers );
 }
 

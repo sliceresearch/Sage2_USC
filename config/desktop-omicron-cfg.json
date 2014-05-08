@@ -24,7 +24,7 @@
 		"omicron": // enable omicron input module
 		{
 			enable: true,
-			dataPort: 7101
+			dataPort: 20005
 		}
 	},
 	layout: {
