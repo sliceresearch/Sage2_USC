@@ -1,0 +1,11 @@
+{
+	"main_script": "texture_cube.js",
+	"width": 400,
+	"height": 300,
+	"animation": true,
+	"load": {
+	},
+	"resources": [
+		"scripts/glMatrix-0.9.5.min.js"
+	]
+}

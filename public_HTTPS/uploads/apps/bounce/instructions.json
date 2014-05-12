@@ -1,0 +1,8 @@
+{
+	"main_script": "bounce.js",
+	"width": 400,
+	"height": 300,
+	"animation": true,
+	"resources": [
+	]
+}
