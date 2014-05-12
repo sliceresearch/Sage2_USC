@@ -1414,6 +1414,7 @@ process.on('uncaughtException', function (e) {
 	else {
 		console.log("Process> uncaught exception: ", e);
 		console.log(" ")
+		console.trace();
 		process.exit(1);
 	}
 });
