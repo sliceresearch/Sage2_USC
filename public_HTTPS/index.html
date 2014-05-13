@@ -116,10 +116,13 @@
 		});
 
 		wsio.on('initialize', function(data) {
+			var startTime = new Date(data.start);
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
 			
 			dt = clientTime - serverTime;
+			
+			Math.seed(startTime.getTime());
 		});
 		
 		wsio.on('setupDisplayConfiguration', function(json_cfg) {
@@ -686,6 +689,20 @@
 		results = regex.exec(location.search);
 		return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 	}
+	
+	Math.seed = function(s) {
+		Math.random = function() {
+			// POSIX drand48 ==> Xn+1 = (a*Xn+c) % m
+			var a = 25214903917;
+			var c = 11;
+			var m = 281474976710656;
+			
+			s = (a*s+c) % m;
+			return s / m;
+			
+			//s = Math.sin(s) * 10000; return s - Math.floor(s);
+		}
+	};
 </script>
 
 <link rel="stylesheet" type="text/css" href="style.css" media="screen" />

@@ -68,6 +68,9 @@ var texture_cube = SAGE2_App.extend( {
 		this.roty = null;
 		
 		this.resizeEvents = "continuous";
+		
+		this.webglContextLost = this.webglContextLostMethod.bind(this);
+		this.webglContextRestored = this.webglContextRestoredMethod.bind(this);
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -77,6 +80,9 @@ var texture_cube = SAGE2_App.extend( {
 		// application specific 'init'
 		this.initGL();
 		if(this.gl){
+			this.element.addEventListener("webglcontextlost", this.webglContextLost, false);
+			this.element.addEventListener("webglcontextrestored", this.webglContextRestored, false);
+		
 			this.initShaders();
 			this.initLighting();
 			this.initBuffers();
@@ -115,6 +121,16 @@ var texture_cube = SAGE2_App.extend( {
 		if(!this.gl){
 			alert("Unable to initialize WebGL. Your browser may not support it.");
 		}
+	},
+	
+	webglContextLostMethod: function(event) {
+		console.log("WebGL Context Lost");
+		console.log(event);
+	},
+	
+	webglContextRestoredMethod: function(event) {
+		console.log("WebGL Context Restored");
+		console.log(event);
 	},
 	
 	initShaders: function() {
