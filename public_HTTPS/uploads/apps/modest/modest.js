@@ -38,6 +38,7 @@ var modest = SAGE2_App.extend( {
 		var london = new MM.Location(51.5001524, -0.1262362);
 		var sf     = new MM.Location(37.7749295, -122.4194155);
 		this.map.setCenterZoom(sf, 14);
+		this.log("Modest map at " + JSON.stringify(sf));
 	},
 
 	load: function(state, date) {

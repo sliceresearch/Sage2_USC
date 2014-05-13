@@ -38,6 +38,7 @@ var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
 var path        = require('path');                // file path extraction and creation
 var request     = require('request');             // external http requests
+var sprint      = require('sprint');              // pretty formating (sprintf)
 
 // custom node modules
 var httpserver  = require('node-httpserver');     // creates web server
@@ -248,6 +249,9 @@ function initializeWSClient(wsio) {
 	}
 	
 	if(wsio.clientType == "webBrowser") webBrowserClient = wsio;
+
+	// Debug messages from applications
+	wsio.on('sage2Log', wsPrintDebugInfo);
 }
 
 function initializeExistingSagePointers(wsio) {
@@ -550,6 +554,10 @@ function wsStopMediaStream(wsio, data) {
 	if(elem !== null) deleteApplication( elem );
 }
 
+// Print message from remote applications
+function wsPrintDebugInfo(wsio, data) {
+	console.log(sprint("Node %2d> [%s] %s", data.node, data.app, data.message));
+}
 
 function wsReceivedMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
