@@ -43,6 +43,8 @@ var SAGE2_App = Class.extend( {
                         this.element.height = height;
                 }
 		this.div.appendChild(this.element);
+		console.log("created " + elem);
+		console.log(this.element);
 		
 		this.resrcPath = resrc + "/";
 		this.startDate = date;

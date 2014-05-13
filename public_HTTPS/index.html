@@ -344,8 +344,12 @@
 			var i;
 			function loadApplication() {
 				// load new app
+				console.log(window[data.application]);
 				if(window[data.application] === undefined) {
 					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + data.application + ".js");
+					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
 						app.init(data.id, data.width, data.height, data.url, date);
@@ -381,6 +385,9 @@
 			
 				data.resrc.forEach(function(element, index, array) {
 					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + element);
+					}, false);
 					js.addEventListener('load', function(event) {
 						resources[element] = true;
 						if(allTrueDict(resources)){

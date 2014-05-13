@@ -43,7 +43,7 @@ var googlemaps = SAGE2_App.extend( {
 
 		// need a global handler for the callback (i.e. scope pollution)
 		googlemaps_self = this;
-		this.APIKEY = "XXXXXX PUT your API KEY XXXXX";
+		this.APIKEY = "AIzaSyBEngu_3hdR3tzZs6yVKho8LxhkEVkfgcw"; // luc's key
 		// load google maps
 		addScript('https://maps.googleapis.com/maps/api/js?key=' + this.APIKEY + '&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
 	},
