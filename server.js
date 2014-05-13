@@ -1091,15 +1091,6 @@ setTimeout(function() {
 	broadcast('setSystemTime', {date: new Date()}, 'receivesClockTime');
 }, (61-cDate.getSeconds())*1000);
 
-
-
-/******** Omicron section ****************************************************************/
-if( config.experimental.omicron.enable )
-{
-	var omicronManager = new omicron( config );
-	omicronManager.runTracker( this, sagePointers );
-}
-
 /***************************************************************************************/
 
 // Start the https server
@@ -1220,7 +1211,7 @@ function getAppPositionSize(appInstance) {
 
 /**** Pointer Functions ********************************************************************/
 
-function createSagePointer( address ) {
+var createSagePointer = function ( address ) {
 	// From addClient type == sageUI
 	sagePointers[address] = new sagepointer(address+"_pointer");
 	remoteInteraction[address] = new interaction();
@@ -1477,4 +1468,20 @@ function deleteApplication( elem ) {
 		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
 	}
 	removeElement(applications, elem);
+}
+
+/******** Omicron section ****************************************************************/
+if( config.experimental.omicron.enable )
+{
+	var omicronManager = new omicron( config );
+	omicronManager.setCallbacks(
+		sagePointers,
+		createSagePointer,
+		showPointer,
+		pointerPress,
+		pointerPosition,
+		hidePointer,
+		pointerRelease
+	);
+	omicronManager.runTracker();
 }
