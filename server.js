@@ -95,6 +95,8 @@ var options = setupHttpsOptions();
 var index  = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
 
+var startTime = new Date();
+
 
 // creates a WebSocket server - 2 way communication between server and all browser clients
 var wsioServer = new websocketIO.Server({server: server});
@@ -177,7 +179,7 @@ function wsAddClient(wsio, data) {
 function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
-	wsio.emit('initialize', {UID: uniqueID, time: new Date()});
+	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
 	
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
