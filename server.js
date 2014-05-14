@@ -348,7 +348,7 @@ function wsPointerDblClick(wsio, data) {
 	var updatedItem;
 
 	if (elem !== null) {
-		if (!elem.isMaximized || elem.isMaximized === 0) {
+		if (elem.maximized !== true) {
 			// need to maximize the item
 			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
 			if (updatedItem !== null) {
