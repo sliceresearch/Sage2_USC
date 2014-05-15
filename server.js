@@ -1452,6 +1452,52 @@ function pointerScroll( address, data ) {
 	}
 }
 
+function pointerDblClick(address, data) {
+	var uniqueID = address;
+	if( sagePointers[address] === undefined )
+		return;
+		
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	var elem     = findAppUnderPointer(pointerX, pointerY);
+	var updatedItem;
+
+	if (elem !== null) {
+		if (!elem.isMaximized || elem.isMaximized === 0) {
+			// need to maximize the item
+			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
+			if (updatedItem !== null) {
+				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+				// the PDF files need an extra redraw
+				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+			}
+		} else {
+			// already maximized, need to restore the item size
+			updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+			if (updatedItem !== null) {
+				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+				// the PDF files need an extra redraw
+				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+			}
+		}
+	}
+}
+
+function pointerCloseGesture(address, pointerX, pointerY) {
+	var uniqueID = address;
+	if( sagePointers[address] === undefined )
+		return;
+		
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	var elem     = findAppUnderPointer(pointerX, pointerY);
+
+	if (elem !== null)
+	{
+		deleteApplication(elem);
+	}
+}
+
 function deleteApplication( elem ) {
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
@@ -1481,7 +1527,11 @@ if( config.experimental.omicron.enable )
 		pointerPress,
 		pointerPosition,
 		hidePointer,
-		pointerRelease
+		pointerRelease,
+		pointerScrollStart,
+		pointerScroll,
+		pointerDblClick,
+		pointerCloseGesture
 	);
 	omicronManager.runTracker();
 }
