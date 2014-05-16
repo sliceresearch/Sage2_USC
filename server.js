@@ -39,6 +39,8 @@ var os          = require('os');                  // operating system access
 var path        = require('path');                // file path extraction and creation
 var request     = require('request');             // external http requests
 var sprint      = require('sprint');              // pretty formating (sprintf)
+var readline    = require('readline');            // to build an evaluation loop (builtin module)
+var program     = require('commander');           // parsing command-line arguments
 
 // custom node modules
 var httpserver  = require('node-httpserver');     // creates web server
@@ -47,6 +49,11 @@ var loader      = require('node-itemloader');     // handles sage item creation
 var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
 
+// Command line arguments
+program
+  .version('0.1.0')
+  .option('-i, --interactive', 'Interactive prompt')
+  .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
@@ -1433,6 +1440,54 @@ process.on('uncaughtException', function (e) {
 index.listen(config.index_port);
 // Start the HTTPS server
 server.listen(config.port);
+
+
+/***************************************************************************************/
+// Command loop: reading input commands
+
+if (program.interactive)
+{
+	// Create line reader for stdin and stdout
+	var shell = readline.createInterface({
+		input:  process.stdin, output: process.stdout
+	});
+
+	// Set the prompt
+	shell.setPrompt('> ');
+
+	// Start the loop
+	shell.prompt();
+
+	// Callback for each line
+	shell.on('line', function(line) {
+		switch(line.trim()) {
+			case '': // ignore
+				break;
+			case 'hello':
+				console.log('world!');
+				break;
+			case 'exit':
+			case 'quit':
+			case 'bye':
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+				break;
+			default:
+				console.log('Say what? I might have heard `' + line.trim() + '`');
+				break;
+		}
+		// loop through
+		shell.prompt();
+	}).on('close', function() {
+		// Close with CTRL-D or CTRL-C
+		console.log('');
+		console.log('SAGE2 done');
+		console.log('');
+		process.exit(0);
+	});
+}
 
 
 /***************************************************************************************/

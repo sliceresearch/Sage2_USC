@@ -52,6 +52,7 @@
     "ytdl": "latest",
     "jshint": "latest",
     "jslint": "latest",
+    "commander": "latest",
     "sprint": "^0.3.1"
   },
   "bundledDependencies": [],
