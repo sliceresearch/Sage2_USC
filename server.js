@@ -1460,11 +1460,37 @@ if (program.interactive)
 
 	// Callback for each line
 	shell.on('line', function(line) {
-		switch(line.trim()) {
+		var command = line.trim().split(' ');
+		switch(command[0]) {
 			case '': // ignore
 				break;
-			case 'hello':
-				console.log('world!');
+			case 'help':
+				console.log('help\tlist commands');
+				console.log('kill\tclose application: arg0: index - kill 0');
+				console.log('list\tlist running applications');
+				console.log('exit\tstop SAGE2');
+				break;
+			case 'close':
+			case 'delete':
+			case 'kill':
+				if (command[1] !== undefined) {
+					var kid = parseInt(command[1], 10); // convert arg1 to base 10
+					if (! isNaN(kid) && (kid >= 0) && (kid < applications.length) ) {
+						console.log('deleting application', kid);
+						deleteApplication( applications[kid] );
+					}
+				}
+				break;
+			case 'list':
+				var i;
+				console.log("Applications\n------------");
+				for(i=0; i<applications.length; i++){
+					console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
+						i, applications[i].id, applications[i].application,
+						 applications[i].width,  applications[i].height,
+						 applications[i].left,  applications[i].top,
+						 applications[i].title));
+				}
 				break;
 			case 'exit':
 			case 'quit':
