@@ -216,6 +216,7 @@ function initializeWSClient(wsio) {
 	}
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
+		wsio.on('updateAppState', wsUpdateAppState);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
@@ -626,6 +627,12 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			}, 16-elapsed);
 		}
 	}
+}
+
+function wsUpdateAppState(wsio, data) {
+	var app = findAppById(data.id);
+	
+	app.data = data.state;
 }
 
 /******************** Server File Functions ********************/

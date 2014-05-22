@@ -357,15 +357,15 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
+						app.init(data.id, data.width, data.height, data.url, date);
 						
 						Object.observe(app.state, function(changes) {
 							var updatedState = JSON.parse(JSON.stringify(app.state));
 						
-							console.log(data.id + ": ");
-							console.log(updatedState);
+							wsio.emit('updateAppState', {id: data.id, state: updatedState});
 						});
 						
-						app.init(data.id, data.width, data.height, data.url, date);
+						//app.init(data.id, data.width, data.height, data.url, date);
 						app.load(data.data, date);
 						app.draw(date);
 						
@@ -380,15 +380,15 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
+					app.init(data.id, data.width, data.height, data.url, date);
 					
 					Object.observe(app.state, function(changes) {
 						var updatedState = JSON.parse(JSON.stringify(app.state));
 						
-						console.log(data.id + ": ");
-						console.log(updatedState);
+						wsio.emit('updateAppState', {id: data.id, state: updatedState});
 					});
 					
-					app.init(data.id, data.width, data.height, data.url, date);
+					//app.init(data.id, data.width, data.height, data.url, date);
 					app.load(data.data, date);
 					app.draw(date);
 					

@@ -35,8 +35,8 @@ var pdf_viewer = SAGE2_App.extend( {
 		//  *** DO NOT OVERWRITE this.state, ALWAYS EDIT ITS PROPERTIES
 		// this.state = {srcPDF: null, pageNum: null, numPagesShown: null}; // BAD
 		
-		this.state.srcPDF = null;
-		this.state.pageNum = null;
+		this.state.src = null;
+		this.state.page = null;
 		this.state.numPagesShown = null;
 	},
 	
@@ -49,8 +49,8 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.loaded = true;
 				_this.pdfDoc = _pdfDoc;
 				
-				_this.state.srcPDF = state.src;
-				_this.state.pageNum = state.page;
+				_this.state.src = state.src;
+				_this.state.page = state.page;
 				_this.state.numPagesShown = state.numPagesShown;
 				
 				_this.draw(date);
@@ -58,7 +58,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		}
 		// load new state of same document
 		else {
-			this.state.pageNum = state.page;
+			this.state.page = state.page;
 			this.state.numPagesShown = state.numPagesShown;
 			
 			this.draw(date);
@@ -73,7 +73,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		if(this.loaded === false) return;
 		
 		var _this = this;
-		this.pdfDoc.getPage(this.state.pageNum).then(function(page) {
+		this.pdfDoc.getPage(this.state.page).then(function(page) {
 			// set the scale to match the canvas
 			var viewport = page.getViewport(_this.canvas.width / page.getViewport(1.0).width);
 			viewport.height = _this.canvas.height;
@@ -103,14 +103,14 @@ var pdf_viewer = SAGE2_App.extend( {
 		
 		if(eventType === "specialKey"){
 			if(data.code === 37 && data.state === "up"){ // Left Arrow
-				if(this.state.pageNum <= 1) return;
-				this.state.pageNum = this.state.pageNum - 1;
+				if(this.state.page <= 1) return;
+				this.state.page = this.state.page - 1;
 		
 				this.draw(date);
 			}
 			if(data.code === 39 && data.state === "up"){ // Right Arrow
-				if(this.state.pageNum >= this.pdfDoc.numPages) return;
-				this.state.pageNum = this.state.pageNum + 1;
+				if(this.state.page >= this.pdfDoc.numPages) return;
+				this.state.page = this.state.page + 1;
 		
 				this.draw(date);
 			}
