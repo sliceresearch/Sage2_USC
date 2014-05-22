@@ -17,6 +17,7 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
+<script type="text/javascript" src="lib/observe.poly.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
 <script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
@@ -356,9 +357,18 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
+						
+						Object.observe(app.state, function(changes) {
+							var updatedState = JSON.parse(JSON.stringify(app.state));
+						
+							console.log(data.id + ": ");
+							console.log(updatedState);
+						});
+						
 						app.init(data.id, data.width, data.height, data.url, date);
 						app.load(data.data, date);
 						app.draw(date);
+						
 						applications[data.id] = app;
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
@@ -370,9 +380,18 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
+					
+					Object.observe(app.state, function(changes) {
+						var updatedState = JSON.parse(JSON.stringify(app.state));
+						
+						console.log(data.id + ": ");
+						console.log(updatedState);
+					});
+					
 					app.init(data.id, data.width, data.height, data.url, date);
 					app.load(data.data, date);
 					app.draw(date);
+					
 					applications[data.id] = app;
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
