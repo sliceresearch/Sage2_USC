@@ -17,10 +17,25 @@ function SAGE2_initialize(data_seed) {
 	Math.seed(data_seed.getTime());
 }
 
+// Debug log function: send parameters to server for printout
+//  if mutiple paramters, sent as one array
+function log (obj) {
+	if (arguments.length===0) return;
+	var args;
+	if (arguments.length > 1)
+		args = Array.prototype.slice.call(arguments);
+	else
+		args = obj;
+	// send a log message to the server
+	sage2Log({app: "index", message: args});
+}
 
+// Pretty print in browser and send to server
+//
 function sage2Log(msgObject) {
 	// Local console print
-	console.log("[" + msgObject.app + "] " + msgObject.message);
+	console.log("%c[%s] %c%s", "color: blue;", msgObject.app,
+		"color: black;", JSON.stringify(msgObject.message));
 
 	// Add the display node ID to the message
 	msgObject.node = clientID;
@@ -128,7 +143,5 @@ Math.seed = function(s) {
 		
 		s = (a*s+c) % m;
 		return s / m;
-		
-		//s = Math.sin(s) * 10000; return s - Math.floor(s);
 	}
 }

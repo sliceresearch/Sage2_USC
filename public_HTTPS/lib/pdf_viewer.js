@@ -14,7 +14,6 @@ var pdf_viewer = SAGE2_App.extend( {
 	
 		this.resizeEvents = "onfinish";
 		
-		this.src = null;
 		this.canvas = null;
 		this.ctx = null;
 		
@@ -53,7 +52,7 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.state.page = state.page;
 				_this.state.numPagesShown = state.numPagesShown;
 				
-				_this.draw(date);
+				_this.refresh(date);
 			});
 		}
 		// load new state of same document
@@ -61,15 +60,11 @@ var pdf_viewer = SAGE2_App.extend( {
 			this.state.page = state.page;
 			this.state.numPagesShown = state.numPagesShown;
 			
-			this.draw(date);
+			this.refresh(date);
 		}
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		// application specific 'draw'
 		if(this.loaded === false) return;
 		
 		var _this = this;
@@ -85,16 +80,13 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.element.src = _this.canvas.toDataURL();
 			});
 		});
-		
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
 		this.canvas.width = this.element.width;
 		this.canvas.height = this.element.height;
 		
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {
@@ -106,13 +98,13 @@ var pdf_viewer = SAGE2_App.extend( {
 				if(this.state.page <= 1) return;
 				this.state.page = this.state.page - 1;
 		
-				this.draw(date);
+				this.refresh(date);
 			}
 			if(data.code === 39 && data.state === "up"){ // Right Arrow
 				if(this.state.page >= this.pdfDoc.numPages) return;
 				this.state.page = this.state.page + 1;
 		
-				this.draw(date);
+				this.refresh(date);
 			}
 		}
 	}
