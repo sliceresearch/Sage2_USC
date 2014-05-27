@@ -49,6 +49,9 @@ var loader      = require('node-itemloader');     // handles sage item creation
 var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
 
+var imageMagick = gm.subClass({imageMagick: true});
+
+
 // Command line arguments
 program
   .version('0.1.0')
@@ -865,7 +868,7 @@ function setupDisplayBackground() {
 				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
 				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 		
-				gm(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(255,255,255,255)").in("-extent", out_res).write(tmpImg, function(err) {
+				imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
 					if(err) throw err;
 			
 					sliceBackgroundImage(tmpImg, bg_file);
@@ -876,7 +879,7 @@ function setupDisplayBackground() {
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		
-			gm(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
+			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
 			
 				sliceBackgroundImage(tmpImg, bg_file);
@@ -891,10 +894,10 @@ function setupDisplayBackground() {
 			var tile = cols.toString() + "x" + rows.toString();
 			var in_res  = bg_info.width.toString() + "x" + bg_info.height.toString();
 		
-			var gmTile = gm().command("montage").in("-geometry", in_res).in("-tile", tile);
-			for(var i=0; i<rows*cols; i++) gmTile = gmTile.in(bg_file);
+			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
+			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
 		
-			gmTile.write(tmpImg, function(err) {
+			imTile.write(tmpImg, function(err) {
 				if(err) throw err;
 			
 				sliceBackgroundImage(tmpImg, bg_file);
@@ -913,8 +916,8 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_"+i.toString() + output_ext);
 		console.log(output);
-		gm(fileName).crop(config.resolution.width, config.resolution.height, x, y).write(output, function(err) {
-			if(err) throw err;
+		imageMagick(fileName).crop(config.resolution.width, config.resolution.height, x, y).write(output, function(err) {
+			if(err) console.log("error slicing image", err); //throw err;
 		});
 	}
 }

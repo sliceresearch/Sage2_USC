@@ -10,6 +10,8 @@
 
 var movie_player = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+		
 		this.source = null;
 		this.playTimeout = null;
 		this.playDelay = 0.75;

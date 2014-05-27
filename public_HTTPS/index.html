@@ -359,13 +359,14 @@
 						var app = new window[data.application];
 						app.init(data.id, data.width, data.height, data.url, date);
 						
-						Object.observe(app.state, function(changes) {
-							var updatedState = JSON.parse(JSON.stringify(app.state));
+						if(app.state !== undefined){
+							Object.observe(app.state, function(changes) {
+								var updatedState = JSON.parse(JSON.stringify(app.state));
 						
-							wsio.emit('updateAppState', {id: data.id, state: updatedState});
-						});
+								wsio.emit('updateAppState', {id: data.id, state: updatedState});
+							});
+						}
 						
-						//app.init(data.id, data.width, data.height, data.url, date);
 						app.load(data.data, date);
 						app.draw(date);
 						
@@ -382,13 +383,14 @@
 					var app = new window[data.application];
 					app.init(data.id, data.width, data.height, data.url, date);
 					
-					Object.observe(app.state, function(changes) {
-						var updatedState = JSON.parse(JSON.stringify(app.state));
+					if(app.state !== undefined){
+						Object.observe(app.state, function(changes) {
+							var updatedState = JSON.parse(JSON.stringify(app.state));
 						
-						wsio.emit('updateAppState', {id: data.id, state: updatedState});
-					});
+							wsio.emit('updateAppState', {id: data.id, state: updatedState});
+						});
+					}
 					
-					//app.init(data.id, data.width, data.height, data.url, date);
 					app.load(data.data, date);
 					app.draw(date);
 					
