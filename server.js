@@ -41,6 +41,7 @@ var request     = require('request');             // external http requests
 var sprint      = require('sprint');              // pretty formating (sprintf)
 var readline    = require('readline');            // to build an evaluation loop (builtin module)
 var program     = require('commander');           // parsing command-line arguments
+var colors      = require('colors');              // pretty colors in the terminal
 
 // custom node modules
 var httpserver  = require('node-httpserver');     // creates web server
@@ -159,7 +160,14 @@ function wsAddClient(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	wsio.clientType = data.clientType;
 	wsio.messages = {};
-	
+
+	// Remember the display ID
+	if (wsio.clientType === "display") {
+		wsio.clientID = data.clientID;
+	} else {
+		wsio.clientID = -1;
+	}
+
 	// types of data sent/received to server from client through WebSockets
 	wsio.messages.sendsPointerData                  = data.sendsPointerData                 || false;
 	wsio.messages.sendsMediaStreamFrames            = data.sendsMediaStreamFrames           || false;
@@ -181,7 +189,10 @@ function wsAddClient(wsio, data) {
 	initializeWSClient(wsio);
 	
 	clients.push(wsio);
-	console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+	if (wsio.clientType==="display")
+		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+	else
+		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
 }
 
 function initializeWSClient(wsio) {
@@ -564,7 +575,10 @@ function wsStopMediaStream(wsio, data) {
 
 // Print message from remote applications
 function wsPrintDebugInfo(wsio, data) {
-	console.log(sprint("Node %2d> [%s] %s", data.node, data.app, data.message));
+	// sprint for padding and pretty colors
+	console.log(
+		sprint("Node %2d> ", data.node).blue + sprint("[%s] ",data.app).green,
+		data.message);
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
@@ -630,9 +644,13 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
-	var app = findAppById(data.id);
-	
-	app.data = data.state;
+	if (wsio.clientID == 0) {
+		var app = findAppById(data.id);
+		
+		app.data = data.state;
+
+		console.log("Got an update for:", app.id, data.state);
+	}
 }
 
 /******************** Server File Functions ********************/

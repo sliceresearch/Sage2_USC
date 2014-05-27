@@ -76,9 +76,10 @@
 		console.log("Connected to server: ", window.location.origin);
 		
 		wsio.open(function() {
-			console.log("open websocket");
+			//console.log("open websocket");
 			var clientDescription = {
 				clientType: "display",
+				clientID: clientID,
 				sendsPointerData: false,
 				sendsMediaStreamFrames: false,
 				requestsServerFiles: false,
@@ -96,6 +97,7 @@
 				receivesRemoteServerInfo: true
 			};
 			wsio.emit('addClient', clientDescription);
+			log("open websocket");
 		});
 
 		// Socket close event (ie server crashed)		
@@ -164,7 +166,11 @@
 				}, false);
 				bg.src = json_cfg.background.image;
 			}
-			
+			// Setup the clipping size
+			var maindiv = document.getElementById('main');
+			maindiv.style.width  = json_cfg.resolution.width  +'px';
+			maindiv.style.height = json_cfg.resolution.height +'px';
+
 			var upperBar = document.getElementById('upperBar');
 			upperBar.style.height = titleBarHeight.toString() + "px";
 			upperBar.style.left = "0px";
@@ -359,15 +365,18 @@
 						var app = new window[data.application];
 						app.init(data.id, data.width, data.height, data.url, date);
 						
-						Object.observe(app.state, function(changes) {
-							var updatedState = JSON.parse(JSON.stringify(app.state));
-						
-							wsio.emit('updateAppState', {id: data.id, state: updatedState});
-						});
-						
+						if (app.state && clientID===0) {
+							Object.observe(app.state, function(changes) {
+								console.log("Changes: ", changes);
+								var updatedState = JSON.parse(JSON.stringify(app.state));
+							
+								wsio.emit('updateAppState', {id: data.id, state: updatedState});
+							}, ["update"]);
+						}
+
 						//app.init(data.id, data.width, data.height, data.url, date);
 						app.load(data.data, date);
-						app.draw(date);
+						app.refresh(date);
 						
 						applications[data.id] = app;
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
@@ -382,15 +391,18 @@
 					var app = new window[data.application];
 					app.init(data.id, data.width, data.height, data.url, date);
 					
-					Object.observe(app.state, function(changes) {
-						var updatedState = JSON.parse(JSON.stringify(app.state));
-						
-						wsio.emit('updateAppState', {id: data.id, state: updatedState});
-					});
-					
+					if (app.state && clientID===0) {
+						Object.observe(app.state, function(changes) {
+							console.log("Changes: ", changes);
+							var updatedState = JSON.parse(JSON.stringify(app.state));
+							
+							wsio.emit('updateAppState', {id: data.id, state: updatedState});
+						}, ["update"]);
+					}
+
 					//app.init(data.id, data.width, data.height, data.url, date);
 					app.load(data.data, date);
-					app.draw(date);
+					app.refresh(date);
 					
 					applications[data.id] = app;
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
@@ -579,7 +591,7 @@
 			
 			var app = applications[data.id];
 			if(app !== undefined && app !== null){
-				app.draw(date);
+				app.refresh(date);
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 			
@@ -588,7 +600,7 @@
 			if(canvasElem != null){
 				var child = canvasElem.getElementsByClassName("sageItem");
 				if(child[0].id in canvasItems){
-					canvasItems[child[0].id].draw(date);
+					canvasItems[child[0].id].refresh(date);
 				}
 			}
 			*/
