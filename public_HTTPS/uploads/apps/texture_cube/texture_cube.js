@@ -50,8 +50,9 @@ var shader_vs = "attribute vec3 aVertexPosition;\
 
 var texture_cube = SAGE2_App.extend( {
 	construct: function() {
-		this.gl = null;
+		arguments.callee.superClass.construct.call(this);
 
+		this.gl = null;
 		this.shaderProgram = null;
 		this.texture = null;
 
@@ -103,8 +104,8 @@ var texture_cube = SAGE2_App.extend( {
 		
 			mat4.perspective(45, this.element.width / this.element.height, 0.1, 100.0, this.pMatrix);
 			
-			console.log("CANVAS: " + this.element.width + "x" + this.element.height);
-			console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);
+			// console.log("CANVAS: " + this.element.width + "x" + this.element.height);
+			// console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);
 		}
 	},
 	
@@ -386,13 +387,9 @@ var texture_cube = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
 		this.rotx += 10.0 * this.dt;
 		this.roty -= 15.0 * this.dt;
 		
@@ -419,9 +416,6 @@ var texture_cube = SAGE2_App.extend( {
 		this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.cubeVertexIndexBuffer);
 		this.setMatrixUniforms();
 		this.gl.drawElements(this.gl.TRIANGLES, this.cubeVertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
-		
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
@@ -431,13 +425,13 @@ var texture_cube = SAGE2_App.extend( {
 		
 		mat4.perspective(45, this.element.width / this.element.height, 0.1, 100.0, this.pMatrix);
 		
-		console.log("CANVAS: " + this.element.width + "x" + this.element.height);
-			console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);
+		// console.log("CANVAS: " + this.element.width + "x" + this.element.height);
+		// console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);
 		
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {
-		
+		//this.refresh(date);
 	}
 });	

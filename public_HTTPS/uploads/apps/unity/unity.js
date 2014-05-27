@@ -10,7 +10,8 @@
 
 var unity = SAGE2_App.extend( {
 	construct: function() {
-		//this.resizeEvents = "continuous";
+		arguments.callee.superClass.construct.call(this);
+
 		this.resizeEvents = "onfinish";
 		this.viewer = null;
 		this.u = null;
@@ -38,25 +39,17 @@ var unity = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		//console.log("draw");
-	
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, user_id, itemX, itemY, data, date) {
 		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
-		//this.draw(date);
+		//this.refresh(date);
 	}
 });

@@ -21,8 +21,9 @@ function addCSS( url, callback ) {
 
 var d3_sample = SAGE2_App.extend( {
 	construct: function() {
-		this.resizeEvents = "continuous"; //"onfinish";
+		arguments.callee.superClass.construct.call(this);
 
+		this.resizeEvents = "continuous"; //"onfinish";
 		this.vertices = null;
 		this.voronoi  = null;
 		this.svg      = null;
@@ -71,7 +72,6 @@ var d3_sample = SAGE2_App.extend( {
 	},
 
 	load: function(state, date) {
-		
 	},
 
 	draw_d3: function(date) {
@@ -87,19 +87,12 @@ var d3_sample = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-
-
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
-
 
 	resize: function(date) {
 		this.svg.attr('width' , this.element.clientWidth  +"px");
 		this.svg.attr('height' , this.element.clientHeight  +"px");
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {
@@ -111,9 +104,9 @@ var d3_sample = SAGE2_App.extend( {
 			//this.draw_d3();
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-		}		
+		}
 	}
-
+	
 });
 
 

@@ -7,7 +7,7 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * node.js
 * ffmpeg
 * poppler
-* graphicsmagick
+* imagemagick
 
 ##### Install #####
 * [Windows Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows))

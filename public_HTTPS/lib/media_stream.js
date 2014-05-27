@@ -10,6 +10,8 @@
 
 var media_stream = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+		
 		this.src = null;
 	},
 	

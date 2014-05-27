@@ -365,6 +365,7 @@
 						var app = new window[data.application];
 						app.init(data.id, data.width, data.height, data.url, date);
 						
+<<<<<<< HEAD
 						if (app.state && clientID===0) {
 							Object.observe(app.state, function(changes) {
 								console.log("Changes: ", changes);
@@ -375,6 +376,16 @@
 						}
 
 						//app.init(data.id, data.width, data.height, data.url, date);
+=======
+						if(app.state !== undefined){
+							Object.observe(app.state, function(changes) {
+								var updatedState = JSON.parse(JSON.stringify(app.state));
+						
+								wsio.emit('updateAppState', {id: data.id, state: updatedState});
+							});
+						}
+						
+>>>>>>> 28c53b8b3f1190b718b5b14496bf206f0ae5f758
 						app.load(data.data, date);
 						app.refresh(date);
 						
@@ -391,6 +402,7 @@
 					var app = new window[data.application];
 					app.init(data.id, data.width, data.height, data.url, date);
 					
+<<<<<<< HEAD
 					if (app.state && clientID===0) {
 						Object.observe(app.state, function(changes) {
 							console.log("Changes: ", changes);
@@ -401,6 +413,16 @@
 					}
 
 					//app.init(data.id, data.width, data.height, data.url, date);
+=======
+					if(app.state !== undefined){
+						Object.observe(app.state, function(changes) {
+							var updatedState = JSON.parse(JSON.stringify(app.state));
+						
+							wsio.emit('updateAppState', {id: data.id, state: updatedState});
+						});
+					}
+					
+>>>>>>> 28c53b8b3f1190b718b5b14496bf206f0ae5f758
 					app.load(data.data, date);
 					app.refresh(date);
 					

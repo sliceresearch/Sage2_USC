@@ -10,6 +10,8 @@
 
 var kinetic_oscillating = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+
 		this.timer  = null;
 		this.redraw = null;
 		this.stage  = null;
@@ -71,13 +73,9 @@ var kinetic_oscillating = SAGE2_App.extend( {
 	},
 
 	load: function(state, date) {
-		
 	},
 
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-
 		this.timer = this.timer + this.dt;
 		if(this.timer >= 0.033333333) {
 			this.timer  = 0.0;
@@ -97,11 +95,7 @@ var kinetic_oscillating = SAGE2_App.extend( {
 			this.frame++;
 			this.redraw = false;
 		}
-
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
-
 
 	resize: function(date) {
         this.stage.setSize({
@@ -112,7 +106,7 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		this.stage.setScale({x:val, y:val});
 
 		this.redraw = true;
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {

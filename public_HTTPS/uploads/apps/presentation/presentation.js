@@ -11,6 +11,8 @@
 
 var presentation = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+
 		this.resizeEvents = "continuous";
 	},
 	
@@ -28,21 +30,13 @@ var presentation = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		//console.log("draw");
-	
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, user_id, itemX, itemY, data, date) {
@@ -86,7 +80,8 @@ var presentation = SAGE2_App.extend( {
 		else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
 			// down
 		}
-		this.draw(date);
+		
+		this.refresh(date);
 	}
 });
 

@@ -10,6 +10,8 @@
 
 var zoom = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+
 		this.resizeEvents = "continuous";
 		this.viewer = null;
 		this.lastZoom = null;
@@ -37,21 +39,13 @@ var zoom = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		//console.log("draw");
-	
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
-		this.draw(date);
+		this.refresh(date);
 	},
 
 	event: function(eventType, user_id, itemX, itemY, data, date) {
@@ -132,9 +126,8 @@ var zoom = SAGE2_App.extend( {
 			this.viewer.viewport.panBy(new OpenSeadragon.Point(0, 0.01));
 			this.viewer.viewport.applyConstraints();
 		}
-		this.draw(date);
 
-		
+		this.refresh(date);
 	}
 });
 

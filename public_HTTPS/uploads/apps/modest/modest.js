@@ -11,8 +11,9 @@
 
 var modest = SAGE2_App.extend( {
 	construct: function() {
-		this.resizeEvents = "continuous"; // "onfinish";
+		arguments.callee.superClass.construct.call(this);
 
+		this.resizeEvents = "continuous"; // "onfinish";
 		this.map = null;
 		this.position = null;
 		this.lastZoom = null;
@@ -42,22 +43,14 @@ var modest = SAGE2_App.extend( {
 	},
 
 	load: function(state, date) {
-
 	},
 
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-
-		// Custom draw code
-
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 
 	resize: function(date) {
 		this.map.setSize(new MM.Point(this.element.clientWidth, this.element.clientHeight));
-		this.draw(date);
+		this.refresh(date);
 	},
 
 	event: function(eventType, user_id, itemX, itemY, data, date) {
@@ -121,7 +114,8 @@ var modest = SAGE2_App.extend( {
 			// down
 			this.map.panDown();
 		}
-		this.draw(date);
+		
+		this.refresh(date);
 	}
 
 });
