@@ -18,6 +18,7 @@
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
 <script type="text/javascript" src="lib/observe.poly.js"></script>
+<script type="text/javascript" src="lib/watch.min.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
 <script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
@@ -367,9 +368,7 @@
 						
 						if(app.state !== undefined && clientID===0){
 							Object.observe(app.state, function(changes) {
-								var updatedState = JSON.parse(JSON.stringify(app.state));
-						
-								wsio.emit('updateAppState', {id: data.id, state: updatedState});
+								wsio.emit('updateAppState', {id: data.id, state: app.state});
 							}, ["update"]);
 						}
 						
@@ -391,9 +390,7 @@
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {
-							var updatedState = JSON.parse(JSON.stringify(app.state));
-						
-							wsio.emit('updateAppState', {id: data.id, state: updatedState});
+							wsio.emit('updateAppState', {id: data.id, state: app.state});
 						}, ["update"]);
 					}
 					
