@@ -143,6 +143,12 @@ var googlemaps = SAGE2_App.extend( {
 		this.state.center = {lat:c.lat(), lng:c.lng()};
 	},
 
+	updateLayers: function () {
+		// to trigger an 'oberve' event, need to rebuild the layer field
+		this.state.layer = {w: this.weatherLayer.getMap() != null,
+							t: this.trafficLayer.getMap() != null};
+	},
+
 	event: function(eventType, user_id, itemX, itemY, data, date) {
 		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
 
@@ -201,26 +207,20 @@ var googlemaps = SAGE2_App.extend( {
 		if (eventType == "keyboard" && data.code == 116 && data.state == "down") {
 			// t key down
 			// add/remove traffic layer
-			if (this.trafficLayer.getMap() == null) {
+			if (this.trafficLayer.getMap() == null)
 				this.trafficLayer.setMap(this.map);
-				this.state.layer.t = true;
-			}
-			else {
+			else
 				this.trafficLayer.setMap(null);
-				this.state.layer.t = false;
-			}
+			this.updateLayers();
 		}
 		if (eventType == "keyboard" && data.code == 119 && data.state == "down") {
 			// w key down
 			// add/remove weather layer
-			if (this.weatherLayer.getMap() == null){
+			if (this.weatherLayer.getMap() == null)
 				this.weatherLayer.setMap(this.map);
-				this.state.layer.w = true;
-			}
-			else{
+			else
 				this.weatherLayer.setMap(null);
-				this.state.layer.w = false;
-			}
+			this.updateLayers();
 		}
 
 		else if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
