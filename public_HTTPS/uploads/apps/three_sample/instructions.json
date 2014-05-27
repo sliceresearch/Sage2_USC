@@ -1,0 +1,9 @@
+{
+	"main_script": "three_sample.js",
+	"width": 400,
+	"height": 300,
+	"animation": true,
+	"resources": [
+		"scripts/three.min.js"
+	]
+}

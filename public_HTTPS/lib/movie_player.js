@@ -10,6 +10,8 @@
 
 var movie_player = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+		
 		this.source = null;
 		this.playTimeout = null;
 		this.playDelay = 0.75;
@@ -45,14 +47,6 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		// application specific 'draw'
-		
-		
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {

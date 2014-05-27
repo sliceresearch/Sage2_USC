@@ -1,0 +1,8 @@
+{
+	"main_script": "zoom.js",
+	"width": 800,
+	"height": 224,
+	"resources": [
+		  "openseadragon.min.js"
+	]
+}

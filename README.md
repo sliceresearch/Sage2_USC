@@ -7,7 +7,7 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * node.js
 * ffmpeg
 * poppler
-* graphicsmagick
+* imagemagick
 
 ##### Install #####
 * [Windows Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows))
@@ -34,6 +34,17 @@ Specify the path to your configuration file in 'config.txt'
     * Audio Client: `https://<host>:<port>/audioManager.html`
     * SAGE UI: `https://<host>:<port>/sageUI.html`
     * SAGE Pointer: `https://<host>:<port>/sagePointer.html` (Allow pop-ups)
+
+##### Supported File Types #####
+* Images
+    * JPEG
+    * PNG
+    * TIFF
+    * BMP
+    * PSD
+* Videos
+    * MP4
+* PDFs
 
 ##### Notice #####
 SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGE™ and SAGE2™).

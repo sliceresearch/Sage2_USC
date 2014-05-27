@@ -1,0 +1,9 @@
+{
+	"main_script": "kinetic_animation.js",
+	"width": 500,
+	"height": 300,
+	"animation": true,
+	"resources": [
+		"scripts/kinetic-v5.1.0.min.js"
+	]
+}

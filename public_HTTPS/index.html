@@ -17,8 +17,11 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
+<script type="text/javascript" src="lib/observe.poly.js"></script>
+<script type="text/javascript" src="lib/watch.min.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
+<script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
 <script type="text/javascript" src="lib/image_viewer.js"></script>
 <script type="text/javascript" src="lib/movie_player.js"></script>
 <script type="text/javascript" src="lib/pdf_viewer.js"></script>
@@ -64,7 +67,7 @@
 	function init() {
 		hostname = window.location.hostname;
 		port = window.location.port;
-		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "http:"  && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		clientID = parseInt(getParameterByName("clientID"));
@@ -74,9 +77,10 @@
 		console.log("Connected to server: ", window.location.origin);
 		
 		wsio.open(function() {
-			console.log("open websocket");
+			//console.log("open websocket");
 			var clientDescription = {
 				clientType: "display",
+				clientID: clientID,
 				sendsPointerData: false,
 				sendsMediaStreamFrames: false,
 				requestsServerFiles: false,
@@ -94,6 +98,7 @@
 				receivesRemoteServerInfo: true
 			};
 			wsio.emit('addClient', clientDescription);
+			log("open websocket");
 		});
 
 		// Socket close event (ie server crashed)		
@@ -116,10 +121,14 @@
 		});
 
 		wsio.on('initialize', function(data) {
+			var startTime  = new Date(data.start);
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
 			
 			dt = clientTime - serverTime;
+			
+			// Global initialization
+			SAGE2_initialize(startTime);
 		});
 		
 		wsio.on('setupDisplayConfiguration', function(json_cfg) {
@@ -158,7 +167,11 @@
 				}, false);
 				bg.src = json_cfg.background.image;
 			}
-			
+			// Setup the clipping size
+			var maindiv = document.getElementById('main');
+			maindiv.style.width  = json_cfg.resolution.width  +'px';
+			maindiv.style.height = json_cfg.resolution.height +'px';
+
 			var upperBar = document.getElementById('upperBar');
 			upperBar.style.height = titleBarHeight.toString() + "px";
 			upperBar.style.left = "0px";
@@ -346,11 +359,22 @@
 				// load new app
 				if(window[data.application] === undefined) {
 					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + data.application + ".js");
+					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
 						app.init(data.id, data.width, data.height, data.url, date);
+						
+						if(app.state !== undefined && clientID===0){
+							Object.observe(app.state, function(changes) {
+								wsio.emit('updateAppState', {id: data.id, state: app.state});
+							}, ["update"]);
+						}
+						
 						app.load(data.data, date);
-						app.draw(date);
+						app.refresh(date);
+						
 						applications[data.id] = app;
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
@@ -363,8 +387,16 @@
 				else {
 					var app = new window[data.application];
 					app.init(data.id, data.width, data.height, data.url, date);
+
+					if(app.state !== undefined && clientID===0){
+						Object.observe(app.state, function(changes) {
+							wsio.emit('updateAppState', {id: data.id, state: app.state});
+						}, ["update"]);
+					}
+					
 					app.load(data.data, date);
-					app.draw(date);
+					app.refresh(date);
+					
 					applications[data.id] = app;
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
@@ -381,6 +413,9 @@
 			
 				data.resrc.forEach(function(element, index, array) {
 					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + element);
+					}, false);
 					js.addEventListener('load', function(event) {
 						resources[element] = true;
 						if(allTrueDict(resources)){
@@ -404,6 +439,7 @@
             dragCorner.style.left = (data.width-cornerSize).toString() + "px";
     		dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
             dragCorner.style.border = "none";
+            dragCorner.style.zIndex = "1";
             windowItem.appendChild(dragCorner);
 			
 			itemCount += 2;
@@ -548,7 +584,7 @@
 			
 			var app = applications[data.id];
 			if(app !== undefined && app !== null){
-				app.draw(date);
+				app.refresh(date);
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 			
@@ -557,7 +593,7 @@
 			if(canvasElem != null){
 				var child = canvasElem.getElementsByClassName("sageItem");
 				if(child[0].id in canvasItems){
-					canvasItems[child[0].id].draw(date);
+					canvasItems[child[0].id].refresh(date);
 				}
 			}
 			*/
@@ -591,93 +627,6 @@
 			}
 			*/
 		});
-	}
-	
-	function playPauseVideo(elemId) {
-		var videoElem = document.getElementById(elemId + "_video");
-		if(videoElem.paused == true){ videoElem.play(); console.log("play"); }
-		else{ videoElem.pause(); console.log("pause"); }
-	}
-	
-	function moveItemToFront(elem) {
-		var last = elem.parentNode.lastChild;
-		if(elem != last){
-			elem.parentNode.replaceChild(elem, last);
-			elem.parentNode.insertBefore(last, elem);
-		}
-	}
-	
-	function formatAMPM(date) {
-		var hours = date.getHours();
-		var minutes = date.getMinutes();
-		var ampm = hours >= 12 ? "pm" : "am";
-		hours = hours % 12;
-		if(hours == 0) hours = 12;
-		var hh = hours.toString();
-		var mm = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
-		return (hh + ":" + mm + ampm);
-	}
-	
-	function format24Hr(date) {
-		var hours = date.getHours();
-		var minutes = date.getMinutes();
-		var hh = hours.toString();
-		var mm = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
-		return (hh + ":" + mm);
-	}
-
-	function base64ToString(base64) {
-		//return decodeURIComponent(escape(atob(base64)));
-		return atob(base64);
-	}
-
-	function stringToBase64(string) {
-		//return btoa(unescape(encodeURIComponent(string)));
-		return btoa(string);
-	}
-	
-	function stringToUint8Array(string) {
-        var uint8Array = new Uint8Array(new ArrayBuffer(string.length));
-        for (var i = 0; i < string.length; i++) {
-            uint8Array[i] = string.charCodeAt(i);
-        }
-
-        return uint8Array;
-    }
-	
-	function base64ToUint8Array(base64) {
-        var raw = atob(base64); //This is a native function that decodes a base64-encoded string.
-        var uint8Array = new Uint8Array(new ArrayBuffer(raw.length));
-        for (var i = 0; i < raw.length; i++) {
-            uint8Array[i] = raw.charCodeAt(i);
-        }
-
-        return uint8Array;
-    }
-    
-    function average(arr) {
-    	var l = arr.length;
-    	if(l == 0) return 0;
-    	var sum = 0;
-    	for(var i=0; i<l; i++){
-    		sum += arr[i];
-    	}
-    	return sum / l;
-    }
-    
-    function allTrueDict(dict) {
-		var key;
-		for(key in dict){
-			if(dict[key] !== true) return false;
-		}
-		return true;
-	}
-    
-	function getParameterByName(name) {
-		name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-		results = regex.exec(location.search);
-		return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 	}
 </script>
 

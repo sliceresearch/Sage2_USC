@@ -18,7 +18,7 @@
 /* jshint -W083 */
 
 // JSLint options
-/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, initializeSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
+/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, getSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
 /*jslint node: true, ass: false, plusplus: true, vars: true, white: true, newcap: true, unparam: true, eqeq: true */
 
 // require variables to be declared
@@ -38,6 +38,10 @@ var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
 var path        = require('path');                // file path extraction and creation
 var request     = require('request');             // external http requests
+var sprint      = require('sprint');              // pretty formating (sprintf)
+var readline    = require('readline');            // to build an evaluation loop (builtin module)
+var program     = require('commander');           // parsing command-line arguments
+var colors      = require('colors');              // pretty colors in the terminal
 
 // custom node modules
 var httpserver  = require('node-httpserver');     // creates web server
@@ -46,6 +50,15 @@ var loader      = require('node-itemloader');     // handles sage item creation
 var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var omicron = require('node-omicron');    // handles Omicron input events
+
+var imageMagick = gm.subClass({imageMagick: true});
+
+
+// Command line arguments
+program
+  .version('0.1.0')
+  .option('-i, --interactive', 'Interactive prompt')
+  .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
@@ -72,9 +85,6 @@ var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.t
 var applications = [];
 var appAnimations = {};
 
-// arrays of files on the server (used for media browser)
-var savedFiles = initializeSavedFilesList();
-
 
 // sets up the background for the display clients (image or color)
 setupDisplayBackground();
@@ -97,6 +107,8 @@ var options = setupHttpsOptions();
 // initializes HTTP and HTTPS servers
 var index = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
+
+var startTime = new Date();
 
 
 // creates a WebSocket server - 2 way communication between server and all browser clients
@@ -153,6 +165,13 @@ function wsAddClient(wsio, data) {
 	wsio.clientType = data.clientType;
 	wsio.messages = {};
 	
+	// Remember the display ID
+	if (wsio.clientType === "display") {
+		wsio.clientID = data.clientID;
+	} else {
+		wsio.clientID = -1;
+	}
+
 	// types of data sent/received to server from client through WebSockets
 	wsio.messages.sendsPointerData                  = data.sendsPointerData                 || false;
 	wsio.messages.sendsMediaStreamFrames            = data.sendsMediaStreamFrames           || false;
@@ -174,13 +193,16 @@ function wsAddClient(wsio, data) {
 	initializeWSClient(wsio);
 	
 	clients.push(wsio);
+	if (wsio.clientType==="display")
+		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+	else
 	console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
 }
 
 function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
-	wsio.emit('initialize', {UID: uniqueID, time: new Date()});
+	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
 	
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
@@ -209,6 +231,7 @@ function initializeWSClient(wsio) {
 	}
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
+		wsio.on('updateAppState', wsUpdateAppState);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
@@ -249,6 +272,9 @@ function initializeWSClient(wsio) {
 	}
 	
 	if(wsio.clientType == "webBrowser") webBrowserClient = wsio;
+
+	// Debug messages from applications
+	wsio.on('sage2Log', wsPrintDebugInfo);
 }
 
 function initializeExistingSagePointers(wsio) {
@@ -345,7 +371,7 @@ function wsPointerDblClick(wsio, data) {
 	var updatedItem;
 
 	if (elem !== null) {
-		if (!elem.isMaximized || elem.isMaximized === 0) {
+		if (elem.maximized !== true) {
 			// need to maximize the item
 			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
 			if (updatedItem !== null) {
@@ -551,6 +577,13 @@ function wsStopMediaStream(wsio, data) {
 	if(elem !== null) deleteApplication( elem );
 }
 
+// Print message from remote applications
+function wsPrintDebugInfo(wsio, data) {
+	// sprint for padding and pretty colors
+	console.log(
+		sprint("Node %2d> ", data.node).blue + sprint("[%s] ",data.app).green,
+		data.message);
+}
 
 function wsReceivedMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
@@ -614,8 +647,19 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 	}
 }
 
+function wsUpdateAppState(wsio, data) {
+	if (wsio.clientID == 0) {
+		var app = findAppById(data.id);
+		
+		app.data = data.state;
+
+		console.log("Got an update for:", app.id, data.state);
+	}
+}
+
 /******************** Server File Functions ********************/
 function wsRequestStoredFiles(wsio, data) {
+	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
 }
 
@@ -798,6 +842,10 @@ function loadConfiguration() {
 	userConfig.pointerWidth   = Math.round(0.200 * userConfig.totalHeight);
 	userConfig.pointerHeight  = Math.round(0.050 * userConfig.totalHeight);
 	
+	// Set default values if missing
+	if (userConfig.port === undefined) userConfig.port = 443;
+	if (userConfig.index_port === undefined) userConfig.index_port = 80;
+
 	return userConfig;
 }
 
@@ -808,7 +856,7 @@ function getUniqueAppId() {
 	return id;	
 }
 
-function initializeSavedFilesList() {
+function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: []};
 	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
 	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
@@ -839,7 +887,7 @@ function setupDisplayBackground() {
 				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
 				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 		
-				gm(bg_file).command("convert").in("-gravity", "center").in("-background", "rgba(255,255,255,255)").in("-extent", out_res).write(tmpImg, function(err) {
+				imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
 					if(err) throw err;
 			
 					sliceBackgroundImage(tmpImg, bg_file);
@@ -850,7 +898,7 @@ function setupDisplayBackground() {
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		
-			gm(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
+			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
 			
 				sliceBackgroundImage(tmpImg, bg_file);
@@ -865,10 +913,10 @@ function setupDisplayBackground() {
 			var tile = cols.toString() + "x" + rows.toString();
 			var in_res  = bg_info.width.toString() + "x" + bg_info.height.toString();
 		
-			var gmTile = gm().command("montage").in("-geometry", in_res).in("-tile", tile);
-			for(var i=0; i<rows*cols; i++) gmTile = gmTile.in(bg_file);
+			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
+			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
 		
-			gmTile.write(tmpImg, function(err) {
+			imTile.write(tmpImg, function(err) {
 				if(err) throw err;
 			
 				sliceBackgroundImage(tmpImg, bg_file);
@@ -887,8 +935,8 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_"+i.toString() + output_ext);
 		console.log(output);
-		gm(fileName).crop(config.resolution.width, config.resolution.height, x, y).write(output, function(err) {
-			if(err) throw err;
+		imageMagick(fileName).crop(config.resolution.width, config.resolution.height, x, y).write(output, function(err) {
+			if(err) console.log("error slicing image", err); //throw err;
 		});
 	}
 }
@@ -905,10 +953,9 @@ function setupHttpsOptions() {
 		}).context;
 	}
 	catch (e) {
-		console.log("\n");
-		console.log(e);
 		console.log("\n----------");
-		console.log("Cannot open certificate for default host: ", config.host);
+		console.log("Cannot open certificate for default host:");
+		console.log(" \"" + config.host + "\" needs file: " + e.path);
 		console.log(" --> Please generate the appropriate certificate in the 'keys' folder");
 		console.log("----------\n\n");
 		process.exit(1);
@@ -924,13 +971,12 @@ function setupHttpsOptions() {
 			}).context;
 		}
 		catch (e) {
-			console.log("\n");
-			console.log(e);
 			console.log("\n----------");
 			console.log("Cannot open certificate for the alternate host: ", config.alternate_hosts[h]);
+			console.log(" needs file: \"" + e.path + "\"");
 			console.log(" --> Please generate the appropriate certificates in the 'keys' folder");
-			console.log("----------\n\n");
-			process.exit(1);
+			console.log(" Ignoring alternate host: ", config.alternate_hosts[h]);
+			console.log("----------\n");
 		}
 	}
 
@@ -947,7 +993,7 @@ function setupHttpsOptions() {
 				return certs[servername];
 			}
 			else{
-				console.log("Unknown host, cannot find a certificate for ", servername);
+				console.log("SNI> Unknown host, cannot find a certificate for ", servername);
 				return null;
 			}
 		}
@@ -988,6 +1034,11 @@ function manageUploadedFiles(files) {
 		var file = files[key][0];
 		
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
+			if(appInstance === null){
+				console.log("unrecognized file type: " + file.headers['content-type']);
+				return;
+			}
+			
 			appInstance.id = getUniqueAppId();
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
@@ -1091,14 +1142,144 @@ setTimeout(function() {
 	broadcast('setSystemTime', {date: new Date()}, 'receivesClockTime');
 }, (61-cDate.getSeconds())*1000);
 
+
 /***************************************************************************************/
 
-// Start the https server
+// Place callback for success in the 'listen' call for HTTPS
+server.on('listening', function (e) {
+	// Success
+	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
+});
+
+// Place callback for errors in the 'listen' call for HTTP
+index.on('error', function (e) {
+	if (e.code == 'EACCES') {
+		console.log("HTTP_server> You are not allowed to use the port: ", config.index_port);
+		console.log("HTTP_server>   use a different port or get authorization (sudo, setcap, ...)");
+		console.log(" ")
+		process.exit(1);
+	}
+	else if (e.code == 'EADDRINUSE') {
+		console.log('HTTP_server> The port is already in use by another process:', config.index_port);
+		console.log("HTTP_server>   use a different port or stop the offending process");
+		console.log(" ")
+		process.exit(1);
+	}
+	else {
+		console.log("HTTP_server> Error in the listen call: ", e.code);
+		console.log(" ")
+		process.exit(1);
+	}
+});
+
+// Place callback for success in the 'listen' call for HTTP
+index.on('listening', function (e) {
+	// Success
+	console.log('Now serving SAGE2 index at http://' + config.host + ':' + config.index_port);
+});
+
+
+// Odly the HTTPS modules doesnt throw the same exceptions than HTTP
+//  catching errors at the process level
+process.on('uncaughtException', function (e) {
+	if (e.code == 'EACCES') {
+		console.log("HTTPS_server> You are not allowed to use the port: ", config.port);
+		console.log("HTTPS_server>   use a different port or get authorization (sudo, setcap, ...)");
+		console.log(" ")
+		process.exit(1);
+	}
+	else if (e.code == 'EADDRINUSE') {
+		console.log('HTTPS_server> The port is already in use by another process:', config.port);
+		console.log("HTTPS_server>   use a different port or stop the offending process");
+		console.log(" ")
+		process.exit(1);
+	}
+	else {
+		console.log("Process> uncaught exception: ", e);
+		console.log(" ")
+		console.trace();
+		process.exit(1);
+	}
+});
+
+// Start the HTTP server
 index.listen(config.index_port);
+// Start the HTTPS server
 server.listen(config.port);
 
-console.log('Now serving the app at https://localhost:' + config.port);
 
+/***************************************************************************************/
+// Command loop: reading input commands
+
+if (program.interactive)
+{
+	// Create line reader for stdin and stdout
+	var shell = readline.createInterface({
+		input:  process.stdin, output: process.stdout
+	});
+
+	// Set the prompt
+	shell.setPrompt('> ');
+
+	// Start the loop
+	shell.prompt();
+
+	// Callback for each line
+	shell.on('line', function(line) {
+		var command = line.trim().split(' ');
+		switch(command[0]) {
+			case '': // ignore
+				break;
+			case 'help':
+				console.log('help\tlist commands');
+				console.log('kill\tclose application: arg0: index - kill 0');
+				console.log('list\tlist running applications');
+				console.log('exit\tstop SAGE2');
+				break;
+			case 'close':
+			case 'delete':
+			case 'kill':
+				if (command[1] !== undefined) {
+					var kid = parseInt(command[1], 10); // convert arg1 to base 10
+					if (! isNaN(kid) && (kid >= 0) && (kid < applications.length) ) {
+						console.log('deleting application', kid);
+						deleteApplication( applications[kid] );
+					}
+				}
+				break;
+			case 'list':
+				var i;
+				console.log("Applications\n------------");
+				for(i=0; i<applications.length; i++){
+					console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
+						i, applications[i].id, applications[i].application,
+						 applications[i].width,  applications[i].height,
+						 applications[i].left,  applications[i].top,
+						 applications[i].title));
+				}
+				break;
+			case 'exit':
+			case 'quit':
+			case 'bye':
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+				break;
+			default:
+				console.log('Say what? I might have heard `' + line.trim() + '`');
+				break;
+		}
+		// loop through
+		shell.prompt();
+	}).on('close', function() {
+		// Close with CTRL-D or CTRL-C
+		console.log('');
+		console.log('SAGE2 done');
+		console.log('');
+		process.exit(0);
+	});
+}
 
 
 /***************************************************************************************/
