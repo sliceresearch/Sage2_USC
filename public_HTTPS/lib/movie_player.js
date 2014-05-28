@@ -14,7 +14,7 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.source = null;
 		this.playTimeout = null;
-		this.playDelay = 0.75;
+		this.playDelay = 1.25;
 		
 		this.canplayCallback = this.canplay.bind(this);
 	},
@@ -47,6 +47,7 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		
 	},
 	
 	resize: function(date) {
