@@ -18,7 +18,6 @@
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
 <script type="text/javascript" src="lib/observe.poly.js"></script>
-<script type="text/javascript" src="lib/watch.min.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
 <script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
@@ -168,11 +167,11 @@
 				bg.src = json_cfg.background.image;
 			}
 			// Setup the clipping size
-			if (typeof json_cfg.background.clip !== "undefined" && json_cfg.background.clip == true) {
-				var maindiv = document.getElementById('main');
-				maindiv.style.width    = json_cfg.resolution.width  +'px';
-				maindiv.style.height   = json_cfg.resolution.height +'px';
-				maindiv.style.overflow = "hidden"; 
+			if(json_cfg.background.clip === true) {
+				var main = document.getElementById("main");
+				main.style.width    = json_cfg.resolution.width  + "px";
+				main.style.height   = json_cfg.resolution.height + "px";
+				main.style.overflow = "hidden"; 
 			}
 
 			var upperBar = document.getElementById('upperBar');

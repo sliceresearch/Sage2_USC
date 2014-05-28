@@ -6,7 +6,8 @@
 	"background": {
 		"color": "#AAAAAA",
 		"image": "images/background/minneapolis_skyline_tm.jpg",
-		"style": "fit"
+		"style": "fit",
+		"clip": true
 	},
 	"show_url": true,
 	"resolution": {
