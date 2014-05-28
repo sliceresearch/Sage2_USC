@@ -14,7 +14,6 @@
 		// background color
 		color: "#333333",
 		// clip the viewport on each display
-		clip: false
 	},
 	show_url: true,
 	resolution: {

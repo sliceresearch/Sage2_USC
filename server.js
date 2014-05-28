@@ -56,7 +56,8 @@ var imageMagick = gm.subClass({imageMagick: true});
 // Command line arguments
 program
   .version('0.1.0')
-  .option('-i, --interactive', 'Interactive prompt')
+  .option('-i, --interactive',  'Interactive prompt')
+  .option('-f, --configuration <value>', 'Specify a configuration file')
   .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
@@ -799,36 +800,50 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 function loadConfiguration() {
 	var configFile = null;
 	
-	// Read config.txt - if exists and specifies a user defined config, then use it
-	if(fs.existsSync("config.txt")){
-		var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
-		for(var i =0; i<lines.length; i++){
-			var text = "";
-			var comment = lines[i].indexOf("//");
-			if(comment >= 0) text = lines[i].substring(0,comment).trim();
-			else text = lines[i].trim();
-		
-			if(text !== ""){
-				configFile = text;
-				console.log("Found configuration file: " + configFile);
-				break;
+	if (program.configuration) {
+		configFile = program.configuration;
+	}
+	else {
+		// Read config.txt - if exists and specifies a user defined config, then use it
+		if(fs.existsSync("config.txt")){
+			var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
+			for(var i =0; i<lines.length; i++){
+				var text = "";
+				var comment = lines[i].indexOf("//");
+				if(comment >= 0) text = lines[i].substring(0,comment).trim();
+				else text = lines[i].trim();
+			
+				if(text !== ""){
+					configFile = text;
+					console.log("Found configuration file: " + configFile);
+					break;
+				}
 			}
 		}
 	}
-	
+
 	// If config.txt does not exist or does not specify any files, look for a config with the hostname
 	if(configFile === null){
 		var hn = os.hostname();
 		var dot = hn.indexOf(".");
-		if(dot >= 0) hn = hn.substring(0, dot);
+		if (dot >= 0) hn = hn.substring(0, dot);
 		configFile = path.join("config", hn + "-cfg.json");
-		if(fs.existsSync(configFile)){
+		if (fs.existsSync(configFile)) {
 			console.log("Found configuration file: " + configFile);
 		}
-		else{
+		else {
 			configFile = path.join("config", "desktop-cfg.json");
 			console.log("Using default configuration file: " + configFile);
 		}
+	}
+
+	if (fs.existsSync(configFile)) {
+		console.log("Using configuration file: " + configFile);
+	} else {
+		console.log("\n----------");
+		console.log("Cannot configuration file:", configFile);
+		console.log("----------\n\n");
+		process.exit(1);
 	}
 	
 	var json_str = fs.readFileSync(configFile, 'utf8');
@@ -1061,25 +1076,28 @@ function manageUploadedFiles(files) {
 
 
 /******** Remote Site Collaboration ******************************************************/
-var remoteSites = new Array(config.remote_sites.length);
-config.remote_sites.forEach(function(element, index, array) {
-	var wsURL = "wss://" + element.host + ":" + element.port.toString();
+var remoteSites = [];
+if (config.remote_sites) {
+	remoteSites = new Array(config.remote_sites.length);
+	config.remote_sites.forEach(function(element, index, array) {
+		var wsURL = "wss://" + element.host + ":" + element.port.toString();
 
-	var remote = createRemoteConnection(wsURL, element, index);
+		var remote = createRemoteConnection(wsURL, element, index);
 
-	var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.titleBarHeight*6) - 2;
-	var rHeight = config.titleBarHeight - 4;
-	var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
-	remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
+		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.titleBarHeight*6) - 2;
+		var rHeight = config.titleBarHeight - 4;
+		var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
+		remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
 
-	// attempt to connect every 15 seconds, if connection failed
-	setInterval(function() {
-		if(!remoteSites[index].connected){
-			var remote = createRemoteConnection(wsURL, element, index);
-			remoteSites[index].wsio = remote;
-		}
-	}, 15000);
-});
+		// attempt to connect every 15 seconds, if connection failed
+		setInterval(function() {
+			if(!remoteSites[index].connected){
+				var remote = createRemoteConnection(wsURL, element, index);
+				remoteSites[index].wsio = remote;
+			}
+		}, 15000);
+	});
+}
 
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new websocketIO(wsURL, false, function() {
@@ -1403,6 +1421,10 @@ if( config.omicronServerIP )
 		udp.bind(dataPort);
 
 	});
+	// Client cannot connecto to Omicron server
+	client.on('error', function  (e) {
+		console.log("Omicron> Error connecting to server: %s:%d".red, trackerIP, msgPort);
+	})
 }
 
 /***************************************************************************************/

@@ -29,7 +29,9 @@
 	],
 	"alternate_hosts": [
 		"127.0.0.1"
-	]
+	],
+	remote_sites: [
+	],
 	"omicronServerIP": "localhost",
 	"omicronMsgPort": 28000,
 	"omicronDataPort": 9123
