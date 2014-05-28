@@ -11,7 +11,10 @@
 		// clock setting: 12-hour or 24-hour
 	clock: 12,
 	background: {
-		color: "#333333"
+		// background color
+		color: "#333333",
+		// clip the viewport on each display
+		clip: false
 	},
 	show_url: true,
 	resolution: {

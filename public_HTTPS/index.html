@@ -168,9 +168,12 @@
 				bg.src = json_cfg.background.image;
 			}
 			// Setup the clipping size
-			var maindiv = document.getElementById('main');
-			maindiv.style.width  = json_cfg.resolution.width  +'px';
-			maindiv.style.height = json_cfg.resolution.height +'px';
+			if (typeof json_cfg.background.clip !== "undefined" && json_cfg.background.clip == true) {
+				var maindiv = document.getElementById('main');
+				maindiv.style.width    = json_cfg.resolution.width  +'px';
+				maindiv.style.height   = json_cfg.resolution.height +'px';
+				maindiv.style.overflow = "hidden"; 
+			}
 
 			var upperBar = document.getElementById('upperBar');
 			upperBar.style.height = titleBarHeight.toString() + "px";
