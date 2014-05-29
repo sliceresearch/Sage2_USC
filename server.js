@@ -61,10 +61,11 @@ program
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
 console.log(config);
+
 var imConstraints = {imageMagick: true};
 if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
 	imConstraints.appPath = config.advanced.ImageMagick;
-var imageMagick = gm.subClass({imageMagick: true, appPath: "C:/Program Files/ImageMagick-6.8.9-Q16/"});
+var imageMagick = gm.subClass(imConstraints);
 
 
 // global variables for various paths
