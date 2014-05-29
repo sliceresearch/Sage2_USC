@@ -84,7 +84,7 @@ var remoteInteraction = {};
 var mediaStreams = {};
 
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight);
+var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
 var appAnimations = {};
 
@@ -1468,7 +1468,7 @@ index.on('listening', function (e) {
 
 // Odly the HTTPS modules doesnt throw the same exceptions than HTTP
 //  catching errors at the process level
-process.on('uncaughtException', function (e) {
+/*process.on('uncaughtException', function (e) {
 	if (e.code == 'EACCES') {
 		console.log("HTTPS_server> You are not allowed to use the port: ", config.port);
 		console.log("HTTPS_server>   use a different port or get authorization (sudo, setcap, ...)");
@@ -1487,7 +1487,7 @@ process.on('uncaughtException', function (e) {
 		console.trace();
 		process.exit(1);
 	}
-});
+});*/
 
 // Start the HTTP server
 index.listen(config.index_port);
@@ -1937,3 +1937,4 @@ function deleteApplication( elem ) {
 	}
 	removeElement(applications, elem);
 }
+
