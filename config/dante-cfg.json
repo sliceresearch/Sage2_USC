@@ -49,5 +49,8 @@
 			"host": "mesaverde.evl.uic.edu",
 			"port": 443
 		}
-	]
+	],
+	"advanced": {
+		"ImageMagick": "C:/Program Files/ImageMagick-6.8.9-Q16/"
+	}
 }

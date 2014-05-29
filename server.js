@@ -50,8 +50,6 @@ var loader      = require('node-itemloader');     // handles sage item creation
 var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
 
-var imageMagick = gm.subClass({imageMagick: true});
-
 
 // Command line arguments
 program
@@ -63,6 +61,10 @@ program
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
 console.log(config);
+var imConstraints = {imageMagick: true};
+if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
+	imConstraints.appPath = config.advanced.ImageMagick;
+var imageMagick = gm.subClass({imageMagick: true, appPath: "C:/Program Files/ImageMagick-6.8.9-Q16/"});
 
 
 // global variables for various paths
