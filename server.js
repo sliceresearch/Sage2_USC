@@ -169,11 +169,12 @@ function wsAddClient(wsio, data) {
 	wsio.messages = {};
 
 	// Remember the display ID
-	if (wsio.clientType === "display") {
-		wsio.clientID = data.clientID;
-	} else {
-		wsio.clientID = -1;
-	}
+	if (wsio.clientType === "display") wsio.clientID = data.clientID;
+	else wsio.clientID = -1;
+	
+	// Remember the app ID
+	if (wsio.clientType === "appViewer") wsio.appID = data.appID;
+	else wsio.appID = "";
 
 	// types of data sent/received to server from client through WebSockets
 	wsio.messages.sendsPointerData                  = data.sendsPointerData                 || false;
@@ -196,8 +197,10 @@ function wsAddClient(wsio, data) {
 	initializeWSClient(wsio);
 	
 	clients.push(wsio);
-	if (wsio.clientType==="display")
+	if (wsio.clientType === "display")
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+	else if (wsio.clientType === "appViewer")
+		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.appID+ ")");
 	else
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
 }
@@ -274,7 +277,8 @@ function initializeWSClient(wsio) {
 		broadcast('connectedToRemoteSite', site, 'receivesRemoteServerInfo');
 	}
 	
-	if(wsio.clientType == "webBrowser") webBrowserClient = wsio;
+	if(wsio.clientType === "webBrowser") webBrowserClient = wsio;
+	if(wsio.clientType === "appViewer") sendAppToViewer(wsio);
 
 	// Debug messages from applications
 	wsio.on('sage2Log', wsPrintDebugInfo);
@@ -326,6 +330,14 @@ function initializeMediaStreams(uniqueID) {
 			mediaStreams[key].clients[uniqueID] = false;
 		}
 	}
+}
+
+function sendAppToViewer(wsio) {
+	var app = findAppById(wsio.appID);
+	
+	console.log(wsio.appID, app);
+	
+	wsio.emit('createAppWindow', app);
 }
 
 /***************** Sage Pointer Functions *****************/

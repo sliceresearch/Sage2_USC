@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-,8">
+<title>SAGE2: App Viewer</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the following license, commonly known
+	//          as the 3-clause (or "modified") BSD license:
+	//
+	// Copyright (c) 2014, Electronic Visualization Laboratory,
+	//                     University of Illinois at Chicago
+	// All rights reserved.
+	//
+	// http://opensource.org/licenses/BSD-3-Clause
+	// See included LICENSE.txt file
+</script>
+
+<script type="text/javascript" src="lib/websocket.io.js"></script>
+<script type="text/javascript" src="lib/observe.poly.js"></script>
+<script type="text/javascript" src="lib/Class.js"></script>
+<script type="text/javascript" src="lib/SAGE2_App.js"></script>
+<script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
+<script type="text/javascript" src="lib/image_viewer.js"></script>
+<script type="text/javascript" src="lib/movie_player.js"></script>
+<script type="text/javascript" src="lib/pdf_viewer.js"></script>
+<script type="text/javascript" src="lib/media_stream.js"></script>
+
+<script type="text/javascript" src="scripts/pointer.js"></script>
+<script type="text/javascript" src="scripts/pdf.js"></script>
+
+<script type="text/javascript">
+	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+	
+	
+	var wsio;
+	var hostname;
+	var port;
+	var dt;
+	
+	var clientID;
+	var appID;
+	var application
+	
+	// Explicitely close web socket when web broswer is closed
+	window.onbeforeunload = function() {
+		if(wsio !== undefined) wsio.close();
+	};
+
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:"  && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		clientID = -1;
+		appID = getParameterByName("appID");
+		console.log("appID: " + appID);
+		
+		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		console.log("Connected to server: ", window.location.origin);
+		
+		wsio.open(function() {
+			//console.log("open websocket");
+			var clientDescription = {
+				clientType: "appViewer",
+				appID: appID,
+				receivesMediaStreamFrames: true,
+				receivesWindowModification: true,
+				receivesInputEvents: true
+			};
+			wsio.emit('addClient', clientDescription);
+			log("open websocket");
+		});
+
+		// Socket close event (ie server crashed)		
+		wsio.on('close', function (evt) {
+			console.log("server closed");
+		});
+
+		wsio.on('initialize', function(data) {
+			var startTime  = new Date(data.start);
+			var serverTime = new Date(data.time);
+			var clientTime = new Date();
+			
+			dt = clientTime - serverTime;
+			
+			// Global initialization
+			SAGE2_initialize(startTime);
+		});
+		
+		wsio.on('updateMediaStreamFrame', function(data) {
+			wsio.emit('receivedMediaStreamFrame', {id: data.id});
+			
+			var app = applications[data.id];
+			if(app !== undefined && app !== null){
+				app.load(data.state);
+			}
+		});
+
+		/******************************/
+		wsio.on('createAppWindow', function(data) {
+			var width = window.innerWidth;
+			var height = window.innerHeight;
+			var date = new Date(data.date);
+			
+			var main = document.getElementById("main");
+			
+			var windowTitle = document.createElement("div");
+			windowTitle.id = data.id + "_title";
+			windowTitle.className = "windowTitle";
+			windowTitle.style.width = width.toString() + "px";
+			windowTitle.style.height = "20px";
+			windowTitle.style.left = "0px";
+			windowTitle.style.top = "0px";
+			main.appendChild(windowTitle);
+			
+			var titleText = document.createElement("p");
+			titleText.style.lineHeight = "20px";
+			titleText.style.fontSize = "12px";
+			titleText.style.color = "#FFFFFF";
+			titleText.style.marginLeft = "5px";
+			titleText.textContent = data.title;
+			windowTitle.appendChild(titleText);
+			
+			var windowItem = document.createElement("div");
+			windowItem.id = data.id;
+			windowItem.className = "windowItem";
+			windowItem.style.left = "0px";
+			windowItem.style.top = "20px";
+			windowItem.style.overflow = "hidden";
+			main.appendChild(windowItem);
+			
+			// App launched in window 
+			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+			
+			// load all resources
+			var i;
+			function loadApplication() {
+				// load new app
+				if(window[data.application] === undefined) {
+					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + data.application + ".js");
+					}, false);
+					js.addEventListener('load', function(event) {
+						var app = new window[data.application];
+						app.init(data.id, data.width, data.height, data.url, date);
+						
+						if(app.state !== undefined && clientID===0){
+							Object.observe(app.state, function(changes) {
+								wsio.emit('updateAppState', {id: data.id, state: app.state});
+							}, ["update"]);
+						}
+						
+						app.load(data.data, date);
+						app.refresh(date);
+						
+						application = app;
+						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+					}, false);
+					js.type = "text/javascript";
+					js.src = data.url + "/" + data.application + ".js";
+					document.head.appendChild(js);
+				}
+			
+				// load existing app
+				else {
+					var app = new window[data.application];
+					app.init(data.id, data.width, data.height, data.url, date);
+
+					if(app.state !== undefined && clientID===0){
+						Object.observe(app.state, function(changes) {
+							wsio.emit('updateAppState', {id: data.id, state: app.state});
+						}, ["update"]);
+					}
+					
+					app.load(data.data, date);
+					app.refresh(date);
+					
+					application = app;
+					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				}
+			};
+			
+			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
+				loadApplication();
+			}
+			else {
+				var resources = {};
+				for(i=0; i<data.resrc.length; i++){
+					resources[data.resrc[i]] = false;
+				}
+			
+				data.resrc.forEach(function(element, index, array) {
+					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + element);
+					}, false);
+					js.addEventListener('load', function(event) {
+						resources[element] = true;
+						if(allTrueDict(resources)){
+							console.log("all resources loaded");
+							loadApplication();
+						}
+					}, false);
+					js.type = "text/javascript";
+					js.src = data.url + "/" + element;
+					document.head.appendChild(js);
+				});
+			}
+		});
+		/******************************/
+		
+		wsio.on('deleteElement', function(elem_data) {
+			console.log("delete: " + elem_data.elemId);
+			
+			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
+			
+			var deleteElem = document.getElementById(elem_data.elemId);
+			deleteElem.parentNode.removeChild(deleteElem);
+		});
+		
+		wsio.on('updateVideoItemTime', function(video_data) {
+			var clientTime = new Date();
+			var serverTime = new Date(clientTime.getTime() - dt);
+			var sentTime = new Date(video_data.sent);
+			var delay = (serverTime.getTime() - sentTime.getTime()) / 1000;
+			
+			var selectedElem = document.getElementById(video_data.elemId);
+			
+			var child = selectedElem.getElementsByClassName("sageItem");
+			var diff = (video_data.time + delay) - child[0].currentTime;
+			
+			var app = applications[video_data.elemId];
+			if(app !== undefined && app !== null){
+				app.event("videoTimeSync", null, null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
+			}
+		});
+		
+		wsio.on('animateCanvas', function(data) {
+			var date = new Date(data.date);
+			
+			var app = applications[data.id];
+			if(app !== undefined && app !== null){
+				app.refresh(date);
+				wsio.emit('finishedRenderingAppFrame', {id: data.id});
+			}
+		});
+		
+		wsio.on('finishedResize', function(data) {
+			var app = application;
+			if(app !== undefined && app.resizeEvents === "onfinish"){
+				var date = new Date(data.date);
+				app.resize(date);
+			}
+		});
+		
+		wsio.on('eventInItem', function(event_data){
+			var date = new Date(event_data.date);
+			
+			if(application.div.id === event_data.elemId)
+				application.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
+		});
+	}
+</script>
+
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
+</head>
+
+<body onload="init()">
+	<div id="main">
+	</div>
+</body>
+</html>
+
