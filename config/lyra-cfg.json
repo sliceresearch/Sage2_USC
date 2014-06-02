@@ -4,6 +4,7 @@
 {
 		// hostname of the web server
 	host: "lyra.evl.optiputer.net",
+	public_host: "lyra.evl.uic.edu",
 		// port of the HTTPS server: 443 for default
 	port: 443,
 		// port of the HTTP public page
@@ -216,7 +217,7 @@
 	alternate_hosts: [
 		"localhost",
 		"127.0.0.1",
-		"lyra.evl.optiputer.net",
+		"lyra.evl.uic.edu",
 	],
 	remote_sites: [
                 {
