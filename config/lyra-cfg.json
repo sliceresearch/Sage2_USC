@@ -1,205 +1,243 @@
+/*
+	Configuration for CAVE2
+*/
 {
-	"host": "lyra.evl.uic.edu",
-	"port": 9090,
-	"index_port": 9292,
-	"clock": 12,
-	"background": {
-		"color": "#333333"
+		// hostname of the web server
+	host: "lyra.evl.optiputer.net",
+		// port of the HTTPS server: 443 for default
+	port: 443,
+		// port of the HTTP public page
+	index_port: 80,
+		// clock setting: 12-hour or 24-hour
+	clock: 12,
+	background: {
+		// background color
+		color: "#333333",
+                image: "images/background/chicago-pano-october-2011-bw.jpg",
+                style: "stretch",
+		// clip the viewport on each display
+		clip: true
 	},
-	"show_url": true,
-	"resolution": {
-		"width": 1366,
-		"height": 1536
+	show_url: true,
+	resolution: {
+		width: 1366,
+		height:  1536
 	},
-	"layout": {
-		"rows": 2,
-		"columns": 18
+		// for experimental features: true/false
+	experimental: {
+		"webbrowser": false  // enable the awesomium module
 	},
-	"displays": [
-		{
-			"ID": 0,
-			"row": 0,
-			"column": 0
-		},
-		{
-			"ID": 1,
-			"row": 1,
-			"column": 0
-		},
-		{
-			"ID": 2,
-			"row": 0,
-			"column": 1
-		},
-		{
-			"ID": 3,
-			"row": 1,
-			"column": 1
-		},
-		{
-			"ID": 4,
-			"row": 0,
-			"column": 2
-		},
-		{
-			"ID": 5,
-			"row": 1,
-			"column": 2
-		},
-		{
-			"ID": 6,
-			"row": 0,
-			"column": 3
-		},
-		{
-			"ID": 7,
-			"row": 1,
-			"column": 3
-		},
-		{
-			"ID": 8,
-			"row": 0,
-			"column": 4
-		},
-		{
-			"ID": 9,
-			"row": 1,
-			"column": 4
-		},
-		{
-			"ID": 10,
-			"row": 0,
-			"column": 5
-		},
-		{
-			"ID": 11,
-			"row": 1,
-			"column": 5
-		},
-		{
-			"ID": 12,
-			"row": 0,
-			"column": 6
-		},
-		{
-			"ID": 13,
-			"row": 1,
-			"column": 6
-		},
-		{
-			"ID": 14,
-			"row": 0,
-			"column": 7
-		},
-		{
-			"ID": 15,
-			"row": 1,
-			"column": 7
-		},
-		{
-			"ID": 16,
-			"row": 0,
-			"column": 8
-		},
-		{
-			"ID": 17,
-			"row": 1,
-			"column": 8
-		},
-		{
-			"ID": 18,
-			"row": 0,
-			"column": 9
-		},
-		{
-			"ID": 19,
-			"row": 1,
-			"column": 9
-		},
-		{
-			"ID": 20,
-			"row": 0,
-			"column": 10
-		},
-		{
-			"ID": 21,
-			"row": 1,
-			"column": 10
-		},
-		{
-			"ID": 22,
-			"row": 0,
-			"column": 11
-		},
-		{
-			"ID": 23,
-			"row": 1,
-			"column": 11
-		},
-		{
-			"ID": 24,
-			"row": 0,
-			"column": 12
-		},
-		{
-			"ID": 25,
-			"row": 1,
-			"column": 12
-		},
-		{
-			"ID": 26,
-			"row": 0,
-			"column": 13
-		},
-		{
-			"ID": 27,
-			"row": 1,
-			"column": 13
-		},
-		{
-			"ID": 28,
-			"row": 0,
-			"column": 14
-		},
-		{
-			"ID": 29,
-			"row": 1,
-			"column": 14
-		},
-		{
-			"ID": 30,
-			"row": 0,
-			"column": 15
-		},
-		{
-			"ID": 31,
-			"row": 1,
-			"column": 15
-		},
-		{
-			"ID": 32,
-			"row": 0,
-			"column": 16
-		},
-		{
-			"ID": 33,
-			"row": 1,
-			"column": 16
-		},
-		{
-			"ID": 34,
-			"row": 0,
-			"column": 17
-		},
-		{
-			"ID": 35,
-			"row": 1,
-			"column": 17
-		}
+	layout: {
+		rows: 2,
+		columns: 18
+	},
+	displays: [
+                {
+                        ID: 0,
+                        row: 0,
+                        column: 0
+                },
+                {
+                        ID: 1,
+                        row: 1,
+                        column: 0
+                },
+                {
+                        ID: 2,
+                        row: 0,
+                        column: 1
+                },
+                {
+                        ID: 3,
+                        row: 1,
+                        column: 1
+                },
+                {
+                        ID: 4,
+                        row: 0,
+                        column: 2
+                },
+                {
+                        ID: 5,
+                        row: 1,
+                        column: 2
+                },
+                {
+                        ID: 6,
+                        row: 0,
+                        column: 3
+                },
+                {
+                        ID: 7,
+                        row: 1,
+                        column: 3
+                },
+                {
+                        ID: 8,
+                        row: 0,
+                        column: 4
+                },
+                {
+                        ID: 9,
+                        row: 1,
+                        column: 4
+                },
+                {
+                        ID: 10,
+                        row: 0,
+                        column: 5
+                },
+                {
+                        ID: 11,
+                        row: 1,
+                        column: 5
+                },
+                {
+                        ID: 12,
+                        row: 0,
+                        column: 6
+                },
+                {
+                        ID: 13,
+                        row: 1,
+                        column: 6
+                },
+                {
+                        ID: 14,
+                        row: 0,
+                        column: 7
+                },
+                {
+                        ID: 15,
+                        row: 1,
+                        column: 7
+                },
+                {
+                        ID: 16,
+                        row: 0,
+                        column: 8
+                },
+                {
+                        ID: 17,
+                        row: 1,
+                        column: 8
+                },
+                {
+                        ID: 18,
+                        row: 0,
+                        column: 9
+                },
+                {
+                        ID: 19,
+                        row: 1,
+                        column: 9
+                },
+                {
+                        ID: 20,
+                        row: 0,
+                        column: 10
+                },
+                {
+                        ID: 21,
+                        row: 1,
+                        column: 10
+                },
+                {
+                        ID: 22,
+                        row: 0,
+                        column: 11
+                },
+                {
+                        ID: 23,
+                        row: 1,
+                        column: 11
+                },
+                {
+                        ID: 24,
+                        row: 0,
+                        column: 12
+                },
+                {
+                        ID: 25,
+                        row: 1,
+                        column: 12
+                },
+                {
+                        ID: 26,
+                        row: 0,
+                        column: 13
+                },
+                {
+                        ID: 27,
+                        row: 1,
+                        column: 13
+                },
+                {
+                        ID: 28,
+                        row: 0,
+                        column: 14
+                },
+                {
+                        ID: 29,
+                        row: 1,
+                        column: 14
+                },
+                {
+                        ID: 30,
+                        row: 0,
+                        column: 15
+                },
+                {
+                        ID: 31,
+                        row: 1,
+                        column: 15
+                },
+                {
+                        ID: 32,
+                        row: 0,
+                        column: 16
+                },
+                {
+                        ID: 33,
+                        row: 1,
+                        column: 16
+                },
+                {
+                        ID: 34,
+                        row: 0,
+                        column: 17
+                },
+                {
+                        ID: 35,
+                        row: 1,
+                        column: 17
+                }
 	],
-	"alternate_hosts": [
+	alternate_hosts: [
 		"localhost",
 		"127.0.0.1",
-		"lyra.evl.optiputer.net"
+		"lyra.evl.optiputer.net",
+	],
+	remote_sites: [
+                {
+                        name: "CAVE2",
+                        host: "lyra.evl.uic.edu",
+                        port: 443
+                },
+                {
+                        name: "IceWall",
+                        host: "thor.evl.uic.edu",
+                        port: 443
+                },
+                {
+                        name: "PhD Room",
+                        host: "dante.evl.uic.edu",
+                        port: 443
+                },
+                {
+                        name: "Green Room",
+                        host: "mesaverde.evl.uic.edu",
+                        port: 443
+                }
 	]
 }
