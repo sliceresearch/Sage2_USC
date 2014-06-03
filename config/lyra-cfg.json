@@ -1,15 +1,22 @@
+/*
+	Configuration for CAVE2
+*/
 {
-	"host": "lyra.evl.uic.edu",
-	"port": 9090,
-	"index_port": 9292,
-	"clock": 12,
+	"host": "lyra.evl.optiputer.net", // hostname of the web server
+	"public_host": "lyra.evl.uic.edu",
+	"port": 443, // port of the HTTPS server: 443 for default
+	"index_port": 80, // port of the HTTP public page: 80 for default
+	"clock": 12, // clock setting: 12-hour or 24-hour
 	"background": {
-		"color": "#333333"
+		"color": "#333333", // background color: used if no image or if image has transparency
+		"image": "images/background/chicago-pano-october-2011-bw.jpg",
+		"style": "stretch", // stretch image to fit entire large display
+		"clip": true // clip the viewport on each display
 	},
-	"show_url": true,
-	"resolution": {
+	"show_url": true, // display public_host on top of large display
+	"resolution": { // resolution of each display
 		"width": 1366,
-		"height": 1536
+		"height":  1536
 	},
 	"layout": {
 		"rows": 2,
@@ -200,6 +207,28 @@
 	"alternate_hosts": [
 		"localhost",
 		"127.0.0.1",
-		"lyra.evl.optiputer.net"
+		"lyra.evl.uic.edu"
+	],
+	"remote_sites": [
+		{
+			"name": "Cyber-Commons",
+			"host": "iridium.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "IceWall",
+			"host": "thor.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "PhD Room",
+			"host": "dante.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "Green Room",
+			"host": "mesaverde.evl.uic.edu",
+			"port": 443
+		}
 	]
 }

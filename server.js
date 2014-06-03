@@ -83,6 +83,12 @@ var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
 
+// Make sure tmp directory is local
+process.env.TMPDIR = path.join(__dirname, "tmp");
+console.log("Temp folder: ".green, process.env.TMPDIR);
+if(!fs.existsSync(process.env.TMPDIR)){
+     fs.mkdirSync(process.env.TMPDIR);
+}
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];

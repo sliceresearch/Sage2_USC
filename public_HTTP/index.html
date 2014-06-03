@@ -46,19 +46,25 @@
 		var display = document.getElementById('display');
 		
 		var https_port = ":" + json_cfg.port.toString();
-		if(https_port == ":443") https_port = "";
+		if (https_port == ":443") https_port = "";
 		
 		// User Interaction
 		var sageUI = document.createElement('p');
 		var sageUI_link = document.createElement('a');
 		sageUI_link.textContent = "SAGE UI";
-		sageUI_link.href = "https://" + json_cfg.host + https_port + "/sageUI.html";
+		if (json_cfg.public_host)
+			sageUI_link.href = "https://" + json_cfg.public_host + https_port + "/sageUI.html";
+		else
+			sageUI_link.href = "https://" + json_cfg.host + https_port + "/sageUI.html";
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
 		var sagePointer = document.createElement('p');
 		var sagePointer_link = document.createElement('a');
 		sagePointer_link.textContent = "SAGE Pointer";
-		sagePointer_link.href = "https://" + json_cfg.host + https_port + "/sagePointer.html";
+		if (json_cfg.public_host)
+			sagePointer_link.href = "https://" + json_cfg.public_host + https_port + "/sagePointer.html";
+		else
+			sagePointer_link.href = "https://" + json_cfg.host + https_port + "/sagePointer.html";
 		sagePointer_link.target = "_blank";
 		sagePointer.appendChild(sagePointer_link);
 		
@@ -69,7 +75,10 @@
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		audioManager_link.href = "https://" + json_cfg.host + https_port + "/audioManager.html";
+		if (json_cfg.public_host)
+			audioManager_link.href = "https://" + json_cfg.public_host + https_port + "/audioManager.html";
+		else
+			audioManager_link.href = "https://" + json_cfg.host + https_port + "/audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
@@ -80,7 +89,10 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			displayClient_link.href = "https://" + json_cfg.host + https_port + "/?clientID=" + i.toString();
+			if (json_cfg.public_host)
+				displayClient_link.href = "https://" + json_cfg.public_host + https_port + "/?clientID=" + i.toString();
+			else
+				displayClient_link.href = "https://" + json_cfg.host + https_port + "/?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
