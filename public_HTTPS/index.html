@@ -199,8 +199,9 @@
 			machine.style.top = (0.05*titleBarHeight).toString() + "px";
 			machine.style.color = "#FFFFFF";
 			if(json_cfg.show_url){
-				if(json_cfg.index_port == 80) machine.textContent = json_cfg.host;
-				else machine.textContent = json_cfg.host + ":" +json_cfg.index_port.toString();
+				var hostname = json_cfg.public_host ? json_cfg.public_host : json_cfg.host;
+				if(json_cfg.index_port == 80) machine.textContent = hostname;
+				else machine.textContent = hostname + ":" +json_cfg.index_port.toString();
 			}
 		});
 		
