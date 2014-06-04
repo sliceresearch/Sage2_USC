@@ -995,12 +995,11 @@ function setupHttpsOptions() {
 	try {
 		// first try the filename based on the hostname-server.key
 		if (fs.existsSync(path.join("keys", config.host + "-server.key"))) {
-			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
-			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
 			certs[config.host] = crypto.createCredentials({
-				key: server_key, cert: server_crt,
-				// not sure if the CA is really used
-				//ca: fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
+				key:  fs.readFileSync(path.join("keys", config.host + "-server.key")),
+				cert: fs.readFileSync(path.join("keys", config.host + "-server.crt")),
+				// CA is only needed for self-signed certs
+				ca:   fs.readFileSync(path.join("keys", config.host + "-ca.crt"))
 			}).context;
 		} else {
 			// remove the hostname from the FQDN and search for wildcard certificate
@@ -1032,8 +1031,8 @@ function setupHttpsOptions() {
 			certs[ alth ] = crypto.createCredentials({
 				key:  fs.readFileSync(path.join("keys", alth + "-server.key")),
 				cert: fs.readFileSync(path.join("keys", alth + "-server.crt")),
-				// not sure if the CA is really used
-				//ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt")),
+				// CA is only needed for self-signed certs
+				ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt"))
 			}).context;
 		}
 		catch (e) {
@@ -1048,10 +1047,10 @@ function setupHttpsOptions() {
 
 	var httpsOptions = {
 		// server default keys
-		key:  server_key,
-		cert: server_crt,
-		// not sure if the CA is really used
-		//ca: fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
+		key:  fs.readFileSync(path.join("keys", config.host + "-server.key")),
+		cert: fs.readFileSync(path.join("keys", config.host + "-server.crt")),
+		// CA is only needed for self-signed certs
+		ca:   fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
 		requestCert: true,
 		rejectUnauthorized: false,
 		// callback to handle multi-homed machines
