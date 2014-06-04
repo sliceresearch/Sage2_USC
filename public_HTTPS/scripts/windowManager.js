@@ -142,7 +142,18 @@ function windowManager(id, ws) {
 	};
 	
 	this.mousePress = function(event) {
-		this.wsio.emit('pointerPress');
+		// open application under pointer
+		if(event.shiftKey === true){
+			var app = this.findAppUnderPointer();
+			if(app !== null){
+				window.open(window.location.origin + "/appViewer.html?appID=" + app.id, "_blank");
+			}
+		}
+		// forward as SAGE Pointer event
+		else {
+			this.wsio.emit('pointerPress');
+		}
+		
 		event.preventDefault();
 	};
 	
@@ -350,4 +361,22 @@ function windowManager(id, ws) {
 		}
 		this.draw();
 	};
+	
+	this.findAppUnderPointer = function() {
+		var app = null;
+		
+		var globalX = this.mouseX / this.scale;
+		var globalY = this.mouseY / this.scale;
+		
+		var i;
+		for(i=this.applications.length-1; i>=0; i--){
+			if(globalX >= this.applications[i].left && globalX <= this.applications[i].left+this.applications[i].width &&
+			   globalY >= this.applications[i].top && globalY <= this.applications[i].top+this.applications[i].height){
+				app = this.applications[i];
+				break;
+			}
+		}
+		
+		return app;
+	}
 }
