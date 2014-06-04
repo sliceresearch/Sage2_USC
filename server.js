@@ -647,6 +647,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 	
 	appAnimations[data.id].clients[uniqueID] = true;
 	if(allTrueDict(appAnimations[data.id].clients)){
+		var i;
 		var key;
 		for(key in appAnimations[data.id].clients){
 			appAnimations[data.id].clients[key] = false;
@@ -658,11 +659,17 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 		if(elapsed > 16){
 			appAnimations[data.id].date = new Date();
 			broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
+			for(i=0; i<clients.length; i++){
+				if(clients[i].appID === data.id) clients[i].emit('animateCanvas', {id: data.id, date: new Date()});
+			}
 		}
 		else{
 			setTimeout(function() {
 				appAnimations[data.id].date = new Date();
 				broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
+				for(i=0; i<clients.length; i++){
+					if(clients[i].appID === data.id) clients[i].emit('animateCanvas', {id: data.id, date: new Date()});
+				}
 			}, 16-elapsed);
 		}
 	}

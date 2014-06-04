@@ -100,8 +100,8 @@
 
 		/******************************/
 		wsio.on('createAppWindow', function(data) {
-			var width = window.innerWidth;
-			var height = window.innerHeight;
+			var winWidth = window.innerWidth;
+			var winHeight = window.innerHeight - 20;
 			var date = new Date(data.date);
 			
 			var main = document.getElementById("main");
@@ -109,7 +109,7 @@
 			var windowTitle = document.createElement("div");
 			windowTitle.id = data.id + "_title";
 			windowTitle.className = "windowTitle";
-			windowTitle.style.width = width.toString() + "px";
+			windowTitle.style.width = winWidth.toString() + "px";
 			windowTitle.style.height = "20px";
 			windowTitle.style.left = "0px";
 			windowTitle.style.top = "0px";
@@ -134,6 +134,18 @@
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
+			
+			var appWidth;
+			var appHeight;
+			if(data.aspect < winWidth / winHeight) {
+				appHeight = winHeight;
+				appWidth  = Math.round(appHeight * data.aspect);
+			}
+			else {
+				appWidth  = winWidth;
+				appHeight = Math.round(appWidth / data.aspect);
+			}
+			
 			// load all resources
 			var i;
 			function loadApplication() {
@@ -145,7 +157,7 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
-						app.init(data.id, data.width, data.height, data.url, date);
+						app.init(data.id, appWidth, appHeight, data.url, date);
 						
 						if(app.state !== undefined && clientID===0){
 							Object.observe(app.state, function(changes) {
@@ -167,7 +179,7 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, data.url, date);
+					app.init(data.id, appWidth, appHeight, data.url, date);
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {
@@ -242,18 +254,42 @@
 		wsio.on('animateCanvas', function(data) {
 			var date = new Date(data.date);
 			
-			var app = applications[data.id];
-			if(app !== undefined && app !== null){
-				app.refresh(date);
+			if(application !== undefined && application !== null){
+				application.refresh(date);
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 		});
 		
 		wsio.on('finishedResize', function(data) {
-			var app = application;
-			if(app !== undefined && app.resizeEvents === "onfinish"){
-				var date = new Date(data.date);
-				app.resize(date);
+			if(application !== undefined && application.div.id === data.id) {
+				var winWidth = window.innerWidth;
+				var winHeight = window.innerHeight - 20;
+			
+				var appWidth;
+				var appHeight;
+				var appAspect = data.elemWidth / data.elemHeight;
+				if(appAspect < winWidth / winHeight) {
+					appHeight = winHeight;
+					appWidth  = Math.round(appHeight * appAspect);
+				}
+				else {
+					appWidth  = winWidth;
+					appHeight = Math.round(appWidth / appAspect);
+				}
+				
+				if(application.element.tagName.toLowerCase() === "div") {
+					application.element.style.width  = appWidth + "px";
+					application.element.style.height = appHeight + "px";
+				}
+				else{
+					application.element.width = appWidth;
+					application.element.height = appHeight;
+				}
+			
+				if(application.resizeEvents === "onfinish" || application.resizeEvents === "continuous"){
+					var date = new Date(data.date);
+					application.resize(date);
+				}
 			}
 		});
 		
