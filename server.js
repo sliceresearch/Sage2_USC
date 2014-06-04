@@ -986,13 +986,36 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 function setupHttpsOptions() {
 	// build a list of certs to support multi-homed computers
 	var certs = {};
+
+	// file caching for the main key of the server
+	var server_key = null;
+	var server_crt = null;
+
 	// add the default cert from the hostname specified in the config file
 	try {
-		certs[config.host] = crypto.createCredentials({
-			key:  fs.readFileSync(path.join("keys", config.host + "-server.key")),
-			cert: fs.readFileSync(path.join("keys", config.host + "-server.crt")),
-			ca:   fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
-		}).context;
+		// first try the filename based on the hostname-server.key
+		if (fs.existsSync(path.join("keys", config.host + "-server.key"))) {
+			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
+			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
+			certs[config.host] = crypto.createCredentials({
+				key: server_key, cert: server_crt,
+				// not sure if the CA is really used
+				//ca: fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
+			}).context;
+		} else {
+			// remove the hostname from the FQDN and search for wildcard certificate
+			//    syntax: _.rest.com.key or _.rest.bigger.com.key
+			var domain    = '_.' + config.host.split('.').slice(1).join('.');
+			var domainkey = path.join("keys", domain + ".key");
+			var domaincrt = path.join("keys", domain + ".crt");
+			if (fs.existsSync(domainkey)) {
+				server_key = fs.readFileSync(domainkey);
+				server_crt = fs.readFileSync(domaincrt);
+				certs[config.host] = crypto.createCredentials({
+					key: server_key, cert: server_crt,
+				}).context;
+			}
+		}
 	}
 	catch (e) {
 		console.log("\n----------");
@@ -1009,7 +1032,8 @@ function setupHttpsOptions() {
 			certs[ alth ] = crypto.createCredentials({
 				key:  fs.readFileSync(path.join("keys", alth + "-server.key")),
 				cert: fs.readFileSync(path.join("keys", alth + "-server.crt")),
-				ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt")),
+				// not sure if the CA is really used
+				//ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt")),
 			}).context;
 		}
 		catch (e) {
@@ -1024,9 +1048,10 @@ function setupHttpsOptions() {
 
 	var httpsOptions = {
 		// server default keys
-		key:  fs.readFileSync(path.join("keys", config.host + "-server.key")),
-		cert: fs.readFileSync(path.join("keys", config.host + "-server.crt")),
-		ca:   fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
+		key:  server_key,
+		cert: server_crt,
+		// not sure if the CA is really used
+		//ca: fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
 		requestCert: true,
 		rejectUnauthorized: false,
 		// callback to handle multi-homed machines

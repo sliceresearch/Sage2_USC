@@ -1,6 +1,6 @@
 #!/bin/sh
 
-global_param="--new-window --window-size=1536,1360 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files"
+global_param="--new-window --window-size=1536,1360 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble"
 
 # Launch Audio Manager
 UDD=$HOME/.config/chrome-nfs/thor_kb_audio
