@@ -62,6 +62,7 @@
 	var canvasItems = {};
 	
 	var applications = {};
+	var dependencies = {};
 	
 	// Explicitely close web socket when web broswer is closed
 	window.onbeforeunload = function() {
@@ -431,24 +432,38 @@
 				var i;
 				var resources = {};
 				for(i=0; i<data.resrc.length; i++){
-					resources[data.resrc[i]] = false;
+					// check dependency cache first
+					if (dependencies[data.resrc[i]] === true) {
+						resources[data.resrc[i]] = true;
+					} else {
+						dependencies[data.resrc[i]] = false;
+						resources[data.resrc[i]] = false;
+					}
 				}
 			
 				data.resrc.forEach(function(element, index, array) {
-					var js = document.createElement("script");
-					js.addEventListener('error', function(event) {
-						console.log("Error loading script: " + element);
-					}, false);
-					js.addEventListener('load', function(event) {
-						resources[element] = true;
+					if (dependencies[element] === false) {
+						var js = document.createElement("script");
+						js.addEventListener('error', function(event) {
+							console.log("Error loading script: " + element);
+						}, false);
+						js.addEventListener('load', function(event) {
+							dependencies[element] = true;
+							resources[element] = true;
+							if(allTrueDict(resources)){
+								console.log("all resources loaded");
+								loadApplication();
+							}
+						}, false);
+						js.type = "text/javascript";
+						js.src = url + "/" + element;
+						document.head.appendChild(js);
+					} else {
 						if(allTrueDict(resources)){
 							console.log("all resources loaded");
 							loadApplication();
 						}
-					}, false);
-					js.type = "text/javascript";
-					js.src = url + "/" + element;
-					document.head.appendChild(js);
+					}
 				});
 			}
 			
