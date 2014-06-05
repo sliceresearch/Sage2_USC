@@ -28,7 +28,7 @@ Specify the path to your configuration file in 'config.txt'
 * Open Terminal / Cmd
     * `cd <SAGE2_directory>`
     * `node server.js`
-* Open Google Chrome (point browser to host and port defined in config file)
+* Open Google Chrome (to enable screen sharing, go to chrome://flags and enable "Enable screen capture support in getUserMedia()")
     * Table of Contents: `http://<host>:<index_port>`
     * Display Client: `https://<host>:<port>/?clientID=<ID>`
     * Audio Client: `https://<host>:<port>/audioManager.html`
