@@ -17,6 +17,8 @@ var playcanvas = SAGE2_App.extend( {
 		this.scene    = null;
 		this.camera   = null;
 		this.model    = null;
+                this.timer = null;
+                this.redraw = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -63,20 +65,34 @@ var playcanvas = SAGE2_App.extend( {
             self.scene.addModel(self.model);
         });
 
+		this.timer = 0.0;
+		this.redraw = false;
 	},
 	
 	load: function(state, date) {
 	},
 
 	draw: function(date) {
-        if (this.model) {
-            this.model.getGraph().rotate(0, 90*this.dt, 0);
-        }
-        this.scene.update();
-		this.renderer.render(this.scene, this.camera);
+		// only redraw if more than 1 sec has passed
+		this.timer = this.timer + this.dt;
+		if(this.timer >= 0.033333333) {
+			// 30 fps
+			this.timer = 0.0;
+			this.redraw = true;
+		}
+
+		if (this.redraw) {
+			if (this.model) {
+				this.model.getGraph().rotate(0, 90*this.dt, 0);
+			}
+			this.scene.update();
+			this.renderer.render(this.scene, this.camera);
+			this.redraw = false;
+		}
 	},
 	
 	resize: function(date) {
+		this.redraw = true;
 		this.refresh(date);
 	},
 	
@@ -84,3 +100,4 @@ var playcanvas = SAGE2_App.extend( {
 		//this.refresh(date);
 	}
 });
+
