@@ -102,7 +102,7 @@ var googlemaps = SAGE2_App.extend( {
 		};
 		this.map = new google.maps.Map(this.element, mapOptions);
 		this.map.setTilt(45);
-		this.map.setOptions({styles: styles});
+		//this.map.setOptions({styles: styles});
 
 		//
 		// Extra layers

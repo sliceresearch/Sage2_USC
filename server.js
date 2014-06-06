@@ -51,18 +51,22 @@ var interaction = require('node-interaction');    // handles sage interaction (m
 var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var omicron = require('node-omicron');    // handles Omicron input events
 
-var imageMagick = gm.subClass({imageMagick: true});
-
 
 // Command line arguments
 program
   .version('0.1.0')
   .option('-i, --interactive', 'Interactive prompt')
+  .option('-f, --configuration <value>', 'Specify a configuration file')
   .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
 console.log(config);
+
+var imConstraints = {imageMagick: true};
+if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
+	imConstraints.appPath = config.advanced.ImageMagick;
+var imageMagick = gm.subClass(imConstraints);
 
 
 // global variables for various paths
@@ -80,8 +84,14 @@ var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
 
+// Make sure tmp directory is local
+process.env.TMPDIR = path.join(__dirname, "tmp");
+console.log("Temp folder: ".green, process.env.TMPDIR);
+if(!fs.existsSync(process.env.TMPDIR)){
+     fs.mkdirSync(process.env.TMPDIR);
+}
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight);
+var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
 var appAnimations = {};
 
@@ -800,6 +810,10 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 function loadConfiguration() {
 	var configFile = null;
 	
+	if (program.configuration) {
+		configFile = program.configuration;
+	}
+	else {
 	// Read config.txt - if exists and specifies a user defined config, then use it
 	if(fs.existsSync("config.txt")){
 		var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
@@ -816,6 +830,7 @@ function loadConfiguration() {
 			}
 		}
 	}
+	}
 	
 	// If config.txt does not exist or does not specify any files, look for a config with the hostname
 	if(configFile === null){
@@ -830,6 +845,15 @@ function loadConfiguration() {
 			configFile = path.join("config", "desktop-cfg.json");
 			console.log("Using default configuration file: " + configFile);
 		}
+	}
+	
+	if (fs.existsSync(configFile)) {
+		console.log("Using configuration file: " + configFile);
+	} else {
+		console.log("\n----------");
+		console.log("Cannot configuration file:", configFile);
+		console.log("----------\n\n");
+		process.exit(1);
 	}
 	
 	var json_str = fs.readFileSync(configFile, 'utf8');
@@ -944,13 +968,38 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 function setupHttpsOptions() {
 	// build a list of certs to support multi-homed computers
 	var certs = {};
+
+	// file caching for the main key of the server
+	var server_key = null;
+	var server_crt = null;
+	var server_ca  = null;
+
 	// add the default cert from the hostname specified in the config file
 	try {
+		// first try the filename based on the hostname-server.key
+		if (fs.existsSync(path.join("keys", config.host + "-server.key"))) {
+			// Load the certificate files
+			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
+			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
+			server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
+			// Build the crypto
 		certs[config.host] = crypto.createCredentials({
-			key:  fs.readFileSync(path.join("keys", config.host + "-server.key")),
-			cert: fs.readFileSync(path.join("keys", config.host + "-server.crt")),
-			ca:   fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
+				key:  server_key,
+				cert: server_crt,
+				ca:   server_ca
 		}).context;
+		} else {
+			// remove the hostname from the FQDN and search for wildcard certificate
+			//    syntax: _.rest.com.key or _.rest.bigger.com.key
+			var domain = '_.' + config.host.split('.').slice(1).join('.');
+			console.log("Domain:", domain);
+			server_key = fs.readFileSync( path.join("keys", domain + ".key") );
+			server_crt = fs.readFileSync( path.join("keys", domain + ".crt") );
+			certs[config.host] = crypto.createCredentials({
+				key: server_key, cert: server_crt,
+				// no need for CA
+			}).context;
+	}
 	}
 	catch (e) {
 		console.log("\n----------");
@@ -967,7 +1016,8 @@ function setupHttpsOptions() {
 			certs[ alth ] = crypto.createCredentials({
 				key:  fs.readFileSync(path.join("keys", alth + "-server.key")),
 				cert: fs.readFileSync(path.join("keys", alth + "-server.crt")),
-				ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt")),
+				// CA is only needed for self-signed certs
+				ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt"))
 			}).context;
 		}
 		catch (e) {
@@ -982,9 +1032,9 @@ function setupHttpsOptions() {
 
 	var httpsOptions = {
 		// server default keys
-		key:  fs.readFileSync(path.join("keys", config.host + "-server.key")),
-		cert: fs.readFileSync(path.join("keys", config.host + "-server.crt")),
-		ca:   fs.readFileSync(path.join("keys", config.host + "-ca.crt")),
+		key:  server_key,
+		cert: server_crt,
+		ca:   server_ca,
 		requestCert: true,
 		rejectUnauthorized: false,
 		// callback to handle multi-homed machines
@@ -1062,7 +1112,9 @@ function manageUploadedFiles(files) {
 
 
 /******** Remote Site Collaboration ******************************************************/
-var remoteSites = new Array(config.remote_sites.length);
+var remoteSites = [];
+if (config.remote_sites) {
+	remoteSites = new Array(config.remote_sites.length);
 config.remote_sites.forEach(function(element, index, array) {
 	var wsURL = "wss://" + element.host + ":" + element.port.toString();
 
@@ -1081,6 +1133,7 @@ config.remote_sites.forEach(function(element, index, array) {
 		}
 	}, 15000);
 });
+}
 
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new websocketIO(wsURL, false, function() {
@@ -1181,7 +1234,7 @@ index.on('listening', function (e) {
 
 // Odly the HTTPS modules doesnt throw the same exceptions than HTTP
 //  catching errors at the process level
-process.on('uncaughtException', function (e) {
+/*process.on('uncaughtException', function (e) {
 	if (e.code == 'EACCES') {
 		console.log("HTTPS_server> You are not allowed to use the port: ", config.port);
 		console.log("HTTPS_server>   use a different port or get authorization (sudo, setcap, ...)");
@@ -1200,7 +1253,7 @@ process.on('uncaughtException', function (e) {
 		console.trace();
 		process.exit(1);
 	}
-});
+});*/
 
 // Start the HTTP server
 index.listen(config.index_port);

@@ -1,19 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
-tentakel pkill chrome -HUP
+tentakel pkill -HUP chrome
 
-server=lyra.evl.optiputer.net
-#server=lyra.evl.uic.edu
-
-global_param="--window-size=1366,1536 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files"
+server="lyra.evl.optiputer.net"
+global_param="--window-size=1366,1536 --window-position=0,0 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble"
 
 for i in {1..36}
 do
 	node=`printf lyra-%02d $i`
-	
+	idx=`expr $i - 1`
+	echo "================= $node: client $idx ================="
 	UDD="$HOME/.config/chrome-nfs/$node"
-	mkdir -p $UDD/Default
 	param="$global_param --user-data-dir=$UDD"
-	client=$(expr $i - 1)
-	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'https://$server:9090?clientID=$client'" &
+	
+	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'https://$server?clientID=$idx'" &
+	ssh -fx $node "sleep 5; env DISPLAY=:0.0 xdotool mousemove --sync 10 10; env DISPLAY=:0.0 xdotool mousemove --sync 0 0" &
 done

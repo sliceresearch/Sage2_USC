@@ -18,7 +18,6 @@
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
 <script type="text/javascript" src="lib/observe.poly.js"></script>
-<script type="text/javascript" src="lib/watch.min.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
 <script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
@@ -36,6 +35,9 @@
 -->
 
 <script type="text/javascript">
+	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+
+
 	var clientID;
 	var offsetX;
 	var offsetY;
@@ -52,12 +54,15 @@
 	var port;
 	var dt;
 	
+	var hostAlias = {};
+	
 	var itemCount = 0;
 	var pdfItems = {};
 	var pointerItems = {};
 	var canvasItems = {};
 	
 	var applications = {};
+	var dependencies = {};
 	
 	// Explicitely close web socket when web broswer is closed
 	window.onbeforeunload = function() {
@@ -132,6 +137,14 @@
 		});
 		
 		wsio.on('setupDisplayConfiguration', function(json_cfg) {
+			var i;
+			if(window.location.hostname !== json_cfg.host)
+				hostAlias[json_cfg.host] = window.location.hostname;
+			for(i=0; i<json_cfg.alternate_hosts.length; i++){
+				if(window.location.hostname !== json_cfg.alternate_hosts[i])
+					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
+			}
+			
 			offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
 			offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
 			titleBarHeight = json_cfg.titleBarHeight;
@@ -168,9 +181,12 @@
 				bg.src = json_cfg.background.image;
 			}
 			// Setup the clipping size
-			var maindiv = document.getElementById('main');
-			maindiv.style.width  = json_cfg.resolution.width  +'px';
-			maindiv.style.height = json_cfg.resolution.height +'px';
+			if(json_cfg.background.clip === true) {
+				var main = document.getElementById("main");
+				main.style.width    = json_cfg.resolution.width  + "px";
+				main.style.height   = json_cfg.resolution.height + "px";
+				main.style.overflow = "hidden"; 
+			}
 
 			var upperBar = document.getElementById('upperBar');
 			upperBar.style.height = titleBarHeight.toString() + "px";
@@ -194,8 +210,9 @@
 			machine.style.top = (0.05*titleBarHeight).toString() + "px";
 			machine.style.color = "#FFFFFF";
 			if(json_cfg.show_url){
-				if(json_cfg.index_port == 80) machine.textContent = json_cfg.host;
-				else machine.textContent = json_cfg.host + ":" +json_cfg.index_port.toString();
+				var hostname = json_cfg.public_host ? json_cfg.public_host : json_cfg.host;
+				if(json_cfg.index_port == 80) machine.textContent = hostname;
+				else machine.textContent = hostname + ":" +json_cfg.index_port.toString();
 			}
 		});
 		
@@ -353,8 +370,13 @@
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
-			// load all resources
-			var i;
+			// convert url if hostname is alias for current origin
+			var a = document.createElement("a");
+			a.href = data.url;
+			var url = data.url;
+			if(hostAlias[a.hostname] !== undefined)
+				url = data.url.replace(a.hostname, hostAlias[a.hostname]);
+			
 			function loadApplication() {
 				// load new app
 				if(window[data.application] === undefined) {
@@ -364,7 +386,7 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
-						app.init(data.id, data.width, data.height, data.url, date);
+						app.init(data.id, data.width, data.height, url, date);
 						
 						if(app.state !== undefined && clientID===0){
 							Object.observe(app.state, function(changes) {
@@ -386,7 +408,7 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, data.url, date);
+					app.init(data.id, data.width, data.height, url, date);
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {
@@ -402,30 +424,46 @@
 				}
 			};
 			
+			// load all resources
 			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
 				loadApplication();
 			}
 			else {
+				var i;
 				var resources = {};
 				for(i=0; i<data.resrc.length; i++){
-					resources[data.resrc[i]] = false;
+					// check dependency cache first
+					if (dependencies[data.resrc[i]] === true) {
+						resources[data.resrc[i]] = true;
+					} else {
+						dependencies[data.resrc[i]] = false;
+						resources[data.resrc[i]] = false;
+					}
 				}
 			
 				data.resrc.forEach(function(element, index, array) {
-					var js = document.createElement("script");
-					js.addEventListener('error', function(event) {
-						console.log("Error loading script: " + element);
-					}, false);
-					js.addEventListener('load', function(event) {
-						resources[element] = true;
+					if (dependencies[element] === false) {
+						var js = document.createElement("script");
+						js.addEventListener('error', function(event) {
+							console.log("Error loading script: " + element);
+						}, false);
+						js.addEventListener('load', function(event) {
+							dependencies[element] = true;
+							resources[element] = true;
+							if(allTrueDict(resources)){
+								console.log("all resources loaded");
+								loadApplication();
+							}
+						}, false);
+						js.type = "text/javascript";
+						js.src = url + "/" + element;
+						document.head.appendChild(js);
+					} else {
 						if(allTrueDict(resources)){
 							console.log("all resources loaded");
 							loadApplication();
 						}
-					}, false);
-					js.type = "text/javascript";
-					js.src = data.url + "/" + element;
-					document.head.appendChild(js);
+					}
 				});
 			}
 			
@@ -538,10 +576,6 @@
 				var date = new Date(position_data.date);
 				app.resize(date);
 			}
-			/*
-			// triggers the resize callback in the application
-			if(child[0].id in canvasItems) canvasItems[child[0].id].resize(date);
-			*/
 		});
 		
 		wsio.on('finishedResize', function(data) {
@@ -550,16 +584,6 @@
 				var date = new Date(data.date);
 				app.resize(date);
 			}
-			
-			/*
-			var selectedElem = document.getElementById(elem.id);
-			
-			var child = selectedElem.getElementsByClassName("sageItem");
-			
-			if(child[0].id in pdfItems){
-				pdfItems[child[0].id].renderPage();
-			}
-			*/
 		});
 		
 		wsio.on('updateVideoItemTime', function(video_data) {
@@ -587,16 +611,6 @@
 				app.refresh(date);
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
-			
-			/*
-			var canvasElem = document.getElementById(animate_data.elemId);
-			if(canvasElem != null){
-				var child = canvasElem.getElementsByClassName("sageItem");
-				if(child[0].id in canvasItems){
-					canvasItems[child[0].id].refresh(date);
-				}
-			}
-			*/
 		});
 		
 		wsio.on('eventInItem', function(event_data){
@@ -604,28 +618,6 @@
 			
 			var app = applications[event_data.elemId];
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
-			
-			/*
-			var selectedElem = document.getElementById(event_data.elemId);
-			var child = selectedElem.getElementsByClassName("sageItem");
-			if(child[0].id in canvasItems){
-				if( typeof canvasItems[child[0].id].event === "function" )
-					canvasItems[child[0].id].event( event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);  
-			}
-
-            if(child[0].tagName.toLowerCase() == "iframe"){
-                //child[0].contentWindow.postMessage('
-            }
-            
-            if(event_data.eventType == "specialKey"){
-				if(event_data.data.code == 37 && event_data.data.state == "up"){ // left arrow
-					if(child[0].id in pdfItems) pdfItems[child[0].id].goPrevious();
-				}
-				if(event_data.data.code == 39 && event_data.data.state == "up"){ // right arrow
-					if(child[0].id in pdfItems) pdfItems[child[0].id].goNext();
-				}
-			}
-			*/
 		});
 	}
 </script>

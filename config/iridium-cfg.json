@@ -74,5 +74,12 @@
 			"host": "mesaverde.evl.uic.edu",
 			"port": 443
 		}
-	]
+	],
+	experimental: {
+		"omicron":
+		{
+			enable:  false,
+			dataPort: 20005
+		}
+	}
 }
