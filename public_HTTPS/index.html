@@ -82,7 +82,6 @@
 		console.log("Connected to server: ", window.location.origin);
 		
 		wsio.open(function() {
-			//console.log("open websocket");
 			var clientDescription = {
 				clientType: "display",
 				clientID: clientID,
@@ -377,6 +376,25 @@
 			if(hostAlias[a.hostname] !== undefined)
 				url = data.url.replace(a.hostname, hostAlias[a.hostname]);
 			
+			// Not used yet: missing scope....
+			function observer(changes) {
+				if (change.type==='add' && !!change.object[change.name]) {
+					if (isArray(change.object[change.name])) {
+						// If adding an array, observe it too  (works natively, not available as polyfill)
+						if (Array.observe)
+							Array.observe(change.object[change.name], observer, ['add','update']);
+					} else if (isObject(change.object[change.name])) {
+						// If adding an object, observe it too
+						Object.observe(change.object[change.name], observer, ['add','update']);
+					} else {
+						// added a value, all good
+					}
+				}
+				if (change.object[change.name]===null) {
+					// added a null value, all good
+				}
+			}
+
 			function loadApplication() {
 				// load new app
 				if(window[data.application] === undefined) {
@@ -387,11 +405,12 @@
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
 						app.init(data.id, data.width, data.height, url, date);
-						
+
 						if(app.state !== undefined && clientID===0){
-							Object.observe(app.state, function(changes) {
+							Object.observe(app.state, function (changes) {
+								//observer(changes);
 								wsio.emit('updateAppState', {id: data.id, state: app.state});
-							}, ["update"]);
+							}, ['update', 'add']);
 						}
 						
 						app.load(data.data, date);
@@ -412,8 +431,9 @@
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {
+							//observer(changes);
 							wsio.emit('updateAppState', {id: data.id, state: app.state});
-						}, ["update"]);
+						}, ['update', 'add']);
 					}
 					
 					app.load(data.data, date);

@@ -13,10 +13,6 @@ var bounce = SAGE2_App.extend( {
 		arguments.callee.superClass.construct.call(this);
 		this.ctx     = null;
 		this.ballImg = null;
-		this.vel     = null;
-		this.pos     = null;
-		this.dir     = null;
-		this.frame   = null;
 		this.resizeEvents = "continuous";
 	},
 
@@ -27,19 +23,27 @@ var bounce = SAGE2_App.extend( {
 		this.ctx = this.element.getContext("2d");
 		this.minDim = Math.min(this.element.width, this.element.height);
 
+		this.state.vel = null;
+		this.state.pos = null;
+		this.state.dir = null;
+
 		this.ballImg = new Image();
 		this.ballImg.src = this.resrcPath + "images/evllogo.png";
-		this.vel = 1;
-		this.pos = [0.5, 0.5];
-		this.dir = [0.7071, 0.7071];		
-		this.frame = 0;
-		this.timer = 0.0;
+		this.timer  = 0.0;
 		this.redraw = true;
 		this.minDim = Math.min(this.element.width, this.element.height);
 	},
 
 	load: function(state, date) {
-		
+		if (state) {
+			this.state.vel = state.vel;
+			this.state.pos = state.pos;
+			this.state.dir = state.dir;
+		} else {
+			this.state.vel = 1;
+			this.state.pos = [0.5, 0.5];
+			this.state.dir = [0.7071, 0.7071];
+		}
 	},
 
 	draw: function(date) {
@@ -60,20 +64,17 @@ var bounce = SAGE2_App.extend( {
 			var hScale = 1.0;
 			if(this.element.width < this.element.height) hScale = this.element.height / this.element.width;
 			if(this.element.height < this.element.width) wScale = this.element.width / this.element.height;
-			
-			if(this.pos[0]<0 && this.dir[0]<0) this.dir[0] = -this.dir[0];
-			if(this.pos[0]>1.0*wScale && this.dir[0]>0) this.dir[0] = -this.dir[0];
-			if(this.pos[1]<0 && this.dir[1]<0) this.dir[1] = -this.dir[1];
-			if(this.pos[1]>1.0*hScale && this.dir[1]>0) this.dir[1] = -this.dir[1];
-			
-			this.pos[0] += this.dir[0]*this.vel*this.dt;
-			this.pos[1] += this.dir[1]*this.vel*this.dt;
+			if(this.state.pos[0]<0 && this.state.dir[0]<0) this.state.dir[0] = -this.state.dir[0];
+			if(this.state.pos[0]>1.0*wScale && this.state.dir[0]>0) this.state.dir[0] = -this.state.dir[0];
+			if(this.state.pos[1]<0 && this.state.dir[1]<0) this.state.dir[1] = -this.state.dir[1];
+			if(this.state.pos[1]>1.0*hScale && this.state.dir[1]>0) this.state.dir[1] = -this.state.dir[1];
+			this.state.pos[0] += this.state.dir[0]*this.state.vel*this.dt;
+			this.state.pos[1] += this.state.dir[1]*this.state.vel*this.dt;
 			var size = 0.2*this.minDim;
-			var x = this.pos[0]*this.minDim - (size/2);
-			var y = this.pos[1]*this.minDim - (size/2);
+			var x = this.state.pos[0]*this.minDim - (size/2);
+			var y = this.state.pos[1]*this.minDim - (size/2);
 			this.ctx.drawImage(this.ballImg, x, y, size, size);
 			
-			this.frame++;
 			this.redraw = false;
 		}
 	},
@@ -82,7 +83,7 @@ var bounce = SAGE2_App.extend( {
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.redraw = true;
 		
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {

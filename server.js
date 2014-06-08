@@ -86,8 +86,13 @@ var mediaStreams = {};
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
 console.log("Temp folder: ".green, process.env.TMPDIR);
-if(!fs.existsSync(process.env.TMPDIR)){
+if (!fs.existsSync(process.env.TMPDIR)) {
      fs.mkdirSync(process.env.TMPDIR);
+}
+// Make sure session folder exists
+var sessionFolder = path.join(__dirname, "sessions")
+if (!fs.existsSync(sessionFolder)) {
+     fs.mkdirSync(sessionFolder);
 }
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
@@ -657,13 +662,109 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
+	// Using updates only from display client 0
 	if (wsio.clientID == 0) {
-		var app = findAppById(data.id);
-		
+		var app  = findAppById(data.id);
 		app.data = data.state;
-
-		console.log("Got an update for:", app.id, data.state);
 	}
+}
+
+
+/******************** Session Functions ********************/
+
+function listSessions() {
+	// Walk through the session files
+	fs.readdir(sessionFolder, function(err, list) {
+		if (err) console.log("Sessions> error reading session folder", fullpath);
+		var i = 1;
+		console.log("\nSessions\n---------");
+		list.forEach(function(file) {
+			var filename = path.join(sessionFolder, file);
+			fs.stat(filename, function(err, stat) {
+				// is it a file
+				if (stat.isFile()) {
+					// doest it ends in .json
+					if (filename.indexOf(".json", filename.length - 5)) {
+						// use its change time (creation, update, ...)
+						var ad = new Date(stat.ctime);
+						var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
+												ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+												ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+						console.log(sprint("%2d: Name: %s\tSize: %.0fKB\tDate: %s",
+							i, file.slice(0,-5), stat.size/1024.0, strdate
+							));
+						i++;
+					}
+				}
+			});
+		});
+	});
+}
+
+
+function saveSession (filename) {
+	var fullpath = path.join(sessionFolder, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	var states     = {};
+	states.numapps = applications.length;
+	states.date    = Date.now();
+	states.apps    = applications;
+
+	fs.writeFile(fullpath, JSON.stringify(states, null, 4), function(err) {
+	    if (err) {
+	      console.log("Server> saving", err);
+	    } else {
+	      console.log("Server> session saved to " + fullpath);
+	    }
+		states = null;
+	});
+}
+
+function loadSession (filename) {
+	var fullpath = path.join(sessionFolder, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+	fs.readFile(fullpath, function(err, data) {
+		if (err) {
+			console.log("Server> reading error", err);
+		} else {
+			console.log("Server> read sessions from " + fullpath);
+
+			var session = JSON.parse(data);
+			console.log("Session> number of applications", session.numapps);
+
+			for (var i=0;i<session.apps.length;i++) {
+				var a = session.apps[i];
+				console.log("Session> App",  a.id);
+
+				// Get the application a new ID
+				a.id = getUniqueAppId();
+				// Reset the time
+				a.date = new Date();
+				if (a.animation) {
+					var j;
+					appAnimations[a.id] = {clients: {}, date: new Date()};
+					for(j=0; j<clients.length; j++){
+						if(clients[j].messages.requiresFullApps){
+							var clientAddress = clients[j].remoteAddress.address + ":" + clients[j].remoteAddress.port;
+							appAnimations[a.id].clients[clientAddress] = false;
+						}
+					}
+				}
+
+				broadcast('createAppWindow', a, 'requiresFullApps');
+				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+
+				applications.push(a);
+			}
+		}
+	});
 }
 
 /******************** Server File Functions ********************/
@@ -1550,11 +1651,35 @@ if (program.interactive)
 			case '': // ignore
 				break;
 			case 'help':
-				console.log('help\tlist commands');
-				console.log('kill\tclose application: arg0: index - kill 0');
-				console.log('list\tlist running applications');
-				console.log('exit\tstop SAGE2');
+				console.log('help\t\tlist commands');
+				console.log('kill\t\tclose application: arg0: index - kill 0');
+				console.log('list\t\tlist running applications');
+				console.log('save\t\tsave state of running applications into a session');
+				console.log('load\t\tload a session and restore applications');
+				console.log('sessions\tlist the available sessions');
+				console.log('exit\t\tstop SAGE2');
 				break;
+
+			case 'save':
+				if (command[1] !== undefined) {
+					saveSession(command[1]);
+				}
+				else {
+					saveSession("default.json");
+				}
+				break;
+			case 'load':
+				if (command[1] !== undefined) {
+					loadSession(command[1]);
+				}
+				else {
+					loadSession("default.json");
+				}
+				break;
+			case 'sessions':
+				listSessions();
+				break;
+
 			case 'close':
 			case 'delete':
 			case 'kill':
