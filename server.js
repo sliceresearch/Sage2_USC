@@ -86,6 +86,7 @@ console.log("Temp folder: ".green, process.env.TMPDIR);
 if (!fs.existsSync(process.env.TMPDIR)) {
      fs.mkdirSync(process.env.TMPDIR);
 }
+
 // Make sure session folder exists
 var sessionFolder = path.join(__dirname, "sessions");
 if (!fs.existsSync(sessionFolder)) {
@@ -246,6 +247,7 @@ function initializeWSClient(wsio) {
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
+		wsio.on('saveSesion', wsSaveSesion);
 		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
 	}
 	if(wsio.messages.sendsWebContentToLoad){
@@ -668,34 +670,51 @@ function wsUpdateAppState(wsio, data) {
 
 
 /******************** Session Functions ********************/
+function wsSaveSesion(wsio, data) {
+	var sname = "";
+	if (data) {
+		sname = data;
+	} else {
+		var ad    = new Date();
+		sname = sprint("session-%4d_%02d_%02d-%02d:%02d:%02s",
+							ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+							ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+	}
+	saveSession(sname);
+}
+
+function printListSessions() {
+	var thelist = listSessions();
+	console.log("Sessions\n---------");
+	for (var i = 0; i < thelist.length; i++) {
+		console.log(sprint("%2d: Name: %s\tSize: %.0fKB\tDate: %s",
+			i, thelist[i].name, thelist[i].size/1024.0, thelist[i].date
+		));
+	}
+}
 
 function listSessions() {
-	// Walk through the session files
-	fs.readdir(sessionFolder, function(err, list) {
-		if (err) console.log("Sessions> error reading session folder", sessionFolder);
-		var i = 1;
-		console.log("\nSessions\n---------");
-		list.forEach(function(file) {
-			var filename = path.join(sessionFolder, file);
-			fs.stat(filename, function(err, stat) {
-				// is it a file
-				if (stat.isFile()) {
-					// doest it ends in .json
-					if (filename.indexOf(".json", filename.length - 5)) {
-						// use its change time (creation, update, ...)
-						var ad = new Date(stat.ctime);
-						var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
-												ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
-												ad.getHours(), ad.getMinutes(), ad.getSeconds() );
-						console.log(sprint("%2d: Name: %s\tSize: %.0fKB\tDate: %s",
-							i, file.slice(0,-5), stat.size/1024.0, strdate
-							));
-						i++;
-					}
-				}
-			});
-		});
-	});
+	var thelist = [];
+	// Walk through the session files: sync I/Os to build the array
+	var files = fs.readdirSync(sessionFolder);
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
+		var filename = path.join(sessionFolder, file);
+		var stat = fs.statSync(filename);
+		// is it a file
+		if (stat.isFile()) {
+			// doest it ends in .json
+			if (filename.indexOf(".json", filename.length - 5)) {
+				// use its change time (creation, update, ...)
+				var ad = new Date(stat.ctime);
+				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
+										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+				thelist.push( {name:file.slice(0,-5) , size:stat.size, date: strdate} );
+			}
+		}
+	}
+	return thelist;
 }
 
 
@@ -771,25 +790,31 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsAddNewElementFromStoredFiles(wsio, data) {
-	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-		appInstance.id = getUniqueAppId();
-		
-		if(appInstance.animation){
-			var i;
-			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[appInstance.id].clients[clientAddress] = false;
+	if (data.application === "load_session") {
+		// if it's a session, then load it
+		loadSession(data.filename);
+	}
+	else {
+		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
+			appInstance.id = getUniqueAppId();
+
+			if(appInstance.animation){
+				var i;
+				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+				for(i=0; i<clients.length; i++){
+					if(clients[i].messages.requiresFullApps){
+						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+						appAnimations[appInstance.id].clients[clientAddress] = false;
+					}
 				}
 			}
-		}
-		
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-		
-		applications.push(appInstance);
-	});
+
+			broadcast('createAppWindow', appInstance, 'requiresFullApps');
+			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+			applications.push(appInstance);
+		});
+	}
 }
 
 /******************** Adding Web Content (URL) ********************/
@@ -978,17 +1003,18 @@ function getUniqueAppId() {
 }
 
 function getSavedFilesList() {
-	var list = {image: [], video: [], pdf: [], app: []};
+	var list = {image: [], video: [], pdf: [], app: [], session:[]};
 	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
 	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
 	var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
+	var savedSessions  = listSessions();
 	var i;
 	for(i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
 	for(i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
 	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push(uploadedPdfs[i]);
 	for(i=0; i<uploadedApps.length; i++)   list.app.push(uploadedApps[i]);
-	
+	for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
 	return list;
 }
 
@@ -1658,23 +1684,19 @@ if (program.interactive)
 				break;
 
 			case 'save':
-				if (command[1] !== undefined) {
+				if (command[1] !== undefined)
 					saveSession(command[1]);
-				}
-				else {
+				else
 					saveSession("default.json");
-				}
 				break;
 			case 'load':
-				if (command[1] !== undefined) {
+				if (command[1] !== undefined)
 					loadSession(command[1]);
-				}
-				else {
+				else
 					loadSession("default.json");
-				}
 				break;
 			case 'sessions':
-				listSessions();
+				printListSessions();
 				break;
 
 			case 'close':
