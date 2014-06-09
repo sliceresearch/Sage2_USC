@@ -9,7 +9,7 @@
 // See included LICENSE.txt file
 
 // node mode
-/* jslint node: true */
+/* jshint node: true */
 
 // how to deal with spaces and tabs
 /* jshint smarttabs: false */
@@ -17,9 +17,6 @@
 // Don't make functions within a loop
 /* jshint -W083 */
 
-// JSLint options
-/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, getSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
-/*jslint node: true, ass: false, plusplus: true, vars: true, white: true, newcap: true, unparam: true, eqeq: true */
 
 // require variables to be declared
 "use strict";
@@ -90,7 +87,7 @@ if (!fs.existsSync(process.env.TMPDIR)) {
      fs.mkdirSync(process.env.TMPDIR);
 }
 // Make sure session folder exists
-var sessionFolder = path.join(__dirname, "sessions")
+var sessionFolder = path.join(__dirname, "sessions");
 if (!fs.existsSync(sessionFolder)) {
      fs.mkdirSync(sessionFolder);
 }
@@ -663,7 +660,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 
 function wsUpdateAppState(wsio, data) {
 	// Using updates only from display client 0
-	if (wsio.clientID == 0) {
+	if (wsio.clientID === 0) {
 		var app  = findAppById(data.id);
 		app.data = data.state;
 	}
@@ -675,7 +672,7 @@ function wsUpdateAppState(wsio, data) {
 function listSessions() {
 	// Walk through the session files
 	fs.readdir(sessionFolder, function(err, list) {
-		if (err) console.log("Sessions> error reading session folder", fullpath);
+		if (err) console.log("Sessions> error reading session folder", sessionFolder);
 		var i = 1;
 		console.log("\nSessions\n---------");
 		list.forEach(function(file) {
@@ -1560,7 +1557,7 @@ if( config.omicronServerIP )
 	// Client cannot connecto to Omicron server
 	client.on('error', function  (e) {
 		console.log("Omicron> Error connecting to server: %s:%d".red, trackerIP, msgPort);
-	})
+	});
 }
 
 /***************************************************************************************/
@@ -1576,18 +1573,18 @@ index.on('error', function (e) {
 	if (e.code == 'EACCES') {
 		console.log("HTTP_server> You are not allowed to use the port: ", config.index_port);
 		console.log("HTTP_server>   use a different port or get authorization (sudo, setcap, ...)");
-		console.log(" ")
+		console.log(" ");
 		process.exit(1);
 	}
 	else if (e.code == 'EADDRINUSE') {
 		console.log('HTTP_server> The port is already in use by another process:', config.index_port);
 		console.log("HTTP_server>   use a different port or stop the offending process");
-		console.log(" ")
+		console.log(" ");
 		process.exit(1);
 	}
 	else {
 		console.log("HTTP_server> Error in the listen call: ", e.code);
-		console.log(" ")
+		console.log(" ");
 		process.exit(1);
 	}
 });

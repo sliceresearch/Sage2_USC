@@ -192,7 +192,6 @@ if(!Object.observe){
         var object = self._watching, keys = Object.keys(object), i=0, l=keys.length;
         var newKeys = [], oldKeys = properties.slice(0), updates = [];
         var prop, queueUpdates = !dontQueueUpdates, propType, value, idx, aLength;
-        //console.log("old keys:", oldKeys);
 
         if(object instanceof Array){
           aLength = object.length;
@@ -229,7 +228,6 @@ if(!Object.observe){
           l = oldKeys.length;
           for(i=0; i<l; i++){
             idx = properties.indexOf(oldKeys[i]);
-            console.log('deleting', idx, oldKeys[i]);
             self.queueUpdate(object, oldKeys[i], 'delete', values[idx]);
             properties.splice(idx,1);
             values.splice(idx,1);
