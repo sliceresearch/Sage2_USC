@@ -10,6 +10,8 @@
 
 var media_stream = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+		
 		this.src = null;
 	},
 	
@@ -21,21 +23,35 @@ var media_stream = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		var base64;
-		if(state.encoding === "base64") base64 = state.src;
-		else if(state.encoding === "binary") base64 = btoa(state.src);
-		this.element.src = "data:" + state.type + ";base64," + base64;
+		// modifying img.src directly leads to memory leaks
+		// explicitly allocate and deallocate: 'createObjectURL' / 'revokeObjectURL'
+		
+		//var base64;
+		//if(state.encoding === "base64") base64 = state.src;
+		//else if(state.encoding === "binary") base64 = btoa(state.src);
+		//this.element.src = "data:" + state.type + ";base64," + base64;
+		
+		var bin;
+		if(state.encoding === "binary") bin = state.src;
+		else if(state.encoding === "base64") bin = atob(state.src);
+		
+		var buf = new ArrayBuffer(bin.length);
+		var view = new Uint8Array(buf);
+		for(var i=0; i<view.length; i++) {
+			view[i] = bin.charCodeAt(i);
+		}
+		
+		var blob = new Blob([buf], {type: state.type});
+		var source = window.URL.createObjectURL(blob);
+		
+		if(this.src !== null) window.URL.revokeObjectURL(this.src);
+		this.src = source;
+		
+		this.element.src = this.src;
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		// application specific 'draw'
-		
-		
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
+	
 	},
 	
 	resize: function(date) {

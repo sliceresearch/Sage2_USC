@@ -10,13 +10,14 @@
 
 var clock = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+
 		this.ctx = null;
 		this.minDim = null;
 		this.timer = null;
 		this.redraw = null;
 		this.enableControls = null;
 		this.controls = null;
-		
 		this.resizeEvents = "continuous";
 	},
 	
@@ -56,13 +57,9 @@ var clock = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
 		// application specific 'draw'
 		// only redraw if more than 1 sec has passed
 		this.timer = this.timer + this.dt;
@@ -188,20 +185,17 @@ var clock = SAGE2_App.extend( {
 			
 			this.redraw = false;
         }
-		
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.redraw = true;
 		
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {
-		
+		//this.refresh(date);
 	}
 });
 

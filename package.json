@@ -1,67 +1,68 @@
 {
-	"name": "webSAGE",
-	"version": "0.1.0",
-	"private": true,
-	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
-	"keywords": [
-		"SAGE",
-		"browser",
-		"collaboration"
-	],
-	"author": "UIC EVL <evl.avatar@gmail.com>",
-	"contributors": [
-		{
-			"name": "Thomas Marrinan",
-			"email": "thomas.j.marrinan@gmail.com"
-		},
-		{
-			"name": "Jillian Aurisano",
-			"email": "jillian.aurisano@gmail.com"
-		},
-		{
-			"name": "Arthur Nishimoto",
-			"email": "arthur.nishimoto@gmail.com"
-		},
-		{
-			"name": "Victor Mateevitsi",
-			"email": "mvictoras@gmail.com"
-		},
-		{
-			"name": "Krishna Bharadwaj",
-			"email": "krishnaknbharadwaj@gmail.com"
-		},
-		{
-			"name": "Luc Renambot",
-			"email": "renambot@gmail.com"
-		}
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/uic-evl/SAGE2"
-	},
-	"dependencies": {
-		"decompress-zip": "latest",
-		"gm": "latest",
-		"imageinfo": "latest",
-		"json5": "latest",
-		"mime": "latest",
-		"multiparty": "latest",
-		"node-ffprobe": "latest",
-		"request": "latest",
-		"ws": "latest",
-		"ytdl": "latest",
-		"jshint": "latest",
-		"jslint": "latest"
-	},
-	"bundledDependencies": [],
-	"devDependencies": {},
-	"engines": {
-		"node": ">=0.6.x"
-	},
-	"scripts": {
-		"start": "node server.js",
-		"lint":  "./node_modules/jslint/bin/jslint.js server.js",
-		"hint":  "./node_modules/jshint/bin/jshint --verbose server.js node_modules/node-*.js"
-	},
-	"license": "BSD-3-Clause"
+  "name": "webSAGE",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
+  "keywords": [
+    "SAGE",
+    "browser",
+    "collaboration"
+  ],
+  "author": "UIC EVL <evl.avatar@gmail.com>",
+  "contributors": [
+    {
+      "name": "Thomas Marrinan",
+      "email": "thomas.j.marrinan@gmail.com"
+    },
+    {
+      "name": "Jillian Aurisano",
+      "email": "jillian.aurisano@gmail.com"
+    },
+    {
+      "name": "Arthur Nishimoto",
+      "email": "arthur.nishimoto@gmail.com"
+    },
+    {
+      "name": "Victor Mateevitsi",
+      "email": "mvictoras@gmail.com"
+    },
+    {
+      "name": "Krishna Bharadwaj",
+      "email": "krishnaknbharadwaj@gmail.com"
+    },
+    {
+      "name": "Luc Renambot",
+      "email": "renambot@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uic-evl/SAGE2"
+  },
+  "dependencies": {
+    "decompress-zip": "latest",
+    "gm": "latest",
+    "imageinfo": "latest",
+    "json5": "latest",
+    "mime": "latest",
+    "multiparty": "latest",
+    "node-ffprobe": "latest",
+    "request": "latest",
+    "ws": "latest",
+    "ytdl": "latest",
+    "jshint": "latest",
+    "commander": "latest",
+    "colors": "latest",
+    "sprint": "^0.3.1"
+  },
+  "bundledDependencies": [],
+  "devDependencies": {},
+  "engines": {
+    "node": ">=0.10.x"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "hint": "./node_modules/jshint/bin/jshint --verbose server.js node_modules/node-*.js"
+  },
+  "license": "BSD-3-Clause"
 }

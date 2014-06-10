@@ -1,7 +1,7 @@
 {
 	"host": "dante.evl.uic.edu",
-	"port": 9090,
-	"index_port": 9292,
+	"port": 443,
+	"index_port": 80,
 	"clock": 12,
 	"background": {
 		"color": "#333333",
@@ -30,11 +30,6 @@
 	],
 	"remote_sites": [
 		{
-			"name": "IceWall",
-			"host": "thor.evl.uic.edu",
-			"port": 443
-		},
-		{
 			"name": "Cyber-Commons",
 			"host": "iridium.evl.uic.edu",
 			"port": 443
@@ -43,6 +38,19 @@
 			"name": "CAVE2",
 			"host": "lyra.evl.uic.edu",
 			"port": 443
+		},
+		{
+			"name": "IceWall",
+			"host": "thor.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "Green Room",
+			"host": "mesaverde.evl.uic.edu",
+			"port": 443
 		}
-	]
+	],
+	"advanced": {
+		"ImageMagick": "C:/Program Files/ImageMagick-6.8.9-Q16/"
+	}
 }

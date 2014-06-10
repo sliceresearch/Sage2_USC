@@ -1,0 +1,8 @@
+{
+	"main_script": "presentation.js",
+	"width": 800,
+	"height": 450,
+	"animation": false,
+	"resources": [
+	]
+}

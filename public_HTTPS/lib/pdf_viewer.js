@@ -10,16 +10,15 @@
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
+		arguments.callee.superClass.construct.call(this);
+	
 		this.resizeEvents = "onfinish";
 		
-		this.src = null;
 		this.canvas = null;
 		this.ctx = null;
 		
-		this.loaded = null;
+		this.loaded = false;
 		this.pdfDoc = null;
-		this.pageNum = 1;
-		this.numPagesShown = 1
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -32,38 +31,44 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.canvas.height = this.element.height;
 		this.ctx = this.canvas.getContext("2d");
 		
-		this.loaded = false;
+		//  *** DO NOT OVERWRITE this.state, ALWAYS EDIT ITS PROPERTIES
+		// this.state = {srcPDF: null, pageNum: null, numPagesShown: null}; // BAD
+		
+		this.state.src = null;
+		this.state.page = null;
+		this.state.numPagesShown = null;
 	},
 	
 	load: function(state, date) {
 		// load new document
 		if(state.src !== undefined && state.src !== null) {		
 			var _this = this;
+			this.loaded = false;
 			PDFJS.getDocument(state.src).then(function getPdfHelloWorld(_pdfDoc) {
-				_this.pdfDoc = _pdfDoc;
-				_this.pageNum = state.page;
-				_this.numPagesShown = state.numPagesShown;
 				_this.loaded = true;
-				_this.draw(date);
+				_this.pdfDoc = _pdfDoc;
+				
+				_this.state.src = state.src;
+				_this.state.page = state.page;
+				_this.state.numPagesShown = state.numPagesShown;
+				
+				_this.refresh(date);
 			});
 		}
 		// load new state of same document
 		else {
-			this.pageNum = state.page;
-			this.numPagesShown = state.numPagesShown;
-			this.draw(date);
+			this.state.page = state.page;
+			this.state.numPagesShown = state.numPagesShown;
+			
+			this.refresh(date);
 		}
 	},
 	
 	draw: function(date) {
-		// call super-class 'preDraw'
-		arguments.callee.superClass.preDraw.call(this, date);
-		
-		// application specific 'draw'
-		if(!this.loaded) return;
+		if(this.loaded === false) return;
 		
 		var _this = this;
-		this.pdfDoc.getPage(this.pageNum).then(function(page) {
+		this.pdfDoc.getPage(this.state.page).then(function(page) {
 			// set the scale to match the canvas
 			var viewport = page.getViewport(_this.canvas.width / page.getViewport(1.0).width);
 			viewport.height = _this.canvas.height;
@@ -75,16 +80,13 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.element.src = _this.canvas.toDataURL();
 			});
 		});
-		
-		// call super-class 'postDraw'
-		arguments.callee.superClass.postDraw.call(this, date);
 	},
 	
 	resize: function(date) {
 		this.canvas.width = this.element.width;
 		this.canvas.height = this.element.height;
 		
-		this.draw(date);
+		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {
@@ -93,16 +95,16 @@ var pdf_viewer = SAGE2_App.extend( {
 		
 		if(eventType === "specialKey"){
 			if(data.code === 37 && data.state === "up"){ // Left Arrow
-				if(this.pageNum <= 1) return;
-				this.pageNum = this.pageNum - 1;
+				if(this.state.page <= 1) return;
+				this.state.page = this.state.page - 1;
 		
-				this.draw(date);
+				this.refresh(date);
 			}
 			if(data.code === 39 && data.state === "up"){ // Right Arrow
-				if(this.pageNum >= this.pdfDoc.numPages) return;
-				this.pageNum = this.pageNum + 1;
+				if(this.state.page >= this.pdfDoc.numPages) return;
+				this.state.page = this.state.page + 1;
 		
-				this.draw(date);
+				this.refresh(date);
 			}
 		}
 	}

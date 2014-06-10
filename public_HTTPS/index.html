@@ -17,8 +17,10 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
+<script type="text/javascript" src="lib/observe.poly.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
+<script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
 <script type="text/javascript" src="lib/image_viewer.js"></script>
 <script type="text/javascript" src="lib/movie_player.js"></script>
 <script type="text/javascript" src="lib/pdf_viewer.js"></script>
@@ -34,6 +36,9 @@
 <script type="text/javascript" src="scripts/snap.svg-min.js"></script>
 <script type="text/javascript" src="scripts/widgets.js"></script>
 <script type="text/javascript">
+	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+
+
 	var clientID;
 	var offsetX;
 	var offsetY;
@@ -50,6 +55,8 @@
 	var port;
 	var dt;
 	
+	var hostAlias = {};
+	
 	var itemCount = 0;
 	var pdfItems = {};
 	var pointerItems = {};
@@ -57,8 +64,12 @@
 	var lockedControlElements = {} ;
 	
 	var applications = {};
+	var dependencies = {};
 	
-	// Explicitely close web socket when web broswer is closed
+	var wallRatio;
+	var browserRatio;
+
+	// Explicitely close web socket when web browser is closed
 	window.onbeforeunload = function() {
 		if(wsio !== undefined) wsio.close();
 	};
@@ -66,7 +77,7 @@
 	function init() {
 		hostname = window.location.hostname;
 		port = window.location.port;
-		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "http:"  && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		clientID = parseInt(getParameterByName("clientID"));
@@ -75,10 +86,12 @@
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		console.log("Connected to server: ", window.location.origin);
 		
+		ratio = "fit";
+
 		wsio.open(function() {
-			console.log("open websocket");
 			var clientDescription = {
 				clientType: "display",
+				clientID: clientID,
 				sendsPointerData: false,
 				sendsMediaStreamFrames: false,
 				requestsServerFiles: false,
@@ -98,6 +111,7 @@
 				receivesWidgetEvents: true
 			};
 			wsio.emit('addClient', clientDescription);
+			log("open websocket");
 		});
 
 		// Socket close event (ie server crashed)		
@@ -120,23 +134,49 @@
 		});
 
 		wsio.on('initialize', function(data) {
+			var startTime  = new Date(data.start);
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
 			
 			dt = clientTime - serverTime;
+			
+			// Global initialization
+			SAGE2_initialize(startTime);
 		});
 		
 		wsio.on('setupDisplayConfiguration', function(json_cfg) {
-			offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
-			offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
-			titleBarHeight = json_cfg.titleBarHeight;
-			titleTextSize = json_cfg.titleTextSize;
-			pointerWidth = json_cfg.pointerWidth;
-			pointerHeight = json_cfg.pointerHeight;
-			pointerOffsetX = Math.round(0.025384*pointerHeight); 
-			pointerOffsetY = Math.round(0.060805*pointerHeight);
-			clock_type = json_cfg.clock;
+			var i;
+			if(window.location.hostname !== json_cfg.host)
+				hostAlias[json_cfg.host] = window.location.hostname;
+			for(i=0; i<json_cfg.alternate_hosts.length; i++){
+				if(window.location.hostname !== json_cfg.alternate_hosts[i])
+					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
+			}
 			
+			if (clientID===-1) {
+				offsetX = 0;
+				offsetY = 0;
+				titleBarHeight = json_cfg.titleBarHeight;
+				titleTextSize  = json_cfg.titleTextSize;
+				pointerWidth   = json_cfg.pointerWidth;
+				pointerHeight  = json_cfg.pointerHeight;
+				pointerOffsetX = Math.round(0.025384*pointerHeight);
+				pointerOffsetY = Math.round(0.060805*pointerHeight);
+				// Quick fix: disable backgroud image
+				json_cfg.background.image = undefined;
+				json_cfg.background.color = "#333333";
+			} else {
+				offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
+				offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
+				titleBarHeight = json_cfg.titleBarHeight;
+				titleTextSize  = json_cfg.titleTextSize;
+				pointerWidth   = json_cfg.pointerWidth;
+				pointerHeight  = json_cfg.pointerHeight;
+				pointerOffsetX = Math.round(0.025384*pointerHeight);
+				pointerOffsetY = Math.round(0.060805*pointerHeight);
+			}
+			clock_type = json_cfg.clock;
+
 			// background color
 			if(typeof json_cfg.background.color !== "undefined" && json_cfg.background.color != null){
 				document.body.style.backgroundColor = json_cfg.background.color;
@@ -162,7 +202,78 @@
 				}, false);
 				bg.src = json_cfg.background.image;
 			}
-			
+			// Setup the clipping size
+			if (clientID===-1) {
+					var main = document.getElementById("main");
+					// set the resolution to be the whole display wall
+					var wallWidth  = json_cfg.resolution.width*json_cfg.layout.columns;
+					var wallHeight = json_cfg.resolution.height*json_cfg.layout.rows;
+					wallRatio = wallWidth / wallHeight;
+					main.style.width    = wallWidth + "px";
+					main.style.height   = wallHeight + "px";
+					main.style.overflow = "hidden";
+
+					// put the scale up to the top left
+					main.style.webkitTransformOrigin = "0% 0%";
+
+					// calculate the scale ratio to make it fit
+					browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
+					var newratio;
+					if (wallRatio >= browserRatio)
+						newratio = document.documentElement.clientWidth / wallWidth;
+					else
+						newratio = document.documentElement.clientHeight / wallHeight;
+					main.style.webkitTransform = "scale("+(newratio)+")";
+
+					window.onresize = function(event) {
+						// recalculate after every window resize
+						browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
+						if (ratio === "fit") {
+							var newratio;
+							if (wallRatio >= browserRatio)
+								newratio = document.documentElement.clientWidth / wallWidth;
+							else
+								newratio = document.documentElement.clientHeight / wallHeight;
+							main.style.webkitTransform = "scale("+(newratio)+")";
+						}
+					};
+					window.onkeydown = function (event) {
+						// keycode: f
+						if (event.keyCode === 70) {
+							if (ratio === "fit") {
+								main.style.webkitTransform = "scale(1)";
+								ratio = "full";
+							} else if (ratio === "full") {
+								var newratio;
+								if (wallRatio >= browserRatio)
+									newratio = document.documentElement.clientWidth / wallWidth;
+								else
+									newratio = document.documentElement.clientHeight / wallHeight;
+								main.style.webkitTransform = "scale("+(newratio)+")";
+								ratio = "fit";
+							}
+						}
+					}
+					// // Too crazy motion
+					// window.addEventListener("mousewheel", function(event) {
+					// 	var scale = 1.0 + Math.abs(event.wheelDelta)/512;
+					// 	if(event.wheelDelta > 0) scale = 1.0 / scale;
+					// 	ratio = ratio * scale;
+					// 	var transfromString = "scale("+(ratio*browserRatio)+")";
+					// 	main.style.webkitTransform = transfromString;
+					// }, false);
+
+					// show the cursor in this mode
+					document.body.style.cursor = "initial";
+			} else {
+				if(json_cfg.background.clip === true) {
+					var main = document.getElementById("main");
+					main.style.width    = json_cfg.resolution.width  + "px";
+					main.style.height   = json_cfg.resolution.height + "px";
+					main.style.overflow = "hidden";
+				}
+			}
+
 			var upperBar = document.getElementById('upperBar');
 			upperBar.style.height = titleBarHeight.toString() + "px";
 			upperBar.style.left = "0px";
@@ -185,8 +296,9 @@
 			machine.style.top = (0.05*titleBarHeight).toString() + "px";
 			machine.style.color = "#FFFFFF";
 			if(json_cfg.show_url){
-				if(json_cfg.index_port == 80) machine.textContent = json_cfg.host;
-				else machine.textContent = json_cfg.host + ":" +json_cfg.index_port.toString();
+				var hostname = json_cfg.public_host ? json_cfg.public_host : json_cfg.host;
+				if(json_cfg.index_port == 80) machine.textContent = hostname;
+				else machine.textContent = hostname + ":" +json_cfg.index_port.toString();
 			}
 		});
 		
@@ -344,17 +456,53 @@
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
-			// load all resources
-			var i;
+			// convert url if hostname is alias for current origin
+			var a = document.createElement("a");
+			a.href = data.url;
+			var url = data.url;
+			if(hostAlias[a.hostname] !== undefined)
+				url = data.url.replace(a.hostname, hostAlias[a.hostname]);
+			
+			// Not used yet: missing scope....
+			function observer(changes) {
+				if (change.type==='add' && !!change.object[change.name]) {
+					if (isArray(change.object[change.name])) {
+						// If adding an array, observe it too  (works natively, not available as polyfill)
+						if (Array.observe)
+							Array.observe(change.object[change.name], observer, ['add','update']);
+					} else if (isObject(change.object[change.name])) {
+						// If adding an object, observe it too
+						Object.observe(change.object[change.name], observer, ['add','update']);
+					} else {
+						// added a value, all good
+					}
+				}
+				if (change.object[change.name]===null) {
+					// added a null value, all good
+				}
+			}
+
 			function loadApplication() {
 				// load new app
 				if(window[data.application] === undefined) {
 					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + data.application + ".js");
+					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
-						app.init(data.id, data.width, data.height, data.url, date);
+						app.init(data.id, data.width, data.height, url, date);
+
+						if(app.state !== undefined && clientID===0){
+							Object.observe(app.state, function (changes) {
+								//observer(changes);
+								wsio.emit('updateAppState', {id: data.id, state: app.state});
+							}, ['update', 'add']);
+						}
+						
 						app.load(data.data, date);
-						app.draw(date);
+						app.refresh(date);
+						
 						applications[data.id] = app;
 						if(app.enableControls==true){// Flag to request controls for App
 							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
@@ -369,35 +517,63 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, data.url, date);
+					app.init(data.id, data.width, data.height, url, date);
+
+					if(app.state !== undefined && clientID===0){
+						Object.observe(app.state, function(changes) {
+							//observer(changes);
+							wsio.emit('updateAppState', {id: data.id, state: app.state});
+						}, ['update', 'add']);
+					}
+					
 					app.load(data.data, date);
-					app.draw(date);
+					app.refresh(date);
+					
 					applications[data.id] = app;
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
 			};
 			
+			// load all resources
 			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
 				loadApplication();
 			}
 			else {
+				var i;
 				var resources = {};
 				for(i=0; i<data.resrc.length; i++){
-					resources[data.resrc[i]] = false;
+					// check dependency cache first
+					if (dependencies[data.resrc[i]] === true) {
+						resources[data.resrc[i]] = true;
+					} else {
+						dependencies[data.resrc[i]] = false;
+						resources[data.resrc[i]] = false;
+					}
 				}
 			
 				data.resrc.forEach(function(element, index, array) {
-					var js = document.createElement("script");
-					js.addEventListener('load', function(event) {
-						resources[element] = true;
+					if (dependencies[element] === false) {
+						var js = document.createElement("script");
+						js.addEventListener('error', function(event) {
+							console.log("Error loading script: " + element);
+						}, false);
+						js.addEventListener('load', function(event) {
+							dependencies[element] = true;
+							resources[element] = true;
+							if(allTrueDict(resources)){
+								console.log("all resources loaded");
+								loadApplication();
+							}
+						}, false);
+						js.type = "text/javascript";
+						js.src = url + "/" + element;
+						document.head.appendChild(js);
+					} else {
 						if(allTrueDict(resources)){
 							console.log("all resources loaded");
 							loadApplication();
 						}
-					}, false);
-					js.type = "text/javascript";
-					js.src = data.url + "/" + element;
-					document.head.appendChild(js);
+					}
 				});
 			}
 			
@@ -411,6 +587,7 @@
             dragCorner.style.left = (data.width-cornerSize).toString() + "px";
     		dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
             dragCorner.style.border = "none";
+            dragCorner.style.zIndex = "1";
             windowItem.appendChild(dragCorner);
 			
 			itemCount += 2;
@@ -531,10 +708,6 @@
 				var date = new Date(position_data.date);
 				app.resize(date);
 			}
-			/*
-			// triggers the resize callback in the application
-			if(child[0].id in canvasItems) canvasItems[child[0].id].resize(date);
-			*/
 		});
 		
 		wsio.on('finishedResize', function(data) {
@@ -543,16 +716,6 @@
 				var date = new Date(data.date);
 				app.resize(date);
 			}
-			
-			/*
-			var selectedElem = document.getElementById(elem.id);
-			
-			var child = selectedElem.getElementsByClassName("sageItem");
-			
-			if(child[0].id in pdfItems){
-				pdfItems[child[0].id].renderPage();
-			}
-			*/
 		});
 		
 		wsio.on('updateVideoItemTime', function(video_data) {
@@ -577,19 +740,9 @@
 			
 			var app = applications[data.id];
 			if(app !== undefined && app !== null){
-				app.draw(date);
+				app.refresh(date);
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
-			
-			/*
-			var canvasElem = document.getElementById(animate_data.elemId);
-			if(canvasElem != null){
-				var child = canvasElem.getElementsByClassName("sageItem");
-				if(child[0].id in canvasItems){
-					canvasItems[child[0].id].draw(date);
-				}
-			}
-			*/
 		});
 		
 		wsio.on('eventInItem', function(event_data){
@@ -597,28 +750,6 @@
 			
 			var app = applications[event_data.elemId];
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
-			
-			/*
-			var selectedElem = document.getElementById(event_data.elemId);
-			var child = selectedElem.getElementsByClassName("sageItem");
-			if(child[0].id in canvasItems){
-				if( typeof canvasItems[child[0].id].event === "function" )
-					canvasItems[child[0].id].event( event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);  
-			}
-
-            if(child[0].tagName.toLowerCase() == "iframe"){
-                //child[0].contentWindow.postMessage('
-            }
-            
-            if(event_data.eventType == "specialKey"){
-				if(event_data.data.code == 37 && event_data.data.state == "up"){ // left arrow
-					if(child[0].id in pdfItems) pdfItems[child[0].id].goPrevious();
-				}
-				if(event_data.data.code == 39 && event_data.data.state == "up"){ // right arrow
-					if(child[0].id in pdfItems) pdfItems[child[0].id].goNext();
-				}
-			}
-			*/
 		});
 
 		wsio.on('pointerPressRight', function(data){
@@ -781,95 +912,7 @@
 			}
 		});
 	}
-	
-	function playPauseVideo(elemId) {
-		var videoElem = document.getElementById(elemId + "_video");
-		if(videoElem.paused == true){ videoElem.play(); console.log("play"); }
-		else{ videoElem.pause(); console.log("pause"); }
-	}
-	
-	function moveItemToFront(elem) {
-		var last = elem.parentNode.lastChild;
-		if(elem != last){
-			elem.parentNode.replaceChild(elem, last);
-			elem.parentNode.insertBefore(last, elem);
-		}
-	}
-	
-	function formatAMPM(date) {
-		var hours = date.getHours();
-		var minutes = date.getMinutes();
-		var ampm = hours >= 12 ? "pm" : "am";
-		hours = hours % 12;
-		if(hours == 0) hours = 12;
-		var hh = hours.toString();
-		var mm = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
-		return (hh + ":" + mm + ampm);
-	}
-	
-	function format24Hr(date) {
-		var hours = date.getHours();
-		var minutes = date.getMinutes();
-		var hh = hours.toString();
-		var mm = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
-		return (hh + ":" + mm);
-	}
 
-	function base64ToString(base64) {
-		//return decodeURIComponent(escape(atob(base64)));
-		return atob(base64);
-	}
-
-	function stringToBase64(string) {
-		//return btoa(unescape(encodeURIComponent(string)));
-		return btoa(string);
-	}
-	
-	function stringToUint8Array(string) {
-        var uint8Array = new Uint8Array(new ArrayBuffer(string.length));
-        for (var i = 0; i < string.length; i++) {
-            uint8Array[i] = string.charCodeAt(i);
-        }
-
-        return uint8Array;
-    }
-	
-	function base64ToUint8Array(base64) {
-        var raw = atob(base64); //This is a native function that decodes a base64-encoded string.
-        var uint8Array = new Uint8Array(new ArrayBuffer(raw.length));
-        for (var i = 0; i < raw.length; i++) {
-            uint8Array[i] = raw.charCodeAt(i);
-        }
-
-        return uint8Array;
-    }
-    
-    function average(arr) {
-    	var l = arr.length;
-    	if(l == 0) return 0;
-    	var sum = 0;
-    	for(var i=0; i<l; i++){
-    		sum += arr[i];
-    	}
-    	return sum / l;
-    }
-    
-    function allTrueDict(dict) {
-		var key;
-		for(key in dict){
-			if(dict[key] !== true) return false;
-		}
-		return true;
-	}
-    
-	function getParameterByName(name) {
-		name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-		results = regex.exec(location.search);
-		return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-	}
-
-	
 </script>
 
 <link rel="stylesheet" type="text/css" href="style.css" media="screen" />

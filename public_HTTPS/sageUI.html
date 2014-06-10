@@ -38,7 +38,7 @@
 	var canvasKeyPressFunc = null;
 	var selectedFile = null;
 	
-	var serverUploadBtn;
+	var serverUploadBtn, serverSessionBtn;
 	var fileOKBtn;
 	var fileCloseBtn;
     var openWebpageBtn;
@@ -47,12 +47,14 @@
 	var imagesDir;
 	var pdfsDir;
 	var videosDir;
+	var sessionsDir;
 	
 	var dir2app = {
-    	"images": "image_viewer",
-    	"videos": "movie_player",
-    	"pdfs": "pdf_viewer",
-    	"apps": "custom_app"
+		"images"   : "image_viewer",
+		"videos"   : "movie_player",
+		"pdfs"     : "pdf_viewer",
+		"sessions" : "load_session",
+		"apps"     : "custom_app"
     };
 
 	// Explicitely close web socket when web broswer is closed
@@ -115,14 +117,16 @@
 			}, 2000);
 		});
 		
-		serverUploadBtn = document.getElementById('serverUploadBtn');
-		fileOKBtn = document.getElementById('fileOKBtn');
-		fileCloseBtn = document.getElementById('fileCloseBtn');
-		openWebpageBtn = document.getElementById('openWebpageBtn');
+		serverUploadBtn  = document.getElementById('serverUploadBtn');
+		serverSessionBtn = document.getElementById('serverSessionBtn');
+		fileOKBtn        = document.getElementById('fileOKBtn');
+		fileCloseBtn     = document.getElementById('fileCloseBtn');
+		openWebpageBtn   = document.getElementById('openWebpageBtn');
 		
-		serverUploadBtn.addEventListener('click', openServerFileBrowser, false);
-		fileOKBtn.addEventListener('click',       selectServerFiles, false);
-		fileCloseBtn.addEventListener('click',    closeServerFileBrowser, false);
+		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
+		serverSessionBtn.addEventListener('click', saveSession, false);
+		fileOKBtn.addEventListener('click',        selectServerFiles, false);
+		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
@@ -147,10 +151,11 @@
 		winMgrCanvas.addEventListener('dblclick', winMgr.mouseDblClick.bind(winMgr), false);
 		document.addEventListener('mousemove', updateTarget, false);
 		
-		appsDir = document.getElementById('apps');
-		imagesDir = document.getElementById('images');
-		pdfsDir = document.getElementById('pdfs');
-		videosDir = document.getElementById('videos');
+		appsDir     = document.getElementById('apps');
+		imagesDir   = document.getElementById('images');
+		pdfsDir     = document.getElementById('pdfs');
+		videosDir   = document.getElementById('videos');
+		sessionsDir = document.getElementById('sessions');
 				
 		wsio.on('setupDisplayConfiguration', function(config) {
 			winMgr.initDisplayConfig(config);
@@ -193,20 +198,23 @@
 			document.getElementById('lb_fade').style.display="block";
 			document.getElementById('lb_light').style.display="block";
 			
-			document.getElementById('apps-dir').checked = false;
-			document.getElementById('images-dir').checked = false;;
-			document.getElementById('pdfs-dir').checked = false;;
-			document.getElementById('videos-dir').checked = false;;
+			document.getElementById('apps-dir').checked     = false;
+			document.getElementById('images-dir').checked   = false;
+			document.getElementById('pdfs-dir').checked     = false;
+			document.getElementById('videos-dir').checked   = false;
+			document.getElementById('sessions-dir').checked = false;
 			
 			removeAllChildren(appsDir);
 			removeAllChildren(imagesDir);
 			removeAllChildren(pdfsDir);
 			removeAllChildren(videosDir);
+			removeAllChildren(sessionsDir);
 			
-			createFileList(files, "app", appsDir);
-			createFileList(files, "image", imagesDir);
-			createFileList(files, "pdf", pdfsDir);
-			createFileList(files, "video", videosDir);
+			createFileList(files, "app",     appsDir);
+			createFileList(files, "image",   imagesDir);
+			createFileList(files, "pdf",     pdfsDir);
+			createFileList(files, "video",   videosDir);
+			createFileList(files, "session", sessionsDir);
 			
 			selectedFile = null;
 		});
@@ -257,6 +265,22 @@
 		wsio.emit('requestStoredFiles');
 	}
 	
+	function pad(n, width, z) {
+	  z = z || '0';
+	  n = n + '';
+	  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
+
+	function saveSession(event) {
+		var ad = new Date();
+		var template = "session-" + ad.getFullYear() + "_" + pad(ad.getMonth()+1,2) + "_" + pad(ad.getDate(),2);
+		template = template + "-" + pad(ad.getHours(),2) + ":" + pad(ad.getMinutes(),2) + ":" + pad(ad.getSeconds(),2);
+		var filename = prompt("Please a session name\n(Leave blank for name based on server's time)", template);
+		if (filename!=null) {
+			wsio.emit('saveSesion', filename);
+		}
+	}
+
 	function closeServerFileBrowser(event) {
 		document.getElementById("lb_fade").style.display="none";
 		document.getElementById("lb_light").style.display="none";
@@ -264,9 +288,9 @@
 	
 	function selectServerFiles(event) {
 		var directory = selectedFile.parentNode.id
-		var fileName = selectedFile.innerHTML;
-		var app = dir2app[directory];
-		
+		var fileName  = selectedFile.innerHTML;
+		// based on folder, match the appropriate application
+		var app       = dir2app[directory];
 		
 		wsio.emit('addNewElementFromStoredFiles', {application: app, filename: fileName});
 		
@@ -302,6 +326,7 @@
 					<p id="fileDropText">Drag files here to upload</p>
 				</div>
 				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
+				<label class="fileLabel">Session:</label><button id="serverSessionBtn" type="button">Save</button>
 			</div>
 			<div id="sagePointer">
 				<label class="sageLabel">Click to start:</label><button id="sagePointerBtn" type="button">SAGE Pointer</button><br />
@@ -348,6 +373,8 @@
         			<ul id="pdfs"></ul>
         			<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
         			<ul id="videos"></ul>
+					<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
+					<ul id="sessions"></ul>
         		</ul>
 			</div>
 		</div>

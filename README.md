@@ -7,7 +7,7 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
 * node.js
 * ffmpeg
 * poppler
-* graphicsmagick
+* imagemagick
 
 ##### Install #####
 * [Windows Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows))
@@ -28,12 +28,23 @@ Specify the path to your configuration file in 'config.txt'
 * Open Terminal / Cmd
     * `cd <SAGE2_directory>`
     * `node server.js`
-* Open Google Chrome (point browser to host and port defined in config file)
+* Open Google Chrome (to enable screen sharing, go to chrome://flags and enable "Enable screen capture support in getUserMedia()")
     * Table of Contents: `http://<host>:<index_port>`
     * Display Client: `https://<host>:<port>/?clientID=<ID>`
     * Audio Client: `https://<host>:<port>/audioManager.html`
     * SAGE UI: `https://<host>:<port>/sageUI.html`
     * SAGE Pointer: `https://<host>:<port>/sagePointer.html` (Allow pop-ups)
+
+##### Supported File Types #####
+* Images
+    * JPEG
+    * PNG
+    * TIFF
+    * BMP
+    * PSD
+* Videos
+    * MP4
+* PDFs
 
 ##### Notice #####
 SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGE™ and SAGE2™).
