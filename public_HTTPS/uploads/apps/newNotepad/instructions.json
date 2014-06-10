@@ -1,0 +1,10 @@
+{
+	"main_script": "newNotepad.js",
+	"type": "canvas",
+	"width": 600,
+	"height": 720,
+	"animation": "timer",
+	"interval": 250,
+	"resources": [
+	]
+}
