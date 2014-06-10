@@ -1677,6 +1677,7 @@ if (program.interactive)
 				console.log('help\t\tlist commands');
 				console.log('kill\t\tclose application: arg0: index - kill 0');
 				console.log('list\t\tlist running applications');
+				console.log('clear\t\tclose all running applications');
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
 				console.log('sessions\tlist the available sessions');
@@ -1710,10 +1711,18 @@ if (program.interactive)
 					}
 				}
 				break;
+			case 'clear':
+				var all = applications.length;
+				while (all) {
+					deleteApplication( applications[0] );
+					// deleteApplication changes the array, so check again
+					all = applications.length;
+				}
+				break;
 			case 'list':
 				var i;
 				console.log("Applications\n------------");
-				for(i=0; i<applications.length; i++){
+				for (i=0; i<applications.length; i++) {
 					console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
 						i, applications[i].id, applications[i].application,
 						 applications[i].width,  applications[i].height,

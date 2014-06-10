@@ -64,7 +64,10 @@
 	var applications = {};
 	var dependencies = {};
 	
-	// Explicitely close web socket when web broswer is closed
+	var wallRatio;
+	var browserRatio;
+
+	// Explicitely close web socket when web browser is closed
 	window.onbeforeunload = function() {
 		if(wsio !== undefined) wsio.close();
 	};
@@ -81,6 +84,8 @@
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		console.log("Connected to server: ", window.location.origin);
 		
+		ratio = "fit";
+
 		wsio.open(function() {
 			var clientDescription = {
 				clientType: "display",
@@ -144,16 +149,27 @@
 					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
 			}
 			
-			offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
-			offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
-			titleBarHeight = json_cfg.titleBarHeight;
-			titleTextSize = json_cfg.titleTextSize;
-			pointerWidth = json_cfg.pointerWidth;
-			pointerHeight = json_cfg.pointerHeight;
-			pointerOffsetX = Math.round(0.025384*pointerHeight); 
-			pointerOffsetY = Math.round(0.060805*pointerHeight);
+			if (clientID===-1) {
+				offsetX = 0;
+				offsetY = 0;
+				titleBarHeight = json_cfg.titleBarHeight;
+				titleTextSize  = json_cfg.titleTextSize;
+				pointerWidth   = json_cfg.pointerWidth;
+				pointerHeight  = json_cfg.pointerHeight;
+				pointerOffsetX = Math.round(0.025384*pointerHeight);
+				pointerOffsetY = Math.round(0.060805*pointerHeight);
+			} else {
+				offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
+				offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
+				titleBarHeight = json_cfg.titleBarHeight;
+				titleTextSize  = json_cfg.titleTextSize;
+				pointerWidth   = json_cfg.pointerWidth;
+				pointerHeight  = json_cfg.pointerHeight;
+				pointerOffsetX = Math.round(0.025384*pointerHeight);
+				pointerOffsetY = Math.round(0.060805*pointerHeight);
+			}
 			clock_type = json_cfg.clock;
-			
+
 			// background color
 			if(typeof json_cfg.background.color !== "undefined" && json_cfg.background.color != null){
 				document.body.style.backgroundColor = json_cfg.background.color;
@@ -180,11 +196,75 @@
 				bg.src = json_cfg.background.image;
 			}
 			// Setup the clipping size
-			if(json_cfg.background.clip === true) {
-				var main = document.getElementById("main");
-				main.style.width    = json_cfg.resolution.width  + "px";
-				main.style.height   = json_cfg.resolution.height + "px";
-				main.style.overflow = "hidden"; 
+			if (clientID===-1) {
+					var main = document.getElementById("main");
+					// set the resolution to be the whole display wall
+					var wallWidth  = json_cfg.resolution.width*json_cfg.layout.columns;
+					var wallHeight = json_cfg.resolution.height*json_cfg.layout.rows;
+					wallRatio = wallWidth / wallHeight;
+					main.style.width    = wallWidth + "px";
+					main.style.height   = wallHeight + "px";
+					main.style.overflow = "hidden";
+
+					// put the scale up to the top left
+					main.style.webkitTransformOrigin = "0% 0%";
+
+					// calculate the scale ratio to make it fit
+					browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
+					var newratio;
+					if (wallRatio >= browserRatio)
+						newratio = document.documentElement.clientWidth / wallWidth;
+					else
+						newratio = document.documentElement.clientHeight / wallHeight;
+					main.style.webkitTransform = "scale("+(newratio)+")";
+
+					window.onresize = function(event) {
+						// recalculate after every window resize
+						browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
+						if (ratio === "fit") {
+							var newratio;
+							if (wallRatio >= browserRatio)
+								newratio = document.documentElement.clientWidth / wallWidth;
+							else
+								newratio = document.documentElement.clientHeight / wallHeight;
+							main.style.webkitTransform = "scale("+(newratio)+")";
+						}
+					};
+					window.onkeydown = function (event) {
+						// keycode: f
+						if (event.keyCode === 70) {
+							if (ratio === "fit") {
+								main.style.webkitTransform = "scale(1)";
+								ratio = "full";
+							} else if (ratio === "full") {
+								var newratio;
+								if (wallRatio >= browserRatio)
+									newratio = document.documentElement.clientWidth / wallWidth;
+								else
+									newratio = document.documentElement.clientHeight / wallHeight;
+								main.style.webkitTransform = "scale("+(newratio)+")";
+								ratio = "fit";
+							}
+						}
+					}
+					// // Too crazy motion
+					// window.addEventListener("mousewheel", function(event) {
+					// 	var scale = 1.0 + Math.abs(event.wheelDelta)/512;
+					// 	if(event.wheelDelta > 0) scale = 1.0 / scale;
+					// 	ratio = ratio * scale;
+					// 	var transfromString = "scale("+(ratio*browserRatio)+")";
+					// 	main.style.webkitTransform = transfromString;
+					// }, false);
+
+					// show the cursor in this mode
+					document.body.style.cursor = "initial";
+			} else {
+				if(json_cfg.background.clip === true) {
+					var main = document.getElementById("main");
+					main.style.width    = json_cfg.resolution.width  + "px";
+					main.style.height   = json_cfg.resolution.height + "px";
+					main.style.overflow = "hidden";
+				}
 			}
 
 			var upperBar = document.getElementById('upperBar');

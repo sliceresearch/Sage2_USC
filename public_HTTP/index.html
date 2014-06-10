@@ -98,6 +98,18 @@
 		
 			display.appendChild(displayClient);
 		}
+		// Add the overview client
+		var i = -1;
+		var displayClient = document.createElement('p');
+		var displayClient_link = document.createElement('a');
+		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
+		if (json_cfg.public_host)
+			displayClient_link.href = "https://" + json_cfg.public_host + https_port + "/?clientID=" + i.toString();
+		else
+			displayClient_link.href = "https://" + json_cfg.host + https_port + "/?clientID=" + i.toString();
+		displayClient_link.target = "_blank";
+		displayClient.appendChild(displayClient_link);
+		display.appendChild(displayClient);
 	}
 </script>
 
