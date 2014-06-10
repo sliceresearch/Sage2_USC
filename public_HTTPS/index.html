@@ -158,6 +158,9 @@
 				pointerHeight  = json_cfg.pointerHeight;
 				pointerOffsetX = Math.round(0.025384*pointerHeight);
 				pointerOffsetY = Math.round(0.060805*pointerHeight);
+				// Quick fix: disable backgroud image
+				json_cfg.background.image = undefined;
+				json_cfg.background.color = "#333333";
 			} else {
 				offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
 				offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
