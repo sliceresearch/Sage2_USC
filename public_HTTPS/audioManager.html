@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-,8">
+<title>SAGE2 Audio Manager</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the following license, commonly known
+	//          as the 3-clause (or "modified") BSD license:
+	//
+	// Copyright (c) 2014, Electronic Visualization Laboratory,
+	//                     University of Illinois at Chicago
+	// All rights reserved.
+	//
+	// http://opensource.org/licenses/BSD-3-Clause
+	// See included LICENSE.txt file
+</script>
+
+<script type="text/javascript" src="lib/websocket.io.js"></script>
+<script type="text/javascript">
+	var wsio;
+	var hostname;
+	var port;
+	var dt;
+	
+	var videos = {};
+	
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		
+		console.log("Connected to server: ", window.location.origin);
+		
+		wsio.open(function() {
+			console.log("open websocket");
+			var clientDescription = {
+				clientType: "audioManager",
+				sendsPointerData: false,
+				sendsMediaStreamFrames: false,
+				requestsServerFiles: false,
+				sendsWebContentToLoad: false,
+				sendsVideoSynchonization: true,
+				sharesContentWithRemoteServer: false,
+				receivesDisplayConfiguration: false,
+				receivesClockTime: false,
+				requiresFullApps: true,
+				requiresAppPositionSizeTypeOnly: false,
+				receivesMediaStreamFrames: false,
+				receivesWindowModification: false,
+				receivesPointerData: false,
+				receivesInputEvents: true,
+				receivesRemoteServerInfo: false
+			};
+			wsio.emit('addClient', clientDescription);
+		});
+		
+		// Socket close event (ie server crashed)		
+		wsio.on('close', function (evt) {
+			var refresh = setInterval(function () {
+				// make a dummy request to test the server every 2 sec
+				xhr = new XMLHttpRequest();
+				xhr.open("GET", "/", true);
+				xhr.onreadystatechange = function() {
+					if(xhr.readyState == 4 && xhr.status == 200){
+						console.log("server ready");
+						// when server ready, clear the interval callback
+						clearInterval(refresh);
+						// and reload the page
+						window.location.reload();
+					}
+				};
+				xhr.send();
+			}, 2000);
+		});
+		
+		wsio.on('initialize', function(data) {
+			var serverTime = new Date(data.time);
+			var clientTime = new Date();
+			
+			dt = clientTime - serverTime;
+		});
+		
+		
+		wsio.on('createAppWindow', function(data) {
+			if(data.application === "movie_player"){
+				var main = document.getElementById("main");
+				
+				var vid = document.createElement("video");
+				vid.id = data.id;
+				vid.width = 800;
+				vid.height = vid.width / data.aspect;
+				vid.controls = false;
+				vid.ready = false;
+				
+				vid.addEventListener('canplay', function() {
+					console.log("video can now play"); // Video is loaded and can be played
+					vid.ready = true;
+				}, false);
+				
+				vid.addEventListener('ended', function() {
+					console.log("video ended");
+					vid.currentTime = 0;
+					vid.pause();
+					vid.style.display = "none";
+					clearInterval(videos[vid.id].interval);
+					var clientTime = new Date();
+					var serverTime = new Date(clientTime.getTime() - dt);
+					wsio.emit('updateVideoTime', {elemId: vid.id, time: vid.currentTime, play: false, sent: serverTime});
+				}, false);
+				
+				console.log(data.data.src);
+				
+				var source = document.createElement("source");
+				var param = data.data.src.indexOf('?');
+				if(param >= 0) source.src = data.data.src + "&clientID=audio";
+				else source.src = data.data.src + "?clientID=audio";
+				source.type = data.data.type;
+				vid.appendChild(source);
+				
+				vid.style.display = "none";
+				
+				videos[vid.id] = {interval: null};
+				
+				main.appendChild(vid);
+			}
+			
+			if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+		});
+		
+		/*
+		wsio.on('addNewElement', function(elem_data) {
+			var main = document.getElementById("main");
+			
+			if(elem_data.type == "video" || elem_data.type == "youtube"){
+				var vid = document.createElement("video");
+				vid.id = elem_data.id;
+				vid.width = 800;
+				vid.height = vid.width / elem_data.aspect;
+				vid.controls = false;
+				vid.ready = false
+				vid.style.backgroundColor = "#333333";
+				if(elem_data.resrc != null) vid.poster = elem_data.resrc;
+				
+				vid.addEventListener('canplay', function() {
+					console.log("video can now play"); // Video is loaded and can be played
+					vid.ready = true;
+				}, false);
+				vid.addEventListener('ended', function() {
+					console.log("video ended");
+					vid.currentTime = 0;
+					vid.pause();
+					vid.style.display = "none";
+					clearInterval(videos[vid.id].interval);
+					var clientTime = new Date();
+					var serverTime = new Date(clientTime.getTime() - dt);
+					wsio.emit('updateVideoTime', {elemId: vid.id, time: vid.currentTime, play: false, sent: serverTime});
+				}, false);
+				
+				console.log(elem_data.src);
+				
+				var source = document.createElement("source");
+				var param = elem_data.src.indexOf('?');
+				if(param >= 0) source.src = elem_data.src + "&clientID=audio";
+				else source.src = elem_data.src + "?clientID=audio";
+				source.type = "video/mp4";
+				vid.appendChild(source);
+				
+				vid.style.display = "none";
+				
+				videos[vid.id] = {interval: null};
+				
+				main.appendChild(vid);
+			}
+		});
+		*/
+		
+		wsio.on('deleteElement', function(elem_data) {
+			var deleteElem = document.getElementById(elem_data.elemId);
+			if(deleteElem != null){
+				clearInterval(videos[deleteElem.id].interval);
+				deleteElem.parentNode.removeChild(deleteElem);
+			}
+		});
+		
+		wsio.on('animateCanvas', function(data) {
+			wsio.emit('finishedRenderingAppFrame', {id: data.id});
+		});
+		
+		wsio.on('eventInItem', function(event_data) {
+			var selectedElem = document.getElementById(event_data.elemId);
+			if(selectedElem == null) return;
+			
+			if(event_data.eventType == "keyboard"){
+				console.log("received keyboard input");
+				var character = String.fromCharCode(event_data.data.code);
+				
+				console.log("received keyboard input: [" + event_data.data.code + "] [" + character + "]"); 
+				if(character == " "){ // spacebar
+					console.log("play/pause video")
+					playPauseVideo(event_data.elemId);
+				}
+			}
+		});
+	}
+	
+	function playPauseVideo(elemId) {
+		var videoElem = document.getElementById(elemId);
+		var allVideos = document.getElementsByTagName("video");
+		
+		for(var i=0; i<allVideos.length; i++){
+			allVideos[i].style.display = "none";
+		}
+		
+		if(videoElem.paused == true){
+			videoElem.play();
+			videoElem.style.display = "block";
+			var clientTime = new Date();
+			var serverTime = new Date(clientTime.getTime() - dt);
+			
+			wsio.emit('updateVideoTime', {elemId: videoElem.id, time: videoElem.currentTime, play: true, sent: serverTime});
+			videos[videoElem.id].interval = setInterval(function() {
+				var clientTime = new Date();
+				var serverTime = new Date(clientTime.getTime() - dt);
+				wsio.emit('updateVideoTime', {elemId: videoElem.id, time: videoElem.currentTime, play: true, sent: serverTime});
+			}, 2000);
+		}
+		else{
+			videoElem.pause();
+			videoElem.style.display = "none";
+			clearInterval(videos[videoElem.id].interval);
+			var clientTime = new Date();
+			var serverTime = new Date(clientTime.getTime() - dt);
+			wsio.emit('updateVideoTime', {elemId: videoElem.id, time: videoElem.currentTime, play: false, sent: serverTime});
+		}
+	}
+</script>
+
+<link rel="stylesheet" type="text/css" href="style_audio.css" media="screen" />
+
+</head>
+
+<body onload="init()">
+	<div id="main">
+		
+	</div>
+</body>
+</html>
+

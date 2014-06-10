@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-,8">
+<title>SAGE2 UI</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the following license, commonly known
+	//          as the 3-clause (or "modified") BSD license:
+	//
+	// Copyright (c) 2014, Electronic Visualization Laboratory,
+	//                     University of Illinois at Chicago
+	// All rights reserved.
+	//
+	// http://opensource.org/licenses/BSD-3-Clause
+	// See included LICENSE.txt file
+</script>
+
+<script type="text/javascript" src="lib/websocket.io.js"></script>
+<script type="text/javascript" src="scripts/sagePointer.js"></script>
+<script type="text/javascript" src="scripts/windowManager.js"></script>
+<script type="text/javascript">
+	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	
+	var name = "Default";
+	var col = [180, 180, 180];
+	
+	var wsio;
+	var sagePtr;
+	var hostname;
+	var port;
+	var winMgr;
+	
+	var canvasKeyEvents = false;
+	var canvasKeyDownFunc = null;
+	var canvasKeyUpFunc = null;
+	var canvasKeyPressFunc = null;
+	var selectedFile = null;
+	
+	var serverUploadBtn;
+	var fileOKBtn;
+	var fileCloseBtn;
+    var openWebpageBtn;
+	var winMgrCanvas;
+	var appsDir;
+	var imagesDir;
+	var pdfsDir;
+	var videosDir;
+	
+	var dir2app = {
+    	"images": "image_viewer",
+    	"videos": "movie_player",
+    	"pdfs": "pdf_viewer",
+    	"apps": "custom_app"
+    };
+
+	// Explicitely close web socket when web broswer is closed
+	window.onbeforeunload = function() {
+		if(wsio !== undefined) wsio.close();
+	};
+	
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		
+		document.title = window.location.hostname.concat(" ", document.title ); 
+		
+		wsio.open(function() {
+			console.log("open websocket");
+			sagePtr = new sagePointer(wsio);
+			
+			var clientDescription = {
+				clientType: "sageUI",
+				sendsPointerData: true,
+				sendsMediaStreamFrames: true,
+				requestsServerFiles: true,
+				sendsWebContentToLoad: true,
+				launchesWebBrowser: true,
+				sendsVideoSynchonization: false,
+				sharesContentWithRemoteServer: false,
+				receivesDisplayConfiguration: true,
+				receivesClockTime: false,
+				requiresFullApps: false,
+				requiresAppPositionSizeTypeOnly: true,
+				receivesMediaStreamFrames: false,
+				receivesWindowModification: true,
+				receivesPointerData: false,
+				receivesInputEvents: false,
+				receivesRemoteServerInfo: false
+			};
+			wsio.emit('addClient', clientDescription);
+		});
+		
+		// Socket close event (ie server crashed)		
+		wsio.on('close', function (evt) {
+			var refresh = setInterval(function () {
+				// make a dummy request to test the server every 2 sec
+				xhr = new XMLHttpRequest();
+				xhr.open("GET", "/", true);
+				xhr.onreadystatechange = function() {
+					if(xhr.readyState == 4 && xhr.status == 200){
+						console.log("server ready");
+						// when server ready, clear the interval callback
+						clearInterval(refresh);
+						// and reload the page
+						window.location.reload();
+					}
+				};
+				xhr.send();
+			}, 2000);
+		});
+		
+		serverUploadBtn = document.getElementById('serverUploadBtn');
+		fileOKBtn = document.getElementById('fileOKBtn');
+		fileCloseBtn = document.getElementById('fileCloseBtn');
+		openWebpageBtn = document.getElementById('openWebpageBtn');
+		
+		serverUploadBtn.addEventListener('click', openServerFileBrowser, false);
+		fileOKBtn.addEventListener('click',       selectServerFiles, false);
+		fileCloseBtn.addEventListener('click',    closeServerFileBrowser, false);
+		
+        openWebpageBtn.addEventListener('click', openWebpage, false);
+
+		winMgr = new windowManager("winMgr", wsio);
+		winMgr.draw();
+		
+		canvasKeyDownFunc = winMgr.keyDown.bind(winMgr);
+		canvasKeyUpFunc = winMgr.keyUp.bind(winMgr);
+		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
+		
+		winMgrCanvas = document.getElementById('winMgr');
+		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr), false);
+		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr), false);
+		winMgrCanvas.addEventListener('mouseup', winMgr.mouseRelease.bind(winMgr), false);
+
+		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr), false);
+		winMgrCanvas.addEventListener('touchmove', winMgr.touchMove.bind(winMgr), false);
+		winMgrCanvas.addEventListener('touchend', winMgr.touchRelease.bind(winMgr), false);
+
+		winMgrCanvas.addEventListener('mousewheel', winMgr.mouseScroll.bind(winMgr), false);
+		winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
+		winMgrCanvas.addEventListener('dblclick', winMgr.mouseDblClick.bind(winMgr), false);
+		document.addEventListener('mousemove', updateTarget, false);
+		
+		appsDir = document.getElementById('apps');
+		imagesDir = document.getElementById('images');
+		pdfsDir = document.getElementById('pdfs');
+		videosDir = document.getElementById('videos');
+				
+		wsio.on('setupDisplayConfiguration', function(config) {
+			winMgr.initDisplayConfig(config);
+			var displayMin = Math.min(config.totalWidth, config.totalHeight);
+			var thisMin = Math.min(screen.width, screen.height);
+			sagePtr.setPointerSensitivity(displayMin/thisMin);
+		});
+		
+		wsio.on('initialize', function(data) {
+			sagePtr.setPointerId(data.UID)
+		});
+		
+		wsio.on('createAppWindowPositionSizeOnly', function(data) {
+			winMgr.addAppWindow(data);
+		});
+		
+		/*
+		wsio.on('addNewElementPositionSizeTypeOnly', function(elem_data) {
+			winMgr.addNewElement(elem_data);
+		});
+		*/
+		
+		wsio.on('deleteElement', function(elem_data) {
+			winMgr.deleteElement(elem_data.elemId);
+		});
+		
+		wsio.on('updateItemOrder', function(order) {
+			winMgr.updateItemOrder(order.idList);
+		});
+		
+		wsio.on('setItemPosition', function(position_data) {
+			winMgr.setItemPosition(position_data);
+		});
+		
+		wsio.on('setItemPositionAndSize', function(position_data) {
+			winMgr.setItemPositionAndSize(position_data);
+		});
+		
+		wsio.on('storedFileList', function(files) {
+			document.getElementById('lb_fade').style.display="block";
+			document.getElementById('lb_light').style.display="block";
+			
+			document.getElementById('apps-dir').checked = false;
+			document.getElementById('images-dir').checked = false;;
+			document.getElementById('pdfs-dir').checked = false;;
+			document.getElementById('videos-dir').checked = false;;
+			
+			removeAllChildren(appsDir);
+			removeAllChildren(imagesDir);
+			removeAllChildren(pdfsDir);
+			removeAllChildren(videosDir);
+			
+			createFileList(files, "app", appsDir);
+			createFileList(files, "image", imagesDir);
+			createFileList(files, "pdf", pdfsDir);
+			createFileList(files, "video", videosDir);
+			
+			selectedFile = null;
+		});
+		
+		wsio.on('requestNextFrame', function(data) {
+			sagePtr.sendMediaStreamFrame();
+		});
+		
+		wsio.on('stopMediaCapture', function() {
+			if(sagePtr.mediaStream != null) sagePtr.mediaStream.stop();
+		});
+	}
+	
+	function createFileList(files, type, dir) {
+		files[type].sort();
+		for(var i=0; i<files[type].length; i++){
+			var listElem = document.createElement("li");
+			listElem.innerHTML = files[type][i];
+			listElem.addEventListener('click', selectFile, false);
+						
+			dir.appendChild(listElem);
+		}
+	}
+	
+	function updateTarget(event) {
+		if(event.target == winMgrCanvas && !canvasKeyEvents){
+			document.addEventListener('keydown', canvasKeyDownFunc, false);
+			document.addEventListener('keyup', canvasKeyUpFunc, false);
+            document.addEventListener('keypress', canvasKeyPressFunc, false);
+			canvasKeyEvents = true;
+		}
+		else if(event.target != winMgrCanvas && canvasKeyEvents){
+			document.removeEventListener('keydown', canvasKeyDownFunc, false);
+			document.removeEventListener('keyup', canvasKeyUpFunc, false);
+            document.removeEventListener('keypress', canvasKeyPressFunc, false);
+
+			canvasKeyEvents = false;
+		}
+	}
+	
+	function removeAllChildren(node) {
+		while (node.lastChild) {
+    		node.removeChild(node.lastChild);
+		}
+	}
+	
+	function openServerFileBrowser(event) {
+		wsio.emit('requestStoredFiles');
+	}
+	
+	function closeServerFileBrowser(event) {
+		document.getElementById("lb_fade").style.display="none";
+		document.getElementById("lb_light").style.display="none";
+	}
+	
+	function selectServerFiles(event) {
+		var directory = selectedFile.parentNode.id
+		var fileName = selectedFile.innerHTML;
+		var app = dir2app[directory];
+		
+		
+		wsio.emit('addNewElementFromStoredFiles', {application: app, filename: fileName});
+		
+		closeServerFileBrowser(event);
+	}
+	
+	function selectFile(event) {
+		if(selectedFile != null) selectedFile.style.backgroundColor = "transparent";
+		
+		selectedFile = event.target;
+		selectedFile.style.backgroundColor = "#B9D3FF";
+	}
+
+    function openWebpage(event) {
+        var url = document.getElementById("openWebpageUrl");
+        wsio.emit('openNewWebpage', {id: sagePtr.uniqueID, url: openWebpageUrl.value});
+    }
+	
+</script>
+
+<link rel="stylesheet" type="text/css" href="style_mgr.css" media="screen" />
+
+</head>
+
+<body onload="init()" onresize="winMgr.resize()">
+	<div id="wrapper">
+		<div id="window">
+			<canvas id="winMgr" style="width: 100%;">HTML5 canvas element not supported</canvas>
+		</div>
+		<div id="extraInteraction">
+			<div id="fileUpload">
+				<div id="fileDrop">
+					<p id="fileDropText">Drag files here to upload</p>
+				</div>
+				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
+			</div>
+			<div id="sagePointer">
+				<label class="sageLabel">Click to start:</label><button id="sagePointerBtn" type="button">SAGE Pointer</button><br />
+				<label class="sageLabel">Pointer name:</label><input id="sagePointerLabel" type="text"></input><br />
+				<label class="sageLabel">Pointer color:</label><input id="sagePointerColor" type="color" value="#B4B4B4"></input>
+			</div>
+			<div id="screenShare">
+				<label class="sageLabel">Click to start:</label>
+				<button id="screenShareBtn" type="button">Share Screen</button>
+				<label class="sageLabel">Screen resolution:</label>
+				<select id="screenShareResolution">
+					<option value="360">360p</option>
+					<option value="480">480p</option>
+					<option value="720">720p</option>
+					<option value="1080" selected="selected">1080p</option>
+				</select>
+				<label class="sageLabel">Frame quality:</label>
+				<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="5" style="width:100px;">
+					<span id="screenShareQualityIndicator" style="margin-left:5px;">5</span>
+				</input>
+			</div>
+            <div id="openWebpage">
+                <label class="sageLabel">Webpage:</label><input id="openWebpageUrl" type="text" value="http://hakim.se/experiments/html5/origami"></input><br/>
+                <button id="openWebpageBtn" type="button">Browse</button><br/>
+            </div>
+		<div>
+		
+		<canvas id="mediaCanvas" style="display: none;"></canvas>
+        <video id="mediaVideo" style="display: none;"></video>
+	</div>
+	
+	<div class="clear"></div>
+	
+	<div id="lb_fade" class="lb_blackoverlay"></div>
+	<div id="lb_light" class="lb_whiteboxcontainer">
+		<div id="fileTreeList" class="lb_whitecontent">
+			<div class="css-treeview">
+				<ul>
+        			<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
+        			<ul id="apps"></ul>
+        			<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
+        			<ul id="images"></ul>
+        			<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label>
+        			<ul id="pdfs"></ul>
+        			<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
+        			<ul id="videos"></ul>
+        		</ul>
+			</div>
+		</div>
+		<div class="clear"></div>
+		<div id="fileButtons">
+			<button id="fileOKBtn" type="button">OK</button>
+			<button id="fileCloseBtn" type="button">Close</button>
+		</div>
+	</div>
+</body>
+</html>
+

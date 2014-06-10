@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-,8">
+<title>SAGE2 Pointer</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the following license, commonly known
+	//          as the 3-clause (or "modified") BSD license:
+	//
+	// Copyright (c) 2014, Electronic Visualization Laboratory,
+	//                     University of Illinois at Chicago
+	// All rights reserved.
+	//
+	// http://opensource.org/licenses/BSD-3-Clause
+	// See included LICENSE.txt file
+</script>
+
+<script type="text/javascript">
+	function init() {
+		// open SAGE Pointer App in new window
+		var url = window.location.origin + "/sagePointerApp.html";
+		var name = "";
+		var specs = "left=0,top=0,width=450,height=125,location=no";
+		var newWin = window.open(url, name, specs);
+		
+		// Popups blocked
+		if(!newWin || newWin.closed || typeof newWin.closed == 'undefined'){ 
+			 alert("please always allow popups from " + window.location.hostname + ", then refresh page");
+		}
+		// sagePointer window successfully opened
+		else{
+			// open page in same window - then close
+			var url = "about:blank";
+			var name = "_self";
+			var specs = "";
+			window.open(url, name, specs);
+			window.close();
+		}
+	}	
+</script>
+</head>
+
+<body onload="init()">
+	
+</body>
+</html>

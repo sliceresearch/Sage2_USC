@@ -392,22 +392,15 @@
 	}
 	
 	function pointerPress(event) {
-		if (event.button==2){
-			wsio.emit('pointerPressRight');	
-		}
-		else{
-			wsio.emit('pointerPress');
-		}
+		console.log("Came here, to SageUI!!!!")
+		var btn = (event.button==2)? 'right':'left';
+		wsio.emit('pointerPress',{button:btn});
 		preventDefault(event);
 	}
 	
 	function pointerRelease(event) {
-		if (event.button==2){
-			wsio.emit('pointerReleaseRight');	
-		}
-		else{
-			wsio.emit('pointerRelease');
-		}
+		var btn = (event.button==2)? 'right':'left';
+		wsio.emit('pointerRelease',{button:btn});
 		preventDefault(event);
 	}
 	

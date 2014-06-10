@@ -41,7 +41,6 @@ certutil -d sql:$HOME/.pki/nssdb -L
 certutil -d sql:$HOME/.pki/nssdb -D -n $server
 # add the new key
 certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n $server -i $server-server.crt
-certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n $server -i $server-server.crt
 # print the DB again
 certutil -d sql:$HOME/.pki/nssdb -L
 echo ""

@@ -1,25 +1,46 @@
+/*
+	default configuration of the server
+*/
 {
-        "host": "localhost",
-        "port": 9090,
-        "clock": 12,
-        "resolution": {
-                "width": 700,
-                "height": 700
-        },
-        "layout": {
-                "rows": 1,
-                "columns": 2
-        },
-        "displays": [
-                {
-                        "ID": 0,
-                        "row": 0,
-                        "column": 0
-                },
-                {
-                        "ID": 1,
-                        "row": 0,
-                        "column": 1
-                }
-        ]
+		// hostname of the web server
+	host: "localhost",
+		// port of the HTTPS server: 443 for default
+	port: 9090,
+		// port of the HTTP public page
+	index_port: 9292,
+		// clock setting: 12-hour or 24-hour
+	clock: 12,
+	background: {
+		color: "#baba55"
+	},
+	show_url: true,
+	resolution: {
+		width: 700,
+		height: 700
+	},
+		// for experimental features: true/false
+	experimental: {
+		"webbrowser": false  // enable the awesomium module
+	},
+	layout: {
+		rows: 1,
+		columns: 2
+	},
+	displays: [
+		{
+			ID: 0,
+			row: 0,
+			column: 0
+		},
+		{
+			ID: 1,
+			row: 0,
+			column: 1
+		},
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	]
 }

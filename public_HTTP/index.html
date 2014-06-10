@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-,8">
+<title>SAGE2 site index</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the following license, commonly known
+	//          as the 3-clause (or "modified") BSD license:
+	//
+	// Copyright (c) 2014, Electronic Visualization Laboratory,
+	//                     University of Illinois at Chicago
+	// All rights reserved.
+	//
+	// http://opensource.org/licenses/BSD-3-Clause
+	// See included LICENSE.txt file
+</script>
+
+<script type="text/javascript">
+	var json_cfg;
+	var hostname;
+	var port;
+	
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+	
+		xhr = new XMLHttpRequest();
+		xhr.open("GET", "/config", true);
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState == 4 && xhr.status == 200){
+				json_cfg = JSON.parse(xhr.responseText);
+				console.log(json_cfg);
+				
+				initializePageList();
+			}
+		};
+		xhr.send();
+	}
+	
+	function initializePageList() {
+		var userInteraction = document.getElementById('userInteraction');
+		var audio = document.getElementById('audio');
+		var display = document.getElementById('display');
+		
+		var https_port = ":" + json_cfg.port.toString();
+		if(https_port == ":443") https_port = "";
+		
+		// User Interaction
+		var sageUI = document.createElement('p');
+		var sageUI_link = document.createElement('a');
+		sageUI_link.textContent = "SAGE UI";
+		sageUI_link.href = "https://" + json_cfg.host + https_port + "/sageUI.html";
+		sageUI_link.target = "_blank";
+		sageUI.appendChild(sageUI_link);
+		var sagePointer = document.createElement('p');
+		var sagePointer_link = document.createElement('a');
+		sagePointer_link.textContent = "SAGE Pointer";
+		sagePointer_link.href = "https://" + json_cfg.host + https_port + "/sagePointer.html";
+		sagePointer_link.target = "_blank";
+		sagePointer.appendChild(sagePointer_link);
+		
+		userInteraction.appendChild(sageUI);
+		userInteraction.appendChild(sagePointer);
+		
+		// Audio
+		var audioManager = document.createElement('p');
+		var audioManager_link = document.createElement('a');
+		audioManager_link.textContent = "Audio Manager";
+		audioManager_link.href = "https://" + json_cfg.host + https_port + "/audioManager.html";
+		audioManager_link.target = "_blank";
+		audioManager.appendChild(audioManager_link);
+		
+		audio.appendChild(audioManager);
+		
+		// Display
+		for(var i=0; i<json_cfg.displays.length; i++){
+			var displayClient = document.createElement('p');
+			var displayClient_link = document.createElement('a');
+			displayClient_link.textContent = "Display (client " + i.toString() + ")";
+			displayClient_link.href = "https://" + json_cfg.host + https_port + "/?clientID=" + i.toString();
+			displayClient_link.target = "_blank";
+			displayClient.appendChild(displayClient_link);
+		
+			display.appendChild(displayClient);
+		}
+	}
+</script>
+
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
+</head>
+
+<body onload="init()">
+	<div id="main">
+		<div id="userInteraction" class="siteType">
+			<h2>User Interaction Pages</h2>
+		</div>
+		<div id="audio" class="siteType">
+			<h2>Audio Pages</h2>
+		</div>
+		<div id="display" class="siteType">
+			<h2>Display Pages</h2>
+		</div>
+	</div>
+</body>
+</html>
+

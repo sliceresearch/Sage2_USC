@@ -1,45 +1,39 @@
-WebSAGE
+SAGE2
 =======
 
 Browser based implementation of SAGE. A cluster-based html viewer used for displaying elements across multiple browser windows.
 
-### Requirements ###
+##### Dependencies #####
+* node.js
 * ffmpeg
 * poppler
+* graphicsmagick
 
-##### For Windows: #####
+##### Install #####
+* [Windows Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows))
+* [Mac OSX Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Mac%20OSX))
+* [OpenSUSE Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(openSUSE))
+* [Ubuntu Install](https://bitbucket.org/sage2/sage2/wiki/Install%20(Ubuntu))
 
-* Download and install [Node.js](http://nodejs.org/)
-* Download and install [7-Zip](http://www.7-zip.org/)
-* Download [FFMpeg](http://ffmpeg.zeranoe.com/builds/)
-* Download [Poppler-utils](http://manifestwebdesign.com/2013/01/09/xpdf-and-poppler-utils-on-windows/)
+##### Configure #####
+* Create a [configuration file](https://bitbucket.org/sage2/sage2/wiki/Configuration) for your display environment
+* Save file in <SAGE2_directory>/config
+* Select your configuration file
+    * Option 1: name your configuration file '<host_until_first_dot>-cfg.json'  
+(eg. host = thor.evl.uic.edu, config file is 'thor-cfg.json')
+    * Option 2: create a file 'config.txt' in <SAGE2_directory>  
+Specify the path to your configuration file in 'config.txt'
 
-Install FFMpeg
-* Move the FFMpeg 7-zip file to "C:\"
-* Right-click, go to 7-Zip > Extract Here
-* Rename extracted folder to "FFMpeg"
+##### Run #####
+* Open Terminal / Cmd
+    * `cd <SAGE2_directory>`
+    * `node server.js`
+* Open Google Chrome (point browser to host and port defined in config file)
+    * Table of Contents: `http://<host>:<index_port>`
+    * Display Client: `https://<host>:<port>/?clientID=<ID>`
+    * Audio Client: `https://<host>:<port>/audioManager.html`
+    * SAGE UI: `https://<host>:<port>/sageUI.html`
+    * SAGE Pointer: `https://<host>:<port>/sagePointer.html` (Allow pop-ups)
 
-Install Poppler
-* Create Folder "C:\Poppler"
-* Move the Poppler-utils zip file to "C:\Poppler"
-* Right-click, go to 7-Zip > Extract Here
-
-Set Environment
-* Add both "C:\FFMpeg" and "C:\Poppler" to you PATH variable
-
-
-##### For Mac OSX: #####
-
-* Download and install [Node.js](http://nodejs.org/)
-* Download and install [homebrew](http://brew.sh/)
-
-```
-brew install ffmpeg 
-brew install poppler --with-glib
-```
-
-
-##### To install all Node js modules: #####
-```
-npm install
-```
+##### Notice #####
+SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGE™ and SAGE2™).

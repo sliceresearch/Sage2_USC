@@ -1,0 +1,75 @@
+@charset "UTF-8";
+
+/* SAGE2 is available for use under the following license, commonly known
+ *          as the 3-clause (or "modified") BSD license:
+ *
+ * Copyright (c) 2014, Electronic Visualization Laboratory,
+ *                     University of Illinois at Chicago
+ * All rights reserved.
+ *
+ * http://opensource.org/licenses/BSD-3-Clause
+ * See included LICENSE.txt file 
+ */
+
+/* CSS Document */
+
+* {
+	margin: 0;
+	padding: 0;
+}
+	
+p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+body {
+	background: #FFFFFF;
+	width: 100%;
+	height: 100%;
+	cursor: none;
+}
+
+#main {
+	position:absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+#upperBar {
+	position:absolute;
+	width: 100%;
+	background: rgba(0,0,0,0.5);
+}
+
+.windowItem {
+	position:absolute;
+	border: solid 1px #000000;
+	box-shadow: 8px 0px 12px #222222;
+}
+
+.windowTitle {
+	position:absolute;
+	background-color: #666666;
+	border: solid 1px #000000;
+	overflow: hidden;
+}
+
+.windowControls {
+	position:absolute;
+	background-color: #666666;
+	border: solid 1px #000000;
+	box-shadow: 8px 8px 12px #222222;
+	overflow: hidden;
+}
+
+.pointerItem {
+	position:absolute;
+	display: block;
+}
+
+.sageItem {
+	display: block;
+}
