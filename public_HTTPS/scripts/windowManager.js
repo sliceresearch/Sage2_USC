@@ -10,36 +10,36 @@
 
 function windowManager(id, ws) {
 	this.element = document.getElementById(id);
-	this.ctx = this.element.getContext("2d");
-	this.wsio = ws;
+	this.ctx   = this.element.getContext("2d");
+	this.wsio  = ws;
 	this.nRows = 0;
 	this.nCols = 0;
 	this.aspectRatio = 1.0;
-	this.resolution = [];
-	this.scale = 1.0;
+	this.resolution  = [];
+	this.scale       = 1.0;
 	this.titleBarHeight = 0;
-	this.applications = [];
-	this.mouseX = 0;
-	this.mouseY = 0;
+	this.applications   = [];
+	this.mouseX         = 0;
+	this.mouseY         = 0;
 	
-	this.canvasImg = new Image();
-	this.canvasImg.src = "images/canvas.png";
-	this.imageImg = new Image();
-	this.imageImg.src = "images/image.png";
-	this.kineticjsImg = new Image();
+	this.canvasImg        = new Image();
+	this.canvasImg.src    = "images/canvas.png";
+	this.imageImg         = new Image();
+	this.imageImg.src     = "images/image.png";
+	this.kineticjsImg     = new Image();
 	this.kineticjsImg.src = "images/kineticjs.png";
-	this.pdfImg = new Image();
-	this.pdfImg.src = "images/pdf.png";
-	this.screenImg = new Image();
-	this.screenImg.src = "images/screen.png";
-	this.threejsImg = new Image();
-	this.threejsImg.src = "images/threejs.png";
-	this.videoImg = new Image();
-	this.videoImg.src = "images/video.png";
-	this.webglImg = new Image();
-	this.webglImg.src = "images/webgl.png";
-	this.youtubeImg = new Image();
-	this.youtubeImg.src = "images/youtube.png";
+	this.pdfImg           = new Image();
+	this.pdfImg.src       = "images/pdf.png";
+	this.screenImg        = new Image();
+	this.screenImg.src    = "images/screen.png";
+	this.threejsImg       = new Image();
+	this.threejsImg.src   = "images/threejs.png";
+	this.videoImg         = new Image();
+	this.videoImg.src     = "images/video.png";
+	this.webglImg         = new Image();
+	this.webglImg.src     = "images/webgl.png";
+	this.youtubeImg       = new Image();
+	this.youtubeImg.src   = "images/youtube.png";
 	
 	var widthPercent = this.element.style.width;
 	var widthPx = parseFloat(widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
@@ -70,9 +70,9 @@ function windowManager(id, ws) {
 			this.ctx.shadowBlur = 12;
 			this.ctx.shadowColor = "#222222";
 			
-			var eLeft = this.applications[i].left * this.scale;
-			var eTop = (this.applications[i].top+this.titleBarHeight) * this.scale;
-			var eWidth = this.applications[i].width * this.scale;
+			var eLeft   = this.applications[i].left * this.scale;
+			var eTop    = (this.applications[i].top+this.titleBarHeight) * this.scale;
+			var eWidth  = this.applications[i].width * this.scale;
 			var eHeight = this.applications[i].height * this.scale;
 			
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
@@ -111,10 +111,10 @@ function windowManager(id, ws) {
 			this.ctx.lineWidth = 2;
 			this.ctx.strokeStyle = "rgba(90, 90, 90, 1.0)";
 			
-			var eLeft = this.applications[i].left * this.scale;
-			var eTop = (this.applications[i].top) * this.scale;
-			var eWidth = this.applications[i].width * this.scale;
-			var eHeight = this.titleBarHeight * this.scale;
+			eLeft   = this.applications[i].left * this.scale;
+			eTop    = (this.applications[i].top) * this.scale;
+			eWidth  = this.applications[i].width * this.scale;
+			eHeight = this.titleBarHeight * this.scale;
 			
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			this.ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
@@ -230,7 +230,7 @@ function windowManager(id, ws) {
 	this.mouseDblClick = function(event) {
 		wsio.emit('pointerDblClick');
 		event.preventDefault();
-	}
+	};
 	
 	this.keyDown = function(event) {
 		this.wsio.emit('keyDown', {code: event.keyCode});
@@ -240,12 +240,12 @@ function windowManager(id, ws) {
 	this.keyUp = function(event) {
 		this.wsio.emit('keyUp', {code: event.keyCode});
 		event.preventDefault();
-	}
+	};
 	
     this.keyPress = function(event) {
 		this.wsio.emit('keyPress', {code: event.charCode});
 		event.preventDefault();
-	}
+	};
 	
 	/*
 	this.addNewElement = function(elem_data) {
@@ -263,15 +263,15 @@ function windowManager(id, ws) {
 	this.deleteElement = function(elemId) {
 		var selectedIndex;
 		var selectedItem;
-		
-		for(var i=0; i<this.applications.length; i++){
+		var i;
+		for(i=0; i<this.applications.length; i++){
 			if(this.applications[i].id == elemId){
 				selectedIndex = i;
 				selectedItem = this.applications[i];
 				break;
 			}
 		}
-		for(var i=selectedIndex; i<this.applications.length-1; i++){
+		for(i=selectedIndex; i<this.applications.length-1; i++){
 			this.applications[i] = this.applications[i+1];
 		}
 		this.applications[this.applications.length-1] = selectedItem;
@@ -307,7 +307,7 @@ function windowManager(id, ws) {
 		
 		this.scale = this.element.width / this.resolution[0];
 		this.draw();
-	}
+	};
 	
 	this.updateItemOrder = function(idList) {
 		var i;
@@ -323,7 +323,7 @@ function windowManager(id, ws) {
 		}
 		
 		this.draw();
-	}
+	};
 	
 	this.setItemPosition = function(position_data) {
 		var i;

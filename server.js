@@ -1025,7 +1025,6 @@ function setupDisplayBackground() {
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
 		var bg_info = imageinfo(fs.readFileSync(bg_file));
-	
 		if(config.background.style == "fit"){
 			if(bg_info.width == config.totalWidth && bg_info.height == config.totalHeight){
 				sliceBackgroundImage(bg_file, bg_file);

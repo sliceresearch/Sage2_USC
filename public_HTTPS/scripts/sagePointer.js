@@ -303,7 +303,7 @@ function sagePointer(wsio) {
 
 						var totalSize = 0;
 						var uploaded = 0;
-						for(key in total){ totalSize += total[key]; uploaded += loaded[key]; }
+						for(var key in total){ totalSize += total[key]; uploaded += loaded[key]; }
 						pc = Math.floor((uploaded/totalSize) * 100);
 						_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
 						if(pc == 100){

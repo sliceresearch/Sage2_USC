@@ -22,8 +22,8 @@ function videoControls(){
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
-		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-		this.ctx.fillRect(0,0, this.element.width, this.element.height)
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillRect(0,0, this.element.width, this.element.height);
 		
 		var spacing = 0.8*this.element.height;
 		

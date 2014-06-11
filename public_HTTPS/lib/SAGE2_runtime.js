@@ -49,7 +49,7 @@ function formatAMPM(date) {
 	var minutes = date.getMinutes();
 	var ampm = hours >= 12 ? "pm" : "am";
 	hours = hours % 12;
-	if(hours == 0) hours = 12;
+	if (hours === 0) hours = 12;
 	var hh = hours.toString();
 	var mm = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
 	return (hh + ":" + mm + ampm);
@@ -94,7 +94,7 @@ function base64ToUint8Array(base64) {
 
 function average(arr) {
 	var l = arr.length;
-	if(l == 0) return 0;
+	if (l === 0) return 0;
 	var sum = 0;
 	for(var i=0; i<l; i++){
 		sum += arr[i];
@@ -114,13 +114,13 @@ function getParameterByName(name) {
 	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
 	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
 	results = regex.exec(location.search);
-	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 	
 function playPauseVideo(elemId) {
 	var videoElem = document.getElementById(elemId + "_video");
-	if(videoElem.paused == true){ videoElem.play(); console.log("play"); }
+	if (videoElem.paused === true) { videoElem.play(); console.log("play"); }
 	else{ videoElem.pause(); console.log("pause"); }
 }
 
@@ -143,5 +143,5 @@ Math.seed = function(s) {
 		
 		s = (a*s+c) % m;
 		return s / m;
-	}
-}
+	};
+};
