@@ -24,6 +24,7 @@ var SAGE2_App = Class.extend( {
 		this.t     = null;
 		this.dt    = null;
 		this.frame = null;
+		this.fps   = null
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -44,16 +45,29 @@ var SAGE2_App = Class.extend( {
 		this.startDate = date;
 		this.prevDate  = date;
 		this.frame     = 0;
+		
+		this.frame_sec = 0;
+		this.sec       = 0.0;
+		this.fps       = 0.0;
 	},
 	
 	preDraw: function(date) {
 		this.t  = (date.getTime() - this.startDate.getTime()) / 1000; // total time since start of program (sec)
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000; // delta time since last frame (sec)
+	
+		this.sec += this.dt;
+		if(this.sec >= 1.0){
+			this.fps       = this.frame_sec / this.sec;
+			this.frame_sec = 0;
+			this.sec       = 0.0;
+		}
 	},
 	
 	postDraw: function(date) {
 		this.prevDate = date;
 		this.frame++;
+		
+		this.frame_sec++;
 	},
 
 	// high-level function to be called a complete draw
