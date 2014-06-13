@@ -1,0 +1,9 @@
+{
+	"main_script": "weather.js",
+	"width": 475,
+	"height": 440,
+	"animation": true,
+	"resources": [
+		"scripts/d3.v3.min.js"
+	]
+}
