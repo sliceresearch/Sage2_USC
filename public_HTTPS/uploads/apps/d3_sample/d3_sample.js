@@ -90,7 +90,7 @@ var d3_sample = SAGE2_App.extend( {
 	},
 
 	resize: function(date) {
-		this.svg.attr('width' , this.element.clientWidth  +"px");
+		this.svg.attr('width' ,  this.element.clientWidth  +"px");
 		this.svg.attr('height' , this.element.clientHeight  +"px");
 		this.refresh(date);
 	},

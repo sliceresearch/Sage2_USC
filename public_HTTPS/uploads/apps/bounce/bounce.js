@@ -20,6 +20,9 @@ var bounce = SAGE2_App.extend( {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
 
+		// Set the framerate
+		this.maxFPS = 30;
+
 		this.ctx = this.element.getContext("2d");
 		this.minDim = Math.min(this.element.width, this.element.height);
 
@@ -29,8 +32,6 @@ var bounce = SAGE2_App.extend( {
 
 		this.ballImg = new Image();
 		this.ballImg.src = this.resrcPath + "images/evllogo.png";
-		this.timer  = 0.0;
-		this.redraw = true;
 		this.minDim = Math.min(this.element.width, this.element.height);
 	},
 
@@ -47,42 +48,30 @@ var bounce = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
-		this.timer = this.timer + this.dt;
-		if(this.timer >= 0.033333333) {
-			this.timer = 0.0;
-			this.redraw = true;
-		}
+		// clear canvas		
+		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
-		if(this.redraw) {		
-			// clear canvas		
-			this.ctx.clearRect(0,0, this.element.width, this.element.height);
-			
-			this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
-			this.ctx.fillRect(0,0, this.element.width, this.element.height)
-			
-			var wScale = 1.0;
-			var hScale = 1.0;
-			if(this.element.width < this.element.height) hScale = this.element.height / this.element.width;
-			if(this.element.height < this.element.width) wScale = this.element.width / this.element.height;
-			if(this.state.pos[0]<0 && this.state.dir[0]<0) this.state.dir[0] = -this.state.dir[0];
-			if(this.state.pos[0]>1.0*wScale && this.state.dir[0]>0) this.state.dir[0] = -this.state.dir[0];
-			if(this.state.pos[1]<0 && this.state.dir[1]<0) this.state.dir[1] = -this.state.dir[1];
-			if(this.state.pos[1]>1.0*hScale && this.state.dir[1]>0) this.state.dir[1] = -this.state.dir[1];
-			this.state.pos[0] += this.state.dir[0]*this.state.vel*this.dt;
-			this.state.pos[1] += this.state.dir[1]*this.state.vel*this.dt;
-			var size = 0.2*this.minDim;
-			var x = this.state.pos[0]*this.minDim - (size/2);
-			var y = this.state.pos[1]*this.minDim - (size/2);
-			this.ctx.drawImage(this.ballImg, x, y, size, size);
-			
-			this.redraw = false;
-		}
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)"
+		this.ctx.fillRect(0,0, this.element.width, this.element.height)
+		
+		var wScale = 1.0;
+		var hScale = 1.0;
+		if(this.element.width < this.element.height) hScale = this.element.height / this.element.width;
+		if(this.element.height < this.element.width) wScale = this.element.width / this.element.height;
+		if(this.state.pos[0]<0 && this.state.dir[0]<0) this.state.dir[0] = -this.state.dir[0];
+		if(this.state.pos[0]>1.0*wScale && this.state.dir[0]>0) this.state.dir[0] = -this.state.dir[0];
+		if(this.state.pos[1]<0 && this.state.dir[1]<0) this.state.dir[1] = -this.state.dir[1];
+		if(this.state.pos[1]>1.0*hScale && this.state.dir[1]>0) this.state.dir[1] = -this.state.dir[1];
+		this.state.pos[0] += this.state.dir[0]*this.state.vel*this.dt;
+		this.state.pos[1] += this.state.dir[1]*this.state.vel*this.dt;
+		var size = 0.2*this.minDim;
+		var x = this.state.pos[0]*this.minDim - (size/2);
+		var y = this.state.pos[1]*this.minDim - (size/2);
+		this.ctx.drawImage(this.ballImg, x, y, size, size);
 	},
 
 	resize: function(date) {
-		this.minDim = Math.min(this.element.width, this.element.height);
-		this.redraw = true;
-		
+		this.minDim = Math.min(this.element.width, this.element.height);		
 		this.refresh(date);
 	},
 	

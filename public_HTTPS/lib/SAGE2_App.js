@@ -24,7 +24,11 @@ var SAGE2_App = Class.extend( {
 		this.t     = null;
 		this.dt    = null;
 		this.frame = null;
-		this.fps   = null
+		this.fps   = null;
+
+		this.timer  = null;
+		this.maxfps = null;
+		this.redraw = null;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -33,10 +37,10 @@ var SAGE2_App = Class.extend( {
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
 		if (elem === "div") {
-			this.element.style.width = width + "px";
+			this.element.style.width  = width  + "px";
 			this.element.style.height = height + "px";
 		} else {
-			this.element.width = width;
+			this.element.width  = width;
 			this.element.height = height;
 		}
 		this.div.appendChild(this.element);
@@ -46,28 +50,36 @@ var SAGE2_App = Class.extend( {
 		this.prevDate  = date;
 		this.frame     = 0;
 		
+		// Measurement variables
 		this.frame_sec = 0;
-		this.sec       = 0.0;
+		this.sec       = 0;
 		this.fps       = 0.0;
+
+		// Frame rate control
+		this.timer     = 0;
+		this.maxFPS    = 60.0; // Big than 60, since Chrome is Vsync anyway
+		this.redraw    = true;
 	},
 	
 	preDraw: function(date) {
 		this.t  = (date.getTime() - this.startDate.getTime()) / 1000; // total time since start of program (sec)
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000; // delta time since last frame (sec)
-	
-		this.sec += this.dt;
-		if(this.sec >= 1.0){
-			this.fps       = this.frame_sec / this.sec;
-			this.frame_sec = 0;
-			this.sec       = 0.0;
+		
+		// Frame rate control
+		this.timer = this.timer + this.dt;
+		if (this.timer > (1.0/this.maxFPS)) {
+			this.timer  = 0.0;
+			this.redraw = true;			
 		}
+		// If we ask for more, just let it run
+		if (this.maxFPS>=60.0) this.redraw = true;
+
+		this.sec += this.dt;
 	},
 	
 	postDraw: function(date) {
 		this.prevDate = date;
 		this.frame++;
-		
-		this.frame_sec++;
 	},
 
 	// high-level function to be called a complete draw
@@ -75,7 +87,19 @@ var SAGE2_App = Class.extend( {
 		// update time
 		this.preDraw(date);
 		// actual application draw
-		this.draw(date);
+		if (this.redraw) {
+			// If drawing, measure actual frame rate
+			if( this.sec >= 1.0){
+				this.fps       = this.frame_sec / this.sec;
+				this.frame_sec = 0;
+				this.sec       = 0;
+			}
+
+			this.draw(date);
+
+			this.frame_sec++;
+			this.redraw = false;	
+		}
 		// update time and misc
 		this.postDraw(date);
 	},

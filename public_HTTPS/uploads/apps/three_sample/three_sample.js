@@ -13,9 +13,6 @@ var three_sample = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.timer  = null;
-		this.redraw = null;
-		this.frame  = null;
 		this.width  = null;
 		this.height = null;
 		this.resizeEvents = "onfinish"; // "continuous";
@@ -73,41 +70,24 @@ var three_sample = SAGE2_App.extend( {
 
 		// draw!
 		this.renderer.render(this.scene, this.camera);
-
-		this.timer  = 0.0;
-		this.redraw = true;
 	},
 	
 	load: function(state, date) {
 	},
 
 	draw: function(date) {
-		this.timer = this.timer + this.dt;
-		if(this.timer >= 0.033333333) {
-			this.timer  = 0.0;
-			this.redraw = true;
-		}
+		var amplitude = 50;
+		var period    = 2.0; // in sec
+		var centerY   = 0;
 		
-		if(this.redraw) {		
-			var amplitude = 50;
-			var period    = 2.0; // in sec
-			var centerY   = 0;
-			
-			this.sphere.position.y = amplitude * Math.sin(this.t * 2*Math.PI / period) + centerY;
-			
-			this.renderer.render(this.scene, this.camera);
-			
-			this.frame++;
-			this.redraw = false;
-		}
+		this.sphere.position.y = amplitude * Math.sin(this.t * 2*Math.PI / period) + centerY;
+		
+		this.renderer.render(this.scene, this.camera);
 	},
 
 	resize: function(date) {
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
-		this.minDim = Math.min(this.width, this.height);
-		this.redraw = true;
-
 		this.renderer.setSize(this.width, this.height);
 		
 		this.refresh(date);

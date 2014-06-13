@@ -144,9 +144,9 @@
 			}
 
 			// Build the elements visible on the wall
-			ui = new uiBuilder(json_cfg);
-			ui.build(clientID);
-			ui.background(clientID);
+			ui = new uiBuilder(json_cfg, clientID);
+			ui.build();
+			ui.background();
 		});
 		
 		wsio.on('setSystemTime', function(data) {

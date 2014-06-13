@@ -643,11 +643,10 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 		for(key in appAnimations[data.id].clients){
 			appAnimations[data.id].clients[key] = false;
 		}
-		
 		// animate max 60 fps
 		var now = new Date();
 		var elapsed = now.getTime() - appAnimations[data.id].date.getTime();
-		if(elapsed > 16){
+   		if (elapsed > 16) {
 			appAnimations[data.id].date = new Date();
 			broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
 		}

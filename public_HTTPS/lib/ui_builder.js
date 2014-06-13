@@ -12,10 +12,11 @@
 // Generic functions used by all SAGE2 applications
 //
 
-function uiBuilder(json_cfg) {
+function uiBuilder(json_cfg, clientID) {
 
 	// Save the wall configuration object
 	this.json_cfg = json_cfg;
+	this.clientID = clientID;
 	// set the default style sheet
 	this.csssheet = "style.css";
 	// Objects for the UI
@@ -43,7 +44,7 @@ function uiBuilder(json_cfg) {
 	this.main = document.getElementById("main");
 
 	// Build the background image/color
-	this.background = function (clientID) {
+	this.background = function () {
 		var _this = this;
 
 		// background color
@@ -51,7 +52,7 @@ function uiBuilder(json_cfg) {
 			document.body.style.backgroundColor = this.json_cfg.background.color;
 		}
 		// Setup the clipping size
-		if (clientID===-1) {
+		if (this.clientID===-1) {
 			// set the resolution to be the whole display wall
 			var wallWidth  = this.json_cfg.resolution.width  * this.json_cfg.layout.columns;
 			var wallHeight = this.json_cfg.resolution.height * this.json_cfg.layout.rows;
@@ -114,10 +115,10 @@ function uiBuilder(json_cfg) {
 					var bg_img;
 					var ext = _this.json_cfg.background.image.lastIndexOf(".");
 					if(_this.json_cfg.background.style == "fit" && (bg.naturalWidth != _this.json_cfg.totalWidth || bg.naturalHeight != _this.json_cfg.totalHeight)){
-						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + clientID + ".png";
+						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
 					}
 					else{
-						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + clientID + _this.json_cfg.background.image.substring(ext);
+						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
 					}
 					document.body.style.backgroundImage    = "url(" + bg_img + ")";
 					document.body.style.backgroundPosition = "top left";
@@ -148,7 +149,7 @@ function uiBuilder(json_cfg) {
 		this.clock.textContent = now;
 	};
 
-	this.build = function (clientID) {
+	this.build = function () {
 		console.log("Buidling the UI for the display");
 
 		var head = document.getElementsByTagName("head")[0];
@@ -160,7 +161,7 @@ function uiBuilder(json_cfg) {
 		fileref.setAttribute("media", "screen");
 		fileref.setAttribute("href",  this.csssheet);
 
-		if (clientID===-1) {
+		if (this.clientID===-1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.titleBarHeight;
@@ -169,12 +170,9 @@ function uiBuilder(json_cfg) {
 			this.pointerHeight  = this.json_cfg.pointerHeight;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
-			// // Quick fix: disable background image
-			// json_cfg.background.image = undefined;
-			// json_cfg.background.color = "#333333";
 		} else {
-			this.offsetX = this.json_cfg.displays[clientID].column * this.json_cfg.resolution.width;
-			this.offsetY = this.json_cfg.displays[clientID].row * this.json_cfg.resolution.height;
+			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
+			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.titleTextSize;
 			this.pointerWidth   = this.json_cfg.pointerWidth;
@@ -298,5 +296,4 @@ function uiBuilder(json_cfg) {
 		if (data.connected) remote.style.backgroundColor = "#379982";
 		else remote.style.backgroundColor = "#AD2A2A";
 	};
-
 }
