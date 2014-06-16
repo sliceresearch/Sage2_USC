@@ -337,7 +337,7 @@ function updateInsideTemp()
 // need to add a random number to the end of the request to avoid browser caching
 // http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
 
-    d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
+    d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
         Math.floor(Math.random() * 10000000), function(datasetTextIn) {
     var parsedCSV = d3.csv.parseRows(datasetTextIn);
 
