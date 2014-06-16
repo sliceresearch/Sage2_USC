@@ -658,7 +658,8 @@ var weather = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-	    drawAll();
+	    updateAll();
+        drawAll();
 	},
 
 	resize: function(date) {
