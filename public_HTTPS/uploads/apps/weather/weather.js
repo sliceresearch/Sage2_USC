@@ -675,6 +675,7 @@ var weather = SAGE2_App.extend( {
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
+        itsF = !itsF;
 		}
 	}
 	
