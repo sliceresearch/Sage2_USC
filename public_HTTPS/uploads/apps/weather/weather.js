@@ -13,7 +13,7 @@
 var scaleFactor = 1.0
 
 // fahrenheit or celsius
-var itsF = 0;
+var itsF = 1;
 
 var date = "Loading ...";
 var hour = "" ;
