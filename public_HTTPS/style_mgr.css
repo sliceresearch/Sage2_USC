@@ -49,7 +49,7 @@ input, button {
 	margin-left: 10px;
 	padding: 5px;
 	width: 250px;
-	height: 90px;
+	height: 70px;
 	text-align: left;
 	border: solid 1px #000000;
 }
@@ -63,13 +63,13 @@ input, button {
 	border: dashed 3px #54C238;
 }
 
-#sagePointer, #screenShare, #openWebpage {
+#sagePointer, #screenShare, #openWebpage, #layout {
 	float: left;
 	margin-top: 10px;
 	margin-left: 10px;
 	padding: 5px;
 	width: 250px;
-	height: 90px;
+	height: 70px;
 	text-align: left;
 	border: solid 1px #000000;
 }

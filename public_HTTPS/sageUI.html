@@ -38,7 +38,7 @@
 	var canvasKeyPressFunc = null;
 	var selectedFile = null;
 	
-	var serverUploadBtn, serverSessionBtn;
+	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
 	var fileCloseBtn;
     var openWebpageBtn;
@@ -119,12 +119,16 @@
 		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
 		serverSessionBtn = document.getElementById('serverSessionBtn');
+		clearBtn         = document.getElementById('clearBtn');
+		tileBtn          = document.getElementById('tileBtn');
 		fileOKBtn        = document.getElementById('fileOKBtn');
 		fileCloseBtn     = document.getElementById('fileCloseBtn');
 		openWebpageBtn   = document.getElementById('openWebpageBtn');
 		
 		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
 		serverSessionBtn.addEventListener('click', saveSession, false);
+		clearBtn.addEventListener('click',         clearDisplay, false);
+		tileBtn.addEventListener('click',          tileApplications, false);
 		fileOKBtn.addEventListener('click',        selectServerFiles, false);
 		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
 		
@@ -281,6 +285,15 @@
 		}
 	}
 
+	function tileApplications (event) {
+		// tile all the application windows
+		wsio.emit('tileApplications');
+	}
+	function clearDisplay (event) {
+		// remove all the applications
+		wsio.emit('clearDisplay');
+	}
+
 	function closeServerFileBrowser(event) {
 		document.getElementById("lb_fade").style.display="none";
 		document.getElementById("lb_light").style.display="none";
@@ -326,7 +339,6 @@
 					<p id="fileDropText">Drag files here to upload</p>
 				</div>
 				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
-				<label class="fileLabel">Session:</label><button id="serverSessionBtn" type="button">Save</button>
 			</div>
 			<div id="sagePointer">
 				<label class="sageLabel">Click to start:</label><button id="sagePointerBtn" type="button">SAGE Pointer</button><br />
@@ -352,6 +364,11 @@
                 <label class="sageLabel">Webpage:</label><input id="openWebpageUrl" type="text" value="http://hakim.se/experiments/html5/origami"></input><br/>
                 <button id="openWebpageBtn" type="button">Browse</button><br/>
             </div>
+			<div id="layout">
+				<label class="sageLabel">Session:</label><button id="serverSessionBtn" type="button">Save current</button>
+				<label class="sageLabel">Clear display:</label><button id="clearBtn" type="button">Clear all</button>
+				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
+			</div>
 		<div>
 		
 		<canvas id="mediaCanvas" style="display: none;"></canvas>

@@ -248,8 +248,10 @@ function initializeWSClient(wsio) {
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
-		wsio.on('saveSesion', wsSaveSesion);
 		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		wsio.on('saveSesion',       wsSaveSesion);
+		wsio.on('clearDisplay',     wsClearDisplay);
+		wsio.on('tileApplications', wsTileApplications);
 	}
 	if(wsio.messages.sendsWebContentToLoad){
 		wsio.on('addNewWebElement', wsAddNewWebElement);
@@ -670,6 +672,7 @@ function wsUpdateAppState(wsio, data) {
 
 
 /******************** Session Functions ********************/
+
 function wsSaveSesion(wsio, data) {
 	var sname = "";
 	if (data) {
@@ -783,7 +786,185 @@ function loadSession (filename) {
 	});
 }
 
+
+//  Tiling Functions
+//
+//
+// From Ratko's DIM in SAGE
+//
+
+function averageWindowAspectRatio() {
+	var num = applications.length;
+
+	if (num === 0) return 1.0;
+
+	var totAr = 0.0;
+	var i;
+	for (i=0; i<num; i++) {
+		var app =  applications[i];
+		totAr += (app.width / app.height);
+	}
+	return (totAr / num);
+}
+
+function fitWithin(app, x, y, width, height, margin) {
+	// take buffer into account
+	x += margin;
+	y += margin;
+	width  = width - 2*margin;
+	height = height - 2*margin;
+
+	var widthRatio  = (width-4) / app.width;
+	var heightRatio = (height-4) / app.height;
+	var maximizeRatio;
+	if (widthRatio > heightRatio)
+		maximizeRatio = heightRatio;
+	else
+		maximizeRatio = widthRatio;
+
+    // figure out the maximized app size (w/o the widgets)
+    var newAppWidth  = Math.round( maximizeRatio*app.width );
+    var newAppHeight = Math.round( maximizeRatio*app.height );
+
+    // figure out the maximized app position (with the widgets)
+    var postMaxX = Math.round( width/2.0 - newAppWidth/2.0 );
+    var postMaxY = Math.round( height/2.0 - newAppHeight/2.0 );
+
+    // the new position of the app considering the maximized state and
+    // all the widgets around it
+    var newAppX = x + postMaxX;
+    var newAppY = y + postMaxY;
+
+    // if the app shouldnt be centered, position it as
+    // close to the original position as possible
+    // if (cx && cy) {
+    // 	if (widthRatio > heightRatio) {
+    //     	// height diff is greater... so adjust x
+    //     	newHalfW = Math.round(newAppWidth/2.0);
+    //     	if (cx+newHalfW > x+width - margin)
+    //     		newAppX = x+width - newAppWidth - margin;
+    //     	else if (cx-newHalfW < x + margin)
+    //     		newAppX = x + margin;
+    //     	else
+    //     		newAppX = cx-newHalfW;
+    //     }
+    //     else {
+    //            // width diff is greater... so adjust y
+    //            newHalfH = int(newAppHeight/2.0);
+    //            if (cy+newHalfH > y+height - margin)
+    //            	newAppY = y+height - newAppHeight - margin;
+    //            else if (cy-newHalfH < y + margin)
+    //            	newAppY = y + margin;
+    //            else
+    //            	newAppY = cy-newHalfH;
+    //     }
+    // }
+	return [newAppX, newAppY, newAppWidth, newAppHeight];
+}
+
+function tileApplications() {
+	var app;
+	var i, c, r;
+	var numCols, numRows;
+
+	var displayAr  = config.totalWidth / config.totalHeight;
+	var arDiff     = displayAr / averageWindowAspectRatio();
+	var numWindows = applications.length;
+
+	// 3 scenarios... windows are on average the same aspect ratio as the display
+	if (arDiff >= 0.7 && arDiff <= 1.3) {
+		numCols = Math.ceil(Math.sqrt( numWindows ));
+		numRows = Math.ceil(numWindows / numCols);
+	}
+    else if (arDiff < 0.7) {
+		// windows are much wider than display
+		c = Math.round(1 / (arDiff/2.0));
+		if (numWindows <= c) {
+			numRows = numWindows;
+			numCols = 1;
+		}
+		else {
+			numCols = Math.max(2, Math.round(numWindows / c));
+			numRows = Math.round(Math.ceil(numWindows / numCols));
+		}
+	}
+	else {
+		// windows are much taller than display
+		c = Math.round(arDiff*2);
+		if (numWindows <= c) {
+			numCols = numWindows;
+			numRows = 1;
+		}
+		else {
+			numRows = Math.max(2, Math.round(numWindows / c));
+			numCols = Math.round(Math.ceil(numWindows / numRows));
+		}
+	}
+
+    // determine the bounds of the tiling area
+	var areaX = 0;
+	var areaY = config.titleBarHeight;
+	var areaW = config.totalWidth;
+	var areaH = config.totalHeight-config.titleBarHeight;
+
+	var tileW = Math.floor(areaW / numCols);
+	var tileH = Math.floor(areaH / numRows);
+
+	// go through them in sorted order
+	// applications.sort()
+
+    r = numRows-1;
+    c = 0;
+	for (i=0; i<applications.length; i++) {
+		// get the application
+		app =  applications[i];
+		// calculate new dimensions
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
+        // update the data structure
+        app.left   = newdims[0];
+        app.top    = newdims[1];
+		app.width  = newdims[2];
+		app.height = newdims[3];
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+
+        c += 1;
+        if (c === numCols) {
+            c  = 0;
+            r -= 1;
+        }
+    }
+}
+
+// Remove all applications
+function clearDisplay() {
+	var all = applications.length;
+	while (all) {
+		deleteApplication( applications[0] );
+		// deleteApplication changes the array, so check again
+		all = applications.length;
+	}
+}
+
+
+// handlers for messages from UI
+
+function wsClearDisplay(wsio, data) {
+	clearDisplay();
+}
+
+function wsTileApplications(wsio, data) {
+	tileApplications();
+}
+
+
 /******************** Server File Functions ********************/
+
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
@@ -1677,6 +1858,7 @@ if (program.interactive)
 				console.log('kill\t\tclose application: arg0: index - kill 0');
 				console.log('list\t\tlist running applications');
 				console.log('clear\t\tclose all running applications');
+				console.log('tile\t\tlayout all running applications');
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
 				console.log('sessions\tlist the available sessions');
@@ -1710,14 +1892,15 @@ if (program.interactive)
 					}
 				}
 				break;
+
 			case 'clear':
-				var all = applications.length;
-				while (all) {
-					deleteApplication( applications[0] );
-					// deleteApplication changes the array, so check again
-					all = applications.length;
-				}
+				clearDisplay();
 				break;
+
+			case 'tile':
+				tileApplications();
+				break;
+
 			case 'list':
 				var i;
 				console.log("Applications\n------------");
