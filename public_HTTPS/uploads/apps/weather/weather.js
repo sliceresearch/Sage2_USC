@@ -200,7 +200,7 @@ function drawBox (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
 
 function drawBorderlessBox (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
 {
-     gwin.sampleSVG.append("svg:rect")
+     sampleSVG.append("svg:rect")
         .style("stroke", colorOut)
         .style("fill", colorOut)
         .style("fill-opacity", percOut)
