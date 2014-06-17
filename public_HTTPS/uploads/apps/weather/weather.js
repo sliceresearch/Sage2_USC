@@ -198,6 +198,20 @@ function drawBox (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
         .attr("width", parseInt(boxWidth*scaleFactor));
 }
 
+function drawBorderlessBox (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+{
+     gwin.sampleSVG.append("svg:rect")
+        .style("stroke", colorOut)
+        .style("fill", colorOut)
+        .style("fill-opacity", percOut)
+        .attr("x", parseInt(boxLocX*scaleFactor))
+        .attr("y", parseInt(boxLocY*scaleFactor))
+        .attr("rx", rounded)
+        .attr("ry", rounded)
+        .attr("height", parseInt(boxHeight*scaleFactor))
+        .attr("width", parseInt(boxWidth*scaleFactor));
+}
+
 ////////////////////////////////////////
 
 function drawText(textLocX, textLocY, theText, textFontSize)
@@ -504,7 +518,7 @@ function drawInsideTemp()
     //--------------------------------------
       
     // clear area for time
-
+/*
     sampleSVG.append("svg:rect")
     .style("stroke", "white")
     .style("fill", "white")
@@ -515,7 +529,7 @@ function drawInsideTemp()
     .attr("ry", rounded)
     .attr("height", 55*scaleFactor)
     .attr("width", canvasWidth*scaleFactor);
-
+*/
     drawTextLeft(leftMargin, 320, date, largeFontSize)
 
     // if hour < 10 indent a bit
@@ -566,6 +580,8 @@ function updateAll()
 function drawAll()
 {
     sampleSVG.selectAll("*").remove();
+    drawBorderlessBox(0,      0, canvasHeight, canvasWidth, "white", 1);
+    
     drawBasicStuff();
     drawOutsideTemp();
     drawInsideTemp(); 
