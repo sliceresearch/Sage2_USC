@@ -580,7 +580,7 @@ function updateAll()
 function drawAll()
 {
     sampleSVG.selectAll("*").remove();
-    drawBorderlessBox(0,      0, canvasHeight, canvasWidth, "white", 1);
+    drawBorderlessBox(0,      0, canvasHeight, this.element.clientWidth, "white", 1);
     
     drawBasicStuff();
     drawOutsideTemp();
