@@ -565,6 +565,9 @@ function updateAll()
 
 function drawAll()
 {
+    console.log("drawAll");
+    gwin.sampleSVG.selectAll("*").remove();
+    drawBasicStuff();
     drawOutsideTemp();
     drawInsideTemp(); 
 }
