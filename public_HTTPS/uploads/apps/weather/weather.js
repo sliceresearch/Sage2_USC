@@ -649,7 +649,7 @@ var weather = SAGE2_App.extend( {
 	    var scaleFactorX = x / canvasWidth;
 	    var scaleFactorY = y / canvasHeight;
 
-	    gwin.scaleFactor = 0.97 * Math.min(scaleFactorX, scaleFactorY);
+	    scaleFactor = 0.97 * Math.min(scaleFactorX, scaleFactorY);
 
 	    updateText();
 
