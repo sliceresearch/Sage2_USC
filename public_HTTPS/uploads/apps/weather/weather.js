@@ -303,8 +303,13 @@ function updateOutsideTemp()
 {
 // need to add a random number to the end of the request to avoid browser caching
 
-    d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function(weatherOut) {
-        weather = weatherOut.query.results.current_observation.temp_f;
+    d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function(error, weatherOut) {
+
+      if (error) {
+          return;
+      }
+      
+      weather = weatherOut.query.results.current_observation.temp_f;
         iconSet = weatherOut.query.results.current_observation.icons.icon_set;
         
         // should use the name field to make sure I get the correct one
@@ -353,7 +358,12 @@ function updateInsideTemp()
 
 //    d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
     d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' + 
-        Math.floor(Math.random() * 10000000), function(datasetTextIn) {
+        Math.floor(Math.random() * 10000000), function(error, datasetTextIn) {
+        
+        if (error) {
+          return;
+      }
+      
     var parsedCSV = d3.csv.parseRows(datasetTextIn);
 
     var d1 = parsedCSV[0][0];
@@ -517,19 +527,6 @@ function drawInsideTemp()
             
     //--------------------------------------
       
-    // clear area for time
-/*
-    sampleSVG.append("svg:rect")
-    .style("stroke", "white")
-    .style("fill", "white")
-    .style("fill-opacity", 1)
-    .attr("x", 0)
-    .attr("y", 280*scaleFactor)
-    .attr("rx", rounded)
-    .attr("ry", rounded)
-    .attr("height", 55*scaleFactor)
-    .attr("width", canvasWidth*scaleFactor);
-*/
     drawTextLeft(leftMargin, 320, date, largeFontSize)
 
     // if hour < 10 indent a bit
@@ -580,7 +577,7 @@ function updateAll()
 function drawAll()
 {
     sampleSVG.selectAll("*").remove();
-    drawBorderlessBox(0,      0, canvasHeight, canvasWidth, "white", 1);
+    drawBorderlessBox(0,      0, 1.05*canvasHeight, 1.05*canvasWidth, "white", 1);
     
     drawBasicStuff();
     drawOutsideTemp();
@@ -653,9 +650,9 @@ var weather = SAGE2_App.extend( {
 	    var scaleFactorY = y / canvasHeight;
 
 	    if (scaleFactorX < scaleFactorY)
-	        scaleFactor = 0.95 * scaleFactorX;
+	        scaleFactor = 0.97 * scaleFactorX;
 	    else
-	        scaleFactor = 0.95 * scaleFactorY;
+	        scaleFactor = 0.97 * scaleFactorY;
 
 	    updateText();
 
