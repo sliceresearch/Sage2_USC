@@ -811,11 +811,11 @@ function fitWithin(app, x, y, width, height, margin) {
 	// take buffer into account
 	x += margin;
 	y += margin;
-	width  = width - 2*margin;
+	width  = width  - 2*margin;
 	height = height - 2*margin;
 
-	var widthRatio  = (width-4) / app.width;
-	var heightRatio = (height-4) / app.height;
+	var widthRatio  = (width-config.titleBarHeight)  / app.width;
+	var heightRatio = (height-config.titleBarHeight) / app.height;
 	var maximizeRatio;
 	if (widthRatio > heightRatio)
 		maximizeRatio = heightRatio;
@@ -903,9 +903,9 @@ function tileApplications() {
 
     // determine the bounds of the tiling area
 	var areaX = 0;
-	var areaY = config.titleBarHeight;
+	var areaY = Math.round(1.5 * config.titleBarHeight); // keep 0.5 height as margin
 	var areaW = config.totalWidth;
-	var areaH = config.totalHeight-config.titleBarHeight;
+	var areaH = config.totalHeight-(2*config.titleBarHeight); // bottom margin: 1.5 + 0.5 = 2
 
 	var tileW = Math.floor(areaW / numCols);
 	var tileH = Math.floor(areaH / numRows);
@@ -922,7 +922,7 @@ function tileApplications() {
         var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
         // update the data structure
         app.left   = newdims[0];
-        app.top    = newdims[1];
+        app.top    = newdims[1]-config.titleBarHeight;
 		app.width  = newdims[2];
 		app.height = newdims[3];
 		// build the object to be sent
