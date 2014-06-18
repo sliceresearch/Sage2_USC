@@ -8,6 +8,10 @@
 //
 // Copyright (c) 2014
 
+var station = "LOT";    // LOT Chicago
+                        // HMO Honolulu
+                        // NKX San Diego
+
 var canvasWidth = 1.0;
 var canvasHeight = 1.0;
 
@@ -16,12 +20,35 @@ var sampleSVG;
 var image1, image2, image3, image4, image5, image6;
 var image3a, image4a;
 
+/*
 var URL1 = "http://radar.weather.gov/ridge/Overlays/Topo/Short/LOT_Topo_Short.jpg";
 var URL2 = "http://radar.weather.gov/ridge/Overlays/County/Short/LOT_County_Short.gif";
 var URL3 = "http://radar.weather.gov/ridge/RadarImg/N0R/LOT_N0R_0.gif";
 var URL4 = "http://radar.weather.gov/ridge/Warnings/Short/LOT_Warnings_0.gif";
 var URL5 = "http://radar.weather.gov/ridge/Legend/N0R/LOT_N0R_Legend_0.gif";
 var URL6 = "http://radar.weather.gov/Overlays/Cities/Short/LOT_City_Short.gif";
+*/
+
+var URL1a = "http://radar.weather.gov/ridge/Overlays/Topo/Short/";
+var URL2a = "http://radar.weather.gov/ridge/Overlays/County/Short/";
+var URL3a = "http://radar.weather.gov/ridge/RadarImg/N0R/";
+var URL4a = "http://radar.weather.gov/ridge/Warnings/Short/";
+var URL5a = "http://radar.weather.gov/ridge/Legend/N0R/";
+var URL6a = "http://radar.weather.gov/Overlays/Cities/Short/";
+
+var URL1b = "_Topo_Short.jpg";
+var URL2b = "_County_Short.gif";
+var URL3b = "_N0R_0.gif";
+var URL4b = "_Warnings_0.gif";
+var URL5b = "_N0R_Legend_0.gif";
+var URL6b = "_City_Short.gif";
+
+var URL1 = URL1a+station+URL1b;
+var URL2 = URL2a+station+URL2b;
+var URL3 = URL3a+station+URL3b;
+var URL4 = URL4a+station+URL4b;
+var URL5 = URL5a+station+URL5b;
+var URL6 = URL6a+station+URL6b;
 
 ////////////////////////////////////////
 
