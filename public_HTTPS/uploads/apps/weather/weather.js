@@ -630,7 +630,7 @@ var weather = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.resizeEvents = "onfinish";
+		this.resizeEvents = "continuous"; //onfinish
 		this.svg = null;
 	},
 
@@ -703,7 +703,7 @@ var weather = SAGE2_App.extend( {
 		this.svg.attr('width' ,  this.element.clientWidth  +"px");
 		this.svg.attr('height' , this.element.clientHeight  +"px");
 		this.refresh(date);
-        drawAll();
+        //drawAll();
 	},
 
 	event: function(eventType, userId, x, y, data, date) {
@@ -713,8 +713,9 @@ var weather = SAGE2_App.extend( {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
         gwin.itsF = !gwin.itsF;
-        updateAll();
-        drawAll();
+        this.refresh(date);
+        //updateAll();
+        //drawAll();
 		}
 	}
 	
