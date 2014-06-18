@@ -38,6 +38,10 @@
 	var canvasKeyPressFunc = null;
 	var selectedFile = null;
 	
+	var uiAspect;
+	var uiWindow;
+	var extraInteraction;
+	
 	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
 	var fileCloseBtn;
@@ -117,6 +121,9 @@
 			}, 2000);
 		});
 		
+		uiWindow         = document.getElementById('uiWindow');
+		extraInteraction = document.getElementById('extraInteraction');
+		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
 		serverSessionBtn = document.getElementById('serverSessionBtn');
 		clearBtn         = document.getElementById('clearBtn');
@@ -135,7 +142,6 @@
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
 		winMgr = new windowManager("winMgr", wsio);
-		winMgr.draw();
 		
 		canvasKeyDownFunc = winMgr.keyDown.bind(winMgr);
 		canvasKeyUpFunc = winMgr.keyUp.bind(winMgr);
@@ -162,6 +168,29 @@
 		sessionsDir = document.getElementById('sessions');
 				
 		wsio.on('setupDisplayConfiguration', function(config) {
+			var extraHeight = extraInteraction.clientHeight;
+			
+			var winWidth  = window.innerWidth;
+			var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+			
+			uiAspect  = config.totalWidth / config.totalHeight;
+			var winAspect = winWidth / winHeight;
+			
+			if(winAspect < uiAspect){
+				var uiWidth  = 0.9*winWidth;
+				var uiHeight = uiWidth / uiAspect;
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			else{
+				var uiHeight = 0.9*winHeight;
+				var uiWidth  = uiHeight * uiAspect;
+				uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			
 			winMgr.initDisplayConfig(config);
 			var displayMin = Math.min(config.totalWidth, config.totalHeight);
 			var thisMin = Math.min(screen.width, screen.height);
@@ -230,6 +259,32 @@
 		wsio.on('stopMediaCapture', function() {
 			if(sagePtr.mediaStream != null) sagePtr.mediaStream.stop();
 		});
+	}
+	
+	function resize() {
+		var extraHeight = extraInteraction.clientHeight;
+			
+		var winWidth  = window.innerWidth;
+		var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+		
+		var winAspect = winWidth / winHeight;
+		
+		if(winAspect < uiAspect){
+			var uiWidth  = 0.9*winWidth;
+			var uiHeight = uiWidth / uiAspect;
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		else{
+			var uiHeight = 0.9*winHeight;
+			var uiWidth  = uiHeight * uiAspect;
+			uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		
+		winMgr.resize();
 	}
 	
 	function createFileList(files, type, dir) {
@@ -328,10 +383,10 @@
 
 </head>
 
-<body onload="init()" onresize="winMgr.resize()">
+<body onload="init()" onresize="resize()">
 	<div id="wrapper">
-		<div id="window">
-			<canvas id="winMgr" style="width: 100%;">HTML5 canvas element not supported</canvas>
+		<div id="uiWindow">
+			<canvas id="winMgr">HTML5 canvas element not supported</canvas>
 		</div>
 		<div id="extraInteraction">
 			<div id="fileUpload">

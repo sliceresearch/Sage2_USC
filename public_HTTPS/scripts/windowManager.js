@@ -41,12 +41,6 @@ function windowManager(id, ws) {
 	this.youtubeImg       = new Image();
 	this.youtubeImg.src   = "images/youtube.png";
 	
-	var widthPercent = this.element.style.width;
-	var widthPx = parseFloat(widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
-	
-	this.ctx.canvas.width = widthPx;
-	this.ctx.canvas.height = widthPx / this.aspectRatio;
-	
 	this.draw = function() {
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.weight);
@@ -282,30 +276,32 @@ function windowManager(id, ws) {
 	this.initDisplayConfig = function(config) {
 		this.nRows = config.layout.rows;
 		this.nCols = config.layout.columns;
-		this.aspectRatio = (config.resolution.width*this.nCols) / (config.resolution.height*this.nRows);
-		
-		var widthPercent = this.element.style.width;
-		var widthPx = (widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
-		
-		this.element.width = widthPx;
-		this.element.height = widthPx / this.aspectRatio;
 		
 		this.resolution = [(config.resolution.width*this.nCols), (config.resolution.height*this.nRows)];
+		this.aspectRatio = this.resolution[0] / this.resolution[1];
+		
+		var widthPx  = this.element.parentNode.style.width;
+		var heightPx = this.element.parentNode.style.height;
+		
+		this.element.width = widthPx.substring(0, widthPx.length-2);
+		this.element.height = heightPx.substring(0, heightPx.length-2);
+		
 		this.scale = this.element.width / this.resolution[0];
 		
-		this.titleBarHeight = Math.round(0.03 * (config.resolution.height * config.layout.rows));
+		this.titleBarHeight = config.titleBarHeight;
 		
 		this.draw();
 	};
 	
 	this.resize = function() {
-		var widthPercent = this.element.style.width;
-		var widthPx = (widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
+		var widthPx  = this.element.parentNode.style.width;
+		var heightPx = this.element.parentNode.style.height;
 		
-		this.element.width = widthPx;
-		this.element.height = widthPx / this.aspectRatio;
+		this.element.width = widthPx.substring(0, widthPx.length-2);
+		this.element.height = heightPx.substring(0, heightPx.length-2);
 		
 		this.scale = this.element.width / this.resolution[0];
+		
 		this.draw();
 	};
 	

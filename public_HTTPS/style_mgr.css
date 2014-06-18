@@ -33,14 +33,10 @@ input, button {
 }
 	
 #wrapper {
-	width: 80%;
+	width: 100%;
 	margin: 0 auto;
 	text-align: center;
 	background-color: #FFFFFF;
-}
-
-#window {
-	margin: 20px 0px 0px 0px;
 }
 
 #fileUpload {
