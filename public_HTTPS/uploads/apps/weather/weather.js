@@ -679,6 +679,7 @@ var weather = SAGE2_App.extend( {
 		this.svg.attr('width' ,  this.element.clientWidth  +"px");
 		this.svg.attr('height' , this.element.clientHeight  +"px");
 		this.refresh(date);
+        drawAll();
 	},
 
 	event: function(eventType, userId, x, y, data, date) {
@@ -689,6 +690,7 @@ var weather = SAGE2_App.extend( {
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
         itsF = !itsF;
         updateAll();
+        drawAll();
 		}
 	}
 	
