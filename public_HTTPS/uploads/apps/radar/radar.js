@@ -8,9 +8,15 @@
 //
 // Copyright (c) 2014
 
-var station = "LOT";    // LOT Chicago
-                        // HMO Honolulu
-                        // NKX San Diego
+var stations = [
+    "LOT", // Chicago
+    "HMO", // Honolulu
+    "NKX", // San Diego
+    "OKX", // New York City
+    "GRK" // Austin
+];
+
+var currentStation = 0;
 
 var canvasWidth = 1.0;
 var canvasHeight = 1.0;
@@ -43,12 +49,12 @@ var URL4b = "_Warnings_0.gif";
 var URL5b = "_N0R_Legend_0.gif";
 var URL6b = "_City_Short.gif";
 
-var URL1 = URL1a+station+URL1b;
-var URL2 = URL2a+station+URL2b;
-var URL3 = URL3a+station+URL3b;
-var URL4 = URL4a+station+URL4b;
-var URL5 = URL5a+station+URL5b;
-var URL6 = URL6a+station+URL6b;
+var URL1;
+var URL2;
+var URL3;
+var URL4;
+var URL5;
+var URL6;
 
 ////////////////////////////////////////
 
@@ -101,6 +107,14 @@ function update()
 
 function setUpBackground()
 {
+
+        URL1 = URL1a+stations[currentStation]+URL1b;
+        URL2 = URL2a+stations[currentStation]+URL2b;
+        URL3 = URL3a+stations[currentStation]+URL3b;
+        URL4 = URL4a+stations[currentStation]+URL4b;
+        URL5 = URL5a+stations[currentStation]+URL5b;
+        URL6 = URL6a+stations[currentStation]+URL6b;
+
         // only need to load the background images and the legend once
 
         image1 = new Image;
@@ -208,6 +222,11 @@ var radar = SAGE2_App.extend( {
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
+            currentStation += 1;
+            if (currentStation >= stations.length)
+                currentStation = 0;
+            setUpBackground();
+            this.draw(date);
 		}
 	}
 	
