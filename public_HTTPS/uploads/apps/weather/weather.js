@@ -556,7 +556,6 @@ function drawInsideTemp()
 
 function updateAll()
 {
-    console.log("updateAll");
     updateOutsideTemp();
     updateInsideTemp(); 
 }
@@ -639,7 +638,7 @@ var weather = SAGE2_App.extend( {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
-        this.maxFPS = 0.5;
+        this.maxFPS = 0.05;
 
 		// Get width height from the supporting div		
 		var width  = this.element.clientWidth;
