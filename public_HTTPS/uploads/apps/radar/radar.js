@@ -8,158 +8,206 @@
 //
 // Copyright (c) 2014
 
-var stations = [
-    "LOT", // Chicago
-    "HMO", // Honolulu
-    "NKX", // San Diego
-    "OKX", // New York City
-    "GRK" // Austin
-];
 
-var currentStation = 0;
+// simple radar image app
+// written by andy johnson - summer 2014
 
-var canvasWidth = 1.0;
-var canvasHeight = 1.0;
+var radar = SAGE2_App.extend( {
 
-var sampleSVG;
+construct: function() {
+        arguments.callee.superClass.construct.call(this);
 
-var image1, image2, image3, image4, image5, image6;
-var image3a, image4a;
+        this.resizeEvents = "continuous";
+        this.svg = null;
 
-/*
-var URL1 = "http://radar.weather.gov/ridge/Overlays/Topo/Short/LOT_Topo_Short.jpg";
-var URL2 = "http://radar.weather.gov/ridge/Overlays/County/Short/LOT_County_Short.gif";
-var URL3 = "http://radar.weather.gov/ridge/RadarImg/N0R/LOT_N0R_0.gif";
-var URL4 = "http://radar.weather.gov/ridge/Warnings/Short/LOT_Warnings_0.gif";
-var URL5 = "http://radar.weather.gov/ridge/Legend/N0R/LOT_N0R_Legend_0.gif";
-var URL6 = "http://radar.weather.gov/Overlays/Cities/Short/LOT_City_Short.gif";
-*/
+    this.stations = [
+        "LOT", // Chicago
+        "HMO", // Honolulu
+        "NKX", // San Diego
+        "OKX", // New York City
+        "GRK" // Austin
+    ];
 
-var URL1a = "http://radar.weather.gov/ridge/Overlays/Topo/Short/";
-var URL2a = "http://radar.weather.gov/ridge/Overlays/County/Short/";
-var URL3a = "http://radar.weather.gov/ridge/RadarImg/N0R/";
-var URL4a = "http://radar.weather.gov/ridge/Warnings/Short/";
-var URL5a = "http://radar.weather.gov/ridge/Legend/N0R/";
-var URL6a = "http://radar.weather.gov/Overlays/Cities/Short/";
+    this.currentStation = 0;
 
-var URL1b = "_Topo_Short.jpg";
-var URL2b = "_County_Short.gif";
-var URL3b = "_N0R_0.gif";
-var URL4b = "_Warnings_0.gif";
-var URL5b = "_N0R_Legend_0.gif";
-var URL6b = "_City_Short.gif";
+    this.canvasWidth = 1.0;
+    this.canvasHeight = 1.0;
 
-var URL1;
-var URL2;
-var URL3;
-var URL4;
-var URL5;
-var URL6;
+    this.sampleSVG;
+
+    this.image1;
+    this.image2;
+    this.image3;
+    this.image4;
+    this.image5;
+    this.image6;
+
+    this.image3a;
+    this.image4a;
+    this.image5a;
+
+    this.URL1;
+    this.URL2;
+    this.URL3;
+    this.URL4;
+    this.URL5;
+    this.URL6;
+},
 
 ////////////////////////////////////////
 
-function drawImage(theImage)
+createURLs: function ()
 {
-    sampleSVG.append("image")
+    var URL1a = "http://radar.weather.gov/ridge/Overlays/Topo/Short/";
+    var URL2a = "http://radar.weather.gov/ridge/Overlays/County/Short/";
+    var URL3a = "http://radar.weather.gov/ridge/RadarImg/N0R/";
+    var URL4a = "http://radar.weather.gov/ridge/Warnings/Short/";
+    var URL5a = "http://radar.weather.gov/ridge/Legend/N0R/";
+    var URL6a = "http://radar.weather.gov/Overlays/Cities/Short/";
+
+    var URL1b = "_Topo_Short.jpg";
+    var URL2b = "_County_Short.gif";
+    var URL3b = "_N0R_0.gif";
+    var URL4b = "_Warnings_0.gif";
+    var URL5b = "_N0R_Legend_0.gif";
+    var URL6b = "_City_Short.gif";
+
+    this.URL1 = URL1a+this.stations[this.currentStation]+URL1b;
+    this.URL2 = URL2a+this.stations[this.currentStation]+URL2b;
+    this.URL3 = URL3a+this.stations[this.currentStation]+URL3b;
+    this.URL4 = URL4a+this.stations[this.currentStation]+URL4b;
+    this.URL5 = URL5a+this.stations[this.currentStation]+URL5b;
+    this.URL6 = URL6a+this.stations[this.currentStation]+URL6b;
+},
+
+////////////////////////////////////////
+
+drawImage: function (theImage)
+{
+    this.sampleSVG.append("image")
     .attr("xlink:href", theImage)
     .attr("opacity", 1)
     .attr("x", 0)
     .attr("y", 0)
-    .attr("width", canvasWidth)
-    .attr("height", canvasHeight); 
-}
+    .attr("width", this.canvasWidth)
+    .attr("height", this.canvasHeight); 
+},
+
 ////////////////////////////////////////
 
-function drawEverything()
+drawEverything: function ()
 {
-    sampleSVG.selectAll("*").remove();
+    this.sampleSVG.selectAll("*").remove();
 
-    drawImage(image1.src); //TOPO
-    drawImage(image2.src); //Counties
+    this.drawImage(this.image1.src); //TOPO
+    this.drawImage(this.image2.src); //Counties
     
-    drawImage(image3.src); //Radar
-    drawImage(image4.src); //Warnings
+    this.drawImage(this.image3.src); //Radar
+    this.drawImage(this.image4.src); //Warnings
 
-    drawImage(image6.src); //Cities
+    this.drawImage(this.image6.src); //Cities
 
-    drawImage(image5.src); //Legend
-}
+    this.drawImage(this.image5.src); //Legend
+},
 
 ////////////////////////////////////////
 
-function update()
+update: function ()
 {
-    // get new imagery for the radar and the warnings
+    // get new imagery for the radar, warnings, overlay (time)
 
-    image3.src = URL3+ '?' + Math.floor(Math.random() * 10000000);
-    image3.onload = function(){
-        //image3 = image3a;
+    this.image3.src = this.URL3+ '?' + Math.floor(Math.random() * 10000000);
+    this.image3.onload = function(){
     } 
 
-    
-    image4.src = URL4+ '?' + Math.floor(Math.random() * 10000000);
-    image4.onload = function(){
-        //image4 = image4a;
-    }   
-}
+    this.image4.src = this.URL4+ '?' + Math.floor(Math.random() * 10000000);
+    this.image4.onload = function(){
+     } 
+
+    this.image5.src = this.URL5+ '?' + Math.floor(Math.random() * 10000000);
+    this.image5.onload = function(){
+    } 
+},
 
 ////////////////////////////////////////
+/*
+updateWindow: function (){
+    var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
 
-function setUpBackground()
-{
+    this.canvasWidth = x;
+    this.canvasHeight = y;
 
-        URL1 = URL1a+stations[currentStation]+URL1b;
-        URL2 = URL2a+stations[currentStation]+URL2b;
-        URL3 = URL3a+stations[currentStation]+URL3b;
-        URL4 = URL4a+stations[currentStation]+URL4b;
-        URL5 = URL5a+stations[currentStation]+URL5b;
-        URL6 = URL6a+stations[currentStation]+URL6b;
+    this.sampleSVG.attr("width", 1.0*this.canvasWidth);
+    this.sampleSVG.attr("height", 1.0*this.canvasHeight);
 
-        // only need to load the background images and the legend once
+    this.sampleSVG.append("svg:rect")
+    .style("stroke", "black")
+    .style("fill", "black")
+    .style("stroke-width", 0)
+    .style("fill-opacity", 1)
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("height", this.canvasHeight)
+    .attr("width", this.canvasWidth);
 
-        image1 = new Image;
-        image1.src = URL1+ '?' + Math.floor(Math.random() * 10000000);
-        image1.onload = function(){
-        } 
-
-        image2 = new Image;
-        image2.src = URL2+ '?' + Math.floor(Math.random() * 10000000);
-        image2.onload = function(){
-        } 
-
-        image5 = new Image;
-        image5.src = URL5+ '?' + Math.floor(Math.random() * 10000000);
-        image5.onload = function(){
-        }
-
-        image6 = new Image;
-        image6.src = URL6+ '?' + Math.floor(Math.random() * 10000000);
-        image6.onload = function(){
-        }
-
-        image3 = new Image;
-        image4 = new Image;
-
-        image3a = new Image;
-        image4a = new Image;
-}
-
+    this.update();
+    this.drawEverything();
+},
+*/
 ////////////////////////////////////////
 
-var radar = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+startup: function (){
+    // set up the area to render into
+   /*
+    this.sampleSVG = d3.select("#viz")
+            .append("svg:svg")
+            .attr("width", this.canvasWidth)
+            .attr("height", this.canvasHeight);
+*/
 
-		this.resizeEvents = "continuous"; //onfinish
-		this.svg = null;
-	},
+    // load in the background images and the legend once
+    this.image1 = new Image;
+    this.image2 = new Image;
+    this.image3 = new Image;
+    this.image4 = new Image;
+    this.image5 = new Image; 
+    this.image6 = new Image;
+
+    this.createURLs();
+
+    // TOPO
+    this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
+    this.image1.onload = function(){
+    } 
+
+    // Counties
+    this.image2.src = this.URL2+ '?' + Math.floor(Math.random() * 10000000);
+    this.image2.onload = function(){
+    } 
+
+    // Cities
+    this.image6.src = this.URL6+ '?' + Math.floor(Math.random() * 10000000);
+    this.image6.onload = function(){
+    }
+
+    this.image3a = new Image;
+    this.image4a = new Image;
+    this.image5a = new Image;
+
+    //this.updateWindow();
+},
 
 
 	init: function(id, width, height, resrc, date) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
-        this.maxFPS = 0.01;
+        this.maxFPS = 0.02;
 
 		// Get width height from the supporting div		
 		var width  = this.element.clientWidth;
@@ -176,11 +224,11 @@ var radar = SAGE2_App.extend( {
 		    .attr("width",   width)
 		    .attr("height",  height)
 		    .attr("viewBox", box);
-		sampleSVG = this.svg;
+		this.sampleSVG = this.svg;
 
-        setUpBackground();
+        this.startup();
 
-		update();
+		this.update();
 		this.draw_d3(date);
 	},
 
@@ -192,10 +240,10 @@ var radar = SAGE2_App.extend( {
 		var x = this.element.clientWidth;
 		var y = this.element.clientHeight;
 
-        canvasWidth = x;
-        canvasHeight = y;
+        this.canvasWidth = x;
+        this.canvasHeight = y;
 
-	    sampleSVG.append("svg:rect")
+	    this.sampleSVG.append("svg:rect")
 	    .style("stroke", "black")
 	    .style("fill", "black")
 	    .style("fill-opacity", 1)
@@ -206,8 +254,8 @@ var radar = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-	    update();
-        drawEverything();
+	    this.update();
+        this.drawEverything();
 	},
 
 	resize: function(date) {
@@ -217,15 +265,20 @@ var radar = SAGE2_App.extend( {
 	},
 
 	event: function(eventType, userId, x, y, data, date) {
+            
+
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-            currentStation += 1;
-            if (currentStation >= stations.length)
-                currentStation = 0;
-            setUpBackground();
+            console.log("event:", this.currentStation, this.stations.length);
+            this.currentStation += 1;
+            if (this.currentStation >= this.stations.length)
+                {
+                    this.currentStation = 0;
+                }
+            this.startup();
             this.draw(date);
 		}
 	}
