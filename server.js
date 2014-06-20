@@ -1242,7 +1242,9 @@ function setupDisplayBackground() {
 		
 			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
 			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
-		
+			// add transparent background
+			imTile.in("-background", "None");
+
 			imTile.write(tmpImg, function(err) {
 				if(err) throw err;
 			
