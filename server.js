@@ -1338,7 +1338,7 @@ function setupHttpsOptions() {
 		key:  server_key,
 		cert: server_crt,
 		ca:   server_ca,
-		requestCert: true,
+		requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
 		rejectUnauthorized: false,
 		// callback to handle multi-homed machines
 		SNICallback: function(servername){
