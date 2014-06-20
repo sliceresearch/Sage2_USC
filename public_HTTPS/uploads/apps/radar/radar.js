@@ -33,25 +33,25 @@ construct: function() {
     this.canvasWidth = 1.0;
     this.canvasHeight = 1.0;
 
-    this.sampleSVG;
+    this.sampleSVG = null;
 
-    this.image1;
-    this.image2;
-    this.image3;
-    this.image4;
-    this.image5;
-    this.image6;
+    this.image1 = new Image();
+    this.image2 = new Image();
+    this.image3 = new Image();
+    this.image4 = new Image();
+    this.image5 = new Image(); 
+    this.image6 = new Image();
 
-    this.image3a;
-    this.image4a;
-    this.image5a;
+    this.image3a = new Image();
+    this.image4a = new Image();
+    this.image5a = new Image();
 
-    this.URL1;
-    this.URL2;
-    this.URL3;
-    this.URL4;
-    this.URL5;
-    this.URL6;
+    this.URL1 = "";
+    this.URL2 = "";
+    this.URL3 = "";
+    this.URL4 = "";
+    this.URL5 = "";
+    this.URL6 = "";
 },
 
 ////////////////////////////////////////
@@ -118,15 +118,15 @@ update: function ()
 
     this.image3.src = this.URL3+ '?' + Math.floor(Math.random() * 10000000);
     this.image3.onload = function(){
-    } 
+    };
 
     this.image4.src = this.URL4+ '?' + Math.floor(Math.random() * 10000000);
     this.image4.onload = function(){
-     } 
+     };
 
     this.image5.src = this.URL5+ '?' + Math.floor(Math.random() * 10000000);
     this.image5.onload = function(){
-    } 
+    };
 },
 
 ////////////////////////////////////////
@@ -171,33 +171,24 @@ startup: function (){
 */
 
     // load in the background images and the legend once
-    this.image1 = new Image;
-    this.image2 = new Image;
-    this.image3 = new Image;
-    this.image4 = new Image;
-    this.image5 = new Image; 
-    this.image6 = new Image;
+
 
     this.createURLs();
 
     // TOPO
     this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
     this.image1.onload = function(){
-    } 
+    }; 
 
     // Counties
     this.image2.src = this.URL2+ '?' + Math.floor(Math.random() * 10000000);
     this.image2.onload = function(){
-    } 
+    }; 
 
     // Cities
     this.image6.src = this.URL6+ '?' + Math.floor(Math.random() * 10000000);
     this.image6.onload = function(){
-    }
-
-    this.image3a = new Image;
-    this.image4a = new Image;
-    this.image5a = new Image;
+    };
 
     //this.updateWindow();
 },
@@ -207,24 +198,25 @@ startup: function (){
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
-        this.maxFPS = 0.02;
+        this.maxFPS = 0.01;
 
-		// Get width height from the supporting div		
-		var width  = this.element.clientWidth;
-		var height = this.element.clientHeight;
+        // Get width height from the supporting div     
+        var divWidth  = this.element.clientWidth;
+        var divHeight = this.element.clientHeight;
 
-		this.element.id = "div" + id;
+        this.element.id = "div" + id;
 
-		// backup of the context
-		var self = this;
+        // backup of the context
+        var self = this;
 
-		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
-		this.svg = d3.select(this.element).append("svg:svg")
-		    .attr("width",   width)
-		    .attr("height",  height)
-		    .attr("viewBox", box);
-		this.sampleSVG = this.svg;
+        // attach the SVG into the this.element node provided to us
+        var box="0,0,"+width+","+height;
+        this.svg = d3.select(this.element).append("svg:svg")
+            .attr("width",   divWidth)
+            .attr("height",  divHeight)
+            .attr("viewBox", box);
+        this.sampleSVG = this.svg;
+
 
         this.startup();
 
@@ -272,8 +264,7 @@ startup: function (){
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-            console.log("event:", this.currentStation, this.stations.length);
-            this.currentStation += 1;
+             this.currentStation += 1;
             if (this.currentStation >= this.stations.length)
                 {
                     this.currentStation = 0;
