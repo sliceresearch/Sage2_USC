@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 var SAGE2_App = Class.extend( {
 	construct: function() {
@@ -24,6 +24,11 @@ var SAGE2_App = Class.extend( {
 		this.t     = null;
 		this.dt    = null;
 		this.frame = null;
+		this.fps   = null;
+
+		this.timer  = null;
+		this.maxfps = null;
+		this.redraw = null;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -32,10 +37,10 @@ var SAGE2_App = Class.extend( {
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
 		if (elem === "div") {
-			this.element.style.width = width + "px";
+			this.element.style.width  = width  + "px";
 			this.element.style.height = height + "px";
 		} else {
-			this.element.width = width;
+			this.element.width  = width;
 			this.element.height = height;
 		}
 		this.div.appendChild(this.element);
@@ -44,11 +49,32 @@ var SAGE2_App = Class.extend( {
 		this.startDate = date;
 		this.prevDate  = date;
 		this.frame     = 0;
+		
+		// Measurement variables
+		this.frame_sec = 0;
+		this.sec       = 0;
+		this.fps       = 0.0;
+
+		// Frame rate control
+		this.timer     = 0;
+		this.maxFPS    = 60.0; // Big than 60, since Chrome is Vsync anyway
+		this.redraw    = true;
 	},
 	
 	preDraw: function(date) {
 		this.t  = (date.getTime() - this.startDate.getTime()) / 1000; // total time since start of program (sec)
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000; // delta time since last frame (sec)
+		
+		// Frame rate control
+		this.timer = this.timer + this.dt;
+		if (this.timer > (1.0/this.maxFPS)) {
+			this.timer  = 0.0;
+			this.redraw = true;			
+		}
+		// If we ask for more, just let it run
+		if (this.maxFPS>=60.0) this.redraw = true;
+
+		this.sec += this.dt;
 	},
 	
 	postDraw: function(date) {
@@ -61,7 +87,19 @@ var SAGE2_App = Class.extend( {
 		// update time
 		this.preDraw(date);
 		// actual application draw
-		this.draw(date);
+		if (this.redraw) {
+			// If drawing, measure actual frame rate
+			if( this.sec >= 1.0){
+				this.fps       = this.frame_sec / this.sec;
+				this.frame_sec = 0;
+				this.sec       = 0;
+			}
+
+			this.draw(date);
+
+			this.frame_sec++;
+			this.redraw = false;	
+		}
 		// update time and misc
 		this.postDraw(date);
 	},

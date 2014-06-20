@@ -28,12 +28,13 @@ Specify the path to your configuration file in 'config.txt'
 * Open Terminal / Cmd
     * `cd <SAGE2_directory>`
     * `node server.js`
-* Open Google Chrome (point browser to host and port defined in config file)
+* Open Google Chrome (to enable screen sharing, go to chrome://flags and enable "Enable screen capture support in getUserMedia()")
     * Table of Contents: `http://<host>:<index_port>`
     * Display Client: `https://<host>:<port>/?clientID=<ID>`
     * Audio Client: `https://<host>:<port>/audioManager.html`
     * SAGE UI: `https://<host>:<port>/sageUI.html`
     * SAGE Pointer: `https://<host>:<port>/sagePointer.html` (Allow pop-ups)
+* [Create a one button SAGE2 launcher for the server and displays](https://bitbucket.org/sage2/sage2/wiki/Launch%20(Server%20%26%20Displays))
 
 ##### Supported File Types #####
 * Images

@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 var shader_fs = "precision mediump float;\
 \
@@ -52,6 +52,8 @@ var texture_cube = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
+		this.fpsText = null;
+		
 		this.gl = null;
 		this.shaderProgram = null;
 		this.texture = null;
@@ -77,6 +79,18 @@ var texture_cube = SAGE2_App.extend( {
 	init: function(id, width, height, resrc, date) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		
+		this.fpsText = document.createElement('p');
+		this.fpsText.textContent = "0.00 fps";
+		this.fpsText.style.fontFamily = "Verdana,sans-serif";
+		this.fpsText.style.fontSize = (0.05*height).toString() + "px";
+		this.fpsText.style.textIndent = "0px";
+		this.fpsText.style.color = "#000000";
+		this.fpsText.style.position = "absolute";
+		this.fpsText.style.top = "10px";
+		this.fpsText.style.left = "10px";
+		
+		this.div.appendChild(this.fpsText);
 		
 		// application specific 'init'
 		this.initGL();
@@ -416,6 +430,8 @@ var texture_cube = SAGE2_App.extend( {
 		this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.cubeVertexIndexBuffer);
 		this.setMatrixUniforms();
 		this.gl.drawElements(this.gl.TRIANGLES, this.cubeVertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
+	
+		this.fpsText.textContent = this.fps.toFixed(2).toString() + " fps";
 	},
 	
 	resize: function(date) {
@@ -424,6 +440,8 @@ var texture_cube = SAGE2_App.extend( {
 		this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
 		
 		mat4.perspective(45, this.element.width / this.element.height, 0.1, 100.0, this.pMatrix);
+		
+		this.fpsText.style.fontSize = (0.05*this.element.height).toString() + "px";
 		
 		// console.log("CANVAS: " + this.element.width + "x" + this.element.height);
 		// console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);

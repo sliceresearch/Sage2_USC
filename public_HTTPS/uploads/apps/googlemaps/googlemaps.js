@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 
 function addScript( url, callback ) {
@@ -49,7 +49,7 @@ var googlemaps = SAGE2_App.extend( {
 
 		// need a global handler for the callback (i.e. scope pollution)
 		googlemaps_self = this;
-		this.APIKEY = "AIzaSyBEngu_3hdR3tzZs6yVKho8LxhkEVkfgcw"; // luc's key
+		this.APIKEY = "AIzaSyBeN2YI0iJIvbGFES3uIpoP4h1DrWaqyBk"; // EVL's key
 		// load google maps
 		addScript('https://maps.googleapis.com/maps/api/js?key=' + this.APIKEY + '&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
 	},

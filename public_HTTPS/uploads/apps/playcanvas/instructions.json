@@ -1,0 +1,11 @@
+{
+	"main_script": "playcanvas.js",
+	"width": 1200,
+	"height": 720,
+	"animation": true,
+	"load": {
+	},
+	"resources": [
+		"playcanvas-latest.js"
+	]
+}
