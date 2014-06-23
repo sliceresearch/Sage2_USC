@@ -49,16 +49,23 @@ widgetSpec.prototype.addTextInput = function (data) {
 }
 
 widgetSpec.prototype.addSlider = function(data){
-	//begin,parts,end,action, property
+	//begin,parts,end,action, property, appObj
 	var s = new slider();
 	s.id = "slider" + this.itemCount;
 	s.appId = this.id;
 	s.begin = data.begin;
 	s.end = data.end;
-	s.parts = data.parts? data.parts:1;
-	s.increments = (s.end - s.begin)/s.parts;
+	if(data.increments){
+		s.increments = data.increments || 1;
+		s.parts = (s.end - s.begin)/s.increments;
+	}
+	else if(data.parts){
+		s.parts = data.parts || 1;
+		s.increments = (s.end - s.begin)/s.parts;
+	}
 	s.call = data.action;
 	s.appProperty = data.property;
+	s.appObj = data.appObj;
 	s.sliderVal = data.begin;
 	s.width = (s.parts < 10)? 8.0*titleBarHeight: 12.0*titleBarHeight;
 	this.items.push(s);
@@ -152,6 +159,23 @@ var buttonType = {
 		"strokeWidth": 2,
 		"speed":600
 
+	},
+	"next-zoom": {
+		"switch": null,
+		"from":"m 0 -6 l 4 6 l -4 6",
+		"to":"m -2 -9 l 8 9 l -10 9",
+		"fill":"none",
+		"strokeWidth": 2,
+		"speed": 600
+	},
+	"prev-zoom": {
+		"switch": null,
+		"from":"m 0 -6 l -4 6 l 4 6",
+		"to":"m 0 -7 l 0 7 l 0 7",
+		"fill":"none",
+		"strokeWidth": 2,
+		"speed":600
+
 	}
 };
 
@@ -184,8 +208,68 @@ function createSlider (paper, sliderSpec, x, y){
 	});
 	var slider = paper.group(sliderArea,sliderLine,sliderKnob);
 	sliderKnob.data("appId", sliderSpec.appId);
+	slider.data('begin', sliderSpec.begin);
+	slider.data("appId", sliderSpec.appId);
+	slider.data('end', sliderSpec.end);
+	slider.data('parts', sliderSpec.parts);
+	slider.data('increments', sliderSpec.increments);
+	slider.data('call', sliderSpec.call);
+	slider.data('appProperty', sliderSpec.appProperty);
+	
+	function moveSlider(){
+		var slider = sliderKnob.parent();
+		var bound = sliderArea.getBBox();
+		var left = bound.x + bound.h/2;
+		var right = bound.x2 - bound.h/2;
+		var begin = slider.data('begin');
+		var end = slider.data('end');
+		var parts = slider.data('parts');
+		var increments = slider.data('increments');
+		var incX = (right-left)/parts;
+		var app = getProperty(sliderSpec.appObj,sliderSpec.appProperty);
+		var sliderVal = app.obj[app.property];
+		var n = Math.floor(0.5 + (sliderVal-begin)/increments);
+		var pos = left + n*incX;
+		var cxVal = sliderKnob.attr('cx');
+		
+		if(pos < left ){
+			return begin;
+		}
+		else if(pos > right){
+			return end;
+		}
+	
+		sliderKnob.animate({cx: pos},100,mina.linear,moveSlider);
+	}
+	
+	moveSlider();
+	
 	return slider;
 }
+
+function mapMoveToSlider(sliderKnob, pos){
+	var slider = sliderKnob.parent();
+	var bound = slider.getBBox();
+	var left = bound.x + bound.h/2;
+	var right = bound.x2 - bound.h/2;
+	var begin = slider.data('begin');
+	var end = slider.data('end');
+	var parts = slider.data('parts');
+	var increments = slider.data('increments');
+
+	if(pos < left )
+		return begin;
+	else if(pos > right) 
+		return end;
+	
+	var knobPos = sliderKnob.attr('cx')?sliderKnob.attr('cx'):sliderKnob.attr('x');	
+	var incX = (right-left)/parts;
+	var n = Math.floor(0.5 + (pos-left)/incX);
+	var sliderValue = begin + n*increments;
+	slider.data('sliderValue', sliderValue);
+	return sliderValue;
+}
+
 
 function createButton(paper, buttonSpec, cx, cy){
 	var buttonRad = 0.75 * titleBarHeight;
@@ -217,6 +301,8 @@ function createButton(paper, buttonSpec, cx, cy){
 	buttonCover.data("speed",type["speed"]);
 	buttonCover.data("appId", buttonSpec.appId);
 	buttonBack.data("appId", buttonSpec.appId);
+	button.data("call",buttonSpec.call);
+	button.data("appId", buttonSpec.appId);
 	return button;
 }
 
@@ -281,31 +367,40 @@ function computeBlinkerPosition (currentPos, str, charCode, printable){
 	//var printable = (charCode > 31 && charCode < 137) ;// spacebar & return key(s) (if you want to allow carriage returns)
         
     if (printable){
-    	pre = str.substring(0,currentPos) + String.fromCharCode(charCode);
+    	var temp = (charCode===32)? ' ' : String.fromCharCode(charCode);
+    	pre = str.substring(0,currentPos) + temp;
 		suf = str.substring(currentPos,currentStrLen);
 		str = pre + suf;
-		flag = true;
 		position++;
     }
     else if (charCode === 39)
     {
+    	pre = str.substring(0,currentPos+1);
+		suf = str.substring(currentPos+1,currentStrLen);
+		str = pre + suf;
     	position++;
     }
 	else if (charCode === 37){
-
+		pre = (currentPos===1)? '' : str.substring(0,currentPos-1);
+		suf = str.substring(currentPos-1,currentStrLen);
+		str = pre + suf;
 		position--;
 	}
 	else if (charCode == 8){
-		pre = str.substring(0,currentPos-1);
+		pre = (currentPos===1)? '' : str.substring(0,currentPos-1);
 		suf = str.substring(currentPos,currentStrLen);
 		str = pre + suf;
-		flag = true;
 		position--;
+	}
+	else if (charCode == 46){
+		pre = (currentPos===0)? '' : str.substring(0,currentPos);
+		suf = str.substring(currentPos+1,currentStrLen);
+		str = pre + suf;
 	}
 	
 	position = (position<0)? 0 : position;
 	position = (position>str.length)?str.length:position;
-	pre = (position > 0)? str.substring(0,position): "";
+	//pre = (position > 0)? str.substring(0,position): "";
 	return {data:str, prefix:pre, blinkerPos:position};
 }
 
@@ -314,35 +409,34 @@ insertText = function(textInput, code, printable){
 	var tAxVal = textInput.data("left"); 
 	var rightEnd = tAxVal + parseInt(textArea.attr("width"));
 	var pos = textInput.data("blinkerPos");
-	
+	var displayText = '';
 	ctrl = textInput.select("text");
-	buf = ctrl.attr("text");
+	buf = textInput.data("text") || '';	
 	
 	if (buf.length==0) buf = "";
 	buf = computeBlinkerPosition(pos, buf, code, printable);
 
 	var pth = "";
-	if(buf.blinkerPos>0){
-		ctrl.attr("text",buf.prefix);
-		var textWidth = ctrl.getBBox().width;
-		
-		if (textWidth >= textArea.attr("width")-5){
-			ctrl.attr('x', rightEnd-5); // + 
-			ctrl.attr('text-anchor','end');
-			pth = "M " + (rightEnd-5) + textInput.data("blinkerSuf");
-		}
-		else{
-			ctrl.attr("x", textInput.data('left'));	
-			ctrl.attr('text-anchor','start');
-			pth = "M " + (textInput.data("left") + textWidth) + textInput.data("blinkerSuf");
-		}
+	
+	ctrl.attr("text",buf.prefix);
+	var textWidth = (buf.prefix.length > 0)? ctrl.getBBox().width : 0;
+	
+	if (textWidth >= textArea.attr("width")-5){
+		ctrl.attr('x', rightEnd-5); // + 
+		ctrl.attr('text-anchor','end');
+		pth = "M " + (rightEnd-5) + textInput.data("blinkerSuf");
+		displayText = buf.prefix;
 	}
 	else{
-		pth = "M " + textInput.data("left") + textInput.data("blinkerSuf");
+		ctrl.attr("x", textInput.data('left'));	
+		ctrl.attr('text-anchor','start');
+		pth = "M " + (textInput.data("left") + textWidth) + textInput.data("blinkerSuf");
+		displayText = buf.data;
 	}
 	textInput.select("path").attr({path:pth});
 	textInput.data("blinkerPos",buf.blinkerPos);
-	ctrl.attr("text",buf.data);	
+	ctrl.attr("text",displayText);
+	textInput.data("text", buf.data);	
 }
 
 getText = function(textInput){
@@ -359,4 +453,25 @@ getCtrl = function(data){
 		}
 	}
 	return ctrl;
+}
+
+getProperty = function (obj,property){
+	var names = property.split('.');
+	var prop = obj;
+	var i = 0;
+	for(;i<names.length-1;i++){
+		prop = prop[names[i]]
+	}
+	return {obj:prop, property:names[i]};
+}
+
+getCtrlUnderPointer = function(data, offsetX, offsetY){
+	var ptr = document.getElementById(data.ptrId);
+	ptr.style.left = (parseInt(ptr.style.left) - 500) + "px"; 
+	var ctrl = Snap.getElementByPoint(data.x-offsetX,data.y-offsetY);
+	ptr.style.left = (parseInt(ptr.style.left) + 500) + "px";
+	var ctrId = ctrl? ctrl.attr("id"):"";
+	if (/control/.test(ctrId) || /button/.test(ctrId) || /slider/.test(ctrId) || /textInput/.test(ctrId))
+		return ctrl;
+	return null;
 }

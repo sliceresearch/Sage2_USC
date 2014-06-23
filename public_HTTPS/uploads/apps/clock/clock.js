@@ -18,7 +18,9 @@ var clock = SAGE2_App.extend( {
 		this.redraw = null;
 		this.enableControls = null;
 		this.controls = null;
+		this.appProperty = 0;
 		this.resizeEvents = "continuous";
+		this.text = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -34,10 +36,10 @@ var clock = SAGE2_App.extend( {
 		
 		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
 
-		this.controls.addButton({type:"play-pause", action:function(appObj){
+		this.controls.addButton({type:"play-pause", action:function(appObj, date){
 			appObj.ctx.fillStyle = "rgba(200, 155, 255, 1.0)";
 		}});
-		this.controls.addButton({type:"play-stop", action:function(appObj){
+		this.controls.addButton({type:"play-stop", action:function(appObj, date){
 			appObj.ctx.fillStyle = "rgba(120, 155, 200, 1.0)";
 		}});
 
@@ -45,13 +47,17 @@ var clock = SAGE2_App.extend( {
 			appObj.text = text;
 		}});
 
-		this.controls.addButton({type:"prev", action:function(appObj){
+		this.controls.addButton({type:"prev", action:function(appObj, date){
 			appObj.ctx.fillStyle = "rgba(200, 180, 100, 1.0)";
+			if (appObj.appProperty <= 0) return;
+			appObj.appProperty = appObj.appProperty - 1;
 		}});
-		this.controls.addButton({type:"next", action:function(appObj){
+		this.controls.addButton({type:"next", action:function(appObj, date){
 			appObj.ctx.fillStyle = "rgba(160, 200, 255, 1.0)";
+			if (appObj.appProperty >= 20) return;
+			appObj.appProperty = appObj.appProperty + 1;
 		}});
-		this.controls.addSlider({begin:0,end:8,parts:10, property:"val", action:function(appObj){
+		this.controls.addSlider({begin:0,end:20,increments:1,appObj:this, property:"appProperty", action:function(appObj, date){
 			appObj.ctx.fillStyle = "rgba(160, 200, 255, 1.0)";
 		}});
 	},
@@ -182,7 +188,13 @@ var clock = SAGE2_App.extend( {
 			this.ctx.moveTo(x, y);
 			this.ctx.closePath();
 			this.ctx.stroke();
-			
+
+			if(this.text){
+				var t = this.ctx.fillStyle;
+				this.ctx.fillStyle = "rgba(20, 60, 30, 1.0)";
+				this.ctx.fillText(this.text,centerX, centerY-30);
+				this.ctx.fillStyle = t;
+			}
 			this.redraw = false;
         }
 	},
