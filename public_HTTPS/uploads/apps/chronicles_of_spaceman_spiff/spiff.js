@@ -21,7 +21,6 @@ var spiff = SAGE2_App.extend( {
     this.svg = null;
 
     this.canvasBackground = "black";
-    this.currentStation = 0;
 
     this.canvasWidth = 600;
     this.canvasHeight = 190;
@@ -35,27 +34,40 @@ var spiff = SAGE2_App.extend( {
     this.URL1b = "";
 
     this.today = "";
+    this.timeDiff = 0;
  },
 
 ////////////////////////////////////////
 
-createURLs: function ()
+initApp: function()
+{
+    // should also make sure temperatureScale is a legal value
+
+    this.nextCallbackFunc = this.nextCallback.bind(this);
+    this.prevCallbackFunc = this.prevCallback.bind(this);
+},
+
+////////////////////////////////////////
+
+createURLs: function (timeMachine)
 {
     var URL1a = "http://images.ucomics.com/comics/ch/";
     var URL1b = ".gif";
 
-    var today = new Date();
+    if (timeMachine > 0)
+        timeMachine = 0;
 
-    if (today.getDay == 0) // its a sunday - no comic today :(
-                        // so grab yesterday's comic :)
-    today = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+    var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
 
-    todayDay = today.getDate().toString(); // 1 - 31
-    todayMonth = (today.getMonth()+1).toString(); // 0 - 11
+    if (today.getDay() === 0) // its a sunday - no comic today :(
+                            // so grab saturday's comic :)
+        today = new Date(new Date().getTime() + 24 * (timeMachine - 1) * 60 * 60 * 1000);
+
+    todayDay = today.getDate().toString(); // days are 1 - 31
+    todayMonth = (today.getMonth()+1).toString(); // months are 0 - 11
     todayYear = today.getFullYear().toString(); // year is correct
 
-   this.today = todayMonth + "/" + todayDay + "/" + todayYear;
-
+    this.today = todayMonth + "/" + todayDay + "/" + todayYear;
 
     if (todayDay.length < 2)
             todayDay = "0" + todayDay;
@@ -69,6 +81,7 @@ createURLs: function ()
 
     var todaysComic = todayYear + "/ch" + todayYear2 + todayMonth + todayDay;
     // sample "2014/ch140619"
+    // no comics on sunday
  
     this.URL1 = URL1a+todaysComic+URL1b;
 },
@@ -77,7 +90,7 @@ createURLs: function ()
 
 drawText: function (textLocX, textLocY, theText, textFontSize)
 {
-    var displayFont = "Arial"
+    var displayFont = "Arial";
     var drawTempText;
 
         drawTempText = "#000";
@@ -108,6 +121,85 @@ drawBox: function  (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
         .attr("width", parseInt(boxWidth*1));
 },
 
+
+drawBoxPrev: function  (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+{
+     this.sampleSVG.append("svg:rect")
+        .style("stroke", "black")
+        .style("fill", colorOut)
+        .style("fill-opacity", percOut)
+        .attr("x", boxLocX)
+        .attr("y", boxLocY)
+        .attr("rx", 8)
+        .attr("ry", 8)
+        .attr("height", boxHeight)
+        .attr("width", boxWidth)
+        .on("click", this.prevCallbackFunc);
+
+        var firstX = boxLocX+10,
+            secondX = boxLocX+boxWidth*0.75-10,
+            thirdX = boxLocX+boxWidth*0.75-10;
+
+        var firstY = boxLocY + boxHeight*0.5, 
+            secondY = boxLocY+boxHeight*0.5-10,
+            thirdY = boxLocY+boxHeight*0.5+10;
+
+        this.sampleSVG.append("polygon")
+        .style("stroke", "black") 
+        .style("fill", "black") 
+        .attr("points", "" + firstX + "," + firstY + ","
+                            + secondX + "," + secondY + ","
+                            + thirdX + "," + thirdY)
+        .on("click", this.prevCallbackFunc); 
+},
+
+drawBoxNext: function  (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+{
+     this.sampleSVG.append("svg:rect")
+        .style("stroke", "black")
+        .style("fill", colorOut)
+        .style("fill-opacity", percOut)
+        .attr("x", boxLocX)
+        .attr("y", boxLocY)
+        .attr("rx", 8)
+        .attr("ry", 8)
+        .attr("height", boxHeight)
+        .attr("width", boxWidth)
+        .on("click", this.nextCallbackFunc);
+
+        var firstX = boxLocX+boxWidth-10,
+            secondX = boxLocX+boxWidth*0.25+10,
+            thirdX = boxLocX+boxWidth*0.25+10;
+
+        var firstY = boxLocY + boxHeight*0.5, 
+            secondY = boxLocY+boxHeight*0.5-10,
+            thirdY = boxLocY+boxHeight*0.5+10;
+
+        this.sampleSVG.append("polygon")
+        .style("stroke", "black") 
+        .style("fill", "black") 
+        .attr("points", "" + firstX + "," + firstY + ","
+                            + secondX + "," + secondY + ","
+                            + thirdX + "," + thirdY)
+        .on("click", this.nextCallbackFunc); 
+},
+
+prevCallback: function()
+{
+    this.timeDiff -= 1;
+    //console.log(this.timeDiff);
+    this.update();
+},
+
+nextCallback: function()
+{
+    this.timeDiff += 1;
+    if (this.timeDiff > 0)
+        this.timeDiff = 0;
+    //console.log(this.timeDiff);
+    this.update();
+},
+
 ////////////////////////////////////////
 
 drawImage: function (theImage)
@@ -122,6 +214,9 @@ drawImage: function (theImage)
 
     this.drawBox(0,this.canvasHeight, 30, this.canvasWidth, "#fdae61", 1.0);
     this.drawText(0.5 * this.canvasWidth,this.canvasHeight+22, "classic Calvin and Hobbes - "+this.today, 24);
+
+    this.drawBoxPrev(0,this.canvasHeight, 30, 50, "#fdae00", 1.0);
+    this.drawBoxNext(this.canvasWidth-50,this.canvasHeight, 30, 50, "#fdae00", 1.0);
 },
 
 
@@ -140,12 +235,11 @@ update: function ()
 {
     // get new image
 
-    this.createURLs();
+    this.createURLs(this.timeDiff);
 
     this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
-    this.image1.onload = function()
-        {
-    }; 
+    this.image1.onload = function(){}; 
+    this.image1.onerror = function(){}; 
 
     this.drawEverything();
     
@@ -228,6 +322,18 @@ updateWindow: function (){
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
+            if (x < 0.5 * this.element.clientWidth)   
+            {
+                this.timeDiff -= 1;
+                this.update();
+            }
+            else
+            {
+                this.timeDiff += 1;
+                if (this.timeDiff > 0)
+                    this.timeDiff = 0;
+                this.update();
+            }
 		}
 	}
 	
