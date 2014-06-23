@@ -1,6 +1,6 @@
 {
 	"main_script": "weather.js",
-	"width": 475,
+	"width": 490,
 	"height": 400,
 	"animation": true,
 	"resources": [
