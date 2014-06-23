@@ -547,8 +547,6 @@ function wsKeyPress(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
-	console.log("lockedControl:");
-	console.log(lockedControl);
 	if(data.code == 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible){ // shift + tab
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
@@ -1854,7 +1852,6 @@ function findAppUnderPointer(pointerX, pointerY) {
 }
 
 function findControlsUnderPointer(pointerX, pointerY) {
-	console.log(controls);
 	for(var i=controls.length-1; i>=0; i--){
 		if(controls[i]!= null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
 			return controls[i];
@@ -2019,8 +2016,6 @@ function pointerMove(uniqueID, data) {
 	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		console.log("lockedControl : ");
-		console.log(lockedControl);
 		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
 		return;
 	}

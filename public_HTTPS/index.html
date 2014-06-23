@@ -504,10 +504,8 @@
 						app.refresh(date);
 						
 						applications[data.id] = app;
-						console.log(app.enableControls);
 						if(app.enableControls==true){// Flag to request controls for App
 							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
-							console.log(controlItems[data.id + "_controls"]);
 						} 
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
@@ -534,7 +532,6 @@
 					applications[data.id] = app;
 					if(app.enableControls==true){// Flag to request controls for App
 							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
-							console.log(controlItems[data.id + "_controls"]);
 					} 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
@@ -781,7 +778,6 @@
 			if (data.elemId != null){
 				if(data.elemId+"_controls" in  controlItems){
 					var size = computeSize(controlItems[data.elemId+ "_controls"].spec) ;
-					console.log(size);
 					wsio.emit('addNewControl', {
 						id:data.elemId+"_controls", 
 						left:data.x,
@@ -906,7 +902,6 @@
 		});
 
 		wsio.on('keyInControl', function(data){
-			console.log(data.printable);
 			var ctrl = getCtrl(data);
 			if (ctrl){
 				var textInput = ctrl.parent();
