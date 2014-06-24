@@ -1751,7 +1751,7 @@ function deleteApplication( elem ) {
 }
 
 /******** Omicron section ****************************************************************/
-if( config.experimental.omicron.enable == true )
+if( config.experimental && config.experimental.omicron && config.experimental.omicron.enable == true )
 {
 	var omicronManager = new omicron( config );
 	omicronManager.setCallbacks(
