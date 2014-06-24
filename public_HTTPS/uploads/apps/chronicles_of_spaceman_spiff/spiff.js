@@ -41,10 +41,11 @@ var spiff = SAGE2_App.extend( {
 
 initApp: function()
 {
-    // should also make sure temperatureScale is a legal value
-
     this.nextCallbackFunc = this.nextCallback.bind(this);
     this.prevCallbackFunc = this.prevCallback.bind(this);
+
+    this.loadFailCallbackFunc = this.loadFailCallback.bind(this);
+    this.loadSuccessCallbackFunc = this.loadSuccessCallback.bind(this);
 },
 
 ////////////////////////////////////////
@@ -58,10 +59,6 @@ createURLs: function (timeMachine)
         timeMachine = 0;
 
     var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
-
-    if (today.getDay() === 0) // its a sunday - no comic today :(
-                            // so grab saturday's comic :)
-        today = new Date(new Date().getTime() + 24 * (timeMachine - 1) * 60 * 60 * 1000);
 
     todayDay = today.getDate().toString(); // days are 1 - 31
     todayMonth = (today.getMonth()+1).toString(); // months are 0 - 11
@@ -147,9 +144,7 @@ drawBoxPrev: function  (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut
         this.sampleSVG.append("polygon")
         .style("stroke", "black") 
         .style("fill", "black") 
-        .attr("points", "" + firstX + "," + firstY + ","
-                            + secondX + "," + secondY + ","
-                            + thirdX + "," + thirdY)
+        .attr("points", "" + firstX + "," + firstY + "," + secondX + "," + secondY + "," + thirdX + "," + thirdY)
         .on("click", this.prevCallbackFunc); 
 },
 
@@ -178,16 +173,13 @@ drawBoxNext: function  (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut
         this.sampleSVG.append("polygon")
         .style("stroke", "black") 
         .style("fill", "black") 
-        .attr("points", "" + firstX + "," + firstY + ","
-                            + secondX + "," + secondY + ","
-                            + thirdX + "," + thirdY)
+        .attr("points", "" + firstX + "," + firstY + "," + secondX + "," + secondY + "," + thirdX + "," + thirdY)
         .on("click", this.nextCallbackFunc); 
 },
 
 prevCallback: function()
 {
     this.timeDiff -= 1;
-    //console.log(this.timeDiff);
     this.update();
 },
 
@@ -196,37 +188,54 @@ nextCallback: function()
     this.timeDiff += 1;
     if (this.timeDiff > 0)
         this.timeDiff = 0;
-    //console.log(this.timeDiff);
     this.update();
+},
+
+loadSuccessCallback: function()
+{
+    this.drawEverything(1);
+},
+
+loadFailCallback: function()
+{
+    this.drawEverything(0);
 },
 
 ////////////////////////////////////////
 
-drawImage: function (theImage)
+drawImage: function (theImage, loadSuccess)
 {
-    this.sampleSVG.append("image")
-    .attr("xlink:href", theImage)
-    .attr("opacity", 1)
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("width", this.canvasWidth)
-    .attr("height", this.canvasHeight); 
+    // if there is an image then show it, else show black
+    if (loadSuccess)
+        this.sampleSVG.append("image")
+        .attr("xlink:href", theImage)
+        .attr("opacity", 1)
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", this.canvasWidth)
+        .attr("height", this.canvasHeight);
+    else
+        {
+//        this.drawBox(0.25 * this.canvasWidth, 0.5 * this.canvasHeight, 30, 0.5 * this.canvasWidth, "#ffffff", 1.0);
+        this.drawBox(0, 0, this.canvasHeight, this.canvasWidth, "#ffffff", 1.0);
+        this.drawText(0.5 * this.canvasWidth, 0.5 * this.canvasHeight+22, "no comic today", 24); 
+        }
 
     this.drawBox(0,this.canvasHeight, 30, this.canvasWidth, "#fdae61", 1.0);
     this.drawText(0.5 * this.canvasWidth,this.canvasHeight+22, "classic Calvin and Hobbes - "+this.today, 24);
 
     this.drawBoxPrev(0,this.canvasHeight, 30, 50, "#fdae00", 1.0);
     this.drawBoxNext(this.canvasWidth-50,this.canvasHeight, 30, 50, "#fdae00", 1.0);
-},
 
+},
 
 ////////////////////////////////////////
 
-drawEverything: function ()
+drawEverything: function (loadSuccess)
 {
     this.sampleSVG.selectAll("*").remove();
- 
-    this.drawImage(this.image1.src); 
+
+    this.drawImage(this.image1.src, loadSuccess); 
 },
 
 ////////////////////////////////////////
@@ -234,15 +243,11 @@ drawEverything: function ()
 update: function ()
 {
     // get new image
-
     this.createURLs(this.timeDiff);
 
     this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
-    this.image1.onload = function(){}; 
-    this.image1.onerror = function(){}; 
-
-    this.drawEverything();
-    
+    this.image1.onload = this.loadSuccessCallbackFunc;
+    this.image1.onerror = this.loadFailCallbackFunc;
 },
 
 ////////////////////////////////////////
@@ -292,6 +297,8 @@ updateWindow: function (){
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 		this.sampleSVG = this.svg;
+
+        this.initApp();
 
 		this.update();
 		this.draw_d3(date);

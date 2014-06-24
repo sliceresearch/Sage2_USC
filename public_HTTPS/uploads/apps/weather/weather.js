@@ -278,14 +278,14 @@ drawTempText: function (textColor)
         .style("fill", textColor)
         .style("font-size", this.gwin.largeFontSize)
         .style("font-family", this.gwin.displayFont)
-        .attr("x", parseInt((this.gwin.canvasWidth+this.gwin.margin+20) * 0.5))
+        .attr("x", parseInt((this.gwin.canvasWidth+this.gwin.margin+25) * 0.5))
         .style("text-anchor", "middle")
         .text(Math.round(this.ForC(this.gwin.outside))+ tempSys + " - " + this.gwin.conditions.toLowerCase());
  
     this.gwin.sampleSVG.append("image")
         .attr("xlink:href", this.gwin.weatherImage.src)
         .attr("opacity", 1.0)
-        .attr("x", this.gwin.margin+20)
+        .attr("x", this.gwin.margin+10)
         .attr("y", 340)
         .attr("width", 50)
         .attr("height", 50);  
