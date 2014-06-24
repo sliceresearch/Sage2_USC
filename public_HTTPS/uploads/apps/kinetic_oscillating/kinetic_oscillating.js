@@ -1,23 +1,20 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 var kinetic_oscillating = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.timer  = null;
-		this.redraw = null;
 		this.stage  = null;
 		this.layer  = null;
 		this.blobs  = null;
-		this.frame  = null;
 		this.width  = null;
 		this.height = null;
 		this.resizeEvents = "onfinish";
@@ -28,11 +25,12 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
+		this.maxFPS = 30;
+		
 		this.lastZoom = date;
 
 		this.element.id = "div" + id;
 		this.element.style.background = '#000';
-		this.frame  = 0;
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
 		this.stage  = new Kinetic.Stage({container: this.element.id, width: this.width, height: this.height});
@@ -67,34 +65,21 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		}
 
 		this.stage.add(this.layer);
-
-		this.timer  = 0.0;
-		this.redraw = true;
 	},
 
 	load: function(state, date) {
 	},
 
 	draw: function(date) {
-		this.timer = this.timer + this.dt;
-		if(this.timer >= 0.033333333) {
-			this.timer  = 0.0;
-			this.redraw = true;
-		}
-		
-		if(this.redraw) {
-			var period        = 2000;
-			var amplitude     = 1;
-			var centerTension = 0;
+		var period        = 2000;
+		var amplitude     = 1;
+		var centerTension = 0;
 
-			for(var n = 0; n < this.blobs.length; n++) {
-				this.blobs[n].setTension(amplitude * Math.sin(this.t*1000.0 * 2 * Math.PI / period) + centerTension);
-			}
-
-			this.stage.draw();
-			this.frame++;
-			this.redraw = false;
+		for(var n = 0; n < this.blobs.length; n++) {
+			this.blobs[n].setTension(amplitude * Math.sin(this.t*1000.0 * 2 * Math.PI / period) + centerTension);
 		}
+
+		this.stage.draw();
 	},
 
 	resize: function(date) {
@@ -105,7 +90,6 @@ var kinetic_oscillating = SAGE2_App.extend( {
         var val = this.element.clientWidth/this.width;
 		this.stage.setScale({x:val, y:val});
 
-		this.redraw = true;
 		this.refresh(date);
 	},
 	

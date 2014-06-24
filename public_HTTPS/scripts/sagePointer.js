@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 function sagePointer(wsio) {
 	this.name = "Default";
@@ -305,7 +305,7 @@ function sagePointer(wsio) {
 
 						var totalSize = 0;
 						var uploaded = 0;
-						for(key in total){ totalSize += total[key]; uploaded += loaded[key]; }
+						for(var key in total){ totalSize += total[key]; uploaded += loaded[key]; }
 						pc = Math.floor((uploaded/totalSize) * 100);
 						_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
 						if(pc == 100){

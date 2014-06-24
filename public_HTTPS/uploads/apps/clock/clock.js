@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 var clock = SAGE2_App.extend( {
 	construct: function() {
@@ -28,8 +28,10 @@ var clock = SAGE2_App.extend( {
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
 		
 		// application specific 'init'
+
 		this.ctx = this.element.getContext("2d");
 		this.minDim = Math.min(this.element.width, this.element.height);
+		this.maxFPS = 1.0;
 		this.timer = 0.0;
 		this.redraw = true;
 		this.enableControls = true;
@@ -131,6 +133,13 @@ var clock = SAGE2_App.extend( {
 				this.ctx.closePath();
 				this.ctx.stroke();
 			}
+
+			if(this.text){
+				var t = this.ctx.fillStyle;
+				this.ctx.fillStyle = "rgba(20, 60, 30, 1.0)";
+				this.ctx.fillText(this.text,centerX, centerY-30);
+				this.ctx.fillStyle = t;
+			}
 		
 			// second hand
 			var handSize = radius * 0.80; // 80% of the radius
@@ -169,7 +178,7 @@ var clock = SAGE2_App.extend( {
 			this.ctx.moveTo(x, y);
 			this.ctx.closePath();
 			this.ctx.stroke();
-		
+
 			// hour hand
 			handSize = radius * 0.40; // 40% of the radius
 			var hour = date.getHours() + min/60;
@@ -188,21 +197,11 @@ var clock = SAGE2_App.extend( {
 			this.ctx.moveTo(x, y);
 			this.ctx.closePath();
 			this.ctx.stroke();
-
-			if(this.text){
-				var t = this.ctx.fillStyle;
-				this.ctx.fillStyle = "rgba(20, 60, 30, 1.0)";
-				this.ctx.fillText(this.text,centerX, centerY-30);
-				this.ctx.fillStyle = t;
-			}
-			this.redraw = false;
-        }
+		}
 	},
 	
 	resize: function(date) {
-		this.minDim = Math.min(this.element.width, this.element.height);
-		this.redraw = true;
-		
+		this.minDim = Math.min(this.element.width, this.element.height);		
 		this.refresh(date);
 	},
 	

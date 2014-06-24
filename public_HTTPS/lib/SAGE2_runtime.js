@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 //
 // Generic functions used by all SAGE2 applications
@@ -49,7 +49,7 @@ function formatAMPM(date) {
 	var minutes = date.getMinutes();
 	var ampm = hours >= 12 ? "pm" : "am";
 	hours = hours % 12;
-	if(hours == 0) hours = 12;
+	if (hours === 0) hours = 12;
 	var hh = hours.toString();
 	var mm = minutes < 10 ? "0"+minutes.toString() : minutes.toString();
 	return (hh + ":" + mm + ampm);
@@ -92,9 +92,89 @@ function base64ToUint8Array(base64) {
     return uint8Array;
 }
 
+function readFile(filename, callback, type) {
+	var dataType = type || "TEXT";
+
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", filename, true);
+	xhr.onreadystatechange = function() {
+		if(xhr.readyState == 4){
+			if(xhr.status == 200){
+				if     (dataType === "TEXT") callback(null, xhr.responseText);
+				else if(dataType === "JSON") callback(null, JSON.parse(xhr.responseText));
+				else if(dataType === "CSV")  callback(null, CSVToArray(xhr.responseText));
+				else                         callback(null, xhr.responseText);
+			}
+			else{
+				callback("Error: File Not Found", null);
+			}
+		}
+	};
+	xhr.send();
+}
+
+function CSVToArray(strData, strDelimiter){
+	// Check to see if the delimiter is defined. If not,
+	// then default to comma.
+	strDelimiter = strDelimiter || ",";
+
+	// Create a regular expression to parse the CSV values.
+	var objPattern = new RegExp(("(\\" + strDelimiter + "|\\r?\\n|\\r|^)" + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" + "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+
+	// Create an array to hold our data. Give the array
+	// a default empty first row.
+	var arrData = [[]];
+
+	// Create an array to hold our individual pattern
+	// matching groups.
+	var arrMatches = null;
+
+
+	// Keep looping over the regular expression matches
+	// until we can no longer find a match.
+	while (arrMatches = objPattern.exec( strData )){
+
+		// Get the delimiter that was found.
+		var strMatchedDelimiter = arrMatches[ 1 ];
+
+		// Check to see if the given delimiter has a length
+		// (is not the start of string) and if it matches
+		// field delimiter. If id does not, then we know
+		// that this delimiter is a row delimiter.
+		if(strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter){
+			// Since we have reached a new row of data,
+			// add an empty row to our data array.
+			arrData.push([]);
+		}
+
+		var strMatchedValue;
+
+		// Now that we have our delimiter out of the way,
+		// let's check to see which kind of value we
+		// captured (quoted or unquoted).
+		if(arrMatches[2]){
+			// We found a quoted value. When we capture
+			// this value, unescape any double quotes.
+			strMatchedValue = arrMatches[2].replace(new RegExp( "\"\"", "g" ),"\"");
+		}
+		else{
+			// We found a non-quoted value.
+			strMatchedValue = arrMatches[3];
+
+		}
+		
+		// Now that we have our value string, let's add
+		// it to the data array.
+		arrData[arrData.length - 1].push(strMatchedValue);
+	}
+
+	// Return the parsed data.
+	return arrData;
+}
+
 function average(arr) {
 	var l = arr.length;
-	if(l == 0) return 0;
+	if (l === 0) return 0;
 	var sum = 0;
 	for(var i=0; i<l; i++){
 		sum += arr[i];
@@ -114,13 +194,13 @@ function getParameterByName(name) {
 	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
 	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
 	results = regex.exec(location.search);
-	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 	
 function playPauseVideo(elemId) {
 	var videoElem = document.getElementById(elemId + "_video");
-	if(videoElem.paused == true){ videoElem.play(); console.log("play"); }
+	if (videoElem.paused === true) { videoElem.play(); console.log("play"); }
 	else{ videoElem.pause(); console.log("pause"); }
 }
 
@@ -143,5 +223,5 @@ Math.seed = function(s) {
 		
 		s = (a*s+c) % m;
 		return s / m;
-	}
-}
+	};
+};

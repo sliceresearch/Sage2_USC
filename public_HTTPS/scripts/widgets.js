@@ -34,7 +34,7 @@ widgetSpec.prototype.addButton = function(data) {
 	b.id = "button" + this.itemCount;
 	b.type = data.type;
 	b.call = data.action;
-	b.width = 1.5*titleBarHeight;
+	b.width = 1.5*ui.titleBarHeight;
 	this.items.push(b);
 	this.itemCount++;
 }
@@ -67,7 +67,7 @@ widgetSpec.prototype.addSlider = function(data){
 	s.appProperty = data.property;
 	s.appObj = data.appObj;
 	s.sliderVal = data.begin;
-	s.width = (s.parts < 10)? 8.0*titleBarHeight: 12.0*titleBarHeight;
+	s.width = (s.parts < 10)? 8.0*ui.titleBarHeight: 12.0*ui.titleBarHeight;
 	this.items.push(s);
 	this.itemCount++;
 };
@@ -90,13 +90,13 @@ function computeSize(widgetObj){
 		totalWidth += arr[i].width;
 		totalWidth += gap;
 	}
-	return {width : totalWidth, height: 2*titleBarHeight};
+	return {width : totalWidth, height: 2*ui.titleBarHeight};
 }
 
 
 function createControls(ctrId, spec){
 	var size = computeSize(spec);
-	var buttonRad = 0.75 * titleBarHeight;
+	var buttonRad = 0.75 * ui.titleBarHeight;
 	var windowControls = Snap(size.width, size.height);
 	var gap = 10;
 
@@ -109,7 +109,7 @@ function createControls(ctrId, spec){
 	
 	var wArr = spec.enumerate();
 	var x = gap;
-	var y = titleBarHeight;
+	var y = ui.titleBarHeight;
 	for (var i in wArr){
 		if (wArr[i] instanceof button){
 			createButton(windowControls,wArr[i],x+buttonRad,y);
@@ -180,7 +180,7 @@ var buttonType = {
 };
 
 function createSlider (paper, sliderSpec, x, y){
-	var sliderHeight = 1.5 * titleBarHeight;
+	var sliderHeight = 1.5 * ui.titleBarHeight;
 	var sliderArea = paper.rect(x,y-sliderHeight/2.0,sliderSpec.width, sliderHeight);
 	sliderArea.attr({
 		id: sliderSpec.id + "Area",
@@ -189,7 +189,7 @@ function createSlider (paper, sliderSpec, x, y){
 		stroke: "#999999"
 	});
 
-	var linePath = "M " + (x+0.5*titleBarHeight) + " " + y + "l " + (sliderSpec.width - titleBarHeight) + " " + 0 ;
+	var linePath = "M " + (x+0.5*ui.titleBarHeight) + " " + y + "l " + (sliderSpec.width - ui.titleBarHeight) + " " + 0 ;
 	var sliderLine = paper.path(linePath); 
 	sliderLine.attr({
 		strokeWidth:1,
@@ -198,7 +198,7 @@ function createSlider (paper, sliderSpec, x, y){
 		stroke:"#888"
 	});
 
-	var sliderKnob = paper.circle(x+0.5*titleBarHeight,y, 0.25*titleBarHeight);
+	var sliderKnob = paper.circle(x+0.5*ui.titleBarHeight,y, 0.25*ui.titleBarHeight);
 	sliderKnob.attr({
 		id:sliderSpec.id + 'knob',
 		style:"shape-rendering:crispEdges;",
@@ -272,7 +272,7 @@ function mapMoveToSlider(sliderKnob, pos){
 
 
 function createButton(paper, buttonSpec, cx, cy){
-	var buttonRad = 0.75 * titleBarHeight;
+	var buttonRad = 0.75 * ui.titleBarHeight;
 	var buttonBack = paper.circle(cx,cy,buttonRad);
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
@@ -307,7 +307,7 @@ function createButton(paper, buttonSpec, cx, cy){
 }
 
 function createTextInput(paper, textInputSpec, x, y){
-	var tIHeight = 1.5 * titleBarHeight;
+	var tIHeight = 1.5 * ui.titleBarHeight;
 	var textArea = paper.rect(x,y-tIHeight,textInputSpec.width, tIHeight);
 	textArea.attr({
 		id: textInputSpec.id + "Area",

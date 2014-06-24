@@ -5,15 +5,15 @@
 <title>SAGE2: Display</title>
 
 <script type="text/javascript">
-	// SAGE2 is available for use under the following license, commonly known
-	//          as the 3-clause (or "modified") BSD license:
+	// SAGE2 is available for use under the SAGE2 Software License
 	//
-	// Copyright (c) 2014, Electronic Visualization Laboratory,
-	//                     University of Illinois at Chicago
-	// All rights reserved.
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
 	//
-	// http://opensource.org/licenses/BSD-3-Clause
-	// See included LICENSE.txt file
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//
+	// Copyright (c) 2014
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
@@ -26,48 +26,39 @@
 <script type="text/javascript" src="lib/pdf_viewer.js"></script>
 <script type="text/javascript" src="lib/media_stream.js"></script>
 
+<!-- Load the module building the wal UI -->
+<script type="text/javascript" src="lib/ui_builder.js"></script>
+
+
 <script type="text/javascript" src="scripts/pointer.js"></script>
 <script type="text/javascript" src="scripts/pdf.js"></script>
-<!--
-<script type="text/javascript" src="scripts/glMatrix-0.9.5.min.js"></script>
-<script type="text/javascript" src="scripts/kinetic-v4.7.4.min.js"></script>
-<script type="text/javascript" src="scripts/three.min.js"></script>
--->
 <script type="text/javascript" src="scripts/snap.svg-min.js"></script>
 <script type="text/javascript" src="scripts/widgets.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
-
 	var clientID;
-	var offsetX;
-	var offsetY;
-	var titleBarHeight;
-	var titleTextSize;
-	var pointerWidth;
-	var pointerHeight;
-	var pointerOffsetX; 
-	var pointerOffsetY;
-	var clock_type;
-	
 	var wsio;
 	var hostname;
 	var port;
 	var dt;
 	
-	var hostAlias = {};
+	var hostAlias    = {};
 	
 	var itemCount = 0;
 	var pdfItems = {};
 	var pointerItems = {};
 	var controlItems = {};
 	var lockedControlElements = {} ;
+
+	var canvasItems  = {};
+
 	
 	var applications = {};
 	var dependencies = {};
-	
-	var wallRatio;
-	var browserRatio;
+
+	// UI object to build the element on the wall
+	var ui;
 
 	// Explicitely close web socket when web browser is closed
 	window.onbeforeunload = function() {
@@ -86,8 +77,6 @@
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		console.log("Connected to server: ", window.location.origin);
 		
-		ratio = "fit";
-
 		wsio.open(function() {
 			var clientDescription = {
 				clientType: "display",
@@ -143,264 +132,60 @@
 			// Global initialization
 			SAGE2_initialize(startTime);
 		});
+
+		wsio.on('addScript', function(script_data) {
+			var js = document.createElement('script');
+			js.type = "text/javascript";
+			js.src = script_data.source;
+			document.head.appendChild(js);
+		});
 		
 		wsio.on('setupDisplayConfiguration', function(json_cfg) {
 			var i;
+
 			if(window.location.hostname !== json_cfg.host)
 				hostAlias[json_cfg.host] = window.location.hostname;
 			for(i=0; i<json_cfg.alternate_hosts.length; i++){
 				if(window.location.hostname !== json_cfg.alternate_hosts[i])
 					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
 			}
-			
-			if (clientID===-1) {
-				offsetX = 0;
-				offsetY = 0;
-				titleBarHeight = json_cfg.titleBarHeight;
-				titleTextSize  = json_cfg.titleTextSize;
-				pointerWidth   = json_cfg.pointerWidth;
-				pointerHeight  = json_cfg.pointerHeight;
-				pointerOffsetX = Math.round(0.025384*pointerHeight);
-				pointerOffsetY = Math.round(0.060805*pointerHeight);
-				// Quick fix: disable backgroud image
-				json_cfg.background.image = undefined;
-				json_cfg.background.color = "#333333";
-			} else {
-				offsetX = json_cfg.displays[clientID].column * json_cfg.resolution.width;
-				offsetY = json_cfg.displays[clientID].row * json_cfg.resolution.height;
-				titleBarHeight = json_cfg.titleBarHeight;
-				titleTextSize  = json_cfg.titleTextSize;
-				pointerWidth   = json_cfg.pointerWidth;
-				pointerHeight  = json_cfg.pointerHeight;
-				pointerOffsetX = Math.round(0.025384*pointerHeight);
-				pointerOffsetY = Math.round(0.060805*pointerHeight);
-			}
-			clock_type = json_cfg.clock;
 
-			// background color
-			if(typeof json_cfg.background.color !== "undefined" && json_cfg.background.color != null){
-				document.body.style.backgroundColor = json_cfg.background.color;
-			}
-			if(typeof json_cfg.background.image !== "undefined" && json_cfg.background.image != null){
-				var bg = new Image();
-				bg.addEventListener('load', function() {
-					console.log(bg.naturalWidth + "x" + bg.naturalHeight);
-					
-					var bg_img;
-					var ext = json_cfg.background.image.lastIndexOf(".");
-					if(json_cfg.background.style == "fit" && (bg.naturalWidth != json_cfg.totalWidth || bg.naturalHeight != json_cfg.totalHeight)){
-						bg_img = json_cfg.background.image.substring(0, ext) + "_" + clientID + ".png";
-					}
-					else{
-						bg_img = json_cfg.background.image.substring(0, ext) + "_" + clientID + json_cfg.background.image.substring(ext);
-					}
-					
-					document.body.style.backgroundImage = "url(" + bg_img + ")";
-					document.body.style.backgroundPosition = "top left";
-					document.body.style.backgroundRepeat = "no-repeat";
-					document.body.style.backgroundSize = json_cfg.resolution.width +"px " + json_cfg.resolution.height + "px";
-				}, false);
-				bg.src = json_cfg.background.image;
-			}
-			// Setup the clipping size
-			if (clientID===-1) {
-					var main = document.getElementById("main");
-					// set the resolution to be the whole display wall
-					var wallWidth  = json_cfg.resolution.width*json_cfg.layout.columns;
-					var wallHeight = json_cfg.resolution.height*json_cfg.layout.rows;
-					wallRatio = wallWidth / wallHeight;
-					main.style.width    = wallWidth + "px";
-					main.style.height   = wallHeight + "px";
-					main.style.overflow = "hidden";
-
-					// put the scale up to the top left
-					main.style.webkitTransformOrigin = "0% 0%";
-
-					// calculate the scale ratio to make it fit
-					browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
-					var newratio;
-					if (wallRatio >= browserRatio)
-						newratio = document.documentElement.clientWidth / wallWidth;
-					else
-						newratio = document.documentElement.clientHeight / wallHeight;
-					main.style.webkitTransform = "scale("+(newratio)+")";
-
-					window.onresize = function(event) {
-						// recalculate after every window resize
-						browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
-						if (ratio === "fit") {
-							var newratio;
-							if (wallRatio >= browserRatio)
-								newratio = document.documentElement.clientWidth / wallWidth;
-							else
-								newratio = document.documentElement.clientHeight / wallHeight;
-							main.style.webkitTransform = "scale("+(newratio)+")";
-						}
-					};
-					window.onkeydown = function (event) {
-						// keycode: f
-						if (event.keyCode === 70) {
-							if (ratio === "fit") {
-								main.style.webkitTransform = "scale(1)";
-								ratio = "full";
-							} else if (ratio === "full") {
-								var newratio;
-								if (wallRatio >= browserRatio)
-									newratio = document.documentElement.clientWidth / wallWidth;
-								else
-									newratio = document.documentElement.clientHeight / wallHeight;
-								main.style.webkitTransform = "scale("+(newratio)+")";
-								ratio = "fit";
-							}
-						}
-					}
-					// // Too crazy motion
-					// window.addEventListener("mousewheel", function(event) {
-					// 	var scale = 1.0 + Math.abs(event.wheelDelta)/512;
-					// 	if(event.wheelDelta > 0) scale = 1.0 / scale;
-					// 	ratio = ratio * scale;
-					// 	var transfromString = "scale("+(ratio*browserRatio)+")";
-					// 	main.style.webkitTransform = transfromString;
-					// }, false);
-
-					// show the cursor in this mode
-					document.body.style.cursor = "initial";
-			} else {
-				if(json_cfg.background.clip === true) {
-					var main = document.getElementById("main");
-					main.style.width    = json_cfg.resolution.width  + "px";
-					main.style.height   = json_cfg.resolution.height + "px";
-					main.style.overflow = "hidden";
-				}
-			}
-
-			var upperBar = document.getElementById('upperBar');
-			upperBar.style.height = titleBarHeight.toString() + "px";
-			upperBar.style.left = "0px";
-			upperBar.style.top = -offsetY.toString() + "px";
-			upperBar.style.zIndex = "9999";
-			
-			var time = document.getElementById('time');
-			time.style.position = "absolute";
-			time.style.whiteSpace = "nowrap";
-			time.style.fontSize = Math.round(titleTextSize) + "px";
-			time.style.left = (-offsetX + titleBarHeight).toString() + "px";
-			time.style.top = (0.05*titleBarHeight).toString() + "px";
-			time.style.color = "#FFFFFF";
-			
-			var machine = document.getElementById('machine');
-			machine.style.position = "absolute";
-			machine.style.whiteSpace = "nowrap";
-			machine.style.fontSize = Math.round(titleTextSize) + "px";
-			machine.style.left = (-offsetX + (6*titleBarHeight)).toString() + "px";
-			machine.style.top = (0.05*titleBarHeight).toString() + "px";
-			machine.style.color = "#FFFFFF";
-			if(json_cfg.show_url){
-				var hostname = json_cfg.public_host ? json_cfg.public_host : json_cfg.host;
-				if(json_cfg.index_port == 80) machine.textContent = hostname;
-				else machine.textContent = hostname + ":" +json_cfg.index_port.toString();
-			}
+			// Build the elements visible on the wall
+			ui = new uiBuilder(json_cfg, clientID);
+			ui.build();
+			ui.background();
 		});
 		
 		wsio.on('setSystemTime', function(data) {
-			// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
-			var time = document.getElementById('time');
-			if(clock_type == 12) time.textContent = formatAMPM(new Date(data.date));
-			else time.textContent = format24Hr(new Date(data.date));
+			ui.setTime(new Date(data.date));
 		});
-		
+
 		wsio.on('addRemoteSite', function(data) {
-			var upperBar = document.getElementById('upperBar');
-			
-			var remote = document.createElement('div');
-			remote.id = data.name;
-			remote.style.position = "absolute";
-			remote.style.textAlign = "center";
-			remote.style.width = data.width.toString() + "px";
-			remote.style.height = data.height.toString() + "px";
-			remote.style.left = (-offsetX + data.pos).toString() + "px";
-			remote.style.top = (-offsetY+2).toString() + "px";
-			if(data.connected) remote.style.backgroundColor = "#379982";
-			else remote.style.backgroundColor = "#AD2A2A";
-			
-			var name = document.createElement('p');
-			name.style.whiteSpace = "nowrap";
-			name.style.fontSize = Math.round(titleTextSize) + "px";
-			name.style.color = "#FFFFFF";
-			name.textContent = data.name;
-			
-			remote.appendChild(name);
-			
-			upperBar.appendChild(remote);
+			ui.addRemoteSite(data);
 		});
 		
 		wsio.on('connectedToRemoteSite', function(data) {
-			var remote = document.getElementById(data.name);
-			if(data.connected) remote.style.backgroundColor = "#379982";
-			else remote.style.backgroundColor = "#AD2A2A";
-		});
-		
-		wsio.on('addScript', function(script_data) {
-			var js = document.createElement('script')
-  			js.type = "text/javascript";
-  			js.src = script_data.source;
-  			document.head.appendChild(js);
+			ui.connectedToRemoteSite(data);
 		});
 		
 		wsio.on('createSagePointer', function(pointer_data){
-			console.log("creating pointer: " + pointer_data.id);
-			
-            var main = document.getElementById("main");
-            
-            var pointerElem = document.createElement("canvas");
-            pointerElem.id = pointer_data.id; 
-            pointerElem.className = "pointerItem";
-            pointerElem.width = pointerWidth;
-            pointerElem.height = pointerHeight;
-            pointerElem.style.left = (pointer_data.left-pointerOffsetX-offsetX).toString() + "px";
-            pointerElem.style.top = (pointer_data.top-pointerOffsetY-offsetY).toString() + "px";
-            pointerElem.style.zIndex = "10000"; 
-
-            main.appendChild(pointerElem); 
-
-            var ptr = new pointer(); 
-            ptr.init(pointerElem.id, pointer_data.label, pointer_data.color) ;
-            ptr.draw();
-            
-            if(pointer_data.visible) pointerElem.style.display = "block";
-            else pointerElem.style.display = "none";
-            
-            pointerItems[pointerElem.id] = ptr;
+			ui.createSagePointer(pointer_data);
         });
         
         wsio.on('showSagePointer', function(pointer_data){
-        	var pointerElem = document.getElementById(pointer_data.id);
-        	
-        	pointerElem.style.display = "block";
-        	pointerElem.style.left = (pointer_data.left-pointerOffsetX-offsetX).toString() + "px";
-            pointerElem.style.top = (pointer_data.top-pointerOffsetY-offsetY).toString() + "px";
-            
-            pointerItems[pointerElem.id].setLabel(pointer_data.label);
-            pointerItems[pointerElem.id].setColor(pointer_data.color);
-            pointerItems[pointerElem.id].draw();
+			ui.showSagePointer(pointer_data);
         });
         
         wsio.on('hideSagePointer', function(pointer_data){
-        	var pointerElem = document.getElementById(pointer_data.id);
-        	
-        	pointerElem.style.display = "none";
+			ui.hideSagePointer(pointer_data);
         });
         
         wsio.on('updateSagePointerPosition', function(pointer_data){
-        	var pointerElem = document.getElementById(pointer_data.id);
-        	
-        	pointerElem.style.left = (pointer_data.left-pointerOffsetX-offsetX).toString() + "px";;
-        	pointerElem.style.top = (pointer_data.top-pointerOffsetY-offsetY).toString() + "px";
+			ui.updateSagePointerPosition(pointer_data);
         });
         
         wsio.on('changeSagePointerMode', function(pointer_data){
-        	pointerItems[pointer_data.id].changeMode(pointer_data.mode);
-        	pointerItems[pointer_data.id].draw();
+			ui.changeSagePointerMode(pointer_data);
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
@@ -423,35 +208,33 @@
 		/******************************/
 		wsio.on('createAppWindow', function(data) {
 			var date = new Date(data.date);
-			
-			var main = document.getElementById("main");
-			
+
 			var windowTitle = document.createElement("div");
-			windowTitle.id = data.id + "_title";
-			windowTitle.className = "windowTitle";
-			windowTitle.style.width = data.width.toString() + "px";
-			windowTitle.style.height = titleBarHeight.toString() + "px";
-			windowTitle.style.left = (data.left-offsetX).toString() + "px";
-			windowTitle.style.top = (data.top-offsetY).toString() + "px";
+			windowTitle.id  = data.id + "_title";
+			windowTitle.className    = "windowTitle";
+			windowTitle.style.width  = data.width.toString() + "px";
+			windowTitle.style.height = ui.titleBarHeight.toString() + "px";
+			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
+			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
 			windowTitle.style.zIndex = itemCount.toString();
-			main.appendChild(windowTitle);
+			ui.main.appendChild(windowTitle);
 			
 			var titleText = document.createElement("p");
-			titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
-			titleText.style.fontSize = Math.round(titleTextSize) + "px";
-			titleText.style.color = "#FFFFFF";
-			titleText.style.marginLeft = Math.round(titleBarHeight/4) + "px";
-			titleText.textContent = data.title;
+			titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
+			titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
+			titleText.style.color      = "#FFFFFF";
+			titleText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
+			titleText.textContent      = data.title;
 			windowTitle.appendChild(titleText);
 			
 			var windowItem = document.createElement("div");
-			windowItem.id = data.id;
-			windowItem.className = "windowItem";
-			windowItem.style.left = (data.left-offsetX).toString() + "px";
-			windowItem.style.top = (data.top+titleBarHeight-offsetY).toString() + "px";
+			windowItem.id  = data.id;
+			windowItem.className      = "windowItem";
+			windowItem.style.left     = (data.left-ui.offsetX).toString() + "px";
+			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
 			windowItem.style.overflow = "hidden";
-			windowItem.style.zIndex = (itemCount+1).toString();
-			main.appendChild(windowItem);
+			windowItem.style.zIndex   = (itemCount+1).toString();
+			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
@@ -583,15 +366,15 @@
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;
             var dragCorner = document.createElement("div");
-            dragCorner.className = "dragCorner";
+            dragCorner.className      = "dragCorner";
             dragCorner.style.position = "absolute";
-            dragCorner.style.width = cornerSize.toString() + "px";
-            dragCorner.style.height = cornerSize.toString() + "px";
-            dragCorner.style.top = (data.height-cornerSize).toString() + "px";
-            dragCorner.style.left = (data.width-cornerSize).toString() + "px";
+            dragCorner.style.width    = cornerSize.toString() + "px";
+            dragCorner.style.height   = cornerSize.toString() + "px";
+            dragCorner.style.top      = (data.height-cornerSize).toString() + "px";
+            dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
     		dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
-            dragCorner.style.border = "none";
-            dragCorner.style.zIndex = "1";
+            dragCorner.style.border   = "none";
+            dragCorner.style.zIndex   = "1";
             windowItem.appendChild(dragCorner);
 			
 			itemCount += 2;
@@ -600,8 +383,6 @@
 		/******************************/
 		
 		wsio.on('deleteElement', function(elem_data) {
-			console.log("delete: " + elem_data.elemId);
-			
 			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
 			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 			
@@ -651,8 +432,7 @@
 		
 		wsio.on('hoverOverItemCorner', function(elem_data) {
 			var selectedElem = document.getElementById(elem_data.elemId);
-			
-			var dragCorner = selectedElem.getElementsByClassName("dragCorner");
+			var dragCorner   = selectedElem.getElementsByClassName("dragCorner");
 			if(elem_data.flag){
 				dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.7)";
             	dragCorner[0].style.border = "2px solid #333333"
@@ -664,26 +444,24 @@
 		});
 
 		wsio.on('setItemPosition', function(position_data) {
-			var date = new Date(position_data.date);
-			
-			var eLeft = position_data.elemLeft - offsetX;
-			var eTop = position_data.elemTop - offsetY;
+			var date  = new Date(position_data.date);
+			var eLeft = position_data.elemLeft - ui.offsetX;
+			var eTop  = position_data.elemTop  - ui.offsetY;
 			
 			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
 			selectedElemTitle.style.left = eLeft.toString() + "px";
-			selectedElemTitle.style.top = eTop.toString() + "px";
+			selectedElemTitle.style.top = eTop.toString()   + "px";
 			
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
-			selectedElem.style.top = (eTop+titleBarHeight).toString() + "px";
-
+			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
 		});
 		
 		wsio.on('setControlPosition', function(position_data) {
 			var date = new Date(position_data.date);
 			
-			var eLeft = position_data.elemLeft - offsetX;
-			var eTop = position_data.elemTop - offsetY;
+			var eLeft = position_data.elemLeft - ui.offsetX;
+			var eTop = position_data.elemTop - ui.offsetY;
 			var selectedControl = document.getElementById(position_data.elemId);
 
 			selectedControl.style.left = eLeft.toString() + "px";
@@ -691,35 +469,35 @@
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
-			var eLeft = position_data.elemLeft - offsetX;
-			var eTop = position_data.elemTop - offsetY;
+			var eLeft = position_data.elemLeft - ui.offsetX;
+			var eTop  = position_data.elemTop  - ui.offsetY;
 			
 			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-			selectedElemTitle.style.left = eLeft.toString() + "px";
-			selectedElemTitle.style.top = eTop.toString() + "px";
+			selectedElemTitle.style.left  = eLeft.toString() + "px";
+			selectedElemTitle.style.top   = eTop.toString()  + "px";
 			selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 			
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
-			selectedElem.style.top = (eTop+titleBarHeight).toString() + "px";
+			selectedElem.style.top  = (eTop+ui.titleBarHeight).toString() + "px";
 			
 			var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 			var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
-			dragCorner[0].style.width = cornerSize.toString() + "px";
+			dragCorner[0].style.width  = cornerSize.toString() + "px";
             dragCorner[0].style.height = cornerSize.toString() + "px";
-            dragCorner[0].style.top = (Math.round(position_data.elemHeight)-cornerSize).toString() + "px";
-            dragCorner[0].style.left = (Math.round(position_data.elemWidth)-cornerSize).toString() + "px";
+            dragCorner[0].style.top    = (Math.round(position_data.elemHeight)-cornerSize).toString() + "px";
+            dragCorner[0].style.left   = (Math.round(position_data.elemWidth)-cornerSize).toString()  + "px";
 			
 			var child = selectedElem.getElementsByClassName("sageItem");
 
 			// if the element is a div, resize should use the style object
 			if(child[0].tagName.toLowerCase() == "div") {
-				child[0].style.width  = Math.round(position_data.elemWidth) + "px";
+				child[0].style.width  = Math.round(position_data.elemWidth)  + "px";
 				child[0].style.height = Math.round(position_data.elemHeight) + "px";
 			}
 			else{
 				// if it's a canvas, just use width and height
-				child[0].width = Math.round(position_data.elemWidth);
+				child[0].width  = Math.round(position_data.elemWidth);
 				child[0].height = Math.round(position_data.elemHeight);
 			}
 			
@@ -741,13 +519,13 @@
 		wsio.on('updateVideoItemTime', function(video_data) {
 			var clientTime = new Date();
 			var serverTime = new Date(clientTime.getTime() - dt);
-			var sentTime = new Date(video_data.sent);
-			var delay = (serverTime.getTime() - sentTime.getTime()) / 1000;
+			var sentTime   = new Date(video_data.sent);
+			var delay      = (serverTime.getTime() - sentTime.getTime()) / 1000;
 			
 			var selectedElem = document.getElementById(video_data.elemId);
 			
 			var child = selectedElem.getElementsByClassName("sageItem");
-			var diff = (video_data.time + delay) - child[0].currentTime;
+			var diff  = (video_data.time + delay) - child[0].currentTime;
 			
 			var app = applications[video_data.elemId];
 			if(app !== undefined && app !== null){
@@ -757,8 +535,7 @@
 		
 		wsio.on('animateCanvas', function(data) {
 			var date = new Date(data.date);
-			
-			var app = applications[data.id];
+			var app  = applications[data.id];
 			if(app !== undefined && app !== null){
 				app.refresh(date);
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
@@ -767,8 +544,7 @@
 		
 		wsio.on('eventInItem', function(event_data){
 			var date = new Date(event_data.date);
-			
-			var app = applications[event_data.elemId];
+			var app  = applications[event_data.elemId];
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
 		});
 
@@ -797,8 +573,8 @@
 				ctrDiv.className = "windowControls";
 				ctrDiv.style.width = data.width.toString() + "px";
 				ctrDiv.style.height = data.height.toString() + "px";
-				ctrDiv.style.left = (data.left-offsetX).toString() + "px";
-				ctrDiv.style.top = (data.top-offsetY).toString() + "px";
+				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
+				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
 				ctrDiv.style.zIndex = "9999".toString();
 				var handle = createControls(data.id,controlItems[data.id].spec);
 				ctrDiv.appendChild (handle);	
@@ -808,7 +584,7 @@
 			}	
 		});
 		wsio.on('requestControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, offsetX, offsetY);
+			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
 			var regC = /_controls/;
 			var regB = /button/;
@@ -834,7 +610,7 @@
 		});
 
 		wsio.on('releaseControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, offsetX, offsetY);
+			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
 			if (ctrl){
 				var ctrId = ctrl.attr("id");
 				var regS = /slider/;
@@ -891,7 +667,7 @@
 			var ctrl = getCtrl(data.ctrl);
 			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
 			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
-			var pos = data.x-offsetX-widgetOffset;
+			var pos = data.x-ui.offsetX-widgetOffset;
 			
 			var val = mapMoveToSlider(ctrl, pos);
 			var slider = ctrl.parent();
@@ -918,16 +694,11 @@
 
 </script>
 
-<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
-
 </head>
 
 <body onload="init()">
 	<div id="main">
-		<div id="upperBar">
-			<p id="time"></p>
-			<p id="machine"></p>
-		</div>
+		<!-- the rest is built programmatically by the uiBuilder -->
 	</div>
 </body>
 </html>

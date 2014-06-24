@@ -5,15 +5,15 @@
 <title>SAGE2 UI</title>
 
 <script type="text/javascript">
-	// SAGE2 is available for use under the following license, commonly known
-	//          as the 3-clause (or "modified") BSD license:
-	//
-	// Copyright (c) 2014, Electronic Visualization Laboratory,
-	//                     University of Illinois at Chicago
-	// All rights reserved.
-	//
-	// http://opensource.org/licenses/BSD-3-Clause
-	// See included LICENSE.txt file
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2014
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
@@ -38,7 +38,11 @@
 	var canvasKeyPressFunc = null;
 	var selectedFile = null;
 	
-	var serverUploadBtn, serverSessionBtn;
+	var uiAspect;
+	var uiWindow;
+	var extraInteraction;
+	
+	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
 	var fileCloseBtn;
     var openWebpageBtn;
@@ -117,21 +121,27 @@
 			}, 2000);
 		});
 		
+		uiWindow         = document.getElementById('uiWindow');
+		extraInteraction = document.getElementById('extraInteraction');
+		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
 		serverSessionBtn = document.getElementById('serverSessionBtn');
+		clearBtn         = document.getElementById('clearBtn');
+		tileBtn          = document.getElementById('tileBtn');
 		fileOKBtn        = document.getElementById('fileOKBtn');
 		fileCloseBtn     = document.getElementById('fileCloseBtn');
 		openWebpageBtn   = document.getElementById('openWebpageBtn');
 		
 		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
 		serverSessionBtn.addEventListener('click', saveSession, false);
+		clearBtn.addEventListener('click',         clearDisplay, false);
+		tileBtn.addEventListener('click',          tileApplications, false);
 		fileOKBtn.addEventListener('click',        selectServerFiles, false);
 		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
 		winMgr = new windowManager("winMgr", wsio);
-		winMgr.draw();
 		
 		canvasKeyDownFunc = winMgr.keyDown.bind(winMgr);
 		canvasKeyUpFunc = winMgr.keyUp.bind(winMgr);
@@ -158,6 +168,29 @@
 		sessionsDir = document.getElementById('sessions');
 				
 		wsio.on('setupDisplayConfiguration', function(config) {
+			var extraHeight = extraInteraction.clientHeight;
+			
+			var winWidth  = window.innerWidth;
+			var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+			
+			uiAspect  = config.totalWidth / config.totalHeight;
+			var winAspect = winWidth / winHeight;
+			
+			if(winAspect < uiAspect){
+				var uiWidth  = 0.9*winWidth;
+				var uiHeight = uiWidth / uiAspect;
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			else{
+				var uiHeight = 0.9*winHeight;
+				var uiWidth  = uiHeight * uiAspect;
+				uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			
 			winMgr.initDisplayConfig(config);
 			var displayMin = Math.min(config.totalWidth, config.totalHeight);
 			var thisMin = Math.min(screen.width, screen.height);
@@ -228,6 +261,32 @@
 		});
 	}
 	
+	function resize() {
+		var extraHeight = extraInteraction.clientHeight;
+			
+		var winWidth  = window.innerWidth;
+		var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+		
+		var winAspect = winWidth / winHeight;
+		
+		if(winAspect < uiAspect){
+			var uiWidth  = 0.9*winWidth;
+			var uiHeight = uiWidth / uiAspect;
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		else{
+			var uiHeight = 0.9*winHeight;
+			var uiWidth  = uiHeight * uiAspect;
+			uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		
+		winMgr.resize();
+	}
+	
 	function createFileList(files, type, dir) {
 		files[type].sort();
 		for(var i=0; i<files[type].length; i++){
@@ -281,6 +340,15 @@
 		}
 	}
 
+	function tileApplications (event) {
+		// tile all the application windows
+		wsio.emit('tileApplications');
+	}
+	function clearDisplay (event) {
+		// remove all the applications
+		wsio.emit('clearDisplay');
+	}
+
 	function closeServerFileBrowser(event) {
 		document.getElementById("lb_fade").style.display="none";
 		document.getElementById("lb_light").style.display="none";
@@ -315,10 +383,10 @@
 
 </head>
 
-<body onload="init()" onresize="winMgr.resize()">
+<body onload="init()" onresize="resize()">
 	<div id="wrapper">
-		<div id="window">
-			<canvas id="winMgr" style="width: 100%;">HTML5 canvas element not supported</canvas>
+		<div id="uiWindow">
+			<canvas id="winMgr">HTML5 canvas element not supported</canvas>
 		</div>
 		<div id="extraInteraction">
 			<div id="fileUpload">
@@ -326,7 +394,6 @@
 					<p id="fileDropText">Drag files here to upload</p>
 				</div>
 				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
-				<label class="fileLabel">Session:</label><button id="serverSessionBtn" type="button">Save</button>
 			</div>
 			<div id="sagePointer">
 				<label class="sageLabel">Click to start:</label><button id="sagePointerBtn" type="button">SAGE Pointer</button><br />
@@ -352,6 +419,11 @@
                 <label class="sageLabel">Webpage:</label><input id="openWebpageUrl" type="text" value="http://hakim.se/experiments/html5/origami"></input><br/>
                 <button id="openWebpageBtn" type="button">Browse</button><br/>
             </div>
+			<div id="layout">
+				<label class="sageLabel">Session:</label><button id="serverSessionBtn" type="button">Save current</button>
+				<label class="sageLabel">Clear display:</label><button id="clearBtn" type="button">Clear all</button>
+				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
+			</div>
 		<div>
 		
 		<canvas id="mediaCanvas" style="display: none;"></canvas>

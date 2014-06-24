@@ -1,57 +1,19 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
-
-var shader_fs = "precision mediump float;\
-\
-	varying vec2 vTextureCoord;\
-	varying vec3 vLightWeighting;\
-\
-	uniform sampler2D uSampler;\
-\
-	void main(void) {\
-		vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));\
-		gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a);\
-	}\
-";
-
-var shader_vs = "attribute vec3 aVertexPosition;\
-	attribute vec3 aVertexNormal;\
-	attribute vec2 aTextureCoord;\
-\
-	uniform mat4 uMVMatrix;\
-	uniform mat4 uPMatrix;\
-	uniform mat3 uNMatrix;\
-\
-	uniform vec3 uAmbientColor;\
-\
-	uniform vec3 uLightingDirection;\
-	uniform vec3 uDirectionalColor;\
-\
-	varying vec2 vTextureCoord;\
-	varying vec3 vLightWeighting;\
-\
-	void main(void) {\
-		gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);\
-		vTextureCoord = aTextureCoord;\
-\
-		vec3 transformedNormal = uNMatrix * aVertexNormal;\
-		float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);\
-		vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;\
-	}\
-";
-
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 var texture_cube = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
+		this.fpsText = null;
+		
 		this.gl = null;
 		this.shaderProgram = null;
 		this.texture = null;
@@ -78,34 +40,45 @@ var texture_cube = SAGE2_App.extend( {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
 		
+		this.fpsText = document.createElement('p');
+		this.fpsText.textContent = "0.00 fps";
+		this.fpsText.style.fontFamily = "Verdana,sans-serif";
+		this.fpsText.style.fontSize = (0.05*height).toString() + "px";
+		this.fpsText.style.textIndent = "0px";
+		this.fpsText.style.color = "#000000";
+		this.fpsText.style.position = "absolute";
+		this.fpsText.style.top = "10px";
+		this.fpsText.style.left = "10px";
+		
+		this.div.appendChild(this.fpsText);
+		
 		// application specific 'init'
 		this.initGL();
 		if(this.gl){
 			this.element.addEventListener("webglcontextlost", this.webglContextLost, false);
 			this.element.addEventListener("webglcontextrestored", this.webglContextRestored, false);
 		
-			this.initShaders();
-			this.initLighting();
-			this.initBuffers();
-			this.initTexture();
-	
 			this.gl.clearColor(0.5, 0.5, 0.5, 1.0);
 			this.gl.enable(this.gl.DEPTH_TEST);
-		
+	
 			this.pMatrix = mat4.create();
 			this.mvMatrix = mat4.create();
-			
+		
 			this.rotx = 0;
 			this.roty = 0;
 			
 			this.gl.viewportWidth = this.gl.drawingBufferWidth;
 			this.gl.viewportHeight = this.gl.drawingBufferHeight;
 			this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
-		
+			
 			mat4.perspective(45, this.element.width / this.element.height, 0.1, 100.0, this.pMatrix);
 			
-			// console.log("CANVAS: " + this.element.width + "x" + this.element.height);
-			// console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);
+			var _this = this;
+			this.initShaders(function() {
+				_this.initLighting();
+				_this.initBuffers();
+				_this.initTexture();
+			});
 		}
 	},
 	
@@ -134,63 +107,99 @@ var texture_cube = SAGE2_App.extend( {
 		console.log(event);
 	},
 	
-	initShaders: function() {
-		var fragmentShader = this.getShader(shader_fs, "x-shader/x-fragment");
-		var vertexShader = this.getShader(shader_vs, "x-shader/x-vertex");
-  
-		// Create the shader program
-		this.shaderProgram = this.gl.createProgram();
-		this.gl.attachShader(this.shaderProgram, vertexShader);
-		this.gl.attachShader(this.shaderProgram, fragmentShader);
-		this.gl.linkProgram(this.shaderProgram);
-  
-		// If creating the shader program failed, alert
-		if(!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)){
-			alert("Unable to initialize the shader program.");
-		}
-  
-		this.gl.useProgram(this.shaderProgram);
+	initShaders: function(callback) {
+		var _this = this;
+		var vertFile = this.resrcPath + "shaders/texture_cube.vert";
+		var fragFile = this.resrcPath + "shaders/texture_cube.frag";
+		
+		this.getShaders(vertFile, fragFile, function(vertexShader, fragmentShader) {
+			// Create the shader program
+			_this.shaderProgram = _this.gl.createProgram();
+			_this.gl.attachShader(_this.shaderProgram, vertexShader);
+			_this.gl.attachShader(_this.shaderProgram, fragmentShader);
+			_this.gl.linkProgram(_this.shaderProgram);
+			
+			// If creating the shader program failed, alert
+			if(!_this.gl.getProgramParameter(_this.shaderProgram, _this.gl.LINK_STATUS)){
+				alert("Unable to initialize the shader program.");
+			}
+			
+			_this.gl.useProgram(_this.shaderProgram);
 	
-		this.shaderProgram.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-		this.gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
+			_this.shaderProgram.vertexPositionAttribute = _this.gl.getAttribLocation(_this.shaderProgram, "aVertexPosition");
+			_this.gl.enableVertexAttribArray(_this.shaderProgram.vertexPositionAttribute);
 
-		this.shaderProgram.vertexNormalAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
-		this.gl.enableVertexAttribArray(this.shaderProgram.vertexNormalAttribute);
+			_this.shaderProgram.vertexNormalAttribute = _this.gl.getAttribLocation(_this.shaderProgram, "aVertexNormal");
+			_this.gl.enableVertexAttribArray(_this.shaderProgram.vertexNormalAttribute);
 
-		this.shaderProgram.textureCoordAttribute = this.gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
-		this.gl.enableVertexAttribArray(this.shaderProgram.textureCoordAttribute);
+			_this.shaderProgram.textureCoordAttribute = _this.gl.getAttribLocation(_this.shaderProgram, "aTextureCoord");
+			_this.gl.enableVertexAttribArray(_this.shaderProgram.textureCoordAttribute);
 
-		this.shaderProgram.pMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uPMatrix");
-		this.shaderProgram.mvMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
-		this.shaderProgram.nMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uNMatrix");
-		this.shaderProgram.samplerUniform = this.gl.getUniformLocation(this.shaderProgram, "uSampler");
-		this.shaderProgram.ambientColorUniform = this.gl.getUniformLocation(this.shaderProgram, "uAmbientColor");
-		this.shaderProgram.lightingDirectionUniform = this.gl.getUniformLocation(this.shaderProgram, "uLightingDirection");
-		this.shaderProgram.directionalColorUniform = this.gl.getUniformLocation(this.shaderProgram, "uDirectionalColor");
+			_this.shaderProgram.pMatrixUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uPMatrix");
+			_this.shaderProgram.mvMatrixUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uMVMatrix");
+			_this.shaderProgram.nMatrixUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uNMatrix");
+			_this.shaderProgram.samplerUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uSampler");
+			_this.shaderProgram.ambientColorUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uAmbientColor");
+			_this.shaderProgram.lightingDirectionUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uLightingDirection");
+			_this.shaderProgram.directionalColorUniform = _this.gl.getUniformLocation(_this.shaderProgram, "uDirectionalColor");
+		
+			callback();
+		});
 	},
 	
-	getShader: function(theSource, type) {
-		// Now figure out what type of shader script we have,
-		// based on its MIME type.
-		var shader;
-  
-		if(type == "x-shader/x-fragment") shader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-		else if(type == "x-shader/x-vertex") shader = this.gl.createShader(this.gl.VERTEX_SHADER);
-		else return null;  // Unknown shader type
-  
-		// Send the source to the shader object
-		this.gl.shaderSource(shader, theSource);
-  
-		// Compile the shader program
-		this.gl.compileShader(shader);
-  
-		// See if it compiled successfully
-		if(!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)){
-			alert("An error occurred compiling the " + type + " shader: " + this.gl.getShaderInfoLog(shader));
-			return null;
-		}
-  
-		return shader;
+	getShaders: function(vertFile, fragFile, callback) {
+		var _this = this;
+		
+		var vertShader;
+		var fragShader;
+		
+		var vertReadComplete = false;
+		var fragReadComplete = false;
+		
+		readFile(vertFile, function(err, text) {
+			if(err) log(err);
+			
+			vertShader = _this.gl.createShader(_this.gl.VERTEX_SHADER);
+			
+			// Send the source to the shader object
+			_this.gl.shaderSource(vertShader, text);
+			
+			// Compile the shader program
+			_this.gl.compileShader(vertShader);
+			
+			// See if it compiled successfully
+			if(!_this.gl.getShaderParameter(vertShader, _this.gl.COMPILE_STATUS)){
+				alert("An error occurred compiling the vertex shader: " + _this.gl.getShaderInfoLog(vertShader));
+			}
+			
+			if(fragReadComplete) {
+				callback(vertShader, fragShader);
+			}
+			
+			vertReadComplete = true;
+		});
+		readFile(fragFile, function(err, text) {
+			if(err) log(err);
+			
+			fragShader = _this.gl.createShader(_this.gl.FRAGMENT_SHADER);
+			
+			// Send the source to the shader object
+			_this.gl.shaderSource(fragShader, text);
+			
+			// Compile the shader program
+			_this.gl.compileShader(fragShader);
+			
+			// See if it compiled successfully
+			if(!_this.gl.getShaderParameter(fragShader, _this.gl.COMPILE_STATUS)){
+				alert("An error occurred compiling the fragment shader: " + _this.gl.getShaderInfoLog(fragShader));
+			}
+			
+			if(vertReadComplete) {
+				callback(vertShader, fragShader);
+			}
+			
+			fragReadComplete = true;
+		});
 	},
 	
 	initLighting: function() {
@@ -359,6 +368,7 @@ var texture_cube = SAGE2_App.extend( {
 		this.texture.image = new Image();
 		this.texture.image.crossOrigin = "anonymous";
 		this.texture.image.addEventListener('load', function(event){
+			_this.texture.image.isLoaded = true;
 			_this.handleLoadedTexture(_this.texture);
 		}, false);
 		this.texture.image.src = this.resrcPath + "images/crate.jpg";
@@ -390,6 +400,9 @@ var texture_cube = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		if(this.shaderProgram === undefined || this.shaderProgram === null) return;
+		if(this.texture.image.isLoaded === undefined || this.texture.image.isLoaded === false) return;
+	
 		this.rotx += 10.0 * this.dt;
 		this.roty -= 15.0 * this.dt;
 		
@@ -416,6 +429,8 @@ var texture_cube = SAGE2_App.extend( {
 		this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.cubeVertexIndexBuffer);
 		this.setMatrixUniforms();
 		this.gl.drawElements(this.gl.TRIANGLES, this.cubeVertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
+	
+		this.fpsText.textContent = this.fps.toFixed(2).toString() + " fps";
 	},
 	
 	resize: function(date) {
@@ -425,8 +440,7 @@ var texture_cube = SAGE2_App.extend( {
 		
 		mat4.perspective(45, this.element.width / this.element.height, 0.1, 100.0, this.pMatrix);
 		
-		// console.log("CANVAS: " + this.element.width + "x" + this.element.height);
-		// console.log("GL_BUF: " + this.gl.drawingBufferWidth + "x" + this.gl.drawingBufferHeight);
+		this.fpsText.style.fontSize = (0.05*this.element.height).toString() + "px";
 		
 		this.refresh(date);
 	},

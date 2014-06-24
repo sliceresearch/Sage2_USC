@@ -1,21 +1,18 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 
 var three_sample = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.timer  = null;
-		this.redraw = null;
-		this.frame  = null;
 		this.width  = null;
 		this.height = null;
 		this.resizeEvents = "onfinish"; // "continuous";
@@ -73,41 +70,24 @@ var three_sample = SAGE2_App.extend( {
 
 		// draw!
 		this.renderer.render(this.scene, this.camera);
-
-		this.timer  = 0.0;
-		this.redraw = true;
 	},
 	
 	load: function(state, date) {
 	},
 
 	draw: function(date) {
-		this.timer = this.timer + this.dt;
-		if(this.timer >= 0.033333333) {
-			this.timer  = 0.0;
-			this.redraw = true;
-		}
+		var amplitude = 50;
+		var period    = 2.0; // in sec
+		var centerY   = 0;
 		
-		if(this.redraw) {		
-			var amplitude = 50;
-			var period    = 2.0; // in sec
-			var centerY   = 0;
-			
-			this.sphere.position.y = amplitude * Math.sin(this.t * 2*Math.PI / period) + centerY;
-			
-			this.renderer.render(this.scene, this.camera);
-			
-			this.frame++;
-			this.redraw = false;
-		}
+		this.sphere.position.y = amplitude * Math.sin(this.t * 2*Math.PI / period) + centerY;
+		
+		this.renderer.render(this.scene, this.camera);
 	},
 
 	resize: function(date) {
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
-		this.minDim = Math.min(this.width, this.height);
-		this.redraw = true;
-
 		this.renderer.setSize(this.width, this.height);
 		
 		this.refresh(date);

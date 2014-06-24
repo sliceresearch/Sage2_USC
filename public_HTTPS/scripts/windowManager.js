@@ -1,51 +1,45 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 function windowManager(id, ws) {
 	this.element = document.getElementById(id);
-	this.ctx = this.element.getContext("2d");
-	this.wsio = ws;
+	this.ctx   = this.element.getContext("2d");
+	this.wsio  = ws;
 	this.nRows = 0;
 	this.nCols = 0;
 	this.aspectRatio = 1.0;
-	this.resolution = [];
-	this.scale = 1.0;
+	this.resolution  = [];
+	this.scale       = 1.0;
 	this.titleBarHeight = 0;
-	this.applications = [];
-	this.mouseX = 0;
-	this.mouseY = 0;
+	this.applications   = [];
+	this.mouseX         = 0;
+	this.mouseY         = 0;
 	
-	this.canvasImg = new Image();
-	this.canvasImg.src = "images/canvas.png";
-	this.imageImg = new Image();
-	this.imageImg.src = "images/image.png";
-	this.kineticjsImg = new Image();
+	this.canvasImg        = new Image();
+	this.canvasImg.src    = "images/canvas.png";
+	this.imageImg         = new Image();
+	this.imageImg.src     = "images/image.png";
+	this.kineticjsImg     = new Image();
 	this.kineticjsImg.src = "images/kineticjs.png";
-	this.pdfImg = new Image();
-	this.pdfImg.src = "images/pdf.png";
-	this.screenImg = new Image();
-	this.screenImg.src = "images/screen.png";
-	this.threejsImg = new Image();
-	this.threejsImg.src = "images/threejs.png";
-	this.videoImg = new Image();
-	this.videoImg.src = "images/video.png";
-	this.webglImg = new Image();
-	this.webglImg.src = "images/webgl.png";
-	this.youtubeImg = new Image();
-	this.youtubeImg.src = "images/youtube.png";
-	
-	var widthPercent = this.element.style.width;
-	var widthPx = parseFloat(widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
-	
-	this.ctx.canvas.width = widthPx;
-	this.ctx.canvas.height = widthPx / this.aspectRatio;
+	this.pdfImg           = new Image();
+	this.pdfImg.src       = "images/pdf.png";
+	this.screenImg        = new Image();
+	this.screenImg.src    = "images/screen.png";
+	this.threejsImg       = new Image();
+	this.threejsImg.src   = "images/threejs.png";
+	this.videoImg         = new Image();
+	this.videoImg.src     = "images/video.png";
+	this.webglImg         = new Image();
+	this.webglImg.src     = "images/webgl.png";
+	this.youtubeImg       = new Image();
+	this.youtubeImg.src   = "images/youtube.png";
 	
 	this.draw = function() {
 		// clear canvas		
@@ -70,9 +64,9 @@ function windowManager(id, ws) {
 			this.ctx.shadowBlur = 12;
 			this.ctx.shadowColor = "#222222";
 			
-			var eLeft = this.applications[i].left * this.scale;
-			var eTop = (this.applications[i].top+this.titleBarHeight) * this.scale;
-			var eWidth = this.applications[i].width * this.scale;
+			var eLeft   = this.applications[i].left * this.scale;
+			var eTop    = (this.applications[i].top+this.titleBarHeight) * this.scale;
+			var eWidth  = this.applications[i].width * this.scale;
 			var eHeight = this.applications[i].height * this.scale;
 			
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
@@ -111,10 +105,10 @@ function windowManager(id, ws) {
 			this.ctx.lineWidth = 2;
 			this.ctx.strokeStyle = "rgba(90, 90, 90, 1.0)";
 			
-			var eLeft = this.applications[i].left * this.scale;
-			var eTop = (this.applications[i].top) * this.scale;
-			var eWidth = this.applications[i].width * this.scale;
-			var eHeight = this.titleBarHeight * this.scale;
+			eLeft   = this.applications[i].left * this.scale;
+			eTop    = (this.applications[i].top) * this.scale;
+			eWidth  = this.applications[i].width * this.scale;
+			eHeight = this.titleBarHeight * this.scale;
 			
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			this.ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
@@ -232,7 +226,7 @@ function windowManager(id, ws) {
 	this.mouseDblClick = function(event) {
 		wsio.emit('pointerDblClick');
 		event.preventDefault();
-	}
+	};
 	
 	this.keyDown = function(event) {
 		this.wsio.emit('keyDown', {code: event.keyCode});
@@ -242,12 +236,12 @@ function windowManager(id, ws) {
 	this.keyUp = function(event) {
 		this.wsio.emit('keyUp', {code: event.keyCode});
 		event.preventDefault();
-	}
+	};
 	
     this.keyPress = function(event) {
 		this.wsio.emit('keyPress', {code: event.charCode});
 		event.preventDefault();
-	}
+	};
 	
 	/*
 	this.addNewElement = function(elem_data) {
@@ -265,15 +259,15 @@ function windowManager(id, ws) {
 	this.deleteElement = function(elemId) {
 		var selectedIndex;
 		var selectedItem;
-		
-		for(var i=0; i<this.applications.length; i++){
+		var i;
+		for(i=0; i<this.applications.length; i++){
 			if(this.applications[i].id == elemId){
 				selectedIndex = i;
 				selectedItem = this.applications[i];
 				break;
 			}
 		}
-		for(var i=selectedIndex; i<this.applications.length-1; i++){
+		for(i=selectedIndex; i<this.applications.length-1; i++){
 			this.applications[i] = this.applications[i+1];
 		}
 		this.applications[this.applications.length-1] = selectedItem;
@@ -284,32 +278,34 @@ function windowManager(id, ws) {
 	this.initDisplayConfig = function(config) {
 		this.nRows = config.layout.rows;
 		this.nCols = config.layout.columns;
-		this.aspectRatio = (config.resolution.width*this.nCols) / (config.resolution.height*this.nRows);
-		
-		var widthPercent = this.element.style.width;
-		var widthPx = (widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
-		
-		this.element.width = widthPx;
-		this.element.height = widthPx / this.aspectRatio;
 		
 		this.resolution = [(config.resolution.width*this.nCols), (config.resolution.height*this.nRows)];
+		this.aspectRatio = this.resolution[0] / this.resolution[1];
+		
+		var widthPx  = this.element.parentNode.style.width;
+		var heightPx = this.element.parentNode.style.height;
+		
+		this.element.width = widthPx.substring(0, widthPx.length-2);
+		this.element.height = heightPx.substring(0, heightPx.length-2);
+		
 		this.scale = this.element.width / this.resolution[0];
 		
-		this.titleBarHeight = Math.round(0.03 * (config.resolution.height * config.layout.rows));
+		this.titleBarHeight = config.titleBarHeight;
 		
 		this.draw();
 	};
 	
 	this.resize = function() {
-		var widthPercent = this.element.style.width;
-		var widthPx = (widthPercent.substring(0, widthPercent.length-1)/100) * this.element.parentNode.clientWidth;
+		var widthPx  = this.element.parentNode.style.width;
+		var heightPx = this.element.parentNode.style.height;
 		
-		this.element.width = widthPx;
-		this.element.height = widthPx / this.aspectRatio;
+		this.element.width = widthPx.substring(0, widthPx.length-2);
+		this.element.height = heightPx.substring(0, heightPx.length-2);
 		
 		this.scale = this.element.width / this.resolution[0];
+		
 		this.draw();
-	}
+	};
 	
 	this.updateItemOrder = function(idList) {
 		var i;
@@ -325,7 +321,7 @@ function windowManager(id, ws) {
 		}
 		
 		this.draw();
-	}
+	};
 	
 	this.setItemPosition = function(position_data) {
 		var i;
