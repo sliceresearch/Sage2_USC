@@ -1,12 +1,12 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 var playcanvas = SAGE2_App.extend( {
 	construct: function() {
@@ -17,14 +17,12 @@ var playcanvas = SAGE2_App.extend( {
 		this.scene    = null;
 		this.camera   = null;
 		this.model    = null;
-                this.timer = null;
-                this.redraw = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
-		
+
         // Create the graphics device
         var device = new pc.gfx.Device(this.element);
 
@@ -64,35 +62,20 @@ var playcanvas = SAGE2_App.extend( {
             self.model = asset.resource;
             self.scene.addModel(self.model);
         });
-
-		this.timer = 0.0;
-		this.redraw = false;
 	},
 	
 	load: function(state, date) {
 	},
 
 	draw: function(date) {
-		// only redraw if more than 1 sec has passed
-		this.timer = this.timer + this.dt;
-		if(this.timer >= 0.033333333) {
-			// 30 fps
-			this.timer = 0.0;
-			this.redraw = true;
+		if (this.model) {
+			this.model.getGraph().rotate(0, 90*this.dt, 0);
 		}
-
-		if (this.redraw) {
-			if (this.model) {
-				this.model.getGraph().rotate(0, 90*this.dt, 0);
-			}
-			this.scene.update();
-			this.renderer.render(this.scene, this.camera);
-			this.redraw = false;
-		}
+		this.scene.update();
+		this.renderer.render(this.scene, this.camera);
 	},
 	
 	resize: function(date) {
-		this.redraw = true;
 		this.refresh(date);
 	},
 	

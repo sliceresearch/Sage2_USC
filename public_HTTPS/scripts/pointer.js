@@ -1,57 +1,56 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
 
 function pointer(){
-	this.element = null;
-	this.ctx = null;
-	this.label = "";
+	this.element    = null;
+	this.ctx        = null;
+	this.label      = "";
 	this.givenColor = "rgba(255, 255, 255, 1.0)";
-	this.drawMode = null; 
+	this.drawMode   = null;
 	
 	this.init = function(id, label, color) {
 		this.element = document.getElementById(id);
-		this.ctx = this.element.getContext("2d");
-		
-		this.label = label;
-		this.givenColor = "rgba(" + color[0].toString() + "," + color[1].toString() + "," + color[2].toString() + ",1.0)"; 
-		
+		this.ctx     = this.element.getContext("2d");
+		this.label   = label;
+
+		this.givenColor    = "rgba(" + color[0].toString() + "," + color[1].toString() + "," + color[2].toString() + ",1.0)"; 
 		this.pointerOffset = [0.0, 0.0];
 		this.drawMode = 0; 
-	}
+	};
 	
 	this.setColor = function(color){
 	    this.givenColor = "rgba(" + color[0].toString() + "," + color[1].toString() + "," + color[2].toString() + ",1.0)";
-	}
+	};
 	
 	this.setLabel = function(label){
 	    this.label = label;
-	}
+	};
 	
 	this.changeMode = function(mode){
 	    this.drawMode = mode;
-	}
+	};
 	
 	this.draw = function() {
-		// clear canvas		
+		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
 		var minDim = Math.min(this.element.width, this.element.height);
 		
 		// pointer
 		this.ctx.lineWidth = (3.0/100.0) * minDim;
-		if( this.drawMode == 0 ){
-            this.ctx.fillStyle = this.givenColor;
+		if( this.drawMode === 0 ){
+            this.ctx.fillStyle   = this.givenColor;
             this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
         }
         else if(this.drawMode == 1){
-            this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+            this.ctx.fillStyle   = "rgba(0, 0, 0, 1.0)";
             this.ctx.strokeStyle = this.givenColor;
         }
 		this.ctx.lineJoin = "round";
@@ -68,9 +67,9 @@ function pointer(){
 		// name
 		var name = this.label; 
 		var size = Math.round(0.22*minDim);
-		this.ctx.font = size.toString() + "pt Arial";
-		var metrics = this.ctx.measureText(name);
-		var textWidth = metrics.width;
+		this.ctx.font  = size.toString() + "pt Arial";
+		var metrics    = this.ctx.measureText(name);
+		var textWidth  = metrics.width;
 		var textHeight = metrics.height;
       
 		this.ctx.lineWidth = 1.6*size;

@@ -1,15 +1,16 @@
-// SAGE2 is available for use under the following license, commonly known
-//          as the 3-clause (or "modified") BSD license:
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// Copyright (c) 2014, Electronic Visualization Laboratory,
-//                     University of Illinois at Chicago
-// All rights reserved.
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// http://opensource.org/licenses/BSD-3-Clause
-// See included LICENSE.txt file
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
+
 
 // node mode
-/* jslint node: true */
+/* jshint node: true */
 
 // how to deal with spaces and tabs
 /* jshint smarttabs: false */
@@ -17,9 +18,6 @@
 // Don't make functions within a loop
 /* jshint -W083 */
 
-// JSLint options
-/*globals loadConfiguration, showPointer, pointerPress, pointerMove, deleteElement, pointerScroll, moveAppToFront, pointerPosition, findAppUnderPointer, pointerRelease, getItemPositionSizeType, initializeExistingSagePointers, initializeMediaStreams, initializeRemoteServerInfo, initializeExistingAppsPositionSizeTypeOnly, initializeExistingApps, getSavedFilesList, createSagePointer, setupDisplayBackground, findRemosetupDisplayBackground, sendConfig, uploadForm, setupHttpsOptions, closeWebSocketClient, wsAddClient, findRemoteSiteByConnection, broadcast, hidePointer, removeElement, initializeWSClient, wsStartSagePointer, wsStopSagePointer, wsPointerPress, wsPointerRelease, wsPointerDblClick, wsPointerPosition, wsPointerMove, wsPointerScrollStart, wsPointerScroll, wsKeyDown, wsKeyUp, wsKeyPress, wsStartNewMediaStream, wsUpdateMediaStreamFrame, wsUpdateMediaStreamChunk, wsStopMediaStream, wsReceivedMediaStreamFrame, wsReceivedRemoteMediaStreamFrame, wsRequestStoredFiles, wsAddNewElementFromStoredFiles, wsAddNewWebElement, wsUpdateVideoTime, wsAddNewElementFromRemoteServer, wsRequestNextRemoteFrame, wsUpdateRemoteMediaStreamFrame */
-/*jslint node: true, ass: false, plusplus: true, vars: true, white: true, newcap: true, unparam: true, eqeq: true */
 
 // require variables to be declared
 "use strict";
@@ -89,6 +87,12 @@ process.env.TMPDIR = path.join(__dirname, "tmp");
 console.log("Temp folder: ".green, process.env.TMPDIR);
 if(!fs.existsSync(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
+}
+
+// Make sure session folder exists
+var sessionFolder = path.join(__dirname, "sessions");
+if (!fs.existsSync(sessionFolder)) {
+     fs.mkdirSync(sessionFolder);
 }
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
@@ -246,6 +250,9 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
 		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		wsio.on('saveSesion',       wsSaveSesion);
+		wsio.on('clearDisplay',     wsClearDisplay);
+		wsio.on('tileApplications', wsTileApplications);
 	}
 	if(wsio.messages.sendsWebContentToLoad){
 		wsio.on('addNewWebElement', wsAddNewWebElement);
@@ -640,7 +647,6 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 		for(key in appAnimations[data.id].clients){
 			appAnimations[data.id].clients[key] = false;
 		}
-		
 		// animate max 60 fps
 		var now = new Date();
 		var elapsed = now.getTime() - appAnimations[data.id].date.getTime();
@@ -658,22 +664,319 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
-	if (wsio.clientID == 0) {
+	// Using updates only from display client 0
+	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);
-		
 		app.data = data.state;
-
-		console.log("Got an update for:", app.id, data.state);
 	}
 }
 
+
+/******************** Session Functions ********************/
+
+function wsSaveSesion(wsio, data) {
+	var sname = "";
+	if (data) {
+		sname = data;
+	} else {
+		var ad    = new Date();
+		sname = sprint("session-%4d_%02d_%02d-%02d:%02d:%02s",
+							ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+							ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+	}
+	saveSession(sname);
+}
+
+function printListSessions() {
+	var thelist = listSessions();
+	console.log("Sessions\n---------");
+	for (var i = 0; i < thelist.length; i++) {
+		console.log(sprint("%2d: Name: %s\tSize: %.0fKB\tDate: %s",
+			i, thelist[i].name, thelist[i].size/1024.0, thelist[i].date
+		));
+	}
+}
+
+function listSessions() {
+	var thelist = [];
+	// Walk through the session files: sync I/Os to build the array
+	var files = fs.readdirSync(sessionFolder);
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
+		var filename = path.join(sessionFolder, file);
+		var stat = fs.statSync(filename);
+		// is it a file
+		if (stat.isFile()) {
+			// doest it ends in .json
+			if (filename.indexOf(".json", filename.length - 5)) {
+				// use its change time (creation, update, ...)
+				var ad = new Date(stat.ctime);
+				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
+										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+				thelist.push( {name:file.slice(0,-5) , size:stat.size, date: strdate} );
+			}
+		}
+	}
+	return thelist;
+}
+
+
+function saveSession (filename) {
+	var fullpath = path.join(sessionFolder, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	var states     = {};
+	states.numapps = applications.length;
+	states.date    = Date.now();
+	states.apps    = applications;
+
+	fs.writeFile(fullpath, JSON.stringify(states, null, 4), function(err) {
+	    if (err) {
+	      console.log("Server> saving", err);
+	    } else {
+	      console.log("Server> session saved to " + fullpath);
+	    }
+		states = null;
+	});
+}
+
+function loadSession (filename) {
+	var fullpath = path.join(sessionFolder, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+	fs.readFile(fullpath, function(err, data) {
+		if (err) {
+			console.log("Server> reading error", err);
+		} else {
+			console.log("Server> read sessions from " + fullpath);
+
+			var session = JSON.parse(data);
+			console.log("Session> number of applications", session.numapps);
+
+			for (var i=0;i<session.apps.length;i++) {
+				var a = session.apps[i];
+				console.log("Session> App",  a.id);
+
+				// Get the application a new ID
+				a.id = getUniqueAppId();
+				// Reset the time
+				a.date = new Date();
+				if (a.animation) {
+					var j;
+					appAnimations[a.id] = {clients: {}, date: new Date()};
+					for(j=0; j<clients.length; j++){
+						if(clients[j].messages.requiresFullApps){
+							var clientAddress = clients[j].remoteAddress.address + ":" + clients[j].remoteAddress.port;
+							appAnimations[a.id].clients[clientAddress] = false;
+						}
+					}
+				}
+
+				broadcast('createAppWindow', a, 'requiresFullApps');
+				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+
+				applications.push(a);
+			}
+		}
+	});
+}
+
+
+//  Tiling Functions
+//
+//
+// From Ratko's DIM in SAGE
+//
+
+function averageWindowAspectRatio() {
+	var num = applications.length;
+
+	if (num === 0) return 1.0;
+
+	var totAr = 0.0;
+	var i;
+	for (i=0; i<num; i++) {
+		var app =  applications[i];
+		totAr += (app.width / app.height);
+	}
+	return (totAr / num);
+}
+
+function fitWithin(app, x, y, width, height, margin) {
+	// take buffer into account
+	x += margin;
+	y += margin;
+	width  = width  - 2*margin;
+	height = height - 2*margin;
+
+	var widthRatio  = (width-config.titleBarHeight)  / app.width;
+	var heightRatio = (height-config.titleBarHeight) / app.height;
+	var maximizeRatio;
+	if (widthRatio > heightRatio)
+		maximizeRatio = heightRatio;
+	else
+		maximizeRatio = widthRatio;
+
+    // figure out the maximized app size (w/o the widgets)
+    var newAppWidth  = Math.round( maximizeRatio*app.width );
+    var newAppHeight = Math.round( maximizeRatio*app.height );
+
+    // figure out the maximized app position (with the widgets)
+    var postMaxX = Math.round( width/2.0 - newAppWidth/2.0 );
+    var postMaxY = Math.round( height/2.0 - newAppHeight/2.0 );
+
+    // the new position of the app considering the maximized state and
+    // all the widgets around it
+    var newAppX = x + postMaxX;
+    var newAppY = y + postMaxY;
+
+    // if the app shouldnt be centered, position it as
+    // close to the original position as possible
+    // if (cx && cy) {
+    // 	if (widthRatio > heightRatio) {
+    //     	// height diff is greater... so adjust x
+    //     	newHalfW = Math.round(newAppWidth/2.0);
+    //     	if (cx+newHalfW > x+width - margin)
+    //     		newAppX = x+width - newAppWidth - margin;
+    //     	else if (cx-newHalfW < x + margin)
+    //     		newAppX = x + margin;
+    //     	else
+    //     		newAppX = cx-newHalfW;
+    //     }
+    //     else {
+    //            // width diff is greater... so adjust y
+    //            newHalfH = int(newAppHeight/2.0);
+    //            if (cy+newHalfH > y+height - margin)
+    //            	newAppY = y+height - newAppHeight - margin;
+    //            else if (cy-newHalfH < y + margin)
+    //            	newAppY = y + margin;
+    //            else
+    //            	newAppY = cy-newHalfH;
+    //     }
+    // }
+	return [newAppX, newAppY, newAppWidth, newAppHeight];
+}
+
+function tileApplications() {
+	var app;
+	var i, c, r;
+	var numCols, numRows;
+
+	var displayAr  = config.totalWidth / config.totalHeight;
+	var arDiff     = displayAr / averageWindowAspectRatio();
+	var numWindows = applications.length;
+
+	// 3 scenarios... windows are on average the same aspect ratio as the display
+	if (arDiff >= 0.7 && arDiff <= 1.3) {
+		numCols = Math.ceil(Math.sqrt( numWindows ));
+		numRows = Math.ceil(numWindows / numCols);
+	}
+    else if (arDiff < 0.7) {
+		// windows are much wider than display
+		c = Math.round(1 / (arDiff/2.0));
+		if (numWindows <= c) {
+			numRows = numWindows;
+			numCols = 1;
+		}
+		else {
+			numCols = Math.max(2, Math.round(numWindows / c));
+			numRows = Math.round(Math.ceil(numWindows / numCols));
+		}
+	}
+	else {
+		// windows are much taller than display
+		c = Math.round(arDiff*2);
+		if (numWindows <= c) {
+			numCols = numWindows;
+			numRows = 1;
+		}
+		else {
+			numRows = Math.max(2, Math.round(numWindows / c));
+			numCols = Math.round(Math.ceil(numWindows / numRows));
+		}
+	}
+
+    // determine the bounds of the tiling area
+	var areaX = 0;
+	var areaY = Math.round(1.5 * config.titleBarHeight); // keep 0.5 height as margin
+	var areaW = config.totalWidth;
+	var areaH = config.totalHeight-(2*config.titleBarHeight); // bottom margin: 1.5 + 0.5 = 2
+
+	var tileW = Math.floor(areaW / numCols);
+	var tileH = Math.floor(areaH / numRows);
+
+	// go through them in sorted order
+	// applications.sort()
+
+    r = numRows-1;
+    c = 0;
+	for (i=0; i<applications.length; i++) {
+		// get the application
+		app =  applications[i];
+		// calculate new dimensions
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
+        // update the data structure
+        app.left   = newdims[0];
+        app.top    = newdims[1]-config.titleBarHeight;
+		app.width  = newdims[2];
+		app.height = newdims[3];
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+
+        c += 1;
+        if (c === numCols) {
+            c  = 0;
+            r -= 1;
+        }
+    }
+}
+
+// Remove all applications
+function clearDisplay() {
+	var all = applications.length;
+	while (all) {
+		deleteApplication( applications[0] );
+		// deleteApplication changes the array, so check again
+		all = applications.length;
+	}
+}
+
+
+// handlers for messages from UI
+
+function wsClearDisplay(wsio, data) {
+	clearDisplay();
+}
+
+function wsTileApplications(wsio, data) {
+	tileApplications();
+}
+
+
 /******************** Server File Functions ********************/
+
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
 }
 
 function wsAddNewElementFromStoredFiles(wsio, data) {
+	if (data.application === "load_session") {
+		// if it's a session, then load it
+		loadSession(data.filename);
+	}
+	else {
 	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		
@@ -693,6 +996,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 		
 		applications.push(appInstance);
 	});
+}
 }
 
 /******************** Adding Web Content (URL) ********************/
@@ -719,7 +1023,11 @@ function wsAddNewWebElement(wsio, data) {
 
 /*********************** Launching Web Browser ************************/
 function wsOpenNewWebpage(wsio, data) {
+	// Check if the web-browser module is enabled in the configuration file
+	if (config.experimental !== undefined && config.experimental.webbrowser === true) {
+		// then emit the command
 	webBrowserClient.emit('openWebBrowser', {url: data.url});
+}
 }
 
 /******************** Video / Audio Synchonization *********************/
@@ -881,17 +1189,18 @@ function getUniqueAppId() {
 }
 
 function getSavedFilesList() {
-	var list = {image: [], video: [], pdf: [], app: []};
+	var list = {image: [], video: [], pdf: [], app: [], session:[]};
 	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
 	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
 	var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
+	var savedSessions  = listSessions();
 	var i;
 	for(i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
 	for(i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
 	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push(uploadedPdfs[i]);
 	for(i=0; i<uploadedApps.length; i++)   list.app.push(uploadedApps[i]);
-	
+	for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
 	return list;
 }
 
@@ -902,7 +1211,6 @@ function setupDisplayBackground() {
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
 		var bg_info = imageinfo(fs.readFileSync(bg_file));
-	
 		if(config.background.style == "fit"){
 			if(bg_info.width == config.totalWidth && bg_info.height == config.totalHeight){
 				sliceBackgroundImage(bg_file, bg_file);
@@ -939,6 +1247,8 @@ function setupDisplayBackground() {
 		
 			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
 			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
+			// add transparent background
+			imTile.in("-background", "None");
 		
 			imTile.write(tmpImg, function(err) {
 				if(err) throw err;
@@ -1035,7 +1345,7 @@ function setupHttpsOptions() {
 		key:  server_key,
 		cert: server_crt,
 		ca:   server_ca,
-		requestCert: true,
+		requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
 		rejectUnauthorized: false,
 		// callback to handle multi-homed machines
 		SNICallback: function(servername){
@@ -1209,18 +1519,18 @@ index.on('error', function (e) {
 	if (e.code == 'EACCES') {
 		console.log("HTTP_server> You are not allowed to use the port: ", config.index_port);
 		console.log("HTTP_server>   use a different port or get authorization (sudo, setcap, ...)");
-		console.log(" ")
+		console.log(" ");
 		process.exit(1);
 	}
 	else if (e.code == 'EADDRINUSE') {
 		console.log('HTTP_server> The port is already in use by another process:', config.index_port);
 		console.log("HTTP_server>   use a different port or stop the offending process");
-		console.log(" ")
+		console.log(" ");
 		process.exit(1);
 	}
 	else {
 		console.log("HTTP_server> Error in the listen call: ", e.code);
-		console.log(" ")
+		console.log(" ");
 		process.exit(1);
 	}
 });
@@ -1284,11 +1594,33 @@ if (program.interactive)
 			case '': // ignore
 				break;
 			case 'help':
-				console.log('help\tlist commands');
-				console.log('kill\tclose application: arg0: index - kill 0');
-				console.log('list\tlist running applications');
-				console.log('exit\tstop SAGE2');
+				console.log('help\t\tlist commands');
+				console.log('kill\t\tclose application: arg0: index - kill 0');
+				console.log('list\t\tlist running applications');
+				console.log('clear\t\tclose all running applications');
+				console.log('tile\t\tlayout all running applications');
+				console.log('save\t\tsave state of running applications into a session');
+				console.log('load\t\tload a session and restore applications');
+				console.log('sessions\tlist the available sessions');
+				console.log('exit\t\tstop SAGE2');
 				break;
+
+			case 'save':
+				if (command[1] !== undefined)
+					saveSession(command[1]);
+				else
+					saveSession("default.json");
+				break;
+			case 'load':
+				if (command[1] !== undefined)
+					loadSession(command[1]);
+				else
+					loadSession("default.json");
+				break;
+			case 'sessions':
+				printListSessions();
+				break;
+
 			case 'close':
 			case 'delete':
 			case 'kill':
@@ -1300,6 +1632,15 @@ if (program.interactive)
 					}
 				}
 				break;
+
+			case 'clear':
+				clearDisplay();
+				break;
+
+			case 'tile':
+				tileApplications();
+				break;
+
 			case 'list':
 				var i;
 				console.log("Applications\n------------");

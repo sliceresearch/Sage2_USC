@@ -5,15 +5,15 @@
 <title>SAGE2 UI</title>
 
 <script type="text/javascript">
-	// SAGE2 is available for use under the following license, commonly known
-	//          as the 3-clause (or "modified") BSD license:
-	//
-	// Copyright (c) 2014, Electronic Visualization Laboratory,
-	//                     University of Illinois at Chicago
-	// All rights reserved.
-	//
-	// http://opensource.org/licenses/BSD-3-Clause
-	// See included LICENSE.txt file
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2014
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
@@ -38,7 +38,11 @@
 	var canvasKeyPressFunc = null;
 	var selectedFile = null;
 	
-	var serverUploadBtn;
+	var uiAspect;
+	var uiWindow;
+	var extraInteraction;
+	
+	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
 	var fileCloseBtn;
     var openWebpageBtn;
@@ -47,12 +51,14 @@
 	var imagesDir;
 	var pdfsDir;
 	var videosDir;
+	var sessionsDir;
 	
 	var dir2app = {
-    	"images": "image_viewer",
-    	"videos": "movie_player",
-    	"pdfs": "pdf_viewer",
-    	"apps": "custom_app"
+		"images"   : "image_viewer",
+		"videos"   : "movie_player",
+		"pdfs"     : "pdf_viewer",
+		"sessions" : "load_session",
+		"apps"     : "custom_app"
     };
 
 	// Explicitely close web socket when web broswer is closed
@@ -115,19 +121,27 @@
 			}, 2000);
 		});
 		
-		serverUploadBtn = document.getElementById('serverUploadBtn');
-		fileOKBtn = document.getElementById('fileOKBtn');
-		fileCloseBtn = document.getElementById('fileCloseBtn');
-		openWebpageBtn = document.getElementById('openWebpageBtn');
+		uiWindow         = document.getElementById('uiWindow');
+		extraInteraction = document.getElementById('extraInteraction');
 		
-		serverUploadBtn.addEventListener('click', openServerFileBrowser, false);
-		fileOKBtn.addEventListener('click',       selectServerFiles, false);
-		fileCloseBtn.addEventListener('click',    closeServerFileBrowser, false);
+		serverUploadBtn  = document.getElementById('serverUploadBtn');
+		serverSessionBtn = document.getElementById('serverSessionBtn');
+		clearBtn         = document.getElementById('clearBtn');
+		tileBtn          = document.getElementById('tileBtn');
+		fileOKBtn        = document.getElementById('fileOKBtn');
+		fileCloseBtn     = document.getElementById('fileCloseBtn');
+		openWebpageBtn   = document.getElementById('openWebpageBtn');
+		
+		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
+		serverSessionBtn.addEventListener('click', saveSession, false);
+		clearBtn.addEventListener('click',         clearDisplay, false);
+		tileBtn.addEventListener('click',          tileApplications, false);
+		fileOKBtn.addEventListener('click',        selectServerFiles, false);
+		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
 		winMgr = new windowManager("winMgr", wsio);
-		winMgr.draw();
 		
 		canvasKeyDownFunc = winMgr.keyDown.bind(winMgr);
 		canvasKeyUpFunc = winMgr.keyUp.bind(winMgr);
@@ -147,12 +161,36 @@
 		winMgrCanvas.addEventListener('dblclick', winMgr.mouseDblClick.bind(winMgr), false);
 		document.addEventListener('mousemove', updateTarget, false);
 		
-		appsDir = document.getElementById('apps');
-		imagesDir = document.getElementById('images');
-		pdfsDir = document.getElementById('pdfs');
-		videosDir = document.getElementById('videos');
+		appsDir     = document.getElementById('apps');
+		imagesDir   = document.getElementById('images');
+		pdfsDir     = document.getElementById('pdfs');
+		videosDir   = document.getElementById('videos');
+		sessionsDir = document.getElementById('sessions');
 				
 		wsio.on('setupDisplayConfiguration', function(config) {
+			var extraHeight = extraInteraction.clientHeight;
+			
+			var winWidth  = window.innerWidth;
+			var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+			
+			uiAspect  = config.totalWidth / config.totalHeight;
+			var winAspect = winWidth / winHeight;
+			
+			if(winAspect < uiAspect){
+				var uiWidth  = 0.9*winWidth;
+				var uiHeight = uiWidth / uiAspect;
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			else{
+				var uiHeight = 0.9*winHeight;
+				var uiWidth  = uiHeight * uiAspect;
+				uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			
 			winMgr.initDisplayConfig(config);
 			var displayMin = Math.min(config.totalWidth, config.totalHeight);
 			var thisMin = Math.min(screen.width, screen.height);
@@ -193,20 +231,23 @@
 			document.getElementById('lb_fade').style.display="block";
 			document.getElementById('lb_light').style.display="block";
 			
-			document.getElementById('apps-dir').checked = false;
-			document.getElementById('images-dir').checked = false;;
-			document.getElementById('pdfs-dir').checked = false;;
-			document.getElementById('videos-dir').checked = false;;
+			document.getElementById('apps-dir').checked     = false;
+			document.getElementById('images-dir').checked   = false;
+			document.getElementById('pdfs-dir').checked     = false;
+			document.getElementById('videos-dir').checked   = false;
+			document.getElementById('sessions-dir').checked = false;
 			
 			removeAllChildren(appsDir);
 			removeAllChildren(imagesDir);
 			removeAllChildren(pdfsDir);
 			removeAllChildren(videosDir);
+			removeAllChildren(sessionsDir);
 			
-			createFileList(files, "app", appsDir);
-			createFileList(files, "image", imagesDir);
-			createFileList(files, "pdf", pdfsDir);
-			createFileList(files, "video", videosDir);
+			createFileList(files, "app",     appsDir);
+			createFileList(files, "image",   imagesDir);
+			createFileList(files, "pdf",     pdfsDir);
+			createFileList(files, "video",   videosDir);
+			createFileList(files, "session", sessionsDir);
 			
 			selectedFile = null;
 		});
@@ -218,6 +259,32 @@
 		wsio.on('stopMediaCapture', function() {
 			if(sagePtr.mediaStream != null) sagePtr.mediaStream.stop();
 		});
+	}
+	
+	function resize() {
+		var extraHeight = extraInteraction.clientHeight;
+			
+		var winWidth  = window.innerWidth;
+		var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+		
+		var winAspect = winWidth / winHeight;
+		
+		if(winAspect < uiAspect){
+			var uiWidth  = 0.9*winWidth;
+			var uiHeight = uiWidth / uiAspect;
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		else{
+			var uiHeight = 0.9*winHeight;
+			var uiWidth  = uiHeight * uiAspect;
+			uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		
+		winMgr.resize();
 	}
 	
 	function createFileList(files, type, dir) {
@@ -257,6 +324,31 @@
 		wsio.emit('requestStoredFiles');
 	}
 	
+	function pad(n, width, z) {
+	  z = z || '0';
+	  n = n + '';
+	  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
+
+	function saveSession(event) {
+		var ad = new Date();
+		var template = "session-" + ad.getFullYear() + "_" + pad(ad.getMonth()+1,2) + "_" + pad(ad.getDate(),2);
+		template = template + "-" + pad(ad.getHours(),2) + ":" + pad(ad.getMinutes(),2) + ":" + pad(ad.getSeconds(),2);
+		var filename = prompt("Please a session name\n(Leave blank for name based on server's time)", template);
+		if (filename!=null) {
+			wsio.emit('saveSesion', filename);
+		}
+	}
+
+	function tileApplications (event) {
+		// tile all the application windows
+		wsio.emit('tileApplications');
+	}
+	function clearDisplay (event) {
+		// remove all the applications
+		wsio.emit('clearDisplay');
+	}
+
 	function closeServerFileBrowser(event) {
 		document.getElementById("lb_fade").style.display="none";
 		document.getElementById("lb_light").style.display="none";
@@ -264,9 +356,9 @@
 	
 	function selectServerFiles(event) {
 		var directory = selectedFile.parentNode.id
-		var fileName = selectedFile.innerHTML;
-		var app = dir2app[directory];
-		
+		var fileName  = selectedFile.innerHTML;
+		// based on folder, match the appropriate application
+		var app       = dir2app[directory];
 		
 		wsio.emit('addNewElementFromStoredFiles', {application: app, filename: fileName});
 		
@@ -291,10 +383,10 @@
 
 </head>
 
-<body onload="init()" onresize="winMgr.resize()">
+<body onload="init()" onresize="resize()">
 	<div id="wrapper">
-		<div id="window">
-			<canvas id="winMgr" style="width: 100%;">HTML5 canvas element not supported</canvas>
+		<div id="uiWindow">
+			<canvas id="winMgr">HTML5 canvas element not supported</canvas>
 		</div>
 		<div id="extraInteraction">
 			<div id="fileUpload">
@@ -327,6 +419,11 @@
                 <label class="sageLabel">Webpage:</label><input id="openWebpageUrl" type="text" value="http://hakim.se/experiments/html5/origami"></input><br/>
                 <button id="openWebpageBtn" type="button">Browse</button><br/>
             </div>
+			<div id="layout">
+				<label class="sageLabel">Session:</label><button id="serverSessionBtn" type="button">Save current</button>
+				<label class="sageLabel">Clear display:</label><button id="clearBtn" type="button">Clear all</button>
+				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
+			</div>
 		<div>
 		
 		<canvas id="mediaCanvas" style="display: none;"></canvas>
@@ -348,6 +445,8 @@
         			<ul id="pdfs"></ul>
         			<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
         			<ul id="videos"></ul>
+					<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
+					<ul id="sessions"></ul>
         		</ul>
 			</div>
 		</div>
