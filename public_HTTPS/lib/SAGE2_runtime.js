@@ -98,11 +98,16 @@ function readFile(filename, callback, type) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", filename, true);
 	xhr.onreadystatechange = function() {
-		if(xhr.readyState == 4 && xhr.status == 200){
-			if     (dataType === "TEXT") callback(xhr.responseText);
-			else if(dataType === "JSON") callback(JSON.parse(xhr.responseText));
-			else if(dataType === "CSV")  callback(CSVToArray(xhr.responseText));
-			else                         callback(xhr.responseText);
+		if(xhr.readyState == 4){
+			if(xhr.status == 200){
+				if     (dataType === "TEXT") callback(null, xhr.responseText);
+				else if(dataType === "JSON") callback(null, JSON.parse(xhr.responseText));
+				else if(dataType === "CSV")  callback(null, CSVToArray(xhr.responseText));
+				else                         callback(null, xhr.responseText);
+			}
+			else{
+				callback("Error: File Not Found", null);
+			}
 		}
 	};
 	xhr.send();

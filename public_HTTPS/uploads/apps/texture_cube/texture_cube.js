@@ -156,7 +156,9 @@ var texture_cube = SAGE2_App.extend( {
 		var vertReadComplete = false;
 		var fragReadComplete = false;
 		
-		readFile(vertFile, function(text) {
+		readFile(vertFile, function(err, text) {
+			if(err) log(err);
+			
 			vertShader = _this.gl.createShader(_this.gl.VERTEX_SHADER);
 			
 			// Send the source to the shader object
@@ -176,7 +178,9 @@ var texture_cube = SAGE2_App.extend( {
 			
 			vertReadComplete = true;
 		});
-		readFile(fragFile, function(text) {
+		readFile(fragFile, function(err, text) {
+			if(err) log(err);
+			
 			fragShader = _this.gl.createShader(_this.gl.FRAGMENT_SHADER);
 			
 			// Send the source to the shader object
