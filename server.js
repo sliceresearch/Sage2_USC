@@ -1022,7 +1022,11 @@ function wsAddNewWebElement(wsio, data) {
 
 /*********************** Launching Web Browser ************************/
 function wsOpenNewWebpage(wsio, data) {
-	webBrowserClient.emit('openWebBrowser', {url: data.url});
+	// Check if the web-browser module is enabled in the configuration file
+	if (config.experimental !== undefined && config.experimental.webbrowser === true) {
+		// then emit the command
+		webBrowserClient.emit('openWebBrowser', {url: data.url});
+	}
 }
 
 /******************** Video / Audio Synchonization *********************/
