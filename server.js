@@ -384,28 +384,8 @@ function wsPointerDblClick(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	var elem     = findAppUnderPointer(pointerX, pointerY);
-	var updatedItem;
-
-	if (elem !== null) {
-		if (elem.maximized !== true) {
-			// need to maximize the item
-			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
-			if (updatedItem !== null) {
-				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
-				// the PDF files need an extra redraw
-				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
-			}
-		} else {
-			// already maximized, need to restore the item size
-			updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
-			if (updatedItem !== null) {
-				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
-				// the PDF files need an extra redraw
-				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
-			}
-		}
-	}
+	
+	pointerDblClick( uniqueID, pointerX, pointerY );
 }
 
 function wsPointerPosition(wsio, data) {
@@ -460,19 +440,11 @@ function wsKeyDown(wsio, data) {
 	}
 
 	//SEND SPECIAL KEY EVENT only will come here
-	if(remoteInteraction[uniqueID].appInteractionMode()){
+	if(remoteInteraction[uniqueID].appInteractionMode()){		
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
-
-		var elem = findAppUnderPointer(pointerX, pointerY);
-
-		if(elem !== null){
-			var itemRelX = pointerX - elem.left;
-			var itemRelY = pointerY - elem.top - config.titleBarHeight;
-			var now = new Date();
-			var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "down" }, date: now };
-			broadcast('eventInItem', event, 'receivesInputEvents');
-		}
+		
+		keyDown( uniqueID, pointerX, pointerY, data );
 	}
 }
 
@@ -509,15 +481,7 @@ function wsKeyUp(wsio, data) {
 			pointerX = sagePointers[uniqueID].left;
 			pointerY = sagePointers[uniqueID].top;
 
-			elem = findAppUnderPointer(pointerX, pointerY);
-
-			if( elem !== null ){
-				var itemRelX = pointerX - elem.left;
-				var itemRelY = pointerY - elem.top - config.titleBarHeight;
-				var now = new Date();
-				var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "up" }, date: now };
-				broadcast('eventInItem', event, 'receivesInputEvents');
-			}
+			keyUp( uniqueID, pointerX, pointerY, data );
 		}
 	}
 }
@@ -534,15 +498,7 @@ function wsKeyPress(wsio, data) {
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
 
-		var elem = findAppUnderPointer(pointerX, pointerY);
-
-		if( elem !== null ){
-			var itemRelX = pointerX - elem.left;
-			var itemRelY = pointerY - elem.top - config.titleBarHeight;
-			var now = new Date();
-			var event = { eventType: "keyboard", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: parseInt(data.code,10), state: "down" }, date: now };
-			broadcast('eventInItem', event, 'receivesInputEvents');
-		}
+		keyPress( unqiueID, pointerX, pointerY, data );
 	}
 
 }
@@ -2027,18 +1983,16 @@ function pointerScroll( address, data ) {
 	}
 }
 
-function pointerDblClick(address, data) {
+function pointerDblClick(address, pointerX, pointerY) {
 	var uniqueID = address;
 	if( sagePointers[address] === undefined )
 		return;
-		
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
-	var elem     = findAppUnderPointer(pointerX, pointerY);
+	
+	var elem = findAppUnderPointer(pointerX, pointerY);
 	var updatedItem;
 
 	if (elem !== null) {
-		if (!elem.isMaximized || elem.isMaximized === 0) {
+		if (elem.maximized !== true) {
 			// need to maximize the item
 			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
 			if (updatedItem !== null) {
@@ -2070,6 +2024,55 @@ function pointerCloseGesture(address, pointerX, pointerY) {
 	if (elem !== null)
 	{
 		deleteApplication(elem);
+	}
+}
+
+function keyDown( uniqueID, pointerX, pointerY, data)
+{
+	//console.log("interaction mode down key code: " + data.code)
+	
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
+	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	if(elem !== null){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "down" }, date: now };
+		broadcast('eventInItem', event, 'receivesInputEvents');
+	}
+}
+
+function keyUp( uniqueID, pointerX, pointerY, data)
+{
+	//console.log("interaction mode up key code: " + data.code)
+	
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
+	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	if( elem !== null ){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "up" }, date: now };
+		broadcast('eventInItem', event, 'receivesInputEvents');
+	}
+}
+
+function keyPress( uniqueID, pointerX, pointerY, data )
+{
+	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	if( elem !== null ){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		var event = { eventType: "keyboard", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: parseInt(data.code,10), state: "down" }, date: now };
+		broadcast('eventInItem', event, 'receivesInputEvents');
 	}
 }
 
@@ -2106,7 +2109,10 @@ if( config.experimental && config.experimental.omicron && config.experimental.om
 		pointerScrollStart,
 		pointerScroll,
 		pointerDblClick,
-		pointerCloseGesture
+		pointerCloseGesture,
+		keyDown,
+		keyUp,
+		keyPress
 	);
 	omicronManager.runTracker();
 }
