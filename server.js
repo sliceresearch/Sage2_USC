@@ -498,7 +498,7 @@ function wsKeyPress(wsio, data) {
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
 
-		keyPress( unqiueID, pointerX, pointerY, data );
+		keyPress( uniqueID, pointerX, pointerY, data );
 	}
 
 }
