@@ -92,6 +92,17 @@ function base64ToUint8Array(base64) {
     return uint8Array;
 }
 
+function readFile(filename, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", filename, true);
+	xhr.onreadystatechange = function() {
+		if(xhr.readyState == 4 && xhr.status == 200){
+			callback(xhr.responseText);
+		}
+	};
+	xhr.send();
+}
+
 function average(arr) {
 	var l = arr.length;
 	if (l === 0) return 0;
