@@ -150,7 +150,7 @@ var buttonType = {
 	"play-pause": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -2 -5 l 0 10 m 4 0 l 0 -10",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"fill":"#000000",
 		"switch": 0,
 		"delay": 400
@@ -158,7 +158,7 @@ var buttonType = {
 	"play-stop": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -5 -5 l 0 10 l 10 0 l 0 -10 z",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"fill":"#000000",
 		"switch": 0,
 		"delay": 400
@@ -168,7 +168,7 @@ var buttonType = {
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -6 0 l 6 0 l -6 0",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay": 600
 	},
 	"prev": {
@@ -176,7 +176,7 @@ var buttonType = {
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m 6 0 l -6 0 l 6 0",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 
 	},
@@ -185,7 +185,7 @@ var buttonType = {
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -2 -9 l 8 9 l -10 9",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay": 600
 	},
 	"prev-zoom": {
@@ -193,7 +193,7 @@ var buttonType = {
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m -2 -9 l -8 9 l 10 9",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 	},
 	"rewind": {
@@ -201,7 +201,7 @@ var buttonType = {
 		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
 		"to":"m 0 -6 l -4 6 l 4 6 m 4 -6 l -8 0 l 8 0",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 	},
 	"fastforward": {
@@ -209,7 +209,7 @@ var buttonType = {
 		"from":"m 0 -6 l 4 6 l -4 6 m 4 -12 l 4 6 l -4 6",
 		"to":"m 0 0 l 4 0 l -4 0 m 4 -6 l 4 6 l -4 6 ",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 	}
 
