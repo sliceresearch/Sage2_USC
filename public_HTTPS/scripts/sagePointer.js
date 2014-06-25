@@ -116,7 +116,8 @@ function sagePointer(wsio) {
 	};
 	
 	this.pointerPressMethod = function(event) {
-		this.wsio.emit('pointerPress');
+		var btn = (event.button===2)?'right':'left';
+		this.wsio.emit('pointerPress',{button:btn});
 		event.preventDefault();
 	};
 
@@ -129,7 +130,8 @@ function sagePointer(wsio) {
 	};
 
 	this.pointerReleaseMethod = function(event) {
-		this.wsio.emit('pointerRelease');
+		var btn = (event.button===2)? 'right':'left';
+		this.wsio.emit('pointerRelease',{button:btn});
 		event.preventDefault();
 	};
 

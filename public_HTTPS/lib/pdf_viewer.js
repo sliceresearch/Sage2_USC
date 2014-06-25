@@ -19,6 +19,9 @@ var pdf_viewer = SAGE2_App.extend( {
 		
 		this.loaded = false;
 		this.pdfDoc = null;
+		this.enableControls = null;
+		this.controls = null;
+		this.pageValText = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -37,6 +40,9 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.state.src = null;
 		this.state.page = null;
 		this.state.numPagesShown = null;
+		this.enableControls = true;
+		this.pageValText = '';
+		
 	},
 	
 	load: function(state, date) {
@@ -47,11 +53,41 @@ var pdf_viewer = SAGE2_App.extend( {
 			PDFJS.getDocument(state.src).then(function getPdfHelloWorld(_pdfDoc) {
 				_this.loaded = true;
 				_this.pdfDoc = _pdfDoc;
-				
+				_this.controls.addButton({type:"rewind", action:function(appObj, date){
+					appObj.state.page  = 1;
+					appObj.setLabelText();
+					appObj.refresh(date);
+				}});
+				_this.controls.addButton({type:"prev", action:function(appObj, date){
+					if(appObj.state.page <= 1) return;
+					appObj.state.page  = appObj.state.page - 1;
+					appObj.setLabelText();
+					appObj.refresh(date);
+				}});
+		
+				_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
+					appObj.setLabelText();
+					appObj.refresh(date);
+				}});
+
+				_this.controls.addLabel({width:40,appObj:_this, property:"pageValText"});
+
+				_this.controls.addButton({type:"next", action:function(appObj, date){
+					if (appObj.state.page  >= appObj.pdfDoc.numPages) return;
+					appObj.state.page = appObj.state.page + 1;
+					appObj.setLabelText();
+					appObj.refresh(date);
+				}});
+				_this.controls.addButton({type:"fastforward", action:function(appObj, date){
+					appObj.state.page  = appObj.pdfDoc.numPages;
+					appObj.setLabelText();
+					appObj.refresh(date);
+				}});
+
 				_this.state.src = state.src;
 				_this.state.page = state.page;
 				_this.state.numPagesShown = state.numPagesShown;
-				
+				_this.setLabelText();
 				_this.refresh(date);
 			});
 		}
@@ -62,6 +98,7 @@ var pdf_viewer = SAGE2_App.extend( {
 			
 			this.refresh(date);
 		}
+		
 	},
 	
 	draw: function(date) {
@@ -97,15 +134,20 @@ var pdf_viewer = SAGE2_App.extend( {
 			if(data.code === 37 && data.state === "up"){ // Left Arrow
 				if(this.state.page <= 1) return;
 				this.state.page = this.state.page - 1;
-		
+				this.setLabelText();
 				this.refresh(date);
 			}
 			if(data.code === 39 && data.state === "up"){ // Right Arrow
 				if(this.state.page >= this.pdfDoc.numPages) return;
 				this.state.page = this.state.page + 1;
-		
+				this.setLabelText();
 				this.refresh(date);
 			}
 		}
+	},
+
+	setLabelText: function(){
+		this.pageValText = this.state.page + '/' + this.pdfDoc.numPages;
 	}
+
 });

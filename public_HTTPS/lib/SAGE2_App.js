@@ -47,6 +47,9 @@ var SAGE2_App = Class.extend( {
 		
 		this.resrcPath = resrc + "/";
 		this.startDate = date;
+
+		this.controls = new widgetSpec(id);
+		this.controls.id = id;
 		this.prevDate  = date;
 		this.frame     = 0;
 		

@@ -136,7 +136,8 @@ function windowManager(id, ws) {
 	};
 	
 	this.mousePress = function(event) {
-		this.wsio.emit('pointerPress');
+		var btn = event.button===2?'right':'left';
+		this.wsio.emit('pointerPress',{button:btn});
 		event.preventDefault();
 	};
 	
@@ -151,7 +152,8 @@ function windowManager(id, ws) {
 	};
 	
 	this.mouseRelease = function(event) {
-		this.wsio.emit('pointerRelease');
+		var btn = event.button===2? 'right':'left';
+		this.wsio.emit('pointerRelease',{button:btn});
 		event.preventDefault();
 	};
 	

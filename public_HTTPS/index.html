@@ -32,8 +32,8 @@
 
 <script type="text/javascript" src="scripts/pointer.js"></script>
 <script type="text/javascript" src="scripts/pdf.js"></script>
-
-
+<script type="text/javascript" src="scripts/snap.svg-min.js"></script>
+<script type="text/javascript" src="scripts/widgets.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
@@ -45,9 +45,14 @@
 	
 	var hostAlias    = {};
 	
-	var itemCount    = 0;
-	var pdfItems     = {};
+	var itemCount = 0;
+	var pdfItems = {};
+	var pointerItems = {};
+	var controlItems = {};
+	var lockedControlElements = {} ;
+
 	var canvasItems  = {};
+
 	
 	var applications = {};
 	var dependencies = {};
@@ -90,7 +95,9 @@
 				receivesWindowModification: true,
 				receivesPointerData: true,
 				receivesInputEvents: true,
-				receivesRemoteServerInfo: true
+				receivesRemoteServerInfo: true,
+				requestsWidgetControl: true,
+				receivesWidgetEvents: true
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -280,6 +287,9 @@
 						app.refresh(date);
 						
 						applications[data.id] = app;
+						if(app.enableControls==true){// Flag to request controls for App
+							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
+						} 
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
 					js.type = "text/javascript";
@@ -303,6 +313,9 @@
 					app.refresh(date);
 					
 					applications[data.id] = app;
+					if(app.enableControls==true){// Flag to request controls for App
+							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
+					} 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
 			};
@@ -330,6 +343,7 @@
 						js.addEventListener('error', function(event) {
 							console.log("Error loading script: " + element);
 						}, false);
+			
 						js.addEventListener('load', function(event) {
 							dependencies[element] = true;
 							resources[element] = true;
@@ -374,6 +388,30 @@
 			
 			var deleteElem = document.getElementById(elem_data.elemId);
 			deleteElem.parentNode.removeChild(deleteElem);
+
+			if (elem_data.elemId + "_controls" in controlItems){
+				var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
+				deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
+				delete controlItems[elem_data.elemId + "_controls"];
+			}
+
+			
+		});
+
+		wsio.on ('hideControl', function(ctrl_data){
+			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==true){
+				var hideElemCtrl = document.getElementById(ctrl_data.id);
+				hideElemCtrl.style.display = 'none';
+				controlItems[ctrl_data.id].show=false;
+			}
+		});
+
+		wsio.on ('showControl', function(ctrl_data){
+			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==false){
+				var showElemCtrl = document.getElementById(ctrl_data.id);
+				showElemCtrl.style.display = 'block';
+				controlItems[ctrl_data.id].show=true;
+			}
 		});
 		
 		wsio.on('updateItemOrder', function(order) {
@@ -382,11 +420,13 @@
 			for(i=0; i<order.idList.length; i++){
 				var selectedElemTitle = document.getElementById(order.idList[i] + "_title");
 				var selectedElem = document.getElementById(order.idList[i]);
-				
+				//var selectedElemCtrl = document.getElementById(order.idList[i] + "_controls");
+
 				selectedElemTitle.style.zIndex = zval.toString();
 				selectedElem.style.zIndex = (zval+1).toString();
+				//selectedElemCtrl.style.zIndex = (zval+2).toString();
 				
-				zval += 2;
+				zval += 2; // 
 			}
 		});
 		
@@ -417,6 +457,17 @@
 			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
 		});
 		
+		wsio.on('setControlPosition', function(position_data) {
+			var date = new Date(position_data.date);
+			
+			var eLeft = position_data.elemLeft - ui.offsetX;
+			var eTop = position_data.elemTop - ui.offsetY;
+			var selectedControl = document.getElementById(position_data.elemId);
+
+			selectedControl.style.left = eLeft.toString() + "px";
+			selectedControl.style.top = eTop.toString() + "px";
+		});
+
 		wsio.on('setItemPositionAndSize', function(position_data) {
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
@@ -496,7 +547,151 @@
 			var app  = applications[event_data.elemId];
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
 		});
+
+		wsio.on('pointerPressRight', function(data){
+			var dt = new Date(data.date);
+			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
+			if (data.elemId != null){
+				if(data.elemId+"_controls" in  controlItems){
+					var size = computeSize(controlItems[data.elemId+ "_controls"].spec) ;
+					wsio.emit('addNewControl', {
+						id:data.elemId+"_controls", 
+						left:data.x,
+						top:data.y,
+						width:size.width,
+						height:size.height,
+						show: true,
+						date: dt 
+					});
+				}
+			}
+		});
+		wsio.on('createControl', function(data){
+			if (controlItems[data.id].show === false){
+				var ctrDiv =  document.createElement("div");
+				ctrDiv.id = data.id;
+				ctrDiv.className = "windowControls";
+				ctrDiv.style.width = data.width.toString() + "px";
+				ctrDiv.style.height = data.height.toString() + "px";
+				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
+				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
+				ctrDiv.style.zIndex = "9999".toString();
+				var handle = createControls(data.id,controlItems[data.id].spec);
+				ctrDiv.appendChild (handle);	
+				main.appendChild(ctrDiv);
+				controlItems[data.id].show = true;
+				controlItems[data.id].divHandle = ctrDiv;
+			}	
+		});
+		wsio.on('requestControlId', function(data){
+			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+			var ctrId = ctrl? ctrl.attr("id"):"";
+			var regC = /_controls/;
+			var regB = /button/;
+			var regS = /slider/;
+			var regTI = /textInput/;
+			
+
+			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
+				var temp = regC.test(ctrId)? null:ctrId;
+				var aId = ctrl.data("appId");
+				/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
+					if(/line/.test(ctrId) || /knob/.test(ctrId))
+				}*/
+				wsio.emit('selectedControlId', { 
+					addr:data.addr,
+					pointerX: data.x,
+					pointerY: data.y,
+					ctrlId: temp,
+					appId: aId
+				});
+				lockedControlElements[data.ptrId] = temp; 
+			}
+		});
+
+		wsio.on('releaseControlId', function(data){
+			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+			if (ctrl){
+				var ctrId = ctrl.attr("id");
+				var regS = /slider/;
+				var regB = /button/;
+				var flag = false;
+				var aId = ctrl.data("appId");
+				if (regS.test(ctrId) || (regB.test(ctrId) && (lockedControlElements[data.ptrId] === ctrId))){
+					flag = true;
+				}
+				wsio.emit('releasedControlId', { 
+					addr:data.addr,
+					pointerX: data.x,
+					pointerY: data.y,
+					ctrlId: ctrId,
+					appId: aId,
+					activateControl: flag
+				});
+
+			}
+			lockedControlElements[data.ptrId] = null;
+		});
+		wsio.on('executeControlFunction', function(data){
+			var ctrl = getCtrl(data);
+			var dt = new Date();
+			if(ctrl){
+				var ctrId = ctrl.attr('id');
+				if (/button/.test(ctrId)){
+					ctrl = ctrl.parent().select("path");
+					var swtch = ctrl.data("switch") ;
+					var delay = ctrl.data("delay") ;
+					if (swtch===null){
+						var f = ctrl.data("from");
+						var t = ctrl.data("to");
+						ctrl.animate({"path":t},delay,mina.bounce,function(){
+							ctrl.animate({"path":f},delay,mina.bounce);	
+						});
+						
+					}
+					else{
+						var pth = ctrl.data(swtch?"from":"to");
+						ctrl.data("switch", 1 - swtch);
+						ctrl.animate({"path":pth},delay,mina.linear);
+						
+					}
+				}
+				var func = ctrl.parent().data("call");
+				func(applications[ctrl.parent().data("appId")],dt);	
+				
+			}
+			
+		});
+
+		wsio.on('moveSliderKnob', function(data){
+			var ctrl = getCtrl(data.ctrl);
+			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
+			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
+			var pos = data.x-ui.offsetX-widgetOffset;
+			
+			var val = mapMoveToSlider(ctrl, pos);
+			var slider = ctrl.parent();
+
+			var app = getProperty(applications[ctrl.data("appId")],slider.data("appProperty"));
+			app.obj[app.property] = val;
+
+		});
+
+		wsio.on('keyInControl', function(data){
+			var ctrl = getCtrl(data);
+			if (ctrl){
+				var textInput = ctrl.parent();
+				if (data.code != 13){
+					insertText(textInput, data.code, data.printable);
+				}
+				else{
+					var func = textInput.data("call");
+					func(applications[textInput.data("appId")],getText(textInput));
+				}		
+			}
+		});
 	}
+
 </script>
 
 </head>
@@ -506,5 +701,4 @@
 		<!-- the rest is built programmatically by the uiBuilder -->
 	</div>
 </body>
-
 </html>
