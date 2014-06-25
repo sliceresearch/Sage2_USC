@@ -240,11 +240,7 @@
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
 			// convert url if hostname is alias for current origin
-			var a = document.createElement("a");
-			a.href = data.url;
-			var url = data.url;
-			if(hostAlias[a.hostname] !== undefined)
-				url = data.url.replace(a.hostname, hostAlias[a.hostname]);
+			var url = cleanURL(data.url);
 			
 			// Not used yet: missing scope....
 			function observer(changes) {
@@ -293,7 +289,7 @@
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
 					js.type = "text/javascript";
-					js.src = data.url + "/" + data.application + ".js";
+					js.src = url + "/" + data.application + ".js";
 					document.head.appendChild(js);
 				}
 			

@@ -211,6 +211,17 @@ function moveItemToFront(elem) {
 		elem.parentNode.insertBefore(last, elem);
 	}
 }
+
+function cleanURL(url) {
+	var a = document.createElement("a");
+	a.href = url;
+	var clean = url;
+	
+	if(hostAlias[a.hostname] !== undefined)
+		clean = url.replace(a.hostname, hostAlias[a.hostname]);
+	
+	return clean;
+}
 	
 
 // Redefine random function to work in distributed fashion
