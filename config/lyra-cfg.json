@@ -18,6 +18,24 @@
 		"width": 1366,
 		"height":  1536
 	},
+	// for experimental features: true/false
+	experimental: {
+		"webbrowser": false,  // enable the awesomium module
+		
+		"omicron": // enable omicron input module
+		{
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			dataPort: 20015,
+			
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			useOinputserver: true,
+			inputServerIP: "cave2tracker.evl.uic.edu",
+			msgPort: 28000
+		}
+	},
 	"layout": {
 		"rows": 2,
 		"columns": 18

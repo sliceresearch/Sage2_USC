@@ -23,7 +23,6 @@ var weather = SAGE2_App.extend( {
 
     this.gwin = {};
     this.myTag = "";
-    this.gwin.itsF = "F"; // Fahrenheit or Celsius or Kelvin
   
     this.gwin.sampleSVG = null;
 
@@ -93,6 +92,10 @@ var weather = SAGE2_App.extend( {
     this.glob.temp_cold           = 60;
     this.glob.temp_colderer       = 30;
     this.glob.temp_coldererer     = 0;
+
+    // add the temperature unit into the state
+    this.state.itsF = null;
+
 },
 
 ////////////////////////////////////////
@@ -102,7 +105,7 @@ initApp: function(temperatureScale)
     // should also make sure temperatureScale is a legal value
 
     if (temperatureScale)
-        this.gwin.itsF = temperatureScale.toUpperCase();
+        this.state.itsF = temperatureScale.toUpperCase();
 
     this.weatherOutsideCallbackFunc = this.weatherOutsideCallback.bind(this);
     this.weatherInsideCallbackFunc = this.weatherInsideCallback.bind(this);
@@ -112,12 +115,12 @@ initApp: function(temperatureScale)
 
 nextTemp: function()
 {
-    if (this.gwin.itsF == "C")
-            this.gwin.itsF = "K";
-    else if (this.gwin.itsF == "K")
-            this.gwin.itsF = "F";
-    else if (this.gwin.itsF == "F")
-            this.gwin.itsF = "C";
+    if (this.state.itsF == "C")
+            this.state.itsF = "K";
+    else if (this.state.itsF == "K")
+            this.state.itsF = "F";
+    else if (this.state.itsF == "F")
+            this.state.itsF = "C";
 },
 
 ////////////////////////////////////////
@@ -193,9 +196,9 @@ tempConvert: function (data)
 
 ForC: function (data)
 {
-    if (this.gwin.itsF == "C")
+    if (this.state.itsF == "C")
         return(Math.round((parseInt(data)-32)*5/9));
-    else if (this.gwin.itsF == "K")
+    else if (this.state.itsF == "K")
         return(Math.round((parseInt(data)-32)*5/9+273.15));
     else
         return(data); // F
@@ -267,7 +270,7 @@ drawTextRight: function (textLocX, textLocY, theText, textFontSize)
 
 drawTempText: function (textColor)
 {
-    var tempSys = " " + this.gwin.itsF;
+    var tempSys = " " + this.state.itsF;
 
     // ouside temperature text
     this.gwin.sampleSVG.append("svg:text")
@@ -399,7 +402,7 @@ convertTimeFormat: function()
     this.gwin.hour = hourCompute+":"+hourAndMinute[1];
 
     // if we are on the metric side also go to 24 hour clock
-    if ((this.gwin.itsF != "F") && (this.gwin.ampm == "pm"))
+    if ((this.state.itsF != "F") && (this.gwin.ampm == "pm"))
         { // need to break into to integers based on the colon then re-form}
          if (hourCompute < 12)
             hourCompute += 12;
@@ -408,7 +411,7 @@ convertTimeFormat: function()
     }
 
     // handle 12:XX am
-    if ((this.gwin.itsF != "F") && (this.gwin.ampm == "am"))
+    if ((this.state.itsF != "F") && (this.gwin.ampm == "am"))
         { // need to break into to integers based on the colon then re-form}
          if (hourCompute >= 12)
             hourCompute = 0;
@@ -427,7 +430,7 @@ convertTimeFormat: function()
         if (dateDay[0] == "0")
             dateDay = dateDay[1];
  
-        if (this.gwin.itsF == "F")
+        if (this.state.itsF == "F")
             this.gwin.date = dateMonth + " " + dateDay +", " + dateYear;
         else      
             this.gwin.date = dateDay + " " + dateMonth + " " + dateYear;
@@ -589,7 +592,7 @@ drawInsideTemp: function ()
     if (this.gwin.hour.length < 5)
         hourIndent = 20;
       
-    if (this.gwin.itsF == "F")  
+    if (this.state.itsF == "F")  
         this.drawTextRight(this.gwin.canvasWidth-this.gwin.margin, 320, this.gwin.hour+" "+this.gwin.ampm, this.gwin.largeFontSize);
     else
        this.drawTextRight(this.gwin.canvasWidth-this.gwin.margin, 320, this.gwin.hour, this.gwin.largeFontSize);
@@ -718,6 +721,12 @@ startup: function (whereToRender)
 	},
 
 	load: function(state, date) {
+        if (state) {
+            this.state.itsF = state.itsF;
+        } else {
+            this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
+        }
+        this.refresh(date);
 	},
 
 	draw_d3: function(date) {

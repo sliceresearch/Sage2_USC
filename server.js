@@ -1,9 +1,9 @@
 // SAGE2 is available for use under the SAGE2 Software License
-// 
+//
 // University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
 // and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
 // Applications (LAVA)
-// 
+//
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
@@ -47,12 +47,13 @@ var websocketIO = require('node-websocket.io');   // creates WebSocket server an
 var loader      = require('node-itemloader');     // handles sage item creation
 var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var omicron = require('node-omicron');    // handles Omicron input events
 
 
 // Command line arguments
 program
   .version('0.1.0')
-  .option('-i, --interactive',  'Interactive prompt')
+  .option('-i, --interactive', 'Interactive prompt')
   .option('-f, --configuration <value>', 'Specify a configuration file')
   .parse(process.argv);
 
@@ -84,7 +85,7 @@ var mediaStreams = {};
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
 console.log("Temp folder: ".green, process.env.TMPDIR);
-if (!fs.existsSync(process.env.TMPDIR)) {
+if(!fs.existsSync(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
 
@@ -119,7 +120,7 @@ var options = setupHttpsOptions();
 
 
 // initializes HTTP and HTTPS servers
-var index  = http.createServer(httpServerIndex.onrequest);
+var index = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
 
 var startTime = new Date();
@@ -178,7 +179,7 @@ function wsAddClient(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	wsio.clientType = data.clientType;
 	wsio.messages = {};
-
+	
 	// Remember the display ID
 	if (wsio.clientType === "display") {
 		wsio.clientID = data.clientID;
@@ -211,7 +212,7 @@ function wsAddClient(wsio, data) {
 	if (wsio.clientType==="display")
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 	else
-		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+	console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
 }
 
 function initializeWSClient(wsio) {
@@ -396,28 +397,8 @@ function wsPointerDblClick(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	var elem     = findAppUnderPointer(pointerX, pointerY);
-	var updatedItem;
-
-	if (elem !== null) {
-		if (elem.maximized !== true) {
-			// need to maximize the item
-			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
-			if (updatedItem !== null) {
-				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
-				// the PDF files need an extra redraw
-				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
-			}
-		} else {
-			// already maximized, need to restore the item size
-			updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
-			if (updatedItem !== null) {
-				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
-				// the PDF files need an extra redraw
-				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
-			}
-		}
-	}
+	
+	pointerDblClick( uniqueID, pointerX, pointerY );
 }
 
 function wsPointerPosition(wsio, data) {
@@ -484,19 +465,11 @@ function wsKeyDown(wsio, data) {
 
 
 	//SEND SPECIAL KEY EVENT only will come here
-	if(remoteInteraction[uniqueID].appInteractionMode()){
+	if(remoteInteraction[uniqueID].appInteractionMode()){		
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
-
-		var elem = findAppUnderPointer(pointerX, pointerY);
-
-		if(elem !== null){
-			var itemRelX = pointerX - elem.left;
-			var itemRelY = pointerY - elem.top - config.titleBarHeight;
-			var now = new Date();
-			var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "down" }, date: now };
-			broadcast('eventInItem', event, 'receivesInputEvents');
-		}
+		
+		keyDown( uniqueID, pointerX, pointerY, data );
 	}
 }
 
@@ -533,15 +506,7 @@ function wsKeyUp(wsio, data) {
 			pointerX = sagePointers[uniqueID].left;
 			pointerY = sagePointers[uniqueID].top;
 
-			elem = findAppUnderPointer(pointerX, pointerY);
-
-			if( elem !== null ){
-				var itemRelX = pointerX - elem.left;
-				var itemRelY = pointerY - elem.top - config.titleBarHeight;
-				var now = new Date();
-				var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "up" }, date: now };
-				broadcast('eventInItem', event, 'receivesInputEvents');
-			}
+			keyUp( uniqueID, pointerX, pointerY, data );
 		}
 	}
 }
@@ -566,15 +531,7 @@ function wsKeyPress(wsio, data) {
 		var pointerX = sagePointers[uniqueID].left;
 		var pointerY = sagePointers[uniqueID].top;
 
-		var elem = findAppUnderPointer(pointerX, pointerY);
-
-		if( elem !== null ){
-			var itemRelX = pointerX - elem.left;
-			var itemRelY = pointerY - elem.top - config.titleBarHeight;
-			var now = new Date();
-			var event = { eventType: "keyboard", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: parseInt(data.code,10), state: "down" }, date: now };
-			broadcast('eventInItem', event, 'receivesInputEvents');
-		}
+		keyPress( uniqueID, pointerX, pointerY, data );
 	}
 
 }
@@ -682,7 +639,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 		// animate max 60 fps
 		var now = new Date();
 		var elapsed = now.getTime() - appAnimations[data.id].date.getTime();
-   		if (elapsed > 16) {
+		if(elapsed > 16){
 			appAnimations[data.id].date = new Date();
 			broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
 		}
@@ -698,7 +655,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 function wsUpdateAppState(wsio, data) {
 	// Using updates only from display client 0
 	if (wsio.clientID === 0) {
-		var app  = findAppById(data.id);
+		var app = findAppById(data.id);
 		app.data = data.state;
 	}
 }
@@ -1009,26 +966,26 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 		loadSession(data.filename);
 	}
 	else {
-		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-			appInstance.id = getUniqueAppId();
-
-			if(appInstance.animation){
-				var i;
-				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.requiresFullApps){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						appAnimations[appInstance.id].clients[clientAddress] = false;
-					}
+	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+		
+		if(appInstance.animation){
+			var i;
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[appInstance.id].clients[clientAddress] = false;
 				}
 			}
-
-			broadcast('createAppWindow', appInstance, 'requiresFullApps');
-			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-			applications.push(appInstance);
-		});
-	}
+		}
+		
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+		
+		applications.push(appInstance);
+	});
+}
 }
 
 /******************** Adding Web Content (URL) ********************/
@@ -1058,8 +1015,8 @@ function wsOpenNewWebpage(wsio, data) {
 	// Check if the web-browser module is enabled in the configuration file
 	if (config.experimental !== undefined && config.experimental.webbrowser === true) {
 		// then emit the command
-		webBrowserClient.emit('openWebBrowser', {url: data.url});
-	}
+	webBrowserClient.emit('openWebBrowser', {url: data.url});
+}
 }
 
 
@@ -1190,39 +1147,39 @@ function loadConfiguration() {
 		configFile = program.configuration;
 	}
 	else {
-		// Read config.txt - if exists and specifies a user defined config, then use it
-		if(fs.existsSync("config.txt")){
-			var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
-			for(var i =0; i<lines.length; i++){
-				var text = "";
-				var comment = lines[i].indexOf("//");
-				if(comment >= 0) text = lines[i].substring(0,comment).trim();
-				else text = lines[i].trim();
-			
-				if(text !== ""){
-					configFile = text;
-					console.log("Found configuration file: " + configFile);
-					break;
-				}
+	// Read config.txt - if exists and specifies a user defined config, then use it
+	if(fs.existsSync("config.txt")){
+		var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
+		for(var i =0; i<lines.length; i++){
+			var text = "";
+			var comment = lines[i].indexOf("//");
+			if(comment >= 0) text = lines[i].substring(0,comment).trim();
+			else text = lines[i].trim();
+		
+			if(text !== ""){
+				configFile = text;
+				console.log("Found configuration file: " + configFile);
+				break;
 			}
 		}
 	}
-
+	}
+	
 	// If config.txt does not exist or does not specify any files, look for a config with the hostname
 	if(configFile === null){
 		var hn = os.hostname();
 		var dot = hn.indexOf(".");
-		if (dot >= 0) hn = hn.substring(0, dot);
+		if(dot >= 0) hn = hn.substring(0, dot);
 		configFile = path.join("config", hn + "-cfg.json");
-		if (fs.existsSync(configFile)) {
+		if(fs.existsSync(configFile)){
 			console.log("Found configuration file: " + configFile);
 		}
-		else {
+		else{
 			configFile = path.join("config", "desktop-cfg.json");
 			console.log("Using default configuration file: " + configFile);
 		}
 	}
-
+	
 	if (fs.existsSync(configFile)) {
 		console.log("Using configuration file: " + configFile);
 	} else {
@@ -1317,7 +1274,7 @@ function setupDisplayBackground() {
 			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
 			// add transparent background
 			imTile.in("-background", "None");
-
+		
 			imTile.write(tmpImg, function(err) {
 				if(err) throw err;
 			
@@ -1361,11 +1318,11 @@ function setupHttpsOptions() {
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
 			server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
-			certs[config.host] = crypto.createCredentials({
+		certs[config.host] = crypto.createCredentials({
 				key:  server_key,
 				cert: server_crt,
 				ca:   server_ca
-			}).context;
+		}).context;
 		} else {
 			// remove the hostname from the FQDN and search for wildcard certificate
 			//    syntax: _.rest.com.key or _.rest.bigger.com.key
@@ -1377,7 +1334,7 @@ function setupHttpsOptions() {
 				key: server_key, cert: server_crt,
 				// no need for CA
 			}).context;
-		}
+	}
 	}
 	catch (e) {
 		console.log("\n----------");
@@ -1493,24 +1450,24 @@ function manageUploadedFiles(files) {
 var remoteSites = [];
 if (config.remote_sites) {
 	remoteSites = new Array(config.remote_sites.length);
-	config.remote_sites.forEach(function(element, index, array) {
-		var wsURL = "wss://" + element.host + ":" + element.port.toString();
+config.remote_sites.forEach(function(element, index, array) {
+	var wsURL = "wss://" + element.host + ":" + element.port.toString();
 
-		var remote = createRemoteConnection(wsURL, element, index);
+	var remote = createRemoteConnection(wsURL, element, index);
 
-		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.titleBarHeight*6) - 2;
-		var rHeight = config.titleBarHeight - 4;
-		var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
-		remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
+	var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.titleBarHeight*6) - 2;
+	var rHeight = config.titleBarHeight - 4;
+	var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
+	remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
 
-		// attempt to connect every 15 seconds, if connection failed
-		setInterval(function() {
-			if(!remoteSites[index].connected){
-				var remote = createRemoteConnection(wsURL, element, index);
-				remoteSites[index].wsio = remote;
-			}
-		}, 15000);
-	});
+	// attempt to connect every 15 seconds, if connection failed
+	setInterval(function() {
+		if(!remoteSites[index].connected){
+			var remote = createRemoteConnection(wsURL, element, index);
+			remoteSites[index].wsio = remote;
+		}
+	}, 15000);
+});
 }
 
 function createRemoteConnection(wsURL, element, index) {
@@ -1573,273 +1530,6 @@ setTimeout(function() {
 	broadcast('setSystemTime', {date: new Date()}, 'receivesClockTime');
 }, (61-cDate.getSeconds())*1000);
 
-
-
-/******** Omicron section ****************************************************************/
-var net = require('net');
-var util = require('util');
-var dgram = require('dgram');
-
-var udp;
-
-var trackerIP = config.omicronServerIP;
-var msgPort = config.omicronMsgPort;
-var dataPort = config.omicronDataPort;
-
-if( config.omicronServerIP )
-{
-	if( msgPort === undefined )
-	{
-		msgPort = 28000;
-		console.log('Omicron: msgPort undefined. Using default: ', msgPort);
-	}
-	if( dataPort === undefined )
-	{
-		dataPort = 9123;
-		console.log('Omicron: dataPort undefined. Using default: ', dataPort);
-	}
-
-	console.log('Connecting to Omicron server: ', trackerIP, msgPort);
-
-	var client = net.connect(msgPort, trackerIP,  function()
-	{ //'connect' listener
-		console.log('Connected to Omicron server. Requesting data on port ', dataPort);
-
-		var sendbuf = util.format("omicron_data_on,%d", dataPort);
-		//console.log("Omicron> Sending handshake: ", sendbuf);
-		client.write(sendbuf);
-
-		udp = dgram.createSocket("udp4");
-		var dstart = Date.now();
-		var emit = 0;
-
-		// array to hold all the button values (1 - down, 0 = up)
-		var buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-		var mouse   = [0, 0, 0];
-		var mousexy = [0.0, 0.0];
-		var colorpt = [0.0, 0.0, 0.0];
-		var mousez  = 0;
-
-		udp.on("message", function (msg, rinfo)
-		{
-			//console.log("UDP> got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
-			// var out = util.format("UDP> msg from [%s:%d] %d bytes", rinfo.address,rinfo.port,msg.length);
-			// console.log(out);
-
-			if ((Date.now() - dstart) > 100)
-			{
-				var offset = 0;
-				var e = {};
-				if (offset < msg.length) e.timestamp = msg.readUInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.sourceId = msg.readUInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.serviceId = msg.readInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.serviceType = msg.readUInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.type = msg.readUInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.flags = msg.readUInt32LE(offset); offset += 4;
-
-				if (offset < msg.length) e.posx = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.posy = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.posz = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.orw = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.orx = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.ory = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.orz = msg.readFloatLE(offset); offset += 4;
-				if (offset < msg.length) e.extraDataType = msg.readUInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.extraDataItems = msg.readUInt32LE(offset); offset += 4;
-				if (offset < msg.length) e.extraDataMask = msg.readUInt32LE(offset); offset += 4;
-
-				// Extra data types:
-				//    0 ExtraDataNull,
-				//    1 ExtraDataFloatArray,
-				//    2 ExtraDataIntArray,
-				//    3 ExtraDataVector3Array,
-				//    4 ExtraDataString,
-				//    5 ExtraDataKinectSpeech
-
-				var r_roll  = Math.asin(2.0*e.orx*e.ory + 2.0*e.orz*e.orw);
-				var r_yaw   = Math.atan2(2.0*e.ory*e.orw-2.0*e.orx*e.orz , 1.0 - 2.0*e.ory*e.ory - 2.0*e.orz*e.orz);
-				var r_pitch = Math.atan2(2.0*e.orx*e.orw-2.0*e.ory*e.orz , 1.0 - 2.0*e.orx*e.orx - 2.0*e.orz*e.orz);
-
-				var posX = e.posx * config.totalWidth;
-				var posY = e.posy*config.totalHeight;
-				var sourceID = e.sourceId;
-
-				// serviceID: 0 = touch, 1 = SAGEPointer (note this depends on the order the services are specified on the server)
-				var serviceID = e.serviceId;
-
-				var touchWidth = 0;
-				var touchHeight = 0;
-				if( serviceID === 0 &&  e.extraDataItems >= 2)
-				{
-					touchWidth = msg.readFloatLE(offset); offset += 4;
-					touchHeight = msg.readFloatLE(offset); offset += 4;
-					//console.log("Touch size: " + touchWidth + "," + touchHeight);
-				}
-
-				// Appending sourceID to pointer address ID
-				var address = trackerIP+":"+sourceID;
-
-				// ServiceTypePointer //////////////////////////////////////////////////
-				if (e.serviceType === 0)
-				{
-					//console.log("pointer ID "+ sourceID +" event! type: " + e.type  );
-					//console.log("pointer event! type: " + e.type  );
-					//console.log("ServiceTypePointer> source ", e.sourceId);
-					//console.log("ServiceTypePointer> serviceID ", e.serviceId);
-
-					// TouchGestureManager Flags:
-					// 1 << 17 = User flag start (as of 12/20/13)
-					// User << 1 = Unprocessed
-					// User << 2 = Single touch
-					// User << 3 = Big touch
-					// User << 4 = 5-finger hold
-					// User << 5 = 5-finger swipe
-					// User << 6 = 3-finger hold
-					var User = 1 << 17;
-
-					var FLAG_SINGLE_TOUCH = User << 2;
-					var FLAG_BIG_TOUCH = User << 3;
-					var FLAG_FIVE_FINGER_HOLD = User << 4;
-					var FLAG_FIVE_FINGER_SWIPE = User << 5;
-					var FLAG_THREE_FINGER_HOLD = User << 6;
-					var FLAG_SINGLE_CLICK = User << 7;
-					var FLAG_DOUBLE_CLICK = User << 8;
-
-					//console.log( e.flags );
-					if (e.type == 3)
-					{ // update (Used only by classic SAGE pointer)
-						/* if( e.sourceId in ptrs )
-							return;
-						colorpt = [Math.floor(e.posx*255.0), Math.floor(e.posy*255.0), Math.floor(e.posz*255.0)];
-						if (offset < msg.length)
-						{
-							if (e.extraDataType == 4 && e.extraDataItems > 0)
-							{
-								console.log("create touch pointer");
-								e.extraString = msg.toString("utf-8", offset, offset+e.extraDataItems);
-								ptrinfo = e.extraString.split(" ");
-								offset += e.extraDataItems;
-								ptrs[e.sourceId] = {id:e.sourceId, label:ptrinfo[0], ip:ptrinfo[1], mouse:[0,0,0], color:colorpt, zoom:0, position:[0,0], mode:0};
-								sio.sockets.emit('createPointer', {type: 'ptr', id: e.sourceId, label: ptrinfo[0], color: colorpt, zoom:0, position:[0,0], src: "resources/mouse-pointer-hi.png" });
-							}
-						}*/
-					}
-					else if (e.type == 4)
-					{ // move
-						if( e.flags == FLAG_SINGLE_TOUCH )
-						{
-							pointerPosition( address, { pointerX: posX, pointerY: posY } );
-
-						}
-					}
-					else if (e.type == 15)
-					{ // zoom
-						console.log("Touch zoom");
-
-						/*
-						Omicron zoom event extra data:
-						0 = touchWidth (parsed above)
-						1 = touchHeight (parsed above)
-						2  = zoom delta
-						3 = event second type ( 1 = Down, 2 = Move, 3 = Up )
-						*/
-						// extraDataType 1 = float
-						if (e.extraDataType == 1 && e.extraDataItems >= 4)
-						{
-
-							var zoomDelta = msg.readFloatLE(offset); offset += 4;
-							var eventType = msg.readFloatLE(offset);  offset += 4;
-							console.log( zoomDelta );
-
-							if( eventType == 1 ) // Zoom start/down
-							{
-								pointerScrollStart( address, posX, posY );
-							}
-							else // Zoom move
-							{
-								pointerScroll( address, { scale: 1+zoomDelta } );
-							}
-						}
-
-					}
-					else if (e.type == 5) { // button down
-						//console.log("\t down , flags ", e.flags);
-
-						if( e.flags == FLAG_SINGLE_TOUCH )
-						{
-							console.log("starting pointer: " + address);
-							// Create pointer
-							if(address in sagePointers){
-								showPointer( address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)" } );
-							}else{
-								createSagePointer(address);
-
-								showPointer( address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)" } );
-
-								pointerPress( address, posX, posY );
-							}
-						}
-						else if( e.flags == FLAG_FIVE_FINGER_HOLD )
-						{
-							console.log("Touch gesture: Five finger hold");
-
-							var elem = findAppUnderPointer(posX, posY);
-
-							// Remove element
-							if( elem !== null )
-							{
-								deleteApplication( elem );
-							}
-						}
-						else if( e.flags == FLAG_THREE_FINGER_HOLD )
-						{
-							console.log("Touch gesture: Three finger hold");
-						}
-						else if( e.flags == FLAG_SINGLE_CLICK )
-						{
-							console.log("Touch gesture: Click");
-						}
-						else if( e.flags == FLAG_DOUBLE_CLICK )
-						{
-							console.log("Touch gesture: Double Click");
-						}
-					}
-					else if (e.type == 6)
-					{ // button up
-						if( e.flags == FLAG_SINGLE_TOUCH )
-						{
-							// Hide pointer
-							hidePointer(address);
-
-							// Release event
-							pointerRelease(address, posX, posY);
-
-							console.log("Touch release");
-						}
-					}
-					else
-					{
-					console.log("\t UNKNOWN event type ", e.type);
-					}
-
-					if (emit>2) { dstart = Date.now(); emit = 0; }
-				}// ServiceTypePointer ends ///////////////////////////////////////////
-			}
-		});
-
-		udp.on("listening", function () {
-			var address = udp.address();
-			console.log("UDP> listening " + address.address + ":" + address.port);
-		});
-
-		udp.bind(dataPort);
-
-	});
-	// Client cannot connecto to Omicron server
-	client.on('error', function  (e) {
-		console.log("Omicron> Error connecting to server: %s:%d".red, trackerIP, msgPort);
-	});
-}
 
 /***************************************************************************************/
 
@@ -1979,7 +1669,7 @@ if (program.interactive)
 			case 'list':
 				var i;
 				console.log("Applications\n------------");
-				for (i=0; i<applications.length; i++) {
+				for(i=0; i<applications.length; i++){
 					console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
 						i, applications[i].id, applications[i].application,
 						 applications[i].width,  applications[i].height,
@@ -2165,7 +1855,7 @@ function getAppPositionSize(appInstance) {
 
 /**** Pointer Functions ********************************************************************/
 
-function createSagePointer( address ) {
+var createSagePointer = function ( address ) {
 	// From addClient type == sageUI
 	sagePointers[address] = new sagepointer(address+"_pointer");
 	remoteInteraction[address] = new interaction();
@@ -2505,6 +2195,99 @@ function pointerScroll( address, data ) {
 	}
 }
 
+function pointerDblClick(address, pointerX, pointerY) {
+	var uniqueID = address;
+	if( sagePointers[address] === undefined )
+		return;
+	
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	var updatedItem;
+
+	if (elem !== null) {
+		if (elem.maximized !== true) {
+			// need to maximize the item
+			updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
+			if (updatedItem !== null) {
+				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+				// the PDF files need an extra redraw
+				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+			}
+		} else {
+			// already maximized, need to restore the item size
+			updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+			if (updatedItem !== null) {
+				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+				// the PDF files need an extra redraw
+				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+			}
+		}
+	}
+}
+
+function pointerCloseGesture(address, pointerX, pointerY) {
+	var uniqueID = address;
+	if( sagePointers[address] === undefined )
+		return;
+		
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	var elem     = findAppUnderPointer(pointerX, pointerY);
+
+	if (elem !== null)
+	{
+		deleteApplication(elem);
+	}
+}
+
+function keyDown( uniqueID, pointerX, pointerY, data)
+{
+	//console.log("interaction mode down key code: " + data.code)
+	
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
+	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	if(elem !== null){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "down" }, date: now };
+		broadcast('eventInItem', event, 'receivesInputEvents');
+	}
+}
+
+function keyUp( uniqueID, pointerX, pointerY, data)
+{
+	//console.log("interaction mode up key code: " + data.code)
+	
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
+	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	if( elem !== null ){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "up" }, date: now };
+		broadcast('eventInItem', event, 'receivesInputEvents');
+	}
+}
+
+function keyPress( uniqueID, pointerX, pointerY, data )
+{
+	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	if( elem !== null ){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		var event = { eventType: "keyboard", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: parseInt(data.code,10), state: "down" }, date: now };
+		broadcast('eventInItem', event, 'receivesInputEvents');
+	}
+}
+
 function deleteApplication( elem ) {
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
@@ -2523,3 +2306,25 @@ function deleteApplication( elem ) {
 	removeElement(applications, elem);
 }
 
+/******** Omicron section ****************************************************************/
+if( config.experimental && config.experimental.omicron && config.experimental.omicron.enable == true )
+{
+	var omicronManager = new omicron( config );
+	omicronManager.setCallbacks(
+		sagePointers,
+		createSagePointer,
+		showPointer,
+		pointerPress,
+		pointerPosition,
+		hidePointer,
+		pointerRelease,
+		pointerScrollStart,
+		pointerScroll,
+		pointerDblClick,
+		pointerCloseGesture,
+		keyDown,
+		keyUp,
+		keyPress
+	);
+	omicronManager.runTracker();
+}
