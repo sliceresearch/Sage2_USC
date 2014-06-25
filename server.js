@@ -2075,6 +2075,13 @@ function showControl(ctrl, pointerX, pointerY){
 	}
 }
 
+function moveControlToPointer(ctrl, pointerX, pointerY){
+	var dt = new Date();
+	ctrl.left = pointerX;
+	ctrl.top = pointerY;
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:pointerX, elemTop: pointerY},'receivesWidgetEvents');
+}
+
 
 function findAppById(id) {
 	var i;
@@ -2317,6 +2324,9 @@ function pointerPressRight( address, pointerX, pointerY ) {
 			else if (elemCtrl.show==false){
 				showControl(elemCtrl, pointerX, pointerY) ;
 			}
+			else{
+				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+			}
 		}
 		else if ( remoteInteraction[address].appInteractionMode() ) {
 
@@ -2326,6 +2336,9 @@ function pointerPressRight( address, pointerX, pointerY ) {
 				}
 				else if (elemCtrl.show==false){
 					showControl(elemCtrl, pointerX, pointerY) ;
+				}
+				else{
+					moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 				}
 			}
 			else{

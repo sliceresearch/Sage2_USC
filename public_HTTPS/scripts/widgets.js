@@ -13,6 +13,7 @@ function slider(){
 	this.increments = null;
 	this.parts = null;
 	this.call = null;
+	this.appObj = null;
 	this.appProperty = null;
 	this.sliderVal = null;
 };
@@ -21,6 +22,14 @@ function textInput(){
 	this.id = null;
 	this.appId = null;
 	this.width = null;
+}
+
+function label(){
+	this.id = null;
+	this.appObj = null;
+	this.appId = null;
+	this.width = null;
+	this.appProperty = null;
 }
 
 function widgetSpec(id){
@@ -72,10 +81,18 @@ widgetSpec.prototype.addSlider = function(data){
 	this.itemCount++;
 };
 
-widgetSpec.prototype.addText = function(t) {
-		this.items.push({ctrl:"text",value:t});
-		this.itemCount++;	
+widgetSpec.prototype.addLabel = function(data){
+	//begin,parts,end,action, property, appObj
+	var l = new label();
+	l.id = "label" + this.itemCount;
+	l.appId = this.id;
+	l.appProperty = data.property;
+	l.appObj = data.appObj;
+	l.width = data.width;
+	this.items.push(l);
+	this.itemCount++;
 };
+
 
 widgetSpec.prototype.enumerate = function(){
 	return this.items;
@@ -115,10 +132,13 @@ function createControls(ctrId, spec){
 			createButton(windowControls,wArr[i],x+buttonRad,y);
 		}
 		else if (wArr[i] instanceof textInput){
-			createTextInput(windowControls,wArr[i],x,1.75*y);
+			createTextInput(windowControls,wArr[i],x,1.75*y); // The bottom left corner of the rect
 		}
 		else if (wArr[i] instanceof slider){
 			createSlider(windowControls,wArr[i],x,y);
+		}
+		else if (wArr[i] instanceof label){
+			createLabel(windowControls,wArr[i],x,1.75*y); //Bottom left
 		}
 		x = x + wArr[i].width + gap;
 	}
@@ -133,7 +153,7 @@ var buttonType = {
 		"strokeWidth": 2,
 		"fill":"#000000",
 		"switch": 0,
-		"speed": 400
+		"delay": 400
 	},
 	"play-stop": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
@@ -141,23 +161,23 @@ var buttonType = {
 		"strokeWidth": 2,
 		"fill":"#000000",
 		"switch": 0,
-		"speed": 400
+		"delay": 400
 	},
 	"next": {
 		"switch": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
-		"to":"m 0 -7 l 0 7 l 0 7",
+		"to":"m -6 0 l 6 0 l -6 0",
 		"fill":"none",
 		"strokeWidth": 2,
-		"speed": 600
+		"delay": 600
 	},
 	"prev": {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
-		"to":"m 0 -7 l 0 7 l 0 7",
+		"to":"m 6 0 l -6 0 l 6 0",
 		"fill":"none",
 		"strokeWidth": 2,
-		"speed":600
+		"delay":600
 
 	},
 	"next-zoom": {
@@ -166,17 +186,33 @@ var buttonType = {
 		"to":"m -2 -9 l 8 9 l -10 9",
 		"fill":"none",
 		"strokeWidth": 2,
-		"speed": 600
+		"delay": 600
 	},
 	"prev-zoom": {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
-		"to":"m 0 -7 l 0 7 l 0 7",
+		"to":"m -2 -9 l -8 9 l 10 9",
 		"fill":"none",
 		"strokeWidth": 2,
-		"speed":600
-
+		"delay":600
+	},
+	"rewind": {
+		"switch": null,
+		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
+		"to":"m 0 -6 l -4 6 l 4 6 m 4 -6 l -8 0 l 8 0",
+		"fill":"none",
+		"strokeWidth": 2,
+		"delay":600
+	},
+	"fastforward": {
+		"switch": null,
+		"from":"m 0 -6 l 4 6 l -4 6 m 4 -12 l 4 6 l -4 6",
+		"to":"m 0 0 l 4 0 l -4 0 m 4 -6 l 4 6 l -4 6 ",
+		"fill":"none",
+		"strokeWidth": 2,
+		"delay":600
 	}
+
 };
 
 function createSlider (paper, sliderSpec, x, y){
@@ -298,7 +334,7 @@ function createButton(paper, buttonSpec, cx, cy){
 	buttonCover.data("switch", type["switch"]) ;
 	buttonCover.data("from",pthf);
 	buttonCover.data("to",ptht);
-	buttonCover.data("speed",type["speed"]);
+	buttonCover.data("delay",type["delay"]);
 	buttonCover.data("appId", buttonSpec.appId);
 	buttonBack.data("appId", buttonSpec.appId);
 	button.data("call",buttonSpec.call);
@@ -474,4 +510,39 @@ getCtrlUnderPointer = function(data, offsetX, offsetY){
 	if (/control/.test(ctrId) || /button/.test(ctrId) || /slider/.test(ctrId) || /textInput/.test(ctrId))
 		return ctrl;
 	return null;
+}
+
+function createLabel(paper, labelSpec, x, y){
+	var lHeight = 1.5 * ui.titleBarHeight;
+	var lArea = paper.rect(x,y-lHeight,labelSpec.width, lHeight);
+	lArea.attr({
+		id: labelSpec.id + "Area",
+		fill:"#666666",
+		strokeWidth : 1,
+		stroke: "#666666"
+	});
+
+	
+	var lData = paper.text(x+2, y-8,"");
+	lData.attr({
+		id: labelSpec.id + "TextData",
+		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:georgia; font-size:" + (lHeight-12) + "px; font-weight:lighter; font-style:normal;"
+		//clipPath:paper.rect(x+2,y-lHeight, labelSpec.width,lHeight)
+	});
+	var label = paper.group(lArea,lData);
+	
+	lArea.data("appId", labelSpec.appId);
+	lData.data("appId",labelSpec.appId);
+	label.data("appId", labelSpec.appId);
+	
+	//label.data("left", x+2);
+	function showText(){
+		var app = getProperty(labelSpec.appObj,labelSpec.appProperty);
+		var data = app.obj[app.property];
+		lData.attr('text',data);
+		lData.animate({width:lData.getBBox().width},10,mina.linear,showText);
+	}
+
+	showText();
+	return label;
 }

@@ -640,19 +640,19 @@
 				if (/button/.test(ctrId)){
 					ctrl = ctrl.parent().select("path");
 					var swtch = ctrl.data("switch") ;
-					var speed = ctrl.data("speed") ;
+					var delay = ctrl.data("delay") ;
 					if (swtch===null){
 						var f = ctrl.data("from");
 						var t = ctrl.data("to");
-						ctrl.animate({"path":t},speed,mina.bounce,function(){
-							ctrl.animate({"path":f},speed,mina.bounce);	
+						ctrl.animate({"path":t},delay,mina.bounce,function(){
+							ctrl.animate({"path":f},delay,mina.bounce);	
 						});
 						
 					}
 					else{
 						var pth = ctrl.data(swtch?"from":"to");
 						ctrl.data("switch", 1 - swtch);
-						ctrl.animate({"path":pth},speed,mina.linear);
+						ctrl.animate({"path":pth},delay,mina.linear);
 						
 					}
 				}
