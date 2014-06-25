@@ -53,12 +53,12 @@ construct: function() {
     this.URL5 = "";
     this.URL6 = "";
 
-    this.OK1 = 1;
-    this.OK2 = 1;
-    this.OK3 = 1;
-    this.OK4 = 1;
-    this.OK5 = 1;
-    this.OK6 = 1;
+    this.OK1 = 0;
+    this.OK2 = 0;
+    this.OK3 = 0;
+    this.OK4 = 0;
+    this.OK5 = 0;
+    this.OK6 = 0;
 },
 
 ////////////////////////////////////////
@@ -145,6 +145,7 @@ drawEverything: function ()
 load1SuccessCallback: function()
 {
     this.OK1 = 1;
+    this.drawEverything();
 },
 load1FailCallback: function()
 {
@@ -153,11 +154,11 @@ load1FailCallback: function()
     this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
     this.image1.onload = this.load1SuccessCallbackFunc;
     this.image1.onerror = this.load1FailCallbackFunc; 
-
 },
 load2SuccessCallback: function()
 {
     this.OK2 = 1;
+    this.drawEverything();
 },
 load2FailCallback: function()
 {
@@ -165,11 +166,11 @@ load2FailCallback: function()
     this.image2.src = this.URL2+ '?' + Math.floor(Math.random() * 10000000);
     this.image2.onload = this.load2SuccessCallbackFunc;
     this.image2.onerror = this.load2FailCallbackFunc; 
-
 },
 load3SuccessCallback: function()
 {
     this.OK3 = 1;
+    this.drawEverything();
 },
 load3FailCallback: function()
 {
@@ -178,11 +179,11 @@ load3FailCallback: function()
     this.image3.src = this.URL3+ '?' + Math.floor(Math.random() * 10000000);
     this.image3.onload = this.load3SuccessCallbackFunc;
     this.image3.onerror = this.load3FailCallbackFunc; 
-
 },
 load4SuccessCallback: function()
 {
     this.OK4 = 1;
+    this.drawEverything();
 },
 load4FailCallback: function()
 {
@@ -191,11 +192,11 @@ load4FailCallback: function()
     this.image4.src = this.URL4+ '?' + Math.floor(Math.random() * 10000000);
     this.image4.onload = this.load4SuccessCallbackFunc;
     this.image4.onerror = this.load4FailCallbackFunc; 
-
 },
 load5SuccessCallback: function()
 {
     this.OK5 = 1;
+    this.drawEverything();
 },
 load5FailCallback: function()
 {
@@ -204,11 +205,11 @@ load5FailCallback: function()
     this.image5.src = this.URL5+ '?' + Math.floor(Math.random() * 10000000);
     this.image5.onload = this.load5SuccessCallbackFunc;
     this.image5.onerror = this.load5FailCallbackFunc; 
-
 },
 load6SuccessCallback: function()
 {
     this.OK6 = 1;
+    this.drawEverything();
 },
 load6FailCallback: function()
 {
@@ -217,7 +218,6 @@ load6FailCallback: function()
     this.image6.src = this.URL6+ '?' + Math.floor(Math.random() * 10000000);
     this.image6.onload = this.load6SuccessCallbackFunc;
     this.image6.onerror = this.load6FailCallbackFunc; 
-
 },
 
 ////////////////////////////////////////
@@ -237,7 +237,6 @@ update: function ()
     this.image5.src = this.URL5+ '?' + Math.floor(Math.random() * 10000000);
     this.image5.onload = this.load5SuccessCallbackFunc;
     this.image5.onerror = this.load5FailCallbackFunc;
-
 },
 
 ////////////////////////////////////////
@@ -357,7 +356,7 @@ startup: function (){
 	
 	draw: function(date) {
 	    this.update();
-        this.drawEverything();
+        //this.drawEverything();
 	},
 
 	resize: function(date) {
