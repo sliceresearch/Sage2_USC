@@ -12,6 +12,11 @@
 // Generic functions used by all SAGE2 applications
 //
 
+// Global variables
+var __SAGE2__ = {};
+__SAGE2GE2__.version = "0.1";
+
+
 function SAGE2_initialize(data_seed) {
 	// Reset random number based on server's time
 	Math.seed(data_seed.getTime());
