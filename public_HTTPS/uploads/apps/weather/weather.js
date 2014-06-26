@@ -206,11 +206,16 @@ ForC: function (data)
 
 ////////////////////////////////////////
 
-drawBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+
+drawBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut, roomNum)
 {
+    var b = null;
+
   if (this.gwin.sampleSVG !== null)
-       this.gwin.sampleSVG.append("svg:rect")
+    {
+        b = this.gwin.sampleSVG.append("svg:rect")
         .style("stroke", "black")
+        .style("stroke-width", 2)
         .style("fill", colorOut)
         .style("fill-opacity", percOut)
         .attr("x", boxLocX)
@@ -219,6 +224,60 @@ drawBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
         .attr("ry", this.gwin.rounded)
         .attr("height", boxHeight)
         .attr("width", boxWidth);
+
+    switch(roomNum) {
+        case 1:
+             b.on("click", this.room1CallbackFunc); break;
+        case 2:
+             b.on("click", this.room2CallbackFunc); break;
+        case 3:
+             b.on("click", this.room3CallbackFunc); break;
+        case 4:
+             b.on("click", this.room4CallbackFunc); break;
+        case 5:
+             b.on("click", this.room5CallbackFunc); break;
+        case 6:
+             b.on("click", this.room6CallbackFunc); break;
+        case 7:
+             b.on("click", this.room7CallbackFunc); break;
+        }
+    }
+
+        
+},
+
+drawRoom: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut, roomNum)
+{
+    this.drawBox(boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut, roomNum);
+},
+
+room1Callback: function()
+{
+    console.log("room 1");
+},
+room2Callback: function()
+{
+    console.log("room 2");
+},
+room3Callback: function()
+{
+    console.log("room 3");
+},
+room4Callback: function()
+{
+    console.log("room 4");
+},
+room5Callback: function()
+{
+    console.log("room 5");
+},
+room6Callback: function()
+{
+    console.log("room 6");
+},
+room7Callback: function()
+{
+    console.log("room 7");
 },
 
 drawBorderlessBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
@@ -274,21 +333,21 @@ drawTempText: function (textColor)
 
     // ouside temperature text
     this.gwin.sampleSVG.append("svg:text")
-        .attr("y", 378)
+        .attr("y", 375)
         .style("fill", textColor)
-        .style("font-size", this.gwin.largeFontSize)
+        .style("font-size", "30")
         .style("font-family", this.gwin.displayFont)
         .attr("x", parseInt((this.gwin.canvasWidth+this.gwin.margin+25) * 0.5))
         .style("text-anchor", "middle")
         .text(Math.round(this.ForC(this.gwin.outside))+ tempSys + " - " + this.gwin.conditions.toLowerCase());
  
-    this.gwin.sampleSVG.append("image")
+    this.gwin.sampleSVG.append("svg:image")
         .attr("xlink:href", this.gwin.weatherImage.src)
         .attr("opacity", 1.0)
         .attr("x", this.gwin.margin+10)
-        .attr("y", 340)
-        .attr("width", 50)
-        .attr("height", 50);  
+        .attr("y", 343)
+        .attr("width", 40)
+        .attr("height", 40);  
     },
 
 ////////////////////////////////////////
@@ -337,6 +396,15 @@ weatherOutsideCallback: function(error, weatherOut)
     // should use the name field to make sure I get the correct one
     this.gwin.weatherIcon = this.gwin.iconSet[8].icon_url;
     this.gwin.weatherImage.src = this.gwin.weatherIcon;
+
+    var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
+    //console.log(weatherName);
+
+    //try out new svg icon set
+    this.gwin.weatherImage.src = "http://lyra.evl.uic.edu:9000/TEMPS/icons/"+weatherName+".svg";
+    //console.log(this.gwin.weatherImage.src);
+    
+
     
     this.gwin.outside = weather;
 
@@ -551,36 +619,38 @@ drawInsideTemp: function ()
 
     this.convertTimeFormat();
 
-    this.drawBox(this.gwin.margin,      50, 100, 150, "white", 1);
-    this.drawBox(this.gwin.margin+150,  50, 100, 150, "white", 1);
-    this.drawBox(this.gwin.margin+300,  50, 150, 150, "white", 1); 
-    this.drawBox(this.gwin.margin+300, 200,  75, 150, "white", 1);
-    this.drawBox(this.gwin.margin+225, 175, 100,  75, "white", 1);
-    this.drawBox(this.gwin.margin+150, 175, 100,  75, "white", 1);
-    this.drawBox(this.gwin.margin,     175, 100, 150, "white", 1);
+    // draw a white room in case there is no data to show
+    this.drawRoom(this.gwin.margin,      50, 100, 150, "white", 1, 7);
+    this.drawRoom(this.gwin.margin+150,  50, 100, 150, "white", 1, 1);
+    this.drawRoom(this.gwin.margin+300,  50, 150, 150, "white", 1, 2); 
+    this.drawRoom(this.gwin.margin+300, 200,  75, 150, "white", 1, 3);
+    this.drawRoom(this.gwin.margin+225, 175, 100,  75, "white", 1, 4);
+    this.drawRoom(this.gwin.margin+150, 175, 100,  75, "white", 1, 5);
+    this.drawRoom(this.gwin.margin,     175, 100, 150, "white", 1, 6);
 
+    // draw the room in the appropriate color for its temperature
     if (this.glob.color1 != "NULL")
         {
-        this.drawBox(this.gwin.margin, 50, 100, 150, this.glob.color7, this.glob.perc7);
-        this.drawBox(this.gwin.margin, 50, 100, 150, this.glob.color7b, 1-this.glob.perc7);
+        this.drawRoom(this.gwin.margin,     50, 100, 150, this.glob.color7, this.glob.perc7, 7);
+        this.drawRoom(this.gwin.margin,     50, 100, 150, this.glob.color7b, 1-this.glob.perc7, 7);
 
-        this.drawBox(this.gwin.margin+150, 50, 100, 150, this.glob.color1, this.glob.perc1);
-        this.drawBox(this.gwin.margin+150, 50, 100, 150, this.glob.color1b, 1-this.glob.perc1);
+        this.drawRoom(this.gwin.margin+150, 50, 100, 150, this.glob.color1, this.glob.perc1, 1);
+        this.drawRoom(this.gwin.margin+150, 50, 100, 150, this.glob.color1b, 1-this.glob.perc1, 1);
                
-        this.drawBox(this.gwin.margin+300, 50, 150, 150, this.glob.color2, this.glob.perc2);
-        this.drawBox(this.gwin.margin+300, 50, 150, 150, this.glob.color2b, 1-this.glob.perc2);
+        this.drawRoom(this.gwin.margin+300, 50, 150, 150, this.glob.color2, this.glob.perc2, 2);
+        this.drawRoom(this.gwin.margin+300, 50, 150, 150, this.glob.color2b, 1-this.glob.perc2, 2);
 
-        this.drawBox(this.gwin.margin+300, 200, 75, 150, this.glob.color3, this.glob.perc3);
-        this.drawBox(this.gwin.margin+300, 200, 75, 150, this.glob.color3b, 1-this.glob.perc3);
+        this.drawRoom(this.gwin.margin+300, 200, 75, 150, this.glob.color3, this.glob.perc3, 3);
+        this.drawRoom(this.gwin.margin+300, 200, 75, 150, this.glob.color3b, 1-this.glob.perc3, 3);
 
-        this.drawBox(this.gwin.margin+225, 175, 100, 75, this.glob.color4, this.glob.perc4);
-        this.drawBox(this.gwin.margin+225, 175, 100, 75, this.glob.color4b, 1-this.glob.perc4);
+        this.drawRoom(this.gwin.margin+225, 175, 100, 75, this.glob.color4, this.glob.perc4, 4);
+        this.drawRoom(this.gwin.margin+225, 175, 100, 75, this.glob.color4b, 1-this.glob.perc4, 4);
 
-        this.drawBox(this.gwin.margin+150, 175, 100, 75, this.glob.color5, this.glob.perc5);
-        this.drawBox(this.gwin.margin+150, 175, 100, 75, this.glob.color5b, 1-this.glob.perc5);
+        this.drawRoom(this.gwin.margin+150, 175, 100, 75, this.glob.color5, this.glob.perc5, 5);
+        this.drawRoom(this.gwin.margin+150, 175, 100, 75, this.glob.color5b, 1-this.glob.perc5, 5);
             
-        this.drawBox(this.gwin.margin, 175, 100, 150, this.glob.color6, this.glob.perc6);
-        this.drawBox(this.gwin.margin, 175, 100, 150, this.glob.color6b, 1-this.glob.perc6);
+        this.drawRoom(this.gwin.margin,     175, 100, 150, this.glob.color6, this.glob.perc6, 6);
+        this.drawRoom(this.gwin.margin,     175, 100, 150, this.glob.color6b, 1-this.glob.perc6, 6);
         }
             
     //--------------------------------------
