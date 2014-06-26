@@ -401,7 +401,8 @@ weatherOutsideCallback: function(error, weatherOut)
     //console.log(weatherName);
 
     //try out new svg icon set
-    this.gwin.weatherImage.src = "http://lyra.evl.uic.edu:9000/TEMPS/icons/"+weatherName+".svg";
+    this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
+    //this.gwin.weatherImage.src = "http://lyra.evl.uic.edu:9000/TEMPS/icons/"+weatherName+".svg";
     //console.log(this.gwin.weatherImage.src);
     
 
