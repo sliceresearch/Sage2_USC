@@ -811,8 +811,8 @@ startup: function (whereToRender)
 	},
 
 	resize: function(date) {
-		this.svg.attr('width' ,  this.element.clientWidth  +"px");
-		this.svg.attr('height' , this.element.clientHeight  +"px");
+		this.svg.attr('width' ,  parseInt(this.element.clientWidth,10) +"px");
+		this.svg.attr('height' , parseInt(this.element.clientHeight,10)  +"px");
 
         this.updateWindow();
 		this.refresh(date);
