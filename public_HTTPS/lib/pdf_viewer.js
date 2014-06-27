@@ -70,7 +70,7 @@ var pdf_viewer = SAGE2_App.extend( {
 					appObj.refresh(date);
 				}});
 
-				_this.controls.addLabel({width:100,appObj:_this, property:"pageValText"});
+				_this.controls.addLabel({maxWidth:100,appObj:_this, property:"pageValText"});
 
 				_this.controls.addButton({type:"next", action:function(appObj, date){
 					if (appObj.state.page  >= appObj.pdfDoc.numPages) return;

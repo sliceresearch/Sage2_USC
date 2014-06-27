@@ -88,7 +88,7 @@ widgetSpec.prototype.addLabel = function(data){
 	l.appId = this.id;
 	l.appProperty = data.property;
 	l.appObj = data.appObj;
-	l.width = data.width;
+	l.width = data.maxWidth;
 	this.items.push(l);
 	this.itemCount++;
 };
@@ -526,7 +526,7 @@ function createLabel(paper, labelSpec, x, y){
 	var lData = paper.text(x+2, y-8,"");
 	lData.attr({
 		id: labelSpec.id + "TextData",
-		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:arial; font-size:" + (lHeight-12) + "px; font-weight:lighter; font-style:normal;"
+		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:Times,sans-serif; font-size:" + (lHeight-12) + "px; font-weight:200; font-style:normal;"
 		//clipPath:paper.rect(x+2,y-lHeight, labelSpec.width,lHeight)
 	});
 	var label = paper.group(lArea,lData);
