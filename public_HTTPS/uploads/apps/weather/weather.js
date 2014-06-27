@@ -128,7 +128,7 @@ nextTemp: function()
 tempConvert: function (data)
     {
     // color brewer colors (derived from an 11 step diverging scale)
-    var color_hot           = "#e74037"; //"#d73027"
+    var color_hot           = "#d73027";
     var color_warmer        = "#f46d43";
     var color_warm          = "#fdae61";
 
@@ -179,7 +179,7 @@ tempConvert: function (data)
         }       
     else
         {
-        color = color_hot;
+        color = color_warmer;
         colorb = color_nice;
         perc = (data - this.glob.temp_nice) / (this.glob.temp_hot - this.glob.temp_nice);
         }
@@ -410,8 +410,7 @@ weatherOutsideCallback: function(error, weatherOut)
     //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
 
     // if its night time then swap out the sun icons for the moon icons
-    if (((this.gwin.ampm == "am") && (+hourAndMinute[0] < 6)) || ((this.gwin.ampm == "pm") && (+hourAndMinute[0] > 7)))
-            {
+if (((this.gwin.ampm == "am") && ((+hourAndMinute[0] == 12) || (+hourAndMinute[0] < 7))) || ((this.gwin.ampm == "pm") && (+hourAndMinute[0] > 7) && (+hourAndMinute[0] < 12)))            {
             if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
                 (weatherName == "clear"))
                 {
