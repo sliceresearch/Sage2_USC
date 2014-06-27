@@ -14,7 +14,7 @@
 
 // Global variables
 var __SAGE2__ = {};
-__SAGE2GE2__.version = "0.1";
+__SAGE2__.version = "0.1";
 
 
 function SAGE2_initialize(data_seed) {
