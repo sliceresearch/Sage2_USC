@@ -166,7 +166,7 @@ var buttonType = {
 	"next": {
 		"switch": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
-		"to":"m -6 0 l 6 0 l -6 0",
+		"to":"m -6 0 l 10 0 l -10 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay": 600
@@ -174,7 +174,7 @@ var buttonType = {
 	"prev": {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
-		"to":"m 6 0 l -6 0 l 6 0",
+		"to":"m 6 0 l -10 0 l 10 0",
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
@@ -199,15 +199,15 @@ var buttonType = {
 	"rewind": {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
-		"to":"m 0 -6 l -4 6 l 4 6 m 4 -6 l -8 0 l 8 0",
+		"to":"m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0",
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
 	},
 	"fastforward": {
 		"switch": null,
-		"from":"m 0 -6 l 4 6 l -4 6 m 4 -12 l 4 6 l -4 6",
-		"to":"m 0 0 l 4 0 l -4 0 m 4 -6 l 4 6 l -4 6 ",
+		"from":"m 0 -6 l 4 6 l -4 6 m -4 -12 l 4 6 l -4 6",
+		"to":"m 0 -6 l 4 6 l -4 6 m -6 -6 l 10 0 l -10 0 ",
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
@@ -313,7 +313,7 @@ function createButton(paper, buttonSpec, cx, cy){
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
 		fill:"#baba55",
-		strokeWidth : 2,
+		strokeWidth : 1,
 		stroke: "#000"
 	});
 
@@ -526,7 +526,7 @@ function createLabel(paper, labelSpec, x, y){
 	var lData = paper.text(x+2, y-8,"");
 	lData.attr({
 		id: labelSpec.id + "TextData",
-		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:georgia; font-size:" + (lHeight-12) + "px; font-weight:lighter; font-style:normal;"
+		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:arial; font-size:" + (lHeight-12) + "px; font-weight:lighter; font-style:normal;"
 		//clipPath:paper.rect(x+2,y-lHeight, labelSpec.width,lHeight)
 	});
 	var label = paper.group(lArea,lData);

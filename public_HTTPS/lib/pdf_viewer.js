@@ -147,7 +147,7 @@ var pdf_viewer = SAGE2_App.extend( {
 	},
 
 	setLabelText: function(){
-		this.pageValText = this.state.page + '/' + this.pdfDoc.numPages;
+		this.pageValText = this.state.page + ' / ' + this.pdfDoc.numPages;
 	}
 
 });
