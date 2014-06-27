@@ -379,9 +379,12 @@ function sagePointer(wsio) {
 	fileDrop.addEventListener('dragend',  this.preventDefault,     false);
 	fileDrop.addEventListener('drop',     this.uploadFileToServer, false);
 	
-	this.windowManager.addEventListener('dragover', this.preventDefault,     false);
-	this.windowManager.addEventListener('dragend',  this.preventDefault,     false);
-	this.windowManager.addEventListener('drop',     this.uploadFileToServer, false);
+	if (this.windowManager) {
+		// Not all sagePointer have a windowManager
+		this.windowManager.addEventListener('dragover', this.preventDefault,     false);
+		this.windowManager.addEventListener('dragend',  this.preventDefault,     false);
+		this.windowManager.addEventListener('drop',     this.uploadFileToServer, false);
+	}
 
 	sagePointerBtn.addEventListener('click', this.startSagePointer, false);
 	screenShareBtn.addEventListener('click', this.startScreenShare, false);
