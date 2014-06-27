@@ -17,15 +17,17 @@ function sagePointer(wsio) {
 	this.sensitivity = null;
 	this.mediaStream = null;
 
-	this.fileDrop       = document.getElementById('fileDrop');
-	this.fileDropText   = document.getElementById('fileDropText');
-	this.sagePointerBtn = document.getElementById('sagePointerBtn');
-	this.screenShareBtn = document.getElementById('screenShareBtn');
+	this.fileDrop         = document.getElementById('fileDrop');
+	this.fileDropText     = document.getElementById('fileDropText');
+	this.fileDropProgress = document.getElementById('fileDropProgress');
+	this.sagePointerBtn   = document.getElementById('sagePointerBtn');
+	this.screenShareBtn   = document.getElementById('screenShareBtn');
 	
 	this.sagePointerLabel      = document.getElementById('sagePointerLabel');
 	this.sagePointerColor      = document.getElementById('sagePointerColor');
 	this.screenShareResolution = document.getElementById('screenShareResolution');
 	this.screenShareQuality    = document.getElementById('screenShareQuality');
+	this.windowManager         = document.getElementById('winMgr');
 	this.screenShareQualityIndicator = document.getElementById('screenShareQualityIndicator');
 	
 	this.mediaVideo         = document.getElementById('mediaVideo');
@@ -308,9 +310,13 @@ function sagePointer(wsio) {
 						for(var key in total){ totalSize += total[key]; uploaded += loaded[key]; }
 						pc = Math.floor((uploaded/totalSize) * 100);
 						_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
+						_this.fileDropProgress.value = pc;
 						if(pc == 100){
 							setTimeout(function() {
-								if(pc == 100) _this.fileDropText.textContent = "Drop multimedia files here";
+								if (pc == 100) {
+									_this.fileDropText.textContent = "Drop multimedia files here";
+									_this.fileDropProgress.value = 0;
+								}
 							}, 500);
 						}
 					}, false);
@@ -373,6 +379,10 @@ function sagePointer(wsio) {
 	fileDrop.addEventListener('dragend',  this.preventDefault,     false);
 	fileDrop.addEventListener('drop',     this.uploadFileToServer, false);
 	
+	this.windowManager.addEventListener('dragover', this.preventDefault,     false);
+	this.windowManager.addEventListener('dragend',  this.preventDefault,     false);
+	this.windowManager.addEventListener('drop',     this.uploadFileToServer, false);
+
 	sagePointerBtn.addEventListener('click', this.startSagePointer, false);
 	screenShareBtn.addEventListener('click', this.startScreenShare, false);
 	
