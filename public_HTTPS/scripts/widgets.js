@@ -101,7 +101,7 @@ widgetSpec.prototype.addLabel = function(data){
 	l.appId = this.id;
 	l.appProperty = data.property;
 	l.appObj = data.appObj;
-	l.width = data.width;
+	l.width = data.maxWidth;
 	this.items.push(l);
 	this.itemCount++;
 };
@@ -163,7 +163,7 @@ var buttonType = {
 	"play-pause": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -2 -5 l 0 10 m 4 0 l 0 -10",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"fill":"#000000",
 		"switch": 0,
 		"delay": 400
@@ -171,7 +171,7 @@ var buttonType = {
 	"play-stop": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -5 -5 l 0 10 l 10 0 l 0 -10 z",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"fill":"#000000",
 		"switch": 0,
 		"delay": 400
@@ -179,17 +179,17 @@ var buttonType = {
 	"next": {
 		"switch": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
-		"to":"m -6 0 l 6 0 l -6 0",
+		"to":"m -6 0 l 10 0 l -10 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay": 600
 	},
 	"prev": {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
-		"to":"m 6 0 l -6 0 l 6 0",
+		"to":"m 6 0 l -10 0 l 10 0",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 
 	},
@@ -198,7 +198,7 @@ var buttonType = {
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -2 -9 l 8 9 l -10 9",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay": 600
 	},
 	"prev-zoom": {
@@ -206,23 +206,23 @@ var buttonType = {
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m -2 -9 l -8 9 l 10 9",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 	},
 	"rewind": {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
-		"to":"m 0 -6 l -4 6 l 4 6 m 4 -6 l -8 0 l 8 0",
+		"to":"m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 	},
 	"fastforward": {
 		"switch": null,
-		"from":"m 0 -6 l 4 6 l -4 6 m 4 -12 l 4 6 l -4 6",
-		"to":"m 0 0 l 4 0 l -4 0 m 4 -6 l 4 6 l -4 6 ",
+		"from":"m 0 -6 l 4 6 l -4 6 m -4 -12 l 4 6 l -4 6",
+		"to":"m 0 -6 l 4 6 l -4 6 m -6 -6 l 10 0 l -10 0 ",
 		"fill":"none",
-		"strokeWidth": 2,
+		"strokeWidth": 1,
 		"delay":600
 	}
 
@@ -326,7 +326,7 @@ function createButton(paper, buttonSpec, cx, cy){
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
 		fill:"#baba55",
-		strokeWidth : 2,
+		strokeWidth : 1,
 		stroke: "#000"
 	});
 
@@ -540,7 +540,7 @@ function createLabel(paper, labelSpec, x, y){
 	var lData = paper.text(x+2, y-8,"");
 	lData.attr({
 		id: labelSpec.id + "TextData",
-		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:georgia; font-size:" + (lHeight-12) + "px; font-weight:lighter; font-style:normal;"
+		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:Times,sans-serif; font-size:" + (lHeight-12) + "px; font-weight:200; font-style:normal;"
 		//clipPath:paper.rect(x+2,y-lHeight, labelSpec.width,lHeight)
 	});
 	var label = paper.group(lArea,lData);

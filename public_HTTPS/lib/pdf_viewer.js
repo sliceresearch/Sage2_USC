@@ -74,7 +74,7 @@ var pdf_viewer = SAGE2_App.extend( {
 					appObj.refresh(date);
 				}});
 
-				_this.controls.addLabel({width:40,appObj:_this, property:"pageValText"});
+				_this.controls.addLabel({maxWidth:100,appObj:_this, property:"pageValText"});
 
 				_this.controls.addButton({type:"next", action:function(appObj, date){
 					if (appObj.state.page  >= appObj.pdfDoc.numPages) return;
@@ -151,7 +151,7 @@ var pdf_viewer = SAGE2_App.extend( {
 	},
 
 	setLabelText: function(){
-		this.pageValText = this.state.page + '/' + this.pdfDoc.numPages;
+		this.pageValText = this.state.page + ' / ' + this.pdfDoc.numPages;
 	}
 
 });

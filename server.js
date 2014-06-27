@@ -1758,18 +1758,22 @@ function showControl(ctrl, pointerX, pointerY){
 	if (ctrl.show === false) {
 		ctrl.show = true;
 		var dt = new Date();
-		ctrl.left = pointerX;
-		ctrl.top = pointerY;
-		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:pointerX, elemTop: pointerY},'receivesWidgetEvents');
+		var rightMargin = config.totalWidth - ctrl.width;
+		var bottomMargin = config.totalHeight - ctrl.height;
+		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
+		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY ;
+		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 		broadcast('showControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
 }
 
 function moveControlToPointer(ctrl, pointerX, pointerY){
 	var dt = new Date();
-	ctrl.left = pointerX;
-	ctrl.top = pointerY;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:pointerX, elemTop: pointerY},'receivesWidgetEvents');
+	var rightMargin = config.totalWidth - ctrl.width;
+	var bottomMargin = config.totalHeight - ctrl.height;
+	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
+	ctrl.top = (pointerY > bottomMargin)? bottomMargin:pointerY ;
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 }
 
 
