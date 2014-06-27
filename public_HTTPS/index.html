@@ -380,19 +380,25 @@
 		/******************************/
 		
 		wsio.on('deleteElement', function(elem_data) {
+			// Tell the application it is over
+			var app = applications[elem_data.elemId];
+			app.terminate();
+			// Remove the app from the list
+			delete applications[elem_data.elemId];
+
+			// Clean up the DOM
 			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
 			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 			
 			var deleteElem = document.getElementById(elem_data.elemId);
 			deleteElem.parentNode.removeChild(deleteElem);
 
+			// Clean up the UI DOM
 			if (elem_data.elemId + "_controls" in controlItems){
 				var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-				deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
+				if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
 				delete controlItems[elem_data.elemId + "_controls"];
 			}
-
-			
 		});
 
 		wsio.on ('hideControl', function(ctrl_data){

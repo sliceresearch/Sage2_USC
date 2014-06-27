@@ -107,6 +107,14 @@ var SAGE2_App = Class.extend( {
 		this.postDraw(date);
 	},
 
+	// Called by SAGE2 core
+	//    application can define the 'quit' method
+	terminate: function () {
+		if (this.hasOwnProperty('quit')) {
+			this.quit();
+		}
+	},
+
 	// Prints message to local browser console and send to server
 	//   accept a string as parameter: this.log("my message")
 	log: function(msg) {
