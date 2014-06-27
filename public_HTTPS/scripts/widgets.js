@@ -8,14 +8,14 @@
 //
 // Copyright (c) 2014
 
-function button(){
+function button() {
 	this.appId = null;
-	this.id = null;
-	this.type = null;
-	this.call = null;
-};
+	this.id    = null;
+	this.type  = null;
+	this.call  = null;
+}
 
-function slider(){
+function slider() {
 	this.id = null;
 	this.appId = null;
 	this.begin = null;
@@ -26,27 +26,28 @@ function slider(){
 	this.appObj = null;
 	this.appProperty = null;
 	this.sliderVal = null;
-};
+}
 
-function textInput(){
-	this.id = null;
+function textInput() {
+	this.id    = null;
 	this.appId = null;
 	this.width = null;
 }
 
-function label(){
-	this.id = null;
+function label() {
+	this.id     = null;
 	this.appObj = null;
-	this.appId = null;
-	this.width = null;
+	this.appId  = null;
+	this.width  = null;
 	this.appProperty = null;
 }
 
-function widgetSpec(id){
+function widgetSpec(id) {
 	this.id = id;
 	this.itemCount = 0;
 	this.items = [];
-};
+}
+
 widgetSpec.prototype.addButton = function(data) {
 	var b = new button();
 	b.appId = this.id;
@@ -56,7 +57,8 @@ widgetSpec.prototype.addButton = function(data) {
 	b.width = 1.5*ui.titleBarHeight;
 	this.items.push(b);
 	this.itemCount++;
-}
+};
+
 widgetSpec.prototype.addTextInput = function (data) {
 	var tI = new textInput();
 	tI.id = "textInput" + this.itemCount;
@@ -65,7 +67,8 @@ widgetSpec.prototype.addTextInput = function (data) {
 	tI.call = data.action;
 	this.items.push(tI);
 	this.itemCount++;
-}
+};
+
 
 widgetSpec.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appObj
@@ -372,13 +375,14 @@ function createTextInput(paper, textInputSpec, x, y){
 		strokeWidth:1
 	});
 
-	var show = function(){
+	var show = function() {
 		blinker.animate({"stroke":"#ffffff"},800,mina.easein,hide);
-	}
+	};
 
-	var hide = function(){
+	var hide = function() {
 		blinker.animate({"stroke":"#000000"},200,mina.easeout,show);
-	}
+	};
+
 	var textData = paper.text(x+2, y-8,"");
 	textData.attr({
 		id: textInputSpec.id + "TextData",
@@ -459,7 +463,7 @@ insertText = function(textInput, code, printable){
 	ctrl = textInput.select("text");
 	buf = textInput.data("text") || '';	
 	
-	if (buf.length==0) buf = "";
+	if (buf.length===0) buf = "";
 	buf = computeBlinkerPosition(pos, buf, code, printable);
 
 	var pth = "";
@@ -483,11 +487,11 @@ insertText = function(textInput, code, printable){
 	textInput.data("blinkerPos",buf.blinkerPos);
 	ctrl.attr("text",displayText);
 	textInput.data("text", buf.data);	
-}
+};
 
 getText = function(textInput){
 	return textInput.select("text").attr("text");
-}
+};
 
 getCtrl = function(data){
 	var lst = Snap.selectAll('*');
@@ -499,17 +503,17 @@ getCtrl = function(data){
 		}
 	}
 	return ctrl;
-}
+};
 
 getProperty = function (obj,property){
 	var names = property.split('.');
-	var prop = obj;
-	var i = 0;
-	for(;i<names.length-1;i++){
-		prop = prop[names[i]]
+	var prop  = obj;
+	var i     = 0;
+	for (;i<names.length-1;i++) {
+		prop = prop[names[i]];
 	}
 	return {obj:prop, property:names[i]};
-}
+};
 
 getCtrlUnderPointer = function(data, offsetX, offsetY){
 	var ptr = document.getElementById(data.ptrId);
@@ -520,7 +524,7 @@ getCtrlUnderPointer = function(data, offsetX, offsetY){
 	if (/control/.test(ctrId) || /button/.test(ctrId) || /slider/.test(ctrId) || /textInput/.test(ctrId))
 		return ctrl;
 	return null;
-}
+};
 
 function createLabel(paper, labelSpec, x, y){
 	var lHeight = 1.5 * ui.titleBarHeight;

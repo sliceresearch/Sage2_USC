@@ -17,33 +17,33 @@ function sagePointer(wsio) {
 	this.sensitivity = null;
 	this.mediaStream = null;
 
-	this.fileDrop = document.getElementById('fileDrop');
-	this.fileDropText = document.getElementById('fileDropText');
+	this.fileDrop       = document.getElementById('fileDrop');
+	this.fileDropText   = document.getElementById('fileDropText');
 	this.sagePointerBtn = document.getElementById('sagePointerBtn');
 	this.screenShareBtn = document.getElementById('screenShareBtn');
 	
-	this.sagePointerLabel = document.getElementById('sagePointerLabel');
-	this.sagePointerColor = document.getElementById('sagePointerColor');
+	this.sagePointerLabel      = document.getElementById('sagePointerLabel');
+	this.sagePointerColor      = document.getElementById('sagePointerColor');
 	this.screenShareResolution = document.getElementById('screenShareResolution');
-	this.screenShareQuality = document.getElementById('screenShareQuality');
+	this.screenShareQuality    = document.getElementById('screenShareQuality');
 	this.screenShareQualityIndicator = document.getElementById('screenShareQualityIndicator');
 	
-	this.mediaVideo = document.getElementById('mediaVideo');
-	this.mediaCanvas = document.getElementById('mediaCanvas');
-	this.mediaCtx = this.mediaCanvas.getContext('2d');
-	this.mediaResolution = this.screenShareResolution.options[this.screenShareResolution.selectedIndex].value;
-	this.mediaQuality = this.screenShareQuality.value;
-	this.mediaHeight = Math.min(this.mediaResolution, screen.height);
-	this.mediaWidth = screen.width/screen.height * this.mediaHeight;
-	this.mediaCanvas.width = this.mediaWidth;
+	this.mediaVideo         = document.getElementById('mediaVideo');
+	this.mediaCanvas        = document.getElementById('mediaCanvas');
+	this.mediaCtx           = this.mediaCanvas.getContext('2d');
+	this.mediaResolution    = this.screenShareResolution.options[this.screenShareResolution.selectedIndex].value;
+	this.mediaQuality       = this.screenShareQuality.value;
+	this.mediaHeight        = Math.min(this.mediaResolution, screen.height);
+	this.mediaWidth         = screen.width/screen.height * this.mediaHeight;
+	this.mediaCanvas.width  = this.mediaWidth;
 	this.mediaCanvas.height = this.mediaHeight;
-	this.broadcasting = false;
+	this.broadcasting       = false;
 	
 	this.chunk = 32 * 1024; // 32 KB
 	this.maxUploadSize = 500 * (1024*1024); // 500 MB
 	
-	if(localStorage["SAGE2_ptrName"]  != null) this.sagePointerLabel.value = localStorage['SAGE2_ptrName'];
-	if(localStorage["SAGE2_ptrColor"] != null) this.sagePointerColor.value = localStorage['SAGE2_ptrColor'];
+	if(localStorage["SAGE2_ptrName"]  !== null) this.sagePointerLabel.value = localStorage['SAGE2_ptrName'];
+	if(localStorage["SAGE2_ptrColor"] !== null) this.sagePointerColor.value = localStorage['SAGE2_ptrColor'];
 	
 	
 	
@@ -60,10 +60,10 @@ function sagePointer(wsio) {
 	};
 	
 	this.startSagePointerMethod = function(event) {
-		if(this.sagePointerLabel.value != ""){
+		if (this.sagePointerLabel.value !== "") {
 			this.name = this.sagePointerLabel.value;
 		}
-		if(this.sagePointerColor.value != ""){
+		if (this.sagePointerColor.value !== "") {
 			this.col[0] = parseInt(this.sagePointerColor.value.substring(1,3), 16);
 			this.col[1] = parseInt(this.sagePointerColor.value.substring(3,5), 16);
 			this.col[2] = parseInt(this.sagePointerColor.value.substring(5,7), 16);
@@ -182,10 +182,10 @@ function sagePointer(wsio) {
 	};
 	
 	this.startScreenShareMethod = function(event) {
-		if(this.sagePointerLabel.value != ""){
+		if(this.sagePointerLabel.value !== ""){
 			this.name = this.sagePointerLabel.value;
 		}
-		if(this.sagePointerColor.value != ""){
+		if(this.sagePointerColor.value !== ""){
 			this.col[0] = parseInt(this.sagePointerColor.value.substring(1,3), 16);
 			this.col[1] = parseInt(this.sagePointerColor.value.substring(3,5), 16);
 			this.col[2] = parseInt(this.sagePointerColor.value.substring(5,7), 16);
@@ -321,24 +321,24 @@ function sagePointer(wsio) {
 				}
 			}
 		}
-		else if(url != null || text != null){
+		else if(url !== null || text !== null){
 			var dataUrl;
-			if(url == null) dataUrl = text;
-			else if(text == null) dataUrl = url;
+			if (url === null) dataUrl = text;
+			else if (text === null) dataUrl = url;
 			else dataUrl = (url.length > text.length) ? url : text;
 			var mimeType = "";
-			var youtube = dataUrl.indexOf("www.youtube.com");
-			var ext = dataUrl.substring(dataUrl.lastIndexOf('.')+1);
+			var youtube  = dataUrl.indexOf("www.youtube.com");
+			var ext      = dataUrl.substring(dataUrl.lastIndexOf('.')+1);
 			if(ext.length > 3) ext = ext.substring(0,3);
 			ext = ext.toLowerCase();
-			if(youtube >= 0) mimeType = "video/youtube";
+			if (youtube >= 0) mimeType = "video/youtube";
 			else if(ext == "jpg" || ext == "jpeg") mimeType = "image/jpeg";
 			else if(ext == "png") mimeType = "image/png";
 			else if(ext == "mp4") mimeType = "video/mp4";
 			else if(ext == "pdf") mimeType = "application/pdf";
 			console.log("URL: " + dataUrl + ", type: " + mimeType);
 
-			if(mimeType != "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl});
+			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl});
 		}
 	};
 	
