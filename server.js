@@ -454,10 +454,10 @@ function wsKeyDown(wsio, data) {
 
 
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
-	if (lockedControl != null){
+	if (lockedControl !== null) {
 		var event = {code: parseInt(data.code), printable:false,state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
 		broadcast('keyInControl', event ,'receivesWidgetEvents');
-		if (data.code == 13){ //Enter key
+		if (data.code == 13) { //Enter key
 			remoteInteraction[uniqueID].dropControl();
 		} 
 		return;
@@ -519,7 +519,7 @@ function wsKeyPress(wsio, data) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
 	}
-	else if (lockedControl != null){
+	else if (lockedControl !== null){
 		var event = {code: parseInt(data.code), printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
 		broadcast('keyInControl', event ,'receivesWidgetEvents');
 		if (data.code == 13){ //Enter key
@@ -1118,7 +1118,7 @@ function wsAddNewControl(wsio, data){
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
 	var regTI = /textInput/;
 	var regSl = /slider/;
-	if (data.ctrlId!=null){ // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
+	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
 	if (regTI.test(data.ctrlId)||regSl.test(data.ctrlId)){
@@ -1129,10 +1129,10 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	if (data.ctrlId!=null && regSl.test(data.ctrlId)){
+	if (data.ctrlId !==null && regSl.test(data.ctrlId) ) {
 		remoteInteraction[data.addr].dropControl();
 	}
-	if (data.activateControl){
+	if (data.activateControl) {
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
@@ -1731,7 +1731,7 @@ function findAppUnderPointer(pointerX, pointerY) {
 
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
-		if(controls[i]!= null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
+		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
 			return controls[i];
 		}
 	}
@@ -1739,8 +1739,8 @@ function findControlsUnderPointer(pointerX, pointerY) {
 }
 
 function findControlByAppId(id) {
-	for(var i=controls.length-1; i>=0; i--){
-		if(controls[i].id === id+'_controls'){
+	for (var i=controls.length-1; i>=0; i--) {
+		if (controls[i].id === id+'_controls') {
 			return controls[i];
 		}
 	}
@@ -1748,14 +1748,14 @@ function findControlByAppId(id) {
 }
 
 function hideControl(ctrl){
-	if (ctrl.show == true){
+	if (ctrl.show === true) {
 		ctrl.show = false;
 		broadcast('hideControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
 }
 
 function showControl(ctrl, pointerX, pointerY){
-	if (ctrl.show == false){
+	if (ctrl.show === false) {
 		ctrl.show = true;
 		var dt = new Date();
 		var rightMargin = config.totalWidth - ctrl.width;
@@ -1865,7 +1865,7 @@ var createSagePointer = function ( address ) {
 	remoteInteraction[address] = new interaction();
 
 	broadcast('createSagePointer', sagePointers[address], 'receivesPointerData');
-}
+};
 
 function showPointer( address, data ) {
 	if( sagePointers[address] === undefined )
@@ -1899,7 +1899,7 @@ function pointerMove(uniqueID, data) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
-	if (updatedControl!=null){
+	if (updatedControl !== null) {
 		broadcast('setControlPosition', updatedControl, 'receivesPointerData');
 		return;
 	}
@@ -1962,11 +1962,11 @@ function pointerMove(uniqueID, data) {
 }
 
 function pointerPress( address, pointerX, pointerY ) {
-	if( sagePointers[address] == undefined ) return;
+	if ( sagePointers[address] === undefined ) return;
 	remoteInteraction[address].dropControl();
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 
-	if (ct != null){
+	if (ct !== null) {
 		remoteInteraction[address].selectMoveControl(ct, pointerX, pointerY);
 		broadcast('requestControlId', {addr:address, ptrId:sagePointers[address].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		return ;
@@ -2001,37 +2001,37 @@ function pointerPress( address, pointerX, pointerY ) {
 }
 
 function pointerPressRight( address, pointerX, pointerY ) {
-	if( sagePointers[address] == undefined ) return;
+	if ( sagePointers[address] === undefined ) return;
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	var ctrl = findControlsUnderPointer(pointerX, pointerY);
-	var now = new Date();
-	if (ctrl != null && ctrl.show == true){
+	var now  = new Date();
+	if (ctrl !== null && ctrl.show === true) {
 		hideControl(ctrl);
 	}
-	else if(elem != null){
+	else if (elem !== null) {
 		var elemCtrl = findControlByAppId(elem.id);
-		if( remoteInteraction[address].windowManagementMode() ){
-			if (elemCtrl==null){
-				broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  					
+		if ( remoteInteraction[address].windowManagementMode() ) {
+			if (elemCtrl === null) {
+				broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
-			else if (elemCtrl.show==false){
+			else if (elemCtrl.show === false) {
 				showControl(elemCtrl, pointerX, pointerY) ;
 			}
-			else{
+			else {
 				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 			}
 		}
 		else if ( remoteInteraction[address].appInteractionMode() ) {
 
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
-				if (elemCtrl==null){
-					broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
+				if (elemCtrl === null) {
+					broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
-				else if (elemCtrl.show==false){
+				else if (elemCtrl.show === false) {
 					showControl(elemCtrl, pointerX, pointerY) ;
 				}
-				else{
+				else {
 					moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 				}
 			}
@@ -2040,42 +2040,41 @@ function pointerPressRight( address, pointerX, pointerY ) {
 				var itemRelY = pointerY - elem.top - config.titleBarHeight;
 				broadcast( 'eventInItem', { eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');  	
 			}
-			
-		}        
+		}
 		
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 	else{
-		broadcast('pointerPressRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
+		broadcast('pointerPressRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 	}
 		
 }
 
 function pointerReleaseRight( address, pointerX, pointerY ) {
-	if( sagePointers[address] == undefined ) return;
-	
+	if( sagePointers[address] === undefined ) return;
+
+	var now = new Date();
 	var elem = findAppUnderPointer(pointerX, pointerY);
-		if(elem != null){
-			if( remoteInteraction[address].windowManagementMode() ){
-				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
+
+	if (elem !== null) {
+		if( remoteInteraction[address].windowManagementMode() ){
+			broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+		}
+		else if ( remoteInteraction[address].appInteractionMode() ) {
+			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
+				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
-			else if ( remoteInteraction[address].appInteractionMode() ) {
-				if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
-					broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
-				}
-				else{
-					var itemRelX = pointerX - elem.left;
-					var itemRelY = pointerY - elem.top - config.titleBarHeight;
-					var now = new Date();
-					broadcast( 'eventInItem', { eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');  	
-				}
-				
+			else{
+				var itemRelX = pointerX - elem.left;
+				var itemRelY = pointerY - elem.top - config.titleBarHeight;
+				broadcast( 'eventInItem', { eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');
 			}
 		}
-		else{
-			broadcast('pointerReleaseRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
-		}
+	}
+	else {
+		broadcast('pointerReleaseRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+	}
 		
 }
 
@@ -2233,12 +2232,11 @@ function pointerCloseGesture(address, pointerX, pointerY) {
 	if( sagePointers[address] === undefined )
 		return;
 		
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
-	var elem     = findAppUnderPointer(pointerX, pointerY);
+	var pX   = sagePointers[uniqueID].left;
+	var pY   = sagePointers[uniqueID].top;
+	var elem = findAppUnderPointer(pX, pY);
 
-	if (elem !== null)
-	{
+	if (elem !== null) {
 		deleteApplication(elem);
 	}
 }
@@ -2311,8 +2309,7 @@ function deleteApplication( elem ) {
 }
 
 /******** Omicron section ****************************************************************/
-if( config.experimental && config.experimental.omicron && config.experimental.omicron.enable == true )
-{
+if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
 	omicronManager.setCallbacks(
 		sagePointers,

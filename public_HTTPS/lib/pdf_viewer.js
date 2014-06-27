@@ -50,6 +50,10 @@ var pdf_viewer = SAGE2_App.extend( {
 		if(state.src !== undefined && state.src !== null) {		
 			var _this = this;
 			this.loaded = false;
+			
+			state.src = cleanURL(state.src);
+			console.log("PDF: " + state.src);
+			
 			PDFJS.getDocument(state.src).then(function getPdfHelloWorld(_pdfDoc) {
 				_this.loaded = true;
 				_this.pdfDoc = _pdfDoc;

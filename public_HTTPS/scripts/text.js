@@ -1,3 +1,14 @@
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
+
+
 function text(){
 	this.element = null;
 	this.ctx = null;
@@ -22,20 +33,20 @@ function text(){
 	this.specialKeyFlag = false;
 	this.range=[];
 
-	this.computeMetrics = function(){
-		this.height = this.element.height;
-		this.fontHeight = getHeightOfText(this.bold,this.font,this.fontSize);
+	this.computeMetrics = function() {
+		this.height       = this.element.height;
+		this.fontHeight   = getHeightOfText(this.bold,this.font,this.fontSize);
 		this.linesVisible = Math.floor(this.element.height/this.fontHeight);
-		this.space = this.ctx.measureText(" ").width;
-		this.columns = Math.floor(this.element.width/this.space);
+		this.space        = this.ctx.measureText(" ").width;
+		this.columns      = Math.floor(this.element.width/this.space);
 	};
 
-	this.findRange = function(){
+	this.findRange = function() {
 		this.range[0] = [1,this.linesVisible];
-	}
-	function getHeightOfText(bold, font, size)
-	{
-		var div = document.createElement('DIV');
+	};
+
+	function getHeightOfText(bold, font, size){
+		var div = document.createElement('div');
 		div.innerHTML = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		div.style.position = 'absolute';
 		div.style.top = '-100px';
@@ -44,9 +55,9 @@ function text(){
 		div.style.fontWeight = bold ? 'bold' : 'normal';
 		div.style.fontSize = size + 'pt';
 		document.body.appendChild(div);
-		var size = div.offsetHeight;
+		var asize = div.offsetHeight;
 		document.body.removeChild(div);
-		return size;
+		return asize;
 	}
 
 	blinker = function (id,ctx, date, color){
@@ -78,16 +89,15 @@ function text(){
 			ctx.strokeStyle = col; 
 		};
 
-		this.moveLC = function(l,c){
-			
+		this.moveLC = function(l,c) {	
 			this.blinkerL = l;
 			this.blinkerC = c;
-		}
-		this.offSet = function(x,y){
+		};
+
+		this.offSet = function(x,y) {
 			this.blinkerX = x;
 			this.blinkerY = y;
 		};
-
 		
 	};
 	
@@ -103,12 +113,11 @@ function text(){
 		/*if (file){
 			var strText = fs.readFileSync(file,'utf8');
 			this.textArr = strText.split("\n");
-		}*/
-		
-	}
+		}*/	
+	};
 	
 	
-	this.displayText = function(){
+	this.displayText = function() {
 		var lno = 1;
 		var cno = 1;
 		
@@ -142,7 +151,7 @@ function text(){
 				count ++ ;
 			}
 		}
-	}
+	};
 
 	
 	this.draw = function(date) {
@@ -164,8 +173,8 @@ function text(){
 		this.space = this.ctx.measureText(" ").width;
 		this.findRange();
 		this.displayText();
-		if (date.getMilliseconds() < 500){
-			for (bkr in this.blinkerArr){
+		if (date.getMilliseconds() < 500) {
+			for (var bkr in this.blinkerArr) {
 				this.blinkerArr[bkr].offSet(this.space + this.lMargin,0);
 				this.blinkerArr[bkr].draw(this.textArr,this.fontHeight);
 			}
@@ -179,9 +188,9 @@ function text(){
 	};
 	
 
-	this.enterKey = function(curL, curC, userId){
+	this.enterKey = function(curL, curC, userId) {
 		if (curL in this.textArr){
-			var nl = this.textArr[curL].substring(curC,this.textArr[curL].length)
+			var nl = this.textArr[curL].substring(curC,this.textArr[curL].length);
 			this.textArr[curL] = this.textArr[curL].substring(0,curC);
 			if (curL+1 in this.textArr){
 				this.textArr.splice(curL+1,0,nl);
@@ -194,30 +203,30 @@ function text(){
 			this.textArr[curL] = "";
 		}
 		this.blinkerArr[userId].moveLC(curL+1,0);
-	}
+	};
 
 	
 	this.event = function( type, userId, x, y, data , date, user_color){
         user_color = user_color || [255,0,0];
-	    if( type == "pointerPress" ){
-	       if( data.button == "left" ){
-				if ((userId in this.blinkerArr)===false){
+	    if ( type == "pointerPress" ) {
+	       if ( data.button == "left" ) {
+				if ((userId in this.blinkerArr)===false) {
 					console.log(user_color);
 					var bkr = new blinker(userId,this.ctx,date,user_color);					
 					this.blinkerArr[userId] = bkr;
 					
 				}
-				else{
+				else {
 					this.blinkerArr[userId].color = user_color;
 				}
 				var lno = Math.ceil(y/this.fontHeight);
 				var tArIdx = lno;
-				if(tArIdx in this.textArr){
+				if (tArIdx in this.textArr) {
 					var len = this.ctx.measureText(this.textArr[tArIdx]).width;
 					if(x >= len){	
 						this.blinkerArr[userId].moveLC(lno,this.textArr[tArIdx].length);
 					}
-					else{
+					else {
 						var c;
 						for(c=0;c<this.textArr[tArIdx].length;c++){
 							if(this.ctx.measureText(this.textArr[tArIdx].substring(0,c)).width > x)
@@ -226,23 +235,17 @@ function text(){
 						this.blinkerArr[userId].moveLC(lno,c-1);
 					}
 				}
-				else{
+				else {
 					this.blinkerArr[userId].moveLC(lno,0);
-				}
-				
-	       } 
-	       
+				}	
+	       }
 	       else if( data.button == "right" ){
-
 	       }
 	    }
 	    else if( type == "pointerRelease" ){
 	       if( data.button == "left" ){
-
 	       } 
-	       
 	       else if( data.button == "right" ){ //not implemented yet
-
 	       }
 	    }
 	    else if( type == "pointerMove" ){ //x and y hold current pointer positions
@@ -257,7 +260,7 @@ function text(){
                 //tabs and new lines ought to be coming in too
                 var theAsciiCode = data.code; 
 				var ch;
-				if ((userId in this.blinkerArr) == false) return; // Bad code. need to remove once the event handler has been modified.
+				if ((userId in this.blinkerArr) === false) return; // Bad code. need to remove once the event handler has been modified.
 				var curL = this.blinkerArr[userId].blinkerL;
 				var curC = this.blinkerArr[userId].blinkerC;
 				console.log(curC);
@@ -325,7 +328,7 @@ function text(){
 				var pre = this.textArr[curL].substring(0,curC);
 				var post = this.textArr[curL].substring(curC+1,this.textArr[curL].length);
 
-				if ((curL in this.textArr)==false) return;
+				if ((curL in this.textArr )=== false) return;
 
 				if (curC < this.textArr[curL].length){
 					this.textArr[curL] = pre + post;
@@ -396,6 +399,6 @@ function text(){
 	    }
 
         this.draw( date ); //redraw    
-	}
+	};
 	 
 }    

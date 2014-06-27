@@ -12,6 +12,11 @@
 // Generic functions used by all SAGE2 applications
 //
 
+// Global variables
+var __SAGE2__ = {};
+__SAGE2__.version = "0.1";
+
+
 function SAGE2_initialize(data_seed) {
 	// Reset random number based on server's time
 	Math.seed(data_seed.getTime());
@@ -132,7 +137,7 @@ function CSVToArray(strData, strDelimiter){
 
 	// Keep looping over the regular expression matches
 	// until we can no longer find a match.
-	while (arrMatches = objPattern.exec( strData )){
+	while (arrMatches = objPattern.exec( strData )) {
 
 		// Get the delimiter that was found.
 		var strMatchedDelimiter = arrMatches[ 1 ];
@@ -210,6 +215,17 @@ function moveItemToFront(elem) {
 		elem.parentNode.replaceChild(elem, last);
 		elem.parentNode.insertBefore(last, elem);
 	}
+}
+
+function cleanURL(url) {
+	var a = document.createElement("a");
+	a.href = url;
+	var clean = url;
+	
+	if(hostAlias[a.hostname] !== undefined)
+		clean = url.replace(a.hostname, hostAlias[a.hostname]);
+	
+	return clean;
 }
 	
 
