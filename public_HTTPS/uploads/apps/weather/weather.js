@@ -201,7 +201,7 @@ ForC: function (data)
     else if (this.state.itsF == "K")
         return(Math.round((parseInt(data)-32)*5/9+273.15));
     else
-        return(data); // F
+        return(data); // F by default
 },
 
 ////////////////////////////////////////
@@ -393,18 +393,33 @@ weatherOutsideCallback: function(error, weatherOut)
 
     this.gwin.iconSet = weatherOut.query.results.current_observation.icons.icon_set;
     
-    // should use the name field to make sure I get the correct one
+    // grab the icon name - I will use the same name to grab a local svg icon
     this.gwin.weatherIcon = this.gwin.iconSet[8].icon_url;
     this.gwin.weatherImage.src = this.gwin.weatherIcon;
 
     var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
     //console.log(weatherName);
 
-    //try out new svg icon set
+   // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
+    // and its between 6pm and 6am then add"-night" to the icon name
+    var hourAndMinute = this.gwin.hour.split(":");
+    //console.log(+hourAndMinute[0], this.gwin.ampm);
+
+    // set the default daylight icon for this weather
     this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
-    //this.gwin.weatherImage.src = "http://lyra.evl.uic.edu:9000/TEMPS/icons/"+weatherName+".svg";
-    //console.log(this.gwin.weatherImage.src);
-    
+    //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
+
+    // if its night time then swap out the sun icons for the moon icons
+    if (((this.gwin.ampm == "am") && (+hourAndMinute[0] < 6)) || ((this.gwin.ampm == "pm") && (+hourAndMinute[0] > 7)))
+            {
+            if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
+                (weatherName == "clear"))
+                {
+                //console.log("night version");
+                //this.gwin.weatherImage.src = "./icons/"+weatherName+"-night.svg";
+                this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
+                }
+            }    
 
     
     this.gwin.outside = weather;
@@ -413,6 +428,8 @@ weatherOutsideCallback: function(error, weatherOut)
 
     this.drawAll();
     },
+
+////////////////////////////////////////
 
 updateOutsideTemp: function ()
 {
@@ -516,7 +533,7 @@ weatherInsideCallback: function(error, datasetTextIn)
         }
 
     var parsedCSV = d3.csv.parseRows(datasetTextIn);
-    var d1, d2;
+    var d2;
 
     this.gwin.roughDate = parsedCSV[0][0];
 
@@ -524,33 +541,27 @@ weatherInsideCallback: function(error, datasetTextIn)
     // just draw using the previous temperatures
     if (parsedCSV.length >= 9)
         {      
-        d1 = parsedCSV[2][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[2][0].split(" ");
         this.glob.data7 = d2[2];
 
-        d1 = parsedCSV[3][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[3][0].split(" ");
         this.glob.data6 = d2[2];
 
-        d1 = parsedCSV[4][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[4][0].split(" ");
         this.glob.data4 = d2[2];
 
-        d1 = parsedCSV[5][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[5][0].split(" ");
         this.glob.data5 = d2[2];
 
-        d1 = parsedCSV[6][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[6][0].split(" ");
         this.glob.data2 = d2[2];
 
-        d1 = parsedCSV[7][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[7][0].split(" ");
         this.glob.data1 = d2[2];
 
-        d1 = parsedCSV[8][0];
-        d2 = d1.split(" ");
+        d2 = parsedCSV[8][0].split(" ");
         this.glob.data3 = d2[2];
+
 
         //--------------------------------------
 
@@ -621,20 +632,17 @@ drawInsideTemp: function ()
     this.convertTimeFormat();
 
     // draw a white room in case there is no data to show
-    this.drawRoom(this.gwin.margin,      50, 100, 150, "white", 1, 7);
     this.drawRoom(this.gwin.margin+150,  50, 100, 150, "white", 1, 1);
     this.drawRoom(this.gwin.margin+300,  50, 150, 150, "white", 1, 2); 
     this.drawRoom(this.gwin.margin+300, 200,  75, 150, "white", 1, 3);
     this.drawRoom(this.gwin.margin+225, 175, 100,  75, "white", 1, 4);
     this.drawRoom(this.gwin.margin+150, 175, 100,  75, "white", 1, 5);
     this.drawRoom(this.gwin.margin,     175, 100, 150, "white", 1, 6);
+    this.drawRoom(this.gwin.margin,      50, 100, 150, "white", 1, 7);
 
     // draw the room in the appropriate color for its temperature
     if (this.glob.color1 != "NULL")
         {
-        this.drawRoom(this.gwin.margin,     50, 100, 150, this.glob.color7, this.glob.perc7, 7);
-        this.drawRoom(this.gwin.margin,     50, 100, 150, this.glob.color7b, 1-this.glob.perc7, 7);
-
         this.drawRoom(this.gwin.margin+150, 50, 100, 150, this.glob.color1, this.glob.perc1, 1);
         this.drawRoom(this.gwin.margin+150, 50, 100, 150, this.glob.color1b, 1-this.glob.perc1, 1);
                
@@ -652,6 +660,9 @@ drawInsideTemp: function ()
             
         this.drawRoom(this.gwin.margin,     175, 100, 150, this.glob.color6, this.glob.perc6, 6);
         this.drawRoom(this.gwin.margin,     175, 100, 150, this.glob.color6b, 1-this.glob.perc6, 6);
+
+        this.drawRoom(this.gwin.margin,      50, 100, 150, this.glob.color7, this.glob.perc7, 7);
+        this.drawRoom(this.gwin.margin,      50, 100, 150, this.glob.color7b, 1-this.glob.perc7, 7);
         }
             
     //--------------------------------------
@@ -671,25 +682,28 @@ drawInsideTemp: function ()
     var textHeightHigh = 135;
     var textHeightLow = 260;
 
+     // draw the temperature in the room
     if (this.glob.color1 != "NULL")
         {
-        this.drawText(this.gwin.margin+75,  textHeightLow,  this.ForC(this.glob.data6), this.gwin.largeFontSize);
-        this.drawText(this.gwin.margin+75,  textHeightHigh, this.ForC(this.glob.data7), this.gwin.largeFontSize);
         this.drawText(this.gwin.margin+225, textHeightHigh, this.ForC(this.glob.data1), this.gwin.largeFontSize);
         this.drawText(this.gwin.margin+375, textHeightHigh, this.ForC(this.glob.data2), this.gwin.largeFontSize);
         this.drawText(this.gwin.margin+375, textHeightLow,  this.ForC(this.glob.data3), this.gwin.largeFontSize);
         this.drawText(this.gwin.margin+263, textHeightLow,  this.ForC(this.glob.data4), this.gwin.largeFontSize);
         this.drawText(this.gwin.margin+187, textHeightLow,  this.ForC(this.glob.data5), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+75,  textHeightLow,  this.ForC(this.glob.data6), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+75,  textHeightHigh, this.ForC(this.glob.data7), this.gwin.largeFontSize);
         }
 
-    this.drawText(this.gwin.margin+75,  200, room6, this.gwin.smallFontSize);
-    this.drawText(this.gwin.margin+75,   75, room7, this.gwin.smallFontSize);
+    // draw room name
     this.drawText(this.gwin.margin+225,  75, room1, this.gwin.smallFontSize);
     this.drawText(this.gwin.margin+375,  75, room2, this.gwin.smallFontSize);
     this.drawText(this.gwin.margin+375, 220, room3, this.gwin.smallFontSize);
     this.drawText(this.gwin.margin+263, 200, room4a, this.gwin.smallFontSize);
     this.drawText(this.gwin.margin+263, 220, room4b, this.gwin.smallFontSize);
     this.drawText(this.gwin.margin+187, 200, room5a, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+187, 220, room5b, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+75,  200, room6, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+75,   75, room7, this.gwin.smallFontSize);
     this.drawText(this.gwin.margin+187, 220, room5b, this.gwin.smallFontSize);
 },
 
@@ -730,8 +744,8 @@ updateWindow: function (){
     y = w.innerHeight|| e.clientHeight|| g.clientHeight;
 */
 
-    x = this.element.clientWidth;
-    y = this.element.clientHeight;
+    var x = this.element.clientWidth;
+    var y = this.element.clientHeight;
 
 
     console.log("Update Window", x, y);
@@ -778,10 +792,10 @@ startup: function (whereToRender)
 		var self = this;
 
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
+		var box="0,0,"+this.gwin.canvasWidth+","+this.gwin.canvasHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
-		    .attr("width",   this.gwin.canvasWidth)
-		    .attr("height",  this.gwin.canvasHeight)
+		    .attr("width",   divWidth)
+		    .attr("height",  divHeight)
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 		this.gwin.sampleSVG = this.svg;
