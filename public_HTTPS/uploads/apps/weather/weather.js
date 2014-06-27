@@ -402,23 +402,24 @@ weatherOutsideCallback: function(error, weatherOut)
 
    // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
     // and its between 6pm and 6am then add"-night" to the icon name
-    var hourAndMinute = this.gwin.hour.split(":");
-    //console.log(+hourAndMinute[0], this.gwin.ampm);
+ 
+     var currentHour = new Date().getHours(); // 0-23
 
     // set the default daylight icon for this weather
     this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
     //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
 
     // if its night time then swap out the sun icons for the moon icons
-if (((this.gwin.ampm == "am") && ((+hourAndMinute[0] == 12) || (+hourAndMinute[0] < 7))) || ((this.gwin.ampm == "pm") && (+hourAndMinute[0] > 7) && (+hourAndMinute[0] < 12)))            {
-            if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
-                (weatherName == "clear"))
-                {
-                //console.log("night version");
-                //this.gwin.weatherImage.src = "./icons/"+weatherName+"-night.svg";
-                this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
-                }
-            }    
+    if ( (currentHour < 7) || (currentHour > 18) )
+        {
+        if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
+            (weatherName == "clear"))
+            {
+            //console.log("night version");
+            //this.gwin.weatherImage.src = "./icons/"+weatherName+"-night.svg";
+            this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
+            }
+        }    
 
     
     this.gwin.outside = weather;
