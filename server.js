@@ -1850,11 +1850,15 @@ function moveElementToEnd(list, elem) {
 }
 
 function getItemPositionSizeType(item) {
-	return {type: item.type, id: item.id, left: item.left, top: item.top, width: item.width, height: item.height, aspect: item.aspect};
+	return {type: item.type, id: item.id, left: item.left, top: item.top,
+			width: item.width, height: item.height, aspect: item.aspect};
 }
 
 function getAppPositionSize(appInstance) {
-	return {id: appInstance.id, application: appInstance.application, left: appInstance.left, top: appInstance.top, width: appInstance.width, height: appInstance.height};
+	return {id: appInstance.id, application: appInstance.application, left: appInstance.left,
+			top: appInstance.top, width: appInstance.width, height: appInstance.height,
+			icon: appInstance.icon || null
+		};
 }
 
 /**** Pointer Functions ********************************************************************/
