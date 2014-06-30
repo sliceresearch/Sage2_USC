@@ -1,5 +1,6 @@
 {
 	"main_script": "clock.js",
+	"icon": "clock.webp",
 	"width": 600,
 	"height": 600,
 	"animation": true,
