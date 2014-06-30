@@ -8,18 +8,24 @@
 //
 // Copyright (c) 2014
 
-var decompresszip = require('decompress-zip');
-var ffprobe = require('node-ffprobe');
-var fs = require('fs');
-var gm = require('gm');
-var imageinfo = require('imageinfo');
-var mime = require('mime');
-var path = require('path');
-var request = require('request');
-var url = require('url');
-var ytdl = require('ytdl');
+/**
+ * @module itemLoader
+ */
 
-var pdfinfo = require('node-pdfinfo').pdfinfo;     // custom node module
+
+var fs        = require('fs');
+var path      = require('path');
+var url       = require('url');
+
+var unzip     = require('decompress-zip');
+var ffprobe   = require('node-ffprobe');
+var gm        = require('gm');
+var imageinfo = require('imageinfo');
+var mime      = require('mime');
+var request   = require('request');
+var ytdl      = require('ytdl');
+
+var pdfinfo = require('./node-pdfinfo').pdfinfo;     // custom node module
 
 var imageMagick;
 mime.default_type = "application/custom";
@@ -389,7 +395,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 	var _this = this;
 	var zipFolder = path.join(path.dirname(file), name);
 
-	var unzipper = new decompresszip(file);
+	var unzipper = new unzip(file);
 	unzipper.on('extract', function(log) {
 		// read instructions for how to handle
 		var instuctionsFile = path.join(zipFolder, "instructions.json");

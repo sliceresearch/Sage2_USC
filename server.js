@@ -8,6 +8,10 @@
 //
 // Copyright (c) 2014
 
+/**
+ * @module server
+ */
+
 
 // node mode
 /* jshint node: true */
@@ -42,12 +46,12 @@ var program     = require('commander');           // parsing command-line argume
 var colors      = require('colors');              // pretty colors in the terminal
 
 // custom node modules
-var httpserver  = require('node-httpserver');     // creates web server
-var websocketIO = require('node-websocket.io');   // creates WebSocket server and clients
-var loader      = require('node-itemloader');     // handles sage item creation
-var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
-var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var omicron = require('node-omicron');    // handles Omicron input events
+var httpserver  = require('./src/node-httpserver');     // creates web server
+var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
+var loader      = require('./src/node-itemloader');     // handles sage item creation
+var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var omicron     = require('./src/node-omicron');    // handles Omicron input events
 
 
 // Command line arguments
@@ -248,6 +252,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
+		wsio.on('appResize', wsAppResize);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
@@ -350,6 +355,7 @@ function initializeMediaStreams(uniqueID) {
 }
 
 /***************** Sage Pointer Functions *****************/
+
 function wsStartSagePointer(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
@@ -657,6 +663,29 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);
 		app.data = data.state;
+	}
+}
+
+//
+// Got a resize call for an application itself
+//
+function wsAppResize(wsio, data) {
+	// Update the object with the new dimensions
+	var app    = findAppById(data.id);
+	if (app) {
+		// Update the width height and aspect ratio
+		app.width  = data.width;
+		app.height = data.height;
+		app.aspect = app.width/app.height;
+		app.native_width  = data.width;
+		app.native_height = data.height;
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 	}
 }
 

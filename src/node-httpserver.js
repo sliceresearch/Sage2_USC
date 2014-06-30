@@ -8,8 +8,12 @@
 //
 // Copyright (c) 2014
 
-var fs = require('fs');
-var url = require('url');
+/**
+ @module httpserver
+ */
+
+var fs   = require('fs');
+var url  = require('url');
 var mime = require('mime');
 
 mime.default_type = "text/plain";

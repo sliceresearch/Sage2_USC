@@ -8,16 +8,21 @@
 //
 // Copyright (c) 2014
 
+/**
+ @module omicron
+ */
+
+
 var net       = require('net');
 var util      = require('util');
 var dgram     = require('dgram');
 var WebSocket = require('ws');
 
-var websocketIO  = require('node-websocket.io');   // creates WebSocket server and clients
-var server       = require('../server.js'); // custom node module
-var interaction  = require('node-interaction'); // custom node module
-var sagepointer  = require('node-sagepointer'); // custom node module
-var coordinateCalculator = require('node-coordinateCalculator'); // custom node module
+var websocketIO  = require('./node-websocket.io');  // creates WebSocket server and clients
+var interaction  = require('./node-interaction');   // custom interaction module
+var sagepointer  = require('./node-sagepointer');   // custom sagepointer module
+var coordinateCalculator = require('./node-coordinateCalculator'); 
+//var server       = require('../server.js'); // loading the server ?
 
 var dataPort     = 9123;
 

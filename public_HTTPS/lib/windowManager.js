@@ -206,7 +206,7 @@ function windowManager(id, ws) {
 	this.touchMove = function(event) {
 		event.preventDefault();
 
-		// Emot the move event
+		// Emit the move event
 		var rect = this.element.getBoundingClientRect();
 		this.mouseX = event.changedTouches[0].clientX - rect.left;
 		this.mouseY = event.changedTouches[0].clientY - rect.top;

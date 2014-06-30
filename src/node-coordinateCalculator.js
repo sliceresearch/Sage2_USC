@@ -8,6 +8,9 @@
 //
 // Copyright (c) 2014
 
+/**
+ @module coordinateCalculator
+ */
 
 var max_y_error = 0.5; // meters
 var max_x_error = 0.005; // fractional
