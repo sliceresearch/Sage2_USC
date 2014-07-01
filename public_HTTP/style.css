@@ -17,19 +17,79 @@
 	margin: 0;
 	padding: 0;
 }
-	
+
+header, section, footer, aside, nav, main, article, figure {
+	display: block;
+}
+
+h1 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 18pt;
+	font-weight: normal;
+	font-style: normal;
+	color: #FFFFFF;
+}
+
 h2 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 14pt;
 	font-weight: normal;
-	font-style: italic;
+	font-style: normal;
+	color:  #ADD8E6;
+	margin: 10px;
+}
+
+h3 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12pt;
+	font-weight: normal;
+	font-style: normal;
 	color: #FFFFFF;
 }
+
+h4 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11pt;
+	font-weight: normal;
+	font-style: normal;
+	color: #FFFFFF;
+}
+
+header {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14pt;
+	font-weight: normal;
+	font-style: normal;
+	color: #FFFFFF;
+	margin: 10px;
+}
+
+footer {
+	color: #FFFFFF;
+	margin: 5px;
+	left: 10px;
+	text-align: left;
+    bottom: 0;
+    position: fixed;
+	z-index:-10;
+}
+
 
 p {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 10pt;
-	text-indent: 10px;
+	text-indent: 25px;
+	color: #FFFFFF;
+}
+
+li {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	font-weight: normal;
+	font-style: normal;
+	width: 800px;
+	overflow: scroll;
+	text-indent: 25px;
 	color: #FFFFFF;
 }
 
@@ -49,18 +109,20 @@ a:hover {
 
 body {
 	background: #333333;
-	width: 100%;
+	width:  100%;
 	height: 100%;
 	text-align: center;
+	min-width:500px;
+	zoom:1.2;
 }
 
-#main {
+main {
 	background: #666666;
-	width: 1000px;
+	width: 90%;
 	text-align: left;
-	margin: 10px;
 	padding: 10px;
 	display: inline-block;
+	z-index:10;
 }
 
 .siteType {
