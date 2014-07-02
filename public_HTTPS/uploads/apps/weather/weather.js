@@ -8,82 +8,124 @@
 //
 // Copyright (c) 2014
 
+////////////////////////////////////////
+// simple evl weather viewer
+// Written by Andy Johnson - 2005 - 2014
+// now in D3 / SVG / SAGE
+////////////////////////////////////////
 
-gwin = new Object()
-    gwin.itsF = 1; // fahrenheit or celsius
+var weather = SAGE2_App.extend( {
+    construct: function() {
+        arguments.callee.superClass.construct.call(this);
 
-    gwin.sampleSVG;
+        this.resizeEvents = "continuous"; //onfinish
+        this.svg = null;
 
-    gwin.date = "Loading ...";
-    gwin.hour = "" ;
-    gwin.ampm = "";
-    gwin.outside = "NULL";
+    this.gwin = {};
+    this.myTag = "";
+  
+    this.gwin.sampleSVG = null;
 
-    gwin.displayFont = "Arial"
-    gwin.massiveFont;
-    gwin.massiveFontSize;
-    gwin.largeFont;
-    gwin.largeFontSize;
-    gwin.smallFont;
-    gwin.smallFontSize;
+    this.gwin.date = "Loading ...";
+    this.gwin.hour = "" ;
+    this.gwin.ampm = "";
+    this.gwin.outside = "NULL";
+    this.gwin.roughDate = "";
 
-    gwin.rounded; 
+    this.gwin.displayFont = "Arial";
+    this.gwin.massiveFontSize = "38px";
+    this.gwin.largeFontSize = "36px";
+    this.gwin.smallFontSize = "18px";
 
-    gwin.scaleFactor = 1.0; // 0.75 is a decent minimum
+    this.gwin.canvasBackground = "white";
 
-    gwin.leftMargin = 20;
-    gwin.canvasHeight = 400;
-    gwin.canvasWidth = 435 + 2 * gwin.leftMargin;
+    this.gwin.rounded = 8; 
 
-    gwin.weatherIcon = "";
-    gwin.weatherImage = new Image;
-    gwin.iconSet;
+    this.gwin.margin = 20;
+    this.gwin.canvasHeight = 400;
+    this.gwin.canvasWidth = 450 + (2 * this.gwin.margin);
 
-glob = new Object()
-    glob.perc1 = 1;
-    glob.perc2 = 1;
-    glob.perc3 = 1;
-    glob.perc4 = 1;
-    glob.perc5 = 1;
-    glob.perc6 = 1;
-    glob.perc7 = 1;
-    glob.color1 = "NULL";
-    glob.color2 = "NULL";
-    glob.color3 = "NULL";
-    glob.color4 = "NULL";
-    glob.color5 = "NULL";
-    glob.color6 = "NULL";
-    glob.color7 = "NULL";
+    this.gwin.weatherIcon = "";
+    this.gwin.weatherImage = new Image();
+    this.gwin.iconSet = "";
 
-    glob.color1b;
-    glob.color2b;
-    glob.color3b;
-    glob.color4b;
-    glob.color5b;
-    glob.color6b;
-    glob.color7b;
+    this.gwin.conditions = "";
 
-    glob.data1 = -1;
-    glob.data2 = -1;
-    glob.data3 = -1;
-    glob.data4 = -1;
-    glob.data5 = -1;
-    glob.data6 = -1;
-    glob.data7 = -1;
+    this.glob = {};
+    this.glob.perc1 = 1;
+    this.glob.perc2 = 1;
+    this.glob.perc3 = 1;
+    this.glob.perc4 = 1;
+    this.glob.perc5 = 1;
+    this.glob.perc6 = 1;
+    this.glob.perc7 = 1;
+    this.glob.color1 = "NULL";
+    this.glob.color2 = "NULL";
+    this.glob.color3 = "NULL";
+    this.glob.color4 = "NULL";
+    this.glob.color5 = "NULL";
+    this.glob.color6 = "NULL";
+    this.glob.color7 = "NULL";
 
-    glob.colorOut;
-    glob.colorOutb;
-    glob.percOut;
+    this.glob.color1b = "#AAAAAA";
+    this.glob.color2b = "#AAAAAA";
+    this.glob.color3b = "#AAAAAA";
+    this.glob.color4b = "#AAAAAA";
+    this.glob.color5b = "#AAAAAA";
+    this.glob.color6b = "#AAAAAA";
+    this.glob.color7b = "#AAAAAA";
 
-    glob.temp_hot            = 85;
-    glob.temp_nice           = 70;
-    glob.temp_cold           = 60;
-    glob.temp_colderer       = 30;
-    glob.temp_coldererer     = 0;
+    this.glob.data1 = -1;
+    this.glob.data2 = -1;
+    this.glob.data3 = -1;
+    this.glob.data4 = -1;
+    this.glob.data5 = -1;
+    this.glob.data6 = -1;
+    this.glob.data7 = -1;
+
+    this.glob.colorOut = "#AAAAAA";
+    this.glob.colorOutb = "#AAAAAA";
+    this.glob.percOut = 0;
+
+    this.glob.temp_hot            = 85;
+    this.glob.temp_nice           = 70;
+    this.glob.temp_cold           = 60;
+    this.glob.temp_colderer       = 30;
+    this.glob.temp_coldererer     = 0;
+
+    // add the temperature unit into the state
+    this.state.itsF = null;
+
+},
 
 ////////////////////////////////////////
 
-function tempConvert (data)
+initApp: function(temperatureScale)
+{
+    // should also make sure temperatureScale is a legal value
+
+    if (temperatureScale)
+        this.state.itsF = temperatureScale.toUpperCase();
+
+    this.weatherOutsideCallbackFunc = this.weatherOutsideCallback.bind(this);
+    this.weatherInsideCallbackFunc = this.weatherInsideCallback.bind(this);
+},
+
+////////////////////////////////////////
+
+nextTemp: function()
+{
+    if (this.state.itsF == "C")
+            this.state.itsF = "K";
+    else if (this.state.itsF == "K")
+            this.state.itsF = "F";
+    else if (this.state.itsF == "F")
+            this.state.itsF = "C";
+},
+
+////////////////////////////////////////
+
+tempConvert: function (data)
     {
     // color brewer colors (derived from an 11 step diverging scale)
     var color_hot           = "#d73027";
@@ -111,35 +153,35 @@ function tempConvert (data)
         colorb = color_unknown;
         perc  = 1;
         }
-    else if (data < glob.temp_coldererer)
+    else if (data < this.glob.temp_coldererer)
         {
         color = color_coldererer;
         colorb = color_coldererer;
         perc  = 1;
         }
-    else if (data < glob.temp_colderer)
+    else if (data < this.glob.temp_colderer)
         {
         color = color_colderer;
         colorb = color_coldererer;
-        perc = (data - glob.temp_coldererer) / (glob.temp_colderer - glob.temp_coldererer)
+        perc = (data - this.glob.temp_coldererer) / (this.glob.temp_colderer - this.glob.temp_coldererer);
         }
-    else if (data < glob.temp_cold)
+    else if (data < this.glob.temp_cold)
         {
         color = color_cold;
         colorb = color_colderer;
-        perc = (data - glob.temp_colderer) / (glob.temp_cold - glob.temp_colderer)
+        perc = (data - this.glob.temp_colderer) / (this.glob.temp_cold - this.glob.temp_colderer);
         }
-    else if (data < glob.temp_nice)
+    else if (data < this.glob.temp_nice)
         {
         color = color_nice;
         colorb = color_cold;
-        perc = (data - glob.temp_cold) / (glob.temp_nice - glob.temp_cold)      
+        perc = (data - this.glob.temp_cold) / (this.glob.temp_nice - this.glob.temp_cold);      
         }       
     else
         {
-        color = color_hot;
+        color = color_warmer;
         colorb = color_nice;
-        perc = (data - glob.temp_nice) / (glob.temp_hot - glob.temp_nice)
+        perc = (data - this.glob.temp_nice) / (this.glob.temp_hot - this.glob.temp_nice);
         }
 
     if (perc > 1.0)
@@ -147,244 +189,326 @@ function tempConvert (data)
     if (perc < 0.0)
         perc = 0.0;
                 
-    return [color, colorb, perc]
-}
+    return [color, colorb, perc];
+},
 
 ////////////////////////////////////////
 
-function ForC (data)
+ForC: function (data)
 {
-    if (gwin.itsF)
-        return(data);
-    else
+    if (this.state.itsF == "C")
         return(Math.round((parseInt(data)-32)*5/9));
-}
+    else if (this.state.itsF == "K")
+        return(Math.round((parseInt(data)-32)*5/9+273.15));
+    else
+        return(data); // F by default
+},
 
 ////////////////////////////////////////
 
-function drawBox (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+
+drawBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut, roomNum)
 {
-     gwin.sampleSVG.append("svg:rect")
+    var b = null;
+
+  if (this.gwin.sampleSVG !== null)
+    {
+        b = this.gwin.sampleSVG.append("svg:rect")
         .style("stroke", "black")
+        .style("stroke-width", 2)
         .style("fill", colorOut)
         .style("fill-opacity", percOut)
-        .attr("x", parseInt(boxLocX*gwin.scaleFactor))
-        .attr("y", parseInt(boxLocY*gwin.scaleFactor))
-        .attr("rx", gwin.rounded)
-        .attr("ry", gwin.rounded)
-        .attr("height", parseInt(boxHeight*gwin.scaleFactor))
-        .attr("width", parseInt(boxWidth*gwin.scaleFactor));
-}
+        .attr("x", boxLocX)
+        .attr("y", boxLocY)
+        .attr("rx", this.gwin.rounded)
+        .attr("ry", this.gwin.rounded)
+        .attr("height", boxHeight)
+        .attr("width", boxWidth);
 
-function drawBorderlessBox (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+    switch(roomNum) {
+        case 1:
+             b.on("click", this.room1CallbackFunc); break;
+        case 2:
+             b.on("click", this.room2CallbackFunc); break;
+        case 3:
+             b.on("click", this.room3CallbackFunc); break;
+        case 4:
+             b.on("click", this.room4CallbackFunc); break;
+        case 5:
+             b.on("click", this.room5CallbackFunc); break;
+        case 6:
+             b.on("click", this.room6CallbackFunc); break;
+        case 7:
+             b.on("click", this.room7CallbackFunc); break;
+        }
+    }
+
+        
+},
+
+drawRoom: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut, roomNum)
 {
-     gwin.sampleSVG.append("svg:rect")
+    this.drawBox(boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut, roomNum);
+},
+
+room1Callback: function()
+{
+    console.log("room 1");
+},
+room2Callback: function()
+{
+    console.log("room 2");
+},
+room3Callback: function()
+{
+    console.log("room 3");
+},
+room4Callback: function()
+{
+    console.log("room 4");
+},
+room5Callback: function()
+{
+    console.log("room 5");
+},
+room6Callback: function()
+{
+    console.log("room 6");
+},
+room7Callback: function()
+{
+    console.log("room 7");
+},
+
+drawBorderlessBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
+{
+    if (this.gwin.sampleSVG !== null)
+     this.gwin.sampleSVG.append("svg:rect")
         .style("stroke", colorOut)
         .style("fill", colorOut)
         .style("fill-opacity", percOut)
-        .attr("x", parseInt(boxLocX*gwin.scaleFactor))
-        .attr("y", parseInt(boxLocY*gwin.scaleFactor))
-        .attr("rx", gwin.rounded)
-        .attr("ry", gwin.rounded)
-        .attr("height", parseInt(boxHeight*gwin.scaleFactor))
-        .attr("width", parseInt(boxWidth*gwin.scaleFactor));
-}
+        .attr("x", boxLocX)
+        .attr("y", boxLocY)
+        .attr("rx", this.gwin.rounded)
+        .attr("ry", this.gwin.rounded)
+        .attr("height", boxHeight)
+        .attr("width", boxWidth);
+},
 
 ////////////////////////////////////////
 
-function drawText(textLocX, textLocY, theText, textFontSize)
+drawT: function (textLocX, textLocY, theText, textFontSize, justification)
 {
- gwin.sampleSVG.append("svg:text")
-        .attr("x", parseInt(textLocX*gwin.scaleFactor))
-        .attr("y", parseInt(textLocY*gwin.scaleFactor))
-        .style("fill", "#000")
-        .style("font-size", textFontSize)
-        .style("font-family", gwin.displayFont)
-        .style("text-anchor", "middle")
-        .text(theText);   
-}
+    if (this.gwin.sampleSVG !== null)
+        this.gwin.sampleSVG.append("svg:text")
+            .attr("x", textLocX)
+            .attr("y", textLocY)
+            .style("fill", "#000")
+            .style("font-size", textFontSize)
+            .style("font-family", this.gwin.displayFont)
+            .style("text-anchor", justification)
+            .text(theText);   
+},
+
+drawText: function (textLocX, textLocY, theText, textFontSize)
+{
+    this.drawT(textLocX, textLocY, theText, textFontSize, "middle");
+},
+
+drawTextLeft: function (textLocX, textLocY, theText, textFontSize)
+{
+    this.drawT(textLocX, textLocY, theText, textFontSize, "start");  
+},
+
+drawTextRight: function (textLocX, textLocY, theText, textFontSize)
+{
+    this.drawT(textLocX, textLocY, theText, textFontSize, "end");  
+},
 
 ////////////////////////////////////////
 
-function drawTextLeft(textLocX, textLocY, theText, textFontSize)
+drawTempText: function (textColor)
 {
- gwin.sampleSVG.append("svg:text")
-        .attr("x", parseInt(textLocX*gwin.scaleFactor))
-        .attr("y", parseInt(textLocY*gwin.scaleFactor))
-        .style("fill", "#000")
-        .style("font-size", textFontSize)
-        .style("font-family", gwin.displayFont)
-        .style("text-anchor", "start")
-        .text(theText);   
-}
+    var tempSys = " " + this.state.itsF;
 
-////////////////////////////////////////
-
-function drawTextRight(textLocX, textLocY, theText, textFontSize)
-{
- gwin.sampleSVG.append("svg:text")
-        .attr("x", parseInt(textLocX*gwin.scaleFactor))
-        .attr("y", parseInt(textLocY*gwin.scaleFactor))
-        .style("fill", "#000")
-        .style("font-size", textFontSize)
-        .style("font-family", gwin.displayFont)
-        .style("text-anchor", "end")
-        .text(theText);   
-}
-
-////////////////////////////////////////
-
-function drawTempText(textColor)
-{
-    var tempSys = "";
-
-    if (gwin.itsF)
-        tempSys = " F"
-    else
-        tempSys = " C";
-
-    gwin.sampleSVG.append("svg:text")
-        .attr("x", parseInt(gwin.canvasWidth*0.5*gwin.scaleFactor))
-        .attr("y", parseInt(378*gwin.scaleFactor))
+    // ouside temperature text
+    this.gwin.sampleSVG.append("svg:text")
+        .attr("y", 375)
         .style("fill", textColor)
-        .style("font-size", gwin.largeFontSize)
-        .style("font-family", gwin.displayFont)
+        .style("font-size", "30")
+        .style("font-family", this.gwin.displayFont)
+        .attr("x", parseInt((this.gwin.canvasWidth+this.gwin.margin+25) * 0.5))
         .style("text-anchor", "middle")
-        .text("Outside it is "+Math.round(ForC(gwin.outside))+ tempSys);
-
-    gwin.sampleSVG.append("image")
-        .attr("xlink:href", gwin.weatherImage.src)
-        .attr("opacity", 1)
-        .attr("x", parseInt(gwin.canvasWidth*0.83*gwin.scaleFactor))
-        .attr("y", parseInt(340*gwin.scaleFactor))
-        .attr("width", 50*gwin.scaleFactor) // -10
-        .attr("height", 50*gwin.scaleFactor); // -10
+        .text(Math.round(this.ForC(this.gwin.outside))+ tempSys + " - " + this.gwin.conditions.toLowerCase());
  
-
-    gwin.sampleSVG.append("image")
-        .attr("xlink:href", gwin.weatherImage.src)
-        .attr("opacity", 1)
-        .attr("x", parseInt(gwin.canvasWidth*0.08 *gwin.scaleFactor))
-        .attr("y", parseInt(340*gwin.scaleFactor))
-        .attr("width", 50*gwin.scaleFactor) // -10
-        .attr("height", 50*gwin.scaleFactor); // -10       
-    }
-
-////////////////////////////////////////
-
-function drawBasicStuff()
-{
-    drawText(gwin.canvasWidth*0.5, 35, "Current weather inside evl", gwin.massiveFontSize);
-}
+    this.gwin.sampleSVG.append("svg:image")
+        .attr("xlink:href", this.gwin.weatherImage.src)
+        .attr("opacity", 1.0)
+        .attr("x", this.gwin.margin+10)
+        .attr("y", 343)
+        .attr("width", 40)
+        .attr("height", 40);  
+    },
 
 ////////////////////////////////////////
 
-function updateOutsideTemp()
+drawBasicStuff: function ()
 {
-// need to add a random number to the end of the request to avoid browser caching
-
-    d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", function(error, weatherOut) {
-
-      if (error) {
-          return;
-      }
-      
-        weather = weatherOut.query.results.current_observation.temp_f;
-        gwin.iconSet = weatherOut.query.results.current_observation.icons.icon_set;
-        
-        // should use the name field to make sure I get the correct one
-        gwin.weatherIcon = gwin.iconSet[8].icon_url;
-        gwin.weatherImage.src = gwin.weatherIcon;
-
-        gwin.outside = weather;
-    });
-}
+    this.drawText(this.gwin.canvasWidth*0.5, 35, "Current weather inside evl", this.gwin.massiveFontSize);
+},
 
 ////////////////////////////////////////
 
-function drawOutsideTemp()
+weatherOutsideCallback: function(error, weatherOut)
 {
-    drawBox(gwin.leftMargin, 340, 50, 450, "white", 1);
-
-    if (gwin.outside != "NULL")
+    if(error)
         {
-        c = tempConvert(gwin.outside);
-        glob.colorOut = c[0];
-        glob.colorOutb = c[1];
-        glob.percOut = c[2];
-
-        drawBox(gwin.leftMargin, 340, 50, 450, glob.colorOut, glob.percOut);
-        drawBox(gwin.leftMargin, 340, 50, 450, glob.colorOutb, 1.0 - glob.percOut);
-                
-        if (gwin.outside < glob.temp_colderer)
-            drawTempText("#FFF");
-        else
-            drawTempText("#000");
+        console.log("weatherOutsideCallback - error");
+        return;
         }
-}
+
+   if((weatherOut === null) || (weatherOut.query === null) || (weatherOut.query.results === null) || (weatherOut.query.results.current_observation === null))
+        {
+        console.log("weatherOut has no data");
+        return;
+        }
+
+    var weather = weatherOut.query.results.current_observation.temp_f;
+    var conditions = weatherOut.query.results.current_observation.weather;
+ 
+        // see what conditions passed by while I wasnt looking 
+       //console.log(conditions, conditions.split(/\s+/).length);
+
+        // partly cloudy icon: "Mostly Cloudy" "Overcast" "Scattered Clouds"
+        conditions = conditions.split(/\s+/).slice(0,2).join(" ");
+
+        // light rain
+        // thunderstorm rain mist
+        // heavy thunderstorm rain mist
+        // light thunderstorm rain
+        // thunderstorm
+
+        // I may need to just take the first 2 words
+        // or ignoranything after thunderstorm
+
+    this.gwin.iconSet = weatherOut.query.results.current_observation.icons.icon_set;
+    
+    // grab the icon name - I will use the same name to grab a local svg icon
+    this.gwin.weatherIcon = this.gwin.iconSet[8].icon_url;
+    this.gwin.weatherImage.src = this.gwin.weatherIcon;
+
+    var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
+    //console.log(weatherName);
+
+   // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
+    // and its between 6pm and 6am then add"-night" to the icon name
+ 
+     var currentHour = new Date().getHours(); // 0-23
+
+    // set the default daylight icon for this weather
+    this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
+    //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
+
+    // if its night time then swap out the sun icons for the moon icons
+    if ( (currentHour < 7) || (currentHour > 18) )
+        {
+        if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
+            (weatherName == "clear"))
+            {
+            //console.log("night version");
+            //this.gwin.weatherImage.src = "./icons/"+weatherName+"-night.svg";
+            this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
+            }
+        }    
+
+    
+    this.gwin.outside = weather;
+
+    this.gwin.conditions = conditions;
+
+    this.drawAll();
+    },
 
 ////////////////////////////////////////
 
-function updateInsideTemp()
+updateOutsideTemp: function ()
 {
-// need to add a random number to the end of the request to avoid browser caching
-// http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
+    d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", this.weatherOutsideCallbackFunc);
+},
 
-//    d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
-     d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' + 
- //    d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
-         Math.floor(Math.random() * 10000000), function(error, datasetTextIn) {
+////////////////////////////////////////
 
-      if (error) {
-          return;
-      }
+drawOutsideTemp: function ()
+{
+    // draw placeholder outside temperature box
+    this.drawBox(this.gwin.margin, 340, 50, 450, "white", 1);
 
-    var parsedCSV = d3.csv.parseRows(datasetTextIn);
+    if (this.gwin.outside != "NULL")
+        {
+        c = this.tempConvert(this.gwin.outside);
+        this.glob.colorOut = c[0];
+        this.glob.colorOutb = c[1];
+        this.glob.percOut = c[2];
 
-    var d1 = parsedCSV[0][0];
-    var d2 = d1.split(" ");
-    gwin.date = d2[0];
-    gwin.hour = d2[1];
-    gwin.ampm = d2[2];
-    gwin.ampm = gwin.ampm.toLowerCase();
+        this.drawBox(this.gwin.margin, 340, 50, 450, this.glob.colorOut, this.glob.percOut);
+        this.drawBox(this.gwin.margin, 340, 50, 450, this.glob.colorOutb, 1.0 - this.glob.percOut);
+
+               
+        if (this.gwin.outside < this.glob.temp_colderer)
+            this.drawTempText("#FFF");
+        else
+            this.drawTempText("#000");
+        }
+},
+
+////////////////////////////////////////
+
+convertTimeFormat: function()
+{
+    var d1, d2;
+    
+    d1 = this.gwin.roughDate;
+
+    if (d1 === "")
+        return;
+
+    d2 = d1.split(" ");
+
+    this.gwin.date = d2[0];
+    this.gwin.hour = d2[1];
+    this.gwin.ampm = d2[2].toLowerCase();
 
     var dateSplit;
     var dateMonth, dateDay, dateYear;
 
-  //  alert(hour);
-    var hourAndMinute = gwin.hour.split(":");
+    var hourAndMinute = this.gwin.hour.split(":");
     var hourCompute = + hourAndMinute[0];
     var minuteCompute = + hourAndMinute[1];
 
-    gwin.hour = hourCompute+":"+hourAndMinute[1];
+    this.gwin.hour = hourCompute+":"+hourAndMinute[1];
 
     // if we are on the metric side also go to 24 hour clock
-    // 12:55 should be 0:55 but its 12:55 now
-    if ((gwin.itsF == 0) && (gwin.ampm == "pm"))
+    if ((this.state.itsF != "F") && (this.gwin.ampm == "pm"))
         { // need to break into to integers based on the colon then re-form}
          if (hourCompute < 12)
             hourCompute += 12;
  
-        gwin.hour = hourCompute.toString()+ ":" + hourAndMinute[1];
+        this.gwin.hour = hourCompute.toString()+ ":" + hourAndMinute[1];
     }
 
     // handle 12:XX am
-    if ((gwin.itsF == 0) && (gwin.ampm == "am"))
+    if ((this.state.itsF != "F") && (this.gwin.ampm == "am"))
         { // need to break into to integers based on the colon then re-form}
          if (hourCompute >= 12)
             hourCompute = 0;
  
-        gwin.hour = hourCompute.toString() + ":" + hourAndMinute[1];
+        this.gwin.hour = hourCompute.toString() + ":" + hourAndMinute[1];
     }
 
-    // if no new data is found do not try to convert nonexistent temperatures
-    // just draw using the previous temperatures
-    if (parsedCSV.length >= 9)
-        {
-        if ((gwin.hour.charAt(0) == "0") && (gwin.hour.charAt(1) != ":"))
-            gwin.hour = gwin.hour.slice(1);
+        if ((this.gwin.hour.charAt(0) == "0") && (this.gwin.hour.charAt(1) != ":"))
+            this.gwin.hour = this.gwin.hour.slice(1);
 
-        dateSplit = gwin.date.split("/");
+        dateSplit = this.gwin.date.split("/");
         dateMonth = dateSplit[0];
         dateDay = dateSplit[1];
         dateYear = dateSplit[2];
@@ -392,83 +516,108 @@ function updateInsideTemp()
         if (dateDay[0] == "0")
             dateDay = dateDay[1];
  
-        if (gwin.itsF == 1)
-            gwin.date = dateMonth + " " + dateDay +", " + dateYear;
+        if (this.state.itsF == "F")
+            this.gwin.date = dateMonth + " " + dateDay +", " + dateYear;
         else      
-            gwin.date = dateDay + " " + dateMonth + " " + dateYear;
-        
-        d1 = parsedCSV[2][0];
-        d2 = d1.split(" ");
-        glob.data7 = d2[2];
-
-        d1 = parsedCSV[3][0];
-        d2 = d1.split(" ");
-        glob.data6 = d2[2];
-
-        d1 = parsedCSV[4][0];
-        d2 = d1.split(" ");
-        glob.data4 = d2[2];
-
-        d1 = parsedCSV[5][0];
-        d2 = d1.split(" ");
-        glob.data5 = d2[2];
-
-        d1 = parsedCSV[6][0];
-        d2 = d1.split(" ");
-        glob.data2 = d2[2];
-
-        d1 = parsedCSV[7][0];
-        d2 = d1.split(" ");
-        glob.data1 = d2[2];
-
-        d1 = parsedCSV[8][0];
-        d2 = d1.split(" ");
-        glob.data3 = d2[2];
-
-        //--------------------------------------
-
-        c = tempConvert(glob.data1);
-        glob.color1 = c[0]; 
-        glob.color1b = c[1];
-        glob.perc1 = c[2];
-
-        c = tempConvert(glob.data2);
-        glob.color2 = c[0]; 
-        glob.color2b = c[1];
-        glob.perc2 = c[2];
-
-        c = tempConvert(glob.data3);
-        glob.color3 = c[0]; 
-        glob.color3b = c[1];
-        glob.perc3 = c[2];
-
-        c = tempConvert(glob.data4);
-        glob.color4 = c[0]; 
-        glob.color4b = c[1];
-        glob.perc4 = c[2];
-
-        c = tempConvert(glob.data5);
-        glob.color5 = c[0]; 
-        glob.color5b = c[1];
-        glob.perc5 = c[2];
-
-        c = tempConvert(glob.data6);
-        glob.color6 = c[0]; 
-        glob.color6b = c[1];
-        glob.perc6 = c[2];
-
-        c = tempConvert(glob.data7);
-        glob.color7 = c[0]; 
-        glob.color7b = c[1];
-        glob.perc7 = c[2];
-        }
-
-     });
-}
+            this.gwin.date = dateDay + " " + dateMonth + " " + dateYear;
+},
 
 ////////////////////////////////////////
 
-function drawInsideTemp()
+weatherInsideCallback: function(error, datasetTextIn)
+{
+    if (error)
+        {
+        console.log("weatherInsideCallback - error");
+        return;
+        }
+
+    var parsedCSV = d3.csv.parseRows(datasetTextIn);
+    var d2;
+
+    this.gwin.roughDate = parsedCSV[0][0];
+
+     // if no new data is found do not try to convert nonexistent temperatures
+    // just draw using the previous temperatures
+    if (parsedCSV.length >= 9)
+        {      
+        d2 = parsedCSV[2][0].split(" ");
+        this.glob.data7 = d2[2];
+
+        d2 = parsedCSV[3][0].split(" ");
+        this.glob.data6 = d2[2];
+
+        d2 = parsedCSV[4][0].split(" ");
+        this.glob.data4 = d2[2];
+
+        d2 = parsedCSV[5][0].split(" ");
+        this.glob.data5 = d2[2];
+
+        d2 = parsedCSV[6][0].split(" ");
+        this.glob.data2 = d2[2];
+
+        d2 = parsedCSV[7][0].split(" ");
+        this.glob.data1 = d2[2];
+
+        d2 = parsedCSV[8][0].split(" ");
+        this.glob.data3 = d2[2];
+
+
+        //--------------------------------------
+
+        c = this.tempConvert(this.glob.data1);
+        this.glob.color1 = c[0]; 
+        this.glob.color1b = c[1];
+        this.glob.perc1 = c[2];
+
+        c = this.tempConvert(this.glob.data2);
+        this.glob.color2 = c[0]; 
+        this.glob.color2b = c[1];
+        this.glob.perc2 = c[2];
+
+        c = this.tempConvert(this.glob.data3);
+        this.glob.color3 = c[0]; 
+        this.glob.color3b = c[1];
+        this.glob.perc3 = c[2];
+
+        c = this.tempConvert(this.glob.data4);
+        this.glob.color4 = c[0]; 
+        this.glob.color4b = c[1];
+        this.glob.perc4 = c[2];
+
+        c = this.tempConvert(this.glob.data5);
+        this.glob.color5 = c[0]; 
+        this.glob.color5b = c[1];
+        this.glob.perc5 = c[2];
+
+        c = this.tempConvert(this.glob.data6);
+        this.glob.color6 = c[0]; 
+        this.glob.color6b = c[1];
+        this.glob.perc6 = c[2];
+
+        c = this.tempConvert(this.glob.data7);
+        this.glob.color7 = c[0]; 
+        this.glob.color7b = c[1];
+        this.glob.perc7 = c[2];
+
+        this.drawAll();
+    }
+},
+
+updateInsideTemp: function ()
+{
+// need to add a random number to the end of the request to avoid browser caching
+// http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
+
+    // d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
+     d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' +
+    //d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
+         Math.floor(Math.random() * 10000000), this.weatherInsideCallbackFunc);
+},
+
+////////////////////////////////////////
+
+drawInsideTemp: function ()
 {
     var room1  = "Meeting Room";
     var room2  = "Main Lab";
@@ -480,169 +629,162 @@ function drawInsideTemp()
     var room6  = "Classroom";
     var room7  = "Ph.D. Room";
 
-    drawBox(gwin.leftMargin,      50, 100, 150, "white", 1);
-    drawBox(gwin.leftMargin+150,  50, 100, 150, "white", 1);
-    drawBox(gwin.leftMargin+300,  50, 150, 150, "white", 1); 
-    drawBox(gwin.leftMargin+300, 200,  75, 150, "white", 1);
-    drawBox(gwin.leftMargin+225, 175, 100,  75, "white", 1);
-    drawBox(gwin.leftMargin+150, 175, 100,  75, "white", 1);
-    drawBox(gwin.leftMargin,     175, 100, 150, "white", 1);
+    this.convertTimeFormat();
 
-    if (glob.color1 != "NULL")
+    // draw a white room in case there is no data to show
+    this.drawRoom(this.gwin.margin+150,  50, 100, 150, "white", 1, 1);
+    this.drawRoom(this.gwin.margin+300,  50, 150, 150, "white", 1, 2); 
+    this.drawRoom(this.gwin.margin+300, 200,  75, 150, "white", 1, 3);
+    this.drawRoom(this.gwin.margin+225, 175, 100,  75, "white", 1, 4);
+    this.drawRoom(this.gwin.margin+150, 175, 100,  75, "white", 1, 5);
+    this.drawRoom(this.gwin.margin,     175, 100, 150, "white", 1, 6);
+    this.drawRoom(this.gwin.margin,      50, 100, 150, "white", 1, 7);
+
+    // draw the room in the appropriate color for its temperature
+    if (this.glob.color1 != "NULL")
         {
-        drawBox(gwin.leftMargin, 50, 100, 150, glob.color7, glob.perc7);
-        drawBox(gwin.leftMargin, 50, 100, 150, glob.color7b, 1-glob.perc7);
-
-        drawBox(gwin.leftMargin+150, 50, 100, 150, glob.color1, glob.perc1);
-        drawBox(gwin.leftMargin+150, 50, 100, 150, glob.color1b, 1-glob.perc1);
+        this.drawRoom(this.gwin.margin+150, 50, 100, 150, this.glob.color1, this.glob.perc1, 1);
+        this.drawRoom(this.gwin.margin+150, 50, 100, 150, this.glob.color1b, 1-this.glob.perc1, 1);
                
-        drawBox(gwin.leftMargin+300, 50, 150, 150, glob.color2, glob.perc2);
-        drawBox(gwin.leftMargin+300, 50, 150, 150, glob.color2b, 1-glob.perc2);
+        this.drawRoom(this.gwin.margin+300, 50, 150, 150, this.glob.color2, this.glob.perc2, 2);
+        this.drawRoom(this.gwin.margin+300, 50, 150, 150, this.glob.color2b, 1-this.glob.perc2, 2);
 
-        drawBox(gwin.leftMargin+300, 200, 75, 150, glob.color3, glob.perc3);
-        drawBox(gwin.leftMargin+300, 200, 75, 150, glob.color3b, 1-glob.perc3);
+        this.drawRoom(this.gwin.margin+300, 200, 75, 150, this.glob.color3, this.glob.perc3, 3);
+        this.drawRoom(this.gwin.margin+300, 200, 75, 150, this.glob.color3b, 1-this.glob.perc3, 3);
 
-        drawBox(gwin.leftMargin+225, 175, 100, 75, glob.color4, glob.perc4);
-        drawBox(gwin.leftMargin+225, 175, 100, 75, glob.color4b, 1-glob.perc4);
+        this.drawRoom(this.gwin.margin+225, 175, 100, 75, this.glob.color4, this.glob.perc4, 4);
+        this.drawRoom(this.gwin.margin+225, 175, 100, 75, this.glob.color4b, 1-this.glob.perc4, 4);
 
-        drawBox(gwin.leftMargin+150, 175, 100, 75, glob.color5, glob.perc5);
-        drawBox(gwin.leftMargin+150, 175, 100, 75, glob.color5b, 1-glob.perc5);
+        this.drawRoom(this.gwin.margin+150, 175, 100, 75, this.glob.color5, this.glob.perc5, 5);
+        this.drawRoom(this.gwin.margin+150, 175, 100, 75, this.glob.color5b, 1-this.glob.perc5, 5);
             
-        drawBox(gwin.leftMargin, 175, 100, 150, glob.color6, glob.perc6);
-        drawBox(gwin.leftMargin, 175, 100, 150, glob.color6b, 1-glob.perc6);
+        this.drawRoom(this.gwin.margin,     175, 100, 150, this.glob.color6, this.glob.perc6, 6);
+        this.drawRoom(this.gwin.margin,     175, 100, 150, this.glob.color6b, 1-this.glob.perc6, 6);
+
+        this.drawRoom(this.gwin.margin,      50, 100, 150, this.glob.color7, this.glob.perc7, 7);
+        this.drawRoom(this.gwin.margin,      50, 100, 150, this.glob.color7b, 1-this.glob.perc7, 7);
         }
             
     //--------------------------------------
 
-
-    drawTextLeft(gwin.leftMargin, 320, gwin.date, gwin.largeFontSize)
+    this.drawTextLeft(this.gwin.margin, 320, this.gwin.date, this.gwin.largeFontSize);
 
     // if hour < 10 indent a bit
     hourIndent = 0;
-    if (gwin.hour.length < 5)
+    if (this.gwin.hour.length < 5)
         hourIndent = 20;
       
-    if (gwin.itsF)  
-        drawTextRight(gwin.canvasWidth-5, 320, gwin.hour+" "+gwin.ampm, gwin.largeFontSize)
+    if (this.state.itsF == "F")  
+        this.drawTextRight(this.gwin.canvasWidth-this.gwin.margin, 320, this.gwin.hour+" "+this.gwin.ampm, this.gwin.largeFontSize);
     else
-       drawTextRight(gwin.canvasWidth-5, 320, gwin.hour, gwin.largeFontSize)
+       this.drawTextRight(this.gwin.canvasWidth-this.gwin.margin, 320, this.gwin.hour, this.gwin.largeFontSize);
  
- var textHeightHigh = 135;
- var textHeightLow = 260;
+    var textHeightHigh = 135;
+    var textHeightLow = 260;
 
-    if (glob.color1 != "NULL")
+     // draw the temperature in the room
+    if (this.glob.color1 != "NULL")
         {
-        drawText(gwin.leftMargin+75,  textHeightLow,  ForC(glob.data6), gwin.largeFontSize)
-        drawText(gwin.leftMargin+75,  textHeightHigh, ForC(glob.data7), gwin.largeFontSize)
-        drawText(gwin.leftMargin+225, textHeightHigh, ForC(glob.data1), gwin.largeFontSize)
-        drawText(gwin.leftMargin+375, textHeightHigh, ForC(glob.data2), gwin.largeFontSize)
-        drawText(gwin.leftMargin+375, textHeightLow,  ForC(glob.data3), gwin.largeFontSize) 
-        drawText(gwin.leftMargin+263, textHeightLow,  ForC(glob.data4), gwin.largeFontSize)
-        drawText(gwin.leftMargin+187, textHeightLow,  ForC(glob.data5), gwin.largeFontSize)
+        this.drawText(this.gwin.margin+225, textHeightHigh, this.ForC(this.glob.data1), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+375, textHeightHigh, this.ForC(this.glob.data2), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+375, textHeightLow,  this.ForC(this.glob.data3), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+263, textHeightLow,  this.ForC(this.glob.data4), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+187, textHeightLow,  this.ForC(this.glob.data5), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+75,  textHeightLow,  this.ForC(this.glob.data6), this.gwin.largeFontSize);
+        this.drawText(this.gwin.margin+75,  textHeightHigh, this.ForC(this.glob.data7), this.gwin.largeFontSize);
         }
 
-    drawText(gwin.leftMargin+75,  200, room6, gwin.smallFontSize)
-    drawText(gwin.leftMargin+75,   75, room7, gwin.smallFontSize)
-    drawText(gwin.leftMargin+225,  75, room1, gwin.smallFontSize)
-    drawText(gwin.leftMargin+375,  75, room2, gwin.smallFontSize)
-    drawText(gwin.leftMargin+375, 220, room3, gwin.smallFontSize)
-    drawText(gwin.leftMargin+263, 200, room4a, gwin.smallFontSize)
-    drawText(gwin.leftMargin+263, 220, room4b, gwin.smallFontSize)
-    drawText(gwin.leftMargin+187, 200, room5a, gwin.smallFontSize)
-    drawText(gwin.leftMargin+187, 220, room5b, gwin.smallFontSize)
-}
+    // draw room name
+    this.drawText(this.gwin.margin+225,  75, room1, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+375,  75, room2, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+375, 220, room3, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+263, 200, room4a, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+263, 220, room4b, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+187, 200, room5a, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+187, 220, room5b, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+75,  200, room6, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+75,   75, room7, this.gwin.smallFontSize);
+    this.drawText(this.gwin.margin+187, 220, room5b, this.gwin.smallFontSize);
+},
 
 ////////////////////////////////////////
 
-function updateAll()
+updateAll: function ()
 {
-    updateOutsideTemp();
-    updateInsideTemp(); 
-}
+    this.updateOutsideTemp();
+    this.updateInsideTemp(); 
+},
 
 ////////////////////////////////////////
 
-function drawAll()
+drawAll: function ()
 {
+    // clear out the existing drawing
+    if (this.gwin.sampleSVG !== null)
+        this.gwin.sampleSVG.selectAll("*").remove();
 
-    gwin.sampleSVG.selectAll("*").remove();
-    drawBorderlessBox(0,      0, 1.05 * gwin.canvasHeight, 1.05 * gwin.canvasWidth, "white", 1);
+    // draw the background
+    this.drawBorderlessBox(0, 0, 1.0 * this.gwin.canvasHeight, 1.0 * this.gwin.canvasWidth, this.gwin.canvasBackground, 1);
 
-    drawBasicStuff();
-    drawOutsideTemp();
-    drawInsideTemp(); 
-}
-
-////////////////////////////////////////
-
-function updateText()
-{
-    gwin.massiveFont = parseInt(38*gwin.scaleFactor);
-    gwin.massiveFontSize   = gwin.massiveFont.toString()+"px";
-
-    gwin.largeFont = parseInt(36*gwin.scaleFactor);
-    gwin.largeFontSize   = gwin.largeFont.toString()+"px";
-
-    gwin.smallFont = parseInt(18*gwin.scaleFactor);
-    gwin.smallFontSize   = gwin.smallFont.toString()+"px";
-
-    gwin.rounded = parseInt(8*gwin.scaleFactor);    
-}
+    // draw the foreground elements
+    this.drawBasicStuff();
+    this.drawOutsideTemp();
+    this.drawInsideTemp(); 
+},
 
 ////////////////////////////////////////
 
-function updateWindow(){
-    var w = window,
+updateWindow: function (){
+
+/*    var w = window,
     d = document,
     e = d.documentElement,
-    g = d.getElementsByTagName('body')[0],
+    g = d.getElementById(this.myTag),
     x = w.innerWidth || e.clientWidth || g.clientWidth,
     y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+*/
 
-    var scaleFactorX = x / gwin.canvasWidth;
-    var scaleFactorY = y / gwin.canvasHeight;
+    var x = this.element.clientWidth;
+    var y = this.element.clientHeight;
 
-    gwin.scaleFactor = 0.97 * Math.min(scaleFactorX, scaleFactorY)
 
-    updateText();
+    console.log("Update Window", x, y);
 
-    gwin.sampleSVG.append("svg:rect")
-    .style("stroke", "white")
-    .style("fill", "white")
-    .style("fill-opacity", 1)
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("rx", gwin.rounded)
-    .attr("ry", gwin.rounded)
-    .attr("height", y)
-    .attr("width", x);
+    // compensate for browser scroll bars - need a better solution
+    this.gwin.sampleSVG.attr("width", x) // x-25
+        .attr("height", y) // y-25
 
-    gwin.sampleSVG.attr("width", parseInt(gwin.canvasWidth * gwin.scaleFactor));
-    gwin.sampleSVG.attr("height", parseInt(gwin.canvasHeight * gwin.scaleFactor));
-
-    drawAll();
-}
+        .attr("viewBox", "0 0 " + this.gwin.canvasWidth + " " + this.gwin.canvasHeight)
+        .attr("preserveAspectRatio", "xMinYMin meet");
+},
 
 ////////////////////////////////////////
+/*
+startup: function (whereToRender)
+{
+    this.updateAll();
+    this.myTag = whereToRender;
 
-var weather = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.resizeEvents = "continuous"; //onfinish
-		this.svg = null;
-	},
+    // set up the area to render into
+    this.gwin.sampleSVG = d3.select(whereToRender)
+            .append("svg:svg")
+            .attr("width", this.gwin.canvasWidth)
+            .attr("height", this.gwin.canvasHeight);
+    this.updateWindow();
+},
+*/
+////////////////////////////////////////
 
 
 	init: function(id, width, height, resrc, date) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
-        this.maxFPS = 0.05;
+        this.maxFPS = 0.02;
 
 		// Get width height from the supporting div		
-		var width  = this.element.clientWidth;
-		var height = this.element.clientHeight;
+		var divWidth  = this.element.clientWidth;
+		var divHeight = this.element.clientHeight;
 
 		this.element.id = "div" + id;
 
@@ -650,59 +792,44 @@ var weather = SAGE2_App.extend( {
 		var self = this;
 
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
+		var box="0,0,"+this.gwin.canvasWidth+","+this.gwin.canvasHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
-		    .attr("width",   width)
-		    .attr("height",  height)
-		    .attr("viewBox", box);
-		gwin.sampleSVG = this.svg;
+		    .attr("width",   divWidth)
+		    .attr("height",  divHeight)
+		    .attr("viewBox", box)
+            .attr("preserveAspectRatio", "xMinYMin meet"); // new
+		this.gwin.sampleSVG = this.svg;
 
-		updateAll();
+        this.initApp ("F");
+		this.updateAll();
 		this.draw_d3(date);
 	},
 
 	load: function(state, date) {
+        if (state) {
+            this.state.itsF = state.itsF;
+        } else {
+            this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
+        }
+        this.refresh(date);
 	},
 
 	draw_d3: function(date) {
-		// Get width height from the supporting div		
-		var x = this.element.clientWidth;
-		var y = this.element.clientHeight;
 
-	    var scaleFactorX = x / gwin.canvasWidth;
-	    var scaleFactorY = y / gwin.canvasHeight;
-
-	    gwin.scaleFactor = 0.97 * Math.min(scaleFactorX, scaleFactorY);
-
-	    updateText();
-
-	    gwin.sampleSVG.append("svg:rect")
-	    .style("stroke", "white")
-	    .style("fill", "white")
-	    .style("fill-opacity", 1)
-	    .attr("x", 0)
-	    .attr("y", 0)
-	    .attr("rx", gwin.rounded)
-	    .attr("ry", gwin.rounded)
-	    .attr("height", y)
-	    .attr("width", x);
-
-	    // sampleSVG.attr("width",  parseInt(canvasWidth*scaleFactor));
-	    // sampleSVG.attr("height", parseInt(canvasHeight*scaleFactor));
-
-	    drawBasicStuff()
+	    this.drawBasicStuff();
+        this.updateWindow();
 	},
 	
 	draw: function(date) {
-	    updateAll();
-        drawAll();
+	    this.updateAll();
 	},
 
 	resize: function(date) {
-		this.svg.attr('width' ,  this.element.clientWidth  +"px");
-		this.svg.attr('height' , this.element.clientHeight  +"px");
+		this.svg.attr('width' ,  parseInt(this.element.clientWidth,10) +"px");
+		this.svg.attr('height' , parseInt(this.element.clientHeight,10)  +"px");
+
+        this.updateWindow();
 		this.refresh(date);
-        //drawAll();
 	},
 
 	event: function(eventType, userId, x, y, data, date) {
@@ -711,10 +838,8 @@ var weather = SAGE2_App.extend( {
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-        gwin.itsF = !gwin.itsF;
-        this.refresh(date);
-        //updateAll();
-        //drawAll();
+            this.nextTemp();
+            this.updateAll();
 		}
 	}
 	

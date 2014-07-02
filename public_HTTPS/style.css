@@ -29,6 +29,11 @@ body {
 	cursor: none;
 }
 
+#background {
+	position:absolute;
+	overflow: hidden;
+}
+
 #main {
 	position:absolute;
 	left: 0px;
@@ -47,7 +52,7 @@ body {
 .windowItem {
 	position:absolute;
 	border: solid 1px #000000;
-	box-shadow: 8px 8px 12px #222222;
+	box-shadow: 8px 0px 12px #222222;
 }
 
 .windowTitle {
@@ -61,6 +66,7 @@ body {
 	position:absolute;
 	background-color: #666666;
 	border: solid 1px #000000;
+	box-shadow: 8px 8px 12px #222222;
 	overflow: hidden;
 }
 

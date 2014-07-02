@@ -8,6 +8,11 @@
 //
 // Copyright (c) 2014
 
+/**
+ @module WebSocket
+ */
+
+
 var WebSocket = require('ws');
 var WebSocketServer = WebSocket.Server;
 

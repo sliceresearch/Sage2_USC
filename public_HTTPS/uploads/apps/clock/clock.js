@@ -12,9 +12,9 @@ var clock = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.ctx = null;
-		this.minDim = null;
-		this.resizeEvents = "continuous";
+		this.ctx          = null;
+		this.minDim       = null;
+		this.resizeEvents = "onfinish";
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -22,8 +22,8 @@ var clock = SAGE2_App.extend( {
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
 		
 		// application specific 'init'
-		this.ctx     = this.element.getContext("2d");
-		this.minDim  = Math.min(this.element.width, this.element.height);
+		this.ctx    = this.element.getContext("2d");
+		this.minDim = Math.min(this.element.width, this.element.height);
 		this.maxFPS = 1.0;
 	},
 	
@@ -31,18 +31,20 @@ var clock = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		console.log("clock> drawing");
+
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 	
 		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)"
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 	
-		var radius = 0.95 * this.minDim / 2;
+		var radius  = 0.95 * this.minDim / 2;
 		var centerX = this.element.width / 2;
 		var centerY = this.element.height / 2;
 	
 		// outside of clock
-		this.ctx.lineWidth = (3.0/100.0) * this.minDim;
+		this.ctx.lineWidth   = (3.0/100.0) * this.minDim;
 		this.ctx.strokeStyle = "rgba(85, 100, 120, 1.0)";
 		this.ctx.beginPath();
 		this.ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
@@ -97,9 +99,9 @@ var clock = SAGE2_App.extend( {
 		x = centerX + handSize * Math.cos(sec*theta - Math.PI/2);
 		y = centerY + handSize * Math.sin(sec*theta - Math.PI/2);
 	
-		this.ctx.lineWidth = (1.0/100.0) * this.minDim;
+		this.ctx.lineWidth   = (1.0/100.0) * this.minDim;
 		this.ctx.strokeStyle = "rgba(70, 35, 50, 1.0)";
-		this.ctx.lineCap = "round";
+		this.ctx.lineCap     = "round";
 		
 		this.ctx.beginPath();
 		this.ctx.moveTo(x, y);
@@ -148,11 +150,14 @@ var clock = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		this.minDim = Math.min(this.element.width, this.element.height);		
+		console.log("clock> resize");
+		this.minDim = Math.min(this.element.width, this.element.height);
+		//this.redraw = true;
 		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date) {
+		console.log("clock> event");
 		//this.refresh(date);
 	}
 });

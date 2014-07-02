@@ -1,6 +1,7 @@
 {
 	"main_script": "weather.js",
-	"width": 475,
+	"icon": "weather.svg",
+	"width": 490,
 	"height": 400,
 	"animation": true,
 	"resources": [

@@ -21,7 +21,7 @@ function windowManager(id, ws) {
 	this.applications   = [];
 	this.mouseX         = 0;
 	this.mouseY         = 0;
-	
+
 	this.canvasImg        = new Image();
 	this.canvasImg.src    = "images/canvas.png";
 	this.imageImg         = new Image();
@@ -40,7 +40,8 @@ function windowManager(id, ws) {
 	this.webglImg.src     = "images/webgl.png";
 	this.youtubeImg       = new Image();
 	this.youtubeImg.src   = "images/youtube.png";
-	
+	this.applicationIcons = {};
+
 	this.draw = function() {
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.weight);
@@ -81,13 +82,39 @@ function windowManager(id, ws) {
 			var size = 0.8*Math.min(eWidth, eHeight);
 			var x = eLeft + (eWidth/2) - (size/2);
 			var y = eTop + (eHeight/2) - (size/2);
-			
-			if(this.applications[i].application === "image_viewer") this.ctx.drawImage(this.imageImg, x, y, size, size);
-			else if(this.applications[i].application === "movie_player") this.ctx.drawImage(this.videoImg, x, y, size, size);
-			else if(this.applications[i].application === "pdf_viewer") this.ctx.drawImage(this.pdfImg, x, y, size, size);
-			else if(this.applications[i].application === "media_stream") this.ctx.drawImage(this.screenImg, x, y, size, size);
-			else this.ctx.drawImage(this.canvasImg, x, y, size, size);
-			
+			var applicationName = this.applications[i].application;
+
+			if(applicationName === "image_viewer") this.ctx.drawImage(this.imageImg, x, y, size, size);
+			else if(applicationName === "movie_player") this.ctx.drawImage(this.videoImg, x, y, size, size);
+			else if(applicationName === "pdf_viewer") this.ctx.drawImage(this.pdfImg, x, y, size, size);
+			else if(applicationName === "media_stream") this.ctx.drawImage(this.screenImg, x, y, size, size);
+			else {
+				var applicationIcon = null;
+				// test if the application provided an icon
+				if (this.applications[i].icon) {
+					if (this.applicationIcons[applicationName]) {
+						// the icon is already loaded
+						applicationIcon = this.applicationIcons[applicationName];
+						this.ctx.drawImage(applicationIcon, x, y, size, size);
+					} else {
+						// loading the icon the first time
+						applicationIcon     = new Image();
+						applicationIcon.src = this.applications[i].icon;
+						// cache the icon image
+						this.applicationIcons[applicationName] = applicationIcon;
+						var self = this;
+						applicationIcon.onload = function() {
+							// wait for the icon to load for drawing it
+							self.ctx.drawImage(applicationIcon, x, y, size, size);
+						};
+					}
+				} else {
+					// by default, use the canvas icon
+					applicationIcon = this.canvasImg;
+					this.ctx.drawImage(applicationIcon, x, y, size, size);
+				}
+			}
+
 			/*
 			if(this.applications[i].type == "canvas") this.ctx.drawImage(this.canvasImg, x, y, size, size);
 			else if(this.applications[i].type == "img") this.ctx.drawImage(this.imageImg, x, y, size, size);
@@ -136,16 +163,18 @@ function windowManager(id, ws) {
 	};
 	
 	this.mousePress = function(event) {
+		var btn = event.button === 2 ? 'right' : 'left';
+		
 		// open application under pointer
-		if(event.shiftKey === true){
+		if(btn === "left" && event.shiftKey === true){
 			var app = this.findAppUnderPointer();
 			if(app !== null){
 				window.open(window.location.origin + "/appViewer.html?appID=" + app.id, "_blank");
 			}
 		}
-		// forward as SAGE Pointer event
+		// forward event to server
 		else {
-			this.wsio.emit('pointerPress');
+			this.wsio.emit('pointerPress',{button:btn});
 		}
 		
 		event.preventDefault();
@@ -162,7 +191,8 @@ function windowManager(id, ws) {
 	};
 	
 	this.mouseRelease = function(event) {
-		this.wsio.emit('pointerRelease');
+		var btn = event.button===2? 'right':'left';
+		this.wsio.emit('pointerRelease',{button:btn});
 		event.preventDefault();
 	};
 	
@@ -188,7 +218,7 @@ function windowManager(id, ws) {
 	this.touchMove = function(event) {
 		event.preventDefault();
 
-		// Emot the move event
+		// Emit the move event
 		var rect = this.element.getBoundingClientRect();
 		this.mouseX = event.changedTouches[0].clientX - rect.left;
 		this.mouseY = event.changedTouches[0].clientY - rect.top;

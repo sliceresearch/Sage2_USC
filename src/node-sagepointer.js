@@ -8,6 +8,11 @@
 //
 // Copyright (c) 2014
 
+/**
+ @module sagepointer
+ */
+
+
 function sagepointer(id) {
 	this.id = id;
 	this.label = "";

@@ -8,22 +8,32 @@
 //
 // Copyright (c) 2014
 
-var decompresszip = require('decompress-zip');
-var ffprobe = require('node-ffprobe');
-var fs = require('fs');
-var gm = require('gm');
-var imageinfo = require('imageinfo');
-var mime = require('mime');
-var path = require('path');
-var request = require('request');
-var url = require('url');
-var ytdl = require('ytdl');
+/**
+ * @module itemLoader
+ */
 
-var pdfinfo = require('node-pdfinfo').pdfinfo;     // custom node module
+
+var fs        = require('fs');
+var path      = require('path');
+var url       = require('url');
+
+var unzip     = require('decompress-zip');
+var ffprobe   = require('node-ffprobe');
+var gm        = require('gm');
+var imageinfo = require('imageinfo');
+var mime      = require('mime');
+var request   = require('request');
+var ytdl      = require('ytdl');
+
+var pdfinfo = require('./node-pdfinfo').pdfinfo;     // custom node module
 
 var imageMagick;
 mime.default_type = "application/custom";
 
+
+function encodeReservedURL(url) {
+	return encodeURI(url).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B").replace(/\,/g, "%2C").replace(/\//g, "%2F").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D").replace(/\?/g, "%3F").replace(/\@/g, "%40");
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarHeight, imConstraints) {
@@ -349,7 +359,9 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		var instructions = JSON.parse(json_str);
 		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 		var aspectRatio = instructions.width / instructions.height;
-		
+		// if icon provided, build the url to it
+		var icon = instructions.icon ? url+"/"+instructions.icon : null;
+
 		var appInstance = {
 			id: null,
 			title: name,
@@ -358,6 +370,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			url: external_url,
 			data: instructions.load,
 			resrc: instructions.resources,
+			icon: icon,
 			left: _this.titleBarHeight,
 			top: 1.5*_this.titleBarHeight,
 			width: instructions.width,
@@ -382,7 +395,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 	var _this = this;
 	var zipFolder = path.join(path.dirname(file), name);
 
-	var unzipper = new decompresszip(file);
+	var unzipper = new unzip(file);
 	unzipper.on('extract', function(log) {
 		// read instructions for how to handle
 		var instuctionsFile = path.join(zipFolder, "instructions.json");
@@ -392,7 +405,9 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			var instructions = JSON.parse(json_str);
 			var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 			var aspectRatio = instructions.width / instructions.height;
-			
+			// if icon provided, build the url to it
+			var icon = instructions.icon ? url+instructions.icon : null;
+
 			var appInstance = {
 				id: null,
 				title: name,
@@ -401,6 +416,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				url: external_url,
 				data: instructions.load,
 				resrc: instructions.resources,
+				icon: icon,
 				left: _this.titleBarHeight,
 				top: 1.5*_this.titleBarHeight,
 				width: instructions.width,
@@ -503,7 +519,7 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var dir = this.app2dir[app];
 	
 	var url = path.join("uploads", dir, file.filename);
-	var external_url = this.hostOrigin + encodeURI(url);
+	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	var mime_type = mime.lookup(localPath);
 	
@@ -520,7 +536,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	
 	var _this = this;
 	var url = path.join("uploads", dir, file.originalFilename);
-	var external_url = this.hostOrigin + encodeURI(url);
+	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	
 	fs.rename(file.path, localPath, function(err) {
@@ -558,7 +574,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			if(appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
 				var url = path.join("uploads", dir, name);
-				var external_url = this.hostOrigin + encodeURI(url);
+				var external_url = this.hostOrigin + encodeReservedURL(url);
 				this.loadZipAppFromFile(appData.path, appData.type, url, external_url, name, function(appInstance) {
 					callback(appInstance);
 				});

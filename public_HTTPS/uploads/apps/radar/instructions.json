@@ -1,7 +1,8 @@
 {
 	"main_script": "radar.js",
+	"icon": "radar.png",
 	"width": 800,
-	"height": 720,
+	"height": 734,
 	"animation": true,
 	"resources": [
 		"scripts/d3.v3.min.js"

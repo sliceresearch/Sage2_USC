@@ -8,6 +8,10 @@
 //
 // Copyright (c) 2014
 
+/**
+ @module pdfinfo
+ */
+
 var exec = require('child_process').exec;
 
 module.exports.pdfinfo = function(pdf_url, callback) {

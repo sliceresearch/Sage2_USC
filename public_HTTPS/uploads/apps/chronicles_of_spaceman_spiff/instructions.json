@@ -1,0 +1,10 @@
+{
+	"main_script": "spiff.js",
+	"icon": "calvin.png",
+	"width": 600,
+	"height": 220,
+	"animation": true,
+	"resources": [
+		"scripts/d3.v3.min.js"
+	]
+}

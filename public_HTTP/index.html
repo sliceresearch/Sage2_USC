@@ -42,9 +42,11 @@
 	
 	function initializePageList() {
 		var userInteraction = document.getElementById('userInteraction');
-		var audio = document.getElementById('audio');
-		var display = document.getElementById('display');
-		
+		var audio       = document.getElementById('audio');
+		var display     = document.getElementById('display');
+		var information = document.getElementById('information');
+		var remotesites = document.getElementById('remotesites');
+
 		var https_port = ":" + json_cfg.port.toString();
 		if (https_port == ":443") https_port = "";
 		
@@ -110,6 +112,41 @@
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
+
+		// Info
+		var aul = document.createElement('ul');
+		if (json_cfg.public_host) {
+			var info1 = document.createElement('li');
+			info1.innerHTML = "Host (public): " + json_cfg.public_host;
+			aul.appendChild(info1);
+		}
+		var info2 = document.createElement('li');
+		info2.innerHTML = "Host: " + json_cfg.host;
+		aul.appendChild(info2);
+		var info3 = document.createElement('li');
+		info3.innerHTML = "Resolution: " + json_cfg.totalWidth + "x" +  json_cfg.totalHeight + " pixels";
+		aul.appendChild(info3);
+		var info4 = document.createElement('li');
+		info4.innerHTML  = "Tiles: " + json_cfg.layout.columns + " by " + json_cfg.layout.rows;
+		info4.innerHTML += " (" + json_cfg.resolution.width + "x" + json_cfg.resolution.height +")";
+		aul.appendChild(info4);
+		information.appendChild(aul);
+
+		// Remote sites
+		var remotes = document.createElement('ol');
+		var rs, lrs;
+		for (var i = 0; i < json_cfg.remote_sites.length; i++) {
+			rs  = document.createElement('li');
+			lrs = document.createElement('a');
+			lrs.textContent = json_cfg.remote_sites[i].name;
+			//lrs.href = "http://" + json_cfg.remote_sites[i].host + ":" + json_cfg.remote_sites[i].port;
+			lrs.href = "http://" + json_cfg.remote_sites[i].host; // assumes on port 80
+			lrs.target = "_blank";
+			rs.appendChild(lrs);
+			remotes.appendChild(rs);
+		};
+		remotesites.appendChild(remotes);
+
 	}
 </script>
 
@@ -118,17 +155,46 @@
 </head>
 
 <body onload="init()">
-	<div id="main">
-		<div id="userInteraction" class="siteType">
+
+	<header>
+		<h1>SAGE2 Index</h1>
+		<p>access all the SAGE2 clients from one place</p>
+	</header>
+
+	<main>
+
+		<section id="userInteraction" class="siteType">
 			<h2>User Interaction Pages</h2>
-		</div>
-		<div id="audio" class="siteType">
+		</section>
+
+		<section id="audio" class="siteType">
 			<h2>Audio Pages</h2>
-		</div>
-		<div id="display" class="siteType">
+		</section>
+
+		<section id="display" class="siteType">
 			<h2>Display Pages</h2>
-		</div>
-	</div>
+		</section>
+
+		<section id="remotesites" class="siteType">
+			<h2>Remote Sites</h2>
+		</section>
+
+		<section id="information" class="siteType">
+			<h2>Configuration</h2>
+		</section>
+
+
+	</main>
+
+	<footer>
+	  <ul>
+	    <li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+		<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
+		<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
+		<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
+	  </ul>
+	</footer>
+
 </body>
 </html>
 

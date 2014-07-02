@@ -12,6 +12,11 @@
 // Generic functions used by all SAGE2 applications
 //
 
+// Global variables
+var __SAGE2__ = {};
+__SAGE2__.version = "0.1";
+
+
 function SAGE2_initialize(data_seed) {
 	// Reset random number based on server's time
 	Math.seed(data_seed.getTime());
@@ -92,6 +97,86 @@ function base64ToUint8Array(base64) {
     return uint8Array;
 }
 
+function readFile(filename, callback, type) {
+	var dataType = type || "TEXT";
+
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", filename, true);
+	xhr.onreadystatechange = function() {
+		if(xhr.readyState == 4){
+			if(xhr.status == 200){
+				if     (dataType === "TEXT") callback(null, xhr.responseText);
+				else if(dataType === "JSON") callback(null, JSON.parse(xhr.responseText));
+				else if(dataType === "CSV")  callback(null, CSVToArray(xhr.responseText));
+				else                         callback(null, xhr.responseText);
+			}
+			else{
+				callback("Error: File Not Found", null);
+			}
+		}
+	};
+	xhr.send();
+}
+
+function CSVToArray(strData, strDelimiter){
+	// Check to see if the delimiter is defined. If not,
+	// then default to comma.
+	strDelimiter = strDelimiter || ",";
+
+	// Create a regular expression to parse the CSV values.
+	var objPattern = new RegExp(("(\\" + strDelimiter + "|\\r?\\n|\\r|^)" + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" + "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+
+	// Create an array to hold our data. Give the array
+	// a default empty first row.
+	var arrData = [[]];
+
+	// Create an array to hold our individual pattern
+	// matching groups.
+	var arrMatches = null;
+
+
+	// Keep looping over the regular expression matches
+	// until we can no longer find a match.
+	while (arrMatches = objPattern.exec( strData )) {
+
+		// Get the delimiter that was found.
+		var strMatchedDelimiter = arrMatches[ 1 ];
+
+		// Check to see if the given delimiter has a length
+		// (is not the start of string) and if it matches
+		// field delimiter. If id does not, then we know
+		// that this delimiter is a row delimiter.
+		if(strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter){
+			// Since we have reached a new row of data,
+			// add an empty row to our data array.
+			arrData.push([]);
+		}
+
+		var strMatchedValue;
+
+		// Now that we have our delimiter out of the way,
+		// let's check to see which kind of value we
+		// captured (quoted or unquoted).
+		if(arrMatches[2]){
+			// We found a quoted value. When we capture
+			// this value, unescape any double quotes.
+			strMatchedValue = arrMatches[2].replace(new RegExp( "\"\"", "g" ),"\"");
+		}
+		else{
+			// We found a non-quoted value.
+			strMatchedValue = arrMatches[3];
+
+		}
+		
+		// Now that we have our value string, let's add
+		// it to the data array.
+		arrData[arrData.length - 1].push(strMatchedValue);
+	}
+
+	// Return the parsed data.
+	return arrData;
+}
+
 function average(arr) {
 	var l = arr.length;
 	if (l === 0) return 0;
@@ -130,6 +215,17 @@ function moveItemToFront(elem) {
 		elem.parentNode.replaceChild(elem, last);
 		elem.parentNode.insertBefore(last, elem);
 	}
+}
+
+function cleanURL(url) {
+	var a = document.createElement("a");
+	a.href = url;
+	var clean = url;
+	
+	if(hostAlias[a.hostname] !== undefined)
+		clean = url.replace(a.hostname, hostAlias[a.hostname]);
+	
+	return clean;
 }
 	
 
