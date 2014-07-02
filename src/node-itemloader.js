@@ -23,7 +23,7 @@ var gm        = require('gm');
 var imageinfo = require('imageinfo');
 var mime      = require('mime');
 var request   = require('request');
-var ytdl      = require('ytdl');
+var ytdl      = require('ytdl-core');
 
 var pdfinfo = require('./node-pdfinfo').pdfinfo;     // custom node module
 

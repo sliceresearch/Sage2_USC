@@ -73,8 +73,9 @@ var pdf_viewer = SAGE2_App.extend( {
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
+				var labelWidth = ("" + _this.pdfDoc.numPages).length * 2 + 3; // 3 for the spaces and the '/'
 
-				_this.controls.addLabel({maxWidth:100,appObj:_this, property:"pageValText"});
+				_this.controls.addLabel({textLength:labelWidth,appObj:_this, property:"pageValText"});
 
 				_this.controls.addButton({type:"next", action:function(appObj, date){
 					if (appObj.state.page  >= appObj.pdfDoc.numPages) return;

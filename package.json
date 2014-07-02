@@ -49,7 +49,7 @@
     "node-ffprobe": "latest",
     "request": "latest",
     "ws": "latest",
-    "ytdl": "latest",
+    "ytdl-core": "latest",
     "jshint": "latest",
     "commander": "latest",
     "colors": "latest",
