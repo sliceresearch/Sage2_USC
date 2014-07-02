@@ -51,7 +51,7 @@ var websocketIO = require('./src/node-websocket.io');   // creates WebSocket ser
 var loader      = require('./src/node-itemloader');     // handles sage item creation
 var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var omicron     = require('./src/node-omicron');    // handles Omicron input events
+var omicron     = require('./src/node-omicron');        // handles Omicron input events
 
 
 // Command line arguments
@@ -1150,8 +1150,7 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if (regTI.test(data.ctrlId)||regSl.test(data.ctrlId)){
-		//broadcast('moveSliderUnderPointer', )
+	if (regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
@@ -1290,6 +1289,7 @@ function setupDisplayBackground() {
 				sliceBackgroundImage(tmpImg, bg_file);
 			});
 		}
+		/*
 		else if(config.background.style == "tile"){
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
@@ -1310,6 +1310,7 @@ function setupDisplayBackground() {
 				sliceBackgroundImage(tmpImg, bg_file);
 			});
 		}
+		*/
 	}
 }
 

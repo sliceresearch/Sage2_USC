@@ -112,18 +112,39 @@ function uiBuilder(json_cfg, clientID) {
 			if (typeof this.json_cfg.background.image !== "undefined" && this.json_cfg.background.image !== null) {
 				var bg = new Image();
 				bg.addEventListener('load', function() {				
-					var bg_img;
-					var ext = _this.json_cfg.background.image.lastIndexOf(".");
-					if(_this.json_cfg.background.style == "fit" && (bg.naturalWidth != _this.json_cfg.totalWidth || bg.naturalHeight != _this.json_cfg.totalHeight)){
-						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+					var background = document.getElementById('background');
+					if(_this.json_cfg.background.style == "tile"){
+						var top = -1 * (_this.offsetY % bg.naturalHeight);
+						var left = -1 * (_this.offsetX % bg.naturalWidth);
+						
+						background.style.top    = top.toString() + "px";
+						background.style.left   = left.toString() + "px";
+						background.style.width  = (window.innerWidth - left).toString() + "px";
+						background.style.height = (window.innerHeight - top).toString() + "px";
+						
+						background.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
+						background.style.backgroundPosition = "top left";
+						background.style.backgroundRepeat   = "repeat-x repeat-y";
+						background.style.backgroundSize     = bg.naturalWidth +"px " + bg.naturalHeight + "px";
 					}
-					else{
-						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+					else {
+						var bg_img;
+						var ext = _this.json_cfg.background.image.lastIndexOf(".");
+						if(_this.json_cfg.background.style == "fit" && (bg.naturalWidth != _this.json_cfg.totalWidth || bg.naturalHeight != _this.json_cfg.totalHeight))
+							bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+						else
+							bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+						
+						background.style.top    = "0px";
+						background.style.left   = "0px";
+						background.style.width  = window.innerWidth + "px";
+						background.style.height = window.innerHeight + "px";
+						
+						background.style.backgroundImage    = "url(" + bg_img + ")";
+						background.style.backgroundPosition = "top left";
+						background.style.backgroundRepeat   = "no-repeat";
+						background.style.backgroundSize     = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
 					}
-					document.body.style.backgroundImage    = "url(" + bg_img + ")";
-					document.body.style.backgroundPosition = "top left";
-					document.body.style.backgroundRepeat   = "no-repeat";
-					document.body.style.backgroundSize = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
 				}, false);
 				bg.src = this.json_cfg.background.image;
 			}
