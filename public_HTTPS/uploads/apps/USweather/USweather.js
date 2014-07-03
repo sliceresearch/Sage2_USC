@@ -247,6 +247,19 @@ nextMode: function()
     this.gwin.mode = this.gwin.mode + 1;
     if (this.gwin.mode > 2)
             this.gwin.mode = 0;
+
+    if (this.gwin.mode === 0)
+        {
+        this.convertToTemp();
+        } 
+    else if (this.gwin.mode === 1)
+        {
+        this.convertToIcon();
+        } 
+    else
+        {
+        this.convertToNone();
+        } 
 },
 
 ////////////////////////////////////////
@@ -267,7 +280,7 @@ drawBox: function (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut)
 
 ////////////////////////////////////////
 
-drawText: function (nodeToAddTo, textLocX, textLocY, theText, textFontSize)
+drawText: function (textVisibility, nodeToAddTo, textLocX, textLocY, theText, textFontSize)
 {
     var displayFont = "Arial";
     var drawTempText;
@@ -279,16 +292,19 @@ drawText: function (nodeToAddTo, textLocX, textLocY, theText, textFontSize)
 
     var tempToShow;
 
-// SAGE Specific
-    if (this.state.itsF === "C")
+
+    if (this.gwin.itsF === "C") // there is a sage versionof this
         {
         tempToShow = (Math.round((parseInt(theText)-32)*5/9));
+        console.log(tempToShow);
         }
      else
         tempToShow = theText; // F by default
 
 
     nodeToAddTo.append("svg:text")
+        .attr("visibility", textVisibility)
+        .attr("id", this.gwin.appID+"IDtext")
         .attr("x", textLocX)
         .attr("y", textLocY)
         .style("fill", drawTempText)
@@ -324,6 +340,7 @@ drawEverything: function (lat, lon, weather, iconSrc)
     
     if (d3.select("#" + myName).node() !== null)
         {
+        //console.log("OLD", d3.select("#" + myName).node());
         d3.select("#" + myName).node().remove();
         }
             
@@ -331,8 +348,6 @@ drawEverything: function (lat, lon, weather, iconSrc)
     var oneLocation = this.gwin.sampleSVG.append("svg:g") 
         .attr("id", myName)
         .attr("class", "node");
-
-    //console.log(xLoc, yLoc);
 
     oneLocation.append("svg:rect")
         .style("fill", colorOut)
@@ -349,7 +364,6 @@ drawEverything: function (lat, lon, weather, iconSrc)
         .style("fill", colorOutb)
         .style("fill-opacity", (1-percOut))
         .style("stroke", "black")
-        .attr("id", "tempRect")
         .attr("x", xLoc)
         .attr("y", yLoc)
         .attr("rx", 8)
@@ -357,30 +371,36 @@ drawEverything: function (lat, lon, weather, iconSrc)
         .attr("height", this.gwin.boxSize)
         .attr("width", this.gwin.boxSize);
 
-        if (this.gwin.mode === 0)
-            {
-            this.drawText(oneLocation, xLoc+this.gwin.boxSize*0.5, yLoc+this.gwin.boxSize*0.75, weather, 20);
-            }
+    if (this.gwin.mode === 0)
+        {
+        textVisibility = "visible";
+        iconVisibility = "hidden";
+        } 
+    else if (this.gwin.mode === 1)
+        {
+        textVisibility = "hidden";
+        iconVisibility = "visible";
+        } 
+    else
+        {
+        textVisibility = "hidden";
+        iconVisibility = "hidden";
+        } 
 
-        else if (this.gwin.mode === 1)
-            {          
-            oneLocation.append("svg:image")
-            .attr("id", "tempRect")
-            .attr("xlink:href", iconSrc)
-            .attr("opacity", 1)
-            .attr("x", xLoc+this.gwin.boxSize*0.1)
-            .attr("y", yLoc+this.gwin.boxSize*0.1)
-            .attr("width", this.gwin.boxSize *0.8) 
-            .attr("height", this.gwin.boxSize *0.8);
-            }
+    this.drawText(textVisibility, oneLocation, xLoc+this.gwin.boxSize*0.5, yLoc+this.gwin.boxSize*0.75, weather, 20);
 
-        else if (this.gwin.mode == 2)
-            {   // just the coloured boxes          
-            }
-        else
-            console.log ("unknown mode");
+    console.log("DrawIcon ", this.gwin.appID+"IDicon");
+
+    oneLocation.append("svg:image")
+        .attr("visibility", iconVisibility)
+        .attr("id", this.gwin.appID+"IDicon")
+        .attr("xlink:href", iconSrc)
+        .attr("opacity", 1)
+        .attr("x", xLoc+this.gwin.boxSize * 0.1)
+        .attr("y", yLoc+this.gwin.boxSize * 0.1)
+        .attr("width", this.gwin.boxSize * 0.8) 
+        .attr("height", this.gwin.boxSize * 0.8);
 },
-
 
 ////////////////////////////////////////
 
@@ -397,6 +417,48 @@ updateWindow: function ()
         .attr("height",  divHeight)
         .attr("viewBox", box)
         .attr("preserveAspectRatio", "xMinYMin meet");
+},
+
+////////////////////////////////////////
+
+convertToTemp: function ()
+{
+    var selectedOnes = null;
+
+    selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDtext");
+    selectedOnes.attr("visibility", "visible");
+
+    selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
+    selectedOnes.attr("visibility", "hidden");
+
+    this.gwin.mode = 0;
+},
+
+convertToIcon: function ()
+{
+    var selectedOnes = null;
+
+
+    selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDtext");
+    selectedOnes.attr("visibility", "hidden");
+
+    selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
+    selectedOnes.attr("visibility", "visible");
+
+    this.gwin.mode = 1;
+},
+
+convertToNone: function ()
+{
+    var selectedOnes = null;
+
+    selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDtext");
+    selectedOnes.attr("visibility", "hidden");
+
+    selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
+    selectedOnes.attr("visibility", "hidden");
+
+    this.gwin.mode = 2;
 },
 
 ////////////////////////////////////////
