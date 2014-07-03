@@ -5,6 +5,7 @@ Zoom application
 * http://openseadragon.github.io/
 
 We use the DZI tile image format, but OpenSeadragon seems to support various formats:
+
 * http://openseadragon.github.io/#examples-and-features
 * http://openseadragon.github.io/examples/creating-zooming-images/
 
