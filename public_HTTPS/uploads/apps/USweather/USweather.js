@@ -8,14 +8,13 @@
     // might be nice to use the albersUSA projection and add in alaska and hawaii
     // but right now that would conflict with the mexico temperatures
 
-    // need to store values to shift from weather to color temp to numerical temp
-    // or keep different svg elements in the group and show/hide them
-
+    // need to handle switch to night time better
+    // ideally based on time of sunset at each location (or at least time zone)
+    
     // could allow clicking on individual elements to change its state
 
     // might also allow people to focus on smaller state level
 
-    // probably should store all 3 version of viz in each node and then swap as needed
 
 
 var USweather = SAGE2_App.extend( {
@@ -41,7 +40,7 @@ this.gwin.boxSize = 35;
 
 this.gwin.mode = 1;
 
-this.gwin.appID;
+this.gwin.appID = "";
 
 this.gwin.projection = null;
 },
@@ -209,7 +208,7 @@ makeCallback: function (lat, lon, weatherOut)
             //console.log("temp is " + weather + " at " + Math.round(lat) + ", " + Math.round(lon));
 
             mySelf.drawEverything(lat, lon, weather, weatherImage.src);
-            }
+            };
 },
 
 ///////////////////////////////////////
@@ -326,8 +325,8 @@ drawEverything: function (lat, lon, weather, iconSrc)
     if ((lat === null) || (lon === null) || (weather === null) || (weather == "null") || (iconSrc === null))
         return;
 
-    var xLoc = this.gwin.projection([lon, lat])[0]; - this.gwin.boxSize/2;
-    var yLoc = this.gwin.projection([lon, lat])[1]; - this.gwin.boxSize/2;
+    var xLoc = this.gwin.projection([lon, lat])[0]; //- this.gwin.boxSize/2;
+    var yLoc = this.gwin.projection([lon, lat])[1]; //- this.gwin.boxSize/2;
 
     c = this.tempConvert(weather);
     colorOut = c[0];
