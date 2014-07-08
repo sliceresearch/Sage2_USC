@@ -328,14 +328,39 @@
 				var resources = {};
 				for(i=0; i<data.resrc.length; i++){
 					// check dependency cache first
-					if (dependencies[data.resrc[i]] === true) {
-						resources[data.resrc[i]] = true;
-					} else {
+					if (dependencies[data.resrc[i]] !== true) {
 						dependencies[data.resrc[i]] = false;
 						resources[data.resrc[i]] = false;
 					}
 				}
-			
+				
+				if(isEmpty(resources)){
+					console.log("all resources loaded");
+					loadApplication();
+				}
+				
+				Object.keys(resources).forEach(function(key) {
+					if(resources.hasOwnProperty(key)) {
+						var js = document.createElement("script");
+						js.addEventListener('error', function(event) {
+							console.log("Error loading script: " + key);
+						}, false);
+		
+						js.addEventListener('load', function(event) {
+							dependencies[key] = true;
+							resources[key] = true;
+							if(allTrueDict(resources)){
+								console.log("all resources loaded");
+								loadApplication();
+							}
+						}, false);
+						js.type = "text/javascript";
+						js.src = url + "/" + key;
+						document.head.appendChild(js);
+					}
+				});
+				
+				/*
 				data.resrc.forEach(function(element, index, array) {
 					if (dependencies[element] === false) {
 						var js = document.createElement("script");
@@ -361,6 +386,7 @@
 						}
 					}
 				});
+				*/
 			}
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;
