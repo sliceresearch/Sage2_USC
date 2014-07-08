@@ -119,8 +119,8 @@ function uiBuilder(json_cfg, clientID) {
 						
 						background.style.top    = top.toString() + "px";
 						background.style.left   = left.toString() + "px";
-						background.style.width  = (window.innerWidth - left).toString() + "px";
-						background.style.height = (window.innerHeight - top).toString() + "px";
+						background.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
+						background.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
 						
 						background.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
 						background.style.backgroundPosition = "top left";
@@ -137,8 +137,8 @@ function uiBuilder(json_cfg, clientID) {
 						
 						background.style.top    = "0px";
 						background.style.left   = "0px";
-						background.style.width  = window.innerWidth + "px";
-						background.style.height = window.innerHeight + "px";
+						background.style.width  = _this.json_cfg.resolution.width + "px";
+						background.style.height = _this.json_cfg.resolution.height + "px";
 						
 						background.style.backgroundImage    = "url(" + bg_img + ")";
 						background.style.backgroundPosition = "top left";
