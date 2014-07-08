@@ -17,8 +17,8 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="scripts/sagePointer.js"></script>
-<script type="text/javascript" src="scripts/windowManager.js"></script>
+<script type="text/javascript" src="lib/sagePointer.js"></script>
+<script type="text/javascript" src="lib/windowManager.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -392,6 +392,7 @@
 			<div id="fileUpload">
 				<div id="fileDrop">
 					<p id="fileDropText">Drag files here to upload</p>
+					<progress id="fileDropProgress" value=0 max=100></progress>
 				</div>
 				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
 			</div>

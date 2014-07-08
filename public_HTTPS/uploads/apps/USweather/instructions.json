@@ -1,0 +1,10 @@
+{
+	"main_script": "USweather.js",
+	"icon": "weather.svg",
+	"width": 900,
+	"height": 600,
+	"animation": true,
+	"resources": [
+		"scripts/d3.v3.min.js"
+	]
+}

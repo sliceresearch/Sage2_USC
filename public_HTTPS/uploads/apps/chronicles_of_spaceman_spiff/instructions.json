@@ -1,5 +1,6 @@
 {
 	"main_script": "spiff.js",
+	"icon": "calvin.png",
 	"width": 600,
 	"height": 220,
 	"animation": true,

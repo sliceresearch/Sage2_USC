@@ -1,5 +1,6 @@
 {
 	"main_script": "d3_sample.js",
+	"icon": "d3.webp",
 	"width": 800,
 	"height": 600,
 	"resources": [

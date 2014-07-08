@@ -1,5 +1,6 @@
 {
 	"main_script": "three_sample.js",
+	"icon": "threejs.webp",
 	"width": 400,
 	"height": 300,
 	"animation": true,

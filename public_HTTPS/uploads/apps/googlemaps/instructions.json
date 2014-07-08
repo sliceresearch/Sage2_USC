@@ -1,5 +1,6 @@
 {
 	"main_script": "googlemaps.js",
+	"icon": "googlemaps.webp",
 	"width": 1400,
 	"height": 400,
 	"resources": [

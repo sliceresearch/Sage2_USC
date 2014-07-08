@@ -48,6 +48,8 @@ var bounce = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
+		//this.log("BOUNCE");
+
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
@@ -77,5 +79,9 @@ var bounce = SAGE2_App.extend( {
 	
 	event: function(eventType, userId, x, y, data, date) {
 		
+	},
+
+	quit: function () {
+		this.log("Bounce quit");
 	}
 });

@@ -34,7 +34,7 @@ var zoom = SAGE2_App.extend( {
 			id: this.element.id,      // suppporting div
 			prefixUrl:   this.resrcPath + "/images/",
 			// change tileSources for your dataset
-			tileSources: this.resrcPath + "rat-brain.dzi"
+			tileSources: this.resrcPath + "chicago.dzi"
 		});
 	},
 	
