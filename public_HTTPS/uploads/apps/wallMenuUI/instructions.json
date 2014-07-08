@@ -1,5 +1,5 @@
 {
-	"main_script": "wallMenuUI.js",
+	"main_script": "thumbnailBrowser.js",
 	"type": "canvas",
 	"width": 600,
 	"height": 600,
