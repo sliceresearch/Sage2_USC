@@ -109,10 +109,10 @@ function uiBuilder(json_cfg, clientID) {
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
 		} else {
+			var background = document.getElementById('background');
 			if (typeof this.json_cfg.background.image !== "undefined" && this.json_cfg.background.image !== null) {
 				var bg = new Image();
 				bg.addEventListener('load', function() {				
-					var background = document.getElementById('background');
 					if(_this.json_cfg.background.style == "tile"){
 						var top = -1 * (_this.offsetY % bg.naturalHeight);
 						var left = -1 * (_this.offsetX % bg.naturalWidth);
@@ -148,6 +148,13 @@ function uiBuilder(json_cfg, clientID) {
 				}, false);
 				bg.src = this.json_cfg.background.image;
 			}
+			else {
+				background.style.top    = "0px";
+				background.style.left   = "0px";
+				background.style.width  = _this.json_cfg.resolution.width + "px";
+				background.style.height = _this.json_cfg.resolution.height + "px";
+			}
+			
 			if (json_cfg.background.clip === true) {
 				this.main.style.width    = json_cfg.resolution.width  + "px";
 				this.main.style.height   = json_cfg.resolution.height + "px";
