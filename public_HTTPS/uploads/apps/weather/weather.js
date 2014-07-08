@@ -345,7 +345,7 @@ drawTempText: function (textColor)
         .attr("xlink:href", this.gwin.weatherImage.src)
         .attr("opacity", 1.0)
         .attr("x", this.gwin.margin+10)
-        .attr("y", 343)
+        .attr("y", 345)
         .attr("width", 40)
         .attr("height", 40);  
     },
@@ -405,6 +405,10 @@ weatherOutsideCallback: function(error, weatherOut)
  
      var currentHour = new Date().getHours(); // 0-23
 
+    // sometimes the current conditions come back empty
+    if (weatherName == "")
+        weatherName = "unknown";
+    
     // set the default daylight icon for this weather
     this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
     //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
@@ -453,7 +457,6 @@ drawOutsideTemp: function ()
         this.drawBox(this.gwin.margin, 340, 50, 450, this.glob.colorOut, this.glob.percOut);
         this.drawBox(this.gwin.margin, 340, 50, 450, this.glob.colorOutb, 1.0 - this.glob.percOut);
 
-               
         if (this.gwin.outside < this.glob.temp_colderer)
             this.drawTempText("#FFF");
         else
@@ -724,7 +727,7 @@ drawAll: function ()
         this.gwin.sampleSVG.selectAll("*").remove();
 
     // draw the background
-    this.drawBorderlessBox(0, 0, 1.0 * this.gwin.canvasHeight, 1.0 * this.gwin.canvasWidth, this.gwin.canvasBackground, 1);
+    this.drawBorderlessBox(0, 0, this.gwin.canvasHeight, this.gwin.canvasWidth, this.gwin.canvasBackground, 1);
 
     // draw the foreground elements
     this.drawBasicStuff();
@@ -736,43 +739,16 @@ drawAll: function ()
 
 updateWindow: function (){
 
-/*    var w = window,
-    d = document,
-    e = d.documentElement,
-    g = d.getElementById(this.myTag),
-    x = w.innerWidth || e.clientWidth || g.clientWidth,
-    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-*/
-
     var x = this.element.clientWidth;
     var y = this.element.clientHeight;
 
-
-    console.log("Update Window", x, y);
-
     // compensate for browser scroll bars - need a better solution
-    this.gwin.sampleSVG.attr("width", x) // x-25
-        .attr("height", y) // y-25
-
+    this.gwin.sampleSVG.attr("width", x) 
+        .attr("height", y) 
         .attr("viewBox", "0 0 " + this.gwin.canvasWidth + " " + this.gwin.canvasHeight)
         .attr("preserveAspectRatio", "xMinYMin meet");
 },
 
-////////////////////////////////////////
-/*
-startup: function (whereToRender)
-{
-    this.updateAll();
-    this.myTag = whereToRender;
-
-    // set up the area to render into
-    this.gwin.sampleSVG = d3.select(whereToRender)
-            .append("svg:svg")
-            .attr("width", this.gwin.canvasWidth)
-            .attr("height", this.gwin.canvasHeight);
-    this.updateWindow();
-},
-*/
 ////////////////////////////////////////
 
 
