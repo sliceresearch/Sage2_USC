@@ -359,34 +359,6 @@
 						document.head.appendChild(js);
 					}
 				});
-				
-				/*
-				data.resrc.forEach(function(element, index, array) {
-					if (dependencies[element] === false) {
-						var js = document.createElement("script");
-						js.addEventListener('error', function(event) {
-							console.log("Error loading script: " + element);
-						}, false);
-			
-						js.addEventListener('load', function(event) {
-							dependencies[element] = true;
-							resources[element] = true;
-							if(allTrueDict(resources)){
-								console.log("all resources loaded");
-								loadApplication();
-							}
-						}, false);
-						js.type = "text/javascript";
-						js.src = url + "/" + element;
-						document.head.appendChild(js);
-					} else {
-						if(allTrueDict(resources)){
-							console.log("all resources loaded");
-							loadApplication();
-						}
-					}
-				});
-				*/
 			}
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;

@@ -545,7 +545,7 @@ function wsKeyPress(wsio, data) {
 /***************** Media Stream Functions *****************/
 function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: " + data.id);
-	mediaStreams[data.id] = {ready: true, chunks: [], clients: {}};
+	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -560,6 +560,11 @@ function wsStartNewMediaStream(wsio, data) {
 			
 		applications.push(appInstance);
 	});
+	
+	// Debug media stream freezing
+	mediaStreams[data.id].timeout = setTimeout(function() {
+		console.log("1 sec with no updates from: " + data.id);
+	}, 1000);
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
@@ -572,6 +577,12 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	if(stream !== null) stream.data = data.state;
 
 	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
+	
+	// Debug media stream freezing
+	clearTimeout(mediaStreams[data.id].timeout);
+	mediaStreams[data.id].timeout = setTimeout(function() {
+		console.log("1 sec with no updates from: " + data.id);
+	}, 1000);
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
@@ -1289,28 +1300,6 @@ function setupDisplayBackground() {
 				sliceBackgroundImage(tmpImg, bg_file);
 			});
 		}
-		/*
-		else if(config.background.style == "tile"){
-			imgExt = path.extname(bg_file);
-			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
-		
-			var cols = Math.ceil(config.totalWidth / bg_info.width);
-			var rows = Math.ceil(config.totalHeight / bg_info.height);
-			var tile = cols.toString() + "x" + rows.toString();
-			var in_res  = bg_info.width.toString() + "x" + bg_info.height.toString();
-		
-			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
-			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
-			// add transparent background
-			imTile.in("-background", "None");
-		
-			imTile.write(tmpImg, function(err) {
-				if(err) throw err;
-			
-				sliceBackgroundImage(tmpImg, bg_file);
-			});
-		}
-		*/
 	}
 }
 
