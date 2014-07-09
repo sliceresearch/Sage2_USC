@@ -37,6 +37,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		this.wsio = wsio;
 		
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
@@ -88,7 +89,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				imageThumbButton = new buttonWidget();
 				imageThumbButton.init(0, this.ctx, null);
 				imageThumbButton.setPosition( i * (imageThumbSize + thumbSpacer), 0 );
-				
+				imageThumbButton.setData( {filename: imageList[i]} );
 				
 				this.thumbnailButtons.push(imageThumbButton);
 			}
@@ -111,7 +112,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		// UI
 		for( i = 0; i < this.thumbnailButtons.length; i++ )
 		{
-			this.thumbnailButtons[i].draw(date);
+			thumbButton = this.thumbnailButtons[i];
+			thumbButton.draw(date);
 		}
 	},
 	
@@ -126,9 +128,20 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	{
 		for( i = 0; i < this.thumbnailButtons.length; i++ )
 		{
-			this.thumbnailButtons[i].onEvent(eventType, userId, x, y, data, date);
+			thumbButton = this.thumbnailButtons[i];
+			thumbButton.onEvent(eventType, userId, x, y, data, date);
+			
+			if( thumbButton.isClicked() )
+			{ 
+				this.addNewElementFromStoredFiles( {application: "image_viewer", filename: thumbButton.getData().filename} );
+			}
 		}
 	},
+	
+	addNewElementFromStoredFiles : function( data )
+	{
+		wsio.emit('addNewElementFromStoredFiles', data);
+	}
 });
 
 function buttonWidget() {
@@ -142,10 +155,21 @@ function buttonWidget() {
 	this.height = 50;
 	
 	this.defaultColor =  "rgba(100, 100, 100, 1.0)";
-	this.mouseOverColor = "rgba(255, 0, 0, 1.0 )";
-	this.clickedColor = "rgba(0, 255, 0, 1.0 )";
+	this.mouseOverColor = "rgba(250, 10, 10, 1.0 )";
+	this.clickedColor = "rgba(10, 250, 10, 1.0 )";
+	this.pressedColor = "rgba(250, 250, 10, 1.0 )";
+	this.releasedColor = "rgba(10, 10, 250, 1.0 )";
 	
+	// Button states:
+	// -1 = Disabled
+	// 0  = Idle
+	// 1  = Over
+	// 2  = Pressed
+	// 3  = Clicked
+	// 4  = Released
 	this.state = 0;
+	
+	this.buttonData = {};
 	
 	this.init = function(id, ctx, resrc)
 	{
@@ -162,16 +186,37 @@ function buttonWidget() {
 		this.posY = y;
 	}
 	
+	this.setData = function( data )
+	{
+		this.buttonData = data;
+	}
+	
+	this.getData = function()
+	{
+		return this.buttonData;
+	}
+	
 	this.draw = function(date)
 	{
-		if( this.state == 1 )
+		if( this.state === 1 )
 			this.ctx.fillStyle = this.mouseOverColor;
-		else if( this.state == 2 )
+		else if( this.state === 3 )
+		{
 			this.ctx.fillStyle = this.clickedColor;
+			this.state = 2; // Pressed state
+		
+		}
+		else if( this.state === 2 )
+			this.ctx.fillStyle = this.pressedColor;
+		else if( this.state === 4 )
+		{
+			this.ctx.fillStyle = this.releasedColor;
+			this.state = 1;
+		}
 		else
 			this.ctx.fillStyle = this.defaultColor;
 		this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
-		
+
 		//console.log("buttonWidget state: "+this.state);
 	};
 	
@@ -179,20 +224,15 @@ function buttonWidget() {
 	{
 		//console.log("buttonWidget onEvent("+eventType+","+userID+","+x+","+y+","+data+","+date+")");
 		
-		if( eventType == "updateFileList" )
-		{
-			console.log(data);
-		}
-		
 		if( this.isOver( userID, x, y ) )
 		{
-			if( eventType == "pointerPress" )
+			if( eventType === "pointerPress" && this.state != 2 )
 			{
-				this.state = 2;
+				this.state = 3; // Click state
 			}
-			else if( this.state == 2 &&  eventType == "pointerRelease" )
+			else if( eventType === "pointerRelease" )
 			{
-				this.state = 1;
+				this.state = 4;
 			}
 			else if( this.state != 2 )
 			{
@@ -204,7 +244,7 @@ function buttonWidget() {
 			this.state = 0;
 		}
 		
-		this.draw(date);
+		//this.draw(date);
 	}
 	
 	this.isOver = function(id, x, y) {
@@ -214,4 +254,16 @@ function buttonWidget() {
 		else
 			return false;
 	};
+	
+	this.isClicked = function()
+	{
+		if ( this.state === 3 )
+		{
+			this.state = 2;
+			return true;
+		}
+		else
+			return false;
+	}
+
 }

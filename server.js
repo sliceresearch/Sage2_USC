@@ -998,6 +998,8 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		
+		console.log("wsAddNewElementFromStoredFiles:");
+		console.log(data);
 		if(appInstance.animation){
 			var i;
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
