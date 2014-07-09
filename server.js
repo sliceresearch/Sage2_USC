@@ -563,8 +563,8 @@ function wsStartNewMediaStream(wsio, data) {
 	
 	// Debug media stream freezing
 	mediaStreams[data.id].timeout = setTimeout(function() {
-		console.log("1 sec with no updates from: " + data.id);
-	}, 1000);
+		console.log("3 sec with no updates from: " + data.id);
+	}, 3000);
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
@@ -581,8 +581,8 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	// Debug media stream freezing
 	clearTimeout(mediaStreams[data.id].timeout);
 	mediaStreams[data.id].timeout = setTimeout(function() {
-		console.log("1 sec with no updates from: " + data.id);
-	}, 1000);
+		console.log("3 sec with no updates from: " + data.id);
+	}, 3000);
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
