@@ -36,8 +36,11 @@ module.exports.pdfinfo = function(pdf_url, callback) {
 			else if(key == "page_size"){
 				var arr = value.split(" ");
 				
-				pdfinfo.page_width  = parseFloat(arr[0]);
-				pdfinfo.page_height = parseFloat(arr[2]);
+				//pdfinfo.page_width  = parseFloat(arr[0]);
+				//pdfinfo.page_height = parseFloat(arr[2]);
+				// 612 x 792 pts (letter)
+				pdfinfo.page_width  = 612;
+				pdfinfo.page_height = 792;
 			}
 			else{
 				pdfinfo[key] = value;

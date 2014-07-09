@@ -505,7 +505,7 @@
 			}
 			
 			var app = applications[position_data.elemId];
-			if(app !== undefined && app.resizeEvents === "continuous"){
+			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
 				var date = new Date(position_data.date);
 				app.resize(date);
 			}
@@ -569,8 +569,9 @@
 				}
 			}
 		});
+
 		wsio.on('createControl', function(data){
-			if (controlItems[data.id].show === false){
+			if (controlItems[data.id].show === false) {
 				var ctrDiv =  document.createElement("div");
 				ctrDiv.id = data.id;
 				ctrDiv.className = "windowControls";
@@ -584,14 +585,15 @@
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id].show = true;
 				controlItems[data.id].divHandle = ctrDiv;
-			}	
+			}
 		});
-		wsio.on('requestControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+
+		wsio.on('requestControlId', function(data) {
+			var ctrl  = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
-			var regC = /_controls/;
-			var regB = /button/;
-			var regS = /slider/;
+			var regC  = /_controls/;
+			var regB  = /button/;
+			var regS  = /slider/;
 			var regTI = /textInput/;
 			
 

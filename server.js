@@ -34,7 +34,7 @@ var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
-var imageinfo   = require('imageinfo');           // gets width, height for images
+// var imageinfo   = require('imageinfo');           // gets width, height for images
 var json5       = require('json5');               // JSON format that allows comments
 var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
@@ -52,6 +52,8 @@ var loader      = require('./src/node-itemloader');     // handles sage item cre
 var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var omicron     = require('./src/node-omicron');        // handles Omicron input events
+var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
+var assets      = require('./src/node-assets');         // manages the list of files
 
 
 // Command line arguments
@@ -98,6 +100,9 @@ var sessionFolder = path.join(__dirname, "sessions");
 if (!fs.existsSync(sessionFolder)) {
      fs.mkdirSync(sessionFolder);
 }
+
+// Build the list of existing assets
+assets.initialize(uploadsFolder);
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
@@ -681,22 +686,24 @@ function wsUpdateAppState(wsio, data) {
 // Got a resize call for an application itself
 //
 function wsAppResize(wsio, data) {
-	// Update the object with the new dimensions
-	var app    = findAppById(data.id);
-	if (app) {
-		// Update the width height and aspect ratio
-		app.width  = data.width;
-		app.height = data.height;
-		app.aspect = app.width/app.height;
-		app.native_width  = data.width;
-		app.native_height = data.height;
-		// build the object to be sent
-		var updateItem = {elemId: app.id,
-							elemLeft: app.left, elemTop: app.top,
-							elemWidth: app.width, elemHeight: app.height,
-							date: new Date()};
-		// send the order
-		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+    if (wsio.clientID === 0) {
+		// Update the object with the new dimensions
+		var app    = findAppById(data.id);
+		if (app) {
+			// Update the width height and aspect ratio
+			app.width  = data.width;
+			app.height = data.height;
+			app.aspect = app.width/app.height;
+			app.native_width  = data.width;
+			app.native_height = data.height;
+			// build the object to be sent
+			var updateItem = {elemId: app.id,
+								elemLeft: app.left, elemTop: app.top,
+								elemWidth: app.width, elemHeight: app.height,
+								force: true, date: new Date()};
+			// send the order
+			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+		}
 	}
 }
 
@@ -752,6 +759,8 @@ function listSessions() {
 
 
 function saveSession (filename) {
+	filename = filename || 'default.json';
+	
 	var fullpath = path.join(sessionFolder, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -763,17 +772,18 @@ function saveSession (filename) {
 	states.date    = Date.now();
 	states.apps    = applications;
 
-	fs.writeFile(fullpath, JSON.stringify(states, null, 4), function(err) {
-	    if (err) {
-	      console.log("Server> saving", err);
-	    } else {
-	      console.log("Server> session saved to " + fullpath);
-	    }
-		states = null;
-	});
+	try {
+		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
+	 	console.log("Session> saved to " + fullpath);
+	}
+	catch (err) {
+		console.log("Session> error saving", err);
+	}
 }
 
 function loadSession (filename) {
+	filename = filename || 'default.json';
+
 	var fullpath = path.join(sessionFolder, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -959,7 +969,7 @@ function tileApplications() {
 		var updateItem = {elemId: app.id,
 							elemLeft: app.left, elemTop: app.top,
 							elemWidth: app.width, elemHeight: app.height,
-							date: new Date()};
+							force: true, date: new Date()};
 		// send the order
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 
@@ -1274,12 +1284,22 @@ function setupDisplayBackground() {
 	// background image
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
-		var bg_info = imageinfo(fs.readFileSync(bg_file));
+
+		//var bg_info = imageinfo(fs.readFileSync(bg_file));
+		var result = exiftool.fileSync(bg_file);
+		if (result.err) {
+			console.log("Error processing background image:", bg_file, result.err);
+ 			console.log(" ");
+			process.exit(1);
+		}
+		var bg_info = result.metadata;
+
+
 		if(config.background.style == "fit"){
-			if(bg_info.width == config.totalWidth && bg_info.height == config.totalHeight){
+			if (bg_info.ImageWidth == config.totalWidth && bg_info.ImageHeight == config.totalHeight) {
 				sliceBackgroundImage(bg_file, bg_file);
 			}
-			else{
+			else {
 				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
 				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 		
@@ -1645,6 +1665,7 @@ if (program.interactive)
 				console.log('tile\t\tlayout all running applications');
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
+				console.log('assets\t\tlist the assets in the file library');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -1653,13 +1674,13 @@ if (program.interactive)
 				if (command[1] !== undefined)
 					saveSession(command[1]);
 				else
-					saveSession("default.json");
+					saveSession();
 				break;
 			case 'load':
 				if (command[1] !== undefined)
 					loadSession(command[1]);
 				else
-					loadSession("default.json");
+					loadSession();
 				break;
 			case 'sessions':
 				printListSessions();
@@ -1681,6 +1702,10 @@ if (program.interactive)
 				clearDisplay();
 				break;
 
+			case 'assets':
+				assets.listAssets();
+				break;
+
 			case 'tile':
 				tileApplications();
 				break;
@@ -1699,6 +1724,8 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
+				saveSession();
+				assets.saveAssets();
 				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
@@ -1712,6 +1739,10 @@ if (program.interactive)
 		shell.prompt();
 	}).on('close', function() {
 		// Close with CTRL-D or CTRL-C
+		// Only synchronous code!
+		// Saving stuff
+		saveSession();
+		assets.saveAssets();
 		console.log('');
 		console.log('SAGE2 done');
 		console.log('');
