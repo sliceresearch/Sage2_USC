@@ -20,12 +20,10 @@ var url       = require('url');
 var unzip     = require('decompress-zip');
 var ffprobe   = require('node-ffprobe');
 var gm        = require('gm');
-//var imageinfo = require('imageinfo');
 var mime      = require('mime');
 var request   = require('request');
 var ytdl      = require('ytdl-core');
 
-//var pdfinfo   = require('./node-pdfinfo').pdfinfo;    // custom node module
 var exiftool  = require('../src/node-exiftool');      // gets exif tags for images
 var assets    = require('../src/node-assets');        // asset management
 
