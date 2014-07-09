@@ -7,9 +7,9 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
+var fileBrowserList = [];
 
 var thumbnailBrowser = SAGE2_App.extend( {
-		
 	construct: function()
 	{
 		arguments.callee.superClass.construct.call(this);
@@ -28,9 +28,9 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx     = this.element.getContext("2d");
 		this.minDim  = Math.min(this.element.width, this.element.height);
 		
-		this.testButton = new buttonWidget();
-		this.testButton.init(0, this.ctx, null);
+		this.thumbnailButtons = [];
 		
+		// websocket to server for file library access
 		hostname = window.location.hostname;
 		port = window.location.port;
 		if(window.location.protocol == "http:" && port == "") port = "80";
@@ -64,14 +64,35 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			wsio.emit('addClient', clientDescription);
 		});
 
-		wsio.on('storedFileList', function(files) {
-			console.log(files);
+		wsio.on('storedFileList', function(fileList) {
+			fileBrowserList = fileList;
 		});
-		
+
 		wsio.on('initialize', function(uniqueID, date, startTime) {
 			wsio.emit('requestStoredFiles');
 		});
 		
+	},
+	
+	updateFileList: function()
+	{
+		imageList = fileBrowserList.image;
+		
+		imageThumbSize = 50;
+		thumbSpacer = 5;
+		
+		if( imageList != null )
+		{
+			for( i = 0; i < imageList.length; i++ )
+			{
+				imageThumbButton = new buttonWidget();
+				imageThumbButton.init(0, this.ctx, null);
+				imageThumbButton.setPosition( i * (imageThumbSize + thumbSpacer), 0 );
+				
+				
+				this.thumbnailButtons.push(imageThumbButton);
+			}
+		}
 	},
 	
 	load: function(state, date)
@@ -88,20 +109,25 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		
 		// UI
-		this.testButton.draw(date);
+		for( i = 0; i < this.thumbnailButtons.length; i++ )
+		{
+			this.thumbnailButtons[i].draw(date);
+		}
 	},
 	
 	resize: function(date)
 	{
+		this.updateFileList();
 		this.minDim = Math.min(this.element.width, this.element.height);		
 		this.refresh(date);
 	},
 	
 	event: function(eventType, userId, x, y, data, date)
 	{
-		this.testButton.onEvent( eventType, userId, x, y, data, date );
-		
-		//this.refresh(date);
+		for( i = 0; i < this.thumbnailButtons.length; i++ )
+		{
+			this.thumbnailButtons[i].onEvent(eventType, userId, x, y, data, date);
+		}
 	},
 });
 
@@ -128,6 +154,12 @@ function buttonWidget() {
 		this.resrcPath = resrc;
 		
 		//console.log("buttonWidget init()");
+	}
+	 
+	this.setPosition = function( x, y )
+	{
+		this.posX = x;
+		this.posY = y;
 	}
 	
 	this.draw = function(date)
