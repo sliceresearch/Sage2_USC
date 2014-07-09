@@ -3,6 +3,7 @@
 <head lang="en">
 <meta charset="utf-,8">
 <title>SAGE2 Audio Manager</title>
+<h1>SAGE2 Audio Manager<h1>
 
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -26,7 +27,9 @@
 	var hostAlias = {};
 	
 	var videos = {};
-	
+    var audioGainNodes = {};
+	var volumeSliders = {};
+    
 	function init() {
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -52,7 +55,7 @@
 				requiresFullApps: true,
 				requiresAppPositionSizeTypeOnly: false,
 				receivesMediaStreamFrames: false,
-				receivesWindowModification: false,
+				receivesWindowModification: true,
 				receivesPointerData: false,
 				receivesInputEvents: true,
 				receivesRemoteServerInfo: false
@@ -94,8 +97,18 @@
 				if(window.location.hostname !== json_cfg.alternate_hosts[i])
 					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
 			}
+
+			console.log("setupDisplayConfiguration totalWidth = " + json_cfg.totalWidth + ", totalHeight = " + json_cfg.totalHeight);
 		});
-		
+
+		wsio.on('setItemPosition', function (data) {
+		    console.log("setItemPosition: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
+
+		});
+
+		wsio.on('setItemPositionAndSize', function (data) {
+		    console.log("setItemPositionAndSize: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
+		});
 		
 		wsio.on('createAppWindow', function(data) {
 			if(data.application === "movie_player"){
@@ -107,8 +120,35 @@
 				vid.height = vid.width / data.aspect;
 				vid.controls = false;
 				vid.ready = false;
-				
-				vid.addEventListener('canplay', function() {
+                
+                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                var audioSource = audioCtx.createMediaElementSource(vid);
+                var gainNode = audioCtx.createGain();
+                audioGainNodes[vid.id] = gainNode;
+                
+                var volumeSlider = document.createElement('input');
+                volumeSlider.id = vid.id;
+                volumeSlider.type = 'range';
+                volumeSlider.min = 0.0;
+                volumeSlider.max = 1.0;
+                volumeSlider.value = 1.0;
+                volumeSlider.step = 0.05;
+                
+                volumeSliders[vid.id] = volumeSlider;
+                
+                function onVolumeSliderChanged(e) {
+                    var volumeSlider = e.target;
+                    audioGainNodes[volumeSlider.id].gain.value = volumeSlider.value;
+                    console.log("event target " + e.target + ", id = " + volumeSlider.id + ", event type " + e.type + ", adjusting gain to " + audioGainNodes[volumeSlider.id].gain.value);
+		   	  
+		        }
+                
+                volumeSlider.addEventListener('input', onVolumeSliderChanged);
+                
+                audioSource.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                vid.addEventListener('canplay', function() {
 					console.log("video can now play"); // Video is loaded and can be played
 					vid.ready = true;
 				}, false);
@@ -145,7 +185,12 @@
 				
 				videos[vid.id] = {interval: null};
 				
-				main.appendChild(vid);
+				videoGroup = document.createElement("fieldset");
+				videoGroup.align = "center";
+                videoGroup.appendChild(vid);
+                videoGroup.appendChild(volumeSlider);
+                
+				main.appendChild(videoGroup);
 			}
 			
 			if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
@@ -200,9 +245,18 @@
 		
 		wsio.on('deleteElement', function(elem_data) {
 			var deleteElem = document.getElementById(elem_data.elemId);
-			if(deleteElem != null){
+            if(deleteElem != null){
 				clearInterval(videos[deleteElem.id].interval);
-				deleteElem.parentNode.removeChild(deleteElem);
+				var fieldsetParent = deleteElem.parentNode;
+                if (fieldsetParent != null) {
+                    var nodes = fieldsetParent.childNodes;
+                    if (nodes != null) {
+                        for (var i = 0; i < nodes.length; i++) {
+                            nodes[i].parentNode.removeChild(nodes[i]);
+                        }
+                        main.removeChild(fieldsetParent);
+                    }
+                }
 			}
 		});
 		
