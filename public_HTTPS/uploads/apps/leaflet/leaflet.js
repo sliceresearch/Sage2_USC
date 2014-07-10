@@ -22,11 +22,13 @@
 
 
 function addCSS( url, callback ) {
-    var fileref = document.createElement("link")
+    var fileref = document.createElement("link");
+
 	if( callback ) fileref.onload = callback;
-    fileref.setAttribute("rel", "stylesheet")
-    fileref.setAttribute("type", "text/css")
-    fileref.setAttribute("href", url)
+
+    fileref.setAttribute("rel", "stylesheet");
+    fileref.setAttribute("type", "text/css");
+    fileref.setAttribute("href", url);
 	document.head.appendChild( fileref );
 }
 
@@ -89,7 +91,7 @@ var leaflet = SAGE2_App.extend( {
 				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map2], zoomControl: false}).setView([41.869910, -87.65], 16);
 
 			/* Initialize the SVG layer */
-			mySelf.map._initPathRoot()    
+			mySelf.map._initPathRoot();
 
 			/* We simply pick up the SVG from the map object */
 			var svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
@@ -109,7 +111,7 @@ var leaflet = SAGE2_App.extend( {
 							console.log("latitude is not a number");
 						if (isNaN(d.longitude))
 							console.log("longitude is not a number");
-						d.LatLng = new L.LatLng(+d.latitude, +d.longitude)
+						d.LatLng = new L.LatLng(+d.latitude, +d.longitude);
 
 
 						//"date_of_occurrence" : "2013-07-03T09:00:00",
@@ -171,18 +173,45 @@ var leaflet = SAGE2_App.extend( {
 			.style("fill", function (d) { return d.color; })
 			.attr("r", 15);
 
-				mySelf.map.on("viewreset", update);
+
+		var feature2 = g.selectAll("text")
+			.data(collection)
+			.enter()
+			.append("svg:text")
+			.style("fill", "white")
+			.style("stroke", function (d) { return d.color; })
+			.style("stroke-width", "1")
+            .style("font-size", "30px")
+            .style("font-family", "Arial")
+            .style("text-anchor", "start")
+            .style("font-weight","bold")
+            .text(function (d)
+            		{
+            			if (d.inLastMonth)
+            				return d._primary_decsription.toLowerCase(); 
+            		});
+
+			mySelf.map.on("viewreset", update);
 				update();
 
-				function update() {
-					feature.attr("transform", 
-					function(d) { 
-						return "translate("+ 
-							mySelf.map.latLngToLayerPoint(d.LatLng).x +","+ 
-							mySelf.map.latLngToLayerPoint(d.LatLng).y +")";
-						}
-					)
+		function update() {
+			feature.attr("transform", 
+			function(d) { 
+				return "translate("+ 
+					mySelf.map.latLngToLayerPoint(d.LatLng).x +","+ 
+					mySelf.map.latLngToLayerPoint(d.LatLng).y +")";
 				}
+			);
+
+			feature2.attr("transform", 
+			function(d) { 
+				return "translate("+ 
+					(mySelf.map.latLngToLayerPoint(d.LatLng).x+20.0) +","+ 
+					(mySelf.map.latLngToLayerPoint(d.LatLng).y+5.0) +")";
+				}
+			);
+			
+		}
 			});	
 }
 );
