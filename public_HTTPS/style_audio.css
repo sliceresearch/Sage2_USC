@@ -14,14 +14,33 @@
 /* CSS Document */
 
 * {
-	margin: 0;
-	padding: 0;
+	
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-weight: normal;
 }
 
 body {
 	text-align: center;
+	background-color: #222222;
+	color: #FFFFFF;
+
+}
+
+#background {
+	position:absolute;
+	overflow: hidden;
 }
 
 #main {
-	width: 800px;
+	
+}
+
+fieldset {
+	border: solid 1px #000000;
+	box-shadow: 8px 0px 12px #222222;
+	background-color: #666666;
+	font-size: 12px;
+	font-weight: normal;
+	margin: auto;
+	
 }

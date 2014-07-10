@@ -4,6 +4,7 @@
 <meta charset="utf-,8">
 <title>SAGE2 Audio Manager</title>
 <h1>SAGE2 Audio Manager<h1>
+<br>
 
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -28,7 +29,11 @@
 	
 	var videos = {};
     var audioGainNodes = {};
+    var audioPannerNodes = {};
 	var volumeSliders = {};
+    
+    var totalWidth;
+    var totalHeight;
     
 	function init() {
 		hostname = window.location.hostname;
@@ -99,12 +104,14 @@
 			}
 
 			console.log("setupDisplayConfiguration totalWidth = " + json_cfg.totalWidth + ", totalHeight = " + json_cfg.totalHeight);
+                
+            totalWidth = json_cfg.totalWidth;
+            totalHeight = json_cfg.totalHeight;
 		});
 
 		wsio.on('setItemPosition', function (data) {
 		    console.log("setItemPosition: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
-
-		});
+        });
 
 		wsio.on('setItemPositionAndSize', function (data) {
 		    console.log("setItemPositionAndSize: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
@@ -114,39 +121,12 @@
 			if(data.application === "movie_player"){
 				var main = document.getElementById("main");
 				
-				var vid = document.createElement("video");
+				var vid = document.createElement("audio");
 				vid.id = data.id;
-				vid.width = 800;
-				vid.height = vid.width / data.aspect;
+				//vid.width = 800;
+				//vid.height = vid.width / data.aspect;
 				vid.controls = false;
 				vid.ready = false;
-                
-                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                var audioSource = audioCtx.createMediaElementSource(vid);
-                var gainNode = audioCtx.createGain();
-                audioGainNodes[vid.id] = gainNode;
-                
-                var volumeSlider = document.createElement('input');
-                volumeSlider.id = vid.id;
-                volumeSlider.type = 'range';
-                volumeSlider.min = 0.0;
-                volumeSlider.max = 1.0;
-                volumeSlider.value = 1.0;
-                volumeSlider.step = 0.05;
-                
-                volumeSliders[vid.id] = volumeSlider;
-                
-                function onVolumeSliderChanged(e) {
-                    var volumeSlider = e.target;
-                    audioGainNodes[volumeSlider.id].gain.value = volumeSlider.value;
-                    console.log("event target " + e.target + ", id = " + volumeSlider.id + ", event type " + e.type + ", adjusting gain to " + audioGainNodes[volumeSlider.id].gain.value);
-		   	  
-		        }
-                
-                volumeSlider.addEventListener('input', onVolumeSliderChanged);
-                
-                audioSource.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
                 
                 vid.addEventListener('canplay', function() {
 					console.log("video can now play"); // Video is loaded and can be played
@@ -184,10 +164,47 @@
 				vid.style.display = "none";
 				
 				videos[vid.id] = {interval: null};
+                
+                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                var audioSource = audioCtx.createMediaElementSource(vid);
+                var gainNode = audioCtx.createGain();
+                audioGainNodes[vid.id] = gainNode;
+                
+                var volumeSlider = document.createElement('input');
+                volumeSlider.id = vid.id;
+                volumeSlider.type = 'range';
+                volumeSlider.min = 0.0;
+                volumeSlider.max = 1.0;
+                volumeSlider.value = 1.0;
+                volumeSlider.step = 0.05;
+                
+                volumeSliders[vid.id] = volumeSlider;
+                
+                function onVolumeSliderChanged(e) {
+                var volumeSlider = e.target;
+                audioGainNodes[volumeSlider.id].gain.value = volumeSlider.value;
+                console.log("event target " + e.target + ", id = " + volumeSlider.id + ", event type " + e.type + ", adjusting gain to " + audioGainNodes[volumeSlider.id].gain.value);
+                
+		        }
+                
+                volumeSlider.addEventListener('input', onVolumeSliderChanged);
+                
+                panNode = audioCtx.createPanner();
+                audioPannerNodes[vid.id] = panNode;
+                audioCtx.listener.setPosition(0, 0, 0);
+                
+                audioSource.connect(gainNode);
+                panNode.connect(audioCtx.destination);
+                gainNode.connect(panNode);
 				
 				videoGroup = document.createElement("fieldset");
-				videoGroup.align = "center";
+				videoGroup.legend = url;
+                
+                vidLabel = document.createElement("p");
+                vidLabel.textContent = data.title;
+                
                 videoGroup.appendChild(vid);
+                videoGroup.appendChild(vidLabel);
                 videoGroup.appendChild(volumeSlider);
                 
 				main.appendChild(videoGroup);
