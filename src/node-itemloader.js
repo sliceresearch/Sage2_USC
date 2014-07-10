@@ -53,6 +53,7 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 		"image/tiff": "image_viewer",
 		"image/vnd.adobe.photoshop": "image_viewer",
 		"video/mp4": "movie_player",
+		"video/webm": "movie_player",
 		"video/youtube": "movie_player",
 		"application/pdf": "pdf_viewer", 
 		"application/zip": "custom_app",
@@ -293,7 +294,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	var mime = assets.getMimeType(file);
 
 	if (dims && mime) {
-		if (mime === "video/mp4") {			
+		if (mime === "video/mp4" || mime === "video/webm") {
 			var appInstance = {
 				id: null,
 				title: name,
@@ -302,7 +303,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 				url: external_url,
 				data: {
 					src: external_url,
-					type: "video/mp4",
+					type: mime,
 					play: false,
 					time: 0.0
 				},
