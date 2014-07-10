@@ -92,21 +92,79 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		console.log(serverFileList);
 		
 		this.thumbnailButtons = [];
+		
+		// Server file lists by type
 		imageList = serverFileList.image;
+		pdfList =  serverFileList.pdf;
+		videoList =  serverFileList.video;
+		appList =  serverFileList.app;
+		sessionList =  serverFileList.session;
 		
 		imageThumbSize = 50;
 		thumbSpacer = 5;
+		
+		imageIcon = this.resrcPath + "/icons/image2.svg";
+		
+		console.log( imageIcon );
 		
 		if( imageList != null )
 		{
 			for( i = 0; i < imageList.length; i++ )
 			{
-				imageThumbButton = new buttonWidget();
-				imageThumbButton.init(0, this.ctx, null);
-				imageThumbButton.setPosition( i * (imageThumbSize + thumbSpacer), 0 );
-				imageThumbButton.setData( {filename: imageList[i]} );
+				thumbnailButton = new buttonWidget();
+				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 0 );
+				thumbnailButton.setData( {application: "image_viewer", filename: imageList[i]} );
 				
-				this.thumbnailButtons.push(imageThumbButton);
+				this.thumbnailButtons.push(thumbnailButton);
+			}
+		}
+		if( pdfList != null )
+		{
+			for( i = 0; i < pdfList.length; i++ )
+			{
+				thumbnailButton = new buttonWidget();
+				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 2 * (imageThumbSize + thumbSpacer) );
+				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i]} );
+				
+				this.thumbnailButtons.push(thumbnailButton);
+			}
+		}
+		if( videoList != null )
+		{
+			for( i = 0; i < videoList.length; i++ )
+			{
+				thumbnailButton = new buttonWidget();
+				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 4 * (imageThumbSize + thumbSpacer) );
+				thumbnailButton.setData( {application: "movie_player", filename: videoList[i]} );
+				
+				this.thumbnailButtons.push(thumbnailButton);
+			}
+		}
+		if( appList != null )
+		{
+			for( i = 0; i < appList.length; i++ )
+			{
+				thumbnailButton = new buttonWidget();
+				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 6 * (imageThumbSize + thumbSpacer) );
+				thumbnailButton.setData( {application: "custom_app", filename: appList[i]} );
+				
+				this.thumbnailButtons.push(thumbnailButton);
+			}
+		}
+		if( sessionList != null )
+		{
+			for( i = 0; i < sessionList.length; i++ )
+			{
+				thumbnailButton = new buttonWidget();
+				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 8 * (imageThumbSize + thumbSpacer) );
+				thumbnailButton.setData( {application: "load_session", filename: sessionList[i]} );
+				
+				this.thumbnailButtons.push(thumbnailButton);
 			}
 		}
 	},
@@ -147,7 +205,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			
 			if( thumbButton.isClicked() && sendsToServer )
 			{ 
-				this.addNewElementFromStoredFiles( {application: "image_viewer", filename: thumbButton.getData().filename} );
+				this.addNewElementFromStoredFiles( thumbButton.getData()  );
 			}
 		}
 	},
