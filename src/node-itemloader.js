@@ -18,7 +18,6 @@ var path      = require('path');
 var url       = require('url');
 
 var unzip     = require('decompress-zip');
-var ffprobe   = require('node-ffprobe');
 var gm        = require('gm');
 var mime      = require('mime');
 var request   = require('request');
@@ -135,69 +134,96 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 				}
 			}
 		}
-
 		var name = info.title;
 		var aspectRatio = 16/9;
 		var resolutionY = mp4.resolution;
 		var resolutionX = resolutionY * aspectRatio;
 		
-		/*
-		var poster = info.iurlmaxres;
-		if (poster === null) poster = info.iurl;
-		if (poster === null) poster = info.iurlsd;
-		*/
-		
-		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, function(appInstance) {
-			callback(appInstance);
+		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
+			function(appInstance) {
+				callback(appInstance);
 		});
 	});
 };
 
-appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
-	var _this = this;
-	ffprobe(source, function(err, data){
-		if(err) throw err;
-		
-		var i;
-		for(i=0; i<data.streams.length; i++){
-			if(data.streams[i].codec_type == "video"){
-				var aspectRatio = data.streams[i].width / data.streams[i].height;
-				
-				var appInstance = {
-					id: null,
-					title: name,
-					application: "movie_player",
-					type: mime_type,
-					url: url,
-					data: {
-						src: source,
-						type: "video/mp4",
-						play: false,
-						time: 0.0
-					},
-					resrc: null,
-					left: _this.titleBarHeight,
-					top: 1.5*_this.titleBarHeight,
-					width: data.streams[i].width,
-					height: data.streams[i].height,
-					native_width: data.streams[i].width,
-					native_height: data.streams[i].height,
-					previous_left: null,
-					previous_top: null,
-					previous_width: null,
-					previous_height: null,
-					maximized: false,
-					aspect: aspectRatio,
-					animation: false,
-					date: new Date()
-				};
-				_this.scaleAppToFitDisplay(appInstance);
-				callback(appInstance);
-				return;
-			}
-		}
-	});
+appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw, vh, callback) {
+	var aspectRatio = vw / vh;
+	var appInstance = {
+		id: null,
+		title: name,
+		application: "movie_player",
+		type: mime_type,
+		url: url,
+		data: {
+			src: source,
+			type: 'video/mp4',
+			play: false,
+			time: 0.0
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5*this.titleBarHeight,
+		width: vw,
+		height: vh,
+		native_width: vw,
+		native_height: vh,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
 };
+
+
+// appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
+// 	var _this = this;
+// 	ffprobe(source, function(err, data){
+// 		if(err) throw err;
+// 		var i;
+// 		for(i=0; i<data.streams.length; i++){
+// 			if(data.streams[i].codec_type == "video"){
+// 				var aspectRatio = data.streams[i].width / data.streams[i].height;
+// 				var appInstance = {
+// 					id: null,
+// 					title: name,
+// 					application: "movie_player",
+// 					type: mime_type,
+// 					url: url,
+// 					data: {
+// 						src: source,
+// 						type: "video/mp4",
+// 						play: false,
+// 						time: 0.0
+// 					},
+// 					resrc: null,
+// 					left: _this.titleBarHeight,
+// 					top: 1.5*_this.titleBarHeight,
+// 					width: data.streams[i].width,
+// 					height: data.streams[i].height,
+// 					native_width: data.streams[i].width,
+// 					native_height: data.streams[i].height,
+// 					previous_left: null,
+// 					previous_top: null,
+// 					previous_width: null,
+// 					previous_height: null,
+// 					maximized: false,
+// 					aspect: aspectRatio,
+// 					animation: false,
+// 					date: new Date()
+// 				};
+// 				_this.scaleAppToFitDisplay(appInstance);
+// 				callback(appInstance);
+// 				return;
+// 			}
+// 		}
+// 	});
+// };
 
 appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var local_url = path.join("uploads", "pdfs", name);
@@ -330,51 +356,6 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	}
 };
 
-// appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_url, name, callback) {
-// 	var _this = this;
-// 	ffprobe(file, function(err, data){
-// 		if(err) throw err;
-		
-// 		var i;
-// 		for(i=0; i<data.streams.length; i++){
-// 			if(data.streams[i].codec_type == "video"){
-// 				var aspectRatio = data.streams[i].width / data.streams[i].height;
-				
-// 				var appInstance = {
-// 					id: null,
-// 					title: name,
-// 					application: "movie_player",
-// 					type: mime_type,
-// 					url: external_url,
-// 					data: {
-// 						src: external_url,
-// 						type: "video/mp4",
-// 						play: false,
-// 						time: 0.0
-// 					},
-// 					resrc: null,
-// 					left: _this.titleBarHeight,
-// 					top: 1.5*_this.titleBarHeight,
-// 					width: data.streams[i].width,
-// 					height: data.streams[i].height,
-// 					native_width: data.streams[i].width,
-// 					native_height: data.streams[i].height,
-// 					previous_left: null,
-// 					previous_top: null,
-// 					previous_width: null,
-// 					previous_height: null,
-// 					maximized: false,
-// 					aspect: aspectRatio,
-// 					animation: false,
-// 					date: new Date()
-// 				};
-// 				_this.scaleAppToFitDisplay(appInstance);
-// 				callback(appInstance);
-// 				return;
-// 			}
-// 		}
-// 	});
-// };
 
 appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_url, name, callback) {
 	// Assume default to Letter size
@@ -667,10 +648,11 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 					callback(appInstance);
 				});
 			}
-			else{
-				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, function(appInstance) {
-					callback(appInstance);
-				});
+			else {
+				console.log("Server> CANT load", appData.url, appData.type, appData.name);
+				// this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, function(appInstance) {
+				// 	callback(appInstance);
+				// });
 			}
 		}
 		else if(app === "pdf_viewer"){

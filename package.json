@@ -46,7 +46,6 @@
     "json5": "latest",
     "mime": "latest",
     "multiparty": "latest",
-    "node-ffprobe": "latest",
     "request": "latest",
     "ws": "latest",
     "ytdl-core": "latest",
