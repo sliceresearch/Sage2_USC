@@ -7,7 +7,9 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
-var fileBrowserList = [];
+var thumbnailBrowserList = [];
+var thumbnailBrowserIDList = [];
+var sendsToServer = true;
 
 var thumbnailBrowser = SAGE2_App.extend( {
 	construct: function()
@@ -29,7 +31,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.minDim  = Math.min(this.element.width, this.element.height);
 		
 		this.thumbnailButtons = [];
-		
+		thumbnailBrowserList.push(this);
+				
 		// websocket to server for file library access
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -40,11 +43,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.wsio = wsio;
 		
 		document.title = window.location.hostname.concat(" ", document.title ); 
-		
+
 		wsio.open(function() {
 			console.log("open websocket");
 			var clientDescription = {
-				clientType: "sageUI",
+				clientType: "mediaBrowser",
+				clientID: id,
 				sendsPointerData: false,
 				sendsMediaStreamFrames: false,
 				requestsServerFiles: true,
@@ -66,18 +70,30 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		});
 
 		wsio.on('storedFileList', function(fileList) {
-			fileBrowserList = fileList;
+			for( i = 0; i < thumbnailBrowserList.length; i++ )
+			{
+				thumbnailBrowserList[i].updateFileList(fileList);
+			}
 		});
 
 		wsio.on('initialize', function(uniqueID, date, startTime) {
 			wsio.emit('requestStoredFiles');
 		});
 		
+		wsio.on('disableSendToServer', function() {
+			sendsToServer = false;
+		});
+		
+		thumbnailBrowserIDList.push(id);
 	},
 	
-	updateFileList: function()
+	updateFileList: function(serverFileList)
 	{
-		imageList = fileBrowserList.image;
+		console.log("updateFileList: ");
+		console.log(serverFileList);
+		
+		this.thumbnailButtons = [];
+		imageList = serverFileList.image;
 		
 		imageThumbSize = 50;
 		thumbSpacer = 5;
@@ -119,7 +135,6 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	resize: function(date)
 	{
-		this.updateFileList();
 		this.minDim = Math.min(this.element.width, this.element.height);		
 		this.refresh(date);
 	},
@@ -131,16 +146,17 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			thumbButton = this.thumbnailButtons[i];
 			thumbButton.onEvent(eventType, userId, x, y, data, date);
 			
-			if( thumbButton.isClicked() )
+			if( thumbButton.isClicked() && sendsToServer )
 			{ 
 				this.addNewElementFromStoredFiles( {application: "image_viewer", filename: thumbButton.getData().filename} );
 			}
 		}
 	},
 	
+	// Displays files
 	addNewElementFromStoredFiles : function( data )
 	{
-		wsio.emit('addNewElementFromStoredFiles', data);
+		this.wsio.emit('addNewElementFromStoredFiles', data);
 	}
 });
 
@@ -265,5 +281,4 @@ function buttonWidget() {
 		else
 			return false;
 	}
-
 }

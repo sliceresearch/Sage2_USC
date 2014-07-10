@@ -85,6 +85,7 @@ var webBrowserClient;
 var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
+var mediaBrowsers = {};
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
@@ -185,7 +186,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages = {};
 	
 	// Remember the display ID
-	if (wsio.clientType === "display") {
+	if (wsio.clientType === "display" || wsio.clientType === "mediaBrowser" ) {
 		wsio.clientID = data.clientID;
 	} else {
 		wsio.clientID = -1;
@@ -210,13 +211,27 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesRemoteServerInfo          = data.receivesRemoteServerInfo         || false;
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
-	initializeWSClient(wsio);
 	
+	initializeWSClient(wsio);
 	clients.push(wsio);
+
 	if (wsio.clientType==="display")
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+	else if ( wsio.clientType === "mediaBrowser" )
+	{
+		// Allows only one instance of each mediabrowser to send 'open file' command
+		if ( mediaBrowsers[wsio.clientID] == null )
+		{
+			console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			mediaBrowsers[wsio.clientID] = wsio;
+		}
+		else
+		{
+			wsio.emit("disableSendToServer");
+		}
+	}
 	else
-	console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
 }
 
 function initializeWSClient(wsio) {
@@ -997,9 +1012,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 	else {
 	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
-		
-		console.log("wsAddNewElementFromStoredFiles:");
-		console.log(data);
+
 		if(appInstance.animation){
 			var i;
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
