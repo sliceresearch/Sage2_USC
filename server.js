@@ -2383,24 +2383,5 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 createMediabrowser();
 function createMediabrowser() {
 	var data = {application: "custom_app", filename: "wallMenuUI"};
-
-	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-			appInstance.id = getUniqueAppId();
-			
-			if(appInstance.animation){
-				var i;
-				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.requiresFullApps){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						appAnimations[appInstance.id].clients[clientAddress] = false;
-					}
-				}
-			}
-			
-			broadcast('createAppWindow', appInstance, 'requiresFullApps');
-			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-			
-			applications.push(appInstance);
-		});
+	wsAddNewElementFromStoredFiles( null, data );
 }

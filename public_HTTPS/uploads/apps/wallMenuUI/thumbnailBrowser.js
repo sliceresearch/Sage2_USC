@@ -7,7 +7,7 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
-var thumbnailBrowserList = [];
+var thumbnailBrowserList = {};
 var thumbnailBrowserIDList = [];
 var sendsToServer = true;
 
@@ -31,7 +31,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.minDim  = Math.min(this.element.width, this.element.height);
 		
 		this.thumbnailButtons = [];
-		thumbnailBrowserList.push(this);
+		thumbnailBrowserList[id] = this;
 				
 		// websocket to server for file library access
 		hostname = window.location.hostname;
@@ -39,12 +39,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		if(window.location.protocol == "http:" && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
-		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
-		this.wsio = wsio;
+		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		
 		document.title = window.location.hostname.concat(" ", document.title ); 
 
-		wsio.open(function() {
+		this.wsio.open(function() {
 			console.log("open websocket");
 			var clientDescription = {
 				clientType: "mediaBrowser",
@@ -66,21 +65,21 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				receivesInputEvents: false,
 				receivesRemoteServerInfo: false
 			};
-			wsio.emit('addClient', clientDescription);
+			thumbnailBrowserList[id].wsio.emit('addClient', clientDescription);
 		});
 
-		wsio.on('storedFileList', function(fileList) {
-			for( i = 0; i < thumbnailBrowserList.length; i++ )
-			{
-				thumbnailBrowserList[i].updateFileList(fileList);
-			}
+		this.wsio.on('storedFileList', function(fileList) {
+			thumbnailBrowserList[id].updateFileList(fileList);
 		});
 
-		wsio.on('initialize', function(uniqueID, date, startTime) {
-			wsio.emit('requestStoredFiles');
+		this.wsio.on('initialize', function(uniqueID, date, startTime) {
+			console.log("initialize");
+			console.log(id);
+			console.log( thumbnailBrowserList );
+			thumbnailBrowserList[id].wsio.emit('requestStoredFiles');
 		});
 		
-		wsio.on('disableSendToServer', function() {
+		this.wsio.on('disableSendToServer', function() {
 			sendsToServer = false;
 		});
 		
