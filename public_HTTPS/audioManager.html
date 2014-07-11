@@ -110,11 +110,36 @@
 		});
 
 		wsio.on('setItemPosition', function (data) {
-		    console.log("setItemPosition: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
+		    //console.log("setItemPosition: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
+		    
+		    var halfTotalWidth = totalWidth / 2;
+		    centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
+		    if (centerX < -totalWidth) centerX = -totalWidth;
+		    if (centerX > totalWidth) centerX = totalWidth;
+		    var panX = centerX / totalWidth;
+		    
+		    var panY = 0;
+		    
+		    var panZ = 1 - Math.abs(panX);
+		    var panNode = audioPannerNodes[data.elemId];
+		    panNode.setPosition(panX, panY, panZ);
+		    //console.log("setItemPosition panX = " + panX + ", panY = " + panY + ", panZ = " + panZ);
         });
 
 		wsio.on('setItemPositionAndSize', function (data) {
-		    console.log("setItemPositionAndSize: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
+		    //console.log("setItemPositionAndSize: elemID = " + data.elemId + ", left = " + data.elemLeft + ", top = " + data.elemTop + ", width = " + data.elemWidth + ", height = " + data.elemHeight);
+		
+		    var halfTotalWidth = totalWidth / 2;
+		    centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
+		    if (centerX < -totalWidth) centerX = -totalWidth;
+		    if (centerX > totalWidth) centerX = totalWidth;
+		    var panX = centerX / totalWidth;
+		    
+		    var panY = 0;
+		    
+		    var panZ = 1 - Math.abs(panX);
+		    var panNode = audioPannerNodes[data.elemId];
+		    panNode.setPosition(panX, panY, panZ);
 		});
 		
 		wsio.on('createAppWindow', function(data) {
@@ -190,7 +215,9 @@
                 volumeSlider.addEventListener('input', onVolumeSliderChanged);
                 
                 panNode = audioCtx.createPanner();
+                panNode.panningModel = 'equalpower';
                 audioPannerNodes[vid.id] = panNode;
+                console.log("audioPannerNodes for index " + vid.id + " has value " + audioPannerNodes[vid.id]);
                 audioCtx.listener.setPosition(0, 0, 0);
                 
                 audioSource.connect(gainNode);
