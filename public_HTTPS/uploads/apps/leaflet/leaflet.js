@@ -50,6 +50,37 @@ var leaflet = SAGE2_App.extend( {
 		this.map2 = null;
 
 		this.whichMap = 1;
+
+		this.bigCollection = {};
+
+		this.numBeats = 3;
+		this.currentBeats = 0;
+
+		this.g = null;
+
+		this.allLoaded = 0;
+	},
+
+
+	getNewData: function(meSelf, beat){
+
+		var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
+
+		d3.json(query, function(collection) {
+			meSelf.currentBeats++;
+
+
+			console.log("grabbing beat"+beat);
+
+			if (meSelf.currentBeats === 1)
+					meSelf.bigCollection = collection;
+			else
+					meSelf.bigCollection = meSelf.bigCollection.concat(collection);
+
+			// when I have all the data start parsing it
+			if (meSelf.currentBeats === meSelf.numBeats)
+				meSelf.dealWithData(meSelf.bigCollection);
+		});
 	},
 
 
@@ -65,6 +96,9 @@ var leaflet = SAGE2_App.extend( {
 		this.element.id = "div" + id;
 		var mySelf = this;
 
+		this.maxFPS = 0.000023; // once every 12 hours
+		//this.maxFPS = 0.1; // for testing
+
 
 		// for SAGE2
 		this.lastZoom = date;
@@ -74,12 +108,11 @@ var leaflet = SAGE2_App.extend( {
 		var mapURL1 = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 		var mapCopyright1 = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
 
-		var mapURL2 = 'http://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}';
-		var mapCopyright2 = 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC';
+		var mapURL2 = 'http://{s}.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png';
+		var mapCopyright2 = '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
 
 		// Load the CSS file for leaflet.js
 		addCSS(mySelf.resrcPath + "scripts/leaflet.css", function(){
-
 
 			mySelf.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
 			mySelf.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
@@ -94,76 +127,88 @@ var leaflet = SAGE2_App.extend( {
 			mySelf.map._initPathRoot();
 
 			/* We simply pick up the SVG from the map object */
-			var svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
-			var g = svg.append("g");
+			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
+			mySelf.g = mySelf.svg.append("g");
 
-			var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
-
-			var today = new Date();
-
-
-			d3.json("http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=1232", function(collection) {
-				collection.forEach(function(d) {
-
-				if (d.latitude && d.longitude)
-					{
-						if (isNaN(d.latitude))
-							console.log("latitude is not a number");
-						if (isNaN(d.longitude))
-							console.log("longitude is not a number");
-						d.LatLng = new L.LatLng(+d.latitude, +d.longitude);
+			mySelf.getNewData(mySelf,"1232");
+			mySelf.getNewData(mySelf,"1231");
+			mySelf.getNewData(mySelf,"0124");
 
 
-						//"date_of_occurrence" : "2013-07-03T09:00:00",
-						// date difference is in milliseconds
-						d.myDate = parseDate(d.date_of_occurrence);
-						d.daysAgo = (today - d.myDate) / 1000 / 60 / 60 / 24; //7-373
+		// attach the SVG into the this.element node provided to us
+		var box="0,0,"+width+","+height;
+		mySelf.svg = d3.select(mySelf.element).append("svg")
+		    .attr("width",   width)
+		    .attr("height",  height)
+		    .attr("viewBox", box);
+});
+},
 
-						if (d.daysAgo < 31)
-							d.inLastMonth = 1;
-						else
-							d.inLastMonth = 0;
+dealWithData: function(collection)
+{
+	var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
+
+	var today = new Date();
 
 
+		collection.forEach(function(d) {
 
-						d.description = d._primary_decsription;
+		if (d.latitude && d.longitude)
+			{
+				if (isNaN(d.latitude))
+					console.log("latitude is not a number");
+				if (isNaN(d.longitude))
+					console.log("longitude is not a number");
+				d.LatLng = new L.LatLng(+d.latitude, +d.longitude);
 
-					   switch(d._primary_decsription) {
-					   	case "THEFT":
-					   	case "BURGLARY":
-					   	case "MOTOR VEHICLE THEFT":
-					   	case "ROBBERY": 			d.color = "green"; break; 
 
-					   	case "ASSAULT":
-					   	case "HOMICIDE":
-					   	case "CRIM SEXUAL ASSAULT":
-					   	case "BATTERY": 			d.color = "red"; break; 
+				//"date_of_occurrence" : "2013-07-03T09:00:00",
+				// date difference is in milliseconds
+				d.myDate = parseDate(d.date_of_occurrence);
+				d.daysAgo = (today - d.myDate) / 1000 / 60 / 60 / 24; //7-373
 
-					   	case "CRIMINAL DAMAGE": 
-					   	case "CRIMINAL TRESPASS": 	d.color = "aqua"; break;
-
-					   	case "WEAPONS VIOLATION": 
-					   	case "CONCEALED CARRY LICENSE VIOLATION":
-					   								d.color = "black"; break;
-
-					   	case "NARCOTICS": 			d.color = "pink"; break;
-
-					   	case "OTHER OFFENSE": 		d.color = "white"; break;
-
-					   	case "DECEPTIVE PRACTICE": d.color = "yellow"; break; 
-
-					   	default: 					d.color = "grey"; break;
-						}
-					}
+				if (d.daysAgo < 31)
+					d.inLastMonth = 1;
 				else
-					{
-					//console.log("FOUND BAD ONE ", +d.latitude, +d.longitude);
-					d.LatLng = new L.LatLng(0,0);
-					}
-					
-				});
+					d.inLastMonth = 0;
 
-		var feature = g.selectAll("circle")
+
+				d.description = d._primary_decsription;
+
+				   switch(d._primary_decsription) {
+				   	case "THEFT":
+				   	case "BURGLARY":
+				   	case "MOTOR VEHICLE THEFT":
+				   	case "ROBBERY": 			d.color = "green"; break; 
+
+				   	case "ASSAULT":
+				   	case "HOMICIDE":
+				   	case "CRIM SEXUAL ASSAULT":
+				   	case "BATTERY": 			d.color = "red"; break; 
+
+				   	case "CRIMINAL DAMAGE": 
+				   	case "CRIMINAL TRESPASS": 	d.color = "purple"; break;
+
+				   	case "NARCOTICS": 			d.color = "pink"; break;
+
+				   	case "DECEPTIVE PRACTICE": d.color = "orange"; break; 
+
+				   	default: 					d.color = "grey"; 
+				   		//console.log(+d.latitude, +d.longitude, d.description, d.color);
+				   		break;
+				}
+			}
+		else
+			{
+			//console.log("FOUND BAD ONE ", +d.latitude, +d.longitude);
+			d.LatLng = new L.LatLng(0,0);
+			}
+			
+		});
+
+		var me = this;
+
+		var feature = this.g.selectAll("circle")
 			.data(collection)
 			.enter()
 			.append("svg:circle")
@@ -174,7 +219,7 @@ var leaflet = SAGE2_App.extend( {
 			.attr("r", 15);
 
 
-		var feature2 = g.selectAll("text")
+		var feature2 = this.g.selectAll("text")
 			.data(collection)
 			.enter()
 			.append("svg:text")
@@ -191,42 +236,31 @@ var leaflet = SAGE2_App.extend( {
             				return d._primary_decsription.toLowerCase(); 
             		});
 
-			mySelf.map.on("viewreset", update);
+			this.map.on("viewreset", update);
 				update();
 
 		function update() {
 			feature.attr("transform", 
 			function(d) { 
 				return "translate("+ 
-					mySelf.map.latLngToLayerPoint(d.LatLng).x +","+ 
-					mySelf.map.latLngToLayerPoint(d.LatLng).y +")";
+					me.map.latLngToLayerPoint(d.LatLng).x +","+ 
+					me.map.latLngToLayerPoint(d.LatLng).y +")";
 				}
 			);
 
 			feature2.attr("transform", 
 			function(d) { 
 				return "translate("+ 
-					(mySelf.map.latLngToLayerPoint(d.LatLng).x+20.0) +","+ 
-					(mySelf.map.latLngToLayerPoint(d.LatLng).y+5.0) +")";
+					(me.map.latLngToLayerPoint(d.LatLng).x+20.0) +","+ 
+					(me.map.latLngToLayerPoint(d.LatLng).y+5.0) +")";
 				}
 			);
 			
 		}
-			});	
-}
-);
 
-		// backup of the context
-		var self = this;
-		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
-		this.svg = d3.select(this.element).append("svg")
-		    .attr("width",   width)
-		    .attr("height",  height)
-		    .attr("viewBox", box);
+		this.allLoaded = 1;
+},
 
-		this.draw_d3(date);
-	},
 
 	load: function(state, date) {
 	},
@@ -236,6 +270,18 @@ var leaflet = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		console.log("getting new data");
+
+		if (this.allLoaded === 1)
+			{
+			this.currentBeats = 0;
+
+			this.getNewData(this,"1232");
+			this.getNewData(this,"1231");
+			this.getNewData(this,"0124");
+			}
+
+		
 	},
 
 	resize: function(date) {
@@ -288,17 +334,25 @@ var leaflet = SAGE2_App.extend( {
 				// m key down
 				// change map type
 
+				var selectedOnes = null;
+
 				if (this.whichMap === 1)
 					{
 					this.whichMap = 2;
 					this.map.removeLayer(this.map1);
 					this.map2.addTo(this.map);
+
+					selectedOnes = this.g.selectAll("text");
+    				selectedOnes.style("fill", "black");
 					}
 				else
 					{
 					this.whichMap = 1;
 					this.map.removeLayer(this.map2);
 					this.map1.addTo(this.map);
+
+					selectedOnes = this.g.selectAll("text");
+    				selectedOnes.style("fill", "white");
 					}
 				}
 
