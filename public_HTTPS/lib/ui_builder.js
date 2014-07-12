@@ -41,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerItems   = {};
 
 	// Get handle on the main div
-	this.main = document.getElementById("main");
+	this.main = document.getElementById("background");
 
 	// Build the background image/color
 	this.background = function () {
