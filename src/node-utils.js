@@ -16,7 +16,7 @@ var sprint = require('sprint');
 function runCommand(cmd, callb) {
 	var dirroot = path.resolve(__dirname, '..');
 	var mychild = ChildProcess.exec(cmd, { cwd:  dirroot, timeout: 2000}, function (err, sout, serr) {
-		if (err) callb("")
+		if (err) callb(null);
 		else callb(sout.split('\n').join(''));
 	});
 }

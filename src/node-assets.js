@@ -110,14 +110,14 @@ getDimensions = function (id) {
 				height: AllAssets.list[id].exif.ImageHeight };
 	else
 		return null;
-}
+};
 
 getMimeType = function (id) {
 	if (id in AllAssets.list)
 		return AllAssets.list[id].exif.MIMEType;
 	else
 		return null;
-}
+};
 
 exifAsync = function(cmds, cb) {
 	var execNext = function() {
@@ -167,7 +167,7 @@ initialize = function (root) {
 			AllAssets.root = root;
 			AllAssets.list = oldList.list;
 			// Flag all the assets for checking
-			for (item in AllAssets.list) AllAssets.list[item].Valid = false;
+			for (var it in AllAssets.list) AllAssets.list[it].Valid = false;
 		} else {
 			AllAssets.list = {};
 			AllAssets.root = root;
@@ -212,7 +212,7 @@ initialize = function (root) {
 				delete AllAssets.list[item];
 			} else {
 				// Just remove the Valid flag
-				delete AllAssets.list[item].Valid
+				delete AllAssets.list[item].Valid;
 			}
 		}
 

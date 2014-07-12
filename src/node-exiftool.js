@@ -75,7 +75,7 @@ function fileSync(filename) {
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err:'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata:null};
 	} else {
-		if (result.stdout.length!=0) {
+		if (result.stdout.length!==0) {
 			var metadata = JSON.parse(result.stdout);
 			return {err:null, metadata:metadata[0]};			
 		} else {
