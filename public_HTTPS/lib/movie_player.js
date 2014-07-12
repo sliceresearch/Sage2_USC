@@ -33,12 +33,20 @@ var movie_player = SAGE2_App.extend( {
 	
 	canplay: function() {
 		console.log("video can play!");
-		
 		this.element.removeEventListener('canplay', this.canplayCallback, false);
 	},
 	
 	load: function(state, date) {
 		this.element.addEventListener('canplay', this.canplayCallback, false);
+		var _this = this;
+		this.element.addEventListener('loadedmetadata', function () {
+			// check the actual size of the video
+			if (_this.element.width  !== _this.element.videoWidth ||
+				_this.element.height !== _this.element.videoHeight) {
+				// send a resize call to the server if needed
+				_this.sendResize(_this.element.videoWidth, _this.element.videoHeight);
+			}
+		}, false);
 		
 		var param = state.src.indexOf('?');
 		if(param >= 0) this.source.src = state.src + "&clientID=" + clientID.toString();
