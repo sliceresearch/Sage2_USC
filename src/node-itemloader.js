@@ -99,22 +99,21 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 	request({url: url, encoding: null, strictSSL: strictSSL}, function(err, response, body) {
 		if(err) throw err;
 		
-		//var info = imageinfo(body);
-		var result = exiftool.bufferSync(body);
-		var info   = result.metadata;
-		if (result.err) {
-			console.log("Error processing image:", url, mime_type, name, result.err);
-		}
-		
-		if (info.ImageWidth && info.ImageHeight) {
-			_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name,
-				function(appInstance) {
-					callback(appInstance);
+		var result = exiftool.buffer(body, function(err, info) {
+			if (err) {
+				console.log("Error processing image:", url, mime_type, name, result.err);
+			}
+			else
+				if (info.ImageWidth && info.ImageHeight) {
+					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name,
+						function(appInstance) {
+							callback(appInstance);
+						}
+					);
+				} else {
+					console.log("File not recognized:", file, mime_type, url);
 				}
-			);
-		} else {
-			console.log("File not recognized:", file, mime_type, url);
-		}
+		});
 	});
 };
 
@@ -589,9 +588,25 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 		
-		_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
-			callback(appInstance);
-		});
+		var	app = _this.mime2app[mime_type];
+		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
+			exiftool.file(localPath, function(err,data) {
+				if (err) {
+					console.log("internal error");
+				} else {
+					console.log("EXIF> Adding", data.FileName);
+					assets.addFile(data.SourceFile, data);
+					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
+						callback(appInstance);
+					});
+				}
+			});
+		}
+		else {
+			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
+				callback(appInstance);
+			});
+		}
 	});
 };
 
@@ -649,10 +664,11 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 			else {
-				console.log("Server> CANT load", appData.url, appData.type, appData.name);
-				// this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, function(appInstance) {
-				// 	callback(appInstance);
-				// });
+				// Fixed size since cant process exif on URL yet
+				console.log("GOT HERE");
+				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance) {
+					callback(appInstance);
+				});
 			}
 		}
 		else if(app === "pdf_viewer"){

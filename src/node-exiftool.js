@@ -14,7 +14,7 @@
 var fs           = require('fs');
 var ChildProcess = require('child_process');
 // try to use spawnSync (node >= v12 ) or emulation
-var spawnSync    = ChildProcess.spawnSync || require('spawn-sync');
+var spawnSync    = ChildProcess.spawnSync; // || require('spawn-sync');
 
 
 // Processes a filename
@@ -70,8 +70,7 @@ function file(filename, done) {
 //    node v12 is good
 //
 function fileSync(filename) {
-	var result = spawnSync('exiftool',
-							['-json', filename]);
+	result = spawnSync('exiftool', ['-json', filename]);
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err:'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata:null};

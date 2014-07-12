@@ -54,11 +54,21 @@ var sagepointer = require('./src/node-sagepointer');    // handles sage pointers
 var omicron     = require('./src/node-omicron');        // handles Omicron input events
 var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
 var assets      = require('./src/node-assets');         // manages the list of files
+var sageutils   = require('./src/node-utils');          // provides the current version number
+
+
+var SAGE2_version = sageutils.getShortVersion();
+console.log("SAGE2 Short Version:", SAGE2_version);
+
+sageutils.getFullVersion(function (version) {
+	console.log("SAGE2 Full Version:", version);
+});
+
 
 
 // Command line arguments
 program
-  .version('0.1.0')
+  .version(SAGE2_version)
   .option('-i, --interactive', 'Interactive prompt')
   .option('-f, --configuration <value>', 'Specify a configuration file')
   .parse(process.argv);
@@ -1229,9 +1239,7 @@ function loadConfiguration() {
 		}
 	}
 	
-	if (fs.existsSync(configFile)) {
-		console.log("Using configuration file: " + configFile);
-	} else {
+	if (! fs.existsSync(configFile)) {
 		console.log("\n----------");
 		console.log("Cannot configuration file:", configFile);
 		console.log("----------\n\n");
@@ -1286,29 +1294,29 @@ function setupDisplayBackground() {
 		var bg_file = path.join(public_https, config.background.image);
 
 		//var bg_info = imageinfo(fs.readFileSync(bg_file));
-		var result = exiftool.fileSync(bg_file);
-		if (result.err) {
-			console.log("Error processing background image:", bg_file, result.err);
- 			console.log(" ");
-			process.exit(1);
-		}
-		var bg_info = result.metadata;
 
+		if (config.background.style == "fit") {
+			var result = exiftool.file(bg_file, function(err, data) {
+				if (err) {
+					console.log("Error processing background image:", bg_file, err);
+					console.log(" ");
+					process.exit(1);
+				}
+				var bg_info = data;
 
-		if(config.background.style == "fit"){
-			if (bg_info.ImageWidth == config.totalWidth && bg_info.ImageHeight == config.totalHeight) {
-				sliceBackgroundImage(bg_file, bg_file);
-			}
-			else {
-				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
-				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
-		
-				imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
-					if(err) throw err;
+				if (bg_info.ImageWidth == config.totalWidth && bg_info.ImageHeight == config.totalHeight) {
+					sliceBackgroundImage(bg_file, bg_file);
+				}
+				else {
+					tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
+					var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 			
-					sliceBackgroundImage(tmpImg, bg_file);
-				});
-			}
+					imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
+						if(err) throw err;
+						sliceBackgroundImage(tmpImg, bg_file);
+					});
+				}
+			} );
 		}
 		else if(config.background.style == "stretch"){
 			imgExt = path.extname(bg_file);
@@ -1456,7 +1464,6 @@ function manageUploadedFiles(files) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key][0];
-		
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
 			if(appInstance === null){
 				console.log("unrecognized file type: " + file.headers['content-type']);

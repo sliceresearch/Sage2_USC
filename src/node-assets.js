@@ -136,21 +136,21 @@ exifAsync = function(cmds, cb) {
 	if (cmds.length>0) execNext();
 };
 
-exifSync = function(cmds, cb) {
-	var execNext = function() {
-		var result = exiftool.fileSync(cmds.shift());
-		if (result.err) {
-			console.log("internal error");
-			cb(result.err);
-		} else {
-			console.log("EXIF> Adding", result.metadata.FileName);
-			addFile(result.metadata.SourceFile, result.metadata);
-			if (cmds.length) execNext();
-			else cb(null);
-		}
-	};
-	if (cmds.length>0) execNext();
-};
+// exifSync = function(cmds, cb) {
+// 	var execNext = function() {
+// 		var result = exiftool.fileSync(cmds.shift());
+// 		if (result.err) {
+// 			console.log("internal error");
+// 			cb(result.err);
+// 		} else {
+// 			console.log("EXIF> Adding", result.metadata.FileName);
+// 			addFile(result.metadata.SourceFile, result.metadata);
+// 			if (cmds.length) execNext();
+// 			else cb(null);
+// 		}
+// 	};
+// 	if (cmds.length>0) execNext();
+// };
 
 
 initialize = function (root) {
