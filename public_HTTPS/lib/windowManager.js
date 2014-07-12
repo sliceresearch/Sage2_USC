@@ -115,18 +115,6 @@ function windowManager(id, ws) {
 				}
 			}
 
-			/*
-			if(this.applications[i].type == "canvas") this.ctx.drawImage(this.canvasImg, x, y, size, size);
-			else if(this.applications[i].type == "img") this.ctx.drawImage(this.imageImg, x, y, size, size);
-			else if(this.applications[i].type == "kineticjs") this.ctx.drawImage(this.kineticjsImg, x, y, size, size);
-			else if(this.applications[i].type == "pdf") this.ctx.drawImage(this.pdfImg, x, y, size, size);
-			else if(this.applications[i].type == "screen") this.ctx.drawImage(this.screenImg, x, y, size, size);
-			else if(this.applications[i].type == "threejs") this.ctx.drawImage(this.threejsImg, x, y, size, size);
-			else if(this.applications[i].type == "video") this.ctx.drawImage(this.videoImg, x, y, size, size);
-			else if(this.applications[i].type == "webgl") this.ctx.drawImage(this.webglImg, x, y, size, size);
-			else if(this.applications[i].type == "youtube") this.ctx.drawImage(this.youtubeImg, x, y, size, size);
-			*/
-			
 			// title bar
 			this.ctx.fillStyle = "rgba(102, 102, 102, 1.0)";
 			this.ctx.lineWidth = 2;
@@ -140,7 +128,6 @@ function windowManager(id, ws) {
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			this.ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 		}
-		
 		
 		/* draw tiled display layout */
 		this.ctx.lineWidth = 2;
