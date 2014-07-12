@@ -148,17 +148,18 @@
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
-		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr), false);
-		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr), false);
-		winMgrCanvas.addEventListener('mouseup', winMgr.mouseRelease.bind(winMgr), false);
+		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
+		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
+		winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr), false);
-		winMgrCanvas.addEventListener('touchmove', winMgr.touchMove.bind(winMgr), false);
-		winMgrCanvas.addEventListener('touchend', winMgr.touchRelease.bind(winMgr), false);
+		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
+		winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
+		winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('mousewheel', winMgr.mouseScroll.bind(winMgr), false);
+		winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
 		winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
-		winMgrCanvas.addEventListener('dblclick', winMgr.mouseDblClick.bind(winMgr), false);
+		winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
+
 		document.addEventListener('mousemove', updateTarget, false);
 		
 		appsDir     = document.getElementById('apps');
@@ -300,14 +301,14 @@
 	
 	function updateTarget(event) {
 		if(event.target == winMgrCanvas && !canvasKeyEvents){
-			document.addEventListener('keydown', canvasKeyDownFunc, false);
-			document.addEventListener('keyup', canvasKeyUpFunc, false);
+			document.addEventListener('keydown',  canvasKeyDownFunc, false);
+			document.addEventListener('keyup',    canvasKeyUpFunc, false);
             document.addEventListener('keypress', canvasKeyPressFunc, false);
 			canvasKeyEvents = true;
 		}
 		else if(event.target != winMgrCanvas && canvasKeyEvents){
-			document.removeEventListener('keydown', canvasKeyDownFunc, false);
-			document.removeEventListener('keyup', canvasKeyUpFunc, false);
+			document.removeEventListener('keydown',  canvasKeyDownFunc, false);
+			document.removeEventListener('keyup',    canvasKeyUpFunc, false);
             document.removeEventListener('keypress', canvasKeyPressFunc, false);
 
 			canvasKeyEvents = false;
