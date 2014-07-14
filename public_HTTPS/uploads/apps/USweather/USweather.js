@@ -4,18 +4,10 @@
 // example of D3 + GEOjson use
 // Written by Andy Johnson - Spring 2014
 ////////////////////////////////////////
-
-    // might be nice to use the albersUSA projection and add in alaska and hawaii
-    // but right now that would conflict with the mexico temperatures
-
-    // need to handle switch to night time better
-    // ideally based on time of sunset at each location (or at least time zone)
     
     // could allow clicking on individual elements to change its state
 
     // might also allow people to focus on smaller state level
-
-
 
 var USweather = SAGE2_App.extend( {
     construct: function() {
@@ -43,6 +35,7 @@ this.gwin.mode = 1;
 this.gwin.appID = "";
 
 this.gwin.projection = null;
+
 },
 
 ////////////////////////////////////////
@@ -181,7 +174,8 @@ makeCallback: function (lat, lon, weatherOut)
 
         weatherIcon = iconSet[8].icon_url;
         var weatherName = weatherIcon.substring(28, weatherIcon.length-4);
-        var currentHour = new Date().getHours(); // 0-23
+       // var currentHour = new Date().getHours(); // 0-23
+var currentTime = new Date().getHours()+new Date().getMinutes()/60;
 
         if (weatherName === "")
                 weatherName = "unknown";
@@ -189,14 +183,29 @@ makeCallback: function (lat, lon, weatherOut)
         //weatherImage.src = "./icons/"+weatherName+".svg";
         weatherImage.src = this.resrcPath + "/icons/"+weatherName+".svg";
 
+        // all of these times are computed in the local time of where computation is done
+        // ie when Andy does it the numbers are all in Chicago time
+        // not the time zone of the lat lon location
+
+
+        // get today's sunrise and sunset times for a given lat lon today 
+        var times = SunCalc.getTimes(new Date(), lat, lon);
+        var sunrise = times.sunrise.getHours() + times.sunrise.getMinutes()/60;
+        var sunset = times.sunset.getHours() + times.sunset.getMinutes()/60;
+
+        // correct for hawaii among others
+        // need to improve this for more generality
+        if (sunset < 12)
+            sunset += 24;
+
         // if its night then swap out the sun icons for the moon icons
-        if ( (currentHour < 7) || (currentHour > 18) )
+        if ( (currentTime < sunrise) || (currentTime > sunset) )
             {
             if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
                 (weatherName == "clear"))
                 {
                 //weatherImage.src = "./icons/"+weatherName+"-night.svg";
-                this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
+                weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
                 }
             }
 
@@ -222,9 +231,65 @@ updateOutsideTemp: function ()
     for (lat = this.gwin.latMaxTemp; lat >= this.gwin.latMinTemp; lat -= 2.2)
         for (lon = this.gwin.lonMinTemp; lon <= this.gwin.lonMaxTemp; lon += 2.7)
             {
-            if (Math.random() > 0.95) // cut down on accesses at once
-            (function(lat,lon)
+            var replace = 0;
+
+            // replace some of the coverage area SW of Texas with Honolulu
+            if ((lat < 29.15) && (lon < -103.5))
                 {
+                    replace = 1;
+                }
+
+            // replace some of the coverage area SW of Texas with Anchorage
+            if ((lat < 31.13) && (lon < -106.7))
+                {
+                    replace = 2;
+                }
+
+            // replace some of the coverage sw of LA area with Anchorage
+            if ((lat < 33.78) && (lon < -118.98))
+                {
+                    replace = 2;
+                }
+
+            // replace some of the coverage area SE of New York with Honolulu
+            if ((lat < 40.296) && (lon > -73.367)) 
+                {
+                    replace = 1;
+                }
+
+            // replace some of the coverage area SE of the carloinas with Honolulu
+            if ((lat < 43.707) && (lon > -69.038))
+                {
+                    replace = 1;
+                }
+
+            // replace some of the coverage area SE of the carloinas with Honolulu
+            if ((lat < 32.769) && (lon > -79.651))
+                {
+                    replace = 1;
+                }
+
+            // replace some of the coverage area SE of the Maine with Honolulu
+            if ((lat < 33.32) && (lon > -78.00))
+                {
+                    replace = 1;
+                }
+                
+
+            if (Math.random() > 0.95) // cut down on accesses at once
+            (function(lat,lon, replace)
+                {
+                if (replace == 1)
+                    {
+                    lat = 21.30694;
+                    lon = -157.858;
+                    }
+                else if (replace == 2)
+                    {
+                    lat = 61.218;
+                    lon = -149.90;
+                    }
+
                 d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'"+lat+","+lon+"'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", 
                     function(err, response)
                         {
@@ -235,7 +300,7 @@ updateOutsideTemp: function ()
                             }
                        MeSelf.makeCallbackFunc(lat, lon, response);
                         });
-                }(lat,lon));
+                }(lat,lon, replace));
             }
 },
 
@@ -466,18 +531,18 @@ convertToNone: function ()
         // call super-class 'init'
         arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
-    this.makeCallbackFunc = this.makeCallback.bind(this);
-    this.jsonCallbackFunc = this.jsonCallback.bind(this);
+        this.makeCallbackFunc = this.makeCallback.bind(this);
+        this.jsonCallbackFunc = this.jsonCallback.bind(this);
 
-    this.gwin.projection = d3.geo.albers()
+        this.gwin.projection = d3.geo.albersUsa()
                .translate([this.gwin.canvasWidth/2, this.gwin.canvasHeight/2])
                .scale([1500]);// default 1000
 
 
-    //Load in GeoJSON data
-    d3.json(this.resrcPath +"./us-states.json", this.jsonCallbackFunc);
+        //Load in GeoJSON data
+        d3.json(this.resrcPath +"./us-states.json", this.jsonCallbackFunc);
 
-    this.gwin.appID = this.div.id;
+        this.gwin.appID = this.div.id;
 
         this.maxFPS = 0.1;
 
