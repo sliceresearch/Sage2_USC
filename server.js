@@ -130,6 +130,7 @@ var server = https.createServer(options, httpsServerApp.onrequest);
 
 var startTime = new Date();
 
+var MODE = {WINDOW_MANAGEMENT: 0, APP_INTERACTION: 1};
 
 // creates a WebSocket server - 2 way communication between server and all browser clients
 var wsioServer = new websocketIO.Server({server: server});
@@ -268,6 +269,8 @@ function initializeWSClient(wsio) {
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
 		wsio.on('appResize', wsAppResize);
+		wsio.on('appMove', wsAppMove);
+		wsio.on('appInteractionMode', wsAppInteractionMode);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
@@ -704,6 +707,38 @@ function wsAppResize(wsio, data) {
 	}
 }
 
+//
+// Got a move call for an application itself
+//
+function wsAppMove(wsio, data) {
+	// Update the object with the new position
+	var app    = findAppById(data.id);
+	if (app) {
+		// Translate the app by the new offset
+		app.left += data.left;
+		app.top += data.top;
+
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+	}
+}
+
+//
+// Got a interaction mode call for an application itself
+//
+function wsAppInteractionMode(wsio, data) {
+	// Update the object with the new position
+	var app    = findAppById(data.id);
+	if (app) {
+		// Apply new mode
+		app.interactionMode = data.mode;
+	}
+}
 
 /******************** Session Functions ********************/
 
@@ -1957,8 +1992,12 @@ function pointerMove(uniqueID, data) {
 		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
 		return;
 	}
-
-	if(remoteInteraction[uniqueID].windowManagementMode()){
+	
+	pointerX = sagePointers[uniqueID].left;
+	pointerY = sagePointers[uniqueID].top;
+	elem = findAppUnderPointer(pointerX, pointerY);
+	
+	if( elem != null && elem.interactionMode === MODE.WINDOW_MANAGEMENT ){
 		pointerX = sagePointers[uniqueID].left;
 		pointerY = sagePointers[uniqueID].top;
 
@@ -1995,18 +2034,18 @@ function pointerMove(uniqueID, data) {
 			}
 		}
 	}
-	else if(remoteInteraction[uniqueID].appInteractionMode()){
-		pointerX = sagePointers[uniqueID].left;
-		pointerY = sagePointers[uniqueID].top;
+	
+	// Apps always receive events. App is responsible for flagging itself for window management and not allowing 'app interaction'
+	pointerX = sagePointers[uniqueID].left;
+	pointerY = sagePointers[uniqueID].top;
 
-		elem = findAppUnderPointer(pointerX, pointerY);
+	elem = findAppUnderPointer(pointerX, pointerY);
 
-		if(elem !== null){
-			var itemRelX = pointerX - elem.left;
-			var itemRelY = pointerY - elem.top - config.titleBarHeight;
-			var now = new Date();
-			broadcast('eventInItem', {eventType: "pointerMove", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {}, date: now }, 'receivesInputEvents');
-		}
+	if(elem !== null){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		broadcast('eventInItem', {eventType: "pointerMove", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {}, date: now }, 'receivesInputEvents');
 	}
 }
 
@@ -2023,30 +2062,31 @@ function pointerPress( address, pointerX, pointerY ) {
 
 
 	var elem = findAppUnderPointer(pointerX, pointerY);
-		if(elem !== null){
-			if( remoteInteraction[address].windowManagementMode() ){
-				var localX = pointerX - elem.left;
-				var localY = pointerY - (elem.top+config.titleBarHeight);
-				var cornerSize = Math.min(elem.width, elem.height) / 5;
-				// bottom right corner - select for drag resize
-				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
-					remoteInteraction[address].selectResizeItem(elem, pointerX, pointerY);
-				}
-				// otherwise - select for move
-				else{
-					remoteInteraction[address].selectMoveItem(elem, pointerX, pointerY); //will only go through if window management mode
-				}
+	if(elem !== null){
+		if ( elem.interactionMode === MODE.WINDOW_MANAGEMENT ){
+			var localX = pointerX - elem.left;
+			var localY = pointerY - (elem.top+config.titleBarHeight);
+			var cornerSize = Math.min(elem.width, elem.height) / 5;
+			// bottom right corner - select for drag resize
+			if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
+				remoteInteraction[address].selectResizeItem(elem, pointerX, pointerY);
 			}
-			else if ( remoteInteraction[address].appInteractionMode() ) {
-				var itemRelX = pointerX - elem.left;
-				var itemRelY = pointerY - elem.top - config.titleBarHeight;
-				var now = new Date();
-				broadcast('eventInItem', {eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
+			// otherwise - select for move
+			else{
+				remoteInteraction[address].selectMoveItem(elem, pointerX, pointerY); //will only go through f window management mode
+				
 			}
-
-			var newOrder = moveAppToFront(elem.id);
-			broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 		}
+		
+		//Apps always receive events. App is responsible for flagging itself for window management and not allowing 'app interaction'
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		broadcast('eventInItem', {eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
+
+		var newOrder = moveAppToFront(elem.id);
+		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+	}
 }
 
 function pointerPressRight( address, pointerX, pointerY ) {
@@ -2142,8 +2182,10 @@ function pointerRelease(address, pointerX, pointerY) {
 	// Attempting to complete a click action on a button or a drag on a slider
 	broadcast('releaseControlId', {addr:address, ptrId:sagePointers[address].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 	remoteInteraction[address].releaseControl();
-	// From pointerRelease
-	if( remoteInteraction[address].windowManagementMode() ){
+	
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	
+	if( elem != null && elem.interactionMode === MODE.WINDOW_MANAGEMENT ){
 		if(remoteInteraction[address].selectedResizeItem !== null){
 			broadcast('finishedResize', {id: remoteInteraction[address].selectedResizeItem.id, elemWidth: remoteInteraction[address].selectedResizeItem.width, elemHeight: remoteInteraction[address].selectedResizeItem.height, date: new Date()}, 'receivesWindowModification');
 			remoteInteraction[address].releaseItem(true);
@@ -2168,15 +2210,13 @@ function pointerRelease(address, pointerX, pointerY) {
 			}
 		}
 	}
-	else if ( remoteInteraction[address].appInteractionMode() ) {
-		var elem = findAppUnderPointer(pointerX, pointerY);
-
-		if( elem !== null ){
-			var itemRelX = pointerX - elem.left;
-			var itemRelY = pointerY - elem.top - config.titleBarHeight;
-			var now = new Date();
-			broadcast('eventInItem', {eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
-		}
+	
+	//Apps always receive events. App is responsible for flagging itself for window management and not allowing 'app interaction'
+	if( elem !== null ){
+		var itemRelX = pointerX - elem.left;
+		var itemRelY = pointerY - elem.top - config.titleBarHeight;
+		var now = new Date();
+		broadcast('eventInItem', {eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
 	}
 }
 

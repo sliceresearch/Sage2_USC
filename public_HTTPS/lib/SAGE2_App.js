@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+var MODE = {WINDOW_MANAGEMENT: 0, APP_INTERACTION: 1};
+
 var SAGE2_App = Class.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
@@ -29,6 +31,8 @@ var SAGE2_App = Class.extend( {
 		this.timer  = null;
 		this.maxfps = null;
 		this.redraw = null;
+		
+		this.interactionMode = MODE.WINDOW_MANAGEMENT;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -126,7 +130,31 @@ var SAGE2_App = Class.extend( {
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
 	},
+	
+	// Send a move
+	sendMove: function (newX, newY) {
+		var msgObject = {};
+		// Add the display node ID to the message
+		msgObject.node   = clientID;
+		msgObject.id     = this.div.id;
+		msgObject.top  = newY;
+		msgObject.left = newX;
+		// Send the message to the server
+		wsio.emit('appMove', msgObject);
+	},
+	
+	sendInteractionMode: function (mode) {
+		this.interactionMode = mode;
+		var msgObject = {};
+		// Add the display node ID to the message
+		msgObject.node   = clientID;
+		msgObject.id     = this.div.id;
+		msgObject.mode  = mode;
 
+		// Send the message to the server
+		wsio.emit('appInteractionMode', msgObject);
+	},
+	
 	// Prints message to local browser console and send to server
 	//   accept a string as parameter: this.log("my message")
 	log: function(msg) {

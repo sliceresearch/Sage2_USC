@@ -56,6 +56,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
 		
 		this.hoverOverText = "";
+		this.clickedPosition = null;
 		
 		this.wsio.open(function() {
 			console.log("open websocket");
@@ -222,21 +223,34 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	event: function(eventType, userId, x, y, data, date)
 	{
+		overButton = false;
+		
 		for( i = 0; i < this.thumbnailButtons.length; i++ )
 		{
 			thumbButton = this.thumbnailButtons[i];
 			thumbButton.onEvent(eventType, userId, x, y, data, date);
 			
-			if( thumbButton.isClicked() && sendsToServer )
+			if ( thumbButton.isClicked() && sendsToServer )
 			{ 
 				this.addNewElementFromStoredFiles( thumbButton.getData()  );
 			}
-			if( thumbButton.isOver()  )
+			if ( thumbButton.isPositionOver(userId, x, y)  )
 			{
 				this.hoverOverText = thumbButton.getData().filename;
+				overButton = true;
 			}
 		}
 		
+		// Pointer is not on a button, but on an open space (window management mode)
+		if ( !overButton && sendsToServer )
+		{
+			this.sendInteractionMode(MODE.WINDOW_MANAGEMENT);
+		}
+		else if ( overButton && sendsToServer )
+		{
+			this.sendInteractionMode(MODE.APP_INTERACTION);
+		}
+
 		// Redraw on event (done here instead of in button due to click events)
 		this.draw(date);
 	},

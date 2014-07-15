@@ -30,6 +30,7 @@ var pdfinfo = require('./node-pdfinfo').pdfinfo;     // custom node module
 var imageMagick;
 mime.default_type = "application/custom";
 
+var MODE = {WINDOW_MANAGEMENT: 0, APP_INTERACTION: 1};
 
 function encodeReservedURL(url) {
 	return encodeURI(url).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B").replace(/\,/g, "%2C").replace(/\//g, "%2F").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D").replace(/\?/g, "%3F").replace(/\@/g, "%40");
@@ -170,7 +171,8 @@ appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, ca
 					maximized: false,
 					aspect: aspectRatio,
 					animation: false,
-					date: new Date()
+					date: new Date(),
+					interactionMode: MODE.WINDOW_MANAGEMENT
 				};
 				_this.scaleAppToFitDisplay(appInstance);
 				callback(appInstance);
@@ -227,7 +229,8 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
-		date: new Date()
+		date: new Date(),
+		interactionMode: MODE.WINDOW_MANAGEMENT
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
@@ -299,7 +302,8 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 					maximized: false,
 					aspect: aspectRatio,
 					animation: false,
-					date: new Date()
+					date: new Date(),
+					interactionMode: MODE.WINDOW_MANAGEMENT
 				};
 				_this.scaleAppToFitDisplay(appInstance);
 				callback(appInstance);
@@ -341,7 +345,8 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 			maximized: false,
 			aspect: aspectRatio,
 			animation: false,
-			date: new Date()
+			date: new Date(),
+			interactionMode: MODE.WINDOW_MANAGEMENT
 		};
 		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
@@ -384,7 +389,8 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			maximized: false,
 			aspect: aspectRatio,
 			animation: instructions.animation,
-			date: new Date()
+			date: new Date(),
+			interactionMode: MODE.WINDOW_MANAGEMENT
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
@@ -430,7 +436,8 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				maximized: false,
 				aspect: aspectRatio,
 				animation: instructions.animation,
-				date: new Date()
+				date: new Date(),
+				interactionMode: MODE.WINDOW_MANAGEMENT
 			};
 			_this.scaleAppToFitDisplay(appInstance);
 			callback(appInstance);
@@ -482,7 +489,8 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, w
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
-		date: new Date()
+		date: new Date(),
+		interactionMode: MODE.WINDOW_MANAGEMENT
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
@@ -636,7 +644,8 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			maximized: false,
 			aspect: appData.application.aspect,
 			animation: appData.application.animation,
-			date: new Date()
+			date: new Date(),
+			interactionMode: MODE.WINDOW_MANAGEMENT
 		};
 		this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
