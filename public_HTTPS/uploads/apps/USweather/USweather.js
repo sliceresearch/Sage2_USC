@@ -9,6 +9,8 @@
 
     // might also allow people to focus on smaller state level
 
+    // probably should load in all the icons up front
+
 var USweather = SAGE2_App.extend( {
     construct: function() {
         arguments.callee.superClass.construct.call(this);
@@ -35,6 +37,25 @@ this.gwin.mode = 1;
 this.gwin.appID = "";
 
 this.gwin.projection = null;
+
+this.gwin.iconmostlycloudynight = new Image();
+this.gwin.iconpartlycloudynight = new Image();
+this.gwin.iconclearnight        = new Image();
+this.gwin.iconsnow              = new Image();
+this.gwin.iconunknown           = new Image();
+this.gwin.iconstorms            = new Image();
+this.gwin.icontstorms           = new Image();
+this.gwin.iconmostlycloudy      = new Image();
+this.gwin.iconpartlycloudy      = new Image();
+this.gwin.iconrain              = new Image();
+this.gwin.iconfog               = new Image();
+this.gwin.iconhazy              = new Image();
+this.gwin.iconsleet             = new Image();
+this.gwin.iconcloudy            = new Image();
+this.gwin.iconclear             = new Image();
+this.gwin.iconsunny             = new Image();
+
+this.gwin.numIconsLoaded = 0;
 
 },
 
@@ -161,7 +182,8 @@ makeCallback: function (lat, lon, weatherOut)
     var iconSet;
     var weather;
     var weatherIcon;
-    var weatherImage = new Image();
+    //var weatherImage = new Image();
+    var weatherImage;
 
      if((weatherOut === null) || (weatherOut.query === null) || (weatherOut.query.results === null) || (weatherOut.query.results.current_observation === null) || (weatherOut.query.results.current_observation.icons === null))
         return; 
@@ -180,8 +202,9 @@ var currentTime = new Date().getHours()+new Date().getMinutes()/60;
         if (weatherName === "")
                 weatherName = "unknown";
 
+        weatherImage = this.getCorrectWeatherIcon(weatherName, 0); //day
         //weatherImage.src = "./icons/"+weatherName+".svg";
-        weatherImage.src = this.resrcPath + "/icons/"+weatherName+".svg";
+        //weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
 
         // all of these times are computed in the local time of where computation is done
         // ie when Andy does it the numbers are all in Chicago time
@@ -204,8 +227,9 @@ var currentTime = new Date().getHours()+new Date().getMinutes()/60;
             if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
                 (weatherName == "clear"))
                 {
+                weatherImage = this.getCorrectWeatherIcon(weatherName, 1); // night
                 //weatherImage.src = "./icons/"+weatherName+"-night.svg";
-                weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
+                //weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
                 }
             }
 
@@ -213,7 +237,8 @@ var currentTime = new Date().getHours()+new Date().getMinutes()/60;
 
         var mySelf = this;
 
-        weatherImage.onload = function(){
+        //weatherImage.onload = function(){
+            if (this.gwin.numIconsLoaded === 16){
             //console.log("temp is " + weather + " at " + Math.round(lat) + ", " + Math.round(lon));
 
             mySelf.drawEverything(lat, lon, weather, weatherImage.src);
@@ -525,6 +550,81 @@ convertToNone: function ()
     this.gwin.mode = 2;
 },
 
+getCorrectWeatherIcon: function(weatherCondition, night)
+{
+    if (night === 1)
+        {   
+            switch(weatherCondition) {
+                case "mostlycloudy": return(this.gwin.iconmostlycloudynight);
+                case "partlycloudy": return(this.gwin.iconpartlycloudynight);
+                case "clear": return(this.gwin.iconclearnight);
+            }
+        }
+    else // night === 0
+        {
+            switch(weatherCondition) {
+                case "snow": return(this.gwin.iconsnow);
+                case "unknown": return(this.gwin.iconunknown);
+                case "storms": return(this.gwin.iconstorms);
+                case "tstorms": return(this.gwin.icontstorms);
+                case "mostlycloudy": return(this.gwin.iconmostlycloudy);
+                case "partlycloudy": return(this.gwin.iconpartlycloudy);
+
+                case "rain": return(this.gwin.iconrain);
+                case "fog": return(this.gwin.iconfog);
+                case "hazy": return(this.gwin.iconhazy);
+                case "sleet": return(this.gwin.iconsleet);
+                case "cloudy": return(this.gwin.iconcloudy);
+                case "clear": return(this.gwin.iconclear);
+                case "sunny": return(this.gwin.iconsunny);
+            }
+        }
+},
+
+// load in all of the weather icons at startup time
+loadInIcons: function()
+{
+    //var path = "./icons/";
+    var path = this.resrcPath + "icons/";
+    var self = this;
+
+    this.gwin.iconmostlycloudynight.src     = path+"mostlycloudy-night.svg";
+    this.gwin.iconmostlycloudynight.onload  = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconpartlycloudynight.src     = path+"partlycloudy-night.svg";
+    this.gwin.iconpartlycloudynight.onload  = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconclearnight.src            = path+"clear-night.svg";
+    this.gwin.iconclearnight.onload         = function(){self.gwin.numIconsLoaded++};
+
+
+    this.gwin.iconsnow.src          = path+"snow.svg";
+    this.gwin.iconsnow.onload       = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconunknown.src       = path+"unknown.svg";
+    this.gwin.iconunknown.onload    = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconstorms.src        = path+"storms.svg";
+    this.gwin.iconstorms.onload     = function(){self.gwin.numIconsLoaded++};
+    this.gwin.icontstorms.src       = path+"tstorms.svg";
+    this.gwin.icontstorms.onload    = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconmostlycloudy.src  = path+"mostlycloudy.svg";
+    this.gwin.iconmostlycloudy.onload = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconpartlycloudy.src  = path+"partlycloudy.svg";
+    this.gwin.iconpartlycloudy.onload = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconrain.src          = path+"rain.svg";
+    this.gwin.iconrain.onload       = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconfog.src           = path+"fog.svg";
+    this.gwin.iconfog.onload        = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconhazy.src          = path+"hazy.svg";
+    this.gwin.iconhazy.onload       = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconsleet.src         = path+"sleet.svg";
+    this.gwin.iconsleet.onload      = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconcloudy.src        = path+"cloudy.svg";
+    this.gwin.iconcloudy.onload     = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconclear.src         = path+"clear.svg";
+    this.gwin.iconclear.onload      = function(){self.gwin.numIconsLoaded++};
+    this.gwin.iconsunny.src         = path+"sunny.svg";
+    this.gwin.iconsunny.onload      = function(){self.gwin.numIconsLoaded++};
+},
+
+
 ////////////////////////////////////////
 
     init: function(id, width, height, resrc, date) {
@@ -545,6 +645,8 @@ convertToNone: function ()
         this.gwin.appID = this.div.id;
 
         this.maxFPS = 0.1;
+
+        this.loadInIcons();
 
         // Get width height from the supporting div     
         var divWidth  = this.element.clientWidth;
