@@ -61,10 +61,6 @@ var sageutils   = require('./src/node-utils');          // provides the current 
 var SAGE2_version = sageutils.getShortVersion();
 console.log("SAGE2 Short Version:", SAGE2_version);
 
-sageutils.getFullVersion(function (version) {
-	console.log("SAGE2 Full Version:", version);
-});
-
 
 
 // Command line arguments
@@ -80,16 +76,25 @@ console.log(config);
 
 
 // find git commit version and date
-var version = {commit: "", date: ""}
-exec("git log --format=\"%h|%aD\" -n 1", function(err, stdout, stderr){
-	if(err) throw err;
-	
-	var parse = stdout.split("|");
-	version.commit = parse[0];
-	version.date = parse[1];
-	
-	broadcast('setupSAGE2Version', version, 'receivesDisplayConfiguration');
+sageutils.getFullVersion(function (version) {
+	// fields: base commit branch date
+	console.log("SAGE2 Full Version:", version);
+	SAGE2_version = {};
+	SAGE2_version.commit = version.base+'-'+version.branch+'-'+version.commit;
+	SAGE2_version.date   = version.date;
+	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 });
+
+
+// var version = {commit: "", date: ""}
+// exec("git log --format=\"%h|%aD\" -n 1", function(err, stdout, stderr){
+// 	if(err) throw err;
+// 	var parse = stdout.split("|");
+// 	version.commit = parse[0];
+// 	version.date   = parse[1];
+// 	broadcast('setupSAGE2Version', version, 'receivesDisplayConfiguration');
+// });
+
 
 
 var imConstraints = {imageMagick: true};
@@ -313,7 +318,7 @@ function initializeWSClient(wsio) {
 	}
 	if(wsio.messages.receivesDisplayConfiguration){
 		wsio.emit('setupDisplayConfiguration', config);
-		wsio.emit('setupSAGE2Version', version);
+		wsio.emit('setupSAGE2Version', SAGE2_version);
 	}
 	
 	
@@ -1454,6 +1459,8 @@ function setupHttpsOptions() {
 
 function sendConfig(req, res) {
 	res.writeHead(200, {"Content-Type": "text/plain"});
+	// Adding the calculated version into the data structure
+	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
 	res.end();
 }
