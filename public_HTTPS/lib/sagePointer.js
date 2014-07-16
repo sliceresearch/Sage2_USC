@@ -98,6 +98,8 @@ function sagePointer(wsio) {
 			document.addEventListener('keypress',            this.pointerKeyPress,  false);
 		
 			this.sagePointerBtn.removeEventListener('click', this.startSagePointer, false);
+			
+			sagePointerEnabled();
 		}
 		else{
 			console.log("pointer lock disabled");
@@ -114,6 +116,8 @@ function sagePointer(wsio) {
 			document.removeEventListener('keypress',         this.pointerKeyPress,  false);
 		
 			this.sagePointerBtn.addEventListener('click',    this.startSagePointer, false);
+			
+			sagePointerDisabled();
 		}
 	};
 	

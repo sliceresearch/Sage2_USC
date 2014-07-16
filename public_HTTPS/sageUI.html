@@ -372,6 +372,16 @@
 		selectedFile.style.backgroundColor = "#B9D3FF";
 	}
 
+	function sagePointerEnabled() {
+		document.getElementById("lb_fade").style.display="block";
+		document.getElementById("lb_pointer_help").style.display="block";
+	}
+	
+	function sagePointerDisabled() {
+		document.getElementById("lb_fade").style.display="none";
+		document.getElementById("lb_pointer_help").style.display="none";
+	}
+	
     function openWebpage(event) {
         var url = document.getElementById("openWebpageUrl");
         wsio.emit('openNewWebpage', {id: sagePtr.uniqueID, url: openWebpageUrl.value});
@@ -455,6 +465,28 @@
 		<div id="fileButtons">
 			<button id="fileOKBtn" type="button">OK</button>
 			<button id="fileCloseBtn" type="button">Close</button>
+		</div>
+	</div>
+	
+	<div id="lb_pointer_help" class="lb_whiteboxcontainer">
+		<div id="pointerHelpText" class="lb_whitecontent">
+			<ul>
+				<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
+				<ul>
+					<li>Window Management Mode</li>
+					<ul>
+						<li>Left-click anywhere on an app to move window</li>
+						<li>Left-click bottom-right corner of an app to resize window</li>
+						<li>Scroll anywhere on an app to resize window</li>
+					</ul>
+					<li>Application Interaction Mode</li>
+					<ul>
+						<li>All events forwarded to app</li>
+					</ul>
+					<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
+				</ul>
+				<li>Press 'Esc' to stop SAGE2 Pointer</li>
+			</ul>
 		</div>
 	</div>
 </body>
