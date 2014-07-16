@@ -548,6 +548,9 @@
 		wsio.on('eventInItem', function(event_data){
 			var date = new Date(event_data.date);
 			var app  = applications[event_data.elemId];
+			// adding pointer information to the event
+            event_data.data.pname  = event_data.user_label;
+            event_data.data.pcolor = event_data.user_color;
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
 		});
 
