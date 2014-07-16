@@ -119,9 +119,9 @@ var leaflet = SAGE2_App.extend( {
 
 
 			if (mySelf.whichMap === 1)
-				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 16);
+				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
 			else
-				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map2], zoomControl: false}).setView([41.869910, -87.65], 16);
+				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
 
 			/* Initialize the SVG layer */
 			mySelf.map._initPathRoot();
