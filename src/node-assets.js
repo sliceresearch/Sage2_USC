@@ -172,21 +172,21 @@ initialize = function (root) {
 			AllAssets.list = {};
 			AllAssets.root = root;
 		}
-	
+
 		console.log("Assests> initialize");
 		var thelist = [];
 		var uploadedImages = fs.readdirSync(path.join(root, "images"));
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
 		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
 		var i;
-	
+		var excludes = [ ".DS_Store" ];
 		var item;
 		for(i=0; i<uploadedImages.length; i++) {
 			item = path.join(root, "images", uploadedImages[i]);
 			if (item in AllAssets.list) {
 				AllAssets.list[item].Valid = true;
 			} else {
-				thelist.push(item);				
+				if (! (item in excludes) ) thelist.push(item);
 			}
 		}
 		for(i=0; i<uploadedVideos.length; i++) {
@@ -194,7 +194,7 @@ initialize = function (root) {
 			if (item in AllAssets.list) {
 				AllAssets.list[item].Valid = true;
 			} else {
-				thelist.push(item);
+				if (! (item in excludes) ) thelist.push(item);
 			}
 		}
 		for(i=0; i<uploadedPdfs.length; i++) {
@@ -202,7 +202,7 @@ initialize = function (root) {
 			if (item in AllAssets.list) {
 				AllAssets.list[item].Valid = true;
 			} else {
-				thelist.push(item);
+				if (! (item in excludes) ) thelist.push(item);
 			}
 		}
 		// delete the elements which not there anymore
