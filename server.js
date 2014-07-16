@@ -1291,6 +1291,7 @@ function getUniqueAppId() {
 	return id;	
 }
 
+
 function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
 	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
@@ -1299,11 +1300,25 @@ function getSavedFilesList() {
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;
-	for(i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
-	for(i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
-	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push(uploadedPdfs[i]);
-	for(i=0; i<uploadedApps.length; i++)   list.app.push(uploadedApps[i]);
-	for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
+	for(i=0; i<uploadedImages.length; i++) list.image.push( { filename: uploadedImages[i], thumbnail: null } );
+	for(i=0; i<uploadedVideos.length; i++) list.video.push( { filename: uploadedVideos[i], thumbnail: null } );
+	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push( { filename: uploadedPdfs[i], thumbnail: null } );
+	for(i=0; i<uploadedApps.length; i++)
+	{
+		var appLocalPath = uploadsFolder + '/apps/' + uploadedApps[i];
+		var instuctionsFile = appLocalPath + "/instructions.json"
+		var url = hostOrigin + 'uploads/apps/' + uploadedApps[i];
+		
+		var json_str = fs.readFileSync(instuctionsFile, 'utf8');
+		var instructions = JSON.parse(json_str);
+		
+		var thumbnailHostPath = null;
+		if ( instructions.icon != null )
+			thumbnailHostPath = url + '/' + instructions.icon;
+			
+		list.app.push( { filename: uploadedApps[i], thumbnail: thumbnailHostPath } );
+	}
+	for(i=0; i<savedSessions.length; i++)  list.session.push( { filename: savedSessions[i].name, thumbnail: null } );
 	return list;
 }
 

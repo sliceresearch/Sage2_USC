@@ -7,6 +7,7 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
+
 var thumbnailBrowserList = {};
 var thumbnailBrowserIDList = [];
 var sendsToServer = true;
@@ -31,16 +32,9 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.minDim  = Math.min(this.element.width, this.element.height);
 		
 		this.thumbnailButtons = [];
+		this.appIconList = null;
 		thumbnailBrowserList[id] = this;
-				
-		// websocket to server for file library access
-		hostname = window.location.hostname;
-		port = window.location.port;
-		if(window.location.protocol == "http:" && port == "") port = "80";
-		if(window.location.protocol == "https:" && port == "") port = "443";
-		
-		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
-		
+
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
 		// load icons
@@ -58,7 +52,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.hoverOverText = "";
 		this.clickedPosition = null;
 		
-		this.wsio.open(function() {
+		wsio.open(function() {
 			console.log("open websocket");
 			var clientDescription = {
 				clientType: "mediaBrowser",
@@ -80,21 +74,18 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				receivesInputEvents: false,
 				receivesRemoteServerInfo: false
 			};
-			thumbnailBrowserList[id].wsio.emit('addClient', clientDescription);
+			wsio.emit('addClient', clientDescription);
 		});
 
-		this.wsio.on('storedFileList', function(fileList) {
+		wsio.on('storedFileList', function(fileList) {
 			thumbnailBrowserList[id].updateFileList(fileList);
 		});
-
-		this.wsio.on('initialize', function(uniqueID, date, startTime) {
-			console.log("initialize");
-			console.log(id);
-			console.log( thumbnailBrowserList );
-			thumbnailBrowserList[id].wsio.emit('requestStoredFiles');
+		
+		wsio.on('initialize', function(uniqueID, date, startTime) {
+			wsio.emit('requestStoredFiles');
 		});
 		
-		this.wsio.on('disableSendToServer', function() {
+		wsio.on('disableSendToServer', function() {
 			sendsToServer = false;
 		});
 		
@@ -113,22 +104,23 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		pdfList =  serverFileList.pdf;
 		videoList =  serverFileList.video;
 		appList =  serverFileList.app;
+
 		sessionList =  serverFileList.session;
 		
 		imageThumbSize = 50;
 		thumbSpacer = 5;
-		
+
 		if( imageList != null )
 		{
 			validImages = 0;
 			for( i = 0; i < imageList.length; i++ )
 			{
-				if( imageList[i].search("Thumbs.db") == -1 )
+				if( imageList[i].filename.search("Thumbs.db") == -1 )
 				{
 					thumbnailButton = new buttonWidget();
 					thumbnailButton.init(0, this.ctx, null);
 					thumbnailButton.setPosition( validImages * (imageThumbSize + thumbSpacer), 1 * (imageThumbSize + thumbSpacer) );
-					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i]} );
+					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].filename} );
 					thumbnailButton.setIdleImage( this.idleImageIcon );
 					
 					this.thumbnailButtons.push(thumbnailButton);
@@ -143,7 +135,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 3 * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i]} );
+				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].filename} );
 				thumbnailButton.setIdleImage( this.idlePDFIcon );
 				
 				this.thumbnailButtons.push(thumbnailButton);
@@ -156,7 +148,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 5 * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "movie_player", filename: videoList[i]} );
+				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].filename} );
 				thumbnailButton.setIdleImage( this.idleVideoIcon );
 				
 				this.thumbnailButtons.push(thumbnailButton);
@@ -169,9 +161,17 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 7 * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "custom_app", filename: appList[i]} );
-				thumbnailButton.setIdleImage( this.idleAppIcon );
-				
+				thumbnailButton.setData( {application: "custom_app", filename: appList[i].filename} );
+
+				if ( appList[i].thumbnail != null )
+				{
+					customIcon = new Image;
+					customIcon.src = appList[i].thumbnail;
+					thumbnailButton.setIdleImage( customIcon );
+				}
+				else
+					thumbnailButton.setIdleImage( this.idleAppIcon );
+
 				this.thumbnailButtons.push(thumbnailButton);
 			}
 		}
@@ -182,7 +182,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), 9 * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "load_session", filename: sessionList[i]} );
+				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].filename} );
 				thumbnailButton.setIdleImage( this.idleSessionIcon );
 				
 				this.thumbnailButtons.push(thumbnailButton);
@@ -200,7 +200,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 	
 		// background
-		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)"
+		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		
 		// UI
@@ -211,7 +211,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		}
 		
 		this.ctx.font="24px sans-serif";
-		this.ctx.fillStyle = "rgba(5, 5, 5, 1.0)"
+		this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
 		this.ctx.fillText( this.hoverOverText, 5, 24);
 	},
 	
@@ -258,7 +258,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	// Displays files
 	addNewElementFromStoredFiles : function( data )
 	{
-		this.wsio.emit('addNewElementFromStoredFiles', data);
+		wsio.emit('addNewElementFromStoredFiles', data);
 	}
 });
 
@@ -272,11 +272,11 @@ function buttonWidget() {
 	this.width = 50;
 	this.height = 50;
 	
-	this.defaultColor =  "rgba(100, 100, 100, 1.0)";
-	this.mouseOverColor = "rgba(250, 10, 10, 1.0 )";
-	this.clickedColor = "rgba(10, 250, 10, 1.0 )";
-	this.pressedColor = "rgba(250, 250, 10, 1.0 )";
-	this.releasedColor = "rgba(10, 10, 250, 1.0 )";
+	this.defaultColor =  "rgba(210, 210, 210, 1.0)";
+	this.mouseOverColor = "rgba(210, 210, 10, 1.0 )";
+	this.clickedColor = "rgba(10, 210, 10, 1.0 )";
+	this.pressedColor = "rgba(10, 210, 210, 1.0 )";
+	this.releasedColor = "rgba(10, 10, 210, 1.0 )";
 	
 	this.idleImage = null;
 	

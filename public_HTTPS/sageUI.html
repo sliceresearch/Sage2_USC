@@ -291,7 +291,7 @@
 		files[type].sort();
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
-			listElem.innerHTML = files[type][i];
+			listElem.innerHTML = files[type][i].filename;
 			listElem.addEventListener('click', selectFile, false);
 						
 			dir.appendChild(listElem);
