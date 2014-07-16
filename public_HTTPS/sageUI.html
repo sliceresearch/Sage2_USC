@@ -197,6 +197,12 @@
 			var thisMin = Math.min(screen.width, screen.height);
 			sagePtr.setPointerSensitivity(displayMin/thisMin);
 		});
+
+		wsio.on('setupSAGE2Version', function(data) {
+			// data: .commit .date	
+			var version = document.getElementById('version');
+			version.innerHTML = "SAGE2 Version: " + data.commit + ' - ' + data.date;		
+		});
 		
 		wsio.on('initialize', function(data) {
 			sagePtr.setPointerId(data.UID)
@@ -490,6 +496,17 @@
 			</ul>
 		</div>
 	</div>
+
+	<footer>
+		<ul>
+			<li id="version">SAGE2 Version:</li>
+			<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+			<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
+			<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
+			<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
+		</ul>
+	</footer>
+
 </body>
 </html>
 

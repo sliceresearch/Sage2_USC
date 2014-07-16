@@ -26,15 +26,16 @@ function getShortVersion() {
 }
 
 function getFullVersion(cb) {
-	var fullVersion = getShortVersion();
+	var fullVersion = {};
+	fullVersion.base = getShortVersion();
 	runCommand('git rev-parse --abbrev-ref HEAD', function (branch) {
-		fullVersion += '-' + branch;
+		fullVersion.branch = branch;
 		runCommand('git rev-parse --short HEAD', function (hash) {
-			fullVersion += '-' + hash;
+			fullVersion.commit = hash;
 			runCommand('git show -s --format=%ci ' + hash, function (adate) {
 				var ad = new Date(adate);
-				sname = sprint("(%4d/%02d/%02d)", ad.getFullYear(), ad.getMonth()+1, ad.getDate() );
-				fullVersion += ' ' + sname;
+				sname  = sprint("%4d/%02d/%02d", ad.getFullYear(), ad.getMonth()+1, ad.getDate() );
+				fullVersion.date = sname;
 				cb(fullVersion);
 			});
 		});
