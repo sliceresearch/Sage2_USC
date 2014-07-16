@@ -302,7 +302,7 @@ dealWithData: function(collection, today)
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
 			// need to turn animation off here or the pan stutters
-			this.map.panBy([this.position.x-itemX, this.position.y-itemY], { animate: false});
+			this.map.panBy([this.position.x-itemX, this.position.y-itemY], {animate: false});
 			this.position.x = itemX;
 			this.position.y = itemY;
 		}
@@ -319,14 +319,22 @@ dealWithData: function(collection, today)
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
 				var z = this.map.getZoom();
-				this.map.setZoom(z+1);
+				this.map.setZoom(z+1, {animate: false});
 				this.lastZoom = date;
+				
+				var z2 = this.map.getZoom();
+				
+				this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
 				var z = this.map.getZoom();
-				this.map.setZoom(z-1);
+				this.map.setZoom(z-1, {animate: false});
 				this.lastZoom = date;
+				
+				var z2 = this.map.getZoom();
+				
+				this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 		}
 

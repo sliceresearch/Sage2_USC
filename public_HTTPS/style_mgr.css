@@ -104,18 +104,6 @@ input, button {
 	margin: 10px;
 }
 
-
-li {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 10pt;
-	font-weight: normal;
-	font-style: normal;
-	width: 800px;
-	overflow: scroll;
-	text-indent: 5px;
-	color: #BBBBBB;
-}
-
 footer {
 	color: #BBBBBB;
 	margin: 5px;
@@ -123,7 +111,18 @@ footer {
 	text-align: left;
     bottom: 0;
     position: fixed;
+    white-space: nowrap;
+    width: 100%;
+	overflow: scroll;
 	z-index:-10;
+}
+
+footer li {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	font-weight: normal;
+	font-style: normal;
+	list-style: none outside none;
 }
 
 .fileLabel {
