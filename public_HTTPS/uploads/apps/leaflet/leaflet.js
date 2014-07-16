@@ -62,7 +62,7 @@ var leaflet = SAGE2_App.extend( {
 	},
 
 
-	getNewData: function(meSelf, beat){
+	getNewData: function(meSelf, beat, date){
 
 		var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
 
@@ -79,7 +79,7 @@ var leaflet = SAGE2_App.extend( {
 
 			// when I have all the data start parsing it
 			if (meSelf.currentBeats === meSelf.numBeats)
-				meSelf.dealWithData(meSelf.bigCollection);
+				meSelf.dealWithData(meSelf.bigCollection, date);
 		});
 	},
 
@@ -130,9 +130,9 @@ var leaflet = SAGE2_App.extend( {
 			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
 			mySelf.g = mySelf.svg.append("g");
 
-			mySelf.getNewData(mySelf,"1232");
-			mySelf.getNewData(mySelf,"1231");
-			mySelf.getNewData(mySelf,"0124");
+			mySelf.getNewData(mySelf,"1232", date);
+			mySelf.getNewData(mySelf,"1231", date);
+			mySelf.getNewData(mySelf,"0124", date);
 
 
 		// attach the SVG into the this.element node provided to us
@@ -144,11 +144,11 @@ var leaflet = SAGE2_App.extend( {
 });
 },
 
-dealWithData: function(collection)
+dealWithData: function(collection, today)
 {
 	var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
 
-	var today = new Date();
+	//var today = new Date();
 
 
 		collection.forEach(function(d) {
@@ -270,15 +270,15 @@ dealWithData: function(collection)
 	},
 	
 	draw: function(date) {
-		console.log("getting new data");
+		//console.log("getting new data");
 
 		if (this.allLoaded === 1)
 			{
 			this.currentBeats = 0;
 
-			this.getNewData(this,"1232");
-			this.getNewData(this,"1231");
-			this.getNewData(this,"0124");
+			this.getNewData(this,"1232", date);
+			this.getNewData(this,"1231", date);
+			this.getNewData(this,"0124", date);
 			}
 
 		
