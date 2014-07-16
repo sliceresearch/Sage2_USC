@@ -159,6 +159,10 @@
 			ui.background();
 		});
 		
+		wsio.on('setupSAGE2Version', function(version) {
+			ui.updateVersionText(version);
+		});
+		
 		wsio.on('setSystemTime', function(data) {
 			ui.setTime(new Date(data.date));
 		});

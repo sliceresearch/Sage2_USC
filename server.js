@@ -44,6 +44,7 @@ var sprint      = require('sprint');              // pretty formating (sprintf)
 var readline    = require('readline');            // to build an evaluation loop (builtin module)
 var program     = require('commander');           // parsing command-line arguments
 var colors      = require('colors');              // pretty colors in the terminal
+var exec        = require('child_process').exec;  // execute child process
 
 // custom node modules
 var httpserver  = require('./src/node-httpserver');     // creates web server
@@ -64,6 +65,20 @@ program
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
 console.log(config);
+
+
+// find git commit version and date
+var version = {commit: "", date: ""}
+exec("git log --format=\"%h|%aD\" -n 1", function(err, stdout, stderr){
+	if(err) throw err;
+	
+	var parse = stdout.split("|");
+	version.commit = parse[0];
+	version.date = parse[1];
+	
+	broadcast('setupSAGE2Version', version, 'receivesDisplayConfiguration');
+});
+
 
 var imConstraints = {imageMagick: true};
 if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
@@ -281,10 +296,13 @@ function initializeWSClient(wsio) {
 		wsio.on('selectedControlId', wsSelectedControlId);
 		wsio.on('releasedControlId', wsReleasedControlId);
 	}
+	if(wsio.messages.receivesDisplayConfiguration){
+		wsio.emit('setupDisplayConfiguration', config);
+		wsio.emit('setupSAGE2Version', version);
+	}
 	
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
-	if(wsio.messages.receivesDisplayConfiguration)     wsio.emit('setupDisplayConfiguration', config);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
 	if(wsio.messages.receivesPointerData)              initializeExistingSagePointers(wsio);
 	if(wsio.messages.requiresFullApps)                 initializeExistingApps(wsio);
