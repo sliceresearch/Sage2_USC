@@ -5,6 +5,7 @@
 	"height": 600,
 	"animation": true,
 	"resources": [
-		"scripts/d3.v3.min.js"
+		"scripts/d3.v3.min.js",
+		"scripts/suncalc.js"
 	]
 }
