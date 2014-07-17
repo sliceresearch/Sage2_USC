@@ -199,9 +199,9 @@
 		});
 
 		wsio.on('setupSAGE2Version', function(data) {
-			// data: .commit .date	
+			// data: .base .branch .commit .date	
 			var version = document.getElementById('version');
-			version.innerHTML = "SAGE2 Version: " + data.commit + ' - ' + data.date;		
+			version.innerHTML = "SAGE2 Version: <b>v" + data.base+"-"+data.branch+"-"+data.commit+"</b> " + data.date;		
 		});
 		
 		wsio.on('initialize', function(data) {

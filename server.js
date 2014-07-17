@@ -76,12 +76,17 @@ console.log(config);
 
 
 // find git commit version and date
-sageutils.getFullVersion(function (version) {
+sageutils.getFullVersion(function(version) {
 	// fields: base commit branch date
 	console.log("SAGE2 Full Version:", version);
+	
+	SAGE2_version = version;
+	/*
 	SAGE2_version = {};
 	SAGE2_version.commit = version.base+'-'+version.branch+'-'+version.commit;
 	SAGE2_version.date   = version.date;
+	*/
+	
 	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 });
 

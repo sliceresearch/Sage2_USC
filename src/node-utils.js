@@ -9,36 +9,33 @@
 // Copyright (c) 2014
 
 var SAGE2_version = require('../package.json').version;
-var ChildProcess = require('child_process');
+var exec   = require('child_process').exec;
 var path   = require('path');
 var sprint = require('sprint');
-
-function runCommand(cmd, callb) {
-	var dirroot = path.resolve(__dirname, '..');
-	var mychild = ChildProcess.exec(cmd, { cwd:  dirroot, timeout: 2000}, function (err, sout, serr) {
-		if (err) callb(null);
-		else callb(sout.split('\n').join(''));
-	});
-}
 
 function getShortVersion() {
 	return SAGE2_version;
 }
 
-function getFullVersion(cb) {
-	var fullVersion = {};
+function getFullVersion(callback) {
+	var fullVersion = {base: "", branch: "", commit: "", date: ""};
 	fullVersion.base = getShortVersion();
-	runCommand('git rev-parse --abbrev-ref HEAD', function (branch) {
-		fullVersion.branch = branch;
-		runCommand('git rev-parse --short HEAD', function (hash) {
-			fullVersion.commit = hash;
-			runCommand('git show -s --format=%ci ' + hash, function (adate) {
-				var ad = new Date(adate);
-				sname  = sprint("%4d/%02d/%02d", ad.getFullYear(), ad.getMonth()+1, ad.getDate() );
-				fullVersion.date = sname;
-				cb(fullVersion);
-			});
-		});
+	
+	var dirroot = path.resolve(__dirname, '..');
+	var cmd = "git log --date=\"short\" --format=\"%d|%h|%ad\" -n 1";
+	exec(cmd, { cwd:  dirroot, timeout: 2000}, function(err, stdout, stderr) {
+		if(err) callback(null);
+		
+		var result = stdout.replace(/\r?\n|\r/g, "");
+		var parse = result.split("|");
+		var branchList = parse[0].split(",");
+		var branch = branchList[branchList.length-1];
+		
+		fullVersion.branch = branch.substring(1, branch.length-1);
+		fullVersion.commit = parse[1];
+		fullVersion.date = parse[2].replace(/-/g, "/");
+		
+		callback(fullVersion);
 	});
 }
 

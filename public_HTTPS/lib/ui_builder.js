@@ -264,7 +264,7 @@ function uiBuilder(json_cfg, clientID) {
 	
 	this.updateVersionText = function(version) {
 		if(this.json_cfg.show_version) {
-			this.version.innerHTML = "<b>v" + version.commit + "</b> " + version.date;
+			this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
 		}
 	}
 
