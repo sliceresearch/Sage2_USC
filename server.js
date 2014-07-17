@@ -2012,7 +2012,7 @@ function pointerMove(uniqueID, data) {
 	pointerY = sagePointers[uniqueID].top;
 	elem = findAppUnderPointer(pointerX, pointerY);
 	
-	if( elem != null && elem.interactionMode === MODE.WINDOW_MANAGEMENT ){
+	if( elem != null && remoteInteraction[uniqueID].windowManagementMode() ){
 		pointerX = sagePointers[uniqueID].left;
 		pointerY = sagePointers[uniqueID].top;
 
@@ -2049,58 +2049,60 @@ function pointerMove(uniqueID, data) {
 			}
 		}
 	}
-	
-	// Apps always receive events. App is responsible for flagging itself for window management and not allowing 'app interaction'
-	pointerX = sagePointers[uniqueID].left;
-	pointerY = sagePointers[uniqueID].top;
+	if( remoteInteraction[uniqueID].appInteractionMode() || ( elem !== null && elem.application === 'thumbnailBrowser' ) )
+	{
+		pointerX = sagePointers[uniqueID].left;
+		pointerY = sagePointers[uniqueID].top;
 
-	elem = findAppUnderPointer(pointerX, pointerY);
+		elem = findAppUnderPointer(pointerX, pointerY);
 
-	if(elem !== null){
-		var itemRelX = pointerX - elem.left;
-		var itemRelY = pointerY - elem.top - config.titleBarHeight;
-		var now = new Date();
-		broadcast('eventInItem', {eventType: "pointerMove", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {}, date: now }, 'receivesInputEvents');
+		if(elem !== null){
+			var itemRelX = pointerX - elem.left;
+			var itemRelY = pointerY - elem.top - config.titleBarHeight;
+			var now = new Date();
+			broadcast('eventInItem', {eventType: "pointerMove", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {}, date: now }, 'receivesInputEvents');
+		}
 	}
 }
 
-function pointerPress( address, pointerX, pointerY ) {
-	if ( sagePointers[address] === undefined ) return;
-	remoteInteraction[address].dropControl();
+function pointerPress( uniqueID, pointerX, pointerY ) {
+	if ( sagePointers[uniqueID] === undefined ) return;
+	remoteInteraction[uniqueID].dropControl();
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 
 	if (ct !== null) {
-		remoteInteraction[address].selectMoveControl(ct, pointerX, pointerY);
-		broadcast('requestControlId', {addr:address, ptrId:sagePointers[address].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
+		remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
+		broadcast('requestControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		return ;
 	}
 
 
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if(elem !== null){
-		if ( elem.interactionMode === MODE.WINDOW_MANAGEMENT ){
+		if ( remoteInteraction[uniqueID].windowManagementMode() ){
 			var localX = pointerX - elem.left;
 			var localY = pointerY - (elem.top+config.titleBarHeight);
 			var cornerSize = Math.min(elem.width, elem.height) / 5;
 			// bottom right corner - select for drag resize
 			if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
-				remoteInteraction[address].selectResizeItem(elem, pointerX, pointerY);
+				remoteInteraction[uniqueID].selectResizeItem(elem, pointerX, pointerY);
 			}
 			// otherwise - select for move
 			else{
-				remoteInteraction[address].selectMoveItem(elem, pointerX, pointerY); //will only go through f window management mode
+				remoteInteraction[uniqueID].selectMoveItem(elem, pointerX, pointerY); //will only go through f window management mode
 				
 			}
 		}
-		
-		//Apps always receive events. App is responsible for flagging itself for window management and not allowing 'app interaction'
-		var itemRelX = pointerX - elem.left;
-		var itemRelY = pointerY - elem.top - config.titleBarHeight;
-		var now = new Date();
-		broadcast('eventInItem', {eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
+		if( remoteInteraction[uniqueID].appInteractionMode() || ( elem !== null && elem.application === 'thumbnailBrowser' ) )
+		{
+			var itemRelX = pointerX - elem.left;
+			var itemRelY = pointerY - elem.top - config.titleBarHeight;
+			var now = new Date();
+			broadcast('eventInItem', {eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
 
-		var newOrder = moveAppToFront(elem.id);
-		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+			var newOrder = moveAppToFront(elem.id);
+			broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+		}
 	}
 }
 
@@ -2191,47 +2193,48 @@ function togglePointerMode(address) {
 	broadcast('changeSagePointerMode', {id: sagePointers[address].id, mode: remoteInteraction[address].interactionMode } , 'receivesPointerData' );
 }
 
-function pointerRelease(address, pointerX, pointerY) {
-	if( sagePointers[address] === undefined )
+function pointerRelease(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
 		return;
 	// Attempting to complete a click action on a button or a drag on a slider
-	broadcast('releaseControlId', {addr:address, ptrId:sagePointers[address].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
-	remoteInteraction[address].releaseControl();
+	broadcast('releaseControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
+	remoteInteraction[uniqueID].releaseControl();
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
-	if( elem != null && elem.interactionMode === MODE.WINDOW_MANAGEMENT ){
-		if(remoteInteraction[address].selectedResizeItem !== null){
-			broadcast('finishedResize', {id: remoteInteraction[address].selectedResizeItem.id, elemWidth: remoteInteraction[address].selectedResizeItem.width, elemHeight: remoteInteraction[address].selectedResizeItem.height, date: new Date()}, 'receivesWindowModification');
-			remoteInteraction[address].releaseItem(true);
+	if( elem != null && remoteInteraction[uniqueID].windowManagementMode() ){
+		if(remoteInteraction[uniqueID].selectedResizeItem !== null){
+			broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, elemWidth: remoteInteraction[uniqueID].selectedResizeItem.width, elemHeight: remoteInteraction[uniqueID].selectedResizeItem.height, date: new Date()}, 'receivesWindowModification');
+			remoteInteraction[uniqueID].releaseItem(true);
 		}
-		if(remoteInteraction[address].selectedMoveItem !== null){
+		if(remoteInteraction[uniqueID].selectedMoveItem !== null){
 			var remoteIdx = -1;
 			for(var i=0; i<remoteSites.length; i++){
-				if(sagePointers[address].left >= remoteSites[i].pos && sagePointers[address].left <= remoteSites[i].pos+remoteSites[i].width &&
-					sagePointers[address].top >= 2 && sagePointers[address].top <= remoteSites[i].height) {
+				if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
+					sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
 					remoteIdx = i;
 					break;
 				}
 			}
 			if(remoteIdx < 0){
-				remoteInteraction[address].releaseItem(true);
+				remoteInteraction[uniqueID].releaseItem(true);
 			}
 			else{
-				var app = findAppById(remoteInteraction[address].selectedMoveItem.id);
+				var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 				remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
-				var updatedItem = remoteInteraction[address].releaseItem(false);
+				var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 				if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 			}
 		}
 	}
-	
-	//Apps always receive events. App is responsible for flagging itself for window management and not allowing 'app interaction'
-	if( elem !== null ){
-		var itemRelX = pointerX - elem.left;
-		var itemRelY = pointerY - elem.top - config.titleBarHeight;
-		var now = new Date();
-		broadcast('eventInItem', {eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, user_color: sagePointers[address].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
+	if( remoteInteraction[uniqueID].appInteractionMode() || ( elem !== null && elem.application === 'thumbnailBrowser' ) )
+	{
+		if( elem !== null ){
+			var itemRelX = pointerX - elem.left;
+			var itemRelY = pointerY - elem.top - config.titleBarHeight;
+			var now = new Date();
+			broadcast('eventInItem', {eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "left"}, date: now }, 'receivesInputEvents');
+		}
 	}
 }
 

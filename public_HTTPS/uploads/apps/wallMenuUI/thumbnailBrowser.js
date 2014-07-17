@@ -7,6 +7,8 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
+//
+// S2DMI 'Tsu-mu-i' (SAGE2 Display Menu User Interface)
 
 var thumbnailBrowserList = {};
 var thumbnailBrowserIDList = [];
@@ -35,6 +37,15 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.appIconList = null;
 		thumbnailBrowserList[id] = this;
 
+		// websocket to server for file library access
+		// Note: using a different socket to prevent locking up other app animations
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
 		// load icons
@@ -52,7 +63,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.hoverOverText = "";
 		this.clickedPosition = null;
 		
-		wsio.open(function() {
+		this.wsio.open(function() {
 			console.log("open websocket");
 			var clientDescription = {
 				clientType: "mediaBrowser",
@@ -74,18 +85,18 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				receivesInputEvents: false,
 				receivesRemoteServerInfo: false
 			};
-			wsio.emit('addClient', clientDescription);
+			thumbnailBrowserList[id].wsio.emit('addClient', clientDescription);
 		});
 
-		wsio.on('storedFileList', function(fileList) {
+		this.wsio.on('storedFileList', function(fileList) {
 			thumbnailBrowserList[id].updateFileList(fileList);
 		});
 		
-		wsio.on('initialize', function(uniqueID, date, startTime) {
-			wsio.emit('requestStoredFiles');
+		this.wsio.on('initialize', function(uniqueID, date, startTime) {
+			thumbnailBrowserList[id].wsio.emit('requestStoredFiles');
 		});
 		
-		wsio.on('disableSendToServer', function() {
+		this.wsio.on('disableSendToServer', function() {
 			sendsToServer = false;
 		});
 		
@@ -258,7 +269,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	// Displays files
 	addNewElementFromStoredFiles : function( data )
 	{
-		wsio.emit('addNewElementFromStoredFiles', data);
+		this.wsio.emit('addNewElementFromStoredFiles', data);
 	}
 });
 
