@@ -98,6 +98,8 @@ function sagePointer(wsio) {
 			document.addEventListener('keypress',            this.pointerKeyPress,  false);
 		
 			this.sagePointerBtn.removeEventListener('click', this.startSagePointer, false);
+			
+			sagePointerEnabled();
 		}
 		else{
 			console.log("pointer lock disabled");
@@ -114,6 +116,8 @@ function sagePointer(wsio) {
 			document.removeEventListener('keypress',         this.pointerKeyPress,  false);
 		
 			this.sagePointerBtn.addEventListener('click',    this.startSagePointer, false);
+			
+			sagePointerDisabled();
 		}
 	};
 	
@@ -166,7 +170,7 @@ function sagePointer(wsio) {
 			this.wsio.emit('keyPress', {code: code});
 		}
 		// if a special key - prevent default (otherwise let continue to keyPress)
-		if(code == 8 || (code >= 16 && code != 32 && code <= 46) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
+		if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
 			event.preventDefault();
 		}
 	};
@@ -283,13 +287,13 @@ function sagePointer(wsio) {
 		event.preventDefault();
 
 		var files = event.dataTransfer.files;
-		var url = event.dataTransfer.getData("Url");
-		var text = event.dataTransfer.getData("Text");
-		if(files.length > 0){
-			var _this = this;
-			var total = {};
+		var url   = event.dataTransfer.getData("Url");
+		var text  = event.dataTransfer.getData("Text");
+		if (files.length > 0) {
+			var _this  = this;
+			var total  = {};
 			var loaded = {};
-			var pc = 0;
+			var pc     = 0;
 
 			for(var i=0; i<files.length; i++){
 				if(files[i].size <= this.maxUploadSize){
@@ -335,13 +339,14 @@ function sagePointer(wsio) {
 			var mimeType = "";
 			var youtube  = dataUrl.indexOf("www.youtube.com");
 			var ext      = dataUrl.substring(dataUrl.lastIndexOf('.')+1);
-			if(ext.length > 3) ext = ext.substring(0,3);
+			if(ext.length > 4) ext = ext.substring(0,4);
 			ext = ext.toLowerCase();
 			if (youtube >= 0) mimeType = "video/youtube";
 			else if(ext == "jpg" || ext == "jpeg") mimeType = "image/jpeg";
-			else if(ext == "png") mimeType = "image/png";
-			else if(ext == "mp4") mimeType = "video/mp4";
-			else if(ext == "pdf") mimeType = "application/pdf";
+			else if(ext == "png") mimeType  = "image/png";
+			else if(ext == "mp4") mimeType  = "video/mp4";
+			else if(ext == "webm") mimeType = "video/webm";
+			else if(ext == "pdf") mimeType  = "application/pdf";
 			console.log("URL: " + dataUrl + ", type: " + mimeType);
 
 			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl});

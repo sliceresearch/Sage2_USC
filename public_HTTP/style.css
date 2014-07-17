@@ -69,8 +69,8 @@ footer {
 	margin: 5px;
 	left: 10px;
 	text-align: left;
-    bottom: 0;
-    position: fixed;
+	bottom: 0;
+	position: fixed;
 	z-index:-10;
 }
 

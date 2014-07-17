@@ -159,6 +159,10 @@
 			ui.background();
 		});
 		
+		wsio.on('setupSAGE2Version', function(version) {
+			ui.updateVersionText(version);
+		});
+		
 		wsio.on('setSystemTime', function(data) {
 			ui.setTime(new Date(data.date));
 		});
@@ -359,34 +363,6 @@
 						document.head.appendChild(js);
 					}
 				});
-				
-				/*
-				data.resrc.forEach(function(element, index, array) {
-					if (dependencies[element] === false) {
-						var js = document.createElement("script");
-						js.addEventListener('error', function(event) {
-							console.log("Error loading script: " + element);
-						}, false);
-			
-						js.addEventListener('load', function(event) {
-							dependencies[element] = true;
-							resources[element] = true;
-							if(allTrueDict(resources)){
-								console.log("all resources loaded");
-								loadApplication();
-							}
-						}, false);
-						js.type = "text/javascript";
-						js.src = url + "/" + element;
-						document.head.appendChild(js);
-					} else {
-						if(allTrueDict(resources)){
-							console.log("all resources loaded");
-							loadApplication();
-						}
-					}
-				});
-				*/
 			}
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;
@@ -533,7 +509,7 @@
 			}
 			
 			var app = applications[position_data.elemId];
-			if(app !== undefined && app.resizeEvents === "continuous"){
+			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
 				var date = new Date(position_data.date);
 				app.resize(date);
 			}
@@ -576,6 +552,9 @@
 		wsio.on('eventInItem', function(event_data){
 			var date = new Date(event_data.date);
 			var app  = applications[event_data.elemId];
+			// adding pointer information to the event
+            event_data.data.pname  = event_data.user_label;
+            event_data.data.pcolor = event_data.user_color;
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
 		});
 
@@ -597,8 +576,9 @@
 				}
 			}
 		});
+
 		wsio.on('createControl', function(data){
-			if (controlItems[data.id].show === false){
+			if (controlItems[data.id].show === false) {
 				var ctrDiv =  document.createElement("div");
 				ctrDiv.id = data.id;
 				ctrDiv.className = "windowControls";
@@ -612,14 +592,15 @@
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id].show = true;
 				controlItems[data.id].divHandle = ctrDiv;
-			}	
+			}
 		});
-		wsio.on('requestControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+
+		wsio.on('requestControlId', function(data) {
+			var ctrl  = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
-			var regC = /_controls/;
-			var regB = /button/;
-			var regS = /slider/;
+			var regC  = /_controls/;
+			var regB  = /button/;
+			var regS  = /slider/;
 			var regTI = /textInput/;
 			
 

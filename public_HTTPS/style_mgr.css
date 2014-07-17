@@ -27,6 +27,20 @@ p, label, span {
 	font-size: 12px;
 }
 
+ul {
+	padding: 0;
+	margin-left: 20px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+
+li {
+	list-style: disc outside none;
+	display: list-item;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+
 input, button {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 11px;
@@ -88,6 +102,27 @@ input, button {
 #fileButtons {
 	text-align: left;
 	margin: 10px;
+}
+
+footer {
+	color: #BBBBBB;
+	margin: 5px;
+	left: 10px;
+	text-align: left;
+    bottom: 0;
+    position: fixed;
+    white-space: nowrap;
+    width: 100%;
+	overflow: scroll;
+	z-index:-10;
+}
+
+footer li {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	font-weight: normal;
+	font-style: normal;
+	list-style: none outside none;
 }
 
 .fileLabel {
@@ -191,4 +226,3 @@ input, button {
 .css-treeview input:checked ~ ul {
 	display: block;
 }
-

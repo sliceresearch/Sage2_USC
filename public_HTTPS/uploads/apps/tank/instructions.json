@@ -1,0 +1,10 @@
+{
+	"main_script": "aTanks.js",
+	"width": 700,
+	"height": 400,
+	"animation": true,
+	"load": {
+	},
+	"resources": [
+	]
+}

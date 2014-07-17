@@ -41,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerItems   = {};
 
 	// Get handle on the main div
-	this.main = document.getElementById("main");
+	this.main = document.getElementById("background");
 
 	// Build the background image/color
 	this.background = function () {
@@ -188,7 +188,7 @@ function uiBuilder(json_cfg, clientID) {
 		fileref.setAttribute("type",  "text/css");
 		fileref.setAttribute("media", "screen");
 		fileref.setAttribute("href",  this.csssheet);
-
+		
 		if (this.clientID===-1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
@@ -217,10 +217,15 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
 		// machine name
-		var machine = document.createElement('p');
-		machine.id  = "machine";
+		this.machine = document.createElement('p');
+		this.machine.id  = "machine";
+		// version id
+		this.version = document.createElement('p');
+		this.version.id  = "version";
+		
 		this.upperBar.appendChild(this.clock);
-		this.upperBar.appendChild(machine);
+		this.upperBar.appendChild(this.machine);
+		this.upperBar.appendChild(this.version);
 		this.main.appendChild(this.upperBar);
 
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
@@ -229,24 +234,39 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.style.zIndex = "9999";
 		
 		this.clock.style.position   = "absolute";
+		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
 		this.clock.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		this.clock.style.color      = "#FFFFFF";
 		
-		machine.style.position   = "absolute";
-		machine.style.whiteSpace = "nowrap";
-		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
-		machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		machine.style.color      = "#FFFFFF";
+		this.machine.style.position   = "absolute";
+		this.machine.style.whiteSpace = "nowrap";
+		this.machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		this.machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
+		this.machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
+		this.machine.style.color      = "#FFFFFF";
+		
+		this.version.style.position   = "absolute";
+		this.version.style.whiteSpace = "nowrap";
+		this.version.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		this.version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (16*this.titleBarHeight)).toString() + "px";
+		this.version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
+		this.version.style.color      = "#FFFFFF";
+		
 		if (this.json_cfg.show_url) {
 			var hostname = this.json_cfg.public_host ? this.json_cfg.public_host : this.json_cfg.host;
-			if (this.json_cfg.index_port == 80) machine.textContent = hostname;
-			else machine.textContent = hostname + ":" +this.json_cfg.index_port.toString();
+			if (this.json_cfg.index_port == 80) this.machine.textContent = hostname;
+			else this.machine.textContent = hostname + ":" +this.json_cfg.index_port.toString();
 		}
 		head.appendChild(fileref);
 	};
+	
+	this.updateVersionText = function(version) {
+		if(this.json_cfg.show_version) {
+			this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
+		}
+	}
 
 	this.createSagePointer = function(pointer_data) {
 		var pointerElem = document.createElement("canvas");

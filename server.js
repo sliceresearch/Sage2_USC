@@ -34,7 +34,7 @@ var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
-var imageinfo   = require('imageinfo');           // gets width, height for images
+// var imageinfo   = require('imageinfo');           // gets width, height for images
 var json5       = require('json5');               // JSON format that allows comments
 var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
@@ -44,6 +44,7 @@ var sprint      = require('sprint');              // pretty formating (sprintf)
 var readline    = require('readline');            // to build an evaluation loop (builtin module)
 var program     = require('commander');           // parsing command-line arguments
 var colors      = require('colors');              // pretty colors in the terminal
+var exec        = require('child_process').exec;  // execute child process
 
 // custom node modules
 var httpserver  = require('./src/node-httpserver');     // creates web server
@@ -52,11 +53,19 @@ var loader      = require('./src/node-itemloader');     // handles sage item cre
 var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var omicron     = require('./src/node-omicron');        // handles Omicron input events
+var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
+var assets      = require('./src/node-assets');         // manages the list of files
+var sageutils   = require('./src/node-utils');          // provides the current version number
+
+
+var SAGE2_version = sageutils.getShortVersion();
+console.log("SAGE2 Short Version:", SAGE2_version);
+
 
 
 // Command line arguments
 program
-  .version('0.1.0')
+  .version(SAGE2_version)
   .option('-i, --interactive', 'Interactive prompt')
   .option('-f, --configuration <value>', 'Specify a configuration file')
   .parse(process.argv);
@@ -64,6 +73,16 @@ program
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
 console.log(config);
+
+
+// find git commit version and date
+sageutils.getFullVersion(function(version) {
+	// fields: base commit branch date
+	console.log("SAGE2 Full Version:", version);
+	SAGE2_version = version;
+	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
+});
+
 
 var imConstraints = {imageMagick: true};
 if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
@@ -99,6 +118,9 @@ var sessionFolder = path.join(__dirname, "sessions");
 if (!fs.existsSync(sessionFolder)) {
      fs.mkdirSync(sessionFolder);
 }
+
+// Build the list of existing assets
+assets.initialize(uploadsFolder);
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
@@ -299,10 +321,13 @@ function initializeWSClient(wsio) {
 		wsio.on('selectedControlId', wsSelectedControlId);
 		wsio.on('releasedControlId', wsReleasedControlId);
 	}
+	if(wsio.messages.receivesDisplayConfiguration){
+		wsio.emit('setupDisplayConfiguration', config);
+		wsio.emit('setupSAGE2Version', SAGE2_version);
+	}
 	
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
-	if(wsio.messages.receivesDisplayConfiguration)     wsio.emit('setupDisplayConfiguration', config);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
 	if(wsio.messages.receivesPointerData)              initializeExistingSagePointers(wsio);
 	if(wsio.messages.requiresFullApps)                 initializeExistingApps(wsio);
@@ -372,7 +397,7 @@ function initializeMediaStreams(uniqueID) {
 	}
 }
 
-/***************** Sage Pointer Functions *****************/
+// **************  Sage Pointer Functions *****************
 
 function wsStartSagePointer(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
@@ -560,10 +585,11 @@ function wsKeyPress(wsio, data) {
 
 }
 
-/***************** Media Stream Functions *****************/
+// **************  Media Stream Functions *****************
+
 function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: " + data.id);
-	mediaStreams[data.id] = {ready: true, chunks: [], clients: {}};
+	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -578,6 +604,11 @@ function wsStartNewMediaStream(wsio, data) {
 			
 		applications.push(appInstance);
 	});
+	
+	// Debug media stream freezing
+	mediaStreams[data.id].timeout = setTimeout(function() {
+		console.log("3 sec with no updates from: " + data.id);
+	}, 3000);
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
@@ -590,6 +621,12 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	if(stream !== null) stream.data = data.state;
 
 	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
+	
+	// Debug media stream freezing
+	clearTimeout(mediaStreams[data.id].timeout);
+	mediaStreams[data.id].timeout = setTimeout(function() {
+		console.log("3 sec with no updates from: " + data.id);
+	}, 3000);
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
@@ -650,7 +687,8 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 	}
 }
 
-/******************** Application Animation Functions ********************/
+// **************  Application Animation Functions *****************
+
 function wsFinishedRenderingAppFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
@@ -688,22 +726,24 @@ function wsUpdateAppState(wsio, data) {
 // Got a resize call for an application itself
 //
 function wsAppResize(wsio, data) {
-	// Update the object with the new dimensions
-	var app    = findAppById(data.id);
-	if (app) {
-		// Update the width height and aspect ratio
-		app.width  = data.width;
-		app.height = data.height;
-		app.aspect = app.width/app.height;
-		app.native_width  = data.width;
-		app.native_height = data.height;
-		// build the object to be sent
-		var updateItem = {elemId: app.id,
-							elemLeft: app.left, elemTop: app.top,
-							elemWidth: app.width, elemHeight: app.height,
-							date: new Date()};
-		// send the order
-		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+    if (wsio.clientID === 0) {
+		// Update the object with the new dimensions
+		var app    = findAppById(data.id);
+		if (app) {
+			// Update the width height and aspect ratio
+			app.width  = data.width;
+			app.height = data.height;
+			app.aspect = app.width/app.height;
+			app.native_width  = data.width;
+			app.native_height = data.height;
+			// build the object to be sent
+			var updateItem = {elemId: app.id,
+								elemLeft: app.left, elemTop: app.top,
+								elemWidth: app.width, elemHeight: app.height,
+								force: true, date: new Date()};
+			// send the order
+			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+		}
 	}
 }
 
@@ -740,7 +780,7 @@ function wsAppInteractionMode(wsio, data) {
 	}
 }
 
-/******************** Session Functions ********************/
+// **************  Session Functions *****************
 
 function wsSaveSesion(wsio, data) {
 	var sname = "";
@@ -791,6 +831,8 @@ function listSessions() {
 
 
 function saveSession (filename) {
+	filename = filename || 'default.json';
+	
 	var fullpath = path.join(sessionFolder, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -802,17 +844,18 @@ function saveSession (filename) {
 	states.date    = Date.now();
 	states.apps    = applications;
 
-	fs.writeFile(fullpath, JSON.stringify(states, null, 4), function(err) {
-	    if (err) {
-	      console.log("Server> saving", err);
-	    } else {
-	      console.log("Server> session saved to " + fullpath);
-	    }
-		states = null;
-	});
+	try {
+		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
+	 	console.log("Session> saved to " + fullpath);
+	}
+	catch (err) {
+		console.log("Session> error saving", err);
+	}
 }
 
 function loadSession (filename) {
+	filename = filename || 'default.json';
+
 	var fullpath = path.join(sessionFolder, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -998,7 +1041,7 @@ function tileApplications() {
 		var updateItem = {elemId: app.id,
 							elemLeft: app.left, elemTop: app.top,
 							elemWidth: app.width, elemHeight: app.height,
-							date: new Date()};
+							force: true, date: new Date()};
 		// send the order
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 
@@ -1032,7 +1075,7 @@ function wsTileApplications(wsio, data) {
 }
 
 
-/******************** Server File Functions ********************/
+// **************  Server File Functions *****************
 
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
@@ -1067,7 +1110,8 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 }
 }
 
-/******************** Adding Web Content (URL) ********************/
+// **************  Adding Web Content (URL) *****************
+
 function wsAddNewWebElement(wsio, data) {
 	appLoader.loadFileFromWebURL(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
@@ -1089,7 +1133,8 @@ function wsAddNewWebElement(wsio, data) {
 	});
 }
 
-/*********************** Launching Web Browser ************************/
+// **************  Launching Web Browser *****************
+
 function wsOpenNewWebpage(wsio, data) {
 	// Check if the web-browser module is enabled in the configuration file
 	if (config.experimental !== undefined && config.experimental.webbrowser === true) {
@@ -1099,12 +1144,14 @@ function wsOpenNewWebpage(wsio, data) {
 }
 
 
-/******************** Video / Audio Synchonization *********************/
+// **************  Video / Audio Synchonization *****************
+
 function wsUpdateVideoTime(wsio, data) {
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');
 }
 
-/******************** Remote Server Content ****************************/
+// **************  Remote Server Content *****************
+
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	var clientAddress, i;
@@ -1183,7 +1230,7 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 	}
 }
 
-/******************** Widget Control Messages ****************************/
+// **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
 	for (var i= controls.length-1;i>=0;i--){
@@ -1216,8 +1263,8 @@ function wsReleasedControlId(wsio, data){
 }
 
 
+// ************************************************************************
 
-/************************************************************************/
 function loadConfiguration() {
 	var configFile = null;
 	
@@ -1258,9 +1305,7 @@ function loadConfiguration() {
 		}
 	}
 	
-	if (fs.existsSync(configFile)) {
-		console.log("Using configuration file: " + configFile);
-	} else {
+	if (! fs.existsSync(configFile)) {
 		console.log("\n----------");
 		console.log("Cannot configuration file:", configFile);
 		console.log("----------\n\n");
@@ -1328,21 +1373,31 @@ function setupDisplayBackground() {
 	// background image
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
-		var bg_info = imageinfo(fs.readFileSync(bg_file));
-		if(config.background.style == "fit"){
-			if(bg_info.width == config.totalWidth && bg_info.height == config.totalHeight){
-				sliceBackgroundImage(bg_file, bg_file);
-			}
-			else{
-				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
-				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
-		
-				imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
-					if(err) throw err;
+
+		//var bg_info = imageinfo(fs.readFileSync(bg_file));
+
+		if (config.background.style == "fit") {
+			var result = exiftool.file(bg_file, function(err, data) {
+				if (err) {
+					console.log("Error processing background image:", bg_file, err);
+					console.log(" ");
+					process.exit(1);
+				}
+				var bg_info = data;
+
+				if (bg_info.ImageWidth == config.totalWidth && bg_info.ImageHeight == config.totalHeight) {
+					sliceBackgroundImage(bg_file, bg_file);
+				}
+				else {
+					tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
+					var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 			
-					sliceBackgroundImage(tmpImg, bg_file);
-				});
-			}
+					imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
+						if(err) throw err;
+						sliceBackgroundImage(tmpImg, bg_file);
+					});
+				}
+			} );
 		}
 		else if(config.background.style == "stretch"){
 			imgExt = path.extname(bg_file);
@@ -1354,28 +1409,6 @@ function setupDisplayBackground() {
 				sliceBackgroundImage(tmpImg, bg_file);
 			});
 		}
-		/*
-		else if(config.background.style == "tile"){
-			imgExt = path.extname(bg_file);
-			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
-		
-			var cols = Math.ceil(config.totalWidth / bg_info.width);
-			var rows = Math.ceil(config.totalHeight / bg_info.height);
-			var tile = cols.toString() + "x" + rows.toString();
-			var in_res  = bg_info.width.toString() + "x" + bg_info.height.toString();
-		
-			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
-			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
-			// add transparent background
-			imTile.in("-background", "None");
-		
-			imTile.write(tmpImg, function(err) {
-				if(err) throw err;
-			
-				sliceBackgroundImage(tmpImg, bg_file);
-			});
-		}
-		*/
 	}
 }
 
@@ -1484,6 +1517,8 @@ function setupHttpsOptions() {
 
 function sendConfig(req, res) {
 	res.writeHead(200, {"Content-Type": "text/plain"});
+	// Adding the calculated version into the data structure
+	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
 	res.end();
 }
@@ -1512,7 +1547,6 @@ function manageUploadedFiles(files) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key][0];
-		
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
 			if(appInstance === null){
 				console.log("unrecognized file type: " + file.headers['content-type']);
@@ -1540,8 +1574,8 @@ function manageUploadedFiles(files) {
 }
 
 
+// **************  Remote Site Collaboration *****************
 
-/******** Remote Site Collaboration ******************************************************/
 var remoteSites = [];
 if (config.remote_sites) {
 	remoteSites = new Array(config.remote_sites.length);
@@ -1615,7 +1649,7 @@ function createRemoteConnection(wsURL, element, index) {
 	return remote;
 }
 
-/******** System Time - Updated Every Minute *********************************************/
+// **************  System Time - Updated Every Minute *****************
 var cDate = new Date();
 setTimeout(function() {
 	setInterval(function() {
@@ -1626,9 +1660,10 @@ setTimeout(function() {
 }, (61-cDate.getSeconds())*1000);
 
 
-/***************************************************************************************/
+// ***************************************************************************************
 
 // Place callback for success in the 'listen' call for HTTPS
+
 server.on('listening', function (e) {
 	// Success
 	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
@@ -1691,7 +1726,8 @@ index.listen(config.index_port);
 server.listen(config.port);
 
 
-/***************************************************************************************/
+// ***************************************************************************************
+
 // Command loop: reading input commands
 
 if (program.interactive)
@@ -1721,6 +1757,7 @@ if (program.interactive)
 				console.log('tile\t\tlayout all running applications');
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
+				console.log('assets\t\tlist the assets in the file library');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -1729,13 +1766,13 @@ if (program.interactive)
 				if (command[1] !== undefined)
 					saveSession(command[1]);
 				else
-					saveSession("default.json");
+					saveSession();
 				break;
 			case 'load':
 				if (command[1] !== undefined)
 					loadSession(command[1]);
 				else
-					loadSession("default.json");
+					loadSession();
 				break;
 			case 'sessions':
 				printListSessions();
@@ -1757,6 +1794,10 @@ if (program.interactive)
 				clearDisplay();
 				break;
 
+			case 'assets':
+				assets.listAssets();
+				break;
+
 			case 'tile':
 				tileApplications();
 				break;
@@ -1775,6 +1816,8 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
+				saveSession();
+				assets.saveAssets();
 				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
@@ -1788,6 +1831,10 @@ if (program.interactive)
 		shell.prompt();
 	}).on('close', function() {
 		// Close with CTRL-D or CTRL-C
+		// Only synchronous code!
+		// Saving stuff
+		saveSession();
+		assets.saveAssets();
 		console.log('');
 		console.log('SAGE2 done');
 		console.log('');
@@ -1796,7 +1843,7 @@ if (program.interactive)
 }
 
 
-/***************************************************************************************/
+// ***************************************************************************************
 
 function broadcast(func, data, type) {
 	for(var i=0; i<clients.length; i++){
@@ -1956,7 +2003,7 @@ function getAppPositionSize(appInstance) {
 		};
 }
 
-/**** Pointer Functions ********************************************************************/
+// **************  Pointer Functions *****************
 
 var createSagePointer = function ( address ) {
 	// From addClient type == sageUI
@@ -2415,7 +2462,8 @@ function deleteApplication( elem ) {
 	removeElement(applications, elem);
 }
 
-/******** Omicron section ****************************************************************/
+// **************  Omicron section *****************
+
 if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
 	omicronManager.setCallbacks(

@@ -1,0 +1,70 @@
+/*
+	configuration for traoumad - luc's machine
+*/
+{
+		// hostname of the web server
+	host: "traoumad.evl.uic.edu",
+		// port of the HTTPS server: 443 for default
+	port: 443,
+		// port of the HTTP public page
+	index_port: 80,
+		// clock setting: 12-hour or 24-hour
+	clock: 12,
+	background: {
+                "color": "#585757",
+                "image": "images/background/dbgrid.png",
+                "style": "tile"
+	},
+	show_version: true,
+	show_url: true,
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+		// for experimental features: true/false
+	experimental: {
+		"webbrowser": false  // enable the awesomium module
+	},
+	layout: {
+		rows: 1,
+		columns: 2
+	},
+	displays: [
+		{
+			ID: 0,
+			row: 0,
+			column: 0
+		},
+		{
+			ID: 1,
+			row: 0,
+			column: 1
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1"
+	],
+	remote_sites: [
+                {
+                        name: "Mesaverde",
+                        host: "mesaverde.evl.uic.edu",
+                        port: 443
+                },
+                {
+                        name: "Cybercommons",
+                        host: "iridium.evl.uic.edu",
+                        port: 443
+                },
+                {
+                        name: "IceWall",
+                        host: "thor.evl.uic.edu",
+                        port: 9090
+                },
+                {
+                        name: "CAVE2",
+                        host: "lyra.evl.uic.edu",
+                        port: 9090
+                }
+	]
+}
