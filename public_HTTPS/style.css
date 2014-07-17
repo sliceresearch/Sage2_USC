@@ -29,6 +29,11 @@ body {
 	cursor: none;
 }
 
+#background {
+	position:absolute;
+	overflow: hidden;
+}
+
 #main {
 	position:absolute;
 	left: 0px;

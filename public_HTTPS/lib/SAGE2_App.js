@@ -107,6 +107,26 @@ var SAGE2_App = Class.extend( {
 		this.postDraw(date);
 	},
 
+	// Called by SAGE2 core
+	//    application can define the 'quit' method
+	terminate: function () {
+		if (typeof this.quit === 'function' ) {
+			this.quit();
+		}
+	},
+
+	// Send a resize
+	sendResize: function (newWidth, newHeight) {
+		var msgObject = {};
+		// Add the display node ID to the message
+		msgObject.node   = clientID;
+		msgObject.id     = this.div.id;
+		msgObject.width  = newWidth;
+		msgObject.height = newHeight;
+		// Send the message to the server
+		wsio.emit('appResize', msgObject);
+	},
+
 	// Prints message to local browser console and send to server
 	//   accept a string as parameter: this.log("my message")
 	log: function(msg) {

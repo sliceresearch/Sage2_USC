@@ -1,5 +1,6 @@
 {
 	"main_script": "modest.js",
+	"icon": "modestmaps.webp",
 	"width": 800,
 	"height": 381,
 	"resources": [

@@ -289,11 +289,15 @@ updateWindow: function (){
 		// backup of the context
 		var self = this;
 
+        var newWidth = this.canvasWidth;
+        var newHeight = this.canvasHeight+30;
+
+
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
+		var box="0,0,"+newWidth+","+newHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
-		    .attr("width",   this.canvasWidth)
-		    .attr("height",  this.canvasHeight+30)
+		    .attr("width",   width)
+		    .attr("height",  height+30)
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 		this.sampleSVG = this.svg;

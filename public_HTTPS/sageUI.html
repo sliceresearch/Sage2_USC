@@ -17,8 +17,8 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="scripts/sagePointer.js"></script>
-<script type="text/javascript" src="scripts/windowManager.js"></script>
+<script type="text/javascript" src="lib/sagePointer.js"></script>
+<script type="text/javascript" src="lib/windowManager.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -148,17 +148,18 @@
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
-		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr), false);
-		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr), false);
-		winMgrCanvas.addEventListener('mouseup', winMgr.mouseRelease.bind(winMgr), false);
+		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
+		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
+		winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr), false);
-		winMgrCanvas.addEventListener('touchmove', winMgr.touchMove.bind(winMgr), false);
-		winMgrCanvas.addEventListener('touchend', winMgr.touchRelease.bind(winMgr), false);
+		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
+		winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
+		winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('mousewheel', winMgr.mouseScroll.bind(winMgr), false);
+		winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
 		winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
-		winMgrCanvas.addEventListener('dblclick', winMgr.mouseDblClick.bind(winMgr), false);
+		winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
+
 		document.addEventListener('mousemove', updateTarget, false);
 		
 		appsDir     = document.getElementById('apps');
@@ -195,6 +196,12 @@
 			var displayMin = Math.min(config.totalWidth, config.totalHeight);
 			var thisMin = Math.min(screen.width, screen.height);
 			sagePtr.setPointerSensitivity(displayMin/thisMin);
+		});
+
+		wsio.on('setupSAGE2Version', function(data) {
+			// data: .commit .date	
+			var version = document.getElementById('version');
+			version.innerHTML = "SAGE2 Version: " + data.commit + ' - ' + data.date;		
 		});
 		
 		wsio.on('initialize', function(data) {
@@ -300,14 +307,14 @@
 	
 	function updateTarget(event) {
 		if(event.target == winMgrCanvas && !canvasKeyEvents){
-			document.addEventListener('keydown', canvasKeyDownFunc, false);
-			document.addEventListener('keyup', canvasKeyUpFunc, false);
+			document.addEventListener('keydown',  canvasKeyDownFunc, false);
+			document.addEventListener('keyup',    canvasKeyUpFunc, false);
             document.addEventListener('keypress', canvasKeyPressFunc, false);
 			canvasKeyEvents = true;
 		}
 		else if(event.target != winMgrCanvas && canvasKeyEvents){
-			document.removeEventListener('keydown', canvasKeyDownFunc, false);
-			document.removeEventListener('keyup', canvasKeyUpFunc, false);
+			document.removeEventListener('keydown',  canvasKeyDownFunc, false);
+			document.removeEventListener('keyup',    canvasKeyUpFunc, false);
             document.removeEventListener('keypress', canvasKeyPressFunc, false);
 
 			canvasKeyEvents = false;
@@ -372,6 +379,16 @@
 		selectedFile.style.backgroundColor = "#B9D3FF";
 	}
 
+	function sagePointerEnabled() {
+		document.getElementById("lb_fade").style.display="block";
+		document.getElementById("lb_pointer_help").style.display="block";
+	}
+	
+	function sagePointerDisabled() {
+		document.getElementById("lb_fade").style.display="none";
+		document.getElementById("lb_pointer_help").style.display="none";
+	}
+	
     function openWebpage(event) {
         var url = document.getElementById("openWebpageUrl");
         wsio.emit('openNewWebpage', {id: sagePtr.uniqueID, url: openWebpageUrl.value});
@@ -392,6 +409,7 @@
 			<div id="fileUpload">
 				<div id="fileDrop">
 					<p id="fileDropText">Drag files here to upload</p>
+					<progress id="fileDropProgress" value=0 max=100></progress>
 				</div>
 				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
 			</div>
@@ -456,6 +474,39 @@
 			<button id="fileCloseBtn" type="button">Close</button>
 		</div>
 	</div>
+	
+	<div id="lb_pointer_help" class="lb_whiteboxcontainer">
+		<div id="pointerHelpText" class="lb_whitecontent">
+			<ul>
+				<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
+				<ul>
+					<li>Window Management Mode</li>
+					<ul>
+						<li>Left-click anywhere on an app to move window</li>
+						<li>Left-click bottom-right corner of an app to resize window</li>
+						<li>Scroll anywhere on an app to resize window</li>
+					</ul>
+					<li>Application Interaction Mode</li>
+					<ul>
+						<li>All events forwarded to app</li>
+					</ul>
+					<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
+				</ul>
+				<li>Press 'Esc' to stop SAGE2 Pointer</li>
+			</ul>
+		</div>
+	</div>
+
+	<footer>
+		<ul>
+			<li id="version">SAGE2 Version:</li>
+			<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+			<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
+			<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
+			<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
+		</ul>
+	</footer>
+
 </body>
 </html>
 

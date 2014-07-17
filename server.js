@@ -8,6 +8,10 @@
 //
 // Copyright (c) 2014
 
+/**
+ * @module server
+ */
+
 
 // node mode
 /* jshint node: true */
@@ -30,7 +34,7 @@ var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
-var imageinfo   = require('imageinfo');           // gets width, height for images
+// var imageinfo   = require('imageinfo');           // gets width, height for images
 var json5       = require('json5');               // JSON format that allows comments
 var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
@@ -40,19 +44,28 @@ var sprint      = require('sprint');              // pretty formating (sprintf)
 var readline    = require('readline');            // to build an evaluation loop (builtin module)
 var program     = require('commander');           // parsing command-line arguments
 var colors      = require('colors');              // pretty colors in the terminal
+var exec        = require('child_process').exec;  // execute child process
 
 // custom node modules
-var httpserver  = require('node-httpserver');     // creates web server
-var websocketIO = require('node-websocket.io');   // creates WebSocket server and clients
-var loader      = require('node-itemloader');     // handles sage item creation
-var interaction = require('node-interaction');    // handles sage interaction (move, resize, etc.)
-var sagepointer = require('node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var omicron = require('node-omicron');    // handles Omicron input events
+var httpserver  = require('./src/node-httpserver');     // creates web server
+var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
+var loader      = require('./src/node-itemloader');     // handles sage item creation
+var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var omicron     = require('./src/node-omicron');        // handles Omicron input events
+var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
+var assets      = require('./src/node-assets');         // manages the list of files
+var sageutils   = require('./src/node-utils');          // provides the current version number
+
+
+var SAGE2_version = sageutils.getShortVersion();
+console.log("SAGE2 Short Version:", SAGE2_version);
+
 
 
 // Command line arguments
 program
-  .version('0.1.0')
+  .version(SAGE2_version)
   .option('-i, --interactive', 'Interactive prompt')
   .option('-f, --configuration <value>', 'Specify a configuration file')
   .parse(process.argv);
@@ -60,6 +73,29 @@ program
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
 console.log(config);
+
+
+// find git commit version and date
+sageutils.getFullVersion(function (version) {
+	// fields: base commit branch date
+	console.log("SAGE2 Full Version:", version);
+	SAGE2_version = {};
+	SAGE2_version.commit = version.base+'-'+version.branch+'-'+version.commit;
+	SAGE2_version.date   = version.date;
+	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
+});
+
+
+// var version = {commit: "", date: ""}
+// exec("git log --format=\"%h|%aD\" -n 1", function(err, stdout, stderr){
+// 	if(err) throw err;
+// 	var parse = stdout.split("|");
+// 	version.commit = parse[0];
+// 	version.date   = parse[1];
+// 	broadcast('setupSAGE2Version', version, 'receivesDisplayConfiguration');
+// });
+
+
 
 var imConstraints = {imageMagick: true};
 if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
@@ -94,6 +130,9 @@ var sessionFolder = path.join(__dirname, "sessions");
 if (!fs.existsSync(sessionFolder)) {
      fs.mkdirSync(sessionFolder);
 }
+
+// Build the list of existing assets
+assets.initialize(uploadsFolder);
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
@@ -248,6 +287,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
+		wsio.on('appResize', wsAppResize);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
@@ -276,10 +316,13 @@ function initializeWSClient(wsio) {
 		wsio.on('selectedControlId', wsSelectedControlId);
 		wsio.on('releasedControlId', wsReleasedControlId);
 	}
+	if(wsio.messages.receivesDisplayConfiguration){
+		wsio.emit('setupDisplayConfiguration', config);
+		wsio.emit('setupSAGE2Version', SAGE2_version);
+	}
 	
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
-	if(wsio.messages.receivesDisplayConfiguration)     wsio.emit('setupDisplayConfiguration', config);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
 	if(wsio.messages.receivesPointerData)              initializeExistingSagePointers(wsio);
 	if(wsio.messages.requiresFullApps)                 initializeExistingApps(wsio);
@@ -350,6 +393,7 @@ function initializeMediaStreams(uniqueID) {
 }
 
 /***************** Sage Pointer Functions *****************/
+
 function wsStartSagePointer(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
@@ -454,10 +498,10 @@ function wsKeyDown(wsio, data) {
 
 
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
-	if (lockedControl != null){
+	if (lockedControl !== null) {
 		var event = {code: parseInt(data.code), printable:false,state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
 		broadcast('keyInControl', event ,'receivesWidgetEvents');
-		if (data.code == 13){ //Enter key
+		if (data.code == 13) { //Enter key
 			remoteInteraction[uniqueID].dropControl();
 		} 
 		return;
@@ -519,7 +563,7 @@ function wsKeyPress(wsio, data) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
 	}
-	else if (lockedControl != null){
+	else if (lockedControl !== null){
 		var event = {code: parseInt(data.code), printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
 		broadcast('keyInControl', event ,'receivesWidgetEvents');
 		if (data.code == 13){ //Enter key
@@ -539,7 +583,7 @@ function wsKeyPress(wsio, data) {
 /***************** Media Stream Functions *****************/
 function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: " + data.id);
-	mediaStreams[data.id] = {ready: true, chunks: [], clients: {}};
+	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -554,6 +598,11 @@ function wsStartNewMediaStream(wsio, data) {
 			
 		applications.push(appInstance);
 	});
+	
+	// Debug media stream freezing
+	mediaStreams[data.id].timeout = setTimeout(function() {
+		console.log("3 sec with no updates from: " + data.id);
+	}, 3000);
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
@@ -566,6 +615,12 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	if(stream !== null) stream.data = data.state;
 
 	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
+	
+	// Debug media stream freezing
+	clearTimeout(mediaStreams[data.id].timeout);
+	mediaStreams[data.id].timeout = setTimeout(function() {
+		console.log("3 sec with no updates from: " + data.id);
+	}, 3000);
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
@@ -660,6 +715,31 @@ function wsUpdateAppState(wsio, data) {
 	}
 }
 
+//
+// Got a resize call for an application itself
+//
+function wsAppResize(wsio, data) {
+    if (wsio.clientID === 0) {
+		// Update the object with the new dimensions
+		var app    = findAppById(data.id);
+		if (app) {
+			// Update the width height and aspect ratio
+			app.width  = data.width;
+			app.height = data.height;
+			app.aspect = app.width/app.height;
+			app.native_width  = data.width;
+			app.native_height = data.height;
+			// build the object to be sent
+			var updateItem = {elemId: app.id,
+								elemLeft: app.left, elemTop: app.top,
+								elemWidth: app.width, elemHeight: app.height,
+								force: true, date: new Date()};
+			// send the order
+			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+		}
+	}
+}
+
 
 /******************** Session Functions ********************/
 
@@ -712,6 +792,8 @@ function listSessions() {
 
 
 function saveSession (filename) {
+	filename = filename || 'default.json';
+	
 	var fullpath = path.join(sessionFolder, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -723,17 +805,18 @@ function saveSession (filename) {
 	states.date    = Date.now();
 	states.apps    = applications;
 
-	fs.writeFile(fullpath, JSON.stringify(states, null, 4), function(err) {
-	    if (err) {
-	      console.log("Server> saving", err);
-	    } else {
-	      console.log("Server> session saved to " + fullpath);
-	    }
-		states = null;
-	});
+	try {
+		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
+	 	console.log("Session> saved to " + fullpath);
+	}
+	catch (err) {
+		console.log("Session> error saving", err);
+	}
 }
 
 function loadSession (filename) {
+	filename = filename || 'default.json';
+
 	var fullpath = path.join(sessionFolder, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -919,7 +1002,7 @@ function tileApplications() {
 		var updateItem = {elemId: app.id,
 							elemLeft: app.left, elemTop: app.top,
 							elemWidth: app.width, elemHeight: app.height,
-							date: new Date()};
+							force: true, date: new Date()};
 		// send the order
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 
@@ -1118,21 +1201,20 @@ function wsAddNewControl(wsio, data){
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
 	var regTI = /textInput/;
 	var regSl = /slider/;
-	if (data.ctrlId!=null){ // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
+	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if (regTI.test(data.ctrlId)||regSl.test(data.ctrlId)){
-		//broadcast('moveSliderUnderPointer', )
+	if (regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	if (data.ctrlId!=null && regSl.test(data.ctrlId)){
+	if (data.ctrlId !==null && regSl.test(data.ctrlId) ) {
 		remoteInteraction[data.addr].dropControl();
 	}
-	if (data.activateControl){
+	if (data.activateControl) {
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
@@ -1180,9 +1262,7 @@ function loadConfiguration() {
 		}
 	}
 	
-	if (fs.existsSync(configFile)) {
-		console.log("Using configuration file: " + configFile);
-	} else {
+	if (! fs.existsSync(configFile)) {
 		console.log("\n----------");
 		console.log("Cannot configuration file:", configFile);
 		console.log("----------\n\n");
@@ -1235,47 +1315,37 @@ function setupDisplayBackground() {
 	// background image
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
-		var bg_info = imageinfo(fs.readFileSync(bg_file));
-		if(config.background.style == "fit"){
-			if(bg_info.width == config.totalWidth && bg_info.height == config.totalHeight){
-				sliceBackgroundImage(bg_file, bg_file);
-			}
-			else{
-				tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
-				var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
-		
-				imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
-					if(err) throw err;
+
+		//var bg_info = imageinfo(fs.readFileSync(bg_file));
+
+		if (config.background.style == "fit") {
+			var result = exiftool.file(bg_file, function(err, data) {
+				if (err) {
+					console.log("Error processing background image:", bg_file, err);
+					console.log(" ");
+					process.exit(1);
+				}
+				var bg_info = data;
+
+				if (bg_info.ImageWidth == config.totalWidth && bg_info.ImageHeight == config.totalHeight) {
+					sliceBackgroundImage(bg_file, bg_file);
+				}
+				else {
+					tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
+					var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 			
-					sliceBackgroundImage(tmpImg, bg_file);
-				});
-			}
+					imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
+						if(err) throw err;
+						sliceBackgroundImage(tmpImg, bg_file);
+					});
+				}
+			} );
 		}
 		else if(config.background.style == "stretch"){
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		
 			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
-				if(err) throw err;
-			
-				sliceBackgroundImage(tmpImg, bg_file);
-			});
-		}
-		else if(config.background.style == "tile"){
-			imgExt = path.extname(bg_file);
-			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
-		
-			var cols = Math.ceil(config.totalWidth / bg_info.width);
-			var rows = Math.ceil(config.totalHeight / bg_info.height);
-			var tile = cols.toString() + "x" + rows.toString();
-			var in_res  = bg_info.width.toString() + "x" + bg_info.height.toString();
-		
-			var imTile = imageMagick().command("montage").in("-geometry", in_res).in("-tile", tile);
-			for(var i=0; i<rows*cols; i++) imTile = imTile.in(bg_file);
-			// add transparent background
-			imTile.in("-background", "None");
-		
-			imTile.write(tmpImg, function(err) {
 				if(err) throw err;
 			
 				sliceBackgroundImage(tmpImg, bg_file);
@@ -1389,6 +1459,8 @@ function setupHttpsOptions() {
 
 function sendConfig(req, res) {
 	res.writeHead(200, {"Content-Type": "text/plain"});
+	// Adding the calculated version into the data structure
+	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
 	res.end();
 }
@@ -1417,7 +1489,6 @@ function manageUploadedFiles(files) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key][0];
-		
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
 			if(appInstance === null){
 				console.log("unrecognized file type: " + file.headers['content-type']);
@@ -1626,6 +1697,7 @@ if (program.interactive)
 				console.log('tile\t\tlayout all running applications');
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
+				console.log('assets\t\tlist the assets in the file library');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -1634,13 +1706,13 @@ if (program.interactive)
 				if (command[1] !== undefined)
 					saveSession(command[1]);
 				else
-					saveSession("default.json");
+					saveSession();
 				break;
 			case 'load':
 				if (command[1] !== undefined)
 					loadSession(command[1]);
 				else
-					loadSession("default.json");
+					loadSession();
 				break;
 			case 'sessions':
 				printListSessions();
@@ -1662,6 +1734,10 @@ if (program.interactive)
 				clearDisplay();
 				break;
 
+			case 'assets':
+				assets.listAssets();
+				break;
+
 			case 'tile':
 				tileApplications();
 				break;
@@ -1680,6 +1756,8 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
+				saveSession();
+				assets.saveAssets();
 				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
@@ -1693,6 +1771,10 @@ if (program.interactive)
 		shell.prompt();
 	}).on('close', function() {
 		// Close with CTRL-D or CTRL-C
+		// Only synchronous code!
+		// Saving stuff
+		saveSession();
+		assets.saveAssets();
 		console.log('');
 		console.log('SAGE2 done');
 		console.log('');
@@ -1731,7 +1813,7 @@ function findAppUnderPointer(pointerX, pointerY) {
 
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
-		if(controls[i]!= null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
+		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
 			return controls[i];
 		}
 	}
@@ -1739,8 +1821,8 @@ function findControlsUnderPointer(pointerX, pointerY) {
 }
 
 function findControlByAppId(id) {
-	for(var i=controls.length-1; i>=0; i--){
-		if(controls[i].id === id+'_controls'){
+	for (var i=controls.length-1; i>=0; i--) {
+		if (controls[i].id === id+'_controls') {
 			return controls[i];
 		}
 	}
@@ -1748,14 +1830,14 @@ function findControlByAppId(id) {
 }
 
 function hideControl(ctrl){
-	if (ctrl.show == true){
+	if (ctrl.show === true) {
 		ctrl.show = false;
 		broadcast('hideControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
 }
 
 function showControl(ctrl, pointerX, pointerY){
-	if (ctrl.show == false){
+	if (ctrl.show === false) {
 		ctrl.show = true;
 		var dt = new Date();
 		var rightMargin = config.totalWidth - ctrl.width;
@@ -1850,11 +1932,15 @@ function moveElementToEnd(list, elem) {
 }
 
 function getItemPositionSizeType(item) {
-	return {type: item.type, id: item.id, left: item.left, top: item.top, width: item.width, height: item.height, aspect: item.aspect};
+	return {type: item.type, id: item.id, left: item.left, top: item.top,
+			width: item.width, height: item.height, aspect: item.aspect};
 }
 
 function getAppPositionSize(appInstance) {
-	return {id: appInstance.id, application: appInstance.application, left: appInstance.left, top: appInstance.top, width: appInstance.width, height: appInstance.height};
+	return {id: appInstance.id, application: appInstance.application, left: appInstance.left,
+			top: appInstance.top, width: appInstance.width, height: appInstance.height,
+			icon: appInstance.icon || null
+		};
 }
 
 /**** Pointer Functions ********************************************************************/
@@ -1865,7 +1951,7 @@ var createSagePointer = function ( address ) {
 	remoteInteraction[address] = new interaction();
 
 	broadcast('createSagePointer', sagePointers[address], 'receivesPointerData');
-}
+};
 
 function showPointer( address, data ) {
 	if( sagePointers[address] === undefined )
@@ -1899,7 +1985,7 @@ function pointerMove(uniqueID, data) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
-	if (updatedControl!=null){
+	if (updatedControl !== null) {
 		broadcast('setControlPosition', updatedControl, 'receivesPointerData');
 		return;
 	}
@@ -1962,11 +2048,11 @@ function pointerMove(uniqueID, data) {
 }
 
 function pointerPress( address, pointerX, pointerY ) {
-	if( sagePointers[address] == undefined ) return;
+	if ( sagePointers[address] === undefined ) return;
 	remoteInteraction[address].dropControl();
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 
-	if (ct != null){
+	if (ct !== null) {
 		remoteInteraction[address].selectMoveControl(ct, pointerX, pointerY);
 		broadcast('requestControlId', {addr:address, ptrId:sagePointers[address].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		return ;
@@ -2001,37 +2087,37 @@ function pointerPress( address, pointerX, pointerY ) {
 }
 
 function pointerPressRight( address, pointerX, pointerY ) {
-	if( sagePointers[address] == undefined ) return;
+	if ( sagePointers[address] === undefined ) return;
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	var ctrl = findControlsUnderPointer(pointerX, pointerY);
-	var now = new Date();
-	if (ctrl != null && ctrl.show == true){
+	var now  = new Date();
+	if (ctrl !== null && ctrl.show === true) {
 		hideControl(ctrl);
 	}
-	else if(elem != null){
+	else if (elem !== null) {
 		var elemCtrl = findControlByAppId(elem.id);
-		if( remoteInteraction[address].windowManagementMode() ){
-			if (elemCtrl==null){
-				broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  					
+		if ( remoteInteraction[address].windowManagementMode() ) {
+			if (elemCtrl === null) {
+				broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
-			else if (elemCtrl.show==false){
+			else if (elemCtrl.show === false) {
 				showControl(elemCtrl, pointerX, pointerY) ;
 			}
-			else{
+			else {
 				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 			}
 		}
 		else if ( remoteInteraction[address].appInteractionMode() ) {
 
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
-				if (elemCtrl==null){
-					broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
+				if (elemCtrl === null) {
+					broadcast('pointerPressRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
-				else if (elemCtrl.show==false){
+				else if (elemCtrl.show === false) {
 					showControl(elemCtrl, pointerX, pointerY) ;
 				}
-				else{
+				else {
 					moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 				}
 			}
@@ -2040,42 +2126,41 @@ function pointerPressRight( address, pointerX, pointerY ) {
 				var itemRelY = pointerY - elem.top - config.titleBarHeight;
 				broadcast( 'eventInItem', { eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');  	
 			}
-			
-		}        
+		}
 		
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 	else{
-		broadcast('pointerPressRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
+		broadcast('pointerPressRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 	}
 		
 }
 
 function pointerReleaseRight( address, pointerX, pointerY ) {
-	if( sagePointers[address] == undefined ) return;
-	
+	if( sagePointers[address] === undefined ) return;
+
+	var now = new Date();
 	var elem = findAppUnderPointer(pointerX, pointerY);
-		if(elem != null){
-			if( remoteInteraction[address].windowManagementMode() ){
-				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
+
+	if (elem !== null) {
+		if( remoteInteraction[address].windowManagementMode() ){
+			broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+		}
+		else if ( remoteInteraction[address].appInteractionMode() ) {
+			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
+				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
-			else if ( remoteInteraction[address].appInteractionMode() ) {
-				if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
-					broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
-				}
-				else{
-					var itemRelX = pointerX - elem.left;
-					var itemRelY = pointerY - elem.top - config.titleBarHeight;
-					var now = new Date();
-					broadcast( 'eventInItem', { eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');  	
-				}
-				
+			else{
+				var itemRelX = pointerX - elem.left;
+				var itemRelY = pointerY - elem.top - config.titleBarHeight;
+				broadcast( 'eventInItem', { eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');
 			}
 		}
-		else{
-			broadcast('pointerReleaseRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');  	
-		}
+	}
+	else {
+		broadcast('pointerReleaseRight',{elemId: null, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+	}
 		
 }
 
@@ -2233,12 +2318,11 @@ function pointerCloseGesture(address, pointerX, pointerY) {
 	if( sagePointers[address] === undefined )
 		return;
 		
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
-	var elem     = findAppUnderPointer(pointerX, pointerY);
+	var pX   = sagePointers[uniqueID].left;
+	var pY   = sagePointers[uniqueID].top;
+	var elem = findAppUnderPointer(pX, pY);
 
-	if (elem !== null)
-	{
+	if (elem !== null) {
 		deleteApplication(elem);
 	}
 }
@@ -2311,8 +2395,7 @@ function deleteApplication( elem ) {
 }
 
 /******** Omicron section ****************************************************************/
-if( config.experimental && config.experimental.omicron && config.experimental.omicron.enable == true )
-{
+if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
 	omicronManager.setCallbacks(
 		sagePointers,

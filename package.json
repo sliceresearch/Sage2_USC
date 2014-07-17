@@ -1,5 +1,5 @@
 {
-  "name": "webSAGE",
+  "name": "SAGE2",
   "version": "0.1.0",
   "private": true,
   "description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
@@ -46,10 +46,9 @@
     "json5": "latest",
     "mime": "latest",
     "multiparty": "latest",
-    "node-ffprobe": "latest",
     "request": "latest",
     "ws": "latest",
-    "ytdl": "latest",
+    "ytdl-core": "latest",
     "jshint": "latest",
     "commander": "latest",
     "colors": "latest",
@@ -62,7 +61,9 @@
   },
   "scripts": {
     "start": "node server.js",
-    "hint": "./node_modules/jshint/bin/jshint --verbose server.js node_modules/node-*.js"
+    "hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
+    "hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/lib/*.js public_HTTPS/scripts/text.js public_HTTPS/scripts/pdf_canvas.js public_HTTPS/scripts/videoControls.js public_HTTPS/scripts/widgets.js public_HTTPS/scripts/pointer.js public_HTTPS/scripts/windowManager.js public_HTTPS/scripts/sagePointer.js",
+    "doc": "yuidoc -c doc/yuidoc.json"
   },
   "license": "BSD-3-Clause"
 }

@@ -41,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerItems   = {};
 
 	// Get handle on the main div
-	this.main = document.getElementById("main");
+	this.main = document.getElementById("background");
 
 	// Build the background image/color
 	this.background = function () {
@@ -109,24 +109,52 @@ function uiBuilder(json_cfg, clientID) {
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
 		} else {
+			var background = document.getElementById('background');
 			if (typeof this.json_cfg.background.image !== "undefined" && this.json_cfg.background.image !== null) {
 				var bg = new Image();
 				bg.addEventListener('load', function() {				
-					var bg_img;
-					var ext = _this.json_cfg.background.image.lastIndexOf(".");
-					if(_this.json_cfg.background.style == "fit" && (bg.naturalWidth != _this.json_cfg.totalWidth || bg.naturalHeight != _this.json_cfg.totalHeight)){
-						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+					if(_this.json_cfg.background.style == "tile"){
+						var top = -1 * (_this.offsetY % bg.naturalHeight);
+						var left = -1 * (_this.offsetX % bg.naturalWidth);
+						
+						background.style.top    = top.toString() + "px";
+						background.style.left   = left.toString() + "px";
+						background.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
+						background.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
+						
+						background.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
+						background.style.backgroundPosition = "top left";
+						background.style.backgroundRepeat   = "repeat-x repeat-y";
+						background.style.backgroundSize     = bg.naturalWidth +"px " + bg.naturalHeight + "px";
 					}
-					else{
-						bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+					else {
+						var bg_img;
+						var ext = _this.json_cfg.background.image.lastIndexOf(".");
+						if(_this.json_cfg.background.style == "fit" && (bg.naturalWidth != _this.json_cfg.totalWidth || bg.naturalHeight != _this.json_cfg.totalHeight))
+							bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+						else
+							bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+						
+						background.style.top    = "0px";
+						background.style.left   = "0px";
+						background.style.width  = _this.json_cfg.resolution.width + "px";
+						background.style.height = _this.json_cfg.resolution.height + "px";
+						
+						background.style.backgroundImage    = "url(" + bg_img + ")";
+						background.style.backgroundPosition = "top left";
+						background.style.backgroundRepeat   = "no-repeat";
+						background.style.backgroundSize     = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
 					}
-					document.body.style.backgroundImage    = "url(" + bg_img + ")";
-					document.body.style.backgroundPosition = "top left";
-					document.body.style.backgroundRepeat   = "no-repeat";
-					document.body.style.backgroundSize = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
 				}, false);
 				bg.src = this.json_cfg.background.image;
 			}
+			else {
+				background.style.top    = "0px";
+				background.style.left   = "0px";
+				background.style.width  = _this.json_cfg.resolution.width + "px";
+				background.style.height = _this.json_cfg.resolution.height + "px";
+			}
+			
 			if (json_cfg.background.clip === true) {
 				this.main.style.width    = json_cfg.resolution.width  + "px";
 				this.main.style.height   = json_cfg.resolution.height + "px";
@@ -160,7 +188,7 @@ function uiBuilder(json_cfg, clientID) {
 		fileref.setAttribute("type",  "text/css");
 		fileref.setAttribute("media", "screen");
 		fileref.setAttribute("href",  this.csssheet);
-
+		
 		if (this.clientID===-1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
@@ -189,10 +217,15 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
 		// machine name
-		var machine = document.createElement('p');
-		machine.id  = "machine";
+		this.machine = document.createElement('p');
+		this.machine.id  = "machine";
+		// version id
+		this.version = document.createElement('p');
+		this.version.id  = "version";
+		
 		this.upperBar.appendChild(this.clock);
-		this.upperBar.appendChild(machine);
+		this.upperBar.appendChild(this.machine);
+		this.upperBar.appendChild(this.version);
 		this.main.appendChild(this.upperBar);
 
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
@@ -201,24 +234,39 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.style.zIndex = "9999";
 		
 		this.clock.style.position   = "absolute";
+		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
 		this.clock.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		this.clock.style.color      = "#FFFFFF";
 		
-		machine.style.position   = "absolute";
-		machine.style.whiteSpace = "nowrap";
-		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
-		machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		machine.style.color      = "#FFFFFF";
+		this.machine.style.position   = "absolute";
+		this.machine.style.whiteSpace = "nowrap";
+		this.machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		this.machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
+		this.machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
+		this.machine.style.color      = "#FFFFFF";
+		
+		this.version.style.position   = "absolute";
+		this.version.style.whiteSpace = "nowrap";
+		this.version.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		this.version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (16*this.titleBarHeight)).toString() + "px";
+		this.version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
+		this.version.style.color      = "#FFFFFF";
+		
 		if (this.json_cfg.show_url) {
 			var hostname = this.json_cfg.public_host ? this.json_cfg.public_host : this.json_cfg.host;
-			if (this.json_cfg.index_port == 80) machine.textContent = hostname;
-			else machine.textContent = hostname + ":" +this.json_cfg.index_port.toString();
+			if (this.json_cfg.index_port == 80) this.machine.textContent = hostname;
+			else this.machine.textContent = hostname + ":" +this.json_cfg.index_port.toString();
 		}
 		head.appendChild(fileref);
 	};
+	
+	this.updateVersionText = function(version) {
+		if(this.json_cfg.show_version) {
+			this.version.innerHTML = "<b>v" + version.commit + "</b> " + version.date;
+		}
+	}
 
 	this.createSagePointer = function(pointer_data) {
 		var pointerElem = document.createElement("canvas");

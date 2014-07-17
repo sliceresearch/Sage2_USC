@@ -17,7 +17,6 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="lib/observe.poly.js"></script>
 <script type="text/javascript" src="lib/Class.js"></script>
 <script type="text/javascript" src="lib/SAGE2_App.js"></script>
 <script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
@@ -29,11 +28,15 @@
 <!-- Load the module building the wal UI -->
 <script type="text/javascript" src="lib/ui_builder.js"></script>
 
+<script type="text/javascript" src="lib/pointer.js"></script>
+<script type="text/javascript" src="lib/widgets.js"></script>
 
-<script type="text/javascript" src="scripts/pointer.js"></script>
+<!-- External dependencies -->
 <script type="text/javascript" src="scripts/pdf.js"></script>
 <script type="text/javascript" src="scripts/snap.svg-min.js"></script>
-<script type="text/javascript" src="scripts/widgets.js"></script>
+<script type="text/javascript" src="scripts/observe.poly.js"></script>
+
+
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
@@ -156,6 +159,10 @@
 			ui.background();
 		});
 		
+		wsio.on('setupSAGE2Version', function(version) {
+			ui.updateVersionText(version);
+		});
+		
 		wsio.on('setSystemTime', function(data) {
 			ui.setTime(new Date(data.date));
 		});
@@ -240,11 +247,7 @@
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
 			// convert url if hostname is alias for current origin
-			var a = document.createElement("a");
-			a.href = data.url;
-			var url = data.url;
-			if(hostAlias[a.hostname] !== undefined)
-				url = data.url.replace(a.hostname, hostAlias[a.hostname]);
+			var url = cleanURL(data.url);
 			
 			// Not used yet: missing scope....
 			function observer(changes) {
@@ -293,7 +296,7 @@
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
 					js.type = "text/javascript";
-					js.src = data.url + "/" + data.application + ".js";
+					js.src = url + "/" + data.application + ".js";
 					document.head.appendChild(js);
 				}
 			
@@ -329,37 +332,35 @@
 				var resources = {};
 				for(i=0; i<data.resrc.length; i++){
 					// check dependency cache first
-					if (dependencies[data.resrc[i]] === true) {
-						resources[data.resrc[i]] = true;
-					} else {
+					if (dependencies[data.resrc[i]] !== true) {
 						dependencies[data.resrc[i]] = false;
 						resources[data.resrc[i]] = false;
 					}
 				}
-			
-				data.resrc.forEach(function(element, index, array) {
-					if (dependencies[element] === false) {
+				
+				if(isEmpty(resources)){
+					console.log("all resources loaded");
+					loadApplication();
+				}
+				
+				Object.keys(resources).forEach(function(key) {
+					if(resources.hasOwnProperty(key)) {
 						var js = document.createElement("script");
 						js.addEventListener('error', function(event) {
-							console.log("Error loading script: " + element);
+							console.log("Error loading script: " + key);
 						}, false);
-			
+		
 						js.addEventListener('load', function(event) {
-							dependencies[element] = true;
-							resources[element] = true;
+							dependencies[key] = true;
+							resources[key] = true;
 							if(allTrueDict(resources)){
 								console.log("all resources loaded");
 								loadApplication();
 							}
 						}, false);
 						js.type = "text/javascript";
-						js.src = url + "/" + element;
+						js.src = url + "/" + key;
 						document.head.appendChild(js);
-					} else {
-						if(allTrueDict(resources)){
-							console.log("all resources loaded");
-							loadApplication();
-						}
 					}
 				});
 			}
@@ -383,19 +384,25 @@
 		/******************************/
 		
 		wsio.on('deleteElement', function(elem_data) {
+			// Tell the application it is over
+			var app = applications[elem_data.elemId];
+			app.terminate();
+			// Remove the app from the list
+			delete applications[elem_data.elemId];
+
+			// Clean up the DOM
 			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
 			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 			
 			var deleteElem = document.getElementById(elem_data.elemId);
 			deleteElem.parentNode.removeChild(deleteElem);
 
+			// Clean up the UI DOM
 			if (elem_data.elemId + "_controls" in controlItems){
 				var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-				deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
+				if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
 				delete controlItems[elem_data.elemId + "_controls"];
 			}
-
-			
 		});
 
 		wsio.on ('hideControl', function(ctrl_data){
@@ -502,7 +509,7 @@
 			}
 			
 			var app = applications[position_data.elemId];
-			if(app !== undefined && app.resizeEvents === "continuous"){
+			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
 				var date = new Date(position_data.date);
 				app.resize(date);
 			}
@@ -545,6 +552,9 @@
 		wsio.on('eventInItem', function(event_data){
 			var date = new Date(event_data.date);
 			var app  = applications[event_data.elemId];
+			// adding pointer information to the event
+            event_data.data.pname  = event_data.user_label;
+            event_data.data.pcolor = event_data.user_color;
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
 		});
 
@@ -567,8 +577,9 @@
 				}
 			}
 		});
+
 		wsio.on('createControl', function(data){
-			if (controlItems[data.id].show === false){
+			if (controlItems[data.id].show === false) {
 				var ctrDiv =  document.createElement("div");
 				ctrDiv.id = data.id;
 				ctrDiv.className = "windowControls";
@@ -582,14 +593,15 @@
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id].show = true;
 				controlItems[data.id].divHandle = ctrDiv;
-			}	
+			}
 		});
-		wsio.on('requestControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+
+		wsio.on('requestControlId', function(data) {
+			var ctrl  = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
-			var regC = /_controls/;
-			var regB = /button/;
-			var regS = /slider/;
+			var regC  = /_controls/;
+			var regB  = /button/;
+			var regS  = /slider/;
 			var regTI = /textInput/;
 			
 
@@ -698,8 +710,10 @@
 </head>
 
 <body onload="init()">
-	<div id="main">
-		<!-- the rest is built programmatically by the uiBuilder -->
+	<div id="background">
+		<div id="main">
+			<!-- the rest is built programmatically by the uiBuilder -->
+		</div>
 	</div>
 </body>
 </html>

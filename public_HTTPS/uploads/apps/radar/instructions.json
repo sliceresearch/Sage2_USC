@@ -1,5 +1,6 @@
 {
 	"main_script": "radar.js",
+	"icon": "radar.png",
 	"width": 800,
 	"height": 734,
 	"animation": true,

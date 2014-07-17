@@ -12,6 +12,11 @@
 // Generic functions used by all SAGE2 applications
 //
 
+// Global variables
+var __SAGE2__ = {};
+__SAGE2__.version = "0.1";
+
+
 function SAGE2_initialize(data_seed) {
 	// Reset random number based on server's time
 	Math.seed(data_seed.getTime());
@@ -132,7 +137,7 @@ function CSVToArray(strData, strDelimiter){
 
 	// Keep looping over the regular expression matches
 	// until we can no longer find a match.
-	while (arrMatches = objPattern.exec( strData )){
+	while (arrMatches = objPattern.exec( strData )) {
 
 		// Get the delimiter that was found.
 		var strMatchedDelimiter = arrMatches[ 1 ];
@@ -210,6 +215,36 @@ function moveItemToFront(elem) {
 		elem.parentNode.replaceChild(elem, last);
 		elem.parentNode.insertBefore(last, elem);
 	}
+}
+
+function cleanURL(url) {
+	var a = document.createElement("a");
+	a.href = url;
+	var clean = url;
+	
+	if(hostAlias[a.hostname] !== undefined)
+		clean = url.replace(a.hostname, hostAlias[a.hostname]);
+	
+	return clean;
+}
+
+function isEmpty(obj) {
+	// undefined and null are "empty"
+	if (obj === undefined || obj === null) return true;
+
+	// Assume if it has a length property with a non-zero value
+	// that that property is correct.
+	if (obj.length > 0)    return false;
+	if (obj.length === 0)  return true;
+
+	// Otherwise, does it have any properties of its own?
+	// Note that this doesn't handle
+	// toString and valueOf enumeration bugs in IE < 9
+	for (var key in obj) {
+		if (hasOwnProperty.call(obj, key)) return false;
+	}
+
+	return true;
 }
 	
 

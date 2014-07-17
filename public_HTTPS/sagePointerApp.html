@@ -17,7 +17,7 @@
 </script>
 
 <script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="scripts/sagePointer.js"></script>
+<script type="text/javascript" src="lib/sagePointer.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -134,6 +134,14 @@
 		
 		var fileDropTextMargin = (fileDropHeight/2) - (fileDropText.clientHeight/2);
 		fileDropText.style.marginTop = fileDropTextMargin.toString() + "px";
+	}
+	
+	function sagePointerEnabled() {
+		
+	}
+	
+	function sagePointerDisabled() {
+		
 	}
 	
 	function openSettings(event) {

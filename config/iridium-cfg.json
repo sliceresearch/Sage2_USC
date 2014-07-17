@@ -8,6 +8,7 @@
 		"style": "fit"
 	},
 	"show_url": true,
+	"show_version": true, 
 	"resolution": {
 		"width": 4098,
 		"height": 768
