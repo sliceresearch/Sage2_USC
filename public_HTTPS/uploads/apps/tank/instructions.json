@@ -1,0 +1,10 @@
+{
+	"main_script": "tank.js",
+	"width": 1600,
+	"height": 800,
+	"animation": true,
+	"load": {
+	},
+	"resources": [
+	]
+}

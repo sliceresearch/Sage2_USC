@@ -15,10 +15,10 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.resizeEvents = "onfinish";
 		
 		this.canvas = null;
-		this.ctx = null;
-		
+		this.ctx    = null;
 		this.loaded = false;
 		this.pdfDoc = null;
+
 		this.enableControls = null;
 		this.controls = null;
 		this.pageValText = null;
@@ -30,19 +30,19 @@ var pdf_viewer = SAGE2_App.extend( {
 		
 		// application specific 'init'
 		this.canvas = document.createElement("canvas");
-		this.canvas.width = this.element.width;
+		this.canvas.width  = this.element.width;
 		this.canvas.height = this.element.height;
 		this.ctx = this.canvas.getContext("2d");
 		
 		//  *** DO NOT OVERWRITE this.state, ALWAYS EDIT ITS PROPERTIES
 		// this.state = {srcPDF: null, pageNum: null, numPagesShown: null}; // BAD
 		
-		this.state.src = null;
+		this.state.src  = null;
 		this.state.page = null;
+
 		this.state.numPagesShown = null;
-		this.enableControls = true;
-		this.pageValText = '';
-		
+		this.enableControls      = true;
+		this.pageValText         = '';
 	},
 	
 	load: function(state, date) {
@@ -52,11 +52,24 @@ var pdf_viewer = SAGE2_App.extend( {
 			this.loaded = false;
 			
 			state.src = cleanURL(state.src);
-			console.log("PDF: " + state.src);
 			
 			PDFJS.getDocument(state.src).then(function getPdfHelloWorld(_pdfDoc) {
-				_this.loaded = true;
 				_this.pdfDoc = _pdfDoc;
+				_this.loaded = true;
+
+				_this.state.src  = state.src;
+				_this.state.page = state.page;
+				_this.state.numPagesShown = state.numPagesShown;
+
+				// Getting the size of the page
+				_pdfDoc.getPage(1).then(function(page) {
+					var viewport = page.getViewport(1.0);
+					var w = parseInt(viewport.width, 10);
+					var h = parseInt(viewport.height,10);
+					_this.sendResize(w, h);
+				});
+
+				// UI stuff
 				_this.controls.addButton({type:"rewind", action:function(appObj, date){
 					appObj.state.page  = 1;
 					appObj.setLabelText();
@@ -88,34 +101,28 @@ var pdf_viewer = SAGE2_App.extend( {
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
-
-				_this.state.src = state.src;
-				_this.state.page = state.page;
-				_this.state.numPagesShown = state.numPagesShown;
+				
 				_this.setLabelText();
-				_this.refresh(date);
 			});
 		}
 		// load new state of same document
 		else {
 			this.state.page = state.page;
 			this.state.numPagesShown = state.numPagesShown;
-			
 			this.refresh(date);
 		}
-		
 	},
 	
 	draw: function(date) {
 		if(this.loaded === false) return;
-		
+
 		var _this = this;
+
 		this.pdfDoc.getPage(this.state.page).then(function(page) {
 			// set the scale to match the canvas
 			var viewport = page.getViewport(_this.canvas.width / page.getViewport(1.0).width);
-			viewport.height = _this.canvas.height;
 			viewport.width  = _this.canvas.width;
-
+			viewport.height = _this.canvas.height;
 			// Render PDF page into canvas context
 			var renderContext = {canvasContext: _this.ctx, viewport: viewport};
 			page.render(renderContext).then(function() {
@@ -125,9 +132,9 @@ var pdf_viewer = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		this.canvas.width = this.element.width;
+		this.canvas.width  = this.element.width;
 		this.canvas.height = this.element.height;
-		
+
 		this.refresh(date);
 	},
 	

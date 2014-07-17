@@ -130,6 +130,12 @@
 		info4.innerHTML  = "Tiles: " + json_cfg.layout.columns + " by " + json_cfg.layout.rows;
 		info4.innerHTML += " (" + json_cfg.resolution.width + "x" + json_cfg.resolution.height +")";
 		aul.appendChild(info4);
+		if (json_cfg.version) {
+			var info5 = document.createElement('li');
+			info5.innerHTML  = "Version: " + json_cfg.version.base + "-" +json_cfg.version.branch +"-" + json_cfg.version.commit +" - " + json_cfg.version.date;		
+			console.log(json_cfg.version);
+			aul.appendChild(info5);
+		}
 		information.appendChild(aul);
 
 		// Remote sites

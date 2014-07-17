@@ -7,6 +7,6 @@
         "linkNatives": "true",
         "outdir": "./doc/api",
         "paths": [ "." ],
-        "exclude": "./public_HTTPS/scripts/"
+        "exclude": "public_HTTPS/scripts"
     }
 }

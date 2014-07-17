@@ -15,6 +15,7 @@
 		color: "#333333",
 		// clip the viewport on each display
 	},
+	show_version: true,
 	show_url: true,
 	resolution: {
 		width: 700,

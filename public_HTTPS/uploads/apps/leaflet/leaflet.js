@@ -15,15 +15,20 @@
 // written by Andy Johnson 2014
 // adapted from http://bl.ocks.org/d3noob/9267535
 //
-// current issues:
-// initial window sometimes appears double-height with blank bottom half
+// currently:
+//		app has two map sources - could have more
+// 		app only reads in data at launch - could re-load every 12 hours
+//		app shows all crimes in past year the same - could make current less transparent
+
 
 function addCSS( url, callback ) {
-    var fileref = document.createElement("link")
+    var fileref = document.createElement("link");
+
 	if( callback ) fileref.onload = callback;
-    fileref.setAttribute("rel", "stylesheet")
-    fileref.setAttribute("type", "text/css")
-    fileref.setAttribute("href", url)
+
+    fileref.setAttribute("rel", "stylesheet");
+    fileref.setAttribute("type", "text/css");
+    fileref.setAttribute("href", url);
 	document.head.appendChild( fileref );
 }
 
@@ -39,6 +44,43 @@ var leaflet = SAGE2_App.extend( {
 		this.lastZoom = null;
 		this.dragging = null;
 		this.position = null;
+
+		this.map = null;
+		this.map1 = null;
+		this.map2 = null;
+
+		this.whichMap = 1;
+
+		this.bigCollection = {};
+
+		this.numBeats = 3;
+		this.currentBeats = 0;
+
+		this.g = null;
+
+		this.allLoaded = 0;
+	},
+
+
+	getNewData: function(meSelf, beat, date){
+
+		var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
+
+		d3.json(query, function(collection) {
+			meSelf.currentBeats++;
+
+
+			console.log("grabbing beat"+beat);
+
+			if (meSelf.currentBeats === 1)
+					meSelf.bigCollection = collection;
+			else
+					meSelf.bigCollection = meSelf.bigCollection.concat(collection);
+
+			// when I have all the data start parsing it
+			if (meSelf.currentBeats === meSelf.numBeats)
+				meSelf.dealWithData(meSelf.bigCollection, date);
+		});
 	},
 
 
@@ -54,113 +96,171 @@ var leaflet = SAGE2_App.extend( {
 		this.element.id = "div" + id;
 		var mySelf = this;
 
-		this.map = null;
+		this.maxFPS = 0.000023; // once every 12 hours
+		//this.maxFPS = 0.1; // for testing
+
 
 		// for SAGE2
 		this.lastZoom = date;
 		this.dragging = false;
 		this.position = {x:0,y:0};
 
-		// Load the CSS file
+		var mapURL1 = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+		var mapCopyright1 = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+
+		var mapURL2 = 'http://{s}.www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png';
+		var mapCopyright2 = '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
+
+		// Load the CSS file for leaflet.js
 		addCSS(mySelf.resrcPath + "scripts/leaflet.css", function(){
 
-			mySelf.map = L.map(mySelf.element.id).setView([41.869910, -87.65], 17);
-			var mapLink = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-				attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-			}).addTo(mySelf.map);
+			mySelf.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
+			mySelf.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
+
+			if (mySelf.whichMap === 1)
+				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
+			else
+				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
 
 			/* Initialize the SVG layer */
-			mySelf.map._initPathRoot()    
+			mySelf.map._initPathRoot();
 
 			/* We simply pick up the SVG from the map object */
-			var svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
-			var g = svg.append("g");
+			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
+			mySelf.g = mySelf.svg.append("g");
 
-			d3.json("http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=1232", function(collection) {
-				collection.forEach(function(d) {
+			mySelf.getNewData(mySelf,"1232", date);
+			mySelf.getNewData(mySelf,"1231", date);
+			mySelf.getNewData(mySelf,"0124", date);
 
-				if (d.latitude && d.longitude)
-					{
-						if (isNaN(d.latitude))
-							console.log("latitude is not a number");
-						if (isNaN(d.longitude))
-							console.log("longitude is not a number");
-						d.LatLng = new L.LatLng(+d.latitude, +d.longitude)
-						d.description = d._primary_decsription;
 
-					   switch(d._primary_decsription) {
-					   	case "THEFT":
-					   	case "BURGLARY":
-					   	case "MOTOR VEHICLE THEFT":
-					   	case "ROBBERY": 			d.color = "green"; break; 
-
-					   	case "ASSAULT":
-					   	case "HOMICIDE":
-					   	case "CRIM SEXUAL ASSAULT":
-					   	case "BATTERY": 			d.color = "red"; break; 
-
-					   	case "CRIMINAL DAMAGE": 
-					   	case "CRIMINAL TRESPASS": 	d.color = "blue"; break;
-
-					   	case "WEAPONS VIOLATION": 
-					   	case "CONCEALED CARRY LICENSE VIOLATION":
-					   								d.color = "black"; break;
-
-					   	case "NARCOTICS": 			d.color = "pink"; break;
-
-					   	case "OTHER OFFENSE": 		d.color = "white"; break;
-
-					   	case "DECEPTIVE PRACTICE": d.color = "yellow"; break; 
-
-					   	default: 					d.color = "grey"; break;
-						}
-					}
-				else
-					{
-					//console.log("FOUND BAD ONE ", +d.latitude, +d.longitude);
-					d.LatLng = new L.LatLng(0,0);
-					}
-					
-				});
-
-				var feature = g.selectAll("circle")
-					.data(collection)
-					.enter()
-					.append("svg:circle")
-					.style("stroke", "white")  
-					.style("stroke-width", 2)
-					.style("opacity", .6) 
-					.style("fill", function (d) { return d.color; })
-					.attr("r", 15);
-
-				mySelf.map.on("viewreset", update);
-				update();
-
-				function update() {
-					feature.attr("transform", 
-					function(d) { 
-						return "translate("+ 
-							mySelf.map.latLngToLayerPoint(d.LatLng).x +","+ 
-							mySelf.map.latLngToLayerPoint(d.LatLng).y +")";
-						}
-					)
-				}
-			});	
-}
-);
-
-		// backup of the context
-		var self = this;
 		// attach the SVG into the this.element node provided to us
 		var box="0,0,"+width+","+height;
-		this.svg = d3.select(this.element).append("svg")
+		mySelf.svg = d3.select(mySelf.element).append("svg")
 		    .attr("width",   width)
 		    .attr("height",  height)
 		    .attr("viewBox", box);
+});
+},
 
-		this.draw_d3(date);
-	},
+dealWithData: function(collection, today)
+{
+	var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
+
+	//var today = new Date();
+
+
+		collection.forEach(function(d) {
+
+		if (d.latitude && d.longitude)
+			{
+				if (isNaN(d.latitude))
+					console.log("latitude is not a number");
+				if (isNaN(d.longitude))
+					console.log("longitude is not a number");
+				d.LatLng = new L.LatLng(+d.latitude, +d.longitude);
+
+
+				//"date_of_occurrence" : "2013-07-03T09:00:00",
+				// date difference is in milliseconds
+				d.myDate = parseDate(d.date_of_occurrence);
+				d.daysAgo = (today - d.myDate) / 1000 / 60 / 60 / 24; //7-373
+
+				if (d.daysAgo < 31)
+					d.inLastMonth = 1;
+				else
+					d.inLastMonth = 0;
+
+
+				d.description = d._primary_decsription;
+
+				   switch(d._primary_decsription) {
+				   	case "THEFT":
+				   	case "BURGLARY":
+				   	case "MOTOR VEHICLE THEFT":
+				   	case "ROBBERY": 			d.color = "green"; break; 
+
+				   	case "ASSAULT":
+				   	case "HOMICIDE":
+				   	case "CRIM SEXUAL ASSAULT":
+				   	case "BATTERY": 			d.color = "red"; break; 
+
+				   	case "CRIMINAL DAMAGE": 
+				   	case "CRIMINAL TRESPASS": 	d.color = "purple"; break;
+
+				   	case "NARCOTICS": 			d.color = "pink"; break;
+
+				   	case "DECEPTIVE PRACTICE": d.color = "orange"; break; 
+
+				   	default: 					d.color = "grey"; 
+				   		//console.log(+d.latitude, +d.longitude, d.description, d.color);
+				   		break;
+				}
+			}
+		else
+			{
+			//console.log("FOUND BAD ONE ", +d.latitude, +d.longitude);
+			d.LatLng = new L.LatLng(0,0);
+			}
+			
+		});
+
+		var me = this;
+
+		var feature = this.g.selectAll("circle")
+			.data(collection)
+			.enter()
+			.append("svg:circle")
+			.style("stroke", function (d) { if (d.inLastMonth) return "black"; else return "white"; })  
+			.style("stroke-width", function (d) { if (d.inLastMonth) return 6; else return 2; })
+			.style("opacity", function (d) { if (d.inLastMonth) return 1.0; else return 0.4; })
+			.style("fill", function (d) { return d.color; })
+			.attr("r", 15);
+
+
+		var feature2 = this.g.selectAll("text")
+			.data(collection)
+			.enter()
+			.append("svg:text")
+			.style("fill", "white")
+			.style("stroke", function (d) { return d.color; })
+			.style("stroke-width", "1")
+            .style("font-size", "30px")
+            .style("font-family", "Arial")
+            .style("text-anchor", "start")
+            .style("font-weight","bold")
+            .text(function (d)
+            		{
+            			if (d.inLastMonth)
+            				return d._primary_decsription.toLowerCase(); 
+            		});
+
+			this.map.on("viewreset", update);
+				update();
+
+		function update() {
+			feature.attr("transform", 
+			function(d) { 
+				return "translate("+ 
+					me.map.latLngToLayerPoint(d.LatLng).x +","+ 
+					me.map.latLngToLayerPoint(d.LatLng).y +")";
+				}
+			);
+
+			feature2.attr("transform", 
+			function(d) { 
+				return "translate("+ 
+					(me.map.latLngToLayerPoint(d.LatLng).x+20.0) +","+ 
+					(me.map.latLngToLayerPoint(d.LatLng).y+5.0) +")";
+				}
+			);
+			
+		}
+
+		this.allLoaded = 1;
+},
+
 
 	load: function(state, date) {
 	},
@@ -170,6 +270,18 @@ var leaflet = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		//console.log("getting new data");
+
+		if (this.allLoaded === 1)
+			{
+			this.currentBeats = 0;
+
+			this.getNewData(this,"1232", date);
+			this.getNewData(this,"1231", date);
+			this.getNewData(this,"0124", date);
+			}
+
+		
 	},
 
 	resize: function(date) {
@@ -190,7 +302,7 @@ var leaflet = SAGE2_App.extend( {
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
 			// need to turn animation off here or the pan stutters
-			this.map.panBy([this.position.x-itemX, this.position.y-itemY], { animate: false});
+			this.map.panBy([this.position.x-itemX, this.position.y-itemY], {animate: false});
 			this.position.x = itemX;
 			this.position.y = itemY;
 		}
@@ -207,21 +319,52 @@ var leaflet = SAGE2_App.extend( {
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
 				var z = this.map.getZoom();
-				this.map.setZoom(z+1);
+				this.map.setZoom(z+1, {animate: false});
 				this.lastZoom = date;
+				
+				var z2 = this.map.getZoom();
+				
+				this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
 				var z = this.map.getZoom();
-				this.map.setZoom(z-1);
+				this.map.setZoom(z-1, {animate: false});
 				this.lastZoom = date;
+				
+				var z2 = this.map.getZoom();
+				
+				this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 		}
+
+		if (eventType == "keyboard" && data.code == 109 && data.state == "down") {
+				// m key down
+				// change map type
+
+				var selectedOnes = null;
+
+				if (this.whichMap === 1)
+					{
+					this.whichMap = 2;
+					this.map.removeLayer(this.map1);
+					this.map2.addTo(this.map);
+
+					selectedOnes = this.g.selectAll("text");
+    				selectedOnes.style("fill", "black");
+					}
+				else
+					{
+					this.whichMap = 1;
+					this.map.removeLayer(this.map2);
+					this.map1.addTo(this.map);
+
+					selectedOnes = this.g.selectAll("text");
+    				selectedOnes.style("fill", "white");
+					}
+				}
 
 		this.refresh(date);
 	}
 	
 });
-
-
-

@@ -18,17 +18,19 @@ var path      = require('path');
 var url       = require('url');
 
 var unzip     = require('decompress-zip');
-var ffprobe   = require('node-ffprobe');
 var gm        = require('gm');
-var imageinfo = require('imageinfo');
 var mime      = require('mime');
 var request   = require('request');
 var ytdl      = require('ytdl-core');
 
-var pdfinfo = require('./node-pdfinfo').pdfinfo;     // custom node module
+var exiftool  = require('../src/node-exiftool');      // gets exif tags for images
+var assets    = require('../src/node-assets');        // asset management
 
 var imageMagick;
 mime.default_type = "application/custom";
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 
 function encodeReservedURL(url) {
@@ -44,11 +46,13 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.titleBarHeight = titleBarHeight;
 	this.mime2app = {
 		"image/jpeg": "image_viewer", 
+		"image/webp": "image_viewer", 
 		"image/png": "image_viewer",
 		"image/bmp": "image_viewer",
 		"image/tiff": "image_viewer",
 		"image/vnd.adobe.photoshop": "image_viewer",
 		"video/mp4": "movie_player",
+		"video/webm": "movie_player",
 		"video/youtube": "movie_player",
 		"application/pdf": "pdf_viewer", 
 		"application/zip": "custom_app",
@@ -65,6 +69,9 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	
 	imageMagick = gm.subClass(imConstraints);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 
 appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 	var wallRatio = this.displayWidth / (this.displayHeight-this.titleBarHeight);
@@ -92,10 +99,20 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 	request({url: url, encoding: null, strictSSL: strictSSL}, function(err, response, body) {
 		if(err) throw err;
 		
-		var info = imageinfo(body);
-		
-		_this.loadImageFromDataBuffer(body, info.width, info.height, mime_type, url, url, name, function(appInstance) {
-			callback(appInstance);
+		var result = exiftool.buffer(body, function(err, info) {
+			if (err) {
+				console.log("Error processing image:", url, mime_type, name, result.err);
+			}
+			else
+				if (info.ImageWidth && info.ImageHeight) {
+					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name,
+						function(appInstance) {
+							callback(appInstance);
+						}
+					);
+				} else {
+					console.log("File not recognized:", file, mime_type, url);
+				}
 		});
 	});
 };
@@ -116,69 +133,96 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 				}
 			}
 		}
-
 		var name = info.title;
 		var aspectRatio = 16/9;
 		var resolutionY = mp4.resolution;
 		var resolutionX = resolutionY * aspectRatio;
 		
-		/*
-		var poster = info.iurlmaxres;
-		if (poster === null) poster = info.iurl;
-		if (poster === null) poster = info.iurlsd;
-		*/
-		
-		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, function(appInstance) {
-			callback(appInstance);
+		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
+			function(appInstance) {
+				callback(appInstance);
 		});
 	});
 };
 
-appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
-	var _this = this;
-	ffprobe(source, function(err, data){
-		if(err) throw err;
-		
-		var i;
-		for(i=0; i<data.streams.length; i++){
-			if(data.streams[i].codec_type == "video"){
-				var aspectRatio = data.streams[i].width / data.streams[i].height;
-				
-				var appInstance = {
-					id: null,
-					title: name,
-					application: "movie_player",
-					type: mime_type,
-					url: url,
-					data: {
-						src: source,
-						type: "video/mp4",
-						play: false,
-						time: 0.0
-					},
-					resrc: null,
-					left: _this.titleBarHeight,
-					top: 1.5*_this.titleBarHeight,
-					width: data.streams[i].width,
-					height: data.streams[i].height,
-					native_width: data.streams[i].width,
-					native_height: data.streams[i].height,
-					previous_left: null,
-					previous_top: null,
-					previous_width: null,
-					previous_height: null,
-					maximized: false,
-					aspect: aspectRatio,
-					animation: false,
-					date: new Date()
-				};
-				_this.scaleAppToFitDisplay(appInstance);
-				callback(appInstance);
-				return;
-			}
-		}
-	});
+appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw, vh, callback) {
+	var aspectRatio = vw / vh;
+	var appInstance = {
+		id: null,
+		title: name,
+		application: "movie_player",
+		type: mime_type,
+		url: url,
+		data: {
+			src: source,
+			type: 'video/mp4',
+			play: false,
+			time: 0.0
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5*this.titleBarHeight,
+		width: vw,
+		height: vh,
+		native_width: vw,
+		native_height: vh,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
 };
+
+
+// appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
+// 	var _this = this;
+// 	ffprobe(source, function(err, data){
+// 		if(err) throw err;
+// 		var i;
+// 		for(i=0; i<data.streams.length; i++){
+// 			if(data.streams[i].codec_type == "video"){
+// 				var aspectRatio = data.streams[i].width / data.streams[i].height;
+// 				var appInstance = {
+// 					id: null,
+// 					title: name,
+// 					application: "movie_player",
+// 					type: mime_type,
+// 					url: url,
+// 					data: {
+// 						src: source,
+// 						type: "video/mp4",
+// 						play: false,
+// 						time: 0.0
+// 					},
+// 					resrc: null,
+// 					left: _this.titleBarHeight,
+// 					top: 1.5*_this.titleBarHeight,
+// 					width: data.streams[i].width,
+// 					height: data.streams[i].height,
+// 					native_width: data.streams[i].width,
+// 					native_height: data.streams[i].height,
+// 					previous_left: null,
+// 					previous_top: null,
+// 					previous_width: null,
+// 					previous_height: null,
+// 					maximized: false,
+// 					aspect: aspectRatio,
+// 					animation: false,
+// 					date: new Date()
+// 				};
+// 				_this.scaleAppToFitDisplay(appInstance);
+// 				callback(appInstance);
+// 				return;
+// 			}
+// 		}
+// 	});
+// };
 
 appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var local_url = path.join("uploads", "pdfs", name);
@@ -202,7 +246,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, callback) {
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
-	
+
 	var appInstance = {
 		id: null,
 		title: name,
@@ -236,15 +280,20 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 	
-	if(mime_type === "image/jpeg" || mime_type === "image/png"){
+	if(mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp"){
 		fs.readFile(file, function (err, data) {
 			if(err) throw err;
-			
-			var info = imageinfo(data);
-			
-			_this.loadImageFromDataBuffer(data, info.width, info.height, mime_type, url, external_url, name, function(appInstance) {
-				callback(appInstance);
-			});
+
+			// Query the exif data
+			var dims = assets.getDimensions(file);
+
+			if (dims) {
+				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, function(appInstance) {
+					callback(appInstance);
+				});
+			} else {
+				console.log("File not recognized:", file, mime_type, url);
+			}
 		});
 	}
 	else{
@@ -263,89 +312,86 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 	}
 };
 
+
 appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_url, name, callback) {
-	var _this = this;
-	ffprobe(file, function(err, data){
-		if(err) throw err;
-		
-		var i;
-		for(i=0; i<data.streams.length; i++){
-			if(data.streams[i].codec_type == "video"){
-				var aspectRatio = data.streams[i].width / data.streams[i].height;
-				
-				var appInstance = {
-					id: null,
-					title: name,
-					application: "movie_player",
-					type: mime_type,
-					url: external_url,
-					data: {
-						src: external_url,
-						type: "video/mp4",
-						play: false,
-						time: 0.0
-					},
-					resrc: null,
-					left: _this.titleBarHeight,
-					top: 1.5*_this.titleBarHeight,
-					width: data.streams[i].width,
-					height: data.streams[i].height,
-					native_width: data.streams[i].width,
-					native_height: data.streams[i].height,
-					previous_left: null,
-					previous_top: null,
-					previous_width: null,
-					previous_height: null,
-					maximized: false,
-					aspect: aspectRatio,
-					animation: false,
-					date: new Date()
-				};
-				_this.scaleAppToFitDisplay(appInstance);
-				callback(appInstance);
-				return;
-			}
+	// Query the exif data
+	var dims = assets.getDimensions(file);
+	var mime = assets.getMimeType(file);
+
+	if (dims && mime) {
+		if (mime === "video/mp4" || mime === "video/webm") {
+			var appInstance = {
+				id: null,
+				title: name,
+				application: "movie_player",
+				type: mime_type,
+				url: external_url,
+				data: {
+					src: external_url,
+					type: mime,
+					play: false,
+					time: 0.0
+				},
+				resrc: null,
+				left:  this.titleBarHeight,
+				top:   1.5 * this.titleBarHeight,
+				width:  dims.width,
+				height: dims.height,
+				native_width:    dims.width,
+				native_height:   dims.height,
+				previous_left:   null,
+				previous_top:    null,
+				previous_width:  null,
+				previous_height: null,
+				maximized:       false,
+				aspect:          dims.width / dims.height,
+				animation:       false,
+				date:            new Date()
+			};
+			this.scaleAppToFitDisplay(appInstance);
+			callback(appInstance);
+			return;
 		}
-	});
+	}
 };
 
-appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_url, name, callback) {
-	var _this = this;
-	pdfinfo(file, function(err, doc) {
-		if(err) throw err;
 
-		var aspectRatio = doc.page_width/doc.page_height;
-		
-		var appInstance = {
-			id: null,
-			title: name,
-			application: "pdf_viewer",
-			type: mime_type,
-			url: external_url,
-			data: {
-				src: external_url,
-				page: 1,
-				numPagesShown: 1
-			},
-			resrc: null,
-			left: _this.titleBarHeight,
-			top: 1.5*_this.titleBarHeight,
-			width: doc.page_width,
-			height: doc.page_height,
-			native_width: doc.page_width,
-			native_height: doc.page_height,
-			previous_left: null,
-			previous_top: null,
-			previous_width: null,
-			previous_height: null,
-			maximized: false,
-			aspect: aspectRatio,
-			animation: false,
-			date: new Date()
-		};
-		_this.scaleAppToFitDisplay(appInstance);
-		callback(appInstance);
-	});
+appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_url, name, callback) {
+	// Assume default to Letter size
+	var page_width  = 612;
+	var page_height = 792;
+
+	var aspectRatio = page_width/page_height;
+	
+	var appInstance = {
+		id: null,
+		title: name,
+		application: "pdf_viewer",
+		type: mime_type,
+		url: external_url,
+		data: {
+			src: external_url,
+			page: 1,
+			numPagesShown: 1
+		},
+		resrc:  null,
+		left:   this.titleBarHeight,
+		top:    1.5 * this.titleBarHeight,
+		width:  page_width,
+		height: page_height,
+		native_width:    page_width,
+		native_height:   page_height,
+		previous_left:   null,
+		previous_top:    null,
+		previous_width:  null,
+		previous_height: null,
+		maximized: false,
+		aspect:    aspectRatio,
+		animation: false,
+		date:      new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
 };
 
 appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_url, name, callback) {
@@ -542,9 +588,25 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 		
-		_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
-			callback(appInstance);
-		});
+		var	app = _this.mime2app[mime_type];
+		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
+			exiftool.file(localPath, function(err,data) {
+				if (err) {
+					console.log("internal error");
+				} else {
+					console.log("EXIF> Adding", data.FileName);
+					assets.addFile(data.SourceFile, data);
+					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
+						callback(appInstance);
+					});
+				}
+			});
+		}
+		else {
+			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
+				callback(appInstance);
+			});
+		}
 	});
 };
 
@@ -601,8 +663,10 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 					callback(appInstance);
 				});
 			}
-			else{
-				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, function(appInstance) {
+			else {
+				// Fixed size since cant process exif on URL yet
+				console.log("GOT HERE");
+				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance) {
 					callback(appInstance);
 				});
 			}
@@ -643,5 +707,6 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 };
 
-module.exports = appLoader;
 //////////////////////////////////////////////////////////////////////////////////////////
+
+module.exports = appLoader;
