@@ -392,15 +392,19 @@ var tank = SAGE2_App.extend( {
 		var rx, ry, rw, rh;
 		
 		for(var i = 0; i < bLimit; i++){
-			rw = Math.floor( Math.random() * (this.element.width / 10)) +100;
-			rh = Math.floor( Math.random() * (this.element.height/ 10)) +100;
+			rw = this.randomInt(100, 100 + (this.element.width  / 10));
+			rh = this.randomInt(100, 100 + (this.element.height / 10));
 			
-			rx = Math.floor( Math.random() * (this.element.width - rw - 400) + rw/2 ) + 200;
-			ry = Math.floor( Math.random() * (this.element.height - rh - 400) + rh/2 ) + 200;
+			rx = this.randomInt(200, this.element.width  - rw - 200);
+			ry = this.randomInt(200, this.element.height - rh - 200);
 			
 			this.barrierList.push( {x: rx, y: ry, width: rw, height: rh} );
 		}
-	} //end generateBarriers
+	}, //end generateBarriers
+	
+	randomInt: function(min, max) {
+		return Math.round(Math.random() * (max-min) + min);
+	} // end randomInt
 });
 
 
