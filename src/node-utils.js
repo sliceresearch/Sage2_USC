@@ -8,33 +8,58 @@
 //
 // Copyright (c) 2014
 
+/**
+ * Provides utility functions for the SAGE2 server
+ *
+ * @class node-utils
+ * @module node-utils
+ * @requires package.json, child_process, path
+ */
+
 var SAGE2_version = require('../package.json').version;
 var exec   = require('child_process').exec;
 var path   = require('path');
-var sprint = require('sprint');
 
+
+/**
+ * Base version comes from evaluating the package.json file
+ *
+ * @method getShortVersion
+ * @return {String} version number as x.x.x
+ */
 function getShortVersion() {
 	return SAGE2_version;
 }
 
+/**
+ * Full version is processed from git information
+ *
+ * @method getFullVersion
+ * @param callback {Function} function to be run when finished, parameter is an object containing base, branch, commit and date fields
+ */
 function getFullVersion(callback) {
-	var fullVersion = {base: "", branch: "", commit: "", date: ""};
+	var fullVersion  = {base: "", branch: "", commit: "", date: ""};
+	// get the base version from package.json file
 	fullVersion.base = getShortVersion();
-	
+
+	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd = "git log --date=\"short\" --format=\"%d|%h|%ad\" -n 1";
 	exec(cmd, { cwd:  dirroot, timeout: 3000}, function(err, stdout, stderr) {
 		if(err) { callback(null); return; }
 		
+		// parsing the results
 		var result = stdout.replace(/\r?\n|\r/g, "");
 		var parse = result.split("|");
 		var branchList = parse[0].split(",");
 		var branch = branchList[branchList.length-1];
 		
+		// filling up the object
 		fullVersion.branch = branch.substring(1, branch.length-1);
 		fullVersion.commit = parse[1];
-		fullVersion.date = parse[2].replace(/-/g, "/");
+		fullVersion.date   = parse[2].replace(/-/g, "/");
 		
+		// return the object in the callback paramter
 		callback(fullVersion);
 	});
 }
