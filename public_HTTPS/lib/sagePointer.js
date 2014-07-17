@@ -170,7 +170,7 @@ function sagePointer(wsio) {
 			this.wsio.emit('keyPress', {code: code});
 		}
 		// if a special key - prevent default (otherwise let continue to keyPress)
-		if(code == 8 || (code >= 16 && code != 32 && code <= 46) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
+		if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
 			event.preventDefault();
 		}
 	};
