@@ -14,6 +14,10 @@ var thumbnailBrowserList = {};
 var thumbnailBrowserIDList = [];
 var sendsToServer = true;
 
+// layout parameters
+var imageThumbSize = 50;
+var thumbSpacer = 5;
+
 var thumbnailBrowser = SAGE2_App.extend( {
 	construct: function()
 	{
@@ -42,7 +46,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		this.appIconList = null;
 		thumbnailBrowserList[id] = this;
-
+	
 		// websocket to server for file library access
 		// Note: using a different socket to prevent locking up other app animations
 		hostname = window.location.hostname;
@@ -128,10 +132,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		appList =  serverFileList.app;
 
 		sessionList =  serverFileList.session;
-		
-		imageThumbSize = 50;
-		thumbSpacer = 5;
-		
+
 		var curRow = 1;
 		var curColumn = 0;
 			
@@ -244,9 +245,6 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	updateThumbnailPositions: function()
 	{
-		imageThumbSize = 50;
-		thumbSpacer = 5;
-		
 		var curRow = 1;
 		var curColumn = 0;
 			
@@ -419,8 +417,8 @@ function buttonWidget() {
 	
 	this.posX = 100;
 	this.posY = 100;
-	this.width = 50;
-	this.height = 50;
+	this.width = imageThumbSize;
+	this.height = imageThumbSize;
 	
 	this.defaultColor =  "rgba(210, 210, 210, 1.0)";
 	this.mouseOverColor = "rgba(210, 210, 10, 1.0 )";
