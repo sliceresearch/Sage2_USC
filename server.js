@@ -67,7 +67,8 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 program
   .version(SAGE2_version)
   .option('-i, --interactive', 'Interactive prompt')
-  .option('-f, --configuration <value>', 'Specify a configuration file')
+  .option('-f, --configuration <file>', 'Specify a configuration file')
+  .option('-s, --session [name]', 'Load a session file (last session if omitted)')
   .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
@@ -1663,8 +1664,15 @@ server.listen(config.port);
 
 // ***************************************************************************************
 
-// Command loop: reading input commands
+// Load session file if specified on the command line (-s)
+if (program.session) {
+	// if -s specified without argument
+	if (program.session == true) loadSession();
+	// if argument specified
+	else loadSession(program.session);
+}
 
+// Command loop: reading input commands
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout
