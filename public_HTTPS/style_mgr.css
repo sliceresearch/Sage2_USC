@@ -45,7 +45,30 @@ input, button {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 11px;
 }
-	
+
+
+/* Dialog (sagePointer lock) */
+dialog {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+  margin:0 auto;
+}
+/* background behind the dialogs */
+dialog::backdrop {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+/* Dialog for the fileBrowser */
+dialog#lb_light {
+    width: 70%;
+    height: 50%;
+}
+
+
 #wrapper {
 	width: 100%;
 	margin: 0 auto;
@@ -101,7 +124,7 @@ input, button {
 
 #fileButtons {
 	text-align: left;
-	margin: 10px;
+	margin: 5px;
 }
 
 footer {
@@ -167,15 +190,8 @@ footer li {
 }
 
 .lb_whitecontent {
-	position: static;
 	text-align: left;
-	margin: 10px;
 }
-
-.clear {
-	clear: both;
-}
-
 
 /***********************************************/
 .css-treeview {
