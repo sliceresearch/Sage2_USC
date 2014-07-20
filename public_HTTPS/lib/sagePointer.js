@@ -398,8 +398,9 @@ function sagePointer(wsio) {
 	screenShareQuality.addEventListener('change',    this.changeScreenShareQuality,    false);
 	
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
-	document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
-	document.addEventListener('webkitpointerlockchange', this.pointerLockChange, false);
+	// redudant here (webkit)
+	// document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
+	// document.addEventListener('webkitpointerlockchange', this.pointerLockChange, false);
 	
 	
 	
