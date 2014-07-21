@@ -65,8 +65,8 @@ function uiBuilder(json_cfg, clientID) {
 			
 			document.body.style.overflow = "scroll";
 			
-			this.bg.style.width      = wallWidth  + "px";
-			this.bg.style.height     = wallHeight + "px";
+			this.bg.style.width    = wallWidth  + "px";
+			this.bg.style.height   = wallHeight + "px";
 			this.bg.style.overflow = "hidden";
 
 			// put the scale up to the top left
@@ -108,6 +108,11 @@ function uiBuilder(json_cfg, clientID) {
 						_this.bg.style.webkitTransform = "scale("+(newratio)+")";
 						_this.ratio = "fit";
 					}
+					// This somehow forces a reflow of the div and show the scrollbars as needed
+					// Needed with chrome v36
+					_this.bg.style.display='none';
+					_this.bg.offsetHeight;
+					_this.bg.style.display='block';
 				}
 			};
 			// show the cursor in this mode
