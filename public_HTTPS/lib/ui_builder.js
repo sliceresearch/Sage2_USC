@@ -41,7 +41,8 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerItems   = {};
 
 	// Get handle on the main div
-	this.main = document.getElementById("background");
+	this.bg = document.getElementById("background");
+	this.main = document.getElementById("main");
 
 	// Build the background image/color
 	this.background = function () {
@@ -49,24 +50,27 @@ function uiBuilder(json_cfg, clientID) {
 
 		// background color
 		if (typeof this.json_cfg.background.color !== "undefined" && this.json_cfg.background.color !== null) {
-			document.body.style.backgroundColor = this.json_cfg.background.color;
+			this.bg.style.backgroundColor = this.json_cfg.background.color;
 		}
+		else {
+			this.bg.style.backgroundColor = "#000000";
+		}
+		
 		// Setup the clipping size
 		if (this.clientID===-1) {
 			// set the resolution to be the whole display wall
 			var wallWidth  = this.json_cfg.resolution.width  * this.json_cfg.layout.columns;
 			var wallHeight = this.json_cfg.resolution.height * this.json_cfg.layout.rows;
 			this.wallRatio = wallWidth / wallHeight;
-			this.main.style.width    = wallWidth + "px";
-			this.main.style.height   = wallHeight + "px";
-			this.main.style.overflow = "hidden";
-
-			// No image support in this mode, set the color of the div instead
-			document.body.style.backgroundColor = '#000000';
-			this.main.style.backgroundColor = this.json_cfg.background.color;
+			
+			document.body.style.overflow = "scroll";
+			
+			this.bg.style.width      = wallWidth  + "px";
+			this.bg.style.height     = wallHeight + "px";
+			this.bg.style.overflow = "hidden";
 
 			// put the scale up to the top left
-			this.main.style.webkitTransformOrigin = "0% 0%";
+			this.bg.style.webkitTransformOrigin = "0% 0%";
 
 			// calculate the scale ratio to make it fit
 			this.browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
@@ -75,7 +79,7 @@ function uiBuilder(json_cfg, clientID) {
 				newratio = document.documentElement.clientWidth / wallWidth;
 			else
 				newratio = document.documentElement.clientHeight / wallHeight;
-			this.main.style.webkitTransform = "scale("+(newratio)+")";
+			this.bg.style.webkitTransform = "scale("+(newratio)+")";
 
 			window.onresize = function(event) {
 				// recalculate after every window resize
@@ -86,14 +90,14 @@ function uiBuilder(json_cfg, clientID) {
 						newratio = document.documentElement.clientWidth / wallWidth;
 					else
 						newratio = document.documentElement.clientHeight / wallHeight;
-					_this.main.style.webkitTransform = "scale("+(newratio)+")";
+					_this.bg.style.webkitTransform = "scale("+(newratio)+")";
 				}
 			};
 			window.onkeydown = function (event) {
 				// keycode: f
 				if (event.keyCode === 70) {
 					if (_this.ratio === "fit") {
-						_this.main.style.webkitTransform = "scale(1)";
+						_this.bg.style.webkitTransform = "scale(1)";
 						_this.ratio = "full";
 					} else if (_this.ratio === "full") {
 						var newratio;
@@ -101,7 +105,7 @@ function uiBuilder(json_cfg, clientID) {
 							newratio = document.documentElement.clientWidth / wallWidth;
 						else
 							newratio = document.documentElement.clientHeight / wallHeight;
-						_this.main.style.webkitTransform = "scale("+(newratio)+")";
+						_this.bg.style.webkitTransform = "scale("+(newratio)+")";
 						_this.ratio = "fit";
 					}
 				}
@@ -109,55 +113,65 @@ function uiBuilder(json_cfg, clientID) {
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
 		} else {
-			var background = document.getElementById('background');
 			if (typeof this.json_cfg.background.image !== "undefined" && this.json_cfg.background.image !== null) {
-				var bg = new Image();
-				bg.addEventListener('load', function() {				
+				var bgImg = new Image();
+				bgImg.addEventListener('load', function() {				
 					if(_this.json_cfg.background.style == "tile"){
-						var top = -1 * (_this.offsetY % bg.naturalHeight);
-						var left = -1 * (_this.offsetX % bg.naturalWidth);
+						var top = -1 * (_this.offsetY % bgImg.naturalHeight);
+						var left = -1 * (_this.offsetX % bgImg.naturalWidth);
 						
-						background.style.top    = top.toString() + "px";
-						background.style.left   = left.toString() + "px";
-						background.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
-						background.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
+						_this.bg.style.top    = top.toString() + "px";
+						_this.bg.style.left   = left.toString() + "px";
+						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
+						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
 						
-						background.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
-						background.style.backgroundPosition = "top left";
-						background.style.backgroundRepeat   = "repeat-x repeat-y";
-						background.style.backgroundSize     = bg.naturalWidth +"px " + bg.naturalHeight + "px";
+						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
+						_this.bg.style.backgroundPosition = "top left";
+						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
+						_this.bg.style.backgroundSize     = bgImg.naturalWidth +"px " + bgImg.naturalHeight + "px";
+						
+						_this.main.style.top    = (-1*top).toString()  + "px";
+						_this.main.style.left   = (-1*left).toString() + "px";
+						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height + "px";
 					}
 					else {
-						var bg_img;
+						var bgImgFinal;
 						var ext = _this.json_cfg.background.image.lastIndexOf(".");
-						if(_this.json_cfg.background.style == "fit" && (bg.naturalWidth != _this.json_cfg.totalWidth || bg.naturalHeight != _this.json_cfg.totalHeight))
-							bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+						if(_this.json_cfg.background.style == "fit" && (bgImg.naturalWidth != _this.json_cfg.totalWidth || bgImg.naturalHeight != _this.json_cfg.totalHeight))
+							bgImgFinal = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
 						else
-							bg_img = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+							bgImgFinal = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
 						
-						background.style.top    = "0px";
-						background.style.left   = "0px";
-						background.style.width  = _this.json_cfg.resolution.width + "px";
-						background.style.height = _this.json_cfg.resolution.height + "px";
+						_this.bg.style.top    = "0px";
+						_this.bg.style.left   = "0px";
+						_this.bg.style.width  = _this.json_cfg.resolution.width + "px";
+						_this.bg.style.height = _this.json_cfg.resolution.height + "px";
 						
-						background.style.backgroundImage    = "url(" + bg_img + ")";
-						background.style.backgroundPosition = "top left";
-						background.style.backgroundRepeat   = "no-repeat";
-						background.style.backgroundSize     = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
+						_this.bg.style.backgroundImage    = "url(" + bgImgFinal + ")";
+						_this.bg.style.backgroundPosition = "top left";
+						_this.bg.style.backgroundRepeat   = "no-repeat";
+						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
+						
+						_this.main.style.top    = "0px";
+						_this.main.style.left   = "0px";
+						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height + "px";
 					}
 				}, false);
-				bg.src = this.json_cfg.background.image;
+				bgImg.src = this.json_cfg.background.image;
 			}
 			else {
-				background.style.top    = "0px";
-				background.style.left   = "0px";
-				background.style.width  = _this.json_cfg.resolution.width + "px";
-				background.style.height = _this.json_cfg.resolution.height + "px";
+				this.bg.style.top    = "0px";
+				this.bg.style.left   = "0px";
+				this.bg.style.width  = this.json_cfg.resolution.width + "px";
+				this.bg.style.height = this.json_cfg.resolution.height + "px";
+				
+				this.main.style.width  = this.json_cfg.resolution.width  + "px";
+				this.main.style.height = this.json_cfg.resolution.height + "px";
 			}
 			
 			if (json_cfg.background.clip === true) {
-				this.main.style.width    = json_cfg.resolution.width  + "px";
-				this.main.style.height   = json_cfg.resolution.height + "px";
 				this.main.style.overflow = "hidden";
 
 				if (this.json_cfg.background.image === null) {
@@ -264,7 +278,7 @@ function uiBuilder(json_cfg, clientID) {
 	
 	this.updateVersionText = function(version) {
 		if(this.json_cfg.show_version) {
-			this.version.innerHTML = "<b>v" + version.commit + "</b> " + version.date;
+			this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
 		}
 	}
 

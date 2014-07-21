@@ -132,7 +132,7 @@
 		aul.appendChild(info4);
 		if (json_cfg.version) {
 			var info5 = document.createElement('li');
-			info5.innerHTML  = "Version: " + json_cfg.version.commit + " - " + json_cfg.version.date;
+			info5.innerHTML  = "Version: " + json_cfg.version.base + "-" +json_cfg.version.branch +"-" + json_cfg.version.commit +" - " + json_cfg.version.date;		
 			console.log(json_cfg.version);
 			aul.appendChild(info5);
 		}

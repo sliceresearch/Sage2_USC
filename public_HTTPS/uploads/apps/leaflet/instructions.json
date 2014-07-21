@@ -1,5 +1,6 @@
 {
 	"main_script": "leaflet.js",
+	"icon": "leaflet.webp",
 	"width": 800,
 	"height": 600,
 	"animation": true,

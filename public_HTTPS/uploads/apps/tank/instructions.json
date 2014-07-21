@@ -1,7 +1,7 @@
 {
-	"main_script": "aTanks.js",
-	"width": 700,
-	"height": 400,
+	"main_script": "tank.js",
+	"width": 1600,
+	"height": 800,
 	"animation": true,
 	"load": {
 	},

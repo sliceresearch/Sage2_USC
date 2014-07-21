@@ -5,8 +5,8 @@
 	"clock": 12,
 	"background": {
 		"color": "#AA3311",
-		"image": "images/background/minneapolis_skyline_tm.jpg",
-		"style": "fit",
+		"image": "images/background/marble_tiles.jpg",//"images/background/minneapolis_skyline_tm.jpg",
+		"style": "tile",
 		"clip": true
 	},
 	"show_url": true,
