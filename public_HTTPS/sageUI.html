@@ -19,6 +19,8 @@
 <script type="text/javascript" src="lib/websocket.io.js"></script>
 <script type="text/javascript" src="lib/sagePointer.js"></script>
 <script type="text/javascript" src="lib/windowManager.js"></script>
+<script type="text/javascript" src="scripts/dialog-polyfill.js"></script>
+
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -168,6 +170,13 @@
 		videosDir   = document.getElementById('videos');
 		sessionsDir = document.getElementById('sessions');
 				
+		// setup for dialog polyfill
+		var diag1 = document.getElementById("lb_light");
+	    dialogPolyfill.registerDialog(diag1);
+		var diag2 = document.getElementById("lb_pointer_help");
+	    dialogPolyfill.registerDialog(diag2);
+
+
 		wsio.on('setupDisplayConfiguration', function(config) {
 			var extraHeight = extraInteraction.clientHeight;
 			
@@ -392,7 +401,8 @@
 	
 </script>
 
-<link rel="stylesheet" type="text/css" href="style_mgr.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
+<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
 
 </head>
 
