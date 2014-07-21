@@ -18,7 +18,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.json_cfg = json_cfg;
 	this.clientID = clientID;
 	// set the default style sheet
-	this.csssheet = "style.css";
+	this.csssheet = "../css/style.css";
 	// Objects for the UI
 	this.upperBar = null;
 	this.clock    = null;
