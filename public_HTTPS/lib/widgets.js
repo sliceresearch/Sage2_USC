@@ -246,6 +246,14 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
+	},
+	"duplicate": {
+		"switch": null,
+		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
+		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 2 0 l 0 -2 l 8 0 l 0 10 l -2 0",
+		"fill":"none",
+		"strokeWidth": 1,
+		"delay":600
 	}
 
 };

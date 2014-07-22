@@ -90,6 +90,8 @@ if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
 	imConstraints.appPath = config.advanced.ImageMagick;
 var imageMagick = gm.subClass(imConstraints);
 
+assets.setupIM(imConstraints);
+
 
 // global variables for various paths
 var public_https = "public_HTTPS"; // directory where HTTPS content is stored
