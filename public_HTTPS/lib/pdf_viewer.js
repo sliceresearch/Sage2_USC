@@ -19,8 +19,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.loaded = false;
 		this.pdfDoc = null;
 
-		this.enableControls = null;
-		this.controls = null;
+		this.enableControls = true;
 		this.pageValText = null;
 	},
 	
@@ -41,7 +40,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.state.page = null;
 
 		this.state.numPagesShown = null;
-		this.enableControls      = true;
+		
 		this.pageValText         = '';
 	},
 	

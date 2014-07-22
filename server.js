@@ -138,6 +138,7 @@ var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.t
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
+var stickyApplications = {};
 
 
 // sets up the background for the display clients (image or color)
@@ -245,6 +246,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesRemoteServerInfo          = data.receivesRemoteServerInfo         || false;
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
+	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
 	initializeWSClient(wsio);
 	
 	clients.push(wsio);
@@ -319,6 +321,9 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.receivesDisplayConfiguration){
 		wsio.emit('setupDisplayConfiguration', config);
 		wsio.emit('setupSAGE2Version', SAGE2_version);
+	}
+	if (wsio.messages.requestsAppClone){
+		wsio.on('createAppClone', wsCreateAppClone);
 	}
 	
 	
@@ -569,7 +574,6 @@ function wsKeyPress(wsio, data) {
 		if (data.code == 13){ //Enter key
 			remoteInteraction[uniqueID].dropControl();
 		} 
-		return;
 	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
 		var pointerX = sagePointers[uniqueID].left;
@@ -1218,7 +1222,44 @@ function wsReleasedControlId(wsio, data){
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
+/******************** Clone Request Messages ****************************/
 
+function wsCreateAppClone(wsio, data){
+	
+	console.log(applications);
+	console.log(data);
+	var app = getAppById(data.id);
+	//console.log("CloneApp:"  + app.id);
+	if (app !== null){
+		var clone = {
+			id:getUniqueAppId(),
+			left: app.left + 5, // modify such that if the new position is off the screen, then reset the position to 0,0
+			top: app.top + 5,
+			width: app.width,
+			height:app.height,
+			data:app.data,
+			resrc: app.resrc,
+			animation: app.animation,
+			date: new Date(),
+			title: app.title,
+			url: app.url,
+			application: app.application
+		}
+
+		broadcast('createAppWindow', clone, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
+		applications.push(clone);	
+	}
+	
+}
+
+function getAppById (appId){
+	for (var i=0;i<applications.length;i++){
+		if (applications[i].id === appId)
+			return applications[i];
+	}
+	return null;
+}
 
 
 /************************************************************************/
@@ -2340,7 +2381,7 @@ function keyDown( uniqueID, pointerX, pointerY, data)
 		var itemRelX = pointerX - elem.left;
 		var itemRelY = pointerY - elem.top - config.titleBarHeight;
 		var now = new Date();
-		var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "down" }, date: now };
+		var event = { eventType: "specialKey", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: data.code, state: "down", printable:false  }, date: now};
 		broadcast('eventInItem', event, 'receivesInputEvents');
 	}
 }
@@ -2371,7 +2412,7 @@ function keyPress( uniqueID, pointerX, pointerY, data )
 		var itemRelX = pointerX - elem.left;
 		var itemRelY = pointerY - elem.top - config.titleBarHeight;
 		var now = new Date();
-		var event = { eventType: "keyboard", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: parseInt(data.code,10), state: "down" }, date: now };
+		var event = { eventType: "keyboard", elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, user_color: sagePointers[uniqueID].color, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {code: parseInt(data.code,10), state: "down", printable:true }, date: now };
 		broadcast('eventInItem', event, 'receivesInputEvents');
 	}
 }

@@ -29,6 +29,10 @@ var SAGE2_App = Class.extend( {
 		this.timer  = null;
 		this.maxfps = null;
 		this.redraw = null;
+		this.enableControls = null;
+		this.controls = null;
+		this.cloneable = null;
+		this.requestForClone = null;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -48,8 +52,9 @@ var SAGE2_App = Class.extend( {
 		this.resrcPath = resrc + "/";
 		this.startDate = date;
 
-		this.controls = new widgetSpec(id);
-		this.controls.id = id;
+		if (this.enableControls === true)
+			this.controls = new widgetSpec(id);
+		
 		this.prevDate  = date;
 		this.frame     = 0;
 		

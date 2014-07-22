@@ -100,7 +100,8 @@
 				receivesInputEvents: true,
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
-				receivesWidgetEvents: true
+				receivesWidgetEvents: true,
+				requestsAppClone: true
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -670,7 +671,16 @@
 					}
 				}
 				var func = ctrl.parent().data("call");
-				func(applications[ctrl.parent().data("appId")],dt);	
+				var appId = ctrl.parent().data("appId");
+				var app = applications[appId];
+				func(app,dt);	
+				console.log(appId);
+				//Check whether a request for clone was made.
+				if(app.cloneable === true && app.requestForClone === true){
+					app.requestForClone = false;
+					console.log("cloning app:" + appId);
+					wsio.emit('createAppClone', {id : appId});
+				}
 				
 			}
 			
