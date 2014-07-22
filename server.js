@@ -67,7 +67,8 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 program
   .version(SAGE2_version)
   .option('-i, --interactive', 'Interactive prompt')
-  .option('-f, --configuration <value>', 'Specify a configuration file')
+  .option('-f, --configuration <file>', 'Specify a configuration file')
+  .option('-s, --session [name]', 'Load a session file (last session if omitted)')
   .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
@@ -76,25 +77,12 @@ console.log(config);
 
 
 // find git commit version and date
-sageutils.getFullVersion(function (version) {
+sageutils.getFullVersion(function(version) {
 	// fields: base commit branch date
 	console.log("SAGE2 Full Version:", version);
-	SAGE2_version = {};
-	SAGE2_version.commit = version.base+'-'+version.branch+'-'+version.commit;
-	SAGE2_version.date   = version.date;
+	SAGE2_version = version;
 	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 });
-
-
-// var version = {commit: "", date: ""}
-// exec("git log --format=\"%h|%aD\" -n 1", function(err, stdout, stderr){
-// 	if(err) throw err;
-// 	var parse = stdout.split("|");
-// 	version.commit = parse[0];
-// 	version.date   = parse[1];
-// 	broadcast('setupSAGE2Version', version, 'receivesDisplayConfiguration');
-// });
-
 
 
 var imConstraints = {imageMagick: true};
@@ -397,7 +385,7 @@ function initializeMediaStreams(uniqueID) {
 	}
 }
 
-/***************** Sage Pointer Functions *****************/
+// **************  Sage Pointer Functions *****************
 
 function wsStartSagePointer(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
@@ -584,7 +572,8 @@ function wsKeyPress(wsio, data) {
 
 }
 
-/***************** Media Stream Functions *****************/
+// **************  Media Stream Functions *****************
+
 function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: " + data.id);
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
@@ -685,7 +674,8 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 	}
 }
 
-/******************** Application Animation Functions ********************/
+// **************  Application Animation Functions *****************
+
 function wsFinishedRenderingAppFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
@@ -745,7 +735,7 @@ function wsAppResize(wsio, data) {
 }
 
 
-/******************** Session Functions ********************/
+// **************  Session Functions *****************
 
 function wsSaveSesion(wsio, data) {
 	var sname = "";
@@ -1040,7 +1030,7 @@ function wsTileApplications(wsio, data) {
 }
 
 
-/******************** Server File Functions ********************/
+// **************  Server File Functions *****************
 
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
@@ -1075,7 +1065,8 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 }
 }
 
-/******************** Adding Web Content (URL) ********************/
+// **************  Adding Web Content (URL) *****************
+
 function wsAddNewWebElement(wsio, data) {
 	appLoader.loadFileFromWebURL(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
@@ -1097,7 +1088,8 @@ function wsAddNewWebElement(wsio, data) {
 	});
 }
 
-/*********************** Launching Web Browser ************************/
+// **************  Launching Web Browser *****************
+
 function wsOpenNewWebpage(wsio, data) {
 	// Check if the web-browser module is enabled in the configuration file
 	if (config.experimental !== undefined && config.experimental.webbrowser === true) {
@@ -1107,12 +1099,14 @@ function wsOpenNewWebpage(wsio, data) {
 }
 
 
-/******************** Video / Audio Synchonization *********************/
+// **************  Video / Audio Synchonization *****************
+
 function wsUpdateVideoTime(wsio, data) {
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');
 }
 
-/******************** Remote Server Content ****************************/
+// **************  Remote Server Content *****************
+
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	var clientAddress, i;
@@ -1191,7 +1185,7 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 	}
 }
 
-/******************** Widget Control Messages ****************************/
+// **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
 	for (var i= controls.length-1;i>=0;i--){
@@ -1261,8 +1255,8 @@ function getAppById (appId){
 	return null;
 }
 
+// ************************************************************************
 
-/************************************************************************/
 function loadConfiguration() {
 	var configFile = null;
 	
@@ -1336,9 +1330,12 @@ function getUniqueAppId() {
 
 function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
-	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	// var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
+	// var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
+	// var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	var uploadedImages = assets.listImages();
+	var uploadedVideos = assets.listVideos();
+	var uploadedPdfs   = assets.listPDFs();
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;
@@ -1557,8 +1554,8 @@ function manageUploadedFiles(files) {
 }
 
 
+// **************  Remote Site Collaboration *****************
 
-/******** Remote Site Collaboration ******************************************************/
 var remoteSites = [];
 if (config.remote_sites) {
 	remoteSites = new Array(config.remote_sites.length);
@@ -1632,7 +1629,7 @@ function createRemoteConnection(wsURL, element, index) {
 	return remote;
 }
 
-/******** System Time - Updated Every Minute *********************************************/
+// **************  System Time - Updated Every Minute *****************
 var cDate = new Date();
 setTimeout(function() {
 	setInterval(function() {
@@ -1643,9 +1640,10 @@ setTimeout(function() {
 }, (61-cDate.getSeconds())*1000);
 
 
-/***************************************************************************************/
+// ***************************************************************************************
 
 // Place callback for success in the 'listen' call for HTTPS
+
 server.on('listening', function (e) {
 	// Success
 	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
@@ -1708,9 +1706,17 @@ index.listen(config.index_port);
 server.listen(config.port);
 
 
-/***************************************************************************************/
-// Command loop: reading input commands
+// ***************************************************************************************
 
+// Load session file if specified on the command line (-s)
+if (program.session) {
+	// if -s specified without argument
+	if (program.session == true) loadSession();
+	// if argument specified
+	else loadSession(program.session);
+}
+
+// Command loop: reading input commands
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout
@@ -1824,7 +1830,7 @@ if (program.interactive)
 }
 
 
-/***************************************************************************************/
+// ***************************************************************************************
 
 function broadcast(func, data, type) {
 	for(var i=0; i<clients.length; i++){
@@ -1984,7 +1990,7 @@ function getAppPositionSize(appInstance) {
 		};
 }
 
-/**** Pointer Functions ********************************************************************/
+// **************  Pointer Functions *****************
 
 var createSagePointer = function ( address ) {
 	// From addClient type == sageUI
@@ -2435,7 +2441,8 @@ function deleteApplication( elem ) {
 	removeElement(applications, elem);
 }
 
-/******** Omicron section ****************************************************************/
+// **************  Omicron section *****************
+
 if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
 	omicronManager.setCallbacks(

@@ -180,50 +180,6 @@ appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw
 };
 
 
-// appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
-// 	var _this = this;
-// 	ffprobe(source, function(err, data){
-// 		if(err) throw err;
-// 		var i;
-// 		for(i=0; i<data.streams.length; i++){
-// 			if(data.streams[i].codec_type == "video"){
-// 				var aspectRatio = data.streams[i].width / data.streams[i].height;
-// 				var appInstance = {
-// 					id: null,
-// 					title: name,
-// 					application: "movie_player",
-// 					type: mime_type,
-// 					url: url,
-// 					data: {
-// 						src: source,
-// 						type: "video/mp4",
-// 						play: false,
-// 						time: 0.0
-// 					},
-// 					resrc: null,
-// 					left: _this.titleBarHeight,
-// 					top: 1.5*_this.titleBarHeight,
-// 					width: data.streams[i].width,
-// 					height: data.streams[i].height,
-// 					native_width: data.streams[i].width,
-// 					native_height: data.streams[i].height,
-// 					previous_left: null,
-// 					previous_top: null,
-// 					previous_width: null,
-// 					previous_height: null,
-// 					maximized: false,
-// 					aspect: aspectRatio,
-// 					animation: false,
-// 					date: new Date()
-// 				};
-// 				_this.scaleAppToFitDisplay(appInstance);
-// 				callback(appInstance);
-// 				return;
-// 			}
-// 		}
-// 	});
-// };
-
 appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var local_url = path.join("uploads", "pdfs", name);
 	var localPath = path.join(this.publicDir, local_url);
@@ -282,7 +238,10 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 	
 	if(mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp"){
 		fs.readFile(file, function (err, data) {
-			if(err) throw err;
+			if(err) {
+				console.log("Error> opening file", file);
+				return; // throw err;
+			}
 
 			// Query the exif data
 			var dims = assets.getDimensions(file);
@@ -298,11 +257,17 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 	}
 	else{
 		imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").toBuffer(function (err, buffer) {
-			if(err) throw err;
-			
+			if(err) {
+				console.log("Error> processing image file", file);
+				return; // throw err;
+			}
+
 			imageMagick(buffer).size(function (err, size) {
-				if(err) throw err;
-				
+				if(err) {
+					console.log("Error> getting buffer size for file", file);
+					return; // throw err;
+				}
+
 				_this.loadImageFromDataBuffer(buffer, size.width, size.height, "image/png", url, external_url, name, function(appInstance) {
 					callback(appInstance);
 				});
@@ -665,7 +630,6 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 			else {
 				// Fixed size since cant process exif on URL yet
-				console.log("GOT HERE");
 				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance) {
 					callback(appInstance);
 				});

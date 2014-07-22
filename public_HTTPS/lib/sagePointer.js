@@ -40,6 +40,7 @@ function sagePointer(wsio) {
 	this.mediaCanvas.width  = this.mediaWidth;
 	this.mediaCanvas.height = this.mediaHeight;
 	this.broadcasting       = false;
+	this.desktopId          = null;
 	
 	this.chunk = 32 * 1024; // 32 KB
 	this.maxUploadSize = 500 * (1024*1024); // 500 MB
@@ -170,7 +171,7 @@ function sagePointer(wsio) {
 			this.wsio.emit('keyPress', {code: code});
 		}
 		// if a special key - prevent default (otherwise let continue to keyPress)
-		if(code == 8 || (code >= 16 && code != 32 && code <= 46) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
+		if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
 			event.preventDefault();
 		}
 	};
@@ -202,11 +203,30 @@ function sagePointer(wsio) {
 	
 		// start screen share
 		this.screenShareBtn.disabled = true;
-
+		
+		
+		// current chrome desktop capture via getUserMedia
 		var streamHeight = Math.min(1080, screen.height);
 		var streamWidth = screen.width/screen.height * streamHeight;
 
 		var constraints = {chromeMediaSource: 'screen', maxWidth: streamWidth, maxHeight: streamHeight};
+		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
+		
+		
+		// future chrome desktop capture via extension
+		//this.desktopId = chrome.desktopCapture.chooseDesktopMedia(["screen"], this.onAccessApproved);
+	};
+	
+	this.onAccessApprovedMethod = function(chromeMediaSourceId) {
+		if (!chromeMediaSourceId) {
+            this.streamFailMethod();
+            return;
+        }
+        
+        var streamHeight = Math.min(1080, screen.height);
+		var streamWidth = screen.width/screen.height * streamHeight;
+		
+        var constraints = {chromeMediaSource: 'desktop', maxWidth: streamWidth, maxHeight: streamHeight};
 		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 	};
 	
@@ -371,6 +391,7 @@ function sagePointer(wsio) {
 	this.pointerKeyDown              = this.pointerKeyDownMethod.bind(this);
 	this.pointerKeyUp                = this.pointerKeyUpMethod.bind(this);
 	this.pointerKeyPress             = this.pointerKeyPressMethod.bind(this);
+	this.onAccessApproved            = this.onAccessApprovedMethod.bind(this);
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
@@ -398,8 +419,9 @@ function sagePointer(wsio) {
 	screenShareQuality.addEventListener('change',    this.changeScreenShareQuality,    false);
 	
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
-	document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
-	document.addEventListener('webkitpointerlockchange', this.pointerLockChange, false);
+	// redudant here (webkit)
+	// document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
+	// document.addEventListener('webkitpointerlockchange', this.pointerLockChange, false);
 	
 	
 	

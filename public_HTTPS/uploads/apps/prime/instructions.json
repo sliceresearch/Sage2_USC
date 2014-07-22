@@ -1,0 +1,11 @@
+{
+	"main_script": "prime.js",
+	"icon": "prime.webp",
+	"width": 600,
+	"height": 600,
+	"animation": true,
+	"load": {
+	},
+	"resources": [
+	]
+}

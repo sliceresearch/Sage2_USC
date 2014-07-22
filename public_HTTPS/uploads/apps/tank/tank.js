@@ -8,7 +8,7 @@
 // http://opensource.org/licenses/BSD-3-Clause
 // See included LICENSE.txt file
 
-var aTanks = SAGE2_App.extend( {
+var tank = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
@@ -158,7 +158,7 @@ var aTanks = SAGE2_App.extend( {
 		for(var b = 0; b < this.barrierList.length; b++) {
 			this.ctx.fillRect( this.barrierList[b].x - this.barrierList[b].width/2, this.barrierList[b].y - this.barrierList[b].height/2, this.barrierList[b].width, this.barrierList[b].height);
 		}
-	}, //end barrier draw
+	}, //end barrierDraw
 	
 	tankMoveAndDrawUpdates: function(i) {
 		//		client, alive, xpos, ypos,   button array (up/down/left/right, kills, shotsarray
@@ -226,8 +226,7 @@ var aTanks = SAGE2_App.extend( {
 					
 	}, //end tankMoveAndDrawUpdates
 	
-	//where i is the tank and j is the specific shot
-	shotMoveAndDrawUpdates : function ( i,  j) {
+	shotMoveAndDrawUpdates : function (i,  j) { //where i is the tank and j is the specific shot
 		//					alive	xpos	ypos   xvel, yvel, owner invuln		, feature bounce
 		//	tempShots.push( [ false, -1000, -1000, 0,       0, 500 				, 2] );
 	
@@ -339,8 +338,6 @@ var aTanks = SAGE2_App.extend( {
 		}
 	}, //end shotMoveAndDrawUpdates
 	
-	
-	//
 	tryShoot: function(userNum, x, y){
 		if(x != this.tankList[userNum].x || y != this.tankList[userNum].y ){
 			for(var i = 0; i < this.tankList[userNum].shots.length; i++){
@@ -365,28 +362,23 @@ var aTanks = SAGE2_App.extend( {
 				}//end shot check
 			}//end for each shot, try shoot.
 		}//end if shot location doesn't match tank location.
-	}, //end try shoot function
-	//
+	}, //end tryShoot
 	
-	addTank : function(userName, name, rgb) {
+	addTank: function(userName, name, rgb) {
 		console.log("Adding a tank for" + userName);
 		var tempShots = [];
-		//                 alive  		xpos   		ypos  	xvel, 	yvel, 		owner invuln,	feature bounce
+		//                alive         xpos      ypos      xvel     yvel     owner invuln      feature bounce
 		tempShots.push( { alive: false, x: -1000, y: -1000, xvel: 0, yvel: 0, ownerInvuln: 500, featureBounce: 2} );
 		tempShots.push( { alive: false, x: -1000, y: -1000, xvel: 0, yvel: 0, ownerInvuln: 500, featureBounce: 2} );
 		tempShots.push( { alive: false, x: -1000, y: -1000, xvel: 0, yvel: 0, ownerInvuln: 500, featureBounce: 2} ); //3 shots per tank
 		
-		
-		//                      client, alive, xpos, ypos,   button array (up/down/left/right []), kills, shotsarray ,  pointer name(7), rgb vals(8)
-		this.tankList.push(  {clientID: userName, alive: false, x: -1000, y: -1000, buttons: [false, false, false, false,[0,0,0,0]], kills: 0,
-			shots: tempShots, name: name , color: rgb, spawnDelay: 0}  );
+		//                   client              alive         xpos      ypos      button array (up/down/left/right [])             kills     shotsarray        pointer name(7)  rgb vals(8)  spawn delay
+		this.tankList.push( {clientID: userName, alive: false, x: -1000, y: -1000, buttons: [false, false, false, false,[0,0,0,0]], kills: 0, shots: tempShots, name: name,      color: rgb,  spawnDelay: 0} );
 		
 		console.log("Done with tank creation");
-	}, //end add tank
+	}, //end addTank
 	
-	
-	didRectanglesCollide : function( rect1, rect2) {
-	
+	didRectanglesCollide: function( rect1, rect2) {
 		if(rect1.x - rect1.width/2 <= rect2.x + rect2.width/2 &&
 			rect1.x + rect1.width/2 >= rect2.x - rect2.width/2 &&
 			rect1.y - rect1.height/2 <= rect2.y + rect2.height/2 &&
@@ -394,32 +386,25 @@ var aTanks = SAGE2_App.extend( {
 			return true;
 		}
 		return false;
-	},
+	}, // end didRectanglesCollide
 	
-	
-	
-	generateBarriers : function(bLimit) {
-	
+	generateBarriers: function(bLimit) {
 		var rx, ry, rw, rh;
-		var d = new Date();
-		console.log("Time: " + d.getTime());
-		
-		var c = d.getTime() % 100;
-		for(var t = 0; t < c; t++){
-			Math.random();
-		}
 		
 		for(var i = 0; i < bLimit; i++){
-		
-			rw = Math.floor( Math.random() * (this.element.width / 10)) +100;
-			rh = Math.floor( Math.random() * (this.element.height/ 10)) +100;
+			rw = this.randomInt(100, 100 + (this.element.width  / 10));
+			rh = this.randomInt(100, 100 + (this.element.height / 10));
 			
-			rx = Math.floor( Math.random() * (this.element.width - rw - 400) + rw/2 ) + 200;
-			ry = Math.floor( Math.random() * (this.element.height - rh - 400) + rh/2 ) + 200;
+			rx = this.randomInt(200, this.element.width  - rw - 200);
+			ry = this.randomInt(200, this.element.height - rh - 200);
 			
 			this.barrierList.push( {x: rx, y: ry, width: rw, height: rh} );
 		}
-	} //end generateBarriers
+	}, //end generateBarriers
+	
+	randomInt: function(min, max) {
+		return Math.round(Math.random() * (max-min) + min);
+	} // end randomInt
 });
 
 

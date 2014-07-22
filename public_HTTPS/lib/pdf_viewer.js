@@ -18,6 +18,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.ctx    = null;
 		this.loaded = false;
 		this.pdfDoc = null;
+		this.ratio  = null;
 
 		this.enableControls = true;
 		this.pageValText = null;
@@ -66,6 +67,7 @@ var pdf_viewer = SAGE2_App.extend( {
 					var w = parseInt(viewport.width, 10);
 					var h = parseInt(viewport.height,10);
 					_this.sendResize(w, h);
+					this.ratio = w / h;
 				});
 
 				// UI stuff
@@ -120,12 +122,22 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.pdfDoc.getPage(this.state.page).then(function(page) {
 			// set the scale to match the canvas
 			var viewport = page.getViewport(_this.canvas.width / page.getViewport(1.0).width);
-			viewport.width  = _this.canvas.width;
-			viewport.height = _this.canvas.height;
+			
+			// Not needed I think
+			// viewport.width  = _this.canvas.width;
+			// viewport.height = _this.canvas.height;
+
 			// Render PDF page into canvas context
 			var renderContext = {canvasContext: _this.ctx, viewport: viewport};
+			
 			page.render(renderContext).then(function() {
 				_this.element.src = _this.canvas.toDataURL();
+				// Check for change in the aspect ratio, send a resize if needed
+				//  (done after the render to avoid double rendering issues)
+				if (_this.ratio !== (viewport.width/viewport.height) ) {
+					_this.ratio = viewport.width/viewport.height;
+					_this.sendResize(viewport.width, viewport.height);
+				}
 			});
 		});
 	},
