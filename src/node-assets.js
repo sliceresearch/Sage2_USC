@@ -109,14 +109,30 @@ addFile = function(filename,exif) {
 	if (exif.MIMEType.indexOf('image/') > -1) {
 		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
 		imageMagick(filename).thumb(250, 250, thumb, 50, function(err) {
-			if (err) throw err;
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
 			anAsset.exif.SAGE2thumbnail = thumb;
 		});
 	} else if (exif.MIMEType === 'application/pdf') {
-		// imageMagick(file+"[0]").noProfile().bitdepth(8).flatten()
 		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		// Process first page: [0]
 		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
-			if (err) throw err;
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
+			anAsset.exif.SAGE2thumbnail = thumb;
+		});
+	} else if (exif.MIMEType.indexOf('video/') > -1) {
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		// try first frame: [0]
+		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
 			anAsset.exif.SAGE2thumbnail = thumb;
 		});
 	}
