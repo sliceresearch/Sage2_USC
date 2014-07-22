@@ -20,7 +20,7 @@ var url       = require('url');
 var gm        = require('gm');                  // imagesmagick
 
 var exiftool  = require('../src/node-exiftool');       // gets exif tags for images
-
+var imageMagick;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +57,9 @@ var AllAssets = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+setupIM = function(constraints){
+	imageMagick = gm.subClass(constraints);
+}
 
 listAssets = function() {
 	var idx = 0;
@@ -100,7 +103,7 @@ addFile = function(filename,exif) {
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
 		var thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
-		gm(filename).thumb(250, 250, thumb, 50,	function(err) {
+		imageMagick(filename).thumb(250, 250, thumb, 50,	function(err) {
 			if (err) throw err;
 			anAsset.exif.SAGE2thumbnail = thumb;
 		});
@@ -283,6 +286,7 @@ initialize = function (root) {
 
 exports.initialize = initialize;
 exports.listAssets = listAssets;
+exports.setupIM = setupIM;
 exports.saveAssets = saveAssets;
 exports.listImages = listImages;
 exports.listPDFs   = listPDFs;
