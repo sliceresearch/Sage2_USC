@@ -1289,9 +1289,12 @@ function getUniqueAppId() {
 
 function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
-	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	// var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
+	// var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
+	// var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	var uploadedImages = assets.listImages();
+	var uploadedVideos = assets.listVideos();
+	var uploadedPdfs   = assets.listPDFs();
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;

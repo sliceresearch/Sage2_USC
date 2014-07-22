@@ -301,7 +301,11 @@
 		files[type].sort();
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
-			listElem.innerHTML = files[type][i];
+			if (typeof files[type][i] === 'string')
+				listElem.innerHTML = files[type][i];
+			else
+				listElem.innerHTML = files[type][i].exif.FileName;
+			console.log(files[type][i].exif);
 			listElem.addEventListener('click', selectFile, false);
 						
 			dir.appendChild(listElem);

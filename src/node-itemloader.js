@@ -630,7 +630,6 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 			else {
 				// Fixed size since cant process exif on URL yet
-				console.log("GOT HERE");
 				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance) {
 					callback(appInstance);
 				});
