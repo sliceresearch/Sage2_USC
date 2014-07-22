@@ -207,7 +207,7 @@ listVideos = function() {
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		if (one.exif.MIMEType === 'video/mp4') {
+		if (one.exif.MIMEType.indexOf('video/') > -1) {
 			result.push(one);
 		}
 	}

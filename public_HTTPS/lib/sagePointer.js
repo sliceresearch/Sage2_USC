@@ -365,6 +365,7 @@ function sagePointer(wsio) {
 			else if(ext == "jpg" || ext == "jpeg") mimeType = "image/jpeg";
 			else if(ext == "png") mimeType  = "image/png";
 			else if(ext == "mp4") mimeType  = "video/mp4";
+			else if(ext == "m4v") mimeType  = "video/mp4";
 			else if(ext == "webm") mimeType = "video/webm";
 			else if(ext == "pdf") mimeType  = "application/pdf";
 			console.log("URL: " + dataUrl + ", type: " + mimeType);
