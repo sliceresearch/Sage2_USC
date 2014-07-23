@@ -85,12 +85,12 @@ sageutils.getFullVersion(function(version) {
 });
 
 
+// Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
 if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
 	imConstraints.appPath = config.advanced.ImageMagick;
 var imageMagick = gm.subClass(imConstraints);
-
-assets.setupIM(imConstraints);
+assets.setupImageMagick(imConstraints);
 
 
 // global variables for various paths
@@ -797,9 +797,17 @@ function saveSession (filename) {
 	}
 
 	var states     = {};
-	states.numapps = applications.length;
+	states.apps    = [];
+	states.numapps = 0;
 	states.date    = Date.now();
-	states.apps    = applications;
+	for (var i=0;i<applications.length;i++) {
+		var a = applications[i];
+		// Ignore media streaming applications for now (desktop sharing)
+		if (a.application !== 'media_stream') {
+			states.apps.push(a);
+			states.numapps++;
+		}
+	}
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
@@ -1703,7 +1711,7 @@ server.listen(config.port);
 // Load session file if specified on the command line (-s)
 if (program.session) {
 	// if -s specified without argument
-	if (program.session == true) loadSession();
+	if (program.session === true) loadSession();
 	// if argument specified
 	else loadSession(program.session);
 }

@@ -16,10 +16,11 @@
 var fs        = require('fs');
 var path      = require('path');
 var url       = require('url');
+var gm        = require('gm');                   // imagesmagick
+var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 
-var gm        = require('gm');                  // imagesmagick
 
-var exiftool  = require('../src/node-exiftool');       // gets exif tags for images
+// Global variable to handle iamgeMagick configuration
 var imageMagick;
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -58,9 +59,13 @@ var AllAssets = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-setupIM = function(constraints){
+
+// Configuration of ImageMagick
+setupImageMagick = function(constraints) {
+	// Load the settings from the server
 	imageMagick = gm.subClass(constraints);
-}
+};
+
 
 listAssets = function() {
 	var idx = 0;
@@ -101,11 +106,36 @@ addFile = function(filename,exif) {
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
 
+	var thumb;
+
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
-		var thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
-		imageMagick(filename).thumb(250, 250, thumb, 50,	function(err) {
-			if (err) throw err;
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		imageMagick(filename).thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
+			anAsset.exif.SAGE2thumbnail = thumb;
+		});
+	} else if (exif.MIMEType === 'application/pdf') {
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		// Process first page: [0]
+		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
+			anAsset.exif.SAGE2thumbnail = thumb;
+		});
+	} else if (exif.MIMEType.indexOf('video/') > -1) {
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		// try first frame: [0]
+		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
 			anAsset.exif.SAGE2thumbnail = thumb;
 		});
 	}
@@ -196,7 +226,7 @@ listVideos = function() {
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		if (one.exif.MIMEType === 'video/mp4') {
+		if (one.exif.MIMEType.indexOf('video/') > -1) {
 			result.push(one);
 		}
 	}
@@ -286,7 +316,6 @@ initialize = function (root) {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 exports.initialize = initialize;
-exports.setupIM = setupIM;
 exports.listAssets = listAssets;
 exports.saveAssets = saveAssets;
 exports.listImages = listImages;
@@ -297,4 +326,6 @@ exports.addURL     = addURL;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
+
+exports.setupImageMagick = setupImageMagick;
 
