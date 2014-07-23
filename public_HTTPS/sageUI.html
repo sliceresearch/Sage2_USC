@@ -19,6 +19,8 @@
 <script type="text/javascript" src="lib/websocket.io.js"></script>
 <script type="text/javascript" src="lib/sagePointer.js"></script>
 <script type="text/javascript" src="lib/windowManager.js"></script>
+<script type="text/javascript" src="scripts/dialog-polyfill.js"></script>
+
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -168,6 +170,13 @@
 		videosDir   = document.getElementById('videos');
 		sessionsDir = document.getElementById('sessions');
 				
+		// setup for dialog polyfill
+		var diag1 = document.getElementById("lb_light");
+	    dialogPolyfill.registerDialog(diag1);
+		var diag2 = document.getElementById("lb_pointer_help");
+	    dialogPolyfill.registerDialog(diag2);
+
+
 		wsio.on('setupDisplayConfiguration', function(config) {
 			var extraHeight = extraInteraction.clientHeight;
 			
@@ -211,13 +220,7 @@
 		wsio.on('createAppWindowPositionSizeOnly', function(data) {
 			winMgr.addAppWindow(data);
 		});
-		
-		/*
-		wsio.on('addNewElementPositionSizeTypeOnly', function(elem_data) {
-			winMgr.addNewElement(elem_data);
-		});
-		*/
-		
+
 		wsio.on('deleteElement', function(elem_data) {
 			winMgr.deleteElement(elem_data.elemId);
 		});
@@ -235,9 +238,8 @@
 		});
 		
 		wsio.on('storedFileList', function(files) {
-			document.getElementById('lb_fade').style.display="block";
-			document.getElementById('lb_light').style.display="block";
-			
+			var diag = document.getElementById('lb_light');
+
 			document.getElementById('apps-dir').checked     = false;
 			document.getElementById('images-dir').checked   = false;
 			document.getElementById('pdfs-dir').checked     = false;
@@ -257,6 +259,7 @@
 			createFileList(files, "session", sessionsDir);
 			
 			selectedFile = null;
+			diag.showModal();
 		});
 		
 		wsio.on('requestNextFrame', function(data) {
@@ -298,7 +301,11 @@
 		files[type].sort();
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
-			listElem.innerHTML = files[type][i].filename;
+			if (typeof files[type][i] === 'string')
+				listElem.innerHTML = files[type][i];
+			else
+				listElem.innerHTML = files[type][i].exif.FileName;
+			console.log(files[type][i].exif);
 			listElem.addEventListener('click', selectFile, false);
 						
 			dir.appendChild(listElem);
@@ -357,18 +364,20 @@
 	}
 
 	function closeServerFileBrowser(event) {
-		document.getElementById("lb_fade").style.display="none";
-		document.getElementById("lb_light").style.display="none";
+		var diag = document.getElementById("lb_light");
+		diag.close();
 	}
-	
+
 	function selectServerFiles(event) {
-		var directory = selectedFile.parentNode.id
-		var fileName  = selectedFile.innerHTML;
-		// based on folder, match the appropriate application
-		var app       = dir2app[directory];
-		
-		wsio.emit('addNewElementFromStoredFiles', {application: app, filename: fileName});
-		
+		if (selectedFile) {
+			var directory = selectedFile.parentNode.id
+			// get the filename (not the html, the actual value set)
+			var fileName  = selectedFile.firstChild.nodeValue;
+			// based on folder, match the appropriate application
+			var app       = dir2app[directory];
+
+			wsio.emit('addNewElementFromStoredFiles', {application: app, filename: fileName});
+		}
 		closeServerFileBrowser(event);
 	}
 	
@@ -380,13 +389,13 @@
 	}
 
 	function sagePointerEnabled() {
-		document.getElementById("lb_fade").style.display="block";
-		document.getElementById("lb_pointer_help").style.display="block";
+		var diag = document.getElementById("lb_pointer_help");
+		diag.showModal();
 	}
 	
 	function sagePointerDisabled() {
-		document.getElementById("lb_fade").style.display="none";
-		document.getElementById("lb_pointer_help").style.display="none";
+		var diag = document.getElementById("lb_pointer_help");
+		diag.close();
 	}
 	
     function openWebpage(event) {
@@ -396,7 +405,8 @@
 	
 </script>
 
-<link rel="stylesheet" type="text/css" href="style_mgr.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
+<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
 
 </head>
 
@@ -448,10 +458,8 @@
         <video id="mediaVideo" style="display: none;"></video>
 	</div>
 	
-	<div class="clear"></div>
-	
-	<div id="lb_fade" class="lb_blackoverlay"></div>
-	<div id="lb_light" class="lb_whiteboxcontainer">
+	<!-- Dialog for the file browser -->
+	<dialog id="lb_light">
 		<div id="fileTreeList" class="lb_whitecontent">
 			<div class="css-treeview">
 				<ul>
@@ -468,14 +476,14 @@
         		</ul>
 			</div>
 		</div>
-		<div class="clear"></div>
 		<div id="fileButtons">
-			<button id="fileOKBtn" type="button">OK</button>
+			<button id="fileOKBtn"    type="button">OK</button>
 			<button id="fileCloseBtn" type="button">Close</button>
 		</div>
-	</div>
+	</dialog>
 	
-	<div id="lb_pointer_help" class="lb_whiteboxcontainer">
+	<!-- Dialog shown during pointer lock -->
+	<dialog id="lb_pointer_help">
 		<div id="pointerHelpText" class="lb_whitecontent">
 			<ul>
 				<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
@@ -495,7 +503,7 @@
 				<li>Press 'Esc' to stop SAGE2 Pointer</li>
 			</ul>
 		</div>
-	</div>
+	</dialog>
 
 	<footer>
 		<ul>

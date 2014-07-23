@@ -44,11 +44,9 @@ function getFullVersion(callback) {
 
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
-	// request information from git (at most takes 2 sec.)
-	var cmd     = "git log --date=\"short\" --format=\"%d|%h|%ad\" -n 1";
-	exec(cmd, { cwd:  dirroot, timeout: 2000}, function(err, stdout, stderr) {
-		// if error (not git tree or exec error) return null
-		if(err) callback(null);
+	var cmd = "git log --date=\"short\" --format=\"%d|%h|%ad\" -n 1";
+	exec(cmd, { cwd:  dirroot, timeout: 3000}, function(err, stdout, stderr) {
+		if(err) { callback(null); return; }
 		
 		// parsing the results
 		var result = stdout.replace(/\r?\n|\r/g, "");

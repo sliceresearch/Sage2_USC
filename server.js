@@ -67,7 +67,8 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 program
   .version(SAGE2_version)
   .option('-i, --interactive', 'Interactive prompt')
-  .option('-f, --configuration <value>', 'Specify a configuration file')
+  .option('-f, --configuration <file>', 'Specify a configuration file')
+  .option('-s, --session [name]', 'Load a session file (last session if omitted)')
   .parse(process.argv);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
@@ -84,10 +85,12 @@ sageutils.getFullVersion(function(version) {
 });
 
 
+// Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
 if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
 	imConstraints.appPath = config.advanced.ImageMagick;
 var imageMagick = gm.subClass(imConstraints);
+assets.setupImageMagick(imConstraints);
 
 
 // global variables for various paths
@@ -1339,9 +1342,12 @@ function getUniqueAppId() {
 
 function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
-	var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	// var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
+	// var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
+	// var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	var uploadedImages = assets.listImages();
+	var uploadedVideos = assets.listVideos();
+	var uploadedPdfs   = assets.listPDFs();
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;
@@ -1728,8 +1734,15 @@ server.listen(config.port);
 
 // ***************************************************************************************
 
-// Command loop: reading input commands
+// Load session file if specified on the command line (-s)
+if (program.session) {
+	// if -s specified without argument
+	if (program.session === true) loadSession();
+	// if argument specified
+	else loadSession(program.session);
+}
 
+// Command loop: reading input commands
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout

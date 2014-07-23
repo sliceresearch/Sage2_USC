@@ -1,7 +1,9 @@
 {
 	"main_script": "leaflet.js",
+	"icon": "leaflet.webp",
 	"width": 800,
 	"height": 600,
+	"animation": true,
 	"resources": [
 		"scripts/d3.v3.min.js",
 		"scripts/leaflet.js"

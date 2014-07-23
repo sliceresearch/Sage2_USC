@@ -16,9 +16,12 @@
 var fs        = require('fs');
 var path      = require('path');
 var url       = require('url');
+var gm        = require('gm');                   // imagesmagick
+var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 
-var exiftool  = require('../src/node-exiftool');       // gets exif tags for images
 
+// Global variable to handle iamgeMagick configuration
+var imageMagick;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +58,11 @@ var AllAssets = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+// Configuration of ImageMagick
+setupImageMagick = function(constraints) {
+	// Load the settings from the server
+	imageMagick = gm.subClass(constraints);
+};
 
 listAssets = function() {
 	var idx = 0;
@@ -72,7 +80,7 @@ saveAssets = function(filename) {
 	// if parameter null, defaults
 	filename = filename || 'assets';
 
-	var fullpath = path.join(AllAssets.root, filename);
+	var fullpath = path.join(AllAssets.root, 'assets', filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
 		fullpath += '.json';
@@ -94,6 +102,40 @@ addFile = function(filename,exif) {
 	anAsset.setFilename(filename);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
+
+	var thumb;
+
+	// If it's an image, process for thumbnail
+	if (exif.MIMEType.indexOf('image/') > -1) {
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		imageMagick(filename).thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
+			anAsset.exif.SAGE2thumbnail = thumb;
+		});
+	} else if (exif.MIMEType === 'application/pdf') {
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		// Process first page: [0]
+		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
+			anAsset.exif.SAGE2thumbnail = thumb;
+		});
+	} else if (exif.MIMEType.indexOf('video/') > -1) {
+		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+		// try first frame: [0]
+		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
+			if (err) {
+				console.log("Assets> cannot generate thumbnail for:", filename);
+				return;
+			}
+			anAsset.exif.SAGE2thumbnail = thumb;
+		});
+	}
 };
 
 addURL = function(url,exif) {
@@ -152,15 +194,56 @@ exifAsync = function(cmds, cb) {
 // 	if (cmds.length>0) execNext();
 // };
 
+listPDFs = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType === 'application/pdf') {
+			result.push(one);
+		}
+	}
+	return result;
+};
+
+listImages = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType.indexOf('image/') > -1) {
+			result.push(one);
+		}
+	}
+	return result;
+};
+
+listVideos = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType.indexOf('video/') > -1) {
+			result.push(one);
+		}
+	}
+	return result;
+};
 
 initialize = function (root) {
 	if (AllAssets === null) {
-		// public_HTTPS/uploads/assets.json
+		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
 		
+		// Make sure the asset folder exists
+		var assetFolder = path.join(root, 'assets');
+		if (!fs.existsSync(assetFolder)) {
+		     fs.mkdirSync(assetFolder);
+		}
+
 		AllAssets = {};
 
-		var assetFile = path.join(root,'assets.json');
+		var assetFile = path.join(assetFolder, 'assets.json');
 		if (fs.existsSync(assetFile)) {
 			var data    = fs.readFileSync(assetFile);
 			var oldList = JSON.parse(data);
@@ -232,9 +315,14 @@ initialize = function (root) {
 exports.initialize = initialize;
 exports.listAssets = listAssets;
 exports.saveAssets = saveAssets;
+exports.listImages = listImages;
+exports.listPDFs   = listPDFs;
+exports.listVideos = listVideos;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
+
+exports.setupImageMagick = setupImageMagick;
 
