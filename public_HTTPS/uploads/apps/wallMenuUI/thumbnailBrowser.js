@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014
 //
-// S2DMI 'Tsu-mu-i' (SAGE2 Display Menu User Interface)
+// S2DMUI (SAGE2  Menu User Interface)
 
 var thumbnailBrowserList = {};
 var thumbnailBrowserIDList = [];
@@ -146,8 +146,18 @@ var thumbnailBrowser = SAGE2_App.extend( {
 					thumbnailButton = new buttonWidget();
 					thumbnailButton.init(0, this.ctx, null);
 					thumbnailButton.setPosition( validImages * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].filename} );
-					thumbnailButton.setIdleImage( this.idleImageIcon );
+					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName} );
+					
+					// Thumbnail image
+					if ( imageList[i].exif.SAGE2thumbnail != null )
+					{
+						customIcon = new Image;
+						customIcon.src = "uploads/assets/"+imageList[i].exif.SAGE2thumbnail;
+						//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
+						thumbnailButton.setIdleImage( customIcon );
+					}
+					else
+						thumbnailButton.setIdleImage( this.idleImageIcon );
 					
 					this.thumbnailButtons.push(thumbnailButton);
 					this.imageThumbnailButtons.push(thumbnailButton);
@@ -165,9 +175,20 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].filename} );
-				thumbnailButton.setIdleImage( this.idlePDFIcon );
+				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName} );
 				
+				// Thumbnail image
+				if ( imageList[i].exif.SAGE2thumbnail != null )
+				{
+					customIcon = new Image;
+					customIcon.src = "uploads/assets/"+pdfList[i].exif.SAGE2thumbnail;
+					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
+					thumbnailButton.setIdleImage( customIcon );
+				}
+				else
+					thumbnailButton.setIdleImage( this.idlePDFIcon );
+						
+
 				this.thumbnailButtons.push(thumbnailButton);
 				this.pdfThumbnailButtons.push(thumbnailButton);
 			}
@@ -182,8 +203,18 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].filename} );
-				thumbnailButton.setIdleImage( this.idleVideoIcon );
+				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName} );
+				
+				// Thumbnail image
+				if ( imageList[i].exif.SAGE2thumbnail != null )
+				{
+					customIcon = new Image;
+					customIcon.src = "uploads/assets/"+videoList[i].exif.SAGE2thumbnail;
+					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
+					thumbnailButton.setIdleImage( customIcon );
+				}
+				else
+					thumbnailButton.setIdleImage( this.idleVideoIcon );
 				
 				this.thumbnailButtons.push(thumbnailButton);
 				this.videoThumbnailButtons.push(thumbnailButton);
@@ -241,8 +272,6 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				this.sessionThumbnailButtons.push(thumbnailButton);
 			}
 		}
-		
-		this.updateThumbnailPositions();
 	},
 	
 	updateThumbnailPositions: function()

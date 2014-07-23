@@ -1351,9 +1351,9 @@ function getSavedFilesList() {
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;
-	for(i=0; i<uploadedImages.length; i++) list.image.push( { filename: uploadedImages[i], thumbnail: null } );
-	for(i=0; i<uploadedVideos.length; i++) list.video.push( { filename: uploadedVideos[i], thumbnail: null } );
-	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push( { filename: uploadedPdfs[i], thumbnail: null } );
+	for(i=0; i<uploadedImages.length; i++) list.image.push( uploadedImages[i] );
+	for(i=0; i<uploadedVideos.length; i++) list.video.push( uploadedVideos[i] );
+	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push( uploadedPdfs[i] );
 	for(i=0; i<uploadedApps.length; i++)
 	{
 		var appLocalPath = uploadsFolder + '/apps/' + uploadedApps[i];

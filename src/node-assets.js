@@ -113,7 +113,7 @@ addFile = function(filename,exif) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = thumb;
+			anAsset.exif.SAGE2thumbnail = exif.FileName+'.jpg';
 		});
 	} else if (exif.MIMEType === 'application/pdf') {
 		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
@@ -123,7 +123,7 @@ addFile = function(filename,exif) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = thumb;
+			anAsset.exif.SAGE2thumbnail = exif.FileName+'.jpg';
 		});
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
@@ -133,7 +133,7 @@ addFile = function(filename,exif) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = thumb;
+			anAsset.exif.SAGE2thumbnail = exif.FileName+'.jpg';
 		});
 	}
 };
