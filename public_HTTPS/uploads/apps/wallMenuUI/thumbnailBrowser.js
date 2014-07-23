@@ -241,6 +241,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				this.sessionThumbnailButtons.push(thumbnailButton);
 			}
 		}
+		
+		this.updateThumbnailPositions();
 	},
 	
 	updateThumbnailPositions: function()
