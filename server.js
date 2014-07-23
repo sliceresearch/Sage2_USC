@@ -1218,14 +1218,11 @@ function wsReleasedControlId(wsio, data){
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
-/******************** Clone Request Messages ****************************/
+/******************** Clone Request Methods ****************************/
 
 function wsCreateAppClone(wsio, data){
 	
-	console.log(applications);
-	console.log(data);
-	var app = getAppById(data.id);
-	//console.log("CloneApp:"  + app.id);
+	var app = findAppById(data.id);
 	if (app !== null){
 		var clone = {
 			id:getUniqueAppId(),
@@ -1249,15 +1246,8 @@ function wsCreateAppClone(wsio, data){
 	
 }
 
-function getAppById (appId){
-	for (var i=0;i<applications.length;i++){
-		if (applications[i].id === appId)
-			return applications[i];
-	}
-	return null;
-}
+/******************** Clone Request Methods ****************************/
 
-// ************************************************************************
 
 function loadConfiguration() {
 	var configFile = null;
@@ -2244,6 +2234,8 @@ function pointerRelease(address, pointerX, pointerY) {
 				}
 			}
 			if(remoteIdx < 0){
+				console.log("Sticky Value:");
+				console.log(remoteInteraction[address].selectedMoveItem.sticky);
 				remoteInteraction[address].releaseItem(true);
 			}
 			else{

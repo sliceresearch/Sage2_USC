@@ -250,8 +250,8 @@ var buttonType = {
 	"duplicate": {
 		"switch": null,
 		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
-		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 2 0 l 0 -2 l 8 0 l 0 10 l -2 0",
-		"fill":"none",
+		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 3 0 l 0 -3 l 8 0 l 0 10 l -3 0",
+		"fill":"#999999",
 		"strokeWidth": 1,
 		"delay":600
 	}
@@ -283,6 +283,8 @@ function createSlider (paper, sliderSpec, x, y){
 		style:"shape-rendering:crispEdges;",
 		fill:"#aaa",
 		stroke:"#666",
+		strokeLinejoin:"round",
+		strokeLinecap:"round",
 		strokeWidth:1
 	});
 	var slider = paper.group(sliderArea,sliderLine,sliderKnob);
@@ -357,6 +359,8 @@ function createButton(paper, buttonSpec, cx, cy){
 		id: buttonSpec.id + "bkgnd",
 		fill:"#baba55",
 		strokeWidth : 1,
+		strokeLinejoin:"round",
+		strokeLinecap:"round",
 		stroke: "#000"
 	});
 

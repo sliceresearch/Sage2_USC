@@ -33,6 +33,7 @@ var SAGE2_App = Class.extend( {
 		this.controls = null;
 		this.cloneable = null;
 		this.requestForClone = null;
+		this.sticky = null;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
