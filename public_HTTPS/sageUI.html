@@ -301,13 +301,18 @@
 		files[type].sort();
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
-			if (typeof files[type][i] === 'string')
-				listElem.innerHTML = files[type][i];
+
+			console.log("type ", type);
+			if ( type === 'app' || type === 'session' )
+				listElem.innerHTML = files[type][i].filename;
 			else
-				listElem.innerHTML = files[type][i].exif.FileName;
-			console.log(files[type][i].exif);
+				if (typeof files[type][i] === 'string')
+					listElem.innerHTML = files[type][i];
+				else {
+					listElem.innerHTML = files[type][i].exif.FileName;
+					}
 			listElem.addEventListener('click', selectFile, false);
-						
+
 			dir.appendChild(listElem);
 		}
 	}

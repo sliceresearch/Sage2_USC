@@ -15,7 +15,7 @@ var thumbnailBrowserIDList = [];
 var sendsToServer = true;
 
 // layout parameters
-var imageThumbSize = 50;
+var imageThumbSize = 100;
 var thumbSpacer = 5;
 
 var thumbnailBrowser = SAGE2_App.extend( {
@@ -152,7 +152,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 					if ( imageList[i].exif.SAGE2thumbnail != null )
 					{
 						customIcon = new Image;
-						customIcon.src = "uploads/assets/"+imageList[i].exif.SAGE2thumbnail;
+						customIcon.src = imageList[i].exif.SAGE2thumbnail;
 						//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 						thumbnailButton.setIdleImage( customIcon );
 					}
@@ -181,7 +181,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				if ( imageList[i].exif.SAGE2thumbnail != null )
 				{
 					customIcon = new Image;
-					customIcon.src = "uploads/assets/"+pdfList[i].exif.SAGE2thumbnail;
+					customIcon.src = pdfList[i].exif.SAGE2thumbnail;
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setIdleImage( customIcon );
 				}
@@ -209,7 +209,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				if ( imageList[i].exif.SAGE2thumbnail != null )
 				{
 					customIcon = new Image;
-					customIcon.src = "uploads/assets/"+videoList[i].exif.SAGE2thumbnail;
+					customIcon.src = videoList[i].exif.SAGE2thumbnail;
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setIdleImage( customIcon );
 				}

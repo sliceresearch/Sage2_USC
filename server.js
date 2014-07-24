@@ -123,7 +123,7 @@ if (!fs.existsSync(sessionFolder)) {
 }
 
 // Build the list of existing assets
-assets.initialize(uploadsFolder);
+assets.initialize(uploadsFolder,"uploads");
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
