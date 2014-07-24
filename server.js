@@ -128,7 +128,6 @@ var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.t
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
-var stickyApplications = {};
 
 
 // sets up the background for the display clients (image or color)
@@ -2242,8 +2241,6 @@ function pointerRelease(address, pointerX, pointerY) {
 				}
 			}
 			if(remoteIdx < 0){
-				console.log("Sticky Value:");
-				console.log(remoteInteraction[address].selectedMoveItem.sticky);
 				remoteInteraction[address].releaseItem(true);
 			}
 			else{

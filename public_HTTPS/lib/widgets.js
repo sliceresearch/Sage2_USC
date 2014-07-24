@@ -280,11 +280,10 @@ function createSlider (paper, sliderSpec, x, y){
 	var sliderKnob = paper.circle(x+0.5*ui.titleBarHeight,y, 0.25*ui.titleBarHeight);
 	sliderKnob.attr({
 		id:sliderSpec.id + 'knob',
-		style:"shape-rendering:crispEdges;",
+		//style:"shape-rendering:crispEdges;",
+		style:"stroke-linecap:round; stroke-linejoin:round",
 		fill:"#aaa",
 		stroke:"#666",
-		strokeLinejoin:"round",
-		strokeLinecap:"round",
 		strokeWidth:1
 	});
 	var slider = paper.group(sliderArea,sliderLine,sliderKnob);
@@ -359,8 +358,6 @@ function createButton(paper, buttonSpec, cx, cy){
 		id: buttonSpec.id + "bkgnd",
 		fill:"#baba55",
 		strokeWidth : 1,
-		strokeLinejoin:"round",
-		strokeLinecap:"round",
 		stroke: "#000"
 	});
 
@@ -373,6 +370,7 @@ function createButton(paper, buttonSpec, cx, cy){
 		transform: "s " + parseInt(buttonRad/8) + " " + parseInt(buttonRad/8),
 		strokeWidth:type["strokeWidth"],
 		stroke:"#000",
+		style:"stroke-linecap:round; stroke-linejoin:round",
 		fill:type["fill"]
 	});
 	var button = paper.group(buttonBack,buttonCover);
