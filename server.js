@@ -123,7 +123,7 @@ if (!fs.existsSync(sessionFolder)) {
 }
 
 // Build the list of existing assets
-assets.initialize(uploadsFolder,"uploads");
+assets.initialize(uploadsFolder, 'uploads');
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
@@ -843,9 +843,17 @@ function saveSession (filename) {
 	}
 
 	var states     = {};
-	states.numapps = applications.length;
+	states.apps    = [];
+	states.numapps = 0;
 	states.date    = Date.now();
-	states.apps    = applications;
+	for (var i=0;i<applications.length;i++) {
+		var a = applications[i];
+		// Ignore media streaming applications for now (desktop sharing)
+		if (a.application !== 'media_stream') {
+			states.apps.push(a);
+			states.numapps++;
+		}
+	}
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
