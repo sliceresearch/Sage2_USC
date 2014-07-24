@@ -9,134 +9,123 @@
 // Copyright (c) 2014
 //
 // Facebook Plugin written by Todd Margolis
+// https://131.193.76.169:9090/uploads/apps/facebook/facebook.js
 
-var Facebook = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
 
-		this.resizeEvents = "continuous"; // "onfinish";
-		this.time = null;
-		this.dragging = null;
-		this.position = null;
-		this.lastScroll = null;
-	},
+var facebook = SAGE2_App.extend( {
 
-	init: function(id, width, height, resrc, date) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+    construct: function() {
+        // call the constructor of the base class
+        arguments.callee.superClass.construct.call(this);
 
-		// application specific 'init'
-		this.element.id = id;
-		console.log(id);
+        // initialize your variables
+        this.myvalue = 5.0;
 
-		this.time = date;
-		this.dragging = false;
-		this.position = {x:0,y:0};
-		this.lastScroll = date;
+        this.resizeEvents = "continuous";//see below for other options
+    },
 
-		// building up the state object
-		this.state.playhead   = 0;
+    init: function(id, width, height, resrc, date) {    
+        // call super-class 'init'
+        arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+
+        // application specific 'init'
+        this.log("Init");
+
 
 		// may need a global handler for callbacks (i.e. scope pollution)
 		Facebook_self = this;
 
-		var my_div = null;
-		var newDiv = null;
-		function addElement () {
-		  // create a new div element and give it some content
-		  var newDiv = document.createElement("div");
-		  var newContent = document.createTextNode("Hi there and greetings!");
-		  newDiv.appendChild(newContent); //add the text node to the newly created div. 
-		  // add the newly created element and its content into the DOM
-		  document.getElementById(id).appendChild(newDiv);
-		  // my_div = document.getElementById("org_div1");
-		  // document.body.insertBefore(newDiv, my_div);
-		}
-	},
+		// create a new div element and give it some content
+		var newDiv = document.createElement("div");
+		var btn=document.createElement("BUTTON");
+		var btnText=document.createTextNode("facebook");
+		btn.appendChild(btnText);
+		btn.addEventListener("click", hello('facebook'));
+		// btn.addEventListener("click", console.log('windows'));
 
-	load: function(state, date) {
-		if (state) {
-			this.state.playhead   = state.playhead;
-		}
-	},
+		newDiv.appendChild(btn); //add the text node to the newly created div. 
 
-	draw: function(date) {
-	},
+		// add the newly created element and its content into the DOM
+		// document.getElementById(id).appendChild(newDiv);
+		this.element.appendChild(newDiv);
+		// my_div = document.getElementById("org_div1");
+		// document.body.insertBefore(newDiv, my_div);
 
-	resize: function(date) {
-		this.refresh(date);
-	},
 
-	forward: function () {
-		this.state.playhead++;
-	},
 
-	backward: function () {
-		this.state.playhead--;
-	},
+		hello.on('auth.login', function(auth){
+			
+			// // call user information, for the given network
+			// hello( auth.network ).api( '/me' ).success(function(r){
+			// 	var $target = $("#profile_"+ auth.network );
+			// 	if($target.length==0){
+			// 		$target = $("<div id='profile_"+auth.network+"'></div>").appendTo("#profile");
+			// 	}
+			// 	$target.html('<img src="'+ r.thumbnail +'" /> Hey '+r.name).attr('title', r.name + " on "+ auth.network);
+			// });
 
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		console.log("div event", eventType, user_id, itemX, itemY, data, date);
+			hello( "facebook" ).api("me/albums").success(function(json){
+				console.log(json);
+				for(a=0; a<json.data.length; a++){
+					if(json.data[a].thumbnail){
+						console.log(json.data[a].thumbnail);
+						var i = document.createElement("IMG");
+						i.src = json.data[a].thumbnail;
+						i.width = 75;
+						Facebook_self.element.appendChild(i);
+					}
+				}
+			}).error(function(){
+				alert("Whoops!");
+			});
 
-		if (eventType === "pointerPress" && (data.button === "left") ) {
-			this.dragging = true;
-			this.position.x = itemX;
-			this.position.y = itemY;
-		}
-		if (eventType === "pointerMove" && this.dragging ) {
-			this.map.panBy(this.position.x-itemX, this.position.y-itemY);
-			this.updateCenter();
-			this.position.x = itemX;
-			this.position.y = itemY;
-		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
-			this.dragging = false;
-			this.position.x = itemX;
-			this.position.y = itemY;
-		}
 
-		// Scroll events for zoom
-		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta;
-			var diff = date - this.lastScroll;
-			if (amount >= 3 && (diff>300)) {
-				this.state.playhead++;
-				this.lastScroll = date;
+		});
+
+		hello.init({ 
+			facebook : 802427029778044
+			},{
+			scope:'user_photos'
 			}
-			else if (amount <= -3 && (diff>300)) {
-				this.state.playhead--;
-				this.lastScroll = date;
-			}
-		}
+		);
 
-		else if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
-			// shift down
-			// zoom in
-		}
-		else if (eventType == "specialKey" && data.code == 17 && data.state == "down") {
-			// control down
-			// zoom out
-		}
+		hello( "facebook", {display:'page'} ).login( function(){
+			console.log("You are signed in to Facebook");
+			// alert("You are signed in to Facebook");
+		});
 
-		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
-			// left
-			this.backward();
-		}
-		else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {
-			// up
-			this.forward();
-		}
-		else if (eventType == "specialKey" && data.code == 39 && data.state == "down") {
-			// right
-			this.forward();
-		}
-		else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
-			// down
-			this.backward();
-		}
+    },
 
-		console.log("playhead: " + this.state.playhead);
-		this.refresh(date);
-	}
+    //load function allows application to begin with a particular state.  Needed for remote site collaboration. 
+    load: function(state, date) {
+        //your load code here- state should define the initial/current state of the application
+    },
+
+    draw: function(date) {
+        // application specific 'draw'
+        this.log("Draw");
+
+        //may need to update state here
+    },
+
+    resize: function(date) {
+        // to do:  may be a super class resize
+        // or your resize code here
+        this.refresh(date); //redraw after resize
+    },
+
+    event: function(eventType, userId, x, y, data, date) {
+        // see event handling description below
+
+        // may need to update state here
+
+        // may need to redraw 
+        this.refresh(date);
+    },
+
+    quit: function() {
+           // It's the end
+           this.log("Done");
+    }
 
 });
