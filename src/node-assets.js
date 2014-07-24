@@ -95,7 +95,6 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-
 addFile = function(filename,exif) {
 	// Add the asset in the array
 	var anAsset = new Asset();
@@ -136,6 +135,37 @@ addFile = function(filename,exif) {
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
 	}
+};
+
+deletePDF = function(filename) {
+	var filepath = path.join(AllAssets.root, 'pdfs', filename);
+	fs.unlink(filepath, function (err) {
+		if (err) console.log("Server> error removing file:", filename, err);
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+		}
+	);
+};
+deleteImage = function(filename) {
+	var filepath = path.join(AllAssets.root, 'images', filename);
+	fs.unlink(filepath, function (err) {
+		if (err) console.log("Server> error removing file:", filename, err);
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+		}
+	);
+};
+deleteVideo = function(filename) {
+	var filepath = path.join(AllAssets.root, 'videos', filename);
+		fs.unlink(filepath, function (err) {
+		if (err) console.log("Server> error removing file:", filename, err);
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+		}
+	);
 };
 
 addURL = function(url,exif) {
@@ -322,6 +352,10 @@ exports.listPDFs   = listPDFs;
 exports.listVideos = listVideos;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
+
+exports.deleteImage = deleteImage;
+exports.deleteVideo = deleteVideo;
+exports.deletePDF   = deletePDF;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;

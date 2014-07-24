@@ -47,6 +47,7 @@
 	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
 	var fileCloseBtn;
+	var fileDeleteBtn;
     var openWebpageBtn;
 	var winMgrCanvas;
 	var appsDir;
@@ -54,7 +55,8 @@
 	var pdfsDir;
 	var videosDir;
 	var sessionsDir;
-	
+	var fileList;
+
 	var dir2app = {
 		"images"   : "image_viewer",
 		"videos"   : "movie_player",
@@ -131,6 +133,7 @@
 		clearBtn         = document.getElementById('clearBtn');
 		tileBtn          = document.getElementById('tileBtn');
 		fileOKBtn        = document.getElementById('fileOKBtn');
+		fileDeleteBtn    = document.getElementById('fileDeleteBtn');
 		fileCloseBtn     = document.getElementById('fileCloseBtn');
 		openWebpageBtn   = document.getElementById('openWebpageBtn');
 		
@@ -139,14 +142,15 @@
 		clearBtn.addEventListener('click',         clearDisplay, false);
 		tileBtn.addEventListener('click',          tileApplications, false);
 		fileOKBtn.addEventListener('click',        selectServerFiles, false);
+		fileDeleteBtn.addEventListener('click',    deleteServerFile, false);
 		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
 		winMgr = new windowManager("winMgr", wsio);
 		
-		canvasKeyDownFunc = winMgr.keyDown.bind(winMgr);
-		canvasKeyUpFunc = winMgr.keyUp.bind(winMgr);
+		canvasKeyDownFunc  = winMgr.keyDown.bind(winMgr);
+		canvasKeyUpFunc    = winMgr.keyUp.bind(winMgr);
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
@@ -238,6 +242,9 @@
 		});
 		
 		wsio.on('storedFileList', function(files) {
+			// Store the file list in a global variable
+			fileList = files;
+
 			var diag = document.getElementById('lb_light');
 
 			document.getElementById('apps-dir').checked     = false;
@@ -259,6 +266,9 @@
 			createFileList(files, "session", sessionsDir);
 			
 			selectedFile = null;
+			// clear the metadata panel
+			document.getElementById('metadata').innerHTML = '';
+			// open the dialog
 			diag.showModal();
 		});
 		
@@ -296,22 +306,28 @@
 		
 		winMgr.resize();
 	}
-	
+
 	function createFileList(files, type, dir) {
 		files[type].sort();
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
-			if (typeof files[type][i] === 'string')
+			if (typeof files[type][i] === 'string') {
 				listElem.innerHTML = files[type][i];
-			else
+				listElem.id        = files[type][i];
+			}
+			else {
 				listElem.innerHTML = files[type][i].exif.FileName;
-			console.log(files[type][i].exif);
-			listElem.addEventListener('click', selectFile, false);
-						
+				listElem.id        = files[type][i].exif.FileName;
+			}
+			// One click: select the file
+			listElem.addEventListener('click',    selectFile,        false);
+			// Double click: open the file
+			listElem.addEventListener('dblclick', selectServerFiles, false);
+			// Put the element <li> in the DOM
 			dir.appendChild(listElem);
 		}
 	}
-	
+
 	function updateTarget(event) {
 		if(event.target == winMgrCanvas && !canvasKeyEvents){
 			document.addEventListener('keydown',  canvasKeyDownFunc, false);
@@ -381,11 +397,80 @@
 		closeServerFileBrowser(event);
 	}
 	
+	function deleteServerFile(event) {
+		if (selectedFile) {
+			var directory = selectedFile.parentNode.id
+			// get the filename (not the html, the actual value set)
+			var fileName  = selectedFile.firstChild.nodeValue;
+			// based on folder, match the appropriate application
+			var app       = dir2app[directory];
+
+			// Remove the element from the file list
+			var elem = document.getElementById(fileName);
+		    elem.parentNode.removeChild(elem);
+
+			// Ask the server to delete the  file / app
+			wsio.emit('deleteElementFromStoredFiles', {application: app, filename: fileName});
+
+			// clear the metadata panel
+			document.getElementById('metadata').innerHTML = '';
+			// clear selection
+			selectedFile = null;
+		}
+	}
+
 	function selectFile(event) {
 		if(selectedFile != null) selectedFile.style.backgroundColor = "transparent";
 		
 		selectedFile = event.target;
 		selectedFile.style.backgroundColor = "#B9D3FF";
+
+		// Show some metada
+		showInfoFile(event);
+	}
+
+	function showInfoFile(event) {
+		var directory = selectedFile.parentNode.id
+		// get the filename (not the html, the actual value set)
+		var fileName  = selectedFile.firstChild.nodeValue;
+		// based on folder, match the appropriate application
+		var app       = dir2app[directory];
+
+		var panel = document.getElementById('metadata');
+		var i, exifdata;
+		if (app === 'image_viewer') {
+			for (i=0;i<fileList.image.length;i++) {
+				if (fileList.image[i].exif.FileName === fileName) {
+					exifdata = fileList.image[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						panel.innerHTML = '<img width=80% src=\"' + exifdata + '\"/>';
+					else
+						panel.innerHTML = '';
+				}
+			}
+		} else if (app === 'movie_player') {
+			for (i=0;i<fileList.video.length;i++) {
+				if (fileList.video[i].exif.FileName === fileName) {
+					exifdata = fileList.video[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						panel.innerHTML = '<img width=80% src=\"' + exifdata + '\"/>';
+					else
+						panel.innerHTML = '';
+				}
+			}
+		} else if (app === 'pdf_viewer') {
+			for (i=0;i<fileList.pdf.length;i++) {
+				if (fileList.pdf[i].exif.FileName === fileName) {
+					exifdata = fileList.pdf[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						panel.innerHTML = '<img width=80% src=\"' + exifdata + '\"/>';
+					else
+						panel.innerHTML = '';
+				}
+			}
+		} else {
+			panel.innerHTML = '';
+		}
 	}
 
 	function sagePointerEnabled() {
@@ -475,10 +560,14 @@
 					<ul id="sessions"></ul>
         		</ul>
 			</div>
+			<div class="sidebox" id="metadata">
+			</div>
 		</div>
 		<div id="fileButtons">
 			<button id="fileOKBtn"    type="button">OK</button>
 			<button id="fileCloseBtn" type="button">Close</button>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<button id="fileDeleteBtn" type="button">Delete</button>
 		</div>
 	</dialog>
 	
