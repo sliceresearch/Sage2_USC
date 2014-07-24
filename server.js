@@ -122,7 +122,7 @@ if (!fs.existsSync(sessionFolder)) {
 }
 
 // Build the list of existing assets
-assets.initialize(uploadsFolder);
+assets.initialize(uploadsFolder, 'uploads');
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
 var applications = [];
@@ -283,6 +283,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
 		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
 		wsio.on('saveSesion',       wsSaveSesion);
 		wsio.on('clearDisplay',     wsClearDisplay);
 		wsio.on('tileApplications', wsTileApplications);
@@ -1052,27 +1053,51 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 		loadSession(data.filename);
 	}
 	else {
-	appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-		appInstance.id = getUniqueAppId();
-		
-		if(appInstance.animation){
-			var i;
-			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[appInstance.id].clients[clientAddress] = false;
+		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
+			appInstance.id = getUniqueAppId();
+
+			if(appInstance.animation){
+				var i;
+				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+				for(i=0; i<clients.length; i++){
+					if(clients[i].messages.requiresFullApps){
+						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+						appAnimations[appInstance.id].clients[clientAddress] = false;
+					}
 				}
 			}
-		}
-		
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-		
-		applications.push(appInstance);
-	});
+
+			broadcast('createAppWindow', appInstance, 'requiresFullApps');
+			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+			applications.push(appInstance);
+		});
+	}
 }
+
+function wsDeleteElementFromStoredFiles(wsio, data) {
+	if (data.application === "load_session") {
+		// if it's a session
+		// NYI
+	} else if (data.application === 'custom_app') {
+		// an app
+		// NYI
+	} else if (data.application === 'image_viewer') {
+		// an image
+		assets.deleteImage(data.filename);
+	} else if (data.application === 'movie_player') {
+		// a movie
+		assets.deleteVideo(data.filename);
+	} else if (data.application === 'pdf_viewer') {
+		// an pdf
+		assets.deletePDF(data.filename);
+	}
+	else {
+		// I dont know
+	}
 }
+
+
 
 // **************  Adding Web Content (URL) *****************
 

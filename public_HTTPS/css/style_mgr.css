@@ -195,6 +195,7 @@ footer li {
 	text-align: left;
 }
 
+
 /***********************************************/
 .css-treeview {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -202,6 +203,16 @@ footer li {
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
+	width:50%;
+}
+
+.sidebox {
+	position: absolute;
+	width:50%;
+	height:100%;
+	left:50%;
+	top:0;
+    margin-top: 20px;
 }
 
 .css-treeview ul,

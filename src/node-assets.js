@@ -98,7 +98,6 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-
 addFile = function(filename,exif) {
 	// Add the asset in the array
 	var anAsset = new Asset();
@@ -106,39 +105,70 @@ addFile = function(filename,exif) {
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
 
-	var thumb;
+	// Path for the node server
+	var thumb  = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
+	// Path for the https server
+	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName+'.jpg');
 
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
-		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
 		imageMagick(filename).thumb(250, 250, thumb, 50, function(err) {
 			if (err) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = thumb;
+			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
 	} else if (exif.MIMEType === 'application/pdf') {
-		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
 		// Process first page: [0]
 		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
 			if (err) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = thumb;
+			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
-		thumb = path.join(AllAssets.root, 'assets', exif.FileName+'.jpg');
 		// try first frame: [0]
 		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
 			if (err) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = thumb;
+			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
 	}
+};
+
+deletePDF = function(filename) {
+	var filepath = path.join(AllAssets.root, 'pdfs', filename);
+	fs.unlink(filepath, function (err) {
+		if (err) console.log("Server> error removing file:", filename, err);
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+		}
+	);
+};
+deleteImage = function(filename) {
+	var filepath = path.join(AllAssets.root, 'images', filename);
+	fs.unlink(filepath, function (err) {
+		if (err) console.log("Server> error removing file:", filename, err);
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+		}
+	);
+};
+deleteVideo = function(filename) {
+	var filepath = path.join(AllAssets.root, 'videos', filename);
+		fs.unlink(filepath, function (err) {
+		if (err) console.log("Server> error removing file:", filename, err);
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+		}
+	);
 };
 
 addURL = function(url,exif) {
@@ -233,7 +263,7 @@ listVideos = function() {
 	return result;
 };
 
-initialize = function (root) {
+initialize = function (root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
@@ -251,12 +281,14 @@ initialize = function (root) {
 			var data    = fs.readFileSync(assetFile);
 			var oldList = JSON.parse(data);
 			AllAssets.root = root;
+			AllAssets.rel  = relativePath;
 			AllAssets.list = oldList.list;
 			// Flag all the assets for checking
 			for (var it in AllAssets.list) AllAssets.list[it].Valid = false;
 		} else {
 			AllAssets.list = {};
 			AllAssets.root = root;
+			AllAssets.rel  = relativePath;
 		}
 
 		console.log("Assests> initialize");
@@ -323,6 +355,10 @@ exports.listPDFs   = listPDFs;
 exports.listVideos = listVideos;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
+
+exports.deleteImage = deleteImage;
+exports.deleteVideo = deleteVideo;
+exports.deletePDF   = deletePDF;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
