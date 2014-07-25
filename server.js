@@ -103,7 +103,7 @@ var itemCount = 0;
 
 // global variables to manage clients
 var clients = [];
-var webBrowserClient;
+var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
@@ -193,6 +193,7 @@ function closeWebSocketClient(wsio) {
 		}
 	}
 	
+	if(wsio.clientType == "webBrowser") webBrowserClient = null;
 	removeElement(clients, wsio);
 }
 
@@ -1126,11 +1127,11 @@ function wsAddNewWebElement(wsio, data) {
 // **************  Launching Web Browser *****************
 
 function wsOpenNewWebpage(wsio, data) {
-	// Check if the web-browser module is enabled in the configuration file
-	if (config.experimental !== undefined && config.experimental.webbrowser === true) {
+	// Check if the web-browser is connected
+	if (webBrowserClient !== null) {
 		// then emit the command
-	webBrowserClient.emit('openWebBrowser', {url: data.url});
-}
+		webBrowserClient.emit('openWebBrowser', {url: data.url});
+	}
 }
 
 
