@@ -131,7 +131,7 @@ addFile = function(filename,exif) {
 		*/
 	} else if (exif.MIMEType === 'application/pdf') {
 		// Process first page: [0]
-		imageMagick(filename+"[0]").command("convert").in("-density", "300").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
+		imageMagick(filename+"[0]").command("convert").in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
 			if (err) {
 				console.log("Assets> cannot generate thumbnail for:", filename);
 				return;
