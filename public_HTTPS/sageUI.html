@@ -41,8 +41,10 @@
 	var selectedFile = null;
 	
 	var uiAspect;
+	var wrapper;
 	var uiWindow;
 	var extraInteraction;
+	var thumbnail;
 	var footer;
 	
 	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
@@ -126,8 +128,10 @@
 			}, 2000);
 		});
 		
+		wrapper          = document.getElementById('wrapper');
 		uiWindow         = document.getElementById('uiWindow');
 		extraInteraction = document.getElementById('extraInteraction');
+		thumbnail        = document.getElementById('thumbnail');
 		footer           = document.getElementById('footer');
 		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
@@ -261,15 +265,23 @@
 			removeAllChildren(videosDir);
 			removeAllChildren(sessionsDir);
 			
-			createFileList(files, "app",     appsDir);
-			createFileList(files, "image",   imagesDir);
-			createFileList(files, "pdf",     pdfsDir);
-			createFileList(files, "video",   videosDir);
-			createFileList(files, "session", sessionsDir);
+			
+			var longestApp = createFileList(files, "app",     appsDir);
+			var longestImg = createFileList(files, "image",   imagesDir);
+			var longestPdf = createFileList(files, "pdf",     pdfsDir);
+			var longestVid = createFileList(files, "video",   videosDir);
+			var longestSes = createFileList(files, "session", sessionsDir);
+			
+			var longest = Math.max(longestApp, longestImg, longestPdf, longestVid, longestSes);
+			console.log(longest);
+			
+			document.getElementById("fileListElems").style.width = (longest+60).toString() + "px";
 			
 			selectedFile = null;
 			// clear the metadata panel
-			document.getElementById('metadata').innerHTML = '';
+			//document.getElementById('metadata').innerHTML = '';
+			thumbnail.src = "images/blank.png";
+			
 			// open the dialog
 			diag.showModal();
 		});
@@ -311,15 +323,19 @@
 
 	function createFileList(files, type, dir) {
 		files[type].sort();
+		
+		var longest = 0;
+		var textWidthTest = document.getElementById("textWidthTest");
+		
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
 			if (typeof files[type][i] === 'string') {
-				listElem.innerHTML = files[type][i];
-				listElem.id        = files[type][i];
+				listElem.textContent = files[type][i];
+				listElem.id          = files[type][i];
 			}
 			else {
-				listElem.innerHTML = files[type][i].exif.FileName;
-				listElem.id        = files[type][i].exif.FileName;
+				listElem.textContent = files[type][i].exif.FileName;
+				listElem.id          = files[type][i].exif.FileName;
 			}
 			// One click: select the file
 			listElem.addEventListener('click',    selectFile,        false);
@@ -327,7 +343,13 @@
 			listElem.addEventListener('dblclick', selectServerFiles, false);
 			// Put the element <li> in the DOM
 			dir.appendChild(listElem);
+			
+			textWidthTest.textContent = listElem.textContent;
+			var textWidth = (textWidthTest.clientWidth + 1);
+			
+			if(textWidth > longest) longest = textWidth;
 		}
+		return longest;
 	}
 
 	function updateTarget(event) {
@@ -415,7 +437,9 @@
 			wsio.emit('deleteElementFromStoredFiles', {application: app, filename: fileName});
 
 			// clear the metadata panel
-			document.getElementById('metadata').innerHTML = '';
+			//document.getElementById('metadata').innerHTML = '';
+			thumbnail.src = "images/blank.png";
+			
 			// clear selection
 			selectedFile = null;
 		}
@@ -438,16 +462,18 @@
 		// based on folder, match the appropriate application
 		var app       = dir2app[directory];
 
-		var panel = document.getElementById('metadata');
+		//var panel = document.getElementById('metadata');
 		var i, exifdata;
 		if (app === 'image_viewer') {
 			for (i=0;i<fileList.image.length;i++) {
 				if (fileList.image[i].exif.FileName === fileName) {
 					exifdata = fileList.image[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						//panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						thumbnail.src = exifdata;
 					else
-						panel.innerHTML = '';
+						//panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
 				}
 			}
 		} else if (app === 'movie_player') {
@@ -455,9 +481,11 @@
 				if (fileList.video[i].exif.FileName === fileName) {
 					exifdata = fileList.video[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						//panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						thumbnail.src = exifdata;
 					else
-						panel.innerHTML = '';
+						//panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
 				}
 			}
 		} else if (app === 'pdf_viewer') {
@@ -465,13 +493,16 @@
 				if (fileList.pdf[i].exif.FileName === fileName) {
 					exifdata = fileList.pdf[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						//panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						thumbnail.src = exifdata;
 					else
-						panel.innerHTML = '';
+						//panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
 				}
 			}
 		} else {
-			panel.innerHTML = '';
+			//panel.innerHTML = '';
+			thumbnail.src = "images/blank.png";
 		}
 	}
 
@@ -540,15 +571,16 @@
 				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
 			</div>
 		</div>
-	
+		
+		<div id="textWidthTest"></div>
 		<canvas id="mediaCanvas" style="display: none;"></canvas>
 		<video id="mediaVideo" style="display: none;"></video>
 	
 		<!-- Dialog for the file browser -->
 		<dialog id="lb_light">
-			<div id="fileTreeList" class="lb_whitecontent">
-				<div class="css-treeview">
-					<ul>
+			<div id="fileBrowser" class="lb_whitecontent">
+				<div id="fileTreeList" class="css-treeview">
+					<ul id="fileListElems" style="width:800px">
 						<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
 						<ul id="apps" class="fileItem"></ul>
 						<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
@@ -561,9 +593,11 @@
 						<ul id="sessions" class="fileItem"></ul>
 					</ul>
 				</div>
-				<div id="metadata" class="sidebox">
+				<div id="metadata">
+					<img id="thumbnail" src="images/blank.png"></img>
 				</div>
 			</div>
+			<div class="clear"></div>
 			<div id="fileButtons">
 				<button id="fileOKBtn"     type="button" style="float:left; margin-left:6px;">OK</button>
 				<button id="fileCloseBtn"  type="button" style="float:left; margin-left:6px;">Close</button>
