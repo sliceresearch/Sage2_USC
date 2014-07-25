@@ -207,9 +207,6 @@
 				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
 			}
 			
-			console.log(winHeight);
-			console.log(uiWindow.style.width, uiWindow.style.height);
-			
 			winMgr.initDisplayConfig(config);
 			var displayMin = Math.min(config.totalWidth, config.totalHeight);
 			var thisMin = Math.min(screen.width, screen.height);
@@ -546,7 +543,7 @@
 	</div>
 	
 	<canvas id="mediaCanvas" style="display: none;"></canvas>
-    <video id="mediaVideo" style="display: none;"></video>
+	<video id="mediaVideo" style="display: none;"></video>
 	
 	<!-- Dialog for the file browser -->
 	<dialog id="lb_light">
@@ -598,11 +595,6 @@
 			</ul>
 		</div>
 	</dialog>
-
-	<div id=test>
-		<div style="width:100px; height:100px; float:left;"></div>
-		<div style="width:100px; height:100px; float:left;"></div>
-	</div>
 
 
 	<footer id="footer">
