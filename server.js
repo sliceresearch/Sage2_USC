@@ -236,6 +236,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
+	
 	initializeWSClient(wsio);
 	
 	clients.push(wsio);

@@ -43,6 +43,7 @@
 	var uiAspect;
 	var uiWindow;
 	var extraInteraction;
+	var footer;
 	
 	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
@@ -127,6 +128,7 @@
 		
 		uiWindow         = document.getElementById('uiWindow');
 		extraInteraction = document.getElementById('extraInteraction');
+		footer           = document.getElementById('footer');
 		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
 		serverSessionBtn = document.getElementById('serverSessionBtn');
@@ -182,7 +184,7 @@
 
 
 		wsio.on('setupDisplayConfiguration', function(config) {
-			var extraHeight = extraInteraction.clientHeight;
+			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
 			
 			var winWidth  = window.innerWidth;
 			var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
@@ -204,6 +206,9 @@
 				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
 				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
 			}
+			
+			console.log(winHeight);
+			console.log(uiWindow.style.width, uiWindow.style.height);
 			
 			winMgr.initDisplayConfig(config);
 			var displayMin = Math.min(config.totalWidth, config.totalHeight);
@@ -282,7 +287,7 @@
 	}
 	
 	function resize() {
-		var extraHeight = extraInteraction.clientHeight;
+		var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
 			
 		var winWidth  = window.innerWidth;
 		var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
@@ -537,11 +542,11 @@
 				<label class="sageLabel">Clear display:</label><button id="clearBtn" type="button">Clear all</button>
 				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
 			</div>
-		<div>
-		
-		<canvas id="mediaCanvas" style="display: none;"></canvas>
-        <video id="mediaVideo" style="display: none;"></video>
+		</div>
 	</div>
+	
+	<canvas id="mediaCanvas" style="display: none;"></canvas>
+    <video id="mediaVideo" style="display: none;"></video>
 	
 	<!-- Dialog for the file browser -->
 	<dialog id="lb_light">
@@ -594,7 +599,13 @@
 		</div>
 	</dialog>
 
-	<footer>
+	<div id=test>
+		<div style="width:100px; height:100px; float:left;"></div>
+		<div style="width:100px; height:100px; float:left;"></div>
+	</div>
+
+
+	<footer id="footer">
 		<ul>
 			<li id="version">SAGE2 Version:</li>
 			<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)

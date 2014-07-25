@@ -76,6 +76,14 @@ dialog#lb_light {
 	background-color: #FFFFFF;
 }
 
+#uiWindow {
+	margin-top: 10px;
+}
+
+#extraInteraction {
+	overflow: auto;
+}
+
 #fileUpload {
 	float: left;
 	margin-top: 10px;
