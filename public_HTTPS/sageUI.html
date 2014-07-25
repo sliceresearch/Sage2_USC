@@ -400,7 +400,7 @@
 	}
 	
 	function deleteServerFile(event) {
-		if (selectedFile) {
+		if(selectedFile && confirm('Are you sure you want to delete this file?')){
 			var directory = selectedFile.parentNode.id
 			// get the filename (not the html, the actual value set)
 			var fileName  = selectedFile.firstChild.nodeValue;
@@ -409,7 +409,7 @@
 
 			// Remove the element from the file list
 			var elem = document.getElementById(fileName);
-		    elem.parentNode.removeChild(elem);
+			elem.parentNode.removeChild(elem);
 
 			// Ask the server to delete the  file / app
 			wsio.emit('deleteElementFromStoredFiles', {application: app, filename: fileName});
@@ -540,73 +540,73 @@
 				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
 			</div>
 		</div>
-	</div>
 	
-	<canvas id="mediaCanvas" style="display: none;"></canvas>
-	<video id="mediaVideo" style="display: none;"></video>
+		<canvas id="mediaCanvas" style="display: none;"></canvas>
+		<video id="mediaVideo" style="display: none;"></video>
 	
-	<!-- Dialog for the file browser -->
-	<dialog id="lb_light">
-		<div id="fileTreeList" class="lb_whitecontent">
-			<div class="css-treeview">
-				<ul>
-        			<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
-        			<ul id="apps"></ul>
-        			<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
-        			<ul id="images"></ul>
-        			<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label>
-        			<ul id="pdfs"></ul>
-        			<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
-        			<ul id="videos"></ul>
-					<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
-					<ul id="sessions"></ul>
-        		</ul>
-			</div>
-			<div class="sidebox" id="metadata">
-			</div>
-		</div>
-		<div id="fileButtons">
-			<button id="fileOKBtn"    type="button">OK</button>
-			<button id="fileCloseBtn" type="button">Close</button>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<button id="fileDeleteBtn" type="button">Delete</button>
-		</div>
-	</dialog>
-	
-	<!-- Dialog shown during pointer lock -->
-	<dialog id="lb_pointer_help">
-		<div id="pointerHelpText" class="lb_whitecontent">
-			<ul>
-				<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
-				<ul>
-					<li>Window Management Mode</li>
+		<!-- Dialog for the file browser -->
+		<dialog id="lb_light">
+			<div id="fileTreeList" class="lb_whitecontent">
+				<div class="css-treeview">
 					<ul>
-						<li>Left-click anywhere on an app to move window</li>
-						<li>Left-click bottom-right corner of an app to resize window</li>
-						<li>Scroll anywhere on an app to resize window</li>
+						<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
+						<ul id="apps" class="fileItem"></ul>
+						<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
+						<ul id="images" class="fileItem"></ul>
+						<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label>
+						<ul id="pdfs" class="fileItem"></ul>
+						<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
+						<ul id="videos" class="fileItem"></ul>
+						<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
+						<ul id="sessions" class="fileItem"></ul>
 					</ul>
-					<li>Application Interaction Mode</li>
+				</div>
+				<div id="metadata" class="sidebox">
+				</div>
+			</div>
+			<div id="fileButtons">
+				<button id="fileOKBtn"     type="button" style="float:left; margin-left:6px;">OK</button>
+				<button id="fileCloseBtn"  type="button" style="float:left; margin-left:6px;">Close</button>
+				<button id="fileDeleteBtn" type="button" style="float:right; margin-right:6px;">Delete</button>
+			</div>
+		</dialog>
+	
+		<!-- Dialog shown during pointer lock -->
+		<dialog id="lb_pointer_help">
+			<div id="pointerHelpText" class="lb_whitecontent">
+				<ul>
+					<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
 					<ul>
-						<li>All events forwarded to app</li>
+						<li>Window Management Mode</li>
+						<ul>
+							<li>Left-click anywhere on an app to move window</li>
+							<li>Left-click bottom-right corner of an app to resize window</li>
+							<li>Right-click on an app to bring up widget bar</li>
+							<li>Right-click on an widget bar to hide it</li>
+							<li>Scroll anywhere on an app to resize window</li>
+						</ul>
+						<li>Application Interaction Mode</li>
+						<ul>
+							<li>All events forwarded to app</li>
+						</ul>
+						<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
 					</ul>
-					<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
+					<li>Press 'Esc' to stop SAGE2 Pointer</li>
 				</ul>
-				<li>Press 'Esc' to stop SAGE2 Pointer</li>
+			</div>
+		</dialog>
+
+
+		<footer id="footer">
+			<ul>
+				<li id="version">SAGE2 Version:</li>
+				<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+				<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
+				<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
+				<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
 			</ul>
-		</div>
-	</dialog>
-
-
-	<footer id="footer">
-		<ul>
-			<li id="version">SAGE2 Version:</li>
-			<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
-			<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
-			<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
-			<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
-		</ul>
-	</footer>
-
+		</footer>
+	</div>
 </body>
 </html>
 
