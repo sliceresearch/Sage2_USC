@@ -2230,6 +2230,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	remoteInteraction[uniqueID].releaseControl();
 	
 	// From pointerRelease
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
 			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
@@ -2257,15 +2259,15 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 		else if(data.button === "right"){
-			// index.hmtl has no 'pointerReleaseRight' message.
-			// I renamed 'pointerPressRight' to 'requestNewControl'
-			// since this function could come from any device (not just a right mouse click)
-			broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: new Date() }, 'receivesPointerData');
+			if( elem !== null ){
+				// index.hmtl has no 'pointerReleaseRight' message.
+				// I renamed 'pointerPressRight' to 'requestNewControl'
+				// since this function could come from any device (not just a right mouse click)
+				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: new Date() }, 'receivesPointerData');
+			}
 		}
 	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		var elem = findAppUnderPointer(pointerX, pointerY);
-
 		if( elem !== null ){
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
 				if(data.button === "right"){
@@ -2286,14 +2288,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				var event = {id: elem.id, type: "pointerRelease", position: ePosition, user: eUser, data: data, date: now};
 		
 				broadcast('eventInItem', event, 'receivesInputEvents');
-			}
-		}
-		else {
-			if(data.button === "right"){
-				// index.hmtl has no 'pointerReleaseRight' message.
-				// I renamed 'pointerPressRight' to 'requestNewControl'
-				// since this function could come from any device (not just a right mouse click)
-				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: new Date() }, 'receivesPointerData');
 			}
 		}
 	}
