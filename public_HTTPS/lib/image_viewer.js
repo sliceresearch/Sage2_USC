@@ -33,7 +33,7 @@ var image_viewer = SAGE2_App.extend( {
 		
 	},
 	
-	event: function(eventType, userId, x, y, data, date) {
+	event: function(type, position, user, data, date) {
 		
 	}
 });
