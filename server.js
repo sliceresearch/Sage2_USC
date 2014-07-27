@@ -602,8 +602,10 @@ function wsStartNewMediaStream(wsio, data) {
 	
 	// Debug media stream freezing
 	mediaStreams[data.id].timeout = setTimeout(function() {
-		console.log("3 sec with no updates from: " + data.id);
-	}, 3000);
+		console.log("Start: 5 sec with no updates from: " + data.id);
+		console.log(mediaStreams[data.id].clients);
+		console.log("ready: " + mediaStreams[data.id].ready);
+	}, 5000);
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
@@ -620,8 +622,12 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	// Debug media stream freezing
 	clearTimeout(mediaStreams[data.id].timeout);
 	mediaStreams[data.id].timeout = setTimeout(function() {
-		console.log("3 sec with no updates from: " + data.id);
-	}, 3000);
+		console.log("Update: 5 sec with no updates from: " + data.id);
+		console.log(mediaStreams[data.id].clients);
+		console.log("ready: " + mediaStreams[data.id].ready);
+		if(mediaStreams[data.id].chunks.length === 0)
+			console.log("chunks received: " + allNonBlank(mediaStreams[data.id].chunks));
+	}, 5000);
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
