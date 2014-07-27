@@ -221,7 +221,7 @@ function windowManager(id, ws) {
 	this.mouseScroll = function(event) {
 		var scale = 1.0 + Math.abs(event.wheelDelta)/512;
 		if(event.wheelDelta > 0) scale = 1.0 / scale;
-		
+
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {scale: scale});
 		event.preventDefault();

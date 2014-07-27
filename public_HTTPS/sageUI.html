@@ -258,28 +258,25 @@
 			document.getElementById('pdfs-dir').checked     = false;
 			document.getElementById('videos-dir').checked   = false;
 			document.getElementById('sessions-dir').checked = false;
-			
+
 			removeAllChildren(appsDir);
 			removeAllChildren(imagesDir);
 			removeAllChildren(pdfsDir);
 			removeAllChildren(videosDir);
 			removeAllChildren(sessionsDir);
-			
-			
+
 			var longestApp = createFileList(files, "app",     appsDir);
 			var longestImg = createFileList(files, "image",   imagesDir);
 			var longestPdf = createFileList(files, "pdf",     pdfsDir);
 			var longestVid = createFileList(files, "video",   videosDir);
 			var longestSes = createFileList(files, "session", sessionsDir);
 			
-			var longest = Math.max(longestApp, longestImg, longestPdf, longestVid, longestSes);
-			console.log(longest);
-			
+			var longest = Math.max(longestApp, longestImg, longestPdf, longestVid, longestSes);			
 			document.getElementById("fileListElems").style.width = (longest+60).toString() + "px";
 			
 			selectedFile = null;
+
 			// clear the metadata panel
-			//document.getElementById('metadata').innerHTML = '';
 			thumbnail.src = "images/blank.png";
 			
 			// open the dialog

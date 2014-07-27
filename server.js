@@ -466,7 +466,8 @@ function wsPointerScrollStart(wsio, data) {
 	var pointerY = sagePointers[uniqueID].top;
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
-	if(elem !== null){
+
+	if (elem !== null) {
 		remoteInteraction[uniqueID].selectScrollItem(elem);
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
@@ -2455,11 +2456,9 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
-		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
-		if(data.wheelDelta > 0) scale = 1.0 / scale;
-		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
+		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(data.scale);
 		if(updatedItem !== null){
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 

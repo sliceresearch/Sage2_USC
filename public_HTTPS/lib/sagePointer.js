@@ -151,7 +151,7 @@ function sagePointer(wsio) {
 		var scale = 1.0 + Math.abs(event.wheelDelta)/512;
 		if(event.wheelDelta > 0) scale = 1.0 / scale;
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {wheelDelta: event.wheelDelta});
+		this.wsio.emit('pointerScroll', {scale: scale});
 		event.preventDefault();
 	};
 
@@ -160,7 +160,7 @@ function sagePointer(wsio) {
 		var scale = 1.0 + Math.abs(wheelDelta)/512;
 		if(wheelDelta > 0) scale = 1.0 / scale;
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {wheelDelta: wheelDelta});
+		this.wsio.emit('pointerScroll', {scale: scale});
 		event.preventDefault();
 	};
 
