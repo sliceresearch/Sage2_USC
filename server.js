@@ -244,7 +244,7 @@ function wsAddClient(wsio, data) {
 	if (wsio.clientType==="display")
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 	else
-	console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
 }
 
 function initializeWSClient(wsio) {
@@ -875,8 +875,52 @@ function loadSession (filename) {
 	});
 }
 
+// **************  Information Functions *****************
 
-//  Tiling Functions
+function listClients() {
+	var i;
+	console.log("Clients (%d)\n------------", clients.length);
+	for(i=0; i<clients.length; i++){
+		var ws = clients[i];
+		var uniqueID = ws.remoteAddress.address + ":" + ws.remoteAddress.port;
+		if (ws.clientType === "display")
+			console.log(sprint("%2d: %s (%s %s)", i, uniqueID, ws.clientType, ws.clientID));
+		else
+			console.log(sprint("%2d: %s (%s)", i, uniqueID, ws.clientType));
+	}
+}
+
+function listMediaStreams() {
+	var i, c, key;
+	console.log("Streams (%d)\n------------", Object.keys(mediaStreams).length);
+	i = 0;
+	for (key in mediaStreams) {
+		var numclients = Object.keys(mediaStreams[key].clients).length;
+		console.log(sprint("%2d: %s ready:%s clients:%d", i, key, mediaStreams[key].ready, numclients));
+		var cstr = " ";
+		for (c in mediaStreams[key].clients) {
+			cstr += c + "(" + mediaStreams[key].clients[c] + ") ";
+		}
+		console.log("\t", cstr);
+		i++;
+	}
+}
+
+function listApplications() {
+	var i;
+	console.log("Applications\n------------");
+	for(i=0; i<applications.length; i++){
+		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
+			i, applications[i].id, applications[i].application,
+			 applications[i].width,  applications[i].height,
+			 applications[i].left,  applications[i].top,
+			 applications[i].title));
+	}
+}
+
+
+// **************  Tiling Functions *****************
+
 //
 //
 // From Ratko's DIM in SAGE
@@ -1775,7 +1819,9 @@ if (program.interactive)
 			case 'help':
 				console.log('help\t\tlist commands');
 				console.log('kill\t\tclose application: arg0: index - kill 0');
-				console.log('list\t\tlist running applications');
+				console.log('apps\t\tlist running applications');
+				console.log('clients\t\tlist connected clients');
+				console.log('streams\t\tlist media streams');
 				console.log('clear\t\tclose all running applications');
 				console.log('tile\t\tlayout all running applications');
 				console.log('save\t\tsave state of running applications into a session');
@@ -1825,17 +1871,16 @@ if (program.interactive)
 				tileApplications();
 				break;
 
-			case 'list':
-				var i;
-				console.log("Applications\n------------");
-				for(i=0; i<applications.length; i++){
-					console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
-						i, applications[i].id, applications[i].application,
-						 applications[i].width,  applications[i].height,
-						 applications[i].left,  applications[i].top,
-						 applications[i].title));
-				}
+			case 'clients':
+				listClients();
 				break;
+			case 'apps':
+				listApplications();
+				break;
+			case 'streams':
+				listMediaStreams();
+				break;
+
 			case 'exit':
 			case 'quit':
 			case 'bye':
