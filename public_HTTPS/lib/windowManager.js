@@ -187,7 +187,8 @@ function windowManager(id, ws) {
 		var globalY = this.mouseY / this.scale;		
 		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
 		// Emit the press event
-		this.wsio.emit('pointerPress');
+		this.wsio.emit('pointerPress',{button:'left'});
+		event.preventDefault();
 	};
 	
 	this.touchMove = function(event) {
@@ -213,7 +214,8 @@ function windowManager(id, ws) {
 		var globalY = this.mouseY / this.scale;		
 		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
 		// Emit the release event
-		this.wsio.emit('pointerRelease');
+		this.wsio.emit('pointerRelease',{button:'left'});
+		event.preventDefault();
 	};
 	////////////////////////////////////////////
 
