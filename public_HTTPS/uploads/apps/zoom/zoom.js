@@ -34,7 +34,8 @@ var zoom = SAGE2_App.extend( {
 			id: this.element.id,      // suppporting div
 			prefixUrl:   this.resrcPath + "/images/",
 			// change tileSources for your dataset
-			tileSources: this.resrcPath + "chicago.dzi"
+			//tileSources: this.resrcPath + "chicago.dzi"
+			tileSources: this.resrcPath + "halfdome.dzi"
 		});
 	},
 	
@@ -48,18 +49,18 @@ var zoom = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
+	event: function(eventType, position, user_id, data, date) {
+		//console.log("Zoom event", eventType, position, user_id, data, date);
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 			this.dragging = true;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
 			//var center = this.viewer.viewport.pixelFromPoint( this.viewer.viewport.getCenter( true ) );
-                	//var target = this.viewer.viewport.pointFromPixel(
-				//new OpenSeadragon.Point(  (itemX-this.position.x),  (itemY-this.position.y) ) );
+			//var target = this.viewer.viewport.pointFromPixel(
+			//new OpenSeadragon.Point(  (itemX-this.position.x),  (itemY-this.position.y) ) );
 			//var offset = new OpenSeadragon.Point(this.position.x-itemX, this.position.y-itemY);
 			//console.log("off ", offset);
 			//var pt = this.viewer.viewport.viewerElementToViewportCoordinates(offset);
@@ -67,26 +68,26 @@ var zoom = SAGE2_App.extend( {
 			//this.viewer.viewport.panTo(target, false);
 			//this.viewer.viewport.applyConstraints();
 
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta;
+			var amount = data.scale;
 			var diff = date - this.lastZoom;
-			if (amount >= 3 && (diff>300)) {
+			if (amount >= 1 && (diff>300)) {
 				// zoom in
 				this.viewer.viewport.zoomBy(1.2);
 				this.viewer.viewport.applyConstraints();
 				this.lastZoom = date;
 			}
-			else if (amount <= -3 && (diff>300)) {
+			else if (amount <= 1 && (diff>300)) {
 				// zoom out
 				this.viewer.viewport.zoomBy(0.8);
 				this.viewer.viewport.applyConstraints();
