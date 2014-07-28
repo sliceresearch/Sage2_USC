@@ -149,38 +149,38 @@ var googlemaps = SAGE2_App.extend( {
 							t: this.trafficLayer.getMap() != null};
 	},
 
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
+	event: function(eventType, position, user_id, data, date) {
+		//console.log("Googlemaps event", eventType, position, user_id, data, date);
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 			this.dragging = true;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
-			this.map.panBy(this.position.x-itemX, this.position.y-itemY);
+			this.map.panBy(this.position.x-position.x, this.position.y-position.y);
 			this.updateCenter();
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta;
+			var amount = data.scale;
 			var diff = date - this.lastZoom;
-			if (amount >= 3 && (diff>300)) {
+			if (amount >= 1 && (diff>300)) {
 				// zoom in
 				var z = this.map.getZoom();
 				this.map.setZoom(z+1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
 			}
-			else if (amount <= -3 && (diff>300)) {
+			else if (amount <= 1 && (diff>300)) {
 				// zoom out
 				var z = this.map.getZoom();
 				this.map.setZoom(z-1);
@@ -189,8 +189,7 @@ var googlemaps = SAGE2_App.extend( {
 			}
 		}
 
-		if (eventType == "keyboard" && data.code == 109 && data.state == "down") {
-			// m key down
+		if (eventType === "keyboard" && data.character==="m") {
 			// change map type
 			if (this.state.mapType == google.maps.MapTypeId.TERRAIN)
 				this.state.mapType = google.maps.MapTypeId.ROADMAP;
@@ -204,8 +203,7 @@ var googlemaps = SAGE2_App.extend( {
 				this.state.mapType = google.maps.MapTypeId.HYBRID;
 			this.map.setMapTypeId(this.state.mapType);
 		}
-		if (eventType == "keyboard" && data.code == 116 && data.state == "down") {
-			// t key down
+		if (eventType === "keyboard" && data.character==="t") {
 			// add/remove traffic layer
 			if (this.trafficLayer.getMap() == null)
 				this.trafficLayer.setMap(this.map);
@@ -213,8 +211,7 @@ var googlemaps = SAGE2_App.extend( {
 				this.trafficLayer.setMap(null);
 			this.updateLayers();
 		}
-		if (eventType == "keyboard" && data.code == 119 && data.state == "down") {
-			// w key down
+		if (eventType === "keyboard" && data.character==="w") {
 			// add/remove weather layer
 			if (this.weatherLayer.getMap() == null)
 				this.weatherLayer.setMap(this.map);
