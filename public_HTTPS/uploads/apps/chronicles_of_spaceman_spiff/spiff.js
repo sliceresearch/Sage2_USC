@@ -327,13 +327,14 @@ updateWindow: function (){
 		this.refresh(date);
 	},
 
-	event: function(eventType, userId, x, y, data, date) {
+    event: function(eventType, position, user, data, date) {
+	//event: function(eventType, userId, x, y, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-            if (x < 0.5 * this.element.clientWidth)   
+            if (position.x < 0.5 * this.element.clientWidth)   
             {
                 this.timeDiff -= 1;
                 this.update();
