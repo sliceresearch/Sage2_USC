@@ -792,7 +792,8 @@ function listSessions() {
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
-				thelist.push( {name:file.slice(0,-5) , size:stat.size, date: strdate} );
+				// Make it look like an exif data structure
+				thelist.push( { exif: { FileName: file.slice(0,-5),  FileSize:stat.size, FileDate: strdate} } );
 			}
 		}
 	}
@@ -1410,39 +1411,42 @@ function getUniqueAppId() {
 }
 
 function getSavedFilesList() {
+	//  Main list of objects to be sent
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
 
-	// var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
-	// var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
-	// var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
-	// for(i=0; i<uploadedApps.length; i++)   list.app.push(uploadedApps[i]);
-	// for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
-
+	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;
-	for (i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
-	for (i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
-	for (i=0; i<uploadedPdfs.length;   i++) list.pdf.push(uploadedPdfs[i]);
+
+	// Sort independently of case
+	uploadedImages.sort( sageutils.compareFilename );
+	uploadedVideos.sort( sageutils.compareFilename );
+	uploadedPdfs.sort(   sageutils.compareFilename );
+	savedSessions.sort(  sageutils.compareFilename );
+	uploadedApps.sort(   sageutils.compareString   );
+
+	for (i=0; i<uploadedImages.length; i++)  list.image.push(uploadedImages[i]);
+	for (i=0; i<uploadedVideos.length; i++)  list.video.push(uploadedVideos[i]);
+	for (i=0; i<uploadedPdfs.length;   i++)  list.pdf.push(uploadedPdfs[i]);
+	for (i=0; i<savedSessions.length;   i++) list.session.push(savedSessions[i]);
 
 	// From the list of apps in the upload folder, build a list of objects
 	//   containing the name of the app and the icon (mimicing an exif structure)
 	for (i=0; i<uploadedApps.length; i++) {
-		var applicationDir    = path.join(uploadsFolder, "apps", uploadedApps[i]);		
-		var instuctionsFile   = path.join(applicationDir, "instructions.json");		
-		var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
-		var instructions      = json5.parse(jsonString);
-		var thumbnailHostPath = null;
-		if (instructions.icon)
-			thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
-		list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath } } );
-	}
-	// Do the same for sessions
-	for(i=0; i<savedSessions.length; i++) {
-		list.session.push( { exif: { FileName: savedSessions[i].name } });
+		var applicationDir    = path.join(uploadsFolder, "apps", uploadedApps[i]);	
+		if (fs.lstatSync(applicationDir).isDirectory()) {
+			var instuctionsFile   = path.join(applicationDir, "instructions.json");		
+			var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
+			var instructions      = json5.parse(jsonString);
+			var thumbnailHostPath = null;
+			if (instructions.icon)
+				thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
+			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath } } );
+		}
 	}
 
 	return list;
