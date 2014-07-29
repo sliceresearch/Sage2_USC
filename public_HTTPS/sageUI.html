@@ -4,6 +4,9 @@
 <meta charset="utf-,8">
 <title>SAGE2 UI</title>
 
+
+<!-- <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+ -->
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License 
 	//      
@@ -16,10 +19,11 @@
 	// Copyright (c) 2014
 </script>
 
-<script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="lib/sagePointer.js"></script>
-<script type="text/javascript" src="lib/windowManager.js"></script>
-<script type="text/javascript" src="scripts/dialog-polyfill.js"></script>
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/sagePointer.js"></script>
+<script type="text/javascript" src="src/windowManager.js"></script>
+<script type="text/javascript" src="lib/dialog-polyfill.js"></script>
+<script type="text/javascript" src="lib/hammer.min.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -160,17 +164,19 @@
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
-		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
-		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
-		winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
-		winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
-		winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
+		// Commented out event handler - done in windowManager
+		// winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
+		// winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
+		// winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
-		winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
-		winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
+		// winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
+		// winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
+		// winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
+
+		// winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
+		// winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
+		// winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
 
 		document.addEventListener('mousemove', updateTarget, false);
 		
