@@ -1326,7 +1326,7 @@ function wsCreateAppClone(wsio, data){
 			title: app.title,
 			url: app.url,
 			application: app.application
-		}
+		};
 
 		broadcast('createAppWindow', clone, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
@@ -1411,20 +1411,40 @@ function getUniqueAppId() {
 
 function getSavedFilesList() {
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
+
 	// var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
 	// var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
 	// var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+	// for(i=0; i<uploadedApps.length; i++)   list.app.push(uploadedApps[i]);
+	// for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
+
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
 	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	var i;
-	for(i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
-	for(i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
-	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push(uploadedPdfs[i]);
-	for(i=0; i<uploadedApps.length; i++)   list.app.push(uploadedApps[i]);
-	for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
+	for (i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
+	for (i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
+	for (i=0; i<uploadedPdfs.length;   i++) list.pdf.push(uploadedPdfs[i]);
+
+	// From the list of apps in the upload folder, build a list of objects
+	//   containing the name of the app and the icon (mimicing an exif structure)
+	for (i=0; i<uploadedApps.length; i++) {
+		var applicationDir    = path.join(uploadsFolder, "apps", uploadedApps[i]);		
+		var instuctionsFile   = path.join(applicationDir, "instructions.json");		
+		var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
+		var instructions      = json5.parse(jsonString);
+		var thumbnailHostPath = null;
+		if (instructions.icon)
+			thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
+		list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath } } );
+	}
+	// Do the same for sessions
+	for(i=0; i<savedSessions.length; i++) {
+		list.session.push( { exif: { FileName: savedSessions[i].name } });
+	}
+
 	return list;
 }
 
@@ -2080,7 +2100,7 @@ function createSagePointer ( uniqueID ) {
 	remoteInteraction[uniqueID] = new interaction();
 
 	broadcast('createSagePointer', sagePointers[uniqueID], 'receivesPointerData');
-};
+}
 
 function showPointer( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
@@ -2129,6 +2149,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 
 	// apps
+	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if(elem !== null){
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
@@ -2146,7 +2167,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				}
 			}
 			else if(data.button === "right"){
-				var elemCtrl = findControlByAppId(elem.id);
+				elemCtrl = findControlByAppId(elem.id);
 				if (elemCtrl === null) {
 					broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
@@ -2161,7 +2182,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
 				if(data.button === "right"){
-					var elemCtrl = findControlByAppId(elem.id);
+					elemCtrl = findControlByAppId(elem.id);
 					if (elemCtrl === null) {
 						broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 					}
