@@ -15,7 +15,7 @@ var thumbnailBrowserIDList = [];
 var sendsToServer = true;
 
 // layout parameters
-var imageThumbSize = 100;
+var imageThumbSize = 50;
 var thumbSpacer = 5;
 
 var thumbnailBrowser = SAGE2_App.extend( {
@@ -178,7 +178,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName} );
 				
 				// Thumbnail image
-				if ( imageList[i].exif.SAGE2thumbnail != null )
+				if ( pdfList[i].exif.SAGE2thumbnail != null )
 				{
 					customIcon = new Image;
 					customIcon.src = pdfList[i].exif.SAGE2thumbnail;
@@ -206,7 +206,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName} );
 				
 				// Thumbnail image
-				if ( imageList[i].exif.SAGE2thumbnail != null )
+				if ( videoList[i].exif.SAGE2thumbnail != null )
 				{
 					customIcon = new Image;
 					customIcon.src = videoList[i].exif.SAGE2thumbnail;
@@ -400,20 +400,20 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	event: function(eventType, userId, x, y, data, date)
+	event: function(type, position, user, data, date)
 	{
 		overButton = false;
 		
 		for( i = 0; i < this.thumbnailButtons.length; i++ )
 		{
 			thumbButton = this.thumbnailButtons[i];
-			thumbButton.onEvent(eventType, userId, x, y, data, date);
+			thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
 			
 			if ( thumbButton.isClicked() && sendsToServer )
 			{ 
 				this.addNewElementFromStoredFiles( thumbButton.getData()  );
 			}
-			if ( thumbButton.isPositionOver(userId, x, y)  )
+			if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
 			{
 				this.hoverOverText = thumbButton.getData().filename;
 				overButton = true;
@@ -421,14 +421,14 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		}
 		
 		// Pointer is not on a button, but on an open space (window management mode)
-		if ( !overButton && sendsToServer )
-		{
-			this.sendInteractionMode(MODE.WINDOW_MANAGEMENT);
-		}
-		else if ( overButton && sendsToServer )
-		{
-			this.sendInteractionMode(MODE.APP_INTERACTION);
-		}
+		//if ( !overButton && sendsToServer )
+		//{
+		//	this.sendInteractionMode(MODE.WINDOW_MANAGEMENT);
+		//}
+		//else if ( overButton && sendsToServer )
+		//{
+		//	this.sendInteractionMode(MODE.APP_INTERACTION);
+		//}
 
 		// Redraw on event (done here instead of in button due to click events)
 		this.draw(date);
@@ -437,6 +437,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	// Displays files
 	addNewElementFromStoredFiles : function( data )
 	{
+		console.log("addNewElementFromStoredFiles: " + data);
 		this.wsio.emit('addNewElementFromStoredFiles', data);
 	}
 });
@@ -543,17 +544,17 @@ function buttonWidget() {
 		//console.log("buttonWidget state: "+this.state);
 	};
 	
-	this.onEvent = function( eventType, userID, x, y, data, date )
+	this.onEvent = function( type, user, x, y, data, date )
 	{
 		//console.log("buttonWidget onEvent("+eventType+","+userID+","+x+","+y+","+data+","+date+")");
 		
-		if( this.isPositionOver( userID, x, y ) )
+		if( this.isPositionOver( user, x, y ) )
 		{
-			if( eventType === "pointerPress" && this.state != 2 )
+			if( type === "pointerPress" && this.state != 2 )
 			{
 				this.state = 3; // Click state
 			}
-			else if( eventType === "pointerRelease" )
+			else if( type === "pointerRelease" )
 			{
 				this.state = 4;
 			}

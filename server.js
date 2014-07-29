@@ -107,6 +107,7 @@ var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
+var mediaBrowsers = {};
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
@@ -336,7 +337,21 @@ function initializeWSClient(wsio) {
 	}
 	
 	if(wsio.clientType == "webBrowser") webBrowserClient = wsio;
-
+	
+	if ( wsio.clientType === "mediaBrowser" )
+	{
+		// Allows only one instance of each mediabrowser to send 'open file' command
+		if ( mediaBrowsers[wsio.clientID] == null )
+		{
+			console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			mediaBrowsers[wsio.clientID] = wsio;
+		}
+		else
+		{
+			wsio.emit("disableSendToServer");
+		}
+	}
+	
 	// Debug messages from applications
 	wsio.on('sage2Log', wsPrintDebugInfo);
 }
@@ -2158,7 +2173,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				}
 			}
 		}
-		else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
+		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
 				if(data.button === "right"){
 					var elemCtrl = findControlByAppId(elem.id);
@@ -2319,7 +2334,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
-	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
+	if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
 		if( elem !== null ){
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
 				if(data.button === "right"){
@@ -2407,7 +2422,7 @@ function pointerMove(uniqueID, data) {
 		}
 	}
 	//
-	else if(remoteInteraction[uniqueID].appInteractionMode()){
+	if(remoteInteraction[uniqueID].appInteractionMode() || (elem !== null && elem.application === 'thumbnailBrowser') ) {
 		if(elem !== null){
 			var elemX = pointerX - elem.left;
 			var elemY = pointerY - elem.top - config.titleBarHeight;
