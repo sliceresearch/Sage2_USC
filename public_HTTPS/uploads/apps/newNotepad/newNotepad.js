@@ -217,7 +217,8 @@ var newNotepad = SAGE2_App.extend( {
 	},
 
 	
-	event: function( type, userId, x, y, data , date, user_color){
+	//event: function( type, userId, x, y, data , date, user_color){
+	event: function(eventType, position, user_id, data, date) {
         user_color = user_color || [255,0,0];
 	    if( type == "pointerPress" ){
 	       if( data.button == "left" ){

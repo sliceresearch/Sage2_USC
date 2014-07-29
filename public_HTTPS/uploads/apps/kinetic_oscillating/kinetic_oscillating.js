@@ -93,12 +93,12 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	event: function(eventType, userId, x, y, data, date) {
+	event: function(eventType, position, user_id, data, date) {
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta;
+			var amount = data.scale;
 			var diff = date - this.lastZoom;
-			if (amount >= 3 && (diff>100)) {
+			if (amount >= 1 && (diff>100)) {
 				// zoom in within the stage
 				var scale = this.stage.scale();
 				scale.x *= 1.2;
@@ -106,7 +106,7 @@ var kinetic_oscillating = SAGE2_App.extend( {
 				this.stage.setScale(scale);
 				this.lastZoom = date;
 			}
-			else if (amount <= -3 && (diff>100)) {
+			else if (amount <= 1 && (diff>100)) {
 				// zoom out within the stage
 				var scale = this.stage.scale();
 				scale.x *= 0.8;
