@@ -238,12 +238,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( curColumn * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "custom_app", filename: appList[i].filename} );
+				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName} );
 
-				if ( appList[i].thumbnail != null )
+				if ( appList[i].exif.SAGE2thumbnail != null )
 				{
 					customIcon = new Image;
-					customIcon.src = appList[i].thumbnail;
+					customIcon.src = appList[i].exif.SAGE2thumbnail;
 					thumbnailButton.setIdleImage( customIcon );
 				}
 				else
