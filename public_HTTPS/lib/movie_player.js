@@ -50,7 +50,7 @@ var movie_player = SAGE2_App.extend( {
 		
 		var param = state.src.indexOf('?');
 		if(param >= 0) this.source.src = state.src + "&clientID=" + clientID.toString();
-		else this.source.src = state.src + "?clientID=" + clientID.toString();
+		else this.source.src = cleanURL(state.src) + "?clientID=" + clientID.toString();
 		this.source.type = state.type;
 	},
 	
@@ -62,10 +62,10 @@ var movie_player = SAGE2_App.extend( {
 		
 	},
 	
-	event: function(eventType, userId, x, y, data, date) {
+	event: function(type, position, user, data, date) {
 		var _this = this;
 		
-		if(eventType === "videoTimeSync"){
+		if(type === "videoTimeSync"){
 			// play a paused video
 			if(data.play && this.element.paused){
 				var vidTime = data.videoTime + data.delay + this.playDelay;

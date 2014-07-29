@@ -9,8 +9,6 @@
 
     // might also allow people to focus on smaller state level
 
-    // probably should load in all the icons up front
-
 var USweather = SAGE2_App.extend( {
     construct: function() {
         arguments.callee.superClass.construct.call(this);
@@ -18,44 +16,44 @@ var USweather = SAGE2_App.extend( {
         this.resizeEvents = "continuous"; //onfinish
         this.svg = null;
 
-this.gwin = {};
-this.gwin.canvasWidth = 1200;
-this.gwin.canvasHeight = 800;
+        this.gwin = {};
+        this.gwin.canvasWidth = 1200;
+        this.gwin.canvasHeight = 800;
 
-this.gwin.sampleSVG = null;
+        this.gwin.sampleSVG = null;
 
-this.gwin.latMinTemp = 26.5;
-this.gwin.latMaxTemp = 48.5;
+        this.gwin.latMinTemp = 26.5;
+        this.gwin.latMaxTemp = 48.5;
 
-this.gwin.lonMinTemp = -124;
-this.gwin.lonMaxTemp = -67;
+        this.gwin.lonMinTemp = -124;
+        this.gwin.lonMaxTemp = -67;
 
-this.gwin.boxSize = 35;
+        this.gwin.boxSize = 35;
 
-this.gwin.mode = 1;
+        this.gwin.mode = 1;
 
-this.gwin.appID = "";
+        this.gwin.appID = "";
 
-this.gwin.projection = null;
+        this.gwin.projection = null;
 
-this.gwin.iconmostlycloudynight = new Image();
-this.gwin.iconpartlycloudynight = new Image();
-this.gwin.iconclearnight        = new Image();
-this.gwin.iconsnow              = new Image();
-this.gwin.iconunknown           = new Image();
-this.gwin.iconstorms            = new Image();
-this.gwin.icontstorms           = new Image();
-this.gwin.iconmostlycloudy      = new Image();
-this.gwin.iconpartlycloudy      = new Image();
-this.gwin.iconrain              = new Image();
-this.gwin.iconfog               = new Image();
-this.gwin.iconhazy              = new Image();
-this.gwin.iconsleet             = new Image();
-this.gwin.iconcloudy            = new Image();
-this.gwin.iconclear             = new Image();
-this.gwin.iconsunny             = new Image();
+        this.gwin.iconmostlycloudynight = new Image();
+        this.gwin.iconpartlycloudynight = new Image();
+        this.gwin.iconclearnight        = new Image();
+        this.gwin.iconsnow              = new Image();
+        this.gwin.iconunknown           = new Image();
+        this.gwin.iconstorms            = new Image();
+        this.gwin.icontstorms           = new Image();
+        this.gwin.iconmostlycloudy      = new Image();
+        this.gwin.iconpartlycloudy      = new Image();
+        this.gwin.iconrain              = new Image();
+        this.gwin.iconfog               = new Image();
+        this.gwin.iconhazy              = new Image();
+        this.gwin.iconsleet             = new Image();
+        this.gwin.iconcloudy            = new Image();
+        this.gwin.iconclear             = new Image();
+        this.gwin.iconsunny             = new Image();
 
-this.gwin.numIconsLoaded = 0;
+        this.gwin.numIconsLoaded = 0;
 
 },
 
@@ -304,16 +302,19 @@ updateOutsideTemp: function ()
             if (Math.random() > 0.95) // cut down on accesses at once
             (function(lat,lon, replace)
                 {
-                if (replace == 1)
+                if (replace === 1)
                     {
-                    lat = 21.30694;
+                    lat = 21.307;
                     lon = -157.858;
                     }
-                else if (replace == 2)
+                else if (replace === 2)
                     {
                     lat = 61.218;
                     lon = -149.90;
                     }
+
+                lon = lon.toFixed(3);
+                lat = lat.toFixed(3);
 
                 d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'"+lat+","+lon+"'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", 
                     function(err, response)
@@ -478,7 +479,7 @@ drawEverything: function (lat, lon, weather, iconSrc)
 
     this.drawText(textVisibility, oneLocation, xLoc+this.gwin.boxSize*0.5, yLoc+this.gwin.boxSize*0.75, weather, 20);
 
-    console.log("DrawIcon ", this.gwin.appID+"IDicon");
+    //console.log("DrawIcon ", this.gwin.appID+"IDicon");
 
     oneLocation.append("svg:image")
         .attr("visibility", iconVisibility)
@@ -557,26 +558,26 @@ getCorrectWeatherIcon: function(weatherCondition, night)
             switch(weatherCondition) {
                 case "mostlycloudy": return(this.gwin.iconmostlycloudynight);
                 case "partlycloudy": return(this.gwin.iconpartlycloudynight);
-                case "clear": return(this.gwin.iconclearnight);
+                case "clear":       return(this.gwin.iconclearnight);
             }
         }
     else // night === 0
         {
             switch(weatherCondition) {
-                case "snow": return(this.gwin.iconsnow);
-                case "unknown": return(this.gwin.iconunknown);
-                case "storms": return(this.gwin.iconstorms);
-                case "tstorms": return(this.gwin.icontstorms);
+                case "snow":        return(this.gwin.iconsnow);
+                case "unknown":     return(this.gwin.iconunknown);
+                case "storms":      return(this.gwin.iconstorms);
+                case "tstorms":     return(this.gwin.icontstorms);
                 case "mostlycloudy": return(this.gwin.iconmostlycloudy);
                 case "partlycloudy": return(this.gwin.iconpartlycloudy);
 
-                case "rain": return(this.gwin.iconrain);
-                case "fog": return(this.gwin.iconfog);
-                case "hazy": return(this.gwin.iconhazy);
-                case "sleet": return(this.gwin.iconsleet);
-                case "cloudy": return(this.gwin.iconcloudy);
-                case "clear": return(this.gwin.iconclear);
-                case "sunny": return(this.gwin.iconsunny);
+                case "rain":        return(this.gwin.iconrain);
+                case "fog":         return(this.gwin.iconfog);
+                case "hazy":        return(this.gwin.iconhazy);
+                case "sleet":       return(this.gwin.iconsleet);
+                case "cloudy":      return(this.gwin.iconcloudy);
+                case "clear":       return(this.gwin.iconclear);
+                case "sunny":       return(this.gwin.iconsunny);
             }
         }
 },
@@ -699,7 +700,8 @@ loadInIcons: function()
         this.refresh(date);
     },
 
-    event: function(eventType, userId, x, y, data, date) {
+    event: function(eventType, pos, user, data, date) {
+    //event: function(eventType, userId, x, y, data, date) {
         if (eventType === "pointerPress" && (data.button === "left") ) {
         }
         if (eventType === "pointerMove" ) {

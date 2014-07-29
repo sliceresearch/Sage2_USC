@@ -48,6 +48,24 @@ function widgetSpec(id) {
 	this.items = [];
 }
 
+String.prototype.width = function(font) {
+	var f = font || '12px arial';
+	var div = document.createElement('DIV');
+	//div.style['width'] = 'auto';
+	//div.style['height'] = 'auto';
+	div.innerHTML = this;
+	div.style['position'] = 'absolute';
+	div.style['float'] = 'left';
+	div.style['white-space'] = 'nowrap';
+	div.style['visibility']= 'hidden';
+	div.style['font'] = f ;
+	
+	document.body.appendChild(div);
+	var w = div.offsetWidth;
+	document.body.removeChild(div);
+  	return w;
+}
+
 widgetSpec.prototype.addButton = function(data) {
 	var b = new button();
 	b.appId = this.id;
@@ -94,18 +112,22 @@ widgetSpec.prototype.addSlider = function(data){
 	this.itemCount++;
 };
 
+
 widgetSpec.prototype.addLabel = function(data){
-	//begin,parts,end,action, property, appObj
+	
+	var lHeight = 1.5 * ui.titleBarHeight;
 	var l = new label();
 	l.id = "label" + this.itemCount;
 	l.appId = this.id;
 	l.appProperty = data.property;
 	l.appObj = data.appObj;
-	l.width = data.maxWidth;
+	var font = (lHeight-12) + 'px arial';
+
+	var doubleUs = new Array(data.textLength+1).join('W');
+	l.width =  doubleUs.width(font);
 	this.items.push(l);
 	this.itemCount++;
 };
-
 
 widgetSpec.prototype.enumerate = function(){
 	return this.items;
@@ -224,6 +246,14 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
+	},
+	"duplicate": {
+		"switch": null,
+		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
+		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 3 0 l 0 -3 l 8 0 l 0 10 l -3 0",
+		"fill":"#999999",
+		"strokeWidth": 1,
+		"delay":600
 	}
 
 };
@@ -250,7 +280,8 @@ function createSlider (paper, sliderSpec, x, y){
 	var sliderKnob = paper.circle(x+0.5*ui.titleBarHeight,y, 0.25*ui.titleBarHeight);
 	sliderKnob.attr({
 		id:sliderSpec.id + 'knob',
-		style:"shape-rendering:crispEdges;",
+		//style:"shape-rendering:crispEdges;",
+		style:"stroke-linecap:round; stroke-linejoin:round",
 		fill:"#aaa",
 		stroke:"#666",
 		strokeWidth:1
@@ -339,6 +370,7 @@ function createButton(paper, buttonSpec, cx, cy){
 		transform: "s " + parseInt(buttonRad/8) + " " + parseInt(buttonRad/8),
 		strokeWidth:type["strokeWidth"],
 		stroke:"#000",
+		style:"stroke-linecap:round; stroke-linejoin:round",
 		fill:type["fill"]
 	});
 	var button = paper.group(buttonBack,buttonCover);
@@ -413,7 +445,6 @@ function computeBlinkerPosition (currentPos, str, charCode, printable){
 	var pre = "";
 	var suf = "";
 	var flag = false;
-	console.log(charCode);
 	//var printable = (charCode > 31 && charCode < 137) ;// spacebar & return key(s) (if you want to allow carriage returns)
         
     if (printable){

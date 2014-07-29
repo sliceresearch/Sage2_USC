@@ -808,7 +808,8 @@ updateWindow: function (){
 		this.refresh(date);
 	},
 
-	event: function(eventType, userId, x, y, data, date) {
+    event: function(eventType, pos, user, data, date) {
+	//event: function(eventType, userId, x, y, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
 		if (eventType === "pointerMove" ) {

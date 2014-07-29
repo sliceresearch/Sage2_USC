@@ -123,8 +123,8 @@ function sagePointer(wsio) {
 	};
 	
 	this.pointerPressMethod = function(event) {
-		var btn = (event.button===2)?'right':'left';
-		this.wsio.emit('pointerPress',{button:btn});
+		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+		this.wsio.emit('pointerPress', {button:btn});
 		event.preventDefault();
 	};
 
@@ -137,8 +137,8 @@ function sagePointer(wsio) {
 	};
 
 	this.pointerReleaseMethod = function(event) {
-		var btn = (event.button===2)? 'right':'left';
-		this.wsio.emit('pointerRelease',{button:btn});
+		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+		this.wsio.emit('pointerRelease', {button:btn});
 		event.preventDefault();
 	};
 
@@ -165,10 +165,12 @@ function sagePointer(wsio) {
 	};
 
 	this.pointerKeyDownMethod = function(event) {
+		console.log(event);
+	
 		var code = parseInt(event.keyCode);
 		this.wsio.emit('keyDown', {code: code});
 		if(code == 9){ // tab is a special case - no keypress event called (do we need to change code?)
-			this.wsio.emit('keyPress', {code: code});
+			this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 		}
 		// if a special key - prevent default (otherwise let continue to keyPress)
 		if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
@@ -184,7 +186,7 @@ function sagePointer(wsio) {
 
 	this.pointerKeyPressMethod = function(event) {
 		var code = parseInt(event.charCode);
-		this.wsio.emit('keyPress', {code: code});
+		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 		event.preventDefault();
 	};
 	

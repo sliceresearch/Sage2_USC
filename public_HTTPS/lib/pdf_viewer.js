@@ -20,8 +20,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.pdfDoc = null;
 		this.ratio  = null;
 
-		this.enableControls = null;
-		this.controls = null;
+		this.enableControls = true;
 		this.pageValText = null;
 	},
 	
@@ -42,7 +41,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.state.page = null;
 
 		this.state.numPagesShown = null;
-		this.enableControls      = true;
+		
 		this.pageValText         = '';
 	},
 	
@@ -150,11 +149,10 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	event: function(eventType, userId, x, y, data, date) {
+	event: function(type, position, user, data, date) {
 		// Left Arrow - go back one page
 		// Right Arrow - go forward one page
-		
-		if(eventType === "specialKey"){
+		if(type === "specialKey"){
 			if(data.code === 37 && data.state === "up"){ // Left Arrow
 				if(this.state.page <= 1) return;
 				this.state.page = this.state.page - 1;

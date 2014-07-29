@@ -100,7 +100,8 @@
 				receivesInputEvents: true,
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
-				receivesWidgetEvents: true
+				receivesWidgetEvents: true,
+				requestsAppClone: true
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -536,7 +537,7 @@
 			
 			var app = applications[video_data.elemId];
 			if(app !== undefined && app !== null){
-				app.event("videoTimeSync", null, null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
+				app.event("videoTimeSync", null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
 			}
 		});
 		
@@ -551,19 +552,25 @@
 		
 		wsio.on('eventInItem', function(event_data){
 			var date = new Date(event_data.date);
-			var app  = applications[event_data.elemId];
+			var app  = applications[event_data.id];
+			
+			app.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+			
+			/*
 			// adding pointer information to the event
             event_data.data.pname  = event_data.user_label;
             event_data.data.pcolor = event_data.user_color;
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
+			*/
 		});
 
-		wsio.on('pointerPressRight', function(data){
+		wsio.on('requestNewControl', function(data){
 			var dt = new Date(data.date);
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
-			if (data.elemId != null){
-				if(data.elemId+"_controls" in  controlItems){
-					var size = computeSize(controlItems[data.elemId+ "_controls"].spec) ;
+			if (data.elemId !== undefined && data.elemId !== null){
+				if(controlItems[data.elemId+"_controls"] !== undefined){
+					var size = computeSize(controlItems[data.elemId+ "_controls"].spec);
+					console.log(size);
 					wsio.emit('addNewControl', {
 						id:data.elemId+"_controls", 
 						left:data.x,
@@ -669,7 +676,15 @@
 					}
 				}
 				var func = ctrl.parent().data("call");
-				func(applications[ctrl.parent().data("appId")],dt);	
+				var appId = ctrl.parent().data("appId");
+				var app = applications[appId];
+				func(app,dt);	
+				//Check whether a request for clone was made.
+				if(app.cloneable === true && app.requestForClone === true){
+					app.requestForClone = false;
+					console.log("cloning app:" + appId);
+					wsio.emit('createAppClone', {id : appId});
+				}
 				
 			}
 			

@@ -211,17 +211,14 @@
 		});
 		
 		wsio.on('eventInItem', function(event_data) {
-			var selectedElem = document.getElementById(event_data.elemId);
-			if(selectedElem == null) return;
+			var selectedElem = document.getElementById(event_data.id);
+			if(selectedElem === undefined || selectedElem === null) return;
 			
-			if(event_data.eventType == "keyboard"){
-				console.log("received keyboard input");
-				var character = String.fromCharCode(event_data.data.code);
-				
-				console.log("received keyboard input: [" + event_data.data.code + "] [" + character + "]"); 
-				if(character == " "){ // spacebar
+			if(event_data.type === "keyboard"){
+				console.log("received keyboard input: [" + event_data.data.code + "] [" + event_data.data.character + "]"); 
+				if(event_data.data.character === " "){ // spacebar
 					console.log("play/pause video")
-					playPauseVideo(event_data.elemId);
+					playPauseVideo(event_data.id);
 				}
 			}
 		});
