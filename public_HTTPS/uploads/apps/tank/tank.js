@@ -71,16 +71,16 @@ var tank = SAGE2_App.extend( {
 				this.tankList[i].spawnDelay += this.dt;
 			}
 			//if tank alive
-			if(this.tankList[i].alive == true){
+			if (this.tankList[i].alive === true) {
 				this.tankMoveAndDrawUpdates(i);
 			} //end if the tank was alive
 			else if(this.tankList[i].x > 0 && this.tankList[i].spawnDelay <= 3){
 				this.ctx.fillStyle = "rgba(0,0,0, 1.0)";
 				this.ctx.font = '20pt Helvetica';
-				this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x +2, this.tankList[i].y +2);
-				this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x +2, this.tankList[i].y -2);
-				this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x -2, this.tankList[i].y +2);
-				this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x -2, this.tankList[i].y -2);
+				// this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x +2, this.tankList[i].y +2);
+				// this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x +2, this.tankList[i].y -2);
+				// this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x -2, this.tankList[i].y +2);
+				// this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x -2, this.tankList[i].y -2);
 				
 				this.ctx.fillStyle = "rgba("+this.tankList[i].color+", 1.0)";
 				this.ctx.fillText( "Spawn Delay: " + Math.ceil(this.spawnRefresh - this.tankList[i].spawnDelay), this.tankList[i].x, this.tankList[i].y);
@@ -100,17 +100,20 @@ var tank = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	event: function(eventType, userId, x, y, data, date) {
+	event: function(eventType, position, userId, data, date) {
+		var x = position.x;
+		var y = position.y;
 		//if got key press / pointer click
-		if(eventType == "keyboard" || eventType == "pointerPress"){
-			console.log("Event received from:" + userId + ". Event:" + eventType + ". State:" + data.state);
-			console.log("   added info: " + data.pname + " has color" + data.pcolor);
+		if (eventType == "keyboard" || eventType == "pointerPress") {
+			console.log("event", data, userId);
+			console.log("Event received from:" + userId.id + ". Event:" + eventType);
+			console.log("   added info: " + userId.label + " has color " + userId.color);
 			//vars to see if it was a new user
 			var newUser = true;
 			var userNumber = -1;
 			//check to see if the input is from an already known user.
 			for(var i = 0; i < this.tankList.length; i++){
-				if(userId == this.tankList[i].clientID) {
+				if(userId.id == this.tankList[i].clientID) {
 					newUser = false;
 					userNumber = i;
 					break;
@@ -118,30 +121,28 @@ var tank = SAGE2_App.extend( {
 			}
 			//check if need to create a new tank for a user
 			if( newUser || userNumber == -1){
-				this.addTank(userId, data.pname, data.pcolor);
+				this.addTank(userId.id, userId.label, userId.color);
 				userNumber = this.tankList.length -1;
 			}
 
-			if( eventType == "keyboard" ){
+			if (eventType == "keyboard") {
 				//	client, alive, xpos, ypos,   button array (up/down/left/right, kills, shotsarray
 				//	[userName, false, -1000, -1000, [false, false, false, false[]], 0, tempShots ]  );
 				//		0		1 		2     3      4 							5    6
-				if(data.state == 'down'){
-					if(data.code == 119){	this.tankList[userNumber].buttons[0] = true ;	this.tankList[userNumber].buttons[4][0] = 0;} //up is w
-					if(data.code == 115){	this.tankList[userNumber].buttons[1] = true ;	this.tankList[userNumber].buttons[4][1] = 0;} //down is s
-					if(data.code == 97){	this.tankList[userNumber].buttons[2] = true;	this.tankList[userNumber].buttons[4][2] = 0;} //left is a
-					if(data.code == 100){	this.tankList[userNumber].buttons[3] = true ;	this.tankList[userNumber].buttons[4][3] = 0;} //right is d
-				}
+				if(data.character == 'w'){	this.tankList[userNumber].buttons[0] = true ;	this.tankList[userNumber].buttons[4][0] = 0;} //up is w
+				if(data.character == 's'){	this.tankList[userNumber].buttons[1] = true ;	this.tankList[userNumber].buttons[4][1] = 0;} //down is s
+				if(data.character == 'a'){	this.tankList[userNumber].buttons[2] = true;	this.tankList[userNumber].buttons[4][2] = 0;} //left is a
+				if(data.character == 'd'){	this.tankList[userNumber].buttons[3] = true ;	this.tankList[userNumber].buttons[4][3] = 0;} //right is d
 			} //end if was a keyboard input
 
-			else if( eventType == "pointerPress"){
+			else if (eventType == "pointerPress") {
 				if(this.tankList[userNumber].alive == false && this.tankList[userNumber].spawnDelay >= 3){
 					this.tankList[userNumber].alive = true;
 					this.tankList[userNumber].x = x;
 					this.tankList[userNumber].y = y;
 					console.log("trying to spawn");
 				}
-				else if(this.tankList[userNumber].alive){
+				else if (this.tankList[userNumber].alive) {
 					console.log("trying to shoot from tank" + userNumber);
 					this.tryShoot(userNumber, x, y);
 				}
@@ -170,7 +171,7 @@ var tank = SAGE2_App.extend( {
 		var vertValueChange = 0;
 		var horiValueChange = 0;
 		if(this.tankList[i].buttons[0] || this.tankList[i].buttons[1] ){ vertChange = true; }
-		if(this.tankList[i].buttons[2] || this.tankList[i].buttons[3] ){	horiChange = true; }
+		if(this.tankList[i].buttons[2] || this.tankList[i].buttons[3] ){ horiChange = true; }
 
 		if(this.tankList[i].buttons[0]) { //up button
 			this.tankList[i].buttons[4][0] += 1; //timer control to turn off movement. has to be done since "up" detection isn't implemented
@@ -365,7 +366,6 @@ var tank = SAGE2_App.extend( {
 	}, //end tryShoot
 	
 	addTank: function(userName, name, rgb) {
-		console.log("Adding a tank for" + userName);
 		var tempShots = [];
 		//                alive         xpos      ypos      xvel     yvel     owner invuln      feature bounce
 		tempShots.push( { alive: false, x: -1000, y: -1000, xvel: 0, yvel: 0, ownerInvuln: 500, featureBounce: 2} );
@@ -373,8 +373,8 @@ var tank = SAGE2_App.extend( {
 		tempShots.push( { alive: false, x: -1000, y: -1000, xvel: 0, yvel: 0, ownerInvuln: 500, featureBounce: 2} ); //3 shots per tank
 		
 		//                   client              alive         xpos      ypos      button array (up/down/left/right [])             kills     shotsarray        pointer name(7)  rgb vals(8)  spawn delay
-		this.tankList.push( {clientID: userName, alive: false, x: -1000, y: -1000, buttons: [false, false, false, false,[0,0,0,0]], kills: 0, shots: tempShots, name: name,      color: rgb,  spawnDelay: 0} );
-		
+		this.tankList.push( {clientID: userName, alive: false, x: -1000, y: -1000, buttons: [false, false, false, false,[0,0,0,0]], kills: 0, shots: tempShots, name: name,      color: rgb[0]+','+rgb[1]+','+rgb[2],  spawnDelay: 0} );
+
 		console.log("Done with tank creation");
 	}, //end addTank
 	
