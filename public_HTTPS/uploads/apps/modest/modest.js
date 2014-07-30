@@ -53,35 +53,35 @@ var modest = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
+	event: function(eventType, position, user_id, data, date) {
+		//console.log("Modest event", eventType, position, user_id, data, date);
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 			this.dragging = true;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
-			this.map.panBy(itemX-this.position.x, itemY-this.position.y);
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.map.panBy(position.x-this.position.x, position.y-this.position.y);
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
 		}
 
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta;
+			var amount = data.scale;
 			var diff = date - this.lastZoom;
-			if (amount >= 3 && (diff>300)) {
+			if (amount >= 1 && (diff>300)) {
 				// zoom in
 				this.map.zoomIn();
 				this.lastZoom = date;
 			}
-			else if (amount <= -3 && (diff>300)) {
+			else if (amount <= 1 && (diff>300)) {
 				// zoom out
 				this.map.zoomOut();
 				this.lastZoom = date;

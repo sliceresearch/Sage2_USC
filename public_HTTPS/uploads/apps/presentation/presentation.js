@@ -39,12 +39,11 @@ var presentation = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
+	event: function(eventType, position, user_id, data, date) {
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
-		if (eventType === "pointerMove" && this.dragging ) {
+		if (eventType === "pointerMove") {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
 		}
@@ -53,22 +52,7 @@ var presentation = SAGE2_App.extend( {
 		if (eventType === "pointerScroll") {
 		}
 
-		if (eventType == "keyboard" && data.code == 109 && data.state == "down") {
-			// m key down
-		}
-		if (eventType == "keyboard" && data.code == 116 && data.state == "down") {
-			// t key down
-		}
-		if (eventType == "keyboard" && data.code == 119 && data.state == "down") {
-			// w key down
-		}
-		else if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
-			// shift down
-		}
-		else if (eventType == "specialKey" && data.code == 17 && data.state == "down") {
-			// control down
-		}
-		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
+		if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
 			// left
 		}
 		else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {

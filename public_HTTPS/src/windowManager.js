@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2014
 
+
 function windowManager(id, ws) {
 	this.element = document.getElementById(id);
 	this.ctx   = this.element.getContext("2d");
@@ -259,14 +260,6 @@ function windowManager(id, ws) {
 		event.preventDefault();
 	};
 	
-	/*
-	this.addNewElement = function(elem_data) {
-		this.applications.push(elem_data);
-		console.log("added: " + elem_data.id + "(" + elem_data.type + ")");
-		this.draw();
-	};
-	*/
-	
 	this.addAppWindow = function(data) {
 		this.applications.push(data);
 		this.draw();
@@ -364,4 +357,80 @@ function windowManager(id, ws) {
 		}
 		this.draw();
 	};
+
+
+	var _this = this;
+	this.hammertime = new Hammer(this.element);
+	// Enable pin-to-zoom
+	this.hammertime.get('pinch').set({ enable: true });
+	// Set 1sec delay to trigger 'press' event
+	this.hammertime.get('press').set({ time: 1000 });
+
+	this.hammertime.on('press', function(event) {
+		// Simulate delete key: press 1sec to delete app
+		_this.wsio.emit('keyUp', {code: 46});
+	});
+
+	// Pan event
+	this.hammertime.on('pan', function(event) {
+		// Set the pointer position
+		var rect = _this.element.getBoundingClientRect();
+		_this.mouseX = event.center.x - rect.left;
+		_this.mouseY = event.center.y - rect.top;
+		var globalX = _this.mouseX / _this.scale;
+		var globalY = _this.mouseY / _this.scale;
+		_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		// Send a pointer press event
+		_this.wsio.emit('pointerPress',{button:'left'});
+	});
+
+	this.hammertime.on('panend', function(event) {
+		// When panning ends, release the pointer
+		_this.wsio.emit('pointerRelease',{button:'left'});
+	});
+
+	// Double-tap event
+	this.hammertime.on('doubletap', function(event) {
+		// Emit the double-click event
+		wsio.emit('pointerDblClick');
+	});
+
+	// Single-tap event
+	this.hammertime.on('tap', function(event) {
+		// Set the pointer position
+		var rect = _this.element.getBoundingClientRect();
+		_this.mouseX = event.center.x - rect.left;
+		_this.mouseY = event.center.y - rect.top;
+		var globalX = _this.mouseX / _this.scale;
+		var globalY = _this.mouseY / _this.scale;
+		_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		// Simulate a press-release sequence
+		_this.wsio.emit('pointerPress',{button:'left'});
+		_this.wsio.emit('pointerRelease',{button:'left'});
+	});
+
+	this.hammertime.on('pinchstart pinchend', function(event) {
+		// Position the pointer
+		var rect = _this.element.getBoundingClientRect();
+		_this.mouseX = event.center.x - rect.left;
+		_this.mouseY = event.center.y - rect.top;
+		var globalX = _this.mouseX / _this.scale;
+		var globalY = _this.mouseY / _this.scale;
+		_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+	});
+
+	this.hammertime.on('pinch', function(event) {
+		var scale = event.scale;
+		// Some slowing down the scale (guess work)
+		if (event.scale > 1) scale = 1.0 + (event.scale - 1.0) / 20.0;
+		if (event.scale < 1) scale = 1.0 - (1.0 - event.scale) / 10.0;
+
+		// Do the scolling
+		_this.wsio.emit('pointerScrollStart');
+		_this.wsio.emit('pointerScroll', {scale: scale});
+	});
+
+	// Need to keep the mousewheel event
+	this.element.addEventListener('mousewheel', this.mouseScroll.bind(this), false);
+
 }

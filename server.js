@@ -807,7 +807,8 @@ function listSessions() {
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
-				thelist.push( {name:file.slice(0,-5) , size:stat.size, date: strdate} );
+				// Make it look like an exif data structure
+				thelist.push( { exif: { FileName: file.slice(0,-5),  FileSize:stat.size, FileDate: strdate} } );
 			}
 		}
 	}
@@ -1341,7 +1342,7 @@ function wsCreateAppClone(wsio, data){
 			title: app.title,
 			url: app.url,
 			application: app.application
-		}
+		};
 
 		broadcast('createAppWindow', clone, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
@@ -1425,10 +1426,10 @@ function getUniqueAppId() {
 }
 
 function getSavedFilesList() {
+	//  Main list of objects to be sent
 	var list = {image: [], video: [], pdf: [], app: [], session:[]};
-	// var uploadedImages = fs.readdirSync(path.join(uploadsFolder, "images"));
-	// var uploadedVideos = fs.readdirSync(path.join(uploadsFolder, "videos"));
-	// var uploadedPdfs   = fs.readdirSync(path.join(uploadsFolder, "pdfs"));
+
+	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
@@ -1436,27 +1437,34 @@ function getSavedFilesList() {
 	var savedSessions  = listSessions();
 	
 	var i;
-	for(i=0; i<uploadedImages.length; i++) list.image.push(uploadedImages[i]);
-	for(i=0; i<uploadedVideos.length; i++) list.video.push(uploadedVideos[i]);
-	for(i=0; i<uploadedPdfs.length; i++)   list.pdf.push(uploadedPdfs[i]);
-	
-	for(i=0; i<uploadedApps.length; i++)
-	{
-		var appLocalPath = uploadsFolder + '/apps/' + uploadedApps[i];
-		var instuctionsFile = appLocalPath + "/instructions.json"
-		var url = hostOrigin + 'uploads/apps/' + uploadedApps[i];
-		
-		var json_str = fs.readFileSync(instuctionsFile, 'utf8');
-		var instructions = JSON.parse(json_str);
-		
-		var thumbnailHostPath = null;
-		if ( instructions.icon != null )
-			thumbnailHostPath = url + '/' + instructions.icon;
-			
-		list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath } } );
+
+	// Sort independently of case
+	uploadedImages.sort( sageutils.compareFilename );
+	uploadedVideos.sort( sageutils.compareFilename );
+	uploadedPdfs.sort(   sageutils.compareFilename );
+	savedSessions.sort(  sageutils.compareFilename );
+	uploadedApps.sort(   sageutils.compareString   );
+
+	for (i=0; i<uploadedImages.length; i++)  list.image.push(uploadedImages[i]);
+	for (i=0; i<uploadedVideos.length; i++)  list.video.push(uploadedVideos[i]);
+	for (i=0; i<uploadedPdfs.length;   i++)  list.pdf.push(uploadedPdfs[i]);
+	for (i=0; i<savedSessions.length;   i++) list.session.push(savedSessions[i]);
+
+	// From the list of apps in the upload folder, build a list of objects
+	//   containing the name of the app and the icon (mimicing an exif structure)
+	for (i=0; i<uploadedApps.length; i++) {
+		var applicationDir    = path.join(uploadsFolder, "apps", uploadedApps[i]);	
+		if (fs.lstatSync(applicationDir).isDirectory()) {
+			var instuctionsFile   = path.join(applicationDir, "instructions.json");		
+			var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
+			var instructions      = json5.parse(jsonString);
+			var thumbnailHostPath = null;
+			if (instructions.icon)
+				thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
+			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath } } );
+		}
 	}
-	
-	for(i=0; i<savedSessions.length; i++)  list.session.push(savedSessions[i].name);
+
 	return list;
 }
 
@@ -2112,7 +2120,7 @@ function createSagePointer ( uniqueID ) {
 	remoteInteraction[uniqueID] = new interaction();
 
 	broadcast('createSagePointer', sagePointers[uniqueID], 'receivesPointerData');
-};
+}
 
 function showPointer( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
@@ -2161,13 +2169,40 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 
 	// apps
+	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if(elem !== null){
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
-			if(data.button === "left"){
+			if (data.button === "left") {
 				var localX = pointerX - elem.left;
 				var localY = pointerY - (elem.top+config.titleBarHeight);
 				var cornerSize = Math.min(elem.width, elem.height) / 5;
+
+				// if localY in negative, inside titlebar
+				if (localY < 0) {
+					// titlebar image: 807x138  (10 pixels front paddding)
+					var buttonsWidth = config.titleBarHeight * (807.0/138.0);
+					var buttonsPad   = config.titleBarHeight * ( 10.0/138.0);
+					var oneButton    = buttonsWidth / 5; // five buttons
+					var startButtons = elem.width - buttonsWidth;
+					if (localX > (startButtons+buttonsPad+4*oneButton)) {
+						//console.log('Titlebar> bottom button');
+						pointerBottomZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad+3*oneButton)) {
+						//console.log('Titlebar> top button');
+						pointerTopZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad+2*oneButton)) {
+						//console.log('Titlebar> right button');
+						pointerRightZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad+oneButton)) {
+						//console.log('Titlebar> left button');
+						pointerLeftZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad)) {
+						//console.log('Titlebar> maximize button');
+						pointerDblClick(uniqueID, pointerX, pointerY);
+					}
+				}
+
 				// bottom right corner - select for drag resize
 				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
 					remoteInteraction[uniqueID].selectResizeItem(elem, pointerX, pointerY);
@@ -2178,7 +2213,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				}
 			}
 			else if(data.button === "right"){
-				var elemCtrl = findControlByAppId(elem.id);
+				elemCtrl = findControlByAppId(elem.id);
 				if (elemCtrl === null) {
 					broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
@@ -2193,7 +2228,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
 				if(data.button === "right"){
-					var elemCtrl = findControlByAppId(elem.id);
+					elemCtrl = findControlByAppId(elem.id);
 					if (elemCtrl === null) {
 						broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 					}
@@ -2535,6 +2570,122 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerLeftZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerRightZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerTopZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerBottomZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem, config);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw

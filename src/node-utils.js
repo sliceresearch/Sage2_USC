@@ -64,6 +64,43 @@ function getFullVersion(callback) {
 	});
 }
 
+/**
+ * Utility function to compare two strings independently of case.
+ * Used for sorting
+ *
+ * @method compareString
+ * @param a {String} first string
+ * @param b {String} second string
+ */
+function compareString(a, b) {
+	var nA = a.toLowerCase();
+	var nB = b.toLowerCase();
+	if (nA < nB) return -1;
+	else if(nA > nB) return 1;
+	return 0;
+}
+
+/**
+ * Utility function to compare two objects based on filename independently of case.
+ * Needs a .exif.FileName field
+ * Used for sorting
+ *
+ * @method compareFilename
+ * @param a {Object} first object
+ * @param b {Object} second object
+ */
+function compareFilename(a, b) {
+	var nA = a.exif.FileName.toLowerCase();
+	var nB = b.exif.FileName.toLowerCase();
+	if (nA < nB) return -1;
+	else if(nA > nB) return 1;
+	return 0;
+}
+
 
 exports.getShortVersion = getShortVersion;
 exports.getFullVersion  = getFullVersion;
+
+exports.compareString   = compareString;
+exports.compareFilename = compareFilename;
+

@@ -4,6 +4,9 @@
 <meta charset="utf-,8">
 <title>SAGE2 UI</title>
 
+
+<!-- <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+ -->
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License 
 	//      
@@ -16,10 +19,11 @@
 	// Copyright (c) 2014
 </script>
 
-<script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="lib/sagePointer.js"></script>
-<script type="text/javascript" src="lib/windowManager.js"></script>
-<script type="text/javascript" src="scripts/dialog-polyfill.js"></script>
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/sagePointer.js"></script>
+<script type="text/javascript" src="src/windowManager.js"></script>
+<script type="text/javascript" src="lib/dialog-polyfill.js"></script>
+<script type="text/javascript" src="lib/hammer.min.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -160,17 +164,19 @@
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
-		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
-		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
-		winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
-		winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
-		winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
+		// Commented out event handler - done in windowManager
+		// winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
+		// winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
+		// winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
 
-		winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
-		winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
-		winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
+		// winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
+		// winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
+		// winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
+
+		// winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
+		// winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
+		// winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
 
 		document.addEventListener('mousemove', updateTarget, false);
 		
@@ -181,11 +187,12 @@
 		sessionsDir = document.getElementById('sessions');
 				
 		// setup for dialog polyfill
-		var diag1 = document.getElementById("lb_light");
-	    dialogPolyfill.registerDialog(diag1);
-		var diag2 = document.getElementById("lb_pointer_help");
-	    dialogPolyfill.registerDialog(diag2);
-
+		if (!document.createElement('dialog').showModal) {
+			var diag1 = document.getElementById("lb_light");
+			dialogPolyfill.registerDialog(diag1);
+			var diag2 = document.getElementById("lb_pointer_help");
+			dialogPolyfill.registerDialog(diag2);
+		}
 
 		wsio.on('setupDisplayConfiguration', function(config) {
 			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
@@ -318,19 +325,19 @@
 		winMgr.resize();
 	}
 
-	function createFileList(files, type, dir) {
-		files[type].sort();
-		
+	function createFileList(files, type, dir) {		
 		var longest = 0;
 		var textWidthTest = document.getElementById("textWidthTest");
 		
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
 			if (typeof files[type][i] === 'string') {
+				// If it's a string, use it as filename
 				listElem.textContent = files[type][i];
 				listElem.id          = files[type][i];
 			}
 			else {
+				// if it's an object, use the .exif.FileName field
 				listElem.textContent = files[type][i].exif.FileName;
 				listElem.id          = files[type][i].exif.FileName;
 			}
@@ -459,17 +466,14 @@
 		// based on folder, match the appropriate application
 		var app       = dir2app[directory];
 
-		//var panel = document.getElementById('metadata');
 		var i, exifdata;
 		if (app === 'image_viewer') {
 			for (i=0;i<fileList.image.length;i++) {
 				if (fileList.image[i].exif.FileName === fileName) {
 					exifdata = fileList.image[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						//panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
 						thumbnail.src = exifdata;
 					else
-						//panel.innerHTML = '';
 						thumbnail.src = "images/blank.png";
 				}
 			}
@@ -478,10 +482,8 @@
 				if (fileList.video[i].exif.FileName === fileName) {
 					exifdata = fileList.video[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						//panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
 						thumbnail.src = exifdata;
 					else
-						//panel.innerHTML = '';
 						thumbnail.src = "images/blank.png";
 				}
 			}
@@ -490,15 +492,22 @@
 				if (fileList.pdf[i].exif.FileName === fileName) {
 					exifdata = fileList.pdf[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						//panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
 						thumbnail.src = exifdata;
 					else
-						//panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
+				}
+			}
+		} else if (app === 'custom_app') {
+			for (i=0;i<fileList.app.length;i++) {
+				if (fileList.app[i].exif.FileName === fileName) {
+					exifdata = fileList.app[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						thumbnail.src = exifdata;
+					else
 						thumbnail.src = "images/blank.png";
 				}
 			}
 		} else {
-			//panel.innerHTML = '';
 			thumbnail.src = "images/blank.png";
 		}
 	}

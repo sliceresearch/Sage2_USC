@@ -1,5 +1,5 @@
 {
-	"main_script": "newNotepad.js",
+	"main_script": "notepad.js",
 	"type": "canvas",
 	"width": 600,
 	"height": 720,

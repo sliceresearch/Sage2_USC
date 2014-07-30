@@ -1,4 +1,15 @@
-var newNotepad = SAGE2_App.extend( {
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014
+
+
+var notepad = SAGE2_App.extend( {
 	construct: function() {
 
 		this.element = null;
@@ -217,25 +228,28 @@ var newNotepad = SAGE2_App.extend( {
 	},
 
 	
-	event: function( type, userId, x, y, data , date, user_color){
-        user_color = user_color || [255,0,0];
+	//event: function( type, userId, x, y, data , date, user_color){
+	event: function(type, position, userId, data, date) {
+		var x = position.x;
+		var y = position.y;
+        var user_color = userId.color || [255,0,0];
 	    if( type == "pointerPress" ){
 	       if( data.button == "left" ){
-				if ((userId in this.blinkerArr)===false){
+				if ((userId.id in this.blinkerArr)===false){
 					console.log(user_color);
-					var bkr = new this.blinker(userId,this.ctx,date,user_color);					
-					this.blinkerArr[userId] = bkr;
+					var bkr = new this.blinker(userId.id,this.ctx,date,user_color);					
+					this.blinkerArr[userId.id] = bkr;
 					
 				}
 				else{
-					this.blinkerArr[userId].color = user_color;
+					this.blinkerArr[userId.id].color = user_color;
 				}
 				var lno = Math.ceil(y/this.fontHeight);
 				var tArIdx = lno;
 				if(tArIdx in this.textArr){
 					var len = this.ctx.measureText(this.textArr[tArIdx]).width;
 					if(x >= len){	
-						this.blinkerArr[userId].moveLC(lno,this.textArr[tArIdx].length);
+						this.blinkerArr[userId.id].moveLC(lno,this.textArr[tArIdx].length);
 					}
 					else{
 						var c;
@@ -243,11 +257,11 @@ var newNotepad = SAGE2_App.extend( {
 							if(this.ctx.measureText(this.textArr[tArIdx].substring(0,c)).width > x)
 								break;
 						}
-						this.blinkerArr[userId].moveLC(lno,c-1);
+						this.blinkerArr[userId.id].moveLC(lno,c-1);
 					}
 				}
 				else{
-					this.blinkerArr[userId].moveLC(lno,0);
+					this.blinkerArr[userId.id].moveLC(lno,0);
 				}
 				
 	       } 
@@ -277,13 +291,13 @@ var newNotepad = SAGE2_App.extend( {
                 //tabs and new lines ought to be coming in too
                 var theAsciiCode = data.code; 
 				var ch;
-				if ((userId in this.blinkerArr) == false) return; // Bad code. need to remove once the event handler has been modified.
-				var curL = this.blinkerArr[userId].blinkerL;
-				var curC = this.blinkerArr[userId].blinkerC;
+				if ((userId.id in this.blinkerArr) == false) return; // Bad code. need to remove once the event handler has been modified.
+				var curL = this.blinkerArr[userId.id].blinkerL;
+				var curC = this.blinkerArr[userId.id].blinkerC;
 				console.log(curC);
 				//alert(theAsciiCode);
 				if (theAsciiCode == 13){
-					this.enterKey(curL, curC, userId);		
+					this.enterKey(curL, curC, userId.id);		
 				
 				}
                 else{
@@ -294,7 +308,7 @@ var newNotepad = SAGE2_App.extend( {
 					else{
 						this.textArr[curL] = String.fromCharCode(theAsciiCode) ;
 					}
-					this.blinkerArr[userId].moveLC(curL,curC+1);
+					this.blinkerArr[userId.id].moveLC(curL,curC+1);
 			
 				}
 	        
@@ -305,8 +319,8 @@ var newNotepad = SAGE2_App.extend( {
 	        // alt, command, up arrow
             //comes in as javascript key code
             var theJavascriptCode = data.code;
-			var curL = userId && this.blinkerArr[userId].blinkerL;
-			var curC = this.blinkerArr[userId].blinkerC;
+			var curL = userId.id && this.blinkerArr[userId.id].blinkerL;
+			var curC = this.blinkerArr[userId.id].blinkerC;
 			console.log(curC);
 			if (theJavascriptCode == 8){
 				if (curL in this.textArr ){
@@ -316,7 +330,7 @@ var newNotepad = SAGE2_App.extend( {
 					if (curC > 0 ){
 						
 						this.textArr[curL] = pre + post;
-						this.blinkerArr[userId].moveLC(curL,curC-1);
+						this.blinkerArr[userId.id].moveLC(curL,curC-1);
 
 					}
 					else if (curL > 1){
@@ -326,17 +340,17 @@ var newNotepad = SAGE2_App.extend( {
 						}
 						this.textArr[curL-1] = t + post;
 						this.textArr.splice(curL,1);
-						this.blinkerArr[userId].moveLC(curL-1,t.length);
+						this.blinkerArr[userId.id].moveLC(curL-1,t.length);
 
 					}
 					
 				}
 				else if (curL-1 in this.textArr){
 					
-					this.blinkerArr[userId].moveLC(curL-1,this.textArr[curL-1].length);	
+					this.blinkerArr[userId.id].moveLC(curL-1,this.textArr[curL-1].length);	
 				}
 				else if (curL > 1){
-					this.blinkerArr[userId].moveLC(curL-1,0);	
+					this.blinkerArr[userId.id].moveLC(curL-1,0);	
 				}
 				
 		
@@ -367,7 +381,7 @@ var newNotepad = SAGE2_App.extend( {
 					curL = curL-1 || curL ;
 					curC = (curL in this.textArr)? this.textArr[curL].length : 0;
 				}
-				this.blinkerArr[userId].moveLC(curL,curC);
+				this.blinkerArr[userId.id].moveLC(curL,curC);
 
 			}
 			else if(theJavascriptCode == 39){
@@ -377,7 +391,7 @@ var newNotepad = SAGE2_App.extend( {
 					curL++ ;
 					curC = 0 ;
 				}
-				this.blinkerArr[userId].moveLC(curL,curC);
+				this.blinkerArr[userId.id].moveLC(curL,curC);
 				//this.save();
 
 			}
@@ -391,7 +405,7 @@ var newNotepad = SAGE2_App.extend( {
 					curL-- ;
 					curC = 0 ;
 				}
-				this.blinkerArr[userId].moveLC(curL,curC);
+				this.blinkerArr[userId.id].moveLC(curL,curC);
 				
 
 			}
@@ -405,7 +419,7 @@ var newNotepad = SAGE2_App.extend( {
 					curL++ ;
 					curC = 0 ;
 				}
-				this.blinkerArr[userId].moveLC(curL,curC);
+				this.blinkerArr[userId.id].moveLC(curL,curC);
 
 			}
 			//alert(theJavascriptCode);
@@ -415,7 +429,7 @@ var newNotepad = SAGE2_App.extend( {
 	    
 	    }
 
-        this.draw( date ); //redraw    
+        this.refresh( date ); //redraw    
 	}
 	 
 });    
