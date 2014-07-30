@@ -2386,7 +2386,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
-	if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
+	if ( remoteInteraction[uniqueID].appInteractionMode() || (elem !== null && elem.application === 'thumbnailBrowser') ) {
 		if( elem !== null ){
 			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
 				if(data.button === "right"){
@@ -2822,3 +2822,11 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 	);
 	omicronManager.runTracker();
 }
+
+/******** DisplayClient Mediabrowser section ****************************************************************/
+createMediabrowser();
+function createMediabrowser() {
+	var data = {application: "custom_app", filename: "wallMenuUI"};
+	wsAddNewElementFromStoredFiles( null, data );
+}
+

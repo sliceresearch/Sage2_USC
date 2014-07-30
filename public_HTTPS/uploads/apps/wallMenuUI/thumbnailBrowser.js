@@ -18,6 +18,8 @@ var sendsToServer = true;
 var imageThumbSize = 50;
 var thumbSpacer = 5;
 
+var thumbnailWindowWidth = 0.7;
+
 var thumbnailBrowser = SAGE2_App.extend( {
 	construct: function()
 	{
@@ -71,6 +73,9 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
 		
 		this.hoverOverText = "";
+		this.hoverOverThumbnail = null;
+		this.hoverOverMeta = null;
+		
 		this.clickedPosition = null;
 		
 		this.wsio.open(function() {
@@ -97,7 +102,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			};
 			thumbnailBrowserList[id].wsio.emit('addClient', clientDescription);
 		});
-
+		
 		this.wsio.on('storedFileList', function(fileList) {
 			thumbnailBrowserList[id].updateFileList(fileList);
 		});
@@ -146,7 +151,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 					thumbnailButton = new buttonWidget();
 					thumbnailButton.init(0, this.ctx, null);
 					thumbnailButton.setPosition( validImages * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName} );
+					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail != null )
@@ -175,7 +180,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName} );
+				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail != null )
@@ -203,7 +208,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName} );
+				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail != null )
@@ -238,7 +243,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( curColumn * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName} );
+				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
 
 				if ( appList[i].exif.SAGE2thumbnail != null )
 				{
@@ -265,13 +270,15 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.ctx, null);
 				thumbnailButton.setPosition( i * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
-				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].filename} );
+				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setIdleImage( this.idleSessionIcon );
 				
 				this.thumbnailButtons.push(thumbnailButton);
 				this.sessionThumbnailButtons.push(thumbnailButton);
 			}
 		}
+		
+		this.updateThumbnailPositions();
 	},
 	
 	updateThumbnailPositions: function()
@@ -281,10 +288,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			
 		for( i = 0; i < this.imageThumbnailButtons.length; i++ )
 		{
-			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) ;
+			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) / this.element.width;
 			var currentButton = this.imageThumbnailButtons[i];
 			
-			if( nextCol > this.element.width )
+			if( nextCol > thumbnailWindowWidth )
 			{
 				curColumn = 0;
 				curRow++;
@@ -299,15 +306,14 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
 		{
-			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) ;
+			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) / this.element.width;
 			var currentButton = this.pdfThumbnailButtons[i];
 			
-			if( nextCol > this.element.width )
+			if( nextCol > thumbnailWindowWidth )
 			{
 				curColumn = 0;
 				curRow++;
 			}
-
 			currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer), curRow * (imageThumbSize + thumbSpacer) );
 			
 			curColumn++;
@@ -317,10 +323,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		for( i = 0; i < this.videoThumbnailButtons.length; i++ )
 		{
-			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) ;
+			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) / this.element.width;
 			var currentButton = this.videoThumbnailButtons[i];
 			
-			if( nextCol > this.element.width )
+			if( nextCol > thumbnailWindowWidth )
 			{
 				curColumn = 0;
 				curRow++;
@@ -335,10 +341,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		for( i = 0; i < this.appThumbnailButtons.length; i++ )
 		{
-			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) ;
+			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) / this.element.width;
 			var currentButton = this.appThumbnailButtons[i];
 			
-			if( nextCol > this.element.width )
+			if( nextCol > thumbnailWindowWidth )
 			{
 				curColumn = 0;
 				curRow++;
@@ -353,10 +359,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
 		{
-			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) ;
+			var nextCol = (curColumn + 1) * (imageThumbSize + thumbSpacer) / this.element.width;
 			var currentButton = this.sessionThumbnailButtons[i];
 			
-			if( nextCol > this.element.width )
+			if( nextCol > thumbnailWindowWidth )
 			{
 				curColumn = 0;
 				curRow++;
@@ -381,16 +387,171 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		
-		// UI
+		// Thumbnail window
 		for( i = 0; i < this.thumbnailButtons.length; i++ )
 		{
 			thumbButton = this.thumbnailButtons[i];
 			thumbButton.draw(date);
 		}
 		
+		// Filename text
 		this.ctx.font="24px sans-serif";
 		this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
 		this.ctx.fillText( this.hoverOverText, 5, 24);
+		
+		// Preview window
+		previewImageSize = this.element.width * 0.3;
+		previewWindowX = this.element.width * 0.7;
+		previewWindowY = 50;
+		
+		if( this.hoverOverThumbnail !== null )
+			this.ctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
+			
+		// Metadata
+		metadataLine = 0;
+		metadataWindowX = previewWindowX;
+		metadataWindowY = previewWindowY + previewImageSize + 20;
+		if( this.hoverOverMeta !== null )
+		{
+			this.ctx.font="16px sans-serif";
+			metadata = this.hoverOverMeta;
+			console.log( metadata);
+			
+			// Generic
+			if( metadata.FileName )
+			{
+				this.ctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.FileSize )
+			{
+				this.ctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			
+			// Images
+			if( metadata.ImageSize )
+			{
+				this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.DateCreated )
+			{
+				this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.Copyright )
+			{
+				this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			
+			// Photo
+			if( metadata.Artist )
+			{
+				this.ctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.Aperture )
+			{
+				this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.Exposure )
+			{
+				this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.Flash )
+			{
+				this.ctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.ExposureTime )
+			{
+				this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.FOV )
+			{
+				this.ctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.FocalLength )
+			{
+				this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.Model )
+			{
+				this.ctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.LensModel )
+			{
+				this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.ISO )
+			{
+				this.ctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.ShutterSpeed )
+			{
+				this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			
+			// GPS
+			if( metadata.GPSAltitude )
+			{
+				this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.GPSLatitude )
+			{
+				this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.GPSTimeStamp )
+			{
+				this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			
+			// Video
+			if( metadata.Duration )
+			{
+				this.ctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.CompressorID )
+			{
+				this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.AvgBitrate )
+			{
+				this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.AudioFormat )
+			{
+				this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.AudioChannels )
+			{
+				this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+			if( metadata.AudioSampleRate )
+			{
+				this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
+				metadataLine++;
+			}
+		}
 	},
 	
 	resize: function(date)
@@ -416,6 +577,9 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
 			{
 				this.hoverOverText = thumbButton.getData().filename;
+				this.hoverOverThumbnail = thumbButton.idleImage;
+				this.hoverOverMeta =  thumbButton.getData().meta;
+
 				overButton = true;
 			}
 		}
