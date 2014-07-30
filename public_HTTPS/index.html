@@ -226,7 +226,14 @@
 			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
 			windowTitle.style.zIndex = itemCount.toString();
 			ui.main.appendChild(windowTitle);
-			
+
+			var windowIcons = document.createElement("img");
+			windowIcons.src = "images/layout.webp";
+			windowIcons.height = Math.round(ui.titleBarHeight);
+			windowIcons.style.position = "absolute";
+			windowIcons.style.right    = "0px";
+			windowTitle.appendChild(windowIcons);
+
 			var titleText = document.createElement("p");
 			titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
 			titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";

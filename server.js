@@ -2157,10 +2157,36 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if(elem !== null){
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
-			if(data.button === "left"){
+			if (data.button === "left") {
 				var localX = pointerX - elem.left;
 				var localY = pointerY - (elem.top+config.titleBarHeight);
 				var cornerSize = Math.min(elem.width, elem.height) / 5;
+
+				// if localY in negative, inside titlebar
+				if (localY < 0) {
+					// titlebar image: 807x138  (10 pixels front paddding)
+					var buttonsWidth = config.titleBarHeight * (807.0/138.0);
+					var buttonsPad   = config.titleBarHeight * ( 10.0/138.0);
+					var oneButton    = buttonsWidth / 5; // five buttons
+					var startButtons = elem.width - buttonsWidth;
+					if (localX > (startButtons+buttonsPad+4*oneButton)) {
+						//console.log('Titlebar> bottom button');
+						pointerBottomZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad+3*oneButton)) {
+						//console.log('Titlebar> top button');
+						pointerTopZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad+2*oneButton)) {
+						//console.log('Titlebar> right button');
+						pointerRightZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad+oneButton)) {
+						//console.log('Titlebar> left button');
+						pointerLeftZone(uniqueID, pointerX, pointerY);
+					} else if (localX > (startButtons+buttonsPad)) {
+						//console.log('Titlebar> maximize button');
+						pointerDblClick(uniqueID, pointerX, pointerY);
+					}
+				}
+
 				// bottom right corner - select for drag resize
 				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
 					remoteInteraction[uniqueID].selectResizeItem(elem, pointerX, pointerY);
@@ -2528,6 +2554,122 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerLeftZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerRightZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerTopZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
+function pointerBottomZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem, config);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw

@@ -187,11 +187,12 @@
 		sessionsDir = document.getElementById('sessions');
 				
 		// setup for dialog polyfill
-		var diag1 = document.getElementById("lb_light");
-	    dialogPolyfill.registerDialog(diag1);
-		var diag2 = document.getElementById("lb_pointer_help");
-	    dialogPolyfill.registerDialog(diag2);
-
+		if (!document.createElement('dialog').showModal) {
+			var diag1 = document.getElementById("lb_light");
+			dialogPolyfill.registerDialog(diag1);
+			var diag2 = document.getElementById("lb_pointer_help");
+			dialogPolyfill.registerDialog(diag2);
+		}
 
 		wsio.on('setupDisplayConfiguration', function(config) {
 			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
