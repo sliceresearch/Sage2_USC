@@ -172,54 +172,6 @@ function windowManager(id, ws) {
 		event.preventDefault();
 	};
 	
-	////////////////////////////////////////////
-	// Initial touch code
-	//   uses only the first touch to move
-	//   compared to move, need to update position on press and release events
-	////////////////////////////////////////////	
-	this.touchPress = function(event) {
-		event.preventDefault();
-
-		// Update "cursor" position
-		var rect = this.element.getBoundingClientRect();
-		this.mouseX = event.changedTouches[0].clientX - rect.left;
-		this.mouseY = event.changedTouches[0].clientY - rect.top;
-		var globalX = this.mouseX / this.scale;
-		var globalY = this.mouseY / this.scale;		
-		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
-		// Emit the press event
-		this.wsio.emit('pointerPress',{button:'left'});
-		event.preventDefault();
-	};
-	
-	this.touchMove = function(event) {
-		event.preventDefault();
-
-		// Emit the move event
-		var rect = this.element.getBoundingClientRect();
-		this.mouseX = event.changedTouches[0].clientX - rect.left;
-		this.mouseY = event.changedTouches[0].clientY - rect.top;
-		var globalX = this.mouseX / this.scale;
-		var globalY = this.mouseY / this.scale;		
-		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
-	};
-	
-	this.touchRelease = function(event) {
-		event.preventDefault();
-
-		// Update the "cursor" position
-		var rect = this.element.getBoundingClientRect();
-		this.mouseX = event.changedTouches[0].clientX - rect.left;
-		this.mouseY = event.changedTouches[0].clientY - rect.top;
-		var globalX = this.mouseX / this.scale;
-		var globalY = this.mouseY / this.scale;		
-		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
-		// Emit the release event
-		this.wsio.emit('pointerRelease',{button:'left'});
-		event.preventDefault();
-	};
-	////////////////////////////////////////////
-
 
 	this.mouseScroll = function(event) {
 		var scale = 1.0 + Math.abs(event.wheelDelta)/512;
@@ -358,79 +310,87 @@ function windowManager(id, ws) {
 		this.draw();
 	};
 
+	// Mouse handlers
+	this.element.addEventListener('mousedown',  this.mousePress.bind(this),    false);
+	this.element.addEventListener('mousemove',  this.mouseMove.bind(this),     false);
+	this.element.addEventListener('mouseup',    this.mouseRelease.bind(this),  false);
+	this.element.addEventListener('dblclick',   this.mouseDblClick.bind(this), false);
+	this.element.addEventListener('mousewheel', this.mouseScroll.bind(this),   false);
+	//this.addEventListener('DOMMouseScroll', this.mouseScrollFF.bind(this), false);
 
-	var _this = this;
-	this.hammertime = new Hammer(this.element);
-	// Enable pin-to-zoom
-	this.hammertime.get('pinch').set({ enable: true });
-	// Set 1sec delay to trigger 'press' event
-	this.hammertime.get('press').set({ time: 1000 });
+	// Touch-enabled code
+	//    using hammer.js library: http://hammerjs.github.io/
+	if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
+		var _this = this;
+		this.hammertime = new Hammer(this.element);
 
-	this.hammertime.on('press', function(event) {
-		// Simulate delete key: press 1sec to delete app
-		_this.wsio.emit('keyUp', {code: 46});
-	});
+		// Enable pin-to-zoom
+		this.hammertime.get('pinch').set({ enable: true });
+		// Set 1sec delay to trigger 'press' event
+		this.hammertime.get('press').set({ time: 1000 });
 
-	// Pan event
-	this.hammertime.on('pan', function(event) {
-		// Set the pointer position
-		var rect = _this.element.getBoundingClientRect();
-		_this.mouseX = event.center.x - rect.left;
-		_this.mouseY = event.center.y - rect.top;
-		var globalX = _this.mouseX / _this.scale;
-		var globalY = _this.mouseY / _this.scale;
-		_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
-		// Send a pointer press event
-		_this.wsio.emit('pointerPress',{button:'left'});
-	});
+		this.hammertime.on('press', function(event) {
+			// Simulate delete key: press 1sec to delete app
+			_this.wsio.emit('keyUp', {code: 46});
+		});
 
-	this.hammertime.on('panend', function(event) {
-		// When panning ends, release the pointer
-		_this.wsio.emit('pointerRelease',{button:'left'});
-	});
+		// Pan event
+		this.hammertime.on('pan', function(event) {
+			// Set the pointer position
+			var rect = _this.element.getBoundingClientRect();
+			_this.mouseX = event.center.x - rect.left;
+			_this.mouseY = event.center.y - rect.top;
+			var globalX = _this.mouseX / _this.scale;
+			var globalY = _this.mouseY / _this.scale;
+			_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+			// Send a pointer press event
+			_this.wsio.emit('pointerPress',{button:'left'});
+		});
 
-	// Double-tap event
-	this.hammertime.on('doubletap', function(event) {
-		// Emit the double-click event
-		wsio.emit('pointerDblClick');
-	});
+		this.hammertime.on('panend', function(event) {
+			// When panning ends, release the pointer
+			_this.wsio.emit('pointerRelease',{button:'left'});
+		});
 
-	// Single-tap event
-	this.hammertime.on('tap', function(event) {
-		// Set the pointer position
-		var rect = _this.element.getBoundingClientRect();
-		_this.mouseX = event.center.x - rect.left;
-		_this.mouseY = event.center.y - rect.top;
-		var globalX = _this.mouseX / _this.scale;
-		var globalY = _this.mouseY / _this.scale;
-		_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
-		// Simulate a press-release sequence
-		_this.wsio.emit('pointerPress',{button:'left'});
-		_this.wsio.emit('pointerRelease',{button:'left'});
-	});
+		// Double-tap event
+		this.hammertime.on('doubletap', function(event) {
+			// Emit the double-click event
+			wsio.emit('pointerDblClick');
+		});
 
-	this.hammertime.on('pinchstart pinchend', function(event) {
-		// Position the pointer
-		var rect = _this.element.getBoundingClientRect();
-		_this.mouseX = event.center.x - rect.left;
-		_this.mouseY = event.center.y - rect.top;
-		var globalX = _this.mouseX / _this.scale;
-		var globalY = _this.mouseY / _this.scale;
-		_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
-	});
+		// Single-tap event
+		this.hammertime.on('tap', function(event) {
+			// Set the pointer position
+			var rect = _this.element.getBoundingClientRect();
+			_this.mouseX = event.center.x - rect.left;
+			_this.mouseY = event.center.y - rect.top;
+			var globalX = _this.mouseX / _this.scale;
+			var globalY = _this.mouseY / _this.scale;
+			_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+			// Simulate a press-release sequence
+			_this.wsio.emit('pointerPress',{button:'left'});
+			_this.wsio.emit('pointerRelease',{button:'left'});
+		});
 
-	this.hammertime.on('pinch', function(event) {
-		var scale = event.scale;
-		// Some slowing down the scale (guess work)
-		if (event.scale > 1) scale = 1.0 + (event.scale - 1.0) / 20.0;
-		if (event.scale < 1) scale = 1.0 - (1.0 - event.scale) / 10.0;
+		this.hammertime.on('pinchstart pinchend', function(event) {
+			// Position the pointer
+			var rect = _this.element.getBoundingClientRect();
+			_this.mouseX = event.center.x - rect.left;
+			_this.mouseY = event.center.y - rect.top;
+			var globalX = _this.mouseX / _this.scale;
+			var globalY = _this.mouseY / _this.scale;
+			_this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		});
 
-		// Do the scolling
-		_this.wsio.emit('pointerScrollStart');
-		_this.wsio.emit('pointerScroll', {scale: scale});
-	});
+		this.hammertime.on('pinch', function(event) {
+			var scale = event.scale;
+			// Some slowing down the scale (guess work)
+			if (event.scale > 1) scale = 1.0 + (event.scale - 1.0) / 20.0;
+			if (event.scale < 1) scale = 1.0 - (1.0 - event.scale) / 10.0;
 
-	// Need to keep the mousewheel event
-	this.element.addEventListener('mousewheel', this.mouseScroll.bind(this), false);
-
+			// Do the scolling
+			_this.wsio.emit('pointerScrollStart');
+			_this.wsio.emit('pointerScroll', {scale: scale});
+		});
+	}
 }
