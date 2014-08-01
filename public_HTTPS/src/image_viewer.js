@@ -13,9 +13,8 @@ var image_viewer = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 		
-		this.src   = null;
-		this.panel = null;
-		this.top   = null;
+		this.src = null;
+		this.top = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -27,23 +26,10 @@ var image_viewer = SAGE2_App.extend( {
 		this.state.type = null;
 		this.state.exif = null;
 		
+		this.createLayer("rgba(0,0,0,0.85)");
+		this.pre = document.createElement('pre');
+		this.layer.appendChild(this.pre);
 		this.top = 0;
-
-		this.panel = document.createElement('pre');
-		this.panel.style.backgroundColor  = "rgba(0,0,0,0.85)";
-		this.panel.style.position = "absolute";
-		this.panel.style.padding  = "0px";
-		this.panel.style.margin   = "0px";
-		this.panel.style.left     = "0px";
-		this.panel.style.top      = "0px";
-		this.panel.style.width    = "100%";
-		this.panel.style.color    = "#FFFFFF";
-		this.panel.style.display  = "none";
-		this.panel.style.overflow = "visible";
-		this.panel.style.zIndex   = parseInt(this.element.parentNode)+1;
-		this.panel.style.fontSize = Math.round(ui.titleTextSize) + "px";
-
-		this.element.parentNode.appendChild(this.panel);
 	},
 	
 	load: function(state, date) {
@@ -52,7 +38,7 @@ var image_viewer = SAGE2_App.extend( {
 			this.state.src  = state.src;
 			this.state.type = state.type;
 			this.state.exif = state.exif;
-			this.panel.innerHTML = this.syntaxHighlight(state.exif);
+			this.pre.innerHTML = this.syntaxHighlight(state.exif);
 		}
 	},
 	
@@ -60,7 +46,6 @@ var image_viewer = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		
 	},
 
 	// Parse JSON object and add colors
@@ -89,26 +74,26 @@ var image_viewer = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
 		if (eventType === "keyboard" && data.character==="i") {
-			if (this.panel.style.display === "none") {
+			if (this.isLayerHidden()) {
 				this.top = 0;
-				this.panel.style.top = "0px";
-				this.panel.style.display = "block";
+				this.showLayer();
 			}
 			else {
-				this.panel.style.display = "none";
+				this.hideLayer();
 			}
 		}
-		// Scroll events for zoom
+		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {
 			var amount = data.scale;
 			if (amount >= 1) {
 				this.top -= ui.titleTextSize * amount;
-				this.panel.style.top = this.top + "px";
+				if (this.top < (-(this.layer.clientHeight-this.element.height))) this.top = -(this.layer.clientHeight-this.element.height);
+				this.layer.style.top = this.top + "px";
 			}
 			else if (amount <= 1) {
 				this.top += ui.titleTextSize * amount;
 				if (this.top > 0) this.top = 0;
-				this.panel.style.top = this.top + "px";
+				this.layer.style.top = this.top + "px";
 			}
 		}
 	}

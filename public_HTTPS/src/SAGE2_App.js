@@ -68,8 +68,56 @@ var SAGE2_App = Class.extend( {
 		this.timer     = 0;
 		this.maxFPS    = 60.0; // Big than 60, since Chrome is Vsync anyway
 		this.redraw    = true;
+
+		// Top layer
+		this.layer     = null;
 	},
-	
+
+	// Functions to create and manager another layered DVI ontop the app
+	/////////////////////////////////////////////////////////////////////
+	createLayer: function(backgroundColor) {
+		this.layer = document.createElement('div');
+		this.layer.style.backgroundColor  = backgroundColor;
+		this.layer.style.position = "absolute";
+		this.layer.style.padding  = "0px";
+		this.layer.style.margin   = "0px";
+		this.layer.style.left     = "0px";
+		this.layer.style.top      = "0px";
+		this.layer.style.width    = "100%";
+		this.layer.style.color    = "#FFFFFF";
+		this.layer.style.display  = "none";
+		this.layer.style.overflow = "visible";
+		this.layer.style.zIndex   = parseInt(this.div.zIndex)+1;
+		this.layer.style.fontSize = Math.round(ui.titleTextSize) + "px";
+
+		this.div.appendChild(this.layer);
+
+		return this.layer;
+	},
+	showLayer: function() {
+		if (this.layer) {
+			// Reset its top position, just in case
+			this.layer.style.top = "0px";
+			this.layer.style.display = "block";
+		}
+	},
+	hideLayer: function () {
+		if (this.layer) {
+			this.layer.style.display = "none";
+		}
+	},
+	showHideLayer: function () {
+		if (this.layer) {
+			if (this.isLayerHidden()) this.showLayer();
+			else this.hideLayer();
+		}
+	},
+	isLayerHidden: function () {
+		if (this.layer)	return (this.layer.style.display === "none");
+		else return false;
+	},
+	/////////////////////////////////////////////////////////////////////
+
 	preDraw: function(date) {
 		this.t  = (date.getTime() - this.startDate.getTime()) / 1000; // total time since start of program (sec)
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000; // delta time since last frame (sec)
