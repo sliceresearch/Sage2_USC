@@ -224,6 +224,14 @@ getMimeType = function (id) {
 		return null;
 };
 
+getExifData = function (id) {
+	if (id in AllAssets.list)
+		return AllAssets.list[id].exif;
+	else
+		return null;
+};
+
+
 exifAsync = function(cmds, cb) {
 	var execNext = function() {
 		exiftool.file(cmds.shift(), function(err,data) {
@@ -392,6 +400,7 @@ exports.deletePDF   = deletePDF;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
+exports.getExifData   = getExifData;
 
 exports.setupImageMagick = setupImageMagick;
 

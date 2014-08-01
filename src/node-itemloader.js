@@ -106,7 +106,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 			}
 			else
 				if (info.ImageWidth && info.ImageHeight) {
-					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name,
+					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
 						function(appInstance) {
 							callback(appInstance);
 						}
@@ -200,7 +200,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 };
 
 
-appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, callback) {
+appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, exif_data, callback) {
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
 
@@ -212,7 +212,8 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		url: external_url,
 		data: {
 			src: source,
-			type: mime_type
+			type: mime_type,
+			exif: exif_data
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -246,9 +247,10 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 
 			// Query the exif data
 			var dims = assets.getDimensions(file);
+			var exif = assets.getExifData(file);
 
 			if (dims) {
-				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, function(appInstance) {
+				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
 					callback(appInstance);
 				});
 			} else {
@@ -263,16 +265,27 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 				return; // throw err;
 			}
 
-			imageMagick(buffer).size(function (err, size) {
-				if(err) {
-					console.log("Error> getting buffer size for file", file);
-					return; // throw err;
-				}
+			// imageMagick(buffer).size(function (err, size) {
+			// 	if(err) {
+			// 		console.log("Error> getting buffer size for file", file);
+			// 		return; // throw err;
+			// 	}
+			// 	_this.loadImageFromDataBuffer(buffer, size.width, size.height, "image/png", url, external_url, name, function(appInstance) {
+			// 		callback(appInstance);
+			// 	});
+			// });
 
-				_this.loadImageFromDataBuffer(buffer, size.width, size.height, "image/png", url, external_url, name, function(appInstance) {
+			// Query the exif data
+			var dims = assets.getDimensions(file);
+			var exif = assets.getExifData(file);
+
+			if (dims) {
+				_this.loadImageFromDataBuffer(buffer, dims.width, dims.height, "image/png", url, external_url, name, exif, function(appInstance) {
 					callback(appInstance);
 				});
-			});
+			} else {
+				console.log("File not recognized:", file, mime_type, url);
+			}
 		});
 		
 	}

@@ -285,7 +285,7 @@ function uiBuilder(json_cfg, clientID) {
 		if(this.json_cfg.show_version) {
 			this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
 		}
-	}
+	};
 
 	this.createSagePointer = function(pointer_data) {
 		var pointerElem = document.createElement("canvas");

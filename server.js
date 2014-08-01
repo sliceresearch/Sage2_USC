@@ -584,7 +584,7 @@ function wsKeyPress(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log("received new stream: " + data.id);
+	console.log("received new stream: ", data.id);
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
@@ -592,6 +592,11 @@ function wsStartNewMediaStream(wsio, data) {
 			mediaStreams[data.id].clients[clientAddress] = false;
 		}
 	}
+
+	// Forcing 'int' type for width and height
+	//     for some reasons, messages from websocket lib from Linux send strings for ints
+	data.width  = parseInt(data.width,  10);
+	data.height = parseInt(data.height, 10);
 
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
@@ -1186,6 +1191,7 @@ function wsOpenNewWebpage(wsio, data) {
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
 		// then emit the command
+		console.log("Browser> new page", data.url);
 		webBrowserClient.emit('openWebBrowser', {url: data.url});
 	}
 }
@@ -1956,7 +1962,7 @@ function findRemoteSiteByConnection(wsio) {
 
 function findAppUnderPointer(pointerX, pointerY) {
 	var i;
-	for(i=applications.length-1; i>=0; i--){
+	for(i=applications.length-1; i>=0; i--) {
 		if(pointerX >= applications[i].left && pointerX <= (applications[i].left+applications[i].width) && pointerY >= applications[i].top && pointerY <= (applications[i].top+applications[i].height+config.titleBarHeight)){
 			return applications[i];
 		}
