@@ -28,12 +28,10 @@
 		if(window.location.protocol == "https:" && port == "") port = "443";
 	
 		xhr = new XMLHttpRequest();
-		xhr.open("GET", "/config", true);
+		xhr.open("GET", "config", true);
 		xhr.onreadystatechange = function() {
 			if(xhr.readyState == 4 && xhr.status == 200){
 				json_cfg = JSON.parse(xhr.responseText);
-				console.log(json_cfg);
-				
 				initializePageList();
 			}
 		};
@@ -54,19 +52,19 @@
 		var sageUI = document.createElement('p');
 		var sageUI_link = document.createElement('a');
 		sageUI_link.textContent = "SAGE UI";
-		if (json_cfg.public_host)
-			sageUI_link.href = "https://" + json_cfg.public_host + https_port + "/sageUI.html";
+		if (https_port == "")
+			sageUI_link.href = "https://" + window.location.host + window.location.pathname + "sageUI.html";
 		else
-			sageUI_link.href = "https://" + json_cfg.host + https_port + "/sageUI.html";
+			sageUI_link.href = "https://" + window.location.hostname + https_port + "/sageUI.html";
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
 		var sagePointer = document.createElement('p');
 		var sagePointer_link = document.createElement('a');
 		sagePointer_link.textContent = "SAGE Pointer";
-		if (json_cfg.public_host)
-			sagePointer_link.href = "https://" + json_cfg.public_host + https_port + "/sagePointer.html";
+		if (https_port == "")
+			sagePointer_link.href = "https://" + window.location.host + window.location.pathname + "sagePointer.html";
 		else
-			sagePointer_link.href = "https://" + json_cfg.host + https_port + "/sagePointer.html";
+			sagePointer_link.href = "https://" + window.location.hostname + https_port + "/sagePointer.html";
 		sagePointer_link.target = "_blank";
 		sagePointer.appendChild(sagePointer_link);
 		
@@ -77,10 +75,10 @@
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		if (json_cfg.public_host)
-			audioManager_link.href = "https://" + json_cfg.public_host + https_port + "/audioManager.html";
+		if (https_port == "")
+			audioManager_link.href = "https://" + window.location.host + window.location.pathname + "audioManager.html";
 		else
-			audioManager_link.href = "https://" + json_cfg.host + https_port + "/audioManager.html";
+			audioManager_link.href = "https://" + window.location.hostname + https_port + "/audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
@@ -91,10 +89,10 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			if (json_cfg.public_host)
-				displayClient_link.href = "https://" + json_cfg.public_host + https_port + "/?clientID=" + i.toString();
+			if (https_port == "")
+				displayClient_link.href = "https://" + window.location.host + window.location.pathname + "?clientID=" + i.toString();
 			else
-				displayClient_link.href = "https://" + json_cfg.host + https_port + "/?clientID=" + i.toString();
+				displayClient_link.href = "https://" + window.location.hostname + https_port + "/?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
@@ -105,21 +103,16 @@
 		var displayClient = document.createElement('p');
 		var displayClient_link = document.createElement('a');
 		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
-		if (json_cfg.public_host)
-			displayClient_link.href = "https://" + json_cfg.public_host + https_port + "/?clientID=" + i.toString();
+		if (https_port == "")
+			displayClient_link.href = "https://" + window.location.host + window.location.pathname + "?clientID=" + i.toString();
 		else
-			displayClient_link.href = "https://" + json_cfg.host + https_port + "/?clientID=" + i.toString();
+			displayClient_link.href = "https://" + window.location.hostname + https_port + "/?clientID=" + i.toString();
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
 
 		// Info
 		var aul = document.createElement('ul');
-		if (json_cfg.public_host) {
-			var info1 = document.createElement('li');
-			info1.innerHTML = "Host (public): " + json_cfg.public_host;
-			aul.appendChild(info1);
-		}
 		var info2 = document.createElement('li');
 		info2.innerHTML = "Host: " + json_cfg.host;
 		aul.appendChild(info2);
@@ -133,7 +126,6 @@
 		if (json_cfg.version) {
 			var info5 = document.createElement('li');
 			info5.innerHTML  = "Version: " + json_cfg.version.base + "-" +json_cfg.version.branch +"-" + json_cfg.version.commit +" - " + json_cfg.version.date;		
-			console.log(json_cfg.version);
 			aul.appendChild(info5);
 		}
 		information.appendChild(aul);

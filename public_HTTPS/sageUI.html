@@ -84,7 +84,7 @@
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
-		
+
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
 		wsio.open(function() {
