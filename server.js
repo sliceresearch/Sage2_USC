@@ -2694,7 +2694,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 	}
 }
 
-function pointerCloseGesture(uniqueID, pointerX, pointerY) {
+function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
 		
@@ -2703,7 +2703,16 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY) {
 	var elem = findAppUnderPointer(pX, pY);
 
 	if (elem !== null) {
-		deleteApplication(elem);
+		if( elem.closeGestureID === undefined && gesture === 0 ) { // gesture: 0 = down, 1 = hold/move, 2 = up
+			elem.closeGestureID = uniqueID;
+			elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
+		}
+		else if( elem.closeGestureTime <= time && gesture === 1 ) { // Held long enough, remove
+			deleteApplication(elem);
+		}
+		else if( gesture === 2 ) { // Released, reset timer
+			elem.closeGestureID = undefined;
+		}
 	}
 }
 
@@ -2794,6 +2803,14 @@ function deleteApplication( elem ) {
 
 if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
+	
+	var closeGestureDelay = 1500;
+	
+	if( config.experimental.omicron.closeGestureDelay !== undefined )	
+	{
+		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
+	}
+	
 	omicronManager.setCallbacks(
 		sagePointers,
 		createSagePointer,
