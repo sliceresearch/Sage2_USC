@@ -263,6 +263,7 @@ function initializeWSClient(wsio) {
 		wsio.on('pointerMove',               wsPointerMove);
 		wsio.on('pointerScrollStart',        wsPointerScrollStart);
 		wsio.on('pointerScroll',             wsPointerScroll);
+		wsio.on('pointerDraw',               wsPointerDraw);
 		wsio.on('keyDown',                   wsKeyDown);
 		wsio.on('keyUp',                     wsKeyUp);
 		wsio.on('keyPress',                  wsKeyPress);
@@ -478,6 +479,11 @@ function wsPointerScroll(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	pointerScroll(uniqueID, data);
+}
+
+function wsPointerDraw(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	pointerDraw(uniqueID, data);
 }
 
 function wsKeyDown(wsio, data) {
@@ -2544,6 +2550,25 @@ function pointerScroll( uniqueID, data ) {
 			
 			var event = {id: elem.id, type: "pointerScroll", position: ePosition, user: eUser, data: data, date: now};
 			
+			broadcast('eventInItem', event, 'receivesInputEvents');
+		}
+	}
+}
+
+function pointerDraw(uniqueID, data) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var ePos  = {x: 0, y: 0};
+	var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220,10,10]};
+	var now   = new Date();
+	var appId = null;
+
+	for (var i=0;i<applications.length;i++) {
+		var a = applications[i];
+		// Send the drawing events only to whiteboard apps
+		if (a.application === 'whiteboard') {
+			var event = {id: a.id, type: "pointerDraw", position: ePos, user: eUser, data: data, date: now};
 			broadcast('eventInItem', event, 'receivesInputEvents');
 		}
 	}
