@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+
+		<title>SAGE2 drawing with Wacom</title>
+
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<script type="text/javascript">
+			// SAGE2 is available for use under the SAGE2 Software License
+			//
+			// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+			// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+			// Applications (LAVA)
+			//
+			// See full text, terms and conditions in the LICENSE.txt included file
+			//
+			// Copyright (c) 2014
+		</script>
+
+		<script type="text/javascript" src="lib/kinetic-v5.1.0.min.js"></script>
+		<script type="text/javascript" src="lib/simplify.js"></script>
+
+		<style type="text/css">
+			#canvas { border: 2px solid rgba(0,0,0,0.50); }
+		</style>
+
+		<script>
+		var plugin;
+		var canvas;
+		var canvasPos  = {x:0.0, y:0.0};
+		var canvasSize = {width:1280, height:720};
+		var capturing  = false;
+		
+		var aSpline    = null;
+		var layer      = null;
+		var pressures  = null;
+
+		function findPos(obj) {
+			var curleft = curtop = 0;
+			if (obj.offsetParent) 
+			{
+				curleft = obj.offsetLeft
+				curtop  = obj.offsetTop
+				while (obj = obj.offsetParent) 
+				{
+					curleft += obj.offsetLeft
+					curtop  += obj.offsetTop
+				}
+			}
+			return {x:curleft, y:curtop};
+		}
+
+		function inCanvasBounds(posX, posY ) {
+			var left   = 0;
+			var top    = 0;
+			var right  = canvasSize.width;
+			var bottom = canvasSize.height;
+
+			return ( posX >= left && posX <= right && 
+					 posY >= top && posY <= bottom);
+		}
+
+		function init () {
+			console.log("Init");
+			plugin = document.getElementById('wtPlugin');
+
+			// Show plugin version
+			pluginVersion = document.getElementById('pluginVersion');
+			pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
+
+			var pluginInformation = document.getElementById('pluginInformation');
+			var isWacom      = plugin.penAPI.isWacom;
+			var version      = plugin.penAPI.version;
+			var tabletModel  = plugin.penAPI.tabletModel;
+			var info         = "Plugin information: isWacom:" + isWacom;
+			info += " version:" + version;
+			info += " tabletModel:" + tabletModel;
+			pluginInformation.innerHTML = info;
+
+			var stage = new Kinetic.Stage({
+				container: 'canvas',
+				width:  1280,
+				height: 720
+			});
+
+			layer = new Kinetic.Layer();
+			stage.add(layer);
+
+	        canvas    = document.getElementById('canvas');
+        	canvasPos = findPos(canvas);
+
+			canvas.addEventListener("mouseup",   mouseup,   true);
+			canvas.addEventListener("mousedown", mousedown, true); 
+		}
+
+		function mousedown(ev)
+		{
+			canvas.onmousemove=mousemove;
+
+			pressures = [];
+
+			var pX = ev.pageX - canvasPos.x;
+			var pY = ev.pageY - canvasPos.y;
+
+			capturing = inCanvasBounds(pX, pY);
+
+			aSpline = new Kinetic.Line({
+				points: [pX,pY],
+				stroke: 'red',
+				strokeWidth: 3,
+				lineCap: 'round',
+				tension: 0 // straight initially
+			});
+			layer.add(aSpline);
+
+			// Register click immediately
+			mousemove(ev);
+		}
+
+		function mouseup(ev) {
+			capturing = false;
+			canvas.style.cursor = 'initial';
+			canvas.onmousemove=null;
+			if (aSpline) {
+				var i;
+				var arr = aSpline.points();
+				var toprocess = [];
+				for (i=0; i<arr.length;i+=2) {
+					toprocess.push({x:arr[2*i], y:arr[2*i+1]});
+				}
+				// Adding the mouseup position
+				curX = ev.pageX - canvasPos.x;
+				curY = ev.pageY - canvasPos.y;
+				toprocess.push({x:curX, y:curY});
+				// starting process
+				var processed = simplify(toprocess, 2.0, true); // array, high-quality: true
+				var newpoints = [];
+				for (i=0; i<processed.length;i++) {
+					newpoints.push(processed[i].x,processed[i].y);
+				}
+				//console.log('Gain:', toprocess.length/newpoints.length);
+				aSpline.points(newpoints);
+				aSpline.tension(0.5);  // more interpolation in the spline
+				var avg = 0.0;
+				for (i=0;i<pressures.length;i++)
+					avg += pressures[i];
+				avg = avg / pressures.length;
+				console.log('Avg>', avg, pressures.length);
+				if (avg===0)
+					aSpline.strokeWidth(3);
+				else
+					aSpline.strokeWidth(avg*8.0);
+				layer.draw();
+			}
+		}
+
+		function mousemove(ev) {
+			var penAPI   = plugin.penAPI;
+			var pressure = 0.0;
+			var isEraser;
+
+			if (penAPI) {
+				pressure = penAPI.pressure;
+				isEraser = penAPI.isEraser;
+				//console.log('Eraser', isEraser);
+
+				// Get data values from Wacom plugin.
+				// var isEraser     = penAPI.isEraser;
+				// var pressure     = penAPI.pressure;
+				// var posX         = penAPI.posX;
+				// var posY         = penAPI.posY;
+				// var pointerType  = penAPI.pointerType;
+				// var sysX         = penAPI.sysX;
+				// var sysY         = penAPI.sysY;
+				// var tabX         = penAPI.tabX;
+				// var tabY         = penAPI.tabY;
+				// var rotationDeg  = penAPI.rotationDeg;
+				// var rotationRad  = penAPI.rotationRad;
+				// var tiltX        = penAPI.tiltX;
+				// var tiltY        = penAPI.tiltY;
+				// var tangPressure = penAPI.tangentialPressure;
+			} else {
+				pressure = 1.0;
+				isEraser = false;
+			}
+
+			canvas.style.cursor = 'crosshair'; //'pointer';
+
+			curX = ev.pageX - canvasPos.x;
+			curY = ev.pageY - canvasPos.y;
+
+			capturing = inCanvasBounds(curX, curY);
+			//console.log('capturing', capturing);
+
+			if (capturing && (pressure >= 0.0)) {
+				aSpline.points(aSpline.points().concat([curX, curY]));
+				console.log(pressure);
+				pressures.push(pressure);
+				aSpline.draw();
+			}
+		}
+
+		</script>
+
+	</head>
+
+	<body onload="init()">
+
+	<object id="wtPlugin" type="application/x-wacomtabletplugin" WIDTH=1 HEIGHT=1 style="position:absolute; left:100px; top:100px">
+	</object>
+
+	<h2>SAGE2 drawing</h2>
+	<div id="canvas" style="width:1280px;height:720px">
+	</div>
+
+	<h2>Information</h2>
+	<h4 id="pluginVersion">Plugin version:</h4>
+	<h4 id="pluginInformation">Plugin information:</h4>
+
+
+	</body>
+</html>

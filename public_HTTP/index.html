@@ -43,6 +43,7 @@
 		var audio       = document.getElementById('audio');
 		var display     = document.getElementById('display');
 		var information = document.getElementById('information');
+		var experiments = document.getElementById('experiments');
 		var remotesites = document.getElementById('remotesites');
 
 		var https_port = ":" + json_cfg.port.toString();
@@ -145,6 +146,16 @@
 		};
 		remotesites.appendChild(remotes);
 
+		var drawingClient = document.createElement('p');
+		var drawingClient_link = document.createElement('a');
+		drawingClient_link.textContent = "Drawing application";
+		if (https_port == "")
+			drawingClient_link.href = "https://" + window.location.host + window.location.pathname + "drawing.html";
+		else
+			drawingClient_link.href = "https://" + window.location.hostname + https_port + "/drawing.html";
+		drawingClient_link.target = "_blank";
+		drawingClient.appendChild(drawingClient_link);
+		experiments.appendChild(drawingClient);
 	}
 </script>
 
@@ -179,6 +190,10 @@
 
 		<section id="information" class="siteType">
 			<h2>Configuration</h2>
+		</section>
+
+		<section id="experiments" class="siteType">
+			<h2>Experiments</h2>
 		</section>
 
 
