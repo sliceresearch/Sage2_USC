@@ -148,7 +148,7 @@
 				for (i=0;i<pressures.length;i++)
 					avg += pressures[i];
 				avg = avg / pressures.length;
-				console.log('Avg>', avg, pressures.length);
+				//console.log('Avg>', avg, pressures.length);
 				if (avg===0)
 					aSpline.strokeWidth(3);
 				else
@@ -197,7 +197,6 @@
 
 			if (capturing && (pressure >= 0.0)) {
 				aSpline.points(aSpline.points().concat([curX, curY]));
-				console.log(pressure);
 				pressures.push(pressure);
 				aSpline.draw();
 			}
