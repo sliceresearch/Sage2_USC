@@ -1,0 +1,10 @@
+{
+	"main_script": "weather.js",
+	"icon": "evl.png",
+	"width": 490,
+	"height": 400,
+	"animation": true,
+	"resources": [
+		"scripts/d3.v3.min.js"
+	]
+}
