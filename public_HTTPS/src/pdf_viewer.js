@@ -8,6 +8,11 @@
 //
 // Copyright (c) 2014
 
+PDFJS.imageResourcesPath = '/images/pdfjs/';
+PDFJS.workerSrc = '/lib/pdf.worker.js';
+PDFJS.cMapUrl = '/cmaps/';
+PDFJS.cMapPacked = true;
+
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
@@ -53,8 +58,8 @@ var pdf_viewer = SAGE2_App.extend( {
 			
 			state.src = cleanURL(state.src);
 			
-			PDFJS.getDocument(state.src).then(function getPdfHelloWorld(_pdfDoc) {
-				_this.pdfDoc = _pdfDoc;
+			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
+				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
 				_this.state.src  = state.src;
@@ -62,23 +67,23 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.state.numPagesShown = state.numPagesShown;
 
 				// Getting the size of the page
-				_pdfDoc.getPage(1).then(function(page) {
+				_this.pdfDoc.getPage(1).then(function(page) {
 					var viewport = page.getViewport(1.0);
 					var w = parseInt(viewport.width, 10);
 					var h = parseInt(viewport.height,10);
 					_this.sendResize(w, h);
-					this.ratio = w / h;
+					_this.ratio = w / h;
 				});
 
 				// UI stuff
 				_this.controls.addButton({type:"rewind", action:function(appObj, date){
-					appObj.state.page  = 1;
+					appObj.state.page = 1;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
 				_this.controls.addButton({type:"prev", action:function(appObj, date){
 					if(appObj.state.page <= 1) return;
-					appObj.state.page  = appObj.state.page - 1;
+					appObj.state.page = appObj.state.page - 1;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
@@ -92,13 +97,13 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.controls.addLabel({textLength:labelWidth,appObj:_this, property:"pageValText"});
 
 				_this.controls.addButton({type:"next", action:function(appObj, date){
-					if (appObj.state.page  >= appObj.pdfDoc.numPages) return;
+					if (appObj.state.page >= appObj.pdfDoc.numPages) return;
 					appObj.state.page = appObj.state.page + 1;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
 				_this.controls.addButton({type:"fastforward", action:function(appObj, date){
-					appObj.state.page  = appObj.pdfDoc.numPages;
+					appObj.state.page = appObj.pdfDoc.numPages;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
@@ -119,9 +124,9 @@ var pdf_viewer = SAGE2_App.extend( {
 
 		var _this = this;
 
-		this.pdfDoc.getPage(this.state.page).then(function(page) {
+		this.pdfDoc.getPage(this.state.page).then(function(pdfPage) {
 			// set the scale to match the canvas
-			var viewport = page.getViewport(_this.canvas.width / page.getViewport(1.0).width);
+			var viewport = pdfPage.getViewport(_this.canvas.width / pdfPage.getViewport(1.0).width);
 			
 			// Not needed I think
 			// viewport.width  = _this.canvas.width;
@@ -130,7 +135,7 @@ var pdf_viewer = SAGE2_App.extend( {
 			// Render PDF page into canvas context
 			var renderContext = {canvasContext: _this.ctx, viewport: viewport};
 			
-			page.render(renderContext).then(function() {
+			pdfPage.render(renderContext).then(function() {
 				_this.element.src = _this.canvas.toDataURL();
 				// Check for change in the aspect ratio, send a resize if needed
 				//  (done after the render to avoid double rendering issues)
