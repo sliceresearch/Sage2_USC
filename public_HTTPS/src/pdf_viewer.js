@@ -48,6 +48,8 @@ var pdf_viewer = SAGE2_App.extend( {
 
 		this.state.numPagesShown = null;
 		
+		this.mostRecent = false;
+		
 		this.pageValText         = '';
 	},
 	
@@ -60,6 +62,8 @@ var pdf_viewer = SAGE2_App.extend( {
 			state.src = cleanURL(state.src);
 			
 			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
+				setAsMostRecentPDF(_this);
+				
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
@@ -128,37 +132,45 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.renderReq++;
 		var currentReq = this.renderReq;
 		
-		PDFJS.getDocument({url: this.state.src}).then(function getDocumentCallback(pdfDocument) {
+		var getDocumentCallback = function(pdfDocument) {
+			setAsMostRecentPDF(_this);
 			if(currentReq !== _this.renderReq) return;
 			
 			_this.pdfDoc = pdfDocument;
-			_this.pdfDoc.getPage(_this.state.page).then(function(pdfPage) {
-				if(currentReq !== _this.renderReq) return;
-				
-				// set the scale to match the canvas
-				var viewport = pdfPage.getViewport(_this.canvas.width / pdfPage.getViewport(1.0).width);
+			_this.pdfDoc.getPage(_this.state.page).then(gotPdfPage);
+		};
+		
+		var gotPdfPage = function(pdfPage) {
+			if(currentReq !== _this.renderReq) return;
 			
-				// Not needed I think
-				// viewport.width  = _this.canvas.width;
-				// viewport.height = _this.canvas.height;
+			// set the scale to match the canvas
+			var viewport = pdfPage.getViewport(_this.canvas.width / pdfPage.getViewport(1.0).width);
+		
+			// Not needed I think
+			// viewport.width  = _this.canvas.width;
+			// viewport.height = _this.canvas.height;
 
-				// Render PDF page into canvas context
-				var renderContext = {canvasContext: _this.ctx, viewport: viewport};
+			// Render PDF page into canvas context
+			var renderContext = {canvasContext: _this.ctx, viewport: viewport};
+		
+			pdfPage.render(renderContext).then(renderPdfPage);
+		};
+		
+		var renderPdfPage = function() {
+			if(currentReq !== _this.renderReq) return;
 			
-				pdfPage.render(renderContext).then(function() {
-					if(currentReq !== _this.renderReq) return;
-					
-					_this.element.src = _this.canvas.toDataURL();
-					// Check for change in the aspect ratio, send a resize if needed
-					//  (done after the render to avoid double rendering issues)
-					if (_this.ratio !== (viewport.width/viewport.height) ) {
-						_this.ratio = viewport.width/viewport.height;
-						_this.sendResize(viewport.width, viewport.height);
-					}
-					this.renderReq = 0;
-				});
-			});
-		});
+			_this.element.src = _this.canvas.toDataURL();
+			// Check for change in the aspect ratio, send a resize if needed
+			//  (done after the render to avoid double rendering issues)
+			if (_this.ratio !== (viewport.width/viewport.height) ) {
+				_this.ratio = viewport.width/viewport.height;
+				_this.sendResize(viewport.width, viewport.height);
+			}
+			this.renderReq = 0;
+		};
+		
+		if(this.mostRecent) this.pdfDoc.getPage(this.state.page).then(gotPdfPage);
+		else                PDFJS.getDocument({url: this.state.src}).then(getDocumentCallback);
 	},
 	
 	resize: function(date) {
