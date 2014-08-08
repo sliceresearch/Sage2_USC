@@ -8,10 +8,7 @@
 //
 // Copyright (c) 2014
 
-PDFJS.imageResourcesPath = '/images/pdfjs/';
-PDFJS.workerSrc = '/lib/pdf.worker.js';
-PDFJS.cMapUrl = '/cmaps/';
-PDFJS.cMapPacked = true;
+PDFJS.workerSrc = 'lib/pdf.worker.js';
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
@@ -19,12 +16,13 @@ var pdf_viewer = SAGE2_App.extend( {
 	
 		this.resizeEvents = "onfinish";
 		
-		this.canvas    = null;
-		this.ctx       = null;
-		this.loaded    = false;
-		this.pdfDoc    = null;
-		this.ratio     = null;
-		this.renderReq = 0;
+		this.canvas  = [];
+		this.ctx     = [];
+		this.loaded  = false;
+		this.pdfDoc  = null;
+		this.ratio   = null;
+		this.currCtx = 0;
+		this.numCtx  = 5;
 
 		this.enableControls = true;
 		this.pageValText    = null;
@@ -35,10 +33,15 @@ var pdf_viewer = SAGE2_App.extend( {
 		arguments.callee.superClass.init.call(this, id, "img", width, height, resrc, date);
 		
 		// application specific 'init'
-		this.canvas = document.createElement("canvas");
-		this.canvas.width  = this.element.width;
-		this.canvas.height = this.element.height;
-		this.ctx = this.canvas.getContext("2d");
+		for(var i=0; i<this.numCtx; i++){
+			var canvas = document.createElement("canvas");
+			canvas.width  = this.element.width;
+			canvas.height = this.element.height;
+			var ctx = canvas.getContext("2d");
+			
+			this.canvas.push(canvas);
+			this.ctx.push(ctx);
+		}
 		
 		//  *** DO NOT OVERWRITE this.state, ALWAYS EDIT ITS PROPERTIES
 		// this.state = {srcPDF: null, pageNum: null, numPagesShown: null}; // BAD
@@ -47,8 +50,6 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.state.page = null;
 
 		this.state.numPagesShown = null;
-		
-		this.mostRecent = false;
 		
 		this.pageValText         = '';
 	},
@@ -62,8 +63,6 @@ var pdf_viewer = SAGE2_App.extend( {
 			state.src = cleanURL(state.src);
 			
 			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
-				setAsMostRecentPDF(_this);
-				
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
@@ -128,54 +127,48 @@ var pdf_viewer = SAGE2_App.extend( {
 		if(this.loaded === false) return;
 
 		var _this = this;
-		
-		this.renderReq++;
-		var currentReq = this.renderReq;
-		
-		var getDocumentCallback = function(pdfDocument) {
-			setAsMostRecentPDF(_this);
-			if(currentReq !== _this.renderReq) return;
-			
-			_this.pdfDoc = pdfDocument;
-			_this.pdfDoc.getPage(_this.state.page).then(gotPdfPage);
-		};
+		var renderPage = this.state.page;
+		var renderCanvas;
 		
 		var gotPdfPage = function(pdfPage) {
-			if(currentReq !== _this.renderReq) return;
+			renderCanvas = _this.currCtx;
 			
 			// set the scale to match the canvas
-			var viewport = pdfPage.getViewport(_this.canvas.width / pdfPage.getViewport(1.0).width);
-		
-			// Not needed I think
-			// viewport.width  = _this.canvas.width;
-			// viewport.height = _this.canvas.height;
+			var viewport = pdfPage.getViewport(_this.canvas[renderCanvas].width / pdfPage.getViewport(1.0).width);
 
 			// Render PDF page into canvas context
-			var renderContext = {canvasContext: _this.ctx, viewport: viewport};
-		
+			var renderContext = {
+				canvasContext: _this.ctx[_this.currCtx],
+				viewport: viewport
+			};
+			
+			_this.currCtx = (_this.currCtx+1) % _this.numCtx;
+			
 			pdfPage.render(renderContext).then(renderPdfPage);
 		};
 		
 		var renderPdfPage = function() {
-			if(currentReq !== _this.renderReq) return;
+			console.log("rendered page " + renderPage);
 			
-			_this.element.src = _this.canvas.toDataURL();
+			if(renderPage === _this.state.page)
+				_this.element.src = _this.canvas[renderCanvas].toDataURL();
+			
 			// Check for change in the aspect ratio, send a resize if needed
 			//  (done after the render to avoid double rendering issues)
 			if (_this.ratio !== (viewport.width/viewport.height) ) {
 				_this.ratio = viewport.width/viewport.height;
 				_this.sendResize(viewport.width, viewport.height);
 			}
-			this.renderReq = 0;
 		};
 		
-		if(this.mostRecent) this.pdfDoc.getPage(this.state.page).then(gotPdfPage);
-		else                PDFJS.getDocument({url: this.state.src}).then(getDocumentCallback);
+		this.pdfDoc.getPage(this.state.page).then(gotPdfPage);
 	},
 	
 	resize: function(date) {
-		this.canvas.width  = this.element.width;
-		this.canvas.height = this.element.height;
+		for(var i=0; i<this.numCtx; i++){
+			this.canvas[i].width  = this.element.width;
+			this.canvas[i].height = this.element.height;
+		}
 
 		this.refresh(date);
 	},
@@ -190,10 +183,16 @@ var pdf_viewer = SAGE2_App.extend( {
 				this.setLabelText();
 				this.refresh(date);
 			}
-			if(data.code === 39 && data.state === "up"){ // Right Arrow
+			else if(data.code === 39 && data.state === "up"){ // Right Arrow
 				if(this.state.page >= this.pdfDoc.numPages) return;
 				this.state.page = this.state.page + 1;
 				this.setLabelText();
+				this.refresh(date);
+			}
+		}
+		
+		if(type === "keyboard"){
+			if(data.character === "r" || data.character === "R"){
 				this.refresh(date);
 			}
 		}

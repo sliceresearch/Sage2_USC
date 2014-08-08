@@ -23,6 +23,7 @@ if (typeof PDFJS === 'undefined') {
 
 PDFJS.version = '1.0.277';
 PDFJS.build = '250d394';
+PDFJS.numDocuments = 0;
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -2515,6 +2516,8 @@ PDFJS.getDocument = function getDocument(source,
                                          pdfDataRangeTransport,
                                          passwordCallback,
                                          progressCallback) {
+  PDFJS.numDocuments++;
+  
   var workerInitializedCapability, workerReadyCapability, transport;
 
   if (typeof source === 'string') {
@@ -3307,7 +3310,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
         cMapPacked: PDFJS.cMapPacked,
         disableFontFace: PDFJS.disableFontFace,
         disableCreateObjectURL: PDFJS.disableCreateObjectURL,
-        verbosity: PDFJS.verbosity
+        verbosity: PDFJS.verbosity,
+        documentID: PDFJS.numDocuments
       });
     },
 

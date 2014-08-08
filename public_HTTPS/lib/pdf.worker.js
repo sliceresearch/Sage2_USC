@@ -23,6 +23,7 @@ if (typeof PDFJS === 'undefined') {
 
 PDFJS.version = '1.0.277';
 PDFJS.build = '250d394';
+PDFJS.numDocuments = 0;
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -15968,6 +15969,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       var preEvaluatedFont = this.preEvaluateFont(font, xref);
       var descriptor = preEvaluatedFont.descriptor;
       var fontID = fontRef.num + '_' + fontRef.gen;
+      
+			
       if (isDict(descriptor)) {
         if (!descriptor.fontAliases) {
           descriptor.fontAliases = Object.create(null);
@@ -16005,8 +16008,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       // Keep track of each font we translated so the caller can
       // load them asynchronously before calling display on a page.
-      font.loadedName = 'g_font_' + (fontRefIsDict ?
-        fontName.replace(/\W/g, '') : fontID);
+      font.loadedName = 'g_font_' + (fontRefIsDict ? fontName.replace(/\W/g, '') : fontID);
 
       font.translated = fontCapability.promise;
 
@@ -21098,7 +21100,7 @@ var Font = (function FontClosure() {
   Font.getFontID = (function () {
     var ID = 1;
     return function Font_getFontID() {
-      return String(ID++);
+      return PDFJS.numDocuments + "_" + String(ID++);
     };
   })();
 
@@ -37857,7 +37859,8 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
     });
 
     handler.on('GetDocRequest', function wphSetupDoc(data) {
-
+			PDFJS.numDocuments = data.documentID;
+			
       var onSuccess = function(doc) {
         handler.send('GetDoc', { pdfInfo: doc });
       };

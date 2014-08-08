@@ -22,6 +22,7 @@ function SAGE2_initialize(data_seed) {
 	Math.seed(data_seed.getTime());
 }
 
+/*
 function setAsMostRecentPDF(app) {
 	for(var key in applications){
 		if(applications[key] instanceof pdf_viewer && applications[key] !== app) {
@@ -30,6 +31,7 @@ function setAsMostRecentPDF(app) {
 	}
 	app.mostRecent = true;
 }
+*/
 
 // Debug log function: send parameters to server for printout
 //  if mutiple paramters, sent as one array
