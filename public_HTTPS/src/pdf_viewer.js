@@ -137,9 +137,13 @@ var pdf_viewer = SAGE2_App.extend( {
 			var viewport = pdfPage.getViewport(_this.canvas[renderCanvas].width / pdfPage.getViewport(1.0).width);
 
 			// Render PDF page into canvas context
+			var count = 0;
 			var renderContext = {
 				canvasContext: _this.ctx[_this.currCtx],
-				viewport: viewport
+				viewport: viewport,
+				continueCallback: function(cont) {
+					cont(); // nothing special right now
+				}
 			};
 			
 			_this.currCtx = (_this.currCtx+1) % _this.numCtx;
