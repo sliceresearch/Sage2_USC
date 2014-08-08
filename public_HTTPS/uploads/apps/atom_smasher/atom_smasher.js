@@ -57,21 +57,16 @@ var atom_smasher = SAGE2_App.extend( {
 		this.renderer 	= new THREE.WebGLRenderer( { antialias: true} );
 
 		// PerspectiveCamera(vertical fov, aspect ratio, near, far )
-//		this.camera 	= new THREE.PerspectiveCamera( 27, this.width/this.height, 5, 3500 );
-		this.camera   = new THREE.PerspectiveCamera(45.0, this.width/this.height, 0.1, 10000.0);
-
+		this.camera = new THREE.PerspectiveCamera(45.0, this.width/this.height, 0.1, 10000 );
 
 		this.scene    = new THREE.Scene();
 		
 		// add some fog
 		this.scene.fog = new THREE.Fog( 0x050505, 3000, 3500 );
 
-//		this.camera.position.x = 1700;
-//		this.camera.position.x = 2000;
-		this.camera.position.x = 500;
+//		this.camera.position.x = 0; 	// for display size: 4230
+		this.camera.position.x = 1700;	// for display size: 15360
 
-//		this.camera.position.z = 2750;
-//		this.camera.position.z = 2050;
 		this.camera.position.z = 1500;
 		this.renderer.setSize(this.width, this.height);
 		
@@ -87,8 +82,7 @@ var atom_smasher = SAGE2_App.extend( {
 		this.vector = new Float32Array( this.particles * 3 );
 		this.accel  = new Float32Array( this.particles * 3 );
 
-		//var n = 500, n2 = n / 2; // particles spread in the cube
-		var n = 1, n2 = n / 2; // particles spread in the cube
+		var n = 500, n2 = n / 2; // particles spread in the cube
 
 		var origin = new Float32Array(3);
 		origin[0] = Math.random() * n - n2;
@@ -149,9 +143,8 @@ var atom_smasher = SAGE2_App.extend( {
 		var texture = THREE.ImageUtils.loadTexture( this.resrcPath + "textures/disc.png" );
 
 		// Create Material
-		// this.material = new THREE.PointCloudMaterial( { size: 150, vertexColors: THREE.VertexColors } );
 		this.material = new THREE.PointCloudMaterial( { 
-			size: 50, 
+			size: 15, 
 			vertexColors: THREE.VertexColors,
 			transparent: true,
 			depthWrite: false,
@@ -161,7 +154,6 @@ var atom_smasher = SAGE2_App.extend( {
 		// Create Particle System and add it to the scene
 		this.particleSystem = new THREE.PointCloud( this.geometry, this.material );
 		this.particleSystem.sortParticles = true;
-		// this.particleSystem = new THREE.PointCloud( this.geometry, shaderMaterial );
 		this.scene.add( this.particleSystem );
 
 		// Create Lines
@@ -184,6 +176,7 @@ var atom_smasher = SAGE2_App.extend( {
 			this.scene.add( this.lines[p] );
 		}
 /*
+// Circle for testing aspect ratio problems
 var CircleMaterial = new THREE.MeshBasicMaterial({
 	color: 0x0000ff
 });
@@ -305,15 +298,9 @@ this.scene.add( circle );
 		this.time  = this.t;
 
 		// Rotate the entire particle system
-		// this.particleSystem.rotation.x = this.t * 0.1;
 		this.particleSystem.rotation.y = this.t * 0.1;
 
 		for ( var i = 0; i < this.positions.length; i += 3 ) {
-
-			// Calculate acceleration
-			// this.accel[ i ] 	= this.accel[ i ] * this.accel[ i ];
-			// this.accel[ i + 1 ] = this.accel[ i + 1 ] * this.accel[ i + 1 ];
-			// this.accel[ i + 2 ] = this.accel[ i + 2 ] * this.accel[ i + 2 ];
 
 			// Calculate velocity
 			this.vector[ i ] 	 += this.accel[ i ] * this.tDiff;
@@ -331,7 +318,6 @@ this.scene.add( circle );
 		    this.lineGeometries[i/3].vertices[this.MAXFRAMES-1] = p; //add the point to the end of the array
 		    this.lineGeometries[i/3].verticesNeedUpdate = true;
 
-			// this.lines[i/3].rotation.x = this.t * 0.1;
 			this.lines[i/3].rotation.y = this.t * 0.1;
 		}
 
