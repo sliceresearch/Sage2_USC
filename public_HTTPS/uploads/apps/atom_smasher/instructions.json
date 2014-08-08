@@ -1,0 +1,10 @@
+{
+	"main_script": "atom_smasher.js",
+	"icon": "threejs.webp",
+	"width": 3840,
+	"height": 1080,
+	"animation": true,
+	"resources": [
+		"scripts/three.min.js"
+	]
+}
