@@ -64,6 +64,7 @@ var facebook = SAGE2_App.extend( {
 			// 	$target.html('<img src="'+ r.thumbnail +'" /> Hey '+r.name).attr('title', r.name + " on "+ auth.network);
 			// });
 
+			// hello( "facebook" ).api("508535142/albums").success(function(json){
 			hello( "facebook" ).api("me/albums").success(function(json){
 				console.log(json);
 				for(a=0; a<json.data.length; a++){
@@ -71,7 +72,8 @@ var facebook = SAGE2_App.extend( {
 						console.log(json.data[a].thumbnail);
 						var i = document.createElement("IMG");
 						i.src = json.data[a].thumbnail;
-						i.width = 75;
+						i.width = 125;
+						i.height = 125;
 						Facebook_self.element.appendChild(i);
 					}
 				}
