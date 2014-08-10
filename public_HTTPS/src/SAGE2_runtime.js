@@ -69,7 +69,7 @@ SAGE2types.String = _String;
 
 function _Boolean(val) {
 	this.description = "Depicts a boolean value";
-	this.value   = (val == true);
+	this.value   = (val === true);
 	this.jsonstr = JSON.stringify(val);
 }
 SAGE2types.Boolean = _Boolean;
@@ -104,13 +104,13 @@ function _Date(obj) {
 }
 SAGE2types.Date = _Date;
 
-SAGE2types.isaLatLng = function(obj) {return obj instanceof SAGE2types.LatLng};
-SAGE2types.isaInt    = function(obj) {return obj instanceof SAGE2types.Int};
-SAGE2types.isaFloat  = function(obj) {return obj instanceof SAGE2types.Float};
-SAGE2types.isaString = function(obj) {return obj instanceof SAGE2types.String};
-SAGE2types.isaObject = function(obj) {return obj instanceof SAGE2types.Object};
-SAGE2types.isaArray  = function(obj) {return obj instanceof SAGE2types.Array};
-SAGE2types.isaDate   = function(obj) {return obj instanceof SAGE2types.Date};
+SAGE2types.isaLatLng = function(obj) { return obj instanceof SAGE2types.LatLng; };
+SAGE2types.isaInt    = function(obj) { return obj instanceof SAGE2types.Int; };
+SAGE2types.isaFloat  = function(obj) { return obj instanceof SAGE2types.Float; };
+SAGE2types.isaString = function(obj) { return obj instanceof SAGE2types.String; };
+SAGE2types.isaObject = function(obj) { return obj instanceof SAGE2types.Object; };
+SAGE2types.isaArray  = function(obj) { return obj instanceof SAGE2types.Array; };
+SAGE2types.isaDate   = function(obj) { return obj instanceof SAGE2types.Date; };
 
 SAGE2types.create    = function(val) {
 	if (_typeOf(val) === 'object') {
