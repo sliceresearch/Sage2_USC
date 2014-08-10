@@ -8,7 +8,9 @@
 //
 // Copyright (c) 2014
 
-PDFJS.workerSrc = 'lib/pdf.worker.js';
+PDFJS.workerSrc     = 'lib/pdf.worker.js';
+PDFJS.disableWorker = false;
+PDFJS.disableWebGL  = false;
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
