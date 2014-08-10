@@ -335,30 +335,36 @@ initialize = function (root, relativePath) {
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
 		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
 		var i;
-		var excludes = [ ".DS_Store" ];
+		var excludes = [ '.DS_Store' ];
 		var item;
 		for(i=0; i<uploadedImages.length; i++) {
-			item = path.join(root, "images", uploadedImages[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				if (! (item in excludes) ) thelist.push(item);
+			if (excludes.indexOf(uploadedImages[i]) === -1) {
+				item = path.join(root, "images", uploadedImages[i]);
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
 			}
 		}
 		for(i=0; i<uploadedVideos.length; i++) {
-			item = path.join(root, "videos", uploadedVideos[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				if (! (item in excludes) ) thelist.push(item);
+			if (excludes.indexOf(uploadedVideos[i]) === -1) {
+				item = path.join(root, "videos", uploadedVideos[i]);
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
 			}
 		}
 		for(i=0; i<uploadedPdfs.length; i++) {
-			item = path.join(root, "pdfs", uploadedPdfs[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				if (! (item in excludes) ) thelist.push(item);
+			if (excludes.indexOf(uploadedPdfs[i]) === -1) {
+				item = path.join(root, "pdfs", uploadedPdfs[i]);
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
 			}
 		}
 		// delete the elements which not there anymore
