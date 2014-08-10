@@ -43,13 +43,13 @@ function sagePointer(wsio) {
 	this.desktopId          = null;
 	
 	this.chunk = 32 * 1024; // 32 KB
-	this.maxUploadSize = 500 * (1024*1024); // 500 MB
-	
+	//this.maxUploadSize = 500 * (1024*1024); // 500 MB
+	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
+
 	if(localStorage["SAGE2_ptrName"]  !== null) this.sagePointerLabel.value = localStorage['SAGE2_ptrName'];
 	if(localStorage["SAGE2_ptrColor"] !== null) this.sagePointerColor.value = localStorage['SAGE2_ptrColor'];
-	
-	
-	
+
+
 	this.setPointerId = function(id) {
 		this.uniqueID = id;
 	};

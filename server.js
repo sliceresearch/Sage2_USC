@@ -34,10 +34,9 @@ var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
-// var imageinfo   = require('imageinfo');           // gets width, height for images
 var json5       = require('json5');               // JSON format that allows comments
-var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
+var util        = require('util');                // node util
 var path        = require('path');                // file path extraction and creation
 var request     = require('request');             // external http requests
 var sprint      = require('sprint');              // pretty formating (sprintf)
@@ -45,6 +44,7 @@ var readline    = require('readline');            // to build an evaluation loop
 var program     = require('commander');           // parsing command-line arguments
 var colors      = require('colors');              // pretty colors in the terminal
 var exec        = require('child_process').exec;  // execute child process
+var formidable  = require('formidable');          // upload processor
 
 // custom node modules
 var httpserver  = require('./src/node-httpserver');     // creates web server
@@ -1620,22 +1620,56 @@ function sendConfig(req, res) {
 	res.end();
 }
 
+// function uploadForm(req, res) {
+// 	var form = new multiparty.Form();
+// 	form.parse(req, function(err, fields, files) {
+// 		if(err){
+// 			res.writeHead(500, {"Content-Type": "text/plain"});
+// 			res.write(err + "\n\n");
+// 			res.end();
+// 		}
+// 		// saves files in appropriate directory and broadcasts the items to the displays
+// 		manageUploadedFiles(files);
+// 		res.writeHead(200, {"Content-Type": "text/plain"});
+// 		res.write("received upload:\n\n");
+// 		res.end();
+// 	});
+// }
+
 function uploadForm(req, res) {
-	var form = new multiparty.Form();
+	var form = new formidable.IncomingForm();
+	form.maxFieldsSize = 4 * 1024 * 1024;
+	form.type          = 'multipart';
+	form.multiples     = true;
+
+	// var lastper = -1;
+	// form.on('progress', function(bytesReceived, bytesExpected) {
+	// 	var per = parseInt(100.0 * bytesReceived/ bytesExpected);
+	// 	if ((per % 10)===0 && lastper!==per) {
+	// 		console.log('Form> %d%', per);
+	// 		lastper = per;
+	// 	}
+	// });
+	form.on('fileBegin', function(name, file) {
+		console.log('Form> ', name, file.name, file.type);
+	});
+
 	form.parse(req, function(err, fields, files) {
 		if(err){
 			res.writeHead(500, {"Content-Type": "text/plain"});
 			res.write(err + "\n\n");
 			res.end();
 		}
-		
-		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(files);
-
-		res.writeHead(200, {"Content-Type": "text/plain"});
-		res.write("received upload:\n\n");
-		res.end();
+		res.writeHead(200, {'content-type': 'text/plain'});
+		res.write('received upload:\n\n');
+		res.end(util.inspect({fields: fields, files: files}));
 	});
+
+	form.on('end', function() {
+		// saves files in appropriate directory and broadcasts the items to the displays
+		manageUploadedFiles(this.openedFiles);
+	});
+
 }
 
 function manageUploadedFiles(files) {
@@ -1643,10 +1677,11 @@ function manageUploadedFiles(files) {
 
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
-		var file = files[key][0];
+		var file = files[key];
+		console.log('manageUploadedFiles> ', files[key].name);
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
 			if(appInstance === null){
-				console.log("unrecognized file type: " + file.headers['content-type']);
+				console.log("Form> unrecognized file type: ", file.name, file.type);
 				return;
 			}
 			

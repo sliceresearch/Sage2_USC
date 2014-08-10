@@ -297,6 +297,9 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	var dims = assets.getDimensions(file);
 	var mime = assets.getMimeType(file);
 
+	if (mime === 'video/quicktime' && mime_type === 'video/mp4')
+		mime = 'video/mp4';
+
 	if (dims && mime) {
 		if (mime === "video/mp4" || mime === "video/webm" || mime === "video/x-m4v" ) {
 			var appInstance = {
@@ -554,13 +557,13 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 };
 
 appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
-	var mime_type = file.headers['content-type'];
+	var mime_type = file.type;
 	var app = this.mime2app[mime_type];
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
 	
 	var _this = this;
-	var url = path.join("uploads", dir, file.originalFilename);
+	var url = path.join("uploads", dir, file.name);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	
@@ -575,14 +578,14 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				} else {
 					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data);
-					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
+					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
 						callback(appInstance);
 					});
 				}
 			});
 		}
 		else {
-			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.originalFilename, compressed: true}, function(appInstance) {
+			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
 				callback(appInstance);
 			});
 		}
