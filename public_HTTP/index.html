@@ -60,6 +60,7 @@
 			sageUI_link.href = "https://" + json_cfg.host + https_port + "/sageUI.html";
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
+
 		var sagePointer = document.createElement('p');
 		var sagePointer_link = document.createElement('a');
 		sagePointer_link.textContent = "SAGE Pointer";
@@ -69,9 +70,20 @@
 			sagePointer_link.href = "https://" + json_cfg.host + https_port + "/sagePointer.html";
 		sagePointer_link.target = "_blank";
 		sagePointer.appendChild(sagePointer_link);
+
+		var goTime = document.createElement('p');
+		var goTime_link = document.createElement('a');
+		goTime_link.textContent = "SAGE Presentor (GoTime)";
+		if (json_cfg.public_host)
+			goTime_link.href = "https://" + json_cfg.public_host + https_port + "/goTime.html";
+		else
+			goTime_link.href = "https://" + json_cfg.host + https_port + "/goTime.html";
+		goTime_link.target = "_blank";
+		goTime.appendChild(goTime_link);
 		
 		userInteraction.appendChild(sageUI);
 		userInteraction.appendChild(sagePointer);
+		userInteraction.appendChild(goTime);
 		
 		// Audio
 		var audioManager = document.createElement('p');

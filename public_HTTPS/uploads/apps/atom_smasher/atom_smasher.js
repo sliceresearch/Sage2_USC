@@ -64,8 +64,8 @@ var atom_smasher = SAGE2_App.extend( {
 		// add some fog
 		this.scene.fog = new THREE.Fog( 0x050505, 3000, 3500 );
 
-//		this.camera.position.x = 0; 	// for display size: 4230
-		this.camera.position.x = 1700;	// for display size: 15360
+		this.camera.position.x = 0; 	// for display size: 4230
+//		this.camera.position.x = 1700;	// for display size: 15360
 
 		this.camera.position.z = 1500;
 		this.renderer.setSize(this.width, this.height);
