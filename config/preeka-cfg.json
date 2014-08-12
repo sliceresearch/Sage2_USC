@@ -8,15 +8,14 @@
 	clock: 12,
 
 	// User specified values (in pixel)
-        titleBarHeight: 60,
-        titleTextSize:  38,
-        pointerWidth:  400,
-        pointerHeight: 100,
+	titleBarHeight: 60,
+	titleTextSize:  38,
+	pointerSize:   100,
 
 	background: {
-                color: "#9a9a9a",
-                image: "images/background/dbgrid.png",
-                style: "tile"
+		color: "#9a9a9a",
+		image: "images/background/dbgrid.png",
+		style: "tile"
 	},
 	show_url: false,
 	show_version: false,
