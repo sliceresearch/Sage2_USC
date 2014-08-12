@@ -369,7 +369,11 @@
 				curY = ev.pageY - canvasPos.y;
 				toprocess.push({x:curX, y:curY});
 				// starting process
-				var processed = simplify(toprocess, 2.0, true); // array, high-quality: true
+				var processed;
+				if (aSpline.eraseMode)
+					processed = simplify(toprocess, 0.2, true);
+				else
+					processed = simplify(toprocess, 2.0, true); // array, pixel size, high-quality: true
 				var newpoints = [];
 				for (i=0; i<processed.length;i++) {
 					newpoints.push(processed[i].x,processed[i].y);

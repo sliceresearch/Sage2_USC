@@ -96,7 +96,9 @@ var whiteboard = SAGE2_App.extend( {
 				// hide all the layers
 				for (var i=0;i<this.allLayers.length;i++)
 					this.allLayers[i].hide();
-				this.allLayers[data.value].show();
+				// make it the active layer
+				this.layer = this.allLayers[data.value];
+				this.layer.show();
 			}
 		}
 		this.refresh(date);
