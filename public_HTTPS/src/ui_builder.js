@@ -18,7 +18,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.json_cfg = json_cfg;
 	this.clientID = clientID;
 	// set the default style sheet
-	this.csssheet = "../css/style.css";
+	this.csssheet = "css/style.css";
 	// Objects for the UI
 	this.upperBar = null;
 	this.clock    = null;
@@ -274,9 +274,16 @@ function uiBuilder(json_cfg, clientID) {
 		this.version.style.color      = "#FFFFFF";
 		
 		if (this.json_cfg.show_url) {
-			var hostname = this.json_cfg.public_host ? this.json_cfg.public_host : this.json_cfg.host;
-			if (this.json_cfg.index_port == 80) this.machine.textContent = hostname;
-			else this.machine.textContent = hostname + ":" +this.json_cfg.index_port.toString();
+			var hostname = window.location.hostname;
+			var iport;
+			if (typeof this.json_cfg.rproxy_index_port != "undefined")
+				iport = this.json_cfg.rproxy_index_port;
+			else
+				iport = this.json_cfg.index_port;
+			if (iport == 80) this.machine.textContent = hostname + window.location.pathname;
+			else this.machine.textContent = hostname + ":" + iport.toString() + window.location.pathname;
+			if (window.location.pathname == "/")
+				this.machine.textContent = this.machine.textContent.slice(0, -1);
 		}
 		head.appendChild(fileref);
 	};

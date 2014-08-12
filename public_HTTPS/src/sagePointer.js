@@ -309,7 +309,7 @@ function sagePointer(wsio) {
 					formdata.append("file"+i.toString(), files[i]);
 
 					xhr = new XMLHttpRequest();
-					xhr.open("POST", "/upload", true);
+					xhr.open("POST", "upload", true);
 					xhr.upload.id = "file"+i.toString();
 					xhr.upload.addEventListener('progress', function(event) {
 						if(!(event.srcElement.id in total)){
