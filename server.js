@@ -1403,23 +1403,17 @@ function loadConfiguration() {
 	// compute extra dependent parameters
 	userConfig.totalWidth     = userConfig.resolution.width  * userConfig.layout.columns;
 	userConfig.totalHeight    = userConfig.resolution.height * userConfig.layout.rows;
-
-	if (userConfig.titleBarHeight)
-		userConfig.titleBarHeight = parseInt(userConfig.titleBarHeight, 10);
-	else
-		userConfig.titleBarHeight = Math.round(0.025 * userConfig.totalHeight);
-	if (userConfig.titleTextSize)
-		userConfig.titleTextSize  = parseInt(userConfig.titleTextSize, 10);
-	else
-		userConfig.titleTextSize  = Math.round(0.015 * userConfig.totalHeight);
-	if (userConfig.pointerWidth)
-		userConfig.pointerWidth   = parseInt(userConfig.pointerWidth, 10);
-	else
-		userConfig.pointerWidth   = Math.round(0.200 * userConfig.totalHeight);
-	if (userConfig.pointerHeight)
-		userConfig.pointerHeight  = parseInt(userConfig.pointerHeight, 10);
-	else
-		userConfig.pointerHeight  = Math.round(0.050 * userConfig.totalHeight);
+	
+	var minDim = Math.min(userConfig.totalWidth, userConfig.totalHeight);
+	
+	if(userConfig.titleBarHeight) userConfig.titleBarHeight = parseInt(userConfig.titleBarHeight, 10);
+	else                          userConfig.titleBarHeight = Math.round(0.025 * minDim);
+	
+	if(userConfig.titleTextSize)  userConfig.titleTextSize  = parseInt(userConfig.titleTextSize, 10);
+	else                          userConfig.titleTextSize  = Math.round(0.015 * minDim);
+	
+	if(userConfig.pointerSize)    userConfig.pointerSize    = parseInt(userConfig.pointerSize, 10);
+	else                          userConfig.pointerSize    = Math.round(0.050 * minDim);
 	
 	// Set default values if missing
 	if (userConfig.port === undefined) userConfig.port = 443;

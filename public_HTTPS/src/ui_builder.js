@@ -213,8 +213,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.titleTextSize;
-			this.pointerWidth   = this.json_cfg.pointerWidth;
-			this.pointerHeight  = this.json_cfg.pointerHeight;
+			this.pointerWidth   = this.json_cfg.pointerSize*4;
+			this.pointerHeight  = this.json_cfg.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		} else {
@@ -222,8 +222,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.titleTextSize;
-			this.pointerWidth   = this.json_cfg.pointerWidth;
-			this.pointerHeight  = this.json_cfg.pointerHeight;
+			this.pointerWidth   = this.json_cfg.pointerSize*4;
+			this.pointerHeight  = this.json_cfg.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		}
