@@ -13,6 +13,9 @@
 // Written by Andy Johnson - 2014
 ////////////////////////////////////////
 
+// would be nice to be able to change the parameters for image directory and duration
+// in the application itself
+
 var evl_photos = SAGE2_App.extend( {
     construct: function() {
         arguments.callee.superClass.construct.call(this);
@@ -26,7 +29,11 @@ var evl_photos = SAGE2_App.extend( {
     this.canvasHeight = 600;
 
     this.sampleSVG = null;
+
+    this.loadTimer = 150;
  
+    this.imageSet = 0;
+
     this.URL1 = "";
     this.URL1a = "";
     this.URL1b = "";
@@ -43,12 +50,29 @@ var evl_photos = SAGE2_App.extend( {
     this.fileName = "";
     this.listFileName = "";
 
+    this.appName = "evl_photos:";
+
     this.image1 = "NULL";
     this.image2 = "NULL";
     this.image3 = "NULL";
 
     this.updateCounter = 0;
  },
+
+chooseImagery: function(selection)
+{
+    // evl photos as default
+    this.listFileNameCore = "http://lyra.evl.uic.edu:9000/";
+    this.listFileNamePhotos = "photos.txt";
+    this.listFileNameLibrary = "evl_Pictures/";
+
+    if (selection == 1)
+        {
+        // scary movie poster version for some diversity in testing
+        this.listFileNameCore = "http://lyra.evl.uic.edu:9000/posterTest/";
+        this.listFileNameLibrary = "posters/";    
+        }
+},
 
 ////////////////////////////////////////
 
@@ -57,6 +81,8 @@ initApp: function()
     this.listFileCallbackFunc = this.listFileCallback.bind(this);
     this.imageLoadCallbackFunc = this.imageLoadCallback.bind(this);
     this.imageLoadFailedCallbackFunc = this.imageLoadFailedCallback.bind(this);
+
+    this.chooseImagery(this.imageSet);
 
     this.loadInList();
     this.newImage();
@@ -69,13 +95,12 @@ imageLoadCallback: function()
     this.okToDraw = 10.0;
     this.image1 = this.image3; // image1 is now the new image
 
-    //console.log ("image load callback");
     this.newImage();
     },
 
 imageLoadFailedCallback: function()
     {
-    console.log("image load failed");
+    console.log(this.appName + "image load failed on " + this.fileName);
     this.newImage();
     this.update();
     },
@@ -86,18 +111,18 @@ listFileCallback: function(error, data)
 {
     if(error)
         {
-        console.log("listFileCallback - error");
+        console.log(this.appName + "listFileCallback - error");
         return;
         }
 
    if(data === null)
         {
-        console.log("list of photos is empty");
+        console.log(this.appName + "list of photos is empty");
         return;
         }
 
     this.bigList = d3.csv.parse(data);
-    console.log("loaded in list of photos");
+    console.log(this.appName + "loaded in list of " + this.bigList.length + " images" );
 
     this.update();
     this.drawEverything();
@@ -149,7 +174,7 @@ drawEverything: function ()
         }
 
     this.updateCounter += 1;
-    if (this.updateCounter > 100)
+    if (this.updateCounter > this.loadTimer)
         {
             this.update();
             this.updateCounter = 0;
@@ -160,12 +185,8 @@ drawEverything: function ()
 
 loadInList: function ()
 {
-
-//    this.listFileName = "http://www.evl.uic.edu/aej/photos.txt";
-    this.listFileName = "http://lyra.evl.uic.edu:9000/photos.txt";
-
+    this.listFileName = this.listFileNameCore + this.listFileNamePhotos;
     d3.text(this.listFileName, this.listFileCallbackFunc);
-
 
 //    readFile(this.listFileName, this.listFileCallbackFunc);
 },
@@ -174,30 +195,33 @@ loadInList: function ()
 
 newImage: function ()
 {
-    this.counter = Math.floor(Math.random() * 2803) + 1;
+    if (this.bigList === null)
+        this.counter = 0;
+    else
+        this.counter = Math.floor(Math.random() * this.bigList.length) + 1;
 },
 
 ////////////////////////////////////////
 
 update: function ()
 {
-    if (this.bigList == null)
+    if (this.bigList === null)
     {
-        console.log("list of photos is null");
+        console.log(this.appName + "list of photos not populated yet");
         return;
     }
 
-    if (this.bigList[this.counter] == null)
+    if (this.bigList[this.counter] === null)
         {   
-        console.log("cant find name of number "+this.counter);
+        console.log(this.appName + "cant find name of number "+this.counter);
         this.newImage();
         this.update(); // potential for infinite loop here
         return;
         }
 
-//    this.fileName = "http://www.evl.uic.edu/aej/evl_Pictures/"+this.bigList[this.counter].name;
-    this.fileName = "http://lyra.evl.uic.edu:9000/evl_Pictures/"+this.bigList[this.counter].name;
-    //console.log ("loading in " + this.fileName);
+        // escape makes a string url-compatible
+        // except for ()s and odd characters like umlauts and graves
+    this.fileName = this.listFileNameCore + this.listFileNameLibrary +escape(this.bigList[this.counter].name);
  
     this.image2 = this.image1; // image2 is the previous image
 
@@ -226,7 +250,7 @@ updateWindow: function (){
         .attr("viewBox", box)
         .attr("preserveAspectRatio", "xMinYMin meet");
 
-    // want a black backdrop to start with
+    // want a black backdrop to add images on top of
     this.sampleSVG.append("svg:rect")
         .style("stroke", "black")
         .style("fill", "black")
@@ -297,8 +321,21 @@ updateWindow: function (){
 		this.refresh(date);
 	},
 
-    event: function(eventType, position, user, data, date) {
-	}
+    event: function(eventType, pos, user, data, date) {
+    //event: function(eventType, userId, x, y, data, date) {
+        if (eventType === "pointerPress" && (data.button === "left") ) {
+        }
+        if (eventType === "pointerMove" ) {
+        }
+        if (eventType === "pointerRelease" && (data.button === "left") ) {
+            this.imageSet += 1;
+            if (this.imageSet > 1)
+                this.imageSet = 0;
+            this.chooseImagery(this.imageSet);
+            this.loadInList();
+            this.drawEverything();
+        }
+    }
 	
 });
 
