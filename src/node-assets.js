@@ -343,7 +343,6 @@ initialize = function (root, relativePath) {
 		for(i=0; i<uploadedImages.length; i++) {
 			if (excludes.indexOf(uploadedImages[i]) === -1) {
 				item = path.resolve(root, "images", uploadedImages[i]);
-				console.log('Testing:', item);
 				if (item in AllAssets.list) {
 					AllAssets.list[item].Valid = true;
 				} else {
