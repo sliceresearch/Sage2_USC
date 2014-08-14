@@ -213,14 +213,14 @@ update: function ()
 
     if (this.bigList[this.counter] === null)
         {   
-        console.log(this.appName + "cant find name of number "+this.counter);
+        console.log(this.appName + "cant find filename of image number "+this.counter);
         this.newImage();
         this.update(); // potential for infinite loop here
         return;
         }
 
-        // escape makes a string url-compatible
-        // except for ()s and odd characters like umlauts and graves
+    // escape makes a string url-compatible
+    // except for ()s, commas, &s, and odd characters like umlauts and graves
     this.fileName = this.listFileNameCore + this.listFileNameLibrary +escape(this.bigList[this.counter].name);
  
     this.image2 = this.image1; // image2 is the previous image
@@ -328,12 +328,12 @@ updateWindow: function (){
         if (eventType === "pointerMove" ) {
         }
         if (eventType === "pointerRelease" && (data.button === "left") ) {
+            this.bigList = null;
             this.imageSet += 1;
             if (this.imageSet > 1)
                 this.imageSet = 0;
             this.chooseImagery(this.imageSet);
             this.loadInList();
-            this.drawEverything();
         }
     }
 	
