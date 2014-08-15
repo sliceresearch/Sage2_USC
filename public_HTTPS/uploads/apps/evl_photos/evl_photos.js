@@ -259,6 +259,9 @@ updateWindow: function (){
     x = this.element.clientWidth;
     y = this.element.clientHeight;
 
+    this.canvasWidth = x;
+    this.canvasHeight = y;
+
     var newWidth = this.canvasWidth;
     var newHeight = this.canvasHeight;
 
