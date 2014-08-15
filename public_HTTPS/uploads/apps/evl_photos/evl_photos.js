@@ -198,7 +198,7 @@ newImage: function ()
     if (this.bigList === null)
         this.counter = 0;
     else
-        this.counter = Math.floor(Math.random() * this.bigList.length) + 1;
+        this.counter = Math.floor(Math.random() * this.bigList.length);
 },
 
 ////////////////////////////////////////
