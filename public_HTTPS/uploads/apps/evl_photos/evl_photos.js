@@ -57,6 +57,11 @@ var evl_photos = SAGE2_App.extend( {
     this.image3 = "NULL";
 
     this.updateCounter = 0;
+
+    this.listFileNameCore = "";
+    this.listFileNamePhotos = "";
+    this.listFileNameLibrary = "";
+
  },
 
 chooseImagery: function(selection)
@@ -69,7 +74,7 @@ chooseImagery: function(selection)
     if (selection == 1)
         {
         // scary movie poster version for some diversity in testing
-        this.listFileNameCore = "http://lyra.evl.uic.edu:9000/posterTest/";
+        this.listFileNameCore = "http://lyra.evl.uic.edu:9000/";
         this.listFileNameLibrary = "posters/";    
         }
 },
@@ -124,6 +129,7 @@ listFileCallback: function(error, data)
     this.bigList = d3.csv.parse(data);
     console.log(this.appName + "loaded in list of " + this.bigList.length + " images" );
 
+    this.newImage();
     this.update();
     this.drawEverything();
 },
@@ -185,7 +191,7 @@ drawEverything: function ()
 
 loadInList: function ()
 {
-    this.listFileName = this.listFileNameCore + this.listFileNamePhotos;
+    this.listFileName = this.listFileNameCore + this.listFileNameLibrary + this.listFileNamePhotos;
     d3.text(this.listFileName, this.listFileCallbackFunc);
 
 //    readFile(this.listFileName, this.listFileCallbackFunc);
