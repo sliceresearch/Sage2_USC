@@ -58,26 +58,28 @@ var evl_photos = SAGE2_App.extend( {
 
     this.updateCounter = 0;
 
-    this.listFileNameCore = "";
     this.listFileNamePhotos = "";
     this.listFileNameLibrary = "";
 
+
+    this.albums = [];
+    this.albums[0] = {list:"http://lyra.evl.uic.edu:9000/evl_Pictures/photos.txt",
+            location:"http://lyra.evl.uic.edu:9000/evl_Pictures/"};
+    this.albums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
+            location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
+    this.albums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam.txt",
+            location:"http://wwc.instacam.com/instacamimg/CHBSC/"};
+    this.albums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
+            location:"http://lyra.evl.uic.edu:9000/posters/"};
  },
+
+////////////////////////////////////////
 
 chooseImagery: function(selection)
 {
-    // evl photos as default
-    this.listFileNameCore = "http://lyra.evl.uic.edu:9000/";
-    this.listFileNamePhotos = "photos.txt";
-    this.listFileNameLibrary = "evl_Pictures/";
-
-    if (selection == 1)
-        {
-        // scary movie poster version for some diversity in testing
-        this.listFileNameCore = "http://lyra.evl.uic.edu:9000/";
-        this.listFileNameLibrary = "posters/";    
-        }
-},
+    this.listFileNamePhotos = this.albums[selection].list;
+    this.listFileNameLibrary = this.albums[selection].location;
+    },
 
 ////////////////////////////////////////
 
@@ -138,7 +140,7 @@ listFileCallback: function(error, data)
 
 drawEverything: function ()
 {
-    if ((this.okToDraw > -1) || (this.forceRedraw > 0))
+    if ((this.okToDraw > -10) || (this.forceRedraw > 0))
         {
         this.sampleSVG.selectAll("*").remove(); 
         this.forceRedraw = 0;
@@ -150,21 +152,31 @@ drawEverything: function ()
         this.sampleSVG.append("svg:rect")
             .style("stroke", "black")
             .style("fill", "black")
-            .style("fill-opacity", 1)
+            .style("fill-opacity", 1.0)
             .attr("x", 0)
             .attr("y", 0)
             .attr("height", newHeight)
             .attr("width", newWidth);
 
         if (this.image2 != "NULL") // previous image
-            this.sampleSVG.append("svg:image")
-            .attr("xlink:href", this.image2.src)
-            .attr("opacity", (this.okToDraw * 0.1))
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("width", this.canvasWidth -10)
-            .attr("height", this.canvasHeight - 10)
-            ;
+        {
+            if (this.okToDraw > 1)
+                this.sampleSVG.append("svg:image")
+                .attr("xlink:href", this.image2.src)
+                .attr("opacity", 1) //(this.okToDraw * 0.1))
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", this.canvasWidth)
+                .attr("height", this.canvasHeight);
+            else
+                this.sampleSVG.append("svg:image")
+                .attr("xlink:href", this.image2.src)
+                .attr("opacity", (this.okToDraw+9) * 0.1) 
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", this.canvasWidth)
+                .attr("height", this.canvasHeight);
+        }
 
         if (this.image1 != "NULL") // current image
             this.sampleSVG.append("svg:image")
@@ -172,9 +184,8 @@ drawEverything: function ()
             .attr("opacity", 1.0 - (this.okToDraw * 0.1))
             .attr("x", 0)
             .attr("y", 0)
-            .attr("width", this.canvasWidth -10)
-            .attr("height", this.canvasHeight - 10)
-            ;
+            .attr("width", this.canvasWidth)
+            .attr("height", this.canvasHeight);
 
         this.okToDraw -= 1.0;
         }
@@ -191,7 +202,7 @@ drawEverything: function ()
 
 loadInList: function ()
 {
-    this.listFileName = this.listFileNameCore + this.listFileNameLibrary + this.listFileNamePhotos;
+    this.listFileName = this.listFileNamePhotos;
     d3.text(this.listFileName, this.listFileCallbackFunc);
 
 //    readFile(this.listFileName, this.listFileCallbackFunc);
@@ -227,7 +238,10 @@ update: function ()
 
     // escape makes a string url-compatible
     // except for ()s, commas, &s, and odd characters like umlauts and graves
-    this.fileName = this.listFileNameCore + this.listFileNameLibrary +escape(this.bigList[this.counter].name);
+
+    // this also appends a random number to the end of the request to avoid browser caching
+    // in case this is a single image repeatedly loaded from a webcam
+    this.fileName = this.listFileNameLibrary + escape(this.bigList[this.counter].name) + '?' +       Math.floor(Math.random() * 10000000);
  
     this.image2 = this.image1; // image2 is the previous image
 
@@ -236,8 +250,6 @@ update: function ()
 
     this.image3.onload = this.imageLoadCallbackFunc;
     this.image3.onerror = this.imageLoadFailedCallbackFunc;
-    
-    
 },
 
 ////////////////////////////////////////
@@ -257,15 +269,15 @@ updateWindow: function (){
         .attr("preserveAspectRatio", "xMinYMin meet");
 
     // want a black backdrop to add images on top of
-    this.sampleSVG.append("svg:rect")
+ /*   this.sampleSVG.append("svg:rect")
         .style("stroke", "black")
         .style("fill", "black")
-        .style("fill-opacity", 1)
+        .style("fill-opacity", 1.0)
         .attr("x", 0)
         .attr("y", 0)
         .attr("height", newHeight)
         .attr("width", newWidth);
-
+*/
 
     this.forceRedraw = 1;
     this.drawEverything(); // need this to keep image while scaling etc
@@ -336,7 +348,7 @@ updateWindow: function (){
         if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.bigList = null;
             this.imageSet += 1;
-            if (this.imageSet > 1)
+            if (this.imageSet >= this.albums.length)
                 this.imageSet = 0;
             this.chooseImagery(this.imageSet);
             this.loadInList();
