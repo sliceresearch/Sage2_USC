@@ -312,6 +312,28 @@ interaction.prototype.maximizeSelectedItem = function(item, config) {
 	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
 };
 
+interaction.prototype.maximizeFullSelectedItem = function(item, config) {
+	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
+	if(item === null) return null;
+
+	// back up values for restore
+	item.previous_left   = item.left;
+	item.previous_top    = item.top;
+	item.previous_width  = item.width;
+	item.previous_height = item.width / item.aspect;
+
+	// calculate new values
+	item.left   = 0;
+	item.top    = config.titleBarHeight;
+	item.width  = config.totalWidth;
+	item.height = config.totalHeight-2*config.titleBarHeight;
+
+	item.maximized = true;
+
+	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
+};
+
+
 /**
  *@method maximizeLeftSelectedItem
  */
