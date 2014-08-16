@@ -17,6 +17,10 @@
 	},
 	show_version: true,
 	show_url: true,
+		// auto-hide the wall UI (top bar, application bar, ...)
+        auto_hide_ui: false,
+		// delay in seconds
+        auto_hide_delay: 30,
 	resolution: {
 		width: 700,
 		height: 700
