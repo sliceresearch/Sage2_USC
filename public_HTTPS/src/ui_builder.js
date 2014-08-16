@@ -41,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerItems   = {};
 
 	// Get handle on the main div
-	this.bg = document.getElementById("background");
+	this.bg   = document.getElementById("background");
 	this.main = document.getElementById("main");
 
 	// Build the background image/color
@@ -365,5 +365,33 @@ function uiBuilder(json_cfg, clientID) {
 		var remote = document.getElementById(data.name);
 		if (data.connected) remote.style.backgroundColor = "#379982";
 		else remote.style.backgroundColor = "#AD2A2A";
+	};
+
+	this.hideInterface = function() {
+		// Hide the top bar
+		this.upperBar.style.display = 'none';
+		// Hide the pointers
+		for (var p in this.pointerItems) {
+			this.pointerItems[p].element.style.display = 'none';
+		}
+		// Hide the apps top bar
+		var applist = document.getElementsByClassName("windowTitle");
+		for (var i = 0; i < applist.length; i++) {
+			applist[i].style.display = 'none';
+		}
+	};
+	this.showInterface = function() {
+		// Show the top bar
+		this.upperBar.style.display = 'block';
+		// Show the pointers (only if they have a name, ui pointers dont have names)
+		for (var p in this.pointerItems) {
+			if (this.pointerItems[p].label !== "")
+				this.pointerItems[p].element.style.display = 'block';
+		}
+		// Show the apps top bar
+		var applist = document.getElementsByClassName("windowTitle");
+		for (var i = 0; i < applist.length; i++) {
+			applist[i].style.display = 'block';
+		}
 	};
 }
