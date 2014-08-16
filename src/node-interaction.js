@@ -201,10 +201,10 @@ interaction.prototype.scrollSelectedItem = function(scale) {
 	var iCenterX = this.selectedScrollItem.left + (this.selectedScrollItem.width/2);
 	var iCenterY = this.selectedScrollItem.top + (this.selectedScrollItem.height/2);
 	
-	this.selectedScrollItem.left   = parseInt(iCenterX - (iWidth/2), 10);
-	this.selectedScrollItem.top    = parseInt(iCenterY - (iHeight/2), 10);
-	this.selectedScrollItem.width  = parseInt(iWidth, 10);
-	this.selectedScrollItem.height = parseInt(iHeight, 10);
+	this.selectedScrollItem.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2), 10);
+	this.selectedScrollItem.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	this.selectedScrollItem.width  = iWidth;                 //parseInt(iWidth, 10);
+	this.selectedScrollItem.height = iHeight;                //parseInt(iHeight, 10);
 	
 	this.selectedScrollItem.maximized = false;
 
@@ -263,8 +263,8 @@ interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 		}
 	}
 	
-	this.selectedResizeItem.width  = parseInt(iWidth, 10);
-	this.selectedResizeItem.height = parseInt(iHeight, 10);
+	this.selectedResizeItem.width  = iWidth;  //parseInt(iWidth, 10);
+	this.selectedResizeItem.height = iHeight; //parseInt(iHeight, 10);
 	this.selectedResizeItem.maximized = false;
 
 	return {elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left, elemTop: this.selectedResizeItem.top, elemWidth: this.selectedResizeItem.width, elemHeight: this.selectedResizeItem.height, date: new Date()};
@@ -302,10 +302,10 @@ interaction.prototype.maximizeSelectedItem = function(item, config) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = parseInt(iCenterX - (iWidth/2) ,10);
-	item.top    = parseInt(iCenterY - (iHeight/2), 10);
-	item.width  = parseInt(iWidth, 10);
-	item.height = parseInt(iHeight, 10);
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
 
 	item.maximized = true;
 
@@ -366,10 +366,10 @@ interaction.prototype.maximizeLeftSelectedItem = function(item, config) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = parseInt(iCenterX - (iWidth/2) ,10);
-	item.top    = parseInt(iCenterY - (iHeight/2), 10);
-	item.width  = parseInt(iWidth, 10);
-	item.height = parseInt(iHeight, 10);
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
 
 	item.maximized = true;
 
@@ -408,10 +408,10 @@ interaction.prototype.maximizeRightSelectedItem = function(item, config) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = parseInt(iCenterX - (iWidth/2) ,10);
-	item.top    = parseInt(iCenterY - (iHeight/2), 10);
-	item.width  = parseInt(iWidth, 10);
-	item.height = parseInt(iHeight, 10);
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
 
 	item.maximized = true;
 
@@ -450,10 +450,10 @@ interaction.prototype.maximizeTopSelectedItem = function(item, config) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = parseInt(iCenterX - (iWidth/2) ,10);
-	item.top    = parseInt(iCenterY - (iHeight/2), 10);
-	item.width  = parseInt(iWidth, 10);
-	item.height = parseInt(iHeight, 10);
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
 
 	item.maximized = true;
 
@@ -492,10 +492,10 @@ interaction.prototype.maximizeBottomSelectedItem = function(item, config) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = parseInt(iCenterX - (iWidth/2) ,10);
-	item.top    = parseInt(iCenterY - (iHeight/2), 10);
-	item.width  = parseInt(iWidth, 10);
-	item.height = parseInt(iHeight, 10);
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
 
 	item.maximized = true;
 

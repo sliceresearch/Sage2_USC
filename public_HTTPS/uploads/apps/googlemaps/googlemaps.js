@@ -23,11 +23,12 @@ var googlemaps = SAGE2_App.extend( {
 		arguments.callee.superClass.construct.call(this);
 
 		this.resizeEvents = "continuous"; // "onfinish";
-		this.map      = null;
-		this.lastZoom = null;
-		this.dragging = null;
-		this.position = null;
-		this.APIKEY   = null;  // google maps developer API key
+		this.map          = null;
+		this.lastZoom     = null;
+		this.dragging     = null;
+		this.position     = null;
+		this.scrollAmount = null;
+		this.APIKEY       = null;  // google maps developer API key
 	},
 
 	init: function(id, width, height, resrc, date) {
@@ -37,9 +38,10 @@ var googlemaps = SAGE2_App.extend( {
 		// application specific 'init'
 		this.element.id = "div" + id;
 
-		this.lastZoom = date;
-		this.dragging = false;
-		this.position = {x:0,y:0};
+		this.lastZoom     = date;
+		this.dragging     = false;
+		this.position     = {x:0,y:0};
+		this.scrollAmount = 0;
 
 		// building up the state object
 		this.state.mapType   = null;
@@ -152,109 +154,122 @@ var googlemaps = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 		//console.log("Googlemaps event", eventType, position, user_id, data, date);
 
-		if (eventType === "pointerPress" && (data.button === "left") ) {
+		if (eventType === "pointerPress" && (data.button === "left")) {
 			this.dragging = true;
 			this.position.x = position.x;
 			this.position.y = position.y;
+			
+			this.refresh(date);
 		}
-		if (eventType === "pointerMove" && this.dragging ) {
+		else if (eventType === "pointerMove" && this.dragging) {
 			this.map.panBy(this.position.x-position.x, this.position.y-position.y);
 			this.updateCenter();
 			this.position.x = position.x;
 			this.position.y = position.y;
+			
+			this.refresh(date);
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left")) {
 			this.dragging = false;
 			this.position.x = position.x;
 			this.position.y = position.y;
+			
+			this.refresh(date);
 		}
 
 		// Scroll events for zoom
-		if (eventType === "pointerScroll") {
-			var amount = data.scale;
-			var diff = date - this.lastZoom;
-			if (amount >= 1 && (diff>300)) {
+		else if (eventType === "pointerScroll") {
+			this.scrollAmount += data.wheelDelta;
+			
+			if (this.scrollAmount >= 128) {
 				// zoom in
 				var z = this.map.getZoom();
 				this.map.setZoom(z+1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
+				
+				this.scrollAmount -= 128;
 			}
-			else if (amount <= 1 && (diff>300)) {
+			else if (this.scrollAmount <= -128) {
 				// zoom out
 				var z = this.map.getZoom();
 				this.map.setZoom(z-1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
+				
+				this.scrollAmount += 128;
 			}
+			
+			this.refresh(date);
 		}
 
-		if (eventType === "keyboard" && data.character==="m") {
-			// change map type
-			if (this.state.mapType == google.maps.MapTypeId.TERRAIN)
-				this.state.mapType = google.maps.MapTypeId.ROADMAP;
-			else if (this.state.mapType == google.maps.MapTypeId.ROADMAP)
-				this.state.mapType = google.maps.MapTypeId.SATELLITE;
-			else if (this.state.mapType == google.maps.MapTypeId.SATELLITE)
-				this.state.mapType = google.maps.MapTypeId.HYBRID;
-			else if (this.state.mapType == google.maps.MapTypeId.HYBRID)
-				this.state.mapType = google.maps.MapTypeId.TERRAIN;
-			else 
-				this.state.mapType = google.maps.MapTypeId.HYBRID;
-			this.map.setMapTypeId(this.state.mapType);
-		}
-		if (eventType === "keyboard" && data.character==="t") {
-			// add/remove traffic layer
-			if (this.trafficLayer.getMap() == null)
-				this.trafficLayer.setMap(this.map);
-			else
-				this.trafficLayer.setMap(null);
-			this.updateLayers();
-		}
-		if (eventType === "keyboard" && data.character==="w") {
-			// add/remove weather layer
-			if (this.weatherLayer.getMap() == null)
-				this.weatherLayer.setMap(this.map);
-			else
-				this.weatherLayer.setMap(null);
-			this.updateLayers();
+		else if (eventType === "keyboard") {
+			if(data.character === "m") {
+				// change map type
+				if (this.state.mapType == google.maps.MapTypeId.TERRAIN)
+					this.state.mapType = google.maps.MapTypeId.ROADMAP;
+				else if (this.state.mapType == google.maps.MapTypeId.ROADMAP)
+					this.state.mapType = google.maps.MapTypeId.SATELLITE;
+				else if (this.state.mapType == google.maps.MapTypeId.SATELLITE)
+					this.state.mapType = google.maps.MapTypeId.HYBRID;
+				else if (this.state.mapType == google.maps.MapTypeId.HYBRID)
+					this.state.mapType = google.maps.MapTypeId.TERRAIN;
+				else 
+					this.state.mapType = google.maps.MapTypeId.HYBRID;
+				this.map.setMapTypeId(this.state.mapType);
+			}
+			else if (data.character === "t") {
+				// add/remove traffic layer
+				if (this.trafficLayer.getMap() == null)
+					this.trafficLayer.setMap(this.map);
+				else
+					this.trafficLayer.setMap(null);
+				this.updateLayers();
+			}
+			else if (data.character === "w") {
+				// add/remove weather layer
+				if (this.weatherLayer.getMap() == null)
+					this.weatherLayer.setMap(this.map);
+				else
+					this.weatherLayer.setMap(null);
+				this.updateLayers();
+			}
+			
+			this.refresh(date);
 		}
 
-		else if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
-			// shift down
-			// zoom in
-			var z = this.map.getZoom();
-			this.map.setZoom(z+1);
-			this.state.zoomLevel = this.map.getZoom();
+		else if (eventType === "specialKey") {
+			if (data.code === 18 && data.state === "down") {      // alt
+				// zoom in
+				var z = this.map.getZoom();
+				this.map.setZoom(z+1);
+				this.state.zoomLevel = this.map.getZoom();
+			}
+			else if (data.code === 17 && data.state === "down") { // control
+				// zoom out
+				var z = this.map.getZoom();
+				this.map.setZoom(z-1);
+				this.state.zoomLevel = this.map.getZoom();
+			}
+			else if (data.code === 37 && data.state === "down") { // left
+				this.map.panBy(-100,0);
+				this.updateCenter();
+			}
+			else if (data.code === 38 && data.state === "down") { // up
+				this.map.panBy(0,-100);
+				this.updateCenter();
+			}
+			else if (data.code === 39 && data.state === "down") { // right
+				this.map.panBy(100,0);
+				this.updateCenter();
+			}
+			else if (data.code === 40 && data.state === "down") { // down
+				this.map.panBy(0,100);
+				this.updateCenter();
+			}
+			
+			this.refresh(date);
 		}
-		else if (eventType == "specialKey" && data.code == 17 && data.state == "down") {
-			// control down
-			// zoom out
-			var z = this.map.getZoom();
-			this.map.setZoom(z-1);
-			this.state.zoomLevel = this.map.getZoom();
-		}
-		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
-			// left
-			this.map.panBy(-100,0);
-			this.updateCenter();
-		}
-		else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {
-			// up
-			this.map.panBy(0,-100);
-			this.updateCenter();
-		}
-		else if (eventType == "specialKey" && data.code == 39 && data.state == "down") {
-			// right
-			this.map.panBy(100,0);
-			this.updateCenter();
-		}
-		else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
-			// down
-			this.map.panBy(0,100);
-			this.updateCenter();
-		}
-		this.refresh(date);
 	}
 
 });
