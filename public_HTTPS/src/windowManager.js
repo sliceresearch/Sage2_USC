@@ -174,21 +174,15 @@ function windowManager(id, ws) {
 	
 
 	this.mouseScroll = function(event) {
-		var scale = 1.0 + Math.abs(event.wheelDelta)/512;
-		if(event.wheelDelta > 0) scale = 1.0 / scale;
-
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {scale: scale});
+		this.wsio.emit('pointerScroll', {wheelDelta: event.wheelDelta});
 		event.preventDefault();
 	};
 	
 	this.mouseScrollFF = function(event) {
 		var wheelDelta = -120*event.detail;
-		var scale = 1.0 + Math.abs(wheelDelta)/512;
-		if(wheelDelta > 0) scale = 1.0 / scale;
-		
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {scale: scale});
+		this.wsio.emit('pointerScroll', {wheelDelta: wheelDelta});
 		event.preventDefault();
 	};
 	
@@ -316,7 +310,7 @@ function windowManager(id, ws) {
 	this.element.addEventListener('mouseup',    this.mouseRelease.bind(this),  false);
 	this.element.addEventListener('dblclick',   this.mouseDblClick.bind(this), false);
 	this.element.addEventListener('mousewheel', this.mouseScroll.bind(this),   false);
-	//this.addEventListener('DOMMouseScroll', this.mouseScrollFF.bind(this), false);
+	//this.element.addEventListener('DOMMouseScroll', this.mouseScrollFF.bind(this), false);
 
 	// Touch-enabled code
 	//    using hammer.js library: http://hammerjs.github.io/
