@@ -222,7 +222,7 @@ function base64ToUint8Array(base64) {
 
 function readFile(filename, callback, type) {
 	var dataType = type || "TEXT";
-
+	
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", filename, true);
 	xhr.onreadystatechange = function() {

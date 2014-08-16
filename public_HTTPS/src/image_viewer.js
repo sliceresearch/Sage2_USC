@@ -84,17 +84,12 @@ var image_viewer = SAGE2_App.extend( {
 		}
 		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {
-			var amount = data.scale;
-			if (amount >= 1) {
-				this.top -= ui.titleTextSize * amount;
-				if (this.top < (-(this.layer.clientHeight-this.element.height))) this.top = -(this.layer.clientHeight-this.element.height);
-				this.layer.style.top = this.top + "px";
-			}
-			else if (amount <= 1) {
-				this.top += ui.titleTextSize * amount;
-				if (this.top > 0) this.top = 0;
-				this.layer.style.top = this.top + "px";
-			}
+			var amount = data.wheelDelta / 64;
+			
+			this.top += ui.titleTextSize * amount;
+			if (this.top > 0) this.top = 0;
+			if (this.top < (-(this.layer.clientHeight-this.element.height))) this.top = -(this.layer.clientHeight-this.element.height);
+			this.layer.style.top = this.top + "px";
 		}
 	}
 });

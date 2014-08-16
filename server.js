@@ -1393,7 +1393,7 @@ function loadConfiguration() {
 	
 	if (! fs.existsSync(configFile)) {
 		console.log("\n----------");
-		console.log("Cannot configuration file:", configFile);
+		console.log("Cannot find configuration file:", configFile);
 		console.log("----------\n\n");
 		process.exit(1);
 	}
@@ -2557,9 +2557,12 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-
+	
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
-		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(data.scale);
+		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
+		if(data.wheelDelta > 0) scale = 1.0 / scale;
+	
+		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
 		if(updatedItem !== null){
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 
