@@ -377,14 +377,21 @@ function windowManager(id, ws) {
 		});
 
 		this.hammertime.on('pinch', function(event) {
+			/*
 			var scale = event.scale;
 			// Some slowing down the scale (guess work)
 			if (event.scale > 1) scale = 1.0 + (event.scale - 1.0) / 20.0;
 			if (event.scale < 1) scale = 1.0 - (1.0 - event.scale) / 10.0;
+			*/
+			
+			var delta = event.scale;
+			if(event.scale < 1.0) delta = 1.0 / delta;
+			delta = parseInt((delta - 1.0) * 512);
+			if(event.scale < 1.0) delta *= -1;
 
 			// Do the scolling
 			_this.wsio.emit('pointerScrollStart');
-			_this.wsio.emit('pointerScroll', {scale: scale});
+			_this.wsio.emit('pointerScroll', {wheelDelta: delta});
 		});
 	}
 }
