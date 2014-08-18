@@ -811,6 +811,22 @@ function listSessions() {
 	return thelist;
 }
 
+function deleteSession (filename) {
+	if (filename) {
+		var fullpath = path.join(sessionFolder, filename);
+		// if it doesn't end in .json, add it
+		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+			fullpath += '.json';
+		}
+		fs.unlink(fullpath, function (err) {
+			if (err) {
+				console.log("Sessions> coudlnt delete session ", filename, err);
+				return;
+			}
+			console.log("Sessions> successfully deleted session", filename);
+		});
+	}
+}
 
 function saveSession (filename) {
 	filename = filename || 'default.json';
@@ -1147,7 +1163,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 function wsDeleteElementFromStoredFiles(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session
-		// NYI
+		deleteSession (data.filename);
 	} else if (data.application === 'custom_app') {
 		// an app
 		// NYI
