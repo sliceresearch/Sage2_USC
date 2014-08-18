@@ -157,6 +157,8 @@
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
+		fileDeleteBtn.disabled = true;
+
 		winMgr = new windowManager("winMgr", wsio);
 		
 		canvasKeyDownFunc  = winMgr.keyDown.bind(winMgr);
@@ -464,6 +466,8 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'movie_player') {
 			for (i=0;i<fileList.video.length;i++) {
 				if (fileList.video[i].exif.FileName === fileName) {
@@ -474,6 +478,8 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'pdf_viewer') {
 			for (i=0;i<fileList.pdf.length;i++) {
 				if (fileList.pdf[i].exif.FileName === fileName) {
@@ -484,6 +490,8 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'custom_app') {
 			for (i=0;i<fileList.app.length;i++) {
 				if (fileList.app[i].exif.FileName === fileName) {
@@ -494,8 +502,13 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = true;
 		} else {
 			thumbnail.src = "images/blank.png";
+
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		}
 	}
 
