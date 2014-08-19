@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-<meta charset="utf-,8">
+<meta charset="utf-8">
 <title>SAGE2 site index</title>
 
 <script type="text/javascript">
@@ -46,26 +46,24 @@
 		var experiments = document.getElementById('experiments');
 		var remotesites = document.getElementById('remotesites');
 
-		var https_port = ":" + json_cfg.port.toString();
+		var https_port;
+		if (typeof json_cfg.rproxy_port != "undefined")
+			https_port = ":" + json_cfg.rproxy_port.toString();
+		else
+			https_port = ":" + json_cfg.port.toString();
 		if (https_port == ":443") https_port = "";
 		
 		// User Interaction
 		var sageUI = document.createElement('p');
 		var sageUI_link = document.createElement('a');
 		sageUI_link.textContent = "SAGE UI";
-		if (https_port == "")
-			sageUI_link.href = "https://" + window.location.host + window.location.pathname + "sageUI.html";
-		else
-			sageUI_link.href = "https://" + window.location.hostname + https_port + "/sageUI.html";
+		sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "sageUI.html";
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
 		var sagePointer = document.createElement('p');
 		var sagePointer_link = document.createElement('a');
 		sagePointer_link.textContent = "SAGE Pointer";
-		if (https_port == "")
-			sagePointer_link.href = "https://" + window.location.host + window.location.pathname + "sagePointer.html";
-		else
-			sagePointer_link.href = "https://" + window.location.hostname + https_port + "/sagePointer.html";
+		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "sagePointer.html";
 		sagePointer_link.target = "_blank";
 		sagePointer.appendChild(sagePointer_link);
 		
@@ -76,10 +74,7 @@
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		if (https_port == "")
-			audioManager_link.href = "https://" + window.location.host + window.location.pathname + "audioManager.html";
-		else
-			audioManager_link.href = "https://" + window.location.hostname + https_port + "/audioManager.html";
+		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
@@ -90,10 +85,7 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			if (https_port == "")
-				displayClient_link.href = "https://" + window.location.host + window.location.pathname + "?clientID=" + i.toString();
-			else
-				displayClient_link.href = "https://" + window.location.hostname + https_port + "/?clientID=" + i.toString();
+			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
@@ -104,10 +96,7 @@
 		var displayClient = document.createElement('p');
 		var displayClient_link = document.createElement('a');
 		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
-		if (https_port == "")
-			displayClient_link.href = "https://" + window.location.host + window.location.pathname + "?clientID=" + i.toString();
-		else
-			displayClient_link.href = "https://" + window.location.hostname + https_port + "/?clientID=" + i.toString();
+		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "?clientID=" + i.toString();
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
@@ -149,10 +138,7 @@
 		var drawingClient = document.createElement('p');
 		var drawingClient_link = document.createElement('a');
 		drawingClient_link.textContent = "Drawing application";
-		if (https_port == "")
-			drawingClient_link.href = "https://" + window.location.host + window.location.pathname + "drawing.html";
-		else
-			drawingClient_link.href = "https://" + window.location.hostname + https_port + "/drawing.html";
+		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "drawing.html";
 		drawingClient_link.target = "_blank";
 		drawingClient.appendChild(drawingClient_link);
 		experiments.appendChild(drawingClient);

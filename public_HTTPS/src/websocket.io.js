@@ -18,7 +18,8 @@ function websocketIO(protocol, host, port) {
 	this.open = function(callback) {
 		var _this = this;
 		
-		console.log(this.protocol + "://" + this.host + ":" + this.port);
+		//console.log(this.protocol + "://" + this.host + ":" + this.port);
+		console.log(this.protocol + "://" + window.location.host + "/" + window.location.pathname.split("/")[1]);
 		//this.ws = new WebSocket(this.protocol + "://" + this.host + ":" + this.port);
 		this.ws = new WebSocket(this.protocol + "://" + window.location.host + "/" + window.location.pathname.split("/")[1]);
 
