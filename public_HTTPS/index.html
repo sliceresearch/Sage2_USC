@@ -16,6 +16,11 @@
 	// Copyright (c) 2014
 </script>
 
+<!-- External dependencies -->
+<script type="text/javascript" src="lib/pdf.js"></script>
+<script type="text/javascript" src="lib/snap.svg-min.js"></script>
+<script type="text/javascript" src="lib/observe.poly.js"></script>
+
 <script type="text/javascript" src="src/websocket.io.js"></script>
 <script type="text/javascript" src="src/Class.js"></script>
 <script type="text/javascript" src="src/SAGE2_App.js"></script>
@@ -30,11 +35,6 @@
 
 <script type="text/javascript" src="src/pointer.js"></script>
 <script type="text/javascript" src="src/widgets.js"></script>
-
-<!-- External dependencies -->
-<script type="text/javascript" src="lib/pdf.js"></script>
-<script type="text/javascript" src="lib/snap.svg-min.js"></script>
-<script type="text/javascript" src="lib/observe.poly.js"></script>
 
 
 <script type="text/javascript">
@@ -62,11 +62,21 @@
 
 	// UI object to build the element on the wall
 	var ui;
+	var uiTimer = null;
+	var uiTimerDelay;
 
 	// Explicitely close web socket when web browser is closed
 	window.onbeforeunload = function() {
 		if(wsio !== undefined) wsio.close();
 	};
+
+	function resetIdle() {
+		if (uiTimer) {
+			clearTimeout(uiTimer);
+			ui.showInterface();
+			uiTimer = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+		}
+	}
 
 	function init() {
 		hostname = window.location.hostname;
@@ -158,6 +168,11 @@
 			ui = new uiBuilder(json_cfg, clientID);
 			ui.build();
 			ui.background();
+			if (json_cfg.auto_hide_ui) {
+				// default delay is 30s if not specified
+				uiTimerDelay = json_cfg.auto_hide_delay ? parseInt(json_cfg.auto_hide_delay,10) : 30;
+				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+			}
 		});
 		
 		wsio.on('setupSAGE2Version', function(version) {
@@ -182,6 +197,7 @@
         
         wsio.on('showSagePointer', function(pointer_data){
 			ui.showSagePointer(pointer_data);
+			resetIdle();
         });
         
         wsio.on('hideSagePointer', function(pointer_data){
@@ -190,10 +206,12 @@
         
         wsio.on('updateSagePointerPosition', function(pointer_data){
 			ui.updateSagePointerPosition(pointer_data);
+			resetIdle();
         });
         
         wsio.on('changeSagePointerMode', function(pointer_data){
 			ui.changeSagePointerMode(pointer_data);
+			resetIdle();
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
@@ -215,6 +233,8 @@
 
 		/******************************/
 		wsio.on('createAppWindow', function(data) {
+			resetIdle();
+
 			var date = new Date(data.date);
 
 			var windowTitle = document.createElement("div");
@@ -228,7 +248,7 @@
 			ui.main.appendChild(windowTitle);
 
 			var windowIcons = document.createElement("img");
-			windowIcons.src = "images/layout.webp";
+			windowIcons.src = "images/layout2.webp";
 			windowIcons.height = Math.round(ui.titleBarHeight);
 			windowIcons.style.position = "absolute";
 			windowIcons.style.right    = "0px";
@@ -392,6 +412,8 @@
 		/******************************/
 		
 		wsio.on('deleteElement', function(elem_data) {
+			resetIdle();
+
 			// Tell the application it is over
 			var app = applications[elem_data.elemId];
 			app.terminate();
@@ -430,6 +452,8 @@
 		});
 		
 		wsio.on('updateItemOrder', function(order) {
+			resetIdle();
+
 			var i;
 			var zval = 0;
 			for(i=0; i<order.idList.length; i++){
@@ -459,6 +483,8 @@
 		});
 
 		wsio.on('setItemPosition', function(position_data) {
+			resetIdle();
+
 			var date  = new Date(position_data.date);
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
@@ -484,6 +510,8 @@
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
+			resetIdle();
+
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
 			
@@ -524,6 +552,8 @@
 		});
 		
 		wsio.on('finishedResize', function(data) {
+			resetIdle();
+
 			var app = applications[data.id];
 			if(app !== undefined && app.resizeEvents === "onfinish"){
 				var date = new Date(data.date);

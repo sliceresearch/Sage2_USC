@@ -84,7 +84,7 @@
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
-		
+
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
 		wsio.open(function() {
@@ -157,6 +157,8 @@
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
+		fileDeleteBtn.disabled = true;
+
 		winMgr = new windowManager("winMgr", wsio);
 		
 		canvasKeyDownFunc  = winMgr.keyDown.bind(winMgr);
@@ -164,19 +166,6 @@
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
-
-		// Commented out event handler - done in windowManager
-		// winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
-		// winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
-		// winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
-
-		// winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
-		// winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
-		// winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
-
-		// winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
-		// winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
-		// winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
 
 		document.addEventListener('mousemove', updateTarget, false);
 		
@@ -477,6 +466,8 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'movie_player') {
 			for (i=0;i<fileList.video.length;i++) {
 				if (fileList.video[i].exif.FileName === fileName) {
@@ -487,6 +478,8 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'pdf_viewer') {
 			for (i=0;i<fileList.pdf.length;i++) {
 				if (fileList.pdf[i].exif.FileName === fileName) {
@@ -497,6 +490,8 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'custom_app') {
 			for (i=0;i<fileList.app.length;i++) {
 				if (fileList.app[i].exif.FileName === fileName) {
@@ -507,8 +502,13 @@
 						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = true;
 		} else {
 			thumbnail.src = "images/blank.png";
+
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		}
 	}
 

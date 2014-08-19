@@ -12,7 +12,7 @@ function pointer(){
 	this.element    = null;
 	this.ctx        = null;
 	this.label      = "";
-	this.givenColor = "rgba(255, 255, 255, 1.0)";
+	this.givenColor = "#FFFFFF";
 	this.drawMode   = null;
 	
 	this.init = function(id, label, color) {
@@ -26,7 +26,7 @@ function pointer(){
 	};
 	
 	this.setColor = function(color){
-	    this.givenColor = "rgba(" + color[0].toString() + "," + color[1].toString() + "," + color[2].toString() + ",1.0)";
+	    this.givenColor = color;
 	};
 	
 	this.setLabel = function(label){

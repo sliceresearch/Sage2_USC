@@ -35,6 +35,129 @@ function log (obj) {
 	sage2Log({app: "index", message: args});
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Basic data types for inter-application communications
+//
+var SAGE2types = {};
+function _LatLng(lat, lng) {
+	this.description = "Depicts a geolocation";
+	this.value   = {lat:lat,lng:lng};
+	this.jsonstr = JSON.stringify(this.value);
+}
+SAGE2types.LatLng = _LatLng;
+
+function _Int(val) {
+	this.description = "Depicts an integer value";
+	this.value   = parseInt(val);
+	this.jsonstr = JSON.stringify(this.value);
+}
+SAGE2types.Int = _Int;
+
+function _Float(val) {
+	this.description = "Depicts an floating point value";
+	this.value   = parseFloat(val);
+	this.jsonstr = JSON.stringify(this.value);
+}
+SAGE2types.Float = _Float;
+
+function _String(str) {
+	this.description = "Depicts a string of characters";
+	this.value   = str;
+	this.jsonstr = str;
+}
+SAGE2types.String = _String;
+
+function _Boolean(val) {
+	this.description = "Depicts a boolean value";
+	this.value   = (val === true);
+	this.jsonstr = JSON.stringify(val);
+}
+SAGE2types.Boolean = _Boolean;
+
+function _Object(obj) {
+	this.description = "Depicts a javascript object";
+	if (_typeOf(obj) === 'object')
+		this.value = obj;
+	else
+		this.value = {value: obj};
+	this.jsonstr = JSON.stringify(this.value);
+}
+SAGE2types.Object = _Object;
+
+function _Array(obj) {
+	this.description = "Depicts a javascript array";
+	if (_typeOf(obj) === 'array')
+		this.value = obj;
+	else
+		this.value = [obj];
+	this.jsonstr = JSON.stringify(this.value);
+}
+SAGE2types.Array = _Array;
+
+function _Date(obj) {
+	this.description = "Depicts a javascript date";
+	if (_typeOf(obj) === 'date')
+		this.value = obj;
+	else
+		this.value = new Date(obj);
+	this.jsonstr = JSON.stringify(this.value);
+}
+SAGE2types.Date = _Date;
+
+SAGE2types.isaLatLng = function(obj) { return obj instanceof SAGE2types.LatLng; };
+SAGE2types.isaInt    = function(obj) { return obj instanceof SAGE2types.Int; };
+SAGE2types.isaFloat  = function(obj) { return obj instanceof SAGE2types.Float; };
+SAGE2types.isaString = function(obj) { return obj instanceof SAGE2types.String; };
+SAGE2types.isaObject = function(obj) { return obj instanceof SAGE2types.Object; };
+SAGE2types.isaArray  = function(obj) { return obj instanceof SAGE2types.Array; };
+SAGE2types.isaDate   = function(obj) { return obj instanceof SAGE2types.Date; };
+
+SAGE2types.create    = function(val) {
+	if (_typeOf(val) === 'object') {
+		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng'))
+			return new SAGE2types.LatLng(val.lat,val.lng);
+		else
+			return new SAGE2types.Object(val);
+	}
+	else if (_typeOf(val) === 'array') {
+		return new SAGE2types.Array(val);
+	}
+	else if (_typeOf(val) === 'number') {
+		var v = parseInt(val);
+		if (v === val)
+			return new SAGE2types.Int(val);
+		else
+			return new SAGE2types.Float(val);
+	}
+	else if (_typeOf(val) === 'string') {
+		return new SAGE2types.String(val);		
+	}
+	else if (_typeOf(val) === 'date') {
+		return new SAGE2types.Date(val);		
+	}
+	return null;
+};
+
+// from javascript.crockford.com
+function _typeOf(value) {
+	var s = typeof value;
+	if (s === 'object') {
+		if (value) {
+			if (value instanceof Array) {
+				s = 'array';
+			} else if (value instanceof Date) {
+				s = 'date';
+			}
+		} else {
+			s = 'null';
+		}
+	}
+	return s;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 // Pretty print in browser and send to server
 //
 function sage2Log(msgObject) {
@@ -99,7 +222,7 @@ function base64ToUint8Array(base64) {
 
 function readFile(filename, callback, type) {
 	var dataType = type || "TEXT";
-
+	
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", filename, true);
 	xhr.onreadystatechange = function() {

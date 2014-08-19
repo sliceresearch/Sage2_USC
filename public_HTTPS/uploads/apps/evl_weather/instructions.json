@@ -1,6 +1,6 @@
 {
 	"main_script": "weather.js",
-	"icon": "weather.svg",
+	"icon": "evl.png",
 	"width": 490,
 	"height": 400,
 	"animation": true,

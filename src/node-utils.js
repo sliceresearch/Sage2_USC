@@ -46,7 +46,7 @@ function getFullVersion(callback) {
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd = "git log --date=\"short\" --format=\"%d|%h|%ad\" -n 1";
 	exec(cmd, { cwd:  dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if(err) { callback(null); return; }
+		if(err) { callback(fullVersion); return; }
 		
 		// parsing the results
 		var result = stdout.replace(/\r?\n|\r/g, "");

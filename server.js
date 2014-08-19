@@ -34,10 +34,9 @@ var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
-// var imageinfo   = require('imageinfo');           // gets width, height for images
 var json5       = require('json5');               // JSON format that allows comments
-var multiparty  = require('multiparty');          // parses POST forms
 var os          = require('os');                  // operating system access
+var util        = require('util');                // node util
 var path        = require('path');                // file path extraction and creation
 var request     = require('request');             // external http requests
 var sprint      = require('sprint');              // pretty formating (sprintf)
@@ -45,6 +44,7 @@ var readline    = require('readline');            // to build an evaluation loop
 var program     = require('commander');           // parsing command-line arguments
 var colors      = require('colors');              // pretty colors in the terminal
 var exec        = require('child_process').exec;  // execute child process
+var formidable  = require('formidable');          // upload processor
 
 // custom node modules
 var httpserver  = require('./src/node-httpserver');     // creates web server
@@ -264,6 +264,7 @@ function initializeWSClient(wsio) {
 		wsio.on('pointerMove',               wsPointerMove);
 		wsio.on('pointerScrollStart',        wsPointerScrollStart);
 		wsio.on('pointerScroll',             wsPointerScroll);
+		wsio.on('pointerDraw',               wsPointerDraw);
 		wsio.on('keyDown',                   wsKeyDown);
 		wsio.on('keyUp',                     wsKeyUp);
 		wsio.on('keyPress',                  wsKeyPress);
@@ -495,6 +496,11 @@ function wsPointerScroll(wsio, data) {
 	pointerScroll(uniqueID, data);
 }
 
+function wsPointerDraw(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	pointerDraw(uniqueID, data);
+}
+
 function wsKeyDown(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
@@ -599,7 +605,7 @@ function wsKeyPress(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log("received new stream: " + data.id);
+	console.log("received new stream: ", data.id);
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
@@ -607,6 +613,11 @@ function wsStartNewMediaStream(wsio, data) {
 			mediaStreams[data.id].clients[clientAddress] = false;
 		}
 	}
+
+	// Forcing 'int' type for width and height
+	//     for some reasons, messages from websocket lib from Linux send strings for ints
+	data.width  = parseInt(data.width,  10);
+	data.height = parseInt(data.height, 10);
 
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
@@ -815,6 +826,22 @@ function listSessions() {
 	return thelist;
 }
 
+function deleteSession (filename) {
+	if (filename) {
+		var fullpath = path.join(sessionFolder, filename);
+		// if it doesn't end in .json, add it
+		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+			fullpath += '.json';
+		}
+		fs.unlink(fullpath, function (err) {
+			if (err) {
+				console.log("Sessions> coudlnt delete session ", filename, err);
+				return;
+			}
+			console.log("Sessions> successfully deleted session", filename);
+		});
+	}
+}
 
 function saveSession (filename) {
 	filename = filename || 'default.json';
@@ -1151,7 +1178,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 function wsDeleteElementFromStoredFiles(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session
-		// NYI
+		deleteSession (data.filename);
 	} else if (data.application === 'custom_app') {
 		// an app
 		// NYI
@@ -1201,6 +1228,7 @@ function wsOpenNewWebpage(wsio, data) {
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
 		// then emit the command
+		console.log("Browser> new page", data.url);
 		webBrowserClient.emit('openWebBrowser', {url: data.url});
 	}
 }
@@ -1396,7 +1424,7 @@ function loadConfiguration() {
 	
 	if (! fs.existsSync(configFile)) {
 		console.log("\n----------");
-		console.log("Cannot configuration file:", configFile);
+		console.log("Cannot find configuration file:", configFile);
 		console.log("----------\n\n");
 		process.exit(1);
 	}
@@ -1406,10 +1434,17 @@ function loadConfiguration() {
 	// compute extra dependent parameters
 	userConfig.totalWidth     = userConfig.resolution.width  * userConfig.layout.columns;
 	userConfig.totalHeight    = userConfig.resolution.height * userConfig.layout.rows;
-	userConfig.titleBarHeight = Math.round(0.025 * userConfig.totalHeight);
-	userConfig.titleTextSize  = Math.round(0.015 * userConfig.totalHeight);
-	userConfig.pointerWidth   = Math.round(0.200 * userConfig.totalHeight);
-	userConfig.pointerHeight  = Math.round(0.050 * userConfig.totalHeight);
+	
+	var minDim = Math.min(userConfig.totalWidth, userConfig.totalHeight);
+	
+	if(userConfig.titleBarHeight) userConfig.titleBarHeight = parseInt(userConfig.titleBarHeight, 10);
+	else                          userConfig.titleBarHeight = Math.round(0.025 * minDim);
+	
+	if(userConfig.titleTextSize)  userConfig.titleTextSize  = parseInt(userConfig.titleTextSize, 10);
+	else                          userConfig.titleTextSize  = Math.round(0.015 * minDim);
+	
+	if(userConfig.pointerSize)    userConfig.pointerSize    = parseInt(userConfig.pointerSize, 10);
+	else                          userConfig.pointerSize    = Math.round(0.050 * minDim);
 	
 	// Set default values if missing
 	if (userConfig.port === undefined) userConfig.port = 443;
@@ -1624,22 +1659,56 @@ function sendConfig(req, res) {
 	res.end();
 }
 
+// function uploadForm(req, res) {
+// 	var form = new multiparty.Form();
+// 	form.parse(req, function(err, fields, files) {
+// 		if(err){
+// 			res.writeHead(500, {"Content-Type": "text/plain"});
+// 			res.write(err + "\n\n");
+// 			res.end();
+// 		}
+// 		// saves files in appropriate directory and broadcasts the items to the displays
+// 		manageUploadedFiles(files);
+// 		res.writeHead(200, {"Content-Type": "text/plain"});
+// 		res.write("received upload:\n\n");
+// 		res.end();
+// 	});
+// }
+
 function uploadForm(req, res) {
-	var form = new multiparty.Form();
+	var form = new formidable.IncomingForm();
+	form.maxFieldsSize = 4 * 1024 * 1024;
+	form.type          = 'multipart';
+	form.multiples     = true;
+
+	// var lastper = -1;
+	// form.on('progress', function(bytesReceived, bytesExpected) {
+	// 	var per = parseInt(100.0 * bytesReceived/ bytesExpected);
+	// 	if ((per % 10)===0 && lastper!==per) {
+	// 		console.log('Form> %d%', per);
+	// 		lastper = per;
+	// 	}
+	// });
+	form.on('fileBegin', function(name, file) {
+		console.log('Form> ', name, file.name, file.type);
+	});
+
 	form.parse(req, function(err, fields, files) {
 		if(err){
 			res.writeHead(500, {"Content-Type": "text/plain"});
 			res.write(err + "\n\n");
 			res.end();
 		}
-		
-		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(files);
-
-		res.writeHead(200, {"Content-Type": "text/plain"});
-		res.write("received upload:\n\n");
-		res.end();
+		res.writeHead(200, {'content-type': 'text/plain'});
+		res.write('received upload:\n\n');
+		res.end(util.inspect({fields: fields, files: files}));
 	});
+
+	form.on('end', function() {
+		// saves files in appropriate directory and broadcasts the items to the displays
+		manageUploadedFiles(this.openedFiles);
+	});
+
 }
 
 function manageUploadedFiles(files) {
@@ -1647,10 +1716,11 @@ function manageUploadedFiles(files) {
 
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
-		var file = files[key][0];
+		var file = files[key];
+		console.log('manageUploadedFiles> ', files[key].name);
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
 			if(appInstance === null){
-				console.log("unrecognized file type: " + file.headers['content-type']);
+				console.log("Form> unrecognized file type: ", file.name, file.type);
 				return;
 			}
 			
@@ -1972,7 +2042,7 @@ function findRemoteSiteByConnection(wsio) {
 
 function findAppUnderPointer(pointerX, pointerY) {
 	var i;
-	for(i=applications.length-1; i>=0; i--){
+	for(i=applications.length-1; i>=0; i--) {
 		if(pointerX >= applications[i].left && pointerX <= (applications[i].left+applications[i].width) && pointerY >= applications[i].top && pointerY <= (applications[i].top+applications[i].height+config.titleBarHeight)){
 			return applications[i];
 		}
@@ -2181,24 +2251,20 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				// if localY in negative, inside titlebar
 				if (localY < 0) {
 					// titlebar image: 807x138  (10 pixels front paddding)
-					var buttonsWidth = config.titleBarHeight * (807.0/138.0);
-					var buttonsPad   = config.titleBarHeight * ( 10.0/138.0);
-					var oneButton    = buttonsWidth / 5; // five buttons
+					var buttonsWidth = config.titleBarHeight * (485.0/111.0);
+					var buttonsPad   = config.titleBarHeight * ( 10.0/111.0);
+					var oneButton    = buttonsWidth / 3; // five buttons
 					var startButtons = elem.width - buttonsWidth;
-					if (localX > (startButtons+buttonsPad+4*oneButton)) {
-						//console.log('Titlebar> bottom button');
-						pointerBottomZone(uniqueID, pointerX, pointerY);
-					} else if (localX > (startButtons+buttonsPad+3*oneButton)) {
-						//console.log('Titlebar> top button');
-						pointerTopZone(uniqueID, pointerX, pointerY);
-					} else if (localX > (startButtons+buttonsPad+2*oneButton)) {
-						//console.log('Titlebar> right button');
-						pointerRightZone(uniqueID, pointerX, pointerY);
+					if (localX > (startButtons+buttonsPad+2*oneButton)) {
+						// last button: close app
+						deleteApplication(elem);
+						// need to quit the function and stop processing
+						return;
 					} else if (localX > (startButtons+buttonsPad+oneButton)) {
-						//console.log('Titlebar> left button');
-						pointerLeftZone(uniqueID, pointerX, pointerY);
+						// middle button: maximize fullscreen
+						pointerFullZone(uniqueID, pointerX, pointerY);
 					} else if (localX > (startButtons+buttonsPad)) {
-						//console.log('Titlebar> maximize button');
+						// first button: maximize
 						pointerDblClick(uniqueID, pointerX, pointerY);
 					}
 				}
@@ -2523,9 +2589,12 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-
+	
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
-		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(data.scale);
+		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
+		if(data.wheelDelta > 0) scale = 1.0 / scale;
+	
+		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
 		if(updatedItem !== null){
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 
@@ -2554,6 +2623,25 @@ function pointerScroll( uniqueID, data ) {
 			
 			var event = {id: elem.id, type: "pointerScroll", position: ePosition, user: eUser, data: data, date: now};
 			
+			broadcast('eventInItem', event, 'receivesInputEvents');
+		}
+	}
+}
+
+function pointerDraw(uniqueID, data) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var ePos  = {x: 0, y: 0};
+	var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220,10,10]};
+	var now   = new Date();
+	var appId = null;
+
+	for (var i=0;i<applications.length;i++) {
+		var a = applications[i];
+		// Send the drawing events only to whiteboard apps
+		if (a.application === 'whiteboard') {
+			var event = {id: a.id, type: "pointerDraw", position: ePos, user: eUser, data: data, date: now};
 			broadcast('eventInItem', event, 'receivesInputEvents');
 		}
 	}
@@ -2675,6 +2763,36 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 	}
 }
 
+// Fullscreen to wall ratio
+function pointerFullZone(uniqueID, pointerX, pointerY) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	if (elem !== null) {
+		if( remoteInteraction[uniqueID].windowManagementMode() ){
+			var updatedItem;
+			if (elem.maximized !== true) {
+				// need to maximize the item
+				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem, config);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			} else {
+				// already maximized, need to restore the item size
+				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
+				if (updatedItem !== null) {
+					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+					// the PDF files need an extra redraw
+					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				}
+			}
+		}
+	}
+}
+
 function pointerBottomZone(uniqueID, pointerX, pointerY) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
@@ -2704,7 +2822,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 	}
 }
 
-function pointerCloseGesture(uniqueID, pointerX, pointerY) {
+function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
 		
@@ -2713,7 +2831,16 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY) {
 	var elem = findAppUnderPointer(pX, pY);
 
 	if (elem !== null) {
-		deleteApplication(elem);
+		if( elem.closeGestureID === undefined && gesture === 0 ) { // gesture: 0 = down, 1 = hold/move, 2 = up
+			elem.closeGestureID = uniqueID;
+			elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
+		}
+		else if( elem.closeGestureTime <= time && gesture === 1 ) { // Held long enough, remove
+			deleteApplication(elem);
+		}
+		else if( gesture === 2 ) { // Released, reset timer
+			elem.closeGestureID = undefined;
+		}
 	}
 }
 
@@ -2804,6 +2931,14 @@ function deleteApplication( elem ) {
 
 if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
+	
+	var closeGestureDelay = 1500;
+	
+	if( config.experimental.omicron.closeGestureDelay !== undefined )	
+	{
+		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
+	}
+	
 	omicronManager.setCallbacks(
 		sagePointers,
 		createSagePointer,
