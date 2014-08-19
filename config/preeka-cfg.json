@@ -1,0 +1,85 @@
+//
+// Display column at EVL
+//
+{
+	host: "preeka.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	clock: 12,
+
+	// User specified values (in pixel)
+	titleBarHeight: 60,
+	titleTextSize:  38,
+	pointerSize:   100,
+
+	background: {
+		color: "#9a9a9a",
+		image: "images/background/dbgrid.png",
+		style: "tile"
+	},
+	show_url: false,
+	show_version: false,
+	resolution: {
+		width: 2560,
+		height: 1600
+	},
+	layout: {
+		rows: 5,
+		columns: 1
+	},
+	displays: [
+		{
+			ID: 0,
+			row: 0,
+			column: 0
+		},
+		{
+			ID: 1,
+			row: 1,
+			column: 0
+		},
+		{
+			ID: 2,
+			row: 2,
+			column: 0
+		},
+		{
+			ID: 3,
+			row: 3,
+			column: 0
+		},
+		{
+			ID: 4,
+			row: 4,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1"
+	],
+	remote_sites: [
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
+		}
+	],
+	advanced: {
+	}
+}

@@ -9,8 +9,6 @@
 // Copyright (c) 2014
 
 function sagePointer(wsio) {
-	this.name = "Default";
-	this.col  = [180, 180, 180];
 	this.wsio = wsio;
 	
 	this.uniqueID = null;
@@ -43,13 +41,27 @@ function sagePointer(wsio) {
 	this.desktopId          = null;
 	
 	this.chunk = 32 * 1024; // 32 KB
-	this.maxUploadSize = 500 * (1024*1024); // 500 MB
+	//this.maxUploadSize = 500 * (1024*1024); // 500 MB
+	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
+
+	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
+	if(localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
 	
-	if(localStorage["SAGE2_ptrName"]  !== null) this.sagePointerLabel.value = localStorage['SAGE2_ptrName'];
-	if(localStorage["SAGE2_ptrColor"] !== null) this.sagePointerColor.value = localStorage['SAGE2_ptrColor'];
-	
-	
-	
+	this.sagePointerLabel.value = localStorage.SAGE2_ptrName;
+	this.sagePointerColor.value = localStorage.SAGE2_ptrColor;
+
+	var _this = this;
+
+	// Capture the changes in the pointer name
+	this.sagePointerLabel.addEventListener('input', function(evt) {
+		localStorage.SAGE2_ptrName  = _this.sagePointerLabel.value;
+	});
+
+	// Capture the changes in the pointer color
+	this.sagePointerColor.addEventListener('change', function(evt) {
+		localStorage.SAGE2_ptrColor = _this.sagePointerColor.value;
+	});
+
 	this.setPointerId = function(id) {
 		this.uniqueID = id;
 	};
@@ -63,18 +75,6 @@ function sagePointer(wsio) {
 	};
 	
 	this.startSagePointerMethod = function(event) {
-		if (this.sagePointerLabel.value !== "") {
-			this.name = this.sagePointerLabel.value;
-		}
-		if (this.sagePointerColor.value !== "") {
-			this.col[0] = parseInt(this.sagePointerColor.value.substring(1,3), 16);
-			this.col[1] = parseInt(this.sagePointerColor.value.substring(3,5), 16);
-			this.col[2] = parseInt(this.sagePointerColor.value.substring(5,7), 16);
-		}
-	
-		localStorage["SAGE2_ptrName"]  = this.sagePointerLabel.value;
-		localStorage["SAGE2_ptrColor"] = this.sagePointerColor.value;
-	
 		this.sagePointerBtn.requestPointerLock = this.sagePointerBtn.requestPointerLock       || 
 												 this.sagePointerBtn.mozRequestPointerLock    || 
 												 this.sagePointerBtn.webkitRequestPointerLock;
@@ -86,7 +86,7 @@ function sagePointer(wsio) {
 	this.pointerLockChangeMethod = function() {
 		if(document.pointerLockElement === this.sagePointerBtn ||  document.mozPointerLockElement === this.sagePointerBtn || document.webkitPointerLockElement === this.sagePointerBtn){
 			console.log("pointer lock enabled");
-			this.wsio.emit('startSagePointer', {label: this.name, color: this.col});
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 		
 			document.addEventListener('mousedown',           this.pointerPress,     false);
 			document.addEventListener('mousemove',           this.pointerMove,      false);
@@ -148,25 +148,19 @@ function sagePointer(wsio) {
 	};
 
 	this.pointerScrollMethod = function(event) {
-		var scale = 1.0 + Math.abs(event.wheelDelta)/512;
-		if(event.wheelDelta > 0) scale = 1.0 / scale;
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {scale: scale});
+		this.wsio.emit('pointerScroll', {wheelDelta: event.wheelDelta});
 		event.preventDefault();
 	};
 
 	this.pointerScrollFFMethod = function(event) {
 		var wheelDelta = -120*event.detail;
-		var scale = 1.0 + Math.abs(wheelDelta)/512;
-		if(wheelDelta > 0) scale = 1.0 / scale;
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {scale: scale});
+		this.wsio.emit('pointerScroll', {wheelDelta: wheelDelta});
 		event.preventDefault();
 	};
 
 	this.pointerKeyDownMethod = function(event) {
-		console.log(event);
-	
 		var code = parseInt(event.keyCode);
 		this.wsio.emit('keyDown', {code: code});
 		if(code == 9){ // tab is a special case - no keypress event called (do we need to change code?)
@@ -191,18 +185,6 @@ function sagePointer(wsio) {
 	};
 	
 	this.startScreenShareMethod = function(event) {
-		if(this.sagePointerLabel.value !== ""){
-			this.name = this.sagePointerLabel.value;
-		}
-		if(this.sagePointerColor.value !== ""){
-			this.col[0] = parseInt(this.sagePointerColor.value.substring(1,3), 16);
-			this.col[1] = parseInt(this.sagePointerColor.value.substring(3,5), 16);
-			this.col[2] = parseInt(this.sagePointerColor.value.substring(5,7), 16);
-		}
-
-		localStorage["SAGE2_ptrName"]  = this.sagePointerLabel.value;
-		localStorage["SAGE2_ptrColor"] = this.sagePointerColor.value;
-	
 		// start screen share
 		this.screenShareBtn.disabled = true;
 		
@@ -243,7 +225,7 @@ function sagePointer(wsio) {
 
 		var frame = this.captureMediaFrame();
 		var raw = this.base64ToString(frame.split(",")[1]);
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: this.name+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: screen.width, height: screen.height});
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: screen.width, height: screen.height});
 
 		this.broadcasting = true;
 	};

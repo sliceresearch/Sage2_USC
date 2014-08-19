@@ -39,8 +39,8 @@ Asset.prototype.setURL = function(aUrl) {
 };
 
 Asset.prototype.setFilename = function(aFilename) {
-    this.filename = aFilename;
-    this.id       = aFilename;
+    this.filename = path.resolve(aFilename);
+    this.id       = this.filename;
 };
 
 Asset.prototype.setEXIF = function(exifdata) {
@@ -210,6 +210,7 @@ addURL = function(url,exif) {
 };
 
 getDimensions = function (id) {
+	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return {width:  AllAssets.list[id].exif.ImageWidth,
 				height: AllAssets.list[id].exif.ImageHeight };
@@ -218,11 +219,21 @@ getDimensions = function (id) {
 };
 
 getMimeType = function (id) {
+	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return AllAssets.list[id].exif.MIMEType;
 	else
 		return null;
 };
+
+getExifData = function (id) {
+	id = path.resolve(id);
+	if (id in AllAssets.list)
+		return AllAssets.list[id].exif;
+	else
+		return null;
+};
+
 
 exifAsync = function(cmds, cb) {
 	var execNext = function() {
@@ -327,30 +338,36 @@ initialize = function (root, relativePath) {
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
 		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
 		var i;
-		var excludes = [ ".DS_Store" ];
+		var excludes = [ '.DS_Store' ];
 		var item;
 		for(i=0; i<uploadedImages.length; i++) {
-			item = path.join(root, "images", uploadedImages[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				if (! (item in excludes) ) thelist.push(item);
+			if (excludes.indexOf(uploadedImages[i]) === -1) {
+				item = path.resolve(root, "images", uploadedImages[i]);
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
 			}
 		}
 		for(i=0; i<uploadedVideos.length; i++) {
-			item = path.join(root, "videos", uploadedVideos[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				if (! (item in excludes) ) thelist.push(item);
+			if (excludes.indexOf(uploadedVideos[i]) === -1) {
+				item = path.resolve(root, "videos", uploadedVideos[i]);
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
 			}
 		}
 		for(i=0; i<uploadedPdfs.length; i++) {
-			item = path.join(root, "pdfs", uploadedPdfs[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				if (! (item in excludes) ) thelist.push(item);
+			if (excludes.indexOf(uploadedPdfs[i]) === -1) {
+				item = path.resolve(root, "pdfs", uploadedPdfs[i]);
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
 			}
 		}
 		// delete the elements which not there anymore
@@ -392,6 +409,7 @@ exports.deletePDF   = deletePDF;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
+exports.getExifData   = getExifData;
 
 exports.setupImageMagick = setupImageMagick;
 

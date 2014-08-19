@@ -26,7 +26,7 @@ var coordinateCalculator = require('./node-coordinateCalculator');
 
 var dataPort     = 9123;
 
-var eventDebug   = true;
+var eventDebug   = false;
 var gestureDebug = true;
 var coordCalculator;
 
@@ -44,8 +44,6 @@ var lastPosY = 0;
 
 function omicronManager( sysConfig )
 {
-	omicronManager = this; // ???
-	
 	config = sysConfig.experimental.omicron;
 	
 	coordCalculator = new coordinateCalculator( config );
@@ -293,6 +291,14 @@ omicronManager.prototype.runTracker = function()
 						pointerPosition( address, { pointerX: posX, pointerY: posY } );
 	
 					}
+					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					{
+						if( gestureDebug )
+						{
+							console.log("Touch move gesture: Five finger hold - " + Date.now());
+						}
+						pointerCloseGesture( address, posX, posY, Date.now(), 1 );
+					}
 				}
 				else if (e.type == 15)
 				{ // zoom
@@ -343,16 +349,16 @@ omicronManager.prototype.runTracker = function()
 							
 							showPointer( address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)" } );
 							
-							pointerPress( address, posX, posY );
+							pointerPress( address, posX, posY, { button: "left" } );
 						}
 					}
 					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
-							console.log("Touch gesture: Five finger hold");
+							console.log("Touch down gesture: Five finger hold - " + Date.now());
 						}
-						pointerCloseGesture( address, posX, posY );
+						pointerCloseGesture( address, posX, posY, Date.now(), 0 );
 					}
 					else if( e.flags == FLAG_THREE_FINGER_HOLD )
 					{
@@ -388,12 +394,20 @@ omicronManager.prototype.runTracker = function()
 						hidePointer(address);
 						
 						// Release event
-						pointerRelease(address, posX, posY);
+						pointerRelease(address, posX, posY, { button: "left" } );
 						
 						if( gestureDebug )
 						{
 							console.log("Touch release");
 						}
+					}
+					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					{
+						if( gestureDebug )
+						{
+							console.log("Touch up gesture: Five finger hold - " + Date.now());
+						}
+						pointerCloseGesture( address, posX, posY, Date.now(), 2 );
 					}
 				}
 				else

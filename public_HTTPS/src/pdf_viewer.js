@@ -8,20 +8,26 @@
 //
 // Copyright (c) 2014
 
+PDFJS.workerSrc     = 'lib/pdf.worker.js';
+PDFJS.disableWorker = false;
+PDFJS.disableWebGL  = false;
+
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 	
 		this.resizeEvents = "onfinish";
 		
-		this.canvas = null;
-		this.ctx    = null;
-		this.loaded = false;
-		this.pdfDoc = null;
-		this.ratio  = null;
+		this.canvas  = [];
+		this.ctx     = [];
+		this.loaded  = false;
+		this.pdfDoc  = null;
+		this.ratio   = null;
+		this.currCtx = 0;
+		this.numCtx  = 5;
 
 		this.enableControls = true;
-		this.pageValText = null;
+		this.pageValText    = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -29,10 +35,15 @@ var pdf_viewer = SAGE2_App.extend( {
 		arguments.callee.superClass.init.call(this, id, "img", width, height, resrc, date);
 		
 		// application specific 'init'
-		this.canvas = document.createElement("canvas");
-		this.canvas.width  = this.element.width;
-		this.canvas.height = this.element.height;
-		this.ctx = this.canvas.getContext("2d");
+		for(var i=0; i<this.numCtx; i++){
+			var canvas = document.createElement("canvas");
+			canvas.width  = this.element.width;
+			canvas.height = this.element.height;
+			var ctx = canvas.getContext("2d");
+			
+			this.canvas.push(canvas);
+			this.ctx.push(ctx);
+		}
 		
 		//  *** DO NOT OVERWRITE this.state, ALWAYS EDIT ITS PROPERTIES
 		// this.state = {srcPDF: null, pageNum: null, numPagesShown: null}; // BAD
@@ -53,8 +64,8 @@ var pdf_viewer = SAGE2_App.extend( {
 			
 			state.src = cleanURL(state.src);
 			
-			PDFJS.getDocument(state.src).then(function getPdfHelloWorld(_pdfDoc) {
-				_this.pdfDoc = _pdfDoc;
+			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
+				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
 				_this.state.src  = state.src;
@@ -62,23 +73,23 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.state.numPagesShown = state.numPagesShown;
 
 				// Getting the size of the page
-				_pdfDoc.getPage(1).then(function(page) {
+				_this.pdfDoc.getPage(1).then(function(page) {
 					var viewport = page.getViewport(1.0);
 					var w = parseInt(viewport.width, 10);
 					var h = parseInt(viewport.height,10);
 					_this.sendResize(w, h);
-					this.ratio = w / h;
+					_this.ratio = w / h;
 				});
 
 				// UI stuff
 				_this.controls.addButton({type:"rewind", action:function(appObj, date){
-					appObj.state.page  = 1;
+					appObj.state.page = 1;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
 				_this.controls.addButton({type:"prev", action:function(appObj, date){
 					if(appObj.state.page <= 1) return;
-					appObj.state.page  = appObj.state.page - 1;
+					appObj.state.page = appObj.state.page - 1;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
@@ -92,13 +103,13 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.controls.addLabel({textLength:labelWidth,appObj:_this, property:"pageValText"});
 
 				_this.controls.addButton({type:"next", action:function(appObj, date){
-					if (appObj.state.page  >= appObj.pdfDoc.numPages) return;
+					if (appObj.state.page >= appObj.pdfDoc.numPages) return;
 					appObj.state.page = appObj.state.page + 1;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
 				_this.controls.addButton({type:"fastforward", action:function(appObj, date){
-					appObj.state.page  = appObj.pdfDoc.numPages;
+					appObj.state.page = appObj.pdfDoc.numPages;
 					appObj.setLabelText();
 					appObj.refresh(date);
 				}});
@@ -118,33 +129,52 @@ var pdf_viewer = SAGE2_App.extend( {
 		if(this.loaded === false) return;
 
 		var _this = this;
-
-		this.pdfDoc.getPage(this.state.page).then(function(page) {
-			// set the scale to match the canvas
-			var viewport = page.getViewport(_this.canvas.width / page.getViewport(1.0).width);
+		var renderPage = this.state.page;
+		var renderCanvas;
+		
+		var gotPdfPage = function(pdfPage) {
+			renderCanvas = _this.currCtx;
 			
-			// Not needed I think
-			// viewport.width  = _this.canvas.width;
-			// viewport.height = _this.canvas.height;
+			// set the scale to match the canvas
+			var viewport = pdfPage.getViewport(_this.canvas[renderCanvas].width / pdfPage.getViewport(1.0).width);
 
 			// Render PDF page into canvas context
-			var renderContext = {canvasContext: _this.ctx, viewport: viewport};
-			
-			page.render(renderContext).then(function() {
-				_this.element.src = _this.canvas.toDataURL();
-				// Check for change in the aspect ratio, send a resize if needed
-				//  (done after the render to avoid double rendering issues)
-				if (_this.ratio !== (viewport.width/viewport.height) ) {
-					_this.ratio = viewport.width/viewport.height;
-					_this.sendResize(viewport.width, viewport.height);
+			var count = 0;
+			var renderContext = {
+				canvasContext: _this.ctx[_this.currCtx],
+				viewport: viewport,
+				continueCallback: function(cont) {
+					cont(); // nothing special right now
 				}
-			});
-		});
+			};
+			
+			_this.currCtx = (_this.currCtx+1) % _this.numCtx;
+			
+			pdfPage.render(renderContext).then(renderPdfPage);
+		};
+		
+		var renderPdfPage = function() {
+			console.log("rendered page " + renderPage);
+			
+			if(renderPage === _this.state.page)
+				_this.element.src = _this.canvas[renderCanvas].toDataURL();
+			
+			// Check for change in the aspect ratio, send a resize if needed
+			//  (done after the render to avoid double rendering issues)
+			if (_this.ratio !== (viewport.width/viewport.height) ) {
+				_this.ratio = viewport.width/viewport.height;
+				_this.sendResize(viewport.width, viewport.height);
+			}
+		};
+		
+		this.pdfDoc.getPage(this.state.page).then(gotPdfPage);
 	},
 	
 	resize: function(date) {
-		this.canvas.width  = this.element.width;
-		this.canvas.height = this.element.height;
+		for(var i=0; i<this.numCtx; i++){
+			this.canvas[i].width  = this.element.width;
+			this.canvas[i].height = this.element.height;
+		}
 
 		this.refresh(date);
 	},
@@ -159,10 +189,16 @@ var pdf_viewer = SAGE2_App.extend( {
 				this.setLabelText();
 				this.refresh(date);
 			}
-			if(data.code === 39 && data.state === "up"){ // Right Arrow
+			else if(data.code === 39 && data.state === "up"){ // Right Arrow
 				if(this.state.page >= this.pdfDoc.numPages) return;
 				this.state.page = this.state.page + 1;
 				this.setLabelText();
+				this.refresh(date);
+			}
+		}
+		
+		if(type === "keyboard"){
+			if(data.character === "r" || data.character === "R"){
 				this.refresh(date);
 			}
 		}

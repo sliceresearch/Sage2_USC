@@ -41,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerItems   = {};
 
 	// Get handle on the main div
-	this.bg = document.getElementById("background");
+	this.bg   = document.getElementById("background");
 	this.main = document.getElementById("main");
 
 	// Build the background image/color
@@ -213,8 +213,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.titleTextSize;
-			this.pointerWidth   = this.json_cfg.pointerWidth;
-			this.pointerHeight  = this.json_cfg.pointerHeight;
+			this.pointerWidth   = this.json_cfg.pointerSize*4;
+			this.pointerHeight  = this.json_cfg.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		} else {
@@ -222,8 +222,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.titleTextSize;
-			this.pointerWidth   = this.json_cfg.pointerWidth;
-			this.pointerHeight  = this.json_cfg.pointerHeight;
+			this.pointerWidth   = this.json_cfg.pointerSize*4;
+			this.pointerHeight  = this.json_cfg.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		}
@@ -283,9 +283,12 @@ function uiBuilder(json_cfg, clientID) {
 	
 	this.updateVersionText = function(version) {
 		if(this.json_cfg.show_version) {
-			this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
+			if (version.branch && version.commit && version.date)
+				this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
+			else
+				this.version.innerHTML = "<b>v" + version.base + "</b>";
 		}
-	}
+	};
 
 	this.createSagePointer = function(pointer_data) {
 		var pointerElem = document.createElement("canvas");
@@ -362,5 +365,33 @@ function uiBuilder(json_cfg, clientID) {
 		var remote = document.getElementById(data.name);
 		if (data.connected) remote.style.backgroundColor = "#379982";
 		else remote.style.backgroundColor = "#AD2A2A";
+	};
+
+	this.hideInterface = function() {
+		// Hide the top bar
+		this.upperBar.style.display = 'none';
+		// Hide the pointers
+		for (var p in this.pointerItems) {
+			this.pointerItems[p].element.style.display = 'none';
+		}
+		// Hide the apps top bar
+		var applist = document.getElementsByClassName("windowTitle");
+		for (var i = 0; i < applist.length; i++) {
+			applist[i].style.display = 'none';
+		}
+	};
+	this.showInterface = function() {
+		// Show the top bar
+		this.upperBar.style.display = 'block';
+		// Show the pointers (only if they have a name, ui pointers dont have names)
+		for (var p in this.pointerItems) {
+			if (this.pointerItems[p].label !== "")
+				this.pointerItems[p].element.style.display = 'block';
+		}
+		// Show the apps top bar
+		var applist = document.getElementsByClassName("windowTitle");
+		for (var i = 0; i < applist.length; i++) {
+			applist[i].style.display = 'block';
+		}
 	};
 }

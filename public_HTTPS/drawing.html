@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+
+		<title>SAGE2 drawing with Wacom</title>
+
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<script type="text/javascript">
+			// SAGE2 is available for use under the SAGE2 Software License
+			//
+			// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+			// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+			// Applications (LAVA)
+			//
+			// See full text, terms and conditions in the LICENSE.txt included file
+			//
+			// Copyright (c) 2014
+		</script>
+
+		<script type="text/javascript" src="src/websocket.io.js"></script>
+		<script type="text/javascript" src="lib/kinetic-v5.1.0.min.js"></script>
+		<script type="text/javascript" src="lib/simplify.js"></script>
+
+		<script>
+		var wsio;
+		var hostname;
+		var port;
+
+		var plugin;
+		var canvas;
+		var canvasPos  = {x:0.0, y:0.0};
+		var canvasSize = {width:1280, height:720};
+		var capturing  = false;
+		var aSpline    = null;
+		var layer      = null;
+		var pressures  = null;
+		var pencolor   = null;
+		var eraseMode  = null;
+		var allLayers  = [];
+		var numLayers  = 0;
+		var uigrp      = null;
+		var currentLayer = null;
+		var drawingStage = null;
+
+		// Explicitely close web socket when web broswer is closed
+		window.onbeforeunload = function() {
+			if(wsio !== undefined) wsio.close();
+		};
+		
+
+		function findPos(obj) {
+			var curleft = curtop = 0;
+			if (obj.offsetParent) 
+			{
+				curleft = obj.offsetLeft
+				curtop  = obj.offsetTop
+				while (obj = obj.offsetParent) 
+				{
+					curleft += obj.offsetLeft
+					curtop  += obj.offsetTop
+				}
+			}
+			return {x:curleft, y:curtop};
+		}
+
+		function inCanvasBounds(posX, posY ) {
+			var left   = 0;
+			var top    = 0;
+			var right  = canvasSize.width;
+			var bottom = canvasSize.height;
+
+			return ( posX >= left && posX <= right && 
+					 posY >= top && posY <= bottom);
+		}
+
+		function init () {
+			// SAGE2 stuff
+			hostname = window.location.hostname;
+			port = window.location.port;
+			if(window.location.protocol == "http:" && port == "") port = "80";
+			if(window.location.protocol == "https:" && port == "") port = "443";
+			
+			wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+
+			wsio.open(function() {
+				console.log("open websocket");
+				var clientDescription = {
+					clientType: "sageAnnotation",
+					sendsPointerData: true,
+					receivesDisplayConfiguration: true,
+					requiresAppPositionSizeTypeOnly: true,
+					receivesWindowModification: true
+				};
+				wsio.emit('addClient', clientDescription);
+			});
+			
+			// Socket close event (ie server crashed)		
+			wsio.on('close', function (evt) {
+				var refresh = setInterval(function () {
+					// make a dummy request to test the server every 2 sec
+					xhr = new XMLHttpRequest();
+					xhr.open("GET", "/", true);
+					xhr.onreadystatechange = function() {
+						if(xhr.readyState == 4 && xhr.status == 200){
+							console.log("server ready");
+							// when server ready, clear the interval callback
+							clearInterval(refresh);
+							// and reload the page
+							window.location.reload();
+						}
+					};
+					xhr.send();
+				}, 2000);
+			});
+
+			wsio.on('setupDisplayConfiguration', function(config) {
+				var ratio = config.totalWidth / config.totalHeight;
+				console.log('Wall> ratio', ratio);
+			});
+			wsio.on('initialize', function(data) {
+				console.log('My ID>', data.UID);
+			});
+
+			// Plugin stuff
+			plugin = document.getElementById('wtPlugin');
+
+			// Show plugin version
+			pluginVersion = document.getElementById('pluginVersion');
+			pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
+
+			var pluginInformation = document.getElementById('pluginInformation');
+			var isWacom      = plugin.penAPI.isWacom;
+			var version      = plugin.penAPI.version;
+			var tabletModel  = plugin.penAPI.tabletModel;
+			var info         = "Plugin information: isWacom:" + isWacom;
+			info += " version:" + version;
+			info += " tabletModel:" + tabletModel;
+			pluginInformation.innerHTML = info;
+
+			// Toolbar
+			var uiStage = new Kinetic.Stage({
+				container: 'toolbar',
+				width:  1280,
+				height: 50
+			});
+			var uilayer = new Kinetic.Layer();
+			uiStage.add(uilayer);
+			var uibg = new Kinetic.Rect({
+				width: 1280,
+				height: 720,
+				fill: '#CCCCCC',
+				stroke: 'black',
+				strokeWidth: 2
+			});
+			uigrp = new Kinetic.Group();
+			var xoffset = 15;
+			var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
+			for (var i = 0; i<14;i++) {
+				var bgrp = new Kinetic.Group( {x: xoffset, y: 5});
+				var button = new Kinetic.Rect({
+					width: 80,
+					height: 40,
+					fill: '#DDDDDD',
+					stroke: 'black',
+					strokeWidth: 0,
+					id: i
+				});
+				bgrp.add(button);
+
+				var buttonLabel = new Kinetic.Label({
+					x: 0, y: 0,	opacity: 1, listening:false
+				});
+				buttonLabel.add(new Kinetic.Tag({listening:false}));
+				buttonLabel.add(new Kinetic.Text({
+					text: labels[i],
+					fontFamily: 'Arial',
+					fontSize: 18,
+					padding: 5,
+					id: 'text_'+i,
+					fill: 'black', listening:false
+				}));
+
+				xoffset += 90;
+				bgrp.add(buttonLabel);
+				uigrp.add(bgrp);
+
+				button.on('mouseup', function(evt) {
+					var id = evt.target.id();
+					if (id===0) {
+						eraseMode = false;
+					} else  if (id===1) {
+						eraseMode = true;
+					} else  if (id===2) {
+						previousLayer();
+					} else  if (id===3) {
+						nextLayer();
+					} else  if (id===4) {
+						newLayer();
+					}
+				});
+			}
+			uilayer.add(uibg);
+			uilayer.add(uigrp);
+			uilayer.draw();
+
+			// Drawing
+			drawingStage = new Kinetic.Stage({
+				container: 'canvas',
+				width:  1280,
+				height: 720
+			});
+			layerbg = new Kinetic.Layer();
+			drawingStage.add(layerbg);
+
+			var rectbg = new Kinetic.Rect({
+				width: 1280,
+				height: 720,
+				fill: 'black',
+				stroke: 'black',
+				strokeWidth: 1
+			});
+			layerbg.add(rectbg);
+			layerbg.draw();
+
+			layer = new Kinetic.Layer();
+			drawingStage.add(layer);
+			allLayers[numLayers] = layer;
+			numLayers++;
+			currentLayer = 0;
+
+			canvas    = document.getElementById('canvas');
+			canvasPos = findPos(canvas);
+			eraseMode = false;
+
+			canvas.addEventListener("mouseup",   mouseup,   true);
+			canvas.addEventListener("mousedown", mousedown, true); 
+		}
+
+		function newLayer() {
+			// create a new layer
+			var nlayer = new Kinetic.Layer();
+			// hide all the other layers
+			for (var i=0;i<numLayers;i++)
+				allLayers[i].hide();
+			// put the new layer on display
+			drawingStage.add(nlayer);
+			nlayer.show();
+			// add it to the array of layers
+			allLayers[numLayers] = nlayer;
+			currentLayer = numLayers;
+			numLayers++;
+			// make it the active layer
+			layer = nlayer;
+			// Update the status window
+			var status = uigrp.find('#text_13');
+			status.text( (currentLayer+1) + '/' + numLayers);
+			uigrp.draw();
+
+			wsio.emit('pointerDraw', {command: 'newlayer'});
+		}
+		function nextLayer() {
+			var newidx = currentLayer + 1;
+			if (newidx >= numLayers) newidx = numLayers-1;
+			if (newidx !== currentLayer) {
+				// set the new index
+				currentLayer = newidx;
+				// show/hide the layers
+				for (var i=0;i<numLayers;i++) {
+					if (i === currentLayer)
+						allLayers[i].show();
+					else
+						allLayers[i].hide();
+				}
+				// make it the active layer
+				layer = allLayers[currentLayer];
+				// Update the status window
+				var status = uigrp.find('#text_13');
+				status.text( (currentLayer+1) + '/' + numLayers);
+				uigrp.draw();
+				wsio.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+			}
+		}
+		function previousLayer() {
+			var newidx = (currentLayer-1) % numLayers;
+			if (newidx >=0 && newidx !== currentLayer) {
+				// set the new index
+				currentLayer = newidx;
+				// show/hide the layers
+				for (var i=0;i<numLayers;i++) {
+					if (i === currentLayer)
+						allLayers[i].show();
+					else
+						allLayers[i].hide();
+				}
+				// make it the active layer
+				layer = allLayers[currentLayer];
+				// Update the status window
+				var status = uigrp.find('#text_13');
+				status.text( (currentLayer+1) + '/' + numLayers);
+				uigrp.draw();
+				wsio.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+			}
+		}
+
+		function mousedown(ev)
+		{
+			if (plugin.penAPI) {
+				// plugin.penAPI.pointerType: 0:out 1:pen 2:mouse/puck 3:eraser
+				if (plugin.penAPI.pointerType === 3) {
+					eraseMode = true;
+				} if (plugin.penAPI.pointerType === 1) {
+					eraseMode = false;
+				}
+			}
+
+			canvas.onmousemove=mousemove;
+			pressures = [];
+
+			var pX = ev.pageX - canvasPos.x;
+			var pY = ev.pageY - canvasPos.y;
+
+			capturing = inCanvasBounds(pX, pY);
+
+			// Use the pointer color or red by default
+			pencolor = localStorage["SAGE2_ptrColor"] || '#FF0000';
+
+			if (eraseMode) {
+				pencolor = 'black';
+				aSpline = new Kinetic.Line({
+					points: [pX,pY],
+					stroke: pencolor,
+					strokeWidth: 40,
+					lineCap: 'round',
+					tension: 0 // straight initially
+				});
+				aSpline.eraseMode = true;
+			} else {
+				aSpline = new Kinetic.Line({
+					points: [pX,pY],
+					stroke: pencolor,
+					strokeWidth: 3,
+					lineCap: 'round',
+					tension: 0 // straight initially
+				});
+				aSpline.eraseMode = false;
+			}
+			layer.add(aSpline);
+
+			// Register click immediately
+			mousemove(ev);
+		}
+
+		function mouseup(ev) {
+			capturing = false;
+			canvas.style.cursor = 'initial';
+			canvas.onmousemove=null;
+			if (aSpline) {
+				var i;
+				var arr = aSpline.points();
+				var toprocess = [];
+				for (i=0; i<arr.length;i+=2) {
+					toprocess.push({x:arr[2*i], y:arr[2*i+1]});
+				}
+				// Adding the mouseup position
+				curX = ev.pageX - canvasPos.x;
+				curY = ev.pageY - canvasPos.y;
+				toprocess.push({x:curX, y:curY});
+				// starting process
+				var processed;
+				if (aSpline.eraseMode)
+					processed = simplify(toprocess, 0.2, true);
+				else
+					processed = simplify(toprocess, 2.0, true); // array, pixel size, high-quality: true
+				var newpoints = [];
+				for (i=0; i<processed.length;i++) {
+					newpoints.push(processed[i].x,processed[i].y);
+				}
+				//console.log('Gain:', toprocess.length/newpoints.length);
+				aSpline.points(newpoints);
+				console.log('Spline: ', aSpline.eraseMode);
+				if (aSpline.eraseMode===false)
+					aSpline.tension(0.5);  // more tension in the spline (smoother)
+				var avg = 0.0;
+				for (i=0;i<pressures.length;i++)
+					avg += pressures[i];
+				avg = avg / pressures.length;
+				//console.log('Avg>', avg, pressures.length);
+				if (avg===0)
+					aSpline.strokeWidth(3);
+				else
+					aSpline.strokeWidth(avg*8.0);
+				layer.draw();
+
+				wsio.emit('pointerDraw', {command: 'draw', points: newpoints, pressure:avg, color:pencolor} );
+			}
+		}
+
+		function mousemove(ev) {
+			var penAPI   = plugin.penAPI;
+			var pressure = 0.0;
+
+			if (penAPI) {
+				pressure  = penAPI.pressure;
+				//console.log('Eraser', isEraser);
+
+				// Get data values from Wacom plugin.
+				// var isEraser     = penAPI.isEraser;
+				// var pressure     = penAPI.pressure;
+				// var posX         = penAPI.posX;
+				// var posY         = penAPI.posY;
+				// var pointerType  = penAPI.pointerType;
+				// var sysX         = penAPI.sysX;
+				// var sysY         = penAPI.sysY;
+				// var tabX         = penAPI.tabX;
+				// var tabY         = penAPI.tabY;
+				// var rotationDeg  = penAPI.rotationDeg;
+				// var rotationRad  = penAPI.rotationRad;
+				// var tiltX        = penAPI.tiltX;
+				// var tiltY        = penAPI.tiltY;
+				// var tangPressure = penAPI.tangentialPressure;
+			} else {
+				pressure = 1.0;
+			}
+
+			if (eraseMode) {
+				canvas.style.cursor = '-webkit-grab'; // grab doesn't work
+				console.log('style', canvas.style.cursor);
+				pressure = 2.5;
+			} else {
+				canvas.style.cursor = 'crosshair';
+			}
+
+
+			curX = ev.pageX - canvasPos.x;
+			curY = ev.pageY - canvasPos.y;
+
+			capturing = inCanvasBounds(curX, curY);
+
+			if (capturing && (pressure >= 0.0)) {
+				aSpline.points(aSpline.points().concat([curX, curY]));
+				pressures.push(pressure);
+				aSpline.draw();
+			}
+		}
+
+		</script>
+
+	</head>
+
+	<body onload="init()">
+
+	<object id="wtPlugin" type="application/x-wacomtabletplugin" WIDTH=1 HEIGHT=1 style="position:absolute; left:100px; top:100px">
+	</object>
+
+	<h2>SAGE2 drawing</h2>
+	<div id="toolbar" style="width:1280px;height:50px">
+	</div>
+	<div id="canvas" style="width:1280px;height:720px">
+	</div>
+
+	<h2>Information</h2>
+	<h4 id="pluginVersion">Plugin version:</h4>
+	<h4 id="pluginInformation">Plugin information:</h4>
+
+
+	</body>
+</html>

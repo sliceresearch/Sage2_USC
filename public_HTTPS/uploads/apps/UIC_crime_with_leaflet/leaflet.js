@@ -293,29 +293,33 @@ dealWithData: function(collection, today)
 		this.refresh(date);
 	},
 	
-	event: function(eventType, user_id, itemX, itemY, data, date) {
+	event: function(eventType, pos, user, data, date) {
+//	event: function(eventType, user_id, itemX, itemY, data, date) {
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 			this.dragging = true;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = pos.x;
+			this.position.y = pos.y;
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
 			// need to turn animation off here or the pan stutters
-			this.map.panBy([this.position.x-itemX, this.position.y-itemY], {animate: false});
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.map.panBy([this.position.x-pos.x, this.position.y-pos.y], {animate: false});
+			this.position.x = pos.x;
+			this.position.y = pos.y;
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = pos.x;
+			this.position.y = pos.y;
 		}
 
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;
+
+			console.log(data);
+
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
 				var z = this.map.getZoom();
@@ -324,7 +328,7 @@ dealWithData: function(collection, today)
 				
 				var z2 = this.map.getZoom();
 				
-				this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
+				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
@@ -334,7 +338,7 @@ dealWithData: function(collection, today)
 				
 				var z2 = this.map.getZoom();
 				
-				this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
+				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 		}
 
