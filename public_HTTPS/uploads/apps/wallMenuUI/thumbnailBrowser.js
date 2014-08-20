@@ -48,6 +48,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		this.appIconList = null;
 		thumbnailBrowserList[id] = this;
+		this.appID = id;
 	
 		// websocket to server for file library access
 		// Note: using a different socket to prevent locking up other app animations
@@ -79,7 +80,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.clickedPosition = null;
 		
 		this.wsio.open(function() {
-			console.log("open websocket");
+			//console.log("open websocket");
 			var clientDescription = {
 				clientType: "mediaBrowser",
 				clientID: id,
@@ -120,8 +121,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	updateFileList: function(serverFileList)
 	{
-		console.log("updateFileList: ");
-		console.log(serverFileList);
+		//console.log("updateFileList: ");
+		//console.log(serverFileList);
 		
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
@@ -415,7 +416,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		{
 			this.ctx.font="16px sans-serif";
 			metadata = this.hoverOverMeta;
-			console.log( metadata);
+			//console.log( metadata);
 			
 			// Generic
 			if( metadata.FileName )
@@ -565,23 +566,32 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	{
 		overButton = false;
 		
-		for( i = 0; i < this.thumbnailButtons.length; i++ )
+		if( data.button === 'left' )
 		{
-			thumbButton = this.thumbnailButtons[i];
-			thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
-			
-			if ( thumbButton.isClicked() && sendsToServer )
-			{ 
-				this.addNewElementFromStoredFiles( thumbButton.getData()  );
-			}
-			if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+			for( i = 0; i < this.thumbnailButtons.length; i++ )
 			{
-				this.hoverOverText = thumbButton.getData().filename;
-				this.hoverOverThumbnail = thumbButton.idleImage;
-				this.hoverOverMeta =  thumbButton.getData().meta;
+				thumbButton = this.thumbnailButtons[i];
+				thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
+				
+				if ( thumbButton.isClicked() && sendsToServer )
+				{ 
+					this.addNewElementFromStoredFiles( thumbButton.getData()  );
+				}
+				if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+				{
+					this.hoverOverText = thumbButton.getData().filename;
+					this.hoverOverThumbnail = thumbButton.idleImage;
+					this.hoverOverMeta =  thumbButton.getData().meta;
 
-				overButton = true;
+					overButton = true;
+				}
 			}
+		}
+		else if( data.button === 'right' && type === 'pointerRelease' )
+		{
+			//console.log("Remove menu");
+			
+			//this.wsio.emit('stopMediaStream', { id: this.appID } );
 		}
 		
 		// Pointer is not on a button, but on an open space (window management mode)
@@ -601,7 +611,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	// Displays files
 	addNewElementFromStoredFiles : function( data )
 	{
-		console.log("addNewElementFromStoredFiles: " + data);
+		//console.log("addNewElementFromStoredFiles: " + data);
 		this.wsio.emit('addNewElementFromStoredFiles', data);
 	}
 });
