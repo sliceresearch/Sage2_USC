@@ -48,6 +48,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		this.appIconList = null;
 		thumbnailBrowserList[id] = this;
+		this.appID = id;
+		this.currentMenuState = 'radialMenu';
 	
 		// websocket to server for file library access
 		// Note: using a different socket to prevent locking up other app animations
@@ -60,7 +62,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
-		// load icons
+		// load thumbnail icons
 		this.idleImageIcon = new Image;
 		this.idleImageIcon.src = this.resrcPath +"icons/image2.svg"
 		this.idlePDFIcon = new Image;
@@ -72,6 +74,80 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idleSessionIcon = new Image;
 		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
 		
+		// radial menu icons
+		this.radialMenuIcon = new Image;
+		this.radialMenuIcon.src = this.resrcPath +"icons/icon_radial_256.png"
+		this.radialCloseIcon = new Image;
+		this.radialCloseIcon.src = this.resrcPath +"icons/icon_close_128.png"
+		
+		// radial menu buttons
+		radialMenuCenter = { x: 200, y: 200 };
+		var angleSeparation = 35;
+		var initAngle = 55;
+		var angle = 0;
+		var menuButtonRadius = 50;
+		
+		// Create buttons
+		this.radialCloseButton = new buttonWidget();
+		this.radialCloseButton.init(0, this.ctx, null);
+		this.radialCloseButton.setIdleImage( this.radialCloseIcon );
+		
+		this.radialCloseButton.useBackgroundColor = false;
+				
+		this.radialImageButton = new buttonWidget();
+		this.radialImageButton.init(0, this.ctx, null);
+		this.radialImageButton.setIdleImage( this.radialMenuIcon );
+		this.radialImageButton.useBackgroundColor = false;
+		this.radialImageButton.setOverlayImage( this.idleImageIcon, 0.3 );
+		
+		this.radialPDFButton = new buttonWidget();
+		this.radialPDFButton.init(0, this.ctx, null);
+		this.radialPDFButton.setIdleImage( this.radialMenuIcon );
+		this.radialPDFButton.useBackgroundColor = false;
+		this.radialPDFButton.setOverlayImage( this.idlePDFIcon, 0.3 );
+		
+		this.radialVideoButton = new buttonWidget();
+		this.radialVideoButton.init(0, this.ctx, null);
+		this.radialVideoButton.setIdleImage( this.radialMenuIcon );
+		this.radialVideoButton.useBackgroundColor = false;
+		this.radialVideoButton.setOverlayImage( this.idleVideoIcon, 0.3 );
+		
+		this.radialAppButton = new buttonWidget();
+		this.radialAppButton.init(0, this.ctx, null);
+		this.radialAppButton.setIdleImage( this.radialMenuIcon );
+		this.radialAppButton.useBackgroundColor = false;
+		this.radialAppButton.setOverlayImage( this.idleAppIcon, 0.3 );
+		
+		this.radialSessionButton = new buttonWidget();
+		this.radialSessionButton.init(0, this.ctx, null);
+		this.radialSessionButton.setIdleImage( this.radialMenuIcon );
+		this.radialSessionButton.useBackgroundColor = false;
+		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, 0.3 );
+		
+		// Place buttons
+		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
+		
+		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
+		this.radialImageButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialImageButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 0) * (Math.PI/180);
+		this.radialPDFButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialPDFButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 2) * (Math.PI/180);
+		this.radialVideoButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialVideoButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
+		this.radialAppButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialAppButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 4) * (Math.PI/180);
+		this.radialSessionButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialSessionButton.setRotation( angle - Math.PI/2 );
+	
+		
 		this.hoverOverText = "";
 		this.hoverOverThumbnail = null;
 		this.hoverOverMeta = null;
@@ -79,12 +155,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.clickedPosition = null;
 		
 		this.wsio.open(function() {
-			console.log("open websocket");
+			//console.log("open websocket");
 			var clientDescription = {
 				clientType: "mediaBrowser",
 				clientID: id,
 				sendsPointerData: false,
-				sendsMediaStreamFrames: false,
+				sendsMediaStreamFrames: true,
 				requestsServerFiles: true,
 				sendsWebContentToLoad: false,
 				launchesWebBrowser: false,
@@ -120,8 +196,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	updateFileList: function(serverFileList)
 	{
-		console.log("updateFileList: ");
-		console.log(serverFileList);
+		//console.log("updateFileList: ");
+		//console.log(serverFileList);
 		
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
@@ -387,169 +463,182 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		
-		// Thumbnail window
-		for( i = 0; i < this.thumbnailButtons.length; i++ )
+		if( this.currentMenuState === 'radialMenu' )
 		{
-			thumbButton = this.thumbnailButtons[i];
-			thumbButton.draw(date);
+			this.radialCloseButton.draw(date);
+			this.radialImageButton.draw(date);
+			this.radialPDFButton.draw(date);
+			this.radialVideoButton.draw(date);
+			this.radialAppButton.draw(date);
+			this.radialSessionButton.draw(date);
 		}
 		
-		// Filename text
-		this.ctx.font="24px sans-serif";
-		this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
-		this.ctx.fillText( this.hoverOverText, 5, 24);
-		
-		// Preview window
-		previewImageSize = this.element.width * 0.3;
-		previewWindowX = this.element.width * 0.7;
-		previewWindowY = 50;
-		
-		if( this.hoverOverThumbnail !== null )
-			this.ctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
-			
-		// Metadata
-		metadataLine = 0;
-		metadataWindowX = previewWindowX;
-		metadataWindowY = previewWindowY + previewImageSize + 20;
-		if( this.hoverOverMeta !== null )
+		// Thumbnail window
+		else if( this.currentMenuState === 'thumbnailWindow' )
 		{
-			this.ctx.font="16px sans-serif";
-			metadata = this.hoverOverMeta;
-			console.log( metadata);
-			
-			// Generic
-			if( metadata.FileName )
+			for( i = 0; i < this.thumbnailButtons.length; i++ )
 			{
-				this.ctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.FileSize )
-			{
-				this.ctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
+				thumbButton = this.thumbnailButtons[i];
+				thumbButton.draw(date);
 			}
 			
-			// Images
-			if( metadata.ImageSize )
-			{
-				this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.DateCreated )
-			{
-				this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Copyright )
-			{
-				this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
+			// Filename text
+			this.ctx.font="24px sans-serif";
+			this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
+			this.ctx.fillText( this.hoverOverText, 5, 24);
 			
-			// Photo
-			if( metadata.Artist )
-			{
-				this.ctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Aperture )
-			{
-				this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Exposure )
-			{
-				this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Flash )
-			{
-				this.ctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.ExposureTime )
-			{
-				this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.FOV )
-			{
-				this.ctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.FocalLength )
-			{
-				this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Model )
-			{
-				this.ctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.LensModel )
-			{
-				this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.ISO )
-			{
-				this.ctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.ShutterSpeed )
-			{
-				this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
+			// Preview window
+			previewImageSize = this.element.width * 0.3;
+			previewWindowX = this.element.width * 0.7;
+			previewWindowY = 50;
 			
-			// GPS
-			if( metadata.GPSAltitude )
+			if( this.hoverOverThumbnail !== null )
+				this.ctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
+				
+			// Metadata
+			metadataLine = 0;
+			metadataWindowX = previewWindowX;
+			metadataWindowY = previewWindowY + previewImageSize + 20;
+			if( this.hoverOverMeta !== null )
 			{
-				this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.GPSLatitude )
-			{
-				this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.GPSTimeStamp )
-			{
-				this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			
-			// Video
-			if( metadata.Duration )
-			{
-				this.ctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.CompressorID )
-			{
-				this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AvgBitrate )
-			{
-				this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AudioFormat )
-			{
-				this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AudioChannels )
-			{
-				this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AudioSampleRate )
-			{
-				this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
+				this.ctx.font="16px sans-serif";
+				metadata = this.hoverOverMeta;
+				//console.log( metadata);
+				
+				// Generic
+				if( metadata.FileName )
+				{
+					this.ctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.FileSize )
+				{
+					this.ctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Images
+				if( metadata.ImageSize )
+				{
+					this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.DateCreated )
+				{
+					this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Copyright )
+				{
+					this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Photo
+				if( metadata.Artist )
+				{
+					this.ctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Aperture )
+				{
+					this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Exposure )
+				{
+					this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Flash )
+				{
+					this.ctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.ExposureTime )
+				{
+					this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.FOV )
+				{
+					this.ctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.FocalLength )
+				{
+					this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Model )
+				{
+					this.ctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.LensModel )
+				{
+					this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.ISO )
+				{
+					this.ctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.ShutterSpeed )
+				{
+					this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// GPS
+				if( metadata.GPSAltitude )
+				{
+					this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.GPSLatitude )
+				{
+					this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.GPSTimeStamp )
+				{
+					this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Video
+				if( metadata.Duration )
+				{
+					this.ctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.CompressorID )
+				{
+					this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AvgBitrate )
+				{
+					this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AudioFormat )
+				{
+					this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AudioChannels )
+				{
+					this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AudioSampleRate )
+				{
+					this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
 			}
 		}
 	},
@@ -565,23 +654,40 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	{
 		overButton = false;
 		
-		for( i = 0; i < this.thumbnailButtons.length; i++ )
+		this.radialCloseButton.onEvent(type, user.id, position.x, position.y, data, date);
+		if ( this.radialCloseButton.isClicked() && sendsToServer )
 		{
-			thumbButton = this.thumbnailButtons[i];
-			thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
-			
-			if ( thumbButton.isClicked() && sendsToServer )
-			{ 
-				this.addNewElementFromStoredFiles( thumbButton.getData()  );
-			}
-			if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
-			{
-				this.hoverOverText = thumbButton.getData().filename;
-				this.hoverOverThumbnail = thumbButton.idleImage;
-				this.hoverOverMeta =  thumbButton.getData().meta;
+			this.closeMenu();
+		}
+		
+		if( data.button === 'left' )
+		{
+			if( this.currentMenuState === 'thumbnailWindow' )
+				{
+				for( i = 0; i < this.thumbnailButtons.length; i++ )
+				{
+					thumbButton = this.thumbnailButtons[i];
+					thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
+					
+					if ( thumbButton.isClicked() && sendsToServer )
+					{ 
+						this.addNewElementFromStoredFiles( thumbButton.getData()  );
+					}
+					if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+					{
+						this.hoverOverText = thumbButton.getData().filename;
+						this.hoverOverThumbnail = thumbButton.idleImage;
+						this.hoverOverMeta =  thumbButton.getData().meta;
 
-				overButton = true;
+						overButton = true;
+					}
+				}
 			}
+		}
+		else if( data.button === 'right' && type === 'pointerRelease' )
+		{
+			//console.log("Remove menu");
+			//
 		}
 		
 		// Pointer is not on a button, but on an open space (window management mode)
@@ -601,8 +707,13 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	// Displays files
 	addNewElementFromStoredFiles : function( data )
 	{
-		console.log("addNewElementFromStoredFiles: " + data);
+		//console.log("addNewElementFromStoredFiles: " + data);
 		this.wsio.emit('addNewElementFromStoredFiles', data);
+	},
+	
+	closeMenu : function()
+	{
+		this.wsio.emit('stopMediaStream', { id: this.appID } );
 	}
 });
 
@@ -613,6 +724,7 @@ function buttonWidget() {
 	
 	this.posX = 100;
 	this.posY = 100;
+	this.angle = 0;
 	this.width = imageThumbSize;
 	this.height = imageThumbSize;
 	
@@ -623,6 +735,9 @@ function buttonWidget() {
 	this.releasedColor = "rgba(10, 10, 210, 1.0 )";
 	
 	this.idleImage = null;
+	this.overlayImage = null;
+	
+	this.useBackgroundColor = true;
 	
 	// Button states:
 	// -1 = Disabled
@@ -650,6 +765,11 @@ function buttonWidget() {
 		this.posY = y;
 	}
 	
+	this.setRotation = function(a )
+	{
+		this.angle = a;
+	}
+	
 	this.setData = function( data )
 	{
 		this.buttonData = data;
@@ -660,6 +780,12 @@ function buttonWidget() {
 		this.idleImage = image;
 	}
 	
+	this.setOverlayImage = function( overlayImage, scale )
+	{
+		this.overlayImage = overlayImage;
+		this.overlayScale = scale;
+	}
+	
 	this.getData = function()
 	{
 		return this.buttonData;
@@ -667,43 +793,56 @@ function buttonWidget() {
 	
 	this.draw = function(date)
 	{
-		
+		this.ctx.save();
+		this.ctx.translate( this.posX, this.posY );
+
 		if( this.state === 1 )
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		else if( this.state === 3 )
 		{
 			this.ctx.fillStyle = this.clickedColor;
 			this.state = 2; // Pressed state
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		else if( this.state === 2 )
 		{
 			this.ctx.fillStyle = this.pressedColor;
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		else if( this.state === 4 )
 		{
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
-		else
+		else if( this.useBackgroundColor )
 		{
 			this.ctx.fillStyle = this.defaultColor;
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		
+		// Draw icon aligned centered
 		
 		if( this.idleImage != null )
 		{
-			this.ctx.drawImage( this.idleImage, this.posX, this.posY, this.width, this.height );
+			this.ctx.rotate( this.angle );
+			this.ctx.drawImage( this.idleImage, -this.width/2, -this.height/2, this.width, this.height );
+		}
+		this.ctx.restore();
+		
+		if( this.overlayImage != null )
+		{
+			this.ctx.save();
+			this.ctx.translate( this.posX, this.posY );
+			this.ctx.drawImage( this.overlayImage, -this.width* this.overlayScale/2, -this.height* this.overlayScale/2, this.width * this.overlayScale, this.height * this.overlayScale);
+			this.ctx.restore();
 		}
 		//console.log("buttonWidget state: "+this.state);
 	};
@@ -734,6 +873,8 @@ function buttonWidget() {
 	}
 	
 	this.isPositionOver = function(id, x, y) {
+		x += this.width/2;
+		y += this.height/2;
 		
 		if( x >= this.posX && x <= this.posX + this.width && y >= this.posY && y <= this.posY + this.height )
 			return true;

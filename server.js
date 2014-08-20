@@ -95,7 +95,8 @@ assets.setupImageMagick(imConstraints);
 
 // global variables for various paths
 var public_https = "public_HTTPS"; // directory where HTTPS content is stored
-var hostOrigin = "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
+var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" 
+		: "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
 var uploadsFolder = path.join(public_https, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
@@ -2237,7 +2238,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		}
 		return ;
 	}
-
+	
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -2322,6 +2323,17 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+	}
+	
+	// menu
+	if (ct === null && elem === null) {
+		if(data.button === "left"){
+
+		}
+		else if(data.button === "right"){
+			createMediabrowser();
+		}
+		return ;
 	}
 }
 
@@ -2959,7 +2971,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 }
 
 /******** DisplayClient Mediabrowser section ****************************************************************/
-createMediabrowser();
+//createMediabrowser();
 function createMediabrowser() {
 	var data = {application: "custom_app", filename: "wallMenuUI"};
 	wsAddNewElementFromStoredFiles( null, data );
