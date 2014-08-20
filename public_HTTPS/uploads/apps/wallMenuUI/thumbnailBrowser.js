@@ -49,6 +49,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.appIconList = null;
 		thumbnailBrowserList[id] = this;
 		this.appID = id;
+		this.currentMenuState = 'radialMenu';
 	
 		// websocket to server for file library access
 		// Note: using a different socket to prevent locking up other app animations
@@ -85,7 +86,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				clientType: "mediaBrowser",
 				clientID: id,
 				sendsPointerData: false,
-				sendsMediaStreamFrames: false,
+				sendsMediaStreamFrames: true,
 				requestsServerFiles: true,
 				sendsWebContentToLoad: false,
 				launchesWebBrowser: false,
@@ -389,168 +390,171 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		
 		// Thumbnail window
-		for( i = 0; i < this.thumbnailButtons.length; i++ )
+		if( this.currentMenuState === 'thumbnailWindow' )
 		{
-			thumbButton = this.thumbnailButtons[i];
-			thumbButton.draw(date);
-		}
-		
-		// Filename text
-		this.ctx.font="24px sans-serif";
-		this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
-		this.ctx.fillText( this.hoverOverText, 5, 24);
-		
-		// Preview window
-		previewImageSize = this.element.width * 0.3;
-		previewWindowX = this.element.width * 0.7;
-		previewWindowY = 50;
-		
-		if( this.hoverOverThumbnail !== null )
-			this.ctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
-			
-		// Metadata
-		metadataLine = 0;
-		metadataWindowX = previewWindowX;
-		metadataWindowY = previewWindowY + previewImageSize + 20;
-		if( this.hoverOverMeta !== null )
-		{
-			this.ctx.font="16px sans-serif";
-			metadata = this.hoverOverMeta;
-			//console.log( metadata);
-			
-			// Generic
-			if( metadata.FileName )
+			for( i = 0; i < this.thumbnailButtons.length; i++ )
 			{
-				this.ctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.FileSize )
-			{
-				this.ctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
+				thumbButton = this.thumbnailButtons[i];
+				thumbButton.draw(date);
 			}
 			
-			// Images
-			if( metadata.ImageSize )
-			{
-				this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.DateCreated )
-			{
-				this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Copyright )
-			{
-				this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
+			// Filename text
+			this.ctx.font="24px sans-serif";
+			this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
+			this.ctx.fillText( this.hoverOverText, 5, 24);
 			
-			// Photo
-			if( metadata.Artist )
-			{
-				this.ctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Aperture )
-			{
-				this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Exposure )
-			{
-				this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Flash )
-			{
-				this.ctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.ExposureTime )
-			{
-				this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.FOV )
-			{
-				this.ctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.FocalLength )
-			{
-				this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.Model )
-			{
-				this.ctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.LensModel )
-			{
-				this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.ISO )
-			{
-				this.ctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.ShutterSpeed )
-			{
-				this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
+			// Preview window
+			previewImageSize = this.element.width * 0.3;
+			previewWindowX = this.element.width * 0.7;
+			previewWindowY = 50;
 			
-			// GPS
-			if( metadata.GPSAltitude )
+			if( this.hoverOverThumbnail !== null )
+				this.ctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
+				
+			// Metadata
+			metadataLine = 0;
+			metadataWindowX = previewWindowX;
+			metadataWindowY = previewWindowY + previewImageSize + 20;
+			if( this.hoverOverMeta !== null )
 			{
-				this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.GPSLatitude )
-			{
-				this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.GPSTimeStamp )
-			{
-				this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			
-			// Video
-			if( metadata.Duration )
-			{
-				this.ctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.CompressorID )
-			{
-				this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AvgBitrate )
-			{
-				this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AudioFormat )
-			{
-				this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AudioChannels )
-			{
-				this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
-			}
-			if( metadata.AudioSampleRate )
-			{
-				this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
-				metadataLine++;
+				this.ctx.font="16px sans-serif";
+				metadata = this.hoverOverMeta;
+				//console.log( metadata);
+				
+				// Generic
+				if( metadata.FileName )
+				{
+					this.ctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.FileSize )
+				{
+					this.ctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Images
+				if( metadata.ImageSize )
+				{
+					this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.DateCreated )
+				{
+					this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Copyright )
+				{
+					this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Photo
+				if( metadata.Artist )
+				{
+					this.ctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Aperture )
+				{
+					this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Exposure )
+				{
+					this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Flash )
+				{
+					this.ctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.ExposureTime )
+				{
+					this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.FOV )
+				{
+					this.ctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.FocalLength )
+				{
+					this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.Model )
+				{
+					this.ctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.LensModel )
+				{
+					this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.ISO )
+				{
+					this.ctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.ShutterSpeed )
+				{
+					this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// GPS
+				if( metadata.GPSAltitude )
+				{
+					this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.GPSLatitude )
+				{
+					this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.GPSTimeStamp )
+				{
+					this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Video
+				if( metadata.Duration )
+				{
+					this.ctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.CompressorID )
+				{
+					this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AvgBitrate )
+				{
+					this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AudioFormat )
+				{
+					this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AudioChannels )
+				{
+					this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.AudioSampleRate )
+				{
+					this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
+					metadataLine++;
+				}
 			}
 		}
 	},
@@ -568,29 +572,31 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		if( data.button === 'left' )
 		{
-			for( i = 0; i < this.thumbnailButtons.length; i++ )
-			{
-				thumbButton = this.thumbnailButtons[i];
-				thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
-				
-				if ( thumbButton.isClicked() && sendsToServer )
-				{ 
-					this.addNewElementFromStoredFiles( thumbButton.getData()  );
-				}
-				if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+			if( this.currentMenuState === 'thumbnailWindow' )
 				{
-					this.hoverOverText = thumbButton.getData().filename;
-					this.hoverOverThumbnail = thumbButton.idleImage;
-					this.hoverOverMeta =  thumbButton.getData().meta;
+				for( i = 0; i < this.thumbnailButtons.length; i++ )
+				{
+					thumbButton = this.thumbnailButtons[i];
+					thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
+					
+					if ( thumbButton.isClicked() && sendsToServer )
+					{ 
+						this.addNewElementFromStoredFiles( thumbButton.getData()  );
+					}
+					if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+					{
+						this.hoverOverText = thumbButton.getData().filename;
+						this.hoverOverThumbnail = thumbButton.idleImage;
+						this.hoverOverMeta =  thumbButton.getData().meta;
 
-					overButton = true;
+						overButton = true;
+					}
 				}
 			}
 		}
 		else if( data.button === 'right' && type === 'pointerRelease' )
 		{
 			//console.log("Remove menu");
-			
 			//this.wsio.emit('stopMediaStream', { id: this.appID } );
 		}
 		

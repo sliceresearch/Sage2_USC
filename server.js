@@ -2238,7 +2238,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		}
 		return ;
 	}
-
+	
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -2323,6 +2323,17 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+	}
+	
+	// menu
+	if (ct === null && elem === null) {
+		if(data.button === "left"){
+
+		}
+		else if(data.button === "right"){
+			createMediabrowser();
+		}
+		return ;
 	}
 }
 
