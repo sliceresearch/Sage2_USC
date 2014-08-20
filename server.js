@@ -95,7 +95,8 @@ assets.setupImageMagick(imConstraints);
 
 // global variables for various paths
 var public_https = "public_HTTPS"; // directory where HTTPS content is stored
-var hostOrigin = "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
+var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" 
+		: "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
 var uploadsFolder = path.join(public_https, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
