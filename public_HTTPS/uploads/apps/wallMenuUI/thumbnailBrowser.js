@@ -85,7 +85,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		var angleSeparation = 35;
 		var initAngle = 55;
 		var angle = 0;
-		var menuButtonRadius = 50;
+		var menuButtonRadius = 100;
 		
 		// Create buttons
 		this.radialCloseButton = new buttonWidget();
@@ -123,6 +123,21 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialSessionButton.setIdleImage( this.radialMenuIcon );
 		this.radialSessionButton.useBackgroundColor = false;
 		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, 0.3 );
+		
+		// Scale buttons different from global thumbnail size
+		//this.radialCloseButton.setSize( 100, 100 );
+		this.radialImageButton.setSize( 100, 100 );
+		this.radialPDFButton.setSize( 100, 100 );
+		this.radialVideoButton.setSize( 100, 100 );
+		this.radialAppButton.setSize( 100, 100 );
+		this.radialSessionButton.setSize( 100, 100 );
+		
+		// Set hitbox size (radial buttons are not square and will overlap)
+		this.radialImageButton.setHitboxSize( 50, 50 );
+		this.radialPDFButton.setHitboxSize( 50, 50 );
+		this.radialVideoButton.setHitboxSize( 50, 50 );
+		this.radialAppButton.setHitboxSize( 50, 50 );
+		this.radialSessionButton.setHitboxSize( 50, 50 );
 		
 		// Place buttons
 		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
@@ -660,6 +675,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			this.closeMenu();
 		}
 		
+		this.radialImageButton.onEvent(type, user.id, position.x, position.y, data, date);
+		this.radialPDFButton.onEvent(type, user.id, position.x, position.y, data, date);
+		this.radialVideoButton.onEvent(type, user.id, position.x, position.y, data, date);
+		this.radialAppButton.onEvent(type, user.id, position.x, position.y, data, date);
+		this.radialSessionButton.onEvent(type, user.id, position.x, position.y, data, date);
+		
 		if( data.button === 'left' )
 		{
 			if( this.currentMenuState === 'thumbnailWindow' )
@@ -728,6 +749,9 @@ function buttonWidget() {
 	this.width = imageThumbSize;
 	this.height = imageThumbSize;
 	
+	this.hitboxWidth = imageThumbSize;
+	this.hitboxheight = imageThumbSize;
+	
 	this.defaultColor =  "rgba(210, 210, 210, 1.0)";
 	this.mouseOverColor = "rgba(210, 210, 10, 1.0 )";
 	this.clickedColor = "rgba(10, 210, 10, 1.0 )";
@@ -786,6 +810,18 @@ function buttonWidget() {
 		this.overlayScale = scale;
 	}
 	
+	this.setSize = function( w, h )
+	{
+		this.width = w;
+		this.height = h;
+	}
+	
+	this.setHitboxSize = function( w, h )
+	{
+		this.hitboxWidth = w;
+		this.hitboxheight = h;
+	}
+	
 	this.getData = function()
 	{
 		return this.buttonData;
@@ -800,32 +836,32 @@ function buttonWidget() {
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
 			
-			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
+			this.ctx.fillRect(-this.hitboxWidth/2, -this.hitboxheight/2, this.hitboxWidth, this.hitboxheight)
 		}
 		else if( this.state === 3 )
 		{
 			this.ctx.fillStyle = this.clickedColor;
 			this.state = 2; // Pressed state
 			
-			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
+			this.ctx.fillRect(-this.hitboxWidth/2, -this.hitboxheight/2, this.hitboxWidth, this.hitboxheight)
 		}
 		else if( this.state === 2 )
 		{
 			this.ctx.fillStyle = this.pressedColor;
 			
-			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
+			this.ctx.fillRect(-this.hitboxWidth/2, -this.hitboxheight/2, this.hitboxWidth, this.hitboxheight)
 		}
 		else if( this.state === 4 )
 		{
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 			
-			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
+			this.ctx.fillRect(-this.hitboxWidth/2, -this.hitboxheight/2, this.hitboxWidth, this.hitboxheight)
 		}
 		else if( this.useBackgroundColor )
 		{
 			this.ctx.fillStyle = this.defaultColor;
-			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
+			this.ctx.fillRect(-this.hitboxWidth/2, -this.hitboxheight/2, this.hitboxWidth, this.hitboxheight)
 		}
 		
 		// Draw icon aligned centered
@@ -873,10 +909,10 @@ function buttonWidget() {
 	}
 	
 	this.isPositionOver = function(id, x, y) {
-		x += this.width/2;
-		y += this.height/2;
+		x += this.hitboxWidth/2;
+		y += this.hitboxheight/2;
 		
-		if( x >= this.posX && x <= this.posX + this.width && y >= this.posY && y <= this.posY + this.height )
+		if( x >= this.posX && x <= this.posX + this.hitboxWidth && y >= this.posY && y <= this.posY + this.hitboxheight )
 			return true;
 		else
 			return false;
