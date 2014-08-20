@@ -338,18 +338,14 @@ function initializeWSClient(wsio) {
 		broadcast('connectedToRemoteSite', site, 'receivesRemoteServerInfo');
 	}
 	
-	if(wsio.clientType == "webBrowser") webBrowserClient = wsio;
+	if (wsio.clientType === "webBrowser") webBrowserClient = wsio;
 	
-	if ( wsio.clientType === "mediaBrowser" )
-	{
+	if (wsio.clientType === "mediaBrowser") {
 		// Allows only one instance of each mediabrowser to send 'open file' command
-		if ( mediaBrowsers[wsio.clientID] == null )
-		{
+		if ( mediaBrowsers[wsio.clientID] === null ) {
 			console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			mediaBrowsers[wsio.clientID] = wsio;
-		}
-		else
-		{
+		} else {
 			wsio.emit("disableSendToServer");
 		}
 	}
@@ -813,7 +809,7 @@ function listSessions() {
 		// is it a file
 		if (stat.isFile()) {
 			// doest it ends in .json
-			if (filename.indexOf(".json", filename.length - 5)) {
+			if (filename.indexOf(".json", filename.length - 5) >= 0) {
 				// use its change time (creation, update, ...)
 				var ad = new Date(stat.ctime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
