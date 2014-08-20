@@ -245,6 +245,11 @@ update: function ()
     // get new image
     this.createURLs(this.timeDiff);
 
+    this.updateSlim();
+},
+
+updateSlim: function ()
+{
     this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
     this.image1.onload = this.loadSuccessCallbackFunc;
     this.image1.onerror = this.loadFailCallbackFunc;
@@ -263,13 +268,16 @@ updateWindow: function (){
     var newWidth = this.canvasWidth;
     var newHeight = this.canvasHeight+30;
 
+    // set background color for areas around my app (in case of non-proportional scaling)
+    this.element.style.backgroundColor = this.canvasBackground;
+
     var box="0,0,"+newWidth+","+newHeight;
     this.sampleSVG.attr("width", x) 
         .attr("height", y) 
         .attr("viewBox", box)
         .attr("preserveAspectRatio", "xMinYMin meet");
 
-    //this.update();
+    this.updateSlim(); 
 },
 
 ////////////////////////////////////////
