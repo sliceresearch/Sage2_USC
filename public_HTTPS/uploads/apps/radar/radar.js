@@ -240,45 +240,9 @@ update: function ()
 },
 
 ////////////////////////////////////////
-/*
-updateWindow: function (){
-    var w = window,
-    d = document,
-    e = d.documentElement,
-    g = d.getElementsByTagName('body')[0],
-    x = w.innerWidth || e.clientWidth || g.clientWidth,
-    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-
-    this.canvasWidth = x;
-    this.canvasHeight = y;
-
-    this.sampleSVG.attr("width", 1.0*this.canvasWidth);
-    this.sampleSVG.attr("height", 1.0*this.canvasHeight);
-
-    this.sampleSVG.append("svg:rect")
-    .style("stroke", "black")
-    .style("fill", "black")
-    .style("stroke-width", 0)
-    .style("fill-opacity", 1)
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("height", this.canvasHeight)
-    .attr("width", this.canvasWidth);
-
-    this.update();
-    this.drawEverything();
-},
-*/
-////////////////////////////////////////
 
 startup: function (){
     // set up the area to render into
-   /*
-    this.sampleSVG = d3.select("#viz")
-            .append("svg:svg")
-            .attr("width", this.canvasWidth)
-            .attr("height", this.canvasHeight);
-*/
 
     // load in the background images and the legend once
 
@@ -318,6 +282,9 @@ startup: function (){
 
         // backup of the context
         var self = this;
+
+        // set background color for areas around my app (in case of non-proportional scaling)
+        this.element.style.backgroundColor = "black";
 
         // attach the SVG into the this.element node provided to us
         var box="0,0,"+width+","+height;
