@@ -62,7 +62,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
-		// load icons
+		// load thumbnail icons
 		this.idleImageIcon = new Image;
 		this.idleImageIcon.src = this.resrcPath +"icons/image2.svg"
 		this.idlePDFIcon = new Image;
@@ -73,6 +73,80 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idleAppIcon.src = this.resrcPath +"icons/cog.svg"
 		this.idleSessionIcon = new Image;
 		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
+		
+		// radial menu icons
+		this.radialMenuIcon = new Image;
+		this.radialMenuIcon.src = this.resrcPath +"icons/icon_radial_256.png"
+		this.radialCloseIcon = new Image;
+		this.radialCloseIcon.src = this.resrcPath +"icons/icon_close_128.png"
+		
+		// radial menu buttons
+		radialMenuCenter = { x: 200, y: 200 };
+		var angleSeparation = 35;
+		var initAngle = 55;
+		var angle = 0;
+		var menuButtonRadius = 50;
+		
+		// Create buttons
+		this.radialCloseButton = new buttonWidget();
+		this.radialCloseButton.init(0, this.ctx, null);
+		this.radialCloseButton.setIdleImage( this.radialCloseIcon );
+		
+		this.radialCloseButton.useBackgroundColor = false;
+				
+		this.radialImageButton = new buttonWidget();
+		this.radialImageButton.init(0, this.ctx, null);
+		this.radialImageButton.setIdleImage( this.radialMenuIcon );
+		this.radialImageButton.useBackgroundColor = false;
+		this.radialImageButton.setOverlayImage( this.idleImageIcon, 0.3 );
+		
+		this.radialPDFButton = new buttonWidget();
+		this.radialPDFButton.init(0, this.ctx, null);
+		this.radialPDFButton.setIdleImage( this.radialMenuIcon );
+		this.radialPDFButton.useBackgroundColor = false;
+		this.radialPDFButton.setOverlayImage( this.idlePDFIcon, 0.3 );
+		
+		this.radialVideoButton = new buttonWidget();
+		this.radialVideoButton.init(0, this.ctx, null);
+		this.radialVideoButton.setIdleImage( this.radialMenuIcon );
+		this.radialVideoButton.useBackgroundColor = false;
+		this.radialVideoButton.setOverlayImage( this.idleVideoIcon, 0.3 );
+		
+		this.radialAppButton = new buttonWidget();
+		this.radialAppButton.init(0, this.ctx, null);
+		this.radialAppButton.setIdleImage( this.radialMenuIcon );
+		this.radialAppButton.useBackgroundColor = false;
+		this.radialAppButton.setOverlayImage( this.idleAppIcon, 0.3 );
+		
+		this.radialSessionButton = new buttonWidget();
+		this.radialSessionButton.init(0, this.ctx, null);
+		this.radialSessionButton.setIdleImage( this.radialMenuIcon );
+		this.radialSessionButton.useBackgroundColor = false;
+		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, 0.3 );
+		
+		// Place buttons
+		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
+		
+		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
+		this.radialImageButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialImageButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 0) * (Math.PI/180);
+		this.radialPDFButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialPDFButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 2) * (Math.PI/180);
+		this.radialVideoButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialVideoButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
+		this.radialAppButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialAppButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 4) * (Math.PI/180);
+		this.radialSessionButton.setPosition( radialMenuCenter.x - menuButtonRadius * Math.cos(angle), radialMenuCenter.y - menuButtonRadius * Math.sin(angle) );
+		this.radialSessionButton.setRotation( angle - Math.PI/2 );
+	
 		
 		this.hoverOverText = "";
 		this.hoverOverThumbnail = null;
@@ -389,8 +463,18 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		
+		if( this.currentMenuState === 'radialMenu' )
+		{
+			this.radialCloseButton.draw(date);
+			this.radialImageButton.draw(date);
+			this.radialPDFButton.draw(date);
+			this.radialVideoButton.draw(date);
+			this.radialAppButton.draw(date);
+			this.radialSessionButton.draw(date);
+		}
+		
 		// Thumbnail window
-		if( this.currentMenuState === 'thumbnailWindow' )
+		else if( this.currentMenuState === 'thumbnailWindow' )
 		{
 			for( i = 0; i < this.thumbnailButtons.length; i++ )
 			{
@@ -570,6 +654,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	{
 		overButton = false;
 		
+		this.radialCloseButton.onEvent(type, user.id, position.x, position.y, data, date);
+		if ( this.radialCloseButton.isClicked() && sendsToServer )
+		{
+			this.closeMenu();
+		}
+		
 		if( data.button === 'left' )
 		{
 			if( this.currentMenuState === 'thumbnailWindow' )
@@ -597,7 +687,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		else if( data.button === 'right' && type === 'pointerRelease' )
 		{
 			//console.log("Remove menu");
-			//this.wsio.emit('stopMediaStream', { id: this.appID } );
+			//
 		}
 		
 		// Pointer is not on a button, but on an open space (window management mode)
@@ -619,6 +709,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	{
 		//console.log("addNewElementFromStoredFiles: " + data);
 		this.wsio.emit('addNewElementFromStoredFiles', data);
+	},
+	
+	closeMenu : function()
+	{
+		this.wsio.emit('stopMediaStream', { id: this.appID } );
 	}
 });
 
@@ -629,6 +724,7 @@ function buttonWidget() {
 	
 	this.posX = 100;
 	this.posY = 100;
+	this.angle = 0;
 	this.width = imageThumbSize;
 	this.height = imageThumbSize;
 	
@@ -639,6 +735,9 @@ function buttonWidget() {
 	this.releasedColor = "rgba(10, 10, 210, 1.0 )";
 	
 	this.idleImage = null;
+	this.overlayImage = null;
+	
+	this.useBackgroundColor = true;
 	
 	// Button states:
 	// -1 = Disabled
@@ -666,6 +765,11 @@ function buttonWidget() {
 		this.posY = y;
 	}
 	
+	this.setRotation = function(a )
+	{
+		this.angle = a;
+	}
+	
 	this.setData = function( data )
 	{
 		this.buttonData = data;
@@ -676,6 +780,12 @@ function buttonWidget() {
 		this.idleImage = image;
 	}
 	
+	this.setOverlayImage = function( overlayImage, scale )
+	{
+		this.overlayImage = overlayImage;
+		this.overlayScale = scale;
+	}
+	
 	this.getData = function()
 	{
 		return this.buttonData;
@@ -683,43 +793,56 @@ function buttonWidget() {
 	
 	this.draw = function(date)
 	{
-		
+		this.ctx.save();
+		this.ctx.translate( this.posX, this.posY );
+
 		if( this.state === 1 )
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		else if( this.state === 3 )
 		{
 			this.ctx.fillStyle = this.clickedColor;
 			this.state = 2; // Pressed state
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		else if( this.state === 2 )
 		{
 			this.ctx.fillStyle = this.pressedColor;
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		else if( this.state === 4 )
 		{
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 			
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
-		else
+		else if( this.useBackgroundColor )
 		{
 			this.ctx.fillStyle = this.defaultColor;
-			this.ctx.fillRect(this.posX,this.posY, this.width, this.height)
+			this.ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height)
 		}
 		
+		// Draw icon aligned centered
 		
 		if( this.idleImage != null )
 		{
-			this.ctx.drawImage( this.idleImage, this.posX, this.posY, this.width, this.height );
+			this.ctx.rotate( this.angle );
+			this.ctx.drawImage( this.idleImage, -this.width/2, -this.height/2, this.width, this.height );
+		}
+		this.ctx.restore();
+		
+		if( this.overlayImage != null )
+		{
+			this.ctx.save();
+			this.ctx.translate( this.posX, this.posY );
+			this.ctx.drawImage( this.overlayImage, -this.width* this.overlayScale/2, -this.height* this.overlayScale/2, this.width * this.overlayScale, this.height * this.overlayScale);
+			this.ctx.restore();
 		}
 		//console.log("buttonWidget state: "+this.state);
 	};
@@ -750,6 +873,8 @@ function buttonWidget() {
 	}
 	
 	this.isPositionOver = function(id, x, y) {
+		x += this.width/2;
+		y += this.height/2;
 		
 		if( x >= this.posX && x <= this.posX + this.width && y >= this.posY && y <= this.posY + this.height )
 			return true;
