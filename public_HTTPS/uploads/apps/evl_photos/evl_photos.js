@@ -145,9 +145,8 @@ drawEverything: function ()
         this.sampleSVG.selectAll("*").remove(); 
         this.forceRedraw = 0;
 
-    var newWidth = this.canvasWidth;
-    var newHeight = this.canvasHeight;
-
+        var newWidth = this.canvasWidth;
+        var newHeight = this.canvasHeight;
 
         this.sampleSVG.append("svg:rect")
             .style("stroke", "black")
@@ -158,34 +157,65 @@ drawEverything: function ()
             .attr("height", newHeight)
             .attr("width", newWidth);
 
+        var windowRatio = this.canvasWidth / this.canvasHeight;
+        var image1DrawWidth = this.canvasWidth;
+        var image1DrawHeight = this.canvasHeight;
+        var image2DrawWidth = this.canvasWidth;
+        var image2DrawHeight = this.canvasHeight;
+
         if (this.image2 != "NULL") // previous image
-        {
+            {
+            //console.log("original image is " + this.image2.width + "," + this.image2.height);
+            var image2x = this.image2.width;
+            var image2y = this.image2.height;
+            var image2ratio = image2x / image2y;
+
+            // want wide images to be aligned to top not center
+            if (image2ratio > windowRatio)
+                    {
+                    image2DrawWidth  =  this.canvasWidth;
+                    image2DrawHeight = this.canvasWidth / image2ratio;
+                    }
+
             if (this.okToDraw > 1)
                 this.sampleSVG.append("svg:image")
                 .attr("xlink:href", this.image2.src)
                 .attr("opacity", 1) //(this.okToDraw * 0.1))
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("width", this.canvasWidth)
-                .attr("height", this.canvasHeight);
+                .attr("width", image2DrawWidth)
+                .attr("height", image2DrawHeight);
             else
                 this.sampleSVG.append("svg:image")
                 .attr("xlink:href", this.image2.src)
                 .attr("opacity", (this.okToDraw+9) * 0.1) 
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("width", this.canvasWidth)
-                .attr("height", this.canvasHeight);
-        }
+                .attr("width", image2DrawWidth)
+                .attr("height", image2DrawHeight);
+            }
 
         if (this.image1 != "NULL") // current image
+        {
+            var image1x = this.image1.width;
+            var image1y = this.image1.height;
+            var image1ratio = image1x / image1y;
+
+            // want wide images to be aligned to top not center
+            if (image1ratio > windowRatio)
+                    {
+                    image1DrawWidth  =  this.canvasWidth;
+                    image1DrawHeight = this.canvasWidth / image1ratio;
+                    }
+
             this.sampleSVG.append("svg:image")
             .attr("xlink:href", this.image1.src)
             .attr("opacity", 1.0 - (this.okToDraw * 0.1))
             .attr("x", 0)
             .attr("y", 0)
-            .attr("width", this.canvasWidth)
-            .attr("height", this.canvasHeight);
+            .attr("width", image1DrawWidth)
+            .attr("height", image1DrawHeight);
+        }
 
         this.okToDraw -= 1.0;
         }
@@ -193,8 +223,8 @@ drawEverything: function ()
     this.updateCounter += 1;
     if (this.updateCounter > this.loadTimer)
         {
-            this.update();
-            this.updateCounter = 0;
+        this.update();
+        this.updateCounter = 0;
         }
 },  
 
@@ -287,17 +317,6 @@ updateWindow: function (){
         .attr("viewBox", box)
         .attr("preserveAspectRatio", "xMinYMin meet");
 
-    // want a black backdrop to add images on top of
- /*   this.sampleSVG.append("svg:rect")
-        .style("stroke", "black")
-        .style("fill", "black")
-        .style("fill-opacity", 1.0)
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("height", newHeight)
-        .attr("width", newWidth);
-*/
-
     this.forceRedraw = 1;
     this.drawEverything(); // need this to keep image while scaling etc
 },
@@ -322,7 +341,6 @@ updateWindow: function (){
         var newWidth = this.canvasWidth;
         var newHeight = this.canvasHeight;
 
-
 		// attach the SVG into the this.element node provided to us
 		var box="0,0,"+newWidth+","+newHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
@@ -333,8 +351,6 @@ updateWindow: function (){
 		this.sampleSVG = this.svg;
 
         this.state.imageSet= 0;
-
-
 	},
 
 	load: function(state, date) {
