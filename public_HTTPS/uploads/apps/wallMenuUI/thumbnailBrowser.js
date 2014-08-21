@@ -12,7 +12,6 @@
 
 var thumbnailBrowserList = {};
 var thumbnailBrowserIDList = [];
-var sendsToServer = true;
 
 // layout parameters
 var imageThumbSize = 50;
@@ -42,7 +41,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	quit: function() {
         // It's the end
-		this.wsio.emit("removeMediabrowserID", { uniqueID: this.uniqueID, id: this.appID } );
+		this.wsio.emit("removeRadialMenu", { id: this.appID } );
     },
 	
 	init: function(id, width, height, resrc, date)
@@ -65,6 +64,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		thumbnailBrowserList[id] = this;
 		this.appID = id;
 		this.currentMenuState = 'radialMenu';
+		this.sendsToServer = true;
 		
 		radialMenuCenter = { x: menuRadius + menuButtonSize/2, y: height - menuRadius - menuButtonSize/2};
 		
@@ -205,7 +205,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.wsio.open(function() {
 			//console.log("open websocket");
 			var clientDescription = {
-				clientType: "mediaBrowser",
+				clientType: "radialMenu",
 				clientID: id,
 				sendsPointerData: false,
 				sendsMediaStreamFrames: false,
@@ -236,12 +236,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			thumbnailBrowserList[id].wsio.emit('requestStoredFiles');
 		});
 		
-		this.wsio.on('disableSendToServer', function() {
-			sendsToServer = false;
-		});
-		
-		this.wsio.on('setUniqueID', function( ID ) {
-			thumbnailBrowserList[id].uniqueID = ID;
+		this.wsio.on('disableSendToServer', function(ID) {
+			thumbnailBrowserList[id].sendsToServer = false;
 		});
 		
 		thumbnailBrowserIDList.push(id);
@@ -707,7 +703,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		overButton = false;
 		
 		this.radialCloseButton.onEvent(type, user.id, position.x, position.y, data, date);
-		if ( this.radialCloseButton.isClicked() && sendsToServer )
+		if ( this.radialCloseButton.isClicked() && this.sendsToServer )
 		{
 			this.closeMenu();
 		}
@@ -784,7 +780,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbButton = currentThumbnailButtons[i];
 				thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
 				
-				if ( thumbButton.isClicked() && sendsToServer )
+				if ( thumbButton.isClicked() && this.sendsToServer )
 				{ 
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
 				}
@@ -811,7 +807,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	closeMenu : function()
 	{
-		this.wsio.emit("removeMediabrowserID", { uniqueID: this.uniqueID, id: this.appID } );
+		this.wsio.emit("removeRadialMenu", { id: this.appID } );
 	}
 });
 
