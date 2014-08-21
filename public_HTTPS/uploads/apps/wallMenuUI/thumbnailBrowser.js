@@ -40,6 +40,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.resizeEvents = "continuous";
 	},
 	
+	quit: function() {
+        // It's the end
+		this.wsio.emit("removeMediabrowserID", this.uniqueID);
+    },
+	
 	init: function(id, width, height, resrc, date)
 	{
 		// call super-class 'init'
@@ -84,7 +89,9 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idleAppIcon = new Image;
 		this.idleAppIcon.src = this.resrcPath +"icons/cog.svg"
 		this.idleSessionIcon = new Image;
-		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
+		this.idleSessionIcon.src = this.resrcPath +"icons/folder-open.svg"
+		this.idleSaveSessionIcon = new Image;
+		this.idleSaveSessionIcon.src = this.resrcPath +"icons/disk.svg"
 		
 		// radial menu icons
 		this.radialMenuIcon = new Image;
@@ -129,6 +136,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialSessionButton.useBackgroundColor = false;
 		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, overlayIconScale );
 		
+		this.radialSaveSessionButton = new buttonWidget();
+		this.radialSaveSessionButton.init(0, this.ctx, null);
+		this.radialSaveSessionButton.setIdleImage( this.radialMenuIcon );
+		this.radialSaveSessionButton.useBackgroundColor = false;
+		this.radialSaveSessionButton.setOverlayImage( this.idleSaveSessionIcon, overlayIconScale );
+		
 		// Scale buttons different from global thumbnail size
 		//this.radialCloseButton.setSize( 100, 100 );
 		this.radialImageButton.setSize( menuButtonSize, menuButtonSize );
@@ -136,6 +149,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialVideoButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialAppButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialSessionButton.setSize( menuButtonSize, menuButtonSize );
+		this.radialSaveSessionButton.setSize( menuButtonSize, menuButtonSize );
 		
 		// Set hitbox size (radial buttons are not square and will overlap)
 		this.radialImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
@@ -143,6 +157,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialVideoButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialAppButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialSessionButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radialSaveSessionButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		
 		// Button alignment
 		this.radialCloseButton.alignment = 'centered';
@@ -151,6 +166,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialVideoButton.alignment = 'centered';
 		this.radialAppButton.alignment = 'centered';
 		this.radialSessionButton.alignment = 'centered';
+		this.radialSaveSessionButton.alignment = 'centered';
 		
 		// Place buttons
 		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
@@ -175,7 +191,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialSessionButton.setPosition( radialMenuCenter.x - menuRadius * Math.cos(angle), radialMenuCenter.y - menuRadius * Math.sin(angle) );
 		this.radialSessionButton.setRotation( angle - Math.PI/2 );
 	
-		
+		angle = (initAngle + angleSeparation * 5) * (Math.PI/180);
+		this.radialSaveSessionButton.setPosition( radialMenuCenter.x - menuRadius * Math.cos(angle), radialMenuCenter.y - menuRadius * Math.sin(angle) );
+		this.radialSaveSessionButton.setRotation( angle - Math.PI/2 );
+	
+	
 		this.hoverOverText = "";
 		this.hoverOverThumbnail = null;
 		this.hoverOverMeta = null;
@@ -188,7 +208,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				clientType: "mediaBrowser",
 				clientID: id,
 				sendsPointerData: false,
-				sendsMediaStreamFrames: true,
+				sendsMediaStreamFrames: false,
 				requestsServerFiles: true,
 				sendsWebContentToLoad: false,
 				launchesWebBrowser: false,
@@ -202,7 +222,8 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				receivesWindowModification: false,
 				receivesPointerData: false,
 				receivesInputEvents: false,
-				receivesRemoteServerInfo: false
+				receivesRemoteServerInfo: false,
+				removeMediabrowserID: true
 			};
 			thumbnailBrowserList[id].wsio.emit('addClient', clientDescription);
 		});
@@ -217,6 +238,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		
 		this.wsio.on('disableSendToServer', function() {
 			sendsToServer = false;
+		});
+		
+		this.wsio.on('setUniqueID', function( ID ) {
+			thumbnailBrowserList[id].uniqueID = ID;
 		});
 		
 		thumbnailBrowserIDList.push(id);
@@ -477,6 +502,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			this.radialVideoButton.draw(date);
 			this.radialAppButton.draw(date);
 			this.radialSessionButton.draw(date);
+			this.radialSaveSessionButton.draw(date);
 		//}
 		
 		// Thumbnail window
@@ -684,9 +710,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialVideoButton.onEvent(type, user.id, position.x, position.y, data, date);
 		this.radialAppButton.onEvent(type, user.id, position.x, position.y, data, date);
 		this.radialSessionButton.onEvent(type, user.id, position.x, position.y, data, date);
+		this.radialSaveSessionButton.onEvent(type, user.id, position.x, position.y, data, date);
 		
 		if( this.radialImageButton.isClicked() )
 		{
+			this.wsio.emit('requestStoredFiles');
 			if( this.currentMenuState !== 'imageThumbnailWindow' )
 				this.currentMenuState = 'imageThumbnailWindow';
 			else
@@ -694,6 +722,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		}
 		if( this.radialPDFButton.isClicked() )
 		{
+			this.wsio.emit('requestStoredFiles');
 			if( this.currentMenuState !== 'pdfThumbnailWindow' )
 				this.currentMenuState = 'pdfThumbnailWindow';
 			else
@@ -701,6 +730,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		}
 		if( this.radialVideoButton.isClicked() )
 		{
+			this.wsio.emit('requestStoredFiles');
 			if( this.currentMenuState !== 'videoThumbnailWindow' )
 				this.currentMenuState = 'videoThumbnailWindow';
 			else
@@ -708,6 +738,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		}
 		if( this.radialAppButton.isClicked() )
 		{
+			this.wsio.emit('requestStoredFiles');
 			if( this.currentMenuState !== 'appThumbnailWindow' )
 				this.currentMenuState = 'appThumbnailWindow';
 			else
@@ -719,6 +750,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				this.currentMenuState = 'sessionThumbnailWindow';
 			else
 				this.currentMenuState = 'radialMenu';
+		}
+		if( this.radialSaveSessionButton.isClicked() )
+		{
+			this.wsio.emit('saveSesion');
+			this.wsio.emit('requestStoredFiles');
 		}
 		
 		if( this.currentMenuState !== 'radialMenu' )

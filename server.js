@@ -239,6 +239,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
+	wsio.messages.removeMediabrowserID			= data.removeMediabrowserID					|| false;
 	
 	initializeWSClient(wsio);
 	
@@ -320,7 +321,9 @@ function initializeWSClient(wsio) {
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
-	
+	if (wsio.messages.removeMediabrowserID){
+		wsio.on('removeMediabrowserID', wsRemoveMediabrowserID);
+	}
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
@@ -345,11 +348,13 @@ function initializeWSClient(wsio) {
 		// Allows only one instance of each mediabrowser to send 'open file' command
 		if ( mediaBrowsers[wsio.clientID] == null )
 		{
-			console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			mediaBrowsers[wsio.clientID] = wsio;
+			console.log("New Mediabrowser Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			mediaBrowsers[uniqueID] = wsio;
+			wsio.emit("setUniqueID", uniqueID);
 		}
 		else
 		{
+			console.log("New existing Mediabrowser Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			wsio.emit("disableSendToServer");
 		}
 	}
@@ -2977,3 +2982,7 @@ function createMediabrowser() {
 	wsAddNewElementFromStoredFiles( null, data );
 }
 
+function wsRemoveMediabrowserID( wsio, uniqueID ) {
+	console.log("Removed thumbnailBrowser ID: " + uniqueID);
+	mediaBrowsers[uniqueID] = null;
+}
