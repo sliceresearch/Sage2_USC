@@ -376,9 +376,6 @@ weatherOutsideCallback: function(error, weatherOut)
     var weather = weatherOut.query.results.current_observation.temp_f;
     var conditions = weatherOut.query.results.current_observation.weather;
  
-        // see what conditions passed by while I wasnt looking 
-       //console.log(conditions, conditions.split(/\s+/).length);
-
         // partly cloudy icon: "Mostly Cloudy" "Overcast" "Scattered Clouds"
         conditions = conditions.split(/\s+/).slice(0,2).join(" ");
 
@@ -389,7 +386,7 @@ weatherOutsideCallback: function(error, weatherOut)
         // thunderstorm
 
         // I may need to just take the first 2 words
-        // or ignoranything after thunderstorm
+        // or ignore anything after thunderstorm
 
     this.gwin.iconSet = weatherOut.query.results.current_observation.icons.icon_set;
     
@@ -398,7 +395,6 @@ weatherOutsideCallback: function(error, weatherOut)
     this.gwin.weatherImage.src = this.gwin.weatherIcon;
 
     var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
-    //console.log(weatherName);
 
    // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
     // and its between 6pm and 6am then add"-night" to the icon name
@@ -419,8 +415,6 @@ weatherOutsideCallback: function(error, weatherOut)
         if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
             (weatherName == "clear"))
             {
-            //console.log("night version");
-            //this.gwin.weatherImage.src = "./icons/"+weatherName+"-night.svg";
             this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+"-night.svg";
             }
         }    
@@ -737,15 +731,21 @@ drawAll: function ()
 
 ////////////////////////////////////////
 
-updateWindow: function (){
+updateWindow: function ()
+{
+    // Get width height from the supporting div     
+    var divWidth  = this.element.clientWidth;
+    var divHeight = this.element.clientHeight;
 
-    var x = this.element.clientWidth;
-    var y = this.element.clientHeight;
+    // set background color for areas around my app (in case of non-proportional scaling)
+    this.element.style.backgroundColor =  this.gwin.canvasBackground;
 
-    // compensate for browser scroll bars - need a better solution
-    this.gwin.sampleSVG.attr("width", x) 
-        .attr("height", y) 
-        .attr("viewBox", "0 0 " + this.gwin.canvasWidth + " " + this.gwin.canvasHeight)
+    var box="0,0,"+this.gwin.canvasWidth+","+this.gwin.canvasHeight;
+
+    this.gwin.sampleSVG
+        .attr("width",   divWidth)
+        .attr("height",  divHeight)
+        .attr("viewBox", box)
         .attr("preserveAspectRatio", "xMinYMin meet");
 },
 
