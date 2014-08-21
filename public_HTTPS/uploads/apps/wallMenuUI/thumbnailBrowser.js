@@ -954,8 +954,11 @@ function buttonWidget() {
 	}
 	
 	this.isPositionOver = function(id, x, y) {
-		x += this.hitboxWidth/2;
-		y += this.hitboxheight/2;
+		if( this.alignment === 'centered' )
+		{
+			x += this.hitboxWidth/2;
+			y += this.hitboxheight/2;
+		}
 		
 		if( x >= this.posX && x <= this.posX + this.hitboxWidth && y >= this.posY && y <= this.posY + this.hitboxheight )
 			return true;
