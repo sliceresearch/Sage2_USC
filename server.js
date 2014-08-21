@@ -2982,7 +2982,10 @@ function createMediabrowser() {
 	wsAddNewElementFromStoredFiles( null, data );
 }
 
-function wsRemoveMediabrowserID( wsio, uniqueID ) {
-	console.log("Removed thumbnailBrowser ID: " + uniqueID);
-	mediaBrowsers[uniqueID] = null;
+function wsRemoveMediabrowserID( wsio, data ) {
+	console.log("Removed thumbnailBrowser ID: " + data.uniqueID);
+	mediaBrowsers[data.uniqueID] = null;
+	
+	var elem = findAppById(data.id);
+	if(elem !== null) deleteApplication( elem );
 }

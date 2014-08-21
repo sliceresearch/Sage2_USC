@@ -42,7 +42,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	quit: function() {
         // It's the end
-		this.wsio.emit("removeMediabrowserID", this.uniqueID);
+		this.wsio.emit("removeMediabrowserID", { uniqueID: this.uniqueID, id: this.appID } );
     },
 	
 	init: function(id, width, height, resrc, date)
@@ -684,6 +684,13 @@ var thumbnailBrowser = SAGE2_App.extend( {
 					this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
+				
+				// Sessions
+				if( metadata.numapps )
+				{
+					this.ctx.fillText( "Applications: " + metadata.numapps);
+					metadataLine++;
+				}
 			}
 		}
 	},
@@ -804,7 +811,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 	
 	closeMenu : function()
 	{
-		this.wsio.emit('stopMediaStream', { id: this.appID } );
+		this.wsio.emit("removeMediabrowserID", { uniqueID: this.uniqueID, id: this.appID } );
 	}
 });
 
