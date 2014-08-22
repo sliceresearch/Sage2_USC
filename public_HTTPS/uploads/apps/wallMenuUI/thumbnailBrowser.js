@@ -69,6 +69,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.currentMenuState = 'radialMenu'; // 'radialMenu', 'imageThumbnailWindow', 'pdfThumbnailWindow', etc.
 		this.currentRadialState = 'radialMenu'; // 'radialMenu', 'radialAppMenu'
 		this.sendsToServer = true;
+		this.thumbnailWindowPos = { x: 0, y: 0 };
 		
 		radialMenuCenter = { x: menuRadius + menuButtonSize/2, y: height - menuRadius - menuButtonSize/2};
 		
@@ -551,8 +552,11 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 	
 		// background
-		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
-		this.ctx.fillRect(0,0, this.element.width, this.element.height)
+		if( this.currentMenuState !== 'radialMenu' )
+		{
+			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
+			this.ctx.fillRect(this.thumbnailWindowPos.x - 10,0, this.element.width, this.element.height)
+		}
 		
 		this.radialCloseButton.draw(date);
 		
@@ -885,7 +889,16 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				}
 			}
 		}
-
+		
+		if( this.currentMenuState === 'radialMenu' )
+		{
+			this.sendResize( 300, 600 );
+		}
+		else
+		{
+			this.sendResize( 1200, 600 );
+		}
+		
 		// Redraw on event (done here instead of in button due to click events)
 		this.draw(date);
 	},
