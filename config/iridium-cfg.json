@@ -79,8 +79,8 @@
 	experimental: {
 		"omicron":
 		{
-			enable:  false,
-			dataPort: 20005
+			enable:  true,
+			dataPort: 30005
 		}
 	}
 }

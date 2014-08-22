@@ -108,7 +108,7 @@ var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
-var mediaBrowsers = {};
+var radialMenus = {};
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
@@ -213,7 +213,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages = {};
 	
 	// Remember the display ID
-	if (wsio.clientType === "display") {
+	if (wsio.clientType === "display" || wsio.clientType === 'radialMenu' ) {
 		wsio.clientID = data.clientID;
 	} else {
 		wsio.clientID = -1;
@@ -321,7 +321,6 @@ function initializeWSClient(wsio) {
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
 	
-	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
 	if(wsio.messages.receivesPointerData)              initializeExistingSagePointers(wsio);
@@ -340,13 +339,17 @@ function initializeWSClient(wsio) {
 	
 	if (wsio.clientType === "webBrowser") webBrowserClient = wsio;
 	
-	if (wsio.clientType === "mediaBrowser") {
-		// Allows only one instance of each mediabrowser to send 'open file' command
-		if ( mediaBrowsers[wsio.clientID] === null ) {
-			console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			mediaBrowsers[wsio.clientID] = wsio;
+	if ( wsio.clientType === "radialMenu" )
+	{
+		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		
+		// Allows only one instance of each radial menu to send 'open file' command
+		if ( radialMenus[wsio.clientID] == null )
+		{
+			//console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			radialMenus[wsio.clientID] = wsio;
 		} else {
-			wsio.emit("disableSendToServer");
+			wsio.emit("disableSendToServer", uniqueID);
 		}
 	}
 	
@@ -2234,7 +2237,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		}
 		return ;
 	}
-
+	
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -2319,6 +2322,23 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+	}
+	
+	// menu
+	if (ct === null) {
+		if(data.button === "left"){
+
+		}
+		else if(data.button === "right"){
+			if( elem === null ){
+				createRadialMenu( 'media' );
+			}
+			else{
+				//createRadialMenu( 'app' );
+			}
+			
+		}
+		return ;
 	}
 }
 
@@ -2650,6 +2670,9 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if (elem !== null) {
+		if( elem.application === 'thumbnailBrowser' )
+			return;
+			
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
 			if (elem.maximized !== true) {
@@ -2955,10 +2978,17 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 	omicronManager.runTracker();
 }
 
-/******** DisplayClient Mediabrowser section ****************************************************************/
+/******** Radial Menu section ****************************************************************/
 //createMediabrowser();
-function createMediabrowser() {
-	var data = {application: "custom_app", filename: "wallMenuUI"};
+function createRadialMenu( menuType ) {
+	var data = {application: "custom_app", filename: "wallMenuUI" };
 	wsAddNewElementFromStoredFiles( null, data );
 }
 
+function wsRemoveRadialMenu( wsio, data ) {
+	//console.log("Removed radial menu ID: " + data.id);
+	radialMenus[data.id] = null;
+	
+	var elem = findAppById(data.id);
+	if(elem !== null) deleteApplication( elem );
+}
