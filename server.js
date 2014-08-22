@@ -353,8 +353,6 @@ function initializeWSClient(wsio) {
 		else
 		{
 			wsio.emit("disableSendToServer", uniqueID);
-			console.log("New existing Mediabrowser Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			
 		}
 	}
 	
@@ -2330,12 +2328,18 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 	
 	// menu
-	if (ct === null && elem === null) {
+	if (ct === null) {
 		if(data.button === "left"){
 
 		}
 		else if(data.button === "right"){
-			createMediabrowser();
+			if( elem === null ){
+				createRadialMenu( 'media' );
+			}
+			else{
+				createRadialMenu( 'app' );
+			}
+			
 		}
 		return ;
 	}
@@ -2976,8 +2980,8 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
-function createMediabrowser() {
-	var data = {application: "custom_app", filename: "wallMenuUI"};
+function createRadialMenu( menuType ) {
+	var data = {application: "custom_app", filename: "wallMenuUI" };
 	wsAddNewElementFromStoredFiles( null, data );
 }
 
