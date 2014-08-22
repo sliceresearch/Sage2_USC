@@ -342,7 +342,7 @@ dealWithData: function(collection, today)
 			}
 		}
 
-		if (eventType == "keyboard" && data.code == 109 && data.state == "down") {
+		if (eventType == "keyboard" && data.character == "m") {
 				// m key down
 				// change map type
 

@@ -34,6 +34,8 @@ var USweather = SAGE2_App.extend( {
 
         this.gwin.appID = "";
 
+        this.appName = "evl_photos:";
+
         this.gwin.projection = null;
 
         this.gwin.iconmostlycloudynight = new Image();
@@ -235,20 +237,17 @@ var currentTime = new Date().getHours()+new Date().getMinutes()/60;
 
         var mySelf = this;
 
-        //weatherImage.onload = function(){
-            if (this.gwin.numIconsLoaded === 16){
-            //console.log("temp is " + weather + " at " + Math.round(lat) + ", " + Math.round(lon));
-
-            mySelf.drawEverything(lat, lon, weather, weatherImage.src);
-            };
+            if (this.gwin.numIconsLoaded === 16)
+                {
+                mySelf.drawEverything(lat, lon, weather, weatherImage.src);
+                };
 },
 
 ///////////////////////////////////////
 
 updateOutsideTemp: function ()
 { 
-     var lat, lon;
- 
+    var lat, lon;
     var MeSelf = this;
 
     for (lat = this.gwin.latMaxTemp; lat >= this.gwin.latMinTemp; lat -= 2.2)
@@ -500,6 +499,9 @@ updateWindow: function ()
     var divWidth  = this.element.clientWidth;
     var divHeight = this.element.clientHeight;
 
+    // set background color for areas around my app (in case of non-proportional scaling)
+    this.element.style.backgroundColor =  "black";
+    
     var box="0,0,"+this.gwin.canvasWidth+","+this.gwin.canvasHeight;
 
     this.gwin.sampleSVG

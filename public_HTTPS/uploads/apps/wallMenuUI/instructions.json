@@ -1,7 +1,7 @@
 {
 	"main_script": "thumbnailBrowser.js",
 	"type": "canvas",
-	"width": 800,
+	"width": 300,
 	"height": 600,
 	"animation": "timer",
 	"interval": 1000,
