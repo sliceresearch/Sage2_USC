@@ -2325,20 +2325,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 	
 	// menu
-	if (ct === null) {
-		if(data.button === "left"){
-
-		}
-		else if(data.button === "right"){
-			if( elem === null ){
-				createRadialMenu( 'media' );
-			}
-			else{
-				//createRadialMenu( 'app' );
-			}
-			
-		}
-		return ;
+	if(data.button === "right")
+	{
+		createRadialMenu( pointerX, pointerY );
 	}
 }
 
@@ -2973,16 +2962,34 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 		pointerCloseGesture,
 		keyDown,
 		keyUp,
-		keyPress
+		keyPress,
+		createRadialMenu
 	);
 	omicronManager.runTracker();
 }
 
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
-function createRadialMenu( menuType ) {
-	var data = {application: "custom_app", filename: "wallMenuUI" };
-	wsAddNewElementFromStoredFiles( null, data );
+function createRadialMenu( pointerX, pointerY ) {
+	var ct = findControlsUnderPointer(pointerX, pointerY);
+	var elem = findAppUnderPointer(pointerX, pointerY);
+	
+	if( ct === null ) // Do not open menu over widget
+	{
+		if( elem === null )
+		{
+			// Open a 'media' radial menu
+			var data = {application: "custom_app", filename: "wallMenuUI" };
+			wsAddNewElementFromStoredFiles( null, data );
+		}
+		else
+		{
+			// Open a 'app' radial menu
+		}
+		
+		// Set the menu position
+		
+	}
 }
 
 function wsRemoveRadialMenu( wsio, data ) {

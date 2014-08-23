@@ -27,7 +27,7 @@ var coordinateCalculator = require('./node-coordinateCalculator');
 var dataPort     = 9123;
 
 var eventDebug   = false;
-var gestureDebug = true;
+var gestureDebug = false;
 var coordCalculator;
 
 var pointerOffscreen  = false;
@@ -41,6 +41,8 @@ var wandScaleDelta = 0.1;
 
 var lastPosX = 0;
 var lastPosY = 0;
+
+var touchZoomScale = 120;
 
 function omicronManager( sysConfig )
 {
@@ -124,7 +126,8 @@ omicronManager.prototype.setCallbacks = function(
 	pointerCloseGestureCB,
 	keyDownCB,
 	keyUpCB,
-	keyPressCB
+	keyPressCB,
+	createRadialMenuCB
 )
 {
 	sagePointers = sagePointerList;
@@ -141,6 +144,7 @@ omicronManager.prototype.setCallbacks = function(
 	keyDown = keyDownCB;
 	keyUp = keyUpCB;
 	keyPress = keyPressCB;
+	createRadialMenu = createRadialMenuCB;
 	
 	createSagePointer(config.inputServerIP);
 	
@@ -328,7 +332,7 @@ omicronManager.prototype.runTracker = function()
 						}
 						else // Zoom move
 						{
-							pointerScroll( address, { scale: 1+zoomDelta } );
+							pointerScroll( address, { wheelDelta: -zoomDelta * touchZoomScale } );
 						}
 					}
 
@@ -366,7 +370,7 @@ omicronManager.prototype.runTracker = function()
 						{
 							console.log("Touch gesture: Three finger hold");
 						}
-						
+						createRadialMenu( posX, posY );
 					}
 					else if( e.flags == FLAG_SINGLE_CLICK )
 					{
@@ -514,13 +518,13 @@ omicronManager.prototype.runTracker = function()
 					else if( lastWandFlags === 0 && (e.flags & scaleUpButton) == scaleUpButton )
 					{
 						pointerScrollStart( address, posX, posY );
-						pointerScroll( address, { scale: 1.0 + wandScaleDelta } );
+						pointerScroll( address, { wheelDelta: wandScaleDelta } );
 						
 					}
 					else if( lastWandFlags === 0 && (e.flags & scaleDownButton) == scaleDownButton )
 					{
 						pointerScrollStart( address, posX, posY );
-						pointerScroll( address, { scale: 1.0 - wandScaleDelta } );
+						pointerScroll( address, { wheelDelta: wandScaleDelta } );
 					}
 					else if( lastWandFlags === 0 && (e.flags & maximizeButton) == maximizeButton )
 					{
