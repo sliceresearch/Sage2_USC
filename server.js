@@ -129,6 +129,10 @@ var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
 
+// global variables to manage presentation
+var currentFrame = 1;
+var inactiveApplications = [];
+
 
 // sets up the background for the display clients (image or color)
 setupDisplayBackground();
@@ -851,10 +855,34 @@ function loadSession (filename) {
 					}
 				}
 
-				broadcast('createAppWindow', a, 'requiresFullApps');
-				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+				if(typeof a.presentation !== 'undefined'){
+					var appActive = false;
+					for(var f=0; f<a.presentation.length-1; f++){
+						// Check if current frame is within start and end frames
+						if((a.presentation[f].frame <= currentFrame) && (a.presentation[f+1].frame >= currentFrame)){
+							appActive = true;
+							break;
+						}
+					}
+					if(appActive){
+						// App is active
+						console.log("app active");
+						broadcast('createAppWindow', a, 'requiresFullApps');
+						broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
 
-				applications.push(a);
+						applications.push(a);
+					}else{
+						// App is not currently active
+						console.log("app INactive");
+						inactiveApplications.push(a);
+					}
+				}else{
+					broadcast('createAppWindow', a, 'requiresFullApps');
+					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+
+					applications.push(a);
+				}
+
 			}
 		}
 	});
