@@ -2980,16 +2980,8 @@ function createRadialMenu( pointerX, pointerY ) {
 		{
 			// Open a 'media' radial menu
 			var data = {application: "custom_app", filename: "wallMenuUI" };
-			//wsAddNewElementFromStoredFiles( null, data );
-			
-			
-			appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-			appInstance.id = getUniqueAppId();
+			wsAddNewElementFromStoredFiles( null, data );
 
-			broadcast('createAppWindow', appInstance, 'requiresFullApps');
-			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-			applications.push(appInstance);		
 		}
 		else
 		{
