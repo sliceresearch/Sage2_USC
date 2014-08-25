@@ -3,7 +3,7 @@
 */
 {
 		// hostname of the web server
-	host: "nishimoto.evl.uic.edu",
+	host: "localhost",
 		// port of the HTTPS server: 443 for default
 	port: 9090,
 		// port of the HTTP public page

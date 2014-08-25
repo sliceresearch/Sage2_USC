@@ -876,7 +876,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				thumbButton = currentThumbnailButtons[i];
 				thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
 				
-				if ( thumbButton.isClicked() && this.sendsToServer )
+				if ( thumbButton.isReleased() && this.sendsToServer )
 				{ 
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
 				}
@@ -890,14 +890,14 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			}
 		}
 		
-		if( this.currentMenuState === 'radialMenu' )
-		{
-			this.sendResize( 300, 600 );
-		}
-		else
-		{
-			this.sendResize( 1200, 600 );
-		}
+		//if( this.currentMenuState === 'radialMenu' )
+		//{
+		//	this.sendResize( 300, 600 );
+		//}
+		//else
+		//{
+		//	this.sendResize( 1200, 600 );
+		//}
 		
 		// Redraw on event (done here instead of in button due to click events)
 		this.draw(date);
@@ -1125,6 +1125,17 @@ function buttonWidget() {
 		if ( this.state === 3 )
 		{
 			this.state = 2;
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	this.isReleased = function()
+	{
+		if ( this.state === 4 )
+		{
+			this.state = 0;
 			return true;
 		}
 		else
