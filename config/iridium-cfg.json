@@ -79,8 +79,19 @@
 	experimental: {
 		"omicron":
 		{
-			enable:  true,
-			dataPort: 30005
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			dataPort: 30005,
+			
+			// Touch gestures
+			zoomGestureScale: 2000,
+			
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			useOinputserver: true,
+			inputServerIP: "crepe.evl.uic.edu",
+			msgPort: 28000
 		}
 	}
 }

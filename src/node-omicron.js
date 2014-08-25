@@ -82,6 +82,11 @@ function omicronManager( sysConfig )
 		totalHeight = 2304;
 	}
 	
+	if( config.zoomGestureScale )
+	{
+		touchZoomScale = config.zoomGestureScale;
+	}
+	
 	// For accepting input server connection
 	var server = net.createServer(function (socket) {
 		console.log('Omicron: Input server "' + socket.remoteAddress + '" connected on port ' + socket.remotePort);
@@ -234,9 +239,11 @@ omicronManager.prototype.runTracker = function()
 			{
 				touchWidth = msg.readFloatLE(offset); offset += 4;
 				touchHeight = msg.readFloatLE(offset); offset += 4;
+				
+				
 				//console.log("Touch size: " + touchWidth + "," + touchHeight); 
 			}
-					
+			
 			// Appending sourceID to pointer address ID
 			var address = rinfo.address+":"+sourceID;
 			
@@ -269,6 +276,14 @@ omicronManager.prototype.runTracker = function()
 				var FLAG_SINGLE_CLICK = User << 7;
 				var FLAG_DOUBLE_CLICK = User << 8;
 				
+				var initX = 0;
+				var initY = 0;
+				if( serviceID === 0  && e.extraDataItems >= 4 && e.flags == FLAG_SINGLE_TOUCH )
+				{
+					initX = msg.readFloatLE(offset); offset += 4;
+					initY = msg.readFloatLE(offset); offset += 4;
+				}
+				
 				//console.log( e.flags );
 				if (e.type == 3)
 				{ // update (Used only by classic SAGE pointer)
@@ -292,6 +307,11 @@ omicronManager.prototype.runTracker = function()
 				{ // move
 					if( e.flags == FLAG_SINGLE_TOUCH )
 					{
+						if( gestureDebug )
+						{
+							
+						}
+						//console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						pointerPosition( address, { pointerX: posX, pointerY: posY } );
 	
 					}
@@ -324,7 +344,6 @@ omicronManager.prototype.runTracker = function()
 
 						var zoomDelta = msg.readFloatLE(offset); offset += 4;
 						var eventType = msg.readFloatLE(offset);  offset += 4;
-						console.log( zoomDelta ); 
 						
 						if( eventType == 1 ) // Zoom start/down
 						{

@@ -1997,7 +1997,6 @@ if (program.interactive)
 			case 'bye':
 				saveSession();
 				assets.saveAssets();
-				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
 				process.exit(0);
@@ -2937,7 +2936,7 @@ function deleteApplication( elem ) {
 }
 
 // **************  Omicron section *****************
-
+var omicronRunning = false;
 if ( config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true ) {
 	var omicronManager = new omicron( config );
 	
@@ -2966,6 +2965,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 		createRadialMenu
 	);
 	omicronManager.runTracker();
+	omicronRunning = true;
 }
 
 /******** Radial Menu section ****************************************************************/
@@ -2980,8 +2980,27 @@ function createRadialMenu( pointerX, pointerY ) {
 		{
 			// Open a 'media' radial menu
 			var data = {application: "custom_app", filename: "wallMenuUI" };
-			wsAddNewElementFromStoredFiles( null, data );
+			//wsAddNewElementFromStoredFiles( null, data );
+			// Copied from above function
+			appLoader.loadFileFromLocalStorage(data, function(appInstance) {
+				appInstance.id = getUniqueAppId();
 
+				if(appInstance.animation){
+					var i;
+					appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+					for(i=0; i<clients.length; i++){
+						if(clients[i].messages.requiresFullApps){
+							var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+							appAnimations[appInstance.id].clients[clientAddress] = false;
+						}
+					}
+				}
+
+				broadcast('createAppWindow', appInstance, 'requiresFullApps');
+				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+				applications.push(appInstance);
+			});
 		}
 		else
 		{
