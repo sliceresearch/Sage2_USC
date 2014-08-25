@@ -482,7 +482,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 	});
 };
 
-appLoader.prototype.createMediaStream = function(source, type, encoding, name, width, height, callback) {
+appLoader.prototype.createMediaStream = function(name, width, height, callback) {
 	var aspectRatio = width/height;
 	
 	var appInstance = {
@@ -492,9 +492,7 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, w
 		type: "application/stream",
 		url: null,
 		data: {
-			src: source,
-			type: type,
-			encoding: encoding
+			dxt1: null
 		},
 		resrc: null,
 		left: this.titleBarHeight,

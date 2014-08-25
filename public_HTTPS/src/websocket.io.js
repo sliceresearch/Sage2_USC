@@ -34,7 +34,20 @@ function websocketIO(protocol, host, port) {
 				}
 			}
 			else{
-				console.log("Error: message is not a binary string");
+				var uInt8 = new Uint8Array(msg.data);
+				
+				var cchar = String.fromCharCode(uInt8[0]);
+				var func = "";
+				var i = 1;
+				
+				while(cchar !== "|"){
+					func += cchar;
+					cchar = String.fromCharCode(uInt8[i]);
+					i++;
+				}
+				
+				var buffer = new Uint8Array(msg.data, i, uInt8.length-i);
+				_this.messages[func](buffer);
 			}
 		};
 		// triggered by unexpected close event
@@ -50,8 +63,28 @@ function websocketIO(protocol, host, port) {
 	};
 	
 	this.emit = function(name, data) {
-		var message = {func: name, data: data};
-		this.ws.send(JSON.stringify(message));
+		if(name === null || name === ""){
+			console.log("Error: no message name specified");
+			return;
+		}
+	
+		// send binary data as array buffer
+		if(data instanceof Uint8Array){
+			name += "|";
+			var funcName = new Uint8Array(name.length);
+			for(var i=0; i<name.length; i++){
+				funcName[i] = name.charCodeAt(i);
+			}
+			var message = new Uint8Array(funcName.length + data.length);
+			message.set(funcName, 0);
+			message.set(data, funcName.length);
+			this.ws.send(message);
+		}
+		// send data as JSON string
+		else {
+			var message = {func: name, data: data};
+			this.ws.send(JSON.stringify(message));
+		}
 	};
 
 	// deliberate close function

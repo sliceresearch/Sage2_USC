@@ -20,6 +20,7 @@
 </script>
 
 <script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/webgl_texture2buffer.js"></script>
 <script type="text/javascript" src="src/sagePointer.js"></script>
 <script type="text/javascript" src="src/windowManager.js"></script>
 <script type="text/javascript" src="lib/dialog-polyfill.js"></script>
@@ -525,6 +526,15 @@
     function openWebpage(event) {
         var url = document.getElementById("openWebpageUrl");
         wsio.emit('openNewWebpage', {id: sagePtr.uniqueID, url: openWebpageUrl.value});
+    }
+    
+    
+    function Uint8Concat(uint8_1, uint8_2) {
+    	var concat = new Uint8Array(uint8_1.length + uint8_2.length);
+    	concat.set(uint8_1, 0);
+    	concat.set(uint8_2, uint8_1.length);
+    	
+    	return concat;
     }
 	
 </script>

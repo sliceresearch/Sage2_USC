@@ -55,7 +55,19 @@ function websocketIO(ws, strictSSL, openCallback) {
 			}
 		}
 		else{
-			console.log("Error: message is not a binary string");
+			var cchar = String.fromCharCode(message[0]);
+			var func = "";
+			var i = 1;
+			
+			while(cchar !== "|"){
+				func += cchar;
+				cchar = String.fromCharCode(message[i]);
+				i++;
+			}
+			
+			var buf = message.slice(i, message.length);
+			
+			_this.messages[func](_this, buf);
 		}
 	});
 }
@@ -77,28 +89,36 @@ websocketIO.prototype.emit = function(name, data) {
 		return;
 	}
 	
-	var message = {func: name, data: data};
-	
-	// double error handling
-	try {
-		var msgString = JSON.stringify(message);
-		this.ws.send(msgString, function(err){
-			if(err){
-				console.log("---ERROR (ws.send)---");
-				console.log(err);
-				console.log("---VALUES---");
-				console.log(name);
-				console.log(typeof message);
-			}
-			// else success
-		});
+	// send binary data as array buffer
+	if(Buffer.isBuffer(data)){
+		var funcName = new Buffer(name+"|");
+		var message = Buffer.concat([funcName, data]);
+		
+		try {
+			this.ws.send(message, {binary: true, mask: false}, function(err){
+				// if(err) console.log("---ERROR (ws.send)---");
+				// else success
+			});
+		}
+		catch(e) {
+			//console.log("---ERROR (try-catch)---");
+		}
 	}
-	catch(e) {
-		console.log("---ERROR (try-catch)---");
-		console.log(e);
-		console.log("---VALUES---");
-		console.log(name);
-		console.log(typeof message);
+	// send data as JSON string
+	else {
+		var message = {func: name, data: data};
+	
+		// double error handling
+		try {
+			var msgString = JSON.stringify(message);
+			this.ws.send(msgString, function(err){
+				// if(err) console.log("---ERROR (ws.send)---");
+				// else success
+			});
+		}
+		catch(e) {
+			//console.log("---ERROR (try-catch)---");
+		}
 	}
 };
 

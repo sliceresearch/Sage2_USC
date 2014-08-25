@@ -215,11 +215,22 @@
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
-			wsio.emit('receivedMediaStreamFrame', {id: data.id});
+			var cchar = String.fromCharCode(data[0]);
+			var id = "";
+			var i = 1;
+			while(cchar !== "|"){
+				id += cchar;
+				cchar = String.fromCharCode(data[i]);
+				i++;
+			}
+			id += cchar+String.fromCharCode(data[i]);
+			var buffer = data.subarray(i+1, data.length);
 			
-			var app = applications[data.id];
+			wsio.emit('receivedMediaStreamFrame', {id: id});
+			
+			var app = applications[id];
 			if(app !== undefined && app !== null){
-				app.load(data.state);
+				app.load({dxt1: buffer}, new Date());
 			}
 		});
 		

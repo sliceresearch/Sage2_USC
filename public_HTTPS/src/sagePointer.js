@@ -49,8 +49,46 @@ function sagePointer(wsio) {
 	
 	this.sagePointerLabel.value = localStorage.SAGE2_ptrName;
 	this.sagePointerColor.value = localStorage.SAGE2_ptrColor;
-
+	
 	var _this = this;
+	
+	this.frameExtractor = new webgl_texture2buffer();
+	this.DXT1unfinished;
+	this.DXT1frame;
+	this.streamId;
+	this.dxt1ByteSize = 0;
+	this.workerCount = 0;
+	this.rgba2dxt1_worker1 = new Worker('src/rgba2dxt1_worker.js');
+	this.rgba2dxt1_worker1.addEventListener('message', function(e) {
+		if(e.data instanceof ArrayBuffer){
+			var startIdx = 3*_this.dxt1ByteSize/4;
+			_this.receivedCompressedImagePortion(new Uint8Array(e.data), startIdx);
+		}
+	}, false);
+	
+	this.rgba2dxt1_worker2 = new Worker('src/rgba2dxt1_worker.js');
+	this.rgba2dxt1_worker2.addEventListener('message', function(e) {
+		if(e.data instanceof ArrayBuffer){
+			var startIdx = 2*_this.dxt1ByteSize/4;
+			_this.receivedCompressedImagePortion(new Uint8Array(e.data), startIdx);
+		}
+	}, false);
+	
+	this.rgba2dxt1_worker3 = new Worker('src/rgba2dxt1_worker.js');
+	this.rgba2dxt1_worker3.addEventListener('message', function(e) {
+		if(e.data instanceof ArrayBuffer){
+			var startIdx = _this.dxt1ByteSize/4;
+			_this.receivedCompressedImagePortion(new Uint8Array(e.data), startIdx);
+		}
+	}, false);
+	
+	this.rgba2dxt1_worker4 = new Worker('src/rgba2dxt1_worker.js');
+	this.rgba2dxt1_worker4.addEventListener('message', function(e) {
+		if(e.data instanceof ArrayBuffer){
+			var startIdx = 0;
+			_this.receivedCompressedImagePortion(new Uint8Array(e.data), startIdx);
+		}
+	}, false);
 
 	// Capture the changes in the pointer name
 	this.sagePointerLabel.addEventListener('input', function(evt) {
@@ -64,6 +102,12 @@ function sagePointer(wsio) {
 
 	this.setPointerId = function(id) {
 		this.uniqueID = id;
+		
+		var streamIdStr = this.uniqueID + "|0";
+		this.streamId = new Uint8Array(streamIdStr.length);
+		for(var i=0; i<this.streamId.length; i++){
+			this.streamId[i] = streamIdStr.charCodeAt(i);
+		}
 	};
 	
 	this.setPointerSensitivity = function(value) {
@@ -188,14 +232,19 @@ function sagePointer(wsio) {
 		// start screen share
 		this.screenShareBtn.disabled = true;
 		
+		var streamWidth  = Math.min(screen.width, 1280);
+		var streamHeight = parseInt(streamWidth * screen.height/screen.width);
+		var constraints = {chromeMediaSource: 'screen', maxWidth: streamWidth, maxHeight: streamHeight}; // Screen Capture
+		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		
+		/*
 		// current chrome desktop capture via getUserMedia
 		var streamHeight = Math.min(1080, screen.height);
 		var streamWidth = screen.width/screen.height * streamHeight;
 
 		var constraints = {chromeMediaSource: 'screen', maxWidth: streamWidth, maxHeight: streamHeight};
 		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
-		
+		*/
 		
 		// future chrome desktop capture via extension
 		//this.desktopId = chrome.desktopCapture.chooseDesktopMedia(["screen"], this.onAccessApproved);
@@ -219,14 +268,22 @@ function sagePointer(wsio) {
 
 		this.mediaStream = stream;
 		this.mediaStream.onended = this.streamEnded;
-
+		
+		this.mediaVideo = document.createElement('video');
+		this.mediaVideo.addEventListener('loadedmetadata', this.streamMetaData, false);
 		this.mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
 		this.mediaVideo.play();
-
+		
+		/*
 		var frame = this.captureMediaFrame();
 		var raw = this.base64ToString(frame.split(",")[1]);
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: screen.width, height: screen.height});
-
+		
+		wsio.emit('sage2Log', {app: "", message: "Screen To JPEG:   " + Date.now()});
+		
+		//this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: screen.width, height: screen.height});
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/png", encoding: "binary", width: screen.width, height: screen.height});
+		*/
+		
 		this.broadcasting = true;
 	};
 
@@ -241,16 +298,91 @@ function sagePointer(wsio) {
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID+"|0"});
 	};
 	
+	this.streamMetaDataMethod = function(event) {
+		console.log("meta data");
+		console.log("starting media stream: " + this.mediaVideo.videoWidth + "x" + this.mediaVideo.videoHeight);
+		
+		var dxt1Width  = this.mediaVideo.videoWidth  - (this.mediaVideo.videoWidth  %  4);
+		var dxt1Height = this.mediaVideo.videoHeight - (this.mediaVideo.videoHeight % 16);
+		this.dxt1ByteSize = dxt1Width * dxt1Height * 0.5;
+		
+		this.DXT1unfinished = new Uint8Array(this.dxt1ByteSize);
+		this.DXT1frame      = new Uint8Array(this.dxt1ByteSize);
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", width: dxt1Width, height: dxt1Height});
+		
+		this.frameExtractor.init(this.mediaVideo.videoWidth, this.mediaVideo.videoHeight);
+		this.rgba2dxt1_worker1.postMessage({cmd: "setParams", width: dxt1Width, height: dxt1Height/4});
+		this.rgba2dxt1_worker2.postMessage({cmd: "setParams", width: dxt1Width, height: dxt1Height/4});
+		this.rgba2dxt1_worker3.postMessage({cmd: "setParams", width: dxt1Width, height: dxt1Height/4});
+		this.rgba2dxt1_worker4.postMessage({cmd: "setParams", width: dxt1Width, height: dxt1Height/4});
+		
+		this.extractFrameMethod();
+		
+		/*
+		this.textureViewer.init("dxt1_v", dxt1Width, dxt1Height, function() {
+			dxt1 = new Uint8Array(dxt1ByteSize);
+			
+			textureViewer.initTexture(dxt1, dxt1Width, dxt1Height);
+			textureViewer.draw();
+			frameStart = Date.now();
+		
+			frameExtractor.init(mediaVideo.videoWidth, mediaVideo.videoHeight);
+			extractFrame();
+		});
+		*/
+	};
+	
+	this.extractFrameMethod = function() {
+		this.frameExtractor.updateTextureWithElement(this.mediaVideo);
+		
+		var width  = this.frameExtractor.width  - (this.frameExtractor.width  %  4);
+		var height = this.frameExtractor.height - (this.frameExtractor.height % 16);
+		var rgba1 = this.frameExtractor.extractRGBA(0,          0, width, height/4);
+		var rgba2 = this.frameExtractor.extractRGBA(0,   height/4, width, height/4);
+		var rgba3 = this.frameExtractor.extractRGBA(0, 2*height/4, width, height/4);
+		var rgba4 = this.frameExtractor.extractRGBA(0, 3*height/4, width, height/4);
+		
+		this.rgba2dxt1_worker1.postMessage(rgba1.buffer, [rgba1.buffer]);
+		this.rgba2dxt1_worker1.postMessage({cmd: "start"});
+		this.rgba2dxt1_worker2.postMessage(rgba2.buffer, [rgba2.buffer]);
+		this.rgba2dxt1_worker2.postMessage({cmd: "start"});
+		this.rgba2dxt1_worker3.postMessage(rgba3.buffer, [rgba3.buffer]);
+		this.rgba2dxt1_worker3.postMessage({cmd: "start"});
+		this.rgba2dxt1_worker4.postMessage(rgba4.buffer, [rgba4.buffer]);
+		this.rgba2dxt1_worker4.postMessage({cmd: "start"});
+	};
+	
+	this.receivedCompressedImagePortion = function(data, startIdx) {
+		this.DXT1unfinished.set(data, startIdx);
+		
+		this.workerCount++;
+		if(this.workerCount === 4){
+			this.workerCount = 0;
+			
+			this.DXT1frame.set(this.DXT1unfinished, 0);
+		
+			if(this.broadcasting === true) setTimeout(this.extractFrame, 4);
+		}
+	};
+	
 	this.captureMediaFrame = function() {
 		this.mediaCtx.clearRect(0, 0, this.mediaWidth, this.mediaHeight);
 		this.mediaCtx.drawImage(mediaVideo, 0, 0, this.mediaWidth, this.mediaHeight);
-		return this.mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality/10));
+		//return this.mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality/10));
+		return this.mediaCanvas.toDataURL("image/png");
 	};
 	
 	this.sendMediaStreamFrame = function() {
 		if(this.broadcasting){
+			this.wsio.emit('updateMediaStreamFrame', Uint8Concat(this.streamId, this.DXT1frame));
+			
+			/*
+			wsio.emit('sage2Log', {app: "", message: "START:            " + Date.now()});
+			
 			var frame = this.captureMediaFrame();
 			var raw = this.base64ToString(frame.split(",")[1]);
+			
+			wsio.emit('sage2Log', {app: "", message: "Screen To JPEG:   " + Date.now()});
 			
 			if(raw.length > this.chunk){
 				var _this = this;
@@ -259,7 +391,8 @@ function sagePointer(wsio) {
 				for(var i=0; i<nchunks; i++){
 					function updateMediaStreamChunk(index, msg_chunk){
 						setTimeout(function() {
-							_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
+							//_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
+							_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/png", encoding: "binary"}, piece: index, total: nchunks});
 						}, 4);
 					}
 					var start = i*this.chunk;
@@ -268,8 +401,10 @@ function sagePointer(wsio) {
 				}
 			}
 			else{
-				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID+"|0", state: {src: raw, type:"image/jpeg", encoding: "binary"}});
+				//this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID+"|0", state: {src: raw, type:"image/jpeg", encoding: "binary"}});
+				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID+"|0", state: {src: raw, type:"image/png", encoding: "binary"}});
 			}
+			*/
 		}
 	};
 	
@@ -380,6 +515,8 @@ function sagePointer(wsio) {
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
+	this.streamMetaData              = this.streamMetaDataMethod.bind(this);
+	this.extractFrame                = this.extractFrameMethod.bind(this);
 	
 	// Event Listeners
 	window.addEventListener('dragover', this.preventDefault, false);

@@ -619,7 +619,7 @@ function wsStartNewMediaStream(wsio, data) {
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.width, data.height, function(appInstance) {
+	appLoader.createMediaStream(data.title, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
@@ -636,6 +636,38 @@ function wsStartNewMediaStream(wsio, data) {
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
+	var cchar = String.fromCharCode(data[0]);
+	var id = "";
+	var i = 1;
+	while(cchar !== "|"){
+		id += cchar;
+		cchar = String.fromCharCode(data[i]);
+		i++;
+	}
+	id += cchar+String.fromCharCode(data[i]);
+	var buffer = data.slice(i+1, data.length);
+	
+	mediaStreams[id].ready = true;
+	for(var key in mediaStreams[id].clients){
+		mediaStreams[id].clients[key] = false;
+	}
+	
+	var stream = findAppById(id);
+	if(stream !== null) stream.data.dxt1 = buffer;
+	
+	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
+	
+	// Debug media stream freezing
+	clearTimeout(mediaStreams[id].timeout);
+	mediaStreams[id].timeout = setTimeout(function() {
+		console.log("Update: 5 sec with no updates from: " + id);
+		console.log(mediaStreams[id].clients);
+		console.log("ready: " + mediaStreams[id].ready);
+		if(mediaStreams[id].chunks.length === 0)
+			console.log("chunks received: " + allNonBlank(mediaStreams[id].chunks));
+	}, 5000);
+	
+	/*
 	mediaStreams[data.id].ready = true;
 	for(var key in mediaStreams[data.id].clients){
 		mediaStreams[data.id].clients[key] = false;
@@ -655,6 +687,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		if(mediaStreams[data.id].chunks.length === 0)
 			console.log("chunks received: " + allNonBlank(mediaStreams[data.id].chunks));
 	}, 5000);
+	*/
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
