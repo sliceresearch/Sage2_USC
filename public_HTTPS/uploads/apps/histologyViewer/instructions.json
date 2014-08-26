@@ -1,0 +1,8 @@
+{
+	"main_script": "histoViewer.js",
+	"width": 800,
+	"height": 224,
+	"resources": [
+		  "openseadragon.js"
+	]
+}

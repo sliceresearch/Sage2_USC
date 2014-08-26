@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-<meta charset="utf-,8">
+<meta charset="utf-8">
 <title>SAGE2 UI</title>
 
+
+<!-- <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+ -->
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License 
 	//      
@@ -16,10 +19,11 @@
 	// Copyright (c) 2014
 </script>
 
-<script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="lib/sagePointer.js"></script>
-<script type="text/javascript" src="lib/windowManager.js"></script>
-<script type="text/javascript" src="scripts/dialog-polyfill.js"></script>
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/sagePointer.js"></script>
+<script type="text/javascript" src="src/windowManager.js"></script>
+<script type="text/javascript" src="lib/dialog-polyfill.js"></script>
+<script type="text/javascript" src="lib/hammer.min.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -41,8 +45,11 @@
 	var selectedFile = null;
 	
 	var uiAspect;
+	var wrapper;
 	var uiWindow;
 	var extraInteraction;
+	var thumbnail;
+	var footer;
 	
 	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
 	var fileOKBtn;
@@ -77,7 +84,7 @@
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
-		
+
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
 		wsio.open(function() {
@@ -125,8 +132,11 @@
 			}, 2000);
 		});
 		
+		wrapper          = document.getElementById('wrapper');
 		uiWindow         = document.getElementById('uiWindow');
 		extraInteraction = document.getElementById('extraInteraction');
+		thumbnail        = document.getElementById('thumbnail');
+		footer           = document.getElementById('footer');
 		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
 		serverSessionBtn = document.getElementById('serverSessionBtn');
@@ -147,6 +157,8 @@
 		
         openWebpageBtn.addEventListener('click', openWebpage, false);
 
+		fileDeleteBtn.disabled = true;
+
 		winMgr = new windowManager("winMgr", wsio);
 		
 		canvasKeyDownFunc  = winMgr.keyDown.bind(winMgr);
@@ -154,17 +166,6 @@
 		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
 		
 		winMgrCanvas = document.getElementById('winMgr');
-		winMgrCanvas.addEventListener('mousedown', winMgr.mousePress.bind(winMgr),  false);
-		winMgrCanvas.addEventListener('mousemove', winMgr.mouseMove.bind(winMgr),    false);
-		winMgrCanvas.addEventListener('mouseup',   winMgr.mouseRelease.bind(winMgr), false);
-
-		winMgrCanvas.addEventListener('touchstart', winMgr.touchPress.bind(winMgr),   false);
-		winMgrCanvas.addEventListener('touchmove',  winMgr.touchMove.bind(winMgr),    false);
-		winMgrCanvas.addEventListener('touchend',   winMgr.touchRelease.bind(winMgr), false);
-
-		winMgrCanvas.addEventListener('mousewheel',     winMgr.mouseScroll.bind(winMgr),   false);
-		winMgrCanvas.addEventListener('DOMMouseScroll', winMgr.mouseScrollFF.bind(winMgr), false);
-		winMgrCanvas.addEventListener('dblclick',       winMgr.mouseDblClick.bind(winMgr), false);
 
 		document.addEventListener('mousemove', updateTarget, false);
 		
@@ -175,14 +176,15 @@
 		sessionsDir = document.getElementById('sessions');
 				
 		// setup for dialog polyfill
-		var diag1 = document.getElementById("lb_light");
-	    dialogPolyfill.registerDialog(diag1);
-		var diag2 = document.getElementById("lb_pointer_help");
-	    dialogPolyfill.registerDialog(diag2);
-
+		if (!document.createElement('dialog').showModal) {
+			var diag1 = document.getElementById("lb_light");
+			dialogPolyfill.registerDialog(diag1);
+			var diag2 = document.getElementById("lb_pointer_help");
+			dialogPolyfill.registerDialog(diag2);
+		}
 
 		wsio.on('setupDisplayConfiguration', function(config) {
-			var extraHeight = extraInteraction.clientHeight;
+			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
 			
 			var winWidth  = window.innerWidth;
 			var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
@@ -252,22 +254,27 @@
 			document.getElementById('pdfs-dir').checked     = false;
 			document.getElementById('videos-dir').checked   = false;
 			document.getElementById('sessions-dir').checked = false;
-			
+
 			removeAllChildren(appsDir);
 			removeAllChildren(imagesDir);
 			removeAllChildren(pdfsDir);
 			removeAllChildren(videosDir);
 			removeAllChildren(sessionsDir);
+
+			var longestApp = createFileList(files, "app",     appsDir);
+			var longestImg = createFileList(files, "image",   imagesDir);
+			var longestPdf = createFileList(files, "pdf",     pdfsDir);
+			var longestVid = createFileList(files, "video",   videosDir);
+			var longestSes = createFileList(files, "session", sessionsDir);
 			
-			createFileList(files, "app",     appsDir);
-			createFileList(files, "image",   imagesDir);
-			createFileList(files, "pdf",     pdfsDir);
-			createFileList(files, "video",   videosDir);
-			createFileList(files, "session", sessionsDir);
+			var longest = Math.max(longestApp, longestImg, longestPdf, longestVid, longestSes);			
+			document.getElementById("fileListElems").style.width = (longest+60).toString() + "px";
 			
 			selectedFile = null;
+
 			// clear the metadata panel
-			document.getElementById('metadata').innerHTML = '';
+			thumbnail.src = "images/blank.png";
+			
 			// open the dialog
 			diag.showModal();
 		});
@@ -282,7 +289,7 @@
 	}
 	
 	function resize() {
-		var extraHeight = extraInteraction.clientHeight;
+		var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
 			
 		var winWidth  = window.innerWidth;
 		var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
@@ -307,17 +314,21 @@
 		winMgr.resize();
 	}
 
-	function createFileList(files, type, dir) {
-		files[type].sort();
+	function createFileList(files, type, dir) {		
+		var longest = 0;
+		var textWidthTest = document.getElementById("textWidthTest");
+		
 		for(var i=0; i<files[type].length; i++){
 			var listElem = document.createElement("li");
 			if (typeof files[type][i] === 'string') {
-				listElem.innerHTML = files[type][i];
-				listElem.id        = files[type][i];
+				// If it's a string, use it as filename
+				listElem.textContent = files[type][i];
+				listElem.id          = files[type][i];
 			}
 			else {
-				listElem.innerHTML = files[type][i].exif.FileName;
-				listElem.id        = files[type][i].exif.FileName;
+				// if it's an object, use the .exif.FileName field
+				listElem.textContent = files[type][i].exif.FileName;
+				listElem.id          = files[type][i].exif.FileName;
 			}
 			// One click: select the file
 			listElem.addEventListener('click',    selectFile,        false);
@@ -325,7 +336,13 @@
 			listElem.addEventListener('dblclick', selectServerFiles, false);
 			// Put the element <li> in the DOM
 			dir.appendChild(listElem);
+			
+			textWidthTest.textContent = listElem.textContent;
+			var textWidth = (textWidthTest.clientWidth + 1);
+			
+			if(textWidth > longest) longest = textWidth;
 		}
+		return longest;
 	}
 
 	function updateTarget(event) {
@@ -398,7 +415,7 @@
 	}
 	
 	function deleteServerFile(event) {
-		if (selectedFile) {
+		if(selectedFile && confirm('Are you sure you want to delete this file?')){
 			var directory = selectedFile.parentNode.id
 			// get the filename (not the html, the actual value set)
 			var fileName  = selectedFile.firstChild.nodeValue;
@@ -407,13 +424,15 @@
 
 			// Remove the element from the file list
 			var elem = document.getElementById(fileName);
-		    elem.parentNode.removeChild(elem);
+			elem.parentNode.removeChild(elem);
 
 			// Ask the server to delete the  file / app
 			wsio.emit('deleteElementFromStoredFiles', {application: app, filename: fileName});
 
 			// clear the metadata panel
-			document.getElementById('metadata').innerHTML = '';
+			//document.getElementById('metadata').innerHTML = '';
+			thumbnail.src = "images/blank.png";
+			
 			// clear selection
 			selectedFile = null;
 		}
@@ -436,40 +455,60 @@
 		// based on folder, match the appropriate application
 		var app       = dir2app[directory];
 
-		var panel = document.getElementById('metadata');
 		var i, exifdata;
 		if (app === 'image_viewer') {
 			for (i=0;i<fileList.image.length;i++) {
 				if (fileList.image[i].exif.FileName === fileName) {
 					exifdata = fileList.image[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						thumbnail.src = exifdata;
 					else
-						panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'movie_player') {
 			for (i=0;i<fileList.video.length;i++) {
 				if (fileList.video[i].exif.FileName === fileName) {
 					exifdata = fileList.video[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						thumbnail.src = exifdata;
 					else
-						panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		} else if (app === 'pdf_viewer') {
 			for (i=0;i<fileList.pdf.length;i++) {
 				if (fileList.pdf[i].exif.FileName === fileName) {
 					exifdata = fileList.pdf[i].exif.SAGE2thumbnail;
 					if (exifdata)
-						panel.innerHTML = '<img width=70% src=\"' + exifdata + '\"/>';
+						thumbnail.src = exifdata;
 					else
-						panel.innerHTML = '';
+						thumbnail.src = "images/blank.png";
 				}
 			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
+		} else if (app === 'custom_app') {
+			for (i=0;i<fileList.app.length;i++) {
+				if (fileList.app[i].exif.FileName === fileName) {
+					exifdata = fileList.app[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						thumbnail.src = exifdata;
+					else
+						thumbnail.src = "images/blank.png";
+				}
+			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = true;
 		} else {
-			panel.innerHTML = '';
+			thumbnail.src = "images/blank.png";
+
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
 		}
 	}
 
@@ -537,73 +576,77 @@
 				<label class="sageLabel">Clear display:</label><button id="clearBtn" type="button">Clear all</button>
 				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
 			</div>
-		<div>
+		</div>
 		
+		<div id="textWidthTest"></div>
 		<canvas id="mediaCanvas" style="display: none;"></canvas>
-        <video id="mediaVideo" style="display: none;"></video>
-	</div>
+		<video id="mediaVideo" style="display: none;"></video>
 	
-	<!-- Dialog for the file browser -->
-	<dialog id="lb_light">
-		<div id="fileTreeList" class="lb_whitecontent">
-			<div class="css-treeview">
-				<ul>
-        			<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
-        			<ul id="apps"></ul>
-        			<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
-        			<ul id="images"></ul>
-        			<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label>
-        			<ul id="pdfs"></ul>
-        			<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
-        			<ul id="videos"></ul>
-					<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
-					<ul id="sessions"></ul>
-        		</ul>
+		<!-- Dialog for the file browser -->
+		<dialog id="lb_light">
+			<div id="fileBrowser" class="lb_whitecontent">
+				<div id="fileTreeList" class="css-treeview">
+					<ul id="fileListElems" style="width:800px">
+						<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
+						<ul id="apps" class="fileItem"></ul>
+						<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
+						<ul id="images" class="fileItem"></ul>
+						<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label>
+						<ul id="pdfs" class="fileItem"></ul>
+						<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
+						<ul id="videos" class="fileItem"></ul>
+						<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
+						<ul id="sessions" class="fileItem"></ul>
+					</ul>
+				</div>
+				<div id="metadata">
+					<img id="thumbnail" src="images/blank.png"></img>
+				</div>
 			</div>
-			<div class="sidebox" id="metadata">
+			<div class="clear"></div>
+			<div id="fileButtons">
+				<button id="fileOKBtn"     type="button" style="float:left; margin-left:6px;">OK</button>
+				<button id="fileCloseBtn"  type="button" style="float:left; margin-left:6px;">Close</button>
+				<button id="fileDeleteBtn" type="button" style="float:right; margin-right:6px;">Delete</button>
 			</div>
-		</div>
-		<div id="fileButtons">
-			<button id="fileOKBtn"    type="button">OK</button>
-			<button id="fileCloseBtn" type="button">Close</button>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<button id="fileDeleteBtn" type="button">Delete</button>
-		</div>
-	</dialog>
+		</dialog>
 	
-	<!-- Dialog shown during pointer lock -->
-	<dialog id="lb_pointer_help">
-		<div id="pointerHelpText" class="lb_whitecontent">
-			<ul>
-				<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
+		<!-- Dialog shown during pointer lock -->
+		<dialog id="lb_pointer_help">
+			<div id="pointerHelpText" class="lb_whitecontent">
 				<ul>
-					<li>Window Management Mode</li>
+					<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
 					<ul>
-						<li>Left-click anywhere on an app to move window</li>
-						<li>Left-click bottom-right corner of an app to resize window</li>
-						<li>Scroll anywhere on an app to resize window</li>
+						<li>Window Management Mode</li>
+						<ul>
+							<li>Left-click anywhere on an app to move window</li>
+							<li>Left-click bottom-right corner of an app to resize window</li>
+							<li>Right-click on an app to bring up widget bar</li>
+							<li>Right-click on an widget bar to hide it</li>
+							<li>Scroll anywhere on an app to resize window</li>
+						</ul>
+						<li>Application Interaction Mode</li>
+						<ul>
+							<li>All events forwarded to app</li>
+						</ul>
+						<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
 					</ul>
-					<li>Application Interaction Mode</li>
-					<ul>
-						<li>All events forwarded to app</li>
-					</ul>
-					<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
+					<li>Press 'Esc' to stop SAGE2 Pointer</li>
 				</ul>
-				<li>Press 'Esc' to stop SAGE2 Pointer</li>
+			</div>
+		</dialog>
+
+
+		<footer id="footer">
+			<ul>
+				<li id="version">SAGE2 Version:</li>
+				<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+				<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
+				<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
+				<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
 			</ul>
-		</div>
-	</dialog>
-
-	<footer>
-		<ul>
-			<li id="version">SAGE2 Version:</li>
-			<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
-			<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
-			<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
-			<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
-		</ul>
-	</footer>
-
+		</footer>
+	</div>
 </body>
 </html>
 

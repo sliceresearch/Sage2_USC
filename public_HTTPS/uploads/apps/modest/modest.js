@@ -14,10 +14,11 @@ var modest = SAGE2_App.extend( {
 		arguments.callee.superClass.construct.call(this);
 
 		this.resizeEvents = "continuous"; // "onfinish";
-		this.map = null;
-		this.position = null;
-		this.lastZoom = null;
-		this.dragging = null;
+		this.map          = null;
+		this.position     = null;
+		this.lastZoom     = null;
+		this.dragging     = null;
+		this.scrollAmount = null;
 	},
 
 	init: function(id, width, height, resrc, date) {
@@ -26,9 +27,10 @@ var modest = SAGE2_App.extend( {
 
 		// application specific 'init'	
 		this.element.id = "div" + id;
-		this.lastZoom = date;
-		this.dragging = false;
-		this.position = {x:0,y:0};
+		this.lastZoom     = date;
+		this.dragging     = false;
+		this.position     = {x:0,y:0};
+		this.scrollAmount = 0;
 
 		var template   = 'http://{S}tile.openstreetmap.org/{Z}/{X}/{Y}.png';
 		var subdomains = ['', 'a.', 'b.', 'c.'];
@@ -53,69 +55,75 @@ var modest = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
-
+	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 			this.dragging = true;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
+			
+			this.refresh(date);
 		}
-		if (eventType === "pointerMove" && this.dragging ) {
-			this.map.panBy(itemX-this.position.x, itemY-this.position.y);
-			this.position.x = itemX;
-			this.position.y = itemY;
+		else if (eventType === "pointerMove" && this.dragging ) {
+			this.map.panBy(position.x-this.position.x, position.y-this.position.y);
+			this.position.x = position.x;
+			this.position.y = position.y;
+			
+			this.refresh(date);
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
-			this.position.x = itemX;
-			this.position.y = itemY;
+			this.position.x = position.x;
+			this.position.y = position.y;
+			
+			this.refresh(date);
 		}
 
 		// Scroll events for zoom
-		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta;
-			var diff = date - this.lastZoom;
-			if (amount >= 3 && (diff>300)) {
+		else if (eventType === "pointerScroll") {
+			this.scrollAmount += data.wheelDelta;
+			
+			if (this.scrollAmount >= 128) {
 				// zoom in
 				this.map.zoomIn();
 				this.lastZoom = date;
+				
+				this.scrollAmount -= 128;
 			}
-			else if (amount <= -3 && (diff>300)) {
+			else if (this.scrollAmount <= -128) {
 				// zoom out
 				this.map.zoomOut();
 				this.lastZoom = date;
+				
+				this.scrollAmount += 128;
 			}
+			
+			this.refresh(date);
 		}
 
-		else if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
-			// shift down
-			// zoom in
-			this.map.zoomIn();
+		else if (eventType === "specialKey") {
+			if (data.code === 18 && data.state === "down") {      // alt
+				// zoom in
+				this.map.zoomIn();
+			}
+			else if (data.code === 17 && data.state === "down") { // control
+				// zoom out
+				this.map.zoomOut();
+			}
+			else if (data.code === 37 && data.state === "down") { // left
+				this.map.panLeft();
+			}
+			else if (data.code === 38 && data.state === "down") { // up
+				this.map.panUp();
+			}
+			else if (data.code === 39 && data.state === "down") { // right
+				this.map.panRight();
+			}
+			else if (data.code === 40 && data.state === "down") { // down
+				this.map.panDown();
+			}
+			
+			this.refresh(date);
 		}
-		else if (eventType == "specialKey" && data.code == 17 && data.state == "down") {
-			// control down
-			// zoom out
-			this.map.zoomOut();
-		}
-		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
-			// left
-			this.map.panLeft();
-		}
-		else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {
-			// up
-			this.map.panUp();
-		}
-		else if (eventType == "specialKey" && data.code == 39 && data.state == "down") {
-			// right
-			this.map.panRight();
-		}
-		else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
-			// down
-			this.map.panDown();
-		}
-		
-		this.refresh(date);
 	}
 
 });

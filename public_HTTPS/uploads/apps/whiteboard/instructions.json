@@ -1,0 +1,9 @@
+{
+	"main_script": "whiteboard.js",
+	"icon": "whiteboard.webp",
+	"width": 1280,
+	"height": 720,
+	"resources": [
+		"lib/kinetic-v5.1.0.min.js"
+	]
+}

@@ -201,10 +201,10 @@ interaction.prototype.scrollSelectedItem = function(scale) {
 	var iCenterX = this.selectedScrollItem.left + (this.selectedScrollItem.width/2);
 	var iCenterY = this.selectedScrollItem.top + (this.selectedScrollItem.height/2);
 	
-	this.selectedScrollItem.left   = parseInt(iCenterX - (iWidth/2), 10);
-	this.selectedScrollItem.top    = parseInt(iCenterY - (iHeight/2), 10);
-	this.selectedScrollItem.width  = parseInt(iWidth, 10);
-	this.selectedScrollItem.height = parseInt(iHeight, 10);
+	this.selectedScrollItem.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2), 10);
+	this.selectedScrollItem.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	this.selectedScrollItem.width  = iWidth;                 //parseInt(iWidth, 10);
+	this.selectedScrollItem.height = iHeight;                //parseInt(iHeight, 10);
 	
 	this.selectedScrollItem.maximized = false;
 
@@ -263,8 +263,8 @@ interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 		}
 	}
 	
-	this.selectedResizeItem.width  = parseInt(iWidth, 10);
-	this.selectedResizeItem.height = parseInt(iHeight, 10);
+	this.selectedResizeItem.width  = iWidth;  //parseInt(iWidth, 10);
+	this.selectedResizeItem.height = iHeight; //parseInt(iHeight, 10);
 	this.selectedResizeItem.maximized = false;
 
 	return {elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left, elemTop: this.selectedResizeItem.top, elemWidth: this.selectedResizeItem.width, elemHeight: this.selectedResizeItem.height, date: new Date()};
@@ -295,18 +295,208 @@ interaction.prototype.maximizeSelectedItem = function(item, config) {
 		iHeight = config.totalHeight - (3*config.titleBarHeight);
 		iWidth  = iHeight*item.aspect;
 	}
-	// back up values for retore
+	// back up values for restore
 	item.previous_left   = item.left;
 	item.previous_top    = item.top;
 	item.previous_width  = item.width;
-	item.previous_height = item.width / item.aspect;	
+	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = parseInt(iCenterX - (iWidth/2) ,10);
-	item.top    = parseInt(iCenterY - (iHeight/2), 10);
-	item.width  = parseInt(iWidth, 10);
-	item.height = parseInt(iHeight, 10);
-	
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
+
+	item.maximized = true;
+
+	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
+};
+
+interaction.prototype.maximizeFullSelectedItem = function(item, config) {
+	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
+	if(item === null) return null;
+
+	// back up values for restore
+	item.previous_left   = item.left;
+	item.previous_top    = item.top;
+	item.previous_width  = item.width;
+	item.previous_height = item.width / item.aspect;
+
+	// calculate new values
+	item.left   = 0;
+	item.top    = config.titleBarHeight;
+	item.width  = config.totalWidth;
+	item.height = config.totalHeight-2*config.titleBarHeight;
+
+	item.maximized = true;
+
+	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
+};
+
+
+/**
+ *@method maximizeLeftSelectedItem
+ */
+
+interaction.prototype.maximizeLeftSelectedItem = function(item, config) {
+	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
+	if(item === null) return null;
+
+	var wallRatio = (config.totalWidth/2.0) / config.totalHeight;
+	var iCenterX  = config.totalWidth/4.0;
+	var iCenterY  = config.totalHeight/2.0;
+	var iWidth    = 1;
+	var iHeight   = 1;
+	if(this.SHIFT === true){
+		item.aspect = item.native_width / item.native_height;
+	}
+	if (item.aspect > wallRatio) {
+		// Image wider than wall
+		iWidth  = (config.totalWidth/2.0) - (3*config.titleBarHeight);
+		iHeight = iWidth / item.aspect;
+	} else {
+		// Wall wider than image
+		iHeight = config.totalHeight - (3*config.titleBarHeight);
+		iWidth  = iHeight*item.aspect;
+	}
+	// back up values for restore
+	item.previous_left   = item.left;
+	item.previous_top    = item.top;
+	item.previous_width  = item.width;
+	item.previous_height = item.width / item.aspect;
+
+	// calculate new values
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
+
+	item.maximized = true;
+
+	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
+};
+
+/**
+ *@method maximizeRightSelectedItem
+ */
+
+interaction.prototype.maximizeRightSelectedItem = function(item, config) {
+	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
+	if(item === null) return null;
+
+	var wallRatio = (config.totalWidth/2.0) / config.totalHeight;
+	var iCenterX  = 3*config.totalWidth/4.0;
+	var iCenterY  = config.totalHeight/2.0;
+	var iWidth    = 1;
+	var iHeight   = 1;
+	if(this.SHIFT === true){
+		item.aspect = item.native_width / item.native_height;
+	}
+	if (item.aspect > wallRatio) {
+		// Image wider than wall
+		iWidth  = (config.totalWidth/2.0) - (3*config.titleBarHeight);
+		iHeight = iWidth / item.aspect;
+	} else {
+		// Wall wider than image
+		iHeight = config.totalHeight - (3*config.titleBarHeight);
+		iWidth  = iHeight*item.aspect;
+	}
+	// back up values for restore
+	item.previous_left   = item.left;
+	item.previous_top    = item.top;
+	item.previous_width  = item.width;
+	item.previous_height = item.width / item.aspect;
+
+	// calculate new values
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
+
+	item.maximized = true;
+
+	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
+};
+
+/**
+ *@method maximizeTopSelectedItem
+ */
+
+interaction.prototype.maximizeTopSelectedItem = function(item, config) {
+	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
+	if(item === null) return null;
+
+	var wallRatio = config.totalWidth / (config.totalHeight/2);
+	var iCenterX  = config.totalWidth/2.0;
+	var iCenterY  = config.totalHeight/4.0;
+	var iWidth    = 1;
+	var iHeight   = 1;
+	if(this.SHIFT === true){
+		item.aspect = item.native_width / item.native_height;
+	}
+	if (item.aspect > wallRatio) {
+		// Image wider than wall
+		iWidth  = config.totalWidth - (3*config.titleBarHeight);
+		iHeight = iWidth / item.aspect;
+	} else {
+		// Wall wider than image
+		iHeight = (config.totalHeight/2.0) - (3*config.titleBarHeight);
+		iWidth  = iHeight*item.aspect;
+	}
+	// back up values for restore
+	item.previous_left   = item.left;
+	item.previous_top    = item.top;
+	item.previous_width  = item.width;
+	item.previous_height = item.width / item.aspect;
+
+	// calculate new values
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
+
+	item.maximized = true;
+
+	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
+};
+
+/**
+ *@method maximizeBottomSelectedItem
+ */
+
+interaction.prototype.maximizeBottomSelectedItem = function(item, config) {
+	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
+	if(item === null) return null;
+
+	var wallRatio = config.totalWidth / (config.totalHeight/2.0);
+	var iCenterX  = config.totalWidth/2.0;
+	var iCenterY  = 3*config.totalHeight/4.0;
+	var iWidth    = 1;
+	var iHeight   = 1;
+	if(this.SHIFT === true){
+		item.aspect = item.native_width / item.native_height;
+	}
+	if (item.aspect > wallRatio) {
+		// Image wider than wall
+		iWidth  = config.totalWidth - (3*config.titleBarHeight);
+		iHeight = iWidth / item.aspect;
+	} else {
+		// Wall wider than image
+		iHeight = (config.totalHeight/2) - (3*config.titleBarHeight);
+		iWidth  = iHeight*item.aspect;
+	}
+	// back up values for restore
+	item.previous_left   = item.left;
+	item.previous_top    = item.top;
+	item.previous_width  = item.width;
+	item.previous_height = item.width / item.aspect;
+
+	// calculate new values
+	item.left   = iCenterX - (iWidth/2);  //parseInt(iCenterX - (iWidth/2) ,10);
+	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
+	item.width  = iWidth;                 //parseInt(iWidth, 10);
+	item.height = iHeight;                //parseInt(iHeight, 10);
+
 	item.maximized = true;
 
 	return {elemId: item.id, elemLeft: item.left, elemTop: item.top, elemWidth: item.width, elemHeight: item.height, date: new Date()};
@@ -319,7 +509,7 @@ interaction.prototype.maximizeSelectedItem = function(item, config) {
 interaction.prototype.restoreSelectedItem = function(item) {
 	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
 	if(item === null) return null;
-	
+
 	item.left   = item.previous_left;
 	item.top    = item.previous_top;
 	item.width  = item.previous_width;

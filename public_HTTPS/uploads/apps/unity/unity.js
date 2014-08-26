@@ -48,8 +48,7 @@ var unity = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	event: function(eventType, user_id, itemX, itemY, data, date) {
-		//console.log("div event", eventType, user_id, itemX, itemY, data, date);
+	event: function(eventType, position, user_id, data, date) {
 		//this.refresh(date);
 	}
 });
