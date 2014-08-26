@@ -344,7 +344,7 @@ function initializeWSClient(wsio) {
 		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( radialMenus[wsio.clientID] == null )
+		if ( radialMenus[wsio.clientID] === null )
 		{
 			//console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			radialMenus[wsio.clientID] = wsio;
@@ -2236,7 +2236,13 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		}
 		return ;
 	}
-	
+
+	// Middle click switches interaction mode too
+	if (data.button === "middle") {
+		togglePointerMode(uniqueID);
+		return;
+	}
+
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);

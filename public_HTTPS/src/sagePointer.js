@@ -85,7 +85,7 @@ function sagePointer(wsio) {
 	
 	this.pointerLockChangeMethod = function() {
 		if(document.pointerLockElement === this.sagePointerBtn ||  document.mozPointerLockElement === this.sagePointerBtn || document.webkitPointerLockElement === this.sagePointerBtn){
-			console.log("pointer lock enabled");
+			//console.log("pointer lock enabled");
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 		
 			document.addEventListener('mousedown',           this.pointerPress,     false);
@@ -103,7 +103,7 @@ function sagePointer(wsio) {
 			sagePointerEnabled();
 		}
 		else{
-			console.log("pointer lock disabled");
+			//console.log("pointer lock disabled");
 			this.wsio.emit('stopSagePointer');
 		
 			document.removeEventListener('mousedown',        this.pointerPress,     false);
