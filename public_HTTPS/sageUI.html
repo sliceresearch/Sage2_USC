@@ -277,6 +277,18 @@
 		wsio.on('stopMediaCapture', function() {
 			if(sagePtr.mediaStream != null) sagePtr.mediaStream.stop();
 		});
+		
+		
+		window.addEventListener('message', function (event) {
+			if(event.origin != window.location.origin) return;
+			
+			if(event.data === "SAGE2_desktop_capture-Loaded"){
+				sagePtr.desktopCaptureEnabled = true;
+			}
+			if(event.data.cmd === "capture_desktop"){
+				sagePtr.captureDesktop(event.data.sourceId);
+			}
+		});
 	}
 	
 	function resize() {
