@@ -114,6 +114,13 @@ function omicronManager( sysConfig )
 			//console.log("Omicron> Sending handshake: ", sendbuf);
 			client.write(sendbuf);
 		});
+		
+		client.on('end', function(e) {
+			console.log('Omicron: oinputserver disconnected');
+		});
+		client.on('error', function(e) {
+			console.log('Omicron: oinputserver connection error - code:', e.code);
+		});
 	}
 }
 

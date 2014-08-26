@@ -1997,6 +1997,7 @@ if (program.interactive)
 			case 'bye':
 				saveSession();
 				assets.saveAssets();
+				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
 				process.exit(0);
