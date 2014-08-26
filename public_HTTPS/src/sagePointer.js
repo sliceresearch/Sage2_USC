@@ -40,6 +40,8 @@ function sagePointer(wsio) {
 	this.broadcasting       = false;
 	this.desktopId          = null;
 	
+	this.desktopCaptureEnabled = false;
+	
 	this.chunk = 32 * 1024; // 32 KB
 	//this.maxUploadSize = 500 * (1024*1024); // 500 MB
 	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
@@ -185,32 +187,22 @@ function sagePointer(wsio) {
 	};
 	
 	this.startScreenShareMethod = function(event) {
+		if(this.desktopCaptureEnabled === false) {
+			alert("Cannot share screen: \"SAGE2 Screen Capture\" Extension not enabled.");
+			return;
+		}
+		
 		// start screen share
 		this.screenShareBtn.disabled = true;
 		
-		
-		// current chrome desktop capture via getUserMedia
-		var streamHeight = Math.min(1080, screen.height);
-		var streamWidth = screen.width/screen.height * streamHeight;
-
-		var constraints = {chromeMediaSource: 'screen', maxWidth: streamWidth, maxHeight: streamHeight};
-		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
-		
-		
-		// future chrome desktop capture via extension
-		//this.desktopId = chrome.desktopCapture.chooseDesktopMedia(["screen"], this.onAccessApproved);
+		window.postMessage('capture_desktop', '*');
 	};
 	
-	this.onAccessApprovedMethod = function(chromeMediaSourceId) {
-		if (!chromeMediaSourceId) {
-            this.streamFailMethod();
-            return;
-        }
-        
-        var streamHeight = Math.min(1080, screen.height);
+	this.captureDesktop = function(sourceId) {
+		var streamHeight = Math.min(1080, screen.height);
 		var streamWidth = screen.width/screen.height * streamHeight;
 		
-        var constraints = {chromeMediaSource: 'desktop', maxWidth: streamWidth, maxHeight: streamHeight};
+		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: sourceId, maxWidth: streamWidth, maxHeight: streamHeight};
 		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 	};
 	
@@ -376,7 +368,7 @@ function sagePointer(wsio) {
 	this.pointerKeyDown              = this.pointerKeyDownMethod.bind(this);
 	this.pointerKeyUp                = this.pointerKeyUpMethod.bind(this);
 	this.pointerKeyPress             = this.pointerKeyPressMethod.bind(this);
-	this.onAccessApproved            = this.onAccessApprovedMethod.bind(this);
+	//this.onAccessApproved            = this.onAccessApprovedMethod.bind(this);
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
