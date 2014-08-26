@@ -1,0 +1,9 @@
+{
+	"main_script": "facebook.js",
+	"width": 500,
+	"height": 500,
+	"resources": [
+		"scripts/hello.min.js",
+		"scripts/jquery.min.js"
+	]
+}
