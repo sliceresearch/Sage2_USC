@@ -151,8 +151,10 @@ function windowManager(id, ws) {
 	};
 	
 	this.mousePress = function(event) {
-		var btn = event.button===2?'right':'left';
-		this.wsio.emit('pointerPress',{button:btn});
+		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+		// ignore right click for now
+		if (btn !== "right")
+			this.wsio.emit('pointerPress',{button:btn});
 		event.preventDefault();
 	};
 	
@@ -167,8 +169,10 @@ function windowManager(id, ws) {
 	};
 	
 	this.mouseRelease = function(event) {
-		var btn = event.button===2? 'right':'left';
-		this.wsio.emit('pointerRelease',{button:btn});
+		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+		// ignore right click for now
+		if (btn !== "right")
+			this.wsio.emit('pointerRelease',{button:btn});
 		event.preventDefault();
 	};
 	
@@ -311,6 +315,11 @@ function windowManager(id, ws) {
 	this.element.addEventListener('dblclick',   this.mouseDblClick.bind(this), false);
 	this.element.addEventListener('mousewheel', this.mouseScroll.bind(this),   false);
 	//this.element.addEventListener('DOMMouseScroll', this.mouseScrollFF.bind(this), false);
+
+	// Prevent right menu to open on the canvas
+	this.element.addEventListener('contextmenu', function(evt) {
+		  evt.preventDefault();
+		}, false);
 
 	// Touch-enabled code
 	//    using hammer.js library: http://hammerjs.github.io/
