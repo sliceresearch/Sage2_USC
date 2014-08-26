@@ -44,6 +44,8 @@ var lastPosY = 0;
 
 var touchZoomScale = 120;
 
+var oinputserverSocket;
+
 function omicronManager( sysConfig )
 {
 	config = sysConfig.experimental.omicron;
@@ -106,22 +108,29 @@ function omicronManager( sysConfig )
 		if( config.msgPort )
 			msgPort = config.msgPort;
 			
-		var client = net.connect(msgPort, config.inputServerIP,  function()
+		oinputserverSocket = net.connect(msgPort, config.inputServerIP,  function()
 		{ //'connect' listener
 			console.log('Connected to Omicron oinputserver at "'+config.inputServerIP+'" on msgPort: '+msgPort+'. Requesting data on port ', dataPort);
 
 			var sendbuf = util.format("omicron_data_on,%d", dataPort);
 			//console.log("Omicron> Sending handshake: ", sendbuf);
-			client.write(sendbuf);
+			oinputserverSocket.write(sendbuf);
 		});
 		
-		client.on('end', function(e) {
+		oinputserverSocket.on('end', function(e) {
 			console.log('Omicron: oinputserver disconnected');
 		});
-		client.on('error', function(e) {
+		oinputserverSocket.on('error', function(e) {
 			console.log('Omicron: oinputserver connection error - code:', e.code);
 		});
 	}
+}
+
+omicronManager.prototype.disconnect = function()
+{
+	var sendbuf = util.format("data_off");
+	console.log("Omicron> Sending disconnect signal");
+	oinputserverSocket.write(sendbuf);
 }
 
 omicronManager.prototype.setCallbacks = function( 
@@ -266,14 +275,14 @@ omicronManager.prototype.runTracker = function()
 				}
 				
 				// TouchGestureManager Flags:
-				// 1 << 17 = User flag start (as of 12/20/13)
+				// 1 << 18 = User flag start (as of 8/3/14)
 				// User << 1 = Unprocessed
 				// User << 2 = Single touch
 				// User << 3 = Big touch
 				// User << 4 = 5-finger hold
 				// User << 5 = 5-finger swipe
 				// User << 6 = 3-finger hold
-				var User = 1 << 17;
+				var User = 1 << 18;
 				
 				var FLAG_SINGLE_TOUCH = User << 2;
 				var FLAG_BIG_TOUCH = User << 3;
@@ -316,9 +325,8 @@ omicronManager.prototype.runTracker = function()
 					{
 						if( gestureDebug )
 						{
-							
+							//console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						}
-						//console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						pointerPosition( address, { pointerX: posX, pointerY: posY } );
 	
 					}
@@ -366,10 +374,10 @@ omicronManager.prototype.runTracker = function()
 				else if (e.type == 5) { // button down
 					if( gestureDebug )
 					{
-						console.log("\t down , flags ", e.flags);
+						console.log("Touch down at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 					}
-					
-					if( e.flags == FLAG_SINGLE_TOUCH )
+
+					if( e.flags === FLAG_SINGLE_TOUCH )
 					{
 						// Create pointer
 						if(address in sagePointers){
@@ -428,7 +436,8 @@ omicronManager.prototype.runTracker = function()
 						
 						if( gestureDebug )
 						{
-							console.log("Touch release");
+							//console.log("Touch release");
+							console.log("Touch up at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 						}
 					}
 					else if( e.flags == FLAG_FIVE_FINGER_HOLD )

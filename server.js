@@ -1997,6 +1997,8 @@ if (program.interactive)
 			case 'bye':
 				saveSession();
 				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
 				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
@@ -2014,6 +2016,8 @@ if (program.interactive)
 		// Saving stuff
 		saveSession();
 		assets.saveAssets();
+		if( omicronRunning )
+			omicronManager.disconnect();
 		console.log('');
 		console.log('SAGE2 done');
 		console.log('');
