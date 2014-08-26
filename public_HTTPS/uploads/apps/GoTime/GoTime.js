@@ -19,6 +19,10 @@ var GoTime = SAGE2_App.extend( {
 		this.dragging = null;
 		this.position = null;
 		this.lastScroll = null;
+
+		this.enableControls = null;
+		this.controls = null;
+		this.pageValText = null;
 	},
 
 	init: function(id, width, height, resrc, date) {
@@ -36,6 +40,7 @@ var GoTime = SAGE2_App.extend( {
 
 		// building up the state object
 		this.state.playhead   = 0;
+		this.state.page = null;
 
 		// may need a global handler for callbacks (i.e. scope pollution)
 		GoTime_self = this;
@@ -52,15 +57,60 @@ var GoTime = SAGE2_App.extend( {
 		  // my_div = document.getElementById("org_div1");
 		  // document.body.insertBefore(newDiv, my_div);
 		}
+
+		this.enableControls      = true;
+		this.pageValText         = '';
+
 	},
 
 	load: function(state, date) {
 		if (state) {
 			this.state.playhead   = state.playhead;
+
+			var _this = this;
+
+			// UI stuff
+			_this.controls.addButton({type:"rewind", action:function(appObj, date){
+				appObj.state.page  = 1;
+				appObj.setLabelText();
+				appObj.refresh(date);
+			}});
+			_this.controls.addButton({type:"prev", action:function(appObj, date){
+				if(appObj.state.page <= 1) return;
+				appObj.state.page  = appObj.state.page - 1;
+				appObj.setLabelText();
+				appObj.refresh(date);
+			}});
+	
+			_this.controls.addSlider({begin:1,end:100,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
+				appObj.setLabelText();
+				appObj.refresh(date);
+			}});
+			var labelWidth = ("" + _this.pdfDoc.numPages).length * 2 + 3; // 3 for the spaces and the '/'
+
+			_this.controls.addLabel({textLength:labelWidth,appObj:_this, property:"pageValText"});
+
+			_this.controls.addButton({type:"next", action:function(appObj, date){
+				if (appObj.state.page  >= appObj.pdfDoc.numPages) return;
+				appObj.state.page = appObj.state.page + 1;
+				appObj.setLabelText();
+				appObj.refresh(date);
+			}});
+			_this.controls.addButton({type:"fastforward", action:function(appObj, date){
+				appObj.state.page  = appObj.pdfDoc.numPages;
+				appObj.setLabelText();
+				appObj.refresh(date);
+			}});
+			
+			_this.setLabelText();
 		}
 	},
 
 	draw: function(date) {
+		if(this.loaded === false) return;
+
+		var _this = this;
+
 	},
 
 	resize: function(date) {
@@ -118,25 +168,45 @@ var GoTime = SAGE2_App.extend( {
 			// zoom out
 		}
 
-		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
-			// left
-			this.backward();
+		// else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
+		// 	// left
+		// 	this.backward();
+		// }
+		// else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {
+		// 	// up
+		// 	this.forward();
+		// }
+		// else if (eventType == "specialKey" && data.code == 39 && data.state == "down") {
+		// 	// right
+		// 	this.forward();
+		// }
+		// else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
+		// 	// down
+		// 	this.backward();
+		// }
+
+		if(eventType === "specialKey"){
+			if(data.code === 37 && data.state === "up"){ // Left Arrow
+				if(this.state.page <= 1) return;
+				this.state.page = this.state.page - 1;
+				this.setLabelText();
+				this.refresh(date);
+			}
+			if(data.code === 39 && data.state === "up"){ // Right Arrow
+				if(this.state.page >= this.pdfDoc.numPages) return;
+				this.state.page = this.state.page + 1;
+				this.setLabelText();
+				this.refresh(date);
+			}
 		}
-		else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {
-			// up
-			this.forward();
-		}
-		else if (eventType == "specialKey" && data.code == 39 && data.state == "down") {
-			// right
-			this.forward();
-		}
-		else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
-			// down
-			this.backward();
-		}
+
 
 		console.log("playhead: " + this.state.playhead);
 		this.refresh(date);
+	},
+
+	setLabelText: function(){
+		this.pageValText = this.state.page + ' / ' + this.pdfDoc.numPages;
 	}
 
 });
