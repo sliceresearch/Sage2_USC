@@ -90,6 +90,7 @@
 		wsio.open(function() {
 			console.log("open websocket");
 			sagePtr = new sagePointer(wsio);
+			window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 			var clientDescription = {
 				clientType: "sageUI",
@@ -291,11 +292,12 @@
 		window.addEventListener('message', function (event) {
 			if(event.origin != window.location.origin) return;
 			
-			if(event.data === "SAGE2_desktop_capture-Loaded"){
-				sagePtr.desktopCaptureEnabled = true;
+			if(event.data.cmd === "SAGE2_desktop_capture-Loaded"){
+				if(sagePtr !== undefined && sagePtr !== null)
+					sagePtr.desktopCaptureEnabled = true;
 			}
-			if(event.data.cmd === "capture_desktop"){
-				sagePtr.captureDesktop(event.data.sourceId);
+			if(event.data.cmd === "window_selected"){
+				sagePtr.captureDesktop(event.data.mediaSourceId);
 			}
 		});
 	}
