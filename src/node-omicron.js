@@ -42,7 +42,8 @@ var wandScaleDelta = 0.1;
 var lastPosX = 0;
 var lastPosY = 0;
 
-var touchZoomScale = 120;
+var touchZoomScale = 520;
+var acceleratedDragScale  = 0;
 
 var oinputserverSocket;
 
@@ -89,6 +90,11 @@ function omicronManager( sysConfig )
 		touchZoomScale = config.zoomGestureScale;
 	}
 	
+	if( config.acceleratedDragScale )
+	{
+		acceleratedDragScale = config.acceleratedDragScale;
+	}
+	
 	// For accepting input server connection
 	var server = net.createServer(function (socket) {
 		console.log('Omicron: Input server "' + socket.remoteAddress + '" connected on port ' + socket.remotePort);
@@ -112,7 +118,7 @@ function omicronManager( sysConfig )
 		{ //'connect' listener
 			console.log('Connected to Omicron oinputserver at "'+config.inputServerIP+'" on msgPort: '+msgPort+'. Requesting data on port ', dataPort);
 
-			var sendbuf = util.format("omicron_data_on,%d", dataPort);
+			var sendbuf = util.format("omicron_data_on,%d\n", dataPort);
 			//console.log("Omicron> Sending handshake: ", sendbuf);
 			oinputserverSocket.write(sendbuf);
 		});
@@ -298,6 +304,9 @@ omicronManager.prototype.runTracker = function()
 				{
 					initX = msg.readFloatLE(offset); offset += 4;
 					initY = msg.readFloatLE(offset); offset += 4;
+					
+					initX *= totalWidth;
+					initY *= totalHeight;
 				}
 				
 				//console.log( e.flags );
@@ -327,7 +336,14 @@ omicronManager.prototype.runTracker = function()
 						{
 							//console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						}
-						pointerPosition( address, { pointerX: posX, pointerY: posY } );
+						
+						var distance = Math.sqrt( Math.pow( Math.abs(posX - initX), 2 ) + Math.pow( Math.abs(posY - initY), 2 ) );
+						var angle = Math.atan2( posY -  initY, posX - initX );
+						
+						var accelDistance = distance * acceleratedDragScale;
+						var accelX = posX + accelDistance * Math.cos(angle);
+						var accelY = posY + accelDistance * Math.sin(angle);
+						pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
 	
 					}
 					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
@@ -419,9 +435,8 @@ omicronManager.prototype.runTracker = function()
 						if( gestureDebug )
 						{
 							console.log("Touch gesture: Double Click");
-							pointerDblClick( address, {} );
 						}
-						
+						pointerDblClick( address, posX, posY );
 					}
 				}
 				else if (e.type == 6)
