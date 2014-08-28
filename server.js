@@ -1411,7 +1411,7 @@ function wsChangeFrame(wsio, data){
 		// Check to see if currently running appliations should be removed
 		for(var i=0; i<applications.length; i++){
 			var a = applications[i];
-			console.log("checking app " + a.title + " for current frame status");
+			console.log("checking active app '" + a.title + "'' for current frame status");
 			if(typeof a.presentation !== 'undefined'){
 				var appActive = false;
 				for(var f=0; f<a.presentation.length-1; f++){
@@ -1443,7 +1443,7 @@ function wsChangeFrame(wsio, data){
 		// Check to see if inactive appliations should be added
 		for(var i=0; i<inactiveApplications.length; i++){
 			var a = inactiveApplications[i];
-			console.log("checking app " + a.title + " for current frame status");
+			console.log("checking inactive app '" + a.title + "'' for current frame status");
 			if(typeof a.presentation !== 'undefined'){
 				var appActive = false;
 				for(var f=0; f<a.presentation.length-1; f++){
@@ -3046,6 +3046,7 @@ function keyPress( uniqueID, pointerX, pointerY, data ) {
 }
 
 function deleteApplication( elem ) {
+	console.log(elem);
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
 	if(elem.application === "media_stream"){

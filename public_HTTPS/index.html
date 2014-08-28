@@ -111,7 +111,8 @@
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
 				receivesWidgetEvents: true,
-				requestsAppClone: true
+				requestsAppClone: true,
+				receivesGoTime: true
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -318,6 +319,7 @@
 						app.refresh(date);
 						
 						applications[data.id] = app;
+
 						if(app.enableControls==true){// Flag to request controls for App
 							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
 						} 
@@ -411,51 +413,29 @@
 		});
 		/******************************/
 		
-		// wsio.on('deleteElement', function(elem_data) {
-		// 	resetIdle();
-
-		// 	// Tell the application it is over
-		// 	var app = applications[elem_data.elemId];
-		// 	app.terminate();
-		// 	// Remove the app from the list
-		// 	delete applications[elem_data.elemId];
-
-		// 	// Clean up the DOM
-		// 	var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
-		// 	deleteElemTitle.parentNode.removeChild(deleteElemTitle);
-			
-		// 	var deleteElem = document.getElementById(elem_data.elemId);
-		// 	deleteElem.parentNode.removeChild(deleteElem);
-
-		// 	// Clean up the UI DOM
-		// 	if (elem_data.elemId + "_controls" in controlItems){
-		// 		var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-		// 		if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-		// 		delete controlItems[elem_data.elemId + "_controls"];
-		// 	}
-		// });
 		wsio.on('deleteElement', function(elem_data) {
 			console.log(elem_data);
+			console.log(applications);
 			resetIdle();
 
 			// Tell the application it is over
-			var app = applications[elem_data];
+			var app = applications[elem_data.elemId];
 			app.terminate();
 			// Remove the app from the list
-			delete applications[elem_data];
+			delete applications[elem_data.elemId];
 
 			// Clean up the DOM
-			var deleteElemTitle = document.getElementById(elem_data + "_title");
+			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
 			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 			
-			var deleteElem = document.getElementById(elem_data);
+			var deleteElem = document.getElementById(elem_data.elemId);
 			deleteElem.parentNode.removeChild(deleteElem);
 
 			// Clean up the UI DOM
-			if (elem_data + "_controls" in controlItems){
-				var deleteElemCtrl = document.getElementById(elem_data + "_controls");
+			if (elem_data.elemId + "_controls" in controlItems){
+				var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
 				if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-				delete controlItems[elem_data + "_controls"];
+				delete controlItems[elem_data.elemId + "_controls"];
 			}
 		});
 
