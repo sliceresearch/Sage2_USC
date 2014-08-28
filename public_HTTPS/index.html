@@ -411,27 +411,51 @@
 		});
 		/******************************/
 		
+		// wsio.on('deleteElement', function(elem_data) {
+		// 	resetIdle();
+
+		// 	// Tell the application it is over
+		// 	var app = applications[elem_data.elemId];
+		// 	app.terminate();
+		// 	// Remove the app from the list
+		// 	delete applications[elem_data.elemId];
+
+		// 	// Clean up the DOM
+		// 	var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+		// 	deleteElemTitle.parentNode.removeChild(deleteElemTitle);
+			
+		// 	var deleteElem = document.getElementById(elem_data.elemId);
+		// 	deleteElem.parentNode.removeChild(deleteElem);
+
+		// 	// Clean up the UI DOM
+		// 	if (elem_data.elemId + "_controls" in controlItems){
+		// 		var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
+		// 		if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
+		// 		delete controlItems[elem_data.elemId + "_controls"];
+		// 	}
+		// });
 		wsio.on('deleteElement', function(elem_data) {
+			console.log(elem_data);
 			resetIdle();
 
 			// Tell the application it is over
-			var app = applications[elem_data.elemId];
+			var app = applications[elem_data];
 			app.terminate();
 			// Remove the app from the list
-			delete applications[elem_data.elemId];
+			delete applications[elem_data];
 
 			// Clean up the DOM
-			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+			var deleteElemTitle = document.getElementById(elem_data + "_title");
 			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 			
-			var deleteElem = document.getElementById(elem_data.elemId);
+			var deleteElem = document.getElementById(elem_data);
 			deleteElem.parentNode.removeChild(deleteElem);
 
 			// Clean up the UI DOM
-			if (elem_data.elemId + "_controls" in controlItems){
-				var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
+			if (elem_data + "_controls" in controlItems){
+				var deleteElemCtrl = document.getElementById(elem_data + "_controls");
 				if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-				delete controlItems[elem_data.elemId + "_controls"];
+				delete controlItems[elem_data + "_controls"];
 			}
 		});
 

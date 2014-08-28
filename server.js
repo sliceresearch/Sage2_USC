@@ -133,6 +133,7 @@ var appAnimations = {};
 
 // global variables to manage presentation
 var currentFrame = 1;
+var numFrames = 25;
 var inactiveApplications = [];
 
 
@@ -243,6 +244,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
+	wsio.messages.receivesGoTime					= data.receivesGoTime					|| false;
 	
 	initializeWSClient(wsio);
 	
@@ -257,7 +259,7 @@ function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
-	
+
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
 		wsio.on('startSagePointer',          wsStartSagePointer);
@@ -323,6 +325,10 @@ function initializeWSClient(wsio) {
 	}
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
+	}
+	if (wsio.messages.receivesGoTime){
+		wsio.on('requestCurrentFrame', wsRequestCurrentFrame);
+		wsio.on('changeFrame', wsChangeFrame);
 	}
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
@@ -1379,6 +1385,92 @@ function wsReleasedControlId(wsio, data){
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
+
+// **************  GoTime Methods *****************
+
+function wsRequestCurrentFrame(wsio, data){
+	if (currentFrame !== null){
+		var ff = {
+			currentFrame: currentFrame,
+			numFrames: numFrames
+		};
+		broadcast('updateFrame', ff,'receivesGoTime');
+	}
+}
+
+function wsChangeFrame(wsio, data){
+	if (data.frame !== null){
+		currentFrame = data.frame;
+		var ff = {
+			currentFrame: currentFrame,
+			numFrames: numFrames
+		};
+		broadcast('updateFrame', ff,'receivesGoTime');
+		console.log("new frame", currentFrame);
+
+		// Check to see if currently running appliations should be removed
+		for(var i=0; i<applications.length; i++){
+			var a = applications[i];
+			console.log("checking app " + a.title + " for current frame status");
+			if(typeof a.presentation !== 'undefined'){
+				var appActive = false;
+				for(var f=0; f<a.presentation.length-1; f++){
+					// Check if current frame is within start and end frames
+					if((a.presentation[f].frame <= currentFrame) && (a.presentation[f+1].frame >= currentFrame)){
+						appActive = true;
+						break;
+					}
+				}
+				if(appActive){
+					// App is active
+					console.log("app " + a.title + " remains active");
+					// broadcast('createAppWindow', a, 'requiresFullApps');
+					// broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+
+					// applications.push(a);
+				}else{
+					// App is no longer active
+					console.log("app " + a.title + " is NO longer active");
+					inactiveApplications.push(a);
+
+					var elem = findAppById(a.id);
+					// console.log("removing",elem);
+					if(elem !== null) deleteApplication( elem );
+				}
+			}
+		}
+
+		// Check to see if inactive appliations should be added
+		for(var i=0; i<inactiveApplications.length; i++){
+			var a = inactiveApplications[i];
+			console.log("checking app " + a.title + " for current frame status");
+			if(typeof a.presentation !== 'undefined'){
+				var appActive = false;
+				for(var f=0; f<a.presentation.length-1; f++){
+					// Check if current frame is within start and end frames
+					if((a.presentation[f].frame <= currentFrame) && (a.presentation[f+1].frame >= currentFrame)){
+						appActive = true;
+						break;
+					}
+				}
+				if(appActive){
+					// App should activate
+					console.log("app " + a.title + " is NOW active");
+					broadcast('createAppWindow', a, 'requiresFullApps');
+					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+
+					applications.push(a);
+					inactiveApplications.splice(i,1);
+				}else{
+					// App should remain inactive
+					console.log("app " + a.title + " is still inactive");
+				}
+			}
+		}
+
+	}
+}
+
 /******************** Clone Request Methods ****************************/
 
 function wsCreateAppClone(wsio, data){
