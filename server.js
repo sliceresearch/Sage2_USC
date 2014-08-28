@@ -1629,6 +1629,8 @@ function setupHttpsOptions() {
 		}
 	}
 
+	console.log(certs);
+
 	var httpsOptions = {
 		// server default keys
 		key:  server_key,
