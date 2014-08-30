@@ -251,7 +251,7 @@ drawBasicStuff: function ()
 
     var today = new Date();
     var currentTime = (today.getMonth()+1) + "/" + today.getDate()  + "/"
-    + today.getFullYear() + " - " + today.getHours() + ":" + today.getMinutes()
+    + today.getFullYear() + " - " + today.getHours() + ":" + ("0" + today.getMinutes()).slice (-2)
 
     this.drawTextRightWhite(1200, 50, currentTime, "40px");
 
@@ -315,6 +315,7 @@ updateInsideTemp: function ()
 drawOneNode: function (x, y, proc, p, row)
 {
     var i, j, num, t, topX;
+    var modNet, modNetText;
 
     if (p === 2) // processors - value ranges from 0 to 16
         {
@@ -371,8 +372,25 @@ drawOneNode: function (x, y, proc, p, row)
             this.drawTextRight(x+85, y+12, proc.toFixed(0)+"%", this.gwin.smallFontSize);
         }
     else // networking values
+        // net out < 1000, 1000 - 100000, > 100000
         {
-        c = this.tempConvert(proc);
+            if (proc < 1000)
+                {
+                    modNet = 30 * proc / 1000;
+                    modNetText = Math.floor(proc) + "K";
+                }
+            else if (proc < 100000)
+                {
+                    modNet = 30 + 45 * proc / 100000;
+                    modNetText = Math.floor(proc / 1000) + "M";
+                }
+            else
+                {
+                    modNet = 90;
+                    modNetText = Math.floor(proc / 1000) + "M";
+                }
+
+        c = this.tempConvert(modNet);
         this.glob.colorOut = c[0];
         this.glob.colorOutb = c[1];
         this.glob.percOut = c[2];
@@ -380,11 +398,11 @@ drawOneNode: function (x, y, proc, p, row)
         this.drawBox(x+50, y, 14, 40, this.glob.colorOut, this.glob.percOut);
         this.drawBox(x+50, y, 14, 40, this.glob.colorOutb, 1.0 - this.glob.percOut);
 
-        //if (proc < this.glob.temp_colderer)
-            //this.drawTextRightWhite(x+80, y+12, proc.toFixed(0), "10px");
-        //else
-            //this.drawTextRight(x+80, y+12, proc.toFixed(0), "10px");
-        }
+        if (proc < 500)
+            this.drawTextRightWhite(x+85, y+12, modNetText, "10px");
+        else
+            this.drawTextRight(x+85, y+12, modNetText, "10px");
+        }    
 },
 
 
