@@ -89,6 +89,10 @@ var cave2_monitor = SAGE2_App.extend( {
     this.today = new Date();
     this.net1Time = new Date();
     this.net2Time = new Date();
+
+    this.oldSumTotal = 0;
+    this.newSumTotal = 0;
+    this.staleConnection = 1;
 },
 
 ////////////////////////////////////////
@@ -123,7 +127,7 @@ tempConvert: function (data)
 
     var color_colder        = "#74add1";
     var color_colderer      = "#4575b4";
-    var color_coldererer    = "#000000"; //"#313695"
+    var color_coldererer    = "#222222"; //"#313695"
 
     var color_unknown       = "#AAAAAA";
 
@@ -281,16 +285,33 @@ drawTextRightWhite: function (textLocX, textLocY, theText, textFontSize)
 
 drawBasicStuff: function ()
 {
-    this.drawTWhite(45, 50, "CAVE2 Monitor", "40px");
-
-    if ((this.connection === 0) || (this.net1Connection == 0) || (this.net2Connection == 0))
-        this.drawTRed(450, 50, "Connection Lost", "40px");
-
     this.today = new Date();
     var currentTime = (this.today.getMonth()+1) + "/" + this.today.getDate()  + "/"
     + this.today.getFullYear() + " - " + this.today.getHours() + ":"
     + ("0" + this.today.getMinutes()).slice (-2)
     + ":" + ("0" + this.today.getSeconds()).slice (-2);
+
+
+    this.drawTWhite(45, 50, "evl CAVE2 monitor", "40px");
+
+    // check if the CPU monitoring is stuck and no values are changing
+    if (this.newSumTotal === this.oldSumTotal)
+        this.staleConnection += 1;
+    else
+        this.staleConnection = 0;
+
+    this.oldSumTotal = this.newSumTotal;
+
+
+    if ((this.connection === 0) || (this.net1Connection == 0)
+        || (this.net2Connection == 0) || (this.staleConnection >= 5) )
+        {
+            this.drawTRed(this.gwin.canvasWidth/2, 50, "Connection Lost", "40px", "middle");
+            this.drawBox(45, 65, 5, 1160, "red", 1.0);
+        }
+    else
+        this.drawBox(45, 65, 5, 1160, "white", 1.0);
+
 
     this.drawTextRightWhite(1205, 50, currentTime, "40px");
 
@@ -329,21 +350,10 @@ network1Callback: function(error, datasetTextIn)
     this.net1Time.setSeconds(time[2]);
 
     var timeSinceLastConnect1 = Math.floor((this.today - this.net1Time)/1000);
-    if (timeSinceLastConnect1 > 30)
+    if (timeSinceLastConnect1 > 45)
         this.net1Connection = 0;
     else
         this.net1Connection = 1;
-
-    /*
-    setDate()   Sets the day of the month of a date object
-setFullYear()   Sets the year (four digits) of a date object
-setHours()  Sets the hour of a date object
-setMilliseconds()   Sets the milliseconds of a date object
-setMinutes()    Set the minutes of a date object
-setMonth()  Sets the month of a date object
-setSeconds()    Sets the seconds of a date object
-*/
-
     
     //console.log(parsedNet1);
     // line 0 is date and time
@@ -391,7 +401,7 @@ network2Callback: function(error, datasetTextIn)
     this.net2Time.setSeconds(time[2]);
 
     var timeSinceLastConnect2 = Math.floor((this.today - this.net2Time)/1000);
-    if (timeSinceLastConnect2 > 30)
+    if (timeSinceLastConnect2 > 45)
         this.net2Connection = 0;
     else
         this.net2Connection = 1;
@@ -444,6 +454,8 @@ weatherInsideCallback: function(error, datasetTextIn)
         d = parsedCSV[0][0].slice(0, 21);
         d2 = parsedCSV[0][0].slice(23, 38);
 
+        this.newSumTotal = 0;
+
         for (var c = 0; c < 37; c++)
             this.bigD[c] = new Array(20); // 16 + 4
 
@@ -452,12 +464,19 @@ weatherInsideCallback: function(error, datasetTextIn)
             for( i=0; i<16; i+= 1)
                 {
                 this.bigD[j][i] = + parsedCSV[j][0].slice(41+(4*i), 44+(4*i));
+                this.newSumTotal += this.bigD[j][i];
                 }
 
             this.bigD[j][16] = + parsedCSV[j][0].slice(105, 110);
             this.bigD[j][17] = + parsedCSV[j][0].slice(113, 118);
             this.bigD[j][18] = + parsedCSV[j][0].slice(119, 125);
             this.bigD[j][19] = Math.round(100 / 64 * (+ parsedCSV[j][0].slice(126, 132)));
+            
+            this.newSumTotal += this.bigD[j][16];
+            this.newSumTotal += this.bigD[j][17];
+            this.newSumTotal += this.bigD[j][18];
+            this.newSumTotal += this.bigD[j][19];
+
             //console.log("bigD["+j+"] is " + this.bigD[j]);
             }
 
@@ -483,6 +502,7 @@ weatherInsideCallback: function(error, datasetTextIn)
                 }
         }
 
+        //console.log (this.newSumTotal);
     this.drawAll();
 },
 
