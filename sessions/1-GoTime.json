@@ -100,10 +100,10 @@
                 [
                     {
                         "frame": 3,
-                        "left": 27,
-                        "top": 40.5,
-                        "width": 1332,
-                        "height": 999
+                        "left": 10,
+                        "top": 10,
+                        "width": 100,
+                        "height": 100
                     },
                     {
                         "frame": 5,
@@ -120,10 +120,6 @@
             "application": "GoTime",
             "type": "application/custom",
             "url": "https://localhost:9090/uploads/apps/GoTime",
-            "data": {
-                "frame": 1,
-                "numFrames": 25
-            },
             "resrc": [],
             "icon": null,
             "left": 27,

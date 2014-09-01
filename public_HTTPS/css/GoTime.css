@@ -1,0 +1,39 @@
+@charset "UTF-8";
+
+/* SAGE2 is available for use under the SAGE2 Software License
+ *
+ * University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+ * and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+ * Applications (LAVA)
+ *
+ * See full text, terms and conditions in the LICENSE.txt included file
+ *
+ * Copyright (c) 2014
+ *
+ * GoTime application developed by Todd Margolis, UCSD 2014
+ */
+
+/* CSS Document */
+
+/*.timeline {position: absolute; left: 25%; width: 50%; border: solid 1px #000000; overflow: auto; }*/
+.timeline {float: left; margin-left: 25%; margin-top: 10px; padding: 5px; width: 50%; border: solid 1px #000000; overflow: auto; }
+
+.timeline ul {margin:0; padding:0; list-style:none; }
+.timeline li {margin-bottom:10px; overflow:hidden; list-style: none; }
+.timeline label {display:inline-block; margin-right:5px; width: 100px;}
+.timeline label span {color:#999; }
+.timeline .input {width:200px; border:1px solid #E0E0E0; background:#F6F6F6; }
+.timeline .app {float:left; width:100%; margin-right:10px; text-align: right;}
+.timeline .app .input {width:50px; }
+
+#GoTimeControls {
+	float: left;
+	margin-top: 10px;
+	margin-left: 10px;
+	padding: 5px;
+	width: 250px;
+	height: 105px;
+	text-align: left;
+	border: solid 1px #000000;
+	background-color: #FFFFFF;
+}

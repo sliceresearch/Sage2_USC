@@ -47,19 +47,31 @@ var GoTime = SAGE2_App.extend( {
 		GoTimeList[id] = this;
 
 		// Build UI for GoTime app
-		// var my_div = null;
-		// var newDiv = null;
-		// function addElement () {
-		//   // create a new div element and give it some content
-		//   var newDiv = document.createElement("div");
-		//   var newContent = document.createTextNode("Hi there and greetings!");
-		//   newDiv.appendChild(newContent); //add the text node to the newly created div. 
-		//   // add the newly created element and its content into the DOM
-		//   document.getElementById(id).appendChild(newDiv);
-		//   // my_div = document.getElementById("org_div1");
-		//   // document.body.insertBefore(newDiv, my_div);
-		// }
-		// addElement();
+		var my_div = null;
+		var newDiv = null;
+		function addElement () {
+			// create a new div element and give it some content
+			var newDiv = document.createElement("div");
+
+			var div = document.createElement('DIV');
+			newDiv.id = "currentFrame";
+			newDiv.style['position'] = 'absolute';
+			newDiv.style['top'] = '30px';
+			newDiv.style['width'] = 'auto';
+			newDiv.style['height'] = 'auto';
+			newDiv.style['float'] = 'left';
+			newDiv.style['white-space'] = 'nowrap';
+			newDiv.style['visibility']= 'visible';
+			newDiv.style['font'] = '24px arial' ;
+			newDiv.style['font-weight'] = 'bold' ;
+
+			var newContent = document.createTextNode("#");
+			newDiv.appendChild(newContent);
+
+			// add the newly created element and its content into the DOM of my app
+			document.getElementById(id).appendChild(newDiv);
+		}
+		addElement();
 
 		this.frameValText         = '';
 
@@ -114,6 +126,8 @@ var GoTime = SAGE2_App.extend( {
 		this.state.frame = ff.currentFrame;
 		this.state.numFrames = ff.numFrames;
 		console.log("frame", this.state.frame);
+		var f = document.getElementById('currentFrame');
+		f.innerHTML = this.state.frame;
 	},
 
 	load: function(state, date) {
@@ -128,6 +142,7 @@ var GoTime = SAGE2_App.extend( {
 				appObj.state.frame = 1;
 				appObj.setLabelText();
 				appObj.refresh(date);
+				appObj.wsio.emit('changeFrame', {frame: appObj.state.frame});
 			}});
 			_this.controls.addButton({type:"prev", action:function(appObj, date){
 				if(appObj.state.frame <= 1) return;
@@ -140,6 +155,7 @@ var GoTime = SAGE2_App.extend( {
 			_this.controls.addSlider({begin:1,end:_this.numFrames,increments:1,appObj:_this, property:"state.frame", action:function(appObj, date){
 				appObj.setLabelText();
 				appObj.refresh(date);
+				appObj.wsio.emit('changeFrame', {frame: appObj.state.frame});
 			}});
 			var labelWidth = ("" + _this.numFrames).length * 2 + 3; // 3 for the spaces and the '/'
 
@@ -156,7 +172,18 @@ var GoTime = SAGE2_App.extend( {
 				appObj.state.frame = appObj.numFrames;
 				appObj.setLabelText();
 				appObj.refresh(date);
+				appObj.wsio.emit('changeFrame', {frame: appObj.state.frame});
 			}});
+
+			_this.controls.addButton({type:"add", action:function(appObj, date){
+				console.log("Add Keyframe");
+				// appObj.wsio.emit('addKeyframe', {frame: appObj.state.frame});
+			}});
+			_this.controls.addButton({type:"sub", action:function(appObj, date){
+				console.log("Remove Keyframe");
+				// appObj.wsio.emit('removeKeyframe', {frame: appObj.state.frame});
+			}});
+
 			
 			_this.setLabelText();
 		// } else {
