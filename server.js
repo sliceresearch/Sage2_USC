@@ -757,6 +757,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
+	console.log(data);
 	// Using updates only from display client 0
 	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);

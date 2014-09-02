@@ -629,6 +629,7 @@
 	    		var i;
 				for(i=0; i<applications.length; i++){
 					if(applications[i].id == a){
+						console.log(applications[i]);
 						var pi = findMinIndex(applications[i].presentation);
 						applications[i].presentation[pi].frame = d.srcElement.value.valueOf();
 
