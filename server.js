@@ -757,11 +757,12 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
-	console.log(data);
+	console.log("data",data);
 	// Using updates only from display client 0
 	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);
-		app.data = data.state;
+		// if(app !== null)
+			app.data = data.state;
 	}
 }
 

@@ -231,6 +231,7 @@
 			webpage.src = "data:image/jpeg;base64," + data.src;
 		});
 
+		var observedData, observedApp;			
 
 		/******************************/
 		wsio.on('createAppWindow', function(data) {
@@ -271,7 +272,7 @@
 			windowItem.style.overflow = "hidden";
 			windowItem.style.zIndex   = (itemCount+1).toString();
 			ui.main.appendChild(windowItem);
-			
+
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
@@ -298,6 +299,7 @@
 			}
 
 			function loadApplication() {
+				console.log("loadApplication", window[data.application]);
 				// load new app
 				if(window[data.application] === undefined) {
 					var js = document.createElement("script");
@@ -309,10 +311,9 @@
 						app.init(data.id, data.width, data.height, url, date);
 
 						if(app.state !== undefined && clientID===0){
-							Object.observe(app.state, function (changes) {
-								//observer(changes);
-								wsio.emit('updateAppState', {id: data.id, state: app.state});
-							}, ['update', 'add']);
+							observedApp = app;
+							observedData = data;
+							Object.observe(app.state, appObserver, ['update', 'add']);
 						}
 						
 						app.load(data.data, date);
@@ -411,6 +412,12 @@
 			itemCount += 2;
 			
 		});
+
+		function appObserver(changes){
+			//observer(changes);
+			wsio.emit('updateAppState', {id: observedData.id, state: observedApp.state});
+		}
+
 		/******************************/
 		
 		wsio.on('deleteElement', function(elem_data) {
@@ -421,6 +428,12 @@
 			// Tell the application it is over
 			var app = applications[elem_data.elemId];
 			app.terminate();
+
+			// Stop monitoring changes to state
+			if(app.state !== undefined && clientID===0){
+				Object.unobserve(app.state, appObserver);
+			}
+
 			// Remove the app from the list
 			delete applications[elem_data.elemId];
 
