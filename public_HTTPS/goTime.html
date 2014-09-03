@@ -593,6 +593,7 @@
     		}
     	}
     	if(!exists){
+	    	// console.log("app doesn't exist. adding to timeline");
 	    	var ul = document.getElementById("appList");
 
 	    	var li = document.createElement("li");
@@ -612,7 +613,9 @@
 	    	iStart.id = "start_"+data.id;
 	    	iStart.className = "input";
 	    	if((data.presentation != null) && (data.presentation[0].frame != null)){
-	    		iStart.value = data.presentation[0].frame;
+	    		// console.log("finding min");
+				var pi = findMinIndex(data.presentation);
+	    		iStart.value = data.presentation[pi].frame;
 	    	}else{
 	    		iStart.value = currentFrame;
 	    		data.presentation = [];
@@ -629,11 +632,19 @@
 	    		var i;
 				for(i=0; i<applications.length; i++){
 					if(applications[i].id == a){
-						console.log(applications[i]);
-						var pi = findMinIndex(applications[i].presentation);
-						applications[i].presentation[pi].frame = d.srcElement.value.valueOf();
+						var valStart = parseInt(d.srcElement.value);
+						var stopEl = document.getElementById("stop_"+a);
+						var valStop  = parseInt(stopEl.value);
+						if(valStart > valStop) {
+							valStart = valStop;
+							d.srcElement.value = valStart;
+						}
 
-						wsio.emit('updateKeyframe', {id: a, pi: pi, frame: d.srcElement.value.valueOf()});
+						var pi = findMinIndex(applications[i].presentation);
+						applications[i].presentation[pi].frame = valStart;
+
+						// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStart);
+						wsio.emit('updateKeyframe', {id: a, pi: pi, frame: valStart});
 						break;
 					}
 				}
@@ -667,9 +678,19 @@
 				for(i=0; i<applications.length; i++){
 					if(applications[i].id == a){
 						var pi = findMaxIndex(applications[i].presentation);
-						applications[i].presentation[pi].frame = d.srcElement.value.valueOf();
 
-						wsio.emit('updateKeyframe', {id: a, pi: pi, frame: d.srcElement.value.valueOf()});
+						var valStop = parseInt(d.srcElement.value);
+						var startEl = document.getElementById("start_"+a);
+						var valStart  = parseInt(startEl.value);
+						if(valStop < valStart) {
+							valStop = valStart;
+							d.srcElement.value = valStop;
+						}
+
+						applications[i].presentation[pi].frame = valStop;
+
+						// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStop);
+						wsio.emit('updateKeyframe', {id: a, pi: pi, frame: valStop});
 						break;
 					}
 				}
@@ -685,6 +706,8 @@
 
 	    	applications.push(data);
 	    	// console.log("applications",applications[applications.length-1]);
+		}else{
+	    	// console.log("app already on timeline");
 		}
     }
 
@@ -771,7 +794,7 @@
 		} else {
 			numFrames = nf;
 		}
-		console.log("numFrames", numFrames);
+		// console.log("numFrames", numFrames);
 		wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
 	}
 
@@ -779,6 +802,7 @@
 	/* GoTime Utilities */
 
     function findMinIndex(ap){
+    	// console.log("finding min value");
     	var minID;
     	var minVal = numFrames;
     	var i;
@@ -787,19 +811,22 @@
     			minVal = ap[i].frame;
     			minID = i;
     		}
+    		// console.log("frame: " + ap[i].frame + " minVal: " + minVal);
     	}
     	return minID;
     }
 
     function findMaxIndex(ap){
+    	// console.log("finding max value");
     	var maxID;
     	var maxVal = 0;
     	var i;
     	for(i=0; i<ap.length; i++){
-    		if(ap[i].frame > maxVal){
+    		if(ap[i].frame >= maxVal){
     			maxVal = ap[i].frame;
     			maxID = i;
     		}
+    		// console.log("frame: " + ap[i].frame + " maxVal: " + maxVal);
     	}
     	return maxID;
     }

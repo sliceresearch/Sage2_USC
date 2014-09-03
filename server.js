@@ -757,7 +757,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
-	console.log("data",data);
+	// console.log("data",data);
 	// Using updates only from display client 0
 	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);
@@ -1431,7 +1431,6 @@ function wsChangeFrame(wsio, data){
 			numFrames: numFrames
 		};
 		broadcast('updateFrame', ff,'receivesGoTime');
-		// console.log("numFrames", numFrames);
 
 		// Check to see if currently running appliations should be removed
 		for(var i=0; i<applications.length; i++){
@@ -1501,18 +1500,42 @@ function wsChangeFrame(wsio, data){
 
 function wsUpdateKeyframe(wsio, data){
 	// Update keyframe values
+	// console.log("updating data: ", data);
 	var app = findAppById(data.id);
 	if (app !== null){
 		if(typeof app.presentation !== 'undefined'){
 			if(typeof data.frame !== 'undefined'){
-				// console.log("updating frame");
+				// console.log("updating " + app.id + " keyframe " + data.pi + " to keyframe" + data.frame);
 				app.presentation[data.pi].frame = data.frame;
+				app.presentation[data.pi].left = app.left;
+				app.presentation[data.pi].top = app.top;
+				app.presentation[data.pi].width = app.width;
+				app.presentation[data.pi].height = app.height;
 				wsChangeFrame(wsio, {frame: currentFrame, numFrames: numFrames});
 			}
 		}else{
-			// app.presentation = [];
-			// app.presentation[0].frame = data.frame;
-			// app.presentation[1].frame = data.frame;
+			app.presentation = [];
+			app.presentation[0] = {};
+			app.presentation[1] = {};
+			if(data.pi == 0){
+				app.presentation[0].frame = data.frame;
+				app.presentation[1].frame = numFrames;
+			}else{
+				app.presentation[0].frame = currentFrame;
+				app.presentation[1].frame = data.frame;
+			}
+
+			app.presentation[0].left = app.left;
+			app.presentation[0].top = app.top;
+			app.presentation[0].width = app.width;
+			app.presentation[0].height = app.height;
+
+			app.presentation[1].left = app.left;
+			app.presentation[1].top = app.top;
+			app.presentation[1].width = app.width;
+			app.presentation[1].height = app.height;
+
+			wsChangeFrame(wsio, {frame: currentFrame, numFrames: numFrames});
 		}
 	}
 }
