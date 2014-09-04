@@ -92,13 +92,13 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idleVideoIcon = new Image;
 		this.idleVideoIcon.src = this.resrcPath +"icons/clapper.svg"
 		this.idleAppIcon = new Image;
-		this.idleAppIcon.src = this.resrcPath +"icons/cog.svg"
+		this.idleAppIcon.src = this.resrcPath +"icons/rocket.svg"
 		this.idleSessionIcon = new Image;
-		this.idleSessionIcon.src = this.resrcPath +"icons/folder-open.svg"
+		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
 		this.idleSaveSessionIcon = new Image;
-		this.idleSaveSessionIcon.src = this.resrcPath +"icons/disk.svg"
+		this.idleSaveSessionIcon.src = this.resrcPath +"icons/download.svg"
 		this.idleSettingsIcon = new Image;
-		this.idleSettingsIcon.src = this.resrcPath +"icons/tools6.svg"
+		this.idleSettingsIcon.src = this.resrcPath +"icons/cog.svg"
 		
 		// Level 2 icons
 		this.idleFolderIcon = new Image;
@@ -620,7 +620,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			this.radialAppButton.draw(date);
 			this.radialSessionButton.draw(date);
 			this.radialSaveSessionButton.draw(date);
-			this.radialSettingsButtonButton.draw(date);
+			this.radialSettingsButton.draw(date);
 		}
 		if( this.currentRadialState === 'radialAppMenu' )
 		{

@@ -297,10 +297,11 @@ omicronManager.prototype.runTracker = function()
 				var FLAG_THREE_FINGER_HOLD = User << 6;
 				var FLAG_SINGLE_CLICK = User << 7;
 				var FLAG_DOUBLE_CLICK = User << 8;
+				var FLAG_MULTI_TOUCH = User << 9;
 				
 				var initX = 0;
 				var initY = 0;
-				if( serviceID === 0  && e.extraDataItems >= 4 && e.flags == FLAG_SINGLE_TOUCH )
+				if( serviceID === 0  && e.extraDataItems >= 4 && e.flags === FLAG_SINGLE_TOUCH )
 				{
 					initX = msg.readFloatLE(offset); offset += 4;
 					initY = msg.readFloatLE(offset); offset += 4;
@@ -310,7 +311,7 @@ omicronManager.prototype.runTracker = function()
 				}
 				
 				//console.log( e.flags );
-				if (e.type == 3)
+				if (e.type === 3)
 				{ // update (Used only by classic SAGE pointer)
 					/* if( e.sourceId in ptrs )
 						return;
@@ -328,9 +329,9 @@ omicronManager.prototype.runTracker = function()
 						}
 					}*/
 				}
-				else if (e.type == 4)
+				else if (e.type === 4)
 				{ // move
-					if( e.flags == FLAG_SINGLE_TOUCH )
+					if( e.flags === FLAG_SINGLE_TOUCH )
 					{
 						if( gestureDebug )
 						{
@@ -346,13 +347,17 @@ omicronManager.prototype.runTracker = function()
 						pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
 	
 					}
-					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
 							console.log("Touch move gesture: Five finger hold - " + Date.now());
 						}
 						pointerCloseGesture( address, posX, posY, Date.now(), 1 );
+					}
+					else if( e.flags === FLAG_MULTI_TOUCH )
+					{
+						pointerPosition( address, { pointerX: posX, pointerY: posY } );
 					}
 				}
 				else if (e.type == 15)
@@ -387,13 +392,13 @@ omicronManager.prototype.runTracker = function()
 					}
 
 				}
-				else if (e.type == 5) { // button down
+				else if (e.type === 5) { // button down
 					if( gestureDebug )
 					{
 						console.log("Touch down at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 					}
 
-					if( e.flags === FLAG_SINGLE_TOUCH )
+					if( e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH )
 					{
 						// Create pointer
 						if(address in sagePointers){
@@ -406,7 +411,7 @@ omicronManager.prototype.runTracker = function()
 							pointerPress( address, posX, posY, { button: "left" } );
 						}
 					}
-					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
@@ -414,7 +419,7 @@ omicronManager.prototype.runTracker = function()
 						}
 						pointerCloseGesture( address, posX, posY, Date.now(), 0 );
 					}
-					else if( e.flags == FLAG_THREE_FINGER_HOLD )
+					else if( e.flags === FLAG_THREE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
@@ -422,7 +427,7 @@ omicronManager.prototype.runTracker = function()
 						}
 						createRadialMenu( posX, posY );
 					}
-					else if( e.flags == FLAG_SINGLE_CLICK )
+					else if( e.flags === FLAG_SINGLE_CLICK )
 					{
 						if( gestureDebug )
 						{
@@ -430,7 +435,7 @@ omicronManager.prototype.runTracker = function()
 						}
 						
 					}
-					else if( e.flags == FLAG_DOUBLE_CLICK )
+					else if( e.flags === FLAG_DOUBLE_CLICK )
 					{
 						if( gestureDebug )
 						{
@@ -441,7 +446,7 @@ omicronManager.prototype.runTracker = function()
 				}
 				else if (e.type == 6)
 				{ // button up
-					if( e.flags == FLAG_SINGLE_TOUCH )
+					if( e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH )
 					{
 						// Hide pointer
 						hidePointer(address);
@@ -455,7 +460,7 @@ omicronManager.prototype.runTracker = function()
 							console.log("Touch up at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 						}
 					}
-					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
