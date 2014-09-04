@@ -1,0 +1,10 @@
+{
+	"main_script": "cave2_monitor.js",
+	"icon": "CAVE2logo.png",
+	"width": 1260,
+	"height": 630,
+	"animation": true,
+	"resources": [
+		"scripts/d3.v3.min.js"
+	]
+}

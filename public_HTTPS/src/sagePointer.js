@@ -40,6 +40,8 @@ function sagePointer(wsio) {
 	this.broadcasting       = false;
 	this.desktopId          = null;
 	
+	this.desktopCaptureEnabled = false;
+	
 	this.chunk = 32 * 1024; // 32 KB
 	//this.maxUploadSize = 500 * (1024*1024); // 500 MB
 	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
@@ -85,7 +87,7 @@ function sagePointer(wsio) {
 	
 	this.pointerLockChangeMethod = function() {
 		if(document.pointerLockElement === this.sagePointerBtn ||  document.mozPointerLockElement === this.sagePointerBtn || document.webkitPointerLockElement === this.sagePointerBtn){
-			console.log("pointer lock enabled");
+			//console.log("pointer lock enabled");
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 		
 			document.addEventListener('mousedown',           this.pointerPress,     false);
@@ -103,7 +105,7 @@ function sagePointer(wsio) {
 			sagePointerEnabled();
 		}
 		else{
-			console.log("pointer lock disabled");
+			//console.log("pointer lock disabled");
 			this.wsio.emit('stopSagePointer');
 		
 			document.removeEventListener('mousedown',        this.pointerPress,     false);
@@ -185,52 +187,47 @@ function sagePointer(wsio) {
 	};
 	
 	this.startScreenShareMethod = function(event) {
+		if(this.desktopCaptureEnabled === false) {
+			alert("Cannot share screen: \"SAGE2 Screen Capture\" Extension not enabled.");
+			return;
+		}
+		
 		// start screen share
-		this.screenShareBtn.disabled = true;
-		
-		
-		// current chrome desktop capture via getUserMedia
-		var streamHeight = Math.min(1080, screen.height);
-		var streamWidth = screen.width/screen.height * streamHeight;
-
-		var constraints = {chromeMediaSource: 'screen', maxWidth: streamWidth, maxHeight: streamHeight};
-		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
-		
-		
-		// future chrome desktop capture via extension
-		//this.desktopId = chrome.desktopCapture.chooseDesktopMedia(["screen"], this.onAccessApproved);
+		window.postMessage('capture_desktop', '*');
 	};
 	
-	this.onAccessApprovedMethod = function(chromeMediaSourceId) {
-		if (!chromeMediaSourceId) {
-            this.streamFailMethod();
-            return;
-        }
-        
-        var streamHeight = Math.min(1080, screen.height);
+	this.captureDesktop = function(mediaSourceId) {
+		/*
+		var streamHeight = Math.min(1080, screen.height);
 		var streamWidth = screen.width/screen.height * streamHeight;
 		
-        var constraints = {chromeMediaSource: 'desktop', maxWidth: streamWidth, maxHeight: streamHeight};
+		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: streamWidth, maxHeight: streamHeight};
+		*/
+		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 1920, maxHeight: 1080};
 		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 	};
 	
 	this.streamSuccessMethod = function(stream) {
 		console.log("media capture success!");
-
+		
+		this.screenShareBtn.disabled = true;
+		
 		this.mediaStream = stream;
 		this.mediaStream.onended = this.streamEnded;
 
 		this.mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
 		this.mediaVideo.play();
-
+		
+		/*
 		var frame = this.captureMediaFrame();
 		var raw = this.base64ToString(frame.split(",")[1]);
 		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: screen.width, height: screen.height});
 
 		this.broadcasting = true;
+		*/
 	};
 
-	this.streamFailMethod = function() {
+	this.streamFailMethod = function(e) {
 		console.log("no access to media capture");
 	};
 	
@@ -239,6 +236,14 @@ function sagePointer(wsio) {
 		this.broadcasting = false;
 		this.screenShareBtn.disabled = false;
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID+"|0"});
+	};
+	
+	this.streamMetaDataMethod = function(event) {
+		var frame = this.captureMediaFrame();
+		var raw = this.base64ToString(frame.split(",")[1]);
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: this.mediaVideo.videoWidth, height: this.mediaVideo.videoHeight});
+
+		this.broadcasting = true;
 	};
 	
 	this.captureMediaFrame = function() {
@@ -376,19 +381,19 @@ function sagePointer(wsio) {
 	this.pointerKeyDown              = this.pointerKeyDownMethod.bind(this);
 	this.pointerKeyUp                = this.pointerKeyUpMethod.bind(this);
 	this.pointerKeyPress             = this.pointerKeyPressMethod.bind(this);
-	this.onAccessApproved            = this.onAccessApprovedMethod.bind(this);
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
+	this.streamMetaData              = this.streamMetaDataMethod.bind(this);
 	
 	// Event Listeners
 	window.addEventListener('dragover', this.preventDefault, false);
 	window.addEventListener('dragend',  this.preventDefault, false);
 	window.addEventListener('drop',     this.preventDefault, false);
 	
-	fileDrop.addEventListener('dragover', this.preventDefault,     false);
-	fileDrop.addEventListener('dragend',  this.preventDefault,     false);
-	fileDrop.addEventListener('drop',     this.uploadFileToServer, false);
+	this.fileDrop.addEventListener('dragover', this.preventDefault,     false);
+	this.fileDrop.addEventListener('dragend',  this.preventDefault,     false);
+	this.fileDrop.addEventListener('drop',     this.uploadFileToServer, false);
 	
 	if (this.windowManager) {
 		// Not all sagePointer have a windowManager
@@ -397,17 +402,18 @@ function sagePointer(wsio) {
 		this.windowManager.addEventListener('drop',     this.uploadFileToServer, false);
 	}
 
-	sagePointerBtn.addEventListener('click', this.startSagePointer, false);
-	screenShareBtn.addEventListener('click', this.startScreenShare, false);
+	this.sagePointerBtn.addEventListener('click', this.startSagePointer, false);
+	this.screenShareBtn.addEventListener('click', this.startScreenShare, false);
 	
-	screenShareResolution.addEventListener('change', this.changeScreenShareResolution, false);
-	screenShareQuality.addEventListener('change',    this.changeScreenShareQuality,    false);
+	this.screenShareResolution.addEventListener('change', this.changeScreenShareResolution, false);
+	this.screenShareQuality.addEventListener('change',    this.changeScreenShareQuality,    false);
 	
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
 	// redudant here (webkit)
 	// document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
 	// document.addEventListener('webkitpointerlockchange', this.pointerLockChange, false);
 	
+	this.mediaVideo.addEventListener('loadedmetadata', this.streamMetaData, false);
 	
 	
 	this.base64ToString = function(base64) {
