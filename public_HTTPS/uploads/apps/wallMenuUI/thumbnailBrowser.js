@@ -939,9 +939,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			{
 				thumbButton = currentThumbnailButtons[i];
 				thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
-				
-				if ( thumbButton.isReleased() && this.sendsToServer )
+
+				if ( thumbButton.isReleased() && this.sendsToServer === true )
 				{ 
+					//console.log(thumbButton+" released" );
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
 				}
 				if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
