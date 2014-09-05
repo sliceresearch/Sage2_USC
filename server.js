@@ -472,6 +472,10 @@ function wsPointerPosition(wsio, data) {
 function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
+	// Casting the parameters to correct type
+	data.deltaX = parseInt(data.deltaX, 10);
+	data.deltaY = parseInt(data.deltaY, 10);
+
 	pointerMove(uniqueID, data);
 }
 
@@ -492,6 +496,10 @@ function wsPointerScrollStart(wsio, data) {
 
 function wsPointerScroll(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+
+	// Casting the parameters to correct type
+	data.wheelDelta = parseInt(data.wheelDelta, 10);
+	console.log('Delta', data.wheelDelta);
 	
 	pointerScroll(uniqueID, data);
 }
