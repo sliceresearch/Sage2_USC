@@ -257,7 +257,7 @@ omicronManager.prototype.runTracker = function()
 					
 			var touchWidth = 0;
 			var touchHeight = 0;
-			if( serviceID === 0 &&  e.extraDataItems >= 2)
+			if( serviceID === 0 &&  e.extraDataItems >= 2 )
 			{
 				touchWidth = msg.readFloatLE(offset); offset += 4;
 				touchHeight = msg.readFloatLE(offset); offset += 4;
@@ -301,7 +301,7 @@ omicronManager.prototype.runTracker = function()
 				
 				var initX = 0;
 				var initY = 0;
-				if( serviceID === 0  && e.extraDataItems >= 4 && e.flags === FLAG_SINGLE_TOUCH )
+				if( serviceID === 0  && e.extraDataItems >= 4 && e.type !== 15  ) // Type 15 = Zoom
 				{
 					initX = msg.readFloatLE(offset); offset += 4;
 					initY = msg.readFloatLE(offset); offset += 4;
@@ -335,7 +335,7 @@ omicronManager.prototype.runTracker = function()
 					{
 						if( gestureDebug )
 						{
-							//console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
+							console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						}
 						
 						var distance = Math.sqrt( Math.pow( Math.abs(posX - initX), 2 ) + Math.pow( Math.abs(posY - initY), 2 ) );
@@ -362,10 +362,6 @@ omicronManager.prototype.runTracker = function()
 				}
 				else if (e.type == 15)
 				{ // zoom
-					if( gestureDebug )
-					{
-						console.log("Touch zoom");
-					}
 					
 					/*
 					Omicron zoom event extra data:
@@ -375,18 +371,24 @@ omicronManager.prototype.runTracker = function()
 					3 = event second type ( 1 = Down, 2 = Move, 3 = Up )
 					*/
 					// extraDataType 1 = float
-					if (e.extraDataType == 1 && e.extraDataItems >= 4)
+					//console.log("Touch zoom " + e.extraDataType  + " " + e.extraDataItems );
+					if (e.extraDataType === 1 && e.extraDataItems >= 4)
 					{
-
 						var zoomDelta = msg.readFloatLE(offset); offset += 4;
 						var eventType = msg.readFloatLE(offset);  offset += 4;
 						
-						if( eventType == 1 ) // Zoom start/down
+						//console.log("Touch zoom zoomDelta " + zoomDelta );
+						//console.log("Touch zoom type " + eventType );
+						
+						if( eventType === 1 ) // Zoom start/down
 						{
+							//console.log("Touch zoom start");
 							pointerScrollStart( address, posX, posY );
 						}
 						else // Zoom move
 						{
+							if( gestureDebug )
+								console.log("Touch zoom");
 							pointerScroll( address, { wheelDelta: -zoomDelta * touchZoomScale } );
 						}
 					}
