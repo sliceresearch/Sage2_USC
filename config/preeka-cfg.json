@@ -5,20 +5,24 @@
 	host: "preeka.evl.uic.edu",
 	port: 443,
 	index_port: 80,
-	clock: 12,
-
-	// User specified values (in pixel)
-	titleBarHeight: 60,
-	titleTextSize:  38,
-	pointerSize:   100,
 
 	background: {
 		color: "#9a9a9a",
 		image: "images/background/dbgrid.png",
 		style: "tile"
 	},
-	show_url: false,
-	show_version: false,
+
+	ui: {
+		show_url: false,
+		show_version: false,
+		clock: 12,
+		show_url: true,
+		// User specified values (in pixel)
+		titleBarHeight: 60,
+		titleTextSize:  38,
+		pointerSize:   100
+	},
+
 	resolution: {
 		width: 2560,
 		height: 1600

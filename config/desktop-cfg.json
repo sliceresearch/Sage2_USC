@@ -8,19 +8,20 @@
 	port: 9090,
 		// port of the HTTP public page
 	index_port: 9292,
-		// clock setting: 12-hour or 24-hour
-	clock: 12,
 	background: {
 		// background color
 		color: "#333333",
-		// clip the viewport on each display
 	},
-	show_version: true,
-	show_url: true,
+	ui: {
+		// clock setting: 12-hour or 24-hour
+		clock: 12,
+		show_version: true,
+		show_url: true,
 		// auto-hide the wall UI (top bar, application bar, ...)
-        auto_hide_ui: false,
+		auto_hide_ui: false,
 		// delay in seconds
-        auto_hide_delay: 30,
+		auto_hide_delay: 30
+	},
 	resolution: {
 		width: 700,
 		height: 700

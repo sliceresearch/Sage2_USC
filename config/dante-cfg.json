@@ -2,13 +2,15 @@
 	"host": "dante.evl.uic.edu",
 	"port": 443,
 	"index_port": 80,
-	"clock": 12,
 	"background": {
 		"color": "#333333",
 		"image": "images/background/dante_wallpaper.jpg",
 		"style": "stretch"
 	},
-	"show_url": true,
+	"ui": {
+		"clock": 12,
+		"show_url": true
+	},
 	"resolution": {
 		"width": 4098,
 		"height": 2304

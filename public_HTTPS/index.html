@@ -168,9 +168,9 @@
 			ui = new uiBuilder(json_cfg, clientID);
 			ui.build();
 			ui.background();
-			if (json_cfg.auto_hide_ui) {
+			if (json_cfg.ui.auto_hide_ui) {
 				// default delay is 30s if not specified
-				uiTimerDelay = json_cfg.auto_hide_delay ? parseInt(json_cfg.auto_hide_delay,10) : 30;
+				uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay,10) : 30;
 				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
 			}
 		});

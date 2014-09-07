@@ -126,7 +126,9 @@ if (!fs.existsSync(sessionFolder)) {
 // Build the list of existing assets
 assets.initialize(uploadsFolder, 'uploads');
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight, config.titleBarHeight, imConstraints);
+var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight,
+						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
+						imConstraints);
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
@@ -499,7 +501,6 @@ function wsPointerScroll(wsio, data) {
 
 	// Casting the parameters to correct type
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
-	console.log('Delta', data.wheelDelta);
 	
 	pointerScroll(uniqueID, data);
 }
@@ -993,14 +994,17 @@ function averageWindowAspectRatio() {
 }
 
 function fitWithin(app, x, y, width, height, margin) {
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
+
 	// take buffer into account
 	x += margin;
 	y += margin;
 	width  = width  - 2*margin;
 	height = height - 2*margin;
 
-	var widthRatio  = (width-config.titleBarHeight)  / app.width;
-	var heightRatio = (height-config.titleBarHeight) / app.height;
+	var widthRatio  = (width-titleBar)  / app.width;
+	var heightRatio = (height-titleBar) / app.height;
 	var maximizeRatio;
 	if (widthRatio > heightRatio)
 		maximizeRatio = heightRatio;
@@ -1020,30 +1024,6 @@ function fitWithin(app, x, y, width, height, margin) {
     var newAppX = x + postMaxX;
     var newAppY = y + postMaxY;
 
-    // if the app shouldnt be centered, position it as
-    // close to the original position as possible
-    // if (cx && cy) {
-    // 	if (widthRatio > heightRatio) {
-    //     	// height diff is greater... so adjust x
-    //     	newHalfW = Math.round(newAppWidth/2.0);
-    //     	if (cx+newHalfW > x+width - margin)
-    //     		newAppX = x+width - newAppWidth - margin;
-    //     	else if (cx-newHalfW < x + margin)
-    //     		newAppX = x + margin;
-    //     	else
-    //     		newAppX = cx-newHalfW;
-    //     }
-    //     else {
-    //            // width diff is greater... so adjust y
-    //            newHalfH = int(newAppHeight/2.0);
-    //            if (cy+newHalfH > y+height - margin)
-    //            	newAppY = y+height - newAppHeight - margin;
-    //            else if (cy-newHalfH < y + margin)
-    //            	newAppY = y + margin;
-    //            else
-    //            	newAppY = cy-newHalfH;
-    //     }
-    // }
 	return [newAppX, newAppY, newAppWidth, newAppHeight];
 }
 
@@ -1087,10 +1067,14 @@ function tileApplications() {
 	}
 
     // determine the bounds of the tiling area
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
 	var areaX = 0;
-	var areaY = Math.round(1.5 * config.titleBarHeight); // keep 0.5 height as margin
+	var areaY = Math.round(1.5 * titleBar); // keep 0.5 height as margin
+	if (config.ui.auto_hide_ui===true) areaY = - config.ui.titleBarHeight;
+
 	var areaW = config.totalWidth;
-	var areaH = config.totalHeight-(2*config.titleBarHeight); // bottom margin: 1.5 + 0.5 = 2
+	var areaH = config.totalHeight-(2*titleBar); // bottom margin: 1.5 + 0.5 = 2
 
 	var tileW = Math.floor(areaW / numCols);
 	var tileH = Math.floor(areaH / numRows);
@@ -1107,7 +1091,7 @@ function tileApplications() {
         var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
         // update the data structure
         app.left   = newdims[0];
-        app.top    = newdims[1]-config.titleBarHeight;
+        app.top    = newdims[1] - titleBar;
 		app.width  = newdims[2];
 		app.height = newdims[3];
 		// build the object to be sent
@@ -1445,14 +1429,14 @@ function loadConfiguration() {
 	
 	var minDim = Math.min(userConfig.totalWidth, userConfig.totalHeight);
 	
-	if(userConfig.titleBarHeight) userConfig.titleBarHeight = parseInt(userConfig.titleBarHeight, 10);
-	else                          userConfig.titleBarHeight = Math.round(0.025 * minDim);
+	if (userConfig.ui.titleBarHeight) userConfig.ui.titleBarHeight = parseInt(userConfig.ui.titleBarHeight, 10);
+	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
 	
-	if(userConfig.titleTextSize)  userConfig.titleTextSize  = parseInt(userConfig.titleTextSize, 10);
-	else                          userConfig.titleTextSize  = Math.round(0.015 * minDim);
+	if (userConfig.ui.titleTextSize) userConfig.ui.titleTextSize = parseInt(userConfig.ui.titleTextSize, 10);
+	else userConfig.ui.titleTextSize = Math.round(0.015 * minDim);
 	
-	if(userConfig.pointerSize)    userConfig.pointerSize    = parseInt(userConfig.pointerSize, 10);
-	else                          userConfig.pointerSize    = Math.round(0.050 * minDim);
+	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
+	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
 	
 	// Set default values if missing
 	if (userConfig.port === undefined) userConfig.port = 443;
@@ -1760,24 +1744,24 @@ function manageUploadedFiles(files) {
 var remoteSites = [];
 if (config.remote_sites) {
 	remoteSites = new Array(config.remote_sites.length);
-config.remote_sites.forEach(function(element, index, array) {
-	var wsURL = "wss://" + element.host + ":" + element.port.toString();
+	config.remote_sites.forEach(function(element, index, array) {
+		var wsURL = "wss://" + element.host + ":" + element.port.toString();
 
-	var remote = createRemoteConnection(wsURL, element, index);
+		var remote = createRemoteConnection(wsURL, element, index);
 
-	var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.titleBarHeight*6) - 2;
-	var rHeight = config.titleBarHeight - 4;
-	var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
-	remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
+		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - 2;
+		var rHeight = config.ui.titleBarHeight - 4;
+		var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
+		remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
 
-	// attempt to connect every 15 seconds, if connection failed
-	setInterval(function() {
-		if(!remoteSites[index].connected){
-			var remote = createRemoteConnection(wsURL, element, index);
-			remoteSites[index].wsio = remote;
-		}
-	}, 15000);
-});
+		// attempt to connect every 15 seconds, if connection failed
+		setInterval(function() {
+			if(!remoteSites[index].connected){
+				var remote = createRemoteConnection(wsURL, element, index);
+				remoteSites[index].wsio = remote;
+			}
+		}, 15000);
+	});
 }
 
 function createRemoteConnection(wsURL, element, index) {
@@ -2052,7 +2036,7 @@ function findRemoteSiteByConnection(wsio) {
 function findAppUnderPointer(pointerX, pointerY) {
 	var i;
 	for(i=applications.length-1; i>=0; i--) {
-		if(pointerX >= applications[i].left && pointerX <= (applications[i].left+applications[i].width) && pointerY >= applications[i].top && pointerY <= (applications[i].top+applications[i].height+config.titleBarHeight)){
+		if(pointerX >= applications[i].left && pointerX <= (applications[i].left+applications[i].width) && pointerY >= applications[i].top && pointerY <= (applications[i].top+applications[i].height+config.ui.titleBarHeight)){
 			return applications[i];
 		}
 	}
@@ -2260,14 +2244,14 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			if (data.button === "left") {
 				var localX = pointerX - elem.left;
-				var localY = pointerY - (elem.top+config.titleBarHeight);
+				var localY = pointerY - (elem.top+config.ui.titleBarHeight);
 				var cornerSize = Math.min(elem.width, elem.height) / 5;
 
 				// if localY in negative, inside titlebar
 				if (localY < 0) {
 					// titlebar image: 807x138  (10 pixels front paddding)
-					var buttonsWidth = config.titleBarHeight * (485.0/111.0);
-					var buttonsPad   = config.titleBarHeight * ( 10.0/111.0);
+					var buttonsWidth = config.ui.titleBarHeight * (485.0/111.0);
+					var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
 					var oneButton    = buttonsWidth / 3; // five buttons
 					var startButtons = elem.width - buttonsWidth;
 					if (localX > (startButtons+buttonsPad+2*oneButton)) {
@@ -2307,7 +2291,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			}
 		}
 		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
-			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
+			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
 				if(data.button === "right"){
 					elemCtrl = findControlByAppId(elem.id);
 					if (elemCtrl === null) {
@@ -2323,7 +2307,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			}
 			else{
 				var elemX = pointerX - elem.left;
-				var elemY = pointerY - elem.top - config.titleBarHeight;
+				var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 			
 				var ePosition = {x: elemX, y: elemY};
 				var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
@@ -2371,7 +2355,7 @@ function pointerPressRight( address, pointerX, pointerY ) {
 		}
 		else if ( remoteInteraction[address].appInteractionMode() ) {
 
-			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
+			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
 				if (elemCtrl === null) {
 					broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
@@ -2384,7 +2368,7 @@ function pointerPressRight( address, pointerX, pointerY ) {
 			}
 			else{
 				var itemRelX = pointerX - elem.left;
-				var itemRelY = pointerY - elem.top - config.titleBarHeight;
+				var itemRelY = pointerY - elem.top - config.ui.titleBarHeight;
 				broadcast( 'eventInItem', { eventType: "pointerPress", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');  	
 			}
 		}
@@ -2410,12 +2394,12 @@ function pointerReleaseRight( address, pointerX, pointerY ) {
 			broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 		}
 		else if ( remoteInteraction[address].appInteractionMode() ) {
-			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
+			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
 				broadcast('pointerReleaseRight',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
 			else{
 				var itemRelX = pointerX - elem.left;
-				var itemRelY = pointerY - elem.top - config.titleBarHeight;
+				var itemRelY = pointerY - elem.top - config.ui.titleBarHeight;
 				broadcast( 'eventInItem', { eventType: "pointerRelease", elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, itemRelativeX: itemRelX, itemRelativeY: itemRelY, data: {button: "right", user_color: sagePointers[address].color}, date: now }, 'receivesPointerData');
 			}
 		}
@@ -2475,7 +2459,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	}
 	if ( remoteInteraction[uniqueID].appInteractionMode() || (elem !== null && elem.application === 'thumbnailBrowser') ) {
 		if( elem !== null ){
-			if (pointerY >=elem.top && pointerY <= elem.top+config.titleBarHeight){
+			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
 				if(data.button === "right"){
 					// index.hmtl has no 'pointerReleaseRight' message.
 					// I renamed 'pointerPressRight' to 'requestNewControl'
@@ -2485,7 +2469,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 			else {
 				var elemX = pointerX - elem.left;
-				var elemY = pointerY - elem.top - config.titleBarHeight;
+				var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 		
 				var ePosition = {x: elemX, y: elemY};
 				var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
@@ -2539,7 +2523,7 @@ function pointerMove(uniqueID, data) {
 		else{
 			if(elem !== null){
 				var localX = pointerX - elem.left;
-				var localY = pointerY - (elem.top+config.titleBarHeight);
+				var localY = pointerY - (elem.top+config.ui.titleBarHeight);
 				var cornerSize = Math.min(elem.width, elem.height) / 5;
 				// bottom right corner - select for drag resize
 				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
@@ -2564,7 +2548,7 @@ function pointerMove(uniqueID, data) {
 	if(remoteInteraction[uniqueID].appInteractionMode() || (elem !== null && elem.application === 'thumbnailBrowser') ) {
 		if(elem !== null){
 			var elemX = pointerX - elem.left;
-			var elemY = pointerY - elem.top - config.titleBarHeight;
+			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 			
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
@@ -2636,7 +2620,7 @@ function pointerScroll( uniqueID, data ) {
 
 		if( elem !== null ){
 			var elemX = pointerX - elem.left;
-			var elemY = pointerY - elem.top - config.titleBarHeight;
+			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 			
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
@@ -2876,7 +2860,7 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 		var elem = findAppUnderPointer(pointerX, pointerY);
 		if(elem !== null){
 			var elemX = pointerX - elem.left;
-			var elemY = pointerY - elem.top - config.titleBarHeight;
+			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 			
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
@@ -2898,7 +2882,7 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 		var elem = findAppUnderPointer(pointerX, pointerY);
 		if( elem !== null ){
 			var elemX = pointerX - elem.left;
-			var elemY = pointerY - elem.top - config.titleBarHeight;
+			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 		
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
@@ -2920,7 +2904,7 @@ function keyPress( uniqueID, pointerX, pointerY, data ) {
 		var elem = findAppUnderPointer(pointerX, pointerY);
 		if( elem !== null ){
 			var elemX = pointerX - elem.left;
-			var elemY = pointerY - elem.top - config.titleBarHeight;
+			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 		
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};

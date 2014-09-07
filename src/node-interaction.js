@@ -278,21 +278,24 @@ interaction.prototype.maximizeSelectedItem = function(item, config) {
 	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
 	if(item === null) return null;
 	
-	var wallRatio = config.totalWidth / config.totalHeight;
-	var iCenterX  = config.totalWidth/2.0;
-	var iCenterY  = config.totalHeight/2.0;
+	var wallRatio = config.totalWidth  / config.totalHeight;
+	var iCenterX  = config.totalWidth  / 2.0;
+	var iCenterY  = config.totalHeight / 2.0;
 	var iWidth    = 1;
 	var iHeight   = 1;
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
+
 	if(this.SHIFT === true){
 		item.aspect = item.native_width / item.native_height;
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = config.totalWidth - (3*config.titleBarHeight);
+		iWidth  = config.totalWidth - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = config.totalHeight - (3*config.titleBarHeight);
+		iHeight = config.totalHeight - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore
@@ -306,6 +309,9 @@ interaction.prototype.maximizeSelectedItem = function(item, config) {
 	item.top    = iCenterY - (iHeight/2); //parseInt(iCenterY - (iHeight/2), 10);
 	item.width  = iWidth;                 //parseInt(iWidth, 10);
 	item.height = iHeight;                //parseInt(iHeight, 10);
+
+	// Shift by 'titleBarHeight' if no auto-hide
+	if (config.ui.auto_hide_ui===true) item.top = item.top - config.ui.titleBarHeight;
 
 	item.maximized = true;
 
@@ -323,10 +329,17 @@ interaction.prototype.maximizeFullSelectedItem = function(item, config) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = 0;
-	item.top    = config.titleBarHeight;
-	item.width  = config.totalWidth;
-	item.height = config.totalHeight-2*config.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) {
+		item.left   = 0;
+		item.top    = -config.ui.titleBarHeight;
+		item.width  = config.totalWidth;
+		item.height = config.totalHeight;
+	} else {
+		item.left   = 0;
+		item.top    = config.ui.titleBarHeight;
+		item.width  = config.totalWidth;
+		item.height = config.totalHeight-2*titleBar;
+	}
 
 	item.maximized = true;
 
@@ -341,6 +354,8 @@ interaction.prototype.maximizeFullSelectedItem = function(item, config) {
 interaction.prototype.maximizeLeftSelectedItem = function(item, config) {
 	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
 	if(item === null) return null;
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
 
 	var wallRatio = (config.totalWidth/2.0) / config.totalHeight;
 	var iCenterX  = config.totalWidth/4.0;
@@ -352,11 +367,11 @@ interaction.prototype.maximizeLeftSelectedItem = function(item, config) {
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = (config.totalWidth/2.0) - (3*config.titleBarHeight);
+		iWidth  = (config.totalWidth/2.0) - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = config.totalHeight - (3*config.titleBarHeight);
+		iHeight = config.totalHeight - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore
@@ -383,6 +398,8 @@ interaction.prototype.maximizeLeftSelectedItem = function(item, config) {
 interaction.prototype.maximizeRightSelectedItem = function(item, config) {
 	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
 	if(item === null) return null;
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
 
 	var wallRatio = (config.totalWidth/2.0) / config.totalHeight;
 	var iCenterX  = 3*config.totalWidth/4.0;
@@ -394,11 +411,11 @@ interaction.prototype.maximizeRightSelectedItem = function(item, config) {
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = (config.totalWidth/2.0) - (3*config.titleBarHeight);
+		iWidth  = (config.totalWidth/2.0) - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = config.totalHeight - (3*config.titleBarHeight);
+		iHeight = config.totalHeight - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore
@@ -425,6 +442,8 @@ interaction.prototype.maximizeRightSelectedItem = function(item, config) {
 interaction.prototype.maximizeTopSelectedItem = function(item, config) {
 	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
 	if(item === null) return null;
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
 
 	var wallRatio = config.totalWidth / (config.totalHeight/2);
 	var iCenterX  = config.totalWidth/2.0;
@@ -436,11 +455,11 @@ interaction.prototype.maximizeTopSelectedItem = function(item, config) {
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = config.totalWidth - (3*config.titleBarHeight);
+		iWidth  = config.totalWidth - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = (config.totalHeight/2.0) - (3*config.titleBarHeight);
+		iHeight = (config.totalHeight/2.0) - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore
@@ -467,6 +486,8 @@ interaction.prototype.maximizeTopSelectedItem = function(item, config) {
 interaction.prototype.maximizeBottomSelectedItem = function(item, config) {
 	if(this.interactionMode != MODE.WINDOW_MANAGEMENT) return null;
 	if(item === null) return null;
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
 
 	var wallRatio = config.totalWidth / (config.totalHeight/2.0);
 	var iCenterX  = config.totalWidth/2.0;
@@ -478,11 +499,11 @@ interaction.prototype.maximizeBottomSelectedItem = function(item, config) {
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = config.totalWidth - (3*config.titleBarHeight);
+		iWidth  = config.totalWidth - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = (config.totalHeight/2) - (3*config.titleBarHeight);
+		iHeight = (config.totalHeight/2) - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore
