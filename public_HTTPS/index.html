@@ -245,6 +245,7 @@
 			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
 			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
 			windowTitle.style.zIndex = itemCount.toString();
+			if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 			ui.main.appendChild(windowTitle);
 
 			var windowIcons = document.createElement("img");
@@ -269,6 +270,7 @@
 			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
 			windowItem.style.overflow = "hidden";
 			windowItem.style.zIndex   = (itemCount+1).toString();
+			if (ui.noDropShadow===true) windowItem.style.boxShadow = "none";
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
@@ -631,6 +633,7 @@
 				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
 				ctrDiv.style.zIndex = "9999".toString();
+				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 				var handle = createControls(data.id,controlItems[data.id].spec);
 				ctrDiv.appendChild (handle);	
 				ui.main.appendChild(ctrDiv);

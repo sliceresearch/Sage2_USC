@@ -32,6 +32,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerHeight  = null;
 	this.pointerOffsetX = null; 
 	this.pointerOffsetY = null;
+	this.noDropShadow   = null;
 
 	// Aspect ratio of the wall and the browser	
 	this.wallRatio      = null;
@@ -227,6 +228,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		}
+		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
+		else this.noDropShadow = false;
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
