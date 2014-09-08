@@ -65,5 +65,5 @@
     "hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/src/*.js",
     "doc": "yuidoc -c doc/yuidoc.json"
   },
-  "license": "BSD-3-Clause"
+  "license": "SAGE2-Software-License"
 }
