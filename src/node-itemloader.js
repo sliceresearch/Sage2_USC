@@ -149,6 +149,15 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 
 appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw, vh, callback) {
 	var aspectRatio = vw / vh;
+
+	var metadata         = {};
+	metadata.title       = "Video Player";
+	metadata.version     = "1.0.0";
+	metadata.description = "Video player for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["video", "movie", "player"];
+
 	var appInstance = {
 		id: null,
 		title: name,
@@ -175,6 +184,7 @@ appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
+		metadata: metadata,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -205,6 +215,14 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
 
+	var metadata         = {};
+	metadata.title       = "Image Viewer";
+	metadata.version     = "1.0.0";
+	metadata.description = "Image viewer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["image", "picture", "viewer"];
+
 	var appInstance = {
 		id: null,
 		title: name,
@@ -230,6 +248,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
+		metadata: metadata,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -303,6 +322,13 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 
 	if (dims && mime) {
 		if (mime === "video/mp4" || mime === "video/webm" || mime === "video/x-m4v" ) {
+			var metadata         = {};
+			metadata.title       = "Video Player";
+			metadata.version     = "1.0.0";
+			metadata.description = "Video player for SAGE2";
+			metadata.author      = "SAGE2";
+			metadata.license     = "SAGE2-Software-License";
+			metadata.keywords    = ["video", "movie", "player"];
 			var appInstance = {
 				id: null,
 				title: name,
@@ -329,6 +355,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 				maximized:       false,
 				aspect:          dims.width / dims.height,
 				animation:       false,
+				metadata:        metadata,
 				date:            new Date()
 			};
 			this.scaleAppToFitDisplay(appInstance);
@@ -345,7 +372,15 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	var page_height = 792;
 
 	var aspectRatio = page_width/page_height;
-	
+
+	var metadata         = {};
+	metadata.title       = "PDF Viewer";
+	metadata.version     = "1.0.0";
+	metadata.description = "PDF viewer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["pdf", "document", "viewer"];
+
 	var appInstance = {
 		id: null,
 		title: name,
@@ -371,6 +406,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		maximized: false,
 		aspect:    aspectRatio,
 		animation: false,
+		metadata: metadata,
 		date:      new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -389,16 +425,36 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 		var aspectRatio = instructions.width / instructions.height;
 		// if icon provided, build the url to it
-		var icon = instructions.icon ? url+"/"+instructions.icon : null;
+		var icon  = instructions.icon ? url+"/"+instructions.icon : null;
+
+		var metadata = {};
+		if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+			metadata.title = instructions.title;
+		else metadata.title = name;
+		if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
+			metadata.version = instructions.version;
+		else metadata.version = "1.0.0";
+		if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
+			metadata.description = instructions.description;
+		else metadata.description = "-";
+		if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
+			metadata.author = instructions.author;
+		else metadata.author = "SAGE2";
+		if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
+			metadata.license = instructions.license;
+		else metadata.license = "-";
+		if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
+			metadata.keywords = instructions.keywords;
+		else metadata.keywords = [];
 
 		var appInstance = {
 			id: null,
-			title: name,
+			title: metadata.title,
 			application: appName,
 			type: mime_type,
 			url: external_url,
 			data: instructions.load,
-			resrc: instructions.resources,
+			resrc: instructions.dependencies,
 			icon: icon,
 			left: _this.titleBarHeight,
 			top: 1.5*_this.titleBarHeight,
@@ -413,6 +469,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			maximized: false,
 			aspect: aspectRatio,
 			animation: instructions.animation,
+			metadata: metadata,
 			date: new Date()
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
@@ -437,14 +494,35 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			// if icon provided, build the url to it
 			var icon = instructions.icon ? url+instructions.icon : null;
 
+			var metadata = {};
+			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+				metadata.title = instructions.title;
+			else metadata.title = name;
+			if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
+				metadata.version = instructions.version;
+			else metadata.version = "1.0.0";
+			if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
+				metadata.description = instructions.description;
+			else metadata.description = "-";
+			if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
+				metadata.author = instructions.author;
+			else metadata.author = "SAGE2";
+			if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
+				metadata.license = instructions.license;
+			else metadata.license = "-";
+			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
+				metadata.keywords = instructions.keywords;
+			else metadata.keywords = [];
+
+
 			var appInstance = {
 				id: null,
-				title: name,
+				title: metadata.title,
 				application: appName,
 				type: mime_type,
 				url: external_url,
 				data: instructions.load,
-				resrc: instructions.resources,
+				resrc: instructions.dependencies,
 				icon: icon,
 				left: _this.titleBarHeight,
 				top: 1.5*_this.titleBarHeight,
@@ -459,6 +537,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				maximized: false,
 				aspect: aspectRatio,
 				animation: instructions.animation,
+				metadata: metadata,
 				date: new Date()
 			};
 			_this.scaleAppToFitDisplay(appInstance);
@@ -486,6 +565,14 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 appLoader.prototype.createMediaStream = function(source, type, encoding, name, width, height, callback) {
 	var aspectRatio = width/height;
 	
+	var metadata         = {};
+	metadata.title       = "Stream Player";
+	metadata.version     = "1.0.0";
+	metadata.description = "Stream player for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["stream", "network", "player"];
+
 	var appInstance = {
 		id: null,
 		title: name,
@@ -511,6 +598,7 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, w
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
+		metadata: metadata,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -682,6 +770,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			maximized: false,
 			aspect: appData.application.aspect,
 			animation: appData.application.animation,
+			metadata: appData.application.metadata,
 			date: new Date()
 		};
 		this.scaleAppToFitDisplay(appInstance);

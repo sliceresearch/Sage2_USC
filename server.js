@@ -963,11 +963,13 @@ function listApplications() {
 	var i;
 	console.log("Applications\n------------");
 	for(i=0; i<applications.length; i++){
-		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s",
-			i, applications[i].id, applications[i].application,
+		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s",
+			i, applications[i].id, applications[i].application.red,
 			 applications[i].width,  applications[i].height,
 			 applications[i].left,  applications[i].top,
-			 applications[i].title));
+			 applications[i].title.green,
+			 applications[i].metadata.version, applications[i].metadata.author.grey
+		));
 	}
 }
 
@@ -1361,6 +1363,7 @@ function wsCreateAppClone(wsio, data){
 			date: new Date(),
 			title: app.title,
 			url: app.url,
+			metadata: app.metadata,
 			application: app.application
 		};
 
@@ -1480,7 +1483,7 @@ function getSavedFilesList() {
 	// From the list of apps in the upload folder, build a list of objects
 	//   containing the name of the app and the icon (mimicing an exif structure)
 	for (i=0; i<uploadedApps.length; i++) {
-		var applicationDir    = path.join(uploadsFolder, "apps", uploadedApps[i]);	
+		var applicationDir = path.join(uploadsFolder, "apps", uploadedApps[i]);
 		if (fs.lstatSync(applicationDir).isDirectory()) {
 			var instuctionsFile   = path.join(applicationDir, "instructions.json");		
 			var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
@@ -1488,7 +1491,28 @@ function getSavedFilesList() {
 			var thumbnailHostPath = null;
 			if (instructions.icon)
 				thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
-			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath } } );
+
+			var metadata = {};
+			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+				metadata.title = instructions.title;
+			else metadata.title = uploadedApps[i];
+			if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
+				metadata.version = instructions.version;
+			else metadata.version = "1.0.0";
+			if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
+				metadata.description = instructions.description;
+			else metadata.description = "-";
+			if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
+				metadata.author = instructions.author;
+			else metadata.author = "SAGE2";
+			if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
+				metadata.license = instructions.license;
+			else metadata.license = "-";
+			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
+				metadata.keywords = instructions.keywords;
+			else metadata.keywords = [];
+
+			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath }, metadata: metadata } );
 		}
 	}
 
