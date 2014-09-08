@@ -16,7 +16,9 @@
 		show_url: false,
 		show_version: false,
 		clock: 12,
-		show_url: true,
+                auto_hide_ui: true,
+                auto_hide_delay: 20,
+		noDropShadow: true,
 		// User specified values (in pixel)
 		titleBarHeight: 60,
 		titleTextSize:  38,
