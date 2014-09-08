@@ -25,6 +25,8 @@
 <script type="text/javascript" src="src/sagePointer.js"></script>
 <script type="text/javascript" src="src/windowManager.js"></script>
 <script type="text/javascript" src="lib/hammer.min.js"></script>
+<script type="text/javascript" src="lib/jquery.1.10.2.js"></script>
+<script type="text/javascript" src="lib/jquery-ui.1.11.1.min.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -75,9 +77,11 @@
 
 	// global variables to manage presentation
 	var currentFrame = 1;
-	var numFrames = 25;
+	var numFrames = 20;
+	var fps = 5;
 	var applications = [];
-	var GoTimeStepForwardBtn, GoTimeStepBackwardBtn, GoTimeBeginningBtn, GoTimeEndBtn, GoTimePlayBtn, GoTimePauseBtn, GoTimeFrameCtr, GoTimeNumFrames;
+	var GoTimeStepForwardBtn, GoTimeStepBackwardBtn, GoTimeBeginningBtn, GoTimeEndBtn, GoTimePlayBtn, GoTimePauseBtn, GoTimeFPS, GoTimeNumFrames;
+	var GoTimePlayer;
 
 	// Explicitely close web socket when web broswer is closed
 	window.onbeforeunload = function() {
@@ -162,7 +166,7 @@
 		GoTimeEndBtn = document.getElementById('GoTimeEndBtn');
 		GoTimePlayBtn = document.getElementById('GoTimePlayBtn');
 		GoTimePauseBtn = document.getElementById('GoTimePauseBtn');
-		GoTimeFrameCtr = document.getElementById('GoTimeFrameCtr');
+		GoTimeFPS = document.getElementById('GoTimeFPS');
 		GoTimeNumFrames = document.getElementById('GoTimeNumFrames');
 
 		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
@@ -181,11 +185,10 @@
 		GoTimeEndBtn.addEventListener('click',			GoTimeEnd, false);
 		GoTimePlayBtn.addEventListener('click',			GoTimePlay, false);
 		GoTimePauseBtn.addEventListener('click',		GoTimePause, false);
-		GoTimeFrameCtr.addEventListener('blur',			GoTimeChangeFrame, false);
+		GoTimeFPS.addEventListener('blur',				GoTimeChangeFPS, false);
 		GoTimeNumFrames.addEventListener('blur',		GoTimeChangeNumFrames, false);
-		GoTimeFrameCtr.value = currentFrame;
+		GoTimeFPS.value = fps;
 		GoTimeNumFrames.value = numFrames;
-
 
 		fileDeleteBtn.disabled = true;
 
@@ -204,7 +207,40 @@
 		pdfsDir     = document.getElementById('pdfs');
 		videosDir   = document.getElementById('videos');
 		sessionsDir = document.getElementById('sessions');
-				
+
+		$("#timelineSlider").slider({
+			range: false,
+			min: 1,
+			max: numFrames,
+			value: 1,
+			create: function( event, ui ) {
+				setSliderTicks(event.target);
+			},
+			slide: function(e,ui){
+				var ff = {currentFrame: ui.value, numFrames: numFrames};
+				setTimeout( function(){
+					// console.log(ff);
+					$("#timelineSliderLabel").html(ui.value).position({
+						my: 'center top',
+						at: 'center bottom',
+						of: ui.handle,
+						offset: "-10, 0"
+					});
+					// updateFrame(ff);
+					wsio.emit('changeFrame', ff);
+				},5);
+			}
+		});
+		$("#timelineSlider").addClass("timelineSlider");
+		setTimeout(function (){
+			$('#timelineSliderLabel').position({
+				my: 'center top',
+				at: 'center bottom',
+				of: $('#timelineSlider span'),
+				offset: "0, 0"
+			});
+		},500);
+
 		wsio.on('setupDisplayConfiguration', function(config) {
 			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
 			
@@ -265,10 +301,13 @@
 			updateFrame(frame);
 		});
 
+		wsio.on('finishedResize', function(data) {
+			// console.log(data);
+		});
 
 		wsio.on('deleteElement', function(elem_data) {
 			winMgr.deleteElement(elem_data.elemId);
-			removeAppTimeline(elem_data.elemId);
+			// removeAppTimeline(elem_data.elemId);
 		});
 		
 		wsio.on('updateItemOrder', function(order) {
@@ -602,22 +641,48 @@
 	    	var d = document.createElement("div");
 	    	d.className = "app";
 
-	    	var t = document.createTextNode(data.title + " (" + data.type + ")");
+	    	var t = document.createTextNode(data.title);
+	    	var img = new Image();
+	    	var applicationName = data.application;
+			if(applicationName === "image_viewer") 			img.src = winMgr.imageImg.src;
+			else if(applicationName === "movie_player") 	img.src = winMgr.videoImg.src;
+			else if(applicationName === "pdf_viewer") 		img.src = winMgr.pdfImg.src;
+			else if(applicationName === "media_stream") 	img.src = winMgr.screenImg.src;
+			else
+				img.src = winMgr.canvasImg.src;
+			img.width = "32";
+			img.height = "32";
 
-	    	var lStart = document.createElement("label");
-	    	lStart.setAttribute("for","start_"+data.id);
-	    	lStart.innerHTML = "Start Frame";
+	    	// JqueryUI slider
+	    	var slider = document.createElement("div");
+	    	slider.id = "jSlider_"+data.id;
+	    	slider.className = "sliders";
 
-	    	var iStart = document.createElement("input");
-	    	iStart.setAttribute("type", "text");
+	    	// Add to DOM
+			d.appendChild(t);
+			d.appendChild(img);
+			d.appendChild(slider);
+			li.appendChild(d);
+			ul.appendChild(li);
+
+	    	$("#jSlider_"+data.id).slider({
+				range: true,
+				min: 1,
+				max: numFrames
+			});
+			var sStart, sStop;
+
+	    	var iStart = document.createElement("div");
 	    	iStart.id = "start_"+data.id;
-	    	iStart.className = "input";
+	    	iStart.className = "sliderLabels";
 	    	if((data.presentation != null) && (data.presentation[0].frame != null)){
 	    		// console.log("finding min");
 				var pi = findMinIndex(data.presentation);
-	    		iStart.value = data.presentation[pi].frame;
+	    		iStart.innerHTML = data.presentation[pi].frame;
+	    		sStart = data.presentation[pi].frame;
 	    	}else{
-	    		iStart.value = currentFrame;
+	    		iStart.innerHTML = currentFrame;
+	    		sStart = currentFrame;
 	    		data.presentation = [];
 	    		data.presentation[0] = {
 	    			"frame": currentFrame, 
@@ -627,44 +692,107 @@
 	    			"height": data.height
 	    		}
 	    	}
-	    	iStart.onblur = function(d){
-	    		var a = d.srcElement.id.slice(6);
+
+			d.appendChild(iStart);
+
+	    	setTimeout(function (){
+				$("#start_"+data.id).position({
+					my: 'center top',
+					at: 'center bottom',
+					of: $("#jSlider_"+data.id + " span").get(0),
+					collision: 'none',
+					offset: "0, 0"
+				});
+			},500);
+
+			$("#jSlider_"+data.id).on("slidestart", function( event, ui ) {
+				var appID = event.target.id.slice(8);
+				var kid;
+				for(var i=0; i<applications.length; i++){
+					if(applications[i].id == appID){
+						for(var k=0; k<ui.values.length; k++){
+							if(ui.values[k] == ui.value){
+								kid = k;
+								applications[i].presentation[k].left 	= applications[i].left;
+								applications[i].presentation[k].top	 	= applications[i].top;
+								applications[i].presentation[k].width 	= applications[i].width;
+								applications[i].presentation[k].height 	= applications[i].height;
+								wsio.emit('updateKeyframe', {id: appID, pi: kid, frame: applications[i].presentation[k].frame, 
+									left: 	applications[i].presentation[k].left,
+									top: 	applications[i].presentation[k].top,
+									width: 	applications[i].presentation[k].width,
+									height: applications[i].presentation[k].height});
+							}
+						}
+					}
+				}
+			} );
+
+			$("#jSlider_"+data.id).on("slide", function( event, ui ) {
+	    		var appID = data.id;
 	    		var i;
 				for(i=0; i<applications.length; i++){
-					if(applications[i].id == a){
-						var valStart = parseInt(d.srcElement.value);
-						var stopEl = document.getElementById("stop_"+a);
-						var valStop  = parseInt(stopEl.value);
-						if(valStart > valStop) {
-							valStart = valStop;
-							d.srcElement.value = valStart;
-						}
+					if(applications[i].id == appID){
+						var valStart = ui.values[0];
+						var valStop  = ui.values[1];
 
-						var pi = findMinIndex(applications[i].presentation);
-						applications[i].presentation[pi].frame = valStart;
+						setTimeout( function(){
+					    	var uiHandle = "#jSlider_"+data.id + " span";
+					    	handleA = $(uiHandle).get(0);
+					    	handleB = ui.handle;
+					    	if($.data(handleA) == $.data(handleB)) {
+								$("#start_"+data.id).html(ui.value).position({
+									my: 'center top',
+									at: 'center bottom',
+									of: ui.handle,
+									offset: "0, 0"
+								});
+								var pi = findMinIndex(applications[i].presentation);
+								applications[i].presentation[pi].frame = valStart;
+					    		iStart.value = valStart;
+								wsio.emit('updateKeyframe', {id: appID, pi: pi, frame: valStart, 
+									left: data.presentation.left,
+									top: data.presentation.top,
+									width: data.presentation.width,
+									height: data.presentation.height});
+					    	}else{
+								$("#stop_"+data.id).html(ui.value).position({
+									my: 'center top',
+									at: 'center bottom',
+									of: ui.handle,
+									offset: "0, 0"
+								});
+
+								var piE = findMaxIndex(applications[i].presentation);
+								applications[i].presentation[piE].frame = valStop;
+					    		iStop.value = valStop;
+								wsio.emit('updateKeyframe', {id: appID, pi: piE, frame: valStop, 
+									left: data.presentation.left,
+									top: data.presentation.top,
+									width: data.presentation.width,
+									height: data.presentation.height});
+					    	}
+					    	// console.log(uiHandle);
+						},5);
 
 						// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStart);
-						wsio.emit('updateKeyframe', {id: a, pi: pi, frame: valStart});
 						break;
 					}
 				}
-	    	};
+			});
 
-	    	var lStop = document.createElement("label");
-	    	lStop.setAttribute("for","stop_"+data.id);
-	    	lStop.innerHTML = "Stop Frame";
-
-	    	var iStop = document.createElement("input");
-	    	iStop.setAttribute("type", "text");
+	    	var iStop = document.createElement("div");
 	    	iStop.id = "stop_"+data.id;
-	    	iStop.className = "input";
+	    	iStop.className = "sliderLabels";
 	    	if(data.presentation.length > 1){
 				var maxIndex = findMaxIndex(data.presentation);
-	    		iStop.value = data.presentation[maxIndex].frame;
+	    		iStop.innerHTML = data.presentation[maxIndex].frame;
+	    		sStop = data.presentation[maxIndex].frame;
 	    	}else{
-	    		iStop.value = numFrames;
+	    		iStop.innerHTML = currentFrame + 1;
+	    		sStop = currentFrame + 1;
 	    		data.presentation[1] = {
-	    			"frame": numFrames, 
+	    			"frame": currentFrame + 1, 
 	    			"left": data.left, 
 	    			"top": data.top, 
 	    			"width": data.width, 
@@ -672,38 +800,33 @@
 	    		}
 
 	    	}
-	    	iStop.onblur = function(d){
-	    		var a = d.srcElement.id.slice(5);
-	    		var i;
-				for(i=0; i<applications.length; i++){
-					if(applications[i].id == a){
-						var pi = findMaxIndex(applications[i].presentation);
 
-						var valStop = parseInt(d.srcElement.value);
-						var startEl = document.getElementById("start_"+a);
-						var valStart  = parseInt(startEl.value);
-						if(valStop < valStart) {
-							valStop = valStart;
-							d.srcElement.value = valStop;
-						}
+	    	setTimeout(function (){
+				$("#stop_"+data.id).position({
+					my: 'top',
+					at: 'bottom',
+					of: $("#jSlider_"+data.id + " span").get(1),
+					collision: 'none',
+					offset: "0, 0"
+				});
+			},500);
 
-						applications[i].presentation[pi].frame = valStop;
+			$("#jSlider_"+data.id).slider("option", "values", [sStart, sStop]);
 
-						// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStop);
-						wsio.emit('updateKeyframe', {id: a, pi: pi, frame: valStop});
-						break;
-					}
-				}
-	    	};
-
-			d.appendChild(t);
-			d.appendChild(lStart);
-			d.appendChild(iStart);
-			d.appendChild(lStop);
 			d.appendChild(iStop);
-			li.appendChild(d);
-			ul.appendChild(li);
 
+			wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: sStart, 
+				left: data.presentation.left,
+				top: data.presentation.top,
+				width: data.presentation.width,
+				height: data.presentation.height});
+			wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: sStop, 
+				left: data.presentation.left,
+				top: data.presentation.top,
+				width: data.presentation.width,
+				height: data.presentation.height});
+
+			// console.log("presentation", data.presentation);
 	    	applications.push(data);
 	    	// console.log("applications",applications[applications.length-1]);
 		}else{
@@ -732,59 +855,89 @@
     }
 
 	function updateFrame(ff) {
+		// console.log(ff);
 		currentFrame = ff.currentFrame;
-		GoTimeFrameCtr.value = currentFrame;
 		numFrames = ff.numFrames;
+		$("#timelineSlider").slider("value", currentFrame);
+		$("#timelineSlider").slider("option", "max", numFrames);
+		$("#timelineSliderLabel").text(currentFrame);
 	};
 
 	function GoTimeStepForward(){
 		if (currentFrame < numFrames){
 			currentFrame++;
-			GoTimeFrameCtr.value = currentFrame;
-			wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
+			$("#timelineSlider").slider("value", currentFrame);
+			$("#timelineSliderLabel").html(currentFrame).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: $('#timelineSlider span'),
+				offset: "-10, 0"
+			});
+
+			console.log("frame",currentFrame);
+			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
+		}else{
+			clearInterval(GoTimePlayer);
 		}
 	}
 	function GoTimeStepBackward(){
 		if (currentFrame > 1){
 			currentFrame--;
-			GoTimeFrameCtr.value = currentFrame;
-			wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
+			$("#timelineSlider").slider("value", currentFrame);
+			$("#timelineSliderLabel").html(currentFrame).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: $('#timelineSlider span'),
+				offset: "-10, 0"
+			});
+			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
 	function GoTimeBeginning(){
 		if (currentFrame > 1){
 			currentFrame = 1;
-			GoTimeFrameCtr.value = currentFrame;
-			wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
+			$("#timelineSlider").slider("value", currentFrame);
+			$("#timelineSliderLabel").html(currentFrame).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: $('#timelineSlider span'),
+				offset: "-10, 0"
+			});
+			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
 	function GoTimeEnd(){
 		if (currentFrame < numFrames){
 			currentFrame = numFrames;
-			GoTimeFrameCtr.value = currentFrame;
-			wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
+			$("#timelineSlider").slider("value", currentFrame);
+			$("#timelineSliderLabel").html(currentFrame).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: $('#timelineSlider span'),
+				offset: "-10, 0"
+			});
+			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
 	function GoTimePlay(){
-		wsio.emit('GoTimePlay', {frame: currentFrame, numFrames: numFrames});
+		if(currentFrame == numFrames)
+			currentFrame = 0;
+		GoTimeStepForward();
+		GoTimePlayer = setInterval(function(){
+			if(currentFrame <= numFrames){
+				GoTimeStepForward();
+			}
+		}, 1000/fps);
 	}
 	function GoTimePause(){
-		wsio.emit('GoTimePause', {frame: currentFrame, numFrames: numFrames});
+		clearInterval(GoTimePlayer);
 	}
-	function GoTimeChangeFrame(){
-		ctr = GoTimeFrameCtr.value;
-		if (ctr < 1){
-			currentFrame = 1;
-		} else if (ctr > numFrames){
-			currentFrame = numFrames;
-		} else {
-			currentFrame = ctr;
-		}
-		wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
+	function GoTimeChangeFPS(){
+		fps = parseInt(GoTimeFPS.value);
+		console.log(fps);
 	}
 	function GoTimeChangeNumFrames(){
 		nf = GoTimeNumFrames.value;
-		ctr = GoTimeFrameCtr.value;
 		if (nf < 1){
 			numFrames = 1;
 			currentFrame = numFrames;
@@ -794,8 +947,33 @@
 		} else {
 			numFrames = nf;
 		}
-		// console.log("numFrames", numFrames);
-		wsio.emit('changeFrame', {frame: currentFrame, numFrames: numFrames});
+
+		slide = $('#timelineSlider');
+		setSliderTicks(slide);
+
+		for(var i=0; i<applications.length; i++){
+			$("#jSlider_"+applications[i].id).slider("option","max",numFrames);
+
+			var uiHandle = "#jSlider_"+applications[i].id + " span";
+			handleA = $(uiHandle).get(0);
+			$("#start_"+applications[i].id).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: handleA,
+				offset: "0, 0"
+			});
+			handleB = $(uiHandle).get(1);
+			$("#stop_"+applications[i].id).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: handleB,
+				offset: "0, 0"
+			});
+
+		}
+
+
+		wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 	}
 
 
@@ -831,8 +1009,29 @@
     	return maxID;
     }
 
+	function setSliderTicks(el) {
+		console.log("creating ticks");
+		var slide =  $(el);
+		var max =  slide.slider("option", "max");    
+		var min =  slide.slider("option", "min");    
+		var spacing =  100 / (max - min);
+
+		slide.find('.ui-slider-tick-mark').remove();
+		for (var i = 0; i < max-min ; i++) {
+			if((i+1)%5 == 0)
+				$('<span class="ui-slider-tick-mark">'+(i+1)+'</span>').css('left', (spacing * i) +  '%').appendTo(slide);
+			else
+				$('<span class="ui-slider-tick-mark"></span>').css('left', (spacing * i) +  '%').appendTo(slide);
+		}
+		// TODO: fix bug that delays tick redraw
+		// $(el).hide().show(1000);
+	}
+
+
 </script>
 
+<link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css"		media="screen" />
+<link rel="stylesheet" type="text/css" href="css/theme.css"				media="screen" />
 <link rel="stylesheet" type="text/css" href="css/style_mgr.css"			media="screen" />
 <link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css"	media="screen" />
 <link rel="stylesheet" type="text/css" href="css/GoTime.css"			media="screen" />
@@ -885,14 +1084,14 @@
 				<label class="sageLabel">Seek:</label><button id="GoTimeStepBackwardBtn" type="button">Backward</button> <button id="GoTimeStepForwardBtn" type="button">Forward</button>
 				<label class="sageLabel">Go to:</label><button id="GoTimeBeginningBtn" type="button">Beginning</button> <button id="GoTimeEndBtn" type="button">End</button>
 				<label class="sageLabel">Controls:</label><button id="GoTimePlayBtn" type="button">Play</button> <button id="GoTimePauseBtn" type="button">Pause</button>
-				<label class="sageLabel">Frame:</label><input id="GoTimeFrameCtr" type="text" size=5></text>
+				<label class="sageLabel">FPS:</label><input id="GoTimeFPS" type="text" size=5></text>
 				<label class="sageLabel">Num Frames:</label><input id="GoTimeNumFrames" type="text" size=5></text>
 			</div>
 
 		</div>
 
 		<!-- Timeline -->
-		<div class="timeline"><ul id="appList"></ul></div>
+		<div class="timeline"><ul id="appList"><li id="timelineSliderLI"><div id="timelineSliderDiv">Current frame: <div id="timelineSlider"></div><div id="timelineSliderLabel"></div></div></li></ul></div>
 		
 		<div id="textWidthTest"></div>
 		<canvas id="mediaCanvas" style="display: none;"></canvas>
