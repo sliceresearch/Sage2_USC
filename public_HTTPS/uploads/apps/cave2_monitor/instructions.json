@@ -4,7 +4,13 @@
 	"width": 1260,
 	"height": 630,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/d3.v3.min.js"
-	]
+	],
+	"title": "CAVE2 Monitor",
+	"version": "1.0.0",
+	"description": "System activity monitor for CAVE2",
+	"keywords": [ "d3", "cave2", "performance", "monitoring" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
 }

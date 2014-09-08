@@ -5,6 +5,12 @@
 	"animation": true,
 	"load": {
 	},
-	"resources": [
-	]
+	"dependencies": [
+	],
+	"title": "Tank Game",
+	"version": "1.0.0",
+	"description": "Shoot'em up 2D tank game",
+	"keywords": [ "canvas", "game", "2d" ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
 }

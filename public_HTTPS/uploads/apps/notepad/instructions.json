@@ -5,6 +5,12 @@
 	"height": 720,
 	"animation": "timer",
 	"interval": 250,
-	"resources": [
-	]
+	"dependencies": [
+	],
+	"title": "Notepad",
+	"version": "1.0.0",
+	"description": "A multi-user notepad application",
+	"keywords": [ "notepad", "collaborative", "text" ],
+	"author": "Krishna Bharadwaj <krishnaknbharadwaj@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

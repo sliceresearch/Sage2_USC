@@ -4,7 +4,13 @@
 	"width": 800,
 	"height": 734,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/d3.v3.min.js"
-	]
+	],
+	"title": "Radar Maps",
+	"version": "1.0.0",
+	"description": "Radar maps of various locations",
+	"keywords": [ "maps", "d3", "geo", "weather" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
 }

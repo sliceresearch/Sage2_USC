@@ -4,8 +4,14 @@
 	"width": 900,
 	"height": 600,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/d3.v3.min.js",
 		"scripts/suncalc.js"
-	]
+	],
+	"title": "US Weather",
+	"version": "1.0.0",
+	"description": "US Weather map using D3.js",
+	"keywords": [ "maps", "weather", "geo", "d3" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
 }
