@@ -133,7 +133,7 @@ var appAnimations = {};
 
 // global variables to manage presentation
 var currentFrame = 1;
-var numFrames = 25;
+var numFrames = 20;
 var inactiveApplications = [];
 
 
@@ -1418,29 +1418,37 @@ function wsRequestCurrentFrame(wsio, data){
 			currentFrame: currentFrame,
 			numFrames: numFrames
 		};
+		// console.log("wsRequestCurrentFrame",ff);
 		broadcast('updateFrame', ff,'receivesGoTime');
 	}
 }
 
 function wsChangeFrame(wsio, data){
+	// Change either the current frame or the total number of frames
+	// data = {currentFrame: currentFrame, numFrames: numFrames}
 	if ((data.frame !== null) || (data.numFrames !== null)){
-		currentFrame = data.frame;
+		currentFrame = data.currentFrame;
 		numFrames = data.numFrames;
 		var ff = {
 			currentFrame: currentFrame,
 			numFrames: numFrames
 		};
+		// console.log("wsChangeFrame",ff);
 		broadcast('updateFrame', ff,'receivesGoTime');
 
 		// Check to see if currently running appliations should be removed
 		for(var i=0; i<applications.length; i++){
-			var a = applications[i];
-			// console.log("checking active app '" + a.title + "' for current frame status");
-			if(typeof a.presentation !== 'undefined'){
+			var app = applications[i];
+			// console.log("checking active app '" + app.title + "' for current frame status");
+			if(typeof app.presentation !== 'undefined'){
 				var appActive = false;
-				for(var f=0; f<a.presentation.length-1; f++){
+				var prevFrame;
+				var nextFrame;
+				for(var f=0; f<app.presentation.length-1; f++){
 					// Check if current frame is within start and end frames
-					if((a.presentation[f].frame <= currentFrame) && (a.presentation[f+1].frame >= currentFrame)){
+					prevFrame = app.presentation[f];
+					nextFrame = app.presentation[f+1];
+					if((prevFrame.frame <= currentFrame) && (nextFrame.frame >= currentFrame)){
 						appActive = true;
 						break;
 					}
@@ -1448,49 +1456,63 @@ function wsChangeFrame(wsio, data){
 				if(appActive){
 					// App is active
 					// console.log("app " + a.title + " remains active");
+					// Interpolate size and position
+					var frameDiff = (currentFrame - prevFrame.frame) / (nextFrame.frame - prevFrame.frame);
+					app.left 	= parseInt(prevFrame.left + (nextFrame.left - prevFrame.left) * frameDiff);
+					app.top 	= parseInt(prevFrame.top + (nextFrame.top - prevFrame.top) * frameDiff);
+					app.width 	= parseInt(prevFrame.width + (nextFrame.width - prevFrame.width) * frameDiff);
+					app.height 	= parseInt(prevFrame.height + (nextFrame.height - prevFrame.height) * frameDiff);
+
+					var updateItem = {elemId: app.id,
+										elemLeft: app.left, elemTop: app.top,
+										elemWidth: app.width, elemHeight: app.height,
+										force: true, date: new Date()};
+					broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+
 				}else{
 					// App is no longer active and should be removed
 					// console.log("app " + a.title + " is NO longer active");
 
-					var elem = findAppById(a.id);
+					var elem = findAppById(app.id);
 					if(elem !== null) deleteApplication( elem );
 
-					inactiveApplications.push(a);
-					broadcast('createAppTimeline', a, 'receivesGoTime');
+					inactiveApplications.push(app);
+					broadcast('createAppTimeline', app, 'receivesGoTime');
 				}
 			}else{
-				// console.log("app " + a.title + " remains constantly active");
+				// console.log("app " + app.title + " remains constantly active");
 			}
 		}
 
 		// Check to see if inactive appliations should be added
 		for(var i=0; i<inactiveApplications.length; i++){
-			var a = inactiveApplications[i];
-			// console.log("checking inactive app '" + a.title + "'' for current frame status");
-			if(typeof a.presentation !== 'undefined'){
+			var app = inactiveApplications[i];
+			// console.log("checking inactive app '" + app.title + "'' for current frame status");
+			if(typeof app.presentation !== 'undefined'){
 				var appActive = false;
-				for(var f=0; f<a.presentation.length-1; f++){
+				for(var f=0; f<app.presentation.length; f++){
 					// Check if current frame is within start and end frames
-					if((a.presentation[f].frame <= currentFrame) && (a.presentation[f+1].frame >= currentFrame)){
-						appActive = true;
-						a.left = a.presentation[f].left;
-						a.top = a.presentation[f].top;
-						a.width = a.presentation[f].width;
-						a.height = a.presentation[f].height;
+					if(app.presentation[f].frame == currentFrame){
+						appActive 	= true;
+						app.left 	= app.presentation[f].left;
+						app.top 	= app.presentation[f].top;
+						app.width 	= app.presentation[f].width;
+						app.height 	= app.presentation[f].height;
+						// console.log("presentation index",f);
 						break;
 					}
 				}
 				if(appActive){
 					// App should activate now
-					// console.log("app " + a.title + " is NOW active");
-					broadcast('createAppWindow', a, 'requiresFullApps');
-					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+					// console.log("app " + app.title + " is NOW active");
+					broadcast('createAppWindow', app, 'requiresFullApps');
+					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(app), 'requiresAppPositionSizeTypeOnly');
 
-					applications.push(a);
+					applications.push(app);
 					inactiveApplications.splice(i,1);
 				}else{
 					// App should remain inactive
-					// console.log("app " + a.title + " is still inactive");
+					// console.log("app " + app.title + " is still inactive");
 				}
 			}
 		}
@@ -1499,7 +1521,8 @@ function wsChangeFrame(wsio, data){
 }
 
 function wsUpdateKeyframe(wsio, data){
-	// Update keyframe values
+	// Update keyframe values for GoTime
+	// data = {id: app.id, pi: keyframe.index, frame: frameNumber}
 	// console.log("updating data: ", data);
 	var app = findAppById(data.id);
 	if (app !== null){
@@ -1511,7 +1534,7 @@ function wsUpdateKeyframe(wsio, data){
 				app.presentation[data.pi].top = app.top;
 				app.presentation[data.pi].width = app.width;
 				app.presentation[data.pi].height = app.height;
-				wsChangeFrame(wsio, {frame: currentFrame, numFrames: numFrames});
+				wsChangeFrame(wsio, {currentFrame: currentFrame, numFrames: numFrames});
 			}
 		}else{
 			app.presentation = [];
@@ -1521,7 +1544,7 @@ function wsUpdateKeyframe(wsio, data){
 				app.presentation[0].frame = data.frame;
 				app.presentation[1].frame = numFrames;
 			}else{
-				app.presentation[0].frame = currentFrame;
+				app.presentation[0].frame = data.startVal;
 				app.presentation[1].frame = data.frame;
 			}
 
@@ -1535,11 +1558,20 @@ function wsUpdateKeyframe(wsio, data){
 			app.presentation[1].width = app.width;
 			app.presentation[1].height = app.height;
 
-			wsChangeFrame(wsio, {frame: currentFrame, numFrames: numFrames});
+			// console.log(app.presentation);
+			wsChangeFrame(wsio, {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
 }
 
+function setItemPositionAndSize(wsio, data){
+	// Update position and size of affected app
+	// data = {elemId: app.id,
+	// 	elemLeft: app.left, elemTop: app.top,
+	// 	elemWidth: app.width, elemHeight: app.height,
+	// 	force: true, date: new Date()}
+
+}
 
 /******************** Clone Request Methods ****************************/
 
