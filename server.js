@@ -486,7 +486,7 @@ function wsPointerScrollStart(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	
+
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if (elem !== null) {
@@ -501,7 +501,7 @@ function wsPointerScroll(wsio, data) {
 
 	// Casting the parameters to correct type
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
-	
+
 	pointerScroll(uniqueID, data);
 }
 
@@ -2649,9 +2649,9 @@ function pointerScroll( uniqueID, data ) {
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 			var now = new Date();
-			
+
 			var event = {id: elem.id, type: "pointerScroll", position: ePosition, user: eUser, data: data, date: now};
-			
+
 			broadcast('eventInItem', event, 'receivesInputEvents');
 		}
 	}
@@ -3039,7 +3039,7 @@ function createRadialMenu( pointerX, pointerY ) {
 function wsRemoveRadialMenu( wsio, data ) {
 	//console.log("Removed radial menu ID: " + data.id);
 	radialMenus[data.id] = null;
-	
+
 	var elem = findAppById(data.id);
 	if(elem !== null) deleteApplication( elem );
 }

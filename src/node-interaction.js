@@ -338,7 +338,7 @@ interaction.prototype.maximizeFullSelectedItem = function(item, config) {
 		item.left   = 0;
 		item.top    = config.ui.titleBarHeight;
 		item.width  = config.totalWidth;
-		item.height = config.totalHeight-2*titleBar;
+		item.height = config.totalHeight-2*config.ui.titleBarHeight;
 	}
 
 	item.maximized = true;
