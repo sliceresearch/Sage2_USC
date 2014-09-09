@@ -2,8 +2,14 @@
 	"main_script": "facebook.js",
 	"width": 500,
 	"height": 500,
-	"resources": [
+	"dependencies": [
 		"scripts/hello.min.js",
 		"scripts/jquery.min.js"
-	]
+	],
+	"title": "Facebook Photos",
+	"version": "1.0.0",
+	"description": "Test to show photos from Facebook",
+	"keywords": [ "facebook", "jquery" ],
+	"author": "Todd Margolis <tmargo@gmail.com>",
+	"license": "UCSD"
 }
