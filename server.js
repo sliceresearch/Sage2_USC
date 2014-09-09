@@ -1517,7 +1517,7 @@ function wsChangeFrame(wsio, data){
 function wsUpdateKeyframe(wsio, data){
 	// Update keyframe values for GoTime
 	// data = {id: app.id, pi: keyframe.index, frame: frameNumber}
-	// console.log("updating data: ", data);
+	console.log("updating data: ", data);
 	var app = findAppById(data.id);
 	if (app !== null){
 		if(typeof app.presentation !== 'undefined'){

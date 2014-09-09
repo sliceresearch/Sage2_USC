@@ -832,16 +832,18 @@
 
 			d.appendChild(iStop);
 
-			wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: sStart, 
-				left: data.presentation.left,
-				top: data.presentation.top,
-				width: data.presentation.width,
-				height: data.presentation.height});
-			wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: sStop, 
-				left: data.presentation.left,
-				top: data.presentation.top,
-				width: data.presentation.width,
-				height: data.presentation.height});
+			// setTimeout(function(){
+				wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: sStart, 
+					left: data.presentation.left,
+					top: data.presentation.top,
+					width: data.presentation.width,
+					height: data.presentation.height});
+				wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: sStop, 
+					left: data.presentation.left,
+					top: data.presentation.top,
+					width: data.presentation.width,
+					height: data.presentation.height});
+			// },0);
 
 			// console.log("presentation", data.presentation);
 	    	applications.push(data);
