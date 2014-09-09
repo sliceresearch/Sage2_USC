@@ -35,6 +35,24 @@ function log (obj) {
 	sage2Log({app: "index", message: args});
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Basic fucntion for creating DOM elements
+//
+function createDrawingElement(id, className, posx, posy, width, height, depth) {
+	var element = document.createElement("canvas");
+	element.id  = id; 
+	element.className    = className;
+	element.width        = width;
+	element.height       = height;
+	element.style.left   = posx.toString() + "px";
+	element.style.top    = posy.toString() + "px";
+	element.style.zIndex = depth.toString();
+	return element;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Basic data types for inter-application communications
 //

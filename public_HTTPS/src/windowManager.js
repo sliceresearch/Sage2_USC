@@ -249,7 +249,7 @@ function windowManager(id, ws) {
 		
 		this.scale = this.element.width / this.resolution[0];
 		
-		this.titleBarHeight = config.titleBarHeight;
+		this.titleBarHeight = config.ui.titleBarHeight;
 		
 		this.draw();
 	};

@@ -670,6 +670,9 @@
 				min: 1,
 				max: numFrames
 			});
+			if(data.application == 'GoTime'){
+				$("#jSlider_"+data.id).slider( "option", "disabled", true );
+			}
 			var sStart, sStop;
 
 	    	var iStart = document.createElement("div");
@@ -678,14 +681,16 @@
 	    	if((data.presentation != null) && (data.presentation[0].frame != null)){
 	    		// console.log("finding min");
 				var pi = findMinIndex(data.presentation);
-	    		iStart.innerHTML = data.presentation[pi].frame;
-	    		sStart = data.presentation[pi].frame;
+	    		var start = (data.application !== 'GoTime' ? data.presentation[pi].frame : 1);
+	    		iStart.innerHTML = start;
+	    		sStart = start;
 	    	}else{
-	    		iStart.innerHTML = currentFrame;
-	    		sStart = currentFrame;
+	    		var start = (data.application !== 'GoTime' ? currentFrame : 1);
+	    		iStart.innerHTML = start;
+	    		sStart = start;
 	    		data.presentation = [];
 	    		data.presentation[0] = {
-	    			"frame": currentFrame, 
+	    			"frame": start, 
 	    			"left": data.left, 
 	    			"top": data.top, 
 	    			"width": data.width, 
@@ -786,13 +791,15 @@
 	    	iStop.className = "sliderLabels";
 	    	if(data.presentation.length > 1){
 				var maxIndex = findMaxIndex(data.presentation);
-	    		iStop.innerHTML = data.presentation[maxIndex].frame;
-	    		sStop = data.presentation[maxIndex].frame;
+	    		var stop = (data.application !== 'GoTime' ? data.presentation[maxIndex].frame : numFrames);
+	    		iStop.innerHTML = stop;
+	    		sStop = stop;
 	    	}else{
-	    		iStop.innerHTML = currentFrame + 1;
-	    		sStop = currentFrame + 1;
+	    		var stop = (data.application !== 'GoTime' ? currentFrame + 1 : numFrames);
+	    		iStop.innerHTML = stop;
+	    		sStop = stop;
 	    		data.presentation[1] = {
-	    			"frame": currentFrame + 1, 
+	    			"frame": stop, 
 	    			"left": data.left, 
 	    			"top": data.top, 
 	    			"width": data.width, 
@@ -860,7 +867,13 @@
 		numFrames = ff.numFrames;
 		$("#timelineSlider").slider("value", currentFrame);
 		$("#timelineSlider").slider("option", "max", numFrames);
-		$("#timelineSliderLabel").text(currentFrame);
+		// $("#timelineSliderLabel").text(currentFrame);
+		$("#timelineSliderLabel").html(currentFrame).position({
+			my: 'center top',
+			at: 'center bottom',
+			of: $('#timelineSlider span'),
+			offset: "-10, 0"
+		});
 	};
 
 	function GoTimeStepForward(){

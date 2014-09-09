@@ -8,29 +8,17 @@
 	port: 9090,
 		// port of the HTTP public page
 	index_port: 9292,
+		// clock setting: 12-hour or 24-hour
+	clock: 12,
 	background: {
 		// background color
 		color: "#333333",
+		// clip the viewport on each display
 	},
-
-	ui: {
-		// clock setting: 12-hour or 24-hour
-		clock: 12,
-		show_version: true,
-		show_url:     true,
-		auto_hide_ui: true,
-		auto_hide_delay: 30,
-
-		// User specified values (in pixel)
-		titleBarHeight: 20,
-		titleTextSize:  12,
-		pointerSize:    40,
-		noDropShadow: true,
-	},
-
+	show_url: true,
 	resolution: {
-		width: 700,
-		height: 700
+		width: 1920,
+		height: 1080
 	},
 		// for experimental features: true/false
 	experimental: {
@@ -53,8 +41,29 @@
 		},
 	],
 	alternate_hosts: [
-		"127.0.0.1"
+		"127.0.0.1", 
+		"137.110.83.25"
 	],
 	remote_sites: [
-	]
+        {
+            "name": "Vroom",
+            "host": "137.110.116.15",
+            "port": 9090
+        }
+ 	],
+	ui: {
+		// clock setting: 12-hour or 24-hour
+		clock: 12,
+		show_version: true,
+		show_url:     true,
+		auto_hide_ui: true,
+		auto_hide_delay: 30,
+
+		// User specified values (in pixel)
+		titleBarHeight: 20,
+		titleTextSize:  12,
+		pointerSize:    40,
+		noDropShadow: true,
+	},
+
 }

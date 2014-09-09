@@ -254,23 +254,24 @@ var buttonType = {
 		"fill":"#999999",
 		"strokeWidth": 1,
 		"delay":600
-	},
-	"add": {
-		"switch": null,
-		"from":"m -5 0 l 10 0 m -5 -5 l 0 10",
-		"to":"m -5 -5 l 10 10 m -10 0 l 10 -10",
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay": 600
-	},
-	"sub": {
-		"switch": null,
-		"from":"m -5 0 l 10 0 m -10 0 l 10 0",
-		"to":"m -5 -5 l 10 10 m -10 0 l 10 -10",
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay": 600
 	}
+	// ,
+	// "add": {
+	// 	"switch": null,
+	// 	"from":"m -5 0 l 10 0 m -5 -5 l 0 10",
+	// 	"to":"m -5 -5 l 10 10 m -10 0 l 10 -10",
+	// 	"fill":"none",
+	// 	"strokeWidth": 1,
+	// 	"delay": 600
+	// },
+	// "sub": {
+	// 	"switch": null,
+	// 	"from":"m -5 0 l 10 0 m -10 0 l 10 0",
+	// 	"to":"m -5 -5 l 10 10 m -10 0 l 10 -10",
+	// 	"fill":"none",
+	// 	"strokeWidth": 1,
+	// 	"delay": 600
+	// }
 
 };
 

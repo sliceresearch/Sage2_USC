@@ -47,7 +47,7 @@
 	var wrapper;
 	var uiWindow;
 	var extraInteraction;
-	var thumbnail;
+	var thumbnail, metadata_text;
 	var footer;
 	
 	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
@@ -136,6 +136,7 @@
 		uiWindow         = document.getElementById('uiWindow');
 		extraInteraction = document.getElementById('extraInteraction');
 		thumbnail        = document.getElementById('thumbnail');
+		metadata_text    = document.getElementById('metadata_text');
 		footer           = document.getElementById('footer');
 		
 		serverUploadBtn  = document.getElementById('serverUploadBtn');
@@ -266,7 +267,8 @@
 
 			// clear the metadata panel
 			thumbnail.src = "images/blank.png";
-			
+			metadata_text.innerHTML = "";
+
 			// open the dialog
 			diag.showModal();
 		});
@@ -437,7 +439,8 @@
 			// clear the metadata panel
 			//document.getElementById('metadata').innerHTML = '';
 			thumbnail.src = "images/blank.png";
-			
+			metadata_text.innerHTML = "";
+
 			// clear selection
 			selectedFile = null;
 		}
@@ -505,12 +508,14 @@
 						thumbnail.src = exifdata;
 					else
 						thumbnail.src = "images/blank.png";
+					metadata_text.innerHTML = fileList.app[i].metadata.title + "<br>v" + fileList.app[i].metadata.version;
 				}
 			}
 			// Enable/disable delete button
 			fileDeleteBtn.disabled = true;
 		} else {
 			thumbnail.src = "images/blank.png";
+			metadata_text.innerHTML = "";
 
 			// Enable/disable delete button
 			fileDeleteBtn.disabled = false;
@@ -606,6 +611,7 @@
 				</div>
 				<div id="metadata">
 					<img id="thumbnail" src="images/blank.png"></img>
+					<label id="metadata_text"></label>
 				</div>
 			</div>
 			<div class="clear"></div>

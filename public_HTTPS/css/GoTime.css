@@ -16,14 +16,14 @@
 /* CSS Document */
 
 /*.timeline {position: absolute; left: 25%; width: 50%; border: solid 1px #000000; overflow: auto; }*/
-.timeline {float: left; margin-left: 25%; margin-top: 10px; padding: 5px; width: 50%; border: solid 1px #000000; overflow: auto; }
+.timeline {float: left; margin-left: 5%; margin-top: 10px; padding: 5px; width: 85%; border: solid 1px #000000; overflow: auto; background: #FFFFFF; }
 
 .timeline ul {margin:0; padding:0; list-style:none; }
-.timeline li {margin-bottom:10px; overflow:hidden; list-style: none; }
+.timeline li {margin-bottom:0px; overflow:hidden; list-style: none; }
 .timeline label {display:inline-block; margin-right:5px; width: 100px;}
 .timeline label span {color:#999; }
 .timeline .input {width:200px; border:1px solid #E0E0E0; background:#F6F6F6; }
-.timeline .app {float:left; width:100%; margin-right:10px; text-align: right;}
+.timeline .app {float:left; width:99%; margin-right:10px; text-align: right; padding-top: 5px;}
 .timeline .app .input {width:50px; }
 
 #GoTimeControls {
@@ -36,4 +36,55 @@
 	text-align: left;
 	border: solid 1px #000000;
 	background-color: #FFFFFF;
+}
+
+#timelineSliderLI {
+}
+
+#timelineSliderDiv {
+	text-align: right;
+	width: 99%;
+	padding-top: 5px;
+}
+
+.timelineSlider {
+	display:inline-flex;
+	width:20%;
+	height:8px;
+	text-align:right;
+	margin-bottom:0px;
+	margin-left: 5px;
+}
+
+#timelineSlider {
+	 width:75%; 
+}
+
+#timelineSliderLabel {
+	width: 50px;
+	padding-top: 2px;
+	text-align: center;
+}
+
+.ui-slider-tick-mark{
+    display:inline-block;
+    width:2px;
+    background:#51c1f0;
+    height:6px;
+    position:absolute;
+    top:1px;
+}
+
+.sliderLabels {
+	width: 50px;
+	padding-top: 2px;
+	text-align: center;
+}
+
+.sliders {
+	display:inline-flex;
+	width:75%;
+	height:8px;
+	text-align:right;
+	margin-left:5px;
 }
