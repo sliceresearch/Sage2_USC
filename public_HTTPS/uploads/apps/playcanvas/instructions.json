@@ -5,7 +5,13 @@
 	"animation": true,
 	"load": {
 	},
-	"resources": [
+	"dependencies": [
 		"playcanvas-latest.js"
-	]
+	],
+	"title": "Play Canvas Demo",
+	"version": "1.0.0",
+	"description": "Demo using the Playcanvas game engine",
+	"keywords": [ "game", "engine", "webgl", "3d" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

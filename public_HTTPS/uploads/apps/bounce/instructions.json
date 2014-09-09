@@ -3,6 +3,12 @@
 	"width": 400,
 	"height": 300,
 	"animation": true,
-	"resources": [
-	]
+	"dependencies": [
+	],
+	"title": "Bounce",
+	"version": "1.0.0",
+	"description": "Canvas 2D with animation example",
+	"keywords": [ "canvas", "2d" ],
+	"author": "Thomas Marrinan <thomas.j.marrinan@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

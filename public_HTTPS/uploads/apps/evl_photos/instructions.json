@@ -4,7 +4,13 @@
 	"width": 800,
 	"height": 600,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/d3.v3.min.js"
-	]
+	],
+	"title": "EVL Photo Slideshow",
+	"version": "1.0.0",
+	"description": "A slideshow of EVL history",
+	"keywords": [ "d3", "picture", "history", "slideshow" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
 }

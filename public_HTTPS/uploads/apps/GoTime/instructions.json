@@ -1,7 +1,13 @@
 {
 	"main_script": "GoTime.js",
-	"width": 500,
-	"height": 100,
-	"resources": [
+	"title": "GoTime Controller",
+       "version": "1.0.0",
+       "description": "GoTime presentation controller",
+       "keywords": [ "presentation" ],
+       "author": "Todd Margolis <tmargo@gmail.com>",
+       "license": "UCSD",
+	"width": 50,
+	"height": 50,
+	"dependencies": [
 	]
 }

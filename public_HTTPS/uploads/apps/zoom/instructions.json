@@ -2,7 +2,13 @@
 	"main_script": "zoom.js",
 	"width": 800,
 	"height": 224,
-	"resources": [
+	"dependencies": [
 		  "openseadragon.min.js"
-	]
+	],
+	"title": "High-resolution Image Viewer",
+	"version": "1.0.0",
+	"description": "High-resolution Image Viewer using the Openseadragon API",
+	"keywords": [ "openseadragon", "image", "viewer" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
 }
