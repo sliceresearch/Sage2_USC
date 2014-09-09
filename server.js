@@ -56,7 +56,7 @@ var omicron     = require('./src/node-omicron');        // handles Omicron input
 var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
 var assets      = require('./src/node-assets');         // manages the list of files
 var sageutils   = require('./src/node-utils');          // provides the current version number
-
+var radialmenu = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
 
 var SAGE2_version = sageutils.getShortVersion();
 console.log("SAGE2 Short Version:", SAGE2_version);
@@ -343,17 +343,17 @@ function initializeWSClient(wsio) {
 	
 	if ( wsio.clientType === "radialMenu" )
 	{
-		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		//wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( !(wsio.clientID in radialMenus) )
-		{
-			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			radialMenus[wsio.clientID] = wsio;
-		} else {
+		//if ( !(wsio.clientID in radialMenus) )
+		//{
+		//	console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+		//	radialMenus[wsio.clientID] = wsio;
+		//} else {
 			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			wsio.emit("disableSendToServer", uniqueID);
-		}
+		//	wsio.emit("disableSendToServer", uniqueID);
+		//}
 	}
 	
 	// Debug messages from applications
@@ -2226,6 +2226,8 @@ function createSagePointer ( uniqueID ) {
 	remoteInteraction[uniqueID] = new interaction(config);
 
 	broadcast('createSagePointer', sagePointers[uniqueID], 'receivesPointerData');
+	
+	createRadialMenu(uniqueID,0,0);
 }
 
 function showPointer( uniqueID, data ) {
@@ -2369,7 +2371,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// menu
 	if(data.button === "right")
 	{
-		createRadialMenu( pointerX, pointerY );
+		//createRadialMenu( uniqueID, pointerX, pointerY );
 	}
 }
 
@@ -2535,6 +2537,8 @@ function pointerMove(uniqueID, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+
+	broadcast('updateRadialMenuPosition', radialMenus[uniqueID], 'receivesPointerData');
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
@@ -3013,7 +3017,11 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
-function createRadialMenu( pointerX, pointerY ) {
+function createRadialMenu( uniqueID, pointerX, pointerY ) {
+	
+	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu");
+	broadcast('createRadialMenu', radialMenus[uniqueID], 'receivesPointerData');
+			
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
@@ -3022,32 +3030,7 @@ function createRadialMenu( pointerX, pointerY ) {
 		if( elem === null )
 		{
 			// Open a 'media' radial menu
-			var data = {application: "custom_app", filename: "wallMenuUI" };
-			//wsAddNewElementFromStoredFiles( null, data );
-			// Copied from above function
-			appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-				appInstance.id = getUniqueAppId();
-
-				if(appInstance.animation){
-					var i;
-					appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-					for(i=0; i<clients.length; i++){
-						if(clients[i].messages.requiresFullApps){
-							var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-							appAnimations[appInstance.id].clients[clientAddress] = false;
-						}
-					}
-				}
-				
-				// Radial menu positon
-				//appInstance.left
-				//appInstance.top
-				
-				broadcast('createAppWindow', appInstance, 'requiresFullApps');
-				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-				applications.push(appInstance);
-			});
+			
 		}
 		else
 		{
@@ -3061,7 +3044,7 @@ function createRadialMenu( pointerX, pointerY ) {
 
 function wsRemoveRadialMenu( wsio, data ) {
 	//console.log("Removed radial menu ID: " + data.id);
-	radialMenus[data.id] = null;
+	//radialMenus[data.id] = null;
 
 	var elem = findAppById(data.id);
 	if(elem !== null) deleteApplication( elem );

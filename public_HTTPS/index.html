@@ -35,7 +35,7 @@
 
 <script type="text/javascript" src="src/pointer.js"></script>
 <script type="text/javascript" src="src/widgets.js"></script>
-
+<script type="text/javascript" src="src/radialMenu.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -216,6 +216,14 @@
 		
 		wsio.on('createRadialMenu', function(menu_data){
 			ui.createRadialMenu(menu_data);
+        });
+		
+		wsio.on('createRadialMenu', function(menu_data){
+			ui.createRadialMenu(menu_data);
+        });
+		
+		wsio.on('updateRadialMenuPosition', function(pointer_data){
+			ui.updateRadialMenuPosition(pointer_data);
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
