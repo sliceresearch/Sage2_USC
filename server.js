@@ -346,11 +346,12 @@ function initializeWSClient(wsio) {
 		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( radialMenus[wsio.clientID] === null )
+		if ( !(wsio.clientID in radialMenus) )
 		{
-			//console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			radialMenus[wsio.clientID] = wsio;
 		} else {
+			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			wsio.emit("disableSendToServer", uniqueID);
 		}
 	}
@@ -2028,6 +2029,9 @@ if (program.interactive)
 			case 'bye':
 				saveSession();
 				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
 				process.exit(0);
@@ -2044,6 +2048,8 @@ if (program.interactive)
 		// Saving stuff
 		saveSession();
 		assets.saveAssets();
+		if( omicronRunning )
+			omicronManager.disconnect();
 		console.log('');
 		console.log('SAGE2 done');
 		console.log('');

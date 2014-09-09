@@ -90,13 +90,27 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.idlePDFIcon = new Image;
 		this.idlePDFIcon.src = this.resrcPath +"icons/file-pdf.svg"
 		this.idleVideoIcon = new Image;
-		this.idleVideoIcon.src = this.resrcPath +"icons/film.svg"
+		this.idleVideoIcon.src = this.resrcPath +"icons/clapper.svg"
 		this.idleAppIcon = new Image;
-		this.idleAppIcon.src = this.resrcPath +"icons/cog.svg"
+		this.idleAppIcon.src = this.resrcPath +"icons/rocket.svg"
 		this.idleSessionIcon = new Image;
-		this.idleSessionIcon.src = this.resrcPath +"icons/folder-open.svg"
+		this.idleSessionIcon.src = this.resrcPath +"icons/upload.svg"
 		this.idleSaveSessionIcon = new Image;
-		this.idleSaveSessionIcon.src = this.resrcPath +"icons/disk.svg"
+		this.idleSaveSessionIcon.src = this.resrcPath +"icons/download.svg"
+		this.idleSettingsIcon = new Image;
+		this.idleSettingsIcon.src = this.resrcPath +"icons/cog.svg"
+		
+		// Level 2 icons
+		this.idleFolderIcon = new Image;
+		this.idleFolderIcon.src = this.resrcPath + "icons/open131.svg"
+		this.idleCloseAppIcon = new Image;
+		this.idleCloseAppIcon.src = this.resrcPath + "icons/window27.svg"
+		this.idleCloseAllIcon = new Image;
+		this.idleCloseAllIcon.src = this.resrcPath + "icons/windows24.svg"
+		this.idleMaximizeIcon = new Image;
+		this.idleMaximizeIcon.src = this.resrcPath + "icons/maximize.svg"
+		this.idleTileIcon = new Image;
+		this.idleTileIcon.src = this.resrcPath + "icons/large16.svg"
 		
 		// radial menu icons
 		this.radialMenuIcon = new Image;
@@ -149,6 +163,12 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialSaveSessionButton.useBackgroundColor = false;
 		this.radialSaveSessionButton.setOverlayImage( this.idleSaveSessionIcon, overlayIconScale );
 		
+		this.radialSettingsButton = new buttonWidget();
+		this.radialSettingsButton.init(0, this.ctx, null);
+		this.radialSettingsButton.setIdleImage( this.radialMenuIcon );
+		this.radialSettingsButton.useBackgroundColor = false;
+		this.radialSettingsButton.setOverlayImage( this.idleSettingsIcon, overlayIconScale );
+		
 		// Scale buttons different from global thumbnail size
 		this.radialCloseButton.setSize( 50, 50 );
 		this.radialImageButton.setSize( menuButtonSize, menuButtonSize );
@@ -157,6 +177,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialAppButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialSessionButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialSaveSessionButton.setSize( menuButtonSize, menuButtonSize );
+		this.radialSettingsButton.setSize( menuButtonSize, menuButtonSize );
 		
 		// Set hitbox size (radial buttons are not square and will overlap)
 		this.radialImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
@@ -165,6 +186,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialAppButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialSessionButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialSaveSessionButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radialSettingsButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		
 		// Button alignment
 		this.radialCloseButton.alignment = 'centered';
@@ -174,6 +196,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialAppButton.alignment = 'centered';
 		this.radialSessionButton.alignment = 'centered';
 		this.radialSaveSessionButton.alignment = 'centered';
+		this.radialSettingsButton.alignment = 'centered';
 		
 		// Place buttons
 		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
@@ -202,6 +225,9 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radialSaveSessionButton.setPosition( radialMenuCenter.x - menuRadius * Math.cos(angle), radialMenuCenter.y - menuRadius * Math.sin(angle) );
 		this.radialSaveSessionButton.setRotation( angle - Math.PI/2 );
 	
+		angle = (initAngle + angleSeparation * 8) * (Math.PI/180);
+		this.radialSettingsButton.setPosition( radialMenuCenter.x - menuRadius * Math.cos(angle), radialMenuCenter.y - menuRadius * Math.sin(angle) );
+		this.radialSettingsButton.setRotation( angle - Math.PI/2 );
 		
 		// Radial level 2
 		var menu2ButtonSize = 140;
@@ -231,20 +257,38 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.radial2AppButton.useBackgroundColor = false;
 		this.radial2AppButton.setOverlayImage( this.idleAppIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
 		
+		this.radial2CloseAllButton = new buttonWidget();
+		this.radial2CloseAllButton.init(0, this.ctx, null);
+		this.radial2CloseAllButton.setIdleImage( this.radialMenuLevel2Icon );
+		this.radial2CloseAllButton.useBackgroundColor = false;
+		this.radial2CloseAllButton.setOverlayImage( this.idleCloseAllIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
+		
+		this.radial2TileButton = new buttonWidget();
+		this.radial2TileButton.init(0, this.ctx, null);
+		this.radial2TileButton.setIdleImage( this.radialMenuLevel2Icon );
+		this.radial2TileButton.useBackgroundColor = false;
+		this.radial2TileButton.setOverlayImage( this.idleTileIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
+		
 		this.radial2ImageButton.setSize( menu2ButtonSize, menu2ButtonSize );
 		this.radial2PDFButton.setSize( menu2ButtonSize, menu2ButtonSize );
 		this.radial2VideoButton.setSize( menu2ButtonSize, menu2ButtonSize );
 		this.radial2AppButton.setSize( menu2ButtonSize, menu2ButtonSize );
+		this.radial2CloseAllButton.setSize( menu2ButtonSize, menu2ButtonSize );
+		this.radial2TileButton.setSize( menu2ButtonSize, menu2ButtonSize );
 		
 		this.radial2ImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radial2PDFButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radial2VideoButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radial2AppButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radial2CloseAllButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radial2TileButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		
 		this.radial2ImageButton.alignment = 'centered';
 		this.radial2PDFButton.alignment = 'centered';
 		this.radial2VideoButton.alignment = 'centered';
 		this.radial2AppButton.alignment = 'centered';
+		this.radial2CloseAllButton.alignment = 'centered';
+		this.radial2TileButton.alignment = 'centered';
 		
 		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
 		this.radial2ImageButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
@@ -261,6 +305,14 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
 		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2AppButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 8) * (Math.PI/180);
+		this.radial2CloseAllButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2CloseAllButton.setRotation( angle - Math.PI/2 );
+		
+		angle = (initAngle + angleSeparation * 7) * (Math.PI/180);
+		this.radial2TileButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2TileButton.setRotation( angle - Math.PI/2 );
 		
 		this.hoverOverText = "";
 		this.hoverOverThumbnail = null;
@@ -568,6 +620,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			this.radialAppButton.draw(date);
 			this.radialSessionButton.draw(date);
 			this.radialSaveSessionButton.draw(date);
+			this.radialSettingsButton.draw(date);
 		}
 		if( this.currentRadialState === 'radialAppMenu' )
 		{
@@ -576,10 +629,21 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		}
 		if( this.currentRadialState === 'radialAppMenu2' )
 		{
+			this.radialImageButton.draw(date);
+			//this.radialPDFButton.draw(date);
+			this.radialVideoButton.draw(date);
+			this.radialAppButton.draw(date);
+			this.radialSessionButton.draw(date);
+			this.radialSaveSessionButton.draw(date);
+			this.radialSettingsButton.draw(date);
+			
 			this.radial2ImageButton.draw(date);
 			this.radial2PDFButton.draw(date);
 			this.radial2VideoButton.draw(date);
 			this.radial2AppButton.draw(date);
+			
+			this.radial2CloseAllButton.draw(date);
+			this.radial2TileButton.draw(date);
 		}
 			
 		// Thumbnail window
@@ -875,9 +939,10 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			{
 				thumbButton = currentThumbnailButtons[i];
 				thumbButton.onEvent(type, user.id, position.x, position.y, data, date);
-				
-				if ( thumbButton.isReleased() && this.sendsToServer )
+
+				if ( thumbButton.isReleased() && this.sendsToServer === true )
 				{ 
+					//console.log(thumbButton+" released" );
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
 				}
 				if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
