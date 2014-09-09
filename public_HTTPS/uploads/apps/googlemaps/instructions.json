@@ -3,6 +3,12 @@
 	"icon": "googlemaps.webp",
 	"width": 1400,
 	"height": 400,
-	"resources": [
-	]
+	"dependencies": [
+	],
+	"title": "Google Maps",
+	"version": "1.0.0",
+	"description": "Map visualization using Google Maps Javascript API V3",
+	"keywords": [ "maps", "google", "geo" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

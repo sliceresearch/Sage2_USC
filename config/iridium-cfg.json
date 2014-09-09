@@ -2,13 +2,16 @@
 	"host": "iridium.evl.uic.edu",
 	"port": 443,
 	"index_port": 80,
-	"clock": 12,
 	"background": {
 		"image": "images/background/chicago_skyline_iridium.jpg",
 		"style": "fit"
 	},
-	"show_url": true,
-	"show_version": true, 
+	"ui": {
+		"clock": 12,
+		"show_url": true,
+		"show_version": true,
+		"noDropShadow": true
+	},
 	"resolution": {
 		"width": 4098,
 		"height": 768
@@ -61,6 +64,11 @@
 			"port": 443
 		},
 		{
+			"name": "CAVE2 Column",
+			"host": "preeka.evl.uic.edu",
+			"port": 443
+		},
+		{
 			"name": "IceWall",
 			"host": "thor.evl.uic.edu",
 			"port": 443
@@ -90,8 +98,8 @@
 			
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events
-			useOinputserver: true,
-			inputServerIP: "crepe.evl.uic.edu",
+ 			useOinputserver: false,
+ 			inputServerIP: "131.193.77.159",
 			msgPort: 28000
 		}
 	}

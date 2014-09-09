@@ -8,12 +8,15 @@
 	port: 9090,
 		// port of the HTTP public page
 	index_port: 9292,
-		// clock setting: 12-hour or 24-hour
-	clock: 12,
 	background: {
 		color: "#333333"
 	},
-	show_url: true,
+	ui: {
+		// clock setting: 12-hour or 24-hour
+		clock: 12,
+		show_version: true,
+		show_url:     true
+	},
 	resolution: {
 		width: 700,
 		height: 700

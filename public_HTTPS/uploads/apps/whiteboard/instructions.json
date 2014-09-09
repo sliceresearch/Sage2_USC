@@ -3,7 +3,13 @@
 	"icon": "whiteboard.webp",
 	"width": 1280,
 	"height": 720,
-	"resources": [
+	"dependencies": [
 		"lib/kinetic-v5.1.0.min.js"
-	]
+	],
+	"title": "Whiteboard",
+	"version": "1.0.0",
+	"description": "A 2D drawing application using Wacom pen",
+	"keywords": [ "2d", "kinetic", "drawing", "wacom" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

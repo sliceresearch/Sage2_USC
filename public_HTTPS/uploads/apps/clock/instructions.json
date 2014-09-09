@@ -6,6 +6,12 @@
 	"animation": true,
 	"load": {
 	},
-	"resources": [
-	]
+	"dependencies": [
+	],
+	"title": "Clock",
+	"version": "1.0.0",
+	"description": "A 2D clock written in Canvas 2D",
+	"keywords": [ "clock", "2d", "canvas" ],
+	"author": "Thomas Marrinan <thomas.j.marrinan@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

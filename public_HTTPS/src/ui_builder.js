@@ -32,6 +32,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerHeight  = null;
 	this.pointerOffsetX = null; 
 	this.pointerOffsetY = null;
+	this.noDropShadow   = null;
 
 	// Aspect ratio of the wall and the browser	
 	this.wallRatio      = null;
@@ -191,7 +192,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.setTime = function (val) {
 			// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
 		var now;
-		if (this.json_cfg.clock == 12) now = formatAMPM(val);
+		if (this.json_cfg.ui.clock == 12) now = formatAMPM(val);
 		else now = format24Hr(val);
 		this.clock.textContent = now;
 	};
@@ -211,22 +212,24 @@ function uiBuilder(json_cfg, clientID) {
 		if (this.clientID===-1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
-			this.titleBarHeight = this.json_cfg.titleBarHeight;
-			this.titleTextSize  = this.json_cfg.titleTextSize;
-			this.pointerWidth   = this.json_cfg.pointerSize*4;
-			this.pointerHeight  = this.json_cfg.pointerSize;
+			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
+			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		} else {
 			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
-			this.titleBarHeight = this.json_cfg.titleBarHeight;
-			this.titleTextSize  = this.json_cfg.titleTextSize;
-			this.pointerWidth   = this.json_cfg.pointerSize*4;
-			this.pointerHeight  = this.json_cfg.pointerSize;
+			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
+			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		}
+		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
+		else this.noDropShadow = false;
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
@@ -273,7 +276,7 @@ function uiBuilder(json_cfg, clientID) {
 		this.version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		this.version.style.color      = "#FFFFFF";
 		
-		if (this.json_cfg.show_url) {
+		if (this.json_cfg.ui.show_url) {
 			var hostname = window.location.hostname;
 			var iport;
 			if (typeof this.json_cfg.rproxy_index_port != "undefined")
@@ -289,7 +292,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 	
 	this.updateVersionText = function(version) {
-		if(this.json_cfg.show_version) {
+		if(this.json_cfg.ui.show_version) {
 			if (version.branch && version.commit && version.date)
 				this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
 			else
@@ -298,14 +301,10 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.createSagePointer = function(pointer_data) {
-		var pointerElem = document.createElement("canvas");
-		pointerElem.id  = pointer_data.id; 
-		pointerElem.className    = "pointerItem";
-		pointerElem.width        = this.pointerWidth;
-		pointerElem.height       = this.pointerHeight;
-		pointerElem.style.left   = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top    = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString() + "px";
-		pointerElem.style.zIndex = "10000"; 
+		var pointerElem = createDrawingElement(pointer_data.id, "pointerItem",
+							pointer_data.left - this.pointerOffsetX - this.offsetX,
+							pointer_data.top  - this.pointerOffsetY - this.offsetY,
+							this.pointerWidth, this.pointerHeight, 10000);
 		this.main.appendChild(pointerElem); 
 
 		var ptr = new pointer(); 
