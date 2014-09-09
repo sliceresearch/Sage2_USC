@@ -12,11 +12,22 @@
 		// background color
 		color: "#333333",
 	},
-
 	ui: {
 		// clock setting: 12-hour or 24-hour
 		clock: 12,
 		show_version: true,
+		show_url: true,
+		// auto-hide the wall UI (top bar, application bar, ...)
+		auto_hide_ui: false,
+		// delay in seconds
+		auto_hide_delay: 30,
+		// min/max window dimensions
+		//    default: between 8% and 120% wall width
+		//             between 8% and 120% wall height
+		minWindowWidth:  220,
+		minWindowHeight: 120,
+		maxWindowWidth:  2048,
+		maxWindowHeight: 2048
 		show_url:     true,
 		auto_hide_ui: true,
 		auto_hide_delay: 30,
@@ -27,7 +38,6 @@
 		pointerSize:    40,
 		noDropShadow: true,
 	},
-
 	resolution: {
 		width: 700,
 		height: 700
