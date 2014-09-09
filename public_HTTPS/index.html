@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-<meta charset="utf-,8">
+<meta charset="utf-8">
 <title>SAGE2: Display</title>
 
 <script type="text/javascript">
@@ -16,25 +16,25 @@
 	// Copyright (c) 2014
 </script>
 
-<script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="lib/Class.js"></script>
-<script type="text/javascript" src="lib/SAGE2_App.js"></script>
-<script type="text/javascript" src="lib/SAGE2_runtime.js"></script>
-<script type="text/javascript" src="lib/image_viewer.js"></script>
-<script type="text/javascript" src="lib/movie_player.js"></script>
-<script type="text/javascript" src="lib/pdf_viewer.js"></script>
-<script type="text/javascript" src="lib/media_stream.js"></script>
+<!-- External dependencies -->
+<script type="text/javascript" src="lib/pdf.js"></script>
+<script type="text/javascript" src="lib/snap.svg-min.js"></script>
+<script type="text/javascript" src="lib/observe.poly.js"></script>
+
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/Class.js"></script>
+<script type="text/javascript" src="src/SAGE2_App.js"></script>
+<script type="text/javascript" src="src/SAGE2_runtime.js"></script>
+<script type="text/javascript" src="src/image_viewer.js"></script>
+<script type="text/javascript" src="src/movie_player.js"></script>
+<script type="text/javascript" src="src/pdf_viewer.js"></script>
+<script type="text/javascript" src="src/media_stream.js"></script>
 
 <!-- Load the module building the wal UI -->
-<script type="text/javascript" src="lib/ui_builder.js"></script>
+<script type="text/javascript" src="src/ui_builder.js"></script>
 
-<script type="text/javascript" src="lib/pointer.js"></script>
-<script type="text/javascript" src="lib/widgets.js"></script>
-
-<!-- External dependencies -->
-<script type="text/javascript" src="scripts/pdf.js"></script>
-<script type="text/javascript" src="scripts/snap.svg-min.js"></script>
-<script type="text/javascript" src="scripts/observe.poly.js"></script>
+<script type="text/javascript" src="src/pointer.js"></script>
+<script type="text/javascript" src="src/widgets.js"></script>
 
 
 <script type="text/javascript">
@@ -62,11 +62,21 @@
 
 	// UI object to build the element on the wall
 	var ui;
+	var uiTimer = null;
+	var uiTimerDelay;
 
 	// Explicitely close web socket when web browser is closed
 	window.onbeforeunload = function() {
 		if(wsio !== undefined) wsio.close();
 	};
+
+	function resetIdle() {
+		if (uiTimer) {
+			clearTimeout(uiTimer);
+			ui.showInterface();
+			uiTimer = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+		}
+	}
 
 	function init() {
 		hostname = window.location.hostname;
@@ -100,7 +110,8 @@
 				receivesInputEvents: true,
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
-				receivesWidgetEvents: true
+				receivesWidgetEvents: true,
+				requestsAppClone: true
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -157,6 +168,11 @@
 			ui = new uiBuilder(json_cfg, clientID);
 			ui.build();
 			ui.background();
+			if (json_cfg.ui.auto_hide_ui) {
+				// default delay is 30s if not specified
+				uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay,10) : 30;
+				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+			}
 		});
 		
 		wsio.on('setupSAGE2Version', function(version) {
@@ -181,6 +197,7 @@
         
         wsio.on('showSagePointer', function(pointer_data){
 			ui.showSagePointer(pointer_data);
+			resetIdle();
         });
         
         wsio.on('hideSagePointer', function(pointer_data){
@@ -189,10 +206,12 @@
         
         wsio.on('updateSagePointerPosition', function(pointer_data){
 			ui.updateSagePointerPosition(pointer_data);
+			resetIdle();
         });
         
         wsio.on('changeSagePointerMode', function(pointer_data){
 			ui.changeSagePointerMode(pointer_data);
+			resetIdle();
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
@@ -214,6 +233,8 @@
 
 		/******************************/
 		wsio.on('createAppWindow', function(data) {
+			resetIdle();
+
 			var date = new Date(data.date);
 
 			var windowTitle = document.createElement("div");
@@ -224,8 +245,16 @@
 			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
 			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
 			windowTitle.style.zIndex = itemCount.toString();
+			if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 			ui.main.appendChild(windowTitle);
-			
+
+			var windowIcons = document.createElement("img");
+			windowIcons.src = "images/layout2.webp";
+			windowIcons.height = Math.round(ui.titleBarHeight);
+			windowIcons.style.position = "absolute";
+			windowIcons.style.right    = "0px";
+			windowTitle.appendChild(windowIcons);
+
 			var titleText = document.createElement("p");
 			titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
 			titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
@@ -241,6 +270,7 @@
 			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
 			windowItem.style.overflow = "hidden";
 			windowItem.style.zIndex   = (itemCount+1).toString();
+			if (ui.noDropShadow===true) windowItem.style.boxShadow = "none";
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
@@ -323,7 +353,7 @@
 				}
 			};
 			
-			// load all resources
+			// load all dependencies
 			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
 				loadApplication();
 			}
@@ -384,6 +414,8 @@
 		/******************************/
 		
 		wsio.on('deleteElement', function(elem_data) {
+			resetIdle();
+
 			// Tell the application it is over
 			var app = applications[elem_data.elemId];
 			app.terminate();
@@ -422,6 +454,8 @@
 		});
 		
 		wsio.on('updateItemOrder', function(order) {
+			resetIdle();
+
 			var i;
 			var zval = 0;
 			for(i=0; i<order.idList.length; i++){
@@ -451,6 +485,8 @@
 		});
 
 		wsio.on('setItemPosition', function(position_data) {
+			resetIdle();
+
 			var date  = new Date(position_data.date);
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
@@ -476,6 +512,8 @@
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
+			resetIdle();
+
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
 			
@@ -516,6 +554,8 @@
 		});
 		
 		wsio.on('finishedResize', function(data) {
+			resetIdle();
+
 			var app = applications[data.id];
 			if(app !== undefined && app.resizeEvents === "onfinish"){
 				var date = new Date(data.date);
@@ -536,7 +576,7 @@
 			
 			var app = applications[video_data.elemId];
 			if(app !== undefined && app !== null){
-				app.event("videoTimeSync", null, null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
+				app.event("videoTimeSync", null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
 			}
 		});
 		
@@ -551,19 +591,25 @@
 		
 		wsio.on('eventInItem', function(event_data){
 			var date = new Date(event_data.date);
-			var app  = applications[event_data.elemId];
+			var app  = applications[event_data.id];
+			
+			app.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+			
+			/*
 			// adding pointer information to the event
             event_data.data.pname  = event_data.user_label;
             event_data.data.pcolor = event_data.user_color;
 			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
+			*/
 		});
 
-		wsio.on('pointerPressRight', function(data){
+		wsio.on('requestNewControl', function(data){
 			var dt = new Date(data.date);
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
-			if (data.elemId != null){
-				if(data.elemId+"_controls" in  controlItems){
-					var size = computeSize(controlItems[data.elemId+ "_controls"].spec) ;
+			if (data.elemId !== undefined && data.elemId !== null){
+				if(controlItems[data.elemId+"_controls"] !== undefined){
+					var size = computeSize(controlItems[data.elemId+ "_controls"].spec);
+					console.log(size);
 					wsio.emit('addNewControl', {
 						id:data.elemId+"_controls", 
 						left:data.x,
@@ -587,6 +633,7 @@
 				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
 				ctrDiv.style.zIndex = "9999".toString();
+				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 				var handle = createControls(data.id,controlItems[data.id].spec);
 				ctrDiv.appendChild (handle);	
 				ui.main.appendChild(ctrDiv);
@@ -669,7 +716,15 @@
 					}
 				}
 				var func = ctrl.parent().data("call");
-				func(applications[ctrl.parent().data("appId")],dt);	
+				var appId = ctrl.parent().data("appId");
+				var app = applications[appId];
+				func(app,dt);	
+				//Check whether a request for clone was made.
+				if(app.cloneable === true && app.requestForClone === true){
+					app.requestForClone = false;
+					console.log("cloning app:" + appId);
+					wsio.emit('createAppClone', {id : appId});
+				}
 				
 			}
 			

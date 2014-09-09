@@ -4,7 +4,13 @@
 	"width": 400,
 	"height": 300,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/three.min.js"
-	]
+	],
+	"title": "Three.js demo",
+	"version": "1.0.0",
+	"description": "A simple Three.js demonstration",
+	"keywords": [ "three", "3d", "animation" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
 }

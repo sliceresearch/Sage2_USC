@@ -1,0 +1,17 @@
+{
+	"main_script": "leaflet.js",
+	"icon": "watch.jpg",
+	"width": 800,
+	"height": 600,
+	"animation": true,
+	"dependencies": [
+		"scripts/d3.v3.min.js",
+		"scripts/leaflet.js"
+	],
+	"title": "UIC crime",
+	"version": "1.0.0",
+	"description": "Shows crime data around UIC with D3.js and leaflet map API",
+	"keywords": [ "crime", "map", "leaflet", "d3", "geo" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
+}

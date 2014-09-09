@@ -1,0 +1,14 @@
+{
+	"main_script": "histoViewer.js",
+	"width": 800,
+	"height": 224,
+	"dependencies": [
+		  "openseadragon.js"
+	],
+	"title": "Histology Viewer",
+	"version": "1.0.0",
+	"description": "Histology Viewer for Pathology",
+	"keywords": [ "openseadragon", "image", "viewer", "histology" ],
+	"author": "Victor Mateevitsi <mvictoras@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

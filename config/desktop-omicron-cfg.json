@@ -8,12 +8,15 @@
 	port: 9090,
 		// port of the HTTP public page
 	index_port: 9292,
-		// clock setting: 12-hour or 24-hour
-	clock: 12,
 	background: {
 		color: "#333333"
 	},
-	show_url: true,
+	ui: {
+		// clock setting: 12-hour or 24-hour
+		clock: 12,
+		show_version: true,
+		show_url:     true
+	},
 	resolution: {
 		width: 700,
 		height: 700
@@ -24,12 +27,12 @@
 		"omicron": // enable omicron input module
 		{
 			enable: true,
-			dataPort: 20005,
+			dataPort: 30005,
 			
 			// Note if the following is enabled the server will attempt
 			// to connect to the specified Omicron oinputserver
 			// (By default the server listens for an Omicron sageinputserver to connect to it)
-			useOinputserver: true,
+			useOinputserver: false,
 			inputServerIP: "cave2tracker.evl.uic.edu",
 			msgPort: 28000
 		}

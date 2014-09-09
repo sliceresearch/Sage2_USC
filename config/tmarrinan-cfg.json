@@ -2,15 +2,17 @@
 	"host": "marrinan.evl.uic.edu",
 	"port": 9090,
 	"index_port": 9292,
-	"clock": 12,
 	"background": {
 		"color": "#AA3311",
 		"image": "images/background/minneapolis_skyline_tm.jpg",
 		"style": "fit",
 		"clip": true
 	},
-	"show_url": true,
-	"show_version": true,
+	"ui": {
+		"clock": 12,
+		"show_url": true,
+		"show_version": true
+	},
 	"resolution": {
 		"width": 700,
 		"height": 700

@@ -77,7 +77,7 @@ var bounce = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	event: function(eventType, userId, x, y, data, date) {
+	event: function(eventType, position, user_id, data, date) {
 		
 	},
 

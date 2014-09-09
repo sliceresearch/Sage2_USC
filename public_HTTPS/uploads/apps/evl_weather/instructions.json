@@ -1,0 +1,16 @@
+{
+	"main_script": "weather.js",
+	"icon": "evl.png",
+	"width": 490,
+	"height": 400,
+	"animation": true,
+	"dependencies": [
+		"scripts/d3.v3.min.js"
+	],
+	"title": "EVL Weather Map",
+	"version": "1.0.0",
+	"description": "EVL weather monitoring",
+	"keywords": [ "d3", "2d", "temperature", "weather" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
+}

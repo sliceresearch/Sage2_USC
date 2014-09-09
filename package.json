@@ -45,13 +45,13 @@
     "imageinfo": "latest",
     "json5": "latest",
     "mime": "latest",
-    "multiparty": "latest",
     "request": "latest",
     "ws": "latest",
     "ytdl-core": "latest",
     "jshint": "latest",
     "commander": "latest",
     "colors": "latest",
+    "formidable": "latest",
     "sprint": "^0.3.1"
   },
   "bundledDependencies": [],
@@ -62,8 +62,8 @@
   "scripts": {
     "start": "node server.js",
     "hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
-    "hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/lib/*.js",
+    "hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/src/*.js",
     "doc": "yuidoc -c doc/yuidoc.json"
   },
-  "license": "BSD-3-Clause"
+  "license": "SAGE2-Software-License"
 }
