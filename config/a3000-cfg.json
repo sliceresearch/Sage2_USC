@@ -64,6 +64,8 @@
 		titleTextSize:  12,
 		pointerSize:    40,
 		noDropShadow: true,
+		fade: true,
+		fadeTime: 200
 	},
 
 }

@@ -240,6 +240,16 @@
 				offset: "0, 0"
 			});
 		},500);
+		var diag = $("#GoTime_help").dialog({
+			show: 'fade', 
+			hide: 'drop',
+			width: 600,
+			height: 125,
+			title: "GoTime Help"
+		});
+		setTimeout(function(){
+			$("#GoTime_help").dialog("close");
+		},3000);
 
 		wsio.on('setupDisplayConfiguration', function(config) {
 			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
@@ -887,7 +897,7 @@
 				offset: "-10, 0"
 			});
 
-			console.log("frame",currentFrame);
+			// console.log("frame",currentFrame);
 			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 		}else{
 			clearInterval(GoTimePlayer);
@@ -932,7 +942,9 @@
 			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
+
 	function GoTimePlay(){
+		clearInterval(GoTimePlayer);
 		if(currentFrame == numFrames)
 			currentFrame = 0;
 		GoTimeStepForward();
@@ -947,7 +959,6 @@
 	}
 	function GoTimeChangeFPS(){
 		fps = parseInt(GoTimeFPS.value);
-		console.log(fps);
 	}
 	function GoTimeChangeNumFrames(){
 		nf = GoTimeNumFrames.value;
@@ -966,6 +977,15 @@
 
 		for(var i=0; i<applications.length; i++){
 			$("#jSlider_"+applications[i].id).slider("option","max",numFrames);
+			if(applications[i].application == 'GoTime'){
+				$("#jSlider_"+applications[i].id).slider("values", 1, numFrames);
+				$("#stop_"+applications[i].id).html(numFrames);
+				wsio.emit('updateKeyframe', {id: applications[i].id, pi: 1, frame: numFrames, 
+								left: 	applications[i].presentation[1].left,
+								top: 	applications[i].presentation[1].top,
+								width: 	applications[i].presentation[1].width,
+								height: applications[i].presentation[1].height});
+			}
 
 			var uiHandle = "#jSlider_"+applications[i].id + " span";
 			handleA = $(uiHandle).get(0);
@@ -1104,7 +1124,7 @@
 		</div>
 
 		<!-- Timeline -->
-		<div class="timeline"><ul id="appList"><li id="timelineSliderLI"><div id="timelineSliderDiv">Current frame: <div id="timelineSlider"></div><div id="timelineSliderLabel"></div></div></li></ul></div>
+		<div class="timeline"><div id="GoTimeHelpBtn"><a href='#' onclick='$("#GoTime_help").dialog("open");'>?</a></div><ul id="appList"><li id="timelineSliderLI"><div id="timelineSliderDiv">Timeline: <div id="timelineSlider"></div><div id="timelineSliderLabel"></div></div></li></ul></div>
 		
 		<div id="textWidthTest"></div>
 		<canvas id="mediaCanvas" style="display: none;"></canvas>
@@ -1163,6 +1183,17 @@
 				</ul>
 			</div>
 		</dialog>
+
+		<!-- Dialog shown momentarily for GoTime -->
+		<div id="GoTime_help" style="display: none;">
+			<div id="GoTimeHelpText" class="lb_whitecontent">
+				<ul>
+					<li>Drag the slider along the timeline to change the current frame</li>
+					<li>Adjust each asset's start and stop times by dragging their individual slider handles</li>
+					<li>Store the size and position for each asset by making your adjustments and then clicking the asset's start or stop handle</li>
+				</ul>
+			</div>
+		</div>
 
 
 		<footer id="footer">

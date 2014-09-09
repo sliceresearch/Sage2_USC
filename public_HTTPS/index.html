@@ -20,6 +20,8 @@
 <script type="text/javascript" src="lib/pdf.js"></script>
 <script type="text/javascript" src="lib/snap.svg-min.js"></script>
 <script type="text/javascript" src="lib/observe.poly.js"></script>
+<script type="text/javascript" src="lib/jquery.1.10.2.js"></script>
+<script type="text/javascript" src="lib/jquery-ui.1.11.1.min.js"></script>
 
 <script type="text/javascript" src="src/websocket.io.js"></script>
 <script type="text/javascript" src="src/Class.js"></script>
@@ -247,6 +249,7 @@
 			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
 			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
 			windowTitle.style.zIndex = itemCount.toString();
+			if (ui.fade===true) windowTitle.style.display = "none";
 			if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 			ui.main.appendChild(windowTitle);
 
@@ -271,9 +274,16 @@
 			windowItem.style.left     = (data.left-ui.offsetX).toString() + "px";
 			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
 			windowItem.style.overflow = "hidden";
+			if (ui.fade===true) windowItem.style.display = "none";
 			windowItem.style.zIndex   = (itemCount+1).toString();
 			if (ui.noDropShadow===true) windowItem.style.boxShadow = "none";
 			ui.main.appendChild(windowItem);
+
+			// Fade in
+			if (ui.fade===true) {
+				$(windowItem).show("fade", "easeInQuad", ui.fadeTime);
+				$(windowTitle).show("fade", "easeInQuad", ui.fadeTime);
+			}
 
 			// App launched in window 
 			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
@@ -301,7 +311,7 @@
 			}
 
 			function loadApplication() {
-				console.log("loadApplication", window[data.application]);
+				// console.log("loadApplication", window[data.application]);
 				// load new app
 				if(window[data.application] === undefined) {
 					var js = document.createElement("script");
@@ -440,11 +450,23 @@
 			delete applications[elem_data.elemId];
 
 			// Clean up the DOM
-			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
-			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
-			
-			var deleteElem = document.getElementById(elem_data.elemId);
-			deleteElem.parentNode.removeChild(deleteElem);
+			if (ui.fade===true) {
+				$("#"+elem_data.elemId + "_title").hide("fade", "easeInQuad", ui.fadeTime);
+				$("#"+elem_data.elemId).hide("fade", "easeInQuad", ui.fadeTime);
+				setTimeout(function(){
+					var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+					deleteElemTitle.parentNode.removeChild(deleteElemTitle);
+					
+					var deleteElem = document.getElementById(elem_data.elemId);
+					deleteElem.parentNode.removeChild(deleteElem);
+				},ui.fadeTime);
+			}else{
+				var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+				deleteElemTitle.parentNode.removeChild(deleteElemTitle);
+				
+				var deleteElem = document.getElementById(elem_data.elemId);
+				deleteElem.parentNode.removeChild(deleteElem);
+			}
 
 			// Clean up the UI DOM
 			if (elem_data.elemId + "_controls" in controlItems){
@@ -542,7 +564,7 @@
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
 			selectedElem.style.top  = (eTop+ui.titleBarHeight).toString() + "px";
-			
+
 			var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 			var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
 			dragCorner[0].style.width  = cornerSize.toString() + "px";
@@ -551,6 +573,7 @@
             dragCorner[0].style.left   = (Math.round(position_data.elemWidth)-cornerSize).toString()  + "px";
 			
 			var child = selectedElem.getElementsByClassName("sageItem");
+			console.log(child);
 
 			// if the element is a div, resize should use the style object
 			if(child[0].tagName.toLowerCase() == "div") {
