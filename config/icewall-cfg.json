@@ -2,13 +2,15 @@
 	"host": "thor.evl.uic.edu",
 	"port": 443,
 	"index_port": 80,
-	"clock": 12,
 	"background": { 
 		"image": "images/background/chicago_skyline_thor.jpg",
 		"style": "fit"
 	},
-	"show_url": true,
-	"show_version": true,
+	"ui": {
+		"clock": 12,
+		"show_url": true,
+		"show_version": true
+	},
 	"resolution": {
 		"width": 3072,
 		"height": 1360

@@ -49,31 +49,44 @@ input, button {
 
 /* Dialog (sagePointer lock) */
 dialog {
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
-  margin:0 auto;
+	border: 1px solid rgba(0, 0, 0, 0.3);
+	border-radius: 6px;
+	box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+	margin:0 auto;
 }
 /* background behind the dialogs */
 dialog::backdrop {
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.75);
 }
 /* Dialog for the fileBrowser */
-dialog#lb_light {
-    width: 70%;
+#lb_light {
+    width: 50%;
     height: 50%;
+}
+
+#lb_pointer_help {
+    width: 50%;
 }
 
 
 #wrapper {
 	width: 100%;
+	height: 100%;
 	margin: 0 auto;
 	text-align: center;
 	background-color: #FFFFFF;
+}
+
+#uiWindow {
+	margin-top: 10px;
+}
+
+#extraInteraction {
+	overflow: auto;
 }
 
 #fileUpload {
@@ -117,16 +130,46 @@ dialog#lb_light {
 	width: 60px;
 }
 
-#fileTreeList {
-	width: 95%;
+#fileBrowser {
+	width: 100%;
 	height: 85%;
-	overflow: scroll;
 	background-color: #D9D9D9;
+}
+
+#fileTreeList {
+	width: 60%;
+	height: 100%;
+	float: left;
+	border-right: solid 1px #000000;
+	white-space: nowrap;
+	overflow: scroll;
+}
+
+#metadata {
+	width: 39%;
+	height: 100%;
+	float: right;
+	text-align: center;
+}
+
+#thumbnail {
+	max-width: 90%;
+	max-height: 90%;
+	margin-top: 5%;
 }
 
 #fileButtons {
 	text-align: left;
 	margin: 5px;
+}
+
+#textWidthTest {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	position: absolute;
+	visibility: hidden;
+	height: auto;
+	width: auto;
 }
 
 footer {
@@ -162,6 +205,10 @@ footer li {
     width:110px;
     text-align: right;
     padding: 3px 10px 3px 0px;
+}
+
+.fileItem {
+	cursor: default;
 }
 
 .lb_blackoverlay {
@@ -203,16 +250,6 @@ footer li {
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
-	width:50%;
-}
-
-.sidebox {
-	position: absolute;
-	width:50%;
-	height:100%;
-	left:50%;
-	top:0;
-    margin-top: 20px;
 }
 
 .css-treeview ul,

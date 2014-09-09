@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-<meta charset="utf-,8">
+<meta charset="utf-8">
 <title>SAGE2 Pointer Application</title>
 
 <script type="text/javascript">
@@ -16,8 +16,8 @@
 	// Copyright (c) 2014
 </script>
 
-<script type="text/javascript" src="lib/websocket.io.js"></script>
-<script type="text/javascript" src="lib/sagePointer.js"></script>
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/sagePointer.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -50,6 +50,7 @@
 		wsio.open(function() {
 			console.log("open websocket");
 			sagePtr = new sagePointer(wsio);
+			window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 			var clientDescription = {
 				clientType: "sagePointer",
@@ -125,6 +126,18 @@
 		});
 		
 		resize();
+		
+		window.addEventListener('message', function (event) {
+			if(event.origin != window.location.origin) return;
+			
+			if(event.data.cmd === "SAGE2_desktop_capture-Loaded"){
+				if(sagePtr !== undefined && sagePtr !== null)
+					sagePtr.desktopCaptureEnabled = true;
+			}
+			if(event.data.cmd === "window_selected"){
+				sagePtr.captureDesktop(event.data.mediaSourceId);
+			}
+		});
 	}
 	
 	function resize() {

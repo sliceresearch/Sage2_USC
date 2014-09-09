@@ -4,7 +4,13 @@
 	"width": 600,
 	"height": 220,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/d3.v3.min.js"
-	]
+	],
+	"title": "Chronicles of Spaceman Spiff",
+	"version": "1.0.0",
+	"description": "Daily Calvin and Hobbes comic",
+	"keywords": [ "d3", "comic" ],
+	"author": "Andrew Johnson <lenzman@me.com>",
+	"license": "SAGE2-Software-License"
 }
