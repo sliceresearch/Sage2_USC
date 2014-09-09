@@ -88,3 +88,13 @@
 	text-align:right;
 	margin-left:5px;
 }
+
+#GoTimeHelpBtn {
+	float: left;
+}
+
+#GoTimeHelpBtn a {
+	text-decoration: none;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}

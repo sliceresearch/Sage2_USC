@@ -33,6 +33,8 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerOffsetX = null; 
 	this.pointerOffsetY = null;
 	this.noDropShadow   = null;
+	this.fade   		= null;
+	this.fadeTime  		= null;
 
 	// Aspect ratio of the wall and the browser	
 	this.wallRatio      = null;
@@ -218,6 +220,7 @@ function uiBuilder(json_cfg, clientID) {
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.fadeTime		= this.json_cfg.ui.fadeTime;
 		} else {
 			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
@@ -227,9 +230,12 @@ function uiBuilder(json_cfg, clientID) {
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.fadeTime		= this.json_cfg.ui.fadeTime;
 		}
 		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
 		else this.noDropShadow = false;
+		if (this.json_cfg.ui.fade === true) this.fade = true;
+		else this.fade = false;
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');

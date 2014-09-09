@@ -16,7 +16,7 @@ var SAGE2_App = Class.extend( {
 		this.resrcPath    = null;
 		this.resizeEvents = "never";
 		this.state = {};
-		console.log("SAGE2_App:", this.state);
+		// console.log("SAGE2_App:", this.state);
 	
 		this.startDate = null;
 		this.prevDate  = null;
