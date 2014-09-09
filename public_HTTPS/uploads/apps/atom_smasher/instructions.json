@@ -4,7 +4,14 @@
 	"width": 1080,
 	"height": 1080,
 	"animation": true,
-	"resources": [
+	"dependencies": [
 		"scripts/three.min.js"
-	]
+	],
+	"title": "Atom Smasher",
+	"version": "1.0.0",
+	"description": "Three.js animation simulating particle collisions",
+	"keywords": [ "three.js" ],
+	"author": "Todd Margolis <tmargo@gmail.com>",
+	"license": "UCSD"
+
 }
