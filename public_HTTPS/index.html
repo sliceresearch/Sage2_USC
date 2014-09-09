@@ -214,6 +214,10 @@
 			resetIdle();
         });
 		
+		wsio.on('createRadialMenu', function(menu_data){
+			ui.createRadialMenu(menu_data);
+        });
+		
 		wsio.on('updateMediaStreamFrame', function(data) {
 			wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			

@@ -16,7 +16,7 @@ function pointer(){
 	this.drawMode   = null;
 	
 	this.init = function(id, label, color) {
-		this.element = document.getElementById(id);
+		this.element = document.getElementById(id); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
 		this.label   = label;
 

@@ -3009,7 +3009,11 @@ function createRadialMenu( pointerX, pointerY ) {
 						}
 					}
 				}
-
+				
+				// Radial menu positon
+				//appInstance.left
+				//appInstance.top
+				
 				broadcast('createAppWindow', appInstance, 'requiresFullApps');
 				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 

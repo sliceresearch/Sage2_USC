@@ -345,7 +345,29 @@ function uiBuilder(json_cfg, clientID) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
 		this.pointerItems[pointer_data.id].draw();
 	};
+	
+	this.createRadialMenu = function(menu_data) {
+		var pointerElem = document.createElement("canvas");
+		pointerElem.id  = pointer_data.id; 
+		pointerElem.className    = "pointerItem";
+		pointerElem.width        = this.pointerWidth;
+		pointerElem.height       = this.pointerHeight;
+		pointerElem.style.left   = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
+		pointerElem.style.top    = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString() + "px";
+		pointerElem.style.zIndex = "10000"; 
+		this.main.appendChild(pointerElem); 
 
+		var ptr = new pointer(); 
+		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color) ;
+		ptr.draw();
+
+		if (pointer_data.visible) pointerElem.style.display = "block";
+		else pointerElem.style.display = "none";
+
+		// keep track of the pointers
+        this.pointerItems[pointerElem.id] = ptr;
+	};
+	
 	this.addRemoteSite = function(data) {
 		var remote = document.createElement('div');
 		remote.id  = data.name;
