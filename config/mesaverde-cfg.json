@@ -1,0 +1,57 @@
+/*
+	default configuration of the server
+*/
+{
+		// hostname of the web server
+	host: "mesaverde.evl.uic.edu",
+		// port of the HTTPS server: 443 for default
+	port: 443,
+		// port of the HTTP public page
+	index_port: 80,
+		// clock setting: 12-hour or 24-hour
+	background: {
+		image: "images/background/osx_hero_2x_cc.jpg",
+		style: "stretch"
+	},
+	ui: {
+		clock: 12,
+		show_url: true,
+		show_version: true, 
+	},
+	resolution: {
+                width: 1920,
+                height: 2160
+	},
+	layout: {
+		rows: 1,
+		columns: 2
+	},
+	displays: [
+		{
+			ID: 0,
+			row: 0,
+			column: 0
+		},
+		{
+			ID: 1,
+			row: 0,
+			column: 1
+		},
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1"
+	],
+	remote_sites: [
+                {
+                        name: "CyberCommons",
+                        host: "iridium.evl.uic.edu",
+                        port: 443
+                },
+                {
+                        name: "CAVE2",
+                        host: "lyra.evl.uic.edu",
+                        port: 443
+                }
+	]
+}
