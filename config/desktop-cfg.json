@@ -20,7 +20,14 @@
 		// auto-hide the wall UI (top bar, application bar, ...)
 		auto_hide_ui: false,
 		// delay in seconds
-		auto_hide_delay: 30
+		auto_hide_delay: 30,
+		// min/max window dimensions
+		//    default: between 8% and 120% wall width
+		//             between 8% and 120% wall height
+		minWindowWidth:  220,
+		minWindowHeight: 120,
+		maxWindowWidth:  2048,
+		maxWindowHeight: 2048
 	},
 	resolution: {
 		width: 700,

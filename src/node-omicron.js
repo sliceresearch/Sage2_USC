@@ -42,7 +42,10 @@ var wandScaleDelta = 0.1;
 var lastPosX = 0;
 var lastPosY = 0;
 
-var touchZoomScale = 120;
+var touchZoomScale = 520;
+var acceleratedDragScale  = 0;
+
+var oinputserverSocket;
 
 function omicronManager( sysConfig )
 {
@@ -87,6 +90,11 @@ function omicronManager( sysConfig )
 		touchZoomScale = config.zoomGestureScale;
 	}
 	
+	if( config.acceleratedDragScale )
+	{
+		acceleratedDragScale = config.acceleratedDragScale;
+	}
+	
 	// For accepting input server connection
 	var server = net.createServer(function (socket) {
 		console.log('Omicron: Input server "' + socket.remoteAddress + '" connected on port ' + socket.remotePort);
@@ -106,15 +114,29 @@ function omicronManager( sysConfig )
 		if( config.msgPort )
 			msgPort = config.msgPort;
 			
-		var client = net.connect(msgPort, config.inputServerIP,  function()
+		oinputserverSocket = net.connect(msgPort, config.inputServerIP,  function()
 		{ //'connect' listener
 			console.log('Connected to Omicron oinputserver at "'+config.inputServerIP+'" on msgPort: '+msgPort+'. Requesting data on port ', dataPort);
 
-			var sendbuf = util.format("omicron_data_on,%d", dataPort);
+			var sendbuf = util.format("omicron_data_on,%d\n", dataPort);
 			//console.log("Omicron> Sending handshake: ", sendbuf);
-			client.write(sendbuf);
+			oinputserverSocket.write(sendbuf);
+		});
+		
+		oinputserverSocket.on('end', function(e) {
+			console.log('Omicron: oinputserver disconnected');
+		});
+		oinputserverSocket.on('error', function(e) {
+			console.log('Omicron: oinputserver connection error - code:', e.code);
 		});
 	}
+}
+
+omicronManager.prototype.disconnect = function()
+{
+	var sendbuf = util.format("data_off");
+	console.log("Omicron> Sending disconnect signal");
+	oinputserverSocket.write(sendbuf);
 }
 
 omicronManager.prototype.setCallbacks = function( 
@@ -235,7 +257,7 @@ omicronManager.prototype.runTracker = function()
 					
 			var touchWidth = 0;
 			var touchHeight = 0;
-			if( serviceID === 0 &&  e.extraDataItems >= 2)
+			if( serviceID === 0 &&  e.extraDataItems >= 2 )
 			{
 				touchWidth = msg.readFloatLE(offset); offset += 4;
 				touchHeight = msg.readFloatLE(offset); offset += 4;
@@ -259,14 +281,14 @@ omicronManager.prototype.runTracker = function()
 				}
 				
 				// TouchGestureManager Flags:
-				// 1 << 17 = User flag start (as of 12/20/13)
+				// 1 << 18 = User flag start (as of 8/3/14)
 				// User << 1 = Unprocessed
 				// User << 2 = Single touch
 				// User << 3 = Big touch
 				// User << 4 = 5-finger hold
 				// User << 5 = 5-finger swipe
 				// User << 6 = 3-finger hold
-				var User = 1 << 17;
+				var User = 1 << 18;
 				
 				var FLAG_SINGLE_TOUCH = User << 2;
 				var FLAG_BIG_TOUCH = User << 3;
@@ -275,17 +297,21 @@ omicronManager.prototype.runTracker = function()
 				var FLAG_THREE_FINGER_HOLD = User << 6;
 				var FLAG_SINGLE_CLICK = User << 7;
 				var FLAG_DOUBLE_CLICK = User << 8;
+				var FLAG_MULTI_TOUCH = User << 9;
 				
 				var initX = 0;
 				var initY = 0;
-				if( serviceID === 0  && e.extraDataItems >= 4 && e.flags == FLAG_SINGLE_TOUCH )
+				if( serviceID === 0  && e.extraDataItems >= 4 && e.type !== 15  ) // Type 15 = Zoom
 				{
 					initX = msg.readFloatLE(offset); offset += 4;
 					initY = msg.readFloatLE(offset); offset += 4;
+					
+					initX *= totalWidth;
+					initY *= totalHeight;
 				}
 				
 				//console.log( e.flags );
-				if (e.type == 3)
+				if (e.type === 3)
 				{ // update (Used only by classic SAGE pointer)
 					/* if( e.sourceId in ptrs )
 						return;
@@ -303,19 +329,25 @@ omicronManager.prototype.runTracker = function()
 						}
 					}*/
 				}
-				else if (e.type == 4)
+				else if (e.type === 4)
 				{ // move
-					if( e.flags == FLAG_SINGLE_TOUCH )
+					if( e.flags === FLAG_SINGLE_TOUCH )
 					{
 						if( gestureDebug )
 						{
-							
+							console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						}
-						//console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
-						pointerPosition( address, { pointerX: posX, pointerY: posY } );
+						
+						var distance = Math.sqrt( Math.pow( Math.abs(posX - initX), 2 ) + Math.pow( Math.abs(posY - initY), 2 ) );
+						var angle = Math.atan2( posY -  initY, posX - initX );
+						
+						var accelDistance = distance * acceleratedDragScale;
+						var accelX = posX + accelDistance * Math.cos(angle);
+						var accelY = posY + accelDistance * Math.sin(angle);
+						pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
 	
 					}
-					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
@@ -323,13 +355,13 @@ omicronManager.prototype.runTracker = function()
 						}
 						pointerCloseGesture( address, posX, posY, Date.now(), 1 );
 					}
+					else if( e.flags === FLAG_MULTI_TOUCH )
+					{
+						pointerPosition( address, { pointerX: posX, pointerY: posY } );
+					}
 				}
 				else if (e.type == 15)
 				{ // zoom
-					if( gestureDebug )
-					{
-						console.log("Touch zoom");
-					}
 					
 					/*
 					Omicron zoom event extra data:
@@ -339,30 +371,36 @@ omicronManager.prototype.runTracker = function()
 					3 = event second type ( 1 = Down, 2 = Move, 3 = Up )
 					*/
 					// extraDataType 1 = float
-					if (e.extraDataType == 1 && e.extraDataItems >= 4)
+					//console.log("Touch zoom " + e.extraDataType  + " " + e.extraDataItems );
+					if (e.extraDataType === 1 && e.extraDataItems >= 4)
 					{
-
 						var zoomDelta = msg.readFloatLE(offset); offset += 4;
 						var eventType = msg.readFloatLE(offset);  offset += 4;
 						
-						if( eventType == 1 ) // Zoom start/down
+						//console.log("Touch zoom zoomDelta " + zoomDelta );
+						//console.log("Touch zoom type " + eventType );
+						
+						if( eventType === 1 ) // Zoom start/down
 						{
+							//console.log("Touch zoom start");
 							pointerScrollStart( address, posX, posY );
 						}
 						else // Zoom move
 						{
+							if( gestureDebug )
+								console.log("Touch zoom");
 							pointerScroll( address, { wheelDelta: -zoomDelta * touchZoomScale } );
 						}
 					}
 
 				}
-				else if (e.type == 5) { // button down
+				else if (e.type === 5) { // button down
 					if( gestureDebug )
 					{
-						console.log("\t down , flags ", e.flags);
+						console.log("Touch down at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 					}
-					
-					if( e.flags == FLAG_SINGLE_TOUCH )
+
+					if( e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH )
 					{
 						// Create pointer
 						if(address in sagePointers){
@@ -375,7 +413,7 @@ omicronManager.prototype.runTracker = function()
 							pointerPress( address, posX, posY, { button: "left" } );
 						}
 					}
-					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
@@ -383,7 +421,7 @@ omicronManager.prototype.runTracker = function()
 						}
 						pointerCloseGesture( address, posX, posY, Date.now(), 0 );
 					}
-					else if( e.flags == FLAG_THREE_FINGER_HOLD )
+					else if( e.flags === FLAG_THREE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{
@@ -391,7 +429,7 @@ omicronManager.prototype.runTracker = function()
 						}
 						createRadialMenu( posX, posY );
 					}
-					else if( e.flags == FLAG_SINGLE_CLICK )
+					else if( e.flags === FLAG_SINGLE_CLICK )
 					{
 						if( gestureDebug )
 						{
@@ -399,19 +437,18 @@ omicronManager.prototype.runTracker = function()
 						}
 						
 					}
-					else if( e.flags == FLAG_DOUBLE_CLICK )
+					else if( e.flags === FLAG_DOUBLE_CLICK )
 					{
 						if( gestureDebug )
 						{
 							console.log("Touch gesture: Double Click");
-							pointerDblClick( address, {} );
 						}
-						
+						pointerDblClick( address, posX, posY );
 					}
 				}
 				else if (e.type == 6)
 				{ // button up
-					if( e.flags == FLAG_SINGLE_TOUCH )
+					if( e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH )
 					{
 						// Hide pointer
 						hidePointer(address);
@@ -421,10 +458,11 @@ omicronManager.prototype.runTracker = function()
 						
 						if( gestureDebug )
 						{
-							console.log("Touch release");
+							//console.log("Touch release");
+							console.log("Touch up at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 						}
 					}
-					else if( e.flags == FLAG_FIVE_FINGER_HOLD )
+					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
 						if( gestureDebug )
 						{

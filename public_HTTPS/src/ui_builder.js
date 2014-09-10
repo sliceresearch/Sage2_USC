@@ -277,12 +277,15 @@ function uiBuilder(json_cfg, clientID) {
 		this.version.style.color      = "#FFFFFF";
 		
 		if (this.json_cfg.ui.show_url) {
-			var hostname = window.location.hostname;
+                        var hostname = this.json_cfg.host;
 			var iport;
-			if (typeof this.json_cfg.rproxy_index_port != "undefined")
+			if (typeof this.json_cfg.rproxy_index_port != "undefined") {
 				iport = this.json_cfg.rproxy_index_port;
-			else
+				hostname = window.location.hostname;
+			}
+			else {
 				iport = this.json_cfg.index_port;
+			}
 			if (iport == 80) this.machine.textContent = hostname + window.location.pathname;
 			else this.machine.textContent = hostname + ":" + iport.toString() + window.location.pathname;
 			if (window.location.pathname == "/")

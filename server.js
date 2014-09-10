@@ -346,11 +346,12 @@ function initializeWSClient(wsio) {
 		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( radialMenus[wsio.clientID] === null )
+		if ( !(wsio.clientID in radialMenus) )
 		{
-			//console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			radialMenus[wsio.clientID] = wsio;
 		} else {
+			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			wsio.emit("disableSendToServer", uniqueID);
 		}
 	}
@@ -486,7 +487,7 @@ function wsPointerScrollStart(wsio, data) {
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-	
+
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if (elem !== null) {
@@ -501,7 +502,7 @@ function wsPointerScroll(wsio, data) {
 
 	// Casting the parameters to correct type
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
-	
+
 	pointerScroll(uniqueID, data);
 }
 
@@ -1436,11 +1437,24 @@ function loadConfiguration() {
 	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
 	
 	if (userConfig.ui.titleTextSize) userConfig.ui.titleTextSize = parseInt(userConfig.ui.titleTextSize, 10);
-	else userConfig.ui.titleTextSize = Math.round(0.015 * minDim);
+	else userConfig.ui.titleTextSize  = Math.round(0.015 * minDim);
 	
 	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
 	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
-	
+
+	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
+	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
+
+	if (userConfig.ui.minWindowWidth) userConfig.ui.minWindowWidth = parseInt(userConfig.ui.minWindowWidth, 10);
+	else userConfig.ui.minWindowWidth  = Math.round(0.08 * userConfig.totalWidth);  // 8%
+	if (userConfig.ui.minWindowHeight) userConfig.ui.minWindowHeight = parseInt(userConfig.ui.minWindowHeight, 10);
+	else userConfig.ui.minWindowHeight = Math.round(0.08 * userConfig.totalHeight); // 8%
+
+	if (userConfig.ui.maxWindowWidth) userConfig.ui.maxWindowWidth = parseInt(userConfig.ui.maxWindowWidth, 10);
+	else userConfig.ui.maxWindowWidth  = Math.round( 1.2 * userConfig.totalWidth);  // 120%
+	if (userConfig.ui.maxWindowHeight) userConfig.ui.maxWindowHeight = parseInt(userConfig.ui.maxWindowHeight, 10);
+	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * userConfig.totalHeight); // 120%
+
 	// Set default values if missing
 	if (userConfig.port === undefined) userConfig.port = 443;
 	if (userConfig.index_port === undefined) userConfig.index_port = 80;
@@ -2015,6 +2029,9 @@ if (program.interactive)
 			case 'bye':
 				saveSession();
 				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
 				console.log('SAGE2 done');
 				console.log('');
 				process.exit(0);
@@ -2031,6 +2048,8 @@ if (program.interactive)
 		// Saving stuff
 		saveSession();
 		assets.saveAssets();
+		if( omicronRunning )
+			omicronManager.disconnect();
 		console.log('');
 		console.log('SAGE2 done');
 		console.log('');
@@ -2204,7 +2223,7 @@ function getAppPositionSize(appInstance) {
 function createSagePointer ( uniqueID ) {
 	// From addClient type == sageUI
 	sagePointers[uniqueID] = new sagepointer(uniqueID+"_pointer");
-	remoteInteraction[uniqueID] = new interaction();
+	remoteInteraction[uniqueID] = new interaction(config);
 
 	broadcast('createSagePointer', sagePointers[uniqueID], 'receivesPointerData');
 }
@@ -2649,9 +2668,9 @@ function pointerScroll( uniqueID, data ) {
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 			var now = new Date();
-			
+
 			var event = {id: elem.id, type: "pointerScroll", position: ePosition, user: eUser, data: data, date: now};
-			
+
 			broadcast('eventInItem', event, 'receivesInputEvents');
 		}
 	}
@@ -2689,7 +2708,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 			var updatedItem;
 			if (elem.maximized !== true) {
 				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem, config);
+				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
@@ -2718,7 +2737,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 			var updatedItem;
 			if (elem.maximized !== true) {
 				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem, config);
+				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
@@ -2747,7 +2766,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 			var updatedItem;
 			if (elem.maximized !== true) {
 				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem, config);
+				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
@@ -2776,7 +2795,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 			var updatedItem;
 			if (elem.maximized !== true) {
 				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem, config);
+				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
@@ -2806,7 +2825,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 			var updatedItem;
 			if (elem.maximized !== true) {
 				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem, config);
+				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
@@ -2835,7 +2854,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 			var updatedItem;
 			if (elem.maximized !== true) {
 				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem, config);
+				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem);
 				if (updatedItem !== null) {
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
@@ -3039,7 +3058,7 @@ function createRadialMenu( pointerX, pointerY ) {
 function wsRemoveRadialMenu( wsio, data ) {
 	//console.log("Removed radial menu ID: " + data.id);
 	radialMenus[data.id] = null;
-	
+
 	var elem = findAppById(data.id);
 	if(elem !== null) deleteApplication( elem );
 }
