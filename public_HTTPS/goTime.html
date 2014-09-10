@@ -114,8 +114,8 @@
 				sharesContentWithRemoteServer: false,
 				receivesDisplayConfiguration: true,
 				receivesClockTime: false,
-				requiresFullApps: true,
-				requiresAppPositionSizeTypeOnly: false,
+				requiresFullApps: false,
+				requiresAppPositionSizeTypeOnly: true,
 				receivesMediaStreamFrames: false,
 				receivesWindowModification: true,
 				receivesPointerData: false,
@@ -292,15 +292,15 @@
 			wsio.emit('requestCurrentFrame');
 		});
 		
-		wsio.on('createAppWindow', function(data) {
-			winMgr.addAppWindow(data);
-			addAppTimeline(data);
-		});
-
-		// wsio.on('createAppWindowPositionSizeOnly', function(data) {
+		// wsio.on('createAppWindow', function(data) {
 		// 	winMgr.addAppWindow(data);
 		// 	addAppTimeline(data);
 		// });
+
+		wsio.on('createAppWindowPositionSizeOnly', function(data) {
+			winMgr.addAppWindow(data);
+			addAppTimeline(data);
+		});
 		
 		wsio.on('createAppTimeline', function(data) {
 			addAppTimeline(data);
@@ -633,7 +633,7 @@
 
     function addAppTimeline(data) {
     	// Add new application to timeline
-    	// console.log("adding new app to timeline");
+    	console.log("adding new app to timeline", data);
     	var exists = false;
     	for(i=0; i<applications.length; i++){
     		if(applications[i].id == data.id){

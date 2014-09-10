@@ -2431,7 +2431,7 @@ function getItemPositionSizeType(item) {
 }
 
 function getAppPositionSize(appInstance) {
-	return {id: appInstance.id, application: appInstance.application, left: appInstance.left,
+	return {id: appInstance.id, title: appInstance.title, application: appInstance.application, left: appInstance.left,
 			top: appInstance.top, width: appInstance.width, height: appInstance.height,
 			icon: appInstance.icon || null
 		};
