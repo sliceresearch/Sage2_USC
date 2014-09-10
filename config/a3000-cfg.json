@@ -65,7 +65,7 @@
 		pointerSize:    40,
 		noDropShadow: true,
 		fade: true,
-		fadeTime: 200
+		fadeTime: 500
 	},
 
 }

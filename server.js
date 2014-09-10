@@ -387,9 +387,6 @@ function initializeExistingApps(wsio) {
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindow', applications[i]);
 	}
-	for(i=0; i<inactiveApplications.length; i++){
-		wsio.emit('createAppTimeline', inactiveApplications[i]);
-	}
 	for(key in appAnimations){
 		if (appAnimations.hasOwnProperty(key)) {
 			appAnimations[key].clients[uniqueID] = false;
@@ -401,6 +398,9 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var i;
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindowPositionSizeOnly', applications[i]);
+	}
+	for(i=0; i<inactiveApplications.length; i++){
+		wsio.emit('createAppTimeline', inactiveApplications[i]);
 	}
 }
 
@@ -1468,10 +1468,11 @@ function wsChangeFrame(wsio, data){
 					// console.log("app " + a.title + " is NO longer active");
 
 					var elem = findAppById(app.id);
-					if(elem !== null) deleteApplication( elem );
+					// elem.inactive = true;
+					// if(elem !== null) 
+					deleteApplication( elem, true );
 
 					inactiveApplications.push(app);
-					broadcast('createAppTimeline', app, 'receivesGoTime');
 				}
 			}else{
 				// console.log("app " + app.title + " remains constantly active");
@@ -1517,7 +1518,6 @@ function wsChangeFrame(wsio, data){
 function wsUpdateKeyframe(wsio, data){
 	// Update keyframe values for GoTime
 	// data = {id: app.id, pi: keyframe.index, frame: frameNumber}
-	console.log("updating data: ", data);
 	var app = findAppById(data.id);
 	if (app !== null){
 		if(typeof app.presentation !== 'undefined'){
@@ -1552,7 +1552,6 @@ function wsUpdateKeyframe(wsio, data){
 			app.presentation[1].width = app.width;
 			app.presentation[1].height = app.height;
 
-			// console.log(app.presentation);
 			wsChangeFrame(wsio, {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
@@ -3179,9 +3178,15 @@ function keyPress( uniqueID, pointerX, pointerY, data ) {
 	}
 }
 
-function deleteApplication( elem ) {
-	broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
-	broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
+function deleteApplication( elem, inactive ) {
+	inactive = typeof inactive !== 'undefined' ? inactive : false;
+	if(inactive == true){
+		broadcast('deleteElement', {elemId: elem.id, inactive: true}, 'requiresFullApps');
+		broadcast('deleteElement', {elemId: elem.id, inactive: true}, 'requiresAppPositionSizeTypeOnly');
+	}else{
+		broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
+		broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
+	}
 	if(elem.application === "media_stream"){
 		var broadcastWS = null;
 		var mediaStreamData = elem.id.split("|");
