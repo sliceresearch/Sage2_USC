@@ -349,31 +349,42 @@ function uiBuilder(json_cfg, clientID) {
 	this.createRadialMenu = function(pointer_data) {
 		console.log("createRadialMenu " + pointer_data.id);
 		
-		pointer_data.left = 0;
-		pointer_data.top = 0;
+		pointer_data.left = 110;
+		pointer_data.top = 110;
 		
-		var pointerElem = createDrawingElement(pointer_data.id, "menuItem",
+		var menu = new radialMenu(); 
+		
+		var menuElem = createDrawingElement(pointer_data.id, "menuItem",
 							pointer_data.left - this.pointerOffsetX - this.offsetX,
 							pointer_data.top  - this.pointerOffsetY - this.offsetY,
-							this.pointerWidth, this.pointerHeight, 10000);
-		this.main.appendChild(pointerElem); 
+							radialMenuSize.x, radialMenuSize.y, 10000);
+		this.main.appendChild(menuElem); 
 
-		var menu = new radialMenu(); 
-		menu.init(pointerElem.id) ;
-		menu.draw();
+		
+		menu.init(menuElem.id) ;
+		
 
-		//if (pointer_data.visible) pointerElem.style.display = "block";
-		//else pointerElem.style.display = "none";
+		if (pointer_data.visible) menuElem.style.display = "block";
+		else menuElem.style.display = "none";
 
 		// keep track of the menus
-        this.radialMenus[pointer_data.id] = menu;
+        this.radialMenus[menuElem.id] = menu;
 	};
 	
-	this.updateRadialMenuPosition = function(pointer_data) {
-		console.log("updateRadialMenuPosition " + pointer_data.id);
-		var pointerElem = document.getElementById(pointer_data.id);
-		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top  = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+	this.updateRadialMenu = function(data) {
+		var menuElem = document.getElementById(data.id+"_menu");
+		
+		console.log("uibuilder: updateRadialMenu " + menuElem.id + " ("+data.x+","+data.y+") menu: "+ menuElem.style.left + "," + menuElem.style.top);
+		
+		this.radialMenus[menuElem.id].onEvent( data.type, {x: data.x, y: data.y}, data.id, data );
+		this.radialMenus[menuElem.id].draw();
+		
+		//var pointerElem = document.getElementById(pointer_data.id);
+		menuElem.style.left = (data.x-this.pointerOffsetX-this.offsetX).toString() + "px";
+		menuElem.style.top  = (data.y-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		
+		
+		//console.log("left: " + pointerElem.style.left + " top: " + pointerElem.style.top);
 	};
 	
 	this.addRemoteSite = function(data) {

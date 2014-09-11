@@ -218,12 +218,8 @@
 			ui.createRadialMenu(menu_data);
         });
 		
-		wsio.on('createRadialMenu', function(menu_data){
-			ui.createRadialMenu(menu_data);
-        });
-		
-		wsio.on('updateRadialMenuPosition', function(pointer_data){
-			ui.updateRadialMenuPosition(pointer_data);
+		wsio.on('radialMenuEvent', function(menu_data){
+			ui.updateRadialMenu(menu_data);
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {

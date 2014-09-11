@@ -427,7 +427,7 @@ omicronManager.prototype.runTracker = function()
 						{
 							console.log("Touch gesture: Three finger hold");
 						}
-						createRadialMenu( posX, posY );
+						createRadialMenu( sourceID, posX, posY );
 					}
 					else if( e.flags === FLAG_SINGLE_CLICK )
 					{

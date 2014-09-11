@@ -18,6 +18,7 @@ var previewWindowOffset = 0.78;
 
 // radial menu buttons
 var radialMenuCenter = { x: 200, y: 200 }; // overwritten in init - based on window size
+var radialMenuSize = { x: 512, y: 512 };
 var angleSeparation = 35;
 var initAngle = 55;
 var angle = 0;
@@ -35,12 +36,16 @@ function radialMenu(){
 		this.ctx     = this.element.getContext("2d");
 		
 		this.resrcPath = "images/radialMenu/"
-	
+		
+		this.menuID = id;
+		this.currentMenuState = 'radialMenu'
+		this.currentRadialState = 'radialMenu'
+		
 		// load thumbnail icons
 		this.idleImageIcon = new Image;
 		this.idleImageIcon.src = this.resrcPath +"image2.svg"
 		this.idlePDFIcon = new Image;
-		this.idlePDFIcon.src = this.resrcPath +"file-pdf.svg"
+		this.idlePDFIcon.src = this.resrcPath +"file.svg"
 		this.idleVideoIcon = new Image;
 		this.idleVideoIcon.src = this.resrcPath +"clapper.svg"
 		this.idleAppIcon = new Image;
@@ -271,6 +276,10 @@ function radialMenu(){
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
+		// TEMP: Just to clearly see context edge
+		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
+		this.ctx.fillRect(0,0, this.element.width, this.element.height)
+			
 		this.radialCloseButton.draw();
 		
 		this.radialImageButton.draw();
@@ -280,6 +289,120 @@ function radialMenu(){
 		this.radialSessionButton.draw();
 		this.radialSaveSessionButton.draw();
 		this.radialSettingsButton.draw();
+	};
+	
+	this.onEvent = function(type, position, user, data) {
+		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
+	
+		overButton = false;
+		
+		this.radialCloseButton.onEvent(type, user.id, position.x, position.y, data);
+		if ( this.radialCloseButton.isClicked() && this.sendsToServer )
+		{
+			this.closeMenu();
+		}
+		
+		
+		this.radialSessionButton.onEvent(type, user.id, position.x, position.y, data);
+		this.radialSaveSessionButton.onEvent(type, user.id, position.x, position.y, data);
+			
+		if( this.currentRadialState === 'radialMenu' )
+		{
+			this.radialImageButton.onEvent(type, user.id, position.x, position.y, data);
+			this.radialPDFButton.onEvent(type, user.id, position.x, position.y, data);
+			this.radialVideoButton.onEvent(type, user.id, position.x, position.y, data);
+			this.radialAppButton.onEvent(type, user.id, position.x, position.y, data);
+			
+		}
+		
+		// Level 2
+		if( this.currentRadialState === 'radialAppMenu2' )
+		{
+			this.radial2ImageButton.onEvent(type, user.id, position.x, position.y, data);
+			this.radial2PDFButton.onEvent(type, user.id, position.x, position.y, data);
+			this.radial2VideoButton.onEvent(type, user.id, position.x, position.y, data);
+			this.radial2AppButton.onEvent(type, user.id, position.x, position.y, data);
+		}
+		
+		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
+		{
+			this.wsio.emit('requestStoredFiles');
+			if( this.currentMenuState !== 'imageThumbnailWindow' )
+				this.currentMenuState = 'imageThumbnailWindow';
+			else
+				this.currentMenuState = 'radialMenu';
+		}
+		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
+		{
+			this.wsio.emit('requestStoredFiles');
+			if( this.currentMenuState !== 'pdfThumbnailWindow' )
+				this.currentMenuState = 'pdfThumbnailWindow';
+			else
+				this.currentMenuState = 'radialMenu';
+		}
+		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
+		{
+			this.wsio.emit('requestStoredFiles');
+			if( this.currentMenuState !== 'videoThumbnailWindow' )
+				this.currentMenuState = 'videoThumbnailWindow';
+			else
+				this.currentMenuState = 'radialMenu';
+		}
+		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
+		{
+			this.wsio.emit('requestStoredFiles');
+			if( this.currentMenuState !== 'appThumbnailWindow' )
+				this.currentMenuState = 'appThumbnailWindow';
+			else
+				this.currentMenuState = 'radialMenu';
+		}
+		if( this.radialSessionButton.isClicked() )
+		{
+			if( this.currentMenuState !== 'sessionThumbnailWindow' )
+				this.currentMenuState = 'sessionThumbnailWindow';
+			else
+				this.currentMenuState = 'radialMenu';
+		}
+		if( this.radialSaveSessionButton.isClicked() )
+		{
+			this.wsio.emit('saveSesion');
+			this.wsio.emit('requestStoredFiles');
+		}
+		
+		if( this.currentMenuState !== 'radialMenu' )
+		{
+			var currentThumbnailButtons = this.imageThumbnailButtons;
+			
+			if( this.currentMenuState === 'imageThumbnailWindow' )
+				currentThumbnailButtons = this.imageThumbnailButtons;
+			else if( this.currentMenuState === 'pdfThumbnailWindow' )
+				currentThumbnailButtons = this.pdfThumbnailButtons;
+			else if( this.currentMenuState === 'videoThumbnailWindow' )
+				currentThumbnailButtons = this.videoThumbnailButtons;
+			else if( this.currentMenuState === 'appThumbnailWindow' )
+				currentThumbnailButtons = this.appThumbnailButtons;
+			else if( this.currentMenuState === 'sessionThumbnailWindow' )
+				currentThumbnailButtons = this.sessionThumbnailButtons;
+				
+			for( i = 0; i < currentThumbnailButtons.length; i++ )
+			{
+				thumbButton = currentThumbnailButtons[i];
+				thumbButton.onEvent(type, user.id, position.x, position.y, data);
+
+				if ( thumbButton.isReleased() && this.sendsToServer === true )
+				{ 
+					//console.log(thumbButton+" released" );
+					this.addNewElementFromStoredFiles( thumbButton.getData()  );
+				}
+				if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+				{
+					this.hoverOverText = thumbButton.getData().filename;
+					this.hoverOverThumbnail = thumbButton.idleImage;
+					this.hoverOverMeta =  thumbButton.getData().meta;
+						overButton = true;
+				}
+			}
+		}
 	};
 }
 
@@ -439,7 +562,7 @@ function buttonWidget() {
 		}
 	};
 	
-	this.onEvent = function( type, user, x, y, data, date )
+	this.onEvent = function( type, user, x, y, data )
 	{
 		//console.log("buttonWidget onEvent("+eventType+","+userID+","+x+","+y+","+data+","+date+")");
 		

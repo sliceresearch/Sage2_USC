@@ -2537,12 +2537,12 @@ function pointerMove(uniqueID, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-
-	broadcast('updateRadialMenuPosition', radialMenus[uniqueID], 'receivesPointerData');
 	
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	
+	updateRadialMenu( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
@@ -3019,7 +3019,9 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	
-	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu");
+	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu", uniqueID);
+	radialMenus[uniqueID].top = pointerY;
+	radialMenus[uniqueID].left = pointerX;
 	broadcast('createRadialMenu', radialMenus[uniqueID], 'receivesPointerData');
 			
 	var ct = findControlsUnderPointer(pointerX, pointerY);
@@ -3040,6 +3042,11 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 		// Set the menu position
 		
 	}
+}
+
+function updateRadialMenu( data )
+{
+	broadcast('radialMenuEvent', data, 'receivesPointerData');
 }
 
 function wsRemoveRadialMenu( wsio, data ) {

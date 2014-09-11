@@ -13,8 +13,9 @@
  */
 
 
-function radialmenu(id) {
+function radialmenu(id, ptrID) {
 	this.id = id;
+	this.pointerid = ptrID;
 	this.label = "";
 	this.color = [255, 255, 255];
 	this.left = 0;
