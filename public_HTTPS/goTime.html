@@ -80,7 +80,7 @@
 	var numFrames = 20;
 	var fps = 5;
 	var applications = [];
-	var GoTimeStepForwardBtn, GoTimeStepBackwardBtn, GoTimeBeginningBtn, GoTimeEndBtn, GoTimePlayBtn, GoTimeFPS, GoTimeNumFrames;
+	var GoTimeStepForwardBtn, GoTimeStepBackwardBtn, GoTimeBeginningBtn, GoTimeEndBtn, GoTimePlayBtn, GoTimeFPS, GoTimeNumFrames, GoTimeDebugger;
 	var GoTimePlayer, GoTimePlaying = false;
 	var adjustingKeyframe = false;
 	var GoTimeSnap = false, GoTimeLoop = false;
@@ -162,13 +162,14 @@
 		fileCloseBtn     = document.getElementById('fileCloseBtn');
 		openWebpageBtn   = document.getElementById('openWebpageBtn');
 		
-		GoTimeStepForwardBtn = document.getElementById('GoTimeStepForwardBtn');
-		GoTimeStepBackwardBtn = document.getElementById('GoTimeStepBackwardBtn');
-		GoTimeBeginningBtn = document.getElementById('GoTimeBeginningBtn');
-		GoTimeEndBtn = document.getElementById('GoTimeEndBtn');
-		GoTimePlayBtn = document.getElementById('GoTimePlayBtn');
-		GoTimeFPS = document.getElementById('GoTimeFPS');
-		GoTimeNumFrames = document.getElementById('GoTimeNumFrames');
+		GoTimeStepForwardBtn 	= document.getElementById('GoTimeStepForwardBtn');
+		GoTimeStepBackwardBtn 	= document.getElementById('GoTimeStepBackwardBtn');
+		GoTimeBeginningBtn 		= document.getElementById('GoTimeBeginningBtn');
+		GoTimeEndBtn 			= document.getElementById('GoTimeEndBtn');
+		GoTimePlayBtn 			= document.getElementById('GoTimePlayBtn');
+		GoTimeFPS 				= document.getElementById('GoTimeFPS');
+		GoTimeNumFrames 		= document.getElementById('GoTimeNumFrames');
+		GoTimeDebugger 			= document.getElementById('GoTimeDebugger');
 
 		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
 		serverSessionBtn.addEventListener('click', saveSession, false);
@@ -178,7 +179,7 @@
 		fileDeleteBtn.addEventListener('click',    deleteServerFile, false);
 		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
 		
-        openWebpageBtn.addEventListener('click', openWebpage, false);
+        openWebpageBtn.addEventListener('click',   openWebpage, false);
 
 		GoTimeStepForwardBtn.addEventListener('click',	GoTimeStepForward, false);
 		GoTimeStepBackwardBtn.addEventListener('click',	GoTimeStepBackward, false);
@@ -187,6 +188,7 @@
 		GoTimePlayBtn.addEventListener('click',			GoTimePlay, false);
 		GoTimeFPS.addEventListener('blur',				GoTimeChangeFPS, false);
 		GoTimeNumFrames.addEventListener('blur',		GoTimeChangeNumFrames, false);
+		GoTimeDebugger.addEventListener('click',		GoTimeDebug, false);
 		GoTimeFPS.value = fps;
 		GoTimeNumFrames.value = numFrames;
 
@@ -218,7 +220,6 @@
 			},
 			slide: function(e,ui){
 				var frame = ui.value;
-				console.log("GoTimeSnap",GoTimeSnap);
 				if(GoTimeSnap){
 					for(var i=0; i<applications.length; i++){
 						for(var k=0; k<applications[i].presentation.length; k++){
@@ -269,6 +270,7 @@
 		$(GoTimePlayBtn).button(		{text: false, icons: {primary: "ui-icon-play"}}).width("34px");
 		$(GoTimeStepForwardBtn).button(	{text: false, icons: {primary: "ui-icon-seek-next"}}).width("34px");
 		$(GoTimeEndBtn).button(			{text: false, icons: {primary: "ui-icon-seek-end"}}).width("34px");
+		$(GoTimeDebugger).button(		{text: true,  icons: {primary: "ui-icon-info"}});
 
 
 
@@ -363,6 +365,7 @@
 		
 		wsio.on('setItemPosition', function(position_data) {
 			winMgr.setItemPosition(position_data);
+			// Only update position if on a keyframe
 			if(!adjustingKeyframe){
 				var appID = position_data.elemId;
 				var kid;
@@ -711,6 +714,12 @@
 	    	d.className = "app";
 
 	    	// App label and icon
+	    	var dt = document.createElement("div");
+	    	dt.style.width = '25%';
+	    	var dtt = document.createElement("div");
+	    	dtt.style.width = '80%';
+	    	dtt.style.display = 'inline-block';
+	    	dtt.style.verticalAlign = 'top';
 	    	var t = document.createTextNode(data.title);
 	    	var img = new Image();
 	    	var applicationName = data.application;
@@ -722,29 +731,45 @@
 				img.src = winMgr.canvasImg.src;
 			img.width = "32";
 			img.height = "32";
+	    	var db = document.createElement("button");
+	    	db.id = 'db_'+data.id;
+	    	db.style.display = 'block';
+	    	db.style.top = '15px';
+	    	db.onclick = function () {
+				wsio.emit('deleteGoTimeApp', data);
+	    	}
 
-	    	// JqueryUI slider
+	    	// Create App slider
 	    	var slider = document.createElement("div");
 	    	slider.id = "jSlider_"+data.id;
 	    	slider.className = "sliders";
 
 	    	// Add to DOM
-			d.appendChild(t);
-			d.appendChild(img);
+			dtt.appendChild(t);
+			dt.appendChild(db);
+			dt.appendChild(dtt);
+			dt.appendChild(img);
+			d.appendChild(dt);
 			d.appendChild(slider);
 			li.appendChild(d);
 			ul.appendChild(li);
 
+			// Initialize Delete Button
+	    	$(db).button({text: false, icons: {primary: "ui-icon-close"}}).width("10px").height("10px");
+	    	
+			// Initialize App Slider
 	    	$("#jSlider_"+data.id).slider({
 				range: true,
 				min: 1,
-				max: numFrames
+				max: numFrames,
+				values: [1,numFrames]
 			});
 			if(data.application == 'GoTime'){
 				$("#jSlider_"+data.id).slider( "option", "disabled", true );
 			}
 			var sStart, sStop;
 
+			// Initialize App Slider Start Handle
 	    	var iStart = document.createElement("div");
 	    	iStart.id = "start_"+data.id;
 	    	iStart.className = "sliderLabels";
@@ -767,9 +792,7 @@
 	    			"height": data.height
 	    		}
 	    	}
-
 			d.appendChild(iStart);
-
 	    	setTimeout(function (){
 				$("#start_"+data.id).position({
 					my: 'center top',
@@ -780,7 +803,7 @@
 				});
 			},500);
 
-
+			// Handler for App Slider Start & Stop
 			$("#jSlider_"+data.id).on("slidestart", function( event, ui ) {
 				adjustingKeyframe = true;
 /*				var appID = event.target.id.slice(8);
@@ -808,7 +831,7 @@
 				adjustingKeyframe = false;
 			});
 
-
+			// Handler for App Slider
 			$("#jSlider_"+data.id).on("slide", function( event, ui ) {
 	    		var appID = data.id;
 	    		var i;
@@ -853,7 +876,6 @@
 									width: data.presentation.width,
 									height: data.presentation.height});
 					    	}
-					    	// console.log(uiHandle);
 						},5);
 
 						// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStart);
@@ -862,6 +884,7 @@
 				}
 			});
 
+			// Initialize App Slider Stop Handle
 	    	var iStop = document.createElement("div");
 	    	iStop.id = "stop_"+data.id;
 	    	iStop.className = "sliderLabels";
@@ -883,7 +906,6 @@
 	    		}
 
 	    	}
-
 	    	setTimeout(function (){
 				$("#stop_"+data.id).position({
 					my: 'top',
@@ -893,27 +915,21 @@
 					offset: "0, 0"
 				});
 			},500);
-
-			$("#jSlider_"+data.id).slider("option", "values", [sStart, sStop]);
-
+			$("#jSlider_"+data.id).slider("values", [sStart, sStop]);
 			d.appendChild(iStop);
 
-			// setTimeout(function(){
-				wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: sStart, 
-					left: data.presentation.left,
-					top: data.presentation.top,
-					width: data.presentation.width,
-					height: data.presentation.height});
-				wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: sStop, 
-					left: data.presentation.left,
-					top: data.presentation.top,
-					width: data.presentation.width,
-					height: data.presentation.height});
-			// },0);
+			wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: sStart, 
+				left: data.presentation.left,
+				top: data.presentation.top,
+				width: data.presentation.width,
+				height: data.presentation.height});
+			wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: sStop, 
+				left: data.presentation.left,
+				top: data.presentation.top,
+				width: data.presentation.width,
+				height: data.presentation.height});
 
-			// console.log("presentation", data.presentation);
 	    	applications.push(data);
-	    	// console.log("applications",applications[applications.length-1]);
 		}else{
 	    	// console.log("app already on timeline");
 		}
@@ -1022,7 +1038,6 @@
 			wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
 		}
 	}
-
 	function GoTimePlay(){
 		if(!GoTimePlaying){
 			clearInterval(GoTimePlayer);
@@ -1093,8 +1108,15 @@
 
 		}
 
-
 		wsio.emit('changeFrame', {currentFrame: currentFrame, numFrames: numFrames});
+	}
+
+	function GoTimeDebug(){
+		// Print debug info
+		for(var i =0; i<applications.length; i++){
+			console.log(applications[i]);
+		}
+		wsio.emit('GoTimeDebug', {});
 	}
 
 
@@ -1220,7 +1242,9 @@
 				<div id="GoTimeHelpBtn"><a href='#' onclick='$("#GoTime_help").dialog("open");'>Help</a>&nbsp;</div>
 				<div id="GoTimeSnap"><label for="GoTimeSnapBox"><input type="checkbox" id="GoTimeSnapBox" onclick='GoTimeSnap = !GoTimeSnap;'> Snap</label></div><div id="GoTimeLoop"><label for="GoTimeLoopBox"><input type="checkbox" id="GoTimeLoopBox" onclick='GoTimeLoop = !GoTimeLoop;'> Loop</label></div>
 			</div>
-			<ul id="appList"><li id="timelineSliderLI"><div id="timelineSliderDiv">Timeline: <div id="timelineSlider"></div><div id="timelineSliderLabel"></div></div></li></ul></div>
+			<ul id="appList"><li id="timelineSliderLI"><div id="timelineSliderDiv">Timeline: <div id="timelineSlider"></div><div id="timelineSliderLabel"></div></div></li></ul>
+			<div id="GoTimeDebugger">DEBUG</div>
+		</div>
 		
 		<div id="textWidthTest"></div>
 		<canvas id="mediaCanvas" style="display: none;"></canvas>

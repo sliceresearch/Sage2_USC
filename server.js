@@ -332,6 +332,8 @@ function initializeWSClient(wsio) {
 		wsio.on('requestCurrentFrame', wsRequestCurrentFrame);
 		wsio.on('changeFrame', wsChangeFrame);
 		wsio.on('updateKeyframe', wsUpdateKeyframe);
+		wsio.on('deleteGoTimeApp', wsDeleteGoTimeApp);
+		wsio.on('GoTimeDebug', wsGoTimeDebug);
 	}
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
@@ -1564,6 +1566,50 @@ function setItemPositionAndSize(wsio, data){
 	// 	elemWidth: app.width, elemHeight: app.height,
 	// 	force: true, date: new Date()}
 
+}
+
+function wsDeleteGoTimeApp( wsio, data ) {
+	broadcast('deleteElement', {elemId: data.id}, 'requiresFullApps');
+	broadcast('deleteElement', {elemId: data.id}, 'requiresAppPositionSizeTypeOnly');
+	if(data.application === "media_stream"){
+		var broadcastWS = null;
+		var mediaStreamData = data.id.split("|");
+		var broadcastAddress = mediaStreamData[0];
+		var broadcastID = parseInt(mediaStreamData[1]);
+		for(var i=0; i<clients.length; i++){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			if(clientAddress == broadcastAddress) broadcastWS = clients[i];
+		}
+
+		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
+	}
+	var app;
+	for(var i=0; i<applications.length; i++){
+		if(applications[i].id == data.id){
+			app = applications[i];
+		}
+	}
+	if(app === undefined){
+		for(var i=0; i<inactiveApplications.length; i++){
+			if(inactiveApplications[i].id == data.id){
+				app = inactiveApplications[i];
+			}
+		}
+		removeElement(inactiveApplications, app);
+	}else{
+		removeElement(applications, app);
+	}
+}
+
+function wsGoTimeDebug( wsio, data ) {
+	console.log("///////////////////// GoTime Debug (Applications) ///////////////////// ");
+	for(var i=0; i<applications.length; i++){
+		console.log(applications[i]);
+	}
+	console.log("///////////////////// GoTime Debug (INACTIVE Applications) ///////////////////// ");
+	for(var i=0; i<inactiveApplications.length; i++){
+		console.log(inactiveApplications[i]);
+	}
 }
 
 /******************** Clone Request Methods ****************************/
