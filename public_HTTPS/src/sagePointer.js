@@ -193,7 +193,7 @@ function sagePointer(wsio) {
 	};
 	
 	this.captureDesktop = function(mediaSourceId) {
-		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 1920, maxHeight: 1080};
+		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 3840, maxHeight: 2160};
 		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 	};
 	
