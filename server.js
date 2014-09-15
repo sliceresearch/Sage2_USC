@@ -1429,7 +1429,6 @@ function wsChangeFrame(wsio, data){
 			currentFrame: currentFrame,
 			numFrames: numFrames
 		};
-		// console.log("wsChangeFrame",ff);
 		broadcast('updateFrame', ff,'receivesGoTime');
 
 		// Check to see if currently running appliations should be removed
@@ -1440,6 +1439,7 @@ function wsChangeFrame(wsio, data){
 				var appActive = false;
 				var prevFrame;
 				var nextFrame;
+				console.log("app.presentation", app.presentation);
 				for(var f=0; f<app.presentation.length-1; f++){
 					// Check if current frame is within start and end frames
 					prevFrame = app.presentation[f];
@@ -1463,6 +1463,7 @@ function wsChangeFrame(wsio, data){
 										elemLeft: app.left, elemTop: app.top,
 										elemWidth: app.width, elemHeight: app.height,
 										force: true, date: new Date()};
+					// console.log('setItemPositionAndSize', updateItem);
 					broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 
 				}else{
@@ -1523,14 +1524,27 @@ function wsUpdateKeyframe(wsio, data){
 	var app = findAppById(data.id);
 	if (app !== null){
 		if(typeof app.presentation !== 'undefined'){
-			if(typeof data.frame !== 'undefined'){
-				// console.log("updating " + app.id + " keyframe " + data.pi + " to keyframe" + data.frame);
+			console.log("updateKeyframe", data);
+			if(typeof app.presentation[data.pi] !== 'undefined'){
+				console.log("updating " + app.id + " keyframe " + data.pi + " to keyframe " + data.frame + " with width " + data.width);
 				app.presentation[data.pi].frame = data.frame;
-				app.presentation[data.pi].left = app.left;
-				app.presentation[data.pi].top = app.top;
-				app.presentation[data.pi].width = app.width;
-				app.presentation[data.pi].height = app.height;
+				app.presentation[data.pi].left = data.left;
+				app.presentation[data.pi].top = data.top;
+				app.presentation[data.pi].width = data.width;
+				app.presentation[data.pi].height = data.height;
 				wsChangeFrame(wsio, {currentFrame: currentFrame, numFrames: numFrames});
+			}else{
+				var keyframe = {
+					frame: 	data.frame,
+					left: 	data.left,
+					top: 	data.top,
+					width: 	data.width,
+					height: data.height
+				};
+				app.presentation.push(keyframe);
+				app.presentation.sort(function(a,b){return a.frame - b.frame});
+				console.log("sorted",app.presentation);
+				// wsChangeFrame(wsio, {currentFrame: currentFrame, numFrames: numFrames});
 			}
 		}else{
 			app.presentation = [];

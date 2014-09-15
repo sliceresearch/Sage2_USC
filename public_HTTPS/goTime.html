@@ -84,6 +84,7 @@
 	var GoTimePlayer, GoTimePlaying = false;
 	var adjustingKeyframe = false;
 	var GoTimeSnap = false, GoTimeLoop = false;
+	var addKeyframeTimer;
 
 	// Explicitely close web socket when web broswer is closed
 	window.onbeforeunload = function() {
@@ -321,6 +322,7 @@
 		});
 		
 		wsio.on('createAppTimeline', function(data) {
+			console.log("calling addAppTimeline from createAppTimeline");
 			addAppTimeline(data);
 		});
 
@@ -330,26 +332,112 @@
 		});
 
 		wsio.on('finishedResize', function(data) {
+			/* data = {id, elemWidth, elemHeight} */
+			// var appID = data.id;
+			// var kid;
+			// for(var i=0; i<applications.length; i++){
+			// 	if(applications[i].id == appID){
+			// 		for(var k=0; k<applications[i].presentation.length; k++){
+			// 			if(applications[i].presentation[k].frame == currentFrame){
+			// 				console.log("setting keyframe for resize event");
+			// 				kid = k;
+			// 				applications[i].presentation[k].left 	= applications[i].left;
+			// 				applications[i].presentation[k].top	 	= applications[i].top;
+			// 				applications[i].presentation[k].width 	= applications[i].width;
+			// 				applications[i].presentation[k].height 	= applications[i].height;
+			// 				wsio.emit('updateKeyframe', {id: appID, pi: kid, frame: currentFrame, 
+			// 					left: 	applications[i].presentation[k].left,
+			// 					top: 	applications[i].presentation[k].top,
+			// 					width: 	applications[i].presentation[k].width,
+			// 					height: applications[i].presentation[k].height});
+			// 				break;
+			// 			}
+			// 		}
+			// 		break;
+			// 	}
+			// }
+			console.log("finishedResize", data);
+
+			// Update keyframe position if not adjusting keyframe
 			var appID = data.id;
 			var kid;
 			for(var i=0; i<applications.length; i++){
 				if(applications[i].id == appID){
 					for(var k=0; k<applications[i].presentation.length; k++){
 						if(applications[i].presentation[k].frame == currentFrame){
+							console.log("Update size/pos of " + applications[i].id + " keyframe " + k);
 							kid = k;
 							applications[i].presentation[k].left 	= applications[i].left;
 							applications[i].presentation[k].top	 	= applications[i].top;
-							applications[i].presentation[k].width 	= applications[i].width;
-							applications[i].presentation[k].height 	= applications[i].height;
+							applications[i].presentation[k].width 	= data.elemWidth;
+							applications[i].presentation[k].height 	= data.elemHeight;
 							wsio.emit('updateKeyframe', {id: appID, pi: kid, frame: currentFrame, 
 								left: 	applications[i].presentation[k].left,
 								top: 	applications[i].presentation[k].top,
 								width: 	applications[i].presentation[k].width,
 								height: applications[i].presentation[k].height});
+							break;
 						}
+					}
+					if(kid === undefined){
+						window.clearTimeout(addKeyframeTimer);
+						addKeyframeTimer = setTimeout(function(appID){
+							console.log("creating new keyframe for " + appID + " at frame " + currentFrame);
+							var values = $("#jSlider_"+appID).slider("values");
+							values.push(currentFrame);
+							values.sort();
+							
+							// Delete slider
+							$("#jSlider_"+appID).slider("destroy");
+
+							// Initialize New App Slider
+							$("#jSlider_"+appID).slider({
+								range: false,
+								min: 1,
+								max: numFrames,
+								values: values
+							});
+							// if(data.application == 'GoTime'){
+							// 	$("#jSlider_"+data.id).slider( "option", "disabled", true );
+							// }
+
+							// Add IDs to handles
+							// var appHandles = $("#jSlider_"+appID + " span");
+							// for(s=0; s<appHandles.length; s++){
+							// 	appHandles[s].id = "appSlider_" + s;
+							// 	console.log("handle: " + appHandles[s].id);
+							// }
+
+							// Add new keyframe to applications
+							for(i=0; i<applications.length; i++){
+								if(applications[i].id == appID){
+									var keyframe = {
+										frame: 	currentFrame,
+										left: 	applications[i].left,
+										top: 	applications[i].top,
+										width: 	applications[i].width,
+										height: applications[i].height
+									};
+									applications[i].presentation.push(keyframe);
+									applications[i].presentation.sort(function(a,b){return a.frame - b.frame});
+									var pi = applications[i].presentation.length - 1;
+									console.log("new keyframes", applications[i].presentation);
+
+									wsio.emit('updateKeyframe', {id: appID, pi: pi, 
+										frame: currentFrame, 
+										left: 	applications[i].left,
+										top: 	applications[i].top,
+										width: 	applications[i].width,
+										height: applications[i].height});
+									break;
+								}
+							}
+
+						}, 250, applications[i].id);
 					}
 				}
 			}
+
 		});
 
 		wsio.on('deleteElement', function(elem_data) {
@@ -365,7 +453,8 @@
 		
 		wsio.on('setItemPosition', function(position_data) {
 			winMgr.setItemPosition(position_data);
-			// Only update position if on a keyframe
+
+			// Update keyframe position if not adjusting keyframe
 			if(!adjustingKeyframe){
 				var appID = position_data.elemId;
 				var kid;
@@ -373,18 +462,75 @@
 					if(applications[i].id == appID){
 						for(var k=0; k<applications[i].presentation.length; k++){
 							if(applications[i].presentation[k].frame == currentFrame){
-								// console.log("updating position keyframe");
+								console.log("Update size/pos of " + applications[i].id + " keyframe " + k);
 								kid = k;
-								applications[i].presentation[k].left 	= applications[i].left;
-								applications[i].presentation[k].top	 	= applications[i].top;
-								applications[i].presentation[k].width 	= applications[i].width;
-								applications[i].presentation[k].height 	= applications[i].height;
+								applications[i].presentation[k].left 	= position_data.elemLeft;
+								applications[i].presentation[k].top	 	= position_data.elemTop;
+								applications[i].presentation[k].width 	= position_data.elemWidth;
+								applications[i].presentation[k].height 	= position_data.elemHeight;
 								wsio.emit('updateKeyframe', {id: appID, pi: kid, frame: currentFrame, 
 									left: 	applications[i].presentation[k].left,
 									top: 	applications[i].presentation[k].top,
 									width: 	applications[i].presentation[k].width,
 									height: applications[i].presentation[k].height});
+								break;
 							}
+						}
+						if(kid === undefined){
+							window.clearTimeout(addKeyframeTimer);
+							addKeyframeTimer = setTimeout(function(appID){
+								console.log("creating new keyframe for " + appID + " at frame " + currentFrame);
+								var values = $("#jSlider_"+appID).slider("values");
+								values.push(currentFrame);
+								values.sort();
+								
+								// Delete slider
+								$("#jSlider_"+appID).slider("destroy");
+
+								// Initialize New App Slider
+								$("#jSlider_"+appID).slider({
+									range: false,
+									min: 1,
+									max: numFrames,
+									values: values
+								});
+								// if(data.application == 'GoTime'){
+								// 	$("#jSlider_"+data.id).slider( "option", "disabled", true );
+								// }
+
+								// Add IDs to handles
+								// var appHandles = $("#jSlider_"+appID + " span");
+								// for(s=0; s<appHandles.length; s++){
+								// 	appHandles[s].id = "appSlider_" + s;
+								// 	console.log("handle: " + appHandles[s].id);
+								// }
+
+								// Add new keyframe to applications
+								for(i=0; i<applications.length; i++){
+									if(applications[i].id == appID){
+										var keyframe = {
+											frame: 	currentFrame,
+											left: 	applications[i].left,
+											top: 	applications[i].top,
+											width: 	applications[i].width,
+											height: applications[i].height
+										};
+										applications[i].presentation.push(keyframe);
+										applications[i].presentation.sort(function(a,b){return a.frame - b.frame});
+										var pi = applications[i].presentation.length - 1;
+										console.log("new keyframes", applications[i].presentation);
+
+										wsio.emit('updateKeyframe', {id: appID, pi: pi, 
+											frame: currentFrame, 
+											left: 	applications[i].left,
+											top: 	applications[i].top,
+											width: 	applications[i].width,
+											height: applications[i].height});
+										break;
+									}
+								}
+
+							}, 250, applications[i].id);
 						}
 					}
 				}
@@ -695,6 +841,12 @@
     /* GoTime Functions */
 
     function addAppTimeline(data) {
+    	console.log("addAppTimeline with" + 
+			" width: " + data.width + 
+			" height: " + data.height + 
+			" left: " + data.left + 
+			" top: " + data.top 
+			);
     	// Add new application to timeline
     	var exists = false;
     	for(i=0; i<applications.length; i++){
@@ -757,182 +909,276 @@
 			// Initialize Delete Button
 	    	$(db).button({text: false, icons: {primary: "ui-icon-close"}}).width("10px").height("10px");
 	    	
-			// Initialize App Slider
-	    	$("#jSlider_"+data.id).slider({
-				range: true,
-				min: 1,
-				max: numFrames,
-				values: [1,numFrames]
-			});
-			if(data.application == 'GoTime'){
-				$("#jSlider_"+data.id).slider( "option", "disabled", true );
-			}
-			var sStart, sStop;
+	    	frames = createAppSlider(data, d);
 
-			// Initialize App Slider Start Handle
-	    	var iStart = document.createElement("div");
-	    	iStart.id = "start_"+data.id;
-	    	iStart.className = "sliderLabels";
-	    	if((data.presentation != null) && (data.presentation[0].frame != null)){
-	    		// console.log("finding min");
-				var pi = findMinIndex(data.presentation);
-	    		var start = (data.application !== 'GoTime' ? data.presentation[pi].frame : 1);
-	    		iStart.innerHTML = start;
-	    		sStart = start;
-	    	}else{
-	    		var start = (data.application !== 'GoTime' ? currentFrame : 1);
-	    		iStart.innerHTML = start;
-	    		sStart = start;
-	    		data.presentation = [];
-	    		data.presentation[0] = {
-	    			"frame": start, 
-	    			"left": data.left, 
-	    			"top": data.top, 
-	    			"width": data.width, 
-	    			"height": data.height
-	    		}
-	    	}
-			d.appendChild(iStart);
-	    	setTimeout(function (){
-				$("#start_"+data.id).position({
-					my: 'center top',
-					at: 'center bottom',
-					of: $("#jSlider_"+data.id + " span").get(0),
-					collision: 'none',
-					offset: "0, 0"
-				});
-			},500);
-
-			// Handler for App Slider Start & Stop
-			$("#jSlider_"+data.id).on("slidestart", function( event, ui ) {
-				adjustingKeyframe = true;
-/*				var appID = event.target.id.slice(8);
-				var kid;
-				for(var i=0; i<applications.length; i++){
-					if(applications[i].id == appID){
-						for(var k=0; k<ui.values.length; k++){
-							if(ui.values[k] == ui.value){
-								kid = k;
-								applications[i].presentation[k].left 	= applications[i].left;
-								applications[i].presentation[k].top	 	= applications[i].top;
-								applications[i].presentation[k].width 	= applications[i].width;
-								applications[i].presentation[k].height 	= applications[i].height;
-								wsio.emit('updateKeyframe', {id: appID, pi: kid, frame: applications[i].presentation[k].frame, 
-									left: 	applications[i].presentation[k].left,
-									top: 	applications[i].presentation[k].top,
-									width: 	applications[i].presentation[k].width,
-									height: applications[i].presentation[k].height});
-							}
-						}
-					}
-				}
-*/			});
-			$("#jSlider_"+data.id).on("slidestop", function( event, ui ) {
-				adjustingKeyframe = false;
-			});
-
-			// Handler for App Slider
-			$("#jSlider_"+data.id).on("slide", function( event, ui ) {
-	    		var appID = data.id;
-	    		var i;
-				for(i=0; i<applications.length; i++){
-					if(applications[i].id == appID){
-						var valStart = ui.values[0];
-						var valStop  = ui.values[1];
-
-						setTimeout( function(){
-					    	var uiHandle = "#jSlider_"+data.id + " span";
-					    	handleA = $(uiHandle).get(0);
-					    	handleB = ui.handle;
-					    	if($.data(handleA) == $.data(handleB)) {
-								$("#start_"+data.id).html(ui.value).position({
-									my: 'center top',
-									at: 'center bottom',
-									of: ui.handle,
-									offset: "0, -10"
-								});
-								var pi = findMinIndex(applications[i].presentation);
-								applications[i].presentation[pi].frame = valStart;
-					    		iStart.value = valStart;
-								wsio.emit('updateKeyframe', {id: appID, pi: pi, frame: valStart, 
-									left: data.presentation.left,
-									top: data.presentation.top,
-									width: data.presentation.width,
-									height: data.presentation.height});
-					    	}else{
-								$("#stop_"+data.id).html(ui.value).position({
-									my: 'center top',
-									at: 'center bottom',
-									of: ui.handle,
-									offset: "0, 0"
-								});
-
-								var piE = findMaxIndex(applications[i].presentation);
-								applications[i].presentation[piE].frame = valStop;
-					    		iStop.value = valStop;
-								wsio.emit('updateKeyframe', {id: appID, pi: piE, frame: valStop, 
-									left: data.presentation.left,
-									top: data.presentation.top,
-									width: data.presentation.width,
-									height: data.presentation.height});
-					    	}
-						},5);
-
-						// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStart);
-						break;
-					}
-				}
-			});
-
-			// Initialize App Slider Stop Handle
-	    	var iStop = document.createElement("div");
-	    	iStop.id = "stop_"+data.id;
-	    	iStop.className = "sliderLabels";
-	    	if(data.presentation.length > 1){
-				var maxIndex = findMaxIndex(data.presentation);
-	    		var stop = (data.application !== 'GoTime' ? data.presentation[maxIndex].frame : numFrames);
-	    		iStop.innerHTML = stop;
-	    		sStop = stop;
-	    	}else{
-	    		var stop = (data.application !== 'GoTime' ? currentFrame + 1 : numFrames);
-	    		iStop.innerHTML = stop;
-	    		sStop = stop;
-	    		data.presentation[1] = {
-	    			"frame": stop, 
-	    			"left": data.left, 
-	    			"top": data.top, 
-	    			"width": data.width, 
-	    			"height": data.height
-	    		}
-
-	    	}
-	    	setTimeout(function (){
-				$("#stop_"+data.id).position({
-					my: 'top',
-					at: 'bottom',
-					of: $("#jSlider_"+data.id + " span").get(1),
-					collision: 'none',
-					offset: "0, 0"
-				});
-			},500);
-			$("#jSlider_"+data.id).slider("values", [sStart, sStop]);
-			d.appendChild(iStop);
-
-			wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: sStart, 
-				left: data.presentation.left,
-				top: data.presentation.top,
-				width: data.presentation.width,
-				height: data.presentation.height});
-			wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: sStop, 
-				left: data.presentation.left,
-				top: data.presentation.top,
-				width: data.presentation.width,
-				height: data.presentation.height});
+	    	console.log("calling updateKeyframe with width " + data.width);
+			wsio.emit('updateKeyframe', {id: data.id, pi: 0, frame: frames[0], 
+				left: data.left,
+				top: data.top,
+				width: data.width,
+				height: data.height});
+	    	console.log("calling updateKeyframe with width " + data.width);
+			wsio.emit('updateKeyframe', {id: data.id, pi: 1, frame: frames[1], 
+				left: data.left,
+				top: data.top,
+				width: data.width,
+				height: data.height});
 
 	    	applications.push(data);
 		}else{
 	    	// console.log("app already on timeline");
 		}
+    }
+
+    function createAppSlider(app, parent){
+		// Initialize App Slider
+    	$("#jSlider_"+app.id).slider({
+			range: false,
+			min: 1,
+			max: numFrames,
+			values: [1,numFrames]
+		});
+		if(app.application == 'GoTime'){
+			$("#jSlider_"+app.id).slider( "option", "disabled", true );
+		}
+		var sStart, sStop;
+
+		// Initialize App Slider Start Handle
+    	var iStart = document.createElement("div");
+    	iStart.id = "start_"+app.id;
+    	iStart.className = "sliderLabels";
+    	if((app.presentation != null) && (app.presentation[0].frame != null)){
+    		// console.log("finding min");
+			var pi = findMinAPIndex(app.presentation);
+    		var start = (app.application !== 'GoTime' ? app.presentation[pi].frame : 1);
+    		iStart.innerHTML = start;
+    		sStart = start;
+    	}else{
+    		var start = (app.application !== 'GoTime' ? currentFrame : 1);
+    		iStart.innerHTML = start;
+    		sStart = start;
+    		app.presentation = [];
+    		app.presentation[0] = {
+    			"frame": start, 
+    			"left": app.left, 
+    			"top": app.top, 
+    			"width": app.width, 
+    			"height": app.height
+    		}
+    	}
+		parent.appendChild(iStart);
+    	setTimeout(function (){
+			$("#start_"+app.id).position({
+				my: 'center top',
+				at: 'center bottom',
+				of: $("#jSlider_"+app.id + " span").get(0),
+				collision: 'none',
+				offset: "0, 0"
+			});
+		},500);
+
+		// Handler for App Slider Start & Stop
+		$("#jSlider_"+app.id).on("slidestart", function( event, ui ) {
+			adjustingKeyframe = true;
+		});
+		$("#jSlider_"+app.id).on("slidestop", function( event, ui ) {
+			console.log("stoping slide with", ui.values);
+			adjustingKeyframe = false;
+		});
+		$("#jSlider_"+app.id+" span").dblclick(function() {
+			var appKeyframes = $("#jSlider_"+app.id).slider("values");
+			console.log("slider values",appKeyframes);
+			console.log("currentFrame",currentFrame);
+
+			for(var i=0; i<applications.length; i++){
+				if(applications[i].id == app.id){
+
+					var kid; // store target keyframe
+					uiHandles = $("#jSlider_"+app.id+" span");
+					for(h=0; h<uiHandles.length; h++){
+						if($.data(uiHandles[h]) == $.data(this)) {
+							kid = h;
+							console.log("Found handle with index", kid);
+							break;
+						}
+					}
+
+					var pid; // store source keyframe
+					for(p=0; p<applications[i].presentation.length; p++){
+						if(applications[i].presentation[p].frame == currentFrame){
+							pid = p;
+							break;
+						}
+					}
+					if(pid !== undefined){
+						console.log("changing target keyframe " + kid + " to match source keyframe " + pid);
+						applications[i].presentation[kid].left 		= applications[i].presentation[pid].left;
+						applications[i].presentation[kid].top	 	= applications[i].presentation[pid].top;
+						applications[i].presentation[kid].width 	= applications[i].presentation[pid].width;
+						applications[i].presentation[kid].height 	= applications[i].presentation[pid].height;
+						wsio.emit('updateKeyframe', {
+							id: app.id, pi: kid, frame: applications[i].presentation[kid].frame, 
+							left: 	applications[i].presentation[kid].left,
+							top: 	applications[i].presentation[kid].top,
+							width: 	applications[i].presentation[kid].width,
+							height: applications[i].presentation[kid].height});
+					}
+					break;
+
+					// console.log("starting slide with", ui.values);
+					// for(var k=0; k<applications[i].presentation.length; k++){
+					// 	if(applications[i].presentation[k].frame == ui.value){
+					//		console.log("changing keyframe " + k + " for frame " + ui.value + " to left " + applications[i].left);
+					// 		kid = k;
+					// 		applications[i].presentation[k].left 	= applications[i].left;
+					// 		applications[i].presentation[k].top	 	= applications[i].top;
+					// 		applications[i].presentation[k].width 	= applications[i].width;
+					// 		applications[i].presentation[k].height 	= applications[i].height;
+					// 		wsio.emit('updateKeyframe', {
+					// 			id: app.id, pi: kid, frame: applications[i].presentation[k].frame, 
+					// 			left: 	applications[i].presentation[k].left,
+					// 			top: 	applications[i].presentation[k].top,
+					// 			width: 	applications[i].presentation[k].width,
+					// 			height: applications[i].presentation[k].height});
+					// 	}
+					// }
+				}
+			}
+		});
+
+		// Handler for App Slider
+		$("#jSlider_"+app.id).on("slide", function( event, ui ) {
+    		var appID = app.id;
+    		var i;
+			for(i=0; i<applications.length; i++){
+				if(applications[i].id == appID){
+					var minID, maxID;
+					var minVal = numFrames, maxVal = 0;
+					var u
+					for(u=0; u<ui.values.length; u++){
+						if(ui.values[u] <= minVal){
+							minVal = ui.values[u];
+							minID = u;
+						}
+					}
+					var valStart = ui.values[minID];
+					for(u=0; u<ui.values.length; u++){
+						if(ui.values[u] >= maxVal){
+							maxVal = ui.values[u];
+							maxID = u;
+						}
+					}
+					var valStop  = ui.values[maxID];
+
+					setTimeout( function(){
+				    	var uiHandles = $("#jSlider_"+app.id + " span");
+
+				    	// Figure out which handle & corresponding pi is being changed
+
+						for(h=0; h<uiHandles.length; h++){
+							if($.data(uiHandles[h]) == $.data(ui.handle)) {
+								// Found the right handle
+
+								// Deal with updating labels?
+								// $("#start_"+app.id).html(ui.value).position({
+								// 	my: 'center top',
+								// 	at: 'center bottom',
+								// 	of: ui.handle,
+								// 	offset: "0, -10"
+								// });
+
+								applications[i].presentation[h].frame = ui.value;
+
+								wsio.emit('updateKeyframe', {id: appID, pi: h, frame: ui.value, 
+									left: app.presentation[h].left,
+									top: app.presentation[h].top,
+									width: app.presentation[h].width,
+									height: app.presentation[h].height});
+
+							}
+						}
+
+						// var pi = findMinAPIndex(applications[i].presentation);
+
+
+				   //  	handleA = $(uiHandles).get(0);
+				   //  	handleB = ui.handle;
+				   //  	if($.data(handleA) == $.data(handleB)) {
+							// $("#start_"+app.id).html(ui.value).position({
+							// 	my: 'center top',
+							// 	at: 'center bottom',
+							// 	of: ui.handle,
+							// 	offset: "0, -10"
+							// });
+							// var pi = findMinAPIndex(applications[i].presentation);
+							// applications[i].presentation[pi].frame = valStart;
+				   //  		iStart.value = valStart;
+							// wsio.emit('updateKeyframe', {id: appID, pi: pi, frame: valStart, 
+							// 	left: app.presentation.left,
+							// 	top: app.presentation.top,
+							// 	width: app.presentation.width,
+							// 	height: app.presentation.height});
+				   //  	}else{
+							// $("#stop_"+app.id).html(ui.value).position({
+							// 	my: 'center top',
+							// 	at: 'center bottom',
+							// 	of: ui.handle,
+							// 	offset: "0, 0"
+							// });
+
+							// var piE = findMaxAPIndex(applications[i].presentation);
+							// console.log("applications[i].presentation",applications[i].presentation);
+							// applications[i].presentation[piE].frame = valStop;
+				   //  		iStop.value = valStop;
+							// wsio.emit('updateKeyframe', {id: appID, pi: piE, frame: valStop, 
+							// 	left: app.presentation.left,
+							// 	top: app.presentation.top,
+							// 	width: app.presentation.width,
+							// 	height: app.presentation.height});
+				   //  	}
+					},5);
+
+					// console.log("sending updateKeyframe for app " + a + " pi: " + pi + " to " + valStart);
+					break;
+				}
+			}
+		});
+
+		// Initialize App Slider Stop Handle
+    	var iStop = document.createElement("div");
+    	iStop.id = "stop_"+app.id;
+    	iStop.className = "sliderLabels";
+    	if(app.presentation.length > 1){
+			var maxIndex = findMaxAPIndex(app.presentation);
+    		var stop = (app.application !== 'GoTime' ? app.presentation[maxIndex].frame : numFrames);
+    		iStop.innerHTML = stop;
+    		sStop = stop;
+    	}else{
+    		var stop = (app.application !== 'GoTime' ? currentFrame + 1 : numFrames);
+    		iStop.innerHTML = stop;
+    		sStop = stop;
+    		app.presentation[1] = {
+    			"frame": stop, 
+    			"left": app.left, 
+    			"top": app.top, 
+    			"width": app.width, 
+    			"height": app.height
+    		}
+
+    	}
+    	setTimeout(function (){
+			$("#stop_"+app.id).position({
+				my: 'top',
+				at: 'bottom',
+				of: $("#jSlider_"+app.id + " span").get(1),
+				collision: 'none',
+				offset: "0, 0"
+			});
+		},500);
+		$("#jSlider_"+app.id).slider("values", [sStart, sStop]);
+		parent.appendChild(iStop);
+
+		return [sStart, sStop];
     }
 
     function removeAppTimeline(e){
@@ -966,7 +1212,6 @@
 			var appSlider = $("#jSlider_"+applications[i].id);
 			appSlider.slider("option", "max", numFrames);
 		}
-
 
 		GoTimeNumFrames.value = numFrames;
 		vals = $("#timelineSlider").slider("option", "max");
@@ -1122,7 +1367,7 @@
 
 	/* GoTime Utilities */
 
-    function findMinIndex(ap){
+    function findMinAPIndex(ap){
     	// console.log("finding min value");
     	var minID;
     	var minVal = numFrames;
@@ -1137,7 +1382,7 @@
     	return minID;
     }
 
-    function findMaxIndex(ap){
+    function findMaxAPIndex(ap){
     	// console.log("finding max value");
     	var maxID;
     	var maxVal = 0;
@@ -1310,7 +1555,9 @@
 				<ul>
 					<li>Drag the slider along the timeline to change the current frame</li>
 					<li>Adjust each asset's start and stop times by dragging their individual slider handles</li>
-					<li>Record the size and position for each asset by making your adjustments while on a keyframe. Turn on snapping to make this easier.</li>
+					<li>Record the size and position for each asset by making your adjustments while on a keyframe.</li>
+					<li>You can match positions and sizes of keyframes by simply double-clicking another keyframes while the timeline slider is on the source keyframe.</li>
+					<li>Turn on snapping to make keyframing easier.</li>
 				</ul>
 			</div>
 		</div>
