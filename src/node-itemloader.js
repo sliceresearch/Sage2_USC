@@ -23,13 +23,15 @@ var mime      = require('mime');
 var request   = require('request');
 var ytdl      = require('ytdl-core');
 
-var exiftool  = require('../src/node-exiftool');      // gets exif tags for images
-var assets    = require('../src/node-assets');        // asset management
+var exiftool  = require('../src/node-exiftool');        // gets exif tags for images
+var assets    = require('../src/node-assets');          // asset management
+var registry  = require('../src/node-registry');  // Registry Manager
 
 var imageMagick;
 mime.default_type = "application/custom";
 
-
+// XXX
+var registryManager= new registry("public_HTTPS/src/registry.json");
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -46,8 +48,8 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.titleBarHeight = titleBarHeight;
 	console.log("Loader: ", this.titleBarHeight);
 	this.mime2app = {
-		"image/jpeg": "image_viewer", 
-		"image/webp": "image_viewer", 
+		"image/jpeg": "image_viewer",
+		"image/webp": "image_viewer",
 		"image/png": "image_viewer",
 		"image/bmp": "image_viewer",
 		"image/tiff": "image_viewer",
@@ -56,7 +58,7 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 		"video/x-m4v": "movie_player",
 		"video/webm": "movie_player",
 		"video/youtube": "movie_player",
-		"application/pdf": "pdf_viewer", 
+		"application/pdf": "pdf_viewer",
 		"application/zip": "custom_app",
 		"application/x-zip-compressed": "custom_app",
 		"application/custom": "custom_app",
@@ -68,7 +70,7 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
     	"pdf_viewer": "pdfs",
     	"custom_app": "apps"
     };
-	
+
 	imageMagick = gm.subClass(imConstraints);
 }
 
@@ -91,7 +93,7 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 		iHeight = this.displayHeight - (3*this.titleBarHeight);
 		iWidth  = iHeight*appInstance.aspect;
 	}
-	
+
 	appInstance.width = iWidth;
 	appInstance.height = iHeight;
 };
@@ -100,7 +102,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 	var _this = this;
 	request({url: url, encoding: null, strictSSL: strictSSL}, function(err, response, body) {
 		if(err) throw err;
-		
+
 		var result = exiftool.buffer(body, function(err, info) {
 			if (err) {
 				console.log("Error processing image:", url, mime_type, name, result.err);
@@ -121,10 +123,10 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 
 appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	var _this = this;
-	
+
 	ytdl.getInfo(url, function(err, info){
 		if(err) throw err;
-		
+
 		var mp4 = {index: -1, resolution: 0};
 		for(var i=0; i<info.formats.length; i++){
 			if(info.formats[i].container == "mp4" && info.formats[i].resolution !== null && info.formats[i].profile != "3d"){
@@ -139,7 +141,7 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 		var aspectRatio = 16/9;
 		var resolutionY = mp4.resolution;
 		var resolutionX = resolutionY * aspectRatio;
-		
+
 		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
 			function(appInstance) {
 				callback(appInstance);
@@ -196,7 +198,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 	var local_url = path.join("uploads", "pdfs", name);
 	var localPath = path.join(this.publicDir, local_url);
 	var _this = this;
-	
+
 	var tmp = fs.createWriteStream(localPath);
 	tmp.on('error', function(err) {
 		if(err) throw err;
@@ -257,7 +259,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 
 appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
-	
+
 	if(mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp"){
 		fs.readFile(file, function (err, data) {
 			if(err) {
@@ -307,7 +309,7 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 				console.log("File not recognized:", file, mime_type, url);
 			}
 		});
-		
+
 	}
 };
 
@@ -564,7 +566,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 
 appLoader.prototype.createMediaStream = function(source, type, encoding, name, width, height, callback) {
 	var aspectRatio = width/height;
-	
+
 	var metadata         = {};
 	metadata.title       = "Stream Player";
 	metadata.version     = "1.0.0";
@@ -625,8 +627,9 @@ appLoader.prototype.loadApplicationFromRemoteServer = function(application, call
 appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 	var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
-	
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance) {
+    var fileType =(/[.]/.exec(filename))[0] ? /[^.]+$/.exec(filename)[0] : undefined;
+
+	this.loadApplication({location: "url", url: file.url, type: mime_type, fileType: fileType, name: filename, strictSSL: true}, function(appInstance) {
 		callback(appInstance);
 	});
 };
@@ -634,13 +637,14 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var app = file.application;
 	var dir = this.app2dir[app];
-	
+
 	var url = path.join("uploads", dir, file.filename);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	var mime_type = mime.lookup(localPath);
-	
-	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance) {
+    var fileType =(/[.]/.exec(file.filename))[0] ? /[^.]+$/.exec(file.filename)[0] : undefined;
+
+	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, fileType: fileType, type: mime_type, name: file.filename, compressed: false}, function(appInstance) {
 		callback(appInstance);
 	});
 };
@@ -650,16 +654,17 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var app = this.mime2app[mime_type];
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
-	
+
 	var _this = this;
 	var url = path.join("uploads", dir, file.name);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
-	
+
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
-		
+
 		var	app = _this.mime2app[mime_type];
+        var fileType =(/[.]/.exec(file.name))[0] ? /[^.]+$/.exec(file.name)[0] : undefined;
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
 			exiftool.file(localPath, function(err,data) {
 				if (err) {
@@ -667,14 +672,14 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				} else {
 					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data);
-					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
+					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, fileType: fileType, name: file.name, compressed: true}, function(appInstance) {
 						callback(appInstance);
 					});
 				}
 			});
 		}
 		else {
-			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
+			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, fileType: fileType, name: file.name, compressed: true}, function(appInstance) {
 				callback(appInstance);
 			});
 		}
@@ -685,9 +690,15 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
 	if(appData.location === "file") {
-		app = this.mime2app[appData.type];
+		app = registryManager.defaultApp[appData.fileType];
+
+        if( app === null || app === undefined ) {
+            console.log("ItemLoader> App not found in registry, trying mime2app");
+            app = this.mime2app[appData.type];
+        }
+
 		var dir = this.app2dir[app];
-		
+
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance);
@@ -699,6 +710,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			});
 		}
 		else if(app === "pdf_viewer"){
+            console.log(appData);
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance);
 			});
@@ -719,10 +731,10 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 		}
 	}
-	
+
 	else if(appData.location === "url") {
 		app = this.mime2app[appData.type];
-		
+
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance);
@@ -747,7 +759,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			});
 		}
 	}
-	
+
 	else if(appData.location === "remote") {
 		var appInstance = {
 			id: appData.application.id,

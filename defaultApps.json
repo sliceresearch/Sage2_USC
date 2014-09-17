@@ -1,0 +1,8 @@
+{
+    "defaultApps": [ 
+        {
+            "fileType": "pdf",
+            "app": "pdf_viewer"
+        }
+    ]
+}
