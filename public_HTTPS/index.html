@@ -220,6 +220,7 @@
 		
 		wsio.on('radialMenuEvent', function(menu_data){
 			ui.updateRadialMenu(menu_data);
+			resetIdle();
         });
 		
 		wsio.on('updateMediaStreamFrame', function(data) {

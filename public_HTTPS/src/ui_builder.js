@@ -341,6 +341,7 @@ function uiBuilder(json_cfg, clientID) {
 		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
 		pointerElem.style.top  = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
 	};
+	
 	this.changeSagePointerMode = function(pointer_data) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
 		this.pointerItems[pointer_data.id].draw();
@@ -349,42 +350,57 @@ function uiBuilder(json_cfg, clientID) {
 	this.createRadialMenu = function(pointer_data) {
 		console.log("createRadialMenu " + pointer_data.id);
 		
-		pointer_data.left = 110;
-		pointer_data.top = 110;
-		
-		var menu = new radialMenu(); 
-		
-		var menuElem = createDrawingElement(pointer_data.id, "menuItem",
+		var menuElem = createDrawingElement(pointer_data.id, "pointerItem",
 							pointer_data.left - this.pointerOffsetX - this.offsetX,
 							pointer_data.top  - this.pointerOffsetY - this.offsetY,
-							radialMenuSize.x, radialMenuSize.y, 10000);
+							radialMenuSize.x, radialMenuSize.y, 9000);
 		this.main.appendChild(menuElem); 
 
-		
+		var menu = new radialMenu(); 
 		menu.init(menuElem.id) ;
 		
-
+		menuElem.style.left = (pointer_data.left - this.pointerOffsetX - this.offsetX).toString() + "px";
+		menuElem.style.top  = (pointer_data.top  - this.pointerOffsetY - this.offsetY).toString()  + "px";
+			
 		if (pointer_data.visible) menuElem.style.display = "block";
 		else menuElem.style.display = "none";
 
 		// keep track of the menus
         this.radialMenus[menuElem.id] = menu;
+				
+		this.radialMenus[menuElem.id].draw();
 	};
 	
 	this.updateRadialMenu = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 		
-		console.log("uibuilder: updateRadialMenu " + menuElem.id + " ("+data.x+","+data.y+") menu: "+ menuElem.style.left + "," + menuElem.style.top);
-		
-		this.radialMenus[menuElem.id].onEvent( data.type, {x: data.x, y: data.y}, data.id, data );
-		this.radialMenus[menuElem.id].draw();
-		
-		//var pointerElem = document.getElementById(pointer_data.id);
-		menuElem.style.left = (data.x-this.pointerOffsetX-this.offsetX).toString() + "px";
-		menuElem.style.top  = (data.y-this.pointerOffsetY-this.offsetY).toString()  + "px";
-		
-		
-		//console.log("left: " + pointerElem.style.left + " top: " + pointerElem.style.top);
+		if( menuElem !== null )
+		{
+			var rect = menuElem.getBoundingClientRect();
+			
+			menuX = data.x - rect.left;
+			menuY = data.y - rect.top;
+			
+			this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data );
+			
+			if( this.radialMenus[menuElem.id].visible )
+			{
+				menuElem.style.display = "block";
+				
+				if( this.radialMenus[menuElem.id].windowInteractionMode === true )
+				{
+					//menuElem.style.left    = (data.x-this.pointerOffsetX-this.offsetX).toString() + "px";
+					//menuElem.style.top     = (data.y-this.pointerOffsetY-this.offsetY).toString()  + "px";
+				}
+				
+				this.radialMenus[menuElem.id].draw();
+			}
+			else
+			{
+				menuElem.style.display = "none";
+			}
+
+		}
 	};
 	
 	this.addRemoteSite = function(data) {

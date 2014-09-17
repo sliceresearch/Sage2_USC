@@ -2226,8 +2226,6 @@ function createSagePointer ( uniqueID ) {
 	remoteInteraction[uniqueID] = new interaction(config);
 
 	broadcast('createSagePointer', sagePointers[uniqueID], 'receivesPointerData');
-	
-	createRadialMenu(uniqueID,0,0);
 }
 
 function showPointer( uniqueID, data ) {
@@ -2369,9 +2367,11 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 	
 	// menu
+	updateRadialMenu( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+	
 	if(data.button === "right")
 	{
-		//createRadialMenu( uniqueID, pointerX, pointerY );
+		createRadialMenu( uniqueID, pointerX, pointerY );
 	}
 }
 
@@ -2526,6 +2526,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
+	
+	// Menu
+	updateRadialMenu( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 }
 
 function pointerMove(uniqueID, data) {

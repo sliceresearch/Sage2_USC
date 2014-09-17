@@ -41,6 +41,9 @@ function radialMenu(){
 		this.currentMenuState = 'radialMenu'
 		this.currentRadialState = 'radialMenu'
 		
+		this.visible = true;
+		this.windowInteractionMode = false;
+		
 		// load thumbnail icons
 		this.idleImageIcon = new Image;
 		this.idleImageIcon.src = this.resrcPath +"image2.svg"
@@ -277,7 +280,15 @@ function radialMenu(){
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
 		// TEMP: Just to clearly see context edge
-		this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
+		if( this.windowInteractionMode === false )
+		{
+			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
+		}
+		else
+		{
+			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)"
+		}
+		
 		this.ctx.fillRect(0,0, this.element.width, this.element.height)
 			
 		this.radialCloseButton.draw();
@@ -291,37 +302,37 @@ function radialMenu(){
 		this.radialSettingsButton.draw();
 	};
 	
+	this.closeMenu = function() {
+		this.visible = false;
+		console.log("Closing menu" );
+	};
+	
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
 	
 		overButton = false;
 		
-		this.radialCloseButton.onEvent(type, user.id, position.x, position.y, data);
-		if ( this.radialCloseButton.isClicked() && this.sendsToServer )
+		buttonOverCount = 0; // Count number of buttons have a pointer over it
+		
+		// Level 0 - Always visible -----------------------------------
+		buttonOverCount += this.radialCloseButton.onEvent(type, user.id, position, data);
+		if ( this.radialCloseButton.isClicked() )
 		{
 			this.closeMenu();
 		}
 		
+		buttonOverCount += this.radialSettingsButton.onEvent(type, user.id, position, data);
 		
-		this.radialSessionButton.onEvent(type, user.id, position.x, position.y, data);
-		this.radialSaveSessionButton.onEvent(type, user.id, position.x, position.y, data);
-			
+		buttonOverCount += this.radialSessionButton.onEvent(type, user.id, position, data);
+		buttonOverCount += this.radialSaveSessionButton.onEvent(type, user.id, position, data);
+		
+		// Level 1 -----------------------------------
 		if( this.currentRadialState === 'radialMenu' )
 		{
-			this.radialImageButton.onEvent(type, user.id, position.x, position.y, data);
-			this.radialPDFButton.onEvent(type, user.id, position.x, position.y, data);
-			this.radialVideoButton.onEvent(type, user.id, position.x, position.y, data);
-			this.radialAppButton.onEvent(type, user.id, position.x, position.y, data);
-			
-		}
-		
-		// Level 2
-		if( this.currentRadialState === 'radialAppMenu2' )
-		{
-			this.radial2ImageButton.onEvent(type, user.id, position.x, position.y, data);
-			this.radial2PDFButton.onEvent(type, user.id, position.x, position.y, data);
-			this.radial2VideoButton.onEvent(type, user.id, position.x, position.y, data);
-			this.radial2AppButton.onEvent(type, user.id, position.x, position.y, data);
+			buttonOverCount += this.radialImageButton.onEvent(type, user.id, position, data);
+			buttonOverCount += this.radialPDFButton.onEvent(type, user.id, position, data);
+			buttonOverCount += this.radialVideoButton.onEvent(type, user.id, position, data);
+			buttonOverCount += this.radialAppButton.onEvent(type, user.id, position, data);
 		}
 		
 		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
@@ -369,6 +380,16 @@ function radialMenu(){
 			this.wsio.emit('requestStoredFiles');
 		}
 		
+		// Level 2 -----------------------------------
+		if( this.currentRadialState === 'radialAppMenu2' )
+		{
+			this.radial2ImageButton.onEvent(type, user.id, position, data);
+			this.radial2PDFButton.onEvent(type, user.id, position, data);
+			this.radial2VideoButton.onEvent(type, user.id, position, data);
+			this.radial2AppButton.onEvent(type, user.id, position, data);
+		}
+		
+		// Thumbnail window ----------------------------
 		if( this.currentMenuState !== 'radialMenu' )
 		{
 			var currentThumbnailButtons = this.imageThumbnailButtons;
@@ -387,14 +408,14 @@ function radialMenu(){
 			for( i = 0; i < currentThumbnailButtons.length; i++ )
 			{
 				thumbButton = currentThumbnailButtons[i];
-				thumbButton.onEvent(type, user.id, position.x, position.y, data);
+				thumbButton.onEvent(type, user.id, position, data);
 
 				if ( thumbButton.isReleased() && this.sendsToServer === true )
 				{ 
 					//console.log(thumbButton+" released" );
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
 				}
-				if ( thumbButton.isPositionOver(user.id, position.x, position.y)  )
+				if ( thumbButton.isPositionOver(user.id, position)  )
 				{
 					this.hoverOverText = thumbButton.getData().filename;
 					this.hoverOverThumbnail = thumbButton.idleImage;
@@ -403,11 +424,18 @@ function radialMenu(){
 				}
 			}
 		}
+		
+		
+		// windowInteractionMode = true if any active button has an event over it
+		if( buttonOverCount > 0 )
+			this.windowInteractionMode = true;
+		else
+			this.windowInteractionMode = false;
 	};
 }
 
 function buttonWidget() {
-	this.element = null;
+	//this.element = null;
 	this.ctx = null;
 	this.resrcPath = null;
 	
@@ -446,7 +474,7 @@ function buttonWidget() {
 	
 	this.init = function(id, ctx, resrc)
 	{
-		this.element = document.getElementById(id);
+		//this.element = document.getElementById(id);
 		this.ctx = ctx
 		this.resrcPath = resrc;
 		
@@ -562,11 +590,9 @@ function buttonWidget() {
 		}
 	};
 	
-	this.onEvent = function( type, user, x, y, data )
+	this.onEvent = function( type, user, position, data )
 	{
-		//console.log("buttonWidget onEvent("+eventType+","+userID+","+x+","+y+","+data+","+date+")");
-		
-		if( this.isPositionOver( user, x, y ) )
+		if( this.isPositionOver( user, position ) )
 		{
 			if( type === "pointerPress" && this.state != 2 )
 			{
@@ -580,14 +606,21 @@ function buttonWidget() {
 			{
 				this.state = 1;
 			}
+			
+			return 1;
 		}
 		else
 		{
 			this.state = 0;
+			
+			return 0;
 		}
 	}
 	
-	this.isPositionOver = function(id, x, y) {
+	this.isPositionOver = function(id, position) {
+		x = position.x;
+		y = position.y;
+		
 		if( this.alignment === 'centered' )
 		{
 			x += this.hitboxWidth/2;
