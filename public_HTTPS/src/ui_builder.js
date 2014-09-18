@@ -382,7 +382,7 @@ function uiBuilder(json_cfg, clientID) {
 		}
 	};
 	
-	this.updateRadialMenu = function(data) {
+	this.radialMenuEvent = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 		
 		if( menuElem !== null )
@@ -412,7 +412,15 @@ function uiBuilder(json_cfg, clientID) {
 				menuElem.style.display = "none";
 				
 			}
-
+		}
+	};
+	
+	this.updateRadialMenu = function(data) {
+		console.log("uibuilder: updateRadialMenu");
+		var menuElem = document.getElementById(data.id+"_menu");
+		if( menuElem !== null )
+		{
+			this.radialMenus[menuElem.id].updateFileList(data.fileList);
 		}
 	};
 	

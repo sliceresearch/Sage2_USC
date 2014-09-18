@@ -2279,7 +2279,15 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		togglePointerMode(uniqueID);
 		return;
 	}
-
+	
+	// menu
+	radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+	
+	if(data.button === "right")
+	{
+		createRadialMenu( uniqueID, pointerX, pointerY );
+	}
+	
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -2365,14 +2373,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
-	
-	// menu
-	updateRadialMenu( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
-	
-	if(data.button === "right")
-	{
-		createRadialMenu( uniqueID, pointerX, pointerY );
-	}
+
 }
 
 /*
@@ -2528,7 +2529,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	}
 	
 	// Menu
-	updateRadialMenu( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+	radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 }
 
 function pointerMove(uniqueID, data) {
@@ -2545,7 +2546,7 @@ function pointerMove(uniqueID, data) {
 	var pointerY = sagePointers[uniqueID].top;
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
-	updateRadialMenu( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
@@ -3027,7 +3028,9 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	radialMenus[uniqueID].left = pointerX;
 
 	broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
-			
+	
+	updateRadialMenu(uniqueID);
+	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
@@ -3048,7 +3051,13 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	}
 }
 
-function updateRadialMenu( data )
+function updateRadialMenu( uniqueID )
+{
+	var savedFiles = getSavedFilesList();
+	broadcast('updateRadialMenu', {id: uniqueID, fileList: savedFiles}, 'receivesPointerData');
+}
+
+function radialMenuEvent( data )
 {
 	broadcast('radialMenuEvent', data, 'receivesPointerData');
 }
