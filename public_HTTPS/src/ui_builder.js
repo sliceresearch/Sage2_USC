@@ -236,6 +236,7 @@ function uiBuilder(json_cfg, clientID) {
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
+		this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better"
 		this.upperBar.id = "upperBar";
 		
 		var color = this.json_cfg.ui.menubar.textColor || "rgba(255, 255, 255, 1.0)";
@@ -271,23 +272,27 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock.style.position   = "absolute";
 		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
-		this.clock.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		this.clock.style.color      = color;
+		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
+		// center vertically: position top 50% and then translate by -50%
+		this.clock.style.top        = "50%";
+		this.clock.style.webkitTransform  = "translateY(-50%)";
 		
 		machine.style.position   = "absolute";
 		machine.style.whiteSpace = "nowrap";
 		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
-		machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		machine.style.color      = color;
+		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
+		machine.style.top        = "50%";
+		machine.style.webkitTransform  = "translateY(-50%)";
 		
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
-		version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		version.style.color      = color;
+		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
+		version.style.top        = "50%";
+		version.style.webkitTransform  = "translateY(-50%)";
 		
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		logo.data = "images/EVL-LAVA.svg";
