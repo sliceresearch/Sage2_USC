@@ -280,7 +280,7 @@ function radialMenu(){
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
 		// TEMP: Just to clearly see context edge
-		if( this.windowInteractionMode === false )
+		if( this.windowInteractionMode === true )
 		{
 			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
 		}
@@ -339,7 +339,9 @@ function radialMenu(){
 		{
 			this.wsio.emit('requestStoredFiles');
 			if( this.currentMenuState !== 'imageThumbnailWindow' )
+			{
 				this.currentMenuState = 'imageThumbnailWindow';
+			}
 			else
 				this.currentMenuState = 'radialMenu';
 		}
@@ -427,10 +429,17 @@ function radialMenu(){
 		
 		
 		// windowInteractionMode = true if any active button has an event over it
-		if( buttonOverCount > 0 )
-			this.windowInteractionMode = true;
-		else
+		
+		if( type === "pointerPress" && buttonOverCount === 0 )
+		{
 			this.windowInteractionMode = false;
+			this.dragPosition = position;
+		}
+		else if( type === "pointerRelease" )
+		{
+			this.windowInteractionMode = true;
+			this.dragPosition = { x: 0, y: 0 };
+		}
 	};
 }
 

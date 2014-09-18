@@ -382,15 +382,16 @@ function uiBuilder(json_cfg, clientID) {
 			menuY = data.y - rect.top;
 			
 			this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data );
-			
+
 			if( this.radialMenus[menuElem.id].visible )
 			{
 				menuElem.style.display = "block";
 				
-				if( this.radialMenus[menuElem.id].windowInteractionMode === true )
+				if( this.radialMenus[menuElem.id].windowInteractionMode === false )
 				{
-					//menuElem.style.left    = (data.x-this.pointerOffsetX-this.offsetX).toString() + "px";
-					//menuElem.style.top     = (data.y-this.pointerOffsetY-this.offsetY).toString()  + "px";
+					dragOffset = this.radialMenus[menuElem.id].dragPosition;
+					menuElem.style.left    = (data.x-dragOffset.x).toString() + "px";
+					menuElem.style.top     = (data.y-dragOffset.y).toString()  + "px";
 				}
 				
 				this.radialMenus[menuElem.id].draw();
