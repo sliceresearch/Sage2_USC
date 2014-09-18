@@ -347,28 +347,39 @@ function uiBuilder(json_cfg, clientID) {
 		this.pointerItems[pointer_data.id].draw();
 	};
 	
-	this.createRadialMenu = function(pointer_data) {
-		console.log("createRadialMenu " + pointer_data.id);
-		
-		var menuElem = createDrawingElement(pointer_data.id, "pointerItem",
-							pointer_data.left - this.pointerOffsetX - this.offsetX,
-							pointer_data.top  - this.pointerOffsetY - this.offsetY,
-							radialMenuSize.x, radialMenuSize.y, 9000);
-		this.main.appendChild(menuElem); 
+	this.createRadialMenu = function(data) {
 
-		var menu = new radialMenu(); 
-		menu.init(menuElem.id) ;
-		
-		menuElem.style.left = (pointer_data.left - this.pointerOffsetX - this.offsetX).toString() + "px";
-		menuElem.style.top  = (pointer_data.top  - this.pointerOffsetY - this.offsetY).toString()  + "px";
+		var menuElem = document.getElementById(data.id+"_menu");
+
+		if( !menuElem )
+		{
+			console.log("createRadialMenu " + data.id);
+			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
+								data.x - this.pointerOffsetX - this.offsetX,
+								data.y  - this.pointerOffsetY - this.offsetY,
+								radialMenuSize.x, radialMenuSize.y, 9000);
+			this.main.appendChild(menuElem); 
+
+			var menu = new radialMenu(); 
+			menu.init(data.id+"_menu") ;
 			
-		if (pointer_data.visible) menuElem.style.display = "block";
-		else menuElem.style.display = "none";
+			menuElem.style.left = (data.x - menu.radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - menu.radialMenuCenter.y).toString()  + "px";
 
-		// keep track of the menus
-        this.radialMenus[menuElem.id] = menu;
-				
-		this.radialMenus[menuElem.id].draw();
+			// keep track of the menus
+			this.radialMenus[data.id+"_menu"] = menu;
+					
+			this.radialMenus[data.id+"_menu"].draw();
+		}
+		else if( this.radialMenus[menuElem.id].visible === false )
+		{
+			menuElem.style.left = (data.x - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+			
+			this.radialMenus[menuElem.id].visible = true;
+			menuElem.style.display = "block";
+			this.radialMenus[menuElem.id].draw();
+		}
 	};
 	
 	this.updateRadialMenu = function(data) {
@@ -381,12 +392,12 @@ function uiBuilder(json_cfg, clientID) {
 			menuX = data.x - rect.left;
 			menuY = data.y - rect.top;
 			
-			this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data );
+			this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 
 			if( this.radialMenus[menuElem.id].visible )
 			{
 				menuElem.style.display = "block";
-				
+
 				if( this.radialMenus[menuElem.id].windowInteractionMode === false )
 				{
 					dragOffset = this.radialMenus[menuElem.id].dragPosition;
@@ -399,6 +410,7 @@ function uiBuilder(json_cfg, clientID) {
 			else
 			{
 				menuElem.style.display = "none";
+				
 			}
 
 		}

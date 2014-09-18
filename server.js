@@ -3025,7 +3025,8 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu", uniqueID);
 	radialMenus[uniqueID].top = pointerY;
 	radialMenus[uniqueID].left = pointerX;
-	broadcast('createRadialMenu', radialMenus[uniqueID], 'receivesPointerData');
+
+	broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 			
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);

@@ -40,9 +40,11 @@ function radialMenu(){
 		this.menuID = id;
 		this.currentMenuState = 'radialMenu'
 		this.currentRadialState = 'radialMenu'
+		this.radialMenuCenter = radialMenuCenter;
 		
 		this.visible = true;
 		this.windowInteractionMode = false;
+		this.dragPosition = { x: 0, y: 0 };
 		
 		// load thumbnail icons
 		this.idleImageIcon = new Image;
@@ -426,16 +428,14 @@ function radialMenu(){
 				}
 			}
 		}
-		
-		
-		// windowInteractionMode = true if any active button has an event over it
-		
-		if( type === "pointerPress" && buttonOverCount === 0 )
+
+		// windowInteractionMode = true if any active button has an event over its
+		if( type === "pointerPress" && data.button === 'left' && buttonOverCount === 0 )
 		{
 			this.windowInteractionMode = false;
 			this.dragPosition = position;
 		}
-		else if( type === "pointerRelease" )
+		else if( type === "pointerRelease" && this.windowInteractionMode === false )
 		{
 			this.windowInteractionMode = true;
 			this.dragPosition = { x: 0, y: 0 };
