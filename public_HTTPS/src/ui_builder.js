@@ -253,7 +253,8 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
-		this.upperBar.appendChild(logo);
+		if(this.json_cfg.ui.logo === "icon") this.upperBar.appendChild(logo);
+		else                                 this.bg.appendChild(logo);
 		this.main.appendChild(this.upperBar);
 
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
@@ -316,16 +317,39 @@ function uiBuilder(json_cfg, clientID) {
 		var logoSVG  = logo.getSVGDocument().querySelector('svg');
 		
 		var bbox = logoSVG.getBBox();
-		var height = 0.95 * this.titleBarHeight;
-		var width  = height * (bbox.width/bbox.height);
+		var width;
+		var height;
+			
+		if(this.json_cfg.ui.logo === "icon") {
+			height = 0.95 * this.titleBarHeight;
+			width  = height * (bbox.width/bbox.height);
 		
-		logo.width  = width;
-		logo.height = height;
-		logo.style.position   = "absolute";
-		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
-		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
+			logo.width  = width;
+			logo.height = height;
+			logo.style.position   = "absolute";
+			logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
+			logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
 		
-		this.changeSVGColor(logoSVG, "path", null, "#FFFFFF");
+			this.changeSVGColor(logoSVG, "path", null, "rgba(255, 255, 255, 1.0)");
+		}
+		else {
+			if(bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+				width  = this.json_cfg.totalWidth / 2;
+				height = width * bbox.height/bbox.width;
+			}
+			else {
+				height = this.json_cfg.totalHeight / 2;
+				width  = height * bbox.width/bbox.height;
+			}
+		
+			logo.width  = width;
+			logo.height = height;
+			logo.style.position = "absolute";
+			logo.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
+			logo.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
+		
+			this.changeSVGColor(logoSVG, "path", null, "rgba(255, 255, 255, 0.15)");
+		}
 	};
 	
 	this.changeSVGColor = function(svgItem, elementType, strokeColor, fillColor) {

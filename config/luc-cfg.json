@@ -9,6 +9,7 @@
 	"ui": {
 		"clock": 24,
 		"show_url": true,
+		"logo": "watermark"
 	},
 	"resolution": {
 		"width": 2560,

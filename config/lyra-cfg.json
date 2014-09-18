@@ -14,7 +14,8 @@
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"show_version": true
+		"show_version": true,
+		logo: "watermark"
 	},
 	"resolution": { // resolution of each display
 		"width": 1366,

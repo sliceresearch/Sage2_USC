@@ -1,14 +1,14 @@
 /*
-	default configuration of the server
+	Configuration for Mesaverde
 */
 {
-		// hostname of the web server
+	// hostname of the web server
 	host: "mesaverde.evl.uic.edu",
-		// port of the HTTPS server: 443 for default
+	// port of the HTTPS server: 443 for default
 	port: 443,
-		// port of the HTTP public page
+	// port of the HTTP public page
 	index_port: 80,
-		// clock setting: 12-hour or 24-hour
+	// clock setting: 12-hour or 24-hour
 	background: {
 		image: "images/background/osx_hero_2x_cc.jpg",
 		style: "stretch"
@@ -16,11 +16,12 @@
 	ui: {
 		clock: 12,
 		show_url: true,
-		show_version: true, 
+		show_version: true,
+		logo: "watermark"
 	},
 	resolution: {
-                width: 1920,
-                height: 2160
+		width: 1920,
+		height: 2160
 	},
 	layout: {
 		rows: 1,

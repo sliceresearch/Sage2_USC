@@ -17,6 +17,7 @@
 		clock: 12,
 		show_version: true,
 		show_url: true,
+		logo: "watermark",
 		// auto-hide the wall UI (top bar, application bar, ...)
 		auto_hide_ui: false,
 		// delay in seconds

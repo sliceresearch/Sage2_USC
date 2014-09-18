@@ -9,7 +9,8 @@
 	},
 	"ui": {
 		"clock": 12,
-		"show_url": true
+		"show_url": true,
+		"logo": "watermark"
 	},
 	"resolution": {
 		"width": 4098,

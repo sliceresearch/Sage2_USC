@@ -15,7 +15,8 @@
 		// clock setting: 12-hour or 24-hour
 		clock: 12,
 		show_version: true,
-		show_url:     true
+		show_url:     true,
+		logo: "watermark"
 	},
 	resolution: {
 		width: 700,

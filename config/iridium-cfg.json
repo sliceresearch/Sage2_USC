@@ -10,6 +10,7 @@
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
+		"logo": "watermark",
 		"noDropShadow": true
 	},
 	"resolution": {
