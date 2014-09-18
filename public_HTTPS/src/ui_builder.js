@@ -199,7 +199,9 @@ function uiBuilder(json_cfg, clientID) {
 
 	this.build = function () {
 		console.log("Buidling the UI for the display");
-
+		
+		this.logoLoadedFunc = this.logoLoaded.bind(this);
+		
 		var head = document.getElementsByTagName("head")[0];
 
 		// Load CSS style sheet
@@ -239,15 +241,19 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
 		// machine name
-		this.machine = document.createElement('p');
-		this.machine.id  = "machine";
+		var machine = document.createElement('p');
+		machine.id  = "machine";
 		// version id
-		this.version = document.createElement('p');
-		this.version.id  = "version";
+		var version = document.createElement('p');
+		version.id  = "version";
+		// EVL-LAVA logo
+		var logo = document.createElement('object');
+		logo.id = "logo";
 		
 		this.upperBar.appendChild(this.clock);
-		this.upperBar.appendChild(this.machine);
-		this.upperBar.appendChild(this.version);
+		this.upperBar.appendChild(machine);
+		this.upperBar.appendChild(version);
+		this.upperBar.appendChild(logo);
 		this.main.appendChild(this.upperBar);
 
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
@@ -262,44 +268,71 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock.style.top        = (0.05*this.titleBarHeight).toString() + "px";
 		this.clock.style.color      = "#FFFFFF";
 		
-		this.machine.style.position   = "absolute";
-		this.machine.style.whiteSpace = "nowrap";
-		this.machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		this.machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
-		this.machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		this.machine.style.color      = "#FFFFFF";
+		machine.style.position   = "absolute";
+		machine.style.whiteSpace = "nowrap";
+		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
+		machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
+		machine.style.color      = "#FFFFFF";
 		
-		this.version.style.position   = "absolute";
-		this.version.style.whiteSpace = "nowrap";
-		this.version.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		this.version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (16*this.titleBarHeight)).toString() + "px";
-		this.version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		this.version.style.color      = "#FFFFFF";
+		version.style.position   = "absolute";
+		version.style.whiteSpace = "nowrap";
+		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
+		version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
+		version.style.color      = "#FFFFFF";
+		
+		logo.addEventListener('load', this.logoLoadedFunc, false);
+		logo.data = "images/EVL-LAVA.svg";
+		logo.type = "image/svg+xml";
 		
 		if (this.json_cfg.ui.show_url) {
-                        var hostname = this.json_cfg.host;
-			var iport;
-			if (typeof this.json_cfg.rproxy_index_port != "undefined") {
+			var url   = this.json_cfg.host;
+			var iport = this.json_cfg.index_port;
+			if(iport !== 80) url += ":" + iport;
+			if(this.json_cfg.rproxy_index_port !== undefined) {
 				iport = this.json_cfg.rproxy_index_port;
-				hostname = window.location.hostname;
+				url = window.location.hostname;
+				if(iport !== 80) url += ":" + iport;
+				url += window.location.pathname;
 			}
-			else {
-				iport = this.json_cfg.index_port;
-			}
-			if (iport == 80) this.machine.textContent = hostname + window.location.pathname;
-			else this.machine.textContent = hostname + ":" + iport.toString() + window.location.pathname;
-			if (window.location.pathname == "/")
-				this.machine.textContent = this.machine.textContent.slice(0, -1);
+			machine.textContent = url;
 		}
 		head.appendChild(fileref);
 	};
 	
-	this.updateVersionText = function(version) {
+	this.updateVersionText = function(data) {
 		if(this.json_cfg.ui.show_version) {
-			if (version.branch && version.commit && version.date)
-				this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
+			var version = document.getElementById('version');
+			if (data.branch && data.commit && data.date)
+				version.innerHTML = "<b>v" + data.base+"-"+data.branch+"-"+data.commit+"</b> " + data.date;
 			else
-				this.version.innerHTML = "<b>v" + version.base + "</b>";
+				version.innerHTML = "<b>v" + data.base + "</b>";
+		}
+	};
+	
+	this.logoLoaded = function(event) {
+		var logo = document.getElementById('logo');
+		var logoSVG  = logo.getSVGDocument().querySelector('svg');
+		
+		var bbox = logoSVG.getBBox();
+		var height = 0.95 * this.titleBarHeight;
+		var width  = height * (bbox.width/bbox.height);
+		
+		logo.width  = width;
+		logo.height = height;
+		logo.style.position   = "absolute";
+		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
+		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
+		
+		this.changeSVGColor(logoSVG, "path", null, "#FFFFFF");
+	};
+	
+	this.changeSVGColor = function(svgItem, elementType, strokeColor, fillColor) {
+		var elements = svgItem.querySelectorAll(elementType);
+		for(var i=0; i<elements.length; i++){
+			if(strokeColor) elements[i].style.stroke = strokeColor;
+			if(fillColor)   elements[i].style.fill   = fillColor;
 		}
 	};
 
