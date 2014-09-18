@@ -6,13 +6,19 @@
 		"color": "#AA3311",
 		"image": "images/background/minneapolis_skyline_tm.jpg",
 		"style": "fit",
+		"watermark": {
+			"svg": "images/EVL-LAVA.svg",
+			"color": "rgba(255, 255, 255, 0.75)"
+		},
 		"clip": true
 	},
 	"ui": {
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
-		"logo": "watermark"
+		"menubar": {
+			"textColor": "rgba(235, 230, 175, 1.0)"
+		}
 	},
 	"resolution": {
 		"width": 700,

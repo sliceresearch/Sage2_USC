@@ -201,6 +201,7 @@ function uiBuilder(json_cfg, clientID) {
 		console.log("Buidling the UI for the display");
 		
 		this.logoLoadedFunc = this.logoLoaded.bind(this);
+		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
 		
 		var head = document.getElementsByTagName("head")[0];
 
@@ -236,7 +237,9 @@ function uiBuilder(json_cfg, clientID) {
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
 		this.upperBar.id = "upperBar";
-
+		
+		var color = this.json_cfg.ui.menubar.textColor || "rgba(255, 255, 255, 1.0)";
+		
 		// time clock
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
@@ -249,12 +252,15 @@ function uiBuilder(json_cfg, clientID) {
 		// EVL-LAVA logo
 		var logo = document.createElement('object');
 		logo.id = "logo";
+		// background watermark
+		var watermark = document.createElement('object');
+		watermark.id = "watermark";
 		
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
-		if(this.json_cfg.ui.logo === "icon") this.upperBar.appendChild(logo);
-		else                                 this.bg.appendChild(logo);
+		this.upperBar.appendChild(logo);
+		this.bg.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
 
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
@@ -267,25 +273,31 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
 		this.clock.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		this.clock.style.color      = "#FFFFFF";
+		this.clock.style.color      = color;
 		
 		machine.style.position   = "absolute";
 		machine.style.whiteSpace = "nowrap";
 		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
 		machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		machine.style.color      = "#FFFFFF";
+		machine.style.color      = color;
 		
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
 		version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		version.style.color      = "#FFFFFF";
+		version.style.color      = color;
 		
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		logo.data = "images/EVL-LAVA.svg";
 		logo.type = "image/svg+xml";
+		
+		if(this.json_cfg.background.watermark !== undefined){
+			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
+			watermark.data = this.json_cfg.background.watermark.svg;
+			watermark.type = "image/svg+xml";
+		}
 		
 		if (this.json_cfg.ui.show_url) {
 			var url   = this.json_cfg.host;
@@ -314,42 +326,47 @@ function uiBuilder(json_cfg, clientID) {
 	
 	this.logoLoaded = function(event) {
 		var logo = document.getElementById('logo');
-		var logoSVG  = logo.getSVGDocument().querySelector('svg');
+		var logoSVG = logo.getSVGDocument().querySelector('svg');
 		
 		var bbox = logoSVG.getBBox();
+		
+		var height = 0.95 * this.titleBarHeight;
+		var width  = height * (bbox.width/bbox.height);
+	
+		logo.width  = width;
+		logo.height = height;
+		logo.style.position   = "absolute";
+		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
+		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
+		
+		var color = this.json_cfg.ui.menubar.textColor || "rgba(255, 255, 255, 1.0)";
+		this.changeSVGColor(logoSVG, "path", null, color);
+	};
+	
+	this.watermarkLoaded = function(event) {
+		var watermark = document.getElementById('watermark');
+		var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
+		
+		var bbox = watermarkSVG.getBBox();
 		var width;
 		var height;
-			
-		if(this.json_cfg.ui.logo === "icon") {
-			height = 0.95 * this.titleBarHeight;
-			width  = height * (bbox.width/bbox.height);
 		
-			logo.width  = width;
-			logo.height = height;
-			logo.style.position   = "absolute";
-			logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
-			logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
-		
-			this.changeSVGColor(logoSVG, "path", null, "rgba(255, 255, 255, 1.0)");
+		if(bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+			width  = this.json_cfg.totalWidth / 2;
+			height = width * bbox.height/bbox.width;
 		}
 		else {
-			if(bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
-				width  = this.json_cfg.totalWidth / 2;
-				height = width * bbox.height/bbox.width;
-			}
-			else {
-				height = this.json_cfg.totalHeight / 2;
-				width  = height * bbox.width/bbox.height;
-			}
-		
-			logo.width  = width;
-			logo.height = height;
-			logo.style.position = "absolute";
-			logo.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
-			logo.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
-		
-			this.changeSVGColor(logoSVG, "path", null, "rgba(255, 255, 255, 0.15)");
+			height = this.json_cfg.totalHeight / 2;
+			width  = height * bbox.width/bbox.height;
 		}
+	
+		watermark.width  = width;
+		watermark.height = height;
+		watermark.style.position = "absolute";
+		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
+		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
+		
+		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
 	
 	this.changeSVGColor = function(svgItem, elementType, strokeColor, fillColor) {

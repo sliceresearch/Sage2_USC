@@ -1540,8 +1540,6 @@ function setupDisplayBackground() {
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
 
-		//var bg_info = imageinfo(fs.readFileSync(bg_file));
-
 		if (config.background.style == "fit") {
 			var result = exiftool.file(bg_file, function(err, data) {
 				if (err) {

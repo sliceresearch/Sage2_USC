@@ -15,7 +15,9 @@
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
-		logo: "watermark"
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
+		}
 	},
 	"resolution": { // resolution of each display
 		"width": 1366,

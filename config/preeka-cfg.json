@@ -16,7 +16,9 @@
 		show_url: false,
 		show_version: false,
 		clock: 12,
-		logo: "watermark",
+		menubar: {
+			textColor: "rgba(255, 255, 255, 1.0)"
+		},
 		auto_hide_ui: true,
 		auto_hide_delay: 20,
 		noDropShadow: true,

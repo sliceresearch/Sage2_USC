@@ -10,7 +10,9 @@
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"logo": "watermark"
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
+		}
 	},
 	"resolution": {
 		"width": 4098,
