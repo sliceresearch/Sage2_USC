@@ -2,121 +2,117 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>SAGE2: Display</title>
+<title>SAGE2 UI</title>
 
+
+<!-- <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+ -->
 <script type="text/javascript">
-	// SAGE2 is available for use under the SAGE2 Software License
-	//
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
 	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
 	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
 	// Applications (LAVA)
-	//
+	//      
 	// See full text, terms and conditions in the LICENSE.txt included file
-	//
+	//      
 	// Copyright (c) 2014
 </script>
 
-<!-- External dependencies -->
-<script type="text/javascript" src="lib/pdf.js"></script>
-<script type="text/javascript" src="lib/snap.svg-min.js"></script>
-<script type="text/javascript" src="lib/observe.poly.js"></script>
-
 <script type="text/javascript" src="src/websocket.io.js"></script>
-<script type="text/javascript" src="src/Class.js"></script>
-<script type="text/javascript" src="src/SAGE2_App.js"></script>
-<script type="text/javascript" src="src/SAGE2_runtime.js"></script>
-<script type="text/javascript" src="src/image_viewer.js"></script>
-<script type="text/javascript" src="src/movie_player.js"></script>
-<script type="text/javascript" src="src/pdf_viewer.js"></script>
-<script type="text/javascript" src="src/media_stream.js"></script>
-
-<!-- Load the module building the wal UI -->
-<script type="text/javascript" src="src/ui_builder.js"></script>
-
-<script type="text/javascript" src="src/pointer.js"></script>
-<script type="text/javascript" src="src/widgets.js"></script>
-
+<script type="text/javascript" src="src/sagePointer.js"></script>
+<script type="text/javascript" src="src/windowManager.js"></script>
+<script type="text/javascript" src="lib/hammer.min.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
-
-	var clientID;
+	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	
+	var name = "Default";
+	var col = [180, 180, 180];
+	
 	var wsio;
+	var sagePtr;
 	var hostname;
 	var port;
-	var dt;
+	var winMgr;
 	
-	var hostAlias    = {};
+	var canvasKeyEvents = false;
+	var canvasKeyDownFunc = null;
+	var canvasKeyUpFunc = null;
+	var canvasKeyPressFunc = null;
+	var selectedFile = null;
 	
-	var itemCount = 0;
-	var pdfItems = {};
-	var pointerItems = {};
-	var controlItems = {};
-	var lockedControlElements = {} ;
-
-	var canvasItems  = {};
-
+	var uiAspect;
+	var wrapper;
+	var uiWindow;
+	var extraInteraction;
+	var thumbnail, metadata_text;
+	var footer;
 	
-	var applications = {};
-	var dependencies = {};
+	var serverUploadBtn, serverSessionBtn, clearBtn, tileBtn;
+	var fileOKBtn;
+	var fileCloseBtn;
+	var fileDeleteBtn;
+    var openWebpageBtn;
+	var winMgrCanvas;
+	var appsDir;
+	var imagesDir;
+	var pdfsDir;
+	var videosDir;
+	var sessionsDir;
+	var fileList;
 
-	// UI object to build the element on the wall
-	var ui;
-	var uiTimer = null;
-	var uiTimerDelay;
+	var dir2app = {
+		"images"   : "image_viewer",
+		"videos"   : "movie_player",
+		"pdfs"     : "pdf_viewer",
+		"sessions" : "load_session",
+		"apps"     : "custom_app"
+    };
 
-	// Explicitely close web socket when web browser is closed
+	// Explicitely close web socket when web broswer is closed
 	window.onbeforeunload = function() {
 		if(wsio !== undefined) wsio.close();
 	};
-
-	function resetIdle() {
-		if (uiTimer) {
-			clearTimeout(uiTimer);
-			ui.showInterface();
-			uiTimer = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
-		}
-	}
-
+	
 	function init() {
 		hostname = window.location.hostname;
 		port = window.location.port;
-		if(window.location.protocol == "http:"  && port == "") port = "80";
+		if(window.location.protocol == "http:" && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
-		clientID = parseInt(getParameterByName("clientID"));
-		console.log("clientID: " + clientID);
-		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
-		console.log("Connected to server: ", window.location.origin);
+
+		document.title = window.location.hostname.concat(" ", document.title ); 
 		
 		wsio.open(function() {
+			console.log("open websocket");
+			sagePtr = new sagePointer(wsio);
+			window.postMessage('SAGE2_desktop_capture_enabled', "*");
+			
 			var clientDescription = {
-				clientType: "display",
-				clientID: clientID,
-				sendsPointerData: false,
-				sendsMediaStreamFrames: false,
-				requestsServerFiles: false,
-				sendsWebContentToLoad: false,
+				clientType: "sageUI",
+				sendsPointerData: true,
+				sendsMediaStreamFrames: true,
+				requestsServerFiles: true,
+				sendsWebContentToLoad: true,
+				launchesWebBrowser: true,
 				sendsVideoSynchonization: false,
 				sharesContentWithRemoteServer: false,
 				receivesDisplayConfiguration: true,
-				receivesClockTime: true,
-				requiresFullApps: true,
-				requiresAppPositionSizeTypeOnly: false,
-				receivesMediaStreamFrames: true,
+				receivesClockTime: false,
+				requiresFullApps: false,
+				requiresAppPositionSizeTypeOnly: true,
+				receivesMediaStreamFrames: false,
 				receivesWindowModification: true,
-				receivesPointerData: true,
-				receivesInputEvents: true,
-				receivesRemoteServerInfo: true,
-				requestsWidgetControl: true,
-				receivesWidgetEvents: true,
-				requestsAppClone: true
+				receivesPointerData: false,
+				receivesInputEvents: false,
+				receivesRemoteServerInfo: false
 			};
 			wsio.emit('addClient', clientDescription);
-			log("open websocket");
 		});
-
+		
 		// Socket close event (ie server crashed)		
 		wsio.on('close', function (evt) {
 			var refresh = setInterval(function () {
@@ -135,639 +131,533 @@
 				xhr.send();
 			}, 2000);
 		});
+		
+		wrapper          = document.getElementById('wrapper');
+		uiWindow         = document.getElementById('uiWindow');
+		extraInteraction = document.getElementById('extraInteraction');
+		thumbnail        = document.getElementById('thumbnail');
+		metadata_text    = document.getElementById('metadata_text');
+		footer           = document.getElementById('footer');
+		
+		serverUploadBtn  = document.getElementById('serverUploadBtn');
+		serverSessionBtn = document.getElementById('serverSessionBtn');
+		clearBtn         = document.getElementById('clearBtn');
+		tileBtn          = document.getElementById('tileBtn');
+		fileOKBtn        = document.getElementById('fileOKBtn');
+		fileDeleteBtn    = document.getElementById('fileDeleteBtn');
+		fileCloseBtn     = document.getElementById('fileCloseBtn');
+		openWebpageBtn   = document.getElementById('openWebpageBtn');
+		
+		serverUploadBtn.addEventListener('click',  openServerFileBrowser, false);
+		serverSessionBtn.addEventListener('click', saveSession, false);
+		clearBtn.addEventListener('click',         clearDisplay, false);
+		tileBtn.addEventListener('click',          tileApplications, false);
+		fileOKBtn.addEventListener('click',        selectServerFiles, false);
+		fileDeleteBtn.addEventListener('click',    deleteServerFile, false);
+		fileCloseBtn.addEventListener('click',     closeServerFileBrowser, false);
+		
+        openWebpageBtn.addEventListener('click', openWebpage, false);
 
+		fileDeleteBtn.disabled = true;
+
+		winMgr = new windowManager("winMgr", wsio);
+		
+		canvasKeyDownFunc  = winMgr.keyDown.bind(winMgr);
+		canvasKeyUpFunc    = winMgr.keyUp.bind(winMgr);
+		canvasKeyPressFunc = winMgr.keyPress.bind(winMgr);
+		
+		winMgrCanvas = document.getElementById('winMgr');
+
+		document.addEventListener('mousemove', updateTarget, false);
+		
+		appsDir     = document.getElementById('apps');
+		imagesDir   = document.getElementById('images');
+		pdfsDir     = document.getElementById('pdfs');
+		videosDir   = document.getElementById('videos');
+		sessionsDir = document.getElementById('sessions');
+				
+		wsio.on('setupDisplayConfiguration', function(config) {
+			var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
+			
+			var winWidth  = window.innerWidth;
+			var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+			
+			uiAspect  = config.totalWidth / config.totalHeight;
+			var winAspect = winWidth / winHeight;
+			
+			if(winAspect < uiAspect){
+				var uiWidth  = 0.9*winWidth;
+				var uiHeight = uiWidth / uiAspect;
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			else{
+				var uiHeight = 0.9*winHeight;
+				var uiWidth  = uiHeight * uiAspect;
+				uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+				uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+				uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+			}
+			
+			winMgr.initDisplayConfig(config);
+			var displayMin = Math.min(config.totalWidth, config.totalHeight);
+			var thisMin = Math.min(screen.width, screen.height);
+			sagePtr.setPointerSensitivity(displayMin/thisMin);
+		});
+
+		wsio.on('setupSAGE2Version', function(data) {
+			// data: .base .branch .commit .date	
+			var version = document.getElementById('version');
+			version.innerHTML = "SAGE2 Version: <b>v" + data.base+"-"+data.branch+"-"+data.commit+"</b> " + data.date;		
+		});
+		
 		wsio.on('initialize', function(data) {
-			var startTime  = new Date(data.start);
-			var serverTime = new Date(data.time);
-			var clientTime = new Date();
-			
-			dt = clientTime - serverTime;
-			
-			// Global initialization
-			SAGE2_initialize(startTime);
-		});
-
-		wsio.on('addScript', function(script_data) {
-			var js = document.createElement('script');
-			js.type = "text/javascript";
-			js.src = script_data.source;
-			document.head.appendChild(js);
+			sagePtr.setPointerId(data.UID)
 		});
 		
-		wsio.on('setupDisplayConfiguration', function(json_cfg) {
-			var i;
-
-			if(window.location.hostname !== json_cfg.host)
-				hostAlias[json_cfg.host] = window.location.hostname;
-			for(i=0; i<json_cfg.alternate_hosts.length; i++){
-				if(window.location.hostname !== json_cfg.alternate_hosts[i])
-					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
-			}
-
-			// Build the elements visible on the wall
-			ui = new uiBuilder(json_cfg, clientID);
-			ui.build();
-			ui.background();
-			if (json_cfg.ui.auto_hide_ui) {
-				// default delay is 30s if not specified
-				uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay,10) : 30;
-				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
-			}
-		});
-		
-		wsio.on('setupSAGE2Version', function(version) {
-			ui.updateVersionText(version);
-		});
-		
-		wsio.on('setSystemTime', function(data) {
-			ui.setTime(new Date(data.date));
+		wsio.on('createAppWindowPositionSizeOnly', function(data) {
+			winMgr.addAppWindow(data);
 		});
 
-		wsio.on('addRemoteSite', function(data) {
-			ui.addRemoteSite(data);
-		});
-		
-		wsio.on('connectedToRemoteSite', function(data) {
-			ui.connectedToRemoteSite(data);
-		});
-		
-		wsio.on('createSagePointer', function(pointer_data){
-			ui.createSagePointer(pointer_data);
-        });
-        
-        wsio.on('showSagePointer', function(pointer_data){
-			ui.showSagePointer(pointer_data);
-			resetIdle();
-        });
-        
-        wsio.on('hideSagePointer', function(pointer_data){
-			ui.hideSagePointer(pointer_data);
-        });
-        
-        wsio.on('updateSagePointerPosition', function(pointer_data){
-			ui.updateSagePointerPosition(pointer_data);
-			resetIdle();
-        });
-        
-        wsio.on('changeSagePointerMode', function(pointer_data){
-			ui.changeSagePointerMode(pointer_data);
-			resetIdle();
-        });
-		
-		wsio.on('updateMediaStreamFrame', function(data) {
-			wsio.emit('receivedMediaStreamFrame', {id: data.id});
-			
-			var app = applications[data.id];
-			if(app !== undefined && app !== null){
-				app.load(data.state);
-			}
-		});
-		
-		wsio.on('updateWebpageStreamFrame', function(data) {
-			wsio.emit('receivedWebpageStreamFrame', {id: data.id, client: clientID});
-		
-			var webpage = document.getElementById(data.id + "_webpage");
-			webpage.src = "data:image/jpeg;base64," + data.src;
-		});
-
-
-		/******************************/
-		wsio.on('createAppWindow', function(data) {
-			resetIdle();
-
-			var date = new Date(data.date);
-
-			var windowTitle = document.createElement("div");
-			windowTitle.id  = data.id + "_title";
-			windowTitle.className    = "windowTitle";
-			windowTitle.style.width  = data.width.toString() + "px";
-			windowTitle.style.height = ui.titleBarHeight.toString() + "px";
-			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
-			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
-			windowTitle.style.zIndex = itemCount.toString();
-			if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
-			ui.main.appendChild(windowTitle);
-
-			var windowIcons = document.createElement("img");
-			windowIcons.src = "images/layout2.webp";
-			windowIcons.height = Math.round(ui.titleBarHeight);
-			windowIcons.style.position = "absolute";
-			windowIcons.style.right    = "0px";
-			windowTitle.appendChild(windowIcons);
-
-			var titleText = document.createElement("p");
-			titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-			titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-			titleText.style.color      = "#FFFFFF";
-			titleText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
-			titleText.textContent      = data.title;
-			windowTitle.appendChild(titleText);
-			
-			var windowItem = document.createElement("div");
-			windowItem.id  = data.id;
-			windowItem.className      = "windowItem";
-			windowItem.style.left     = (data.left-ui.offsetX).toString() + "px";
-			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
-			windowItem.style.overflow = "hidden";
-			windowItem.style.zIndex   = (itemCount+1).toString();
-			if (ui.noDropShadow===true) windowItem.style.boxShadow = "none";
-			ui.main.appendChild(windowItem);
-			
-			// App launched in window 
-			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
-			
-			// convert url if hostname is alias for current origin
-			var url = cleanURL(data.url);
-			
-			// Not used yet: missing scope....
-			function observer(changes) {
-				if (change.type==='add' && !!change.object[change.name]) {
-					if (isArray(change.object[change.name])) {
-						// If adding an array, observe it too  (works natively, not available as polyfill)
-						if (Array.observe)
-							Array.observe(change.object[change.name], observer, ['add','update']);
-					} else if (isObject(change.object[change.name])) {
-						// If adding an object, observe it too
-						Object.observe(change.object[change.name], observer, ['add','update']);
-					} else {
-						// added a value, all good
-					}
-				}
-				if (change.object[change.name]===null) {
-					// added a null value, all good
-				}
-			}
-
-			function loadApplication() {
-				// load new app
-				if(window[data.application] === undefined) {
-					var js = document.createElement("script");
-					js.addEventListener('error', function(event) {
-						console.log("Error loading script: " + data.application + ".js");
-					}, false);
-					js.addEventListener('load', function(event) {
-						var app = new window[data.application];
-						app.init(data.id, data.width, data.height, url, date);
-
-						if(app.state !== undefined && clientID===0){
-							Object.observe(app.state, function (changes) {
-								//observer(changes);
-								wsio.emit('updateAppState', {id: data.id, state: app.state});
-							}, ['update', 'add']);
-						}
-						
-						app.load(data.data, date);
-						app.refresh(date);
-						
-						applications[data.id] = app;
-						if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
-						} 
-						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-					}, false);
-					js.type = "text/javascript";
-					js.src = url + "/" + data.application + ".js";
-					document.head.appendChild(js);
-				}
-			
-				// load existing app
-				else {
-					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, url, date);
-
-					if(app.state !== undefined && clientID===0){
-						Object.observe(app.state, function(changes) {
-							//observer(changes);
-							wsio.emit('updateAppState', {id: data.id, state: app.state});
-						}, ['update', 'add']);
-					}
-					
-					app.load(data.data, date);
-					app.refresh(date);
-					
-					applications[data.id] = app;
-					if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
-					} 
-					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-				}
-			};
-			
-			// load all dependencies
-			if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
-				loadApplication();
-			}
-			else {
-				var i;
-				var resources = {};
-				for(i=0; i<data.resrc.length; i++){
-					// check dependency cache first
-					if (dependencies[data.resrc[i]] !== true) {
-						dependencies[data.resrc[i]] = false;
-						resources[data.resrc[i]] = false;
-					}
-				}
-				
-				if(isEmpty(resources)){
-					console.log("all resources loaded");
-					loadApplication();
-				}
-				
-				Object.keys(resources).forEach(function(key) {
-					if(resources.hasOwnProperty(key)) {
-						var js = document.createElement("script");
-						js.addEventListener('error', function(event) {
-							console.log("Error loading script: " + key);
-						}, false);
-		
-						js.addEventListener('load', function(event) {
-							dependencies[key] = true;
-							resources[key] = true;
-							if(allTrueDict(resources)){
-								console.log("all resources loaded");
-								loadApplication();
-							}
-						}, false);
-						js.type = "text/javascript";
-						js.src = url + "/" + key;
-						document.head.appendChild(js);
-					}
-				});
-			}
-			
-			var cornerSize = Math.min(data.width, data.height) / 5;
-            var dragCorner = document.createElement("div");
-            dragCorner.className      = "dragCorner";
-            dragCorner.style.position = "absolute";
-            dragCorner.style.width    = cornerSize.toString() + "px";
-            dragCorner.style.height   = cornerSize.toString() + "px";
-            dragCorner.style.top      = (data.height-cornerSize).toString() + "px";
-            dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
-    		dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
-            dragCorner.style.border   = "none";
-            dragCorner.style.zIndex   = "1";
-            windowItem.appendChild(dragCorner);
-			
-			itemCount += 2;
-			
-		});
-		/******************************/
-		
 		wsio.on('deleteElement', function(elem_data) {
-			resetIdle();
-
-			// Tell the application it is over
-			var app = applications[elem_data.elemId];
-			app.terminate();
-			// Remove the app from the list
-			delete applications[elem_data.elemId];
-
-			// Clean up the DOM
-			var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
-			deleteElemTitle.parentNode.removeChild(deleteElemTitle);
-			
-			var deleteElem = document.getElementById(elem_data.elemId);
-			deleteElem.parentNode.removeChild(deleteElem);
-
-			// Clean up the UI DOM
-			if (elem_data.elemId + "_controls" in controlItems){
-				var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-				if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-				delete controlItems[elem_data.elemId + "_controls"];
-			}
-		});
-
-		wsio.on ('hideControl', function(ctrl_data){
-			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==true){
-				var hideElemCtrl = document.getElementById(ctrl_data.id);
-				hideElemCtrl.style.display = 'none';
-				controlItems[ctrl_data.id].show=false;
-			}
-		});
-
-		wsio.on ('showControl', function(ctrl_data){
-			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==false){
-				var showElemCtrl = document.getElementById(ctrl_data.id);
-				showElemCtrl.style.display = 'block';
-				controlItems[ctrl_data.id].show=true;
-			}
+			winMgr.deleteElement(elem_data.elemId);
 		});
 		
 		wsio.on('updateItemOrder', function(order) {
-			resetIdle();
-
-			var i;
-			var zval = 0;
-			for(i=0; i<order.idList.length; i++){
-				var selectedElemTitle = document.getElementById(order.idList[i] + "_title");
-				var selectedElem = document.getElementById(order.idList[i]);
-				//var selectedElemCtrl = document.getElementById(order.idList[i] + "_controls");
-
-				selectedElemTitle.style.zIndex = zval.toString();
-				selectedElem.style.zIndex = (zval+1).toString();
-				//selectedElemCtrl.style.zIndex = (zval+2).toString();
-				
-				zval += 2; // 
-			}
+			winMgr.updateItemOrder(order.idList);
 		});
 		
-		wsio.on('hoverOverItemCorner', function(elem_data) {
-			var selectedElem = document.getElementById(elem_data.elemId);
-			var dragCorner   = selectedElem.getElementsByClassName("dragCorner");
-			if(elem_data.flag){
-				dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.7)";
-            	dragCorner[0].style.border = "2px solid #333333"
-            }
-            else{
-            	dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.0)";
-            	dragCorner[0].style.border = "none"
-            }
-		});
-
 		wsio.on('setItemPosition', function(position_data) {
-			resetIdle();
-
-			var date  = new Date(position_data.date);
-			var eLeft = position_data.elemLeft - ui.offsetX;
-			var eTop  = position_data.elemTop  - ui.offsetY;
-			
-			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-			selectedElemTitle.style.left = eLeft.toString() + "px";
-			selectedElemTitle.style.top = eTop.toString()   + "px";
-			
-			var selectedElem = document.getElementById(position_data.elemId);
-			selectedElem.style.left = eLeft.toString() + "px";
-			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
+			winMgr.setItemPosition(position_data);
 		});
 		
-		wsio.on('setControlPosition', function(position_data) {
-			var date = new Date(position_data.date);
-			
-			var eLeft = position_data.elemLeft - ui.offsetX;
-			var eTop = position_data.elemTop - ui.offsetY;
-			var selectedControl = document.getElementById(position_data.elemId);
-
-			selectedControl.style.left = eLeft.toString() + "px";
-			selectedControl.style.top = eTop.toString() + "px";
-		});
-
 		wsio.on('setItemPositionAndSize', function(position_data) {
-			resetIdle();
-
-			var eLeft = position_data.elemLeft - ui.offsetX;
-			var eTop  = position_data.elemTop  - ui.offsetY;
-			
-			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-			selectedElemTitle.style.left  = eLeft.toString() + "px";
-			selectedElemTitle.style.top   = eTop.toString()  + "px";
-			selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
-			
-			var selectedElem = document.getElementById(position_data.elemId);
-			selectedElem.style.left = eLeft.toString() + "px";
-			selectedElem.style.top  = (eTop+ui.titleBarHeight).toString() + "px";
-			
-			var dragCorner = selectedElem.getElementsByClassName("dragCorner");
-			var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
-			dragCorner[0].style.width  = cornerSize.toString() + "px";
-            dragCorner[0].style.height = cornerSize.toString() + "px";
-            dragCorner[0].style.top    = (Math.round(position_data.elemHeight)-cornerSize).toString() + "px";
-            dragCorner[0].style.left   = (Math.round(position_data.elemWidth)-cornerSize).toString()  + "px";
-			
-			var child = selectedElem.getElementsByClassName("sageItem");
-
-			// if the element is a div, resize should use the style object
-			if(child[0].tagName.toLowerCase() == "div") {
-				child[0].style.width  = Math.round(position_data.elemWidth)  + "px";
-				child[0].style.height = Math.round(position_data.elemHeight) + "px";
-			}
-			else{
-				// if it's a canvas, just use width and height
-				child[0].width  = Math.round(position_data.elemWidth);
-				child[0].height = Math.round(position_data.elemHeight);
-			}
-			
-			var app = applications[position_data.elemId];
-			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
-				var date = new Date(position_data.date);
-				app.resize(date);
-			}
+			winMgr.setItemPositionAndSize(position_data);
 		});
 		
-		wsio.on('finishedResize', function(data) {
-			resetIdle();
+		wsio.on('storedFileList', function(files) {
+			// Store the file list in a global variable
+			fileList = files;
 
-			var app = applications[data.id];
-			if(app !== undefined && app.resizeEvents === "onfinish"){
-				var date = new Date(data.date);
-				app.resize(date);
-			}
+			var diag = document.getElementById('lb_light');
+
+			document.getElementById('apps-dir').checked     = false;
+			document.getElementById('images-dir').checked   = false;
+			document.getElementById('pdfs-dir').checked     = false;
+			document.getElementById('videos-dir').checked   = false;
+			document.getElementById('sessions-dir').checked = false;
+
+			removeAllChildren(appsDir);
+			removeAllChildren(imagesDir);
+			removeAllChildren(pdfsDir);
+			removeAllChildren(videosDir);
+			removeAllChildren(sessionsDir);
+
+			var longestApp = createFileList(files, "app",     appsDir);
+			var longestImg = createFileList(files, "image",   imagesDir);
+			var longestPdf = createFileList(files, "pdf",     pdfsDir);
+			var longestVid = createFileList(files, "video",   videosDir);
+			var longestSes = createFileList(files, "session", sessionsDir);
+			
+			var longest = Math.max(longestApp, longestImg, longestPdf, longestVid, longestSes);			
+			document.getElementById("fileListElems").style.width = (longest+60).toString() + "px";
+			
+			selectedFile = null;
+
+			// clear the metadata panel
+			thumbnail.src = "images/blank.png";
+			metadata_text.innerHTML = "";
+
+			// open the dialog
+			diag.showModal();
 		});
 		
-		wsio.on('updateVideoItemTime', function(video_data) {
-			var clientTime = new Date();
-			var serverTime = new Date(clientTime.getTime() - dt);
-			var sentTime   = new Date(video_data.sent);
-			var delay      = (serverTime.getTime() - sentTime.getTime()) / 1000;
-			
-			var selectedElem = document.getElementById(video_data.elemId);
-			
-			var child = selectedElem.getElementsByClassName("sageItem");
-			var diff  = (video_data.time + delay) - child[0].currentTime;
-			
-			var app = applications[video_data.elemId];
-			if(app !== undefined && app !== null){
-				app.event("videoTimeSync", null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
-			}
+		wsio.on('requestNextFrame', function(data) {
+			sagePtr.sendMediaStreamFrame();
 		});
 		
-		wsio.on('animateCanvas', function(data) {
-			var date = new Date(data.date);
-			var app  = applications[data.id];
-			if(app !== undefined && app !== null){
-				app.refresh(date);
-				wsio.emit('finishedRenderingAppFrame', {id: data.id});
-			}
+		wsio.on('stopMediaCapture', function() {
+			if(sagePtr.mediaStream != null) sagePtr.mediaStream.stop();
 		});
 		
-		wsio.on('eventInItem', function(event_data){
-			var date = new Date(event_data.date);
-			var app  = applications[event_data.id];
+		
+		window.addEventListener('message', function (event) {
+			if(event.origin != window.location.origin) return;
 			
-			app.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
-			
-			/*
-			// adding pointer information to the event
-            event_data.data.pname  = event_data.user_label;
-            event_data.data.pcolor = event_data.user_color;
-			app.event(event_data.eventType, event_data.user_id, event_data.itemRelativeX, event_data.itemRelativeY, event_data.data, date);
-			*/
-		});
-
-		wsio.on('requestNewControl', function(data){
-			var dt = new Date(data.date);
-			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
-			if (data.elemId !== undefined && data.elemId !== null){
-				if(controlItems[data.elemId+"_controls"] !== undefined){
-					var size = computeSize(controlItems[data.elemId+ "_controls"].spec);
-					console.log(size);
-					wsio.emit('addNewControl', {
-						id:data.elemId+"_controls", 
-						left:data.x,
-						top:data.y,
-						width:size.width,
-						height:size.height,
-						show: true,
-						date: dt 
-					});
-				}
+			if(event.data.cmd === "SAGE2_desktop_capture-Loaded"){
+				if(sagePtr !== undefined && sagePtr !== null)
+					sagePtr.desktopCaptureEnabled = true;
 			}
-		});
-
-		wsio.on('createControl', function(data){
-			if (controlItems[data.id].show === false) {
-				var ctrDiv =  document.createElement("div");
-				ctrDiv.id = data.id;
-				ctrDiv.className = "windowControls";
-				ctrDiv.style.width = data.width.toString() + "px";
-				ctrDiv.style.height = data.height.toString() + "px";
-				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
-				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
-				ctrDiv.style.zIndex = "9999".toString();
-				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
-				var handle = createControls(data.id,controlItems[data.id].spec);
-				ctrDiv.appendChild (handle);	
-				ui.main.appendChild(ctrDiv);
-				controlItems[data.id].show = true;
-				controlItems[data.id].divHandle = ctrDiv;
-			}
-		});
-
-		wsio.on('requestControlId', function(data) {
-			var ctrl  = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
-			var ctrId = ctrl? ctrl.attr("id"):"";
-			var regC  = /_controls/;
-			var regB  = /button/;
-			var regS  = /slider/;
-			var regTI = /textInput/;
-			
-
-			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
-				var temp = regC.test(ctrId)? null:ctrId;
-				var aId = ctrl.data("appId");
-				/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
-					if(/line/.test(ctrId) || /knob/.test(ctrId))
-				}*/
-				wsio.emit('selectedControlId', { 
-					addr:data.addr,
-					pointerX: data.x,
-					pointerY: data.y,
-					ctrlId: temp,
-					appId: aId
-				});
-				lockedControlElements[data.ptrId] = temp; 
-			}
-		});
-
-		wsio.on('releaseControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
-			if (ctrl){
-				var ctrId = ctrl.attr("id");
-				var regS = /slider/;
-				var regB = /button/;
-				var flag = false;
-				var aId = ctrl.data("appId");
-				if (regS.test(ctrId) || (regB.test(ctrId) && (lockedControlElements[data.ptrId] === ctrId))){
-					flag = true;
-				}
-				wsio.emit('releasedControlId', { 
-					addr:data.addr,
-					pointerX: data.x,
-					pointerY: data.y,
-					ctrlId: ctrId,
-					appId: aId,
-					activateControl: flag
-				});
-
-			}
-			lockedControlElements[data.ptrId] = null;
-		});
-		wsio.on('executeControlFunction', function(data){
-			var ctrl = getCtrl(data);
-			var dt = new Date();
-			if(ctrl){
-				var ctrId = ctrl.attr('id');
-				if (/button/.test(ctrId)){
-					ctrl = ctrl.parent().select("path");
-					var swtch = ctrl.data("switch") ;
-					var delay = ctrl.data("delay") ;
-					if (swtch===null){
-						var f = ctrl.data("from");
-						var t = ctrl.data("to");
-						ctrl.animate({"path":t},delay,mina.bounce,function(){
-							ctrl.animate({"path":f},delay,mina.bounce);	
-						});
-						
-					}
-					else{
-						var pth = ctrl.data(swtch?"from":"to");
-						ctrl.data("switch", 1 - swtch);
-						ctrl.animate({"path":pth},delay,mina.linear);
-						
-					}
-				}
-				var func = ctrl.parent().data("call");
-				var appId = ctrl.parent().data("appId");
-				var app = applications[appId];
-				func(app,dt);	
-				//Check whether a request for clone was made.
-				if(app.cloneable === true && app.requestForClone === true){
-					app.requestForClone = false;
-					console.log("cloning app:" + appId);
-					wsio.emit('createAppClone', {id : appId});
-				}
-				
-			}
-			
-		});
-
-		wsio.on('moveSliderKnob', function(data){
-			var ctrl = getCtrl(data.ctrl);
-			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
-			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
-			var pos = data.x-ui.offsetX-widgetOffset;
-			
-			var val = mapMoveToSlider(ctrl, pos);
-			var slider = ctrl.parent();
-
-			var app = getProperty(applications[ctrl.data("appId")],slider.data("appProperty"));
-			app.obj[app.property] = val;
-
-		});
-
-		wsio.on('keyInControl', function(data){
-			var ctrl = getCtrl(data);
-			if (ctrl){
-				var textInput = ctrl.parent();
-				if (data.code != 13){
-					insertText(textInput, data.code, data.printable);
-				}
-				else{
-					var func = textInput.data("call");
-					func(applications[textInput.data("appId")],getText(textInput));
-				}		
+			if(event.data.cmd === "window_selected"){
+				sagePtr.captureDesktop(event.data.mediaSourceId);
 			}
 		});
 	}
+	
+	function resize() {
+		var extraHeight = extraInteraction.clientHeight + footer.clientHeight;
+			
+		var winWidth  = window.innerWidth;
+		var winHeight = window.innerHeight - extraHeight; // extraHeight ==> interaction boxes below ui
+		
+		var winAspect = winWidth / winHeight;
+		
+		if(winAspect < uiAspect){
+			var uiWidth  = 0.9*winWidth;
+			var uiHeight = uiWidth / uiAspect;
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.height = Math.round(uiHeight).toString() +  "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		else{
+			var uiHeight = 0.9*winHeight;
+			var uiWidth  = uiHeight * uiAspect;
+			uiWindow.style.height = Math.round(uiHeight).toString() + "px";
+			uiWindow.style.width  = Math.round(uiWidth).toString() + "px";
+			uiWindow.style.marginLeft = Math.round((winWidth-uiWidth)/2).toString() + "px";
+		}
+		
+		winMgr.resize();
+	}
 
+	function createFileList(files, type, dir) {		
+		var longest = 0;
+		var textWidthTest = document.getElementById("textWidthTest");
+		
+		for(var i=0; i<files[type].length; i++){
+			var listElem = document.createElement("li");
+			if (typeof files[type][i] === 'string') {
+				// If it's a string, use it as filename
+				listElem.textContent = files[type][i];
+				listElem.id          = files[type][i];
+			}
+			else {
+				// if it's an object, use the .exif.FileName field
+				listElem.textContent = files[type][i].exif.FileName;
+				listElem.id          = files[type][i].exif.FileName;
+			}
+			// One click: select the file
+			listElem.addEventListener('click',    selectFile,        false);
+			// Double click: open the file
+			listElem.addEventListener('dblclick', selectServerFiles, false);
+			// Put the element <li> in the DOM
+			dir.appendChild(listElem);
+			
+			textWidthTest.textContent = listElem.textContent;
+			var textWidth = (textWidthTest.clientWidth + 1);
+			
+			if(textWidth > longest) longest = textWidth;
+		}
+		return longest;
+	}
+
+	function updateTarget(event) {
+		if(event.target == winMgrCanvas && !canvasKeyEvents){
+			document.addEventListener('keydown',  canvasKeyDownFunc, false);
+			document.addEventListener('keyup',    canvasKeyUpFunc, false);
+            document.addEventListener('keypress', canvasKeyPressFunc, false);
+			canvasKeyEvents = true;
+		}
+		else if(event.target != winMgrCanvas && canvasKeyEvents){
+			document.removeEventListener('keydown',  canvasKeyDownFunc, false);
+			document.removeEventListener('keyup',    canvasKeyUpFunc, false);
+            document.removeEventListener('keypress', canvasKeyPressFunc, false);
+
+			canvasKeyEvents = false;
+		}
+	}
+	
+	function removeAllChildren(node) {
+		while (node.lastChild) {
+    		node.removeChild(node.lastChild);
+		}
+	}
+	
+	function openServerFileBrowser(event) {
+		wsio.emit('requestStoredFiles');
+	}
+	
+	function pad(n, width, z) {
+	  z = z || '0';
+	  n = n + '';
+	  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
+
+	function saveSession(event) {
+		var ad = new Date();
+		var template = "session-" + ad.getFullYear() + "_" + pad(ad.getMonth()+1,2) + "_" + pad(ad.getDate(),2);
+		template = template + "-" + pad(ad.getHours(),2) + ":" + pad(ad.getMinutes(),2) + ":" + pad(ad.getSeconds(),2);
+		var filename = prompt("Please a session name\n(Leave blank for name based on server's time)", template);
+		if (filename!=null) {
+			wsio.emit('saveSesion', filename);
+		}
+	}
+
+	function tileApplications (event) {
+		// tile all the application windows
+		wsio.emit('tileApplications');
+	}
+	function clearDisplay (event) {
+		// remove all the applications
+		wsio.emit('clearDisplay');
+	}
+
+	function closeServerFileBrowser(event) {
+		var diag = document.getElementById("lb_light");
+		diag.close();
+	}
+
+	function selectServerFiles(event) {
+		if (selectedFile) {
+			var directory = selectedFile.parentNode.id
+			// get the filename (not the html, the actual value set)
+			var fileName  = selectedFile.firstChild.nodeValue;
+			// based on folder, match the appropriate application
+			var app       = dir2app[directory];
+
+			wsio.emit('addNewElementFromStoredFiles', {application: app, filename: fileName});
+		}
+		closeServerFileBrowser(event);
+	}
+	
+	function deleteServerFile(event) {
+		if(selectedFile && confirm('Are you sure you want to delete this file?')){
+			var directory = selectedFile.parentNode.id
+			// get the filename (not the html, the actual value set)
+			var fileName  = selectedFile.firstChild.nodeValue;
+			// based on folder, match the appropriate application
+			var app       = dir2app[directory];
+
+			// Remove the element from the file list
+			var elem = document.getElementById(fileName);
+			elem.parentNode.removeChild(elem);
+
+			// Ask the server to delete the  file / app
+			wsio.emit('deleteElementFromStoredFiles', {application: app, filename: fileName});
+
+			// clear the metadata panel
+			//document.getElementById('metadata').innerHTML = '';
+			thumbnail.src = "images/blank.png";
+			metadata_text.innerHTML = "";
+
+			// clear selection
+			selectedFile = null;
+		}
+	}
+
+	function selectFile(event) {
+		if(selectedFile != null) selectedFile.style.backgroundColor = "transparent";
+		
+		selectedFile = event.target;
+		selectedFile.style.backgroundColor = "#B9D3FF";
+
+		// Show some metada
+		showInfoFile(event);
+	}
+
+	function showInfoFile(event) {
+		var directory = selectedFile.parentNode.id
+		// get the filename (not the html, the actual value set)
+		var fileName  = selectedFile.firstChild.nodeValue;
+		// based on folder, match the appropriate application
+		var app       = dir2app[directory];
+
+		var i, exifdata;
+		if (app === 'image_viewer') {
+			for (i=0;i<fileList.image.length;i++) {
+				if (fileList.image[i].exif.FileName === fileName) {
+					exifdata = fileList.image[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						thumbnail.src = exifdata;
+					else
+						thumbnail.src = "images/blank.png";
+				}
+			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
+		} else if (app === 'movie_player') {
+			for (i=0;i<fileList.video.length;i++) {
+				if (fileList.video[i].exif.FileName === fileName) {
+					exifdata = fileList.video[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						thumbnail.src = exifdata;
+					else
+						thumbnail.src = "images/blank.png";
+				}
+			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
+		} else if (app === 'pdf_viewer') {
+			for (i=0;i<fileList.pdf.length;i++) {
+				if (fileList.pdf[i].exif.FileName === fileName) {
+					exifdata = fileList.pdf[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						thumbnail.src = exifdata;
+					else
+						thumbnail.src = "images/blank.png";
+				}
+			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
+		} else if (app === 'custom_app') {
+			for (i=0;i<fileList.app.length;i++) {
+				if (fileList.app[i].exif.FileName === fileName) {
+					exifdata = fileList.app[i].exif.SAGE2thumbnail;
+					if (exifdata)
+						thumbnail.src = exifdata;
+					else
+						thumbnail.src = "images/blank.png";
+					metadata_text.innerHTML = fileList.app[i].metadata.title + "<br>v" + fileList.app[i].metadata.version;
+				}
+			}
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = true;
+		} else {
+			thumbnail.src = "images/blank.png";
+			metadata_text.innerHTML = "";
+
+			// Enable/disable delete button
+			fileDeleteBtn.disabled = false;
+		}
+	}
+
+	function sagePointerEnabled() {
+		var diag = document.getElementById("lb_pointer_help");
+		diag.showModal();
+	}
+	
+	function sagePointerDisabled() {
+		var diag = document.getElementById("lb_pointer_help");
+		diag.close();
+	}
+	
+    function openWebpage(event) {
+        var url = document.getElementById("openWebpageUrl");
+        wsio.emit('openNewWebpage', {id: sagePtr.uniqueID, url: openWebpageUrl.value});
+    }
+	
 </script>
+
+<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
+<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
 
 </head>
 
-<body onload="init()">
-	<div id="background">
-		<div id="main">
-			<!-- the rest is built programmatically by the uiBuilder -->
+<body onload="init()" onresize="resize()">
+	<div id="wrapper">
+		<div id="uiWindow">
+			<canvas id="winMgr">HTML5 canvas element not supported</canvas>
 		</div>
+		<div id="extraInteraction">
+			<div id="fileUpload">
+				<div id="fileDrop">
+					<p id="fileDropText">Drag files here to upload</p>
+					<progress id="fileDropProgress" value=0 max=100></progress>
+				</div>
+				<label class="fileLabel">Load from Server:</label><button id="serverUploadBtn" type="button">Select Files</button>
+			</div>
+			<div id="sagePointer">
+				<label class="sageLabel">Click to start:</label><button id="sagePointerBtn" type="button">SAGE Pointer</button><br />
+				<label class="sageLabel">Pointer name:</label><input id="sagePointerLabel" type="text"></input><br />
+				<label class="sageLabel">Pointer color:</label><input id="sagePointerColor" type="color" value="#B4B4B4"></input>
+			</div>
+			<div id="screenShare">
+				<label class="sageLabel">Click to start:</label>
+				<button id="screenShareBtn" type="button">Share Screen</button>
+				<label class="sageLabel">Screen resolution:</label>
+				<select id="screenShareResolution">
+					<option>Low</option>
+					<option>Medium</option>
+					<option>High</option>
+					<option selected="selected">Full</option>
+				</select>
+				<label class="sageLabel">Frame quality:</label>
+				<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="5" style="width:100px;">
+					<span id="screenShareQualityIndicator" style="margin-left:5px;">5</span>
+				</input>
+			</div>
+            <div id="openWebpage">
+                <label class="sageLabel">Webpage:</label><input id="openWebpageUrl" type="text" value="http://hakim.se/experiments/html5/origami"></input><br/>
+                <button id="openWebpageBtn" type="button">Browse</button><br/>
+            </div>
+			<div id="layout">
+				<label class="sageLabel">Session:</label><button id="serverSessionBtn" type="button">Save current</button>
+				<label class="sageLabel">Clear display:</label><button id="clearBtn" type="button">Clear all</button>
+				<label class="sageLabel">Tile applications:</label><button id="tileBtn" type="button">Tile all</button>
+			</div>
+		</div>
+		
+		<div id="textWidthTest"></div>
+		<canvas id="mediaCanvas" style="display: none;"></canvas>
+		<video id="mediaVideo" style="display: none;"></video>
+	
+		<!-- Dialog for the file browser -->
+		<dialog id="lb_light">
+			<div id="fileBrowser" class="lb_whitecontent">
+				<div id="fileTreeList" class="css-treeview">
+					<ul id="fileListElems" style="width:800px">
+						<li><input type="checkbox" id="apps-dir" /><label for="apps-dir">Apps</label>
+						<ul id="apps" class="fileItem"></ul>
+						<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label>
+						<ul id="images" class="fileItem"></ul>
+						<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label>
+						<ul id="pdfs" class="fileItem"></ul>
+						<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label>
+						<ul id="videos" class="fileItem"></ul>
+						<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label>
+						<ul id="sessions" class="fileItem"></ul>
+					</ul>
+				</div>
+				<div id="metadata">
+					<img id="thumbnail" src="images/blank.png"></img>
+					<label id="metadata_text"></label>
+				</div>
+			</div>
+			<div class="clear"></div>
+			<div id="fileButtons">
+				<button id="fileOKBtn"     type="button" style="float:left; margin-left:6px;">OK</button>
+				<button id="fileCloseBtn"  type="button" style="float:left; margin-left:6px;">Close</button>
+				<button id="fileDeleteBtn" type="button" style="float:right; margin-right:6px;">Delete</button>
+			</div>
+		</dialog>
+	
+		<!-- Dialog shown during pointer lock -->
+		<dialog id="lb_pointer_help">
+			<div id="pointerHelpText" class="lb_whitecontent">
+				<ul>
+					<li>SAGE2 Pointer has two modes: window management (black outline, color fill) and application interaction (color outline, black fill)</li>
+					<ul>
+						<li>Window Management Mode</li>
+						<ul>
+							<li>Left-click anywhere on an app to move window</li>
+							<li>Left-click bottom-right corner of an app to resize window</li>
+							<li>Right-click on an app to bring up widget bar</li>
+							<li>Right-click on an widget bar to hide it</li>
+							<li>Scroll anywhere on an app to resize window</li>
+						</ul>
+						<li>Application Interaction Mode</li>
+						<ul>
+							<li>All events forwarded to app</li>
+						</ul>
+						<li>Press 'Shift'+'Tab' to toggle SAGE2 Pointer modes</li>
+					</ul>
+					<li>Press 'Esc' to stop SAGE2 Pointer</li>
+				</ul>
+			</div>
+		</dialog>
+
+
+		<footer id="footer">
+			<ul>
+				<li id="version">SAGE2 Version:</li>
+				<li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+				<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
+				<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
+				<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
+			</ul>
+		</footer>
 	</div>
 </body>
 </html>
+
