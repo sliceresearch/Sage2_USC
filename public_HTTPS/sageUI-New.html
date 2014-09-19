@@ -59,10 +59,10 @@
 			arrangementDiv.className = "uiButton";
 			settingsDiv.className    = "uiButton";
 			helpDiv.className        = "uiButton";
-			var applauncher = createSVG("images/applauncher.svg", null, null, 48, 48);
-			var arrangement = createSVG("images/arrangement.svg", null, "uiButton", 48, 48);
-			var settings    = createSVG("images/settings.svg",    null, "uiButton", 48, 48);
-			var help        = createSVG("images/help.svg",        null, "uiButton", 48, 48);
+			var applauncher = createSVG("images/applauncher.svg", "applauncher", 48, 48);
+			var arrangement = createSVG("images/arrangement.svg", "arrangement", 48, 48);
+			var settings    = createSVG("images/settings.svg",    "settings",    48, 48);
+			var help        = createSVG("images/help.svg",        "help",        48, 48);
 			var applauncherText = document.createElement('p');
 			var arrangementText = document.createElement('p');
 			var settingsText    = document.createElement('p');
@@ -99,12 +99,7 @@
 		this.displayUI   = null;
 		this.canvas      = null;
 		this.ctx         = null;
-		
 		this.buttonUI    = null;
-		this.applauncher = null;
-		this.arrangement = null;
-		this.settings    = null;
-		this.help        = null;
 		
 		this.config      = null;
 		
@@ -176,22 +171,46 @@
 			
 			sage2UI.init(config);
 		});
+		
+		window.addEventListener('click', pointerClick, false);
 	}
 	
 	function resize() {
 		
 	}
 	
+	function pointerClick(event) {
+		var element = event.srcElement;
+		if(element.id === "applauncher") {
+			console.log("App Launcher");
+		}
+		else if(element.id === "arrangement") {
+			console.log("Arrangement");
+		}
+		else if(element.id === "settings") {
+			console.log("Settings");
+		}
+		else if(element.id === "help") {
+			console.log("Help");
+		}
+	}
 	
 	
-	function createSVG(src, id, className, width, height) {
-		var svg = document.createElement('object');
+	
+	function createSVG(src, id, width, height) {
+		var svg = document.createElement('img');
 		svg.id = id;
-		svg.className = className;
+		svg.src = src;
+		svg.type = "image/svg+xml";
+		svg.width  = width;
+		svg.height = height;
+		/*
+		var svg = document.createElement('object');
 		svg.data = src;
 		svg.type = "image/svg+xml";
 		svg.width  = width;
 		svg.height = height;
+		*/
 		
 		return svg;
 	}
@@ -217,7 +236,7 @@
 .uiButton {
 	position: relative;
 }
-.uiButton object {
+.uiButton img {
 	position: absolute;
 	top: 8px;
     left: 8px;
@@ -225,7 +244,7 @@
 	-moz-transition: 100ms ease-in-out;
 	transition: 100ms ease-in-out;
 }
-.uiButton:hover object {
+.uiButton:hover img {
 	-webkit-transform: scale(1.2);
 	-moz-transform: scale(1.2);
 	transform: scale(1.2);
