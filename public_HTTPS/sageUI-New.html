@@ -30,11 +30,32 @@
 		};
 		
 		this.draw = function() {
+			var i;
 			var sage2UI = document.getElementById('sage2UI');
 			var ctx = sage2UI.getContext('2d');
 			
+			// background
 			ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
 			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
+			
+			
+			// tiled display layout
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+			ctx.strokeRect(0, 0, sage2UI.width, sage2UI.height);
+			var stepX = sage2UI.width/this.config.layout.columns;
+			var stepY = sage2UI.height/this.config.layout.rows;
+			ctx.beginPath();
+			for(i=1; i<this.config.layout.columns; i++){
+				ctx.moveTo(i*stepX, 0);
+				ctx.lineTo(i*stepX, sage2UI.height);
+			}
+			for(i=1; i<this.config.layout.rows; i++){
+				ctx.moveTo(0, i*stepY);
+				ctx.lineTo(sage2UI.width, i*stepY);
+			}
+			ctx.closePath();
+			ctx.stroke();
 		};
 		
 		this.resize = function() {
@@ -135,7 +156,10 @@
 	
 	function pointerClick(event) {
 		var element = event.srcElement;
-		if(element.id === "applauncher") {
+		if(element.id === "sage2UI") {
+			console.log("sage2UI");
+		}
+		else if(element.id === "applauncher") {
 			console.log("App Launcher");
 		}
 		else if(element.id === "arrangement") {
@@ -188,6 +212,10 @@ body {
 	height: 256px;
 }
 
+#extraUI {
+	padding: 10px;
+}
+
 .uiButton {
 	position: relative;
 	width: 155px;
@@ -221,9 +249,9 @@ body {
 	background-color: #787878;
 	border-radius: 8px;
 	opacity: 0.0;
-	-webkit-transition: opacity 100ms;
-	-moz-transition: opacity 100ms;
-	transition: opacity 100ms;
+	-webkit-transition: opacity 100ms ease-in-out;
+	-moz-transition: opacity 100ms ease-in-out;
+	transition: opacity 100ms ease-in-out;
 }
 
 .uiButton:hover p {
