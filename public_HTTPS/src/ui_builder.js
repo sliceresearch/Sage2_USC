@@ -350,31 +350,35 @@ function uiBuilder(json_cfg, clientID) {
 	this.createRadialMenu = function(data) {
 
 		var menuElem = document.getElementById(data.id+"_menu");
-
+		
+		// Do this only on the 'master' radial menu
 		if( !menuElem )
 		{
-			console.log("createRadialMenu " + data.id);
-			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
-								data.x - this.pointerOffsetX - this.offsetX,
-								data.y  - this.pointerOffsetY - this.offsetY,
-								radialMenuSize.x, radialMenuSize.y, 9000);
-			this.main.appendChild(menuElem); 
-
-			var menu = new radialMenu(); 
-			menu.init(data.id+"_menu") ;
-			
-			menuElem.style.left = (data.x - menu.radialMenuCenter.x).toString() + "px";
-			menuElem.style.top  = (data.y - menu.radialMenuCenter.y).toString()  + "px";
-
-			// keep track of the menus
-			this.radialMenus[data.id+"_menu"] = menu;
-					
-			this.radialMenus[data.id+"_menu"].draw();
+		
 		}
-		else if( this.radialMenus[menuElem.id].visible === false )
+		
+		console.log("createRadialMenu " + data.id);
+		console.log(" pointerOffset" +  this.pointerOffsetX + ", " +  this.pointerOffsetY );
+		console.log(" offset" +  this.offsetX + ", " +  this.offsetY );
+		menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
+							data.x  - this.offsetX,
+							data.y - this.offsetY,
+							radialMenuSize.x, radialMenuSize.y, 9000);
+		this.main.appendChild(menuElem); 
+			var menu = new radialMenu(); 
+		menu.init(data.id+"_menu") ;
+		
+		menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+		menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+		
+		// keep track of the menus
+		this.radialMenus[data.id+"_menu"] = menu;
+		this.radialMenus[data.id+"_menu"].draw();
+		
+		if( this.radialMenus[menuElem.id].visible === false )
 		{
-			menuElem.style.left = (data.x - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
-			menuElem.style.top  = (data.y - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
 			
 			this.radialMenus[menuElem.id].visible = true;
 			menuElem.style.display = "block";
@@ -389,8 +393,8 @@ function uiBuilder(json_cfg, clientID) {
 		{
 			var rect = menuElem.getBoundingClientRect();
 			
-			menuX = data.x - rect.left;
-			menuY = data.y - rect.top;
+			menuX = data.x - rect.left - this.offsetX;
+			menuY = data.y - rect.top - this.offsetY;
 			
 			this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 
@@ -401,8 +405,8 @@ function uiBuilder(json_cfg, clientID) {
 				if( this.radialMenus[menuElem.id].windowInteractionMode === false )
 				{
 					dragOffset = this.radialMenus[menuElem.id].dragPosition;
-					menuElem.style.left    = (data.x-dragOffset.x).toString() + "px";
-					menuElem.style.top     = (data.y-dragOffset.y).toString()  + "px";
+					menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
+					menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
 				}
 				
 				this.radialMenus[menuElem.id].draw();
@@ -410,7 +414,6 @@ function uiBuilder(json_cfg, clientID) {
 			else
 			{
 				menuElem.style.display = "none";
-				
 			}
 		}
 	};

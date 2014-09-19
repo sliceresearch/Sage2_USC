@@ -695,8 +695,8 @@ function radialMenu(){
 	};
 	
 	this.updateFileList = function(serverFileList) {
-		console.log("updateFileList: ");
-		console.log(serverFileList);
+		//console.log("updateFileList: ");
+		//console.log(serverFileList);
 		
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
