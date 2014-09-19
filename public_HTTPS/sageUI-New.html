@@ -20,97 +20,60 @@
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	
-	function horizontalDisplayUI() {
-		this.displayUI   = null;
-		this.canvas      = null;
-		this.ctx         = null;
-		this.buttonUI    = null;
-		
-		this.config      = null;
+	function displayUI() {
+		this.config = null;
 		
 		this.init = function(config) {
 			this.config = config;
 			
-			var mainUI = document.getElementById('mainUI');
+			this.resize();
+		};
+		
+		this.draw = function() {
+			var sage2UI = document.getElementById('sage2UI');
+			var ctx = sage2UI.getContext('2d');
 			
-			this.displayUI    = document.createElement('div');
-			this.displayUI.id = "displayUI";
-			this.canvas       = document.createElement('canvas');
-			this.ctx          = this.canvas.getContext('2d');
-			this.displayUI.appendChild(this.canvas);
+			ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
+			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
+		};
+		
+		this.resize = function() {
+			var displayUI = document.getElementById('displayUI');
+			var sage2UI = document.getElementById('sage2UI');
+			var menuUI = document.getElementById('menuUI');
 			
-			this.buttonUI = document.createElement('div');
-			this.buttonUI.id = "buttonUI";
-			this.buttonUI.style.width  = "155px";
-			this.buttonUI.style.height = "256px";
-			var applauncherDiv = document.createElement('div');
-			var arrangementDiv = document.createElement('div');
-			var settingsDiv    = document.createElement('div');
-			var helpDiv        = document.createElement('div');
-			applauncherDiv.style.width  = "155px";
-			applauncherDiv.style.height = "64px";
-			arrangementDiv.style.width  = "155px";
-			arrangementDiv.style.height = "64px";
-			settingsDiv.style.width     = "155px";
-			settingsDiv.style.height    = "64px";
-			helpDiv.style.width         = "155px";
-			helpDiv.style.height        = "64px";
-			applauncherDiv.className = "uiButton";
-			arrangementDiv.className = "uiButton";
-			settingsDiv.className    = "uiButton";
-			helpDiv.className        = "uiButton";
-			var applauncher = createSVG("images/applauncher.svg", "applauncher", 48, 48);
-			var arrangement = createSVG("images/arrangement.svg", "arrangement", 48, 48);
-			var settings    = createSVG("images/settings.svg",    "settings",    48, 48);
-			var help        = createSVG("images/help.svg",        "help",        48, 48);
-			var applauncherText = document.createElement('p');
-			var arrangementText = document.createElement('p');
-			var settingsText    = document.createElement('p');
-			var helpText        = document.createElement('p');
-			applauncherText.textContent = "App Launcher";
-			arrangementText.textContent = "Arrangement";
-			settingsText.textContent    = "Settings";
-			helpText.textContent        = "Help";
-			applauncherDiv.appendChild(applauncher);
-			arrangementDiv.appendChild(arrangement);
-			settingsDiv.appendChild(settings);
-			helpDiv.appendChild(help);
-			applauncherDiv.appendChild(applauncherText);
-			arrangementDiv.appendChild(arrangementText);
-			settingsDiv.appendChild(settingsText);
-			helpDiv.appendChild(helpText);
-			this.buttonUI.appendChild(applauncherDiv);
-			this.buttonUI.appendChild(arrangementDiv);
-			this.buttonUI.appendChild(settingsDiv);
-			this.buttonUI.appendChild(helpDiv);
+			var extraHeight = document.getElementById('extraUI').clientHeight;
+			var freeWidth   = window.innerWidth  - 185;              // size of menu buttons
+			var freeHeight  = window.innerHeight - extraHeight - 20; // size of interaction buttons + margin
 			
-			mainUI.appendChild(this.displayUI);
-			mainUI.appendChild(this.buttonUI);
+			var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
+			var freeAspect  = freeWidth / freeHeight;
+			
+			// wide sage2 display (compared to page)
+			if(freeAspect < sage2Aspect) {
+				sage2UI.width  = Math.floor(freeWidth);
+				sage2UI.height = Math.floor(freeWidth / sage2Aspect);
+				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+				displayUI.style.marginTop = "10px";
+				menuUI.style.marginTop = (sage2UI.height/2 - 128).toString() + "px";
+			}
+			// tall sage2 display (compared to page)
+			else {
+				sage2UI.height = Math.floor(freeHeight);
+				sage2UI.width  = Math.floor(freeHeight * sage2Aspect);
+				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+				displayUI.style.marginTop = "10px";
+				menuUI.style.marginTop = (sage2UI.height/2 - 128).toString() + "px";
+			}
+			if(sage2UI.height < 256) {
+				displayUI.style.marginTop = ((256-sage2UI.height) / 2 + 10).toString() + "px";
+				menuUI.style.marginTop = "0px";
+			}
 			
 			this.draw();
 		};
-		
-		this.draw = function() {
-		
-		};
 	}
 	
-	function verticalDisplayUI() {
-		this.displayUI   = null;
-		this.canvas      = null;
-		this.ctx         = null;
-		this.buttonUI    = null;
-		
-		this.config      = null;
-		
-		this.init = function(config) {
-			this.config = config;
-		};
-		
-		this.draw = function() {
-		
-		};
-	}
 	
 	var wsio;
 	var sage2UI;
@@ -159,16 +122,7 @@
 		});
 		
 		wsio.on('setupDisplayConfiguration', function(config) {
-			var extraHeight = document.getElementById('extraUI').clientHeight;
-			var freeWidth   = window.innerWidth;
-			var freeHeight  = window.innerHeight - extraHeight;
-			
-			var sage2Aspect = config.totalWidth / config.totalHeight;
-			var freeAspect  = freeWidth / freeHeight;
-			
-			if(sage2Aspect >= 1.0) sage2UI = new horizontalDisplayUI();
-			else                   sage2UI = new verticalDisplayUI();
-			
+			sage2UI = new displayUI();
 			sage2UI.init(config);
 		});
 		
@@ -176,7 +130,7 @@
 	}
 	
 	function resize() {
-		
+		sage2UI.resize();
 	}
 	
 	function pointerClick(event) {
@@ -193,26 +147,6 @@
 		else if(element.id === "help") {
 			console.log("Help");
 		}
-	}
-	
-	
-	
-	function createSVG(src, id, width, height) {
-		var svg = document.createElement('img');
-		svg.id = id;
-		svg.src = src;
-		svg.type = "image/svg+xml";
-		svg.width  = width;
-		svg.height = height;
-		/*
-		var svg = document.createElement('object');
-		svg.data = src;
-		svg.type = "image/svg+xml";
-		svg.width  = width;
-		svg.height = height;
-		*/
-		
-		return svg;
 	}
 	
 	function reloadIfServerRunning(callback) {
@@ -233,9 +167,33 @@
 </script>
 
 <style type="text/css">
+body {
+	margin: 0px;
+	padding: 0px;
+}
+
+#mainUI {
+	margin: 0px;
+	overflow: auto;
+}
+
+#displayUI {
+	float: left;
+	margin: 10px;
+}
+
+#menuUI {
+	float: left;
+	width: 165px;
+	height: 256px;
+}
+
 .uiButton {
 	position: relative;
+	width: 155px;
+	height: 64px;
 }
+
 .uiButton img {
 	position: absolute;
 	top: 8px;
@@ -244,11 +202,13 @@
 	-moz-transition: 100ms ease-in-out;
 	transition: 100ms ease-in-out;
 }
+
 .uiButton:hover img {
 	-webkit-transform: scale(1.2);
 	-moz-transform: scale(1.2);
 	transform: scale(1.2);
 }
+
 .uiButton p {
 	position: absolute;
 	top: 12px;
@@ -265,10 +225,14 @@
 	-moz-transition: opacity 100ms;
 	transition: opacity 100ms;
 }
+
 .uiButton:hover p {
 	opacity: 1.0;
 }
 
+.clear {
+	clear: both;
+}
 </style>
 
 <!--
@@ -279,8 +243,31 @@
 
 <body onload="init()" onresize="resize()">
 	<div id="mainUI">
+		<div id="displayUI">
+			<canvas id="sage2UI"></canvas>
+		</div>
+		<div id="menuUI">
+			<div id="applauncherContainer" class="uiButton">
+				<img id="applauncher" src="images/applauncher.svg" width="48" height="48"></img>
+				<p>App Launcher</p>
+			</div>
+			<div id="arrangementContainer" class="uiButton">
+				<img id="arrangement" src="images/arrangement.svg" width="48" height="48"></img>
+				<p>Arrangement</p>
+			</div>
+			<div id="settingsContainer" class="uiButton">
+				<img id="settings" src="images/settings.svg" width="48" height="48"></img>
+				<p>Settings</p>
+			</div>
+			<div id="helpContainer" class="uiButton">
+				<img id="help" src="images/help.svg" width="48" height="48"></img>
+				<p>Help</p>
+			</div>
+		</div>
 	</div>
+	<div class="clear"></div>
 	<div id="extraUI">
+		<button id="sage2PointerBtn" type="button">SAGE2 Pointer</button>
 	</div>
 </body>
 </html>

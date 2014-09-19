@@ -5,9 +5,9 @@
 	 width="512px" height="512px" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve">
 <circle fill="#787878" cx="256" cy="256" r="256"/>
 <g>
-	<polyline fill="none" stroke="#FFFFFF" stroke-width="10" points="193.969,142.396 193.969,104 409.632,104 409.632,319.021 369.316,319.021"/>
-	<polyline fill="none" stroke="#FFFFFF" stroke-width="10" points="153.653,188.473 153.653,142.71 369.366,142.71 369.366,358.373 323.24,358.373"/>
-	<rect x="107.948" y="188.467" fill="none" stroke="#FFFFFF" stroke-width="10" width="215.662" height="215.662"/>
+	<polyline fill="none" stroke="#FFFFFF" stroke-width="16" points="193.969,142.396 193.969,104 409.632,104 409.632,319.021 369.316,319.021"/>
+	<polyline fill="none" stroke="#FFFFFF" stroke-width="16" points="153.653,188.473 153.653,142.71 369.366,142.71 369.366,358.373 323.24,358.373"/>
+	<rect x="107.948" y="188.467" fill="none" stroke="#FFFFFF" stroke-width="16" width="215.662" height="215.662"/>
 	<polygon fill="#FFFFFF" points="216.01,205.147 289.187,296.618 216.01,388.089 142.833,296.617 	"/>
 </g>
 </svg>
