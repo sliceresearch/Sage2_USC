@@ -34,10 +34,15 @@ httpserver.prototype.onreq = function(req, res) {
 			this.getFuncs[getName](req, res);
 			return;
 		}
+
+		if (fs.existsSync(this.publicDirectory+getName)) {
+			var stats = fs.lstatSync(this.publicDirectory+getName);
+			if (stats.isDirectory()) getName = getName + "/index.html";
+		}
 		
-		if(getName == "/") getName = "/index.html";
+		if (getName == "/") getName = "/index.html";
+
 		var pathname = this.publicDirectory + getName;
-		//console.log(pathname);
 		
 		var header = {};
 		var type = mime.lookup(pathname);

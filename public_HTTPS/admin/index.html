@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>SAGE2 site index</title>
+<title>SAGE2 Administrator Controls</title>
 
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -57,13 +57,13 @@
 		var sageUI = document.createElement('p');
 		var sageUI_link = document.createElement('a');
 		sageUI_link.textContent = "SAGE UI";
-		sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "sageUI.html";
+		sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin","");
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
 		var sagePointer = document.createElement('p');
 		var sagePointer_link = document.createElement('a');
 		sagePointer_link.textContent = "SAGE Pointer";
-		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "sagePointer.html";
+		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin","") + "sagePointer.html";
 		sagePointer_link.target = "_blank";
 		sagePointer.appendChild(sagePointer_link);
 		
@@ -74,7 +74,7 @@
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "audioManager.html";
+		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin","") + "audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
@@ -85,7 +85,7 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "?clientID=" + i.toString();
+			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin","") + "display.html?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
@@ -96,13 +96,12 @@
 		var displayClient = document.createElement('p');
 		var displayClient_link = document.createElement('a');
 		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
-		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "?clientID=" + i.toString();
+		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin","") + "display.html?clientID=" + i.toString();
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
 
 		// Info
-		//var aul = document.createElement('ul');
 		var info2 = document.createElement('p');
 		info2.innerHTML = "Host: " + json_cfg.host;
 		var info3 = document.createElement('p');
@@ -137,22 +136,21 @@
 		var drawingClient = document.createElement('p');
 		var drawingClient_link = document.createElement('a');
 		drawingClient_link.textContent = "Drawing application";
-		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "drawing.html";
+		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin","") + "drawing.html";
 		drawingClient_link.target = "_blank";
 		drawingClient.appendChild(drawingClient_link);
 		experiments.appendChild(drawingClient);
 	}
 </script>
 
-<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="admin/style.css" media="screen" />
 
 </head>
 
 <body onload="init()">
 
 	<header>
-		<h1>SAGE2 Index</h1>
-		<p>access all the SAGE2 clients from one place</p>
+		<h1>SAGE2 Administrator Controls</h1>
 	</header>
 
 	<main>
@@ -183,9 +181,9 @@
 
 		<section id="help" class="siteType">
 			<h2>Help</h2>
-			<p><a href="help.html#sharing">Enable desktop sharing</a></p>
-			<p><a href="help.html#pointer">Pointer usage</a></p>
-			<p><a href="help.html#content">Sharing content</a></p>
+			<p><a href="help#sharing">Enable desktop sharing</a></p>
+			<p><a href="help#pointer">Pointer usage</a></p>
+			<p><a href="help#content">Sharing content</a></p>
 		</section>
 
 	</main>
