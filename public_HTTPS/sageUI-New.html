@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>SAGE2 UI</title>
+<!--<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">-->
+<script type="text/javascript">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2014
+</script>
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript">
+	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	
+	function horizontalDisplayUI() {
+		this.displayUI   = null;
+		this.canvas      = null;
+		this.ctx         = null;
+		this.buttonUI    = null;
+		
+		this.config      = null;
+		
+		this.init = function(config) {
+			this.config = config;
+			
+			var mainUI = document.getElementById('mainUI');
+			
+			this.displayUI    = document.createElement('div');
+			this.displayUI.id = "displayUI";
+			this.canvas       = document.createElement('canvas');
+			this.ctx          = this.canvas.getContext('2d');
+			this.displayUI.appendChild(this.canvas);
+			
+			this.buttonUI = document.createElement('div');
+			this.buttonUI.id = "buttonUI";
+			this.buttonUI.style.width  = "155px";
+			this.buttonUI.style.height = "256px";
+			var applauncherDiv = document.createElement('div');
+			var arrangementDiv = document.createElement('div');
+			var settingsDiv    = document.createElement('div');
+			var helpDiv        = document.createElement('div');
+			applauncherDiv.style.width  = "155px";
+			applauncherDiv.style.height = "64px";
+			arrangementDiv.style.width  = "155px";
+			arrangementDiv.style.height = "64px";
+			settingsDiv.style.width     = "155px";
+			settingsDiv.style.height    = "64px";
+			helpDiv.style.width         = "155px";
+			helpDiv.style.height        = "64px";
+			applauncherDiv.className = "uiButton";
+			arrangementDiv.className = "uiButton";
+			settingsDiv.className    = "uiButton";
+			helpDiv.className        = "uiButton";
+			var applauncher = createSVG("images/applauncher.svg", null, null, 48, 48);
+			var arrangement = createSVG("images/arrangement.svg", null, "uiButton", 48, 48);
+			var settings    = createSVG("images/settings.svg",    null, "uiButton", 48, 48);
+			var help        = createSVG("images/help.svg",        null, "uiButton", 48, 48);
+			var applauncherText = document.createElement('p');
+			var arrangementText = document.createElement('p');
+			var settingsText    = document.createElement('p');
+			var helpText        = document.createElement('p');
+			applauncherText.textContent = "App Launcher";
+			arrangementText.textContent = "Arrangement";
+			settingsText.textContent    = "Settings";
+			helpText.textContent        = "Help";
+			applauncherDiv.appendChild(applauncher);
+			arrangementDiv.appendChild(arrangement);
+			settingsDiv.appendChild(settings);
+			helpDiv.appendChild(help);
+			applauncherDiv.appendChild(applauncherText);
+			arrangementDiv.appendChild(arrangementText);
+			settingsDiv.appendChild(settingsText);
+			helpDiv.appendChild(helpText);
+			this.buttonUI.appendChild(applauncherDiv);
+			this.buttonUI.appendChild(arrangementDiv);
+			this.buttonUI.appendChild(settingsDiv);
+			this.buttonUI.appendChild(helpDiv);
+			
+			mainUI.appendChild(this.displayUI);
+			mainUI.appendChild(this.buttonUI);
+			
+			this.draw();
+		};
+		
+		this.draw = function() {
+		
+		};
+	}
+	
+	function verticalDisplayUI() {
+		this.displayUI   = null;
+		this.canvas      = null;
+		this.ctx         = null;
+		
+		this.buttonUI    = null;
+		this.applauncher = null;
+		this.arrangement = null;
+		this.settings    = null;
+		this.help        = null;
+		
+		this.config      = null;
+		
+		this.init = function(config) {
+			this.config = config;
+		};
+		
+		this.draw = function() {
+		
+		};
+	}
+	
+	var wsio;
+	var sage2UI;
+	
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		wsio.open(function() {
+			console.log("open websocket");
+			//sagePtr = new sagePointer(wsio);
+			//window.postMessage('SAGE2_desktop_capture_enabled', "*");
+			
+			var clientDescription = {
+				clientType: "sageUI",
+				sendsPointerData: true,
+				sendsMediaStreamFrames: true,
+				requestsServerFiles: true,
+				sendsWebContentToLoad: true,
+				launchesWebBrowser: true,
+				sendsVideoSynchonization: false,
+				sharesContentWithRemoteServer: false,
+				receivesDisplayConfiguration: true,
+				receivesClockTime: false,
+				requiresFullApps: false,
+				requiresAppPositionSizeTypeOnly: true,
+				receivesMediaStreamFrames: false,
+				receivesWindowModification: true,
+				receivesPointerData: false,
+				receivesInputEvents: false,
+				receivesRemoteServerInfo: false
+			};
+			wsio.emit('addClient', clientDescription);
+		});
+		
+		// socket close event (i.e. server crashed)		
+		wsio.on('close', function (evt) {
+			var refresh = setInterval(function() {
+				reloadIfServerRunning(function() {
+					clearInterval(refresh);
+				});
+			}, 2000);
+		});
+		
+		wsio.on('setupDisplayConfiguration', function(config) {
+			var extraHeight = document.getElementById('extraUI').clientHeight;
+			var freeWidth   = window.innerWidth;
+			var freeHeight  = window.innerHeight - extraHeight;
+			
+			var sage2Aspect = config.totalWidth / config.totalHeight;
+			var freeAspect  = freeWidth / freeHeight;
+			
+			if(sage2Aspect >= 1.0) sage2UI = new horizontalDisplayUI();
+			else                   sage2UI = new verticalDisplayUI();
+			
+			sage2UI.init(config);
+		});
+	}
+	
+	function resize() {
+		
+	}
+	
+	
+	
+	function createSVG(src, id, className, width, height) {
+		var svg = document.createElement('object');
+		svg.id = id;
+		svg.className = className;
+		svg.data = src;
+		svg.type = "image/svg+xml";
+		svg.width  = width;
+		svg.height = height;
+		
+		return svg;
+	}
+	
+	function reloadIfServerRunning(callback) {
+		// make a dummy request to test the server every 2 sec
+		xhr = new XMLHttpRequest();
+		xhr.open("GET", "/", true);
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState == 4 && xhr.status == 200){
+				console.log("server ready");
+				// when server ready, callback
+				callback();
+				// and reload the page
+				window.location.reload();
+			}
+		};
+		xhr.send();
+	}
+</script>
+
+<style type="text/css">
+.uiButton {
+	position: relative;
+}
+.uiButton object {
+	position: absolute;
+	top: 8px;
+    left: 8px;
+	-webkit-transition: 100ms ease-in-out;
+	-moz-transition: 100ms ease-in-out;
+	transition: 100ms ease-in-out;
+}
+.uiButton:hover object {
+	-webkit-transform: scale(1.2);
+	-moz-transform: scale(1.2);
+	transform: scale(1.2);
+}
+.uiButton p {
+	position: absolute;
+	top: 12px;
+	left: 64px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	white-space: nowrap;
+	padding: 2px 4px 2px 4px;
+	color: #FFFFFF;
+	background-color: #787878;
+	border-radius: 8px;
+	opacity: 0.0;
+	-webkit-transition: opacity 100ms;
+	-moz-transition: opacity 100ms;
+	transition: opacity 100ms;
+}
+.uiButton:hover p {
+	opacity: 1.0;
+}
+
+</style>
+
+<!--
+<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
+<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
+-->
+</head>
+
+<body onload="init()" onresize="resize()">
+	<div id="mainUI">
+	</div>
+	<div id="extraUI">
+	</div>
+</body>
+</html>
+
