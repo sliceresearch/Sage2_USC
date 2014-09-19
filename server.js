@@ -346,14 +346,14 @@ function initializeWSClient(wsio) {
 		//wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		//if ( !(wsio.clientID in radialMenus) )
-		//{
-		//	console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-		//	radialMenus[wsio.clientID] = wsio;
-		//} else {
-			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-		//	wsio.emit("disableSendToServer", uniqueID);
-		//}
+		if ( !(wsio.clientID in radialMenus) )
+		{
+			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			radialMenus[wsio.clientID] = wsio;
+		} else {
+			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
+			wsio.emit("disableSendToServer", uniqueID);
+		}
 	}
 	
 	// Debug messages from applications

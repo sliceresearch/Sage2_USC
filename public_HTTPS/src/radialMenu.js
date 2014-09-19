@@ -29,6 +29,8 @@ var overlayIconScale = 0.3; // image, pdf, etc image
 
 var thumbnailWindowSize = { x: 1600, y: 800 };
 
+var radialMenuList = {};
+
 function radialMenu(){
 	this.element    = null;
 	this.ctx        = null;
@@ -53,6 +55,48 @@ function radialMenu(){
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowScrollLock = { x: true, y: false };
+		
+		this.sendsToServer = true;
+		radialMenuList[id] = this;
+		
+		// websocket to server for file library access
+		// Note: using a different socket to prevent locking up other app animations
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+
+		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		this.wsio.open(function() {
+			console.log("open websocket: " + id);
+			var clientDescription = {
+				clientType: "radialMenu",
+				clientID: id,
+				sendsPointerData: false,
+				sendsMediaStreamFrames: false,
+				requestsServerFiles: true,
+				sendsWebContentToLoad: false,
+				launchesWebBrowser: false,
+				sendsVideoSynchonization: false,
+				sharesContentWithRemoteServer: false,
+				receivesDisplayConfiguration: true,
+				receivesClockTime: false,
+				requiresFullApps: false,
+				requiresAppPositionSizeTypeOnly: false,
+				receivesMediaStreamFrames: false,
+				receivesWindowModification: false,
+				receivesPointerData: false,
+				receivesInputEvents: false,
+				receivesRemoteServerInfo: false,
+				removeMediabrowserID: true
+			};
+			radialMenuList[id].wsio.emit('addClient', clientDescription);
+		});
+		
+		this.wsio.on('disableSendToServer', function(ID) {
+			radialMenuList[id].sendsToServer = false;
+			radialMenuList[id].wsio.close();
+		});
 		
 		// load thumbnail icons
 		this.idleImageIcon = new Image;
@@ -630,7 +674,7 @@ function radialMenu(){
 				thumbButton = currentThumbnailButtons[i];
 				buttonOverCount += thumbButton.onEvent(type, user.id, position, data);
 
-				if ( thumbButton.isReleased() && this.sendsToServer === true )
+				if ( thumbButton.isReleased() )
 				{ 
 					//console.log(thumbButton+" released" );
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
@@ -692,6 +736,15 @@ function radialMenu(){
 			}
 		}
 
+	};
+	
+	// Displays files
+	this.addNewElementFromStoredFiles = function( data )
+	{
+		if( this.sendsToServer === true )
+		{
+			this.wsio.emit('addNewElementFromStoredFiles', data);
+		}
 	};
 	
 	this.updateFileList = function(serverFileList) {
