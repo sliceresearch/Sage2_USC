@@ -668,8 +668,8 @@ function radialMenu(){
 			{
 				if( this.thumbnailWindowScrollOffset.y <= 0 )
 				{
-					this.thumbnailWindowScrollOffset.x += this.thumbnailWindowDragPosition.x - position.x;
-					this.thumbnailWindowScrollOffset.y += this.thumbnailWindowDragPosition.y - position.y;
+					this.thumbnailWindowScrollOffset.x += position.x - this.thumbnailWindowDragPosition.x;
+					this.thumbnailWindowScrollOffset.y += position.y - this.thumbnailWindowDragPosition.y;
 				}
 				else
 				{

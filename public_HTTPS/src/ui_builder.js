@@ -350,31 +350,27 @@ function uiBuilder(json_cfg, clientID) {
 	this.createRadialMenu = function(data) {
 
 		var menuElem = document.getElementById(data.id+"_menu");
-		
-		// Do this only on the 'master' radial menu
+
 		if( !menuElem )
 		{
-		
+			//console.log("createRadialMenu " + data.id);
+			//console.log(" pointerOffset" +  this.pointerOffsetX + ", " +  this.pointerOffsetY );
+			//console.log(" offset" +  this.offsetX + ", " +  this.offsetY );
+			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
+								data.x  - this.offsetX,
+								data.y - this.offsetY,
+								radialMenuSize.x, radialMenuSize.y, 9000);
+			this.main.appendChild(menuElem); 
+				var menu = new radialMenu(); 
+			menu.init(data.id+"_menu") ;
+			
+			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+			
+			// keep track of the menus
+			this.radialMenus[data.id+"_menu"] = menu;
+			this.radialMenus[data.id+"_menu"].draw();
 		}
-		
-		console.log("createRadialMenu " + data.id);
-		console.log(" pointerOffset" +  this.pointerOffsetX + ", " +  this.pointerOffsetY );
-		console.log(" offset" +  this.offsetX + ", " +  this.offsetY );
-		menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
-							data.x  - this.offsetX,
-							data.y - this.offsetY,
-							radialMenuSize.x, radialMenuSize.y, 9000);
-		this.main.appendChild(menuElem); 
-			var menu = new radialMenu(); 
-		menu.init(data.id+"_menu") ;
-		
-		menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
-		menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-		
-		// keep track of the menus
-		this.radialMenus[data.id+"_menu"] = menu;
-		this.radialMenus[data.id+"_menu"].draw();
-		
 		if( this.radialMenus[menuElem.id].visible === false )
 		{
 			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
