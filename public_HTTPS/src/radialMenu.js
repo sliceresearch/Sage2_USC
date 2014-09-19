@@ -27,7 +27,7 @@ var menuButtonSize = 100; // pie image size
 var menuButtonHitboxSize = 50;
 var overlayIconScale = 0.3; // image, pdf, etc image
 
-var thumbnailWindowSize = { x: 1600, y: 700 };
+var thumbnailWindowSize = { x: 1600, y: 800 };
 
 function radialMenu(){
 	this.element    = null;
@@ -46,7 +46,13 @@ function radialMenu(){
 		
 		this.visible = true;
 		this.windowInteractionMode = false;
+		this.redraw = true;
 		this.dragPosition = { x: 0, y: 0 };
+		
+		this.dragThumbnailWindow = false;
+		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
+		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
+		this.thumbnailWindowScrollLock = { x: true, y: false };
 		
 		// load thumbnail icons
 		this.idleImageIcon = new Image;
@@ -284,17 +290,23 @@ function radialMenu(){
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
 		// TEMP: Just to clearly see context edge
-		if( this.windowInteractionMode === true )
-		{
-			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
-		}
-		else
+		if( this.windowInteractionMode === false )
 		{
 			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)"
 		}
+		else if( this.dragThumbnailWindow === true )
+		{
+			this.ctx.fillStyle = "rgba(55, 55, 5, 0.5)"
+		}
+		else
+		{
+			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
+		}
 		
-		this.ctx.fillRect(0,0, this.element.width, this.element.height)
-			
+		this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
+		
+		this.ctx.fillRect(radialMenuSize.x,0, thumbnailWindowSize.x, thumbnailWindowSize.y)
+		
 		this.radialCloseButton.draw();
 		this.radialSettingsButton.draw();
 		
@@ -306,7 +318,6 @@ function radialMenu(){
 			this.radialAppButton.draw();
 			this.radialSessionButton.draw();
 			this.radialSaveSessionButton.draw();
-			
 		}
 
 		// Thumbnail window
@@ -506,7 +517,10 @@ function radialMenu(){
 	
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
-	
+		
+		if( type !== "pointerMove" )
+			this.redraw = true;
+			
 		overButton = false;
 		
 		buttonOverCount = 0; // Count number of buttons have a pointer over it
@@ -632,16 +646,52 @@ function radialMenu(){
 		}
 
 		// windowInteractionMode = true if any active button has an event over its
-		if( type === "pointerPress" && data.button === 'left' && buttonOverCount === 0 )
+		if( type === "pointerPress" && data.button === 'left' )
 		{
-			this.windowInteractionMode = false;
-			this.dragPosition = position;
+			// Press over radial menu, drag menu
+			if( position.x > 0 && position.x < radialMenuSize.x && position.y > 0 && position.y < radialMenuSize.y && buttonOverCount === 0 )
+			{
+				this.windowInteractionMode = false;
+				this.dragPosition = position;
+			}
+			
+			if( position.x > radialMenuSize.x && position.x < thumbnailWindowSize.x && position.y > 0 && position.y < thumbnailWindowSize.y )
+			{
+				this.dragThumbnailWindow = true;
+				this.thumbnailWindowDragPosition = position;
+			}
+			
 		}
-		else if( type === "pointerRelease" && this.windowInteractionMode === false )
+		else if( type === "pointerMove" )
 		{
-			this.windowInteractionMode = true;
-			this.dragPosition = { x: 0, y: 0 };
+			if( this.dragThumbnailWindow === true )
+			{
+				if( this.thumbnailWindowScrollOffset.y <= 0 )
+				{
+					this.thumbnailWindowScrollOffset.x += this.thumbnailWindowDragPosition.x - position.x;
+					this.thumbnailWindowScrollOffset.y += this.thumbnailWindowDragPosition.y - position.y;
+				}
+				else
+				{
+					this.thumbnailWindowScrollOffset.y = 0;
+				}
+				
+				this.thumbnailWindowDragPosition = position;
+			}
 		}
+		else if( type === "pointerRelease" )
+		{
+			if(  this.windowInteractionMode === false )
+			{
+				this.windowInteractionMode = true;
+				this.dragPosition = { x: 0, y: 0 };
+			}
+			else if( this.dragThumbnailWindow === true )
+			{
+				this.dragThumbnailWindow = false;
+			}
+		}
+
 	};
 	
 	this.updateFileList = function(serverFileList) {
@@ -778,7 +828,13 @@ function radialMenu(){
 	
 	this.updateThumbnailPositions = function()
 	{
-		 this.thumbnailWindowPos = { x: radialMenuCenter.x * 2 + menuButtonSize/2, y: 0 };
+		var thumbnailWindowScrollOffset =  this.thumbnailWindowScrollOffset;
+		if( this.thumbnailWindowScrollLock.x === true )
+			thumbnailWindowScrollOffset.x = 0;
+		if( this.thumbnailWindowScrollLock.y === true )
+			thumbnailWindowScrollOffset.y = 0;
+			
+		this.thumbnailWindowPos = { x: radialMenuCenter.x * 2 + menuButtonSize/2 + thumbnailWindowScrollOffset.x, y: thumbnailWindowScrollOffset.y };
 		
 		var curRow = 1;
 		var curColumn = 0;
