@@ -239,8 +239,10 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better"
 		this.upperBar.id = "upperBar";
 		
-		var color = this.json_cfg.ui.menubar.textColor || "rgba(255, 255, 255, 1.0)";
-		
+		var textColor = "rgba(255, 255, 255, 1.0)"
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+			textColor = this.json_cfg.ui.menubar.textColor;
+			
 		// time clock
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
@@ -263,16 +265,21 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.appendChild(logo);
 		this.bg.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
-
+		
+		var backgroundColor = "rgba(0, 0, 0, 0.5)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.backgroundColor !== undefined)
+			backgroundColor = this.json_cfg.ui.menubar.backgroundColor;
+			
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
 		this.upperBar.style.left   = "0px";
 		this.upperBar.style.top    = -this.offsetY.toString() + "px";
 		this.upperBar.style.zIndex = "9999";
+		this.upperBar.style.backgroundColor = backgroundColor;
 		
 		this.clock.style.position   = "absolute";
 		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		this.clock.style.color      = color;
+		this.clock.style.color      = textColor;
 		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
 		// center vertically: position top 50% and then translate by -50%
 		this.clock.style.top        = "50%";
@@ -281,7 +288,7 @@ function uiBuilder(json_cfg, clientID) {
 		machine.style.position   = "absolute";
 		machine.style.whiteSpace = "nowrap";
 		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		machine.style.color      = color;
+		machine.style.color      = textColor;
 		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
 		machine.style.top        = "50%";
 		machine.style.webkitTransform  = "translateY(-50%)";
@@ -289,7 +296,7 @@ function uiBuilder(json_cfg, clientID) {
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		version.style.color      = color;
+		version.style.color      = textColor;
 		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
 		version.style.top        = "50%";
 		version.style.webkitTransform  = "translateY(-50%)";
@@ -344,8 +351,10 @@ function uiBuilder(json_cfg, clientID) {
 		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
 		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
 		
-		var color = this.json_cfg.ui.menubar.textColor || "rgba(255, 255, 255, 1.0)";
-		this.changeSVGColor(logoSVG, "path", null, color);
+		var textColor = "rgba(255, 255, 255, 1.0)"
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+			textColor = this.json_cfg.ui.menubar.textColor;
+		this.changeSVGColor(logoSVG, "path", null, textColor);
 	};
 	
 	this.watermarkLoaded = function(event) {
@@ -428,6 +437,13 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.addRemoteSite = function(data) {
+		var connectedColor = "rgba(55, 153, 130, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
+		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
+			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
+		
 		var remote = document.createElement('div');
 		remote.id  = data.name;
 		remote.style.position = "absolute";
@@ -436,13 +452,18 @@ function uiBuilder(json_cfg, clientID) {
 		remote.style.height = data.height.toString() + "px";
 		remote.style.left   = (-this.offsetX + data.pos).toString() + "px";
 		remote.style.top    = (-this.offsetY+2).toString() + "px";
-		if (data.connected) remote.style.backgroundColor = "#379982";
-		else remote.style.backgroundColor = "#AD2A2A";
+		if (data.connected) remote.style.backgroundColor = connectedColor;
+		else remote.style.backgroundColor = disconnectedColor;
+		
+		
+		var color = "rgba(255, 255, 255, 1.0)"
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+			color = this.json_cfg.ui.menubar.textColor;
 		
 		var name = document.createElement('p');
 		name.style.whiteSpace = "nowrap";
 		name.style.fontSize = Math.round(this.titleTextSize) + "px";
-		name.style.color = "#FFFFFF";
+		name.style.color = color;
 		name.textContent = data.name;
 		remote.appendChild(name);
 		
@@ -450,9 +471,16 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.connectedToRemoteSite = function(data) {
+		var connectedColor = "rgba(55, 153, 130, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
+		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
+			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
+			
 		var remote = document.getElementById(data.name);
-		if (data.connected) remote.style.backgroundColor = "#379982";
-		else remote.style.backgroundColor = "#AD2A2A";
+		if (data.connected) remote.style.backgroundColor = connectedColor;
+		else remote.style.backgroundColor = disconnectedColor;
 	};
 
 	this.hideInterface = function() {

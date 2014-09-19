@@ -22,7 +22,10 @@
 		show_version: true,
 		show_url: true,
 		menubar: {
-			textColor: "rgba(255, 255, 255, 1.0)"
+			backgroundColor: "rgba(0, 0, 0, 0.5)",
+			textColor: "rgba(255, 255, 255, 1.0)",
+			remoteConnectedColor: "rgba(55, 153, 130, 1.0)",
+			remoteDisconnectedColor: "rgba(173, 42, 42, 1.0)"
 		},
 		// auto-hide the wall UI (top bar, application bar, ...)
 		auto_hide_ui: false,
@@ -40,7 +43,7 @@
 		width: 700,
 		height: 700
 	},
-		// for experimental features: true/false
+	// for experimental features: true/false
 	experimental: {
 		"webbrowser": false  // enable the awesomium module
 	},
