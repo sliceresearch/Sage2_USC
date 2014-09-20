@@ -73,9 +73,9 @@ tempConvert: function(data)
 
     var color_colder        = "#74add1";
     var color_colderer      = "#4575b4";
-    var color_coldererer    = "#313695";
+    var color_coldererer    = "#AAAAAA"; //"#313695";
 
-    var color_unknown       = "#AAAAAA";
+    var color_unknown       = "#EEEEEE"; //"#AAAAAA";
 
     var temp_hot            = 85;
     var temp_nice           = 70;
@@ -374,9 +374,9 @@ drawText: function (textVisibility, nodeToAddTo, textLocX, textLocY, theText, te
     var displayFont = "Arial";
     var drawTempText;
 
-    if (+theText < 30) //temp_colderer
-        drawTempText = "#FFF";
-    else
+   // if (+theText < 30) //temp_colderer
+   //     drawTempText = "#FFF";
+   // else
         drawTempText = "#000";
 
     var tempToShow;
@@ -385,7 +385,7 @@ drawText: function (textVisibility, nodeToAddTo, textLocX, textLocY, theText, te
     if (this.gwin.itsF === "C") // there is a sage versionof this
         {
         tempToShow = (Math.round((parseInt(theText)-32)*5/9));
-        console.log(tempToShow);
+        //console.log(tempToShow);
         }
      else
         tempToShow = theText; // F by default
