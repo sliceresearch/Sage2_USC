@@ -239,7 +239,7 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better"
 		this.upperBar.id = "upperBar";
 		
-		var textColor = "rgba(255, 255, 255, 1.0)"
+		var textColor = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
 			textColor = this.json_cfg.ui.menubar.textColor;
 			
@@ -351,7 +351,7 @@ function uiBuilder(json_cfg, clientID) {
 		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
 		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
 		
-		var textColor = "rgba(255, 255, 255, 1.0)"
+		var textColor = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
 			textColor = this.json_cfg.ui.menubar.textColor;
 		this.changeSVGColor(logoSVG, "path", null, textColor);
@@ -454,9 +454,8 @@ function uiBuilder(json_cfg, clientID) {
 		remote.style.top    = (-this.offsetY+2).toString() + "px";
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
-		
-		
-		var color = "rgba(255, 255, 255, 1.0)"
+
+		var color = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
 			color = this.json_cfg.ui.menubar.textColor;
 		
