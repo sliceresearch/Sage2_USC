@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>SAGE2 UI</title>
+<!--<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">-->
+<script type="text/javascript">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2014
+</script>
+<script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript">
+	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
+	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	
+	function displayUI() {
+		this.config = null;
+		
+		this.init = function(config) {
+			this.config = config;
+			
+			this.resize();
+		};
+		
+		this.draw = function() {
+			var i;
+			var sage2UI = document.getElementById('sage2UI');
+			var ctx = sage2UI.getContext('2d');
+			
+			// background
+			ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
+			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
+			
+			
+			// tiled display layout
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+			ctx.strokeRect(0, 0, sage2UI.width, sage2UI.height);
+			var stepX = sage2UI.width/this.config.layout.columns;
+			var stepY = sage2UI.height/this.config.layout.rows;
+			ctx.beginPath();
+			for(i=1; i<this.config.layout.columns; i++){
+				ctx.moveTo(i*stepX, 0);
+				ctx.lineTo(i*stepX, sage2UI.height);
+			}
+			for(i=1; i<this.config.layout.rows; i++){
+				ctx.moveTo(0, i*stepY);
+				ctx.lineTo(sage2UI.width, i*stepY);
+			}
+			ctx.closePath();
+			ctx.stroke();
+		};
+		
+		this.resize = function() {
+			var displayUI = document.getElementById('displayUI');
+			var sage2UI = document.getElementById('sage2UI');
+			var menuUI = document.getElementById('menuUI');
+			
+			var extraHeight = document.getElementById('extraUI').clientHeight;
+			var freeWidth   = window.innerWidth  - 192;              // size of menu buttons
+			var freeHeight  = window.innerHeight - extraHeight - 20; // size of interaction buttons + margin
+			
+			var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
+			var freeAspect  = freeWidth / freeHeight;
+			
+			// wide sage2 display (compared to page)
+			if(freeAspect < sage2Aspect) {
+				sage2UI.width  = Math.floor(freeWidth);
+				sage2UI.height = Math.floor(freeWidth / sage2Aspect);
+				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+				displayUI.style.marginTop = "10px";
+				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
+			}
+			// tall sage2 display (compared to page)
+			else {
+				sage2UI.height = Math.floor(freeHeight);
+				sage2UI.width  = Math.floor(freeHeight * sage2Aspect);
+				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+				displayUI.style.marginTop = "10px";
+				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
+			}
+			if(sage2UI.height < 320) {
+				var dTop = (320-sage2UI.height) / 2;
+				var mTop = 0;
+				if(dTop < 10) {
+					mTop = 10-dTop;
+					dTop = 10;
+				}
+				displayUI.style.marginTop = dTop.toString() + "px";
+				menuUI.style.marginTop = mTop.toString() + "px";
+			}
+			
+			this.draw();
+		};
+	}
+	
+	
+	var wsio;
+	var sage2UI;
+	
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		wsio.open(function() {
+			console.log("open websocket");
+			//sagePtr = new sagePointer(wsio);
+			//window.postMessage('SAGE2_desktop_capture_enabled', "*");
+			
+			var clientDescription = {
+				clientType: "sageUI",
+				sendsPointerData: true,
+				sendsMediaStreamFrames: true,
+				requestsServerFiles: true,
+				sendsWebContentToLoad: true,
+				launchesWebBrowser: true,
+				sendsVideoSynchonization: false,
+				sharesContentWithRemoteServer: false,
+				receivesDisplayConfiguration: true,
+				receivesClockTime: false,
+				requiresFullApps: false,
+				requiresAppPositionSizeTypeOnly: true,
+				receivesMediaStreamFrames: false,
+				receivesWindowModification: true,
+				receivesPointerData: false,
+				receivesInputEvents: false,
+				receivesRemoteServerInfo: false
+			};
+			wsio.emit('addClient', clientDescription);
+		});
+		
+		// socket close event (i.e. server crashed)		
+		wsio.on('close', function (evt) {
+			var refresh = setInterval(function() {
+				reloadIfServerRunning(function() {
+					clearInterval(refresh);
+				});
+			}, 2000);
+		});
+		
+		wsio.on('setupDisplayConfiguration', function(config) {
+			sage2UI = new displayUI();
+			sage2UI.init(config);
+		});
+		
+		window.addEventListener('click', pointerClick, false);
+	}
+	
+	function resize() {
+		sage2UI.resize();
+	}
+	
+	function pointerClick(event) {
+		var element = event.srcElement;
+		if(element.id === "sage2UI") {
+			console.log("sage2UI");
+		}
+		else if(element.id === "applauncher") {
+			console.log("App Launcher");
+		}
+		else if(element.id === "mediabrowser") {
+			console.log("Media Browser");
+		}
+		else if(element.id === "arrangement") {
+			console.log("Arrangement");
+		}
+		else if(element.id === "settings") {
+			console.log("Settings");
+		}
+		else if(element.id === "help") {
+			console.log("Help");
+		}
+		else if(element.id === "shareScreenBtn") {
+			console.log("Share Screen");
+		}
+		else if(element.id === "sage2PointerBtn") {
+			console.log("SAGE2 Pointer");
+		}
+	}
+	
+	function reloadIfServerRunning(callback) {
+		// make a dummy request to test the server every 2 sec
+		xhr = new XMLHttpRequest();
+		xhr.open("GET", "/", true);
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState == 4 && xhr.status == 200){
+				console.log("server ready");
+				// when server ready, callback
+				callback();
+				// and reload the page
+				window.location.reload();
+			}
+		};
+		xhr.send();
+	}
+</script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	padding: 0px;
+}
+
+#mainUI {
+	margin: 0px;
+	overflow: auto;
+}
+
+#displayUI {
+	float: left;
+	margin: 10px;
+}
+
+#menuUI {
+	float: left;
+	width: 172px;
+	height: 320px;
+}
+
+#extraUI {
+	padding: 10px;
+}
+
+.uiButton {
+	position: relative;
+	width: 162px;
+	height: 64px;
+}
+
+.uiButton img {
+	position: absolute;
+	top: 8px;
+    left: 8px;
+	-webkit-transition: 100ms ease-in-out;
+	-moz-transition: 100ms ease-in-out;
+	transition: 100ms ease-in-out;
+}
+
+.uiButton:hover img {
+	-webkit-transform: scale(1.2);
+	-moz-transform: scale(1.2);
+	transform: scale(1.2);
+}
+
+.uiButton p {
+	position: absolute;
+	top: 12px;
+	left: 64px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	white-space: nowrap;
+	padding: 2px 4px 2px 4px;
+	color: #FFFFFF;
+	background-color: #787878;
+	border-radius: 8px;
+	opacity: 0.0;
+	-webkit-transition: opacity 100ms ease-in-out;
+	-moz-transition: opacity 100ms ease-in-out;
+	transition: opacity 100ms ease-in-out;
+}
+
+.uiButton:hover p {
+	opacity: 1.0;
+}
+
+.button {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	text-decoration: none;
+	white-space: nowrap;
+	padding: 6px 8px 6px 8px;
+	color: #FFFFFF;
+	background-color: #787878;
+	border-radius: 8px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+.button:active {
+	background-color: #565656;
+}
+
+.clear {
+	clear: both;
+}
+</style>
+
+<!--
+<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
+<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
+-->
+</head>
+
+<body onload="init()" onresize="resize()">
+	<div id="mainUI">
+		<div id="displayUI">
+			<canvas id="sage2UI"></canvas>
+		</div>
+		<div id="menuUI">
+			<div id="applauncherContainer" class="uiButton">
+				<img id="applauncher" src="images/applauncher.svg" width="48" height="48"></img>
+				<p>App Launcher</p>
+			</div>
+			<div id="mediaBrowserContainer" class="uiButton">
+				<img id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"></img>
+				<p>Media Browser</p>
+			</div>
+			<div id="arrangementContainer" class="uiButton">
+				<img id="arrangement" src="images/arrangement.svg" width="48" height="48"></img>
+				<p>Arrangement</p>
+			</div>
+			<div id="settingsContainer" class="uiButton">
+				<img id="settings" src="images/settings.svg" width="48" height="48"></img>
+				<p>Settings</p>
+			</div>
+			<div id="helpContainer" class="uiButton">
+				<img id="help" src="images/help.svg" width="48" height="48"></img>
+				<p>Help</p>
+			</div>
+		</div>
+	</div>
+	<div class="clear"></div>
+	<div id="extraUI">
+		<span id="shareScreenBtn" class="button">Share Screen</span>
+		<span id="sage2PointerBtn" class="button">SAGE2 Pointer</span>
+	</div>
+</body>
+</html>
+
