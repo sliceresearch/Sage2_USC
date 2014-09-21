@@ -64,7 +64,7 @@
 			var menuUI = document.getElementById('menuUI');
 			
 			var extraHeight = document.getElementById('extraUI').clientHeight;
-			var freeWidth   = window.innerWidth  - 185;              // size of menu buttons
+			var freeWidth   = window.innerWidth  - 192;              // size of menu buttons
 			var freeHeight  = window.innerHeight - extraHeight - 20; // size of interaction buttons + margin
 			
 			var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
@@ -76,7 +76,7 @@
 				sage2UI.height = Math.floor(freeWidth / sage2Aspect);
 				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 				displayUI.style.marginTop = "10px";
-				menuUI.style.marginTop = (sage2UI.height/2 - 128).toString() + "px";
+				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
 			}
 			// tall sage2 display (compared to page)
 			else {
@@ -84,11 +84,17 @@
 				sage2UI.width  = Math.floor(freeHeight * sage2Aspect);
 				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 				displayUI.style.marginTop = "10px";
-				menuUI.style.marginTop = (sage2UI.height/2 - 128).toString() + "px";
+				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
 			}
-			if(sage2UI.height < 256) {
-				displayUI.style.marginTop = ((256-sage2UI.height) / 2 + 10).toString() + "px";
-				menuUI.style.marginTop = "0px";
+			if(sage2UI.height < 320) {
+				var dTop = (320-sage2UI.height) / 2;
+				var mTop = 0;
+				if(dTop < 10) {
+					mTop = 10-dTop;
+					dTop = 10;
+				}
+				displayUI.style.marginTop = dTop.toString() + "px";
+				menuUI.style.marginTop = mTop.toString() + "px";
 			}
 			
 			this.draw();
@@ -162,6 +168,9 @@
 		else if(element.id === "applauncher") {
 			console.log("App Launcher");
 		}
+		else if(element.id === "mediabrowser") {
+			console.log("Media Browser");
+		}
 		else if(element.id === "arrangement") {
 			console.log("Arrangement");
 		}
@@ -170,6 +179,12 @@
 		}
 		else if(element.id === "help") {
 			console.log("Help");
+		}
+		else if(element.id === "shareScreenBtn") {
+			console.log("Share Screen");
+		}
+		else if(element.id === "sage2PointerBtn") {
+			console.log("SAGE2 Pointer");
 		}
 	}
 	
@@ -208,8 +223,8 @@ body {
 
 #menuUI {
 	float: left;
-	width: 165px;
-	height: 256px;
+	width: 172px;
+	height: 320px;
 }
 
 #extraUI {
@@ -218,7 +233,7 @@ body {
 
 .uiButton {
 	position: relative;
-	width: 155px;
+	width: 162px;
 	height: 64px;
 }
 
@@ -258,6 +273,25 @@ body {
 	opacity: 1.0;
 }
 
+.button {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	text-decoration: none;
+	white-space: nowrap;
+	padding: 6px 8px 6px 8px;
+	color: #FFFFFF;
+	background-color: #787878;
+	border-radius: 8px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+.button:active {
+	background-color: #565656;
+}
+
 .clear {
 	clear: both;
 }
@@ -279,6 +313,10 @@ body {
 				<img id="applauncher" src="images/applauncher.svg" width="48" height="48"></img>
 				<p>App Launcher</p>
 			</div>
+			<div id="mediaBrowserContainer" class="uiButton">
+				<img id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"></img>
+				<p>Media Browser</p>
+			</div>
 			<div id="arrangementContainer" class="uiButton">
 				<img id="arrangement" src="images/arrangement.svg" width="48" height="48"></img>
 				<p>Arrangement</p>
@@ -295,7 +333,8 @@ body {
 	</div>
 	<div class="clear"></div>
 	<div id="extraUI">
-		<button id="sage2PointerBtn" type="button">SAGE2 Pointer</button>
+		<span id="shareScreenBtn" class="button">Share Screen</span>
+		<span id="sage2PointerBtn" class="button">SAGE2 Pointer</span>
 	</div>
 </body>
 </html>
