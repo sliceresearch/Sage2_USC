@@ -1077,7 +1077,7 @@ function tileApplications() {
 	if (config.ui.auto_hide_ui===true) areaY = - config.ui.titleBarHeight;
 
 	var areaW = config.totalWidth;
-	var areaH = config.totalHeight-(2*titleBar); // bottom margin: 1.5 + 0.5 = 2
+	var areaH = config.totalHeight-(1.0*titleBar);
 
 	var tileW = Math.floor(areaW / numCols);
 	var tileH = Math.floor(areaH / numRows);
@@ -1085,13 +1085,16 @@ function tileApplications() {
 	// go through them in sorted order
 	// applications.sort()
 
+	var padding = 4;
+	// if only one application, no padding, i.e maximize
+	if (applications.length===1) padding = 0;
     r = numRows-1;
     c = 0;
 	for (i=0; i<applications.length; i++) {
 		// get the application
 		app =  applications[i];
 		// calculate new dimensions
-        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
         // update the data structure
         app.left   = newdims[0];
         app.top    = newdims[1] - titleBar;
