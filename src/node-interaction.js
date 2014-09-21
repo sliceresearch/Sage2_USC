@@ -312,11 +312,11 @@ interaction.prototype.maximizeSelectedItem = function(item) {
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = this.configuration.totalWidth - (3*titleBar);
+		iWidth  = this.configuration.totalWidth;// - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = this.configuration.totalHeight - (3*titleBar);
+		iHeight = this.configuration.totalHeight - (2*titleBar);// - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore
