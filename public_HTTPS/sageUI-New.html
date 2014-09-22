@@ -16,9 +16,11 @@
 	// Copyright (c) 2014
 </script>
 <script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/SAGE2_interaction.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
 	
 	function displayUI() {
 		this.config = null;
@@ -104,6 +106,7 @@
 	
 	var wsio;
 	var sage2UI;
+	var interactor;
 	
 	function init() {
 		hostname = window.location.hostname;
@@ -114,7 +117,7 @@
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		wsio.open(function() {
 			console.log("open websocket");
-			//sagePtr = new sagePointer(wsio);
+			interactor = new SAGE2_interaction(wsio);
 			//window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 			var clientDescription = {
@@ -148,9 +151,17 @@
 			}, 2000);
 		});
 		
+		wsio.on('initialize', function(data) {
+			interactor.setInteractionId(data.UID);
+		});
+		
 		wsio.on('setupDisplayConfiguration', function(config) {
 			sage2UI = new displayUI();
 			sage2UI.init(config);
+			
+			var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
+			var screenMin = Math.min(screen.width, screen.height);
+			interactor.setPointerSensitivity(sage2Min/screenMin);
 		});
 		
 		
@@ -163,7 +174,7 @@
 		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
 		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
 		
-		window.addEventListener('click', pointerClick, false);
+		document.addEventListener('click', pointerClick, false);
 	}
 	
 	function resize() {
@@ -200,19 +211,19 @@
 		}
 		else if(element.id === "shareScreenBtn") {
 			console.log("Share Screen");
-			
-			// test
-			var fileDropProgress = document.getElementById('fileDropProgress');
-			fileDropProgress.value = Math.floor(Math.random() * 100);
-			fileDropProgress.style.opacity = 1.0;
 		}
 		else if(element.id === "sage2PointerBtn") {
 			console.log("SAGE2 Pointer");
-			
-			// test
-			var fileDropProgress = document.getElementById('fileDropProgress');
-			fileDropProgress.style.opacity = 0.0;
+			interactor.startSAGE2Pointer(element.id);
 		}
+	}
+	
+	function sagePointerEnabled() {
+		// show SAGE2 Pointer dialog
+	}
+	
+	function sagePointerDisabled() {
+		// hide SAGE2 Pointer dialog
 	}
 	
 	function reloadIfServerRunning(callback) {
@@ -232,172 +243,7 @@
 	}
 </script>
 
-<style type="text/css">
-body {
-	margin: 0px;
-	padding: 0px;
-}
-
-p {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	color: #000000;
-}
-
-#mainUI {
-	margin: 0px;
-	overflow: auto;
-}
-
-#displayUI {
-	float: left;
-	margin: 10px;
-}
-
-#menuUI {
-	float: left;
-	width: 172px;
-	height: 320px;
-}
-
-#extraUI {
-	padding: 10px;
-	overflow: auto;
-	cursor: default;
-}
-
-#fileDrop {
-	float:left;
-	width: 250px;
-	height: 56px;
-	text-align: center;
-	background-color: #FFFFFF;
-	border: dashed 3px #787878;
-}
-
-#fileDropText {
-	margin-top: 22px; 
-	color: #565656;
-}
-
-#fileDropProgressArea {
-	float: left;
-	height: 62px;
-	margin-left: 10px;
-}
-
-#fileDropProgress {
-	margin-top: 16px;
-	height: 32px;
-	-webkit-appearance: none;
-	appearance: none;
-}
-
-#fileDropProgress[value]::-webkit-progress-bar {
-	background-color: #C8C8C8;
-	border-radius: 8px;
-}
-
-#fileDropProgress[value]::-webkit-progress-value {
-	background-color: #565656;
-	border-radius: 8px;
-}
-
-#sage2Buttons{
-	float: left;
-	margin-left: 10px;
-	width: 105px;
-	height: 62px;
-}
-
-#shareScreenBtn {
-	display: inline-block;
-	width: 105px;
-	height: 24px;
-	margin-top: 5px;
-	line-height: 24px;
-	text-align: center;
-}
-
-#sage2PointerBtn {
-	display: inline-block;
-	width: 105px;
-	height: 24px;
-	margin-top: 5px;
-	line-height: 24px;
-	text-align: center;
-}
-
-.uiButton {
-	position: relative;
-	width: 162px;
-	height: 64px;
-}
-
-.uiButton img {
-	position: absolute;
-	top: 8px;
-    left: 8px;
-	-webkit-transition: 100ms ease-in-out;
-	-moz-transition: 100ms ease-in-out;
-	transition: 100ms ease-in-out;
-}
-
-.uiButton img:hover {
-	-webkit-transform: scale(1.2);
-	-moz-transform: scale(1.2);
-	transform: scale(1.2);
-}
-
-.uiButton p {
-	position: absolute;
-	top: 12px;
-	left: 64px;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	white-space: nowrap;
-	padding: 2px 4px 2px 4px;
-	color: #FFFFFF;
-	background-color: #787878;
-	border-radius: 8px;
-	opacity: 0.0;
-	cursor: default;
-	-webkit-transition: opacity 100ms ease-in-out;
-	-moz-transition: opacity 100ms ease-in-out;
-	transition: opacity 100ms ease-in-out;
-}
-
-.uiButton img:hover + p {
-	opacity: 1.0;
-}
-
-.button {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	text-decoration: none;
-	white-space: nowrap;
-	color: #FFFFFF;
-	background-color: #787878;
-	border-radius: 8px;
-	cursor: pointer;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	user-select: none;
-}
-
-.button:active {
-	background-color: #565656;
-}
-
-.clear {
-	clear: both;
-}
-</style>
-
-<!--
-<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
-<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
--->
+<link rel="stylesheet" type="text/css" href="css/style_ui.css"       media="screen" />
 </head>
 
 <body onload="init()" onresize="resize()">
