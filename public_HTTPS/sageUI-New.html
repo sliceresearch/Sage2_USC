@@ -26,9 +26,14 @@
 		this.config = null;
 		
 		this.init = function(config) {
+			var _this = this;
 			this.config = config;
-			
-			this.resize();
+			this.logo = new Image();
+			this.logo.onload = function(event) {
+				_this.resize();
+			};
+			this.logo.src = "images/EVL-LAVA_UI.svg"
+			this.logoAspect = 3.47828052509;
 		};
 		
 		this.draw = function() {
@@ -37,14 +42,26 @@
 			var ctx = sage2UI.getContext('2d');
 			
 			// background
-			ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
+			ctx.fillStyle = "rgba(180, 180, 180, 1.0)";
 			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
 			
+			var logoX, logoY, logoW, logoH;
+			if((sage2UI.width/sage2UI.height) <= this.logoAspect){
+				logoW = sage2UI.width * 0.75;
+				logoH = logoW / this.logoAspect;
+			}
+			else {
+				logoH = sage2UI.height * 0.75;
+				logoW = logoH * this.logoAspect;
+			}
+			logoX = sage2UI.width/2  - logoW/2;
+			logoY = sage2UI.height/2 - logoH/2;
+			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
 			
 			// tiled display layout
 			ctx.lineWidth = 2;
-			ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-			ctx.strokeRect(0, 0, sage2UI.width, sage2UI.height);
+			ctx.strokeStyle = "rgba(86, 86, 86, 1.0)";
+			//ctx.strokeRect(0, 0, sage2UI.width, sage2UI.height);
 			var stepX = sage2UI.width/this.config.layout.columns;
 			var stepY = sage2UI.height/this.config.layout.rows;
 			ctx.beginPath();
@@ -65,9 +82,8 @@
 			var sage2UI = document.getElementById('sage2UI');
 			var menuUI = document.getElementById('menuUI');
 			
-			var extraHeight = document.getElementById('extraUI').offsetHeight;
-			var freeWidth   = window.innerWidth  - 192;              // size of menu buttons
-			var freeHeight  = window.innerHeight - extraHeight - 20; // size of interaction buttons + margin
+			var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 30; // size of menu buttons
+			var freeHeight  = window.innerHeight - 20;                 // size of 10px margin (top, bottom)
 			
 			var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 			var freeAspect  = freeWidth / freeHeight;
@@ -78,7 +94,7 @@
 				sage2UI.height = Math.floor(freeWidth / sage2Aspect);
 				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 				displayUI.style.marginTop = "10px";
-				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
+				menuUI.style.marginTop = ((sage2UI.height/2) - (menuUI.offsetHeight/2) + 10).toString() + "px";
 			}
 			// tall sage2 display (compared to page)
 			else {
@@ -86,10 +102,10 @@
 				sage2UI.width  = Math.floor(freeHeight * sage2Aspect);
 				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 				displayUI.style.marginTop = "10px";
-				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
+				menuUI.style.marginTop = ((sage2UI.height/2) - (menuUI.offsetHeight/2) + 10).toString() + "px";
 			}
-			if(sage2UI.height < 320) {
-				var dTop = (320-sage2UI.height) / 2;
+			if(sage2UI.height < menuUI.offsetHeight) {
+				var dTop = (menuUI.offsetHeight-sage2UI.height) / 2;
 				var mTop = 0;
 				if(dTop < 10) {
 					mTop = 10-dTop;
@@ -165,27 +181,10 @@
 		});
 		
 		
-		var menuUI = document.getElementById('menuUI');
-		var fileDrop = document.getElementById('fileDrop');
-		var fileDropProgress = document.getElementById('fileDropProgress');
-		var sageButtons = document.getElementById('sage2Buttons');
-		
-		
-		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
-		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
-		
 		document.addEventListener('click', pointerClick, false);
 	}
 	
 	function resize() {
-		var menuUI = document.getElementById('menuUI');
-		var fileDrop = document.getElementById('fileDrop');
-		var fileDropProgress = document.getElementById('fileDropProgress');
-		var sageButtons = document.getElementById('sage2Buttons');
-		
-		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
-		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
-		
 		sage2UI.resize();
 	}
 	
@@ -209,10 +208,10 @@
 		else if(element.id === "info") {
 			console.log("Info");
 		}
-		else if(element.id === "shareScreenBtn") {
+		else if(element.id === "sharescreen") {
 			console.log("Share Screen");
 		}
-		else if(element.id === "sage2PointerBtn") {
+		else if(element.id === "sage2pointer") {
 			console.log("SAGE2 Pointer");
 			interactor.startSAGE2Pointer(element.id);
 		}
@@ -252,6 +251,14 @@
 			<canvas id="sage2UI"></canvas>
 		</div>
 		<div id="menuUI">
+			<div id="sage2pointerContainer" class="uiButton">
+				<img id="sage2pointer" src="images/sage2pointer.svg" width="48" height="48"></img>
+				<p>SAGE2 Pointer</p>
+			</div>
+			<div id="sharescreenContainer" class="uiButton">
+				<img id="sharescreen" src="images/sharescreen.svg" width="48" height="48"></img>
+				<p>Share Screen</p>
+			</div>
 			<div id="applauncherContainer" class="uiButton">
 				<img id="applauncher" src="images/applauncher.svg" width="48" height="48"></img>
 				<p>App Launcher</p>
@@ -275,6 +282,7 @@
 		</div>
 	</div>
 	<div class="clear"></div>
+	<!--
 	<div id="extraUI">
 		<div id="fileDrop">
 			<p id="fileDropText">Drop multimedia files here</p>
@@ -287,6 +295,7 @@
 			<span id="sage2PointerBtn" class="button">SAGE2 Pointer</span>
 		</div>
 	</div>
+	-->
 </body>
 </html>
 
