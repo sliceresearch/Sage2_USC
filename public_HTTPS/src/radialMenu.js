@@ -1012,6 +1012,7 @@ function buttonWidget() {
 	this.useBackgroundColor = true;
 	
 	this.alignment = 'left';
+	this.hitboxShape = 'circle';
 	
 	// Button states:
 	// -1 = Disabled
@@ -1097,32 +1098,68 @@ function buttonWidget() {
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
 			
-			this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			if( this.hitboxShape === 'box' )
+				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			else if( this.hitboxShape === 'circle' )
+			{
+				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				this.ctx.fillStyle = this.mouseOverColor;
+				this.ctx.fill();
+			}
 		}
 		else if( this.state === 3 )
 		{
 			this.ctx.fillStyle = this.clickedColor;
 			this.state = 2; // Pressed state
 			
-			this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			if( this.hitboxShape === 'box' )
+				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			else if( this.hitboxShape === 'circle' )
+			{
+				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				this.ctx.fillStyle = this.clickedColor;
+				this.ctx.fill();
+			}
 		}
 		else if( this.state === 2 )
 		{
 			this.ctx.fillStyle = this.pressedColor;
 			
-			this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			if( this.hitboxShape === 'box' )
+				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			else if( this.hitboxShape === 'circle' )
+			{
+				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				this.ctx.fillStyle = this.pressedColor;
+				this.ctx.fill();
+			}
 		}
 		else if( this.state === 4 )
 		{
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 			
-			this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			if( this.hitboxShape === 'box' )
+				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			else if( this.hitboxShape === 'circle' )
+			{
+				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				this.ctx.fillStyle = this.releasedColor;
+				this.ctx.fill();
+			}
 		}
 		else if( this.useBackgroundColor )
 		{
 			this.ctx.fillStyle = this.defaultColor;
-			this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			
+			if( this.hitboxShape === 'box' )
+				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+			else if( this.hitboxShape === 'circle' )
+			{
+				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				this.ctx.fillStyle = this.defaultColor;
+				this.ctx.fill();
+			}
 		}
 		
 		// Draw icon aligned centered
@@ -1173,16 +1210,29 @@ function buttonWidget() {
 		x = position.x;
 		y = position.y;
 		
-		if( this.alignment === 'centered' )
+		if( this.alignment === 'centered' && this.hitboxShape === 'box' )
 		{
 			x += this.hitboxWidth/2;
 			y += this.hitboxheight/2;
 		}
 		
-		if( x >= this.posX && x <= this.posX + this.hitboxWidth && y >= this.posY && y <= this.posY + this.hitboxheight )
-			return true;
-		else
-			return false;
+		if( this.hitboxShape === 'box' )
+		{
+			if( x >= this.posX && x <= this.posX + this.hitboxWidth && y >= this.posY && y <= this.posY + this.hitboxheight )
+				return true;
+			else
+				return false;
+		
+		}
+		else if( this.hitboxShape === 'circle' )
+		{
+			var distance = Math.sqrt( Math.pow(Math.abs( x - this.posX ), 2) + Math.pow(Math.abs( y - this.posY ), 2) );
+			
+			if( distance <= this.hitboxWidth/2 )
+				return true;
+			else
+				return false;
+		}
 	};
 	
 	this.isOver = function()
