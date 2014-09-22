@@ -61,7 +61,6 @@
 			// tiled display layout
 			ctx.lineWidth = 2;
 			ctx.strokeStyle = "rgba(86, 86, 86, 1.0)";
-			//ctx.strokeRect(0, 0, sage2UI.width, sage2UI.height);
 			var stepX = sage2UI.width/this.config.layout.columns;
 			var stepY = sage2UI.height/this.config.layout.rows;
 			ctx.beginPath();
@@ -80,6 +79,8 @@
 		this.resize = function() {
 			var displayUI = document.getElementById('displayUI');
 			var sage2UI = document.getElementById('sage2UI');
+			var fileDropArea = document.getElementById('fileDropArea');
+			var fileDropText = document.getElementById('fileDropText');
 			var menuUI = document.getElementById('menuUI');
 			
 			var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 30; // size of menu buttons
@@ -115,13 +116,31 @@
 				menuUI.style.marginTop = mTop.toString() + "px";
 			}
 			
+			fileDropArea.style.width  = sage2UI.width  + "px";
+			fileDropArea.style.height = sage2UI.height + "px";
+			fileDropArea.style.left   = "2px";
+			fileDropArea.style.top    = "2px";
+			
+			var fontSize = Math.round(sage2UI.height * 0.075);
+			var fileDropTextSize = getTextSize(fileDropText.textContent, fontSize + "px"); 
+			var lines = 1;
+			var availableWidth = parseInt(sage2UI.width*0.75, 10);
+			if(availableWidth < fileDropTextSize[0]) lines = Math.ceil(fileDropTextSize[0] / availableWidth);
+			var availableHeight = fileDropTextSize[1] * lines;
+			fileDropText.style.width  = availableWidth.toString() + "px";
+			fileDropText.style.height = availableHeight.toString() + "px";
+			fileDropText.style.fontSize = fontSize + "px";
+			fileDropText.style.marginTop = ((sage2UI.height-availableHeight) / 2).toString() + "px";
+			fileDropText.style.marginLeft = ((sage2UI.width-availableWidth) / 2).toString() + "px";
+			fileDropText.style.borderRadius = (fontSize * 0.5).toString() + "px";
+			
 			this.draw();
 		};
 	}
 	
 	
 	var wsio;
-	var sage2UI;
+	var SAGE2DisplayUI;
 	var interactor;
 	
 	function init() {
@@ -172,20 +191,68 @@
 		});
 		
 		wsio.on('setupDisplayConfiguration', function(config) {
-			sage2UI = new displayUI();
-			sage2UI.init(config);
+			SAGE2DisplayUI = new displayUI();
+			SAGE2DisplayUI.init(config);
 			
 			var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 			var screenMin = Math.min(screen.width, screen.height);
 			interactor.setPointerSensitivity(sage2Min/screenMin);
 		});
 		
+		var sage2UI = document.getElementById('sage2UI');
+		var fileDropArea = document.getElementById('fileDropArea');
+		
+		window.addEventListener('dragover', preventDefault, false);
+		window.addEventListener('dragend',  preventDefault, false);
+		window.addEventListener('drop',     preventDefault, false);
+	
+		fileDropArea.addEventListener('dragover',  preventDefault, false);
+		fileDropArea.addEventListener('dragend',   preventDefault, false);
+		fileDropArea.addEventListener('dragenter', fileDragEnter,  false);
+		fileDropArea.addEventListener('dragleave', fileDragLeave,  false);
+		fileDropArea.addEventListener('drop',      fileDrop,       false);
 		
 		document.addEventListener('click', pointerClick, false);
 	}
 	
 	function resize() {
-		sage2UI.resize();
+		SAGE2DisplayUI.resize();
+	}
+	
+	function preventDefault(event) {
+		event.preventDefault();
+	}
+	
+	function fileDragEnter(event) {
+		console.log("drag enter");
+		
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "dashed";
+		
+		var fileDropArea = document.getElementById('fileDropArea');
+		fileDropArea.style.opacity = 0.7;
+	}
+	
+	function fileDragLeave(event) {
+		console.log("drag leave");
+		
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "solid";
+		
+		var fileDropArea = document.getElementById('fileDropArea');
+		fileDropArea.style.opacity = 0.0;
+	}
+	
+	function fileDrop(event) {
+		event.preventDefault();
+		
+		// trigger file upload
+		
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "solid";
+		
+		var fileDropArea = document.getElementById('fileDropArea');
+		fileDropArea.style.opacity = 0.0;
 	}
 	
 	function pointerClick(event) {
@@ -225,6 +292,13 @@
 		// hide SAGE2 Pointer dialog
 	}
 	
+	function getTextSize(text, size) {
+		var textWidthTest = document.getElementById('textWidthTest');
+		textWidthTest.style.fontSize = size;
+		textWidthTest.textContent = text;
+		return [(textWidthTest.clientWidth + 1), (textWidthTest.clientHeight + 1)];
+	}
+	
 	function reloadIfServerRunning(callback) {
 		// make a dummy request to test the server every 2 sec
 		xhr = new XMLHttpRequest();
@@ -249,6 +323,9 @@
 	<div id="mainUI">
 		<div id="displayUI">
 			<canvas id="sage2UI"></canvas>
+			<div id="fileDropArea">
+				<p id="fileDropText">Drop multimedia files here</p>
+			</div>
 		</div>
 		<div id="menuUI">
 			<div id="sage2pointerContainer" class="uiButton">
@@ -280,6 +357,7 @@
 				<p>Info</p>
 			</div>
 		</div>
+		<div id="textWidthTest"></div>
 	</div>
 	<div class="clear"></div>
 	<!--
