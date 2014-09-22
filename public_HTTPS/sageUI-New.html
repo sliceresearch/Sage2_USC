@@ -63,7 +63,7 @@
 			var sage2UI = document.getElementById('sage2UI');
 			var menuUI = document.getElementById('menuUI');
 			
-			var extraHeight = document.getElementById('extraUI').clientHeight;
+			var extraHeight = document.getElementById('extraUI').offsetHeight;
 			var freeWidth   = window.innerWidth  - 192;              // size of menu buttons
 			var freeHeight  = window.innerHeight - extraHeight - 20; // size of interaction buttons + margin
 			
@@ -153,10 +153,28 @@
 			sage2UI.init(config);
 		});
 		
+		
+		var menuUI = document.getElementById('menuUI');
+		var fileDrop = document.getElementById('fileDrop');
+		var fileDropProgress = document.getElementById('fileDropProgress');
+		var sageButtons = document.getElementById('sage2Buttons');
+		
+		
+		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
+		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
+		
 		window.addEventListener('click', pointerClick, false);
 	}
 	
 	function resize() {
+		var menuUI = document.getElementById('menuUI');
+		var fileDrop = document.getElementById('fileDrop');
+		var fileDropProgress = document.getElementById('fileDropProgress');
+		var sageButtons = document.getElementById('sage2Buttons');
+		
+		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
+		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
+		
 		sage2UI.resize();
 	}
 	
@@ -177,14 +195,23 @@
 		else if(element.id === "settings") {
 			console.log("Settings");
 		}
-		else if(element.id === "help") {
-			console.log("Help");
+		else if(element.id === "info") {
+			console.log("Info");
 		}
 		else if(element.id === "shareScreenBtn") {
 			console.log("Share Screen");
+			
+			// test
+			var fileDropProgress = document.getElementById('fileDropProgress');
+			fileDropProgress.value = Math.floor(Math.random() * 100);
+			fileDropProgress.style.opacity = 1.0;
 		}
 		else if(element.id === "sage2PointerBtn") {
 			console.log("SAGE2 Pointer");
+			
+			// test
+			var fileDropProgress = document.getElementById('fileDropProgress');
+			fileDropProgress.style.opacity = 0.0;
 		}
 	}
 	
@@ -211,6 +238,12 @@ body {
 	padding: 0px;
 }
 
+p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
 #mainUI {
 	margin: 0px;
 	overflow: auto;
@@ -229,6 +262,70 @@ body {
 
 #extraUI {
 	padding: 10px;
+	overflow: auto;
+	cursor: default;
+}
+
+#fileDrop {
+	float:left;
+	width: 250px;
+	height: 56px;
+	text-align: center;
+	background-color: #FFFFFF;
+	border: dashed 3px #787878;
+}
+
+#fileDropText {
+	margin-top: 22px; 
+	color: #565656;
+}
+
+#fileDropProgressArea {
+	float: left;
+	height: 62px;
+	margin-left: 10px;
+}
+
+#fileDropProgress {
+	margin-top: 16px;
+	height: 32px;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+#fileDropProgress[value]::-webkit-progress-bar {
+	background-color: #C8C8C8;
+	border-radius: 8px;
+}
+
+#fileDropProgress[value]::-webkit-progress-value {
+	background-color: #565656;
+	border-radius: 8px;
+}
+
+#sage2Buttons{
+	float: left;
+	margin-left: 10px;
+	width: 105px;
+	height: 62px;
+}
+
+#shareScreenBtn {
+	display: inline-block;
+	width: 105px;
+	height: 24px;
+	margin-top: 5px;
+	line-height: 24px;
+	text-align: center;
+}
+
+#sage2PointerBtn {
+	display: inline-block;
+	width: 105px;
+	height: 24px;
+	margin-top: 5px;
+	line-height: 24px;
+	text-align: center;
 }
 
 .uiButton {
@@ -246,7 +343,7 @@ body {
 	transition: 100ms ease-in-out;
 }
 
-.uiButton:hover img {
+.uiButton img:hover {
 	-webkit-transform: scale(1.2);
 	-moz-transform: scale(1.2);
 	transform: scale(1.2);
@@ -264,12 +361,13 @@ body {
 	background-color: #787878;
 	border-radius: 8px;
 	opacity: 0.0;
+	cursor: default;
 	-webkit-transition: opacity 100ms ease-in-out;
 	-moz-transition: opacity 100ms ease-in-out;
 	transition: opacity 100ms ease-in-out;
 }
 
-.uiButton:hover p {
+.uiButton img:hover + p {
 	opacity: 1.0;
 }
 
@@ -278,7 +376,6 @@ body {
 	font-size: 12px;
 	text-decoration: none;
 	white-space: nowrap;
-	padding: 6px 8px 6px 8px;
 	color: #FFFFFF;
 	background-color: #787878;
 	border-radius: 8px;
@@ -325,16 +422,24 @@ body {
 				<img id="settings" src="images/settings.svg" width="48" height="48"></img>
 				<p>Settings</p>
 			</div>
-			<div id="helpContainer" class="uiButton">
-				<img id="help" src="images/help.svg" width="48" height="48"></img>
-				<p>Help</p>
+			<div id="infoContainer" class="uiButton">
+				<img id="info" src="images/info.svg" width="48" height="48"></img>
+				<p>Info</p>
 			</div>
 		</div>
 	</div>
 	<div class="clear"></div>
 	<div id="extraUI">
-		<span id="shareScreenBtn" class="button">Share Screen</span>
-		<span id="sage2PointerBtn" class="button">SAGE2 Pointer</span>
+		<div id="fileDrop">
+			<p id="fileDropText">Drop multimedia files here</p>
+		</div>
+		<div id="fileDropProgressArea">
+			<progress id="fileDropProgress" value="20" max="100"></progress>
+		</div>
+		<div id="sage2Buttons">
+			<span id="shareScreenBtn" class="button">Share Screen</span>
+			<span id="sage2PointerBtn" class="button">SAGE2 Pointer</span>
+		</div>
 	</div>
 </body>
 </html>
