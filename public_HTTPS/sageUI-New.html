@@ -268,6 +268,13 @@
 		});
 		
 		var sage2UI = document.getElementById('sage2UI');
+		var fileListElems = document.getElementById('fileListElems');
+		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
+		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var metadata = document.getElementById('metadata');
+		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
+		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
+		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		
 		window.addEventListener('dragover', preventDefault, false);
 		window.addEventListener('dragend',  preventDefault, false);
@@ -284,6 +291,14 @@
 	
 	function resize() {
 		SAGE2DisplayUI.resize();
+		
+		var fileListElems = document.getElementById('fileListElems');
+		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
+		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var metadata = document.getElementById('metadata');
+		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
+		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
+		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
 	}
 	
 	function preventDefault(event) {
@@ -318,14 +333,21 @@
 	
 	function pointerClick(event) {
 		var element = event.srcElement;
+		// SAGE2 UI Interaction
 		if(element.id === "sage2UI") {
 			console.log("sage2UI");
 		}
+		
+		// Menu Buttons
 		else if(element.id === "applauncher") {
 			console.log("App Launcher");
 		}
 		else if(element.id === "mediabrowser") {
 			console.log("Media Browser");
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "block";
+			mediaBrowser.style.display = "block";
 		}
 		else if(element.id === "arrangement") {
 			console.log("Arrangement");
@@ -343,6 +365,26 @@
 			console.log("SAGE2 Pointer");
 			interactor.startSAGE2Pointer(element.id);
 		}
+		
+		// Media File Browser
+		else if (element.id === "fileOKBtn") {
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "none";
+			mediaBrowser.style.display = "none";
+		}
+		else if (element.id === "fileCloseBtn") {
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "none";
+			mediaBrowser.style.display = "none";
+		}
+		else if (element.id === "fileDeleteBtn") {
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "none";
+			mediaBrowser.style.display = "none";
+		}
 	}
 	
 	function sagePointerEnabled() {
@@ -351,13 +393,6 @@
 	
 	function sagePointerDisabled() {
 		// hide SAGE2 Pointer dialog
-	}
-	
-	function getTextSize(text, size) {
-		var textWidthTest = document.getElementById('textWidthTest');
-		textWidthTest.style.fontSize = size;
-		textWidthTest.textContent = text;
-		return [(textWidthTest.clientWidth + 1), (textWidthTest.clientHeight + 1)];
 	}
 	
 	function reloadIfServerRunning(callback) {
@@ -377,7 +412,7 @@
 	}
 </script>
 
-<link rel="stylesheet" type="text/css" href="css/style_ui.css"       media="screen" />
+<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen" />
 </head>
 
 <body onload="init()" onresize="resize()">
@@ -415,9 +450,37 @@
 				<p>Info</p>
 			</div>
 		</div>
-		<div id="textWidthTest"></div>
 	</div>
 	<div class="clear"></div>
+	
+	<!-- transparent black overlay for all dialogs -->
+	<div id="blackoverlay" class="lb_blackoverlay"></div>
+	
+	<!-- dialog for the media browser -->
+	<div id="mediaBrowser" class="lb_container">
+		<div id="fileTreeList" class="css-treeview">
+			<ul id="fileListElems">
+				<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label></li>
+				<ul id="images" class="fileItem"></ul>
+				<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label></li>
+				<ul id="pdfs" class="fileItem"></ul>
+				<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label></li>
+				<ul id="videos" class="fileItem"></ul>
+				<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label></li>
+				<ul id="sessions" class="fileItem"></ul>
+			</ul>
+		</div>
+		<div id="metadata">
+			<img id="thumbnail" src="images/blank.png"></img>
+			<label id="metadata_text"></label>
+		</div>
+		<div class="clear"></div>
+		<div id="fileButtons">
+			<span id="fileOKBtn"     class="button">OK</span>
+			<span id="fileCloseBtn"  class="button">Close</span>
+			<span id="fileDeleteBtn" class="button">Delete</span>
+		</div>
+	</div>
 </body>
 </html>
 
