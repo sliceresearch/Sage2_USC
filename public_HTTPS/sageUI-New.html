@@ -303,12 +303,12 @@
 		var sage2pointerHelp = document.getElementById('sage2pointerHelp');
 		var sage2pointerHelpAspect = 1264.25/982.255;
 		if(sage2pointerHelpAspect <= windowAspect){
-			sage2pointerHelp.height = window.innerHeight/2;
+			sage2pointerHelp.height = window.innerHeight * 0.7;
 			sage2pointerHelp.width = sage2pointerHelp.height * sage2pointerHelpAspect;
 		}
 		else {
-			sage2pointer_help.width = window.innerWidth/2;
-			sage2pointer_help.height = sage2pointerHelp.width / sage2pointerHelpAspect;
+			sage2pointerHelp.width = window.innerWidth * 0.7;
+			sage2pointerHelp.height = sage2pointerHelp.width / sage2pointerHelpAspect;
 		}
 	}
 	
