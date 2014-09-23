@@ -460,24 +460,35 @@
 	<div id="mediaBrowser" class="lb_container">
 		<div id="fileTreeList" class="css-treeview">
 			<ul id="fileListElems">
-				<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label></li>
-				<ul id="images" class="fileItem"></ul>
-				<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label></li>
-				<ul id="pdfs" class="fileItem"></ul>
-				<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label></li>
-				<ul id="videos" class="fileItem"></ul>
-				<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label></li>
-				<ul id="sessions" class="fileItem"></ul>
+				<li>
+					<input type="checkbox" id="images-dir"></input>
+					<label for="images-dir">Images</label>
+					<ul id="images" class="fileItem"></ul>
+				</li>
+				<li>
+					<input type="checkbox" id="pdfs-dir"></input>
+					<label for="pdfs-dir">PDFs</label>
+					<ul id="pdfs" class="fileItem"></ul>
+				</li>
+				<li>
+					<input type="checkbox" id="videos-dir"></input>
+					<label for="videos-dir">Videos</label>
+					<ul id="videos" class="fileItem"></ul>
+				</li>
+				<li>
+					<input type="checkbox" id="sessions-dir"></input>
+					<label for="sessions-dir">Sessions</label>
+					<ul id="sessions" class="fileItem"></ul>
+				</li>
 			</ul>
 		</div>
 		<div id="metadata">
 			<img id="thumbnail" src="images/blank.png"></img>
 			<label id="metadata_text"></label>
 		</div>
-		<div class="clear"></div>
 		<div id="fileButtons">
-			<span id="fileOKBtn"     class="button">OK</span>
-			<span id="fileCloseBtn"  class="button">Close</span>
+			<span id="fileOKBtn" class="button">OK</span>
+			<span id="fileCloseBtn" class="button">Close</span>
 			<span id="fileDeleteBtn" class="button">Delete</span>
 		</div>
 	</div>
