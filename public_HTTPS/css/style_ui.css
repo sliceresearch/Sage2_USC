@@ -110,7 +110,7 @@ p {
 
 
 /***** Light Box    *****/
-#sage2pointer_dialog {
+#sage2pointerDialog {
 	top: 50%;
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
@@ -118,7 +118,32 @@ p {
 	transform: translate(-50%, -50%);
 }
 
-#mediaBrowser {
+#appLauncherDialog {
+	left: 25%;
+	top: 25%;
+	width: 50%;
+	height: 50%;
+}
+
+#appOKBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+
+#appCloseBtn {
+	position: absolute;
+	left: 43px;
+	bottom: 10px;
+}
+
+#appDeleteBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#mediaBrowserDialog {
 	left: 25%;
 	top: 25%;
 	width: 50%;
@@ -168,6 +193,57 @@ p {
 	bottom: 10px;
 }
 
+#arrangementDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#arrangementItems{
+	width: 350px;
+	margin: 10px 10px 38px 10px;
+}
+
+#arrangementCloseBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+
+#settingsDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#settingsItems {
+	width: 350px;
+	margin: 10px 10px 38px 10px;
+}
+
+#settingsCloseBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+
+#blackoverlay {
+	display: none;
+	position: fixed;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: #000000;
+	z-index: 1001;
+	opacity: .65;
+	cursor: default;
+}
+
 .fileItem {
 	cursor: default;
 }
@@ -188,20 +264,7 @@ p {
 	background-color: #565656;
 }
 
-.lb_blackoverlay {
-	display: none;
-	position: fixed;
-	top: 0%;
-	left: 0%;
-	width: 100%;
-	height: 100%;
-	background-color: #000000;
-	z-index: 1001;
-	opacity: .65;
-	cursor: default;
-}
-
-.lb_container {
+.dialog {
 	display: none;
 	position: absolute;
 	border: 4px solid #787878;
