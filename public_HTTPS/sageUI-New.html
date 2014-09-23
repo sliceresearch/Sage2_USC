@@ -16,17 +16,26 @@
 	// Copyright (c) 2014
 </script>
 <script type="text/javascript" src="src/websocket.io.js"></script>
+<script type="text/javascript" src="src/SAGE2_interaction.js"></script>
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 	navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
 	
 	function displayUI() {
 		this.config = null;
 		
 		this.init = function(config) {
+			var _this = this;
 			this.config = config;
-			
-			this.resize();
+			this.logo = new Image();
+			this.logo.onload = function(event) {
+				_this.resize();
+			};
+			this.logo.src = "images/EVL-LAVA_UI.svg"
+			this.logoAspect = 3.47828052509;
+			this.fileDrop = false;
+			this.fileDropFontSize = 12;
 		};
 		
 		this.draw = function() {
@@ -35,14 +44,25 @@
 			var ctx = sage2UI.getContext('2d');
 			
 			// background
-			ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
+			ctx.fillStyle = "rgba(180, 180, 180, 1.0)";
 			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
 			
+			var logoX, logoY, logoW, logoH;
+			if((sage2UI.width/sage2UI.height) <= this.logoAspect){
+				logoW = sage2UI.width * 0.75;
+				logoH = logoW / this.logoAspect;
+			}
+			else {
+				logoH = sage2UI.height * 0.75;
+				logoW = logoH * this.logoAspect;
+			}
+			logoX = sage2UI.width/2  - logoW/2;
+			logoY = sage2UI.height/2 - logoH/2;
+			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
 			
 			// tiled display layout
 			ctx.lineWidth = 2;
-			ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
-			ctx.strokeRect(0, 0, sage2UI.width, sage2UI.height);
+			ctx.strokeStyle = "rgba(86, 86, 86, 1.0)";
 			var stepX = sage2UI.width/this.config.layout.columns;
 			var stepY = sage2UI.height/this.config.layout.rows;
 			ctx.beginPath();
@@ -56,16 +76,99 @@
 			}
 			ctx.closePath();
 			ctx.stroke();
+			
+			// file drop overlay
+			if(this.fileDrop === true){
+				ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+				ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
+				
+				var txt = "Drop multimedia files here";
+				ctx.font = this.fileDropFontSize + "px Verdana";
+				var txtWidth = ctx.measureText(txt).width;
+				
+				var textBoxWidth = Math.round(sage2UI.width*0.75);
+				var lines = this.textLineCount(ctx, txt, textBoxWidth);
+				var lineHeight = this.fileDropFontSize * 1.2;
+				var textBoxHeight = lineHeight * lines;
+				
+				var textBoxX = (sage2UI.width-textBoxWidth) / 2;
+				var textBoxY = (sage2UI.height-textBoxHeight) / 2;
+				var textBoxRadius = this.fileDropFontSize * 0.5;
+				ctx.textAlign = "center";
+				ctx.fillStyle = "rgba(86, 86, 86, 0.7)";
+				this.drawRoundedRect(ctx, textBoxX, textBoxY, textBoxWidth, textBoxHeight, textBoxRadius, true, false);
+				
+				var textStartX = sage2UI.width/2 + this.fileDropFontSize*0.175;
+				var textStartY = sage2UI.height/2 - ((lines-1)/2)*lineHeight + this.fileDropFontSize*0.333;
+				ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+				this.wrapText(ctx, txt, textStartX, textStartY, textBoxWidth, lineHeight);
+			}
+		};
+		
+		this.drawRoundedRect = function(ctx, x, y, width, height, radius, fillFlag, strokeFlag) {
+			ctx.beginPath();
+			ctx.moveTo(x + radius, y);
+			ctx.lineTo(x + width - radius, y);
+			ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+			ctx.lineTo(x + width, y + height - radius);
+			ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+			ctx.lineTo(x + radius, y + height);
+			ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+			ctx.lineTo(x, y + radius);
+			ctx.quadraticCurveTo(x, y, x + radius, y);
+			ctx.closePath();
+			if(fillFlag === true) ctx.fill();
+			if(strokeFlag === true) ctx.stroke();
+		};
+		
+		this.textLineCount = function(ctx, text, maxWidth) {
+			var words = text.split(" ");
+			var line = "";
+			var count = 1;
+
+			for(var n=0; n<words.length; n++) {
+				var testLine = line + words[n] + " ";
+				var testWidth = ctx.measureText(testLine).width;
+				if(testWidth > maxWidth && n > 0) {
+					line = words[n] + ' ';
+					count++;
+				}
+				else {
+					line = testLine;
+				}
+			}
+			return count;
+		};
+		
+		this.wrapText = function(ctx, text, x, y, maxWidth, lineHeight) {
+			var words = text.split(" ");
+			var line = "";
+
+			for(var n=0; n<words.length; n++) {
+				var testLine = line + words[n] + " ";
+				var testWidth = ctx.measureText(testLine).width;
+				if(testWidth > maxWidth && n > 0) {
+					ctx.fillText(line, x, y);
+					line = words[n] + ' ';
+					y += lineHeight;
+				}
+				else {
+					line = testLine;
+				}
+			}
+			ctx.fillText(line, x, y);
 		};
 		
 		this.resize = function() {
 			var displayUI = document.getElementById('displayUI');
 			var sage2UI = document.getElementById('sage2UI');
+			var ctx = sage2UI.getContext('2d');
+			//var fileDropArea = document.getElementById('fileDropArea');
+			//var fileDropText = document.getElementById('fileDropText');
 			var menuUI = document.getElementById('menuUI');
 			
-			var extraHeight = document.getElementById('extraUI').offsetHeight;
-			var freeWidth   = window.innerWidth  - 192;              // size of menu buttons
-			var freeHeight  = window.innerHeight - extraHeight - 20; // size of interaction buttons + margin
+			var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 30; // size of menu buttons
+			var freeHeight  = window.innerHeight - 20;                 // size of 10px margin (top, bottom)
 			
 			var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 			var freeAspect  = freeWidth / freeHeight;
@@ -76,7 +179,7 @@
 				sage2UI.height = Math.floor(freeWidth / sage2Aspect);
 				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 				displayUI.style.marginTop = "10px";
-				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
+				menuUI.style.marginTop = ((sage2UI.height/2) - (menuUI.offsetHeight/2) + 10).toString() + "px";
 			}
 			// tall sage2 display (compared to page)
 			else {
@@ -84,10 +187,10 @@
 				sage2UI.width  = Math.floor(freeHeight * sage2Aspect);
 				displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 				displayUI.style.marginTop = "10px";
-				menuUI.style.marginTop = (sage2UI.height/2 - 150).toString() + "px";
+				menuUI.style.marginTop = ((sage2UI.height/2) - (menuUI.offsetHeight/2) + 10).toString() + "px";
 			}
-			if(sage2UI.height < 320) {
-				var dTop = (320-sage2UI.height) / 2;
+			if(sage2UI.height < menuUI.offsetHeight) {
+				var dTop = (menuUI.offsetHeight-sage2UI.height) / 2;
 				var mTop = 0;
 				if(dTop < 10) {
 					mTop = 10-dTop;
@@ -97,13 +200,16 @@
 				menuUI.style.marginTop = mTop.toString() + "px";
 			}
 			
+			this.fileDropFontSize = Math.round(sage2UI.height * 0.075);
+			
 			this.draw();
 		};
 	}
 	
 	
 	var wsio;
-	var sage2UI;
+	var SAGE2DisplayUI;
+	var interactor;
 	
 	function init() {
 		hostname = window.location.hostname;
@@ -114,7 +220,7 @@
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		wsio.open(function() {
 			console.log("open websocket");
-			//sagePtr = new sagePointer(wsio);
+			interactor = new SAGE2_interaction(wsio);
 			//window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 			var clientDescription = {
@@ -148,46 +254,100 @@
 			}, 2000);
 		});
 		
-		wsio.on('setupDisplayConfiguration', function(config) {
-			sage2UI = new displayUI();
-			sage2UI.init(config);
+		wsio.on('initialize', function(data) {
+			interactor.setInteractionId(data.UID);
 		});
 		
+		wsio.on('setupDisplayConfiguration', function(config) {
+			SAGE2DisplayUI = new displayUI();
+			SAGE2DisplayUI.init(config);
+			
+			var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
+			var screenMin = Math.min(screen.width, screen.height);
+			interactor.setPointerSensitivity(sage2Min/screenMin);
+		});
 		
-		var menuUI = document.getElementById('menuUI');
-		var fileDrop = document.getElementById('fileDrop');
-		var fileDropProgress = document.getElementById('fileDropProgress');
-		var sageButtons = document.getElementById('sage2Buttons');
+		var sage2UI = document.getElementById('sage2UI');
+		var fileListElems = document.getElementById('fileListElems');
+		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
+		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var metadata = document.getElementById('metadata');
+		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
+		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
+		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		
+		window.addEventListener('dragover', preventDefault, false);
+		window.addEventListener('dragend',  preventDefault, false);
+		window.addEventListener('drop',     preventDefault, false);
+	
+		sage2UI.addEventListener('dragover',  preventDefault, false);
+		sage2UI.addEventListener('dragend',   preventDefault, false);
+		sage2UI.addEventListener('dragenter', fileDragEnter,  false);
+		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
+		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
-		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
-		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
-		
-		window.addEventListener('click', pointerClick, false);
+		document.addEventListener('click', pointerClick, false);
 	}
 	
 	function resize() {
-		var menuUI = document.getElementById('menuUI');
-		var fileDrop = document.getElementById('fileDrop');
-		var fileDropProgress = document.getElementById('fileDropProgress');
-		var sageButtons = document.getElementById('sage2Buttons');
+		SAGE2DisplayUI.resize();
 		
-		var extraWidth = fileDrop.offsetWidth + sageButtons.offsetWidth + menuUI.offsetWidth + 40;
-		fileDropProgress.style.width = (window.innerWidth - extraWidth).toString() + "px";
+		var fileListElems = document.getElementById('fileListElems');
+		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
+		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var metadata = document.getElementById('metadata');
+		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
+		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
+		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
+	}
+	
+	function preventDefault(event) {
+		event.preventDefault();
+	}
+	
+	function fileDragEnter(event) {
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "dashed";
+		SAGE2DisplayUI.fileDrop = true;
+		SAGE2DisplayUI.draw();
+	}
+	
+	function fileDragLeave(event) {
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "solid";
+		SAGE2DisplayUI.fileDrop = false;
+		SAGE2DisplayUI.draw();
+	}
+	
+	function fileDrop(event) {
+		event.preventDefault();
 		
-		sage2UI.resize();
+		// trigger file upload
+		console.log("drop location: " + event.layerX + ", " + event.layerY);
+		
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "solid";
+		SAGE2DisplayUI.fileDrop = false;
+		SAGE2DisplayUI.draw();
 	}
 	
 	function pointerClick(event) {
 		var element = event.srcElement;
+		// SAGE2 UI Interaction
 		if(element.id === "sage2UI") {
 			console.log("sage2UI");
 		}
+		
+		// Menu Buttons
 		else if(element.id === "applauncher") {
 			console.log("App Launcher");
 		}
 		else if(element.id === "mediabrowser") {
 			console.log("Media Browser");
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "block";
+			mediaBrowser.style.display = "block";
 		}
 		else if(element.id === "arrangement") {
 			console.log("Arrangement");
@@ -198,21 +358,41 @@
 		else if(element.id === "info") {
 			console.log("Info");
 		}
-		else if(element.id === "shareScreenBtn") {
+		else if(element.id === "sharescreen") {
 			console.log("Share Screen");
-			
-			// test
-			var fileDropProgress = document.getElementById('fileDropProgress');
-			fileDropProgress.value = Math.floor(Math.random() * 100);
-			fileDropProgress.style.opacity = 1.0;
 		}
-		else if(element.id === "sage2PointerBtn") {
+		else if(element.id === "sage2pointer") {
 			console.log("SAGE2 Pointer");
-			
-			// test
-			var fileDropProgress = document.getElementById('fileDropProgress');
-			fileDropProgress.style.opacity = 0.0;
+			interactor.startSAGE2Pointer(element.id);
 		}
+		
+		// Media File Browser
+		else if (element.id === "fileOKBtn") {
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "none";
+			mediaBrowser.style.display = "none";
+		}
+		else if (element.id === "fileCloseBtn") {
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "none";
+			mediaBrowser.style.display = "none";
+		}
+		else if (element.id === "fileDeleteBtn") {
+			var blackoverlay = document.getElementById('blackoverlay');
+			var mediaBrowser = document.getElementById('mediaBrowser');
+			blackoverlay.style.display = "none";
+			mediaBrowser.style.display = "none";
+		}
+	}
+	
+	function sagePointerEnabled() {
+		// show SAGE2 Pointer dialog
+	}
+	
+	function sagePointerDisabled() {
+		// hide SAGE2 Pointer dialog
 	}
 	
 	function reloadIfServerRunning(callback) {
@@ -232,172 +412,7 @@
 	}
 </script>
 
-<style type="text/css">
-body {
-	margin: 0px;
-	padding: 0px;
-}
-
-p {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	color: #000000;
-}
-
-#mainUI {
-	margin: 0px;
-	overflow: auto;
-}
-
-#displayUI {
-	float: left;
-	margin: 10px;
-}
-
-#menuUI {
-	float: left;
-	width: 172px;
-	height: 320px;
-}
-
-#extraUI {
-	padding: 10px;
-	overflow: auto;
-	cursor: default;
-}
-
-#fileDrop {
-	float:left;
-	width: 250px;
-	height: 56px;
-	text-align: center;
-	background-color: #FFFFFF;
-	border: dashed 3px #787878;
-}
-
-#fileDropText {
-	margin-top: 22px; 
-	color: #565656;
-}
-
-#fileDropProgressArea {
-	float: left;
-	height: 62px;
-	margin-left: 10px;
-}
-
-#fileDropProgress {
-	margin-top: 16px;
-	height: 32px;
-	-webkit-appearance: none;
-	appearance: none;
-}
-
-#fileDropProgress[value]::-webkit-progress-bar {
-	background-color: #C8C8C8;
-	border-radius: 8px;
-}
-
-#fileDropProgress[value]::-webkit-progress-value {
-	background-color: #565656;
-	border-radius: 8px;
-}
-
-#sage2Buttons{
-	float: left;
-	margin-left: 10px;
-	width: 105px;
-	height: 62px;
-}
-
-#shareScreenBtn {
-	display: inline-block;
-	width: 105px;
-	height: 24px;
-	margin-top: 5px;
-	line-height: 24px;
-	text-align: center;
-}
-
-#sage2PointerBtn {
-	display: inline-block;
-	width: 105px;
-	height: 24px;
-	margin-top: 5px;
-	line-height: 24px;
-	text-align: center;
-}
-
-.uiButton {
-	position: relative;
-	width: 162px;
-	height: 64px;
-}
-
-.uiButton img {
-	position: absolute;
-	top: 8px;
-    left: 8px;
-	-webkit-transition: 100ms ease-in-out;
-	-moz-transition: 100ms ease-in-out;
-	transition: 100ms ease-in-out;
-}
-
-.uiButton img:hover {
-	-webkit-transform: scale(1.2);
-	-moz-transform: scale(1.2);
-	transform: scale(1.2);
-}
-
-.uiButton p {
-	position: absolute;
-	top: 12px;
-	left: 64px;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	white-space: nowrap;
-	padding: 2px 4px 2px 4px;
-	color: #FFFFFF;
-	background-color: #787878;
-	border-radius: 8px;
-	opacity: 0.0;
-	cursor: default;
-	-webkit-transition: opacity 100ms ease-in-out;
-	-moz-transition: opacity 100ms ease-in-out;
-	transition: opacity 100ms ease-in-out;
-}
-
-.uiButton img:hover + p {
-	opacity: 1.0;
-}
-
-.button {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	text-decoration: none;
-	white-space: nowrap;
-	color: #FFFFFF;
-	background-color: #787878;
-	border-radius: 8px;
-	cursor: pointer;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	user-select: none;
-}
-
-.button:active {
-	background-color: #565656;
-}
-
-.clear {
-	clear: both;
-}
-</style>
-
-<!--
-<link rel="stylesheet" type="text/css" href="css/style_mgr.css"       media="screen" />
-<link rel="stylesheet" type="text/css" href="css/dialog-polyfill.css" media="screen" />
--->
+<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen" />
 </head>
 
 <body onload="init()" onresize="resize()">
@@ -406,6 +421,14 @@ p {
 			<canvas id="sage2UI"></canvas>
 		</div>
 		<div id="menuUI">
+			<div id="sage2pointerContainer" class="uiButton">
+				<img id="sage2pointer" src="images/sage2pointer.svg" width="48" height="48"></img>
+				<p>SAGE2 Pointer</p>
+			</div>
+			<div id="sharescreenContainer" class="uiButton">
+				<img id="sharescreen" src="images/sharescreen.svg" width="48" height="48"></img>
+				<p>Share Screen</p>
+			</div>
 			<div id="applauncherContainer" class="uiButton">
 				<img id="applauncher" src="images/applauncher.svg" width="48" height="48"></img>
 				<p>App Launcher</p>
@@ -429,16 +452,33 @@ p {
 		</div>
 	</div>
 	<div class="clear"></div>
-	<div id="extraUI">
-		<div id="fileDrop">
-			<p id="fileDropText">Drop multimedia files here</p>
+	
+	<!-- transparent black overlay for all dialogs -->
+	<div id="blackoverlay" class="lb_blackoverlay"></div>
+	
+	<!-- dialog for the media browser -->
+	<div id="mediaBrowser" class="lb_container">
+		<div id="fileTreeList" class="css-treeview">
+			<ul id="fileListElems">
+				<li><input type="checkbox" id="images-dir" /><label for="images-dir">Images</label></li>
+				<ul id="images" class="fileItem"></ul>
+				<li><input type="checkbox" id="pdfs-dir" /><label for="pdfs-dir">PDFs</label></li>
+				<ul id="pdfs" class="fileItem"></ul>
+				<li><input type="checkbox" id="videos-dir" /><label for="videos-dir">Videos</label></li>
+				<ul id="videos" class="fileItem"></ul>
+				<li><input type="checkbox" id="sessions-dir" /><label for="sessions-dir">Sessions</label></li>
+				<ul id="sessions" class="fileItem"></ul>
+			</ul>
 		</div>
-		<div id="fileDropProgressArea">
-			<progress id="fileDropProgress" value="20" max="100"></progress>
+		<div id="metadata">
+			<img id="thumbnail" src="images/blank.png"></img>
+			<label id="metadata_text"></label>
 		</div>
-		<div id="sage2Buttons">
-			<span id="shareScreenBtn" class="button">Share Screen</span>
-			<span id="sage2PointerBtn" class="button">SAGE2 Pointer</span>
+		<div class="clear"></div>
+		<div id="fileButtons">
+			<span id="fileOKBtn"     class="button">OK</span>
+			<span id="fileCloseBtn"  class="button">Close</span>
+			<span id="fileDeleteBtn" class="button">Delete</span>
 		</div>
 	</div>
 </body>
