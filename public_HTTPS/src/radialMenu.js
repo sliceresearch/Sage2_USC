@@ -48,7 +48,7 @@ function radialMenu(){
 		
 		this.visible = true;
 		this.windowInteractionMode = false;
-		this.redraw = true;
+		this.ctx.redraw = true;
 		this.dragPosition = { x: 0, y: 0 };
 		
 		this.dragThumbnailWindow = false;
@@ -65,7 +65,7 @@ function radialMenu(){
 		port = window.location.port;
 		if(window.location.protocol == "http:" && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
-
+		
 		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		this.wsio.open(function() {
 			console.log("open websocket: " + id);
@@ -97,6 +97,7 @@ function radialMenu(){
 			radialMenuList[id].sendsToServer = false;
 			radialMenuList[id].wsio.close();
 		});
+		
 		
 		// load thumbnail icons
 		this.idleImageIcon = new Image;
@@ -338,10 +339,12 @@ function radialMenu(){
 		angle = (initAngle + angleSeparation * 7) * (Math.PI/180);
 		this.radial2TileButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2TileButton.setRotation( angle - Math.PI/2 );
+		
+		
 	};
 	
 	this.draw = function() {
-	
+		
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
@@ -375,7 +378,7 @@ function radialMenu(){
 			this.radialSessionButton.draw();
 			this.radialSaveSessionButton.draw();
 		}
-
+		
 		// Thumbnail window
 		if( this.currentMenuState !== 'radialMenu' )
 		{
@@ -564,6 +567,7 @@ function radialMenu(){
 				}
 			}
 		}
+		
 	};
 	
 	this.closeMenu = function() {
@@ -571,13 +575,27 @@ function radialMenu(){
 		console.log("Closing menu" );
 	};
 	
+	this.setToggleMenu = function(type)
+	{
+		if( this.currentMenuState !== type )
+		{
+			this.currentMenuState = type;
+			this.element.width = thumbnailWindowSize.x;
+			this.element.height = thumbnailWindowSize.y;
+		}
+		else
+		{
+			this.currentMenuState = 'radialMenu';
+			this.element.width = radialMenuSize.x;
+			this.element.height = radialMenuSize.y;
+		}
+	};
+	
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
 		
-		if( type !== "pointerMove" )
-			this.redraw = true;
-			
 		overButton = false;
+		
 		
 		buttonOverCount = 0; // Count number of buttons have a pointer over it
 		
@@ -596,8 +614,8 @@ function radialMenu(){
 		// Level 1 -----------------------------------
 		if( this.currentRadialState === 'radialMenu' )
 		{
-			this.element.width = radialMenuSize.x;
-			this.element.height = radialMenuSize.y;
+			//this.element.width = radialMenuSize.x;
+			//this.element.height = radialMenuSize.y;
 			
 			buttonOverCount += this.radialImageButton.onEvent(type, user.id, position, data);
 			buttonOverCount += this.radialPDFButton.onEvent(type, user.id, position, data);
@@ -607,44 +625,23 @@ function radialMenu(){
 		
 		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
 		{
-			//this.wsio.emit('requestStoredFiles');
-			if( this.currentMenuState !== 'imageThumbnailWindow' )
-			{
-				this.currentMenuState = 'imageThumbnailWindow';
-			}
-			else
-				this.currentMenuState = 'radialMenu';
+			this.setToggleMenu('imageThumbnailWindow');
 		}
 		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
 		{
-			//this.wsio.emit('requestStoredFiles');
-			if( this.currentMenuState !== 'pdfThumbnailWindow' )
-				this.currentMenuState = 'pdfThumbnailWindow';
-			else
-				this.currentMenuState = 'radialMenu';
+			this.setToggleMenu('pdfThumbnailWindow');
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
 		{
-			//this.wsio.emit('requestStoredFiles');
-			if( this.currentMenuState !== 'videoThumbnailWindow' )
-				this.currentMenuState = 'videoThumbnailWindow';
-			else
-				this.currentMenuState = 'radialMenu';
+			this.setToggleMenu('videoThumbnailWindow');
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
 		{
-			//this.wsio.emit('requestStoredFiles');
-			if( this.currentMenuState !== 'appThumbnailWindow' )
-				this.currentMenuState = 'appThumbnailWindow';
-			else
-				this.currentMenuState = 'radialMenu';
+			this.setToggleMenu('appThumbnailWindow');
 		}
 		if( this.radialSessionButton.isClicked() )
 		{
-			if( this.currentMenuState !== 'sessionThumbnailWindow' )
-				this.currentMenuState = 'sessionThumbnailWindow';
-			else
-				this.currentMenuState = 'radialMenu';
+			this.setToggleMenu('sessionThumbnailWindow');
 		}
 		if( this.radialSaveSessionButton.isClicked() )
 		{
@@ -664,8 +661,6 @@ function radialMenu(){
 		// Thumbnail window ----------------------------
 		if( this.currentMenuState !== 'radialMenu' )
 		{
-			this.element.width = thumbnailWindowSize.x;
-			this.element.height = thumbnailWindowSize.y;
 			this.updateThumbnailPositions();
 
 			var currentThumbnailButtons = this.imageThumbnailButtons;
@@ -700,7 +695,7 @@ function radialMenu(){
 				}
 			}
 		}
-
+			
 		// windowInteractionMode = true if any active button has an event over its
 		if( type === "pointerPress" && data.button === 'left' )
 		{
@@ -732,6 +727,8 @@ function radialMenu(){
 					this.thumbnailWindowScrollOffset.y = 0;
 				}
 				
+				// TEMP: Until thumbnail window is separate context
+				this.draw();
 				this.thumbnailWindowDragPosition = position;
 			}
 		}
@@ -747,7 +744,13 @@ function radialMenu(){
 				this.dragThumbnailWindow = false;
 			}
 		}
-
+		
+		
+		if( this.ctx.redraw === true )
+		{
+			this.draw();
+			this.ctx.redraw = false;
+		}
 	};
 	
 	// Displays files
@@ -1179,29 +1182,36 @@ function buttonWidget() {
 		{
 			this.ctx.rotate( this.angle );
 			
-			// Tint the image ----------------------------------------
-			// create offscreen buffer, 
-			buffer = document.createElement('canvas');
-			buffer.width = this.width;
-			buffer.height = this.height;
-			bx = buffer.getContext('2d');
+			if( this.state !== 0 )
+			{
+				// Tint the image (Part 1)
+				// create offscreen buffer, 
+				buffer = document.createElement('canvas');
+				buffer.width = this.width;
+				buffer.height = this.height;
+				bx = buffer.getContext('2d');
 
-			// fill offscreen buffer with the tint color
-			bx.fillStyle = this.ctx.fillStyle;
-			bx.fillRect(0,0,buffer.width,buffer.height);
+				// fill offscreen buffer with the tint color
+				bx.fillStyle = this.ctx.fillStyle;
+				bx.fillRect(0,0,buffer.width,buffer.height);
 
-			// destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
-			bx.globalCompositeOperation = "destination-atop";
-			bx.drawImage(this.idleImage, 0, 0, this.width, this.height );
-
+				// destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
+				bx.globalCompositeOperation = "destination-atop";
+				bx.drawImage(this.idleImage, 0, 0, this.width, this.height );
+			}
+			
 			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
-
-			//then set the global alpha to the amound that you want to tint it, and draw the buffer directly on top of it.
-			this.ctx.globalAlpha = 0.8;
 			
-			// draw the tinted overlay
-			this.ctx.drawImage( buffer, offset.x, offset.y, this.width, this.height );
+			// Tint the image (Part 2)
+			if( this.state !== 0 )
+			{
+				//then set the global alpha to the amound that you want to tint it, and draw the buffer directly on top of it.
+				this.ctx.globalAlpha = 0.8;
+				
+				// draw the tinted overlay
+				this.ctx.drawImage( buffer, offset.x, offset.y, this.width, this.height );
+			}
 			
 		}
 		this.ctx.restore();
@@ -1222,13 +1232,17 @@ function buttonWidget() {
 			if( type === "pointerPress" && this.state != 2 )
 			{
 				this.state = 3; // Click state
+				this.ctx.redraw = true;
 			}
 			else if( type === "pointerRelease" )
 			{
 				this.state = 4;
+				this.ctx.redraw = true;
 			}
-			else if( this.state != 2 )
+			else if( this.state !== 2 )
 			{
+				if( this.state !== 1 )
+					this.ctx.redraw = true;
 				this.state = 1;
 			}
 			
@@ -1236,6 +1250,8 @@ function buttonWidget() {
 		}
 		else
 		{
+			if( this.state !== 0 )
+				this.ctx.redraw = true;
 			this.state = 0;
 			
 			return 0;

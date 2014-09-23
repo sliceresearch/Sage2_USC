@@ -402,8 +402,6 @@ function uiBuilder(json_cfg, clientID) {
 					menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
 					menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
 				}
-				
-				this.radialMenus[menuElem.id].draw();
 			}
 			else
 			{
@@ -418,6 +416,7 @@ function uiBuilder(json_cfg, clientID) {
 		if( menuElem !== null )
 		{
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
+			this.radialMenus[menuElem.id].draw();
 		}
 	};
 	
