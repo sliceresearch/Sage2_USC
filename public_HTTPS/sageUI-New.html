@@ -200,7 +200,8 @@
 				menuUI.style.marginTop = mTop.toString() + "px";
 			}
 			
-			this.fileDropFontSize = Math.round(sage2UI.height * 0.075);
+			var minDim = Math.min(sage2UI.width, sage2UI.height);
+			this.fileDropFontSize = Math.round(minDim * 0.075);
 			
 			this.draw();
 		};
@@ -268,13 +269,6 @@
 		});
 		
 		var sage2UI = document.getElementById('sage2UI');
-		var fileListElems = document.getElementById('fileListElems');
-		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
-		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
-		var metadata = document.getElementById('metadata');
-		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
-		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
-		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		
 		window.addEventListener('dragover', preventDefault, false);
 		window.addEventListener('dragend',  preventDefault, false);
@@ -287,10 +281,18 @@
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
 		document.addEventListener('click', pointerClick, false);
+		
+		resizeDialogs();
 	}
 	
 	function resize() {
 		SAGE2DisplayUI.resize();
+		
+		resizeDialogs();
+	}
+	
+	function resizeDialogs() {
+		var windowAspect = window.innerWidth/window.innerHeight;
 		
 		var fileListElems = document.getElementById('fileListElems');
 		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
@@ -299,6 +301,16 @@
 		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
 		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
 		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var sage2pointer_help = document.getElementById('sage2pointer_help');
+		var sage2pointer_helpAspect = 1264.25/982.255;
+		if(sage2pointer_helpAspect <= windowAspect){
+			sage2pointer_help.height = window.innerHeight/2;
+			sage2pointer_help.width = sage2pointer_help.height * sage2pointer_helpAspect;
+		}
+		else {
+			sage2pointer_help.width = window.innerWidth/2;
+			sage2pointer_help.height = sage2pointer_help.width / sage2pointer_helpAspect;
+		}
 	}
 	
 	function preventDefault(event) {
@@ -389,10 +401,18 @@
 	
 	function sagePointerEnabled() {
 		// show SAGE2 Pointer dialog
+		var blackoverlay = document.getElementById('blackoverlay');
+		sage2pointer_dialog = document.getElementById('sage2pointer_dialog');
+		blackoverlay.style.display = "block";
+		sage2pointer_dialog.style.display = "block";
 	}
 	
 	function sagePointerDisabled() {
 		// hide SAGE2 Pointer dialog
+		var blackoverlay = document.getElementById('blackoverlay');
+		sage2pointer_dialog = document.getElementById('sage2pointer_dialog');
+		blackoverlay.style.display = "none";
+		sage2pointer_dialog.style.display = "none";
 	}
 	
 	function reloadIfServerRunning(callback) {
@@ -491,6 +511,11 @@
 			<span id="fileCloseBtn" class="button">Close</span>
 			<span id="fileDeleteBtn" class="button">Delete</span>
 		</div>
+	</div>
+	
+	<!-- dialog for the SAGE2 Pointer Help -->
+	<div id="sage2pointer_dialog" class="lb_container">
+		<img id="sage2pointer_help" src="images/SAGE2Pointer-help.svg"></img>
 	</div>
 </body>
 </html>
