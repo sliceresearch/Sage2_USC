@@ -127,8 +127,10 @@ function radialMenu(){
 		this.idleTileIcon.src = this.resrcPath + "large16.svg"
 		
 		// radial menu icons
+		//this.radialMenuIcon = new Image;
+		//this.radialMenuIcon.src = this.resrcPath +"icon_radial_256.png"
 		this.radialMenuIcon = new Image;
-		this.radialMenuIcon.src = this.resrcPath +"icon_radial_256.png"
+		this.radialMenuIcon.src = this.resrcPath +"icon_radial_button_circle.svg"
 		this.radialMenuLevel2Icon = new Image;
 		this.radialMenuLevel2Icon.src = this.resrcPath +"icon_radial_level2_360.png"
 		this.radialCloseIcon = new Image;
@@ -211,6 +213,15 @@ function radialMenu(){
 		this.radialSessionButton.alignment = 'centered';
 		this.radialSaveSessionButton.alignment = 'centered';
 		this.radialSettingsButton.alignment = 'centered';
+		
+		this.radialCloseButton.hitboxShape = 'circle';
+		this.radialImageButton.hitboxShape = 'circle';
+		this.radialPDFButton.hitboxShape = 'circle';
+		this.radialVideoButton.hitboxShape = 'circle';
+		this.radialAppButton.hitboxShape = 'circle';
+		this.radialSessionButton.hitboxShape = 'circle';
+		this.radialSaveSessionButton.hitboxShape = 'circle';
+		this.radialSettingsButton.hitboxShape = 'circle';
 		
 		// Place buttons
 		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
@@ -330,6 +341,7 @@ function radialMenu(){
 	};
 	
 	this.draw = function() {
+	
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
@@ -1012,7 +1024,7 @@ function buttonWidget() {
 	this.useBackgroundColor = true;
 	
 	this.alignment = 'left';
-	this.hitboxShape = 'circle';
+	this.hitboxShape = 'box';
 	
 	// Button states:
 	// -1 = Disabled
@@ -1102,9 +1114,9 @@ function buttonWidget() {
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
 			else if( this.hitboxShape === 'circle' )
 			{
-				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				this.ctx.fillStyle = this.mouseOverColor;
-				this.ctx.fill();
+				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				//this.ctx.fillStyle = this.mouseOverColor;
+				//this.ctx.fill();
 			}
 		}
 		else if( this.state === 3 )
@@ -1116,9 +1128,9 @@ function buttonWidget() {
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
 			else if( this.hitboxShape === 'circle' )
 			{
-				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				this.ctx.fillStyle = this.clickedColor;
-				this.ctx.fill();
+				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				//this.ctx.fillStyle = this.clickedColor;
+				//this.ctx.fill();
 			}
 		}
 		else if( this.state === 2 )
@@ -1129,9 +1141,9 @@ function buttonWidget() {
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
 			else if( this.hitboxShape === 'circle' )
 			{
-				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				this.ctx.fillStyle = this.pressedColor;
-				this.ctx.fill();
+				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				//this.ctx.fillStyle = this.pressedColor;
+				//this.ctx.fill();
 			}
 		}
 		else if( this.state === 4 )
@@ -1143,9 +1155,9 @@ function buttonWidget() {
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
 			else if( this.hitboxShape === 'circle' )
 			{
-				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				this.ctx.fillStyle = this.releasedColor;
-				this.ctx.fill();
+				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				//this.ctx.fillStyle = this.releasedColor;
+				//this.ctx.fill();
 			}
 		}
 		else if( this.useBackgroundColor )
@@ -1156,9 +1168,9 @@ function buttonWidget() {
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
 			else if( this.hitboxShape === 'circle' )
 			{
-				this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				this.ctx.fillStyle = this.defaultColor;
-				this.ctx.fill();
+				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
+				//this.ctx.fillStyle = this.defaultColor;
+				//this.ctx.fill();
 			}
 		}
 		
@@ -1166,7 +1178,31 @@ function buttonWidget() {
 		if( this.idleImage != null )
 		{
 			this.ctx.rotate( this.angle );
+			
+			// Tint the image ----------------------------------------
+			// create offscreen buffer, 
+			buffer = document.createElement('canvas');
+			buffer.width = this.width;
+			buffer.height = this.height;
+			bx = buffer.getContext('2d');
+
+			// fill offscreen buffer with the tint color
+			bx.fillStyle = this.ctx.fillStyle;
+			bx.fillRect(0,0,buffer.width,buffer.height);
+
+			// destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
+			bx.globalCompositeOperation = "destination-atop";
+			bx.drawImage(this.idleImage, 0, 0, this.width, this.height );
+
+			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
+
+			//then set the global alpha to the amound that you want to tint it, and draw the buffer directly on top of it.
+			this.ctx.globalAlpha = 0.8;
+			
+			// draw the tinted overlay
+			this.ctx.drawImage( buffer, offset.x, offset.y, this.width, this.height );
+			
 		}
 		this.ctx.restore();
 		
