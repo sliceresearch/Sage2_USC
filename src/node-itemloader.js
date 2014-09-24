@@ -31,7 +31,7 @@ var imageMagick;
 mime.default_type = "application/custom";
 
 // XXX
-var registryManager= new registry("public_HTTPS/src/registry.json");
+var registryManager= new registry("applicationRegistry.json");
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -47,23 +47,7 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.displayHeight = displayHeight;
 	this.titleBarHeight = titleBarHeight;
 	console.log("Loader: ", this.titleBarHeight);
-	this.mime2app = {
-		"image/jpeg": "image_viewer",
-		"image/webp": "image_viewer",
-		"image/png": "image_viewer",
-		"image/bmp": "image_viewer",
-		"image/tiff": "image_viewer",
-		"image/vnd.adobe.photoshop": "image_viewer",
-		"video/mp4": "movie_player",
-		"video/x-m4v": "movie_player",
-		"video/webm": "movie_player",
-		"video/youtube": "movie_player",
-		"application/pdf": "pdf_viewer",
-		"application/zip": "custom_app",
-		"application/x-zip-compressed": "custom_app",
-		"application/custom": "custom_app",
-		"application/stream": "media_stream"
-    };
+
     this.app2dir = {
     	"image_viewer": "images",
     	"movie_player": "videos",
@@ -625,11 +609,11 @@ appLoader.prototype.loadApplicationFromRemoteServer = function(application, call
 };
 
 appLoader.prototype.loadFileFromWebURL = function(file, callback) {
-	var mime_type = file.type;
+	// XXX - Will this work with our custom apps?
+    var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
-    var fileType =(/[.]/.exec(filename))[0] ? /[^.]+$/.exec(filename)[0] : undefined;
 
-	this.loadApplication({location: "url", url: file.url, type: mime_type, fileType: fileType, name: filename, strictSSL: true}, function(appInstance) {
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance) {
 		callback(appInstance);
 	});
 };
@@ -642,16 +626,15 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	var mime_type = mime.lookup(localPath);
-    var fileType =(/[.]/.exec(file.filename))[0] ? /[^.]+$/.exec(file.filename)[0] : undefined;
 
-	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, fileType: fileType, type: mime_type, name: file.filename, compressed: false}, function(appInstance) {
+	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance) {
 		callback(appInstance);
 	});
 };
 
 appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var mime_type = file.type;
-	var app = this.mime2app[mime_type];
+	var app = registryManager.defaultApp[mime_type];;
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
 
@@ -663,8 +646,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 
-		var	app = _this.mime2app[mime_type];
-        var fileType =(/[.]/.exec(file.name))[0] ? /[^.]+$/.exec(file.name)[0] : undefined;
+		var	app = registryManager.defaultApp[mime_type];;
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
 			exiftool.file(localPath, function(err,data) {
 				if (err) {
@@ -672,14 +654,14 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				} else {
 					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data);
-					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, fileType: fileType, name: file.name, compressed: true}, function(appInstance) {
+					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
 						callback(appInstance);
 					});
 				}
 			});
 		}
 		else {
-			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, fileType: fileType, name: file.name, compressed: true}, function(appInstance) {
+			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
 				callback(appInstance);
 			});
 		}
@@ -690,12 +672,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
 	if(appData.location === "file") {
-		app = registryManager.defaultApp[appData.fileType];
-
-        if( app === null || app === undefined ) {
-            console.log("ItemLoader> App not found in registry, trying mime2app");
-            app = this.mime2app[appData.type];
-        }
+		app = registryManager.defaultApp[appData.type];
 
 		var dir = this.app2dir[app];
 
@@ -733,7 +710,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
-		app = this.mime2app[appData.type];
+		app = registryManager.defaultApp[appData.type];
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {

@@ -31,13 +31,13 @@ function registryManager(registryFile) {
         for(var i=0; i<jsonRegistry.apps.length; i++) {
             var app = jsonRegistry.apps[i];
             if (app.name !== undefined && app.name !== null && app.name !== "" &&
-                app.fileTypes !== undefined && app.fileTypes !== null && Array.isArray(app.fileTypes) ) {
+                app.mimeTypes !== undefined && app.mimeTypes !== null && Array.isArray(app.mimeTypes) ) {
 
                 console.log("Registry> Found app: " + app.name);
-                console.log("Registry> [" + app.name + "] Supported FileTypes: " + app.fileTypes);
+                console.log("Registry> [" + app.name + "] Supported FileTypes: " + app.mimeTypes);
 
-                for(var j=0; j<app.fileTypes.length; j++) {
-                    this.fileTypeToApp[app.fileTypes] = app.name;
+                for(var j=0; j<app.mimeTypes.length; j++) {
+                    this.fileTypeToApp[app.mimeTypes] = app.name;
                 }
             }
         }
@@ -49,13 +49,13 @@ registryManager.prototype.readDefaultAppFile = function() {
     var jsonString = fs.readFileSync("defaultApps.json", 'utf8');
     var jsonDefApps = json5.parse(jsonString);
 
-    if (jsonDefApps.defaultApps !== undefined &&
-        jsonDefApps.defaultApps !== null &&
-        Array.isArray(jsonDefApps.defaultApps) ) {
-        for(var i=0; i<jsonDefApps.defaultApps.length; i++) {
-            var defApp =  jsonDefApps.defaultApps[i];
-            this.defaultApp[defApp.fileType] = defApp.app;
-            console.log("Registry> Registering: " + defApp.fileType + " with " + defApp.app);
+    if (jsonDefApps.defaultApplications !== undefined &&
+        jsonDefApps.defaultApplications !== null &&
+        Array.isArray(jsonDefApps.defaultApplications) ) {
+        for(var i=0; i<jsonDefApps.defaultApplications.length; i++) {
+            var defApp =  jsonDefApps.defaultApplications[i];
+            this.defaultApp[defApp.type] = defApp.application;
+            console.log("Registry> Registering: " + defApp.type + " with " + defApp.application);
         }
     }
 }

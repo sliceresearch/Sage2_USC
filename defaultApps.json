@@ -1,8 +1,64 @@
 {
-    "defaultApps": [ 
+    "defaultApplications": [ 
         {
-            "fileType": "pdf",
-            "app": "pdf_viewer"
+            "type": "application/pdf",
+            "application": "pdf_viewer"
+        },
+        {
+            "type": "image/jpeg",
+            "application": "image_viewer"
+        },
+        {
+            "type": "image/webp",
+            "application": "image_viewer"
+        },
+        {
+            "type": "image/png",
+            "application": "image_viewer"
+        },
+        {
+            "type": "image/bmp",
+            "application": "image_viewer"
+        },
+        {
+            "type": "image/tiff",
+            "application": "image_viewer"
+        },
+        {
+            "type": "image/vnd.adobe.photoshop",
+            "application": "image_viewer"
+        },
+        {
+            "type": "video/mp4",
+            "application": "movie_player"
+        },
+        {
+            "type": "video/x-m4v",
+           "application": "movie_player"
+        },
+        {
+            "type": "video/webm",
+            "application": "movie_player"
+        },
+        {
+            "type": "video/youtube",
+            "application": "movie_player"
+        },
+        {
+            "type": "application/zip",
+            "application": "custom_app"
+        },
+        {
+            "type": "application/x-zip-compressed",
+            "application": "custom_app"
+        },
+        {
+            "type": "application/custom",
+            "application": "custom_app"
+        },
+        {
+            "type": "application/stream",
+            "application": "media_stream"
         }
     ]
 }

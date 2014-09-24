@@ -2,8 +2,8 @@
     "apps": [
         {
             "name": "pdfViewer",
-            "fileTypes": [
-                "pdf"
+            "mimeTypes": [
+                "application/pdf"
             ]
         }
     ]
