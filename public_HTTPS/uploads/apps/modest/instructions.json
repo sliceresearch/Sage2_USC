@@ -3,6 +3,7 @@
 	"icon": "modestmaps.webp",
 	"width": 800,
 	"height": 381,
+	"resize": "free",
 	"dependencies": [
 		"scripts/modestmaps.min.js"
 	],

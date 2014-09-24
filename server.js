@@ -1750,8 +1750,8 @@ function manageUploadedFiles(files) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
-		console.log('manageUploadedFiles> ', files[key].name);
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
+
 			if(appInstance === null){
 				console.log("Form> unrecognized file type: ", file.name, file.type);
 				return;
@@ -2294,21 +2294,22 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				// if localY in negative, inside titlebar
 				if (localY < 0) {
 					// titlebar image: 807x138  (10 pixels front paddding)
-					var buttonsWidth = config.ui.titleBarHeight * (485.0/111.0);
+					var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 					var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
-					var oneButton    = buttonsWidth / 3; // five buttons
+					var oneButton    = buttonsWidth / 2; // two buttons
 					var startButtons = elem.width - buttonsWidth;
-					if (localX > (startButtons+buttonsPad+2*oneButton)) {
+					if (localX > (startButtons+buttonsPad+oneButton)) {
 						// last button: close app
 						deleteApplication(elem);
 						// need to quit the function and stop processing
 						return;
-					} else if (localX > (startButtons+buttonsPad+oneButton)) {
-						// middle button: maximize fullscreen
-						pointerFullZone(uniqueID, pointerX, pointerY);
 					} else if (localX > (startButtons+buttonsPad)) {
-						// first button: maximize
-						pointerDblClick(uniqueID, pointerX, pointerY);
+						if (elem.resizeMode !== undefined && elem.resizeMode === "free")
+							// full wall resize
+							pointerFullZone(uniqueID, pointerX, pointerY);
+						else
+							// proportional resize
+							pointerDblClick(uniqueID, pointerX, pointerY);
 					}
 				}
 

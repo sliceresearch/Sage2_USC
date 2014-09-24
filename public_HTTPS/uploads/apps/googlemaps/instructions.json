@@ -3,6 +3,7 @@
 	"icon": "googlemaps.webp",
 	"width": 1400,
 	"height": 400,
+	"resize": "free",
 	"dependencies": [
 	],
 	"title": "Google Maps",
