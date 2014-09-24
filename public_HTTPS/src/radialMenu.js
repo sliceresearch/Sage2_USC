@@ -35,10 +35,22 @@ function radialMenu(){
 	this.element    = null;
 	this.ctx        = null;
 	
-	this.init = function(id) {
+	this.thumbnailWindowElement = null;
+	this.thumbWindowctx = null;
+	
+	this.init = function(id, thumbElem) {
 		this.element = document.getElementById(id); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
 		
+		this.thumbnailWindowElement = thumbElem;
+
+		this.thumbnailWindowElement.width = thumbnailWindowSize.x;
+		this.thumbnailWindowElement.height = thumbnailWindowSize.y;
+		
+		this.thumbnailWindowElement.style.display = "block";
+		
+		this.thumbWindowctx = this.thumbnailWindowElement.getContext("2d");
+
 		this.resrcPath = "images/radialMenu/"
 		
 		this.menuID = id;
@@ -347,24 +359,28 @@ function radialMenu(){
 		
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
+		this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
 		
 		// TEMP: Just to clearly see context edge
 		if( this.windowInteractionMode === false )
 		{
 			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)"
+			this.thumbWindowctx.fillStyle = this.ctx.fillStyle
 		}
 		else if( this.dragThumbnailWindow === true )
 		{
 			this.ctx.fillStyle = "rgba(55, 55, 5, 0.5)"
+			this.thumbWindowctx.fillStyle = this.ctx.fillStyle
 		}
 		else
 		{
 			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
+			this.thumbWindowctx.fillStyle = this.ctx.fillStyle
 		}
-		
 		this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
-		
-		this.ctx.fillRect(radialMenuSize.x,0, thumbnailWindowSize.x, thumbnailWindowSize.y)
+		if( this.currentMenuState !== 'radialMenu' )
+			this.thumbWindowctx.fillRect(radialMenuSize.x,0, thumbnailWindowSize.x, thumbnailWindowSize.y)
+		// ------------------------------------------------------
 		
 		this.radialCloseButton.draw();
 		this.radialSettingsButton.draw();
@@ -402,9 +418,9 @@ function radialMenu(){
 			}
 			
 			// Filename text
-			this.ctx.font="24px sans-serif";
-			this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
-			this.ctx.fillText( this.hoverOverText, this.thumbnailWindowPos.x, 24);
+			this.thumbWindowctx.font="24px sans-serif";
+			this.thumbWindowctx.fillStyle = "rgba(250, 250, 250, 1.0)"
+			this.thumbWindowctx.fillText( this.hoverOverText, this.thumbnailWindowPos.x, 24);
 			
 			// Preview window
 			previewImageSize = this.element.width * previewWindowWidth;
@@ -412,7 +428,7 @@ function radialMenu(){
 			previewWindowY = 50;
 			
 			if( this.hoverOverThumbnail )
-				this.ctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
+				this.thumbWindowctx.drawImage( this.hoverOverThumbnail, previewWindowX, previewWindowY, previewImageSize, previewImageSize );
 				
 			// Metadata
 			metadataLine = 0;
@@ -420,149 +436,149 @@ function radialMenu(){
 			metadataWindowY = previewWindowY + previewImageSize + 20;
 			if( this.hoverOverMeta )
 			{
-				this.ctx.font="16px sans-serif";
+				this.thumbWindowctx.font="16px sans-serif";
 				metadata = this.hoverOverMeta;
 				//console.log( metadata);
 				
 				// Generic
 				if( metadata.FileName )
 				{
-					this.ctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "File Name: " + metadata.FileName, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.FileSize )
 				{
-					this.ctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "File Size: " + metadata.FileSize, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				
 				// Images
 				if( metadata.ImageSize )
 				{
-					this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Resolution: " + metadata.ImageSize, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.DateCreated )
 				{
-					this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Date Created: " + metadata.DateCreated, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.Copyright )
 				{
-					this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Copyright: " + metadata.Copyright, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				
 				// Photo
 				if( metadata.Artist )
 				{
-					this.ctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Artist: " + metadata.Artist, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.Aperture )
 				{
-					this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Aperture: " + metadata.Aperture, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.Exposure )
 				{
-					this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Exposure: " + metadata.Exposure, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.Flash )
 				{
-					this.ctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Flash: " + metadata.Flash, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.ExposureTime )
 				{
-					this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.FOV )
 				{
-					this.ctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "FOV: " + metadata.FOV, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.FocalLength )
 				{
-					this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Focal Length: " + metadata.FocalLength, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.Model )
 				{
-					this.ctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Model: " + metadata.Model, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.LensModel )
 				{
-					this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Lens Model: " + metadata.LensModel, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.ISO )
 				{
-					this.ctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "ISO: " + metadata.ISO, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.ShutterSpeed )
 				{
-					this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				
 				// GPS
 				if( metadata.GPSAltitude )
 				{
-					this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.GPSLatitude )
 				{
-					this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.GPSTimeStamp )
 				{
-					this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				
 				// Video
 				if( metadata.Duration )
 				{
-					this.ctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Duration: " + metadata.Duration, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.CompressorID )
 				{
-					this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Compressor: " + metadata.CompressorID, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.AvgBitrate )
 				{
-					this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.AudioFormat )
 				{
-					this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.AudioChannels )
 				{
-					this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				if( metadata.AudioSampleRate )
 				{
-					this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
+					this.thumbWindowctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataWindowX, metadataWindowY + metadataLine * 20);
 					metadataLine++;
 				}
 				
 				// Sessions
 				if( metadata.numapps )
 				{
-					this.ctx.fillText( "Applications: " + metadata.numapps);
+					this.thumbWindowctx.fillText( "Applications: " + metadata.numapps);
 					metadataLine++;
 				}
 			}
@@ -582,12 +598,14 @@ function radialMenu(){
 			this.currentMenuState = type;
 			this.element.width = thumbnailWindowSize.x;
 			this.element.height = thumbnailWindowSize.y;
+			this.thumbnailWindowElement.style.display = "block";
 		}
 		else
 		{
 			this.currentMenuState = 'radialMenu';
 			this.element.width = radialMenuSize.x;
 			this.element.height = radialMenuSize.y;
+			this.thumbnailWindowElement.style.display = "None";
 		}
 	};
 	
@@ -746,10 +764,11 @@ function radialMenu(){
 		}
 		
 		
-		if( this.ctx.redraw === true )
+		if( this.ctx.redraw === true || this.thumbWindowctx.redraw === true )
 		{
 			this.draw();
 			this.ctx.redraw = false;
+			this.thumbWindowctx.redraw = false;
 		}
 	};
 	
@@ -789,7 +808,7 @@ function radialMenu(){
 				if( imageList[i].filename.search("Thumbs.db") == -1 )
 				{
 					thumbnailButton = new buttonWidget();
-					thumbnailButton.init(0, this.ctx, null);
+					thumbnailButton.init(0, this.thumbWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					
 					// Thumbnail image
@@ -814,7 +833,7 @@ function radialMenu(){
 			for( i = 0; i < pdfList.length; i++ )
 			{
 				thumbnailButton = new buttonWidget();
-				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				
 				// Thumbnail image
@@ -838,7 +857,7 @@ function radialMenu(){
 			for( i = 0; i < videoList.length; i++ )
 			{
 				thumbnailButton = new buttonWidget();
-				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				
 				// Thumbnail image
@@ -861,7 +880,7 @@ function radialMenu(){
 			for( i = 0; i < appList.length; i++ )
 			{
 				thumbnailButton = new buttonWidget();
-				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
 
 				if ( appList[i].exif.SAGE2thumbnail != null )
@@ -882,7 +901,7 @@ function radialMenu(){
 			for( i = 0; i < sessionList.length; i++ )
 			{
 				thumbnailButton = new buttonWidget();
-				thumbnailButton.init(0, this.ctx, null);
+				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setIdleImage( this.idleSessionIcon );
 				
@@ -1182,35 +1201,13 @@ function buttonWidget() {
 		{
 			this.ctx.rotate( this.angle );
 			
-			if( this.state !== 0 )
-			{
-				// Tint the image (Part 1)
-				// create offscreen buffer, 
-				buffer = document.createElement('canvas');
-				buffer.width = this.width;
-				buffer.height = this.height;
-				bx = buffer.getContext('2d');
-
-				// fill offscreen buffer with the tint color
-				bx.fillStyle = this.ctx.fillStyle;
-				bx.fillRect(0,0,buffer.width,buffer.height);
-
-				// destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
-				bx.globalCompositeOperation = "destination-atop";
-				bx.drawImage(this.idleImage, 0, 0, this.width, this.height );
-			}
-			
 			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
 			
 			// Tint the image (Part 2)
 			if( this.state !== 0 )
 			{
-				//then set the global alpha to the amound that you want to tint it, and draw the buffer directly on top of it.
-				this.ctx.globalAlpha = 0.8;
-				
-				// draw the tinted overlay
-				this.ctx.drawImage( buffer, offset.x, offset.y, this.width, this.height );
+				this.drawTintImage( this.idleImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
 			}
 			
 		}
@@ -1223,6 +1220,30 @@ function buttonWidget() {
 			this.ctx.drawImage( this.overlayImage, -this.width* this.overlayScale/2, -this.height* this.overlayScale/2, this.width * this.overlayScale, this.height * this.overlayScale);
 			this.ctx.restore();
 		}
+	};
+	 
+	this.drawTintImage = function( image, offset, width, height, color, alpha )
+	{
+		// Tint the image (Part 1)
+		// create offscreen buffer, 
+		buffer = document.createElement('canvas');
+		buffer.width = width;
+		buffer.height = height;
+		bx = buffer.getContext('2d');
+
+		// fill offscreen buffer with the tint color
+		bx.fillStyle = color;
+		bx.fillRect(0,0,buffer.width,buffer.height);
+
+		// destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
+		bx.globalCompositeOperation = "destination-atop";
+		bx.drawImage(image, 0, 0, width, height );
+		
+		//then set the global alpha to the amound that you want to tint it, and draw the buffer directly on top of it.
+		this.ctx.globalAlpha = alpha;
+				
+		// draw the tinted overlay
+		this.ctx.drawImage( buffer, offset.x, offset.y, width, height );
 	};
 	
 	this.onEvent = function( type, user, position, data )

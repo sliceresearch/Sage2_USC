@@ -357,13 +357,22 @@ function uiBuilder(json_cfg, clientID) {
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
 								radialMenuSize.x, radialMenuSize.y, 9000);
+			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
+								data.x  - this.offsetX,
+								data.y - this.offsetY,
+								radialMenuSize.x, radialMenuSize.y, 9000);
 			this.main.appendChild(menuElem); 
+			this.main.appendChild(menuElem2); 
 			
-			var menu = new radialMenu(); 
-			menu.init(data.id+"_menu") ;
+			var menu = new radialMenu();
+			
+			menu.init(data.id+"_menu", menuElem2) ;
 			
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+			
+			menu.thumbnailWindowElement.style.left = menuElem.style.left;
+			menu.thumbnailWindowElement.style.top = menuElem.style.top;
 			
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
@@ -373,6 +382,9 @@ function uiBuilder(json_cfg, clientID) {
 		{
 			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+			
+			this.radialMenus[menuElem.id].thumbnailWindowElement.style.left = menuElem.style.left;
+			this.radialMenus[menuElem.id].thumbnailWindowElement.style.top = menuElem.style.top;
 			
 			this.radialMenus[menuElem.id].visible = true;
 			menuElem.style.display = "block";
@@ -395,17 +407,22 @@ function uiBuilder(json_cfg, clientID) {
 				this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 
 				menuElem.style.display = "block";
-
+				this.radialMenus[menuElem.id].thumbnailWindowElement.style.display = "block";
+				
 				if( this.radialMenus[menuElem.id].windowInteractionMode === false )
 				{
 					dragOffset = this.radialMenus[menuElem.id].dragPosition;
 					menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
 					menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
+					
+					this.radialMenus[menuElem.id].thumbnailWindowElement.style.left = menuElem.style.left;
+					this.radialMenus[menuElem.id].thumbnailWindowElement.style.top = menuElem.style.top;
 				}
 			}
 			else
 			{
 				menuElem.style.display = "none";
+				this.radialMenus[menuElem.id].thumbnailWindowElement.style.display = "none";
 			}
 		}
 	};
