@@ -52,7 +52,7 @@ registryManager.prototype.readRegistryFile = function() {
         for(var i=0; i<this.jsonFile.registry.length; i++) {
             var defApp =  this.jsonFile.registry[i];
             this.type2app[defApp.type] = defApp.default;
-            console.log("Registry> Registering: " + defApp.type + " with " + defApp.default);
+            console.log("Registry> In registry: " + defApp.type + " with " + defApp.default);
         }
     }
 
@@ -75,37 +75,36 @@ registryManager.prototype.syncNativeApps = function() {
             if (app.name !== undefined && app.name !== null && app.name !== "" &&
                 app.types !== undefined && app.types !== null && Array.isArray(app.types) ) {
 
-                console.log("Registry> Found app: " + app.name);
-                console.log("Registry> [" + app.name + "] Supported FileTypes: " + app.types);
+                console.log("Registry> Syncing: [" + app.name + "] Supported FileTypes: " + app.types);
 
-                for(var j=0; j<app.types.length; j++) {
-                    this.registerApp(app.name, app.types[j]);
-                }
+                this.register(app.name, app.types);
             }
         }
     }
 }
 
-registryManager.prototype.registerApp = function(name, type) {
-    var found = false;
-    for(var i=0; i<this.jsonFile.registry.length; i++) {
-        var regEntry = this.jsonFile.registry[i];
-        if (regEntry.type === type) {
-            regEntry.applications.push(name);
-            var found = true;
+registryManager.prototype.register = function(name, types) {
+    for(var i=0; i<types.length; i++) {
+        var found = false;
+        for(var j=0; j<this.jsonFile.registry.length; j++) {
+            var regEntry = this.jsonFile.registry[j];
+            if (regEntry.type === types[i]) {
+                regEntry.applications.push(name);
+                var found = true;
+            }
         }
-    }
 
-    // This type is not in the registry, add a new app
-    // and set as default
-    if (!found) {
-        console.log("Registry> Type " + type + " not in registry. Adding for app " + name);
-        var newApp = {};
-        newApp.type = type;
-        newApp.applications = [ name ];
-        newApp.default = name;
-        this.setDefaultApplication(name, type);
-        this.jsonFile.registry.push(newApp);
+        // This type is not in the registry, add a new app
+        // and set as default
+        if (!found) {
+            console.log("Registry> Type " + types[i] + " not in registry. Adding for app " + name);
+            var newApp = {};
+            newApp.type = types[i];
+            newApp.applications = [ name ];
+            newApp.default = name;
+            this.setDefaultApplication(name, types[i]);
+            this.jsonFile.registry.push(newApp);
+        }
     }
 }
 

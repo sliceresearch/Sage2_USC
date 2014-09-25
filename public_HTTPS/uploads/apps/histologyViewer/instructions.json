@@ -10,5 +10,6 @@
 	"description": "Histology Viewer for Pathology",
 	"keywords": [ "openseadragon", "image", "viewer", "histology" ],
 	"author": "Victor Mateevitsi <mvictoras@gmail.com>",
-	"license": "SAGE2-Software-License"
+	"license": "SAGE2-Software-License",
+    "fileTypes": [ "pathology/ndpi" ]
 }

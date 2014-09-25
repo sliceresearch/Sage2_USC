@@ -30,8 +30,6 @@ var registry  = require('../src/node-registry');  // Registry Manager
 var imageMagick;
 mime.default_type = "application/custom";
 
-// XXX
-var registryManager= new registry();
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -46,6 +44,7 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.displayWidth = displayWidth;
 	this.displayHeight = displayHeight;
 	this.titleBarHeight = titleBarHeight;
+    this.registryManager= new registry();
 	console.log("Loader: ", this.titleBarHeight);
 
     this.app2dir = {
@@ -634,7 +633,7 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 
 appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var mime_type = file.type;
-	var app = registryManager.type2app[mime_type];;
+	var app = this.registryManager.type2app[mime_type];;
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
 
@@ -646,7 +645,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 
-		var	app = registryManager.type2app[mime_type];;
+		var	app = this.registryManager.type2app[mime_type];;
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
 			exiftool.file(localPath, function(err,data) {
 				if (err) {
@@ -672,7 +671,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
 	if(appData.location === "file") {
-		app = registryManager.type2app[appData.type];
+		app = this.registryManager.type2app[appData.type];
 
 		var dir = this.app2dir[app];
 
@@ -710,7 +709,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
-		adefaultpp = registryManager.type2app[appData.type];
+		adefaultpp = this.registryManager.type2app[appData.type];
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
