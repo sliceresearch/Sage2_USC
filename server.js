@@ -1440,10 +1440,7 @@ function loadConfiguration() {
 	else userConfig.ui.titleTextSize  = Math.round(0.015 * minDim);
 	
 	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
-	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
-
-	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
-	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
+	else userConfig.ui.pointerSize = Math.round(0.072 * minDim);
 
 	if (userConfig.ui.minWindowWidth) userConfig.ui.minWindowWidth = parseInt(userConfig.ui.minWindowWidth, 10);
 	else userConfig.ui.minWindowWidth  = Math.round(0.08 * userConfig.totalWidth);  // 8%

@@ -402,8 +402,8 @@ function uiBuilder(json_cfg, clientID) {
 		var ptr = new pointer(); 
 		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
 
-		//if (pointer_data.visible) pointerElem.style.display = "block";
-		//else pointerElem.style.display = "none";
+		if (pointer_data.visible) pointerElem.style.display = "block";
+		else pointerElem.style.display = "none";
 
 		// keep track of the pointers
         this.pointerItems[pointerElem.id] = ptr;
