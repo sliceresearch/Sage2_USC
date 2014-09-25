@@ -145,6 +145,7 @@ httpServerIndex.httpGET('/config', sendConfig); // send config object to client 
 
 // create HTTPS server for all SAGE content
 var httpsServerApp = new httpserver("public_HTTPS");
+httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
 
 
