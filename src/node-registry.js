@@ -16,59 +16,118 @@ var fs          = require('fs');
 var json5       = require('json5');
 var path        = require('path');
 
-function registryManager(registryFile) {
-    this.defaultApp = {};
-    this.fileTypeToApp = {};
+function registryManager() {
+    this.type2app = {};
+    this.app2type = {};
+    this.registryFile = "fileRegistry.json";
+    this.nativeAppsFile = "nativeApps.json";
+    this.jsonFile = {}
 
-    console.log("Registry> Building registry!");
 
-    this.readDefaultAppFile();
+    console.log("Registry> Initializing registry!");
 
-    var jsonString = fs.readFileSync(registryFile, 'utf8');
-    var jsonRegistry = json5.parse(jsonString);
+    if (fs.existsSync(this.registryFile)) {
+        console.log("Registry> Registry file found. Reading file...");
+        this.readRegistryFile();
+    } else {
+        console.log("Registry> Registry file " + this.registryFile + " not found. Building registry...");
+        this.jsonFile.registry = [];
+    }
+    this.syncRegistry();
+    if (!fs.existsSync(this.registryFile)) {
+        console.log("Registry> Registry synced, writing file.");
+        this.writeRegistry();
+    }
 
-    if (jsonRegistry.apps !== undefined && jsonRegistry.apps !== null && Array.isArray(jsonRegistry.apps) ) {
-        for(var i=0; i<jsonRegistry.apps.length; i++) {
-            var app = jsonRegistry.apps[i];
+}
+
+registryManager.prototype.readRegistryFile = function() {
+    var jsonString = fs.readFileSync(this.registryFile, 'utf8');
+    this.jsonFile = json5.parse(jsonString);
+
+    if (this.jsonFile.registry !== undefined &&
+        this.jsonFile.registry !== null &&
+        Array.isArray(this.jsonFile.registry) ) {
+
+        for(var i=0; i<this.jsonFile.registry.length; i++) {
+            var defApp =  this.jsonFile.registry[i];
+            this.type2app[defApp.type] = defApp.default;
+            console.log("Registry> Registering: " + defApp.type + " with " + defApp.default);
+        }
+    }
+
+}
+
+registryManager.prototype.syncRegistry = function() {
+    this.syncNativeApps();
+}
+
+registryManager.prototype.syncNativeApps = function() {
+    var jsonString = fs.readFileSync(this.nativeAppsFile, 'utf8');
+    var nativeApps = json5.parse(jsonString);
+
+    if (nativeApps.applications !== undefined &&
+        nativeApps.applications !== null &&
+        Array.isArray(nativeApps.applications) ) {
+
+        for(var i=0; i<nativeApps.applications.length; i++) {
+            var app = nativeApps.applications[i];
             if (app.name !== undefined && app.name !== null && app.name !== "" &&
-                app.mimeTypes !== undefined && app.mimeTypes !== null && Array.isArray(app.mimeTypes) ) {
+                app.types !== undefined && app.types !== null && Array.isArray(app.types) ) {
 
                 console.log("Registry> Found app: " + app.name);
-                console.log("Registry> [" + app.name + "] Supported FileTypes: " + app.mimeTypes);
+                console.log("Registry> [" + app.name + "] Supported FileTypes: " + app.types);
 
-                for(var j=0; j<app.mimeTypes.length; j++) {
-                    this.fileTypeToApp[app.mimeTypes] = app.name;
+                for(var j=0; j<app.types.length; j++) {
+                    this.registerApp(app.name, app.types[j]);
                 }
             }
         }
     }
 }
 
-registryManager.prototype.readDefaultAppFile = function() {
-    console.log("Registry> Reading default app file...");
-    var jsonString = fs.readFileSync("defaultApps.json", 'utf8');
-    var jsonDefApps = json5.parse(jsonString);
-
-    if (jsonDefApps.defaultApplications !== undefined &&
-        jsonDefApps.defaultApplications !== null &&
-        Array.isArray(jsonDefApps.defaultApplications) ) {
-        for(var i=0; i<jsonDefApps.defaultApplications.length; i++) {
-            var defApp =  jsonDefApps.defaultApplications[i];
-            this.defaultApp[defApp.type] = defApp.application;
-            console.log("Registry> Registering: " + defApp.type + " with " + defApp.application);
+registryManager.prototype.registerApp = function(name, type) {
+    var found = false;
+    for(var i=0; i<this.jsonFile.registry.length; i++) {
+        var regEntry = this.jsonFile.registry[i];
+        if (regEntry.type === type) {
+            regEntry.applications.push(name);
+            var found = true;
         }
+    }
+
+    // This type is not in the registry, add a new app
+    // and set as default
+    if (!found) {
+        console.log("Registry> Type " + type + " not in registry. Adding for app " + name);
+        var newApp = {};
+        newApp.type = type;
+        newApp.applications = [ name ];
+        newApp.default = name;
+        this.setDefaultApplication(name, type);
+        this.jsonFile.registry.push(newApp);
     }
 }
 
-registryManager.prototype.registerFileType = function() {
+registryManager.prototype.writeRegistry = function() {
+    try {
+        fs.writeFileSync(this.registryFile, JSON.stringify(this.jsonFile, null));
+    }
+    catch (err) {
+        console.log("Registry> Unable to write registry file", err);
+    }
+}
+
+registryManager.prototype.getApp = function(type) {
+    return this.type2app[type];
+}
+
+registryManager.prototype.setApp = function(type) {
 
 }
 
-registryManager.prototype.removeFileType = function() {
-
-}
-
-registryManager.prototype.makeDefault = function() {
+registryManager.prototype.setDefaultApplication = function(app, type) {
+    this.type2app[type] = app;
 
 }
 

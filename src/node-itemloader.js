@@ -31,7 +31,7 @@ var imageMagick;
 mime.default_type = "application/custom";
 
 // XXX
-var registryManager= new registry("applicationRegistry.json");
+var registryManager= new registry();
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -634,7 +634,7 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 
 appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var mime_type = file.type;
-	var app = registryManager.defaultApp[mime_type];;
+	var app = registryManager.type2app[mime_type];;
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
 
@@ -646,7 +646,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 
-		var	app = registryManager.defaultApp[mime_type];;
+		var	app = registryManager.type2app[mime_type];;
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
 			exiftool.file(localPath, function(err,data) {
 				if (err) {
@@ -672,7 +672,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
 	if(appData.location === "file") {
-		app = registryManager.defaultApp[appData.type];
+		app = registryManager.type2app[appData.type];
 
 		var dir = this.app2dir[app];
 
@@ -710,7 +710,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
-		app = registryManager.defaultApp[appData.type];
+		adefaultpp = registryManager.type2app[appData.type];
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
