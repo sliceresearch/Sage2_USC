@@ -249,6 +249,7 @@ function readFile(filename, callback, type) {
 				if     (dataType === "TEXT") callback(null, xhr.responseText);
 				else if(dataType === "JSON") callback(null, JSON.parse(xhr.responseText));
 				else if(dataType === "CSV")  callback(null, CSVToArray(xhr.responseText));
+				else if(dataType === "SVG")  callback(null, xhr.responseXML.getElementsByTagName('svg')[0]);
 				else                         callback(null, xhr.responseText);
 			}
 			else{

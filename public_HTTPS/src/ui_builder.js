@@ -392,7 +392,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.createSagePointer = function(pointer_data) {
-		var pointerElem = createDrawingElement(pointer_data.id, "pointerItem",
+		/*var pointerElem = createDrawingElement(pointer_data.id, "pointerItem",
 							pointer_data.left - this.pointerOffsetX - this.offsetX,
 							pointer_data.top  - this.pointerOffsetY - this.offsetY,
 							this.pointerWidth, this.pointerHeight, 10000);
@@ -407,6 +407,57 @@ function uiBuilder(json_cfg, clientID) {
 
 		// keep track of the pointers
         this.pointerItems[pointerElem.id] = ptr;
+		*/
+		var pointerElem = document.createElement('div');
+		pointerElem.id = pointer_data.id;
+		pointerElem.className = "pointerItem";
+		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
+		pointerElem.style.top = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		//pointerElem.style.width = this.pointerWidth + "px";
+		//pointerElem.style.height = this.pointerHeight + "px";
+		this.main.appendChild(pointerElem); 
+		
+		var ptr = new pointer(); 
+		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
+		//ptr.draw();
+
+		//if (pointer_data.visible) pointerElem.style.display = "block";
+		//else pointerElem.style.display = "none";
+
+		// keep track of the pointers
+        this.pointerItems[pointerElem.id] = ptr;
+		
+		/*
+		var _this = this;
+		readFile("images/SAGE2 Pointer.svg", function(err, svg) {
+			var pointerElem = document.createElement('div');
+			pointerElem.id = pointer_data.id;
+			pointerElem.className = "pointerItem";
+			pointerElem.style.left = pointer_data.left - _this.pointerOffsetX - _this.offsetX;
+			pointerElem.style.top = pointer_data.top  - _this.pointerOffsetY - _this.offsetY;
+			pointerElem.style.width = _this.pointerWidth + "px";
+			pointerElem.style.height = _this.pointerHeight + "px";
+			
+			var pointerIcon = document.createElement('div');
+			pointerIcon.style.marginLeft = "10px";
+			pointerIcon.style.marginTop = "10px";
+			svg.setAttribute("preserveAspectRatio", "xMinYMin meet");
+			svg.setAttribute("height", _this.pointerHeight + "px");
+			svg.setAttribute("width", _this.pointerWidth + "px");
+			pointerIcon.appendChild(svg);
+			pointerElem.appendChild(pointerIcon);
+			this.main.appendChild(pointerElem);
+			
+			var ptr = new pointer(); 
+			ptr.init(svg.id, pointer_data.label, pointer_data.color);
+			
+			//if (pointer_data.visible) pointerElem.style.display = "block";
+			//else pointerElem.style.display = "none";
+			
+			// keep track of the pointers
+			_this.pointerItems[pointerElem.id] = ptr;
+		}, "SVG");
+		*/
 	};
 
 	this.showSagePointer = function(pointer_data) {
@@ -418,7 +469,7 @@ function uiBuilder(json_cfg, clientID) {
 
 	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
-	    this.pointerItems[pointerElem.id].draw();
+	    //this.pointerItems[pointerElem.id].draw();
 	};
 
 	this.hideSagePointer = function(pointer_data) {
@@ -433,7 +484,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 	this.changeSagePointerMode = function(pointer_data) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
-		this.pointerItems[pointer_data.id].draw();
+		//this.pointerItems[pointer_data.id].draw();
 	};
 
 	this.addRemoteSite = function(data) {

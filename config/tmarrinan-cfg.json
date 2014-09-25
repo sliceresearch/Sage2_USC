@@ -21,7 +21,8 @@
 			"textColor": "rgba(235, 230, 175, 1.0)",
 			"remoteConnectedColor": "rgba(96, 171, 224, 1.0)",
 			"remoteDisconnectedColor": "rgba(100, 100, 100, 1.0)"
-		}
+		},
+		"pointerSize": 80
 	},
 	"resolution": {
 		"width": 700,
