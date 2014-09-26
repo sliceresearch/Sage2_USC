@@ -123,7 +123,7 @@ addFile = function(filename,exif) {
 		// Process first page: [0]
 		imageMagick(filename+"[0]").size(function(err, value){
 			if(err) throw err;
-	
+			
 			imageMagick(value.width, value.height, "#ffffff").append(filename+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
 				if(err) throw err;
 	
