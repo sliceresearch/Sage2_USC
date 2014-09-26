@@ -228,8 +228,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
-			this.pointerOffsetX = Math.round(0.233333*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.254167*this.pointerHeight);
+			this.pointerOffsetX = Math.round(0.17917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.19614*this.pointerHeight);
 		}
 		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
 		else this.noDropShadow = false;
@@ -397,6 +397,7 @@ function uiBuilder(json_cfg, clientID) {
 		pointerElem.className = "pointerItem";
 		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
 		pointerElem.style.top = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem); 
 		
 		var ptr = new pointer(); 

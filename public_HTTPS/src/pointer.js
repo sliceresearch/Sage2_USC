@@ -30,28 +30,28 @@ function pointer() {
 		this.color = color;
 		this.mode = 0;
 		
-		var pointerIconSize = height * 0.7;
-		var pointerIconX = height * 0.2;
-		var pointerIconY  = height * 0.2;
+		var pointerIconSize = height * 0.6;
+		var pointerIconX = height * 0.15;
+		var pointerIconY  = height * 0.15;
 		this.pointerIconLoaded = false;
 		
-		var winModeIconSize = height * 0.275;
-		var winModeIconX = height * 0.375;
-		var winModeIconY = height * 0.72;
+		var winModeIconSize = height * 0.375;
+		var winModeIconX = height * 0.25;
+		var winModeIconY = height * 0.60;
 		this.winModeIconLoaded = false;
 		
-		var appModeIconSize = height * 0.275;
-		var appModeIconX = height * 0.085;
-		var appModeIconY = height * 0.085;
+		var appModeIconSize = height * 0.330;
+		var appModeIconX = height * 0.008333;
+		var appModeIconY = height * 0.029167;   
 		this.appModeIconLoaded = false;
 		
-		var labelBGX = height * 0.675;
-		var labelBGY = height * 0.73;
-		var labelBGWidth  = height * 1.00;
-		var labelBGHeight = height * 0.25;
-		var labelTextX = height * 0.80;
-		var labelTextY = height * 0.90;
-		var labelTextSize = Math.round(0.155*height);
+		var labelBGX = height * 0.6500;
+		var labelBGY = height * 0.6275;
+		var labelBGWidth  = height * 1.000;
+		var labelBGHeight = height * 0.325;
+		var labelTextX = height * 0.81275;
+		var labelTextY = height * 0.85000;
+		var labelTextSize = Math.round(0.186*height);
 		
 		var _this = this;
 		Snap.load("images/SAGE2 Pointer.svg", function(f) {
@@ -127,7 +127,7 @@ function pointer() {
 	};
 	
 	this.setLabel = function(label) {
-		var labelBGHeight = this.snap.node.clientHeight * 0.25;
+		var labelBGHeight = this.snap.node.clientHeight * 0.325;
 	    this.labelText.attr({text: label});
 	    this.labelBG.attr({width: this.labelText.node.clientWidth + labelBGHeight});
 	};
