@@ -424,7 +424,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		var instructions = JSON.parse(json_str);
 		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 		var aspectRatio = instructions.width / instructions.height;
-		// if icon provided, build the url to it
+		// if icon provided, build the url to it ... move to 1496 in server (getSavedFilesList)
 		var icon = null;
 		if(instructions.icon){
 			var iconPath = path.join(zipFolder, instructions.icon);
@@ -432,10 +432,10 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			imageMagick(iconPath).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", function(err, buffer) {
 				if(err) throw err;
 				
-				var dominantColor = buffer.toString();
-				var rgbaStart = dominantColor.indexOf("(");
-				var rgbaEnd   = dominantColor.indexOf(")");
-				var rgba = dominantColor.substring(rgbaStart+1, rgbaEnd).split(",");
+				var avgColor = buffer.toString();
+				var rgbaStart = avgColor.indexOf("(");
+				var rgbaEnd   = avgColor.indexOf(")");
+				var rgba = avgColor.substring(rgbaStart+1, rgbaEnd).split(",");
 				var red   = 0;
 				var green = 0;
 				var blue  = 0;
@@ -446,7 +446,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 				if(rgba[2][rgba[2].length-1] === "%") blue  = Math.round(255 * parseFloat(rgba[2])/100);
 				else blue  = parseInt(rgba[2], 10);
 				
-				// use tinted dominant color as background
+				// use tinted average color as background
 				var bgRed   = Math.round(255 - ((255 - red)   * 0.5));
 				var bgGreen = Math.round(255 - ((255 - green) * 0.5));
 				var bgBlue  = Math.round(255 - ((255 - blue)  * 0.5));

@@ -1474,7 +1474,8 @@ function getSavedFilesList() {
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
+	var uploadedApps   = assets.listApps();
+	//var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
 	
 	var i;
@@ -1483,14 +1484,16 @@ function getSavedFilesList() {
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
+	uploadedApps.sort(   sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
-	uploadedApps.sort(   sageutils.compareString   );
 
 	for (i=0; i<uploadedImages.length; i++)  list.image.push(uploadedImages[i]);
 	for (i=0; i<uploadedVideos.length; i++)  list.video.push(uploadedVideos[i]);
 	for (i=0; i<uploadedPdfs.length;   i++)  list.pdf.push(uploadedPdfs[i]);
+	for (i=0; i<uploadedApps.length;   i++)  list.app.push(uploadedApps[i]);
 	for (i=0; i<savedSessions.length;   i++) list.session.push(savedSessions[i]);
 
+	/*
 	// From the list of apps in the upload folder, build a list of objects
 	//   containing the name of the app and the icon (mimicing an exif structure)
 	for (i=0; i<uploadedApps.length; i++) {
@@ -1526,6 +1529,7 @@ function getSavedFilesList() {
 			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath }, metadata: metadata } );
 		}
 	}
+	*/
 
 	return list;
 }

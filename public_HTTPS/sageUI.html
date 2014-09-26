@@ -503,12 +503,9 @@
 		} else if (app === 'custom_app') {
 			for (i=0;i<fileList.app.length;i++) {
 				if (fileList.app[i].exif.FileName === fileName) {
-					exifdata = fileList.app[i].exif.SAGE2thumbnail;
-					if (exifdata)
-						thumbnail.src = exifdata;
-					else
-						thumbnail.src = "images/blank.png";
-					metadata_text.innerHTML = fileList.app[i].metadata.title + "<br>v" + fileList.app[i].metadata.version;
+					exifdata = fileList.app[i].exif;
+					thumbnail.src = exifdata.SAGE2thumbnail;
+					metadata_text.innerHTML = exifdata.metadata.title + "<br>v" + exifdata.metadata.version;
 				}
 			}
 			// Enable/disable delete button
