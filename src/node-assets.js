@@ -119,35 +119,23 @@ addFile = function(filename,exif) {
 			}
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
-		
-		/*
-		imageMagick(filename).thumb(250, 250, thumb, 50, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
-		});
-		*/
 	} else if (exif.MIMEType === 'application/pdf') {
 		// Process first page: [0]
-		imageMagick(filename+"[0]").command("convert").in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
+		imageMagick(filename+"[0]").size(function(err, value){
+			if(err) throw err;
+	
+			imageMagick(value.width, value.height, "#ffffff").append(filename+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
+				if(err) throw err;
+	
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function (err) {
+					if (err) {
+						console.log("Assets> cannot generate thumbnail for:", filename);
+						return;
+					}
+					anAsset.exif.SAGE2thumbnail = rthumb;
+				});
+			});
 		});
-		
-		/*
-		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
-		});
-		*/
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		// try first frame: [0]
 		imageMagick(filename+"[0]").command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
@@ -157,16 +145,6 @@ addFile = function(filename,exif) {
 			}
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
-		
-		/*
-		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
-		});
-		*/
 	}
 };
 
