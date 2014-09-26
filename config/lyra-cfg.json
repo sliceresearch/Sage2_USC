@@ -239,6 +239,11 @@
 			"port": 443
 		},
 		{
+			"name": "CAVE2 Column",
+			"host": "preeka.evl.uic.edu",
+			"port": 443
+		},
+		{
 			"name": "IceWall",
 			"host": "thor.evl.uic.edu",
 			"port": 443
