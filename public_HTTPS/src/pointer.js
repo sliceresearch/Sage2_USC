@@ -9,18 +9,20 @@
 // Copyright (c) 2014
 
 function pointer() {
-	this.div               = null;
-	this.snap              = null;
-	this.pointerIcon       = null;
-	this.pointerIconLoaded = null;
-	this.appModeIcon       = null;
-	this.appModeIconLoaded = null;
-	this.winModeIcon       = null;
-	this.winModeIconLoaded = null;
-	this.labelBG           = null;
-	this.labelText         = null;
-	this.color             = null;
-	this.mode              = null;
+	this.div                = null;
+	this.snap               = null;
+	this.pointerIcon1       = null;
+	this.pointerIcon1Loaded = null;
+	this.pointerIcon2       = null;
+	this.pointerIcon2Loaded = null;
+	this.appModeIcon        = null;
+	this.appModeIconLoaded  = null;
+	this.winModeIcon        = null;
+	this.winModeIconLoaded  = null;
+	this.labelBG            = null;
+	this.labelText          = null;
+	this.color              = null;
+	this.mode               = null;
 	
 	this.init = function(id, label, color, width, height) {
 		this.div = document.getElementById(id);
@@ -30,7 +32,7 @@ function pointer() {
 		this.color = color;
 		this.mode = 0;
 		
-		var pointerIconSize = height * 0.6;
+		var pointerIconSize = height * 0.65;
 		var pointerIconX = height * 0.15;
 		var pointerIconY  = height * 0.15;
 		this.pointerIconLoaded = false;
@@ -41,23 +43,23 @@ function pointer() {
 		this.winModeIconLoaded = false;
 		
 		var appModeIconSize = height * 0.330;
-		var appModeIconX = height * 0.008333;
+		var appModeIconX = height * 0.0125;
 		var appModeIconY = height * 0.029167;   
 		this.appModeIconLoaded = false;
 		
-		var labelBGX = height * 0.6500;
-		var labelBGY = height * 0.6275;
-		var labelBGWidth  = height * 1.000;
-		var labelBGHeight = height * 0.325;
-		var labelTextX = height * 0.81275;
-		var labelTextY = height * 0.85000;
-		var labelTextSize = Math.round(0.186*height);
+		var labelBGX = height * 0.65;
+		var labelBGY = height * 0.65;//0.6275;
+		var labelBGWidth  = height * 1.00;
+		var labelBGHeight = height * 0.275;
+		var labelTextX = height * 0.7925;
+		var labelTextY = height * 0.8475;
+		var labelTextSize = Math.round(0.17*height);
 		
 		var _this = this;
-		Snap.load("images/SAGE2 Pointer.svg", function(f) {
-			_this.pointerIcon = f.select("svg");
-			_this.pointerIcon.attr({
-				id: "pointerIcon",
+		Snap.load("images/SAGE2 Pointer 1.svg", function(f) {
+			_this.pointerIcon1 = f.select("svg");
+			_this.pointerIcon1.attr({
+				id: "pointerIcon1",
 				x: pointerIconX,
 				y: pointerIconY,
 				width: pointerIconSize,
@@ -65,10 +67,28 @@ function pointer() {
 				preserveAspectRatio: "xMinYMin meet"
 			});
 			
-			_this.snap.append(_this.pointerIcon);
+			_this.snap.append(_this.pointerIcon1);
     		
-    		_this.pointerIconLoaded = true;
-			if(_this.winModeIconLoaded === true && _this.appModeIconLoaded)
+    		_this.pointerIcon1Loaded = true;
+			if(_this.pointerIcon2Loaded === true && _this.winModeIconLoaded === true && _this.appModeIconLoaded)
+				_this.updateIconColors();
+		});
+		
+		Snap.load("images/SAGE2 Pointer 2.svg", function(f) {
+			_this.pointerIcon2 = f.select("svg");
+			_this.pointerIcon2.attr({
+				id: "pointerIcon2",
+				x: pointerIconX,
+				y: pointerIconY,
+				width: pointerIconSize,
+				height: pointerIconSize,
+				preserveAspectRatio: "xMinYMin meet"
+			});
+			
+			_this.snap.append(_this.pointerIcon2);
+    		
+    		_this.pointerIcon2Loaded = true;
+			if(_this.pointerIcon1Loaded === true && _this.winModeIconLoaded === true && _this.appModeIconLoaded)
 				_this.updateIconColors();
 		});
 		
@@ -86,7 +106,7 @@ function pointer() {
 			_this.snap.append(_this.winModeIcon);
 			
 			_this.winModeIconLoaded = true;
-			if(_this.pointerIconLoaded === true && _this.appModeIconLoaded === true)
+			if(_this.pointerIcon1Loaded === true && _this.pointerIcon2Loaded === true && _this.appModeIconLoaded === true)
 				_this.updateIconColors();
 		});
 		
@@ -104,7 +124,7 @@ function pointer() {
 			_this.snap.prepend(_this.appModeIcon);
 			
 			_this.appModeIconLoaded = true;
-			if(_this.pointerIconLoaded === true && _this.winModeIconLoaded === true)
+			if(_this.pointerIcon1Loaded === true && _this.pointerIcon2Loaded === true && _this.winModeIconLoaded === true)
 				_this.updateIconColors();
 		});
 		
@@ -127,7 +147,7 @@ function pointer() {
 	};
 	
 	this.setLabel = function(label) {
-		var labelBGHeight = this.snap.node.clientHeight * 0.325;
+		var labelBGHeight = this.snap.node.clientHeight * 0.275;
 	    this.labelText.attr({text: label});
 	    this.labelBG.attr({width: this.labelText.node.clientWidth + labelBGHeight});
 	};
@@ -138,21 +158,22 @@ function pointer() {
 	};
 	
 	this.updateIconColors = function() {
-		 // window manipulation
-	    if(this.mode === 0) {
-	    	this.colorSVG(this.pointerIcon, "#000000", this.color);
-	    	this.colorSVG(this.winModeIcon, "#000000", this.color);
-	    	this.colorSVG(this.appModeIcon, "#000000", this.color);
+		this.colorSVG(this.pointerIcon1, "#000000", this.color);
+		this.colorSVG(this.pointerIcon2, "#000000", this.color);
+		this.colorSVG(this.winModeIcon,  "#000000", this.color);
+		this.colorSVG(this.appModeIcon,  "#000000", this.color);
 	    	
+		// window manipulation
+	    if(this.mode === 0) {
+	    	this.pointerIcon1.attr({display: "none"});
+	    	this.pointerIcon2.attr({display: ""});
 	    	this.winModeIcon.attr({display: ""});
 	    	this.appModeIcon.attr({display: "none"});
 	    }
 	    // application interaction
 	    else if(this.mode === 1) {
-	    	this.colorSVG(this.pointerIcon, this.color, "#000000");
-	    	this.colorSVG(this.winModeIcon, this.color, "#000000");
-	    	this.colorSVG(this.appModeIcon, this.color, "#000000");
-	    	
+	    	this.pointerIcon1.attr({display: ""});
+	    	this.pointerIcon2.attr({display: "none"});
 	    	this.winModeIcon.attr({display: "none"});
 	    	this.appModeIcon.attr({display: ""});
 	    }
