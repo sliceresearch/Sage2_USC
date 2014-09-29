@@ -273,6 +273,8 @@
 			var appListContainer = document.getElementById('appListContainer');
 			var size = parseInt(appListContainer.style.width, 10) / 4;
 			
+			console.log(data);
+			
 			removeAllChildren(appList);
 			
 			var i = 0;
@@ -281,16 +283,22 @@
 				var appsPerRow = Math.min(data.length - i, 4);
 				for(var j=0; j<appsPerRow; j++){
 					var col = document.createElement('td');
+					col.id = "app_row_" + data[i+j].exif.FileName;
+					col.setAttribute("application", data[i+j].exif.FileName);
 					col.style.verticalAlign = "top";
 					col.style.textAlign = "center";
 					col.style.width = size + "px";
 					col.style.paddingTop = "12px";
 					col.style.paddingBottom = "12px";
 					var appIcon = document.createElement('img');
+					appIcon.id = "app_icon_" + data[i+j].exif.FileName;
+					appIcon.setAttribute("application", data[i+j].exif.FileName);
 					appIcon.src = data[i+j].exif.SAGE2thumbnail;
 					appIcon.width = parseInt(size * 0.8, 10);
 					appIcon.height = parseInt(size * 0.8, 10);
 					var appName = document.createElement('p');
+					appName.id = "app_name_" + data[i+j].exif.FileName;
+					appName.setAttribute("application", data[i+j].exif.FileName);
 					appName.textContent = data[i+j].exif.metadata.title;
 					col.appendChild(appIcon);
 					col.appendChild(appName);
@@ -446,6 +454,18 @@
 		// Settings Dialog
 		else if (element.id === "settingsCloseBtn") {
 			hideDialog('settingsDialog');
+		}
+		
+		
+		// Application Selected
+		else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
+			var application = element.getAttribute("application");
+			console.log(application);
+		}
+		
+		// Other
+		else {
+			console.log("clicked on: ", element);
 		}
 	}
 	
