@@ -288,6 +288,7 @@ function initializeWSClient(wsio) {
 		wsio.on('appResize', wsAppResize);
 	}
 	if(wsio.messages.requestsServerFiles){
+		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
 		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
@@ -1137,6 +1138,11 @@ function wsTileApplications(wsio, data) {
 
 // **************  Server File Functions *****************
 
+function wsRequestAvailableApplications(wsio, data) {
+	var applications = getApplications();
+	wsio.emit('availableApplications', applications);
+}
+
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
@@ -1464,6 +1470,13 @@ function getUniqueAppId() {
 	itemCount++;
 	
 	return id;	
+}
+
+function getApplications() {
+	var uploadedApps = assets.listApps();
+	uploadedApps.sort(sageutils.compareFilename);
+	
+	return uploadedApps;
 }
 
 function getSavedFilesList() {

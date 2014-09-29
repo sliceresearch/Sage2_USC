@@ -125,6 +125,19 @@ p {
 	height: 50%;
 }
 
+#appListContainer {
+	position: absolute;
+	left: 12px;
+	top: 12px;
+	margin: 0px;
+	overflow: scroll;
+}
+
+#appList {
+	width: 100%;
+	background-color: #D9D9D9;
+}
+
 #appOKBtn {
 	position: absolute;
 	left: 10px;

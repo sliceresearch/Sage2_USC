@@ -268,6 +268,41 @@
 			interactor.setPointerSensitivity(sage2Min/screenMin);
 		});
 		
+		wsio.on('availableApplications', function(data) {
+			var appList = document.getElementById('appList');
+			var appListContainer = document.getElementById('appListContainer');
+			var size = parseInt(appListContainer.style.width, 10) / 4;
+			
+			removeAllChildren(appList);
+			
+			var i = 0;
+			while(i < data.length){
+				var row = document.createElement('tr');
+				var appsPerRow = Math.min(data.length - i, 4);
+				for(var j=0; j<appsPerRow; j++){
+					var col = document.createElement('td');
+					col.style.verticalAlign = "top";
+					col.style.textAlign = "center";
+					col.style.width = size + "px";
+					col.style.paddingTop = "12px";
+					col.style.paddingBottom = "12px";
+					var appIcon = document.createElement('img');
+					appIcon.src = data[i+j].exif.SAGE2thumbnail;
+					appIcon.width = parseInt(size * 0.8, 10);
+					appIcon.height = parseInt(size * 0.8, 10);
+					var appName = document.createElement('p');
+					appName.textContent = data[i+j].exif.metadata.title;
+					col.appendChild(appIcon);
+					col.appendChild(appName);
+					row.appendChild(col);
+				}
+				appList.appendChild(row);
+				i += appsPerRow;
+			}
+			
+			showDialog('appLauncherDialog');
+		});
+		
 		var sage2UI = document.getElementById('sage2UI');
 		
 		window.addEventListener('dragover', preventDefault, false);
@@ -293,12 +328,15 @@
 	function resizeDialogs() {
 		var windowAspect = window.innerWidth/window.innerHeight;
 		
+		var appListContainer = document.getElementById('appListContainer');
+		appListContainer.style.width = (window.innerWidth/2 - 24).toString() + "px";
+		appListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		var fileListElems = document.getElementById('fileListElems');
-		fileListElems.style.width = (window.innerWidth/2 *0.6 - 16).toString() + "px";
+		fileListElems.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
 		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		var metadata = document.getElementById('metadata');
-		metadata.style.left = (window.innerWidth/2 *0.6 - 5).toString() + "px";
-		metadata.style.width = (window.innerWidth/2 *0.4 - 7).toString() + "px";
+		metadata.style.left = (window.innerWidth/2 *0.6 - 13).toString() + "px";
+		metadata.style.width = (window.innerWidth/2 *0.4).toString() + "px";
 		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		var sage2pointerHelp = document.getElementById('sage2pointerHelp');
 		var sage2pointerHelpAspect = 1264.25/982.255;
@@ -352,7 +390,7 @@
 		
 		// Menu Buttons
 		else if(element.id === "applauncher") {
-			showDialog('appLauncherDialog');
+			wsio.emit('requestAvailableApplications');
 		}
 		else if(element.id === "mediabrowser") {
 			showDialog('mediaBrowserDialog');
@@ -435,6 +473,12 @@
 		hideDialog('sage2pointerDialog');
 	}
 	
+	function removeAllChildren(node) {
+		while (node.lastChild) {
+    		node.removeChild(node.lastChild);
+		}
+	}
+	
 	function reloadIfServerRunning(callback) {
 		// make a dummy request to test the server every 2 sec
 		xhr = new XMLHttpRequest();
@@ -503,6 +547,10 @@
 	
 	<!-- dialog for the App Launcher-->
 	<div id="appLauncherDialog" class="dialog">
+		<div id="appListContainer">
+			<table id="appList">
+			</table>
+		</div>
 		<div id="appButtons">
 			<span id="appOKBtn" class="button">OK</span>
 			<span id="appCloseBtn" class="button">Close</span>
