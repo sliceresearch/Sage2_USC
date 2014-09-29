@@ -360,7 +360,7 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x, radialMenuSize.y, 9000);
+								radialMenuSize.x, radialMenuSize.y, 8900);
 			this.main.appendChild(menuElem); 
 			this.main.appendChild(menuElem2); 
 			
@@ -399,30 +399,33 @@ function uiBuilder(json_cfg, clientID) {
 		{
 			var rect = menuElem.getBoundingClientRect();
 			
-			menuX = data.x - rect.left - this.offsetX;
-			menuY = data.y - rect.top - this.offsetY;
-
-			if( this.radialMenus[menuElem.id].visible )
+			pointerX = data.x - rect.left - this.offsetX;
+			pointerY = data.y - rect.top - this.offsetY;
+			
+			var menu = this.radialMenus[menuElem.id];
+			
+			if( menu.visible )
 			{
-				this.radialMenus[menuElem.id].onEvent( data.type, {x: menuX, y: menuY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
+				menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 
 				menuElem.style.display = "block";
-				this.radialMenus[menuElem.id].thumbnailWindowElement.style.display = "block";
+				menu.thumbnailWindowElement.style.display = "block";
 				
-				if( this.radialMenus[menuElem.id].windowInteractionMode === false )
+				dragOffset = menu.dragPosition;
+				if( menu.windowInteractionMode === false )
 				{
-					dragOffset = this.radialMenus[menuElem.id].dragPosition;
+					dragOffset = menu.dragPosition;
 					menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
 					menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
-					
-					this.radialMenus[menuElem.id].thumbnailWindowElement.style.left = menuElem.style.left;
-					this.radialMenus[menuElem.id].thumbnailWindowElement.style.top = menuElem.style.top;
 				}
+				
+				menu.thumbnailWindowElement.style.left = (rect.left + menu.thumbnailWindowScrollOffset.x).toString() + "px";
+				menu.thumbnailWindowElement.style.top = (rect.top + menu.thumbnailWindowScrollOffset.y).toString()  + "px";
 			}
 			else
 			{
 				menuElem.style.display = "none";
-				this.radialMenus[menuElem.id].thumbnailWindowElement.style.display = "none";
+				menu.thumbnailWindowElement.style.display = "none";
 			}
 		}
 	};
