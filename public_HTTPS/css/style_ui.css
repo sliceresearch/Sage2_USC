@@ -163,15 +163,17 @@ p {
 	height: 50%;
 }
 
-#fileListElems {
+#fileListContainer {
 	position: absolute;
 	left: 12px;
 	top: 12px;
 	margin: 0px;
-	text-align: left;
-	white-space: nowrap;
 	background-color: #D9D9D9;
 	overflow: scroll;
+}
+
+#fileListElems {
+	text-align: left;
 }
 
 #metadata {
@@ -289,9 +291,10 @@ p {
 }
 
 /***** File Browser *****/
+
 .css-treeview {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 11px;
+	font-size: 12px;
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
@@ -302,6 +305,8 @@ p {
 	padding: 0px;
 	margin: 6px 3px 0px 3px;
 	list-style: none;
+	display: block;
+	white-space: nowrap;
 }
 
 .css-treeview input {
@@ -311,7 +316,6 @@ p {
 
 .css-treeview label {
 	cursor: pointer;
-	font-size: 12px;
 }
 
 .css-treeview input + label {
@@ -331,9 +335,23 @@ p {
 
 .css-treeview input ~ ul > li {
 	margin: 0px;
-	padding: 0px 0px 0px 46px;
+	padding-left: 48px;
+	font-size: 11px;
 }
 
 .css-treeview input:checked ~ ul {
 	display: block;
+}
+
+/******** Text - Width Test ********/
+#textWidthTest {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	visibility: hidden;
+	height: auto;
+	width: auto;
+	white-space: nowrap;
 }

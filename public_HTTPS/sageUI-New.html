@@ -314,7 +314,7 @@
 		});
 		
 		wsio.on('storedFileList', function(data) {
-			document.getElementById('images-dir').checked   = false;
+			document.getElementById('images-dir').checked   = true;
 			document.getElementById('pdfs-dir').checked     = false;
 			document.getElementById('videos-dir').checked   = false;
 			document.getElementById('sessions-dir').checked = false;
@@ -329,10 +329,13 @@
 			removeAllChildren(pdfs);
 			removeAllChildren(sessions);
 			
-			createFileList(data, "images",   images);
-			createFileList(data, "videos",   videos);
-			createFileList(data, "pdfs",     pdfs);
-			createFileList(data, "sessions", sessions);
+			var longestImageName   = createFileList(data, "images",   images);
+			var longestVideoName   = createFileList(data, "videos",   videos);
+			var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+			var longestSessionName = createFileList(data, "sessions", sessions);
+			
+			var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+			document.getElementById('fileListElems').style.width = (longest+60).toString() + "px";
 			
 			showDialog('mediaBrowserDialog');
 		});
@@ -376,9 +379,9 @@
 		var appListContainer = document.getElementById('appListContainer');
 		appListContainer.style.width = (window.innerWidth/2 - 24).toString() + "px";
 		appListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
-		var fileListElems = document.getElementById('fileListElems');
-		fileListElems.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
-		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var fileListContainer = document.getElementById('fileListContainer');
+		fileListContainer.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
+		fileListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		var metadata = document.getElementById('metadata');
 		metadata.style.left = (window.innerWidth/2 *0.6 - 13).toString() + "px";
 		metadata.style.width = (window.innerWidth/2 *0.4).toString() + "px";
@@ -396,14 +399,22 @@
 	}
 	
 	function createFileList(list, type, parent) {
+		var textWidthTest = document.getElementById('textWidthTest');
+		var longest = 0;
 		for(var i=0; i<list[type].length; i++){
-			var listElem = document.createElement("li");
-			listElem.textContent = list[type][i].exif.FileName;
-			listElem.id          = "file_" + list[type][i].exif.FileName;
-			listElem.setAttribute("application", type2App[type]);
-			listElem.setAttribute("file", list[type][i].exif.FileName);
-			parent.appendChild(listElem);
+			var file = document.createElement('li');
+			file.textContent = list[type][i].exif.FileName;
+			file.id          = "file_" + list[type][i].exif.FileName;
+			file.setAttribute("application", type2App[type]);
+			file.setAttribute("file", list[type][i].exif.FileName);
+			parent.appendChild(file);
+			
+			textWidthTest.textContent = file.textContent;
+			var textWidth = (textWidthTest.clientWidth + 1);
+			if(textWidth > longest) longest = textWidth;
 		}
+		textWidthTest.textContent = "";
+		return longest;
 	}
 	
 	function preventDefault(event) {
@@ -674,28 +685,30 @@
 	<!-- dialog for the Media Browser -->
 	<div id="mediaBrowserDialog" class="dialog">
 		<div id="fileTreeList" class="css-treeview">
-			<ul id="fileListElems">
-				<li>
-					<input type="checkbox" id="images-dir"></input>
-					<label for="images-dir">Images</label>
-					<ul id="images" class="fileItem"></ul>
-				</li>
-				<li>
-					<input type="checkbox" id="pdfs-dir"></input>
-					<label for="pdfs-dir">PDFs</label>
-					<ul id="pdfs" class="fileItem"></ul>
-				</li>
-				<li>
-					<input type="checkbox" id="videos-dir"></input>
-					<label for="videos-dir">Videos</label>
-					<ul id="videos" class="fileItem"></ul>
-				</li>
-				<li>
-					<input type="checkbox" id="sessions-dir"></input>
-					<label for="sessions-dir">Sessions</label>
-					<ul id="sessions" class="fileItem"></ul>
-				</li>
-			</ul>
+			<div id="fileListContainer">
+				<ul id="fileListElems">
+					<li>
+						<input type="checkbox" id="images-dir"></input>
+						<label for="images-dir">Images</label>
+						<ul id="images" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="pdfs-dir"></input>
+						<label for="pdfs-dir">PDFs</label>
+						<ul id="pdfs" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="videos-dir"></input>
+						<label for="videos-dir">Videos</label>
+						<ul id="videos" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="sessions-dir"></input>
+						<label for="sessions-dir">Sessions</label>
+						<ul id="sessions" class="fileItem"></ul>
+					</li>
+				</ul>
+			</div>
 		</div>
 		<div id="metadata">
 			<img id="thumbnail" src="images/blank.png"></img>
@@ -731,6 +744,10 @@
 			<span id="settingsCloseBtn" class="button">Close</span>
 		</div>
 	</div>
+	
+	
+	<!-- invisible text to test rendered width -->
+	<div id="textWidthTest"></div>
 </body>
 </html>
 
