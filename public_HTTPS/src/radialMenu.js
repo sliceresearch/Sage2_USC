@@ -603,6 +603,8 @@ function radialMenu(){
 			this.element.width = thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
 			this.element.height = thumbnailWindowSize.y;
 			this.thumbnailWindowElement.style.display = "block";
+			
+			return true;
 		}
 		else
 		{
@@ -610,7 +612,18 @@ function radialMenu(){
 			this.element.width = radialMenuSize.x;
 			this.element.height = radialMenuSize.y;
 			this.thumbnailWindowElement.style.display = "None";
+			
+			return false;
 		}
+	};
+	
+	this.resetRadialButtonLitState = function()
+	{
+		this.radialImageButton.isLit = false;
+		this.radialPDFButton.isLit = false;
+		this.radialVideoButton.isLit = false;
+		this.radialAppButton.isLit = false;
+		this.radialSessionButton.isLit = false;
 	};
 	
 	this.onEvent = function(type, position, user, data) {
@@ -647,23 +660,43 @@ function radialMenu(){
 		
 		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
 		{
-			this.setToggleMenu('imageThumbnailWindow');
+			this.resetRadialButtonLitState();
+			if( this.setToggleMenu('imageThumbnailWindow') )
+			{
+				this.radialImageButton.isLit = true;
+			}
 		}
 		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
 		{
-			this.setToggleMenu('pdfThumbnailWindow');
+			this.resetRadialButtonLitState();
+			if( this.setToggleMenu('pdfThumbnailWindow') )
+			{
+				this.radialPDFButton.isLit = true;
+			}
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
 		{
-			this.setToggleMenu('videoThumbnailWindow');
+			this.resetRadialButtonLitState();
+			if( this.setToggleMenu('videoThumbnailWindow') )
+			{
+				this.radialVideoButton.isLit = true;
+			}
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
 		{
-			this.setToggleMenu('appThumbnailWindow');
+			this.resetRadialButtonLitState();
+			if( this.setToggleMenu('appThumbnailWindow') )
+			{
+				this.radialAppButton.isLit = true;
+			}
 		}
 		if( this.radialSessionButton.isClicked() )
 		{
-			this.setToggleMenu('sessionThumbnailWindow');
+			this.resetRadialButtonLitState();
+			if( this.setToggleMenu('sessionThumbnailWindow') )
+			{
+				this.radialSessionButton.isLit = true;
+			}
 		}
 		if( this.radialSaveSessionButton.isClicked() )
 		{
@@ -1035,6 +1068,7 @@ function buttonWidget() {
 	this.clickedColor = "rgba(10, 210, 10, 1.0 )";
 	this.pressedColor = "rgba(10, 210, 210, 1.0 )";
 	this.releasedColor = "rgba(10, 10, 210, 1.0 )";
+	this.litColor = "rgba(10, 210, 210, 1.0 )";
 	
 	this.idleImage = null;
 	this.overlayImage = null;
@@ -1044,6 +1078,8 @@ function buttonWidget() {
 	
 	this.alignment = 'left';
 	this.hitboxShape = 'box';
+	
+	this.isLit = false;
 	
 	// Button states:
 	// -1 = Disabled
@@ -1181,7 +1217,10 @@ function buttonWidget() {
 		}
 		else if( this.useBackgroundColor )
 		{
-			this.ctx.fillStyle = this.defaultColor;
+			if( this.isLit )
+				this.ctx.fillStyle = this.litColor;
+			else
+				this.ctx.fillStyle = this.defaultColor;
 			
 			if( this.hitboxShape === 'box' )
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
@@ -1201,13 +1240,19 @@ function buttonWidget() {
 			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
 			
-			// Tint the image (Part 2)
+			if( this.isLit === true )
+				this.drawTintImage( this.idleImage, offset, this.width, this.height, this.litColor, 0.8 );
+						
+			// Tint the image
 			if( this.state !== 0 )
 			{
 				if( this.simpleTint )
 					this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
 				else
-					this.drawTintImage( this.idleImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
+				{
+					if( this.isLit === false )
+						this.drawTintImage( this.idleImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
+				}
 			}
 			
 		}
