@@ -290,7 +290,9 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
-		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		//wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		wsio.on('loadApplication', wsLoadApplication);
+		wsio.on('loadFileFromServer', wsLoadFileFromServer);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
 		wsio.on('saveSesion',       wsSaveSesion);
 		wsio.on('clearDisplay',     wsClearDisplay);
@@ -1151,7 +1153,30 @@ function wsRequestStoredFiles(wsio, data) {
 	wsio.emit('storedFileList', savedFiles);
 }
 
-function wsAddNewElementFromStoredFiles(wsio, data) {
+function wsLoadApplication(wsio, data) {
+	var appData = {application: "custom_app", filename: data.application};
+	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+
+		if(appInstance.animation){
+			var i;
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[appInstance.id].clients[clientAddress] = false;
+				}
+			}
+		}
+		
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+		applications.push(appInstance);
+	});
+}
+
+function wsLoadFileFromServer(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -1159,18 +1184,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
 			appInstance.id = getUniqueAppId();
-
-			if(appInstance.animation){
-				var i;
-				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.requiresFullApps){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						appAnimations[appInstance.id].clients[clientAddress] = false;
-					}
-				}
-			}
-
+			
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 

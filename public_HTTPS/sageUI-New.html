@@ -214,6 +214,7 @@
 	
 	var selectedAppEntry;
 	var selectedFileEntry;
+	var type2App;
 	
 	function init() {
 		hostname = window.location.hostname;
@@ -354,6 +355,13 @@
 		selectedAppEntry = null;
 		selectedFileEntry = null;
 		
+		type2App = {
+			images: "image_viewer",
+			videos: "movie_player",
+			pdfs: "pdf_viewer",
+			sessions: "load_session"
+		};
+		
 		resizeDialogs();
 	}
 	
@@ -392,7 +400,8 @@
 			var listElem = document.createElement("li");
 			listElem.textContent = list[type][i].exif.FileName;
 			listElem.id          = "file_" + list[type][i].exif.FileName;
-			listElem.setAttribute("file", type+"/"+list[type][i].exif.FileName);
+			listElem.setAttribute("application", type2App[type]);
+			listElem.setAttribute("file", list[type][i].exif.FileName);
 			parent.appendChild(listElem);
 		}
 	}
@@ -513,8 +522,6 @@
 		
 		// File Selected
 		else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
-			var file = element.getAttribute("file");
-			
 			if(selectedFileEntry !== null) selectedFileEntry.style.backgroundColor = "transparent";
 			selectedFileEntry = element;
 			selectedFileEntry.style.backgroundColor = "#B9D3FF";
@@ -542,14 +549,17 @@
 	function loadSelectedApplication() {
 		if(selectedAppEntry !== null) {
 			var application = selectedAppEntry.getAttribute("application");
-			console.log("loading " + application);
+			
+			wsio.emit('loadApplication', {application: application});
 		}
 	}
 	
 	function loadSelectedFile() {
 		if(selectedFileEntry !== null) {
+			var application = selectedFileEntry.getAttribute("application");
 			var file = selectedFileEntry.getAttribute("file");
-			console.log("loading " + file);
+			
+			wsio.emit('loadFileFromServer', {application: application, filename: file});
 		}
 	}
 	
