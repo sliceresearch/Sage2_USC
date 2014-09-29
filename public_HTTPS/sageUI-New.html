@@ -584,7 +584,6 @@
 	}
 	
 	function reloadIfServerRunning(callback) {
-		// make a dummy request to test the server every 2 sec
 		xhr = new XMLHttpRequest();
 		xhr.open("GET", "/", true);
 		xhr.onreadystatechange = function() {
