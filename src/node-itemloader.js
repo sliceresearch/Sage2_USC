@@ -425,42 +425,6 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 		var aspectRatio = instructions.width / instructions.height;
 		
-		/*
-		// if icon provided, build the url to it ... move to 1496 in server (getSavedFilesList)
-		var icon = null;
-		if(instructions.icon){
-			var iconPath = path.join(zipFolder, instructions.icon);
-			
-			imageMagick(iconPath).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", function(err, buffer) {
-				if(err) throw err;
-				
-				var avgColor = buffer.toString();
-				var rgbaStart = avgColor.indexOf("(");
-				var rgbaEnd   = avgColor.indexOf(")");
-				var rgba = avgColor.substring(rgbaStart+1, rgbaEnd).split(",");
-				var red   = 0;
-				var green = 0;
-				var blue  = 0;
-				if(rgba[0][rgba[0].length-1] === "%") red   = Math.round(255 * parseFloat(rgba[0])/100);
-				else red   = parseInt(rgba[0], 10);
-				if(rgba[1][rgba[1].length-1] === "%") green = Math.round(255 * parseFloat(rgba[1])/100);
-				else green = parseInt(rgba[1], 10);
-				if(rgba[2][rgba[2].length-1] === "%") blue  = Math.round(255 * parseFloat(rgba[2])/100);
-				else blue  = parseInt(rgba[2], 10);
-				
-				// use tinted average color as background
-				var bgRed   = Math.round(255 - ((255 - red)   * 0.5));
-				var bgGreen = Math.round(255 - ((255 - green) * 0.5));
-				var bgBlue  = Math.round(255 - ((255 - blue)  * 0.5));
-				
-				imageMagick(840, 840, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 420 420 5 420").in("-draw", "image src-over 164 164 512 512 '"+iconPath+"'").write("test.png", function(err) {
-					if(err) throw err;
-				});
-				//convert -size 840x840 xc:none -fill 'rgb(255,192,128)' -draw 'circle 420 420 5 420' -draw "image src-over 164 164 512 512 'marbles.tif'" test.png
-			});
-		}
-		//var icon  = instructions.icon ? url+"/"+instructions.icon : null;
-
 		var metadata = {};
 		if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
 			metadata.title = instructions.title;
@@ -480,21 +444,19 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 			metadata.keywords = instructions.keywords;
 		else metadata.keywords = [];
-		*/
-		
-		var title = name;
-		if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-			title = instructions.title;
+
+		var resizeMode = "proportional";
+		if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+			resizeMode = instructions.resize;
 		
 		var appInstance = {
 			id: null,
-			title: title,
+			title: metadata.title,
 			application: appName,
 			type: mime_type,
 			url: external_url,
 			data: instructions.load,
 			resrc: instructions.dependencies,
-			//icon: icon,
 			left: _this.titleBarHeight,
 			top: 1.5*_this.titleBarHeight,
 			width: instructions.width,
@@ -508,7 +470,8 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			maximized: false,
 			aspect: aspectRatio,
 			animation: instructions.animation,
-			//metadata: metadata,
+			metadata: metadata,
+			resizeMode: resizeMode,
 			date: new Date()
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
@@ -531,12 +494,6 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 			var aspectRatio = instructions.width / instructions.height;
 			
-			/*
-			// if icon provided, build the url to it
-			var iconPath = path.join(zipFolder, instructions.icon);
-			
-			var icon = instructions.icon ? url+"/"+instructions.icon : null;
-
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
 				metadata.title = instructions.title;
@@ -556,21 +513,19 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
-			*/
-			
-			var title = name;
-			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-				title = instructions.title;
+
+			var resizeMode = "proportional";
+			if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+				resizeMode = instructions.resize;
 
 			var appInstance = {
 				id: null,
-				title: title,
+				title: metadata.title,
 				application: appName,
 				type: mime_type,
 				url: external_url,
 				data: instructions.load,
 				resrc: instructions.dependencies,
-				//icon: icon,
 				left: _this.titleBarHeight,
 				top: 1.5*_this.titleBarHeight,
 				width: instructions.width,
@@ -584,7 +539,8 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				maximized: false,
 				aspect: aspectRatio,
 				animation: instructions.animation,
-				//metadata: metadata,
+				metadata: metadata,
+				resizeMode: resizeMode,
 				date: new Date()
 			};
 			_this.scaleAppToFitDisplay(appInstance);
