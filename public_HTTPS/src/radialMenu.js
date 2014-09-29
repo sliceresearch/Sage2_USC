@@ -114,6 +114,9 @@ function radialMenu(){
 		
 		
 		// load thumbnail icons
+		this.idleExitIcon = new Image;
+		this.idleExitIcon.src = this.resrcPath +"exit.svg"
+		
 		this.idleImageIcon = new Image;
 		this.idleImageIcon.src = this.resrcPath +"image2.svg"
 		this.idlePDFIcon = new Image;
@@ -151,10 +154,20 @@ function radialMenu(){
 		this.radialCloseIcon = new Image;
 		this.radialCloseIcon.src = this.resrcPath +"icon_close_128.png"
 		
+		this.radialDragIcon = new Image;
+		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg"
+		
 		// Create buttons
+		this.radialDragButton = new buttonWidget();
+		this.radialDragButton.init(0, this.ctx, null);
+		this.radialDragButton.setIdleImage( this.radialDragIcon );
+		this.radialDragButton.useBackgroundColor = false;
+		
 		this.radialCloseButton = new buttonWidget();
 		this.radialCloseButton.init(0, this.ctx, null);
-		this.radialCloseButton.setIdleImage( this.radialCloseIcon );
+		this.radialCloseButton.setIdleImage( this.radialMenuIcon );
+		this.radialCloseButton.useBackgroundColor = false;
+		this.radialCloseButton.setOverlayImage( this.idleExitIcon, overlayIconScale );
 		
 		this.radialCloseButton.useBackgroundColor = false;
 				
@@ -201,7 +214,9 @@ function radialMenu(){
 		this.radialSettingsButton.setOverlayImage( this.idleSettingsIcon, overlayIconScale );
 		
 		// Scale buttons different from global thumbnail size
-		this.radialCloseButton.setSize( 50, 50 );
+		this.radialDragButton.setSize( 420, 420 );
+		
+		this.radialCloseButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialImageButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialPDFButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialVideoButton.setSize( menuButtonSize, menuButtonSize );
@@ -211,6 +226,7 @@ function radialMenu(){
 		this.radialSettingsButton.setSize( menuButtonSize, menuButtonSize );
 		
 		// Set hitbox size (radial buttons are not square and will overlap)
+		this.radialCloseButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialPDFButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		this.radialVideoButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
@@ -220,6 +236,7 @@ function radialMenu(){
 		this.radialSettingsButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		
 		// Button alignment
+		this.radialDragButton.alignment = 'centered';
 		this.radialCloseButton.alignment = 'centered';
 		this.radialImageButton.alignment = 'centered';
 		this.radialPDFButton.alignment = 'centered';
@@ -239,6 +256,7 @@ function radialMenu(){
 		this.radialSettingsButton.hitboxShape = 'circle';
 		
 		// Place buttons
+		this.radialDragButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
 		this.radialCloseButton.setPosition( radialMenuCenter.x, radialMenuCenter.y );
 		
 		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
@@ -384,6 +402,8 @@ function radialMenu(){
 		if( this.currentMenuState !== 'radialMenu' )
 			this.thumbWindowctx.fillRect(this.thumbnailWindowPosition.x,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
 		// ------------------------------------------------------
+		
+		this.radialDragButton.draw();
 		
 		this.radialCloseButton.draw();
 		this.radialSettingsButton.draw();
@@ -737,7 +757,7 @@ function radialMenu(){
 				thumbEventPos = { x: position.x - this.thumbnailWindowScrollOffset.x, y: position.y - this.thumbnailWindowScrollOffset.y };
 				buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 
-				if ( thumbButton.isReleased() && this.dragThumbnailWindow === false )
+				if ( thumbButton.isReleased() )
 				{ 
 					//console.log(thumbButton+" released" );
 					this.addNewElementFromStoredFiles( thumbButton.getData()  );
@@ -1235,7 +1255,7 @@ function buttonWidget() {
 		// Draw icon aligned centered
 		if( this.idleImage != null )
 		{
-			this.ctx.rotate( this.angle );
+			//this.ctx.rotate( this.angle );
 			
 			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );

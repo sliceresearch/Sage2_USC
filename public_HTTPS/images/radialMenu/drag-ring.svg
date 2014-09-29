@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <defs>
+  <filter id="svg_1_blur">
+   <feGaussianBlur stdDeviation="1.6"/>
+  </filter>
+  <filter id="svg_4_blur">
+   <feGaussianBlur stdDeviation="0.4" in="SourceGraphic"/>
+  </filter>
+  <filter id="svg_3_blur">
+   <feGaussianBlur stdDeviation="0.4" in="SourceGraphic"/>
+  </filter>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <circle fill="#bcbcbc" stroke-width="4" stroke-dasharray="5,2,2,2" stroke-linejoin="null" stroke-linecap="null" cx="200" cy="200" r="160" id="svg_1" fill-opacity="0.01" stroke="#e0dbdb" filter="url(#svg_1_blur)"/>
+  <ellipse stroke="#e0dbdb" filter="url(#svg_4_blur)" fill-opacity="0.8" fill="#bcbcbc" stroke-width="2" stroke-dasharray="5,2,2,2" stroke-linejoin="null" stroke-linecap="null" cx="200" cy="39.508301" id="svg_4" rx="38.666667" ry="19.847168"/>
+  <line filter="url(#svg_3_blur)" stroke="#e0dbdb" id="svg_3" y2="50.958015" x2="200" y1="27.93946" x1="200" fill-opacity="0.8" stroke-linecap="null" stroke-linejoin="null" stroke-width="2" fill="none"/>
+  <line id="svg_8" filter="url(#svg_3_blur)" stroke="#e0dbdb" y2="50.958015" x2="215" y1="27.93946" x1="215" fill-opacity="0.8" stroke-linecap="null" stroke-linejoin="null" stroke-width="2" fill="none"/>
+  <line id="svg_9" filter="url(#svg_3_blur)" stroke="#e0dbdb" y2="50.958015" x2="185" y1="27.93946" x1="185" fill-opacity="0.8" stroke-linecap="null" stroke-linejoin="null" stroke-width="2" fill="none"/>
+  <ellipse id="svg_10" stroke="#e0dbdb" filter="url(#svg_4_blur)" fill-opacity="0.8" fill="#bcbcbc" stroke-width="2" stroke-dasharray="5,2,2,2" stroke-linejoin="null" stroke-linecap="null" cx="200" cy="355.999992" rx="38.666667" ry="19.847168"/>
+ </g>
+</svg>
