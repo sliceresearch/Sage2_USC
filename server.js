@@ -288,6 +288,7 @@ function initializeWSClient(wsio) {
 		wsio.on('appResize', wsAppResize);
 	}
 	if(wsio.messages.requestsServerFiles){
+		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
 		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
@@ -1137,6 +1138,11 @@ function wsTileApplications(wsio, data) {
 
 // **************  Server File Functions *****************
 
+function wsRequestAvailableApplications(wsio, data) {
+	var applications = getApplications();
+	wsio.emit('availableApplications', applications);
+}
+
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
@@ -1466,70 +1472,27 @@ function getUniqueAppId() {
 	return id;	
 }
 
-function getSavedFilesList() {
-	//  Main list of objects to be sent
-	var list = {image: [], video: [], pdf: [], app: [], session:[]};
+function getApplications() {
+	var uploadedApps = assets.listApps();
+	uploadedApps.sort(sageutils.compareFilename);
+	
+	return uploadedApps;
+}
 
+function getSavedFilesList() {
 	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps   = assets.listApps();
-	//var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
-	
-	var i;
 
 	// Sort independently of case
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
-	uploadedApps.sort(   sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
-
-	for (i=0; i<uploadedImages.length; i++)  list.image.push(uploadedImages[i]);
-	for (i=0; i<uploadedVideos.length; i++)  list.video.push(uploadedVideos[i]);
-	for (i=0; i<uploadedPdfs.length;   i++)  list.pdf.push(uploadedPdfs[i]);
-	for (i=0; i<uploadedApps.length;   i++)  list.app.push(uploadedApps[i]);
-	for (i=0; i<savedSessions.length;   i++) list.session.push(savedSessions[i]);
-
-	/*
-	// From the list of apps in the upload folder, build a list of objects
-	//   containing the name of the app and the icon (mimicing an exif structure)
-	for (i=0; i<uploadedApps.length; i++) {
-		var applicationDir = path.join(uploadsFolder, "apps", uploadedApps[i]);
-		if (fs.lstatSync(applicationDir).isDirectory()) {
-			var instuctionsFile   = path.join(applicationDir, "instructions.json");		
-			var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
-			var instructions      = json5.parse(jsonString);
-			var thumbnailHostPath = null;
-			if (instructions.icon)
-				thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
-
-			var metadata = {};
-			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-				metadata.title = instructions.title;
-			else metadata.title = uploadedApps[i];
-			if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
-				metadata.version = instructions.version;
-			else metadata.version = "1.0.0";
-			if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
-				metadata.description = instructions.description;
-			else metadata.description = "-";
-			if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
-				metadata.author = instructions.author;
-			else metadata.author = "SAGE2";
-			if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
-				metadata.license = instructions.license;
-			else metadata.license = "-";
-			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
-				metadata.keywords = instructions.keywords;
-			else metadata.keywords = [];
-
-			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath }, metadata: metadata } );
-		}
-	}
-	*/
+	
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions};
 
 	return list;
 }

@@ -424,6 +424,8 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		var instructions = JSON.parse(json_str);
 		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 		var aspectRatio = instructions.width / instructions.height;
+		
+		/*
 		// if icon provided, build the url to it ... move to 1496 in server (getSavedFilesList)
 		var icon = null;
 		if(instructions.icon){
@@ -478,16 +480,21 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 			metadata.keywords = instructions.keywords;
 		else metadata.keywords = [];
-
+		*/
+		
+		var title = name;
+		if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+			title = instructions.title;
+		
 		var appInstance = {
 			id: null,
-			title: metadata.title,
+			title: title,
 			application: appName,
 			type: mime_type,
 			url: external_url,
 			data: instructions.load,
 			resrc: instructions.dependencies,
-			icon: icon,
+			//icon: icon,
 			left: _this.titleBarHeight,
 			top: 1.5*_this.titleBarHeight,
 			width: instructions.width,
@@ -501,7 +508,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			maximized: false,
 			aspect: aspectRatio,
 			animation: instructions.animation,
-			metadata: metadata,
+			//metadata: metadata,
 			date: new Date()
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
@@ -523,6 +530,8 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			var instructions = JSON.parse(json_str);
 			var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 			var aspectRatio = instructions.width / instructions.height;
+			
+			/*
 			// if icon provided, build the url to it
 			var iconPath = path.join(zipFolder, instructions.icon);
 			
@@ -547,17 +556,21 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
-
+			*/
+			
+			var title = name;
+			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+				title = instructions.title;
 
 			var appInstance = {
 				id: null,
-				title: metadata.title,
+				title: title,
 				application: appName,
 				type: mime_type,
 				url: external_url,
 				data: instructions.load,
 				resrc: instructions.dependencies,
-				icon: icon,
+				//icon: icon,
 				left: _this.titleBarHeight,
 				top: 1.5*_this.titleBarHeight,
 				width: instructions.width,
@@ -571,7 +584,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				maximized: false,
 				aspect: aspectRatio,
 				animation: instructions.animation,
-				metadata: metadata,
+				//metadata: metadata,
 				date: new Date()
 			};
 			_this.scaleAppToFitDisplay(appInstance);
