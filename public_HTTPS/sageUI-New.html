@@ -212,6 +212,9 @@
 	var SAGE2DisplayUI;
 	var interactor;
 	
+	var selectedAppEntry;
+	var selectedFileEntry;
+	
 	function init() {
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -324,6 +327,9 @@
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
 		document.addEventListener('click', pointerClick, false);
+		
+		selectedAppEntry = null;
+		selectedFileEntry = null;
 		
 		resizeDialogs();
 	}
@@ -460,7 +466,10 @@
 		// Application Selected
 		else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
 			var application = element.getAttribute("application");
-			console.log(application);
+			
+			if(selectedAppEntry !== null) selectedAppEntry.style.backgroundColor = "transparent";
+			selectedAppEntry = document.getElementById('app_row_' + application);
+			selectedAppEntry.style.backgroundColor = "#B9D3FF";
 		}
 		
 		// Other
