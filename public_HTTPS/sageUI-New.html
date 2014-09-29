@@ -276,8 +276,6 @@
 			var appListContainer = document.getElementById('appListContainer');
 			var size = parseInt(appListContainer.style.width, 10) / 4;
 			
-			console.log(data);
-			
 			removeAllChildren(appList);
 			
 			var i = 0;
@@ -314,6 +312,30 @@
 			showDialog('appLauncherDialog');
 		});
 		
+		wsio.on('storedFileList', function(data) {
+			document.getElementById('images-dir').checked   = false;
+			document.getElementById('pdfs-dir').checked     = false;
+			document.getElementById('videos-dir').checked   = false;
+			document.getElementById('sessions-dir').checked = false;
+			
+			var images = document.getElementById('images');
+			var videos = document.getElementById('videos');
+			var pdfs = document.getElementById('pdfs');
+			var sessions = document.getElementById('sessions');
+			
+			removeAllChildren(images);
+			removeAllChildren(videos);
+			removeAllChildren(pdfs);
+			removeAllChildren(sessions);
+			
+			createFileList(data, "images",   images);
+			createFileList(data, "videos",   videos);
+			createFileList(data, "pdfs",     pdfs);
+			createFileList(data, "sessions", sessions);
+			
+			showDialog('mediaBrowserDialog');
+		});
+		
 		var sage2UI = document.getElementById('sage2UI');
 		
 		window.addEventListener('dragover', preventDefault, false);
@@ -327,6 +349,7 @@
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
 		document.addEventListener('click', pointerClick, false);
+		document.addEventListener('dblclick', pointerDblClick, false);
 		
 		selectedAppEntry = null;
 		selectedFileEntry = null;
@@ -361,6 +384,16 @@
 		else {
 			sage2pointerHelp.width = window.innerWidth * 0.7;
 			sage2pointerHelp.height = sage2pointerHelp.width / sage2pointerHelpAspect;
+		}
+	}
+	
+	function createFileList(list, type, parent) {
+		for(var i=0; i<list[type].length; i++){
+			var listElem = document.createElement("li");
+			listElem.textContent = list[type][i].exif.FileName;
+			listElem.id          = "file_" + list[type][i].exif.FileName;
+			listElem.setAttribute("file", type+"/"+list[type][i].exif.FileName);
+			parent.appendChild(listElem);
 		}
 	}
 	
@@ -407,7 +440,7 @@
 			wsio.emit('requestAvailableApplications');
 		}
 		else if(element.id === "mediabrowser") {
-			showDialog('mediaBrowserDialog');
+			wsio.emit('requestStoredFiles');
 		}
 		else if(element.id === "arrangement") {
 			showDialog('arrangementDialog');
@@ -428,26 +461,32 @@
 		
 		// App Launcher Dialog
 		else if (element.id === "appOKBtn") {
+			loadSelectedApplication()
 			hideDialog('appLauncherDialog');
 		}
 		else if (element.id === "appCloseBtn") {
+			selectedAppEntry = null;
 			hideDialog('appLauncherDialog');
 		}
 		else if (element.id === "appDeleteBtn") {
 			if(confirm("Are you sure you want to delete this app?")){
+				selectedAppEntry = null;
 				hideDialog('appLauncherDialog');
 			}
 		}
 		
 		// Media Browser Dialog
 		else if (element.id === "fileOKBtn") {
+			loadSelectedFile();
 			hideDialog('mediaBrowserDialog');
 		}
 		else if (element.id === "fileCloseBtn") {
+			selectedFileEntry = null;
 			hideDialog('mediaBrowserDialog');
 		}
 		else if (element.id === "fileDeleteBtn") {
 			if(confirm("Are you sure you want to delete this file?")){
+				selectedFileEntry = null;
 				hideDialog('mediaBrowserDialog');
 			}
 		}
@@ -472,9 +511,45 @@
 			selectedAppEntry.style.backgroundColor = "#B9D3FF";
 		}
 		
+		// File Selected
+		else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
+			var file = element.getAttribute("file");
+			
+			if(selectedFileEntry !== null) selectedFileEntry.style.backgroundColor = "transparent";
+			selectedFileEntry = element;
+			selectedFileEntry.style.backgroundColor = "#B9D3FF";
+		}
+		
 		// Other
 		else {
-			console.log("clicked on: ", element);
+			//console.log("clicked on: ", element);
+		}
+	}
+	
+	function pointerDblClick(event) {
+		var element = event.srcElement;
+		
+		if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
+			loadSelectedApplication();
+			hideDialog('appLauncherDialog');
+		}
+		else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
+			loadSelectedFile();
+			hideDialog('mediaBrowserDialog');
+		}
+	}
+	
+	function loadSelectedApplication() {
+		if(selectedAppEntry !== null) {
+			var application = selectedAppEntry.getAttribute("application");
+			console.log("loading " + application);
+		}
+	}
+	
+	function loadSelectedFile() {
+		if(selectedFileEntry !== null) {
+			var file = selectedFileEntry.getAttribute("file");
+			console.log("loading " + file);
 		}
 	}
 	
