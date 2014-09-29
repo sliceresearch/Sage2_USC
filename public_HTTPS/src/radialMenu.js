@@ -17,8 +17,8 @@ var previewWindowWidth = 0.2;
 var previewWindowOffset = 0.75;
 
 // radial menu buttons
-var radialMenuCenter = { x: 200, y: 200 }; // overwritten in init - based on window size
-var radialMenuSize = { x: 400, y: 400 };
+var radialMenuCenter = { x: 210, y: 210 }; // overwritten in init - based on window size
+var radialMenuSize = { x: 420, y: 420 };
 var angleSeparation = 35;
 var initAngle = 55;
 var angle = 0;
@@ -216,7 +216,7 @@ function radialMenu(){
 		this.radialSettingsButton.setOverlayImage( this.idleSettingsIcon, overlayIconScale );
 		
 		// Scale buttons different from global thumbnail size
-		this.radialDragButton.setSize( 420, 420 );
+		this.radialDragButton.setSize( 460, 460 );
 		
 		this.radialCloseButton.setSize( menuButtonSize, menuButtonSize );
 		this.radialImageButton.setSize( menuButtonSize, menuButtonSize );
@@ -387,7 +387,6 @@ function radialMenu(){
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
 		
-		// TEMP: Just to clearly see context edge
 		if( this.windowInteractionMode === false )
 		{
 			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)"
@@ -404,6 +403,8 @@ function radialMenu(){
 			this.thumbWindowctx.fillStyle = this.ctx.fillStyle
 		}
 		
+		// TEMP: Just to clearly see context edge
+		//this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
 		
 		if( this.currentMenuState !== 'radialMenu' )
 			this.thumbWindowctx.fillRect(this.thumbnailWindowPosition.x,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
