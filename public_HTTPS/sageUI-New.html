@@ -28,6 +28,7 @@
 		this.init = function(config) {
 			var _this = this;
 			this.config = config;
+			this.scale = null;
 			this.logo = new Image();
 			this.logo.onload = function(event) {
 				_this.resize();
@@ -36,6 +37,8 @@
 			this.logoAspect = 3.47828052509;
 			this.fileDrop = false;
 			this.fileDropFontSize = 12;
+			
+			this.applications = [];
 		};
 		
 		this.draw = function() {
@@ -59,6 +62,38 @@
 			logoX = sage2UI.width/2  - logoW/2;
 			logoY = sage2UI.height/2 - logoH/2;
 			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+			
+			// applications
+			for(i=0; i<this.applications.length; i++){
+				// item
+				ctx.fillStyle = "rgba(102, 102, 102, 1.0)";
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = "rgba(86, 86, 86, 1.0)";
+			
+				var tLeft   = this.applications[i].left * this.scale;
+				var tTop    = (this.applications[i].top) * this.scale;
+				var tWidth  = this.applications[i].width * this.scale;
+				var tHeight = this.config.ui.titleBarHeight * this.scale;
+			
+				ctx.fillRect(tLeft, tTop, tWidth, tHeight);
+				ctx.strokeRect(tLeft, tTop, tWidth, tHeight);
+				
+				ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+				
+				var eLeft   =  this.applications[i].left * this.scale;
+				var eTop    = (this.applications[i].top+this.config.ui.titleBarHeight) * this.scale;
+				var eWidth  =  this.applications[i].width * this.scale;
+				var eHeight =  this.applications[i].height * this.scale;
+				
+				ctx.fillRect(eLeft, eTop, eWidth, eHeight);
+				ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
+				
+				var size = 0.8*Math.min(eWidth, eHeight);
+				var x = eLeft + (eWidth/2) - (size/2);
+				var y = eTop + (eHeight/2) - (size/2);
+				
+				ctx.drawImage(this.applications[i].icon, x, y, size, size);
+			}
 			
 			// tiled display layout
 			ctx.lineWidth = 2;
@@ -103,6 +138,33 @@
 				ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
 				this.wrapText(ctx, txt, textStartX, textStartY, textBoxWidth, lineHeight);
 			}
+		};
+		
+		this.addAppWindow = function(data) {
+			var icon = data.icon;
+			data.icon = new Image();
+			var _this = this;
+			data.icon.onload = function() {
+				_this.applications.push(data);
+				_this.draw();
+			};
+			data.icon.src = icon || "images/blank.png";
+		};
+		
+		this.deleteApp = function(id) {
+		
+		};
+		
+		this.updateItemOrder = function(order) {
+		
+		};
+		
+		this.setItemPosition = function(position_data) {
+		
+		};
+		
+		this.setItemPositionAndSize = function(position_data) {
+		
 		};
 		
 		this.drawRoundedRect = function(ctx, x, y, width, height, radius, fillFlag, strokeFlag) {
@@ -203,6 +265,8 @@
 			var minDim = Math.min(sage2UI.width, sage2UI.height);
 			this.fileDropFontSize = Math.round(minDim * 0.075);
 			
+			this.scale = sage2UI.width / this.config.totalWidth;
+			
 			this.draw();
 		};
 	}
@@ -270,6 +334,26 @@
 			var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 			var screenMin = Math.min(screen.width, screen.height);
 			interactor.setPointerSensitivity(sage2Min/screenMin);
+		});
+		
+		wsio.on('createAppWindowPositionSizeOnly', function(data) {
+			SAGE2DisplayUI.addAppWindow(data);
+		});
+
+		wsio.on('deleteElement', function(data) {
+			SAGE2DisplayUI.deleteApp(data.elemId);
+		});
+		
+		wsio.on('updateItemOrder', function(data) {
+			SAGE2DisplayUI.updateItemOrder(data.idList);
+		});
+		
+		wsio.on('setItemPosition', function(data) {
+			SAGE2DisplayUI.setItemPosition(data);
+		});
+		
+		wsio.on('setItemPositionAndSize', function(data) {
+			SAGE2DisplayUI.setItemPositionAndSize(data);
 		});
 		
 		wsio.on('availableApplications', function(data) {

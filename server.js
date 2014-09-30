@@ -390,7 +390,7 @@ function initializeExistingApps(wsio) {
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var i;
 	for(i=0; i<applications.length; i++){
-		wsio.emit('createAppWindowPositionSizeOnly', applications[i]);
+		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(applications[i]));
 	}
 }
 
