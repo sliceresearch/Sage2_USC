@@ -1,6 +1,6 @@
 {
 	"main_script": "whiteboard.js",
-	"icon": "whiteboard.webp",
+	"icon": "whiteboard.png",
 	"width": 1280,
 	"height": 720,
 	"dependencies": [
