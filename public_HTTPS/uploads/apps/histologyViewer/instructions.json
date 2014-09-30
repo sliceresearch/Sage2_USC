@@ -2,6 +2,7 @@
 	"main_script": "histoViewer.js",
 	"width": 800,
 	"height": 224,
+	"resize": "free",
 	"dependencies": [
 		  "openseadragon.js"
 	],

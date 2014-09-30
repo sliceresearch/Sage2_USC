@@ -4,6 +4,7 @@
 	"width": 800,
 	"height": 600,
 	"animation": true,
+	"resize": "free",
 	"dependencies": [
 		"scripts/d3.v3.min.js",
 		"scripts/leaflet.js"

@@ -290,7 +290,9 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
-		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		//wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		wsio.on('loadApplication', wsLoadApplication);
+		wsio.on('loadFileFromServer', wsLoadFileFromServer);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
 		wsio.on('saveSesion',       wsSaveSesion);
 		wsio.on('clearDisplay',     wsClearDisplay);
@@ -388,7 +390,7 @@ function initializeExistingApps(wsio) {
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var i;
 	for(i=0; i<applications.length; i++){
-		wsio.emit('createAppWindowPositionSizeOnly', applications[i]);
+		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(applications[i]));
 	}
 }
 
@@ -1078,7 +1080,7 @@ function tileApplications() {
 	if (config.ui.auto_hide_ui===true) areaY = - config.ui.titleBarHeight;
 
 	var areaW = config.totalWidth;
-	var areaH = config.totalHeight-(2*titleBar); // bottom margin: 1.5 + 0.5 = 2
+	var areaH = config.totalHeight-(1.0*titleBar);
 
 	var tileW = Math.floor(areaW / numCols);
 	var tileH = Math.floor(areaH / numRows);
@@ -1086,13 +1088,16 @@ function tileApplications() {
 	// go through them in sorted order
 	// applications.sort()
 
+	var padding = 4;
+	// if only one application, no padding, i.e maximize
+	if (applications.length===1) padding = 0;
     r = numRows-1;
     c = 0;
 	for (i=0; i<applications.length; i++) {
 		// get the application
 		app =  applications[i];
 		// calculate new dimensions
-        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
         // update the data structure
         app.left   = newdims[0];
         app.top    = newdims[1] - titleBar;
@@ -1148,7 +1153,30 @@ function wsRequestStoredFiles(wsio, data) {
 	wsio.emit('storedFileList', savedFiles);
 }
 
-function wsAddNewElementFromStoredFiles(wsio, data) {
+function wsLoadApplication(wsio, data) {
+	var appData = {application: "custom_app", filename: data.application};
+	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+
+		if(appInstance.animation){
+			var i;
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[appInstance.id].clients[clientAddress] = false;
+				}
+			}
+		}
+		
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+		applications.push(appInstance);
+	});
+}
+
+function wsLoadFileFromServer(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -1156,18 +1184,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
 			appInstance.id = getUniqueAppId();
-
-			if(appInstance.animation){
-				var i;
-				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.requiresFullApps){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						appAnimations[appInstance.id].clients[clientAddress] = false;
-					}
-				}
-			}
-
+			
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
@@ -1711,8 +1728,8 @@ function manageUploadedFiles(files) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
-		console.log('manageUploadedFiles> ', files[key].name);
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
+
 			if(appInstance === null){
 				console.log("Form> unrecognized file type: ", file.name, file.type);
 				return;
@@ -2255,21 +2272,22 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				// if localY in negative, inside titlebar
 				if (localY < 0) {
 					// titlebar image: 807x138  (10 pixels front paddding)
-					var buttonsWidth = config.ui.titleBarHeight * (485.0/111.0);
+					var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 					var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
-					var oneButton    = buttonsWidth / 3; // five buttons
+					var oneButton    = buttonsWidth / 2; // two buttons
 					var startButtons = elem.width - buttonsWidth;
-					if (localX > (startButtons+buttonsPad+2*oneButton)) {
+					if (localX > (startButtons+buttonsPad+oneButton)) {
 						// last button: close app
 						deleteApplication(elem);
 						// need to quit the function and stop processing
 						return;
-					} else if (localX > (startButtons+buttonsPad+oneButton)) {
-						// middle button: maximize fullscreen
-						pointerFullZone(uniqueID, pointerX, pointerY);
 					} else if (localX > (startButtons+buttonsPad)) {
-						// first button: maximize
-						pointerDblClick(uniqueID, pointerX, pointerY);
+						if (elem.resizeMode !== undefined && elem.resizeMode === "free")
+							// full wall resize
+							pointerFullZone(uniqueID, pointerX, pointerY);
+						else
+							// proportional resize
+							pointerDblClick(uniqueID, pointerX, pointerY);
 					}
 				}
 

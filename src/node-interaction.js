@@ -253,7 +253,13 @@ interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 	
 	var iWidth  = pointerX - this.selectedResizeItem.left + this.selectOffsetX;
 	var iHeight = 1;
-	if(this.SHIFT === true){
+	var resizeMode = this.SHIFT;
+
+	// Flip the resize mode if resize app preference is 'free'
+	if (this.selectedResizeItem.resizeMode === "free")
+		resizeMode = ! resizeMode;
+
+	if(resizeMode === true){
 		iHeight = pointerY - this.selectedResizeItem.top + this.selectOffsetY;
 
 		if(iWidth  < this.configuration.ui.minWindowWidth)  iWidth  = this.configuration.ui.minWindowWidth;

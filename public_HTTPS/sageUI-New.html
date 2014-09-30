@@ -28,6 +28,7 @@
 		this.init = function(config) {
 			var _this = this;
 			this.config = config;
+			this.scale = null;
 			this.logo = new Image();
 			this.logo.onload = function(event) {
 				_this.resize();
@@ -36,6 +37,8 @@
 			this.logoAspect = 3.47828052509;
 			this.fileDrop = false;
 			this.fileDropFontSize = 12;
+			
+			this.applications = [];
 		};
 		
 		this.draw = function() {
@@ -59,6 +62,38 @@
 			logoX = sage2UI.width/2  - logoW/2;
 			logoY = sage2UI.height/2 - logoH/2;
 			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+			
+			// applications
+			for(i=0; i<this.applications.length; i++){
+				// item
+				ctx.fillStyle = "rgba(102, 102, 102, 1.0)";
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = "rgba(86, 86, 86, 1.0)";
+			
+				var tLeft   = this.applications[i].left * this.scale;
+				var tTop    = (this.applications[i].top) * this.scale;
+				var tWidth  = this.applications[i].width * this.scale;
+				var tHeight = this.config.ui.titleBarHeight * this.scale;
+			
+				ctx.fillRect(tLeft, tTop, tWidth, tHeight);
+				ctx.strokeRect(tLeft, tTop, tWidth, tHeight);
+				
+				ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+				
+				var eLeft   =  this.applications[i].left * this.scale;
+				var eTop    = (this.applications[i].top+this.config.ui.titleBarHeight) * this.scale;
+				var eWidth  =  this.applications[i].width * this.scale;
+				var eHeight =  this.applications[i].height * this.scale;
+				
+				ctx.fillRect(eLeft, eTop, eWidth, eHeight);
+				ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
+				
+				var size = 0.8*Math.min(eWidth, eHeight);
+				var x = eLeft + (eWidth/2) - (size/2);
+				var y = eTop + (eHeight/2) - (size/2);
+				
+				ctx.drawImage(this.applications[i].icon, x, y, size, size);
+			}
 			
 			// tiled display layout
 			ctx.lineWidth = 2;
@@ -103,6 +138,77 @@
 				ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
 				this.wrapText(ctx, txt, textStartX, textStartY, textBoxWidth, lineHeight);
 			}
+		};
+		
+		this.addAppWindow = function(data) {
+			var icon = data.icon;
+			data.icon = new Image();
+			var _this = this;
+			data.icon.onload = function() {
+				_this.applications.push(data);
+				_this.draw();
+			};
+			data.icon.src = icon || "images/blank.png";
+		};
+		
+		this.deleteApp = function(id) {
+			var selectedIndex;
+			var selectedItem;
+			var i;
+			for(i=0; i<this.applications.length; i++){
+				if(this.applications[i].id === id){
+					selectedIndex = i;
+					selectedItem = this.applications[i];
+					break;
+				}
+			}
+			for(i=selectedIndex; i<this.applications.length-1; i++){
+				this.applications[i] = this.applications[i+1];
+			}
+			this.applications[this.applications.length-1] = selectedItem;
+			this.applications.pop();
+			this.draw();
+		};
+		
+		this.updateItemOrder = function(order) {
+			var i;
+			var j;
+			for(i=0; i<order.length; i++){
+				for(j=0; j<this.applications.length; j++){
+					if(this.applications[j].id === order[i]){
+						var tmp = this.applications[i];
+						this.applications[i] = this.applications[j];
+						this.applications[j] = tmp;
+					}
+				}
+			}
+			this.draw();
+		};
+		
+		this.setItemPosition = function(position_data) {
+			var i;
+			for(i=0; i<this.applications.length; i++){
+				if(this.applications[i].id === position_data.elemId){
+					this.applications[i].left = position_data.elemLeft;
+					this.applications[i].top = position_data.elemTop;
+					break;
+				}
+			}
+			this.draw();
+		};
+		
+		this.setItemPositionAndSize = function(position_data) {
+			var i;
+			for(i=0; i<this.applications.length; i++){
+				if(this.applications[i].id === position_data.elemId){
+					this.applications[i].left = position_data.elemLeft;
+					this.applications[i].top = position_data.elemTop;
+					this.applications[i].width = position_data.elemWidth;
+					this.applications[i].height = position_data.elemHeight;
+					break;
+				}
+			}
+			this.draw();
 		};
 		
 		this.drawRoundedRect = function(ctx, x, y, width, height, radius, fillFlag, strokeFlag) {
@@ -203,6 +309,8 @@
 			var minDim = Math.min(sage2UI.width, sage2UI.height);
 			this.fileDropFontSize = Math.round(minDim * 0.075);
 			
+			this.scale = sage2UI.width / this.config.totalWidth;
+			
 			this.draw();
 		};
 	}
@@ -214,6 +322,7 @@
 	
 	var selectedAppEntry;
 	var selectedFileEntry;
+	var type2App;
 	
 	function init() {
 		hostname = window.location.hostname;
@@ -269,6 +378,26 @@
 			var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 			var screenMin = Math.min(screen.width, screen.height);
 			interactor.setPointerSensitivity(sage2Min/screenMin);
+		});
+		
+		wsio.on('createAppWindowPositionSizeOnly', function(data) {
+			SAGE2DisplayUI.addAppWindow(data);
+		});
+
+		wsio.on('deleteElement', function(data) {
+			SAGE2DisplayUI.deleteApp(data.elemId);
+		});
+		
+		wsio.on('updateItemOrder', function(data) {
+			SAGE2DisplayUI.updateItemOrder(data.idList);
+		});
+		
+		wsio.on('setItemPosition', function(data) {
+			SAGE2DisplayUI.setItemPosition(data);
+		});
+		
+		wsio.on('setItemPositionAndSize', function(data) {
+			SAGE2DisplayUI.setItemPositionAndSize(data);
 		});
 		
 		wsio.on('availableApplications', function(data) {
@@ -328,10 +457,13 @@
 			removeAllChildren(pdfs);
 			removeAllChildren(sessions);
 			
-			createFileList(data, "images",   images);
-			createFileList(data, "videos",   videos);
-			createFileList(data, "pdfs",     pdfs);
-			createFileList(data, "sessions", sessions);
+			var longestImageName   = createFileList(data, "images",   images);
+			var longestVideoName   = createFileList(data, "videos",   videos);
+			var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+			var longestSessionName = createFileList(data, "sessions", sessions);
+			
+			var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+			document.getElementById('fileListElems').style.width = (longest+60).toString() + "px";
 			
 			showDialog('mediaBrowserDialog');
 		});
@@ -354,6 +486,13 @@
 		selectedAppEntry = null;
 		selectedFileEntry = null;
 		
+		type2App = {
+			images: "image_viewer",
+			videos: "movie_player",
+			pdfs: "pdf_viewer",
+			sessions: "load_session"
+		};
+		
 		resizeDialogs();
 	}
 	
@@ -368,9 +507,9 @@
 		var appListContainer = document.getElementById('appListContainer');
 		appListContainer.style.width = (window.innerWidth/2 - 24).toString() + "px";
 		appListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
-		var fileListElems = document.getElementById('fileListElems');
-		fileListElems.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
-		fileListElems.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		var fileListContainer = document.getElementById('fileListContainer');
+		fileListContainer.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
+		fileListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
 		var metadata = document.getElementById('metadata');
 		metadata.style.left = (window.innerWidth/2 *0.6 - 13).toString() + "px";
 		metadata.style.width = (window.innerWidth/2 *0.4).toString() + "px";
@@ -388,13 +527,22 @@
 	}
 	
 	function createFileList(list, type, parent) {
+		var textWidthTest = document.getElementById('textWidthTest');
+		var longest = 0;
 		for(var i=0; i<list[type].length; i++){
-			var listElem = document.createElement("li");
-			listElem.textContent = list[type][i].exif.FileName;
-			listElem.id          = "file_" + list[type][i].exif.FileName;
-			listElem.setAttribute("file", type+"/"+list[type][i].exif.FileName);
-			parent.appendChild(listElem);
+			var file = document.createElement('li');
+			file.textContent = list[type][i].exif.FileName;
+			file.id          = "file_" + list[type][i].exif.FileName;
+			file.setAttribute("application", type2App[type]);
+			file.setAttribute("file", list[type][i].exif.FileName);
+			parent.appendChild(file);
+			
+			textWidthTest.textContent = file.textContent;
+			var textWidth = (textWidthTest.clientWidth + 1);
+			if(textWidth > longest) longest = textWidth;
 		}
+		textWidthTest.textContent = "";
+		return longest;
 	}
 	
 	function preventDefault(event) {
@@ -513,8 +661,6 @@
 		
 		// File Selected
 		else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
-			var file = element.getAttribute("file");
-			
 			if(selectedFileEntry !== null) selectedFileEntry.style.backgroundColor = "transparent";
 			selectedFileEntry = element;
 			selectedFileEntry.style.backgroundColor = "#B9D3FF";
@@ -542,14 +688,17 @@
 	function loadSelectedApplication() {
 		if(selectedAppEntry !== null) {
 			var application = selectedAppEntry.getAttribute("application");
-			console.log("loading " + application);
+			
+			wsio.emit('loadApplication', {application: application});
 		}
 	}
 	
 	function loadSelectedFile() {
 		if(selectedFileEntry !== null) {
+			var application = selectedFileEntry.getAttribute("application");
 			var file = selectedFileEntry.getAttribute("file");
-			console.log("loading " + file);
+			
+			wsio.emit('loadFileFromServer', {application: application, filename: file});
 		}
 	}
 	
@@ -584,7 +733,6 @@
 	}
 	
 	function reloadIfServerRunning(callback) {
-		// make a dummy request to test the server every 2 sec
 		xhr = new XMLHttpRequest();
 		xhr.open("GET", "/", true);
 		xhr.onreadystatechange = function() {
@@ -665,28 +813,30 @@
 	<!-- dialog for the Media Browser -->
 	<div id="mediaBrowserDialog" class="dialog">
 		<div id="fileTreeList" class="css-treeview">
-			<ul id="fileListElems">
-				<li>
-					<input type="checkbox" id="images-dir"></input>
-					<label for="images-dir">Images</label>
-					<ul id="images" class="fileItem"></ul>
-				</li>
-				<li>
-					<input type="checkbox" id="pdfs-dir"></input>
-					<label for="pdfs-dir">PDFs</label>
-					<ul id="pdfs" class="fileItem"></ul>
-				</li>
-				<li>
-					<input type="checkbox" id="videos-dir"></input>
-					<label for="videos-dir">Videos</label>
-					<ul id="videos" class="fileItem"></ul>
-				</li>
-				<li>
-					<input type="checkbox" id="sessions-dir"></input>
-					<label for="sessions-dir">Sessions</label>
-					<ul id="sessions" class="fileItem"></ul>
-				</li>
-			</ul>
+			<div id="fileListContainer">
+				<ul id="fileListElems">
+					<li>
+						<input type="checkbox" id="images-dir"></input>
+						<label for="images-dir">Images</label>
+						<ul id="images" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="pdfs-dir"></input>
+						<label for="pdfs-dir">PDFs</label>
+						<ul id="pdfs" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="videos-dir"></input>
+						<label for="videos-dir">Videos</label>
+						<ul id="videos" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="sessions-dir"></input>
+						<label for="sessions-dir">Sessions</label>
+						<ul id="sessions" class="fileItem"></ul>
+					</li>
+				</ul>
+			</div>
 		</div>
 		<div id="metadata">
 			<img id="thumbnail" src="images/blank.png"></img>
@@ -722,6 +872,10 @@
 			<span id="settingsCloseBtn" class="button">Close</span>
 		</div>
 	</div>
+	
+	
+	<!-- invisible text to test rendered width -->
+	<div id="textWidthTest"></div>
 </body>
 </html>
 
