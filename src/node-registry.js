@@ -15,25 +15,32 @@
 var fs          = require('fs');
 var json5       = require('json5');
 var path        = require('path');
+var mime        = require('mime');
 
 function registryManager() {
     this.type2app = {};
-    this.app2type = {};
     this.registryFile = "fileRegistry.json";
     this.nativeAppsFile = "nativeApps.json";
-    this.jsonFile = {}
+    this.registryMap = {}
 
 
     console.log("Registry> Initializing registry!");
 
+    // Check if registry file exists
     if (fs.existsSync(this.registryFile)) {
         console.log("Registry> Registry file found. Reading file...");
         this.readRegistryFile();
     } else {
         console.log("Registry> Registry file " + this.registryFile + " not found. Building registry...");
-        this.jsonFile.registry = [];
+        this.registryMap.registry = [];
     }
-    this.syncRegistry();
+
+    /**
+    * Sync the registry.
+    * If registry is empty, create it and write the file.
+    * If registry is not empty, scan for changes and update.
+    * **/
+    this.scanNativeApps();
     if (!fs.existsSync(this.registryFile)) {
         console.log("Registry> Registry synced, writing file.");
         this.writeRegistry();
@@ -43,14 +50,14 @@ function registryManager() {
 
 registryManager.prototype.readRegistryFile = function() {
     var jsonString = fs.readFileSync(this.registryFile, 'utf8');
-    this.jsonFile = json5.parse(jsonString);
+    this.registryMap = json5.parse(jsonString);
 
-    if (this.jsonFile.registry !== undefined &&
-        this.jsonFile.registry !== null &&
-        Array.isArray(this.jsonFile.registry) ) {
+    if (this.registryMap.registry !== undefined &&
+        this.registryMap.registry !== null &&
+        Array.isArray(this.registryMap.registry) ) {
 
-        for(var i=0; i<this.jsonFile.registry.length; i++) {
-            var defApp =  this.jsonFile.registry[i];
+        for(var i=0; i<this.registryMap.registry.length; i++) {
+            var defApp =  this.registryMap.registry[i];
             this.type2app[defApp.type] = defApp.default;
             console.log("Registry> In registry: " + defApp.type + " with " + defApp.default);
         }
@@ -58,11 +65,7 @@ registryManager.prototype.readRegistryFile = function() {
 
 }
 
-registryManager.prototype.syncRegistry = function() {
-    this.syncNativeApps();
-}
-
-registryManager.prototype.syncNativeApps = function() {
+registryManager.prototype.scanNativeApps = function() {
     var jsonString = fs.readFileSync(this.nativeAppsFile, 'utf8');
     var nativeApps = json5.parse(jsonString);
 
@@ -77,7 +80,7 @@ registryManager.prototype.syncNativeApps = function() {
 
                 console.log("Registry> Syncing: [" + app.name + "] Supported FileTypes: " + app.types);
 
-                this.register(app.name, app.types);
+                this.registerMime(app.name, app.types);
             }
         }
     }
@@ -85,9 +88,43 @@ registryManager.prototype.syncNativeApps = function() {
 
 registryManager.prototype.register = function(name, types) {
     for(var i=0; i<types.length; i++) {
+        var type = mime.lookup(types[i]);
+
+        // XXX -What happens when multiple fileTypes?
+        if (type === undefined || type === null || type === 'application/custom') {
+            var map = {};
+            map['application/' + name] = [ types[i] ];
+            mime.define(map);
+            type = mime.lookup(types[i]);
+        }
         var found = false;
-        for(var j=0; j<this.jsonFile.registry.length; j++) {
-            var regEntry = this.jsonFile.registry[j];
+        for(var j=0; j<this.registryMap.registry.length; j++) {
+            var regEntry = this.registryMap.registry[j];
+            if (regEntry.type === type) {
+                regEntry.applications.push(name);
+                var found = true;
+            }
+        }
+
+        // This type is not in the registry, add a new app
+        // and set as default
+        if (!found) {
+            console.log("Registry> Type " + type + " not in registry. Adding for app " + name);
+            var newApp = {};
+            newApp.type = type;
+            newApp.applications = [ name ];
+            newApp.default = name;
+            this.setDefaultApplication(name, type);
+            this.registryMap.registry.push(newApp);
+        }
+    }
+}
+
+registryManager.prototype.registerMime = function(name, types) {
+    for(var i=0; i<types.length; i++) {
+        var found = false;
+        for(var j=0; j<this.registryMap.registry.length; j++) {
+            var regEntry = this.registryMap.registry[j];
             if (regEntry.type === types[i]) {
                 regEntry.applications.push(name);
                 var found = true;
@@ -103,26 +140,18 @@ registryManager.prototype.register = function(name, types) {
             newApp.applications = [ name ];
             newApp.default = name;
             this.setDefaultApplication(name, types[i]);
-            this.jsonFile.registry.push(newApp);
+            this.registryMap.registry.push(newApp);
         }
     }
 }
 
 registryManager.prototype.writeRegistry = function() {
     try {
-        fs.writeFileSync(this.registryFile, JSON.stringify(this.jsonFile, null));
+        fs.writeFileSync(this.registryFile, JSON.stringify(this.registryMap, null));
     }
     catch (err) {
         console.log("Registry> Unable to write registry file", err);
     }
-}
-
-registryManager.prototype.getApp = function(type) {
-    return this.type2app[type];
-}
-
-registryManager.prototype.setApp = function(type) {
-
 }
 
 registryManager.prototype.setDefaultApplication = function(app, type) {
