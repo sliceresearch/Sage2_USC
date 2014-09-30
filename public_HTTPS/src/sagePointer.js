@@ -31,12 +31,8 @@ function sagePointer(wsio) {
 	this.mediaVideo         = document.getElementById('mediaVideo');
 	this.mediaCanvas        = document.getElementById('mediaCanvas');
 	this.mediaCtx           = this.mediaCanvas.getContext('2d');
-	this.mediaResolution    = this.screenShareResolution.options[this.screenShareResolution.selectedIndex].value;
+	this.mediaResolution    = this.screenShareResolution.selectedIndex;
 	this.mediaQuality       = this.screenShareQuality.value;
-	this.mediaHeight        = Math.min(this.mediaResolution, screen.height);
-	this.mediaWidth         = screen.width/screen.height * this.mediaHeight;
-	this.mediaCanvas.width  = this.mediaWidth;
-	this.mediaCanvas.height = this.mediaHeight;
 	this.broadcasting       = false;
 	this.desktopId          = null;
 	
@@ -197,13 +193,7 @@ function sagePointer(wsio) {
 	};
 	
 	this.captureDesktop = function(mediaSourceId) {
-		/*
-		var streamHeight = Math.min(1080, screen.height);
-		var streamWidth = screen.width/screen.height * streamHeight;
-		
-		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: streamWidth, maxHeight: streamHeight};
-		*/
-		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 1920, maxHeight: 1080};
+		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 3840, maxHeight: 2160};
 		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 	};
 	
@@ -217,14 +207,6 @@ function sagePointer(wsio) {
 
 		this.mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
 		this.mediaVideo.play();
-		
-		/*
-		var frame = this.captureMediaFrame();
-		var raw = this.base64ToString(frame.split(",")[1]);
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: screen.width, height: screen.height});
-
-		this.broadcasting = true;
-		*/
 	};
 
 	this.streamFailMethod = function(e) {
@@ -239,6 +221,22 @@ function sagePointer(wsio) {
 	};
 	
 	this.streamMetaDataMethod = function(event) {
+		var widths = [Math.min( 852, this.mediaVideo.videoWidth), 
+					  Math.min(1280, this.mediaVideo.videoWidth), 
+					  Math.min(1920, this.mediaVideo.videoWidth), 
+					  this.mediaVideo.videoWidth];
+		
+		for(var i=0; i<4; i++){
+			var height = parseInt(widths[i] * this.mediaVideo.videoHeight/this.mediaVideo.videoWidth, 10);
+			this.screenShareResolution.options[i].value = widths[i] + "x" + height;
+		}
+		
+		var res = this.screenShareResolution.options[this.mediaResolution].value.split("x");
+		this.mediaWidth  = parseInt(res[0], 10);
+		this.mediaHeight = parseInt(res[1], 10);
+		this.mediaCanvas.width  = this.mediaWidth;
+		this.mediaCanvas.height = this.mediaHeight;
+		
 		var frame = this.captureMediaFrame();
 		var raw = this.base64ToString(frame.split(",")[1]);
 		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: this.mediaVideo.videoWidth, height: this.mediaVideo.videoHeight});
@@ -248,7 +246,7 @@ function sagePointer(wsio) {
 	
 	this.captureMediaFrame = function() {
 		this.mediaCtx.clearRect(0, 0, this.mediaWidth, this.mediaHeight);
-		this.mediaCtx.drawImage(mediaVideo, 0, 0, this.mediaWidth, this.mediaHeight);
+		this.mediaCtx.drawImage(this.mediaVideo, 0, 0, this.mediaWidth, this.mediaHeight);
 		return this.mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality/10));
 	};
 	
@@ -279,12 +277,15 @@ function sagePointer(wsio) {
 	};
 	
 	this.changeScreenShareResolutionMethod = function(event) {
-		this.mediaResolution = parseInt(this.screenShareResolution.options[this.screenShareResolution.selectedIndex].value);
-		this.mediaHeight = Math.min(this.mediaResolution, screen.height);
-		this.mediaWidth  = screen.width/screen.height * this.mediaHeight;
-		this.mediaCanvas.width  = this.mediaWidth;
-		this.mediaCanvas.height = this.mediaHeight;
-		console.log("media resolution: " + this.mediaResolution);
+		this.mediaResolution = this.screenShareResolution.selectedIndex;
+		if(this.screenShareResolution.options[this.mediaResolution].value){
+			var res = this.screenShareResolution.options[this.mediaResolution].value.split("x");
+			this.mediaHeight = parseInt(res[0], 10);
+			this.mediaWidth  = parseInt(res[1], 10);
+			this.mediaCanvas.width  = this.mediaWidth;
+			this.mediaCanvas.height = this.mediaHeight;
+			console.log("media resolution: " + this.screenShareResolution.options[this.mediaResolution].value);
+		}
 	};
 
 	this.changeScreenShareQualityMethod = function(event) {

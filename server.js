@@ -1077,7 +1077,7 @@ function tileApplications() {
 	if (config.ui.auto_hide_ui===true) areaY = - config.ui.titleBarHeight;
 
 	var areaW = config.totalWidth;
-	var areaH = config.totalHeight-(2*titleBar); // bottom margin: 1.5 + 0.5 = 2
+	var areaH = config.totalHeight-(1.0*titleBar);
 
 	var tileW = Math.floor(areaW / numCols);
 	var tileH = Math.floor(areaH / numRows);
@@ -1085,13 +1085,16 @@ function tileApplications() {
 	// go through them in sorted order
 	// applications.sort()
 
+	var padding = 4;
+	// if only one application, no padding, i.e maximize
+	if (applications.length===1) padding = 0;
     r = numRows-1;
     c = 0;
 	for (i=0; i<applications.length; i++) {
 		// get the application
 		app =  applications[i];
 		// calculate new dimensions
-        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, 15);
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
         // update the data structure
         app.left   = newdims[0];
         app.top    = newdims[1] - titleBar;
@@ -1540,8 +1543,6 @@ function setupDisplayBackground() {
 	if(config.background.image !== undefined && config.background.image !== null){
 		var bg_file = path.join(public_https, config.background.image);
 
-		//var bg_info = imageinfo(fs.readFileSync(bg_file));
-
 		if (config.background.style == "fit") {
 			var result = exiftool.file(bg_file, function(err, data) {
 				if (err) {
@@ -1749,8 +1750,8 @@ function manageUploadedFiles(files) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
-		console.log('manageUploadedFiles> ', files[key].name);
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
+
 			if(appInstance === null){
 				console.log("Form> unrecognized file type: ", file.name, file.type);
 				return;
@@ -2301,21 +2302,22 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				// if localY in negative, inside titlebar
 				if (localY < 0) {
 					// titlebar image: 807x138  (10 pixels front paddding)
-					var buttonsWidth = config.ui.titleBarHeight * (485.0/111.0);
+					var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 					var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
-					var oneButton    = buttonsWidth / 3; // five buttons
+					var oneButton    = buttonsWidth / 2; // two buttons
 					var startButtons = elem.width - buttonsWidth;
-					if (localX > (startButtons+buttonsPad+2*oneButton)) {
+					if (localX > (startButtons+buttonsPad+oneButton)) {
 						// last button: close app
 						deleteApplication(elem);
 						// need to quit the function and stop processing
 						return;
-					} else if (localX > (startButtons+buttonsPad+oneButton)) {
-						// middle button: maximize fullscreen
-						pointerFullZone(uniqueID, pointerX, pointerY);
 					} else if (localX > (startButtons+buttonsPad)) {
-						// first button: maximize
-						pointerDblClick(uniqueID, pointerX, pointerY);
+						if (elem.resizeMode !== undefined && elem.resizeMode === "free")
+							// full wall resize
+							pointerFullZone(uniqueID, pointerX, pointerY);
+						else
+							// proportional resize
+							pointerDblClick(uniqueID, pointerX, pointerY);
 					}
 				}
 

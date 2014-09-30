@@ -4,12 +4,20 @@
 	"index_port": 80,
 	"background": {
 		"image": "images/background/chicago_skyline_iridium.jpg",
-		"style": "fit"
+		"style": "fit",
+		"watermark": {
+			"svg": "images/EVL-logo.svg",
+			"color": "rgba(255, 255, 255, 0.2)"
+		},
+		"clip": true
 	},
 	"ui": {
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
+		},
 		"noDropShadow": true
 	},
 	"resolution": {

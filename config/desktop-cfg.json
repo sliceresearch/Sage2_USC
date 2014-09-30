@@ -11,12 +11,22 @@
 	background: {
 		// background color
 		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
 	},
 	ui: {
 		// clock setting: 12-hour or 24-hour
 		clock: 12,
 		show_version: true,
 		show_url: true,
+		menubar: {
+			backgroundColor: "rgba(0, 0, 0, 0.5)",
+			textColor: "rgba(255, 255, 255, 1.0)",
+			remoteConnectedColor: "rgba(55, 153, 130, 1.0)",
+			remoteDisconnectedColor: "rgba(173, 42, 42, 1.0)"
+		},
 		// auto-hide the wall UI (top bar, application bar, ...)
 		auto_hide_ui: false,
 		// delay in seconds
@@ -33,7 +43,7 @@
 		width: 1200,
 		height: 900
 	},
-		// for experimental features: true/false
+	// for experimental features: true/false
 	experimental: {
 		"webbrowser": false  // enable the awesomium module
 	},

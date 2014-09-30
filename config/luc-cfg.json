@@ -9,6 +9,9 @@
 	"ui": {
 		"clock": 24,
 		"show_url": true,
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
+		}
 	},
 	"resolution": {
 		"width": 2560,

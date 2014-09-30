@@ -14,7 +14,10 @@
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"show_version": true
+		"show_version": true,
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
+		}
 	},
 	"resolution": { // resolution of each display
 		"width": 1366,
@@ -233,6 +236,11 @@
 		{
 			"name": "Cyber-Commons",
 			"host": "iridium.evl.uic.edu",
+			"port": 443
+		},
+		{
+			"name": "CAVE2 Column",
+			"host": "preeka.evl.uic.edu",
 			"port": 443
 		},
 		{

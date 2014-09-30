@@ -132,12 +132,11 @@ function omicronManager( sysConfig )
 	}
 }
 
-omicronManager.prototype.disconnect = function()
-{
+omicronManager.prototype.disconnect = function() {
 	var sendbuf = util.format("data_off");
 	console.log("Omicron> Sending disconnect signal");
 	oinputserverSocket.write(sendbuf);
-}
+};
 
 omicronManager.prototype.setCallbacks = function( 
 	sagePointerList,

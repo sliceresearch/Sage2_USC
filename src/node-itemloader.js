@@ -447,6 +447,10 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			metadata.keywords = instructions.keywords;
 		else metadata.keywords = [];
 
+		var resizeMode = "proportional";
+		if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+			resizeMode = instructions.resize;
+
 		var appInstance = {
 			id: null,
 			title: metadata.title,
@@ -470,6 +474,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			aspect: aspectRatio,
 			animation: instructions.animation,
 			metadata: metadata,
+			resizeMode: resizeMode,
 			date: new Date()
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
@@ -514,6 +519,10 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
 
+			var resizeMode = "proportional";
+			if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+				resizeMode = instructions.resize;
+
 
 			var appInstance = {
 				id: null,
@@ -538,6 +547,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 				aspect: aspectRatio,
 				animation: instructions.animation,
 				metadata: metadata,
+				resizeMode: resizeMode,
 				date: new Date()
 			};
 			_this.scaleAppToFitDisplay(appInstance);
