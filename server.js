@@ -477,7 +477,7 @@ function wsPointerPosition(wsio, data) {
 
 function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	// Casting the parameters to correct type
 	data.deltaX = parseInt(data.deltaX, 10);
 	data.deltaY = parseInt(data.deltaY, 10);
@@ -516,7 +516,7 @@ function wsPointerDraw(wsio, data) {
 
 function wsKeyDown(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	if(data.code == 16){ // shift
 		remoteInteraction[uniqueID].SHIFT = true;
 	}
@@ -556,7 +556,7 @@ function wsKeyDown(wsio, data) {
 
 function wsKeyUp(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	if(data.code == 16){ // shift
 		remoteInteraction[uniqueID].SHIFT = false;
 	}
@@ -577,10 +577,10 @@ function wsKeyUp(wsio, data) {
 	var pointerY = sagePointers[uniqueID].top;
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
-
+	
 	if(elem !== null){
 		if(remoteInteraction[uniqueID].windowManagementMode()){
-			if(data.code == "8" || data.code == "46"){ // backspace or delete
+			if(data.code === 8 || data.code === 46){ // backspace or delete
 				deleteApplication(elem);
 			}
 		}

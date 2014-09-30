@@ -23,12 +23,11 @@
 	document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
 	
 	function displayUI() {
-		this.config = null;
-		
-		this.init = function(config) {
+		this.init = function(config, wsio) {
 			var _this = this;
 			this.config = config;
-			this.scale = null;
+			this.wsio = wsio;
+			this.scale = 1.0;
 			this.logo = new Image();
 			this.logo.onload = function(event) {
 				_this.resize();
@@ -39,6 +38,8 @@
 			this.fileDropFontSize = 12;
 			
 			this.applications = [];
+			this.pointerX = 0;
+			this.pointerY = 0;
 		};
 		
 		this.draw = function() {
@@ -265,6 +266,35 @@
 			ctx.fillText(line, x, y);
 		};
 		
+		this.pointerMove = function(x, y) {
+			this.pointerX = x;
+			this.pointerY = y;
+			var globalX = this.pointerX / this.scale;
+			var globalY = this.pointerY / this.scale;
+			this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		};
+		
+		this.keyDown = function(keyCode) {
+			if(keyCode !== 27) {
+				this.wsio.emit('keyDown', {code: keyCode});
+				if(keyCode === 9) { // tab is a special case - must emulate keyPress event
+					this.wsio.emit('keyPress', {code: keyCode, character: String.fromCharCode(keyCode)});
+				}
+				// if a special key - prevent default (otherwise let continue to keyPress)
+				if(keyCode <= 7 || (keyCode >= 10 && keyCode <= 15) || keyCode === 32 || (keyCode >= 47 && keyCode <= 90) || (keyCode >= 94 && keyCode <= 111) || keyCode >= 146) {
+					return false;
+				}
+			}
+			return true;
+		};
+		
+		this.keyUp = function(keyCode) {
+			if(keyCode !== 27) {
+				this.wsio.emit('keyUp', {code: keyCode});
+			}
+			return true;
+		};
+		
 		this.resize = function() {
 			var displayUI = document.getElementById('displayUI');
 			var sage2UI = document.getElementById('sage2UI');
@@ -319,6 +349,7 @@
 	var wsio;
 	var SAGE2DisplayUI;
 	var interactor;
+	var keyEvents;
 	
 	var selectedAppEntry;
 	var selectedFileEntry;
@@ -373,7 +404,7 @@
 		
 		wsio.on('setupDisplayConfiguration', function(config) {
 			SAGE2DisplayUI = new displayUI();
-			SAGE2DisplayUI.init(config);
+			SAGE2DisplayUI.init(config, wsio);
 			
 			var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 			var screenMin = Math.min(screen.width, screen.height);
@@ -480,9 +511,11 @@
 		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
+		document.addEventListener('mousemove', pointerMove, false);
 		document.addEventListener('click', pointerClick, false);
 		document.addEventListener('dblclick', pointerDblClick, false);
 		
+		keyEvents = false;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
 		
@@ -573,6 +606,29 @@
 		sage2UI.style.borderStyle = "solid";
 		SAGE2DisplayUI.fileDrop = false;
 		SAGE2DisplayUI.draw();
+	}
+	
+	function pointerMove(event) {
+		// listen for keyboard events if mouse moved over sage2UI
+		if(event.srcElement.id === "sage2UI" && keyEvents === false){
+			document.addEventListener('keydown',  keyDown,  false);
+			document.addEventListener('keyup',    keyUp,    false);
+            document.addEventListener('keypress', keyPress, false);
+			keyEvents = true;
+		}
+		else if(event.srcElement.id !== "sage2UI" && keyEvents === true){
+			document.removeEventListener('keydown',  keyDown,  false);
+			document.removeEventListener('keyup',    keyUp,    false);
+            document.removeEventListener('keypress', keyPress, false);
+			keyEvents = false;
+		}
+		
+		if(event.srcElement.id === "sage2UI"){
+			var rect = event.srcElement.getBoundingClientRect();
+			var mouseX = event.clientX - rect.left;
+			var mouseY = event.clientY - rect.top;
+			SAGE2DisplayUI.pointerMove(mouseX, mouseY);
+		}
 	}
 	
 	function pointerClick(event) {
@@ -683,6 +739,23 @@
 			loadSelectedFile();
 			hideDialog('mediaBrowserDialog');
 		}
+	}
+	
+	function keyDown(event) {
+		if(SAGE2DisplayUI.keyDown(parseInt(event.keyCode, 10))){
+			event.preventDefault();
+		}
+	}
+	
+	function keyUp(event) {
+		if(SAGE2DisplayUI.keyUp(parseInt(event.keyCode, 10))){
+			event.preventDefault();
+		}
+	}
+	
+	function keyPress(event) {
+		
+		event.preventDefault();
 	}
 	
 	function loadSelectedApplication() {
