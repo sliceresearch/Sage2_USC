@@ -484,50 +484,51 @@ function uiBuilder(json_cfg, clientID) {
 	};
 	
 	this.radialMenuEvent = function(data) {
-		var menuElem = document.getElementById(data.id+"_menu");
 		
-		if( menuElem !== null )
-		{
-			var rect = menuElem.getBoundingClientRect();
-			
-			pointerX = data.x - rect.left - this.offsetX;
-			pointerY = data.y - rect.top - this.offsetY;
-			
-			var menu = this.radialMenus[menuElem.id];
-			
-			if( menu.visible )
-			{
-				menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
+		for (var menuID in this.radialMenus) {
+			var menuElem = document.getElementById(menuID);
+			var menu = this.radialMenus[menuID];
 
-				menuElem.style.display = "block";
-				menu.thumbnailWindowElement.style.display = "block";
-				
-				dragOffset = menu.dragPosition;
-				if( menu.windowInteractionMode === false )
-				{
-					dragOffset = menu.dragPosition;
-					menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
-					menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
-				}
-				
-				menu.thumbnailWindowElement.style.left = (rect.left + menu.thumbnailWindowScrollOffset.x).toString() + "px";
-				menu.thumbnailWindowElement.style.top = (rect.top + menu.thumbnailWindowScrollOffset.y).toString()  + "px";
-				
-				if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
-				{
-					menu.draw();
-				}
-			}
-			else
+			if( menuElem !== null )
 			{
-				menuElem.style.display = "none";
-				menu.thumbnailWindowElement.style.display = "none";
+				var rect = menuElem.getBoundingClientRect();
+				
+				pointerX = data.x - rect.left - this.offsetX;
+				pointerY = data.y - rect.top - this.offsetY;
+					
+				if( menu.visible )
+				{
+					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
+					menuElem.style.display = "block";
+					menu.thumbnailWindowElement.style.display = "block";
+					
+					dragOffset = menu.dragPosition;
+					if( menu.windowInteractionMode === false )
+					{
+						dragOffset = menu.dragPosition;
+						menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
+						menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
+					}
+					
+					menu.thumbnailWindowElement.style.left = (rect.left + menu.thumbnailWindowScrollOffset.x).toString() + "px";
+					menu.thumbnailWindowElement.style.top = (rect.top + menu.thumbnailWindowScrollOffset.y).toString()  + "px";
+					
+					if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
+					{
+						menu.draw();
+					}
+				}
+				else
+				{
+					menuElem.style.display = "none";
+					menu.thumbnailWindowElement.style.display = "none";
+				}
 			}
 		}
 	};
 	
 	this.updateRadialMenu = function(data) {
-		console.log("uibuilder: updateRadialMenu");
+		
 		var menuElem = document.getElementById(data.id+"_menu");
 		if( menuElem !== null )
 		{

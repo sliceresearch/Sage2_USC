@@ -143,6 +143,7 @@ omicronManager.prototype.setCallbacks = function(
 	createSagePointerCB,
 	showPointerCB,
 	pointerPressCB,
+	pointerMoveCB,
 	pointerPositionCB,
 	hidePointerCB,
 	pointerReleaseCB,
@@ -160,6 +161,7 @@ omicronManager.prototype.setCallbacks = function(
 	createSagePointer = createSagePointerCB;
 	showPointer = showPointerCB;
 	pointerPress = pointerPressCB;
+	pointerMove = pointerMoveCB;
 	pointerPosition = pointerPositionCB;
 	hidePointer = hidePointerCB;
 	pointerRelease = pointerReleaseCB;
@@ -344,6 +346,7 @@ omicronManager.prototype.runTracker = function()
 						var accelX = posX + accelDistance * Math.cos(angle);
 						var accelY = posY + accelDistance * Math.sin(angle);
 						pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
+						pointerMove(address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" } );
 	
 					}
 					else if( e.flags === FLAG_FIVE_FINGER_HOLD )

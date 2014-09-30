@@ -27,7 +27,7 @@ var menuButtonSize = 100; // pie image size
 var menuButtonHitboxSize = 50;
 var overlayIconScale = 0.3; // image, pdf, etc image
 
-var thumbnailWindowSize = { x: 1224, y: 850 };
+var thumbnailWindowSize = { x: 1224, y: 860 };
 var thumbnailPreviewWindowSize = { x: 350, y: 800 };
 
 var radialMenuList = {};
@@ -894,6 +894,7 @@ function radialMenu(){
 		}
 			
 		// windowInteractionMode = true if any active button has an event over its
+		console.log(type, data);
 		if( type === "pointerPress" && data.button === 'left' )
 		{
 			// Press over radial menu, drag menu
@@ -1095,18 +1096,32 @@ function radialMenu(){
 	{
 		var curRow = 0;
 		var curColumn = 0;
-			
+		
+		// maxRows is considered a 'hard' limit based on the thumbnail and window size.
+		// If maxRows and maxCols is exceeded, then maxCols is expanded as needed.
+		var maxRows = Math.floor((thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize + thumbSpacer));
+		var maxCols = Math.floor((thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize + thumbSpacer));
+		var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
+		
+		if( neededColumns >= 1 )
+		{
+			//this.thumbnailWindowElement.width = thumbnailWindowSize.x + (imageThumbSize + thumbSpacer) * neededColumns;
+		}
+		
 		for( i = 0; i < this.imageThumbnailButtons.length; i++ )
 		{
 			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
 			var currentButton = this.imageThumbnailButtons[i];
-
-			if( nextCol > thumbnailWindowSize.x )
+			
+			
+			if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
 			{
 				curColumn = 0;
-				curRow++;
+				
+				if( curRow < maxRows - 1 )
+					curRow++;
 			}
-
+			
 			currentButton.setPosition( this.thumbnailWindowPosition.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
 			
 			curColumn++;

@@ -478,8 +478,11 @@ function wsPointerMove(wsio, data) {
 	// Casting the parameters to correct type
 	data.deltaX = parseInt(data.deltaX, 10);
 	data.deltaY = parseInt(data.deltaY, 10);
-
-	pointerMove(uniqueID, data);
+	
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	
+	pointerMove(uniqueID, pointerX, pointerY, data);
 }
 
 function wsPointerScrollStart(wsio, data) {
@@ -2534,7 +2537,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 }
 
-function pointerMove(uniqueID, data) {
+function pointerMove(uniqueID, pointerX, pointerY, data) {
 	sagePointers[uniqueID].left += data.deltaX;
 	sagePointers[uniqueID].top += data.deltaY;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
@@ -2543,11 +2546,9 @@ function pointerMove(uniqueID, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-	
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+
 	var elem = findAppUnderPointer(pointerX, pointerY);
-	
+
 	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
@@ -3005,6 +3006,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 		createSagePointer,
 		showPointer,
 		pointerPress,
+		pointerMove,
 		pointerPosition,
 		hidePointer,
 		pointerRelease,
