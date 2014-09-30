@@ -266,12 +266,29 @@
 			ctx.fillText(line, x, y);
 		};
 		
+		this.pointerPress = function(btn) {
+			if(btn !== "right"){
+				this.wsio.emit('pointerPress', {button: btn});
+			}
+		};
+		
+		this.pointerRelease = function(btn) {
+			if(btn !== "right"){
+				this.wsio.emit('pointerRelease', {button: btn});
+			}
+		};
+		
 		this.pointerMove = function(x, y) {
 			this.pointerX = x;
 			this.pointerY = y;
 			var globalX = this.pointerX / this.scale;
 			var globalY = this.pointerY / this.scale;
 			this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		};
+		
+		this.pointerScroll = function(value) {
+			this.wsio.emit('pointerScrollStart');
+			this.wsio.emit('pointerScroll', {wheelDelta: value});
 		};
 		
 		this.keyDown = function(keyCode) {
@@ -295,12 +312,15 @@
 			return true;
 		};
 		
+		this.keyPress = function(charCode) {
+			this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
+			return true;
+		}
+		
 		this.resize = function() {
 			var displayUI = document.getElementById('displayUI');
 			var sage2UI = document.getElementById('sage2UI');
 			var ctx = sage2UI.getContext('2d');
-			//var fileDropArea = document.getElementById('fileDropArea');
-			//var fileDropText = document.getElementById('fileDropText');
 			var menuUI = document.getElementById('menuUI');
 			
 			var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 30; // size of menu buttons
@@ -511,9 +531,12 @@
 		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
-		document.addEventListener('mousemove', pointerMove, false);
-		document.addEventListener('click', pointerClick, false);
-		document.addEventListener('dblclick', pointerDblClick, false);
+		document.addEventListener('mousedown',  pointerPress, false);
+		document.addEventListener('mouseup',    pointerRelease, false);
+		document.addEventListener('mousemove',  pointerMove, false);
+		document.addEventListener('click',      pointerClick, false);
+		document.addEventListener('dblclick',   pointerDblClick, false);
+		document.addEventListener('mousewheel', pointerScroll, false);
 		
 		keyEvents = false;
 		selectedAppEntry = null;
@@ -608,6 +631,22 @@
 		SAGE2DisplayUI.draw();
 	}
 	
+	function pointerPress(event) {
+		if(event.srcElement.id === "sage2UI"){
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			SAGE2DisplayUI.pointerPress(btn);
+			event.preventDefault();
+		}
+	}
+	
+	function pointerRelease(event) {
+		if(event.srcElement.id === "sage2UI"){
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			SAGE2DisplayUI.pointerRelease(btn);
+			event.preventDefault();
+		}
+	}
+	
 	function pointerMove(event) {
 		// listen for keyboard events if mouse moved over sage2UI
 		if(event.srcElement.id === "sage2UI" && keyEvents === false){
@@ -634,13 +673,8 @@
 	function pointerClick(event) {
 		var element = event.srcElement;
 		
-		// SAGE2 UI Interaction
-		if(element.id === "sage2UI") {
-			console.log("sage2UI");
-		}
-		
 		// Menu Buttons
-		else if(element.id === "applauncher") {
+		if(element.id === "applauncher") {
 			wsio.emit('requestAvailableApplications');
 		}
 		else if(element.id === "mediabrowser") {
@@ -741,6 +775,13 @@
 		}
 	}
 	
+	function pointerScroll(event) {
+		if(event.srcElement.id === "sage2UI"){
+			SAGE2DisplayUI.pointerScroll(event.wheelDelta);
+			event.preventDefault();
+		}
+	}
+	
 	function keyDown(event) {
 		if(SAGE2DisplayUI.keyDown(parseInt(event.keyCode, 10))){
 			event.preventDefault();
@@ -754,8 +795,9 @@
 	}
 	
 	function keyPress(event) {
-		
-		event.preventDefault();
+		if(SAGE2DisplayUI.keyPress(parseInt(event.charCode, 10))){
+			event.preventDefault();
+		}
 	}
 	
 	function loadSelectedApplication() {
