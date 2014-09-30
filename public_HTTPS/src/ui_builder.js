@@ -421,6 +421,11 @@ function uiBuilder(json_cfg, clientID) {
 				
 				menu.thumbnailWindowElement.style.left = (rect.left + menu.thumbnailWindowScrollOffset.x).toString() + "px";
 				menu.thumbnailWindowElement.style.top = (rect.top + menu.thumbnailWindowScrollOffset.y).toString()  + "px";
+				
+				if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
+				{
+					menu.draw();
+				}
 			}
 			else
 			{

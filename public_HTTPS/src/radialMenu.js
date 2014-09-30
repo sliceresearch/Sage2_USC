@@ -157,7 +157,10 @@ function radialMenu(){
 		this.radialCloseIcon.src = this.resrcPath +"icon_close_128.png"
 		
 		this.radialDragIcon = new Image;
-		this.radialDragIcon.src = this.resrcPath +"drag-ring2.svg"
+		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg"
+		
+		this.glowLine = new Image;
+		this.glowLine.src = this.resrcPath +"glow-line.svg"
 		
 		// Create buttons
 		this.radialDragButton = new buttonWidget();
@@ -370,19 +373,32 @@ function radialMenu(){
 		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2AppButton.setRotation( angle - Math.PI/2 );
 		
-		angle = (initAngle + angleSeparation * 8) * (Math.PI/180);
+		angle = (initAngle + angleSeparation * 8.325) * (Math.PI/180);
 		this.radial2CloseAllButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2CloseAllButton.setRotation( angle - Math.PI/2 );
 		
-		angle = (initAngle + angleSeparation * 7.3) * (Math.PI/180);
+		angle = (initAngle + angleSeparation * 7.675) * (Math.PI/180);
 		this.radial2TileButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2TileButton.setRotation( angle - Math.PI/2 );
 		
 		
 	};
 	
-	this.draw = function() {
+	this.drawGlowLine = function( position, angleIncrement, glowLineSize )
+	{
+		this.ctx.save();
+		this.ctx.fillStyle = "rgba(255, 255, 255, 1)"
+		this.ctx.translate( position.x , position.y );
+		this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180) );
+		this.ctx.drawImage(this.glowLine, - glowLineSize.x/2, 0, glowLineSize.x, glowLineSize.y);
 		
+		this.ctx.restore();
+	};
+	
+	this.draw = function() {
+		this.ctx.redraw = false;
+		this.thumbWindowctx.redraw = false;
+			
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
@@ -409,6 +425,14 @@ function radialMenu(){
 		if( this.currentMenuState !== 'radialMenu' )
 			this.thumbWindowctx.fillRect(this.thumbnailWindowPosition.x,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
 		// ------------------------------------------------------
+		
+		this.drawGlowLine( this.radialMenuCenter, 0, {x: 15, y: 200} ); // 
+		this.drawGlowLine( this.radialMenuCenter, 1, {x: 15, y: 200} ); // 
+		this.drawGlowLine( this.radialMenuCenter, 2, {x: 15, y: 200} ); // 
+		this.drawGlowLine( this.radialMenuCenter, 3, {x: 15, y: 200} ); // 
+		this.drawGlowLine( this.radialMenuCenter, 4, {x: 15, y: 200} ); // 
+		this.drawGlowLine( this.radialMenuCenter, 5, {x: 15, y: 200} ); // 
+		this.drawGlowLine( this.radialMenuCenter, 8, {x: 15, y: 200} ); // Settings
 		
 		this.radialDragButton.draw();
 		
@@ -867,9 +891,9 @@ function radialMenu(){
 		
 		if( this.ctx.redraw === true || this.thumbWindowctx.redraw === true )
 		{
-			this.draw();
-			this.ctx.redraw = false;
-			this.thumbWindowctx.redraw = false;
+			//this.draw();
+			//this.ctx.redraw = false;
+			//this.thumbWindowctx.redraw = false;
 		}
 	};
 	
