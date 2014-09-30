@@ -1,62 +1,65 @@
 {
-        "host": "thor.evl.uic.edu",
-		"port": 8090,
-		"index_port": 8292,
-		"background": {
-			"color": "#333333"
-		},
-		"ui": {
-			"clock": 12,
-			"show_url": true,
-			"show_version": true
-		},
-        "resolution": {
-                "width": 3072,
-                "height": 1366
-        },
-        "layout": {
-                "rows": 1,
-                "columns": 1
-        },
-        "displays": [
-                {
-                        "ID": 0,
-                        "row": 0,
-                        "column": 0
-                }
-        ],
-		"alternate_hosts": [
-			"localhost",
-			"127.0.0.1"
-		],
-		"remote_sites": [
-			{
-				"name": "Cyber-Commons",
-				"host": "iridium.evl.uic.edu",
-				"port": 9090
-			},
-			{
-				"name": "CAVE2",
-				"host": "lyra.evl.uic.edu",
-				"port": 9090
-			}
-		],
-		// for experimental features: true/false
-		experimental: {
-			"webbrowser": false,  // enable the awesomium module
-		
-			"omicron": // enable omicron input module
-			{
-				// Standard 'SAGE' connection
-				// SAGE listens for a sageinputserver to stream events
-				enable: true,
-				dataPort: 30015,
-				
-				// Additional 'CAVE2' type connection
-				// SAGE connects to an oinputserver to get events
-				useOinputserver: true,
-				inputServerIP: "cave2tracker.evl.uic.edu",
-				msgPort: 28000
-			}
+	"host": "thor.evl.uic.edu",
+	"port": 8090,
+	"index_port": 8292,
+	"background": {
+		"color": "#333333"
+	},
+	"ui": {
+		"clock": 12,
+		"show_url": true,
+		"show_version": true,
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
 		}
+	},
+	"resolution": {
+		"width": 3072,
+		"height": 1366
+	},
+	"layout": {
+		"rows": 1,
+		"columns": 1
+	},
+	"displays": [
+		{
+			"ID": 0,
+			"row": 0,
+			"column": 0
+		}
+	],
+	"alternate_hosts": [
+		"localhost",
+		"127.0.0.1"
+	],
+	"remote_sites": [
+		{
+			"name": "Cyber-Commons",
+			"host": "iridium.evl.uic.edu",
+			"port": 9090
+		},
+		{
+			"name": "CAVE2",
+			"host": "lyra.evl.uic.edu",
+			"port": 9090
+		}
+	],
+	// for experimental features: true/false
+	"experimental": {
+		"webbrowser": false,  // enable the awesomium module
+	
+		"omicron": // enable omicron input module
+		{
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			"enable": true,
+			"dataPort": 30015,
+			
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			"useOinputserver": true,
+			"inputServerIP": "cave2tracker.evl.uic.edu",
+			"msgPort": 28000
+		}
+	}
 }

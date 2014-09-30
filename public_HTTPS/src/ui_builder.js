@@ -199,7 +199,10 @@ function uiBuilder(json_cfg, clientID) {
 
 	this.build = function () {
 		console.log("Buidling the UI for the display");
-
+		
+		this.logoLoadedFunc = this.logoLoaded.bind(this);
+		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
+		
 		var head = document.getElementsByTagName("head")[0];
 
 		// Load CSS style sheet
@@ -233,73 +236,158 @@ function uiBuilder(json_cfg, clientID) {
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
+		this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better"
 		this.upperBar.id = "upperBar";
-
+		
+		var textColor = "rgba(255, 255, 255, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+			textColor = this.json_cfg.ui.menubar.textColor;
+			
 		// time clock
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
 		// machine name
-		this.machine = document.createElement('p');
-		this.machine.id  = "machine";
+		var machine = document.createElement('p');
+		machine.id  = "machine";
 		// version id
-		this.version = document.createElement('p');
-		this.version.id  = "version";
+		var version = document.createElement('p');
+		version.id  = "version";
+		// EVL-LAVA logo
+		var logo = document.createElement('object');
+		logo.id = "logo";
+		// background watermark
+		var watermark = document.createElement('object');
+		watermark.id = "watermark";
 		
 		this.upperBar.appendChild(this.clock);
-		this.upperBar.appendChild(this.machine);
-		this.upperBar.appendChild(this.version);
+		this.upperBar.appendChild(machine);
+		this.upperBar.appendChild(version);
+		this.upperBar.appendChild(logo);
+		this.bg.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
-
+		
+		var backgroundColor = "rgba(0, 0, 0, 0.5)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.backgroundColor !== undefined)
+			backgroundColor = this.json_cfg.ui.menubar.backgroundColor;
+			
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
 		this.upperBar.style.left   = "0px";
 		this.upperBar.style.top    = -this.offsetY.toString() + "px";
 		this.upperBar.style.zIndex = "9999";
+		this.upperBar.style.backgroundColor = backgroundColor;
 		
 		this.clock.style.position   = "absolute";
 		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		this.clock.style.color      = textColor;
 		this.clock.style.left       = (-this.offsetX + this.titleBarHeight).toString() + "px";
-		this.clock.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		this.clock.style.color      = "#FFFFFF";
+		// center vertically: position top 50% and then translate by -50%
+		this.clock.style.top        = "50%";
+		this.clock.style.webkitTransform  = "translateY(-50%)";
 		
-		this.machine.style.position   = "absolute";
-		this.machine.style.whiteSpace = "nowrap";
-		this.machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		this.machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
-		this.machine.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		this.machine.style.color      = "#FFFFFF";
+		machine.style.position   = "absolute";
+		machine.style.whiteSpace = "nowrap";
+		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		machine.style.color      = textColor;
+		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
+		machine.style.top        = "50%";
+		machine.style.webkitTransform  = "translateY(-50%)";
 		
-		this.version.style.position   = "absolute";
-		this.version.style.whiteSpace = "nowrap";
-		this.version.style.fontSize   = Math.round(this.titleTextSize) + "px";
-		this.version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (16*this.titleBarHeight)).toString() + "px";
-		this.version.style.top        = (0.05*this.titleBarHeight).toString() + "px";
-		this.version.style.color      = "#FFFFFF";
+		version.style.position   = "absolute";
+		version.style.whiteSpace = "nowrap";
+		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
+		version.style.color      = textColor;
+		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
+		version.style.top        = "50%";
+		version.style.webkitTransform  = "translateY(-50%)";
+		
+		logo.addEventListener('load', this.logoLoadedFunc, false);
+		logo.data = "images/EVL-LAVA.svg";
+		logo.type = "image/svg+xml";
+		
+		if(this.json_cfg.background.watermark !== undefined){
+			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
+			watermark.data = this.json_cfg.background.watermark.svg;
+			watermark.type = "image/svg+xml";
+		}
 		
 		if (this.json_cfg.ui.show_url) {
-                        var hostname = this.json_cfg.host;
-			var iport;
-			if (typeof this.json_cfg.rproxy_index_port != "undefined") {
+			var url   = this.json_cfg.host;
+			var iport = this.json_cfg.index_port;
+			if(iport !== 80) url += ":" + iport;
+			if(this.json_cfg.rproxy_index_port !== undefined) {
 				iport = this.json_cfg.rproxy_index_port;
-				hostname = window.location.hostname;
+				url = window.location.hostname;
+				if(iport !== 80) url += ":" + iport;
+				url += window.location.pathname;
 			}
-			else {
-				iport = this.json_cfg.index_port;
-			}
-			if (iport == 80) this.machine.textContent = hostname + window.location.pathname;
-			else this.machine.textContent = hostname + ":" + iport.toString() + window.location.pathname;
-			if (window.location.pathname == "/")
-				this.machine.textContent = this.machine.textContent.slice(0, -1);
+			machine.textContent = url;
 		}
 		head.appendChild(fileref);
 	};
 	
-	this.updateVersionText = function(version) {
+	this.updateVersionText = function(data) {
 		if(this.json_cfg.ui.show_version) {
-			if (version.branch && version.commit && version.date)
-				this.version.innerHTML = "<b>v" + version.base+"-"+version.branch+"-"+version.commit+"</b> " + version.date;
+			var version = document.getElementById('version');
+			if (data.branch && data.commit && data.date)
+				version.innerHTML = "<b>v" + data.base+"-"+data.branch+"-"+data.commit+"</b> " + data.date;
 			else
-				this.version.innerHTML = "<b>v" + version.base + "</b>";
+				version.innerHTML = "<b>v" + data.base + "</b>";
+		}
+	};
+	
+	this.logoLoaded = function(event) {
+		var logo = document.getElementById('logo');
+		var logoSVG = logo.getSVGDocument().querySelector('svg');
+		
+		var bbox = logoSVG.getBBox();
+		
+		var height = 0.95 * this.titleBarHeight;
+		var width  = height * (bbox.width/bbox.height);
+	
+		logo.width  = width;
+		logo.height = height;
+		logo.style.position   = "absolute";
+		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
+		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
+		
+		var textColor = "rgba(255, 255, 255, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+			textColor = this.json_cfg.ui.menubar.textColor;
+		this.changeSVGColor(logoSVG, "path", null, textColor);
+	};
+	
+	this.watermarkLoaded = function(event) {
+		var watermark = document.getElementById('watermark');
+		var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
+		
+		var bbox = watermarkSVG.getBBox();
+		var width;
+		var height;
+		
+		if(bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+			width  = this.json_cfg.totalWidth / 2;
+			height = width * bbox.height/bbox.width;
+		}
+		else {
+			height = this.json_cfg.totalHeight / 2;
+			width  = height * bbox.width/bbox.height;
+		}
+	
+		watermark.width  = width;
+		watermark.height = height;
+		watermark.style.position = "absolute";
+		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
+		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
+		
+		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
+	};
+	
+	this.changeSVGColor = function(svgItem, elementType, strokeColor, fillColor) {
+		var elements = svgItem.querySelectorAll(elementType);
+		for(var i=0; i<elements.length; i++){
+			if(strokeColor) elements[i].style.stroke = strokeColor;
+			if(fillColor)   elements[i].style.fill   = fillColor;
 		}
 	};
 
@@ -349,6 +437,13 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.addRemoteSite = function(data) {
+		var connectedColor = "rgba(55, 153, 130, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
+		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
+			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
+		
 		var remote = document.createElement('div');
 		remote.id  = data.name;
 		remote.style.position = "absolute";
@@ -357,13 +452,17 @@ function uiBuilder(json_cfg, clientID) {
 		remote.style.height = data.height.toString() + "px";
 		remote.style.left   = (-this.offsetX + data.pos).toString() + "px";
 		remote.style.top    = (-this.offsetY+2).toString() + "px";
-		if (data.connected) remote.style.backgroundColor = "#379982";
-		else remote.style.backgroundColor = "#AD2A2A";
+		if (data.connected) remote.style.backgroundColor = connectedColor;
+		else remote.style.backgroundColor = disconnectedColor;
+
+		var color = "rgba(255, 255, 255, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+			color = this.json_cfg.ui.menubar.textColor;
 		
 		var name = document.createElement('p');
 		name.style.whiteSpace = "nowrap";
 		name.style.fontSize = Math.round(this.titleTextSize) + "px";
-		name.style.color = "#FFFFFF";
+		name.style.color = color;
 		name.textContent = data.name;
 		remote.appendChild(name);
 		
@@ -371,9 +470,16 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.connectedToRemoteSite = function(data) {
+		var connectedColor = "rgba(55, 153, 130, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
+		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
+		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
+			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
+			
 		var remote = document.getElementById(data.name);
-		if (data.connected) remote.style.backgroundColor = "#379982";
-		else remote.style.backgroundColor = "#AD2A2A";
+		if (data.connected) remote.style.backgroundColor = connectedColor;
+		else remote.style.backgroundColor = disconnectedColor;
 	};
 
 	this.hideInterface = function() {

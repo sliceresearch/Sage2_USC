@@ -15,7 +15,10 @@
 		// clock setting: 12-hour or 24-hour
 		clock: 12,
 		show_version: true,
-		show_url:     true
+		show_url:     true,
+		"menubar": {
+			"textColor": "rgba(255, 255, 255, 1.0)"
+		}
 	},
 	resolution: {
 		width: 700,

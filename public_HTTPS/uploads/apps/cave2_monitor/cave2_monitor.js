@@ -286,10 +286,10 @@ drawTextRightWhite: function (textLocX, textLocY, theText, textFontSize)
 drawBasicStuff: function ()
 {
     this.today = new Date();
-    var currentTime = (this.today.getMonth()+1) + "/" + this.today.getDate()  + "/"
-    + this.today.getFullYear() + " - " + this.today.getHours() + ":"
-    + ("0" + this.today.getMinutes()).slice (-2)
-    + ":" + ("0" + this.today.getSeconds()).slice (-2);
+    var currentTime = (this.today.getMonth()+1) + "/" + this.today.getDate()  + 
+    "/" + this.today.getFullYear() + " - " + this.today.getHours() + ":" +
+    ("0" + this.today.getMinutes()).slice (-2) +
+    ":" + ("0" + this.today.getSeconds()).slice (-2);
 
 
     this.drawTWhite(45, 50, "evl CAVE2 monitor", "40px");
@@ -303,14 +303,22 @@ drawBasicStuff: function ()
     this.oldSumTotal = this.newSumTotal;
 
 
-    if ((this.connection === 0) || (this.net1Connection == 0)
-        || (this.net2Connection == 0) || (this.staleConnection >= 5) )
+    if ((this.connection === 0) || (this.net1Connection === 0) ||
+        (this.net2Connection === 0) || (this.staleConnection >= 5))
         {
             this.drawTRed(this.gwin.canvasWidth/2, 50, "Connection Lost", "40px", "middle");
             this.drawBox(45, 65, 5, 1160, "red", 1.0);
+
+            if ((this.connection === 0) || (this.staleConnection >= 5))
+                this.drawTRed(this.gwin.canvasWidth/2-100, 62, "cluster", "10px", "left");
+            if (this.net1Connection === 0)
+                this.drawTRed(this.gwin.canvasWidth/2, 62, "net int", "10px", "left");
+            if (this.net2Connection === 0)
+                this.drawTRed(this.gwin.canvasWidth/2+100, 62, "net ext", "10px", "left");
         }
     else
         this.drawBox(45, 65, 5, 1160, "white", 1.0);
+
 
 
     this.drawTextRightWhite(1205, 50, currentTime, "40px");
@@ -438,7 +446,7 @@ weatherInsideCallback: function(error, datasetTextIn)
         }
 
     var parsedCSV = d3.csv.parseRows(datasetTextIn);
-    var d, d2;
+    var d, d2, c;
 
     if (parsedCSV.length >= 37)
         {
@@ -456,7 +464,7 @@ weatherInsideCallback: function(error, datasetTextIn)
 
         this.newSumTotal = 0;
 
-        for (var c = 0; c < 37; c++)
+        for (c = 0; c < 37; c++)
             this.bigD[c] = new Array(20); // 16 + 4
 
         for (j=0; j<37; j+= 1)
@@ -485,7 +493,7 @@ weatherInsideCallback: function(error, datasetTextIn)
         {
             this.connection = 0;
 
-            for (var c = 0; c < 37; c++)
+            for (c = 0; c < 37; c++)
                 this.bigD[c] = new Array(20); // 16 + 4
 
             for (j=0; j<37; j+= 1)
@@ -540,7 +548,7 @@ drawOneNode: function (x, y, proc, p, row)
                 btmY = y - i*16;
 
                 if (row < 1)
-                    theY = topY
+                    theY = topY;
                 else
                     theY = btmY;
 
@@ -645,9 +653,9 @@ drawInsideTemp: function ()
 
         netsUp = this.bigN1[j] + this.bigN2[j]; // should be 2 if all working well
         if (netsUp === 1)
-            netColor = "yellow"
+            netColor = "yellow";
         else if (netsUp === 0)
-            netColor = "red"
+            netColor = "red";
 
         if (j === 0)    // 0
             {
@@ -719,14 +727,21 @@ drawAll: function ()
 
 ////////////////////////////////////////
 
-updateWindow: function (){
+updateWindow: function ()
+{
+    // Get width height from the supporting div     
+    var divWidth  = this.element.clientWidth;
+    var divHeight = this.element.clientHeight;
 
-    var x = d3.select(this.myTag).style("width") ;
-    var y = d3.select(this.myTag).style("height") ;
+    // set background color for areas around my app (in case of non-proportional scaling)
+    this.element.style.backgroundColor =  "black";
+    
+    var box="0,0,"+this.gwin.canvasWidth+","+this.gwin.canvasHeight;
 
-   this.gwin.sampleSVG.attr("width", x)
-        .attr("height", y)
-        .attr("viewBox", "0 0 " + this.gwin.canvasWidth + " " + this.gwin.canvasHeight)
+    this.gwin.sampleSVG
+        .attr("width",   divWidth)
+        .attr("height",  divHeight)
+        .attr("viewBox", box)
         .attr("preserveAspectRatio", "xMinYMin meet");
 },
 
@@ -755,6 +770,8 @@ updateWindow: function (){
             .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
         this.gwin.sampleSVG = this.svg;
+
+        this.drawBox(0, 0, this.gwin.canvasHeight, this.gwin.canvasWidth, "black", 1);
 
         this.initApp();
         this.updateAll();

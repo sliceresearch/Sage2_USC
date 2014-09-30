@@ -253,7 +253,13 @@ interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 	
 	var iWidth  = pointerX - this.selectedResizeItem.left + this.selectOffsetX;
 	var iHeight = 1;
-	if(this.SHIFT === true){
+	var resizeMode = this.SHIFT;
+
+	// Flip the resize mode if resize app preference is 'free'
+	if (this.selectedResizeItem.resizeMode === "free")
+		resizeMode = ! resizeMode;
+
+	if(resizeMode === true){
 		iHeight = pointerY - this.selectedResizeItem.top + this.selectOffsetY;
 
 		if(iWidth  < this.configuration.ui.minWindowWidth)  iWidth  = this.configuration.ui.minWindowWidth;
@@ -312,11 +318,11 @@ interaction.prototype.maximizeSelectedItem = function(item) {
 	}
 	if (item.aspect > wallRatio) {
 		// Image wider than wall
-		iWidth  = this.configuration.totalWidth - (3*titleBar);
+		iWidth  = this.configuration.totalWidth;// - (3*titleBar);
 		iHeight = iWidth / item.aspect;
 	} else {
 		// Wall wider than image
-		iHeight = this.configuration.totalHeight - (3*titleBar);
+		iHeight = this.configuration.totalHeight - (2*titleBar);// - (3*titleBar);
 		iWidth  = iHeight*item.aspect;
 	}
 	// back up values for restore

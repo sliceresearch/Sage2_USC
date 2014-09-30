@@ -11,10 +11,12 @@
 
 function windowManager(id, ws) {
 	this.element = document.getElementById(id);
-	this.ctx   = this.element.getContext("2d");
-	this.wsio  = ws;
-	this.nRows = 0;
-	this.nCols = 0;
+	this.ctx     = this.element.getContext("2d");
+	this.wsio    = ws;
+	this.nRows   = 0;
+	this.nCols   = 0;
+	this.config  = null;
+
 	this.aspectRatio = 1.0;
 	this.resolution  = [];
 	this.scale       = 1.0;
@@ -61,10 +63,14 @@ function windowManager(id, ws) {
 			this.ctx.lineWidth = 2;
 			this.ctx.strokeStyle = "rgba(90, 90, 90, 1.0)";
 			
-			this.ctx.shadowOffsetX = 8;
-			this.ctx.shadowOffsetY = 8;
-			this.ctx.shadowBlur = 12;
-			this.ctx.shadowColor = "#222222";
+			if (this.config.ui.noDropShadow === true) {
+				// no drop shadow
+			} else {
+				this.ctx.shadowOffsetX = 8;
+				this.ctx.shadowOffsetY = 8;
+				this.ctx.shadowBlur = 12;
+				this.ctx.shadowColor = "#222222";
+			}
 			
 			var eLeft   = this.applications[i].left * this.scale;
 			var eTop    = (this.applications[i].top+this.titleBarHeight) * this.scale;
@@ -235,8 +241,9 @@ function windowManager(id, ws) {
 	};
 	
 	this.initDisplayConfig = function(config) {
-		this.nRows = config.layout.rows;
-		this.nCols = config.layout.columns;
+		this.config = config;
+		this.nRows  = config.layout.rows;
+		this.nCols  = config.layout.columns;
 		
 		this.resolution = [(config.resolution.width*this.nCols), (config.resolution.height*this.nRows)];
 		this.aspectRatio = this.resolution[0] / this.resolution[1];
