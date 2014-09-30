@@ -61,6 +61,11 @@ function radialMenu(){
 		
 		this.settingMenuOpen = false;
 		
+		this.timer = 0;
+		this.menuState = 'open';
+		this.stateTransition = 0;
+		this.stateTransitionTime = 1;
+		
 		this.visible = true;
 		this.windowInteractionMode = false;
 		this.ctx.redraw = true;
@@ -97,7 +102,7 @@ function radialMenu(){
 				sharesContentWithRemoteServer: false,
 				receivesDisplayConfiguration: true,
 				receivesClockTime: false,
-				requiresFullApps: false,
+				requiresFullApps: true,
 				requiresAppPositionSizeTypeOnly: false,
 				receivesMediaStreamFrames: false,
 				receivesWindowModification: false,
@@ -114,6 +119,9 @@ function radialMenu(){
 			radialMenuList[id].wsio.close();
 		});
 		
+		this.wsio.on('animateCanvas', function(data) {
+			radialMenuList[id].animate(data);
+		});
 		
 		// load thumbnail icons
 		this.idleExitIcon = new Image;
@@ -160,7 +168,7 @@ function radialMenu(){
 		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg"
 		
 		this.glowLine = new Image;
-		this.glowLine.src = this.resrcPath +"glow-line.svg"
+		this.glowLine.src = this.resrcPath +"glow_lines2_1024.png"
 		
 		// Create buttons
 		this.radialDragButton = new buttonWidget();
@@ -384,21 +392,33 @@ function radialMenu(){
 		
 	};
 	
-	this.drawGlowLine = function( position, angleIncrement, glowLineSize )
+	this.drawImage = function( image, position, size, color, angle, centered )
 	{
-		this.ctx.save();
-		this.ctx.fillStyle = "rgba(255, 255, 255, 1)"
-		this.ctx.translate( position.x , position.y );
-		this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180) );
-		this.ctx.drawImage(this.glowLine, - glowLineSize.x/2, 0, glowLineSize.x, glowLineSize.y);
+		//this.ctx.save();
+		this.ctx.fillStyle = color
+		//this.ctx.translate( position.x , position.y );
+		//this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180) );
+		if( centered )
+			this.ctx.drawImage(image, position.x - size.x/2, position.y - size.y/2, size.x, size.y)
+		else
+			this.ctx.drawImage(image, position.x, position.y, size.x, size.y)
 		
-		this.ctx.restore();
+		//this.ctx.restore();
+	};
+	
+	this.animate = function( data )
+	{
+		console.log(data);
 	};
 	
 	this.draw = function() {
-		this.ctx.redraw = false;
-		this.thumbWindowctx.redraw = false;
-			
+	
+		if( this.menuState !== 'opening' )
+		{
+			this.ctx.redraw = false;
+			this.thumbWindowctx.redraw = false;
+		}
+		
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
@@ -420,19 +440,32 @@ function radialMenu(){
 		}
 		
 		// TEMP: Just to clearly see context edge
-		//this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
+		if( this.menuState == 'opening' )
+		{
+			this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
+			
+			if( this.stateTransition < 1 )
+				this.stateTransition += this.stateTransitionTime / 1000;
+			else
+				this.stateTransition = 0;
+		}
+		else if( this.menuState == 'open' )
+		{
+			this.stateTransition = 1;
+		}
 		
 		if( this.currentMenuState !== 'radialMenu' )
 			this.thumbWindowctx.fillRect(this.thumbnailWindowPosition.x,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
 		// ------------------------------------------------------
 		
-		this.drawGlowLine( this.radialMenuCenter, 0, {x: 15, y: 200} ); // 
-		this.drawGlowLine( this.radialMenuCenter, 1, {x: 15, y: 200} ); // 
-		this.drawGlowLine( this.radialMenuCenter, 2, {x: 15, y: 200} ); // 
-		this.drawGlowLine( this.radialMenuCenter, 3, {x: 15, y: 200} ); // 
-		this.drawGlowLine( this.radialMenuCenter, 4, {x: 15, y: 200} ); // 
-		this.drawGlowLine( this.radialMenuCenter, 5, {x: 15, y: 200} ); // 
-		this.drawGlowLine( this.radialMenuCenter, 8, {x: 15, y: 200} ); // Settings
+		this.drawImage( this.glowLine, this.radialMenuCenter, {x: 170 * this.stateTransition, y: 170 * this.stateTransition}, "rgba(255, 255, 255, 0.9)", 0, true );
+		//this.drawGlowLine( this.radialMenuCenter, 0, {x: 15, y: 200} ); // 
+		//this.drawGlowLine( this.radialMenuCenter, 1, {x: 15, y: 200} ); // 
+		//this.drawGlowLine( this.radialMenuCenter, 2, {x: 15, y: 200} ); // 
+		//this.drawGlowLine( this.radialMenuCenter, 3, {x: 15, y: 200} ); // 
+		//this.drawGlowLine( this.radialMenuCenter, 4, {x: 15, y: 200} ); // 
+		//this.drawGlowLine( this.radialMenuCenter, 5, {x: 15, y: 200} ); // 
+		//this.drawGlowLine( this.radialMenuCenter, 8, {x: 15, y: 200} ); // Settings
 		
 		this.radialDragButton.draw();
 		
@@ -1060,7 +1093,7 @@ function radialMenu(){
 		}
 		//curColumn = 0;
 		//curRow += 2;
-		curRow = 1;
+		curRow = 0;
 		curColumn = 0;
 		for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
 		{
@@ -1078,7 +1111,7 @@ function radialMenu(){
 		}
 		//curColumn = 0;
 		//curRow += 2;
-		curRow = 1;
+		curRow = 0;
 		curColumn = 0;
 		for( i = 0; i < this.videoThumbnailButtons.length; i++ )
 		{
@@ -1097,7 +1130,7 @@ function radialMenu(){
 		}
 		//curColumn = 0;
 		//curRow += 2;
-		curRow = 1;
+		curRow = 0;
 		curColumn = 0;
 		for( i = 0; i < this.appThumbnailButtons.length; i++ )
 		{
@@ -1116,7 +1149,7 @@ function radialMenu(){
 		}
 		//curColumn = 0;
 		//curRow += 2;
-		curRow = 1;
+		curRow = 0;
 		curColumn = 0;
 		for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
 		{

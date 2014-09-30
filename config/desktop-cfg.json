@@ -30,8 +30,8 @@
 		maxWindowHeight: 2048
 	},
 	resolution: {
-		width: 700,
-		height: 700
+		width: 1200,
+		height: 900
 	},
 		// for experimental features: true/false
 	experimental: {
