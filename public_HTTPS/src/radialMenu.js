@@ -1098,10 +1098,10 @@ function radialMenu(){
 			
 		for( i = 0; i < this.imageThumbnailButtons.length; i++ )
 		{
-			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer)) / this.element.width;
+			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
 			var currentButton = this.imageThumbnailButtons[i];
 
-			if( nextCol > thumbnailWindowWidth )
+			if( nextCol > thumbnailWindowSize.x )
 			{
 				curColumn = 0;
 				curRow++;
@@ -1117,10 +1117,10 @@ function radialMenu(){
 		curColumn = 0;
 		for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
 		{
-			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer)) / this.element.width;
+			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
 			var currentButton = this.pdfThumbnailButtons[i];
 			
-			if( nextCol > thumbnailWindowWidth )
+			if( nextCol > thumbnailWindowSize.x )
 			{
 				curColumn = 0;
 				curRow++;
@@ -1135,10 +1135,10 @@ function radialMenu(){
 		curColumn = 0;
 		for( i = 0; i < this.videoThumbnailButtons.length; i++ )
 		{
-			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer)) / this.element.width;
+			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
 			var currentButton = this.videoThumbnailButtons[i];
 			
-			if( nextCol > thumbnailWindowWidth )
+			if( nextCol > thumbnailWindowSize.x )
 			{
 				curColumn = 0;
 				curRow++;
@@ -1154,10 +1154,10 @@ function radialMenu(){
 		curColumn = 0;
 		for( i = 0; i < this.appThumbnailButtons.length; i++ )
 		{
-			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer)) / this.element.width;
+			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
 			var currentButton = this.appThumbnailButtons[i];
 			
-			if( nextCol > thumbnailWindowWidth )
+			if( nextCol > thumbnailWindowSize.x )
 			{
 				curColumn = 0;
 				curRow++;
@@ -1173,10 +1173,10 @@ function radialMenu(){
 		curColumn = 0;
 		for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
 		{
-			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer)) / this.element.width;
+			var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
 			var currentButton = this.sessionThumbnailButtons[i];
 			
-			if( nextCol > thumbnailWindowWidth )
+			if( nextCol > thumbnailWindowSize.x )
 			{
 				curColumn = 0;
 				curRow++;
