@@ -152,19 +152,63 @@
 		};
 		
 		this.deleteApp = function(id) {
-		
+			var selectedIndex;
+			var selectedItem;
+			var i;
+			for(i=0; i<this.applications.length; i++){
+				if(this.applications[i].id === id){
+					selectedIndex = i;
+					selectedItem = this.applications[i];
+					break;
+				}
+			}
+			for(i=selectedIndex; i<this.applications.length-1; i++){
+				this.applications[i] = this.applications[i+1];
+			}
+			this.applications[this.applications.length-1] = selectedItem;
+			this.applications.pop();
+			this.draw();
 		};
 		
 		this.updateItemOrder = function(order) {
-		
+			var i;
+			var j;
+			for(i=0; i<order.length; i++){
+				for(j=0; j<this.applications.length; j++){
+					if(this.applications[j].id === order[i]){
+						var tmp = this.applications[i];
+						this.applications[i] = this.applications[j];
+						this.applications[j] = tmp;
+					}
+				}
+			}
+			this.draw();
 		};
 		
 		this.setItemPosition = function(position_data) {
-		
+			var i;
+			for(i=0; i<this.applications.length; i++){
+				if(this.applications[i].id === position_data.elemId){
+					this.applications[i].left = position_data.elemLeft;
+					this.applications[i].top = position_data.elemTop;
+					break;
+				}
+			}
+			this.draw();
 		};
 		
 		this.setItemPositionAndSize = function(position_data) {
-		
+			var i;
+			for(i=0; i<this.applications.length; i++){
+				if(this.applications[i].id === position_data.elemId){
+					this.applications[i].left = position_data.elemLeft;
+					this.applications[i].top = position_data.elemTop;
+					this.applications[i].width = position_data.elemWidth;
+					this.applications[i].height = position_data.elemHeight;
+					break;
+				}
+			}
+			this.draw();
 		};
 		
 		this.drawRoundedRect = function(ctx, x, y, width, height, radius, fillFlag, strokeFlag) {
