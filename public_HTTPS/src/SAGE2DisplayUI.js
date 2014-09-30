@@ -267,6 +267,10 @@ function SAGE2DisplayUI() {
 		this.wsio.emit('pointerScroll', {wheelDelta: value});
 	};
 	
+	this.pointerDblClick = function() {
+		this.wsio.emit('pointerDblClick');
+	};
+	
 	this.keyDown = function(keyCode) {
 		if(keyCode !== 27) {
 			this.wsio.emit('keyDown', {code: keyCode});

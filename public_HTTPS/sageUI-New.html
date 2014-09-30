@@ -426,8 +426,11 @@
 	
 	function pointerDblClick(event) {
 		var element = event.srcElement;
-		
-		if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
+		if(element.id === "sage2UI"){
+			displayUI.pointerDblClick();
+			event.preventDefault();
+		}
+		else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
 			loadSelectedApplication();
 			hideDialog('appLauncherDialog');
 		}
