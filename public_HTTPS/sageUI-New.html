@@ -29,6 +29,9 @@
 	var keyEvents;
 	var touchMode;
 	var touchDist;
+	var touchTime;
+	var touchTap;
+	var touchTapTime;
 	
 	var selectedAppEntry;
 	var selectedFileEntry;
@@ -203,6 +206,7 @@
 		keyEvents = false;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
+		touchTapTime = 0;
 		
 		type2App = {
 			images: "image_viewer",
@@ -456,6 +460,7 @@
 				displayUI.pointerMove(touchX, touchY);
 				displayUI.pointerPress("left");
 				touchMode = "translate";
+				touchTime = Date.now();
 			}
 			else if(event.touches.length === 2) {
 				var rect = event.srcElement.getBoundingClientRect();
@@ -481,6 +486,13 @@
 		if(event.srcElement.id === "sage2UI"){
 			if(touchMode === "translate") {
 				displayUI.pointerRelease("left");
+				
+				var now = Date.now();
+				if((now-touchTapTime) > 500) { touchTap = 0;                     }
+				if((now-touchTime)    < 250) { touchTap++;   touchTapTime = now; }
+				else                         { touchTap = 0; touchTapTime = 0;   }
+				
+				if(touchTap === 2) displayUI.pointerDblClick();
 			}
 			touchMode = "";
 			event.preventDefault();
@@ -503,7 +515,7 @@
 				var touch1Y = event.touches[1].clientY - rect.top;
 				var newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
 				if(Math.abs(newDist - touchDist) > 25){
-					var wheelDelta = parseInt((touchDist-newDist)/100, 10);
+					var wheelDelta = parseInt((touchDist-newDist)/256, 10);
 					displayUI.pointerScroll(wheelDelta);
 					touchDist = newDist;
 				}
