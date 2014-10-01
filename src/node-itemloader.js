@@ -642,12 +642,18 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 };
 
 appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
-	var mime_type = file.type;
-	var app = this.registryManager.type2app[mime_type];;
+	var mime_type = mime.lookup(file.name);
+	var app = this.registryManager.type2app[mime_type];
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
+    if (dir === null || dir === undefined || dir === "") {
+        dir = this.registryManager.type2dir[mime_type];
+    }
 
 	var _this = this;
+    if (!fs.existsSync(path.join(this.publicDir, "uploads", dir))) {
+        fs.mkdirSync(path.join(this.publicDir, "uploads", dir));
+    }
 	var url = path.join("uploads", dir, file.name);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
@@ -655,7 +661,6 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 
-		var	app = this.registryManager.type2app[mime_type];;
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
 			exiftool.file(localPath, function(err,data) {
 				if (err) {
@@ -670,6 +675,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 			});
 		}
 		else {
+            console.log("Trying: " + app);
 			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
 				callback(appInstance);
 			});
@@ -716,10 +722,13 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 		}
+        else {
+            console.log("Trying to Loading file");
+        }
 	}
 
 	else if(appData.location === "url") {
-		adefaultpp = this.registryManager.type2app[appData.type];
+		app = this.registryManager.type2app[appData.type];
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {

@@ -12,5 +12,6 @@
 	"keywords": [ "openseadragon", "image", "viewer", "histology" ],
 	"author": "Victor Mateevitsi <mvictoras@gmail.com>",
 	"license": "SAGE2-Software-License",
-    "fileTypes": [ "ndpi" ]
+    "fileTypes": [ "ndpi" ],
+    "directory": "histology"
 }

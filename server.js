@@ -1528,12 +1528,16 @@ function getSavedFilesList() {
 			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
-
-			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath }, metadata: metadata } );
             if (instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes) ) {
-                appLoader.registryManager.register(uploadedApps[i], instructions.fileTypes);
+                var directory = ""
+                if (instructions.directory !== undefined && instructions.directory !== null && instructions.directory !== "")
+                    directory = instructions.directory;
+                appLoader.registryManager.register(uploadedApps[i], instructions.fileTypes, directory);
                 appLoader.registryManager.writeRegistry();
             }
+
+			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath }, metadata: metadata } );
+
         }
 	}
 

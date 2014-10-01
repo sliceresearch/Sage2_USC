@@ -19,12 +19,20 @@ var mime        = require('mime');
 
 function registryManager() {
     this.type2app = {};
+    this.type2dir = {};
     this.registryFile = "fileRegistry.json";
     this.nativeAppsFile = "nativeApps.json";
+    this.mimeFile = "custom.types";
     this.registryMap = {}
 
 
     console.log("Registry> Initializing registry!");
+
+    // Check if custom.type exists
+    if (fs.existsSync(this.mimeFile)) {
+        mime.load(this.mimeFile);
+    }
+
 
     // Check if registry file exists
     if (fs.existsSync(this.registryFile)) {
@@ -59,10 +67,31 @@ registryManager.prototype.readRegistryFile = function() {
         for(var i=0; i<this.registryMap.registry.length; i++) {
             var defApp =  this.registryMap.registry[i];
             this.type2app[defApp.type] = defApp.default;
+            if (defApp.directory !== null && defApp.directory !== undefined && defApp.directory !== "")
+                this.type2dir[defApp.type] = defApp.directory;
+            //this.mimeRegister(defApp.type);
+
             console.log("Registry> In registry: " + defApp.type + " with " + defApp.default);
         }
     }
 
+}
+
+registryManager.prototype.mimeRegister = function(fileType) {
+    var type = mime.lookup(fileType);
+
+    // XXX -What happens when multiple fileTypes?
+    console.log("Found: " + type + " with fileType: " + fileType);
+    if (type === undefined || type === null || type === 'application/custom') {
+        var map = {};
+        map['application/' + fileType] = [ fileType ];
+        mime.define(map);
+        fs.appendFileSync(this.mimeFile, 'application/' + fileType + ' ' + fileType + '\n');
+
+        type = mime.lookup(fileType);
+    }
+    console.log("Registered as: " + type);
+    return type;
 }
 
 registryManager.prototype.scanNativeApps = function() {
@@ -86,22 +115,20 @@ registryManager.prototype.scanNativeApps = function() {
     }
 }
 
-registryManager.prototype.register = function(name, types) {
+registryManager.prototype.register = function(name, types, directory) {
     for(var i=0; i<types.length; i++) {
-        var type = mime.lookup(types[i]);
 
-        // XXX -What happens when multiple fileTypes?
-        if (type === undefined || type === null || type === 'application/custom') {
-            var map = {};
-            map['application/' + name] = [ types[i] ];
-            mime.define(map);
-            type = mime.lookup(types[i]);
-        }
+        var type = this.mimeRegister(types[i]);
+
         var found = false;
         for(var j=0; j<this.registryMap.registry.length; j++) {
             var regEntry = this.registryMap.registry[j];
             if (regEntry.type === type) {
                 regEntry.applications.push(name);
+                if (directory !== null && directory !== undefined && directory !== "") {
+                    this.type2dir[type] = directory;
+                    regEntry.directory = directory;
+                }
                 var found = true;
             }
         }
@@ -113,6 +140,10 @@ registryManager.prototype.register = function(name, types) {
             var newApp = {};
             newApp.type = type;
             newApp.applications = [ name ];
+            if (directory !== null && directory !== undefined && directory !== "") {
+                this.type2dir[type] = directory;
+                newApp.directory = directory;
+            }
             newApp.default = name;
             this.setDefaultApplication(name, type);
             this.registryMap.registry.push(newApp);
