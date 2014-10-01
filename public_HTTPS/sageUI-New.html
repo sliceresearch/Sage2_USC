@@ -133,7 +133,7 @@
 					var appIcon = document.createElement('img');
 					appIcon.id = "app_icon_" + data[i+j].exif.FileName;
 					appIcon.setAttribute("application", data[i+j].exif.FileName);
-					appIcon.src = data[i+j].exif.SAGE2thumbnail;
+					appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.png";
 					appIcon.width = parseInt(size * 0.8, 10);
 					appIcon.height = parseInt(size * 0.8, 10);
 					var appName = document.createElement('p');

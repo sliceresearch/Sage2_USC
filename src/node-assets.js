@@ -148,13 +148,13 @@ addFile = function(filename,exif) {
 		});
 	} else if (exif.MIMEType === 'application/custom') {
 		if(exif.icon === null){
-			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp1.png');
+			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 		}
 		else {
 			// Path for the node server
-			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName+'.png');
+			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
 			// Path for the https server
-			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName+'.png');
+			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
 			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", function(err, buffer) {
 				if(err) throw err;
 			
@@ -177,13 +177,26 @@ addFile = function(filename,exif) {
 				var bgGreen = Math.round(255 - ((255 - green) * 0.5));
 				var bgBlue  = Math.round(255 - ((255 - blue)  * 0.5));
 				
-				imageMagick(840, 840, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 420 420 5 420").in("-draw", "image src-over 164 164 512 512 '"+exif.icon+"'").write(thumb, function(err) {
+				
+				imageMagick(1024, 1024, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 512 512 8 512").in("-draw", "image src-over 156 156 712 712 '"+exif.icon+"'").write(thumb+'_1024.png', function(err) {
 					if (err) {
-						console.log("Assets> cannot generate thumbnail for:", filename);
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
 						return;
 					}
-					anAsset.exif.SAGE2thumbnail = rthumb;
 				});
+				imageMagick(512, 512, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 256 256 4 256").in("-draw", "image src-over 78 78 356 356 '"+exif.icon+"'").write(thumb+'_512.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+				});
+				imageMagick(256, 256, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 128 128 2 128").in("-draw", "image src-over 39 39 178 178 '"+exif.icon+"'").write(thumb+'_256.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+				});
+				anAsset.exif.SAGE2thumbnail = rthumb;
 			});
 		}
 	}
