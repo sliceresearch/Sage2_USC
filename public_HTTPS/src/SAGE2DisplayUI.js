@@ -55,7 +55,7 @@ function SAGE2DisplayUI() {
 			ctx.fillRect(tLeft, tTop, tWidth, tHeight);
 			ctx.strokeRect(tLeft, tTop, tWidth, tHeight);
 			
-			ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+			ctx.fillStyle = "rgba(230, 230, 230, 1.0)";
 			
 			var eLeft   =  this.applications[i].left * this.scale;
 			var eTop    = (this.applications[i].top+this.config.ui.titleBarHeight) * this.scale;
@@ -65,7 +65,7 @@ function SAGE2DisplayUI() {
 			ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 			
-			var size = 0.8*Math.min(eWidth, eHeight);
+			var size = 0.85*Math.min(eWidth, eHeight);
 			var x = eLeft + (eWidth/2) - (size/2);
 			var y = eTop + (eHeight/2) - (size/2);
 			
@@ -118,7 +118,7 @@ function SAGE2DisplayUI() {
 	};
 	
 	this.addAppWindow = function(data) {
-		var icon = data.icon;
+		var icon = data.icon+"_512.png";
 		data.icon = new Image();
 		var _this = this;
 		data.icon.onload = function() {

@@ -18,6 +18,7 @@ var json5     = require('json5');
 var path      = require('path');
 var url       = require('url');
 var gm        = require('gm');                   // imagesmagick
+var ffmpeg    = require('fluent-ffmpeg');        // ffmpeg
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 
 
@@ -105,21 +106,33 @@ addFile = function(filename,exif) {
 	anAsset.setFilename(filename);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
-
-	// Path for the node server
-	var thumb  = path.join(AllAssets.root, 'assets', exif.FileName+'.png');
+	
+	// Path for the file system
+	var thumb = path.join(AllAssets.root, 'assets', exif.FileName);
 	// Path for the https server
-	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName+'.png');
+	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName);
 
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
-		imageMagick(filename).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
+		imageMagick(filename).command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
 			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
+				console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
+		imageMagick(filename).command("convert").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function(err) {
+			if (err) {
+				console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+				return;
+			}
+		});
+		imageMagick(filename).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function(err) {
+			if (err) {
+				console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+				return;
+			}
+		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/pdf') {
 		// Process first page: [0]
 		imageMagick(filename+"[0]").size(function(err, value){
@@ -127,34 +140,118 @@ addFile = function(filename,exif) {
 			
 			imageMagick(value.width, value.height, "#ffffff").append(filename+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
 				if(err) throw err;
-	
-				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function (err) {
+				
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function (err) {
 					if (err) {
-						console.log("Assets> cannot generate thumbnail for:", filename);
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
 						return;
 					}
 					anAsset.exif.SAGE2thumbnail = rthumb;
 				});
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function (err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+					anAsset.exif.SAGE2thumbnail = rthumb;
+				});
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function (err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+				});
+				anAsset.exif.SAGE2thumbnail = rthumb;
 			});
 		});
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
-		// try first frame: [0]
-		imageMagick(filename+"[0]").command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
+		thumbFolder = path.join(AllAssets.root, 'assets');
+		ffmpeg.ffprobe(filename, function(err, metadata){
+			var width;
+			var height;
+			for(var i=0; i<metadata.streams.length; i++){
+				if(metadata.streams[i].codec_type === "video"){
+					width  = metadata.streams[i].width;
+					height = metadata.streams[i].height;
+					break;
+				}
 			}
+			var aspect = width/height;
+			
+			var size1024 = "1024x" + Math.round(1024/aspect);
+			var size512  =  "512x" + Math.round( 512/aspect);
+			var size256  =  "256x" + Math.round( 256/aspect);
+			if(aspect < 1.0){
+				size1024 = Math.round(1024*aspect) + "x1024";
+				size512  = Math.round( 512*aspect) + "x512";
+				size256  = Math.round( 256*aspect) + "x256";
+			}
+			
+			ffmpeg(filename).on('end', function() {
+				var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size1024+'_1.png');
+				imageMagick(tmpImg).command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
+						return;
+					}
+					fs.unlink(tmpImg, function (err) {
+						if(err) throw err;
+					});
+				});
+			}).screenshots({
+				timestamps: ["10%"], 
+				filename: exif.FileName+"_%r_%i.png", 
+				folder: thumbFolder, 
+				size: size1024
+			});
+			
+			ffmpeg(filename).on('end', function() {
+				var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size512+'_1.png');
+				imageMagick(tmpImg).command("convert").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+					fs.unlink(tmpImg, function (err) {
+						if(err) throw err;
+					});
+				});
+			}).screenshots({
+				timestamps: ["10%"], 
+				filename: exif.FileName+"_%r_%i.png", 
+				folder: thumbFolder, 
+				size: size512
+			});
+			
+			ffmpeg(filename).on('end', function() {
+				var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size256+'_1.png');
+				imageMagick(tmpImg).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+					fs.unlink(tmpImg, function (err) {
+						if(err) throw err;
+					});
+				});
+			}).screenshots({
+				timestamps: ["10%"], 
+				filename: exif.FileName+"_%r_%i.png", 
+				folder: thumbFolder, 
+				size: size256
+			});
+			
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
 	} else if (exif.MIMEType === 'application/custom') {
 		if(exif.icon === null){
-			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp1.png');
+			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 		}
 		else {
 			// Path for the node server
-			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName+'.png');
+			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
 			// Path for the https server
-			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName+'.png');
+			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
 			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", function(err, buffer) {
 				if(err) throw err;
 			
@@ -177,13 +274,26 @@ addFile = function(filename,exif) {
 				var bgGreen = Math.round(255 - ((255 - green) * 0.5));
 				var bgBlue  = Math.round(255 - ((255 - blue)  * 0.5));
 				
-				imageMagick(840, 840, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 420 420 5 420").in("-draw", "image src-over 164 164 512 512 '"+exif.icon+"'").write(thumb, function(err) {
+				
+				imageMagick(1024, 1024, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 512 512 8 512").in("-draw", "image src-over 156 156 712 712 '"+exif.icon+"'").write(thumb+'_1024.png', function(err) {
 					if (err) {
-						console.log("Assets> cannot generate thumbnail for:", filename);
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
 						return;
 					}
-					anAsset.exif.SAGE2thumbnail = rthumb;
 				});
+				imageMagick(512, 512, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 256 256 4 256").in("-draw", "image src-over 78 78 356 356 '"+exif.icon+"'").write(thumb+'_512.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+				});
+				imageMagick(256, 256, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 128 128 2 128").in("-draw", "image src-over 39 39 178 178 '"+exif.icon+"'").write(thumb+'_256.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+				});
+				anAsset.exif.SAGE2thumbnail = rthumb;
 			});
 		}
 	}

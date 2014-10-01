@@ -29,10 +29,18 @@
 	var keyEvents;
 	var touchMode;
 	var touchDist;
+	var touchTime;
+	var touchTap;
+	var touchTapTime;
+	var touchHold;
+	var touchStartX;
+	var touchStartY;
 	
 	var selectedAppEntry;
 	var selectedFileEntry;
 	var type2App;
+	
+	var hasMouse;
 	
 	function init() {
 		hostname = window.location.hostname;
@@ -113,14 +121,14 @@
 		wsio.on('availableApplications', function(data) {
 			var appList = document.getElementById('appList');
 			var appListContainer = document.getElementById('appListContainer');
-			var size = parseInt(appListContainer.style.width, 10) / 4;
+			var size = parseInt(appListContainer.style.width, 10) / 6;
 			
 			removeAllChildren(appList);
 			
 			var i = 0;
 			while(i < data.length){
 				var row = document.createElement('tr');
-				var appsPerRow = Math.min(data.length - i, 4);
+				var appsPerRow = Math.min(data.length - i, 6);
 				for(var j=0; j<appsPerRow; j++){
 					var col = document.createElement('td');
 					col.id = "app_row_" + data[i+j].exif.FileName;
@@ -133,7 +141,7 @@
 					var appIcon = document.createElement('img');
 					appIcon.id = "app_icon_" + data[i+j].exif.FileName;
 					appIcon.setAttribute("application", data[i+j].exif.FileName);
-					appIcon.src = data[i+j].exif.SAGE2thumbnail;
+					appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.png";
 					appIcon.width = parseInt(size * 0.8, 10);
 					appIcon.height = parseInt(size * 0.8, 10);
 					var appName = document.createElement('p');
@@ -190,19 +198,22 @@
 		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
-		document.addEventListener('mousedown',  pointerPress, false);
-		document.addEventListener('mouseup',    pointerRelease, false);
-		document.addEventListener('mousemove',  pointerMove, false);
-		document.addEventListener('click',      pointerClick, false);
+		document.addEventListener('mousedown',  pointerPress,    false);
+		document.addEventListener('mouseup',    pointerRelease,  false);
+		document.addEventListener('mousemove',  pointerMove,     false);
+		document.addEventListener('mousemove',  mouseCheck,      false);
+		document.addEventListener('click',      pointerClick,    false);
 		document.addEventListener('dblclick',   pointerDblClick, false);
-		document.addEventListener('mousewheel', pointerScroll, false);
-		document.addEventListener('touchstart', touchStart, false);
-		document.addEventListener('touchend',   touchEnd, false);
-		document.addEventListener('touchmove',  touchMove, false);
+		document.addEventListener('mousewheel', pointerScroll,   false);
+		document.addEventListener('touchstart', touchStart,      false);
+		document.addEventListener('touchend',   touchEnd,        false);
+		document.addEventListener('touchmove',  touchMove,       false);
 		
 		keyEvents = false;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
+		touchTapTime = 0;
+		touchHold = null;
 		
 		type2App = {
 			images: "image_viewer",
@@ -210,6 +221,9 @@
 			pdfs: "pdf_viewer",
 			sessions: "load_session"
 		};
+		
+		hasMouse = false;
+		console.log("Assuming mobile device");
 		
 		resizeDialogs();
 	}
@@ -223,8 +237,8 @@
 		var windowAspect = window.innerWidth/window.innerHeight;
 		
 		var appListContainer = document.getElementById('appListContainer');
-		appListContainer.style.width = (window.innerWidth/2 - 24).toString() + "px";
-		appListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		appListContainer.style.width = (window.innerWidth*0.7 - 24).toString() + "px";
+		appListContainer.style.height = (window.innerHeight*0.7 - 48).toString() + "px";
 		var fileListContainer = document.getElementById('fileListContainer');
 		fileListContainer.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
 		fileListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
@@ -330,6 +344,13 @@
 			var mouseY = event.clientY - rect.top;
 			displayUI.pointerMove(mouseX, mouseY);
 		}
+	}
+	
+	function mouseCheck(event) {
+		if(event.path === undefined) return;
+		hasMouse = true;
+		console.log("Detected as desktop device");
+		document.removeEventListener('mousemove', mouseCheck, false);
 	}
 	
 	function pointerClick(event) {
@@ -451,10 +472,15 @@
 		if(event.srcElement.id === "sage2UI") {
 			if(event.touches.length === 1){
 				var rect = event.srcElement.getBoundingClientRect();
-				var touchX = event.touches[0].clientX - rect.left;
-				var touchY = event.touches[0].clientY - rect.top;
-				displayUI.pointerMove(touchX, touchY);
+				touchStartX = event.touches[0].clientX - rect.left;
+				touchStartY = event.touches[0].clientY - rect.top;
+				displayUI.pointerMove(touchStartX, touchStartY);
 				displayUI.pointerPress("left");
+				touchTime = Date.now();
+				touchHold = setTimeout(function() {
+					displayUI.keyDown(8);
+					displayUI.keyUp(8);
+				}, 1500);
 				touchMode = "translate";
 			}
 			else if(event.touches.length === 2) {
@@ -468,9 +494,17 @@
 				displayUI.pointerRelease("left");
 				displayUI.pointerMove(touchX, touchY);
 				touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+				if(touchHold !== null) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 				touchMode = "scale";
 			}
 			else {
+				if(touchHold !== null) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 				touchMode = "";
 			}
 			event.preventDefault();
@@ -481,9 +515,20 @@
 		if(event.srcElement.id === "sage2UI"){
 			if(touchMode === "translate") {
 				displayUI.pointerRelease("left");
+				
+				var now = Date.now();
+				if((now-touchTapTime) > 500) { touchTap = 0;                     }
+				if((now-touchTime)    < 250) { touchTap++;   touchTapTime = now; }
+				else                         { touchTap = 0; touchTapTime = 0;   }
+				
+				if(touchTap === 2) displayUI.pointerDblClick();
 			}
 			touchMode = "";
 			event.preventDefault();
+		}
+		if(touchHold !== null) {
+			clearTimeout(touchHold);
+			touchHold = null;
 		}
 	}
 	
@@ -494,6 +539,12 @@
 				var touchX = event.touches[0].clientX - rect.left;
 				var touchY = event.touches[0].clientY - rect.top;
 				displayUI.pointerMove(touchX, touchY);
+				
+				var dist = (touchX-touchStartX)*(touchX-touchStartX) + (touchY-touchStartY)*(touchY-touchStartY);
+				if(touchHold !== null && dist > 25) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 			}
 			else if(touchMode === "scale") {
 				var rect = event.srcElement.getBoundingClientRect();
@@ -503,7 +554,7 @@
 				var touch1Y = event.touches[1].clientY - rect.top;
 				var newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
 				if(Math.abs(newDist - touchDist) > 25){
-					var wheelDelta = parseInt((touchDist-newDist)/100, 10);
+					var wheelDelta = parseInt((touchDist-newDist)/256, 10);
 					displayUI.pointerScroll(wheelDelta);
 					touchDist = newDist;
 				}
