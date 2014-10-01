@@ -26,13 +26,18 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.startSAGE2Pointer = function(buttonId) {
-		var button = document.getElementById(buttonId);
-		button.requestPointerLock = button.requestPointerLock       || 
-									button.mozRequestPointerLock    || 
-									button.webkitRequestPointerLock;
-
-		// Ask the browser to lock the pointer
-		button.requestPointerLock();
+		if(hasMouse) {
+			var button = document.getElementById(buttonId);
+			button.requestPointerLock = button.requestPointerLock       || 
+										button.mozRequestPointerLock    || 
+										button.webkitRequestPointerLock;
+		
+			// Ask the browser to lock the pointer
+			button.requestPointerLock();
+		}
+		else {
+			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
+		}
 	};
 	
 	this.pointerLockChangeMethod = function() {

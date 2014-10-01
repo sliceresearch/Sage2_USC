@@ -40,6 +40,8 @@
 	var selectedFileEntry;
 	var type2App;
 	
+	var hasMouse;
+	
 	function init() {
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -196,15 +198,16 @@
 		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
-		document.addEventListener('mousedown',  pointerPress, false);
-		document.addEventListener('mouseup',    pointerRelease, false);
-		document.addEventListener('mousemove',  pointerMove, false);
-		document.addEventListener('click',      pointerClick, false);
+		document.addEventListener('mousedown',  pointerPress,    false);
+		document.addEventListener('mouseup',    pointerRelease,  false);
+		document.addEventListener('mousemove',  pointerMove,     false);
+		document.addEventListener('mousemove',  mouseCheck,      false);
+		document.addEventListener('click',      pointerClick,    false);
 		document.addEventListener('dblclick',   pointerDblClick, false);
-		document.addEventListener('mousewheel', pointerScroll, false);
-		document.addEventListener('touchstart', touchStart, false);
-		document.addEventListener('touchend',   touchEnd, false);
-		document.addEventListener('touchmove',  touchMove, false);
+		document.addEventListener('mousewheel', pointerScroll,   false);
+		document.addEventListener('touchstart', touchStart,      false);
+		document.addEventListener('touchend',   touchEnd,        false);
+		document.addEventListener('touchmove',  touchMove,       false);
 		
 		keyEvents = false;
 		selectedAppEntry = null;
@@ -218,6 +221,9 @@
 			pdfs: "pdf_viewer",
 			sessions: "load_session"
 		};
+		
+		hasMouse = false;
+		console.log("Assuming mobile device");
 		
 		resizeDialogs();
 	}
@@ -338,6 +344,13 @@
 			var mouseY = event.clientY - rect.top;
 			displayUI.pointerMove(mouseX, mouseY);
 		}
+	}
+	
+	function mouseCheck(event) {
+		if(event.path === undefined) return;
+		hasMouse = true;
+		console.log("Detected as desktop device");
+		document.removeEventListener('mousemove', mouseCheck, false);
 	}
 	
 	function pointerClick(event) {
