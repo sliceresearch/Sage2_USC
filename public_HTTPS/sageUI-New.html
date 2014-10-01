@@ -113,14 +113,14 @@
 		wsio.on('availableApplications', function(data) {
 			var appList = document.getElementById('appList');
 			var appListContainer = document.getElementById('appListContainer');
-			var size = parseInt(appListContainer.style.width, 10) / 4;
+			var size = parseInt(appListContainer.style.width, 10) / 6;
 			
 			removeAllChildren(appList);
 			
 			var i = 0;
 			while(i < data.length){
 				var row = document.createElement('tr');
-				var appsPerRow = Math.min(data.length - i, 4);
+				var appsPerRow = Math.min(data.length - i, 6);
 				for(var j=0; j<appsPerRow; j++){
 					var col = document.createElement('td');
 					col.id = "app_row_" + data[i+j].exif.FileName;
@@ -223,8 +223,8 @@
 		var windowAspect = window.innerWidth/window.innerHeight;
 		
 		var appListContainer = document.getElementById('appListContainer');
-		appListContainer.style.width = (window.innerWidth/2 - 24).toString() + "px";
-		appListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		appListContainer.style.width = (window.innerWidth*0.7 - 24).toString() + "px";
+		appListContainer.style.height = (window.innerHeight*0.7 - 48).toString() + "px";
 		var fileListContainer = document.getElementById('fileListContainer');
 		fileListContainer.style.width = (window.innerWidth/2 *0.6 - 24).toString() + "px";
 		fileListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
