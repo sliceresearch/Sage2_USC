@@ -118,7 +118,7 @@ function SAGE2DisplayUI() {
 	};
 	
 	this.addAppWindow = function(data) {
-		var icon = data.icon;
+		var icon = data.icon+"_512.png";
 		data.icon = new Image();
 		var _this = this;
 		data.icon.onload = function() {
