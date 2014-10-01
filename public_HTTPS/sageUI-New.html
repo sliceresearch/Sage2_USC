@@ -32,6 +32,9 @@
 	var touchTime;
 	var touchTap;
 	var touchTapTime;
+	var touchHold;
+	var touchStartX;
+	var touchStartY;
 	
 	var selectedAppEntry;
 	var selectedFileEntry;
@@ -207,6 +210,7 @@
 		selectedAppEntry = null;
 		selectedFileEntry = null;
 		touchTapTime = 0;
+		touchHold = null;
 		
 		type2App = {
 			images: "image_viewer",
@@ -455,12 +459,16 @@
 		if(event.srcElement.id === "sage2UI") {
 			if(event.touches.length === 1){
 				var rect = event.srcElement.getBoundingClientRect();
-				var touchX = event.touches[0].clientX - rect.left;
-				var touchY = event.touches[0].clientY - rect.top;
-				displayUI.pointerMove(touchX, touchY);
+				touchStartX = event.touches[0].clientX - rect.left;
+				touchStartY = event.touches[0].clientY - rect.top;
+				displayUI.pointerMove(touchStartX, touchStartY);
 				displayUI.pointerPress("left");
-				touchMode = "translate";
 				touchTime = Date.now();
+				touchHold = setTimeout(function() {
+					displayUI.keyDown(8);
+					displayUI.keyUp(8);
+				}, 1500);
+				touchMode = "translate";
 			}
 			else if(event.touches.length === 2) {
 				var rect = event.srcElement.getBoundingClientRect();
@@ -473,9 +481,17 @@
 				displayUI.pointerRelease("left");
 				displayUI.pointerMove(touchX, touchY);
 				touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+				if(touchHold !== null) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 				touchMode = "scale";
 			}
 			else {
+				if(touchHold !== null) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 				touchMode = "";
 			}
 			event.preventDefault();
@@ -497,6 +513,10 @@
 			touchMode = "";
 			event.preventDefault();
 		}
+		if(touchHold !== null) {
+			clearTimeout(touchHold);
+			touchHold = null;
+		}
 	}
 	
 	function touchMove(event) {
@@ -506,6 +526,12 @@
 				var touchX = event.touches[0].clientX - rect.left;
 				var touchY = event.touches[0].clientY - rect.top;
 				displayUI.pointerMove(touchX, touchY);
+				
+				var dist = (touchX-touchStartX)*(touchX-touchStartX) + (touchY-touchStartY)*(touchY-touchStartY);
+				if(touchHold !== null && dist > 25) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 			}
 			else if(touchMode === "scale") {
 				var rect = event.srcElement.getBoundingClientRect();
