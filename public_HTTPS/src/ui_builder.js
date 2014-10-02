@@ -228,8 +228,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
-			this.pointerOffsetX = Math.round(0.17917*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.19614*this.pointerHeight);
+			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		}
 		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
 		else this.noDropShadow = false;
