@@ -502,16 +502,7 @@ function uiBuilder(json_cfg, clientID) {
 					menuElem.style.display = "block";
 					menu.thumbnailWindowElement.style.display = "block";
 					
-					dragOffset = menu.dragPosition;
-					if( menu.windowInteractionMode === false )
-					{
-						dragOffset = menu.dragPosition;
-						menuElem.style.left    = (data.x - this.offsetX - dragOffset.x).toString() + "px";
-						menuElem.style.top     = (data.y - this.offsetY - dragOffset.y).toString()  + "px";
-					}
-					
-					menu.thumbnailWindowElement.style.left = (rect.left + menu.thumbnailWindowScrollOffset.x).toString() + "px";
-					menu.thumbnailWindowElement.style.top = (rect.top + menu.thumbnailWindowScrollOffset.y).toString()  + "px";
+					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 					
 					if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
 					{
