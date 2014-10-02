@@ -347,7 +347,7 @@
 	}
 	
 	function mouseCheck(event) {
-		if(event.path === undefined) return;
+		if(event.movementX === 0 && event.movementY === 0) return;
 		hasMouse = true;
 		document.title = "SAGE2 UI - Desktop";
 		console.log("Detected as desktop device");
