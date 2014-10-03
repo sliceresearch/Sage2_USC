@@ -29,6 +29,18 @@ p {
 	color: #000000;
 }
 
+label {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
+span {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
 #mainUI {
 	margin: 0px;
 	overflow: auto;
@@ -253,8 +265,45 @@ p {
 }
 
 #settingsItems {
-	width: 350px;
-	margin: 10px 10px 38px 10px;
+	margin: 10px 10px 42px 10px;
+	overflow: auto;
+}
+
+#sage2PointerSettingsContainer {
+	width: 225px;
+	float: left;
+	margin-right: 10px;
+}
+
+#screenSharingSettingsContainer {
+	width: 225px;
+	float: left;
+}
+
+#sage2PointerSettingsContainer td {
+	padding-bottom: 4px;
+}
+
+#screenSharingSettingsContainer td {
+	padding-bottom: 4px;
+}
+
+#sage2PointerLabel {
+	width: 120px;
+	height: 16px;
+}
+
+#sage2PointerColor {
+	width: 50px;
+	height: 25px;
+}
+
+#screenShareQuality {
+	width: 80px;
+}
+
+#screenShareQualityIndicator {
+	margin-left: 4px;
 }
 
 #settingsCloseBtn {

@@ -781,9 +781,53 @@
 	<!-- dialog for the Settings-->
 	<div id="settingsDialog" class="dialog">
 		<div id="settingsItems">
-			<p>Test 01</p>
-			<p>Test 02</p>
-			<p>Test 03</p>
+			<div id="sage2PointerSettingsContainer">
+				<table>
+					<tr>
+						<td style="padding-right:4px;">
+							<label class="sageLabel">Pointer name:</label>
+						</td>
+						<td>
+							<input id="sage2PointerLabel" type="text"></input>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-right:4px;">
+							<label class="sageLabel">Pointer color:</label>
+						</td>
+						<td>
+							<input id="sage2PointerColor" type="color" value="#B4B4B4">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="screenSharingSettingsContainer">
+				<table>
+					<tr>
+						<td style="padding-right:4px;">
+							<label class="sageLabel">Screen resolution:</label>
+						</td>
+						<td>
+							<select id="screenShareResolution">
+								<option>Low</option>
+								<option>Medium</option>
+								<option>High</option>
+								<option selected="selected">Full</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-right:4px;">
+							<label class="sageLabel">Frame quality:</label>
+						</td>
+						<td>
+							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="5">
+								<span id="screenShareQualityIndicator">5</span>
+							</input>
+						</td>
+					</tr>
+				</table>
+			</div>
 		</div>
 		<div id="settingsButtons">
 			<span id="settingsCloseBtn" class="button">Close</span>

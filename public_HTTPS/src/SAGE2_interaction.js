@@ -13,9 +13,13 @@ function SAGE2_interaction(wsio) {
 	this.uniqueID = null;
 	this.sensitivity = null;
 	this.mediaStream = null;
+	this.mediaQuality = 5;
 	
 	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
 	if(localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
+	
+	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
+	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
 	
 	this.setInteractionId = function(id) {
 		this.uniqueID = id;
@@ -147,6 +151,27 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	
+	this.changeSage2PointerLabelMethod = function(event) {
+		localStorage.SAGE2_ptrName = event.srcElement.value;
+	};
+	
+	this.changeSage2PointerColorMethod = function(event) {
+		localStorage.SAGE2_ptrColor = event.srcElement.value;
+	};
+	
+	this.changeScreenShareResolutionMethod = function(event) {
+		this.mediaResolution = this.screenShareResolution.selectedIndex;
+		if(this.screenShareResolution.options[this.mediaResolution].value) {
+			
+		}
+	};
+	
+	this.changeScreenShareQualityMethod = function(event) {
+		this.mediaQuality = event.srcElement.value;
+		document.getElementById('screenShareQualityIndicator').textContent = this.mediaQuality;
+	};
+	
+	
 	this.pointerLockChange           = this.pointerLockChangeMethod.bind(this);
 	this.pointerPress                = this.pointerPressMethod.bind(this);
 	this.pointerMove                 = this.pointerMoveMethod.bind(this);
@@ -157,6 +182,17 @@ function SAGE2_interaction(wsio) {
 	this.pointerKeyUp                = this.pointerKeyUpMethod.bind(this);
 	this.pointerKeyPress             = this.pointerKeyPressMethod.bind(this);
 	
+	this.changeSage2PointerLabel     = this.changeSage2PointerLabelMethod.bind(this);
+	this.changeSage2PointerColor     = this.changeSage2PointerColorMethod.bind(this);
+	this.changeScreenShareResolution = this.changeScreenShareResolutionMethod.bind(this);
+	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
+	
 	
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
+	
+	document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
+	document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
+	document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
+	document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
+	
 }
