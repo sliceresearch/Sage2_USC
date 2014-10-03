@@ -382,7 +382,7 @@
 		
 		
 		// App Launcher Dialog
-		else if (element.id === "appOKBtn") {
+		else if (element.id === "appOpenBtn") {
 			loadSelectedApplication()
 			hideDialog('appLauncherDialog');
 		}
@@ -390,15 +390,9 @@
 			selectedAppEntry = null;
 			hideDialog('appLauncherDialog');
 		}
-		else if (element.id === "appDeleteBtn") {
-			if(confirm("Are you sure you want to delete this app?")){
-				selectedAppEntry = null;
-				hideDialog('appLauncherDialog');
-			}
-		}
 		
 		// Media Browser Dialog
-		else if (element.id === "fileOKBtn") {
+		else if (element.id === "fileOpenBtn") {
 			loadSelectedFile();
 			hideDialog('mediaBrowserDialog');
 		}
@@ -701,9 +695,8 @@
 			</table>
 		</div>
 		<div id="appButtons">
-			<span id="appOKBtn" class="button">OK</span>
+			<span id="appOpenBtn" class="button">Open</span>
 			<span id="appCloseBtn" class="button">Close</span>
-			<span id="appDeleteBtn" class="button">Delete</span>
 		</div>
 	</div>
 	
@@ -740,7 +733,7 @@
 			<label id="metadata_text"></label>
 		</div>
 		<div id="fileButtons">
-			<span id="fileOKBtn" class="button">OK</span>
+			<span id="fileOpenBtn" class="button">Open</span>
 			<span id="fileCloseBtn" class="button">Close</span>
 			<span id="fileDeleteBtn" class="button">Delete</span>
 		</div>

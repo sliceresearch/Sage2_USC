@@ -138,21 +138,15 @@ p {
 	background-color: #D9D9D9;
 }
 
-#appOKBtn {
+#appOpenBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
 #appCloseBtn {
 	position: absolute;
-	left: 43px;
-	bottom: 10px;
-}
-
-#appDeleteBtn {
-	position: absolute;
-	right: 10px;
+	right: 55px;
 	bottom: 10px;
 }
 
@@ -190,21 +184,21 @@ p {
 	margin-top: 5%;
 }
 
-#fileOKBtn {
+#fileOpenBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
 #fileCloseBtn {
 	position: absolute;
-	left: 43px;
+	right: 55px;
 	bottom: 10px;
 }
 
 #fileDeleteBtn {
 	position: absolute;
-	right: 10px;
+	left: 10px;
 	bottom: 10px;
 }
 
