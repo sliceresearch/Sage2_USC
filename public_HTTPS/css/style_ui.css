@@ -190,8 +190,8 @@ p {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #000000;
-	white-space: pre-wrap;       /* css-3 */
-	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+	white-space: pre-wrap;
+	word-wrap: break-word;
 	word-break: break-all;
 }
 
@@ -221,9 +221,21 @@ p {
 	transform: translate(-50%, -50%);
 }
 
-#arrangementItems{
-	width: 350px;
-	margin: 10px 10px 38px 10px;
+#arrangementItems {
+	margin: 10px 10px 42px 10px;
+	overflow: auto;
+}
+
+#clearcontentContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#tilecontentContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
 }
 
 #arrangementCloseBtn {

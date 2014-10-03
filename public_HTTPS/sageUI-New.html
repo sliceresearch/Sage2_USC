@@ -446,6 +446,16 @@
 			metadata_text.textContent = selectedFileEntry.textContent;
 		}
 		
+		// Arrangement Button Chosen
+		else if(element.id === "clearcontent") {
+			console.log("clear all");
+			hideDialog('arrangementDialog');
+		}
+		else if(element.id === "tilecontent") {
+			console.log("tile content");
+			hideDialog('arrangementDialog');
+		}
+		
 		// Other
 		else {
 			//console.log("clicked on: ", element);
@@ -754,9 +764,14 @@
 	<!-- dialog for the Arrangement-->
 	<div id="arrangementDialog" class="dialog">
 		<div id="arrangementItems">
-			<p>Test 01</p>
-			<p>Test 02</p>
-			<p>Test 03</p>
+			<div id="clearcontentContainer">
+				<img id="clearcontent" src="images/clearcontent.svg" width="64" height="64"></img>
+				<p>Clear All</p>
+			</div>
+			<div id="tilecontentContainer">
+				<img id="tilecontent" src="images/tilecontent.svg" width="64" height="64"></img>
+				<p>Tile Content</p>
+			</div>
 		</div>
 		<div id="arrangementButtons">
 			<span id="arrangementCloseBtn" class="button">Close</span>
