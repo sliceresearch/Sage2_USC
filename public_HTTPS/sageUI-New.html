@@ -448,11 +448,11 @@
 		
 		// Arrangement Button Chosen
 		else if(element.id === "clearcontent") {
-			console.log("clear all");
+			wsio.emit('clearDisplay');
 			hideDialog('arrangementDialog');
 		}
 		else if(element.id === "tilecontent") {
-			console.log("tile content");
+			wsio.emit('tileApplications');
 			hideDialog('arrangementDialog');
 		}
 		
