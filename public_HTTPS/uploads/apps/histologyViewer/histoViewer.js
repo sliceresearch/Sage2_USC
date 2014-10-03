@@ -31,22 +31,35 @@ var histoViewer = SAGE2_App.extend( {
 		this.dragging = false;
 		this.position = {x:0,y:0};
 
+        console.log("Res: " + resrc);
 		// create the image viewer with the right data and path
-		this.viewer = OpenSeadragon({
+		},
+
+	load: function(state, date) {
+        console.log("Trying to load...");
+        console.log(state);
+        console.log(this.resrcPath);
+
+        // Format file
+        var url = this.resrcPath;
+        var filename = state.src;
+        filename = filename.replace("public_HTTPS/uploads/", "");
+        filename = filename.replace("ndpi", "dzi");
+
+        url = url.replace("apps/histologyViewer", "");
+
+        this.viewer = OpenSeadragon({
 			id: this.element.id,      // suppporting div
 			prefixUrl:   this.resrcPath + "/images/",
 			// change tileSources for your dataset
 			//tileSources: this.resrcPath + "chicago.dzi"
-			tileSources: this.resrcPath + "/images/" + "Liver.dzi",
+			tileSources: url + filename,
             showNavigator: true,
             showNavigationControl: false,
             autoHideControls: false,
             maxZoomLevel: 100
         });
-	},
-
-	load: function(state, date) {
-	},
+},
 
 	draw: function(date) {
 	},

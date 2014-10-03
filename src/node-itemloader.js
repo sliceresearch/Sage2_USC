@@ -398,6 +398,109 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
+appLoader.prototype.readInstructionsFile = function(instructionsFile, callback) {
+    var thumbnailHostPath = null;
+    var instr = {};
+    fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if(err) throw err;
+
+        var instructions = JSON.parse(json_str);
+        instr.width = instructions.width;
+        instr.height = instructions.height;
+        instr.aspectRatio = instructions.width / instructions.height;
+        // if icon provided, build the url to it
+        instr.icon  = instructions.icon ? url+"/"+instructions.icon : null;
+        instr.appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
+
+        instr.metadata = {};
+        if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+            instr.metadata.title = instructions.title;
+        else instr.metadata.title = uploadedApps[i];
+        if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
+            instr.metadata.version = instructions.version;
+        else metadata.version = "1.0.0";
+        if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
+            instr.metadata.description = instructions.description;
+        else metadata.description = "-";
+        if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
+            instr.metadata.author = instructions.author;
+        else metadata.author = "SAGE2";
+        if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
+            instr.metadata.license = instructions.license;
+        else metadata.license = "-";
+        if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
+            instr.metadata.keywords = instructions.keywords;
+        else metadata.keywords = [];
+        if (instructions.dependencies !== undefined && instructions.dependencies !== null && instructions.dependencies !== "")
+            instr.dependencies = instructions.dependencies;
+        if (instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes) ) {
+            instr.directory = ""
+            if (instructions.directory !== undefined && instructions.directory !== null && instructions.directory !== "")
+                instr.directory = instructions.directory;
+        }
+        instr.resizeMode = "proportional";
+		if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+			instr.resizeMode = instructions.resize;
+
+        callback(instr);
+    });
+
+}
+
+appLoader.prototype.loadApp = function(file, mime_type, url, external_url, name, callback) {
+	var _this = this;
+
+    // Find the app!!
+    var appName = this.registryManager.type2app[mime_type];
+	console.log("Loader> Loading %s with %s", mime_type, appName);
+
+    var instructionsFile = path.join(this.publicDir, "uploads", "apps", appName, "instructions.json");
+    console.log("Reading: %s", instructionsFile);
+    this.readInstructionsFile(instructionsFile, function(instructions) {
+        console.log(instructions);
+
+        // Find the app
+        // Create the correct external url
+        var app_url = path.join("uploads", "apps", appName);
+        var app_external_url = _this.hostOrigin + encodeReservedURL(app_url);
+
+
+        var appInstance = {
+            id: null,
+            title: instructions.metadata.title,
+            application: instructions.appName,
+            type: instructions.mime_type,
+            url: app_external_url,
+            data: {
+                src: file,
+                //type: file,
+                //encoding: encoding
+            },
+            resrc: instructions.dependencies,
+            icon: instructions.icon,
+            left: _this.titleBarHeight,
+            top: 1.5*_this.titleBarHeight,
+            width: instructions.width,
+            height: instructions.height,
+            native_width: instructions.width,
+            native_height: instructions.height,
+            previous_left: null,
+            previous_top: null,
+            previous_width: null,
+            previous_height: null,
+            maximized: false,
+            aspect: instructions.aspectRatio,
+            animation: instructions.animation,
+            metadata: instructions.metadata,
+            resizeMode: instructions.resizeMode,
+            date: new Date()
+        };
+        console.log(appInstance);
+        callback(appInstance);
+    });
+};
+
+
 appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 	var zipFolder = file;
@@ -675,7 +778,6 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 			});
 		}
 		else {
-            console.log("Trying: " + app);
 			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
 				callback(appInstance);
 			});
@@ -686,10 +788,16 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
+    console.log("AppData: ");
+    console.log(appData);
+
 	if(appData.location === "file") {
 		app = this.registryManager.type2app[appData.type];
 
 		var dir = this.app2dir[app];
+        if (dir === null || dir === undefined || dir === "") {
+            dir = this.registryManager.type2dir[appData.type];
+        }
 
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
@@ -717,14 +825,42 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 			else {
+                console.log(appData);
 				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 					callback(appInstance);
 				});
 			}
 		}
         else {
-            console.log("Trying to Loading file");
-        }
+            console.log(appData);
+            console.log("Trying to Loading file: " + dir + " " + appData.name);
+            // XXX - Maybe use some kind of plugin?
+            // If this is a histology image, then convert it into a pyramidal tiff
+            if (app === "histologyViewer") {
+                console.log("Loader> NDPI Image detected. Converting into pyramidal tiff.");
+                var filePath = path.join(this.publicDir, appData.url);
+                var spawn = require('child_process').spawn,
+                    ndpi = spawn('./src/bin/ndpi', [filePath]);
+
+                    ndpi.stdout.on('data', function (data) {
+                      console.log('stdout: ' + data);
+                      });
+
+                    ndpi.stderr.on('data', function (data) {
+                        console.log('stderr: ' + data);
+                        });
+                    ndpi.on('close', function (code) {
+                        console.log('out: ' + code);
+                        this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
+                            callback(appInstance);
+                        }.bind(this));
+                }.bind(this));
+            } else {
+            this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
+					callback(appInstance);
+				});
+            }
+}
 	}
 
 	else if(appData.location === "url") {

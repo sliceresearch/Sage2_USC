@@ -1765,6 +1765,9 @@ function manageUploadedFiles(files) {
 				return;
 			}
 
+            console.log("=====");
+            console.log(appInstance);
+
 			appInstance.id = getUniqueAppId();
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
