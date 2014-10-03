@@ -1201,6 +1201,20 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 
 function wsAddNewWebElement(wsio, data) {
 	appLoader.loadFileFromWebURL(data, function(appInstance) {
+
+		// Get the drop position and convert it to wall coordinates
+		var position = data.position || [0,0];
+		position[0] = parseInt(position[0] * config.totalWidth,  10);
+		position[1] = parseInt(position[1] * config.totalHeight, 10);
+
+		// Use the position from the drop location
+		if (position[0] !== 0 || position[1] !== 0) {
+			appInstance.left = position[0] - appInstance.width/2;
+			if (appInstance.left < 0 ) appInstance.left = 0;
+			appInstance.top  = position[1] - appInstance.height/2;
+			if (appInstance.top < 0) appInstance.top = 0;
+		}
+
 		appInstance.id = getUniqueAppId();
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
@@ -1709,7 +1723,8 @@ function sendConfig(req, res) {
 // }
 
 function uploadForm(req, res) {
-	var form = new formidable.IncomingForm();
+	var form     = new formidable.IncomingForm();
+	var position = [ 0, 0];
 	form.maxFieldsSize = 4 * 1024 * 1024;
 	form.type          = 'multipart';
 	form.multiples     = true;
@@ -1722,8 +1737,15 @@ function uploadForm(req, res) {
 	// 		lastper = per;
 	// 	}
 	// });
+
 	form.on('fileBegin', function(name, file) {
 		console.log('Form> ', name, file.name, file.type);
+	});
+
+	form.on('field', function (field, value) {
+		// convert value [0 to 1] to wall coordinate from drop location
+		if (field === 'dropX') position[0] = parseInt(parseFloat(value) * config.totalWidth,  10);
+		if (field === 'dropY') position[1] = parseInt(parseFloat(value) * config.totalHeight, 10);
 	});
 
 	form.parse(req, function(err, fields, files) {
@@ -1739,12 +1761,12 @@ function uploadForm(req, res) {
 
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(this.openedFiles);
+		manageUploadedFiles(this.openedFiles, position);
 	});
 
 }
 
-function manageUploadedFiles(files) {
+function manageUploadedFiles(files, position) {
 	var url, external_url, localPath, ext;
 
     var fileKeys = Object.keys(files);
@@ -1756,7 +1778,15 @@ function manageUploadedFiles(files) {
 				console.log("Form> unrecognized file type: ", file.name, file.type);
 				return;
 			}
-			
+
+			// Use the position from the drop location
+			if (position[0] !== 0 || position[1] !== 0) {
+				appInstance.left = position[0] - appInstance.width/2;
+				if (appInstance.left < 0 ) appInstance.left = 0;
+				appInstance.top  = position[1] - appInstance.height/2;
+				if (appInstance.top < 0) appInstance.top = 0;
+			}
+
 			appInstance.id = getUniqueAppId();
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');

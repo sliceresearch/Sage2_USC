@@ -296,6 +296,9 @@ function sagePointer(wsio) {
 	this.uploadFileToServerMethod = function(event) {
 		event.preventDefault();
 
+		var dropX = event.offsetX / event.target.clientWidth;
+		var dropY = event.offsetY / event.target.clientHeight;
+
 		var files = event.dataTransfer.files;
 		var url   = event.dataTransfer.getData("Url");
 		var text  = event.dataTransfer.getData("Text");
@@ -309,6 +312,8 @@ function sagePointer(wsio) {
 				if(files[i].size <= this.maxUploadSize){
 					var formdata = new FormData();
 					formdata.append("file"+i.toString(), files[i]);
+					formdata.append("dropX", dropX);
+					formdata.append("dropY", dropY);
 
 					xhr = new XMLHttpRequest();
 					xhr.open("POST", "upload", true);
@@ -360,7 +365,7 @@ function sagePointer(wsio) {
 			else if(ext == "pdf") mimeType  = "application/pdf";
 			console.log("URL: " + dataUrl + ", type: " + mimeType);
 
-			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl});
+			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl, position:[dropX,dropY]});
 		}
 	};
 	
