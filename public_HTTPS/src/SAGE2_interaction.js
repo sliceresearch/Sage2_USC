@@ -13,6 +13,7 @@ function SAGE2_interaction(wsio) {
 	this.uniqueID = null;
 	this.sensitivity = null;
 	this.mediaStream = null;
+	this.mediaResolution = null;
 	this.mediaQuality = 5;
 	
 	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
@@ -160,8 +161,8 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.changeScreenShareResolutionMethod = function(event) {
-		this.mediaResolution = this.screenShareResolution.selectedIndex;
-		if(this.screenShareResolution.options[this.mediaResolution].value) {
+		this.mediaResolution = event.srcElement.selectedIndex;
+		if(event.srcElement.options[this.mediaResolution].value) {
 			
 		}
 	};

@@ -252,7 +252,7 @@ span {
 
 #arrangementCloseBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
@@ -299,7 +299,7 @@ span {
 }
 
 #screenShareQuality {
-	width: 80px;
+	width: 100px;
 }
 
 #screenShareQualityIndicator {
@@ -308,7 +308,7 @@ span {
 
 #settingsCloseBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
