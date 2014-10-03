@@ -172,6 +172,8 @@ p {
 
 #metadata {
 	position: absolute;
+	margin: 0px;
+	padding: 0px;
 	top: 12px;
 	text-align: center;
 	background-color: #D9D9D9;
@@ -179,9 +181,18 @@ p {
 }
 
 #thumbnail {
-	max-width: 90%;
-	max-height: 90%;
 	margin-top: 5%;
+	border: none;
+}
+
+#metadata_text {
+	display: block;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+	white-space: pre-wrap;       /* css-3 */
+	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+	word-break: break-all;
 }
 
 #fileOpenBtn {

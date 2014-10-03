@@ -267,6 +267,7 @@
 			file.id          = "file_" + list[type][i].exif.FileName;
 			file.setAttribute("application", type2App[type]);
 			file.setAttribute("file", list[type][i].exif.FileName);
+			file.setAttribute("thumbnail", list[type][i].exif.SAGE2thumbnail);
 			parent.appendChild(file);
 			
 			textWidthTest.textContent = file.textContent;
@@ -429,9 +430,20 @@
 		
 		// File Selected
 		else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
+			// highlight selection
 			if(selectedFileEntry !== null) selectedFileEntry.style.backgroundColor = "transparent";
 			selectedFileEntry = element;
 			selectedFileEntry.style.backgroundColor = "#B9D3FF";
+			
+			// show metadata
+			var metadata = document.getElementById('metadata');
+			var size = Math.min(parseInt(metadata.style.width, 10), parseInt(metadata.style.height, 10)) * 0.9 - 32;
+			var thumbnail = document.getElementById('thumbnail');
+			thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_256.png";
+			thumbnail.width = size;
+			thumbnail.height = size;
+			var metadata_text = document.getElementById('metadata_text');
+			metadata_text.textContent = selectedFileEntry.textContent;
 		}
 		
 		// Other
