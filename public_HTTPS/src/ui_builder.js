@@ -402,8 +402,14 @@ function uiBuilder(json_cfg, clientID) {
 		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color) ;
 		ptr.draw();
 
-		if (pointer_data.visible) pointerElem.style.display = "block";
-		else pointerElem.style.display = "none";
+		if (pointer_data.visible) {
+			pointerElem.style.display = "block";
+			ptr.isShown = true;
+		}
+		else {
+			pointerElem.style.display = "none";
+			ptr.isShown = false;
+		}
 
 		// keep track of the pointers
         this.pointerItems[pointerElem.id] = ptr;
@@ -419,11 +425,13 @@ function uiBuilder(json_cfg, clientID) {
 	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
 	    this.pointerItems[pointerElem.id].draw();
+		this.pointerItems[pointerElem.id].isShown = true;
 	};
 
 	this.hideSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 		pointerElem.style.display = "none";
+		this.pointerItems[pointerElem.id].isShown = false;
 	};
 
 	this.updateSagePointerPosition = function(pointer_data) {
@@ -495,13 +503,16 @@ function uiBuilder(json_cfg, clientID) {
 			applist[i].style.display = 'none';
 		}
 	};
+
 	this.showInterface = function() {
 		// Show the top bar
 		this.upperBar.style.display = 'block';
 		// Show the pointers (only if they have a name, ui pointers dont have names)
 		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].label !== "")
-				this.pointerItems[p].element.style.display = 'block';
+			if (this.pointerItems[p].label !== "") {
+				if (this.pointerItems[p].isShown === true)
+				 	this.pointerItems[p].element.style.display = 'block';
+			}
 		}
 		// Show the apps top bar
 		var applist = document.getElementsByClassName("windowTitle");
