@@ -1706,25 +1706,9 @@ function sendConfig(req, res) {
 	res.end();
 }
 
-// function uploadForm(req, res) {
-// 	var form = new multiparty.Form();
-// 	form.parse(req, function(err, fields, files) {
-// 		if(err){
-// 			res.writeHead(500, {"Content-Type": "text/plain"});
-// 			res.write(err + "\n\n");
-// 			res.end();
-// 		}
-// 		// saves files in appropriate directory and broadcasts the items to the displays
-// 		manageUploadedFiles(files);
-// 		res.writeHead(200, {"Content-Type": "text/plain"});
-// 		res.write("received upload:\n\n");
-// 		res.end();
-// 	});
-// }
-
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
-	var position = [ 0, 0];
+	var position = [ 0, 0 ];
 	form.maxFieldsSize = 4 * 1024 * 1024;
 	form.type          = 'multipart';
 	form.multiples     = true;
