@@ -118,13 +118,14 @@ function SAGE2DisplayUI() {
 	};
 	
 	this.addAppWindow = function(data) {
-		var icon = data.icon+"_512.png";
+		var icon = data.icon;
 		data.icon = new Image();
 		var _this = this;
 		data.icon.onload = function() {
 			_this.draw();
 		};
-		data.icon.src = icon || "images/blank.png";
+		if(icon) data.icon.src = icon+"_512.png";
+		else data.icon.src = "images/blank.png";
 		this.applications.push(data);
 	};
 	

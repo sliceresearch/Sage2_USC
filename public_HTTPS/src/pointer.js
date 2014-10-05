@@ -11,10 +11,8 @@
 function pointer() {
 	this.div                = null;
 	this.snap               = null;
-	this.pointerIcon1       = null;
-	this.pointerIcon1Loaded = null;
-	this.pointerIcon2       = null;
-	this.pointerIcon2Loaded = null;
+	this.pointerIcon        = null;
+	this.pointerIconLoaded  = null;
 	this.appModeIcon        = null;
 	this.appModeIconLoaded  = null;
 	this.winModeIcon        = null;
@@ -37,23 +35,16 @@ function pointer() {
 		var pointerIconY  = height * 0.20;
 		this.pointerIconLoaded = false;
 		
-		/*
-		var winModeIconSize = height * 0.375;
-		var winModeIconX = height * 0.25;
-		var winModeIconY = height * 0.60;
-		this.winModeIconLoaded = false;
-		*/
 		var winModeIconSize = height * 0.330;
-		var winModeIconX = height * 0.1125;
-		var winModeIconY = height * 0.079167;
+		var winModeIconX = height * 0.0925;
+		var winModeIconY = height * 0.044167;
 		this.winModeIconLoaded = false;
 		
 		var appModeIconSize = height * 0.330;
-		var appModeIconX = height * 0.1125;
-		var appModeIconY = height * 0.079167;   
+		var appModeIconX = height * 0.0925;
+		var appModeIconY = height * 0.044167;   
 		this.appModeIconLoaded = false;
 		
-		// option 1
 		var labelBGX = height * 0.40;
 		var labelBGY = height * 0.65;
 		var labelBGWidth  = height * 1.00;
@@ -62,42 +53,12 @@ function pointer() {
 		var labelTextY = height * 0.8475;
 		var labelTextSize = Math.round(0.17*height);
 		
-		/*
-		// option 2
-		var labelBGX = height * 0.70;
-		var labelBGY = height * 0.50;
-		var labelBGWidth  = height * 1.00;
-		var labelBGHeight = height * 0.275;
-		var labelTextX = height * 0.8425;
-		var labelTextY = height * 0.6975;
-		var labelTextSize = Math.round(0.17*height);
-		*/
-		
 		var _this = this;
-		Snap.load("images/SAGE2 Pointer 1.svg", function(f) {
-			_this.pointerIcon1 = f.select("svg");
-			_this.pointerIcon1.attr({
-				id: "pointerIcon1",
-				x: pointerIconX,
-				y: pointerIconY,
-				width: pointerIconSize,
-				height: pointerIconSize,
-				preserveAspectRatio: "xMinYMin meet"
-			});
-			
-			_this.snap.append(_this.pointerIcon1);
-    		
-    		_this.pointerIcon1Loaded = true;
-			if(_this.pointerIcon2Loaded === true && _this.winModeIconLoaded === true && _this.appModeIconLoaded)
-				_this.updateIconColors();
-			
-			_this.pointerIcon1.attr({display: "none"});
-		});
 		
-		Snap.load("images/SAGE2 Pointer 2.svg", function(f) {
-			_this.pointerIcon2 = f.select("svg");
-			_this.pointerIcon2.attr({
-				id: "pointerIcon2",
+		Snap.load("images/SAGE2 Pointer Arrow.svg", function(f) {
+			_this.pointerIcon = f.select("svg");
+			_this.pointerIcon.attr({
+				id: "pointerIcon",
 				x: pointerIconX,
 				y: pointerIconY,
 				width: pointerIconSize,
@@ -105,10 +66,10 @@ function pointer() {
 				preserveAspectRatio: "xMinYMin meet"
 			});
 			
-			_this.snap.append(_this.pointerIcon2);
+			_this.snap.append(_this.pointerIcon);
     		
-    		_this.pointerIcon2Loaded = true;
-			if(_this.pointerIcon1Loaded === true && _this.winModeIconLoaded === true && _this.appModeIconLoaded)
+    		_this.pointerIconLoaded = true;
+			if(_this.winModeIconLoaded === true && _this.appModeIconLoaded)
 				_this.updateIconColors();
 		});
 		
@@ -126,7 +87,7 @@ function pointer() {
 			_this.snap.prepend(_this.winModeIcon);
 			
 			_this.winModeIconLoaded = true;
-			if(_this.pointerIcon1Loaded === true && _this.pointerIcon2Loaded === true && _this.appModeIconLoaded === true)
+			if(_this.pointerIconLoaded === true && _this.appModeIconLoaded === true)
 				_this.updateIconColors();
 		});
 		
@@ -144,7 +105,7 @@ function pointer() {
 			_this.snap.prepend(_this.appModeIcon);
 			
 			_this.appModeIconLoaded = true;
-			if(_this.pointerIcon1Loaded === true && _this.pointerIcon2Loaded === true && _this.winModeIconLoaded === true)
+			if(_this.pointerIconLoaded === true && _this.winModeIconLoaded === true)
 				_this.updateIconColors();
 		});
 		
@@ -178,10 +139,9 @@ function pointer() {
 	};
 	
 	this.updateIconColors = function() {
-		this.colorSVG(this.pointerIcon1, "#000000", this.color);
-		this.colorSVG(this.pointerIcon2, "#000000", this.color);
-		this.colorSVG(this.winModeIcon,  "#000000", "#000000");
-		this.colorSVG(this.appModeIcon,  "#000000", "#000000");
+		this.colorSVG(this.pointerIcon, "#000000", this.color);
+		this.colorSVG(this.winModeIcon,  "#000000", "#FFFFFF");
+		this.colorSVG(this.appModeIcon,  "#000000", "#FFFFFF");
 	    	
 		// window manipulation
 	    if(this.mode === 0) {

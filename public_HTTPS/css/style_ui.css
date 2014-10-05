@@ -29,6 +29,18 @@ p {
 	color: #000000;
 }
 
+label {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
+span {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
 #mainUI {
 	margin: 0px;
 	overflow: auto;
@@ -138,21 +150,15 @@ p {
 	background-color: #D9D9D9;
 }
 
-#appOKBtn {
+#appOpenBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
 #appCloseBtn {
 	position: absolute;
-	left: 43px;
-	bottom: 10px;
-}
-
-#appDeleteBtn {
-	position: absolute;
-	right: 10px;
+	right: 55px;
 	bottom: 10px;
 }
 
@@ -178,6 +184,8 @@ p {
 
 #metadata {
 	position: absolute;
+	margin: 0px;
+	padding: 0px;
 	top: 12px;
 	text-align: center;
 	background-color: #D9D9D9;
@@ -185,26 +193,35 @@ p {
 }
 
 #thumbnail {
-	max-width: 90%;
-	max-height: 90%;
 	margin-top: 5%;
+	border: none;
 }
 
-#fileOKBtn {
+#metadata_text {
+	display: block;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+
+#fileOpenBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
 #fileCloseBtn {
 	position: absolute;
-	left: 43px;
+	right: 55px;
 	bottom: 10px;
 }
 
 #fileDeleteBtn {
 	position: absolute;
-	right: 10px;
+	left: 10px;
 	bottom: 10px;
 }
 
@@ -216,14 +233,26 @@ p {
 	transform: translate(-50%, -50%);
 }
 
-#arrangementItems{
-	width: 350px;
-	margin: 10px 10px 38px 10px;
+#arrangementItems {
+	margin: 10px 10px 42px 10px;
+	overflow: auto;
+}
+
+#clearcontentContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#tilecontentContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
 }
 
 #arrangementCloseBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
@@ -236,13 +265,50 @@ p {
 }
 
 #settingsItems {
-	width: 350px;
-	margin: 10px 10px 38px 10px;
+	margin: 10px 10px 42px 10px;
+	overflow: auto;
+}
+
+#sage2PointerSettingsContainer {
+	width: 225px;
+	float: left;
+	margin-right: 10px;
+}
+
+#screenSharingSettingsContainer {
+	width: 225px;
+	float: left;
+}
+
+#sage2PointerSettingsContainer td {
+	padding-bottom: 4px;
+}
+
+#screenSharingSettingsContainer td {
+	padding-bottom: 4px;
+}
+
+#sage2PointerLabel {
+	width: 120px;
+	height: 16px;
+}
+
+#sage2PointerColor {
+	width: 50px;
+	height: 25px;
+}
+
+#screenShareQuality {
+	width: 100px;
+}
+
+#screenShareQualityIndicator {
+	margin-left: 4px;
 }
 
 #settingsCloseBtn {
 	position: absolute;
-	left: 10px;
+	right: 10px;
 	bottom: 10px;
 }
 
