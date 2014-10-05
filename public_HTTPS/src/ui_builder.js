@@ -488,7 +488,8 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.style.display = 'none';
 		// Hide the pointers
 		for (var p in this.pointerItems) {
-			this.pointerItems[p].element.style.display = 'none';
+			if (this.pointerItems[p].element)
+				this.pointerItems[p].element.style.display = 'none';
 		}
 		// Hide the apps top bar
 		var applist = document.getElementsByClassName("windowTitle");
@@ -502,7 +503,8 @@ function uiBuilder(json_cfg, clientID) {
 		// Show the pointers (only if they have a name, ui pointers dont have names)
 		for (var p in this.pointerItems) {
 			if (this.pointerItems[p].label !== "")
-				this.pointerItems[p].element.style.display = 'block';
+				if (this.pointerItems[p].element)
+					this.pointerItems[p].element.style.display = 'block';
 		}
 		// Show the apps top bar
 		var applist = document.getElementsByClassName("windowTitle");
