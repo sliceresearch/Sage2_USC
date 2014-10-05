@@ -147,7 +147,11 @@ span {
 
 #appList {
 	width: 100%;
-	background-color: #D9D9D9;
+	background-color: #484848;
+}
+
+#appList p {
+	color: #FFFFFF;
 }
 
 #appOpenBtn {
@@ -174,12 +178,20 @@ span {
 	left: 12px;
 	top: 12px;
 	margin: 0px;
-	background-color: #D9D9D9;
+	background-color: #484848;
 	overflow: scroll;
 }
 
 #fileListElems {
 	text-align: left;
+}
+
+#fileListElems label {
+	color: #FFFFFF;
+}
+
+#fileListElems li {
+	color: #FFFFFF;
 }
 
 #metadata {
@@ -188,7 +200,7 @@ span {
 	padding: 0px;
 	top: 12px;
 	text-align: center;
-	background-color: #D9D9D9;
+	background-color: #484848;
 	border-left: solid 1px #000000;
 }
 
@@ -201,7 +213,7 @@ span {
 	display: block;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;
-	color: #000000;
+	color: #FFFFFF;
 	white-space: pre-wrap;
 	word-wrap: break-word;
 	word-break: break-all;
@@ -385,13 +397,15 @@ span {
 }
 
 .css-treeview input + label {
-	background: url('../images/dir-closed.png') no-repeat;
+	background: url('../images/dir-closed.svg') no-repeat;
+	background-size: 32px 17px;
     padding: 3px 0px 3px 42px;
     background-position: 0px 0px;
 }
 
 .css-treeview input:checked + label {
-	background: url('../images/dir-open.png') no-repeat;
+	background: url('../images/dir-open.svg') no-repeat;
+	background-size: 32px 17px;
 }
 
 .css-treeview input ~ ul {

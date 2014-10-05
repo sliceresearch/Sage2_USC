@@ -43,9 +43,9 @@ function SAGE2DisplayUI() {
 		// applications
 		for(i=0; i<this.applications.length; i++){
 			// item
-			ctx.fillStyle = "rgba(102, 102, 102, 1.0)";
+			ctx.fillStyle = "rgba(230, 230, 230, 1.0)";
 			ctx.lineWidth = 2;
-			ctx.strokeStyle = "rgba(86, 86, 86, 1.0)";
+			ctx.strokeStyle = "rgba(108, 108, 108, 1.0)";
 		
 			var tLeft   = this.applications[i].left * this.scale;
 			var tTop    = (this.applications[i].top) * this.scale;
@@ -55,7 +55,7 @@ function SAGE2DisplayUI() {
 			ctx.fillRect(tLeft, tTop, tWidth, tHeight);
 			ctx.strokeRect(tLeft, tTop, tWidth, tHeight);
 			
-			ctx.fillStyle = "rgba(230, 230, 230, 1.0)";
+			ctx.fillStyle = "rgba(72, 72, 72, 1.0)";
 			
 			var eLeft   =  this.applications[i].left * this.scale;
 			var eTop    = (this.applications[i].top+this.config.ui.titleBarHeight) * this.scale;
