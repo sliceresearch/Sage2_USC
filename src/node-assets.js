@@ -244,7 +244,7 @@ addFile = function(filename,exif) {
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
 	} else if (exif.MIMEType === 'application/custom') {
-		if(exif.icon === null){
+		if (exif.icon === null || ! fs.existsSync(exif.icon) ) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 		}
 		else {
