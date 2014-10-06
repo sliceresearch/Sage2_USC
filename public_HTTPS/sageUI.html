@@ -52,6 +52,8 @@
 		wsio.open(function() {
 			console.log("open websocket");
 			interactor = new SAGE2_interaction(wsio);
+			interactor.setFileUploadProgressCallback(fileUploadProgress);
+			interactor.setFileUploadCompleteCallback(fileUploadComplete);
 			window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 			var clientDescription = {
@@ -318,13 +320,33 @@
 	function fileDrop(event) {
 		event.preventDefault();
 		
-		// trigger file upload
-		console.log("drop location: " + event.layerX + ", " + event.layerY);
-		
 		var sage2UI = document.getElementById('sage2UI');
 		sage2UI.style.borderStyle = "solid";
 		displayUI.fileDrop = false;
 		displayUI.draw();
+		
+		// trigger file upload
+		console.log("drop location: " + event.layerX + ", " + event.layerY);
+		if(event.dataTransfer.files.length > 0) {
+			displayUI.fileUpload = true;
+			displayUI.uploadPercent = 0;
+			interactor.uploadFiles(event.dataTransfer.files, event.layerX, event.layerY);
+		}
+		else {
+			interactor.uploadURL(event.dataTransfer.getData("Url"), event.layerX, event.layerY);
+		}
+	}
+	
+	function fileUploadProgress(percent) {
+		displayUI.setUploadPercent(percent);
+		displayUI.draw();
+	}
+	
+	function fileUploadComplete() {
+		setTimeout(function() {
+			displayUI.fileUpload = false;
+			displayUI.draw();
+		}, 500);
 	}
 	
 	function pointerPress(event) {
@@ -367,7 +389,9 @@
 	}
 	
 	function mouseCheck(event) {
-		if(event.movementX === 0 && event.movementY === 0) return;
+		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+		if(movementX === 0 && movementY === 0) return;
 		hasMouse = true;
 		document.title = "SAGE2 UI - Desktop";
 		console.log("Detected as desktop device");

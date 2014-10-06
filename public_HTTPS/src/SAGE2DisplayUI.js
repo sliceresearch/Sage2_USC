@@ -11,6 +11,8 @@ function SAGE2DisplayUI() {
 		this.logo.src = "images/EVL-LAVA_UI.svg"
 		this.logoAspect = 3.47828052509;
 		this.fileDrop = false;
+		this.fileUpload = false;
+		this.uploadPercent = 0;
 		this.fileDropFontSize = 12;
 		
 		this.applications = [];
@@ -115,7 +117,33 @@ function SAGE2DisplayUI() {
 			ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
 			this.wrapText(ctx, txt, textStartX, textStartY, textBoxWidth, lineHeight);
 		}
+		
+		// file upload overlay
+		if(this.fileUpload === true){
+			ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
+			
+			var progressWidth = Math.round(sage2UI.width*0.75);
+			var progressHeight = progressWidth * 0.07;
+			var progressX = (sage2UI.width-progressWidth) / 2;
+			var progressY = (sage2UI.height-progressHeight) / 2;
+			var progressRadius = progressHeight * 0.5;
+			
+			ctx.strokeStyle = "rgba(30, 30, 30, 0.85)";
+			ctx.strokeWidth = 2;
+			this.drawRoundedRect(ctx, progressX, progressY, progressWidth, progressHeight, progressRadius, false, true);
+			
+			var percentWidth = Math.round(progressWidth * this.uploadPercent);
+			if(percentWidth > progressHeight){
+				ctx.fillStyle = "rgba(86, 86, 86, 0.85)";
+				this.drawRoundedRect(ctx, progressX, progressY, percentWidth, progressHeight, progressRadius, true, false);
+			}
+		}
 	};
+	
+	this.setUploadPercent = function(percent) {
+		this.uploadPercent = percent; // [0.0 - 1.0]   (not 0 - 100)
+	}
 	
 	this.addAppWindow = function(data) {
 		var icon = data.icon;

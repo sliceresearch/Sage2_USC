@@ -12,6 +12,8 @@ function SAGE2_interaction(wsio) {
 	this.wsio = wsio;
 	this.uniqueID = null;
 	this.sensitivity = null;
+	this.fileUploadProgress = null;
+	this.fileUploadComplete = null;
 	this.mediaStream = null;
 	this.mediaVideo = null;
 	this.mediaResolution = 3;
@@ -19,6 +21,7 @@ function SAGE2_interaction(wsio) {
 	this.desktopCaptureEnabled = false;
 	this.broadcasting = false;
 	this.chunk = 32 * 1024; // 32 KB
+	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
 	
 	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
 	if(localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
@@ -32,6 +35,67 @@ function SAGE2_interaction(wsio) {
 	
 	this.setPointerSensitivity = function(value) {
 		this.sensitivity = value;
+	};
+	
+	this.setFileUploadProgressCallback = function(callback) {
+		this.fileUploadProgress = callback;
+	};
+	
+	this.setFileUploadCompleteCallback = function(callback) {
+		this.fileUploadComplete = callback;
+	};
+	
+	this.uploadFiles = function(files, dropX, dropY) {
+		var _this = this;
+		var loaded = {};
+		var filesFinished = 0;
+		var total = 0;
+
+		for(var i=0; i<files.length; i++){
+			if(files[i].size <= this.maxUploadSize){
+				var formdata = new FormData();
+				formdata.append("file"+i.toString(), files[i]);
+				xhr = new XMLHttpRequest();
+				xhr.open("POST", "upload", true);
+				xhr.upload.id = "file"+i.toString();
+				xhr.upload.addEventListener('progress', function(event) {
+					if(loaded[event.srcElement.id] === undefined) total += event.total;
+					loaded[event.srcElement.id] = event.loaded;
+					var uploaded = 0;
+					for(var key in loaded) uploaded += loaded[key];
+					var pc = uploaded/total;
+					if(_this.fileUploadProgress) _this.fileUploadProgress(pc);
+				}, false);
+				xhr.addEventListener('load', function(event) {
+					filesFinished++;
+					if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
+				}, false);
+				xhr.send(formdata);
+			}
+			else{
+				alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024*1024)) + " MB)");
+			}
+		}
+	};
+	
+	this.uploadURL = function(url, dropX, dropY) {
+		var mimeType = "";
+		var youtube  = url.indexOf("www.youtube.com");
+		var ext      = url.substring(url.lastIndexOf('.')+1);
+		if(ext.length > 4) ext = ext.substring(0, 4);
+		if(ext.length === 4 && (ext[3] === '?' || ext[3] === '#')) ext = ext.substring(0, 3);
+		ext = ext.toLowerCase();
+		if (youtube >= 0)       mimeType = "video/youtube";
+		else if(ext === "jpg")  mimeType = "image/jpeg";
+		else if(ext === "jpeg") mimeType = "image/jpeg";
+		else if(ext === "png")  mimeType = "image/png";
+		else if(ext === "mp4")  mimeType = "video/mp4";
+		else if(ext === "m4v")  mimeType = "video/mp4";
+		else if(ext === "webm") mimeType = "video/webm";
+		else if(ext === "pdf")  mimeType = "application/pdf";
+		console.log("URL: " + url + ", type: " + mimeType);
+
+		if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: url});
 	};
 	
 	this.startSAGE2Pointer = function(buttonId) {
