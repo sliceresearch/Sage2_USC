@@ -414,15 +414,21 @@
 		// Media Browser Dialog
 		else if (element.id === "fileOpenBtn") {
 			loadSelectedFile();
+			document.getElementById('thumbnail').src = "images/blank.png";
+			document.getElementById('metadata_text').textContent = "";
 			hideDialog('mediaBrowserDialog');
 		}
 		else if (element.id === "fileCloseBtn") {
 			selectedFileEntry = null;
+			document.getElementById('thumbnail').src = "images/blank.png";
+			document.getElementById('metadata_text').textContent = "";
 			hideDialog('mediaBrowserDialog');
 		}
 		else if (element.id === "fileDeleteBtn") {
 			if(confirm("Are you sure you want to delete this file?")){
 				selectedFileEntry = null;
+				document.getElementById('thumbnail').src = "images/blank.png";
+				document.getElementById('metadata_text').textContent = "";
 				hideDialog('mediaBrowserDialog');
 			}
 		}
@@ -493,6 +499,8 @@
 		}
 		else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
 			loadSelectedFile();
+			document.getElementById('thumbnail').src = "images/blank.png";
+			document.getElementById('metadata_text').textContent = "";
 			hideDialog('mediaBrowserDialog');
 		}
 	}
