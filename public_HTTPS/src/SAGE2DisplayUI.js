@@ -67,11 +67,13 @@ function SAGE2DisplayUI() {
 			ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 			
-			var size = 0.85*Math.min(eWidth, eHeight);
-			var x = eLeft + (eWidth/2) - (size/2);
-			var y = eTop + (eHeight/2) - (size/2);
-			
-			ctx.drawImage(this.applications[i].icon, x, y, size, size);
+			if(this.applications[i].iconLoaded === true) {
+				var size = 0.85*Math.min(eWidth, eHeight);
+				var x = eLeft + (eWidth/2) - (size/2);
+				var y = eTop + (eHeight/2) - (size/2);
+				
+				ctx.drawImage(this.applications[i].icon, x, y, size, size);
+			}
 		}
 		
 		// tiled display layout
@@ -143,15 +145,22 @@ function SAGE2DisplayUI() {
 	
 	this.setUploadPercent = function(percent) {
 		this.uploadPercent = percent; // [0.0 - 1.0]   (not 0 - 100)
-	}
+	};
 	
 	this.addAppWindow = function(data) {
 		var icon = data.icon;
 		data.icon = new Image();
 		var _this = this;
-		data.icon.onload = function() {
+		data.icon.onload = function(event) {
+			data.iconLoaded = true;
 			_this.draw();
 		};
+		data.icon.onerror = function(event) {
+			setTimeout(function() {
+				data.icon.src = icon+"_512.png";
+			}, 1000);
+		};
+		data.iconLoaded = false;
 		if(icon) data.icon.src = icon+"_512.png";
 		else data.icon.src = "images/blank.png";
 		this.applications.push(data);
