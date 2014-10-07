@@ -116,7 +116,7 @@ function pointer() {
 		this.labelText = this.snap.text(labelTextX, labelTextY, label).attr({
 			fill: "#FFFFFF",
 			fontSize: labelTextSize + "px",
-			fontFamily: "Verdana"
+			fontFamily: "Verdana,Arial,Helvetica"
 		});
 		
 		this.labelBG.attr({width: this.labelText.node.clientWidth + labelBGHeight});
