@@ -252,10 +252,19 @@ addFile = function(filename,exif) {
 			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
 			// Path for the https server
 			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
-			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", function(err, buffer) {
-				if(err) throw err;
 			
+			var averageColorOfImage = function(err, buffer) {
+				if(err) throw err;
+				
 				var avgColor = buffer.toString();
+				if(avgColor.length === 6 && avgColor === "'none'"){
+					imageMagick(exif.icon).noProfile().write(exif.icon, function(err) {
+						if(err) throw err;
+						
+						imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
+					});
+					return;
+				}
 				var rgbaStart = avgColor.indexOf("(");
 				var rgbaEnd   = avgColor.indexOf(")");
 				var rgba = avgColor.substring(rgbaStart+1, rgbaEnd).split(",");
@@ -294,7 +303,10 @@ addFile = function(filename,exif) {
 					}
 				});
 				anAsset.exif.SAGE2thumbnail = rthumb;
-			});
+			};
+			
+			
+			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
 		}
 	}
 };

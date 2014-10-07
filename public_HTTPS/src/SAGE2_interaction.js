@@ -55,6 +55,8 @@ function SAGE2_interaction(wsio) {
 			if(files[i].size <= this.maxUploadSize){
 				var formdata = new FormData();
 				formdata.append("file"+i.toString(), files[i]);
+				formdata.append("dropX", dropX);
+				formdata.append("dropY", dropY);
 				xhr = new XMLHttpRequest();
 				xhr.open("POST", "upload", true);
 				xhr.upload.id = "file"+i.toString();
@@ -95,7 +97,7 @@ function SAGE2_interaction(wsio) {
 		else if(ext === "pdf")  mimeType = "application/pdf";
 		console.log("URL: " + url + ", type: " + mimeType);
 
-		if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: url});
+		if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: url, position: [dropX, dropY]});
 	};
 	
 	this.startSAGE2Pointer = function(buttonId) {

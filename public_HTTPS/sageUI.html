@@ -327,13 +327,15 @@
 		
 		// trigger file upload
 		console.log("drop location: " + event.layerX + ", " + event.layerY);
+		var x = event.layerX/event.srcElement.clientWidth;
+		var y = event.layerY/event.srcElement.clientHeight;
 		if(event.dataTransfer.files.length > 0) {
 			displayUI.fileUpload = true;
 			displayUI.uploadPercent = 0;
-			interactor.uploadFiles(event.dataTransfer.files, event.layerX, event.layerY);
+			interactor.uploadFiles(event.dataTransfer.files, x, y);
 		}
 		else {
-			interactor.uploadURL(event.dataTransfer.getData("Url"), event.layerX, event.layerY);
+			interactor.uploadURL(event.dataTransfer.getData("Url"), x, y);
 		}
 	}
 	
