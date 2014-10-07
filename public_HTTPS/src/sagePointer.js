@@ -292,9 +292,25 @@ function sagePointer(wsio) {
 		this.mediaQuality = this.screenShareQuality.value;
 		this.screenShareQualityIndicator.textContent = this.mediaQuality;
 	};
-	
+
 	this.uploadFileToServerMethod = function(event) {
 		event.preventDefault();
+
+		var dropX = 0.0;
+		var dropY = 0.0;
+
+		// Check if we are are a sageUI or a sagePointer
+		if (event.target.id === "fileDropText") {
+			// we are in sagePointer
+			dropX = 0.0;
+			dropY = 0.0;
+		} else if (event.target.id === "winMgr") {
+			// we are in sageUI
+			dropX = event.offsetX / event.target.clientWidth;
+			dropY = event.offsetY / event.target.clientHeight;
+		} else {
+			// I dont know ;-)
+		}
 
 		var files = event.dataTransfer.files;
 		var url   = event.dataTransfer.getData("Url");
@@ -309,6 +325,8 @@ function sagePointer(wsio) {
 				if(files[i].size <= this.maxUploadSize){
 					var formdata = new FormData();
 					formdata.append("file"+i.toString(), files[i]);
+					formdata.append("dropX", dropX);
+					formdata.append("dropY", dropY);
 
 					xhr = new XMLHttpRequest();
 					xhr.open("POST", "upload", true);
@@ -324,12 +342,14 @@ function sagePointer(wsio) {
 						for(var key in total){ totalSize += total[key]; uploaded += loaded[key]; }
 						pc = Math.floor((uploaded/totalSize) * 100);
 						_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
-						_this.fileDropProgress.value = pc;
+						// sagePointerApp has no progress bar
+						if (_this.fileDropProgress !== null) _this.fileDropProgress.value = pc;
 						if(pc == 100){
 							setTimeout(function() {
 								if (pc == 100) {
 									_this.fileDropText.textContent = "Drop multimedia files here";
-									_this.fileDropProgress.value = 0;
+									// sagePointerApp has no progress bar
+									if (_this.fileDropProgress !== null) _this.fileDropProgress.value = 0;
 								}
 							}, 500);
 						}
@@ -360,7 +380,7 @@ function sagePointer(wsio) {
 			else if(ext == "pdf") mimeType  = "application/pdf";
 			console.log("URL: " + dataUrl + ", type: " + mimeType);
 
-			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl});
+			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl, position:[dropX,dropY]});
 		}
 	};
 	

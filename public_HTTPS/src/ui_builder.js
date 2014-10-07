@@ -229,8 +229,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
-			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		}
 		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
 		else this.noDropShadow = false;
@@ -393,18 +393,25 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.createSagePointer = function(pointer_data) {
-		var pointerElem = createDrawingElement(pointer_data.id, "pointerItem",
-							pointer_data.left - this.pointerOffsetX - this.offsetX,
-							pointer_data.top  - this.pointerOffsetY - this.offsetY,
-							this.pointerWidth, this.pointerHeight, 10000);
+		var pointerElem = document.createElement('div');
+		pointerElem.id = pointer_data.id;
+		pointerElem.className = "pointerItem";
+		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
+		pointerElem.style.top = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem); 
-
+		
 		var ptr = new pointer(); 
-		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color) ;
-		ptr.draw();
+		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
 
-		if (pointer_data.visible) pointerElem.style.display = "block";
-		else pointerElem.style.display = "none";
+		if (pointer_data.visible) {
+			pointerElem.style.display = "block";
+			ptr.isShown = true;
+		}
+		else {
+			pointerElem.style.display = "none";
+			ptr.isShown = false;
+		}
 
 		// keep track of the pointers
         this.pointerItems[pointerElem.id] = ptr;
@@ -419,23 +426,26 @@ function uiBuilder(json_cfg, clientID) {
 
 	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
-	    this.pointerItems[pointerElem.id].draw();
+		
+		this.pointerItems[pointerElem.id].isShown = true;
 	};
 
 	this.hideSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 		pointerElem.style.display = "none";
+		this.pointerItems[pointerElem.id].isShown = false;
 	};
 
 	this.updateSagePointerPosition = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
-		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top  = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		var translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+		pointerElem.style['-webkit-transform'] = translate;
+		pointerElem.style['-moz-transform']    = translate;
+		pointerElem.style['transform']         = translate;
 	};
 	
 	this.changeSagePointerMode = function(pointer_data) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
-		this.pointerItems[pointer_data.id].draw();
 	};
 	
 	this.createRadialMenu = function(data) {
@@ -579,7 +589,8 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.style.display = 'none';
 		// Hide the pointers
 		for (var p in this.pointerItems) {
-			this.pointerItems[p].element.style.display = 'none';
+			if (this.pointerItems[p].element)
+				this.pointerItems[p].element.style.display = 'none';
 		}
 		// Hide the apps top bar
 		var applist = document.getElementsByClassName("windowTitle");
@@ -587,13 +598,16 @@ function uiBuilder(json_cfg, clientID) {
 			applist[i].style.display = 'none';
 		}
 	};
+
 	this.showInterface = function() {
 		// Show the top bar
 		this.upperBar.style.display = 'block';
 		// Show the pointers (only if they have a name, ui pointers dont have names)
 		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].label !== "")
-				this.pointerItems[p].element.style.display = 'block';
+			if (this.pointerItems[p].label !== "") {
+				if (this.pointerItems[p].isShown === true)
+				 	this.pointerItems[p].element.style.display = 'block';
+			}
 		}
 		// Show the apps top bar
 		var applist = document.getElementsByClassName("windowTitle");

@@ -1,6 +1,6 @@
 {
   "name": "SAGE2",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
   "keywords": [
@@ -40,19 +40,20 @@
     "url": "https://github.com/uic-evl/SAGE2"
   },
   "dependencies": {
+    "colors": "latest",
+    "commander": "latest",
     "decompress-zip": "latest",
+    "fluent-ffmpeg": "latest",
+    "formidable": "latest",
     "gm": "latest",
     "imageinfo": "latest",
+    "jshint": "latest",
     "json5": "latest",
     "mime": "latest",
     "request": "latest",
+    "sprint": "^0.3.1",
     "ws": "latest",
-    "ytdl-core": "latest",
-    "jshint": "latest",
-    "commander": "latest",
-    "colors": "latest",
-    "formidable": "latest",
-    "sprint": "^0.3.1"
+    "ytdl-core": "latest"
   },
   "bundledDependencies": [],
   "devDependencies": {},

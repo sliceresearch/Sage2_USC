@@ -1,6 +1,6 @@
 {
 	"main_script": "leaflet.js",
-	"icon": "watch.jpg",
+	"icon": "watch.png",
 	"width": 800,
 	"height": 600,
 	"animation": true,
