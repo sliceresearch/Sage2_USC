@@ -337,6 +337,57 @@ span {
 	cursor: default;
 }
 
+#sage2MobileContainer {
+	display: none;
+	position: fixed;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: #464646;
+	z-index: 1001;
+	cursor: default;
+}
+
+#sage2Mobile {
+	width: 100%;
+	height: 100%;
+}
+
+#sage2MobileTrackpad {
+	width: 100%;
+	height: 80%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileButtons {
+	width: 100%;
+	height: 20%;
+}
+
+#sage2MobileLeftButton {
+	float: left;
+	width: 50%;
+	height: 100%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileRightButton {
+	float: left;
+	width: 50%;
+	height: 100%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
 .fileItem {
 	cursor: default;
 }

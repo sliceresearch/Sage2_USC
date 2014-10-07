@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <title>SAGE2 UI - Mobile</title>
 <!--<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">-->
 <script type="text/javascript">
@@ -402,7 +402,13 @@
 		var element = event.srcElement;
 		
 		// Menu Buttons
-		if(element.id === "applauncher") {
+		if(element.id === "sage2pointer") {
+			interactor.startSAGE2Pointer(element.id);
+		}
+		else if(element.id === "sharescreen") {
+			interactor.startScreenShare();
+		}
+		else if(element.id === "applauncher") {
 			wsio.emit('requestAvailableApplications');
 		}
 		else if(element.id === "mediabrowser") {
@@ -416,12 +422,6 @@
 		}
 		else if(element.id === "info") {
 			
-		}
-		else if(element.id === "sharescreen") {
-			interactor.startScreenShare();
-		}
-		else if(element.id === "sage2pointer") {
-			interactor.startSAGE2Pointer(element.id);
 		}
 		
 		
@@ -667,17 +667,17 @@
 	}
 	
 	function showDialog(id) {
-		var blackoverlay = document.getElementById('blackoverlay');
-		var dialog = document.getElementById(id);
-		blackoverlay.style.display = "block";
-		dialog.style.display = "block";
+		document.getElementById('blackoverlay').style.display = "block";
+		document.getElementById(id).style.display = "block";
 	}
 	
 	function hideDialog(id) {
-		var blackoverlay = document.getElementById('blackoverlay');
-		var dialog = document.getElementById(id);
-		blackoverlay.style.display = "none";
-		dialog.style.display = "none";
+		document.getElementById('blackoverlay').style.display = "none";
+		document.getElementById(id).style.display = "none";
+	}
+	
+	function showSAGE2PointerOverlayNoMouse() {
+		document.getElementById('sage2MobileContainer').style.display = "block";
 	}
 	
 	function sagePointerEnabled() {
@@ -882,6 +882,14 @@
 		</div>
 		<div id="settingsButtons">
 			<span id="settingsCloseBtn" class="button">Close</span>
+		</div>
+	</div>
+	
+	<div id="sage2MobileContainer">
+		<div id="sage2MobileTrackpad"></div>
+		<div id="sage2MobileButtons">
+			<div id="sage2MobileLeftButton"></div>
+			<div id="sage2MobileRightButton"></div>
 		</div>
 	</div>
 	

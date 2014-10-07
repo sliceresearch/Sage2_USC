@@ -110,6 +110,10 @@ function SAGE2_interaction(wsio) {
 		}
 		else {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
+			
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
+			
+			showSAGE2PointerOverlayNoMouse();
 		}
 	};
 	
@@ -288,6 +292,8 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.pointerKeyDownMethod = function(event) {
+		console.log("keydown:", event);
+		
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if(code === 27) {
@@ -307,6 +313,8 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.pointerKeyUpMethod = function(event) {
+		console.log("keyup:", event);
+		
 		var code = parseInt(event.keyCode, 10);
 		if(code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
@@ -316,6 +324,8 @@ function SAGE2_interaction(wsio) {
 	
 	
 	this.pointerKeyPressMethod = function(event) {
+		console.log("keypress:", event);
+		
 		var code = parseInt(event.charCode, 10);
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 		event.preventDefault();
