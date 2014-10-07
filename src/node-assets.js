@@ -491,10 +491,23 @@ initialize = function (root, relativePath) {
 		
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
-		if (!fs.existsSync(assetFolder)) {
-		     fs.mkdirSync(assetFolder);
-		}
-
+		if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
+		
+		// Make sure the asset/apps folder exists
+		var assetAppsFolder = path.join(assetFolder, 'apps');
+		if (!fs.existsSync(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
+		
+		// Make sure unknownapp images exist
+		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.png');
+		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.png');
+		if (!fs.existsSync(unknownapp_256)) fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
+		var unknownapp_512Img = path.resolve(root, '..', 'images', 'unknownapp_512.png');
+		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.png');
+		if (!fs.existsSync(unknownapp_512)) fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+		var unknownapp_1024Img = path.resolve(root, '..', 'images', 'unknownapp_1024.png');
+		var unknownapp_1024 = path.join(assetAppsFolder, 'unknownapp_1024.png');
+		if (!fs.existsSync(unknownapp_1024)) fs.createReadStream(unknownapp_1024Img).pipe(fs.createWriteStream(unknownapp_1024));
+		
 		AllAssets = {};
 
 		var assetFile = path.join(assetFolder, 'assets.json');
