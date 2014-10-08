@@ -621,6 +621,8 @@ exports.listApps   = listApps;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
 
+exports.exifAsync   = exifAsync;
+
 exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
 exports.deletePDF   = deletePDF;
