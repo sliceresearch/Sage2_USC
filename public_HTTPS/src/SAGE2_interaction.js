@@ -124,7 +124,6 @@ function SAGE2_interaction(wsio) {
 								 document.mozPointerLockElement    ||
 								 document.webkitPointerLockElement;
 		
-		console.log(pointerLockElement);
 		// disable SAGE2 Pointer
 		if(pointerLockElement === undefined || pointerLockElement === null) {
 			this.wsio.emit('stopSagePointer');
