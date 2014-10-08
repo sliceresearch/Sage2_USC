@@ -451,10 +451,14 @@
 			hideDialog('mediaBrowserDialog');
 		}
 		else if (element.id === "fileDeleteBtn") {
-			if(confirm("Are you sure you want to delete this file?")){
-				selectedFileEntry = null;
+			if(selectedFileEntry !== null && confirm("Are you sure you want to delete this file?")){
+				var application = selectedFileEntry.getAttribute("application");
+				var file = selectedFileEntry.getAttribute("file");
+				wsio.emit('deleteElementFromStoredFiles', {application: application, filename: file});
+				
 				document.getElementById('thumbnail').src = "images/blank.png";
 				document.getElementById('metadata_text').textContent = "";
+				selectedFileEntry = null;
 				hideDialog('mediaBrowserDialog');
 			}
 		}

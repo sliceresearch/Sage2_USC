@@ -161,9 +161,9 @@ addFile = function(filename,exif) {
 						return;
 					}
 				});
-				anAsset.exif.SAGE2thumbnail = rthumb;
 			});
 		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		thumbFolder = path.join(AllAssets.root, 'assets');
 		ffmpeg.ffprobe(filename, function(err, metadata){
@@ -240,9 +240,8 @@ addFile = function(filename,exif) {
 				folder: thumbFolder, 
 				size: size256
 			});
-			
-			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/custom') {
 		if (exif.icon === null || ! fs.existsSync(exif.icon) ) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
@@ -302,27 +301,27 @@ addFile = function(filename,exif) {
 						return;
 					}
 				});
-				anAsset.exif.SAGE2thumbnail = rthumb;
 			};
 			
-			
 			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
+			anAsset.exif.SAGE2thumbnail = rthumb;
 		}
 	}
 };
 
 deletePDF = function(filename) {
-	var filepath = path.join(AllAssets.root, 'pdfs', filename);
+	var filepath = path.resolve(AllAssets.root, 'pdfs', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
-			console.log("Server> successfully deleted file:", filename);
-			// Delete the metadata
-			delete AllAssets.list[filepath];
-		}
-	);
+		
+		console.log("Server> successfully deleted file:", filename);
+		// Delete the metadata
+		console.log(filepath)
+		delete AllAssets.list[filepath];
+	});
 };
 deleteImage = function(filename) {
-	var filepath = path.join(AllAssets.root, 'images', filename);
+	var filepath = path.resolve(AllAssets.root, 'images', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
 			console.log("Server> successfully deleted file:", filename);
@@ -332,7 +331,7 @@ deleteImage = function(filename) {
 	);
 };
 deleteVideo = function(filename) {
-	var filepath = path.join(AllAssets.root, 'videos', filename);
+	var filepath = path.resolve(AllAssets.root, 'videos', filename);
 		fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
 			console.log("Server> successfully deleted file:", filename);
