@@ -36,6 +36,7 @@
 	var touchStartX;
 	var touchStartY;
 	
+	var openDialog;
 	var selectedAppEntry;
 	var selectedFileEntry;
 	var type2App;
@@ -218,8 +219,10 @@
 		document.addEventListener('touchstart', touchStart,      false);
 		document.addEventListener('touchend',   touchEnd,        false);
 		document.addEventListener('touchmove',  touchMove,       false);
+		document.addEventListener('keyup',      escapeDialog,    false);
 		
 		keyEvents = false;
+		openDialog = null;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
 		touchTapTime = 0;
@@ -645,6 +648,13 @@
 		}
 	}
 	
+	function escapeDialog(event) {
+		if(parseInt(event.keyCode, 10) === 27 && openDialog !== null){
+			hideDialog(openDialog);
+			event.preventDefault();
+		}
+	}
+	
 	function keyDown(event) {
 		if(displayUI.keyDown(parseInt(event.keyCode, 10))){
 			event.preventDefault();
@@ -681,11 +691,13 @@
 	}
 	
 	function showDialog(id) {
+		openDialog = id;
 		document.getElementById('blackoverlay').style.display = "block";
 		document.getElementById(id).style.display = "block";
 	}
 	
 	function hideDialog(id) {
+		openDialog = null;
 		document.getElementById('blackoverlay').style.display = "none";
 		document.getElementById(id).style.display = "none";
 	}
