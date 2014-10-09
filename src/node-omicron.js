@@ -22,7 +22,6 @@ var websocketIO  = require('./node-websocket.io');  // creates WebSocket server 
 var interaction  = require('./node-interaction');   // custom interaction module
 var sagepointer  = require('./node-sagepointer');   // custom sagepointer module
 var coordinateCalculator = require('./node-coordinateCalculator'); 
-//var server       = require('../server.js'); // loading the server ?
 
 var dataPort     = 9123;
 
@@ -52,6 +51,18 @@ function omicronManager( sysConfig )
 	config = sysConfig.experimental.omicron;
 	
 	coordCalculator = new coordinateCalculator( config );
+	
+	serverHost = sysConfig.host;
+	
+	if( config.host === undefined )
+	{
+		console.log('Omicron: Using web server hostname: ', sysConfig.host);
+	}
+	else
+	{
+		serverHost = config.host;
+		console.log('Omicron: Using server hostname: ', serverHost);
+	}
 	
 	if( config.dataPort === undefined )	
 	{
@@ -105,7 +116,8 @@ function omicronManager( sysConfig )
 		});
 
 	});
-	server.listen(dataPort, sysConfig.host);
+
+	server.listen(dataPort, serverHost);
 	
 	if( config.useOinputserver === true )
 	{
