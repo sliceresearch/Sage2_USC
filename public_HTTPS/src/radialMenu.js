@@ -368,7 +368,7 @@ function radialMenu(){
 		// Thumbnail window background
 		if( this.currentMenuState !== 'radialMenu' )
 		{
-			this.thumbWindowctx.fillRect(0,0, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
+			this.thumbWindowctx.fillRect(0,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
 		}
 		// ------------------------------------------------------
 		
@@ -443,7 +443,7 @@ function radialMenu(){
 			if( this.currentMenuState !== 'radialMenu' )
 			{
 				this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
-				this.ctx.fillRect(previewImageX - 10,this.thumbnailWindowPosition.y, previewImageSize + 20, thumbnailWindowSize.y)
+				this.ctx.fillRect(previewImageX - 10,this.thumbnailWindowPosition.y + 20, previewImageSize + 20, thumbnailWindowSize.y)
 				
 				//this.ctx.fillRect(this.thumbnailWindowPosition.x,5, 720, 50)
 			}
@@ -932,7 +932,7 @@ function radialMenu(){
 	{
 		if( this.sendsToServer === true )
 		{
-			this.wsio.emit('loadApplication', data);
+			this.wsio.emit('loadApplication', { application: data.filename} );
 		}
 	};
 	
