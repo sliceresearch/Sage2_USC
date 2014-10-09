@@ -802,8 +802,8 @@ function radialMenu(){
 		}
 		if( this.radialSaveSessionButton.isClicked() )
 		{
-			//this.wsio.emit('saveSesion');
-			//this.wsio.emit('requestStoredFiles');
+			this.wsio.emit('saveSesion');
+			this.wsio.emit('requestStoredFiles');
 		}
 		
 		// Level 2 -----------------------------------
