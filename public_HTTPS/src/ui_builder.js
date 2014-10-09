@@ -513,7 +513,7 @@ function uiBuilder(json_cfg, clientID) {
 		// Show the pointers (only if they have a name, ui pointers dont have names)
 		for (var p in this.pointerItems) {
 			if (this.pointerItems[p].label !== "") {
-				if (this.pointerItems[p].isShown === true)
+				if (this.pointerItems[p].isShown === true && this.pointerItems[p].element)
 				 	this.pointerItems[p].element.style.display = 'block';
 			}
 		}
