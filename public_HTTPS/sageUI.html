@@ -510,6 +510,14 @@
 			wsio.emit('tileApplications');
 			hideDialog('arrangementDialog');
 		}
+		else if(element.id === "savesession") {
+			var template = "Session " + dateToYYYYMMDDHHMMSS(new Date());
+			var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
+			if(filename !== null) {
+				wsio.emit('saveSesion', filename);
+				hideDialog('arrangementDialog');
+			}
+		}
 		
 		// Other
 		else {
@@ -702,6 +710,17 @@
 		}
 	}
 	
+	function pad(n, width, z) {
+		z = z || '0';
+		n = n.toString();
+		return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
+	
+	function dateToYYYYMMDDHHMMSS(date) {
+		return date.getFullYear() + "-" + pad(date.getMonth()+1, 2) + "-" + pad(date.getDate(), 2) + " " + 
+				pad(date.getHours(),2) + ":" + pad(date.getMinutes(),2) + ":" + pad(date.getSeconds(),2);
+	}
+	
 	function reloadIfServerRunning(callback) {
 		xhr = new XMLHttpRequest();
 		xhr.open("GET", "/", true);
@@ -828,6 +847,10 @@
 			<div id="tilecontentContainer">
 				<img id="tilecontent" src="images/tilecontent.svg" width="64" height="64"></img>
 				<p>Tile Content</p>
+			</div>
+			<div id="savesessionContainer">
+				<img id="savesession" src="images/savesession.svg" width="64" height="64"></img>
+				<p>Save Session</p>
 			</div>
 		</div>
 		<div id="arrangementButtons">
