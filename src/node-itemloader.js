@@ -481,46 +481,48 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 		fs.readFile(instuctionsFile, 'utf8', function(err, json_str) {
 			if(err) throw err;
 			
-			assets.exifAsync(zipFolder);
+			assets.exifAsync([zipFolder], function(err){
+				if(err) throw err;
 			
-			var instructions = JSON.parse(json_str);
-			var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
-			var aspectRatio = instructions.width / instructions.height;
+				var instructions = JSON.parse(json_str);
+				var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
+				var aspectRatio = instructions.width / instructions.height;
 
-			var resizeMode = "proportional";
-			if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
-				resizeMode = instructions.resize;
+				var resizeMode = "proportional";
+				if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+					resizeMode = instructions.resize;
 				
-			var exif = assets.getExifData(zipFolder);
+				var exif = assets.getExifData(zipFolder);
 
-			var appInstance = {
-				id: null,
-				title: exif.metadata.title,
-				application: appName,
-				icon: exif.SAGE2thumbnail,
-				type: mime_type,
-				url: external_url,
-				data: instructions.load,
-				resrc: instructions.dependencies,
-				left: _this.titleBarHeight,
-				top: 1.5*_this.titleBarHeight,
-				width: instructions.width,
-				height: instructions.height,
-				native_width: instructions.width,
-				native_height: instructions.height,
-				previous_left: null,
-				previous_top: null,
-				previous_width: null,
-				previous_height: null,
-				maximized: false,
-				aspect: aspectRatio,
-				animation: instructions.animation,
-				metadata: exif.metadata,
-				resizeMode: resizeMode,
-				date: new Date()
-			};
-			_this.scaleAppToFitDisplay(appInstance);
-			callback(appInstance);
+				var appInstance = {
+					id: null,
+					title: exif.metadata.title,
+					application: appName,
+					icon: exif.SAGE2thumbnail,
+					type: mime_type,
+					url: external_url,
+					data: instructions.load,
+					resrc: instructions.dependencies,
+					left: _this.titleBarHeight,
+					top: 1.5*_this.titleBarHeight,
+					width: instructions.width,
+					height: instructions.height,
+					native_width: instructions.width,
+					native_height: instructions.height,
+					previous_left: null,
+					previous_top: null,
+					previous_width: null,
+					previous_height: null,
+					maximized: false,
+					aspect: aspectRatio,
+					animation: instructions.animation,
+					metadata: exif.metadata,
+					resizeMode: resizeMode,
+					date: new Date()
+				};
+				_this.scaleAppToFitDisplay(appInstance);
+				callback(appInstance);
+			});
 		});
 
 		// delete original zip file

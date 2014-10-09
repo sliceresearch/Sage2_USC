@@ -36,6 +36,7 @@
 	var touchStartX;
 	var touchStartY;
 	
+	var openDialog;
 	var selectedAppEntry;
 	var selectedFileEntry;
 	var type2App;
@@ -218,8 +219,10 @@
 		document.addEventListener('touchstart', touchStart,      false);
 		document.addEventListener('touchend',   touchEnd,        false);
 		document.addEventListener('touchmove',  touchMove,       false);
+		document.addEventListener('keyup',      escapeDialog,    false);
 		
 		keyEvents = false;
+		openDialog = null;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
 		touchTapTime = 0;
@@ -451,10 +454,14 @@
 			hideDialog('mediaBrowserDialog');
 		}
 		else if (element.id === "fileDeleteBtn") {
-			if(confirm("Are you sure you want to delete this file?")){
-				selectedFileEntry = null;
+			if(selectedFileEntry !== null && confirm("Are you sure you want to delete this file?")){
+				var application = selectedFileEntry.getAttribute("application");
+				var file = selectedFileEntry.getAttribute("file");
+				wsio.emit('deleteElementFromStoredFiles', {application: application, filename: file});
+				
 				document.getElementById('thumbnail').src = "images/blank.png";
 				document.getElementById('metadata_text').textContent = "";
+				selectedFileEntry = null;
 				hideDialog('mediaBrowserDialog');
 			}
 		}
@@ -505,6 +512,14 @@
 		else if(element.id === "tilecontent") {
 			wsio.emit('tileApplications');
 			hideDialog('arrangementDialog');
+		}
+		else if(element.id === "savesession") {
+			var template = "Session " + dateToYYYYMMDDHHMMSS(new Date());
+			var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
+			if(filename !== null) {
+				wsio.emit('saveSesion', filename);
+				hideDialog('arrangementDialog');
+			}
 		}
 		
 		// Other
@@ -633,6 +648,13 @@
 		}
 	}
 	
+	function escapeDialog(event) {
+		if(parseInt(event.keyCode, 10) === 27 && openDialog !== null){
+			hideDialog(openDialog);
+			event.preventDefault();
+		}
+	}
+	
 	function keyDown(event) {
 		if(displayUI.keyDown(parseInt(event.keyCode, 10))){
 			event.preventDefault();
@@ -669,11 +691,13 @@
 	}
 	
 	function showDialog(id) {
+		openDialog = id;
 		document.getElementById('blackoverlay').style.display = "block";
 		document.getElementById(id).style.display = "block";
 	}
 	
 	function hideDialog(id) {
+		openDialog = null;
 		document.getElementById('blackoverlay').style.display = "none";
 		document.getElementById(id).style.display = "none";
 	}
@@ -696,6 +720,17 @@
 		while (node.lastChild) {
     		node.removeChild(node.lastChild);
 		}
+	}
+	
+	function pad(n, width, z) {
+		z = z || '0';
+		n = n.toString();
+		return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
+	
+	function dateToYYYYMMDDHHMMSS(date) {
+		return date.getFullYear() + "-" + pad(date.getMonth()+1, 2) + "-" + pad(date.getDate(), 2) + " " + 
+				pad(date.getHours(),2) + ":" + pad(date.getMinutes(),2) + ":" + pad(date.getSeconds(),2);
 	}
 	
 	function reloadIfServerRunning(callback) {
@@ -824,6 +859,10 @@
 			<div id="tilecontentContainer">
 				<img id="tilecontent" src="images/tilecontent.svg" width="64" height="64"></img>
 				<p>Tile Content</p>
+			</div>
+			<div id="savesessionContainer">
+				<img id="savesession" src="images/savesession.svg" width="64" height="64"></img>
+				<p>Save Session</p>
 			</div>
 		</div>
 		<div id="arrangementButtons">

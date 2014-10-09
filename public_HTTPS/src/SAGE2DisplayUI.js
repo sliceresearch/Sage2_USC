@@ -341,7 +341,7 @@ function SAGE2DisplayUI() {
 		var ctx = sage2UI.getContext('2d');
 		var menuUI = document.getElementById('menuUI');
 		
-		var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 30; // size of menu buttons
+		var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 40; // size of menu buttons
 		var freeHeight  = window.innerHeight - 20;                 // size of 10px margin (top, bottom)
 		
 		var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
