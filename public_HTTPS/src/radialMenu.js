@@ -105,7 +105,7 @@ function radialMenu(){
 				sharesContentWithRemoteServer: false,
 				receivesDisplayConfiguration: true,
 				receivesClockTime: false,
-				requiresFullApps: true,
+				requiresFullApps: false,
 				requiresAppPositionSizeTypeOnly: false,
 				receivesMediaStreamFrames: false,
 				receivesWindowModification: false,
@@ -120,10 +120,6 @@ function radialMenu(){
 		this.wsio.on('disableSendToServer', function(ID) {
 			radialMenuList[id].sendsToServer = false;
 			radialMenuList[id].wsio.close();
-		});
-		
-		this.wsio.on('animateCanvas', function(data) {
-			radialMenuList[id].animate(data);
 		});
 		
 		// load thumbnail icons
