@@ -262,6 +262,12 @@ span {
 	text-align: center;
 }
 
+#savesessionContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
 #arrangementCloseBtn {
 	position: absolute;
 	right: 10px;
