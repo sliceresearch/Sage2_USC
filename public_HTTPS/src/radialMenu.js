@@ -30,7 +30,7 @@ var menuButtonHitboxSize = 50;
 var overlayIconScale = 0.3; // image, pdf, etc image
 
 var thumbnailWindowSize = { x: 1224, y: 860 };
-var thumbnailPreviewWindowSize = { x: 350, y: 800 };
+var thumbnailPreviewWindowSize = { x: 550, y: 800 };
 
 var radialMenuList = {};
 
@@ -180,7 +180,7 @@ function radialMenu(){
 		this.thumbnailWindowFrame.src = this.resrcPath +"thumbnail_window_frame2.png"
 		
 		// Create buttons
-		// icon, useBackGroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
+		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
 		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 )
 		
 		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 )
@@ -965,7 +965,7 @@ function radialMenu(){
 					thumbnailButton = new buttonWidget();
 					thumbnailButton.init(0, this.thumbWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
-					thumbnailButton.simpleTint = true;
+					thumbnailButton.simpleTint = false;
 					
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail != null )
@@ -990,7 +990,7 @@ function radialMenu(){
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
-				thumbnailButton.simpleTint = true;
+				thumbnailButton.simpleTint = false;
 				
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail != null )
@@ -1014,7 +1014,7 @@ function radialMenu(){
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
-				thumbnailButton.simpleTint = true;
+				thumbnailButton.simpleTint = false;
 				
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail != null )
@@ -1038,7 +1038,11 @@ function radialMenu(){
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
-				thumbnailButton.simpleTint = true;
+				thumbnailButton.simpleTint = false;
+				thumbnailButton.useBackgroundColor = false;
+				
+				thumbnailButton.setSize( imageThumbSize * 2, imageThumbSize * 2 );
+				thumbnailButton.setHitboxSize( imageThumbSize * 2, imageThumbSize * 2 );
 				
 				if ( appList[i].exif.SAGE2thumbnail != null )
 				{
@@ -1061,7 +1065,7 @@ function radialMenu(){
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setIdleImage( this.idleSessionIcon );
-				thumbnailButton.simpleTint = true;
+				thumbnailButton.simpleTint = false;
 				
 				this.thumbnailButtons.push(thumbnailButton);
 				this.sessionThumbnailButtons.push(thumbnailButton);
@@ -1155,12 +1159,17 @@ function radialMenu(){
 		curRow = 0;
 		curColumn = 0;
 		if( this.currentMenuState === 'appThumbnailWindow' )
+		{
+			var maxRows = Math.floor((thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize * 2 + thumbSpacer));
+			var maxCols = Math.floor((thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize * 2 + thumbSpacer));
+			var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
+		
 			for( i = 0; i < this.appThumbnailButtons.length; i++ )
 			{
-				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
+				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize * 2 + thumbSpacer));
 				var currentButton = this.appThumbnailButtons[i];
 				
-				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
+				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize * 2 + thumbSpacer) )
 				{
 					curColumn = 0;
 					
@@ -1168,10 +1177,11 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize * 2 + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize * 2 + thumbSpacer) );
 				
 				curColumn++;
 			}
+		}
 		//curColumn = 0;
 		//curRow += 2;
 		curRow = 0;
@@ -1313,56 +1323,20 @@ function buttonWidget() {
 		if( this.state === 1 )
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
-			
-			if( this.hitboxShape === 'box' )
-				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
-			else if( this.hitboxShape === 'circle' )
-			{
-				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				//this.ctx.fillStyle = this.mouseOverColor;
-				//this.ctx.fill();
-			}
 		}
 		else if( this.state === 3 )
 		{
 			this.ctx.fillStyle = this.clickedColor;
 			this.state = 2; // Pressed state
-			
-			if( this.hitboxShape === 'box' )
-				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
-			else if( this.hitboxShape === 'circle' )
-			{
-				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				//this.ctx.fillStyle = this.clickedColor;
-				//this.ctx.fill();
-			}
 		}
 		else if( this.state === 2 )
 		{
 			this.ctx.fillStyle = this.pressedColor;
-			
-			if( this.hitboxShape === 'box' )
-				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
-			else if( this.hitboxShape === 'circle' )
-			{
-				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				//this.ctx.fillStyle = this.pressedColor;
-				//this.ctx.fill();
-			}
 		}
 		else if( this.state === 4 )
 		{
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
-			
-			if( this.hitboxShape === 'box' )
-				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
-			else if( this.hitboxShape === 'circle' )
-			{
-				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
-				//this.ctx.fillStyle = this.releasedColor;
-				//this.ctx.fill();
-			}
 		}
 		else if( this.useBackgroundColor )
 		{
@@ -1390,13 +1364,15 @@ function buttonWidget() {
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
 			
 			if( this.isLit === true )
-				this.drawTintImage( this.idleImage, offset, this.width, this.height, this.litColor, 0.8 );
+				this.drawTintImage( this.idleImage, offset, this.width, this.height, this.litColor, 0.5 );
 						
 			// Tint the image
 			if( this.state !== 0 )
 			{
 				if( this.simpleTint )
+				{
 					this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight)
+				}
 				else
 				{
 					if( this.isLit === false )
