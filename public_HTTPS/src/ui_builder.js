@@ -538,6 +538,16 @@ function uiBuilder(json_cfg, clientID) {
 		}
 	};
 	
+	this.updateRadialMenuApps = function(data) {
+		console.log("updateRadialMenuApps");
+		var menuElem = document.getElementById(data.id+"_menu");
+		if( menuElem !== null )
+		{
+			this.radialMenus[menuElem.id].updateAppFileList(data.fileList);
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
 	this.addRemoteSite = function(data) {
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)

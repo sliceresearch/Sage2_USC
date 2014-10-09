@@ -3049,8 +3049,23 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 
 function updateRadialMenu( uniqueID )
 {
-	var savedFiles = getSavedFilesList();
-	broadcast('updateRadialMenu', {id: uniqueID, fileList: savedFiles}, 'receivesPointerData');
+	// Build lists of assets
+	var uploadedImages = assets.listImages();
+	var uploadedVideos = assets.listVideos();
+	var uploadedPdfs   = assets.listPDFs();
+	var uploadedApps = assets.listApps();
+	var savedSessions  = listSessions();
+
+	// Sort independently of case
+	uploadedImages.sort( sageutils.compareFilename );
+	uploadedVideos.sort( sageutils.compareFilename );
+	uploadedPdfs.sort(   sageutils.compareFilename );
+	uploadedApps.sort(   sageutils.compareFilename );
+	savedSessions.sort(  sageutils.compareFilename );
+	
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions, apps: uploadedApps};
+
+	broadcast('updateRadialMenu', {id: uniqueID, fileList: list}, 'receivesPointerData');
 }
 
 function radialMenuEvent( data )

@@ -466,7 +466,7 @@ function radialMenu(){
 				//console.log( metadata);
 				
 				// Generic
-				if( metadata.FileName )
+				if( metadata.metadata === undefined && metadata.FileName )
 				{
 					this.ctx.fillText( "File Name: " + metadata.FileName, metadataTextPosX, metadataTextPosY + metadataLine * 20);
 					metadataLine++;
@@ -474,6 +474,12 @@ function radialMenu(){
 				if( metadata.FileSize )
 				{
 					this.ctx.fillText( "File Size: " + metadata.FileSize, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				if( metadata.FileDate )
+				{
+					this.ctx.fillText( "File Date: " + metadata.FileDate, metadataTextPosX, metadataTextPosY + metadataLine * 20);
 					metadataLine++;
 				}
 				
@@ -597,6 +603,38 @@ function radialMenu(){
 				if( metadata.AudioSampleRate )
 				{
 					this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				
+				// Apps
+				if( metadata.metadata.title )
+				{
+					this.ctx.fillText( "Title: " + metadata.metadata.title, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.metadata.version )
+				{
+					this.ctx.fillText( "Version: " + metadata.metadata.version, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.metadata.author )
+				{
+					this.ctx.fillText( "Author: " + metadata.metadata.author, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.metadata.description )
+				{
+					this.ctx.fillText( "Description: " + metadata.metadata.description, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.metadata.license )
+				{
+					this.ctx.fillText( "License: " + metadata.metadata.license, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+					metadataLine++;
+				}
+				if( metadata.metadata.keywords )
+				{
+					this.ctx.fillText( "Keywords: " + metadata.metadata.keywords, metadataTextPosX, metadataTextPosY + metadataLine * 20);
 					metadataLine++;
 				}
 				
@@ -915,7 +953,7 @@ function radialMenu(){
 		videoList =  serverFileList.videos;
 		appList =  serverFileList.apps;
 
-		sessionList =  serverFileList.session;
+		sessionList =  serverFileList.sessions;
 
 		if( imageList != null )
 		{
@@ -1005,7 +1043,7 @@ function radialMenu(){
 				if ( appList[i].exif.SAGE2thumbnail != null )
 				{
 					customIcon = new Image;
-					customIcon.src = appList[i].exif.SAGE2thumbnail;
+					customIcon.src = appList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setIdleImage( customIcon );
 				}
 				else
@@ -1075,7 +1113,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'pdfThumbnailWindow' )
 			for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
 			{
-				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
+				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.pdfThumbnailButtons[i];
 				
 				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
@@ -1097,7 +1135,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'videoThumbnailWindow' )
 			for( i = 0; i < this.videoThumbnailButtons.length; i++ )
 			{
-				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
+				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.videoThumbnailButtons[i];
 				
 				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
@@ -1119,7 +1157,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'appThumbnailWindow' )
 			for( i = 0; i < this.appThumbnailButtons.length; i++ )
 			{
-				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
+				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.appThumbnailButtons[i];
 				
 				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
@@ -1141,7 +1179,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'sessionThumbnailWindow' )
 			for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
 			{
-				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 1) * (imageThumbSize + thumbSpacer));
+				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.sessionThumbnailButtons[i];
 				
 				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
@@ -1157,7 +1195,7 @@ function radialMenu(){
 				curColumn++;
 			}
 	};
-	
+
 }
 
 function buttonWidget() {
