@@ -50,6 +50,7 @@
 	remote_sites: [
 	],
 	advanced: {
-        ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/"
+        ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+        FFMpeg: "C:/FFMpeg/bin/"
     }
 }

@@ -62,10 +62,14 @@ var AllAssets = null;
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Configuration of ImageMagick
-setupImageMagick = function(constraints) {
+// Configuration of ImageMagick and FFMpeg
+setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
-	imageMagick = gm.subClass(constraints);
+	imageMagick = gm.subClass(imOptions);
+	if(ffmpegOptions.appPath !== undefined){
+		ffmpeg.setFfmpegPath(ffmpegOptions.appPath + "ffmpeg.exe");
+		ffmpeg.setFfprobePath(ffmpegOptions.appPath + "ffprobe.exe");
+	}
 };
 
 
@@ -631,5 +635,4 @@ exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
 exports.getExifData   = getExifData;
 
-exports.setupImageMagick = setupImageMagick;
-
+exports.setupBinaries = setupBinaries;

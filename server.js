@@ -90,10 +90,13 @@ sageutils.getFullVersion(function(version) {
 
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
-if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
-	imConstraints.appPath = config.advanced.ImageMagick;
+var ffmpegOptions = {};
+if(config.advanced !== undefined){
+	if(config.advanced.ImageMagick !== undefined) imConstraints.appPath = config.advanced.ImageMagick;
+	if(config.advanced.FFMpeg !== undefined)      ffmpegOptions.appPath = config.advanced.FFMpeg;
+}
 var imageMagick = gm.subClass(imConstraints);
-assets.setupImageMagick(imConstraints);
+assets.setupBinaries(imConstraints, ffmpegOptions);
 
 
 // global variables for various paths
