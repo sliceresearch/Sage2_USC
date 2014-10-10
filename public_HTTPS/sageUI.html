@@ -611,10 +611,18 @@
 			touchMode = "";
 			event.preventDefault();
 		}
+		else {
+			if(touchTap === 1) {
+				pointerClick(event);
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		}
 		if(touchHold !== null) {
 			clearTimeout(touchHold);
 			touchHold = null;
 		}
+		
 	}
 	
 	function touchMove(event) {
