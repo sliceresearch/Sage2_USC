@@ -58,6 +58,9 @@ var assets      = require('./src/node-assets');         // manages the list of f
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var radialmenu = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
 
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+console.log("Detected Server OS as: " + platform);
+
 var SAGE2_version = sageutils.getShortVersion();
 console.log("SAGE2 Short Version:", SAGE2_version);
 
@@ -1453,7 +1456,12 @@ function loadConfiguration() {
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
-			configFile = path.join("config", "desktop-cfg.json");
+			if(platform === "Windows"){
+				configFile = path.join("config", "defaultWindows-cfg.json");
+			}
+			else {
+				configFile = path.join("config", "defaultLinux-cfg.json");
+			}
 			console.log("Using default configuration file: " + configFile);
 		}
 	}
