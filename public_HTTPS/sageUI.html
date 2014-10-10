@@ -209,11 +209,7 @@
 		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
-		document.addEventListener('mousedown',  pointerPress,    false);
-		document.addEventListener('mouseup',    pointerRelease,  false);
-		document.addEventListener('mousemove',  pointerMove,     false);
 		document.addEventListener('mousemove',  mouseCheck,      false);
-		document.addEventListener('mousewheel', pointerScroll,   false);
 		document.addEventListener('touchstart', touchStart,      false);
 		document.addEventListener('touchend',   touchEnd,        false);
 		document.addEventListener('touchmove',  touchMove,       false);
@@ -398,8 +394,14 @@
 		hasMouse = true;
 		document.title = "SAGE2 UI - Desktop";
 		console.log("Detected as desktop device");
+		
+		document.addEventListener('mousedown',  pointerPress,    false);
+		document.addEventListener('mouseup',    pointerRelease,  false);
+		document.addEventListener('mousemove',  pointerMove,     false);
+		document.addEventListener('mousewheel', pointerScroll,   false);
 		document.addEventListener('click',      pointerClick,    false);
 		document.addEventListener('dblclick',   pointerDblClick, false);
+		
 		document.removeEventListener('mousemove', mouseCheck, false);
 	}
 	
