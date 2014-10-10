@@ -23,7 +23,8 @@ var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 
 
 // Global variable to handle iamgeMagick configuration
-var imageMagick;
+var imageMagick = null;
+var ffmpegPath = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,8 +68,7 @@ setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
 	imageMagick = gm.subClass(imOptions);
 	if(ffmpegOptions.appPath !== undefined){
-		ffmpeg.setFfmpegPath(ffmpegOptions.appPath + "ffmpeg.exe");
-		ffmpeg.setFfprobePath(ffmpegOptions.appPath + "ffprobe.exe");
+		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg.exe";
 	}
 };
 
@@ -170,80 +170,78 @@ addFile = function(filename,exif) {
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		thumbFolder = path.join(AllAssets.root, 'assets');
-		ffmpeg.ffprobe(filename, function(err, metadata){
-			var width;
-			var height;
-			for(var i=0; i<metadata.streams.length; i++){
-				if(metadata.streams[i].codec_type === "video"){
-					width  = metadata.streams[i].width;
-					height = metadata.streams[i].height;
-					break;
+		
+		var width  = exif.ImageWidth;
+		var height = exif.ImageHeight;
+		var aspect = width/height;
+			
+		var size1024 = "1024x" + Math.round(1024/aspect);
+		var size512  =  "512x" + Math.round( 512/aspect);
+		var size256  =  "256x" + Math.round( 256/aspect);
+		if(aspect < 1.0){
+			size1024 = Math.round(1024*aspect) + "x1024";
+			size512  = Math.round( 512*aspect) + "x512";
+			size256  = Math.round( 256*aspect) + "x256";
+		}
+		
+		var ffmpeg1024 = ffmpeg(filename);
+		if(ffmpegPath !== null) ffmpeg1024.setFfmpegPath(ffmpegPath);
+		ffmpeg1024.on('end', function() {
+			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size1024+'_1.png');
+			imageMagick(tmpImg).command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
+				if (err) {
+					console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
+					return;
 				}
-			}
-			var aspect = width/height;
-			
-			var size1024 = "1024x" + Math.round(1024/aspect);
-			var size512  =  "512x" + Math.round( 512/aspect);
-			var size256  =  "256x" + Math.round( 256/aspect);
-			if(aspect < 1.0){
-				size1024 = Math.round(1024*aspect) + "x1024";
-				size512  = Math.round( 512*aspect) + "x512";
-				size256  = Math.round( 256*aspect) + "x256";
-			}
-			
-			ffmpeg(filename).on('end', function() {
-				var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size1024+'_1.png');
-				imageMagick(tmpImg).command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
-					if (err) {
-						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
-						return;
-					}
-					fs.unlink(tmpImg, function (err) {
-						if(err) throw err;
-					});
+				fs.unlink(tmpImg, function (err) {
+					if(err) throw err;
 				});
-			}).screenshots({
-				timestamps: ["10%"], 
-				filename: exif.FileName+"_%r_%i.png", 
-				folder: thumbFolder, 
-				size: size1024
 			});
-			
-			ffmpeg(filename).on('end', function() {
-				var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size512+'_1.png');
-				imageMagick(tmpImg).command("convert").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function(err) {
-					if (err) {
-						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
-						return;
-					}
-					fs.unlink(tmpImg, function (err) {
-						if(err) throw err;
-					});
+		}).screenshots({
+			timestamps: ["10%"], 
+			filename: exif.FileName+"_%r_%i.png", 
+			folder: thumbFolder, 
+			size: size1024
+		});
+		
+		var ffmpeg512 = ffmpeg(filename);
+		if(ffmpegPath !== null) ffmpeg512.setFfmpegPath(ffmpegPath);
+		ffmpeg512.on('end', function() {
+			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size512+'_1.png');
+			imageMagick(tmpImg).command("convert").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function(err) {
+				if (err) {
+					console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+					return;
+				}
+				fs.unlink(tmpImg, function (err) {
+					if(err) throw err;
 				});
-			}).screenshots({
-				timestamps: ["10%"], 
-				filename: exif.FileName+"_%r_%i.png", 
-				folder: thumbFolder, 
-				size: size512
 			});
-			
-			ffmpeg(filename).on('end', function() {
-				var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size256+'_1.png');
-				imageMagick(tmpImg).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function(err) {
-					if (err) {
-						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
-						return;
-					}
-					fs.unlink(tmpImg, function (err) {
-						if(err) throw err;
-					});
+		}).screenshots({
+			timestamps: ["10%"], 
+			filename: exif.FileName+"_%r_%i.png", 
+			folder: thumbFolder, 
+			size: size512
+		});
+		
+		var ffmpeg256 = ffmpeg(filename)
+		if(ffmpegPath !== null) ffmpeg256.setFfmpegPath(ffmpegPath);
+		ffmpeg256.on('end', function() {
+			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size256+'_1.png');
+			imageMagick(tmpImg).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function(err) {
+				if (err) {
+					console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+					return;
+				}
+				fs.unlink(tmpImg, function (err) {
+					if(err) throw err;
 				});
-			}).screenshots({
-				timestamps: ["10%"], 
-				filename: exif.FileName+"_%r_%i.png", 
-				folder: thumbFolder, 
-				size: size256
 			});
+		}).screenshots({
+			timestamps: ["10%"], 
+			filename: exif.FileName+"_%r_%i.png", 
+			folder: thumbFolder, 
+			size: size256
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/custom') {
