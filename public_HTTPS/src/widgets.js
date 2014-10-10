@@ -46,6 +46,17 @@ function widgetSpec(id) {
 	this.id = id;
 	this.itemCount = 0;
 	this.items = [];
+	this.buttonGroups = [];
+	this.buttonGroupIdx = -1;
+	this.hasSlider = false;
+	this.hasTextInput = false;
+}
+
+widgetSpec.prototype.addButtonGroup = function(){
+	if (this.buttonGroupIdx < 4){
+		this.buttonGroupIdx = this.buttonGroupIdx+1;
+		this.buttonGroups[this.buttonGroupIdx] = [];
+	}
 }
 
 String.prototype.width = function(font) {
@@ -67,14 +78,19 @@ String.prototype.width = function(font) {
 }
 
 widgetSpec.prototype.addButton = function(data) {
-	var b = new button();
-	b.appId = this.id;
-	b.id = "button" + this.itemCount;
-	b.type = data.type;
-	b.call = data.action;
-	b.width = 1.5*ui.titleBarHeight;
-	this.items.push(b);
-	this.itemCount++;
+	if (this.buttonGroupIdx < 4 && this.buttonGroupIdx > -1 && this.buttonGroups[this.buttonGroupIdx].length <= 3){
+		var b = new button();
+		b.appId = this.id;
+		b.id = "button" + this.itemCount;
+		b.type = data.type;
+		b.call = data.action;
+		b.width = 1.5*ui.titleBarHeight;
+		this.items.push(b);
+		this.buttonGroups[this.buttonGroupIdx].push(b);
+		console.log(this.buttonGroups);
+		this.itemCount++;
+	}
+	
 };
 
 widgetSpec.prototype.addTextInput = function (data) {
@@ -90,26 +106,31 @@ widgetSpec.prototype.addTextInput = function (data) {
 
 widgetSpec.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appObj
-	var s = new slider();
-	s.id = "slider" + this.itemCount;
-	s.appId = this.id;
-	s.begin = data.begin;
-	s.end = data.end;
-	if(data.increments){
-		s.increments = data.increments || 1;
-		s.parts = (s.end - s.begin)/s.increments;
+	if (this.hasSlider === false){
+		this.hasSlider = true;
+		var s = new slider();
+		s.id = "slider" + this.itemCount;
+		s.appId = this.id;
+		s.begin = data.begin;
+		s.end = data.end;
+		if(data.increments){
+			s.increments = data.increments || 1;
+			s.parts = (s.end - s.begin)/s.increments;
+		}
+		else if(data.parts){
+			s.parts = data.parts || 1;
+			s.increments = (s.end - s.begin)/s.parts;
+		}
+		s.call = data.action;
+		s.appProperty = data.property;
+		s.appObj = data.appObj;
+		s.sliderVal = data.begin;
+		s.width = (s.parts < 10)? 8.0*ui.titleBarHeight: 12.0*ui.titleBarHeight;
+		this.slider = s;
+		this.items.push(s);
+		this.itemCount++;
 	}
-	else if(data.parts){
-		s.parts = data.parts || 1;
-		s.increments = (s.end - s.begin)/s.parts;
-	}
-	s.call = data.action;
-	s.appProperty = data.property;
-	s.appObj = data.appObj;
-	s.sliderVal = data.begin;
-	s.width = (s.parts < 10)? 8.0*ui.titleBarHeight: 12.0*ui.titleBarHeight;
-	this.items.push(s);
-	this.itemCount++;
+	
 };
 
 
@@ -133,6 +154,26 @@ widgetSpec.prototype.enumerate = function(){
 	return this.items;
 };
 
+widgetSpec.prototype.computeSize = function(){
+	var size = {
+		width:0,
+		height:0
+	};
+	var dim = {};
+	dim.buttonRadius = 0.8 * ui.titleBarHeight;
+	dim.radius = dim.buttonRadius * 5.027 ; // tan(78.5): angle subtended at the center is 22.5
+	dim.innerR = dim.radius - dim.buttonRadius -3; // for the pie slice
+	dim.outerR = dim.radius + dim.buttonRadius +3;
+
+	size.height = dim.outerR * 2 + 5;
+	size.width = size.height;
+
+	if (this.hasSlider === true || this.hasTextInput === true){
+		size.width = size.width + this.slider.width;
+	}
+	this.controlDimensions = dim;
+	return size;
+}
 
 function computeSize(widgetObj){
 	var arr = widgetObj.enumerate();
@@ -147,20 +188,50 @@ function computeSize(widgetObj){
 
 
 function createControls(ctrId, spec){
-	var size = computeSize(spec);
-	var buttonRad = 0.75 * ui.titleBarHeight;
+	var size = spec.computeSize();
+	var dim = spec.controlDimensions;
+	
 	var windowControls = Snap(size.width, size.height);
-	var gap = 10;
+	var center = {x:size.height/2.0,y:size.height/2.0}; //change to reflect windowControls center
 
 	windowControls.attr({
 		fill: "#000",
 		id: ctrId + "SVG"
 	});
 	
-	var ctrHandle = document.getElementById(ctrId + "SVG");
+
+	drawControlCenter(windowControls,center, dim.innerR - 2*dim.buttonRadius, "SAGE2");
+
+
 	
-	var wArr = spec.enumerate();
-	var x = gap;
+	/*Place buttons*/
+	var angleRanges = (spec.buttonGroups.length===1)? [[56.25,303.75]]:[[56.25,123.75],[236.25,303.75],[146.25,213.75],[326.25,393.75]];
+
+	for(var g=0; g < spec.buttonGroups.length; g++){
+		var btns = spec.buttonGroups[g];
+		var range = angleRanges[g];
+		var start = range[0];
+		var end = range[1];
+		drawPieSlice(windowControls, start-5,end+5, dim.innerR, dim.outerR,center);
+		var betweenButtons = (end - start)/btns.length;
+		var padding = betweenButtons/2;
+		var theta = start + padding;
+		for (var b=0; b<btns.length;b++){
+			var point = polarToCartesian(dim.radius,theta,center);
+			console.log(point);
+			createButton(windowControls,btns[b],point.x,point.y,dim.buttonRadius-2);
+			theta = theta + betweenButtons;
+		}
+
+	}
+	if (spec.hasSlider===true){
+		var d = makeSliderBarPath(340,380, dim.innerR, center, spec.slider.width);
+		createSlider(windowControls,spec.slider,center.x  + dim.innerR, center.y, d);
+	}
+
+	
+
+	/*var x = gap;
 	var y = ui.titleBarHeight;
 	for (var i in wArr){
 		if (wArr[i] instanceof button){
@@ -177,8 +248,50 @@ function createControls(ctrId, spec){
 		}
 		x = x + wArr[i].width + gap;
 	}
-
+	*/
+	var ctrHandle = document.getElementById(ctrId + "SVG");
 	return ctrHandle;
+}
+
+
+function drawControlCenter(paper, center, radius, initialText){
+	var cCenter = paper.circle(center.x,center.y,radius);
+	cCenter.attr("class", "widgetBackground");
+	var text = paper.text(center.x,center.y,initialText);
+	text.attr("class", "widgetText");
+	text.attr("dy", "0.4em");
+}
+
+function drawPieSlice(paper, start,end, innerR, outerR, center){
+	var pointA= polarToCartesian(innerR,start,center);
+	var pointB = polarToCartesian(outerR,start,center);
+	var pointC= polarToCartesian(outerR,end,center);
+	var pointD = polarToCartesian(innerR,end,center);
+	
+	var d = "M " + pointA.x + " " + pointA.y
+		+ "L " + pointB.x + " " + pointB.y
+		+ "A " + outerR + " " + outerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y 
+		+ "L " + pointD.x + " " + pointD.y
+		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
+
+	var groupBoundaryPath = paper.path(d);
+	groupBoundaryPath.attr("class", "widgetBackground");
+}
+
+function makeSliderBarPath(start,end, innerR, center, width){
+	var center2 = {x:center.x+width,y:center.y};
+	var pointA= polarToCartesian(innerR,start,center);
+	var pointB = polarToCartesian(innerR,start,center2);
+	var pointC= polarToCartesian(innerR,end,center2);
+	var pointD = polarToCartesian(innerR,end,center);
+	
+	var d = "M " + pointA.x + " " + pointA.y
+		+ "L " + pointB.x + " " + pointB.y
+		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y 
+		+ "L " + pointD.x + " " + pointD.y
+		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
+
+	return d;
 }
 
 var buttonType = {
@@ -258,36 +371,43 @@ var buttonType = {
 
 };
 
-function createSlider (paper, sliderSpec, x, y){
+function createSlider (paper, sliderSpec, x, y, outline){
 	var sliderHeight = 1.5 * ui.titleBarHeight;
-	var sliderArea = paper.rect(x,y-sliderHeight/2.0,sliderSpec.width, sliderHeight);
-	sliderArea.attr({
-		id: sliderSpec.id + "Area",
-		fill:"#000000",
-		strokeWidth : 1,
-		stroke: "#999999"
-	});
+	var sliderArea = paper.path(outline);
+	sliderArea.attr("class", "widgetBackground");
 
-	var linePath = "M " + (x+0.5*ui.titleBarHeight) + " " + y + "l " + (sliderSpec.width - ui.titleBarHeight) + " " + 0 ;
+	var linePath = "M " + (x+5) + " " + y + "l " + (sliderSpec.width - 10) + " " + 0 ;
 	var sliderLine = paper.path(linePath); 
 	sliderLine.attr({
 		strokeWidth:1,
 		id:sliderSpec.id + 'line',
 		style:"shape-rendering:crispEdges;",
-		stroke:"#888"
+		stroke:"rgba(230,230,230,1.0)"
 	});
-
-	var sliderKnob = paper.circle(x+0.5*ui.titleBarHeight,y, 0.25*ui.titleBarHeight);
+	var knobWidth = 3.0*ui.titleBarHeight;
+	var knobHeight = 1.5*ui.titleBarHeight;
+	var sliderKnob = paper.rect(x+0.5*ui.titleBarHeight,y - knobHeight/2, knobWidth, knobHeight);
 	sliderKnob.attr({
 		id:sliderSpec.id + 'knob',
+		class: "sliderKnob",
+		rx:"0.5em",
+		ry:"0.5em",
 		//style:"shape-rendering:crispEdges;",
-		style:"stroke-linecap:round; stroke-linejoin:round",
-		fill:"#aaa",
-		stroke:"#666",
-		strokeWidth:1
+		fill:"rgba(200,200,200,1.0)",
+		strokeWidth : 1,
+		stroke: "rgba(230,230,230,1.0)"
 	});
-	var slider = paper.group(sliderArea,sliderLine,sliderKnob);
+	var sliderKnobLabel = paper.text(x+0.5*ui.titleBarHeight + knobWidth/2.0, y,"-");
+	sliderKnobLabel.attr({
+		id: sliderSpec.id+ "knobLabel",
+		class:"sliderText",
+		dy:"0.3em"
+	});
+	
+
+	var slider = paper.group(sliderArea,sliderLine,sliderKnob,sliderKnobLabel);
 	sliderKnob.data("appId", sliderSpec.appId);
+	sliderKnobLabel.data("appId", sliderSpec.appId);
 	slider.data('begin', sliderSpec.begin);
 	slider.data("appId", sliderSpec.appId);
 	slider.data('end', sliderSpec.end);
@@ -298,9 +418,10 @@ function createSlider (paper, sliderSpec, x, y){
 	
 	function moveSlider(){
 		var slider = sliderKnob.parent();
+		var halfKnobWidth = sliderKnob.getBBox().w/2.0;
 		var bound = sliderArea.getBBox();
-		var left = bound.x + bound.h/2;
-		var right = bound.x2 - bound.h/2;
+		var left = bound.x + 5 + halfKnobWidth ;
+		var right = bound.x2 - 5 - halfKnobWidth ;
 		var begin = slider.data('begin');
 		var end = slider.data('end');
 		var parts = slider.data('parts');
@@ -319,7 +440,9 @@ function createSlider (paper, sliderSpec, x, y){
 			return end;
 		}
 	
-		sliderKnob.animate({cx: pos},100,mina.linear,moveSlider);
+		sliderKnob.animate({x: pos - knobWidth/2.0},10,mina.linear,moveSlider);
+		sliderKnobLabel.attr("text", (n+1) +" / "+ end );
+		sliderKnobLabel.animate({x: pos},10,mina.linear,moveSlider);
 	}
 	
 	moveSlider();
@@ -329,9 +452,10 @@ function createSlider (paper, sliderSpec, x, y){
 
 function mapMoveToSlider(sliderKnob, pos){
 	var slider = sliderKnob.parent();
+	var halfKnobWidth = sliderKnob.getBBox().w/2.0;
 	var bound = slider.getBBox();
-	var left = bound.x + bound.h/2;
-	var right = bound.x2 - bound.h/2;
+	var left = bound.x + bound.h/2 + halfKnobWidth ;
+	var right = bound.x2 - bound.h/2 - halfKnobWidth;
 	var begin = slider.data('begin');
 	var end = slider.data('end');
 	var parts = slider.data('parts');
@@ -351,14 +475,14 @@ function mapMoveToSlider(sliderKnob, pos){
 }
 
 
-function createButton(paper, buttonSpec, cx, cy){
-	var buttonRad = 0.75 * ui.titleBarHeight;
+function createButton(paper, buttonSpec, cx, cy, rad){
+	var buttonRad = rad;
 	var buttonBack = paper.circle(cx,cy,buttonRad);
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
-		fill:"#baba55",
+		fill:"rgba(200,200,200,1.0)",
 		strokeWidth : 1,
-		stroke: "#000"
+		stroke: "rgba(230,230,230,1.0)"
 	});
 
 	var type = buttonType[buttonSpec.type];
@@ -590,4 +714,13 @@ function createLabel(paper, labelSpec, x, y){
 
 	showText();
 	return label;
+}
+
+function polarToCartesian(r,theta,c){
+	theta = theta * Math.PI / 180.0;
+	if (c === undefined || c === null)
+		c = {x:0,y:0};
+	var x = c.x + r*Math.cos(theta);
+	var y = c.y - r*Math.sin(theta);
+	return {x:x,y:y};
 }

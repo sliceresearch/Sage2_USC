@@ -608,7 +608,8 @@
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 			if (data.elemId !== undefined && data.elemId !== null){
 				if(controlItems[data.elemId+"_controls"] !== undefined){
-					var size = computeSize(controlItems[data.elemId+ "_controls"].spec);
+					var size = controlItems[data.elemId+ "_controls"].spec.computeSize();
+					//var size = {width:200,height:200};
 					console.log(size);
 					wsio.emit('addNewControl', {
 						id:data.elemId+"_controls", 
@@ -629,6 +630,7 @@
 				ctrDiv.id = data.id;
 				ctrDiv.className = "windowControls";
 				ctrDiv.style.width = data.width.toString() + "px";
+				ctrDiv.style.fill = "rgba(0,0,0,0.0)";
 				ctrDiv.style.height = data.height.toString() + "px";
 				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
