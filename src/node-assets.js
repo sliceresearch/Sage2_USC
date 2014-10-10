@@ -14,14 +14,17 @@
 
 
 var fs        = require('fs');
+var json5     = require('json5');
 var path      = require('path');
 var url       = require('url');
 var gm        = require('gm');                   // imagesmagick
+var ffmpeg    = require('fluent-ffmpeg');        // ffmpeg
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 
 
 // Global variable to handle iamgeMagick configuration
-var imageMagick;
+var imageMagick = null;
+var ffmpegPath = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,10 +63,13 @@ var AllAssets = null;
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Configuration of ImageMagick
-setupImageMagick = function(constraints) {
+// Configuration of ImageMagick and FFMpeg
+setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
-	imageMagick = gm.subClass(constraints);
+	imageMagick = gm.subClass(imOptions);
+	if(ffmpegOptions.appPath !== undefined){
+		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg.exe";
+	}
 };
 
 
@@ -104,84 +110,220 @@ addFile = function(filename,exif) {
 	anAsset.setFilename(filename);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
-
-	// Path for the node server
-	var thumb  = path.join(AllAssets.root, 'assets', exif.FileName+'.png');
+	
+	// Path for the file system
+	var thumb = path.join(AllAssets.root, 'assets', exif.FileName);
 	// Path for the https server
-	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName+'.png');
+	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName);
 
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
-		imageMagick(filename).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
+		imageMagick(filename).command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
 			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
+				console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
-		
-		/*
-		imageMagick(filename).thumb(250, 250, thumb, 50, function(err) {
+		imageMagick(filename).command("convert").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function(err) {
 			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
+				console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
 				return;
 			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
 		});
-		*/
+		imageMagick(filename).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function(err) {
+			if (err) {
+				console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+				return;
+			}
+		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/pdf') {
 		// Process first page: [0]
-		imageMagick(filename+"[0]").command("convert").in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
+		imageMagick(filename+"[0]").size(function(err, value){
+			if(err) throw err;
+			
+			imageMagick(value.width, value.height, "#ffffff").append(filename+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
+				if(err) throw err;
+				
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function (err) {
+					if (err) {
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
+						return;
+					}
+					anAsset.exif.SAGE2thumbnail = rthumb;
+				});
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function (err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+					anAsset.exif.SAGE2thumbnail = rthumb;
+				});
+				imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function (err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+				});
+			});
 		});
-		
-		/*
-		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
-		});
-		*/
+		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
-		// try first frame: [0]
-		imageMagick(filename+"[0]").command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
+		thumbFolder = path.join(AllAssets.root, 'assets');
+		
+		var width  = exif.ImageWidth;
+		var height = exif.ImageHeight;
+		var aspect = width/height;
+			
+		var size1024 = "1024x" + Math.round(1024/aspect);
+		var size512  =  "512x" + Math.round( 512/aspect);
+		var size256  =  "256x" + Math.round( 256/aspect);
+		if(aspect < 1.0){
+			size1024 = Math.round(1024*aspect) + "x1024";
+			size512  = Math.round( 512*aspect) + "x512";
+			size256  = Math.round( 256*aspect) + "x256";
+		}
+		
+		var ffmpeg1024 = ffmpeg(filename);
+		if(ffmpegPath !== null) ffmpeg1024.setFfmpegPath(ffmpegPath);
+		ffmpeg1024.on('end', function() {
+			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size1024+'_1.png');
+			imageMagick(tmpImg).command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
+				if (err) {
+					console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
+					return;
+				}
+				fs.unlink(tmpImg, function (err) {
+					if(err) throw err;
+				});
+			});
+		}).screenshots({
+			timestamps: ["10%"], 
+			filename: exif.FileName+"_%r_%i.png", 
+			folder: thumbFolder, 
+			size: size1024
 		});
 		
-		/*
-		imageMagick(filename+"[0]").thumb(250, 250, thumb, 50, function(err) {
-			if (err) {
-				console.log("Assets> cannot generate thumbnail for:", filename);
-				return;
-			}
-			anAsset.exif.SAGE2thumbnail = rthumb;
+		var ffmpeg512 = ffmpeg(filename);
+		if(ffmpegPath !== null) ffmpeg512.setFfmpegPath(ffmpegPath);
+		ffmpeg512.on('end', function() {
+			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size512+'_1.png');
+			imageMagick(tmpImg).command("convert").in("-resize", "512x512").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "512x512").write(thumb+'_512.png', function(err) {
+				if (err) {
+					console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+					return;
+				}
+				fs.unlink(tmpImg, function (err) {
+					if(err) throw err;
+				});
+			});
+		}).screenshots({
+			timestamps: ["10%"], 
+			filename: exif.FileName+"_%r_%i.png", 
+			folder: thumbFolder, 
+			size: size512
 		});
-		*/
+		
+		var ffmpeg256 = ffmpeg(filename)
+		if(ffmpegPath !== null) ffmpeg256.setFfmpegPath(ffmpegPath);
+		ffmpeg256.on('end', function() {
+			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size256+'_1.png');
+			imageMagick(tmpImg).command("convert").in("-resize", "256x256").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "256x256").write(thumb+'_256.png', function(err) {
+				if (err) {
+					console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+					return;
+				}
+				fs.unlink(tmpImg, function (err) {
+					if(err) throw err;
+				});
+			});
+		}).screenshots({
+			timestamps: ["10%"], 
+			filename: exif.FileName+"_%r_%i.png", 
+			folder: thumbFolder, 
+			size: size256
+		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else if (exif.MIMEType === 'application/custom') {
+		if (exif.icon === null || ! fs.existsSync(exif.icon) ) {
+			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
+		}
+		else {
+			// Path for the node server
+			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
+			// Path for the https server
+			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
+			
+			var averageColorOfImage = function(err, buffer) {
+				if(err) throw err;
+				
+				var avgColor = buffer.toString();
+				if(avgColor.length === 6 && avgColor === "'none'"){
+					imageMagick(exif.icon).noProfile().write(exif.icon, function(err) {
+						if(err) throw err;
+						
+						imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
+					});
+					return;
+				}
+				var rgbaStart = avgColor.indexOf("(");
+				var rgbaEnd   = avgColor.indexOf(")");
+				var rgba = avgColor.substring(rgbaStart+1, rgbaEnd).split(",");
+				var red   = 0;
+				var green = 0;
+				var blue  = 0;
+				if(rgba[0][rgba[0].length-1] === "%") red   = Math.round(255 * parseFloat(rgba[0])/100);
+				else red   = parseInt(rgba[0], 10);
+				if(rgba[1][rgba[1].length-1] === "%") green = Math.round(255 * parseFloat(rgba[1])/100);
+				else green = parseInt(rgba[1], 10);
+				if(rgba[2][rgba[2].length-1] === "%") blue  = Math.round(255 * parseFloat(rgba[2])/100);
+				else blue  = parseInt(rgba[2], 10);
+			
+				// use tinted average color as background
+				var bgRed   = Math.round(255 - ((255 - red)   * 0.5));
+				var bgGreen = Math.round(255 - ((255 - green) * 0.5));
+				var bgBlue  = Math.round(255 - ((255 - blue)  * 0.5));
+				
+				
+				imageMagick(1024, 1024, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 512 512 8 512").in("-draw", "image src-over 156 156 712 712 '"+exif.icon+"'").write(thumb+'_1024.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
+						return;
+					}
+				});
+				imageMagick(512, 512, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 256 256 4 256").in("-draw", "image src-over 78 78 356 356 '"+exif.icon+"'").write(thumb+'_512.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+				});
+				imageMagick(256, 256, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+bgRed+","+bgGreen+","+bgBlue+")").in("-draw", "circle 128 128 2 128").in("-draw", "image src-over 39 39 178 178 '"+exif.icon+"'").write(thumb+'_256.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+				});
+			};
+			
+			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
+			anAsset.exif.SAGE2thumbnail = rthumb;
+		}
 	}
 };
 
 deletePDF = function(filename) {
-	var filepath = path.join(AllAssets.root, 'pdfs', filename);
+	var filepath = path.resolve(AllAssets.root, 'pdfs', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
-			console.log("Server> successfully deleted file:", filename);
-			// Delete the metadata
-			delete AllAssets.list[filepath];
-		}
-	);
+		
+		console.log("Server> successfully deleted file:", filename);
+		// Delete the metadata
+		console.log(filepath)
+		delete AllAssets.list[filepath];
+	});
 };
 deleteImage = function(filename) {
-	var filepath = path.join(AllAssets.root, 'images', filename);
+	var filepath = path.resolve(AllAssets.root, 'images', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
 			console.log("Server> successfully deleted file:", filename);
@@ -191,7 +333,7 @@ deleteImage = function(filename) {
 	);
 };
 deleteVideo = function(filename) {
-	var filepath = path.join(AllAssets.root, 'videos', filename);
+	var filepath = path.resolve(AllAssets.root, 'videos', filename);
 		fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
 			console.log("Server> successfully deleted file:", filename);
@@ -237,17 +379,56 @@ getExifData = function (id) {
 
 exifAsync = function(cmds, cb) {
 	var execNext = function() {
-		exiftool.file(cmds.shift(), function(err,data) {
-			if (err) {
-				console.log("internal error");
-				cb(err);
-			} else {
-				console.log("EXIF> Adding", data.FileName);
-				addFile(data.SourceFile, data);
-				if (cmds.length) execNext();
-				else cb(null);
+		var file = cmds.shift();
+		if(fs.lstatSync(file).isDirectory()){
+			var instuctionsFile   = path.join(file, "instructions.json");		
+			var instructions      = json5.parse(fs.readFileSync(instuctionsFile, 'utf8'));
+			var appIcon = null;
+			if(instructions.icon) {
+				appIcon = path.join(file, instructions.icon);
 			}
-		});
+			var app = path.basename(file);
+			console.log("EXIF> Adding " + app + " (App)");
+			
+			var metadata = {};
+			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
+				metadata.title = instructions.title;
+			else metadata.title = app;
+			if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
+				metadata.version = instructions.version;
+			else metadata.version = "1.0.0";
+			if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
+				metadata.description = instructions.description;
+			else metadata.description = "-";
+			if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
+				metadata.author = instructions.author;
+			else metadata.author = "SAGE2";
+			if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
+				metadata.license = instructions.license;
+			else metadata.license = "-";
+			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
+				metadata.keywords = instructions.keywords;
+			else metadata.keywords = [];
+			
+			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
+			
+			addFile(file, exif);
+			if (cmds.length) execNext();
+			else cb(null);
+		}
+		else {
+			exiftool.file(file, function(err,data) {
+				if (err) {
+					console.log("internal error");
+					cb(err);
+				} else {
+					console.log("EXIF> Adding " + data.FileName);
+					addFile(data.SourceFile, data);
+					if (cmds.length) execNext();
+					else cb(null);
+				}
+			});
+		}
 	};
 	if (cmds.length>0) execNext();
 };
@@ -304,6 +485,18 @@ listVideos = function() {
 	return result;
 };
 
+listApps = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType === 'application/custom') {
+			result.push(one);
+		}
+	}
+	return result;
+};
+
 initialize = function (root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
@@ -311,10 +504,23 @@ initialize = function (root, relativePath) {
 		
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
-		if (!fs.existsSync(assetFolder)) {
-		     fs.mkdirSync(assetFolder);
-		}
-
+		if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
+		
+		// Make sure the asset/apps folder exists
+		var assetAppsFolder = path.join(assetFolder, 'apps');
+		if (!fs.existsSync(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
+		
+		// Make sure unknownapp images exist
+		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.png');
+		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.png');
+		if (!fs.existsSync(unknownapp_256)) fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
+		var unknownapp_512Img = path.resolve(root, '..', 'images', 'unknownapp_512.png');
+		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.png');
+		if (!fs.existsSync(unknownapp_512)) fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+		var unknownapp_1024Img = path.resolve(root, '..', 'images', 'unknownapp_1024.png');
+		var unknownapp_1024 = path.join(assetAppsFolder, 'unknownapp_1024.png');
+		if (!fs.existsSync(unknownapp_1024)) fs.createReadStream(unknownapp_1024Img).pipe(fs.createWriteStream(unknownapp_1024));
+		
 		AllAssets = {};
 
 		var assetFile = path.join(assetFolder, 'assets.json');
@@ -337,6 +543,7 @@ initialize = function (root, relativePath) {
 		var uploadedImages = fs.readdirSync(path.join(root, "images"));
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
 		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
+		var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
 		var i;
 		var excludes = [ '.DS_Store' ];
 		var item;
@@ -370,6 +577,18 @@ initialize = function (root, relativePath) {
 				}
 			}
 		}
+		for(i=0; i<uploadedApps.length; i++){
+			var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
+			if (fs.lstatSync(applicationDir).isDirectory()) {
+				item = applicationDir;
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
+			}
+		}
+		
 		// delete the elements which not there anymore
 		for (item in AllAssets.list) {
 			if (AllAssets.list[item].Valid === false) {
@@ -400,8 +619,11 @@ exports.saveAssets = saveAssets;
 exports.listImages = listImages;
 exports.listPDFs   = listPDFs;
 exports.listVideos = listVideos;
+exports.listApps   = listApps;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
+
+exports.exifAsync   = exifAsync;
 
 exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
@@ -411,5 +633,4 @@ exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
 exports.getExifData   = getExifData;
 
-exports.setupImageMagick = setupImageMagick;
-
+exports.setupBinaries = setupBinaries;

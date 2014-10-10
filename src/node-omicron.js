@@ -22,7 +22,6 @@ var websocketIO  = require('./node-websocket.io');  // creates WebSocket server 
 var interaction  = require('./node-interaction');   // custom interaction module
 var sagepointer  = require('./node-sagepointer');   // custom sagepointer module
 var coordinateCalculator = require('./node-coordinateCalculator'); 
-//var server       = require('../server.js'); // loading the server ?
 
 var dataPort     = 9123;
 
@@ -52,6 +51,18 @@ function omicronManager( sysConfig )
 	config = sysConfig.experimental.omicron;
 	
 	coordCalculator = new coordinateCalculator( config );
+	
+	serverHost = sysConfig.host;
+	
+	if( config.host === undefined )
+	{
+		console.log('Omicron: Using web server hostname: ', sysConfig.host);
+	}
+	else
+	{
+		serverHost = config.host;
+		console.log('Omicron: Using server hostname: ', serverHost);
+	}
 	
 	if( config.dataPort === undefined )	
 	{
@@ -105,7 +116,8 @@ function omicronManager( sysConfig )
 		});
 
 	});
-	server.listen(dataPort, sysConfig.host);
+
+	server.listen(dataPort, serverHost);
 	
 	if( config.useOinputserver === true )
 	{
@@ -143,6 +155,7 @@ omicronManager.prototype.setCallbacks = function(
 	createSagePointerCB,
 	showPointerCB,
 	pointerPressCB,
+	pointerMoveCB,
 	pointerPositionCB,
 	hidePointerCB,
 	pointerReleaseCB,
@@ -160,6 +173,7 @@ omicronManager.prototype.setCallbacks = function(
 	createSagePointer = createSagePointerCB;
 	showPointer = showPointerCB;
 	pointerPress = pointerPressCB;
+	pointerMove = pointerMoveCB;
 	pointerPosition = pointerPositionCB;
 	hidePointer = hidePointerCB;
 	pointerRelease = pointerReleaseCB;
@@ -344,6 +358,7 @@ omicronManager.prototype.runTracker = function()
 						var accelX = posX + accelDistance * Math.cos(angle);
 						var accelY = posY + accelDistance * Math.sin(angle);
 						pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
+						pointerMove(address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" } );
 	
 					}
 					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
@@ -426,7 +441,7 @@ omicronManager.prototype.runTracker = function()
 						{
 							console.log("Touch gesture: Three finger hold");
 						}
-						createRadialMenu( posX, posY );
+						createRadialMenu( sourceID, posX, posY );
 					}
 					else if( e.flags === FLAG_SINGLE_CLICK )
 					{

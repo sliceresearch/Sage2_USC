@@ -56,7 +56,10 @@ var omicron     = require('./src/node-omicron');        // handles Omicron input
 var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
 var assets      = require('./src/node-assets');         // manages the list of files
 var sageutils   = require('./src/node-utils');          // provides the current version number
+var radialmenu = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
 
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+console.log("Detected Server OS as: " + platform);
 
 var SAGE2_version = sageutils.getShortVersion();
 console.log("SAGE2 Short Version:", SAGE2_version);
@@ -87,10 +90,13 @@ sageutils.getFullVersion(function(version) {
 
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
-if(config.advanced !== undefined && config.advanced.ImageMagick !== undefined)
-	imConstraints.appPath = config.advanced.ImageMagick;
+var ffmpegOptions = {};
+if(config.advanced !== undefined){
+	if(config.advanced.ImageMagick !== undefined) imConstraints.appPath = config.advanced.ImageMagick;
+	if(config.advanced.FFMpeg !== undefined)      ffmpegOptions.appPath = config.advanced.FFMpeg;
+}
 var imageMagick = gm.subClass(imConstraints);
-assets.setupImageMagick(imConstraints);
+assets.setupBinaries(imConstraints, ffmpegOptions);
 
 
 // global variables for various paths
@@ -288,8 +294,11 @@ function initializeWSClient(wsio) {
 		wsio.on('appResize', wsAppResize);
 	}
 	if(wsio.messages.requestsServerFiles){
+		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
-		wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		//wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
+		wsio.on('loadApplication', wsLoadApplication);
+		wsio.on('loadFileFromServer', wsLoadFileFromServer);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
 		wsio.on('saveSesion',       wsSaveSesion);
 		wsio.on('clearDisplay',     wsClearDisplay);
@@ -343,7 +352,7 @@ function initializeWSClient(wsio) {
 	
 	if ( wsio.clientType === "radialMenu" )
 	{
-		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		//wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
 		if ( !(wsio.clientID in radialMenus) )
@@ -351,7 +360,7 @@ function initializeWSClient(wsio) {
 			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 			radialMenus[wsio.clientID] = wsio;
 		} else {
-			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
 			wsio.emit("disableSendToServer", uniqueID);
 		}
 	}
@@ -387,7 +396,7 @@ function initializeExistingApps(wsio) {
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var i;
 	for(i=0; i<applications.length; i++){
-		wsio.emit('createAppWindowPositionSizeOnly', applications[i]);
+		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(applications[i]));
 	}
 }
 
@@ -474,12 +483,15 @@ function wsPointerPosition(wsio, data) {
 
 function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	// Casting the parameters to correct type
 	data.deltaX = parseInt(data.deltaX, 10);
 	data.deltaY = parseInt(data.deltaY, 10);
-
-	pointerMove(uniqueID, data);
+	
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	
+	pointerMove(uniqueID, pointerX, pointerY, data);
 }
 
 function wsPointerScrollStart(wsio, data) {
@@ -513,7 +525,7 @@ function wsPointerDraw(wsio, data) {
 
 function wsKeyDown(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	if(data.code == 16){ // shift
 		remoteInteraction[uniqueID].SHIFT = true;
 	}
@@ -553,7 +565,7 @@ function wsKeyDown(wsio, data) {
 
 function wsKeyUp(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	if(data.code == 16){ // shift
 		remoteInteraction[uniqueID].SHIFT = false;
 	}
@@ -574,10 +586,10 @@ function wsKeyUp(wsio, data) {
 	var pointerY = sagePointers[uniqueID].top;
 	
 	var elem = findAppUnderPointer(pointerX, pointerY);
-
+	
 	if(elem !== null){
 		if(remoteInteraction[uniqueID].windowManagementMode()){
-			if(data.code == "8" || data.code == "46"){ // backspace or delete
+			if(data.code === 8 || data.code === 46){ // backspace or delete
 				deleteApplication(elem);
 			}
 		}
@@ -1140,12 +1152,40 @@ function wsTileApplications(wsio, data) {
 
 // **************  Server File Functions *****************
 
+function wsRequestAvailableApplications(wsio, data) {
+	var applications = getApplications();
+	wsio.emit('availableApplications', applications);
+}
+
 function wsRequestStoredFiles(wsio, data) {
 	var savedFiles = getSavedFilesList();
 	wsio.emit('storedFileList', savedFiles);
 }
 
-function wsAddNewElementFromStoredFiles(wsio, data) {
+function wsLoadApplication(wsio, data) {
+	var appData = {application: "custom_app", filename: data.application};
+	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+
+		if(appInstance.animation){
+			var i;
+			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[appInstance.id].clients[clientAddress] = false;
+				}
+			}
+		}
+		
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+		applications.push(appInstance);
+	});
+}
+
+function wsLoadFileFromServer(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -1153,18 +1193,7 @@ function wsAddNewElementFromStoredFiles(wsio, data) {
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
 			appInstance.id = getUniqueAppId();
-
-			if(appInstance.animation){
-				var i;
-				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.requiresFullApps){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						appAnimations[appInstance.id].clients[clientAddress] = false;
-					}
-				}
-			}
-
+			
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
@@ -1430,7 +1459,12 @@ function loadConfiguration() {
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
-			configFile = path.join("config", "desktop-cfg.json");
+			if(platform === "Windows"){
+				configFile = path.join("config", "defaultWindows-cfg.json");
+			}
+			else {
+				configFile = path.join("config", "defaultLinux-cfg.json");
+			}
 			console.log("Using default configuration file: " + configFile);
 		}
 	}
@@ -1457,10 +1491,7 @@ function loadConfiguration() {
 	else userConfig.ui.titleTextSize  = Math.round(0.015 * minDim);
 	
 	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
-	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
-
-	if (userConfig.ui.pointerSize) userConfig.ui.pointerSize = parseInt(userConfig.ui.pointerSize, 10);
-	else userConfig.ui.pointerSize = Math.round(0.050 * minDim);
+	else userConfig.ui.pointerSize = Math.round(0.08 * minDim);
 
 	if (userConfig.ui.minWindowWidth) userConfig.ui.minWindowWidth = parseInt(userConfig.ui.minWindowWidth, 10);
 	else userConfig.ui.minWindowWidth  = Math.round(0.08 * userConfig.totalWidth);  // 8%
@@ -1486,66 +1517,27 @@ function getUniqueAppId() {
 	return id;	
 }
 
-function getSavedFilesList() {
-	//  Main list of objects to be sent
-	var list = {image: [], video: [], pdf: [], app: [], session:[]};
+function getApplications() {
+	var uploadedApps = assets.listApps();
+	uploadedApps.sort(sageutils.compareFilename);
+	
+	return uploadedApps;
+}
 
+function getSavedFilesList() {
 	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps   = fs.readdirSync(path.join(uploadsFolder, "apps"));
 	var savedSessions  = listSessions();
-	
-	var i;
 
 	// Sort independently of case
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
-	uploadedApps.sort(   sageutils.compareString   );
-
-	for (i=0; i<uploadedImages.length; i++)  list.image.push(uploadedImages[i]);
-	for (i=0; i<uploadedVideos.length; i++)  list.video.push(uploadedVideos[i]);
-	for (i=0; i<uploadedPdfs.length;   i++)  list.pdf.push(uploadedPdfs[i]);
-	for (i=0; i<savedSessions.length;   i++) list.session.push(savedSessions[i]);
-
-	// From the list of apps in the upload folder, build a list of objects
-	//   containing the name of the app and the icon (mimicing an exif structure)
-	for (i=0; i<uploadedApps.length; i++) {
-		var applicationDir = path.join(uploadsFolder, "apps", uploadedApps[i]);
-		if (fs.lstatSync(applicationDir).isDirectory()) {
-			var instuctionsFile   = path.join(applicationDir, "instructions.json");		
-			var jsonString        = fs.readFileSync(instuctionsFile, 'utf8');
-			var instructions      = json5.parse(jsonString);
-			var thumbnailHostPath = null;
-			if (instructions.icon)
-				thumbnailHostPath = path.join("uploads", "apps", uploadedApps[i], instructions.icon);
-
-			var metadata = {};
-			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-				metadata.title = instructions.title;
-			else metadata.title = uploadedApps[i];
-			if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
-				metadata.version = instructions.version;
-			else metadata.version = "1.0.0";
-			if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
-				metadata.description = instructions.description;
-			else metadata.description = "-";
-			if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
-				metadata.author = instructions.author;
-			else metadata.author = "SAGE2";
-			if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
-				metadata.license = instructions.license;
-			else metadata.license = "-";
-			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
-				metadata.keywords = instructions.keywords;
-			else metadata.keywords = [];
-
-			list.app.push( { exif: { FileName: uploadedApps[i], SAGE2thumbnail: thumbnailHostPath }, metadata: metadata } );
-		}
-	}
+	
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions};
 
 	return list;
 }
@@ -2294,7 +2286,15 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		togglePointerMode(uniqueID);
 		return;
 	}
-
+	
+	// menu
+	radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+	
+	if(data.button === "right")
+	{
+		createRadialMenu( uniqueID, pointerX, pointerY );
+	}
+	
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -2381,12 +2381,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
-	
-	// menu
-	if(data.button === "right")
-	{
-		createRadialMenu( pointerX, pointerY );
-	}
+
 }
 
 /*
@@ -2540,9 +2535,12 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
+	
+	// Menu
+	radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 }
 
-function pointerMove(uniqueID, data) {
+function pointerMove(uniqueID, pointerX, pointerY, data) {
 	sagePointers[uniqueID].left += data.deltaX;
 	sagePointers[uniqueID].top += data.deltaY;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
@@ -2551,10 +2549,10 @@ function pointerMove(uniqueID, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-	
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+
 	var elem = findAppUnderPointer(pointerX, pointerY);
+
+	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
@@ -3011,6 +3009,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 		createSagePointer,
 		showPointer,
 		pointerPress,
+		pointerMove,
 		pointerPosition,
 		hidePointer,
 		pointerRelease,
@@ -3029,7 +3028,16 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
-function createRadialMenu( pointerX, pointerY ) {
+function createRadialMenu( uniqueID, pointerX, pointerY ) {
+	
+	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu", uniqueID);
+	radialMenus[uniqueID].top = pointerY;
+	radialMenus[uniqueID].left = pointerX;
+
+	broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
+	
+	updateRadialMenu(uniqueID);
+	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
@@ -3038,28 +3046,7 @@ function createRadialMenu( pointerX, pointerY ) {
 		if( elem === null )
 		{
 			// Open a 'media' radial menu
-			var data = {application: "custom_app", filename: "wallMenuUI" };
-			//wsAddNewElementFromStoredFiles( null, data );
-			// Copied from above function
-			appLoader.loadFileFromLocalStorage(data, function(appInstance) {
-				appInstance.id = getUniqueAppId();
-
-				if(appInstance.animation){
-					var i;
-					appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-					for(i=0; i<clients.length; i++){
-						if(clients[i].messages.requiresFullApps){
-							var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-							appAnimations[appInstance.id].clients[clientAddress] = false;
-						}
-					}
-				}
-
-				broadcast('createAppWindow', appInstance, 'requiresFullApps');
-				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-				applications.push(appInstance);
-			});
+			
 		}
 		else
 		{
@@ -3071,9 +3058,35 @@ function createRadialMenu( pointerX, pointerY ) {
 	}
 }
 
+function updateRadialMenu( uniqueID )
+{
+	// Build lists of assets
+	var uploadedImages = assets.listImages();
+	var uploadedVideos = assets.listVideos();
+	var uploadedPdfs   = assets.listPDFs();
+	var uploadedApps = assets.listApps();
+	var savedSessions  = listSessions();
+
+	// Sort independently of case
+	uploadedImages.sort( sageutils.compareFilename );
+	uploadedVideos.sort( sageutils.compareFilename );
+	uploadedPdfs.sort(   sageutils.compareFilename );
+	uploadedApps.sort(   sageutils.compareFilename );
+	savedSessions.sort(  sageutils.compareFilename );
+	
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions, apps: uploadedApps};
+
+	broadcast('updateRadialMenu', {id: uniqueID, fileList: list}, 'receivesPointerData');
+}
+
+function radialMenuEvent( data )
+{
+	broadcast('radialMenuEvent', data, 'receivesPointerData');
+}
+
 function wsRemoveRadialMenu( wsio, data ) {
 	//console.log("Removed radial menu ID: " + data.id);
-	radialMenus[data.id] = null;
+	//radialMenus[data.id] = null;
 
 	var elem = findAppById(data.id);
 	if(elem !== null) deleteApplication( elem );

@@ -14,7 +14,7 @@
 
 // Global variables
 var __SAGE2__ = {};
-__SAGE2__.version = "0.1";
+__SAGE2__.version = "0.2.0";
 
 
 function SAGE2_initialize(data_seed) {
@@ -249,6 +249,7 @@ function readFile(filename, callback, type) {
 				if     (dataType === "TEXT") callback(null, xhr.responseText);
 				else if(dataType === "JSON") callback(null, JSON.parse(xhr.responseText));
 				else if(dataType === "CSV")  callback(null, CSVToArray(xhr.responseText));
+				else if(dataType === "SVG")  callback(null, xhr.responseXML.getElementsByTagName('svg')[0]);
 				else                         callback(null, xhr.responseText);
 			}
 			else{

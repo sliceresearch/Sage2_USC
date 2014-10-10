@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<svg width="10" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <defs>
+  <filter height="200%" width="200%" y="-50%" x="-50%" id="svg_2_blur">
+   <feGaussianBlur stdDeviation="1" in="SourceGraphic"/>
+  </filter>
+  <linearGradient id="svg_4">
+   <stop offset="0" stop-color="#9b9b9b"/>
+   <stop offset="1" stop-color="#646464"/>
+  </linearGradient>
+  <linearGradient y2="0" x2="1" y1="0" x1="0" id="svg_5">
+   <stop offset="0" stop-color="#9b9b9b"/>
+   <stop offset="1" stop-color="#646464"/>
+  </linearGradient>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <path filter="url(#svg_2_blur)" stroke="#9b9b9b" fill-opacity="0.9" id="svg_2" d="m3.235508,1.708882l3.528984,0l0,14.291116l-3.528984,0l0,-14.291116z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" fill="#ffffff"/>
+ </g>
+</svg>

@@ -40,7 +40,8 @@ function uiBuilder(json_cfg, clientID) {
 	this.ratio          = "fit";
 
 	this.pointerItems   = {};
-
+	this.radialMenus	= {};
+	
 	// Get handle on the main div
 	this.bg   = document.getElementById("background");
 	this.main = document.getElementById("main");
@@ -228,8 +229,8 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
-			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		}
 		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
 		else this.noDropShadow = false;
@@ -392,15 +393,16 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.createSagePointer = function(pointer_data) {
-		var pointerElem = createDrawingElement(pointer_data.id, "pointerItem",
-							pointer_data.left - this.pointerOffsetX - this.offsetX,
-							pointer_data.top  - this.pointerOffsetY - this.offsetY,
-							this.pointerWidth, this.pointerHeight, 10000);
+		var pointerElem = document.createElement('div');
+		pointerElem.id = pointer_data.id;
+		pointerElem.className = "pointerItem";
+		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
+		pointerElem.style.top = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem); 
-
+		
 		var ptr = new pointer(); 
-		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color) ;
-		ptr.draw();
+		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
 
 		if (pointer_data.visible) {
 			pointerElem.style.display = "block";
@@ -424,7 +426,7 @@ function uiBuilder(json_cfg, clientID) {
 
 	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
-	    this.pointerItems[pointerElem.id].draw();
+		
 		this.pointerItems[pointerElem.id].isShown = true;
 	};
 
@@ -436,14 +438,116 @@ function uiBuilder(json_cfg, clientID) {
 
 	this.updateSagePointerPosition = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
-		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top  = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		var translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+		pointerElem.style['-webkit-transform'] = translate;
+		pointerElem.style['-moz-transform']    = translate;
+		pointerElem.style['transform']         = translate;
 	};
+	
 	this.changeSagePointerMode = function(pointer_data) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
-		this.pointerItems[pointer_data.id].draw();
 	};
+	
+	this.createRadialMenu = function(data) {
 
+		var menuElem = document.getElementById(data.id+"_menu");
+
+		if( !menuElem )
+		{
+			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
+								data.x  - this.offsetX,
+								data.y - this.offsetY,
+								radialMenuSize.x, radialMenuSize.y, 9000);
+			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
+								data.x  - this.offsetX,
+								data.y - this.offsetY,
+								radialMenuSize.x, radialMenuSize.y, 8900);
+			this.main.appendChild(menuElem); 
+			this.main.appendChild(menuElem2); 
+			
+			var menu = new radialMenu();
+			
+			menu.init(data.id+"_menu", menuElem2) ;
+			
+			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+			
+			menu.thumbnailWindowElement.style.left = menuElem.style.left;
+			menu.thumbnailWindowElement.style.top = menuElem.style.top;
+			
+			// keep track of the menus
+			this.radialMenus[data.id+"_menu"] = menu;
+			this.radialMenus[data.id+"_menu"].draw();
+		}
+		if( this.radialMenus[menuElem.id].visible === false )
+		{
+			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+			
+			this.radialMenus[menuElem.id].thumbnailWindowElement.style.left = menuElem.style.left;
+			this.radialMenus[menuElem.id].thumbnailWindowElement.style.top = menuElem.style.top;
+			
+			this.radialMenus[menuElem.id].visible = true;
+			menuElem.style.display = "block";
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
+	this.radialMenuEvent = function(data) {
+		
+		for (var menuID in this.radialMenus) {
+			var menuElem = document.getElementById(menuID);
+			var menu = this.radialMenus[menuID];
+
+			if( menuElem !== null )
+			{
+				var rect = menuElem.getBoundingClientRect();
+				
+				pointerX = data.x - rect.left - this.offsetX;
+				pointerY = data.y - rect.top - this.offsetY;
+					
+				if( menu.visible )
+				{
+					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
+					menuElem.style.display = "block";
+					menu.thumbnailWindowElement.style.display = "block";
+					
+					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
+					
+					if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
+					{
+						menu.draw();
+					}
+				}
+				else
+				{
+					menuElem.style.display = "none";
+					menu.thumbnailWindowElement.style.display = "none";
+				}
+			}
+		}
+	};
+	
+	this.updateRadialMenu = function(data) {
+		
+		var menuElem = document.getElementById(data.id+"_menu");
+		if( menuElem !== null )
+		{
+			this.radialMenus[menuElem.id].updateFileList(data.fileList);
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
+	this.updateRadialMenuApps = function(data) {
+		console.log("updateRadialMenuApps");
+		var menuElem = document.getElementById(data.id+"_menu");
+		if( menuElem !== null )
+		{
+			this.radialMenus[menuElem.id].updateAppFileList(data.fileList);
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
 	this.addRemoteSite = function(data) {
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
@@ -495,7 +599,8 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.style.display = 'none';
 		// Hide the pointers
 		for (var p in this.pointerItems) {
-			this.pointerItems[p].element.style.display = 'none';
+			if (this.pointerItems[p].div)
+				this.pointerItems[p].div.style.display = 'none';
 		}
 		// Hide the apps top bar
 		var applist = document.getElementsByClassName("windowTitle");
@@ -511,7 +616,7 @@ function uiBuilder(json_cfg, clientID) {
 		for (var p in this.pointerItems) {
 			if (this.pointerItems[p].label !== "") {
 				if (this.pointerItems[p].isShown === true)
-				 	this.pointerItems[p].element.style.display = 'block';
+				 	this.pointerItems[p].div.style.display = 'block';
 			}
 		}
 		// Show the apps top bar

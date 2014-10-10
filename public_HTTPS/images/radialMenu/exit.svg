@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g>
+  <title>Layer 1</title>
+  <g id="svg_1">
+   <line stroke="#449FDB" id="svg_2"/>
+  </g>
+  <rect fill="#FAFAFA" stroke-width="null" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="4.866516" y="13.400452" width="22.528016" height="5.125714" id="svg_4" transform="rotate(45 16.130523681640625,15.963308334350588) "/>
+  <rect id="svg_3" fill="#FAFAFA" stroke-width="null" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" x="4.866516" y="13.400452" width="22.528016" height="5.125714" transform="rotate(-45 16.130523681640625,15.963308334350584) "/>
+ </g>
+</svg>

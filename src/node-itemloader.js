@@ -227,6 +227,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
+		icon: exif_data.SAGE2thumbnail,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -329,10 +330,14 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			metadata.author      = "SAGE2";
 			metadata.license     = "SAGE2-Software-License";
 			metadata.keywords    = ["video", "movie", "player"];
+			
+			var exif = assets.getExifData(file);
+			
 			var appInstance = {
 				id: null,
 				title: name,
 				application: "movie_player",
+				icon: exif.SAGE2thumbnail,
 				type: mime_type,
 				url: external_url,
 				data: {
@@ -380,11 +385,14 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	metadata.author      = "SAGE2";
 	metadata.license     = "SAGE2-Software-License";
 	metadata.keywords    = ["pdf", "document", "viewer"];
+	
+	var exif = assets.getExifData(file);
 
 	var appInstance = {
 		id: null,
 		title: name,
 		application: "pdf_viewer",
+		icon: exif.SAGE2thumbnail,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -424,42 +432,22 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 		var instructions = JSON.parse(json_str);
 		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
 		var aspectRatio = instructions.width / instructions.height;
-		// if icon provided, build the url to it
-		var icon  = instructions.icon ? url+"/"+instructions.icon : null;
-
-		var metadata = {};
-		if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-			metadata.title = instructions.title;
-		else metadata.title = name;
-		if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
-			metadata.version = instructions.version;
-		else metadata.version = "1.0.0";
-		if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
-			metadata.description = instructions.description;
-		else metadata.description = "-";
-		if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
-			metadata.author = instructions.author;
-		else metadata.author = "SAGE2";
-		if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
-			metadata.license = instructions.license;
-		else metadata.license = "-";
-		if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
-			metadata.keywords = instructions.keywords;
-		else metadata.keywords = [];
 
 		var resizeMode = "proportional";
 		if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
 			resizeMode = instructions.resize;
-
+			
+		var exif = assets.getExifData(zipFolder);
+		
 		var appInstance = {
 			id: null,
-			title: metadata.title,
+			title: exif.metadata.title,
 			application: appName,
+			icon: exif.SAGE2thumbnail,
 			type: mime_type,
 			url: external_url,
 			data: instructions.load,
 			resrc: instructions.dependencies,
-			icon: icon,
 			left: _this.titleBarHeight,
 			top: 1.5*_this.titleBarHeight,
 			width: instructions.width,
@@ -473,7 +461,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			maximized: false,
 			aspect: aspectRatio,
 			animation: instructions.animation,
-			metadata: metadata,
+			metadata: exif.metadata,
 			resizeMode: resizeMode,
 			date: new Date()
 		};
@@ -492,66 +480,49 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 		var instuctionsFile = path.join(zipFolder, "instructions.json");
 		fs.readFile(instuctionsFile, 'utf8', function(err, json_str) {
 			if(err) throw err;
+			
+			assets.exifAsync([zipFolder], function(err){
+				if(err) throw err;
+			
+				var instructions = JSON.parse(json_str);
+				var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
+				var aspectRatio = instructions.width / instructions.height;
 
-			var instructions = JSON.parse(json_str);
-			var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
-			var aspectRatio = instructions.width / instructions.height;
-			// if icon provided, build the url to it
-			var icon = instructions.icon ? url+instructions.icon : null;
+				var resizeMode = "proportional";
+				if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+					resizeMode = instructions.resize;
+				
+				var exif = assets.getExifData(zipFolder);
 
-			var metadata = {};
-			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-				metadata.title = instructions.title;
-			else metadata.title = name;
-			if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
-				metadata.version = instructions.version;
-			else metadata.version = "1.0.0";
-			if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
-				metadata.description = instructions.description;
-			else metadata.description = "-";
-			if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
-				metadata.author = instructions.author;
-			else metadata.author = "SAGE2";
-			if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
-				metadata.license = instructions.license;
-			else metadata.license = "-";
-			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
-				metadata.keywords = instructions.keywords;
-			else metadata.keywords = [];
-
-			var resizeMode = "proportional";
-			if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
-				resizeMode = instructions.resize;
-
-
-			var appInstance = {
-				id: null,
-				title: metadata.title,
-				application: appName,
-				type: mime_type,
-				url: external_url,
-				data: instructions.load,
-				resrc: instructions.dependencies,
-				icon: icon,
-				left: _this.titleBarHeight,
-				top: 1.5*_this.titleBarHeight,
-				width: instructions.width,
-				height: instructions.height,
-				native_width: instructions.width,
-				native_height: instructions.height,
-				previous_left: null,
-				previous_top: null,
-				previous_width: null,
-				previous_height: null,
-				maximized: false,
-				aspect: aspectRatio,
-				animation: instructions.animation,
-				metadata: metadata,
-				resizeMode: resizeMode,
-				date: new Date()
-			};
-			_this.scaleAppToFitDisplay(appInstance);
-			callback(appInstance);
+				var appInstance = {
+					id: null,
+					title: exif.metadata.title,
+					application: appName,
+					icon: exif.SAGE2thumbnail,
+					type: mime_type,
+					url: external_url,
+					data: instructions.load,
+					resrc: instructions.dependencies,
+					left: _this.titleBarHeight,
+					top: 1.5*_this.titleBarHeight,
+					width: instructions.width,
+					height: instructions.height,
+					native_width: instructions.width,
+					native_height: instructions.height,
+					previous_left: null,
+					previous_top: null,
+					previous_width: null,
+					previous_height: null,
+					maximized: false,
+					aspect: aspectRatio,
+					animation: instructions.animation,
+					metadata: exif.metadata,
+					resizeMode: resizeMode,
+					date: new Date()
+				};
+				_this.scaleAppToFitDisplay(appInstance);
+				callback(appInstance);
+			});
 		});
 
 		// delete original zip file

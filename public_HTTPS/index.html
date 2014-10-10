@@ -35,7 +35,7 @@
 
 <script type="text/javascript" src="src/pointer.js"></script>
 <script type="text/javascript" src="src/widgets.js"></script>
-
+<script type="text/javascript" src="src/radialMenu.js"></script>
 
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
@@ -213,6 +213,21 @@
 			ui.changeSagePointerMode(pointer_data);
 			resetIdle();
         });
+		
+		wsio.on('createRadialMenu', function(menu_data){
+			ui.createRadialMenu(menu_data);
+        });
+		
+		wsio.on('radialMenuEvent', function(menu_data){
+			ui.radialMenuEvent(menu_data);
+			resetIdle();
+        });
+		
+		wsio.on('updateRadialMenu', function(menu_data){
+			ui.updateRadialMenu(menu_data);
+			resetIdle();
+        });
+		
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
 			wsio.emit('receivedMediaStreamFrame', {id: data.id});

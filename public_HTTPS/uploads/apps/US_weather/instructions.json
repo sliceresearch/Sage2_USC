@@ -1,6 +1,6 @@
 {
 	"main_script": "USweather.js",
-	"icon": "weather.svg",
+	"icon": "weather.png",
 	"width": 900,
 	"height": 600,
 	"animation": true,
