@@ -9,13 +9,13 @@
 // Copyright (c) 2014
 
 
-var three_sample = SAGE2_App.extend( {
+var threejs_sample = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
 		this.width  = null;
 		this.height = null;
-		this.resizeEvents = "onfinish"; // "continuous";
+		this.resizeEvents = "continuous";
 
 		this.renderer = null;
 		this.camera   = null;
