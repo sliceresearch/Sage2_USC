@@ -375,8 +375,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
 
-		console.log("onMouseMove: state ", state, event.clientX, event.clientY );
-
 		if ( state === STATE.ROTATE ) {
 
 			if ( scope.noRotate === true ) return;
