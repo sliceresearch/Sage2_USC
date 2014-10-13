@@ -532,7 +532,10 @@
 	}
 	
 	function pointerDblClick(event) {
-		var element = event.target;
+		handleDblClick(event.target);
+	}
+	
+	function handleDblClick(element) {
 		if(element.id === "sage2UI"){
 			displayUI.pointerDblClick();
 			event.preventDefault();
@@ -624,6 +627,9 @@
 		else {
 			if(touchTap === 1) {
 				handleClick(event.changedTouches[0].target);
+			}
+			else if(touchTap === 2) {
+				handleDblClick(event.changedTouches[0].target);
 			}
 			event.stopPropagation();
 		}
