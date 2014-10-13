@@ -139,7 +139,7 @@ function SAGE2_interaction(wsio) {
 			document.removeEventListener('mousemove',  this.pointerMove,      false);
 			document.removeEventListener('mouseup',    this.pointerRelease,   false);
 			document.removeEventListener('dblclick',   this.pointerDblClick,  false);
-			document.removeEventListener('mousewheel', this.pointerScroll,    false);
+			document.removeEventListener('wheel',      this.pointerScroll,    false);
 			document.removeEventListener('keydown',    this.pointerKeyDown,   false);
 			document.removeEventListener('keyup',      this.pointerKeyUp,     false);
 			document.removeEventListener('keypress',   this.pointerKeyPress,  false);
@@ -156,7 +156,7 @@ function SAGE2_interaction(wsio) {
 			document.addEventListener('mousemove',  this.pointerMove,      false);
 			document.addEventListener('mouseup',    this.pointerRelease,   false);
 			document.addEventListener('dblclick',   this.pointerDblClick,  false);
-			document.addEventListener('mousewheel', this.pointerScroll,    false);
+			document.addEventListener('wheel',      this.pointerScroll,    false);
 			document.addEventListener('keydown',    this.pointerKeyDown,   false);
 			document.addEventListener('keyup',      this.pointerKeyUp,     false);
 			document.addEventListener('keypress',   this.pointerKeyPress,  false);

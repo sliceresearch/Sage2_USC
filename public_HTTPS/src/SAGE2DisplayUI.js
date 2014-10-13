@@ -302,7 +302,7 @@ function SAGE2DisplayUI() {
 	
 	this.pointerScroll = function(value) {
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {wheelDelta: value});
+		this.wsio.emit('pointerScroll', {wheelDelta: event.deltaY});
 	};
 	
 	this.pointerDblClick = function() {
