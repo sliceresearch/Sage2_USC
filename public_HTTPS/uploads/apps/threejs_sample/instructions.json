@@ -1,5 +1,5 @@
 {
-	"main_script": "three_sample.js",
+	"main_script": "threejs_sample.js",
 	"icon": "threejs.webp",
 	"width": 400,
 	"height": 300,
@@ -7,7 +7,7 @@
 	"dependencies": [
 		"scripts/three.min.js"
 	],
-	"title": "Three.js demo",
+	"title": "Three.js minimal app",
 	"version": "1.0.0",
 	"description": "A simple Three.js demonstration",
 	"keywords": [ "three", "3d", "animation" ],

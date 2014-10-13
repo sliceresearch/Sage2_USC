@@ -219,6 +219,7 @@
 		openDialog = null;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
+		touchTime = 0;
 		touchTapTime = 0;
 		touchHold = null;
 		
@@ -324,8 +325,8 @@
 		
 		// trigger file upload
 		console.log("drop location: " + event.layerX + ", " + event.layerY);
-		var x = event.layerX/event.srcElement.clientWidth;
-		var y = event.layerY/event.srcElement.clientHeight;
+		var x = event.layerX/event.target.clientWidth;
+		var y = event.layerY/event.target.clientHeight;
 		if(event.dataTransfer.files.length > 0) {
 			displayUI.fileUpload = true;
 			displayUI.uploadPercent = 0;
@@ -349,7 +350,7 @@
 	}
 	
 	function pointerPress(event) {
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerPress(btn);
 			event.preventDefault();
@@ -357,7 +358,7 @@
 	}
 	
 	function pointerRelease(event) {
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerRelease(btn);
 			event.preventDefault();
@@ -366,21 +367,21 @@
 	
 	function pointerMove(event) {
 		// listen for keyboard events if mouse moved over sage2UI
-		if(event.srcElement.id === "sage2UI" && keyEvents === false){
+		if(event.target.id === "sage2UI" && keyEvents === false){
 			document.addEventListener('keydown',  keyDown,  false);
 			document.addEventListener('keyup',    keyUp,    false);
             document.addEventListener('keypress', keyPress, false);
 			keyEvents = true;
 		}
-		else if(event.srcElement.id !== "sage2UI" && keyEvents === true){
+		else if(event.target.id !== "sage2UI" && keyEvents === true){
 			document.removeEventListener('keydown',  keyDown,  false);
 			document.removeEventListener('keyup',    keyUp,    false);
             document.removeEventListener('keypress', keyPress, false);
 			keyEvents = false;
 		}
 		
-		if(event.srcElement.id === "sage2UI"){
-			var rect = event.srcElement.getBoundingClientRect();
+		if(event.target.id === "sage2UI"){
+			var rect = event.target.getBoundingClientRect();
 			var mouseX = event.clientX - rect.left;
 			var mouseY = event.clientY - rect.top;
 			displayUI.pointerMove(mouseX, mouseY);
@@ -390,7 +391,7 @@
 	function mouseCheck(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-		if(movementX === 0 && movementY === 0) return;
+		if(movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000) return;
 		hasMouse = true;
 		document.title = "SAGE2 UI - Desktop";
 		console.log("Detected as desktop device");
@@ -398,7 +399,7 @@
 		document.addEventListener('mousedown',  pointerPress,    false);
 		document.addEventListener('mouseup',    pointerRelease,  false);
 		document.addEventListener('mousemove',  pointerMove,     false);
-		document.addEventListener('mousewheel', pointerScroll,   false);
+		document.addEventListener('wheel',      pointerScroll,   false);
 		document.addEventListener('click',      pointerClick,    false);
 		document.addEventListener('dblclick',   pointerDblClick, false);
 		
@@ -406,7 +407,7 @@
 	}
 	
 	function pointerClick(event) {
-		handleClick(event.srcElement);
+		handleClick(event.target);
 	}
 	
 	function handleClick(element) {	
@@ -531,7 +532,10 @@
 	}
 	
 	function pointerDblClick(event) {
-		var element = event.srcElement;
+		handleDblClick(event.target);
+	}
+	
+	function handleDblClick(element) {
 		if(element.id === "sage2UI"){
 			displayUI.pointerDblClick();
 			event.preventDefault();
@@ -549,8 +553,8 @@
 	}
 	
 	function pointerScroll(event) {
-		if(event.srcElement.id === "sage2UI"){
-			displayUI.pointerScroll(event.wheelDelta);
+		if(event.target.id === "sage2UI"){
+			displayUI.pointerScroll(event.deltaY);
 			event.preventDefault();
 		}
 	}
@@ -560,9 +564,9 @@
 			touchTime = Date.now();
 		}
 	
-		if(event.srcElement.id === "sage2UI") {
+		if(event.target.id === "sage2UI") {
 			if(event.touches.length === 1){
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				touchStartX = event.touches[0].clientX - rect.left;
 				touchStartY = event.touches[0].clientY - rect.top;
 				displayUI.pointerMove(touchStartX, touchStartY);
@@ -574,7 +578,7 @@
 				touchMode = "translate";
 			}
 			else if(event.touches.length === 2) {
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				var touch0X = event.touches[0].clientX - rect.left;
 				var touch0Y = event.touches[0].clientY - rect.top;
 				var touch1X = event.touches[1].clientX - rect.left;
@@ -611,7 +615,7 @@
 		if((now-touchTime)    < 250) { touchTap++;   touchTapTime = now; }
 		else                         { touchTap = 0; touchTapTime = 0;   }
 	
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			if(touchMode === "translate") {
 				displayUI.pointerRelease("left");
 				if(touchTap === 2) displayUI.pointerDblClick();
@@ -624,6 +628,9 @@
 			if(touchTap === 1) {
 				handleClick(event.changedTouches[0].target);
 			}
+			else if(touchTap === 2) {
+				handleDblClick(event.changedTouches[0].target);
+			}
 			event.stopPropagation();
 		}
 		if(touchHold !== null) {
@@ -634,9 +641,9 @@
 	}
 	
 	function touchMove(event) {
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			if(touchMode === "translate") {
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				var touchX = event.touches[0].clientX - rect.left;
 				var touchY = event.touches[0].clientY - rect.top;
 				displayUI.pointerMove(touchX, touchY);
@@ -648,7 +655,7 @@
 				}
 			}
 			else if(touchMode === "scale") {
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				var touch0X = event.touches[0].clientX - rect.left;
 				var touch0Y = event.touches[0].clientY - rect.top;
 				var touch1X = event.touches[1].clientX - rect.left;
