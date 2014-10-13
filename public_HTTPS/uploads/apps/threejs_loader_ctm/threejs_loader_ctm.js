@@ -226,6 +226,7 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 			}
 			else if (eventType === "pointerMove" && this.dragging) {
 				this.controls.mouseMove(position.x, position.y);
+				this.refresh(date);
 			}
 			else if (eventType === "pointerRelease" && (data.button === "left")) {
 				this.dragging = false;
@@ -233,12 +234,14 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 
 			if (eventType === "pointerScroll") {
 				this.controls.scale( data.wheelDelta );
+				this.refresh(date);
 			}
 			
 			if (eventType === "keyboard") {
 				if(data.character === " ") {
 					this.rotating = ! this.rotating;
 					this.controls.autoRotate = this.rotating;
+					this.refresh(date);
 				}
 			}
 			
@@ -246,21 +249,24 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 				if (data.code === 37 && data.state === "down") { // left
 					this.controls.pan(this.controls.keyPanSpeed, 0);
 					this.controls.update();
+					this.refresh(date);
 				}
 				else if (data.code === 38 && data.state === "down") { // up
 					this.controls.pan(0, this.controls.keyPanSpeed);
 					this.controls.update();
+					this.refresh(date);
 				}
 				else if (data.code === 39 && data.state === "down") { // right
 					this.controls.pan(  - this.controls.keyPanSpeed, 0);
 					this.controls.update();
+					this.refresh(date);
 				}
 				else if (data.code === 40 && data.state === "down") { // down
 					this.controls.pan(0, - this.controls.keyPanSpeed);
 					this.controls.update();
+					this.refresh(date);
 				}				
 			}
-			this.refresh(date);
 		}
 	}
 
