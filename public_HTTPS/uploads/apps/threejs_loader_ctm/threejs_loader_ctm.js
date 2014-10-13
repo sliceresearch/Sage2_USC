@@ -35,6 +35,8 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 
 		this.cameraCube = null;
 		this.sceneCube  = null;
+		this.dragging   = null;
+		this.rotating   = null;
 	},
 
 	init: function(id, width, height, resrc, date) {
@@ -45,7 +47,9 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		this.frame  = 0;
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
-		this.ready  = false;
+		this.dragging = false;
+		this.ready    = false;
+		this.rotating = false;
 
 		var _this = this;
 		addScriptForThreejs(_this.resrcPath + "scripts/OrbitControls.js", function() {
@@ -68,7 +72,8 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		this.controls.maxPolarAngle = Math.PI / 2;
 		this.controls.minDistance = 200;
 		this.controls.maxDistance = 500;
-		this.controls.autoRotate  = true;
+		this.controls.autoRotate  = false; //true;
+		this.controls.zoomSpeed   = 0.1;
 		this.controls.autoRotateSpeed = 2.0; // 30 seconds per round when fps is 60
 
 		// SCENE
@@ -215,26 +220,47 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 	
 	event: function(eventType, position, user_id, data, date) {
 		if (this.ready) {
+			if (eventType === "pointerPress" && (data.button === "left")) {
+				this.dragging = true;
+				this.controls.mouseDown(position.x,position.y,0);
+			}
+			else if (eventType === "pointerMove" && this.dragging) {
+				this.controls.mouseMove(position.x, position.y);
+			}
+			else if (eventType === "pointerRelease" && (data.button === "left")) {
+				this.dragging = false;
+			}
+
+			if (eventType === "pointerScroll") {
+				this.controls.scale( data.wheelDelta );
+			}
+			
+			if (eventType === "keyboard") {
+				if(data.character === " ") {
+					this.rotating = ! this.rotating;
+					this.controls.autoRotate = this.rotating;
+				}
+			}
+			
 			if (eventType === "specialKey") {
 				if (data.code === 37 && data.state === "down") { // left
-					this.controls.pan(100, 0);
+					this.controls.pan(this.controls.keyPanSpeed, 0);
 					this.controls.update();
 				}
 				else if (data.code === 38 && data.state === "down") { // up
-					this.controls.pan(0, 100);
+					this.controls.pan(0, this.controls.keyPanSpeed);
 					this.controls.update();
 				}
 				else if (data.code === 39 && data.state === "down") { // right
-					this.controls.pan(-100, 0);
+					this.controls.pan(  - this.controls.keyPanSpeed, 0);
 					this.controls.update();
 				}
 				else if (data.code === 40 && data.state === "down") { // down
-					this.controls.pan(0, -100);
+					this.controls.pan(0, - this.controls.keyPanSpeed);
 					this.controls.update();
-				}
-				
-				this.refresh(date);
+				}				
 			}
+			this.refresh(date);
 		}
 	}
 
