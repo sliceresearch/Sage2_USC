@@ -162,7 +162,7 @@ span {
 
 #appCloseBtn {
 	position: absolute;
-	right: 55px;
+	right: 90px;
 	bottom: 10px;
 }
 
@@ -227,7 +227,7 @@ span {
 
 #fileCloseBtn {
 	position: absolute;
-	right: 55px;
+	right: 90px;
 	bottom: 10px;
 }
 
@@ -246,7 +246,7 @@ span {
 }
 
 #arrangementItems {
-	margin: 10px 10px 42px 10px;
+	margin: 10px 10px 66px 10px;
 	overflow: auto;
 }
 
@@ -283,7 +283,7 @@ span {
 }
 
 #settingsItems {
-	margin: 10px 10px 42px 10px;
+	margin: 10px 10px 66px 10px;
 	overflow: auto;
 }
 
@@ -399,8 +399,8 @@ span {
 }
 
 .button {
-	padding: 2px 4px 2px 4px;
-	border-radius: 8px;
+	padding: 12px 16px 12px 16px;
+	border-radius: 12px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #FFFFFF;
