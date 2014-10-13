@@ -3034,9 +3034,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	radialMenus[uniqueID].top = pointerY;
 	radialMenus[uniqueID].left = pointerX;
 
-	broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 	
-	updateRadialMenu(uniqueID);
 	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3046,16 +3044,14 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 		if( elem === null )
 		{
 			// Open a 'media' radial menu
-			
+			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 		}
 		else
 		{
 			// Open a 'app' radial menu
 		}
-		
-		// Set the menu position
-		
 	}
+	updateRadialMenu(uniqueID);
 }
 
 function updateRadialMenu( uniqueID )
