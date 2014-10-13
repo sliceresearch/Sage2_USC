@@ -80,7 +80,7 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		this.sceneCube.add( this.cameraCube );
 
 		var r    = this.resrcPath + "textures/";
-		var urls = [ r + "px.png", r + "nx.png", r + "py.png", r + "ny.png", r + "pz.png", r + "nz.png" ];
+		var urls = [ r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg" ];
 		var textureCube = THREE.ImageUtils.loadTextureCube( urls );
 
 		var shader = THREE.ShaderLib[ "cube" ];
