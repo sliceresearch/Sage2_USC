@@ -325,10 +325,14 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	}
 
+	this.mouseDown = function (px,py,b) {
+		onMouseDown({clientX:px, clientY:py, button:b});
+	};
+
 	function onMouseDown( event ) {
 
 		if ( scope.enabled === false ) return;
-		event.preventDefault();
+		//event.preventDefault();
 
 		if ( event.button === 0 ) {
 			if ( scope.noRotate === true ) return;
@@ -353,17 +357,21 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		}
 
-		document.addEventListener( 'mousemove', onMouseMove, false );
-		document.addEventListener( 'mouseup', onMouseUp, false );
+		// document.addEventListener( 'mousemove', onMouseMove, false );
+		// document.addEventListener( 'mouseup', onMouseUp, false );
 		scope.dispatchEvent( startEvent );
 
 	}
+
+	this.mouseMove = function (px,py) {
+		onMouseMove({clientX:px, clientY:py});
+	};
 
 	function onMouseMove( event ) {
 
 		if ( scope.enabled === false ) return;
 
-		event.preventDefault();
+		// event.preventDefault();
 
 		var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
 
@@ -429,12 +437,18 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	}
 
+	// added for SAGE2
+	this.scale = function (value) {
+		onMouseWheel( {wheelDelta: value} );
+	};
+
 	function onMouseWheel( event ) {
 
 		if ( scope.enabled === false || scope.noZoom === true ) return;
 
-		event.preventDefault();
-		event.stopPropagation();
+		// no need for SAGE2
+		// event.preventDefault();
+		// event.stopPropagation();
 
 		var delta = 0;
 
@@ -544,8 +558,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		if ( scope.enabled === false ) return;
 
-		event.preventDefault();
-		event.stopPropagation();
+		// event.preventDefault();
+		// event.stopPropagation();
 
 		var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
 
@@ -628,16 +642,15 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	}
 
-	this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-	this.domElement.addEventListener( 'mousedown', onMouseDown, false );
-	this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
-	this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
-
-	this.domElement.addEventListener( 'touchstart', touchstart, false );
-	this.domElement.addEventListener( 'touchend', touchend, false );
-	this.domElement.addEventListener( 'touchmove', touchmove, false );
-
-	window.addEventListener( 'keydown', onKeyDown, false );
+		// No need for SAGE2
+	// this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+	// this.domElement.addEventListener( 'mousedown', onMouseDown, false );
+	// this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
+	// this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
+	// this.domElement.addEventListener( 'touchstart', touchstart, false );
+	// this.domElement.addEventListener( 'touchend', touchend, false );
+	// this.domElement.addEventListener( 'touchmove', touchmove, false );
+	// window.addEventListener( 'keydown', onKeyDown, false );
 
 	// force an update at start
 	this.update();
