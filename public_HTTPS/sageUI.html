@@ -238,7 +238,7 @@
 			
 			if(event.data.cmd === "SAGE2_desktop_capture-Loaded"){
 				if(interactor !== undefined && interactor !== null)
-					interactor.desktopCaptureEnabled = true;
+					interactor.chromeDesktopCaptureEnabled = true;
 			}
 			if(event.data.cmd === "window_selected"){
 				interactor.captureDesktop(event.data.mediaSourceId);

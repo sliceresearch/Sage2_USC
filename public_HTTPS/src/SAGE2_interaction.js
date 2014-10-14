@@ -18,7 +18,7 @@ function SAGE2_interaction(wsio) {
 	this.mediaVideo = null;
 	this.mediaResolution = 3;
 	this.mediaQuality = 5;
-	this.desktopCaptureEnabled = false;
+	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting = false;
 	this.chunk = 32 * 1024; // 32 KB
 	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
@@ -168,13 +168,19 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.startScreenShare = function() {
-		if(this.desktopCaptureEnabled === false) {
-			alert("Cannot share screen: \"SAGE2 Screen Capture\" Extension not enabled.");
-			return;
+		var userAgent = navigator.userAgent.toLowerCase();
+			
+		if(this.chromeDesktopCaptureEnabled === true) {
+			// post message to start chrome screen share
+			window.postMessage('capture_desktop', '*');
 		}
-		
-		// start screen share
-		window.postMessage('capture_desktop', '*');
+		else if(userAgent.indexOf("firefox") >= 0) {
+			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
+			navigator.getUserMedia({video: {mediaSource: 'screen'}}, this.streamSuccess, this.streamFail);
+		}
+		else {
+			alert("Cannot share screen: \"SAGE2 Screen Capture\" not enabled for this domain.");
+		}
 	};
 	
 	this.captureDesktop = function(mediaSourceId) {
@@ -206,11 +212,16 @@ function SAGE2_interaction(wsio) {
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID+"|0"});
 	};
 	
-	this.streamMetaDataMethod = function(event) {
+	this.streamCanPlayMethod = function(event) {
 		var screenShareResolution = document.getElementById('screenShareResolution');
 		var mediaVideo = document.getElementById('mediaVideo');
 		var mediaCanvas = document.getElementById('mediaCanvas');
-	
+		
+		if(mediaVideo.videoWidth === 0 || mediaVideo.videoHeight === 0){
+			setTimeout(this.streamCanPlay, 500, event);
+			return;
+		}
+		
 		var widths = [Math.min( 852, mediaVideo.videoWidth), 
 					  Math.min(1280, mediaVideo.videoWidth), 
 					  Math.min(1920, mediaVideo.videoWidth), 
@@ -362,7 +373,7 @@ function SAGE2_interaction(wsio) {
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
-	this.streamMetaData              = this.streamMetaDataMethod.bind(this);
+	this.streamCanPlay               = this.streamCanPlayMethod.bind(this);
 	
 	this.pointerLockError            = this.pointerLockErrorMethod.bind(this);
 	this.pointerLockChange           = this.pointerLockChangeMethod.bind(this);
@@ -390,5 +401,5 @@ function SAGE2_interaction(wsio) {
 	document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
 	
-	document.getElementById('mediaVideo').addEventListener('loadedmetadata',    this.streamMetaData,              false);
+	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);
 }
