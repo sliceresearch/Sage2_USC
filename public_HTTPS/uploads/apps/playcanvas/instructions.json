@@ -1,5 +1,6 @@
 {
 	"main_script": "playcanvas.js",
+	"icon": "playcanvas.webp",
 	"width": 1200,
 	"height": 720,
 	"animation": true,
