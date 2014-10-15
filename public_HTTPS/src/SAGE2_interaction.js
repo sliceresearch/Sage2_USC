@@ -307,7 +307,7 @@ function SAGE2_interaction(wsio) {
 	
 	this.pointerScrollMethod = function(event) {
 		this.wsio.emit('pointerScrollStart');
-		this.wsio.emit('pointerScroll', {wheelDelta: event.wheelDelta});
+		this.wsio.emit('pointerScroll', {wheelDelta: event.deltaY});
 		event.preventDefault();
 	};
 	
