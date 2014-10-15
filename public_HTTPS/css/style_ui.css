@@ -330,6 +330,28 @@ span {
 	bottom: 10px;
 }
 
+#ffShareScreenDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width: 265px;
+	height: 60px;
+}
+
+#ffShareScreenBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+
+#ffShareWindowBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
 #blackoverlay {
 	display: none;
 	position: fixed;

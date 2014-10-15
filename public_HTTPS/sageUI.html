@@ -241,7 +241,7 @@
 					interactor.chromeDesktopCaptureEnabled = true;
 			}
 			if(event.data.cmd === "window_selected"){
-				interactor.captureDesktop(event.data.mediaSourceId);
+				interactor.captureDesktop("chrome", event.data.mediaSourceId);
 			}
 		});
 		
@@ -523,6 +523,16 @@
 				wsio.emit('saveSesion', filename);
 				hideDialog('arrangementDialog');
 			}
+		}
+		
+		// Firefox Share Screen Dialog
+		else if(element.id === "ffShareScreenBtn"){
+			interactor.captureDesktop("firefox", "screen");
+			hideDialog('ffShareScreenDialog');
+		}
+		else if(element.id === "ffShareWindowBtn"){
+			interactor.captureDesktop("firefox", "window");
+			hideDialog('ffShareScreenDialog');
 		}
 		
 		// Other
@@ -947,6 +957,11 @@
 		<div id="settingsButtons">
 			<span id="settingsCloseBtn" class="button">Close</span>
 		</div>
+	</div>
+	
+	<div id="ffShareScreenDialog" class="dialog">
+		<span id="ffShareScreenBtn" class="button">Share Screen</span>
+		<span id="ffShareWindowBtn" class="button">Share Window</span>
 	</div>
 	
 	<div id="sage2MobileContainer">

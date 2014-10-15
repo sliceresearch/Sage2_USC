@@ -176,16 +176,21 @@ function SAGE2_interaction(wsio) {
 		}
 		else if(userAgent.indexOf("firefox") >= 0) {
 			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
-			navigator.getUserMedia({video: {mediaSource: 'screen'}}, this.streamSuccess, this.streamFail);
+			showDialog('ffShareScreenDialog');
 		}
 		else {
 			alert("Cannot share screen: \"SAGE2 Screen Capture\" not enabled for this domain.");
 		}
 	};
 	
-	this.captureDesktop = function(mediaSourceId) {
-		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 3840, maxHeight: 2160};
-		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
+	this.captureDesktop = function(browser, data) {
+		if(browser === "chrome"){
+			var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: data, maxWidth: 3840, maxHeight: 2160};
+			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
+		}
+		else if(browser === "firefox") {
+			navigator.getUserMedia({video: {mediaSource: data}, audio: false}, this.streamSuccess, this.streamFail);
+		}
 	};
 	
 	this.streamSuccessMethod = function(stream) {
