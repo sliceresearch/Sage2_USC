@@ -4,28 +4,38 @@
 	"index_port": 80,
 	"background": {
 		"color": "#333333",
-		"image": "images/background/dante_wallpaper.jpg",
-		"style": "stretch"
-	},
-	"ui": {
-		"clock": 12,
-		"show_url": true,
-		"menubar": {
-			"textColor": "rgba(255, 255, 255, 1.0)"
+        "watermark": {
+			"svg": "images/EVL-LAVA.svg",
+			"color": "rgba(255, 255, 255, 0.5)"
 		}
 	},
+    "ui": {
+		"clock": 12,           // clock setting: 12-hour or 24-hour
+		"show_version": true,  // shows SAGE2 version in menu bar
+		"show_url": true,      // shows SAGE2 url in menu bar
+    },
 	"resolution": {
 		"width": 4098,
-		"height": 2304
+		"height": 768
 	},
 	"layout": {
-		"rows": 1,
+		"rows": 3,
 		"columns": 1
 	},
 	"displays": [
 		{
 			"ID": 0,
 			"row": 0,
+			"column": 0
+		},
+		{
+			"ID": 1,
+			"row": 1,
+			"column": 0
+		},
+		{
+			"ID": 2,
+			"row": 2,
 			"column": 0
 		}
 	],
@@ -56,6 +66,7 @@
 		}
 	],
 	"advanced": {
-		"ImageMagick": "C:/Program Files/ImageMagick-6.8.9-Q16/"
+		"ImageMagick": "C:/Program Files/ImageMagick-6.8.9-Q16/",
+        "FFMpeg": "C:/FFMpeg/bin/"
 	}
 }
