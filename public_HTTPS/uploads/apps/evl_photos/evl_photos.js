@@ -66,7 +66,7 @@ var evl_photos = SAGE2_App.extend( {
     this.albums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
             location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
     this.albums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
-            location:"http://www.glerl.noaa.gov/metdata/cams/"};
+            location:"http://cdn.abclocal.go.com/three/wls/webcam/"};
     this.albums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
             location:"http://lyra.evl.uic.edu:9000/posters/"};
 
