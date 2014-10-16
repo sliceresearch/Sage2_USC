@@ -15,7 +15,7 @@
 		"show_url": true,      // shows SAGE2 url in menu bar
     },
 	"resolution": {
-		"width": 4098,
+		"width": 4080,
 		"height": 768
 	},
 	"layout": {
