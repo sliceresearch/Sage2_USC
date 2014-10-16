@@ -17,6 +17,7 @@ var fs        = require('fs');
 var json5     = require('json5');
 var path      = require('path');
 var url       = require('url');
+var color     = require('color');
 var gm        = require('gm');                   // imagesmagick
 var ffmpeg    = require('fluent-ffmpeg');        // ffmpeg
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
@@ -305,7 +306,70 @@ addFile = function(filename,exif) {
 				});
 			};
 			
-			imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
+			var primaryColorOfImage = function(err, buffer) {
+				if(err) throw err;
+				
+				var result = buffer.toString();
+				var colors = result.substring(1, result.length-1).split("\n");
+				var primaryColor = {r: 0, g: 0, b: 0};
+				var primaryValue = 0;
+				for(var i=0; i<colors.length; i++){
+					var cInfo = colors[i].trim();
+					var rgbStart = cInfo.indexOf("(");
+					var rgbEnd = cInfo.indexOf(")");
+					if(rgbStart < 0 || rgbEnd < 0) continue;
+					
+					var rawCount = parseInt(cInfo.substring(0, rgbStart-2), 10);
+					var red   = parseInt(cInfo.substring(rgbStart+1, rgbStart+ 4), 10);
+					var green = parseInt(cInfo.substring(rgbStart+5, rgbStart+ 8), 10);
+					var blue  = parseInt(cInfo.substring(rgbStart+9, rgbStart+12), 10);
+					var alpha = parseInt(cInfo.substring(rgbStart+13, rgbStart+16), 10);
+					
+					var rgb = color({r: red, g: green, b: blue});
+					var hsv = rgb.hsv();
+					var ms = (hsv.s+1) / 100;
+					var mv = hsv.v > 60 ? 1.0 : hsv.v > 30 ? 0.1: 0.01;
+					var ma = alpha / 255;
+					var weighted = rawCount * ms*mv*ma;
+					if(weighted > primaryValue){
+						primaryValue = weighted;
+						primaryColor.r = red;
+						primaryColor.g = green;
+						primaryColor.b = blue;
+					}
+					//console.log("color ("+hsv.s+"x"+hsv.v+"|"+(ms*mv*ma).toFixed(3)+"): " + weighted.toFixed(1) + " rgb("+red+","+green+","+blue+")");
+				}
+				var primaryTint = {
+					r: Math.round(255 - ((255 - primaryColor.r) * 0.25)),
+					g: Math.round(255 - ((255 - primaryColor.g) * 0.25)),
+					b: Math.round(255 - ((255 - primaryColor.b) * 0.25))
+				};
+				
+				imageMagick(1024, 1024, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+primaryTint.r+","+primaryTint.g+","+primaryTint.b+")").in("-draw", "circle 512 512 8 512").in("-draw", "image src-over 156 156 712 712 '"+exif.icon+"'").write(thumb+'_1024.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
+						return;
+					}
+				});
+				imageMagick(512, 512, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+primaryTint.r+","+primaryTint.g+","+primaryTint.b+")").in("-draw", "circle 256 256 4 256").in("-draw", "image src-over 78 78 356 356 '"+exif.icon+"'").write(thumb+'_512.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 512x512 thumbnail for:", filename);
+						return;
+					}
+				});
+				imageMagick(256, 256, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+primaryTint.r+","+primaryTint.g+","+primaryTint.b+")").in("-draw", "circle 128 128 2 128").in("-draw", "image src-over 39 39 178 178 '"+exif.icon+"'").write(thumb+'_256.png', function(err) {
+					if (err) {
+						console.log("Assets> cannot generate 256x256 thumbnail for:", filename);
+						return;
+					}
+				});
+				
+				//console.log("Primary Color: rgb("+primaryColor.r+","+primaryColor.g+","+primaryColor.b+") ["+exif.FileName+"]");
+				//console.log("Primary Tint:  rgb("+primaryTint.r+","+primaryTint.g+","+primaryTint.b+") ["+exif.FileName+"]");
+			};
+			
+			imageMagick(exif.icon).command("convert").in("-colors", "32").in("-depth", "8").in("-format", "'%c'").toBuffer("histogram:info", primaryColorOfImage);
+			//imageMagick(exif.icon).command("convert").in("-filter", "box").in("-resize", "1x1!").in("-format", "'%[pixel:u]'").toBuffer("info", averageColorOfImage);
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		}
 	}

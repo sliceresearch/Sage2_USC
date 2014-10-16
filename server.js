@@ -45,6 +45,7 @@ var program     = require('commander');           // parsing command-line argume
 var colors      = require('colors');              // pretty colors in the terminal
 var exec        = require('child_process').exec;  // execute child process
 var formidable  = require('formidable');          // upload processor
+var qrimage     = require('qr-image');            // qr-code generation
 
 // custom node modules
 var httpserver  = require('./src/node-httpserver');     // creates web server
@@ -56,7 +57,7 @@ var omicron     = require('./src/node-omicron');        // handles Omicron input
 var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
 var assets      = require('./src/node-assets');         // manages the list of files
 var sageutils   = require('./src/node-utils');          // provides the current version number
-var radialmenu = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
+var radialmenu  = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
 
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 console.log("Detected Server OS as: " + platform);
@@ -115,6 +116,14 @@ var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
 var radialMenus = {};
+
+// Generating QR-code of URL for UI page
+var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
+var qr_out = path.join(uploadsFolder, "images", "QR.png");
+qr_png.on('readable', function() { console.log('processing QR'); });
+qr_png.on('end',      function() { console.log('QR image generated', qr_out); });
+qr_png.pipe(fs.createWriteStream(qr_out));
+
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
@@ -1619,11 +1628,11 @@ function setupHttpsOptions() {
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
 			server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
-		certs[config.host] = crypto.createCredentials({
-				key:  server_key,
-				cert: server_crt,
-				ca:   server_ca
-		}).context;
+			certs[config.host] = crypto.createCredentials({
+					key:  server_key,
+					cert: server_crt,
+					ca:   server_ca
+			}).context;
 		} else {
 			// remove the hostname from the FQDN and search for wildcard certificate
 			//    syntax: _.rest.com.key or _.rest.bigger.com.key
@@ -3034,9 +3043,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	radialMenus[uniqueID].top = pointerY;
 	radialMenus[uniqueID].left = pointerX;
 
-	broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 	
-	updateRadialMenu(uniqueID);
 	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3046,16 +3053,14 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 		if( elem === null )
 		{
 			// Open a 'media' radial menu
-			
+			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 		}
 		else
 		{
 			// Open a 'app' radial menu
 		}
-		
-		// Set the menu position
-		
 	}
+	updateRadialMenu(uniqueID);
 }
 
 function updateRadialMenu( uniqueID )
