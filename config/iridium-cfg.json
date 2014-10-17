@@ -102,7 +102,7 @@
 			
 			// Touch gestures
 			zoomGestureScale: 2000,
-			acceleratedDragScale: 1,
+			acceleratedDragScale: 3,
 			
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events
