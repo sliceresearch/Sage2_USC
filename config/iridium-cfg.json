@@ -15,6 +15,8 @@
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
+		"maxWindowWidth" : 8196,
+		"maxWindowHeight" : 8196,
 		"menubar": {
 			"textColor": "rgba(255, 255, 255, 1.0)"
 		},
@@ -63,6 +65,7 @@
 	"alternate_hosts": [ 
 		"localhost",
 		"127.0.0.1",
+                "131.193.183.199",
 		"iridium.evl.optiputer.net"
 	],
 	"remote_sites": [
@@ -102,7 +105,7 @@
 			
 			// Touch gestures
 			zoomGestureScale: 2000,
-			acceleratedDragScale: 1,
+			acceleratedDragScale: 3,
 			
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events

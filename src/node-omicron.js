@@ -145,9 +145,12 @@ function omicronManager( sysConfig )
 }
 
 omicronManager.prototype.disconnect = function() {
-	var sendbuf = util.format("data_off");
-	console.log("Omicron> Sending disconnect signal");
-	oinputserverSocket.write(sendbuf);
+	if( oinputserverSocket )
+	{
+		var sendbuf = util.format("data_off");
+		console.log("Omicron> Sending disconnect signal");
+		oinputserverSocket.write(sendbuf);
+	}
 };
 
 omicronManager.prototype.setCallbacks = function( 
@@ -358,7 +361,7 @@ omicronManager.prototype.runTracker = function()
 						var accelX = posX + accelDistance * Math.cos(angle);
 						var accelY = posY + accelDistance * Math.sin(angle);
 						pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
-						pointerMove(address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" } );
+						pointerMove(address, accelX, accelY, { deltaX: 0, deltaY: 0, button: "left" } );
 	
 					}
 					else if( e.flags === FLAG_FIVE_FINGER_HOLD )

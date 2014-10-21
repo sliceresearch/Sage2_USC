@@ -83,15 +83,15 @@ var modest = SAGE2_App.extend( {
 			this.scrollAmount += data.wheelDelta;
 			
 			if (this.scrollAmount >= 128) {
-				// zoom in
-				this.map.zoomIn();
+				// zoom out
+				this.map.zoomOut();
 				this.lastZoom = date;
 				
 				this.scrollAmount -= 128;
 			}
 			else if (this.scrollAmount <= -128) {
-				// zoom out
-				this.map.zoomOut();
+				// zoom in
+				this.map.zoomIn();
 				this.lastZoom = date;
 				
 				this.scrollAmount += 128;
