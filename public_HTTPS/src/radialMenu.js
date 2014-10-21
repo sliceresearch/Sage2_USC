@@ -886,13 +886,6 @@ function radialMenu(){
 		{
 			if( this.dragThumbnailWindow === true )
 			{
-				var thumbWindowSize = thumbnailWindowSize;
-				var maxRows = Math.floor((thumbWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize + thumbSpacer));
-				var maxCols = Math.floor((thumbWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize + thumbSpacer));
-				var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
-				
-				var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer);
-
 				if( this.thumbnailWindowScrollOffset.x <= 0 )
 				{
 					var scrollDist = 0;
@@ -916,18 +909,7 @@ function radialMenu(){
 						this.scrollOpenContentLock = true;
 					}
 				}
-				
-				// Limits on scroll distance ----------------------------------------
-				if( this.thumbnailWindowScrollOffset.x > 0 )
-				{
-					this.thumbnailWindowScrollOffset.x = 0;
-					this.scrollOpenContentLock = true;
-				}
-				
-				if( this.thumbnailWindowScrollOffset.x < maxScrollPosX )
-					this.thumbnailWindowScrollOffset.x = maxScrollPosX;
-				// --------------------------------------------------------------------
-				
+
 				this.thumbnailWindowDragPosition = position;
 				
 				this.thumbWindowctx.redraw = true;
@@ -1127,8 +1109,37 @@ function radialMenu(){
 		// If maxRows and maxCols is exceeded, then maxCols is expanded as needed.
 		var maxRows = Math.floor((thumbWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize + thumbSpacer));
 		var maxCols = Math.floor((thumbWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize + thumbSpacer));
-		var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
 		
+		var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
+		if( this.currentMenuState === 'pdfThumbnailWindow' )
+			neededColumns = Math.ceil(this.pdfThumbnailButtons.length / ( maxRows * maxCols ));
+		else if( this.currentMenuState === 'videoThumbnailWindow' )
+			neededColumns = Math.ceil(this.videoThumbnailButtons.length / ( maxRows * maxCols ));
+		else if( this.currentMenuState === 'sessionThumbnailWindow' )
+			neededColumns = Math.ceil(this.sessionThumbnailButtons.length / ( maxRows * maxCols ));
+			
+		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer);
+		
+		// Special thumbnail size for custom apps
+		if( this.currentMenuState === 'appThumbnailWindow' )
+		{
+			maxRows = Math.floor((thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize * 2 + thumbSpacer));
+			maxCols = Math.floor((thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize * 2 + thumbSpacer));
+			neededColumns = Math.ceil(this.appThumbnailButtons.length / ( maxRows * maxCols ));
+			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize * 2 + thumbSpacer);
+		}
+
+		// Limits on scroll distance ----------------------------------------
+		if( this.thumbnailWindowScrollOffset.x > 0 )
+		{
+			this.thumbnailWindowScrollOffset.x = 0;
+			this.scrollOpenContentLock = true;
+		}
+		
+		if( this.thumbnailWindowScrollOffset.x < maxScrollPosX )
+			this.thumbnailWindowScrollOffset.x = maxScrollPosX;
+		// --------------------------------------------------------------------
+				
 		//console.log( this.thumbnailWindowScrollOffset.x, this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer));
 		if( this.currentMenuState === 'imageThumbnailWindow' )
 			for( i = 0; i < this.imageThumbnailButtons.length; i++ )
@@ -1160,7 +1171,7 @@ function radialMenu(){
 				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.pdfThumbnailButtons[i];
 				
-				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
+				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
 				{
 					curColumn = 0;
 					
@@ -1182,7 +1193,7 @@ function radialMenu(){
 				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.videoThumbnailButtons[i];
 				
-				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
+				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
 				{
 					curColumn = 0;
 					
@@ -1200,16 +1211,12 @@ function radialMenu(){
 		curColumn = 0;
 		if( this.currentMenuState === 'appThumbnailWindow' )
 		{
-			var maxRows = Math.floor((thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize * 2 + thumbSpacer));
-			var maxCols = Math.floor((thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize * 2 + thumbSpacer));
-			var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
-		
 			for( i = 0; i < this.appThumbnailButtons.length; i++ )
 			{
 				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize * 2 + thumbSpacer));
 				var currentButton = this.appThumbnailButtons[i];
 				
-				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize * 2 + thumbSpacer) )
+				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
 				{
 					curColumn = 0;
 					
@@ -1232,7 +1239,7 @@ function radialMenu(){
 				var nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
 				var currentButton = this.sessionThumbnailButtons[i];
 				
-				if( nextCol > thumbnailWindowSize.x + neededColumns * (imageThumbSize + thumbSpacer) )
+				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
 				{
 					curColumn = 0;
 					
