@@ -46,6 +46,17 @@ function widgetSpec(id) {
 	this.id = id;
 	this.itemCount = 0;
 	this.items = [];
+	this.buttonGroups = [];
+	this.buttonGroupIdx = -1;
+	this.hasSlider = false;
+	this.hasTextInput = false;
+}
+
+widgetSpec.prototype.addButtonGroup = function(){
+	if (this.buttonGroupIdx < 4){
+		this.buttonGroupIdx = this.buttonGroupIdx+1;
+		this.buttonGroups[this.buttonGroupIdx] = [];
+	}
 }
 
 String.prototype.width = function(font) {
@@ -67,49 +78,64 @@ String.prototype.width = function(font) {
 }
 
 widgetSpec.prototype.addButton = function(data) {
-	var b = new button();
-	b.appId = this.id;
-	b.id = "button" + this.itemCount;
-	b.type = data.type;
-	b.call = data.action;
-	b.width = 1.5*ui.titleBarHeight;
-	this.items.push(b);
-	this.itemCount++;
+	if (this.buttonGroupIdx < 4 && this.buttonGroupIdx > -1 && this.buttonGroups[this.buttonGroupIdx].length <= 3){
+		var b = new button();
+		b.appId = this.id;
+		b.id = "button" + this.itemCount;
+		b.type = data.type;
+		b.call = data.action;
+		b.width = 1.5*ui.titleBarHeight;
+		this.items.push(b);
+		this.buttonGroups[this.buttonGroupIdx].push(b);
+		console.log(this.buttonGroups);
+		this.itemCount++;
+	}
+	
 };
 
 widgetSpec.prototype.addTextInput = function (data) {
-	var tI = new textInput();
-	tI.id = "textInput" + this.itemCount;
-	tI.appId = this.id;
-	tI.width = data.width;
-	tI.call = data.action;
-	this.items.push(tI);
-	this.itemCount++;
+	if (this.hasTextInput === false){
+		this.hasTextInput = true;
+		var tI = new textInput();
+		tI.id = "textInput" + this.itemCount;
+		tI.appId = this.id;
+		tI.width = 12.0*ui.titleBarHeight;
+		tI.call = data.action;
+		this.textInput = tI;
+		this.items.push(tI);
+		this.itemCount++;
+	}
+	
 };
 
 
 widgetSpec.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appObj
-	var s = new slider();
-	s.id = "slider" + this.itemCount;
-	s.appId = this.id;
-	s.begin = data.begin;
-	s.end = data.end;
-	if(data.increments){
-		s.increments = data.increments || 1;
-		s.parts = (s.end - s.begin)/s.increments;
+	if (this.hasSlider === false){
+		this.hasSlider = true;
+		var s = new slider();
+		s.id = "slider" + this.itemCount;
+		s.appId = this.id;
+		s.begin = data.begin;
+		s.end = data.end;
+		if(data.increments){
+			s.increments = data.increments || 1;
+			s.parts = (s.end - s.begin)/s.increments;
+		}
+		else if(data.parts){
+			s.parts = data.parts || 1;
+			s.increments = (s.end - s.begin)/s.parts;
+		}
+		s.call = data.action;
+		s.appProperty = data.property;
+		s.appObj = data.appObj;
+		s.sliderVal = data.begin;
+		s.width = 12.0*ui.titleBarHeight;
+		this.slider = s;
+		this.items.push(s);
+		this.itemCount++;
 	}
-	else if(data.parts){
-		s.parts = data.parts || 1;
-		s.increments = (s.end - s.begin)/s.parts;
-	}
-	s.call = data.action;
-	s.appProperty = data.property;
-	s.appObj = data.appObj;
-	s.sliderVal = data.begin;
-	s.width = (s.parts < 10)? 8.0*ui.titleBarHeight: 12.0*ui.titleBarHeight;
-	this.items.push(s);
-	this.itemCount++;
+	
 };
 
 
@@ -133,6 +159,29 @@ widgetSpec.prototype.enumerate = function(){
 	return this.items;
 };
 
+widgetSpec.prototype.computeSize = function(){
+	var size = {
+		width:0,
+		height:0
+	};
+	var dim = {};
+	dim.buttonRadius = 0.8 * ui.titleBarHeight;
+	dim.radius = dim.buttonRadius * 5.027 ; // tan(78.5): angle subtended at the center is 22.5
+	dim.innerR = dim.radius - dim.buttonRadius -3; // for the pie slice
+	dim.outerR = dim.radius + dim.buttonRadius +3;
+
+	size.height = dim.outerR * 2 + 5;
+	size.width = size.height;
+
+	if (this.hasSlider === true){
+		size.width = size.width  + this.slider.width ;
+	}
+	else if ( this.hasTextInput === true){
+		size.width = size.width  + this.textInput.width;
+	}
+	this.controlDimensions = dim;
+	return size;
+}
 
 function computeSize(widgetObj){
 	var arr = widgetObj.enumerate();
@@ -147,20 +196,65 @@ function computeSize(widgetObj){
 
 
 function createControls(ctrId, spec){
-	var size = computeSize(spec);
-	var buttonRad = 0.75 * ui.titleBarHeight;
+	var size = spec.computeSize();
+	var dim = spec.controlDimensions;
+	
 	var windowControls = Snap(size.width, size.height);
-	var gap = 10;
+	var center = {x:size.height/2.0,y:size.height/2.0}; //change to reflect windowControls center
 
 	windowControls.attr({
 		fill: "#000",
 		id: ctrId + "SVG"
 	});
 	
-	var ctrHandle = document.getElementById(ctrId + "SVG");
+
+	drawControlCenter(windowControls,center, dim.innerR - 2*dim.buttonRadius, "SAGE2");
+
+
 	
-	var wArr = spec.enumerate();
-	var x = gap;
+	/*Place buttons*/
+	var angleRanges = (spec.buttonGroups.length===1)? [[56.25,303.75]]:[[56.25,123.75],[236.25,303.75],[146.25,213.75],[326.25,393.75]];
+
+	for(var g=0; g < spec.buttonGroups.length; g++){
+		var btns = spec.buttonGroups[g];
+		var range = angleRanges[g];
+		var start = range[0];
+		var end = range[1];
+		drawPieSlice(windowControls, start-5,end+5, dim.innerR, dim.outerR,center);
+		var betweenButtons = (end - start)/btns.length;
+		var padding = betweenButtons/2;
+		var theta = start + padding;
+		for (var b=0; b<btns.length;b++){
+			var point = polarToCartesian(dim.radius,theta,center);
+			console.log(point);
+			createButton(windowControls,btns[b],point.x,point.y,dim.buttonRadius-2);
+			theta = theta + betweenButtons;
+		}
+
+	}
+	var d, centerY;
+	if (spec.hasSlider===true && spec.hasTextInput === true){
+		d = makeBarPath(5,45, dim.innerR, center, spec.slider.width);
+		centerY = polarToCartesian(dim.innerR,23, center).y;
+		createSlider(windowControls,spec.slider,center.x  + dim.innerR + 10, centerY, d);
+		d = makeBarPath(315,355, dim.innerR, center, spec.textInput.width);
+		centerY = polarToCartesian(dim.innerR,337, center).y;
+		createTextInput(windowControls,spec.textInput, center.x  + dim.innerR + 10, centerY, d);
+	}
+	else if (spec.hasSlider===true){
+		d = makeBarPath(340,380, dim.innerR, center, spec.slider.width);
+		centerY = polarToCartesian(dim.innerR,0, center).y;
+		createSlider(windowControls,spec.slider,center.x  + dim.innerR + 10, centerY, d);
+	}
+	else{
+		d = makeBarPath(340,380, dim.innerR, center, spec.textInput.width);
+		centerY = polarToCartesian(dim.innerR,0, center).y;
+		createTextInput(windowControls,spec.textInput,center.x  + dim.innerR+10, centerY, d);
+	}
+
+	
+
+	/*var x = gap;
 	var y = ui.titleBarHeight;
 	for (var i in wArr){
 		if (wArr[i] instanceof button){
@@ -177,8 +271,50 @@ function createControls(ctrId, spec){
 		}
 		x = x + wArr[i].width + gap;
 	}
-
+	*/
+	var ctrHandle = document.getElementById(ctrId + "SVG");
 	return ctrHandle;
+}
+
+
+function drawControlCenter(paper, center, radius, initialText){
+	var cCenter = paper.circle(center.x,center.y,radius);
+	cCenter.attr("class", "widgetBackground");
+	var text = paper.text(center.x,center.y,initialText);
+	text.attr("class", "widgetText");
+	text.attr("dy", "0.4em");
+}
+
+function drawPieSlice(paper, start,end, innerR, outerR, center){
+	var pointA= polarToCartesian(innerR,start,center);
+	var pointB = polarToCartesian(outerR,start,center);
+	var pointC= polarToCartesian(outerR,end,center);
+	var pointD = polarToCartesian(innerR,end,center);
+	
+	var d = "M " + pointA.x + " " + pointA.y
+		+ "L " + pointB.x + " " + pointB.y
+		+ "A " + outerR + " " + outerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y 
+		+ "L " + pointD.x + " " + pointD.y
+		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
+
+	var groupBoundaryPath = paper.path(d);
+	groupBoundaryPath.attr("class", "widgetBackground");
+}
+
+function makeBarPath(start,end, innerR, center, width){
+	var center2 = {x:center.x+width,y:center.y};
+	var pointA= polarToCartesian(innerR,start,center);
+	var pointB = polarToCartesian(innerR,start,center2);
+	var pointC= polarToCartesian(innerR,end,center2);
+	var pointD = polarToCartesian(innerR,end,center);
+	
+	var d = "M " + pointA.x + " " + pointA.y
+		+ "L " + pointB.x + " " + pointB.y
+		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y 
+		+ "L " + pointD.x + " " + pointD.y
+		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
+
+	return d;
 }
 
 var buttonType = {
@@ -258,36 +394,43 @@ var buttonType = {
 
 };
 
-function createSlider (paper, sliderSpec, x, y){
+function createSlider (paper, sliderSpec, x, y, outline){
 	var sliderHeight = 1.5 * ui.titleBarHeight;
-	var sliderArea = paper.rect(x,y-sliderHeight/2.0,sliderSpec.width, sliderHeight);
-	sliderArea.attr({
-		id: sliderSpec.id + "Area",
-		fill:"#000000",
-		strokeWidth : 1,
-		stroke: "#999999"
-	});
+	var sliderArea = paper.path(outline);
+	sliderArea.attr("class", "widgetBackground");
 
-	var linePath = "M " + (x+0.5*ui.titleBarHeight) + " " + y + "l " + (sliderSpec.width - ui.titleBarHeight) + " " + 0 ;
+	var linePath = "M " + x + " " + y + "l " + (sliderSpec.width - 20) + " " + 0 ;
 	var sliderLine = paper.path(linePath); 
 	sliderLine.attr({
 		strokeWidth:1,
 		id:sliderSpec.id + 'line',
 		style:"shape-rendering:crispEdges;",
-		stroke:"#888"
+		stroke:"rgba(230,230,230,1.0)"
 	});
-
-	var sliderKnob = paper.circle(x+0.5*ui.titleBarHeight,y, 0.25*ui.titleBarHeight);
+	var knobWidth = 3.6*ui.titleBarHeight;
+	var knobHeight = 1.5*ui.titleBarHeight;
+	var sliderKnob = paper.rect(x+0.5*ui.titleBarHeight,y - knobHeight/2, knobWidth, knobHeight);
 	sliderKnob.attr({
 		id:sliderSpec.id + 'knob',
+		class: "sliderKnob",
+		rx:"0.5em",
+		ry:"0.5em",
 		//style:"shape-rendering:crispEdges;",
-		style:"stroke-linecap:round; stroke-linejoin:round",
-		fill:"#aaa",
-		stroke:"#666",
-		strokeWidth:1
+		fill:"rgba(200,200,200,1.0)",
+		strokeWidth : 1,
+		stroke: "rgba(230,230,230,1.0)"
 	});
-	var slider = paper.group(sliderArea,sliderLine,sliderKnob);
+	var sliderKnobLabel = paper.text(x+0.5*ui.titleBarHeight + knobWidth/2.0, y,"-");
+	sliderKnobLabel.attr({
+		id: sliderSpec.id+ "knobLabel",
+		class:"sliderText",
+		dy:"0.3em"
+	});
+	
+
+	var slider = paper.group(sliderArea,sliderLine,sliderKnob,sliderKnobLabel);
 	sliderKnob.data("appId", sliderSpec.appId);
+	sliderKnobLabel.data("appId", sliderSpec.appId);
 	slider.data('begin', sliderSpec.begin);
 	slider.data("appId", sliderSpec.appId);
 	slider.data('end', sliderSpec.end);
@@ -298,9 +441,10 @@ function createSlider (paper, sliderSpec, x, y){
 	
 	function moveSlider(){
 		var slider = sliderKnob.parent();
+		var halfKnobWidth = sliderKnob.getBBox().w/2.0;
 		var bound = sliderArea.getBBox();
-		var left = bound.x + bound.h/2;
-		var right = bound.x2 - bound.h/2;
+		var left = bound.x + 10 + halfKnobWidth ;
+		var right = bound.x2 - 10 - halfKnobWidth ;
 		var begin = slider.data('begin');
 		var end = slider.data('end');
 		var parts = slider.data('parts');
@@ -319,7 +463,9 @@ function createSlider (paper, sliderSpec, x, y){
 			return end;
 		}
 	
-		sliderKnob.animate({cx: pos},100,mina.linear,moveSlider);
+		sliderKnob.animate({x: pos - knobWidth/2.0},100,mina.linear);
+		sliderKnobLabel.attr("text", (n+1) +" / "+ end );
+		sliderKnobLabel.animate({x: pos},100,mina.linear,moveSlider);
 	}
 	
 	moveSlider();
@@ -329,9 +475,10 @@ function createSlider (paper, sliderSpec, x, y){
 
 function mapMoveToSlider(sliderKnob, pos){
 	var slider = sliderKnob.parent();
+	var halfKnobWidth = sliderKnob.getBBox().w/2.0;
 	var bound = slider.getBBox();
-	var left = bound.x + bound.h/2;
-	var right = bound.x2 - bound.h/2;
+	var left = bound.x + bound.h/2 + halfKnobWidth ;
+	var right = bound.x2 - bound.h/2 - halfKnobWidth;
 	var begin = slider.data('begin');
 	var end = slider.data('end');
 	var parts = slider.data('parts');
@@ -351,14 +498,14 @@ function mapMoveToSlider(sliderKnob, pos){
 }
 
 
-function createButton(paper, buttonSpec, cx, cy){
-	var buttonRad = 0.75 * ui.titleBarHeight;
+function createButton(paper, buttonSpec, cx, cy, rad){
+	var buttonRad = rad;
 	var buttonBack = paper.circle(cx,cy,buttonRad);
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
-		fill:"#baba55",
+		fill:"rgba(200,200,200,1.0)",
 		strokeWidth : 1,
-		stroke: "#000"
+		stroke: "rgba(230,230,230,1.0)"
 	});
 
 	var type = buttonType[buttonSpec.type];
@@ -387,9 +534,12 @@ function createButton(paper, buttonSpec, cx, cy){
 	return button;
 }
 
-function createTextInput(paper, textInputSpec, x, y){
-	var tIHeight = 1.5 * ui.titleBarHeight;
-	var textArea = paper.rect(x,y-tIHeight,textInputSpec.width, tIHeight);
+function createTextInput(paper, textInputSpec, x, y, outline){
+	var uiElementSize = ui.titleBarHeight;
+	var tIHeight = 1.5 * uiElementSize;
+	var textInputOutline = paper.path(outline);
+	textInputOutline.attr("class","widgetBackground");
+	var textArea = paper.rect(x,y-tIHeight/2.0,textInputOutline.getBBox().w-50, tIHeight);
 	textArea.attr({
 		id: textInputSpec.id + "Area",
 		fill:"#000000",
@@ -397,7 +547,7 @@ function createTextInput(paper, textInputSpec, x, y){
 		stroke: "#999999"
 	});
 
-	var pth = "M " + (x+2) + " " + (y-2) + " l 0 -" + (tIHeight - 4);
+	var pth = "M " + (x+2) + " " + (y-tIHeight/2.0 +2) + " l 0 " + (tIHeight - 4);
 	var blinker = paper.path(pth);
 	blinker.attr({
 		id: textInputSpec.id + "Blinker",
@@ -415,11 +565,10 @@ function createTextInput(paper, textInputSpec, x, y){
 		blinker.animate({"stroke":"#000000"},200,mina.easeout,show);
 	};
 
-	var textData = paper.text(x+2, y-8,"");
+	var textData = paper.text(x+2, y + tIHeight/2.0 -6,"");
 	textData.attr({
 		id: textInputSpec.id + "TextData",
-		style:"fill: #ffffff; stroke: #ffffff; shape-rendering:crispEdges; font-family:georgia; font-size:" + (tIHeight-6) + "px; font-weight:lighter; font-style:normal;",
-		clipPath:paper.rect(x+2,y-tIHeight, textInputSpec.width,tIHeight)
+		style:"fill: #ffffff; stroke: #ffffff; font-family:sans-serif; font-size:" + (tIHeight-6) + "px; font-weight:lighter; font-style:normal;",
 	});
 	var textInput = paper.group(textArea,blinker);
 	textInput.add(textData);
@@ -430,98 +579,105 @@ function createTextInput(paper, textInputSpec, x, y){
 	blinker.data("show", show); // Find out how to stop animating the blinker
 	textInput.data("buffer","");
 	textInput.data("blinkerPos",0) ;
-	textInput.data("blinkerSuf"," " + (y-2) + " l 0 -" + (tIHeight - 4));
+	textInput.data("blinkerSuf"," " + (y-tIHeight/2.0 +2) + " l 0 " + (tIHeight - 4));
 	textInput.data("left", x+2);
 	textInput.data("call", textInputSpec.call);
+	textInput.data("head", "");
+	textInput.data("prefix", "");
+	textInput.data("suffix", "");
+	textInput.data("tail", "");
 	
 	show();
 
 	return textInput;
 }
 
-function computeBlinkerPosition (currentPos, str, charCode, printable){
-	var position = currentPos;
-	var currentStrLen = str.length;
-	var pre = "";
-	var suf = "";
-	var flag = false;
-	//var printable = (charCode > 31 && charCode < 137) ;// spacebar & return key(s) (if you want to allow carriage returns)
-        
-    if (printable){
-    	var temp = (charCode===32)? ' ' : String.fromCharCode(charCode);
-    	pre = str.substring(0,currentPos) + temp;
-		suf = str.substring(currentPos,currentStrLen);
-		str = pre + suf;
-		position++;
-    }
-    else if (charCode === 39)
-    {
-    	pre = str.substring(0,currentPos+1);
-		suf = str.substring(currentPos+1,currentStrLen);
-		str = pre + suf;
-    	position++;
-    }
-	else if (charCode === 37){
-		pre = (currentPos===1)? '' : str.substring(0,currentPos-1);
-		suf = str.substring(currentPos-1,currentStrLen);
-		str = pre + suf;
-		position--;
-	}
-	else if (charCode == 8){
-		pre = (currentPos===1)? '' : str.substring(0,currentPos-1);
-		suf = str.substring(currentPos,currentStrLen);
-		str = pre + suf;
-		position--;
-	}
-	else if (charCode == 46){
-		pre = (currentPos===0)? '' : str.substring(0,currentPos);
-		suf = str.substring(currentPos+1,currentStrLen);
-		str = pre + suf;
-	}
-	
-	position = (position<0)? 0 : position;
-	position = (position>str.length)?str.length:position;
-	//pre = (position > 0)? str.substring(0,position): "";
-	return {data:str, prefix:pre, blinkerPos:position};
-}
 
 insertText = function(textInput, code, printable){
-	var textArea = textInput.select("rect");
+	var textBox = textInput.select("rect");
+	var boxWidth = textBox.attr("width");
 	var tAxVal = textInput.data("left"); 
-	var rightEnd = tAxVal + parseInt(textArea.attr("width"));
+	var rightEnd = tAxVal + parseInt(textBox.attr("width"));
 	var pos = textInput.data("blinkerPos");
 	var displayText = '';
 	ctrl = textInput.select("text");
 	buf = textInput.data("text") || '';	
 	
-	if (buf.length===0) buf = "";
-	buf = computeBlinkerPosition(pos, buf, code, printable);
-
-	var pth = "";
-	
-	ctrl.attr("text",buf.prefix);
-	var textWidth = (buf.prefix.length > 0)? ctrl.getBBox().width : 0;
-	
-	if (textWidth >= textArea.attr("width")-5){
-		ctrl.attr('x', rightEnd-5); // + 
-		ctrl.attr('text-anchor','end');
-		pth = "M " + (rightEnd-5) + textInput.data("blinkerSuf");
-		displayText = buf.prefix;
+	var head = textInput.data("head");
+	var prefix = textInput.data("prefix");
+	var suffix = textInput.data("suffix");
+	var tail = textInput.data("tail");
+	switch (code){
+		case 37://left
+			if (prefix.length > 0){
+				suffix = prefix.slice(-1) + suffix;
+				prefix = prefix.slice(0,-1);
+			}
+			else if (head.length > 0){
+				suffix = head.slice(-1) + suffix;
+				head = head.slice(0,-1);
+			}
+			break;
+		case 39://right
+			if (suffix.length > 0){
+				prefix = prefix + suffix.slice(0,1);
+				suffix = suffix.slice(1);
+			}
+			else if (tail.length > 0){
+				prefix = prefix + tail.slice(0,1);
+				tail = tail.slice(1);
+			}
+			break;
+		case 8://backspace
+			if (prefix.length > 0){
+				prefix = prefix.slice(0,-1);
+			}
+			else{
+				head = head.slice(0,-1);
+			}
+			suffix = suffix + tail.slice(0,1);
+			tail = tail.slice(1);
+			break;
+		case 46://delete
+			if (suffix.length > 0){
+				suffix = suffix.slice(1) + tail.slice(0,1);
+			}
+			tail = tail.slice(1);
+			break;
+		default:
+			if (printable){
+				var temp = (code===32)? ' ' : String.fromCharCode(code);
+				prefix = prefix + temp;
+			}
 	}
-	else{
-		ctrl.attr("x", textInput.data('left'));	
-		ctrl.attr('text-anchor','start');
-		pth = "M " + (textInput.data("left") + textWidth) + textInput.data("blinkerSuf");
-		displayText = buf.data;
-	}
-	textInput.select("path").attr({path:pth});
-	textInput.data("blinkerPos",buf.blinkerPos);
+	displayText = prefix + suffix;
 	ctrl.attr("text",displayText);
-	textInput.data("text", buf.data);	
+	var textWidth = (displayText.length > 0)? ctrl.getBBox().width : 0;
+	if (textWidth > boxWidth - 5){
+		if (suffix.length > 0){
+			tail = suffix.slice(-1) + tail;
+			suffix = suffix.slice(0,-1);
+		}
+		else{
+			head = head + prefix.slice(0,1);
+			prefix = prefix.slice(1);
+		}
+	}
+
+	ctrl.attr("text",prefix);
+	var pos = (prefix.length > 0)? ctrl.getBBox().width : 0;
+	pth = "M " + (textInput.data("left") + pos) + textInput.data("blinkerSuf");
+	textInput.select("path").attr({path:pth});
+	ctrl.attr("text",prefix + suffix);
+	textInput.data("head", head);
+	textInput.data("prefix", prefix);
+	textInput.data("suffix", suffix);
+	textInput.data("tail", tail);
+
 };
 
 getText = function(textInput){
-	return textInput.select("text").attr("text");
+	return textInput.data("head") + textInput.data("prefix") + textInput.data("suffix") + textInput.data("tail");
 };
 
 getCtrl = function(data){
@@ -590,4 +746,13 @@ function createLabel(paper, labelSpec, x, y){
 
 	showText();
 	return label;
+}
+
+function polarToCartesian(r,theta,c){
+	theta = theta * Math.PI / 180.0;
+	if (c === undefined || c === null)
+		c = {x:0,y:0};
+	var x = c.x + r*Math.cos(theta);
+	var y = c.y - r*Math.sin(theta);
+	return {x:x,y:y};
 }

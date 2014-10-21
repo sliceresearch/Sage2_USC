@@ -162,7 +162,7 @@ span {
 
 #appCloseBtn {
 	position: absolute;
-	right: 55px;
+	right: 90px;
 	bottom: 10px;
 }
 
@@ -227,7 +227,7 @@ span {
 
 #fileCloseBtn {
 	position: absolute;
-	right: 55px;
+	right: 90px;
 	bottom: 10px;
 }
 
@@ -246,7 +246,7 @@ span {
 }
 
 #arrangementItems {
-	margin: 10px 10px 42px 10px;
+	margin: 10px 10px 66px 10px;
 	overflow: auto;
 }
 
@@ -283,9 +283,44 @@ span {
 }
 
 #settingsItems {
-	margin: 10px 10px 42px 10px;
+	margin: 10px 10px 66px 10px;
 	overflow: auto;
 }
+
+#browserDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#browserItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+#browserCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+#browserOpenBtn {
+	position: absolute;
+	right: 90px;
+	bottom: 10px;
+}
+
+#browserItemsContainer {
+	width: 400px;
+	float: left;
+	margin-right: 10px;
+}
+
+#browserItemsContainer td {
+	padding-bottom: 4px;
+}
+
 
 #sage2PointerSettingsContainer {
 	width: 225px;
@@ -325,6 +360,28 @@ span {
 }
 
 #settingsCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#ffShareScreenDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width: 265px;
+	height: 60px;
+}
+
+#ffShareScreenBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+
+#ffShareWindowBtn {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
@@ -399,8 +456,8 @@ span {
 }
 
 .button {
-	padding: 2px 4px 2px 4px;
-	border-radius: 8px;
+	padding: 12px 16px 12px 16px;
+	border-radius: 12px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #FFFFFF;

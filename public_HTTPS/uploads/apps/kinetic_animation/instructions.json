@@ -1,5 +1,6 @@
 {
 	"main_script": "kinetic_animation.js",
+	"icon": "kinetic_animation.webp",
 	"width": 500,
 	"height": 300,
 	"animation": true,

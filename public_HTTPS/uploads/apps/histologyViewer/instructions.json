@@ -1,5 +1,6 @@
 {
 	"main_script": "histoViewer.js",
+	"icon": "histology.webp",
 	"width": 800,
 	"height": 224,
 	"resize": "free",

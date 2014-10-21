@@ -1,70 +1,72 @@
 {
-  "name": "SAGE2",
-  "version": "0.2.0",
-  "private": true,
-  "description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
-  "keywords": [
-    "SAGE",
-    "browser",
-    "collaboration"
-  ],
-  "author": "UIC EVL <evl.avatar@gmail.com>",
-  "contributors": [
-    {
-      "name": "Thomas Marrinan",
-      "email": "thomas.j.marrinan@gmail.com"
-    },
-    {
-      "name": "Jillian Aurisano",
-      "email": "jillian.aurisano@gmail.com"
-    },
-    {
-      "name": "Arthur Nishimoto",
-      "email": "arthur.nishimoto@gmail.com"
-    },
-    {
-      "name": "Victor Mateevitsi",
-      "email": "mvictoras@gmail.com"
-    },
-    {
-      "name": "Krishna Bharadwaj",
-      "email": "krishnaknbharadwaj@gmail.com"
-    },
-    {
-      "name": "Luc Renambot",
-      "email": "renambot@gmail.com"
-    }
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/uic-evl/SAGE2"
-  },
-  "dependencies": {
-    "colors": "latest",
-    "commander": "latest",
-    "decompress-zip": "latest",
-    "fluent-ffmpeg": "latest",
-    "formidable": "latest",
-    "gm": "latest",
-    "imageinfo": "latest",
-    "jshint": "latest",
-    "json5": "latest",
-    "mime": "latest",
-    "request": "latest",
-    "sprint": "^0.3.1",
-    "ws": "latest",
-    "ytdl-core": "latest"
-  },
-  "bundledDependencies": [],
-  "devDependencies": {},
-  "engines": {
-    "node": ">=0.10.x"
-  },
-  "scripts": {
-    "start": "node server.js",
-    "hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
-    "hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/src/*.js",
-    "doc": "yuidoc -c doc/yuidoc.json"
-  },
-  "license": "SAGE2-Software-License"
+	"name": "SAGE2",
+	"version": "0.2.0",
+	"private": true,
+	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
+	"keywords": [
+		"SAGE",
+		"browser",
+		"collaboration"
+	],
+	"author": "UIC EVL <evl.avatar@gmail.com>",
+	"contributors": [
+		{
+			"name": "Thomas Marrinan",
+			"email": "thomas.j.marrinan@gmail.com"
+		},
+		{
+			"name": "Jillian Aurisano",
+			"email": "jillian.aurisano@gmail.com"
+		},
+		{
+			"name": "Arthur Nishimoto",
+			"email": "arthur.nishimoto@gmail.com"
+		},
+		{
+			"name": "Victor Mateevitsi",
+			"email": "mvictoras@gmail.com"
+		},
+		{
+			"name": "Krishna Bharadwaj",
+			"email": "krishnaknbharadwaj@gmail.com"
+		},
+		{
+			"name": "Luc Renambot",
+			"email": "renambot@gmail.com"
+		}
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/uic-evl/SAGE2"
+	},
+	"dependencies": {
+		"qr-image": "latest",
+		"color": "latest",
+		"colors": "latest",
+		"commander": "latest",
+		"decompress-zip": "latest",
+		"fluent-ffmpeg": "latest",
+		"formidable": "latest",
+		"gm": "latest",
+		"imageinfo": "latest",
+		"jshint": "latest",
+		"json5": "latest",
+		"mime": "latest",
+		"request": "latest",
+		"sprint": "^0.3.1",
+		"ws": "latest",
+		"ytdl-core": "latest"
+	},
+	"bundledDependencies": [],
+	"devDependencies": {},
+	"engines": {
+		"node": ">=0.10.x"
+	},
+	"scripts": {
+		"start": "node server.js",
+		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
+		"hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/src/*.js",
+		"doc": "yuidoc -c doc/yuidoc.json"
+	},
+	"license": "SAGE2-Software-License"
 }

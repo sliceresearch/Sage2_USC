@@ -1,5 +1,6 @@
 {
 	"main_script": "presentation.js",
+	"icon": "presentation.webp",
 	"width": 800,
 	"height": 450,
 	"animation": false,

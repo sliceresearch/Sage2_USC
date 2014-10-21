@@ -84,7 +84,7 @@
 		if(window.location.protocol == "http:"  && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
 		
-		clientID = parseInt(getParameterByName("clientID"));
+		clientID = parseInt(getParameterByName("clientID")) || 0;
 		console.log("clientID: " + clientID);
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
@@ -623,8 +623,8 @@
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 			if (data.elemId !== undefined && data.elemId !== null){
 				if(controlItems[data.elemId+"_controls"] !== undefined){
-					var size = computeSize(controlItems[data.elemId+ "_controls"].spec);
-					console.log(size);
+					var size = controlItems[data.elemId+ "_controls"].spec.computeSize();
+					//var size = {width:200,height:200};
 					wsio.emit('addNewControl', {
 						id:data.elemId+"_controls", 
 						left:data.x,
@@ -644,6 +644,7 @@
 				ctrDiv.id = data.id;
 				ctrDiv.className = "windowControls";
 				ctrDiv.style.width = data.width.toString() + "px";
+				ctrDiv.style.fill = "rgba(0,0,0,0.0)";
 				ctrDiv.style.height = data.height.toString() + "px";
 				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
@@ -763,6 +764,7 @@
 			var ctrl = getCtrl(data);
 			if (ctrl){
 				var textInput = ctrl.parent();
+
 				if (data.code != 13){
 					insertText(textInput, data.code, data.printable);
 				}

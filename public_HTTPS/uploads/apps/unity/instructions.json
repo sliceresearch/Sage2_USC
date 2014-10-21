@@ -1,5 +1,6 @@
 {
 	"main_script": "unity.js",
+	"icon": "unity.webp",
 	"width": 800,
 	"height": 600,
 	"animation": true,

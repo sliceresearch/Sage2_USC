@@ -1,5 +1,6 @@
 {
 	"main_script": "kinetic_oscillating.js",
+	"icon": "kinetic_oscillating.webp",
 	"width": 500,
 	"height": 300,
 	"animation": true,

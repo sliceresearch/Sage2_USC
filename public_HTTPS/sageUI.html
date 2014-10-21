@@ -209,13 +209,7 @@
 		sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 		sage2UI.addEventListener('drop',      fileDrop,       false);
 		
-		document.addEventListener('mousedown',  pointerPress,    false);
-		document.addEventListener('mouseup',    pointerRelease,  false);
-		document.addEventListener('mousemove',  pointerMove,     false);
 		document.addEventListener('mousemove',  mouseCheck,      false);
-		document.addEventListener('click',      pointerClick,    false);
-		document.addEventListener('dblclick',   pointerDblClick, false);
-		document.addEventListener('mousewheel', pointerScroll,   false);
 		document.addEventListener('touchstart', touchStart,      false);
 		document.addEventListener('touchend',   touchEnd,        false);
 		document.addEventListener('touchmove',  touchMove,       false);
@@ -225,6 +219,7 @@
 		openDialog = null;
 		selectedAppEntry = null;
 		selectedFileEntry = null;
+		touchTime = 0;
 		touchTapTime = 0;
 		touchHold = null;
 		
@@ -243,10 +238,10 @@
 			
 			if(event.data.cmd === "SAGE2_desktop_capture-Loaded"){
 				if(interactor !== undefined && interactor !== null)
-					interactor.desktopCaptureEnabled = true;
+					interactor.chromeDesktopCaptureEnabled = true;
 			}
 			if(event.data.cmd === "window_selected"){
-				interactor.captureDesktop(event.data.mediaSourceId);
+				interactor.captureDesktop("chrome", event.data.mediaSourceId);
 			}
 		});
 		
@@ -262,14 +257,14 @@
 		var windowAspect = window.innerWidth/window.innerHeight;
 		var appListContainer = document.getElementById('appListContainer');
 		appListContainer.style.width  = (window.innerWidth*0.7 - 24).toString() + "px";
-		appListContainer.style.height = (window.innerHeight*0.7 - 48).toString() + "px";
+		appListContainer.style.height = (window.innerHeight*0.7 - 72).toString() + "px";
 		var fileListContainer = document.getElementById('fileListContainer');
 		fileListContainer.style.width  = (window.innerWidth/2 *0.6 - 24).toString() + "px";
-		fileListContainer.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		fileListContainer.style.height = (window.innerHeight/2 - 72).toString() + "px";
 		var metadata = document.getElementById('metadata');
 		metadata.style.left   = (window.innerWidth/2 *0.6 - 13).toString() + "px";
 		metadata.style.width  = (window.innerWidth/2 *0.4).toString() + "px";
-		metadata.style.height = (window.innerHeight/2 - 48).toString() + "px";
+		metadata.style.height = (window.innerHeight/2 - 72).toString() + "px";
 		var sage2pointerHelp  = document.getElementById('sage2pointerHelp');
 		var sage2pointerHelpAspect  = 1264.25/982.255;
 		if(sage2pointerHelpAspect <= windowAspect){
@@ -330,8 +325,8 @@
 		
 		// trigger file upload
 		console.log("drop location: " + event.layerX + ", " + event.layerY);
-		var x = event.layerX/event.srcElement.clientWidth;
-		var y = event.layerY/event.srcElement.clientHeight;
+		var x = event.layerX/event.target.clientWidth;
+		var y = event.layerY/event.target.clientHeight;
 		if(event.dataTransfer.files.length > 0) {
 			displayUI.fileUpload = true;
 			displayUI.uploadPercent = 0;
@@ -355,7 +350,7 @@
 	}
 	
 	function pointerPress(event) {
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerPress(btn);
 			event.preventDefault();
@@ -363,7 +358,7 @@
 	}
 	
 	function pointerRelease(event) {
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerRelease(btn);
 			event.preventDefault();
@@ -372,21 +367,21 @@
 	
 	function pointerMove(event) {
 		// listen for keyboard events if mouse moved over sage2UI
-		if(event.srcElement.id === "sage2UI" && keyEvents === false){
+		if(event.target.id === "sage2UI" && keyEvents === false){
 			document.addEventListener('keydown',  keyDown,  false);
 			document.addEventListener('keyup',    keyUp,    false);
             document.addEventListener('keypress', keyPress, false);
 			keyEvents = true;
 		}
-		else if(event.srcElement.id !== "sage2UI" && keyEvents === true){
+		else if(event.target.id !== "sage2UI" && keyEvents === true){
 			document.removeEventListener('keydown',  keyDown,  false);
 			document.removeEventListener('keyup',    keyUp,    false);
             document.removeEventListener('keypress', keyPress, false);
 			keyEvents = false;
 		}
 		
-		if(event.srcElement.id === "sage2UI"){
-			var rect = event.srcElement.getBoundingClientRect();
+		if(event.target.id === "sage2UI"){
+			var rect = event.target.getBoundingClientRect();
 			var mouseX = event.clientX - rect.left;
 			var mouseY = event.clientY - rect.top;
 			displayUI.pointerMove(mouseX, mouseY);
@@ -396,16 +391,26 @@
 	function mouseCheck(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-		if(movementX === 0 && movementY === 0) return;
+		if(movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000) return;
 		hasMouse = true;
 		document.title = "SAGE2 UI - Desktop";
 		console.log("Detected as desktop device");
+		
+		document.addEventListener('mousedown',  pointerPress,    false);
+		document.addEventListener('mouseup',    pointerRelease,  false);
+		document.addEventListener('mousemove',  pointerMove,     false);
+		document.addEventListener('wheel',      pointerScroll,   false);
+		document.addEventListener('click',      pointerClick,    false);
+		document.addEventListener('dblclick',   pointerDblClick, false);
+		
 		document.removeEventListener('mousemove', mouseCheck, false);
 	}
 	
 	function pointerClick(event) {
-		var element = event.srcElement;
-		
+		handleClick(event.target);
+	}
+	
+	function handleClick(element) {	
 		// Menu Buttons
 		if(element.id === "sage2pointer") {
 			interactor.startSAGE2Pointer(element.id);
@@ -425,10 +430,12 @@
 		else if(element.id === "settings") {
 			showDialog('settingsDialog');
 		}
+		else if(element.id === "browser") {
+			showDialog('browserDialog');
+		}
 		else if(element.id === "info") {
 			
 		}
-		
 		
 		// App Launcher Dialog
 		else if (element.id === "appOpenBtn") {
@@ -476,6 +483,15 @@
 			hideDialog('settingsDialog');
 		}
 		
+		// Browser Dialog
+		else if (element.id === "browserOpenBtn") {
+        	var url = document.getElementById("openWebpageUrl");
+        	wsio.emit('openNewWebpage', {id: interactor.uniqueID, url: openWebpageUrl.value});
+			hideDialog('browserDialog');
+		}
+		else if (element.id === "browserCloseBtn") {
+			hideDialog('browserDialog');
+		}
 		
 		// Application Selected
 		else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
@@ -522,6 +538,16 @@
 			}
 		}
 		
+		// Firefox Share Screen Dialog
+		else if(element.id === "ffShareScreenBtn"){
+			interactor.captureDesktop("firefox", "screen");
+			hideDialog('ffShareScreenDialog');
+		}
+		else if(element.id === "ffShareWindowBtn"){
+			interactor.captureDesktop("firefox", "window");
+			hideDialog('ffShareScreenDialog');
+		}
+		
 		// Other
 		else {
 			//console.log("clicked on: ", element);
@@ -529,7 +555,10 @@
 	}
 	
 	function pointerDblClick(event) {
-		var element = event.srcElement;
+		handleDblClick(event.target);
+	}
+	
+	function handleDblClick(element) {
 		if(element.id === "sage2UI"){
 			displayUI.pointerDblClick();
 			event.preventDefault();
@@ -547,21 +576,24 @@
 	}
 	
 	function pointerScroll(event) {
-		if(event.srcElement.id === "sage2UI"){
-			displayUI.pointerScroll(event.wheelDelta);
+		if(event.target.id === "sage2UI"){
+			displayUI.pointerScroll(event.deltaY);
 			event.preventDefault();
 		}
 	}
 	
 	function touchStart(event) {
-		if(event.srcElement.id === "sage2UI") {
+		if(event.touches.length === 1){
+			touchTime = Date.now();
+		}
+	
+		if(event.target.id === "sage2UI") {
 			if(event.touches.length === 1){
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				touchStartX = event.touches[0].clientX - rect.left;
 				touchStartY = event.touches[0].clientY - rect.top;
 				displayUI.pointerMove(touchStartX, touchStartY);
 				displayUI.pointerPress("left");
-				touchTime = Date.now();
 				touchHold = setTimeout(function() {
 					displayUI.keyDown(8);
 					displayUI.keyUp(8);
@@ -569,7 +601,7 @@
 				touchMode = "translate";
 			}
 			else if(event.touches.length === 2) {
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				var touch0X = event.touches[0].clientX - rect.left;
 				var touch0Y = event.touches[0].clientY - rect.top;
 				var touch1X = event.touches[1].clientX - rect.left;
@@ -593,34 +625,48 @@
 				touchMode = "";
 			}
 			event.preventDefault();
+			event.stopPropagation();
+		}
+		else {
+			event.stopPropagation();
 		}
 	}
 	
 	function touchEnd(event) {
-		if(event.srcElement.id === "sage2UI"){
+		var now = Date.now();
+		if((now-touchTapTime) > 500) { touchTap = 0;                     }
+		if((now-touchTime)    < 250) { touchTap++;   touchTapTime = now; }
+		else                         { touchTap = 0; touchTapTime = 0;   }
+	
+		if(event.target.id === "sage2UI"){
 			if(touchMode === "translate") {
 				displayUI.pointerRelease("left");
-				
-				var now = Date.now();
-				if((now-touchTapTime) > 500) { touchTap = 0;                     }
-				if((now-touchTime)    < 250) { touchTap++;   touchTapTime = now; }
-				else                         { touchTap = 0; touchTapTime = 0;   }
-				
 				if(touchTap === 2) displayUI.pointerDblClick();
 			}
 			touchMode = "";
 			event.preventDefault();
+			event.stopPropagation();
+		}
+		else {
+			if(touchTap === 1) {
+				handleClick(event.changedTouches[0].target);
+			}
+			else if(touchTap === 2) {
+				handleDblClick(event.changedTouches[0].target);
+			}
+			event.stopPropagation();
 		}
 		if(touchHold !== null) {
 			clearTimeout(touchHold);
 			touchHold = null;
 		}
+		
 	}
 	
 	function touchMove(event) {
-		if(event.srcElement.id === "sage2UI"){
+		if(event.target.id === "sage2UI"){
 			if(touchMode === "translate") {
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				var touchX = event.touches[0].clientX - rect.left;
 				var touchY = event.touches[0].clientY - rect.top;
 				displayUI.pointerMove(touchX, touchY);
@@ -632,7 +678,7 @@
 				}
 			}
 			else if(touchMode === "scale") {
-				var rect = event.srcElement.getBoundingClientRect();
+				var rect = event.target.getBoundingClientRect();
 				var touch0X = event.touches[0].clientX - rect.left;
 				var touch0Y = event.touches[0].clientY - rect.top;
 				var touch1X = event.touches[1].clientX - rect.left;
@@ -774,6 +820,10 @@
 				<img id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"></img>
 				<p>Media Browser</p>
 			</div>
+			<div id="browserContainer" class="uiButton">
+				<img id="browser" src="images/browser.svg" width="48" height="48"></img>
+				<p>Web browser</p>
+			</div>
 			<div id="arrangementContainer" class="uiButton">
 				<img id="arrangement" src="images/arrangement.svg" width="48" height="48"></img>
 				<p>Arrangement</p>
@@ -846,6 +896,28 @@
 			<span id="fileOpenBtn" class="button">Open</span>
 			<span id="fileCloseBtn" class="button">Close</span>
 			<span id="fileDeleteBtn" class="button">Delete</span>
+		</div>
+	</div>
+
+	<!-- dialog for the Browser -->
+	<div id="browserDialog" class="dialog">
+		<div id="browserItems">
+			<div id="browserItemsContainer">
+				<table>
+					<tr>
+						<td style="padding-right:4px;">
+							<label class="sageLabel">Webpage:</label>
+						</td>
+						<td>
+							<input id="openWebpageUrl" size="80" type="text" value="http://www.nytimes.com/"></input>
+						</td>
+					</tr>
+				</table>
+			</div>	
+		</div>
+		<div id="browswerButtons">
+			<span id="browserOpenBtn"  class="button">Open</span>
+			<span id="browserCloseBtn" class="button">Close</span>
 		</div>
 	</div>
 	
@@ -924,6 +996,11 @@
 		<div id="settingsButtons">
 			<span id="settingsCloseBtn" class="button">Close</span>
 		</div>
+	</div>
+	
+	<div id="ffShareScreenDialog" class="dialog">
+		<span id="ffShareScreenBtn" class="button">Share Screen</span>
+		<span id="ffShareWindowBtn" class="button">Share Window</span>
 	</div>
 	
 	<div id="sage2MobileContainer">
