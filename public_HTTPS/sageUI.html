@@ -430,6 +430,9 @@
 		else if(element.id === "settings") {
 			showDialog('settingsDialog');
 		}
+		else if(element.id === "browser") {
+			showDialog('browserDialog');
+		}
 		else if(element.id === "info") {
 			
 		}
@@ -478,6 +481,16 @@
 		// Settings Dialog
 		else if (element.id === "settingsCloseBtn") {
 			hideDialog('settingsDialog');
+		}
+		
+		// Browser Dialog
+		else if (element.id === "browserOpenBtn") {
+        	var url = document.getElementById("openWebpageUrl");
+        	wsio.emit('openNewWebpage', {id: interactor.uniqueID, url: openWebpageUrl.value});
+			hideDialog('browserDialog');
+		}
+		else if (element.id === "browserCloseBtn") {
+			hideDialog('browserDialog');
 		}
 		
 		// Application Selected
@@ -807,6 +820,10 @@
 				<img id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"></img>
 				<p>Media Browser</p>
 			</div>
+			<div id="browserContainer" class="uiButton">
+				<img id="browser" src="images/browser.svg" width="48" height="48"></img>
+				<p>Web browser</p>
+			</div>
 			<div id="arrangementContainer" class="uiButton">
 				<img id="arrangement" src="images/arrangement.svg" width="48" height="48"></img>
 				<p>Arrangement</p>
@@ -879,6 +896,28 @@
 			<span id="fileOpenBtn" class="button">Open</span>
 			<span id="fileCloseBtn" class="button">Close</span>
 			<span id="fileDeleteBtn" class="button">Delete</span>
+		</div>
+	</div>
+
+	<!-- dialog for the Browser -->
+	<div id="browserDialog" class="dialog">
+		<div id="browserItems">
+			<div id="browserItemsContainer">
+				<table>
+					<tr>
+						<td style="padding-right:4px;">
+							<label class="sageLabel">Webpage:</label>
+						</td>
+						<td>
+							<input id="openWebpageUrl" size="80" type="text" value="http://www.nytimes.com/"></input>
+						</td>
+					</tr>
+				</table>
+			</div>	
+		</div>
+		<div id="browswerButtons">
+			<span id="browserOpenBtn"  class="button">Open</span>
+			<span id="browserCloseBtn" class="button">Close</span>
 		</div>
 	</div>
 	

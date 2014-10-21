@@ -774,6 +774,7 @@ function radialMenu(){
 			if( this.setToggleMenu('pdfThumbnailWindow') )
 			{
 				this.radialPDFButton.isLit = true;
+				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
@@ -782,6 +783,7 @@ function radialMenu(){
 			if( this.setToggleMenu('videoThumbnailWindow') )
 			{
 				this.radialVideoButton.isLit = true;
+				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
@@ -790,6 +792,7 @@ function radialMenu(){
 			if( this.setToggleMenu('appThumbnailWindow') )
 			{
 				this.radialAppButton.isLit = true;
+				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialSessionButton.isClicked() )
@@ -798,6 +801,7 @@ function radialMenu(){
 			if( this.setToggleMenu('sessionThumbnailWindow') )
 			{
 				this.radialSessionButton.isLit = true;
+				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialSaveSessionButton.isClicked() )
@@ -888,8 +892,7 @@ function radialMenu(){
 				var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
 				
 				var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer);
-				
-				console.log(  this.thumbnailWindowScrollOffset.x );
+
 				if( this.thumbnailWindowScrollOffset.x <= 0 )
 				{
 					var scrollDist = 0;
