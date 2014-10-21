@@ -82,33 +82,38 @@ var pdf_viewer = SAGE2_App.extend( {
 				
 				_this.controls.addButtonGroup();
 				
-				
-				_this.controls.addButton({type:"next", action:function(appObj, date){
-					if (appObj.state.page >= appObj.pdfDoc.numPages) return;
-					appObj.state.page = appObj.state.page + 1;
-					appObj.refresh(date);
-				}});
-				_this.controls.addButton({type:"prev", action:function(appObj, date){
-					if(appObj.state.page <= 1) return;
-					appObj.state.page = appObj.state.page - 1;
-					appObj.refresh(date);
-				}});
-
-				_this.controls.addButtonGroup();
-				_this.controls.addButton({type:"rewind", action:function(appObj, date){
-					appObj.state.page = 1;
-					appObj.refresh(date);
-				}});
-		
 				_this.controls.addButton({type:"fastforward", action:function(appObj, date){
 					appObj.state.page = appObj.pdfDoc.numPages;
 					appObj.refresh(date);
 				}});
 				
+				_this.controls.addButton({type:"rewind", action:function(appObj, date){
+					appObj.state.page = 1;
+					appObj.refresh(date);
+				}});
+
+				_this.controls.addButtonGroup();
+				_this.controls.addButton({type:"prev", action:function(appObj, date){
+					if(appObj.state.page <= 1) return;
+					appObj.state.page = appObj.state.page - 1;
+					appObj.refresh(date);
+				}});
+				_this.controls.addButton({type:"next", action:function(appObj, date){
+					if (appObj.state.page >= appObj.pdfDoc.numPages) return;
+					appObj.state.page = appObj.state.page + 1;
+					appObj.refresh(date);
+				}});
+		
+				
+				
 				
 				_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
 					appObj.refresh(date);
 				}});
+				/*_this.controls.addTextInput({width:120,action:function(appObj, text){
+					console.log("textInput added" + text);
+				}});*/
+				
 				
 			});
 		}

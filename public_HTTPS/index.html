@@ -625,7 +625,6 @@
 				if(controlItems[data.elemId+"_controls"] !== undefined){
 					var size = controlItems[data.elemId+ "_controls"].spec.computeSize();
 					//var size = {width:200,height:200};
-					console.log(size);
 					wsio.emit('addNewControl', {
 						id:data.elemId+"_controls", 
 						left:data.x,
@@ -765,6 +764,7 @@
 			var ctrl = getCtrl(data);
 			if (ctrl){
 				var textInput = ctrl.parent();
+
 				if (data.code != 13){
 					insertText(textInput, data.code, data.printable);
 				}

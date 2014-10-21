@@ -94,13 +94,18 @@ widgetSpec.prototype.addButton = function(data) {
 };
 
 widgetSpec.prototype.addTextInput = function (data) {
-	var tI = new textInput();
-	tI.id = "textInput" + this.itemCount;
-	tI.appId = this.id;
-	tI.width = data.width;
-	tI.call = data.action;
-	this.items.push(tI);
-	this.itemCount++;
+	if (this.hasTextInput === false){
+		this.hasTextInput = true;
+		var tI = new textInput();
+		tI.id = "textInput" + this.itemCount;
+		tI.appId = this.id;
+		tI.width = 12.0*ui.titleBarHeight;
+		tI.call = data.action;
+		this.textInput = tI;
+		this.items.push(tI);
+		this.itemCount++;
+	}
+	
 };
 
 
@@ -125,7 +130,7 @@ widgetSpec.prototype.addSlider = function(data){
 		s.appProperty = data.property;
 		s.appObj = data.appObj;
 		s.sliderVal = data.begin;
-		s.width = (s.parts < 10)? 8.0*ui.titleBarHeight: 12.0*ui.titleBarHeight;
+		s.width = 12.0*ui.titleBarHeight;
 		this.slider = s;
 		this.items.push(s);
 		this.itemCount++;
@@ -168,8 +173,11 @@ widgetSpec.prototype.computeSize = function(){
 	size.height = dim.outerR * 2 + 5;
 	size.width = size.height;
 
-	if (this.hasSlider === true || this.hasTextInput === true){
-		size.width = size.width + this.slider.width;
+	if (this.hasSlider === true){
+		size.width = size.width  + this.slider.width ;
+	}
+	else if ( this.hasTextInput === true){
+		size.width = size.width  + this.textInput.width;
 	}
 	this.controlDimensions = dim;
 	return size;
@@ -224,9 +232,24 @@ function createControls(ctrId, spec){
 		}
 
 	}
-	if (spec.hasSlider===true){
-		var d = makeSliderBarPath(340,380, dim.innerR, center, spec.slider.width);
-		createSlider(windowControls,spec.slider,center.x  + dim.innerR, center.y, d);
+	var d, centerY;
+	if (spec.hasSlider===true && spec.hasTextInput === true){
+		d = makeBarPath(5,45, dim.innerR, center, spec.slider.width);
+		centerY = polarToCartesian(dim.innerR,23, center).y;
+		createSlider(windowControls,spec.slider,center.x  + dim.innerR + 10, centerY, d);
+		d = makeBarPath(315,355, dim.innerR, center, spec.textInput.width);
+		centerY = polarToCartesian(dim.innerR,337, center).y;
+		createTextInput(windowControls,spec.textInput, center.x  + dim.innerR + 10, centerY, d);
+	}
+	else if (spec.hasSlider===true){
+		d = makeBarPath(340,380, dim.innerR, center, spec.slider.width);
+		centerY = polarToCartesian(dim.innerR,0, center).y;
+		createSlider(windowControls,spec.slider,center.x  + dim.innerR + 10, centerY, d);
+	}
+	else{
+		d = makeBarPath(340,380, dim.innerR, center, spec.textInput.width);
+		centerY = polarToCartesian(dim.innerR,0, center).y;
+		createTextInput(windowControls,spec.textInput,center.x  + dim.innerR+10, centerY, d);
 	}
 
 	
@@ -278,7 +301,7 @@ function drawPieSlice(paper, start,end, innerR, outerR, center){
 	groupBoundaryPath.attr("class", "widgetBackground");
 }
 
-function makeSliderBarPath(start,end, innerR, center, width){
+function makeBarPath(start,end, innerR, center, width){
 	var center2 = {x:center.x+width,y:center.y};
 	var pointA= polarToCartesian(innerR,start,center);
 	var pointB = polarToCartesian(innerR,start,center2);
@@ -376,7 +399,7 @@ function createSlider (paper, sliderSpec, x, y, outline){
 	var sliderArea = paper.path(outline);
 	sliderArea.attr("class", "widgetBackground");
 
-	var linePath = "M " + (x+5) + " " + y + "l " + (sliderSpec.width - 10) + " " + 0 ;
+	var linePath = "M " + x + " " + y + "l " + (sliderSpec.width - 20) + " " + 0 ;
 	var sliderLine = paper.path(linePath); 
 	sliderLine.attr({
 		strokeWidth:1,
@@ -384,7 +407,7 @@ function createSlider (paper, sliderSpec, x, y, outline){
 		style:"shape-rendering:crispEdges;",
 		stroke:"rgba(230,230,230,1.0)"
 	});
-	var knobWidth = 3.0*ui.titleBarHeight;
+	var knobWidth = 3.6*ui.titleBarHeight;
 	var knobHeight = 1.5*ui.titleBarHeight;
 	var sliderKnob = paper.rect(x+0.5*ui.titleBarHeight,y - knobHeight/2, knobWidth, knobHeight);
 	sliderKnob.attr({
@@ -420,8 +443,8 @@ function createSlider (paper, sliderSpec, x, y, outline){
 		var slider = sliderKnob.parent();
 		var halfKnobWidth = sliderKnob.getBBox().w/2.0;
 		var bound = sliderArea.getBBox();
-		var left = bound.x + 5 + halfKnobWidth ;
-		var right = bound.x2 - 5 - halfKnobWidth ;
+		var left = bound.x + 10 + halfKnobWidth ;
+		var right = bound.x2 - 10 - halfKnobWidth ;
 		var begin = slider.data('begin');
 		var end = slider.data('end');
 		var parts = slider.data('parts');
@@ -440,9 +463,9 @@ function createSlider (paper, sliderSpec, x, y, outline){
 			return end;
 		}
 	
-		sliderKnob.animate({x: pos - knobWidth/2.0},10,mina.linear,moveSlider);
+		sliderKnob.animate({x: pos - knobWidth/2.0},100,mina.linear);
 		sliderKnobLabel.attr("text", (n+1) +" / "+ end );
-		sliderKnobLabel.animate({x: pos},10,mina.linear,moveSlider);
+		sliderKnobLabel.animate({x: pos},100,mina.linear,moveSlider);
 	}
 	
 	moveSlider();
@@ -511,9 +534,12 @@ function createButton(paper, buttonSpec, cx, cy, rad){
 	return button;
 }
 
-function createTextInput(paper, textInputSpec, x, y){
-	var tIHeight = 1.5 * ui.titleBarHeight;
-	var textArea = paper.rect(x,y-tIHeight,textInputSpec.width, tIHeight);
+function createTextInput(paper, textInputSpec, x, y, outline){
+	var uiElementSize = ui.titleBarHeight;
+	var tIHeight = 1.5 * uiElementSize;
+	var textInputOutline = paper.path(outline);
+	textInputOutline.attr("class","widgetBackground");
+	var textArea = paper.rect(x,y-tIHeight/2.0,textInputOutline.getBBox().w-50, tIHeight);
 	textArea.attr({
 		id: textInputSpec.id + "Area",
 		fill:"#000000",
@@ -521,7 +547,7 @@ function createTextInput(paper, textInputSpec, x, y){
 		stroke: "#999999"
 	});
 
-	var pth = "M " + (x+2) + " " + (y-2) + " l 0 -" + (tIHeight - 4);
+	var pth = "M " + (x+2) + " " + (y-tIHeight/2.0 +2) + " l 0 " + (tIHeight - 4);
 	var blinker = paper.path(pth);
 	blinker.attr({
 		id: textInputSpec.id + "Blinker",
@@ -539,11 +565,10 @@ function createTextInput(paper, textInputSpec, x, y){
 		blinker.animate({"stroke":"#000000"},200,mina.easeout,show);
 	};
 
-	var textData = paper.text(x+2, y-8,"");
+	var textData = paper.text(x+2, y + tIHeight/2.0 -6,"");
 	textData.attr({
 		id: textInputSpec.id + "TextData",
-		style:"fill: #ffffff; stroke: #ffffff; shape-rendering:crispEdges; font-family:georgia; font-size:" + (tIHeight-6) + "px; font-weight:lighter; font-style:normal;",
-		clipPath:paper.rect(x+2,y-tIHeight, textInputSpec.width,tIHeight)
+		style:"fill: #ffffff; stroke: #ffffff; font-family:sans-serif; font-size:" + (tIHeight-6) + "px; font-weight:lighter; font-style:normal;",
 	});
 	var textInput = paper.group(textArea,blinker);
 	textInput.add(textData);
@@ -554,16 +579,20 @@ function createTextInput(paper, textInputSpec, x, y){
 	blinker.data("show", show); // Find out how to stop animating the blinker
 	textInput.data("buffer","");
 	textInput.data("blinkerPos",0) ;
-	textInput.data("blinkerSuf"," " + (y-2) + " l 0 -" + (tIHeight - 4));
+	textInput.data("blinkerSuf"," " + (y-tIHeight/2.0 +2) + " l 0 " + (tIHeight - 4));
 	textInput.data("left", x+2);
 	textInput.data("call", textInputSpec.call);
+	textInput.data("head", "");
+	textInput.data("prefix", "");
+	textInput.data("suffix", "");
+	textInput.data("tail", "");
 	
 	show();
 
 	return textInput;
 }
 
-function computeBlinkerPosition (currentPos, str, charCode, printable){
+/*function computeBlinkerPosition (currentPos, str, charCode, printable){
 	var position = currentPos;
 	var currentStrLen = str.length;
 	var pre = "";
@@ -625,7 +654,6 @@ insertText = function(textInput, code, printable){
 	
 	ctrl.attr("text",buf.prefix);
 	var textWidth = (buf.prefix.length > 0)? ctrl.getBBox().width : 0;
-	
 	if (textWidth >= textArea.attr("width")-5){
 		ctrl.attr('x', rightEnd-5); // + 
 		ctrl.attr('text-anchor','end');
@@ -643,9 +671,92 @@ insertText = function(textInput, code, printable){
 	ctrl.attr("text",displayText);
 	textInput.data("text", buf.data);	
 };
+*/
+insertText = function(textInput, code, printable){
+	var textBox = textInput.select("rect");
+	var boxWidth = textBox.attr("width");
+	var tAxVal = textInput.data("left"); 
+	var rightEnd = tAxVal + parseInt(textBox.attr("width"));
+	var pos = textInput.data("blinkerPos");
+	var displayText = '';
+	ctrl = textInput.select("text");
+	buf = textInput.data("text") || '';	
+	
+	var head = textInput.data("head");
+	var prefix = textInput.data("prefix");
+	var suffix = textInput.data("suffix");
+	var tail = textInput.data("tail");
+	switch (code){
+		case 37://left
+			if (prefix.length > 0){
+				suffix = prefix.slice(-1) + suffix;
+				prefix = prefix.slice(0,-1);
+			}
+			else if (head.length > 0){
+				suffix = head.slice(-1) + suffix;
+				head = head.slice(0,-1);
+			}
+			break;
+		case 39://right
+			if (suffix.length > 0){
+				prefix = prefix + suffix.slice(0,1);
+				suffix = suffix.slice(1);
+			}
+			else if (tail.length > 0){
+				prefix = prefix + tail.slice(0,1);
+				tail = tail.slice(1);
+			}
+			break;
+		case 8://backspace
+			if (prefix.length > 0){
+				prefix = prefix.slice(0,-1);
+			}
+			else{
+				head = head.slice(0,-1);
+			}
+			suffix = suffix + tail.slice(0,1);
+			tail = tail.slice(1);
+			break;
+		case 46://delete
+			if (suffix.length > 0){
+				suffix = suffix.slice(1) + tail.slice(0,1);
+			}
+			tail = tail.slice(1);
+			break;
+		default:
+			if (printable){
+				var temp = (code===32)? ' ' : String.fromCharCode(code);
+				prefix = prefix + temp;
+			}
+	}
+	displayText = prefix + suffix;
+	ctrl.attr("text",displayText);
+	var textWidth = (displayText.length > 0)? ctrl.getBBox().width : 0;
+	if (textWidth > boxWidth - 5){
+		if (suffix.length > 0){
+			tail = suffix.slice(-1) + tail;
+			suffix = suffix.slice(0,-1);
+		}
+		else{
+			head = head + prefix.slice(0,1);
+			prefix = prefix.slice(1);
+		}
+	}
+
+	ctrl.attr("text",prefix);
+	var pos = (prefix.length > 0)? ctrl.getBBox().width : 0;
+	pth = "M " + (textInput.data("left") + pos) + textInput.data("blinkerSuf");
+	textInput.select("path").attr({path:pth});
+	ctrl.attr("text",prefix + suffix);
+	textInput.data("head", head);
+	textInput.data("prefix", prefix);
+	textInput.data("suffix", suffix);
+	textInput.data("tail", tail);
+
+};
 
 getText = function(textInput){
-	return textInput.select("text").attr("text");
+	return textInput.data("head") + textInput.data("prefix") + textInput.data("suffix") + textInput.data("tail");
 };
 
 getCtrl = function(data){
