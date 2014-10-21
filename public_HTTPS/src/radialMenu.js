@@ -945,7 +945,7 @@ function radialMenu(){
 	{
 		if( this.sendsToServer === true )
 		{
-			this.wsio.emit('loadFileFromServer', data);
+			this.wsio.emit('loadFileFromServer', { application: data.application, filename: data.filename} );
 		}
 	};
 	
