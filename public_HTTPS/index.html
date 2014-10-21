@@ -336,7 +336,7 @@
 						
 						applications[data.id] = app;
 						if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
+							controlItems[data.id + "_controls"] = { show:false, handle:app};
 						} 
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
@@ -362,7 +362,7 @@
 					
 					applications[data.id] = app;
 					if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, spec:app.controls};
+							controlItems[data.id + "_controls"] = { show:false, handle:app};
 					} 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
@@ -623,17 +623,20 @@
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 			if (data.elemId !== undefined && data.elemId !== null){
 				if(controlItems[data.elemId+"_controls"] !== undefined){
-					var size = controlItems[data.elemId+ "_controls"].spec.computeSize();
-					//var size = {width:200,height:200};
-					wsio.emit('addNewControl', {
-						id:data.elemId+"_controls", 
-						left:data.x,
-						top:data.y,
-						width:size.width,
-						height:size.height,
-						show: true,
-						date: dt 
-					});
+					var spec = controlItems[data.elemId+ "_controls"].handle.controls;
+					if (spec.controlsReady()===true){
+						var size = spec.computeSize();
+						wsio.emit('addNewControl', {
+							id:data.elemId+"_controls", 
+							left:data.x,
+							top:data.y,
+							width:size.width,
+							height:size.height,
+							show: true,
+							date: dt 
+						});
+					}
+					
 				}
 			}
 		});
@@ -650,11 +653,15 @@
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
 				ctrDiv.style.zIndex = "9999".toString();
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
-				var handle = createControls(data.id,controlItems[data.id].spec);
-				ctrDiv.appendChild (handle);	
-				ui.main.appendChild(ctrDiv);
-				controlItems[data.id].show = true;
-				controlItems[data.id].divHandle = ctrDiv;
+				var spec = controlItems[data.id].handle.controls;
+				if (spec.controlsReady() === true){
+					var handle = createControls(data.id,spec);
+					ctrDiv.appendChild (handle);	
+					ui.main.appendChild(ctrDiv);
+					controlItems[data.id].show = true;
+					controlItems[data.id].divHandle = ctrDiv;
+				}
+				
 			}
 		});
 

@@ -44,6 +44,7 @@ function label() {
 
 function widgetSpec(id) {
 	this.id = id;
+	this.specReady = false;
 	this.itemCount = 0;
 	this.items = [];
 	this.buttonGroups = [];
@@ -52,6 +53,13 @@ function widgetSpec(id) {
 	this.hasTextInput = false;
 }
 
+widgetSpec.prototype.finishedAddingControls = function(){
+	this.specReady = true;
+	console.log("ready!");
+}
+widgetSpec.prototype.controlsReady = function(){
+	return this.specReady;
+}
 widgetSpec.prototype.addButtonGroup = function(){
 	if (this.buttonGroupIdx < 4){
 		this.buttonGroupIdx = this.buttonGroupIdx+1;
@@ -321,6 +329,8 @@ var buttonType = {
 	"play-pause": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -2 -5 l 0 10 m 4 0 l 0 -10",
+		"width":10,
+		"height":12,
 		"strokeWidth": 1,
 		"fill":"#000000",
 		"switch": 0,
@@ -329,6 +339,8 @@ var buttonType = {
 	"play-stop": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -5 -5 l 0 10 l 10 0 l 0 -10 z",
+		"width":10,
+		"height":12,
 		"strokeWidth": 1,
 		"fill":"#000000",
 		"switch": 0,
@@ -338,6 +350,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -6 0 l 10 0 l -10 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
+		"width":10,
+		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay": 600
@@ -346,6 +360,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m 6 0 l -10 0 l 10 0",
+		"width":10,
+		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
@@ -355,6 +371,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -2 -9 l 8 9 l -10 9",
+		"width":10,
+		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay": 600
@@ -363,6 +381,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m -2 -9 l -8 9 l 10 9",
+		"width":10,
+		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
@@ -371,6 +391,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
 		"to":"m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0",
+		"width":10,
+		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
@@ -379,6 +401,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m 0 -6 l 4 6 l -4 6 m -4 -12 l 4 6 l -4 6",
 		"to":"m 0 -6 l 4 6 l -4 6 m -6 -6 l 10 0 l -10 0 ",
+		"width":10,
+		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600
@@ -387,6 +411,8 @@ var buttonType = {
 		"switch": null,
 		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
 		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 3 0 l 0 -3 l 8 0 l 0 10 l -3 0",
+		"width":10,
+		"height":12,
 		"fill":"#999999",
 		"strokeWidth": 1,
 		"delay":600
@@ -512,9 +538,11 @@ function createButton(paper, buttonSpec, cx, cy, rad){
 	var pthf = "M " + cx + " " + cy  + " " + type["from"];
 	var ptht= "M " + cx + " " + cy  + " " + type["to"];
 	var buttonCover = paper.path(pthf);
+	var coverWidth = type["width"];
+	var coverHeight = type["height"];
 	buttonCover.attr({
 		id: buttonSpec.id + "cover",
-		transform: "s " + parseInt(buttonRad/8) + " " + parseInt(buttonRad/8),
+		transform: "s " + (buttonRad/(1.5*coverWidth)) + " " + (buttonRad/coverHeight),
 		strokeWidth:type["strokeWidth"],
 		stroke:"#000",
 		style:"stroke-linecap:round; stroke-linejoin:round",
