@@ -517,7 +517,7 @@
 			var app = applications[position_data.elemId];
 			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
 				if(app.moved !== undefined) {
-					app.moved(Math.round(eLeft), Math.round(eTop+ui.titleBarHeight),
+					app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight),
 								ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
 				}
 			}
@@ -575,7 +575,7 @@
 				var date = new Date(position_data.date);
 				app.resize(date);
 				if(app.moved !== undefined) {
-					app.moved(Math.round(eLeft), Math.round(eTop+ui.titleBarHeight),
+					app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight),
 								ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
 				}
 			}
