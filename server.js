@@ -2136,9 +2136,9 @@ function showControl(ctrl, pointerX, pointerY){
 		var dt = new Date();
 		var rightMargin = config.totalWidth - ctrl.width;
 		var bottomMargin = config.totalHeight - ctrl.height;
-		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
-		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY ;
-		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left-ctrl.height/2, elemTop: ctrl.top-ctrl.height/2},'receivesWidgetEvents');
+		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
+		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
+		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 		broadcast('showControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
 }
