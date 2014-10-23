@@ -110,6 +110,7 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
 					appObj.refresh(date);
 				}});
+				_this.controls.finishedAddingControls();
 				/*_this.controls.addTextInput({width:120,action:function(appObj, text){
 					console.log("textInput added" + text);
 				}});*/

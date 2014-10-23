@@ -2105,7 +2105,10 @@ function findAppUnderPointer(pointerX, pointerY) {
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
-			return controls[i];
+			if (controls[i].show == true)
+				return controls[i];
+			else
+				return null;
 		}
 	}
 	return null;
@@ -2133,8 +2136,8 @@ function showControl(ctrl, pointerX, pointerY){
 		var dt = new Date();
 		var rightMargin = config.totalWidth - ctrl.width;
 		var bottomMargin = config.totalHeight - ctrl.height;
-		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
-		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY ;
+		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
+		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
 		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 		broadcast('showControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
@@ -2146,7 +2149,7 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	var bottomMargin = config.totalHeight - ctrl.height;
 	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin:pointerY ;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left-ctrl.height/2, elemTop: ctrl.top-ctrl.height/2},'receivesWidgetEvents');
 }
 
 

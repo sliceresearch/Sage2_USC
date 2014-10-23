@@ -28,7 +28,7 @@ function SAGE2_interaction(wsio) {
 	
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
-	
+
 	this.setInteractionId = function(id) {
 		this.uniqueID = id;
 	};
@@ -379,7 +379,7 @@ function SAGE2_interaction(wsio) {
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
 	this.streamCanPlay               = this.streamCanPlayMethod.bind(this);
-	
+
 	this.pointerLockError            = this.pointerLockErrorMethod.bind(this);
 	this.pointerLockChange           = this.pointerLockChangeMethod.bind(this);
 	this.pointerPress                = this.pointerPressMethod.bind(this);
@@ -395,7 +395,7 @@ function SAGE2_interaction(wsio) {
 	this.changeSage2PointerColor     = this.changeSage2PointerColorMethod.bind(this);
 	this.changeScreenShareResolution = this.changeScreenShareResolutionMethod.bind(this);
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
-	
+
 	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
