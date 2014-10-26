@@ -44,7 +44,6 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.displayWidth = displayWidth;
 	this.displayHeight = displayHeight;
 	this.titleBarHeight = titleBarHeight;
-	console.log("Loader: ", this.titleBarHeight);
 	this.mime2app = {
 		"image/jpeg": "image_viewer", 
 		"image/webp": "image_viewer", 

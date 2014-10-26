@@ -120,8 +120,8 @@ var radialMenus = {};
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-qr_png.on('readable', function() { console.log('processing QR'); });
-qr_png.on('end',      function() { console.log('QR image generated', qr_out); });
+qr_png.on('readable', function() { process.stdout.write('.'); });
+qr_png.on('end',      function() { console.log(' QR image generated', qr_out); });
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
@@ -161,6 +161,7 @@ httpServerIndex.httpGET('/config', sendConfig); // send config object to client 
 // create HTTPS server for all SAGE content
 var httpsServerApp = new httpserver("public_HTTPS");
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
+httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
 
 // create HTTPS options - sets up security keys
