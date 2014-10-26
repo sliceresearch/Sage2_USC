@@ -113,7 +113,7 @@ addFile = function(filename,exif) {
 	AllAssets.list[anAsset.id] = anAsset;
 	
 	// Path for the file system
-	var thumb = path.join(AllAssets.root, 'assets', exif.FileName);
+	var thumb  = path.join(AllAssets.root, 'assets', exif.FileName);
 	// Path for the https server
 	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName);
 
@@ -225,7 +225,7 @@ addFile = function(filename,exif) {
 			size: size512
 		});
 		
-		var ffmpeg256 = ffmpeg(filename)
+		var ffmpeg256 = ffmpeg(filename);
 		if(ffmpegPath !== null) ffmpeg256.setFfmpegPath(ffmpegPath);
 		ffmpeg256.on('end', function() {
 			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size256+'_1.png');
@@ -251,10 +251,10 @@ addFile = function(filename,exif) {
 		}
 		else {
 			// Path for the node server
-			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
+			thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
 			// Path for the https server
-			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
-			
+			rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
+
 			var averageColorOfImage = function(err, buffer) {
 				if(err) throw err;
 				
@@ -382,7 +382,6 @@ deletePDF = function(filename) {
 		
 		console.log("Server> successfully deleted file:", filename);
 		// Delete the metadata
-		console.log(filepath)
 		delete AllAssets.list[filepath];
 	});
 };
