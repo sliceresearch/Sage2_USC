@@ -21,12 +21,12 @@ var radialMenuScale = 1.0;
 
 var radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
 var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
-var angleSeparation = 35;
-var initAngle = 55;
-var angle = 0;
-var menuRadius = 100;
-var menuButtonSize = 100; // pie image size
-var menuButtonHitboxSize = 50;
+var radialMenuAngleSeparation = 35;
+var radialMenuInitAngle = 55;
+var radialMenuAngle= 0;
+var radialMenuRadius = 100;
+var radialMenuButtonSize = 100; // pie image size
+var radialMenuButtonHitboxSize = 50;
 var overlayIconScale = 0.3; // image, pdf, etc image
 
 var thumbnailScrollScale = 1;
@@ -184,65 +184,65 @@ function radialMenu(){
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
 		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 )
 		
-		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 )
+		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, 0 )
 		
-		this.radialCloseButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 9, menuRadius )
+		this.radialCloseButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 9, radialMenuRadius )
 		this.radialCloseButton.setOverlayImage( this.idleExitIcon, overlayIconScale );
 		
-		this.radialImageButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 1, menuRadius )
+		this.radialImageButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 1, radialMenuRadius )
 		this.radialImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale );
 		
-		this.radialPDFButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, menuRadius )
+		this.radialPDFButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, radialMenuRadius )
 		this.radialPDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale );
 		
-		this.radialVideoButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 2, menuRadius )
+		this.radialVideoButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 2, radialMenuRadius )
 		this.radialVideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale );
 		
-		this.radialAppButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 3, menuRadius )
+		this.radialAppButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 3, radialMenuRadius )
 		this.radialAppButton.setOverlayImage( this.idleAppIcon, overlayIconScale );
 
-		this.radialSessionButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 4, menuRadius )
+		this.radialSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 4, radialMenuRadius )
 		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, overlayIconScale );
 		
-		this.radialSaveSessionButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 5, menuRadius )
+		this.radialSaveSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 5, radialMenuRadius )
 		this.radialSaveSessionButton.setOverlayImage( this.idleSaveSessionIcon, overlayIconScale );
 		
-		this.radialSettingsButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 8, menuRadius )
+		this.radialSettingsButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8, radialMenuRadius )
 		this.radialSettingsButton.setOverlayImage( this.idleSettingsIcon, overlayIconScale );
 		
 		// Radial level 2
 		var menu2ButtonSize = 140;
-		var menuLevel2Radius = menuRadius + menuButtonSize/2 + 10;
+		var menuLevel2Radius = radialMenuRadius + radialMenuButtonSize/2 + 10;
 		
-		this.radial2CloseAllButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 8.325, menuLevel2Radius )
+		this.radial2CloseAllButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8.325, menuLevel2Radius )
 		this.radial2CloseAllButton.setOverlayImage( this.idleCloseAllIcon, overlayIconScale );
 		
-		this.radial2TileButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 7.675, menuLevel2Radius )
+		this.radial2TileButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 7.675, menuLevel2Radius )
 		this.radial2TileButton.setOverlayImage( this.idleTileIcon, overlayIconScale );
 		
-		this.radial2ImageButton = new buttonWidget();
+		this.radial2ImageButton = new radialMenuButton();
 		this.radial2ImageButton.init(0, this.ctx, null);
 		this.radial2ImageButton.setIdleImage( this.radialMenuIcon );
 		this.radial2ImageButton.useBackgroundColor = false;
-		this.radial2ImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
+		this.radial2ImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
 		
-		this.radial2PDFButton = new buttonWidget();
+		this.radial2PDFButton = new radialMenuButton();
 		this.radial2PDFButton.init(0, this.ctx, null);
 		this.radial2PDFButton.setIdleImage( this.radialMenuIcon );
 		this.radial2PDFButton.useBackgroundColor = false;
-		this.radial2PDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
+		this.radial2PDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
 		
-		this.radial2VideoButton = new buttonWidget();
+		this.radial2VideoButton = new radialMenuButton();
 		this.radial2VideoButton.init(0, this.ctx, null);
 		this.radial2VideoButton.setIdleImage( this.radialMenuIcon );
 		this.radial2VideoButton.useBackgroundColor = false;
-		this.radial2VideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
+		this.radial2VideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
 		
-		this.radial2AppButton = new buttonWidget();
+		this.radial2AppButton = new radialMenuButton();
 		this.radial2AppButton.init(0, this.ctx, null);
 		this.radial2AppButton.setIdleImage( this.radialMenuIcon );
 		this.radial2AppButton.useBackgroundColor = false;
-		this.radial2AppButton.setOverlayImage( this.idleAppIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
+		this.radial2AppButton.setOverlayImage( this.idleAppIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
 		
 
 		this.radial2ImageButton.setSize( menu2ButtonSize, menu2ButtonSize );
@@ -251,10 +251,10 @@ function radialMenu(){
 		this.radial2AppButton.setSize( menu2ButtonSize, menu2ButtonSize );
 	
 		
-		this.radial2ImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-		this.radial2PDFButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-		this.radial2VideoButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-		this.radial2AppButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radial2ImageButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
+		this.radial2PDFButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
+		this.radial2VideoButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
+		this.radial2AppButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
 		
 		this.radial2ImageButton.alignment = 'centered';
 		this.radial2PDFButton.alignment = 'centered';
@@ -263,28 +263,28 @@ function radialMenu(){
 		this.radial2CloseAllButton.alignment = 'centered';
 		this.radial2TileButton.alignment = 'centered';
 		
-		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
-		this.radial2ImageButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2ImageButton.setRotation( angle - Math.PI/2 );
+		radialMenuAngle = (radialMenuInitAngle+ radialMenuAngleSeparation * 1) * (Math.PI/180);
+		this.radial2ImageButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
+		this.radial2ImageButton.setRotation( radialMenuAngle- Math.PI/2 );
 		
-		angle = (initAngle + angleSeparation * 0) * (Math.PI/180);
-		this.radial2PDFButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2PDFButton.setRotation( angle - Math.PI/2 );
+		radialMenuAngle = (radialMenuInitAngle + radialMenuAngleSeparation * 0) * (Math.PI/180);
+		this.radial2PDFButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
+		this.radial2PDFButton.setRotation( radialMenuAngle- Math.PI/2 );
 		
-		angle = (initAngle + angleSeparation * 2) * (Math.PI/180);
-		this.radial2VideoButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2VideoButton.setRotation( angle - Math.PI/2 );
+		radialMenuAngle = (radialMenuInitAngle + radialMenuAngleSeparation * 2) * (Math.PI/180);
+		this.radial2VideoButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
+		this.radial2VideoButton.setRotation( radialMenuAngle- Math.PI/2 );
 		
-		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
-		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2AppButton.setRotation( angle - Math.PI/2 );
+		radialMenuAngle = (radialMenuInitAngle + radialMenuAngleSeparation * 3) * (Math.PI/180);
+		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
+		this.radial2AppButton.setRotation( radialMenuAngle- Math.PI/2 );
 	
 		
 	};
 	
 	this.createRadialButton = function( idleIcon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxShape, radialPos, buttonRadius )
 	{
-		button = new buttonWidget();
+		button = new radialMenuButton();
 		button.init(0, this.ctx, null);
 		button.setIdleImage( idleIcon );
 		button.useBackgroundColor = useBackgroundColor;
@@ -295,9 +295,9 @@ function radialMenu(){
 		button.alignment = alignment;
 		button.hitboxShape = hitboxShape;
 		
-		angle = (initAngle + angleSeparation * radialPos) * (Math.PI/180);
-		button.setPosition( radialMenuCenter.x - buttonRadius * radialMenuScale  * Math.cos(angle), radialMenuCenter.y - buttonRadius * radialMenuScale * Math.sin(angle) );
-		button.setRotation( angle - Math.PI/2 );
+		radialMenuAngle= (radialMenuInitAngle+ radialMenuAngleSeparation * radialPos) * (Math.PI/180);
+		button.setPosition( radialMenuCenter.x - buttonRadius * radialMenuScale  * Math.cos(radialMenuAngle), radialMenuCenter.y - buttonRadius * radialMenuScale * Math.sin(radialMenuAngle) );
+		button.setRotation( radialMenuAngle- Math.PI/2 );
 		
 		return button;
 	};
@@ -307,7 +307,7 @@ function radialMenu(){
 		//this.ctx.save();
 		ctx.fillStyle = color
 		//this.ctx.translate( position.x , position.y );
-		//this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180) );
+		//this.ctx.rotate( (radialMenuInitAngle+ radialMenuAngleSeparation * angleIncrement + 90) * (Math.PI/180) );
 		if( centered )
 			ctx.drawImage(image, position.x - size.x/2, position.y - size.y/2, size.x, size.y)
 		else
@@ -983,7 +983,7 @@ function radialMenu(){
 			{
 				if( imageList[i].filename.search("Thumbs.db") == -1 )
 				{
-					thumbnailButton = new buttonWidget();
+					thumbnailButton = new radialMenuButton();
 					thumbnailButton.init(0, this.thumbWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					thumbnailButton.simpleTint = false;
@@ -1008,7 +1008,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < pdfList.length; i++ )
 			{
-				thumbnailButton = new buttonWidget();
+				thumbnailButton = new radialMenuButton();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1032,7 +1032,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < videoList.length; i++ )
 			{
-				thumbnailButton = new buttonWidget();
+				thumbnailButton = new radialMenuButton();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1056,7 +1056,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < appList.length; i++ )
 			{
-				thumbnailButton = new buttonWidget();
+				thumbnailButton = new radialMenuButton();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1082,7 +1082,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < sessionList.length; i++ )
 			{
-				thumbnailButton = new buttonWidget();
+				thumbnailButton = new radialMenuButton();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setIdleImage( this.idleSessionIcon );
@@ -1255,14 +1255,14 @@ function radialMenu(){
 
 }
 
-function buttonWidget() {
+function radialMenuButton() {
 	//this.element = null;
 	this.ctx = null;
 	this.resrcPath = null;
 	
 	this.posX = 100;
 	this.posY = 100;
-	this.angle = 0;
+	this.radialMenuAngle= 0;
 	this.width = imageThumbSize;
 	this.height = imageThumbSize;
 	
@@ -1307,7 +1307,7 @@ function buttonWidget() {
 		this.ctx = ctx
 		this.resrcPath = resrc;
 		
-		//console.log("buttonWidget init()");
+		//console.log("radialMenuButton init()");
 	}
 	 
 	this.setPosition = function( x, y )
@@ -1318,7 +1318,7 @@ function buttonWidget() {
 	
 	this.setRotation = function(a )
 	{
-		this.angle = a;
+		this.radialMenuAngle= a;
 	}
 	
 	this.setData = function( data )
@@ -1408,7 +1408,7 @@ function buttonWidget() {
 		// Draw icon aligned centered
 		if( this.idleImage != null )
 		{
-			//this.ctx.rotate( this.angle );
+			//this.ctx.rotate( this.radialMenuAngle);
 			
 			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
