@@ -28,7 +28,7 @@
 		if(window.location.protocol == "https:" && port == "") port = "443";
 	
 		xhr = new XMLHttpRequest();
-		xhr.open("GET", "config", true);
+		xhr.open("GET", "/config", true);
 		xhr.onreadystatechange = function() {
 			if(xhr.readyState == 4 && xhr.status == 200){
 				json_cfg = JSON.parse(xhr.responseText);
@@ -57,13 +57,14 @@
 		var sageUI = document.createElement('p');
 		var sageUI_link = document.createElement('a');
 		sageUI_link.textContent = "SAGE UI";
-		sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "sageUI.html";
+        sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","");
+
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
 		var sagePointer = document.createElement('p');
 		var sagePointer_link = document.createElement('a');
 		sagePointer_link.textContent = "SAGE Pointer";
-		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "sagePointer.html";
+		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "sagePointer.html";
 		sagePointer_link.target = "_blank";
 		sagePointer.appendChild(sagePointer_link);
 		
@@ -74,7 +75,7 @@
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "audioManager.html";
+		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
@@ -85,7 +86,7 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "?clientID=" + i.toString();
+			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
@@ -96,13 +97,12 @@
 		var displayClient = document.createElement('p');
 		var displayClient_link = document.createElement('a');
 		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
-		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "?clientID=" + i.toString();
+		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
 
 		// Info
-		//var aul = document.createElement('ul');
 		var info2 = document.createElement('p');
 		info2.innerHTML = "Host: " + json_cfg.host;
 		var info3 = document.createElement('p');
@@ -126,7 +126,6 @@
 			rs  = document.createElement('li');
 			lrs = document.createElement('a');
 			lrs.textContent = json_cfg.remote_sites[i].name;
-			//lrs.href = "http://" + json_cfg.remote_sites[i].host + ":" + json_cfg.remote_sites[i].port;
 			lrs.href = "http://" + json_cfg.remote_sites[i].host; // assumes on port 80
 			lrs.target = "_blank";
 			rs.appendChild(lrs);
@@ -137,22 +136,21 @@
 		var drawingClient = document.createElement('p');
 		var drawingClient_link = document.createElement('a');
 		drawingClient_link.textContent = "Drawing application";
-		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname + "drawing.html";
+		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "drawing.html";
 		drawingClient_link.target = "_blank";
 		drawingClient.appendChild(drawingClient_link);
 		experiments.appendChild(drawingClient);
 	}
 </script>
 
-<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 
 </head>
 
 <body onload="init()">
 
 	<header>
-		<h1>SAGE2 Index</h1>
-		<p>access all the SAGE2 clients from one place</p>
+		<h1>SAGE2 Administrator Controls</h1>
 	</header>
 
 	<main>
@@ -183,21 +181,12 @@
 
 		<section id="help" class="siteType">
 			<h2>Help</h2>
-			<p><a href="help.html#sharing">Enable desktop sharing</a></p>
-			<p><a href="help.html#pointer">Pointer usage</a></p>
-			<p><a href="help.html#content">Sharing content</a></p>
+			<p><a href="/help/index.html#sharing">Enable desktop sharing</a></p>
+			<p><a href="/help/index.html#pointer">Pointer usage</a></p>
+			<p><a href="/help/index.html#content">Sharing content</a></p>
 		</section>
 
 	</main>
-
-	<footer>
-	  <ul>
-	    <li>University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
-		<li>University of Hawai'i at Manoa's Laboratory for Advanced Visualization and Applications (LAVA)
-		<li style="font-style:italic;">SAGE2 and SAGE are trademarks of the University of Illinois Board of Trustees.
-		<li style="font-style:italic;">Major funding for SAGE2 and SAGE is provided by National Science Foundation award ACI-1339772.
-	  </ul>
-	</footer>
 
 </body>
 </html>
