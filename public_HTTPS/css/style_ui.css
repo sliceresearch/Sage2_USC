@@ -245,6 +245,7 @@ span {
 	transform: translate(-50%, -50%);
 }
 
+
 #arrangementItems {
 	margin: 10px 10px 66px 10px;
 	overflow: auto;
@@ -274,6 +275,42 @@ span {
 	bottom: 10px;
 }
 
+
+
+#infoDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+#infoItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+#helpContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#adminContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#infoContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#infoCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+
+
 #settingsDialog {
 	top: 50%;
 	left: 50%;
@@ -286,6 +323,41 @@ span {
 	margin: 10px 10px 66px 10px;
 	overflow: auto;
 }
+
+#browserDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#browserItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+#browserCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+#browserOpenBtn {
+	position: absolute;
+	right: 90px;
+	bottom: 10px;
+}
+
+#browserItemsContainer {
+	width: 400px;
+	float: left;
+	margin-right: 10px;
+}
+
+#browserItemsContainer td {
+	padding-bottom: 4px;
+}
+
 
 #sage2PointerSettingsContainer {
 	width: 225px;

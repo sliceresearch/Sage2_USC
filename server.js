@@ -120,8 +120,8 @@ var radialMenus = {};
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-qr_png.on('readable', function() { console.log('processing QR'); });
-qr_png.on('end',      function() { console.log('QR image generated', qr_out); });
+qr_png.on('readable', function() { process.stdout.write('.'); });
+qr_png.on('end',      function() { console.log(' QR image generated', qr_out); });
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
@@ -161,6 +161,7 @@ httpServerIndex.httpGET('/config', sendConfig); // send config object to client 
 // create HTTPS server for all SAGE content
 var httpsServerApp = new httpserver("public_HTTPS");
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
+httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
 
 // create HTTPS options - sets up security keys
@@ -1495,6 +1496,9 @@ function loadConfiguration() {
 	
 	if (userConfig.ui.titleBarHeight) userConfig.ui.titleBarHeight = parseInt(userConfig.ui.titleBarHeight, 10);
 	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
+
+	if (userConfig.ui.widgetControlSize) userConfig.ui.widgetControlSize = parseInt(userConfig.ui.widgetControlSize, 10);
+	else userConfig.ui.widgetControlSize = Math.round(0.020 * minDim);
 	
 	if (userConfig.ui.titleTextSize) userConfig.ui.titleTextSize = parseInt(userConfig.ui.titleTextSize, 10);
 	else userConfig.ui.titleTextSize  = Math.round(0.015 * minDim);
@@ -2105,7 +2109,10 @@ function findAppUnderPointer(pointerX, pointerY) {
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
-			return controls[i];
+			if (controls[i].show === true)
+				return controls[i];
+			else
+				return null;
 		}
 	}
 	return null;
@@ -2133,8 +2140,8 @@ function showControl(ctrl, pointerX, pointerY){
 		var dt = new Date();
 		var rightMargin = config.totalWidth - ctrl.width;
 		var bottomMargin = config.totalHeight - ctrl.height;
-		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
-		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY ;
+		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
+		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
 		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 		broadcast('showControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
@@ -2146,7 +2153,7 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	var bottomMargin = config.totalHeight - ctrl.height;
 	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin:pointerY ;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left-ctrl.height/2, elemTop: ctrl.top-ctrl.height/2},'receivesWidgetEvents');
 }
 
 
