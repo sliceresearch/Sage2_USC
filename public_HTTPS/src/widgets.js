@@ -7,40 +7,46 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
+var widgets = {
+	button: function () {
+		this.appId = null;
+		this.id    = null;
+		this.type  = null;
+		this.call  = null;
+	},
+	slider: function() {
+		this.id = null;
+		this.appId = null;
+		this.begin = null;
+		this.end = null;
+		this.increments = null;
+		this.parts = null;
+		this.call = null;
+		this.appObj = null;
+		this.appProperty = null;
+		this.sliderVal = null;
+	},
+	textInput: function() {
+		this.id    = null;
+		this.appId = null;
+		this.width = null;
+	},
+	label: function() {
+		this.id     = null;
+		this.appObj = null;
+		this.appId  = null;
+		this.width  = null;
+		this.appProperty = null;
+	}
 
-function button() {
-	this.appId = null;
-	this.id    = null;
-	this.type  = null;
-	this.call  = null;
 }
 
-function slider() {
-	this.id = null;
-	this.appId = null;
-	this.begin = null;
-	this.end = null;
-	this.increments = null;
-	this.parts = null;
-	this.call = null;
-	this.appObj = null;
-	this.appProperty = null;
-	this.sliderVal = null;
-}
 
-function textInput() {
-	this.id    = null;
-	this.appId = null;
-	this.width = null;
-}
 
-function label() {
-	this.id     = null;
-	this.appObj = null;
-	this.appId  = null;
-	this.width  = null;
-	this.appProperty = null;
-}
+
+
+
+
 
 function widgetSpec(id) {
 	this.id = id;
@@ -55,7 +61,6 @@ function widgetSpec(id) {
 
 widgetSpec.prototype.finishedAddingControls = function(){
 	this.specReady = true;
-	console.log("ready!");
 }
 widgetSpec.prototype.controlsReady = function(){
 	return this.specReady;
@@ -87,27 +92,25 @@ String.prototype.width = function(font) {
 
 widgetSpec.prototype.addButton = function(data) {
 	if (this.buttonGroupIdx < 4 && this.buttonGroupIdx > -1 && this.buttonGroups[this.buttonGroupIdx].length <= 3){
-		var b = new button();
+		var b = new widgets.button();
 		b.appId = this.id;
 		b.id = "button" + this.itemCount;
 		b.type = data.type;
 		b.call = data.action;
-		b.width = 1.5*ui.titleBarHeight;
+		b.width = 1.5*ui.widgetControlSize;
 		this.items.push(b);
 		this.buttonGroups[this.buttonGroupIdx].push(b);
-		console.log(this.buttonGroups);
 		this.itemCount++;
 	}
-	
 };
 
 widgetSpec.prototype.addTextInput = function (data) {
 	if (this.hasTextInput === false){
 		this.hasTextInput = true;
-		var tI = new textInput();
+		var tI = new widgets.textInput();
 		tI.id = "textInput" + this.itemCount;
 		tI.appId = this.id;
-		tI.width = 12.0*ui.titleBarHeight;
+		tI.width = 12.0*ui.widgetControlSize;
 		tI.call = data.action;
 		this.textInput = tI;
 		this.items.push(tI);
@@ -121,7 +124,7 @@ widgetSpec.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appObj
 	if (this.hasSlider === false){
 		this.hasSlider = true;
-		var s = new slider();
+		var s = new widgets.slider();
 		s.id = "slider" + this.itemCount;
 		s.appId = this.id;
 		s.begin = data.begin;
@@ -138,7 +141,7 @@ widgetSpec.prototype.addSlider = function(data){
 		s.appProperty = data.property;
 		s.appObj = data.appObj;
 		s.sliderVal = data.begin;
-		s.width = 12.0*ui.titleBarHeight;
+		s.width = 12.0*ui.widgetControlSize;
 		this.slider = s;
 		this.items.push(s);
 		this.itemCount++;
@@ -149,8 +152,8 @@ widgetSpec.prototype.addSlider = function(data){
 
 widgetSpec.prototype.addLabel = function(data){
 	
-	var lHeight = 1.5 * ui.titleBarHeight;
-	var l = new label();
+	var lHeight = 1.5 * ui.widgetControlSize;
+	var l = new widgets.label();
 	l.id = "label" + this.itemCount;
 	l.appId = this.id;
 	l.appProperty = data.property;
@@ -173,7 +176,7 @@ widgetSpec.prototype.computeSize = function(){
 		height:0
 	};
 	var dim = {};
-	dim.buttonRadius = 0.8 * ui.titleBarHeight;
+	dim.buttonRadius = 0.8 * ui.widgetControlSize;
 	dim.radius = dim.buttonRadius * 5.027 ; // tan(78.5): angle subtended at the center is 22.5
 	dim.innerR = dim.radius - dim.buttonRadius -3; // for the pie slice
 	dim.outerR = dim.radius + dim.buttonRadius +3;
@@ -191,16 +194,6 @@ widgetSpec.prototype.computeSize = function(){
 	return size;
 }
 
-function computeSize(widgetObj){
-	var arr = widgetObj.enumerate();
-	var gap = 10; // distance between widgets
-	var totalWidth = gap;
-	for(var i in arr){
-		totalWidth += arr[i].width;
-		totalWidth += gap;
-	}
-	return {width : totalWidth, height: 2*ui.titleBarHeight};
-}
 
 
 function createControls(ctrId, spec){
@@ -234,7 +227,6 @@ function createControls(ctrId, spec){
 		var theta = start + padding;
 		for (var b=0; b<btns.length;b++){
 			var point = polarToCartesian(dim.radius,theta,center);
-			console.log(point);
 			createButton(windowControls,btns[b],point.x,point.y,dim.buttonRadius-2);
 			theta = theta + betweenButtons;
 		}
@@ -260,26 +252,6 @@ function createControls(ctrId, spec){
 		createTextInput(windowControls,spec.textInput,center.x  + dim.innerR+10, centerY, d);
 	}
 
-	
-
-	/*var x = gap;
-	var y = ui.titleBarHeight;
-	for (var i in wArr){
-		if (wArr[i] instanceof button){
-			createButton(windowControls,wArr[i],x+buttonRad,y);
-		}
-		else if (wArr[i] instanceof textInput){
-			createTextInput(windowControls,wArr[i],x,1.75*y); // The bottom left corner of the rect
-		}
-		else if (wArr[i] instanceof slider){
-			createSlider(windowControls,wArr[i],x,y);
-		}
-		else if (wArr[i] instanceof label){
-			createLabel(windowControls,wArr[i],x,1.75*y); //Bottom left
-		}
-		x = x + wArr[i].width + gap;
-	}
-	*/
 	var ctrHandle = document.getElementById(ctrId + "SVG");
 	return ctrHandle;
 }
@@ -290,6 +262,9 @@ function drawControlCenter(paper, center, radius, initialText){
 	cCenter.attr("class", "widgetBackground");
 	var text = paper.text(center.x,center.y,initialText);
 	text.attr("class", "widgetText");
+	text.attr({
+		fontSize: (0.045 * ui.widgetControlSize) + "em"
+	})
 	text.attr("dy", "0.4em");
 }
 
@@ -421,7 +396,7 @@ var buttonType = {
 };
 
 function createSlider (paper, sliderSpec, x, y, outline){
-	var sliderHeight = 1.5 * ui.titleBarHeight;
+	var sliderHeight = 1.5 * ui.widgetControlSize;
 	var sliderArea = paper.path(outline);
 	sliderArea.attr("class", "widgetBackground");
 
@@ -433,9 +408,10 @@ function createSlider (paper, sliderSpec, x, y, outline){
 		style:"shape-rendering:crispEdges;",
 		stroke:"rgba(230,230,230,1.0)"
 	});
-	var knobWidth = 3.6*ui.titleBarHeight;
-	var knobHeight = 1.5*ui.titleBarHeight;
-	var sliderKnob = paper.rect(x+0.5*ui.titleBarHeight,y - knobHeight/2, knobWidth, knobHeight);
+	var knobWidth = 3.6*ui.widgetControlSize;
+
+	var knobHeight = 1.5*ui.widgetControlSize;
+	var sliderKnob = paper.rect(x+0.5*ui.widgetControlSize,y - knobHeight/2, knobWidth, knobHeight);
 	sliderKnob.attr({
 		id:sliderSpec.id + 'knob',
 		class: "sliderKnob",
@@ -446,11 +422,13 @@ function createSlider (paper, sliderSpec, x, y, outline){
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
-	var sliderKnobLabel = paper.text(x+0.5*ui.titleBarHeight + knobWidth/2.0, y,"-");
+	var sliderKnobLabel = paper.text(x+0.5*ui.widgetControlSize + knobWidth/2.0, y,"-");
+	var fontSize = 0.045 * ui.widgetControlSize;
 	sliderKnobLabel.attr({
 		id: sliderSpec.id+ "knobLabel",
 		class:"sliderText",
-		dy:"0.3em"
+		dy:"0.3em",
+		fontSize:fontSize + "em"
 	});
 	
 
@@ -563,7 +541,7 @@ function createButton(paper, buttonSpec, cx, cy, rad){
 }
 
 function createTextInput(paper, textInputSpec, x, y, outline){
-	var uiElementSize = ui.titleBarHeight;
+	var uiElementSize = ui.widgetControlSize;
 	var tIHeight = 1.5 * uiElementSize;
 	var textInputOutline = paper.path(outline);
 	textInputOutline.attr("class","widgetBackground");
@@ -732,9 +710,9 @@ getProperty = function (obj,property){
 
 getCtrlUnderPointer = function(data, offsetX, offsetY){
 	var ptr = document.getElementById(data.ptrId);
-	ptr.style.left = (parseInt(ptr.style.left) - 500) + "px"; 
+	ptr.style.left = (parseInt(ptr.style.left) + 10000) + "px"; 
 	var ctrl = Snap.getElementByPoint(data.x-offsetX,data.y-offsetY);
-	ptr.style.left = (parseInt(ptr.style.left) + 500) + "px";
+	ptr.style.left = (parseInt(ptr.style.left) - 10000) + "px";
 	var ctrId = ctrl? ctrl.attr("id"):"";
 	if (/control/.test(ctrId) || /button/.test(ctrId) || /slider/.test(ctrId) || /textInput/.test(ctrId))
 		return ctrl;
@@ -742,7 +720,7 @@ getCtrlUnderPointer = function(data, offsetX, offsetY){
 };
 
 function createLabel(paper, labelSpec, x, y){
-	var lHeight = 1.5 * ui.titleBarHeight;
+	var lHeight = 1.5 * ui.widgetControlSize;
 	var lArea = paper.rect(x,y-lHeight,labelSpec.width, lHeight);
 	lArea.attr({
 		id: labelSpec.id + "Area",

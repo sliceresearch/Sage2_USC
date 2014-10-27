@@ -69,6 +69,7 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.state.page = state.page;
 				_this.state.numPagesShown = state.numPagesShown;
 
+				 addWidgetControlsToPdfViewer (_this);
 				// Getting the size of the page
 				_this.pdfDoc.getPage(1).then(function(page) {
 					var viewport = page.getViewport(1.0);
@@ -78,39 +79,7 @@ var pdf_viewer = SAGE2_App.extend( {
 					_this.ratio = w / h;
 				});
 
-				// UI stuff
 				
-				_this.controls.addButtonGroup();
-				
-				_this.controls.addButton({type:"fastforward", action:function(appObj, date){
-					appObj.state.page = appObj.pdfDoc.numPages;
-					appObj.refresh(date);
-				}});
-				
-				_this.controls.addButton({type:"rewind", action:function(appObj, date){
-					appObj.state.page = 1;
-					appObj.refresh(date);
-				}});
-
-				_this.controls.addButtonGroup();
-				_this.controls.addButton({type:"prev", action:function(appObj, date){
-					if(appObj.state.page <= 1) return;
-					appObj.state.page = appObj.state.page - 1;
-					appObj.refresh(date);
-				}});
-				_this.controls.addButton({type:"next", action:function(appObj, date){
-					if (appObj.state.page >= appObj.pdfDoc.numPages) return;
-					appObj.state.page = appObj.state.page + 1;
-					appObj.refresh(date);
-				}});
-		
-				
-				
-				
-				_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
-					appObj.refresh(date);
-				}});
-				_this.controls.finishedAddingControls();
 				/*_this.controls.addTextInput({width:120,action:function(appObj, text){
 					console.log("textInput added" + text);
 				}});*/
@@ -203,3 +172,39 @@ var pdf_viewer = SAGE2_App.extend( {
 		}
 	}
 });
+
+
+function addWidgetControlsToPdfViewer (_this){
+// UI stuff
+	
+	_this.controls.addButtonGroup();
+
+	_this.controls.addButton({type:"fastforward", action:function(appObj, date){
+		appObj.state.page = appObj.pdfDoc.numPages;
+		appObj.refresh(date);
+	}});
+
+	_this.controls.addButton({type:"rewind", action:function(appObj, date){
+		appObj.state.page = 1;
+		appObj.refresh(date);
+	}});
+
+	_this.controls.addButtonGroup();
+	_this.controls.addButton({type:"prev", action:function(appObj, date){
+		if(appObj.state.page <= 1) return;
+		appObj.state.page = appObj.state.page - 1;
+		appObj.refresh(date);
+	}});
+	_this.controls.addButton({type:"next", action:function(appObj, date){
+		if (appObj.state.page >= appObj.pdfDoc.numPages) return;
+		appObj.state.page = appObj.state.page + 1;
+		appObj.refresh(date);
+	}});
+
+	
+	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
+		appObj.refresh(date);
+	}});
+	_this.controls.finishedAddingControls();
+
+}
