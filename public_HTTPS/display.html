@@ -679,7 +679,7 @@
 		});
 
 		wsio.on('requestControlId', function(data) {
-			var ctrl  = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+			var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
 			var regC  = /_controls/;
 			var regB  = /button/;
@@ -705,7 +705,7 @@
 		});
 
 		wsio.on('releaseControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+			var ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			if (ctrl){
 				var ctrId = ctrl.attr("id");
 				var regS = /slider/;
@@ -728,7 +728,7 @@
 			lockedControlElements[data.ptrId] = null;
 		});
 		wsio.on('executeControlFunction', function(data){
-			var ctrl = getCtrl(data);
+			var ctrl = getWidgetControlById(data);
 			var dt = new Date();
 			if(ctrl){
 				var ctrId = ctrl.attr('id');
@@ -767,7 +767,7 @@
 		});
 
 		wsio.on('moveSliderKnob', function(data){
-			var ctrl = getCtrl(data.ctrl);
+			var ctrl = getWidgetControlById(data.ctrl);
 			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
 			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 			var pos = data.x-ui.offsetX-widgetOffset;
@@ -776,12 +776,12 @@
 			var slider = ctrl.parent();
 
 			var app = getProperty(applications[ctrl.data("appId")],slider.data("appProperty"));
-			app.obj[app.property] = val;
+			app.handle[app.property] = val;
 
 		});
 
 		wsio.on('keyInControl', function(data){
-			var ctrl = getCtrl(data);
+			var ctrl = getWidgetControlById(data);
 			if (ctrl){
 				var textInput = ctrl.parent();
 

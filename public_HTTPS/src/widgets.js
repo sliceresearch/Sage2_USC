@@ -7,7 +7,7 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
-var widgets = {
+var SAGE2WidgetControls = {
 	button: function () {
 		this.appId = null;
 		this.id    = null;
@@ -22,7 +22,7 @@ var widgets = {
 		this.increments = null;
 		this.parts = null;
 		this.call = null;
-		this.appObj = null;
+		this.appHandle = null;
 		this.appProperty = null;
 		this.sliderVal = null;
 	},
@@ -33,7 +33,7 @@ var widgets = {
 	},
 	label: function() {
 		this.id     = null;
-		this.appObj = null;
+		this.appHandle = null;
 		this.appId  = null;
 		this.width  = null;
 		this.appProperty = null;
@@ -41,14 +41,7 @@ var widgets = {
 
 }
 
-
-
-
-
-
-
-
-function widgetSpec(id) {
+function SAGE2WidgetControlBar(id) {
 	this.id = id;
 	this.specReady = false;
 	this.itemCount = 0;
@@ -59,40 +52,24 @@ function widgetSpec(id) {
 	this.hasTextInput = false;
 }
 
-widgetSpec.prototype.finishedAddingControls = function(){
+SAGE2WidgetControlBar.prototype.finishedAddingControls = function(){
 	this.specReady = true;
 }
-widgetSpec.prototype.controlsReady = function(){
+SAGE2WidgetControlBar.prototype.controlsReady = function(){
 	return this.specReady;
 }
-widgetSpec.prototype.addButtonGroup = function(){
+SAGE2WidgetControlBar.prototype.addButtonGroup = function(){
 	if (this.buttonGroupIdx < 4){
 		this.buttonGroupIdx = this.buttonGroupIdx+1;
 		this.buttonGroups[this.buttonGroupIdx] = [];
 	}
 }
 
-String.prototype.width = function(font) {
-	var f = font || '12px arial';
-	var div = document.createElement('DIV');
-	//div.style['width'] = 'auto';
-	//div.style['height'] = 'auto';
-	div.innerHTML = this;
-	div.style['position'] = 'absolute';
-	div.style['float'] = 'left';
-	div.style['white-space'] = 'nowrap';
-	div.style['visibility']= 'hidden';
-	div.style['font'] = f ;
-	
-	document.body.appendChild(div);
-	var w = div.offsetWidth;
-	document.body.removeChild(div);
-  	return w;
-}
 
-widgetSpec.prototype.addButton = function(data) {
+
+SAGE2WidgetControlBar.prototype.addButton = function(data) {
 	if (this.buttonGroupIdx < 4 && this.buttonGroupIdx > -1 && this.buttonGroups[this.buttonGroupIdx].length <= 3){
-		var b = new widgets.button();
+		var b = new SAGE2WidgetControls.button();
 		b.appId = this.id;
 		b.id = "button" + this.itemCount;
 		b.type = data.type;
@@ -104,10 +81,10 @@ widgetSpec.prototype.addButton = function(data) {
 	}
 };
 
-widgetSpec.prototype.addTextInput = function (data) {
+SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 	if (this.hasTextInput === false){
 		this.hasTextInput = true;
-		var tI = new widgets.textInput();
+		var tI = new SAGE2WidgetControls.textInput();
 		tI.id = "textInput" + this.itemCount;
 		tI.appId = this.id;
 		tI.width = 12.0*ui.widgetControlSize;
@@ -120,11 +97,11 @@ widgetSpec.prototype.addTextInput = function (data) {
 };
 
 
-widgetSpec.prototype.addSlider = function(data){
-	//begin,parts,end,action, property, appObj
+SAGE2WidgetControlBar.prototype.addSlider = function(data){
+	//begin,parts,end,action, property, appHandle
 	if (this.hasSlider === false){
 		this.hasSlider = true;
-		var s = new widgets.slider();
+		var s = new SAGE2WidgetControls.slider();
 		s.id = "slider" + this.itemCount;
 		s.appId = this.id;
 		s.begin = data.begin;
@@ -139,7 +116,7 @@ widgetSpec.prototype.addSlider = function(data){
 		}
 		s.call = data.action;
 		s.appProperty = data.property;
-		s.appObj = data.appObj;
+		s.appHandle = data.appHandle;
 		s.sliderVal = data.begin;
 		s.width = 12.0*ui.widgetControlSize;
 		this.slider = s;
@@ -150,27 +127,13 @@ widgetSpec.prototype.addSlider = function(data){
 };
 
 
-widgetSpec.prototype.addLabel = function(data){
-	
-	var lHeight = 1.5 * ui.widgetControlSize;
-	var l = new widgets.label();
-	l.id = "label" + this.itemCount;
-	l.appId = this.id;
-	l.appProperty = data.property;
-	l.appObj = data.appObj;
-	var font = (lHeight-12) + 'px arial';
 
-	var doubleUs = new Array(data.textLength+1).join('W');
-	l.width =  doubleUs.width(font);
-	this.items.push(l);
-	this.itemCount++;
-};
 
-widgetSpec.prototype.enumerate = function(){
+SAGE2WidgetControlBar.prototype.enumerate = function(){
 	return this.items;
 };
 
-widgetSpec.prototype.computeSize = function(){
+SAGE2WidgetControlBar.prototype.computeSize = function(){
 	var size = {
 		width:0,
 		height:0
@@ -258,14 +221,14 @@ function createControls(ctrId, spec){
 
 
 function drawControlCenter(paper, center, radius, initialText){
-	var cCenter = paper.circle(center.x,center.y,radius);
-	cCenter.attr("class", "widgetBackground");
-	var text = paper.text(center.x,center.y,initialText);
-	text.attr("class", "widgetText");
-	text.attr({
+	var controlCenter = paper.circle(center.x,center.y,radius);
+	controlCenter.attr("class", "widgetBackground");
+	var controlCenterLabel = paper.text(center.x,center.y,initialText);
+	controlCenterLabel.attr("class", "widgetText");
+	controlCenterLabel.attr({
 		fontSize: (0.045 * ui.widgetControlSize) + "em"
 	})
-	text.attr("dy", "0.4em");
+	controlCenterLabel.attr("dy", "0.4em");
 }
 
 function drawPieSlice(paper, start,end, innerR, outerR, center){
@@ -453,11 +416,11 @@ function createSlider (paper, sliderSpec, x, y, outline){
 		var end = slider.data('end');
 		var parts = slider.data('parts');
 		var increments = slider.data('increments');
-		var incX = (right-left)/parts;
-		var app = getProperty(sliderSpec.appObj,sliderSpec.appProperty);
-		var sliderVal = app.obj[app.property];
+		var deltaX = (right-left)/parts;
+		var app = getProperty(sliderSpec.appHandle,sliderSpec.appProperty);
+		var sliderVal = app.handle[app.property];
 		var n = Math.floor(0.5 + (sliderVal-begin)/increments);
-		var pos = left + n*incX;
+		var pos = left + n*deltaX;
 		var cxVal = sliderKnob.attr('cx');
 		
 		if(pos < left ){
@@ -494,10 +457,9 @@ function mapMoveToSlider(sliderKnob, pos){
 		return end;
 	
 	var knobPos = sliderKnob.attr('cx')?sliderKnob.attr('cx'):sliderKnob.attr('x');	
-	var incX = (right-left)/parts;
-	var n = Math.floor(0.5 + (pos-left)/incX);
+	var deltaX = (right-left)/parts;
+	var n = Math.floor(0.5 + (pos-left)/deltaX);
 	var sliderValue = begin + n*increments;
-	slider.data('sliderValue', sliderValue);
 	return sliderValue;
 }
 
@@ -584,7 +546,7 @@ function createTextInput(paper, textInputSpec, x, y, outline){
 	textInput.data("appId", textInputSpec.appId);
 	blinker.data("show", show); // Find out how to stop animating the blinker
 	textInput.data("buffer","");
-	textInput.data("blinkerPos",0) ;
+	textInput.data("blinkerPosition",0) ;
 	textInput.data("blinkerSuf"," " + (y-tIHeight/2.0 +2) + " l 0 " + (tIHeight - 4));
 	textInput.data("left", x+2);
 	textInput.data("call", textInputSpec.call);
@@ -604,7 +566,7 @@ insertText = function(textInput, code, printable){
 	var boxWidth = textBox.attr("width");
 	var tAxVal = textInput.data("left"); 
 	var rightEnd = tAxVal + parseInt(textBox.attr("width"));
-	var pos = textInput.data("blinkerPos");
+	var pos = textInput.data("blinkerPosition");
 	var displayText = '';
 	ctrl = textInput.select("text");
 	buf = textInput.data("text") || '';	
@@ -686,42 +648,85 @@ getText = function(textInput){
 	return textInput.data("head") + textInput.data("prefix") + textInput.data("suffix") + textInput.data("tail");
 };
 
-getCtrl = function(data){
-	var lst = Snap.selectAll('*');
-	var ctrl = null;
-	for(var l=0; l< lst.length; l++){
-		if (lst[l].attr("id") === data.ctrlId && lst[l].data("appId") === data.appId){
-			ctrl = lst[l];
+getWidgetControlById = function(ctrl){
+	var svgElements = Snap.selectAll('*');
+	var requestedSvgElement = null;
+	for(var l=0; l< svgElements.length; l++){
+		if (svgElements[l].attr("id") === ctrl.ctrlId && svgElements[l].data("appId") === ctrl.appId){
+			requestedSvgElement = svgElements[l];
 			break;
 		}
 	}
-	return ctrl;
+	return requestedSvgElement;
 };
 
-getProperty = function (obj,property){
+getProperty = function (objectHandle,property){
 	var names = property.split('.');
-	var prop  = obj;
+	var handle  = objectHandle;
 	var i     = 0;
 	for (;i<names.length-1;i++) {
-		prop = prop[names[i]];
+		handle = handle[names[i]];
 	}
-	return {obj:prop, property:names[i]};
+	return {handle:handle, property:names[i]};
 };
 
-getCtrlUnderPointer = function(data, offsetX, offsetY){
-	var ptr = document.getElementById(data.ptrId);
-	ptr.style.left = (parseInt(ptr.style.left) + 10000) + "px"; 
-	var ctrl = Snap.getElementByPoint(data.x-offsetX,data.y-offsetY);
-	ptr.style.left = (parseInt(ptr.style.left) - 10000) + "px";
-	var ctrId = ctrl? ctrl.attr("id"):"";
-	if (/control/.test(ctrId) || /button/.test(ctrId) || /slider/.test(ctrId) || /textInput/.test(ctrId))
-		return ctrl;
+getWidgetControlUnderPointer = function(data, offsetX, offsetY){
+	var pointerElement = document.getElementById(data.ptrId);
+	pointerElement.style.left = (parseInt(pointerElement.style.left) + 10000) + "px"; 
+	var widgetControlUnderPointer = Snap.getElementByPoint(data.x-offsetX,data.y-offsetY);
+	pointerElement.style.left = (parseInt(pointerElement.style.left) - 10000) + "px";
+	var widgetControlId = widgetControlUnderPointer? widgetControlUnderPointer.attr("id"):"";
+	if (/control/.test(widgetControlId) || /button/.test(widgetControlId) || /slider/.test(widgetControlId) || /textInput/.test(widgetControlId))
+		return widgetControlUnderPointer;
 	return null;
 };
 
+
+polarToCartesian = function (radius,theta,center){
+	theta = theta * Math.PI / 180.0;
+	if (center === undefined || center === null)
+		center = {x:0,y:0};
+	var x = center.x + radius*Math.cos(theta);
+	var y = center.y - radius*Math.sin(theta);
+	return {x:x,y:y};
+}
+
+/*
+String.prototype.width = function(font) {
+	var f = font || '12px arial';
+	var div = document.createElement('DIV');
+	//div.style['width'] = 'auto';
+	//div.style['height'] = 'auto';
+	div.innerHTML = this;
+	div.style['position'] = 'absolute';
+	div.style['float'] = 'left';
+	div.style['white-space'] = 'nowrap';
+	div.style['visibility']= 'hidden';
+	div.style['font'] = f ;
+	
+	document.body.appendChild(div);
+	var w = div.offsetWidth;
+	document.body.removeChild(div);
+  	return w;
+}
+SAGE2WidgetControlBar.prototype.addLabel = function(data){
+	
+	var labelHeight = 1.5 * ui.widgetControlSize;
+	var l = new SAGE2WidgetControls.label();
+	l.id = "label" + this.itemCount;
+	l.appId = this.id;
+	l.appProperty = data.property;
+	l.appHandle = data.appHandle;
+	var font = (labelHeight-12) + 'px arial';
+
+	var doubleUs = new Array(data.textLength+1).join('W');
+	l.width =  doubleUs.width(font);
+	this.items.push(l);
+	this.itemCount++;
+};
 function createLabel(paper, labelSpec, x, y){
-	var lHeight = 1.5 * ui.widgetControlSize;
-	var lArea = paper.rect(x,y-lHeight,labelSpec.width, lHeight);
+	var labelHeight = 1.5 * ui.widgetControlSize;
+	var lArea = paper.rect(x,y-labelHeight,labelSpec.width, labelHeight);
 	lArea.attr({
 		id: labelSpec.id + "Area",
 		fill:"#666666",
@@ -733,8 +738,8 @@ function createLabel(paper, labelSpec, x, y){
 	var lData = paper.text(x+2, y-8,"");
 	lData.attr({
 		id: labelSpec.id + "TextData",
-		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:Times,sans-serif; font-size:" + (lHeight-12) + "px; font-weight:200; font-style:normal;"
-		//clipPath:paper.rect(x+2,y-lHeight, labelSpec.width,lHeight)
+		style:"fill: #000000; stroke: #000000; shape-rendering:crispEdges; font-family:Times,sans-serif; font-size:" + (labelHeight-12) + "px; font-weight:200; font-style:normal;"
+		//clipPath:paper.rect(x+2,y-labelHeight, labelSpec.width,labelHeight)
 	});
 	var label = paper.group(lArea,lData);
 	
@@ -744,7 +749,7 @@ function createLabel(paper, labelSpec, x, y){
 	
 	//label.data("left", x+2);
 	function showText(){
-		var app = getProperty(labelSpec.appObj,labelSpec.appProperty);
+		var app = getProperty(labelSpec.appHandle,labelSpec.appProperty);
 		var data = app.obj[app.property];
 		lData.attr('text',data);
 		lData.animate({width:lData.getBBox().width},10,mina.linear,showText);
@@ -754,11 +759,4 @@ function createLabel(paper, labelSpec, x, y){
 	return label;
 }
 
-function polarToCartesian(r,theta,c){
-	theta = theta * Math.PI / 180.0;
-	if (c === undefined || c === null)
-		c = {x:0,y:0};
-	var x = c.x + r*Math.cos(theta);
-	var y = c.y - r*Math.sin(theta);
-	return {x:x,y:y};
-}
+*/
