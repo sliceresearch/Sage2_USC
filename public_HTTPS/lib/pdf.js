@@ -1768,8 +1768,6 @@ PDFJS.getDocument = function getDocument(source,
                                          pdfDataRangeTransport,
                                          passwordCallback,
                                          progressCallback) {
-  PDFJS.numDocuments++;
-  
   var workerInitializedCapability, workerReadyCapability, transport;
 
   if (typeof source === 'string') {
@@ -2607,6 +2605,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
     fetchDocument: function WorkerTransport_fetchDocument(source) {
       source.disableAutoFetch = PDFJS.disableAutoFetch;
       source.chunkedViewerLoading = !!this.pdfDataRangeTransport;
+      PDFJS.numDocuments++;
       this.messageHandler.send('GetDocRequest', {
         source: source,
         disableRange: PDFJS.disableRange,
