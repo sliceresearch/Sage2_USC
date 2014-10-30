@@ -33033,7 +33033,6 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       if (source.data) {
         try {
           pdfManager = new LocalPdfManager(source.data, source.password);
-          pdfManager.docId = data.documentID;
           pdfManagerCapability.resolve();
         } catch (ex) {
           pdfManagerCapability.reject(ex);
@@ -33042,7 +33041,6 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       } else if (source.chunkedViewerLoading) {
         try {
           pdfManager = new NetworkPdfManager(source, handler);
-          pdfManager.docId = data.documentID;
           pdfManagerCapability.resolve();
         } catch (ex) {
           pdfManagerCapability.reject(ex);
@@ -33092,7 +33090,6 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
           try {
             pdfManager = new NetworkPdfManager(source, handler);
-            pdfManager.docId = data.documentID;
             pdfManagerCapability.resolve(pdfManager);
           } catch (ex) {
             pdfManagerCapability.reject(ex);
@@ -33103,7 +33100,6 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
           // the data is array, instantiating directly from it
           try {
             pdfManager = new LocalPdfManager(args.chunk, source.password);
-            pdfManager.docId = data.documentID;
             pdfManagerCapability.resolve();
           } catch (ex) {
             pdfManagerCapability.reject(ex);
