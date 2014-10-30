@@ -25,6 +25,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.ratio   = null;
 		this.currCtx = 0;
 		this.numCtx  = 5;
+		this.src     = null;
 
 		this.enableControls = true;
 	},
@@ -126,8 +127,25 @@ var pdf_viewer = SAGE2_App.extend( {
 		var renderPdfPage = function() {
 			console.log("rendered page " + renderPage);
 			
-			if(renderPage === _this.state.page)
-				_this.element.src = _this.canvas[renderCanvas].toDataURL();
+			if(renderPage === _this.state.page){
+				var data = _this.canvas[renderCanvas].toDataURL().split(',');
+				var bin  = atob(data[1]);
+				var mime = data[0].split(':')[1].split(';')[0];
+				
+				var buf = new ArrayBuffer(bin.length);
+				var view = new Uint8Array(buf);
+				for(var i=0; i<view.length; i++) {
+					view[i] = bin.charCodeAt(i);
+				}
+		
+				var blob = new Blob([buf], {type: mime});
+				var source = window.URL.createObjectURL(blob);
+		
+				if(_this.src !== null) window.URL.revokeObjectURL(_this.src);
+				_this.src = source;
+			
+				_this.element.src = _this.src;
+			}
 			
 			// Check for change in the aspect ratio, send a resize if needed
 			//  (done after the render to avoid double rendering issues)
