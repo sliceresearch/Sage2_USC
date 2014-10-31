@@ -35,5 +35,24 @@ radialmenu.prototype.stop = function() {
 	this.visible = false;
 };
 
+radialmenu.prototype.onEvent = function(type, position, data) {
+	var radialMenuScale = 1.0;
+	var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
+
+	if( this.visible === true && type !== "pointerRelease" && data.button === 'left' )
+	{
+		// Press over radial menu, drag menu
+		console.log("radial menu ", this.left, " ", this.top);
+		if( position.x > this.left - radialMenuSize.x/2 && position.x <  this.left  - radialMenuSize.x/2 + radialMenuSize.x && position.y > this.top  - radialMenuSize.y/2 && position.y < this.top - radialMenuSize.y/2 + radialMenuSize.y )
+		{
+			//this.windowInteractionMode = false;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+};
 
 module.exports = radialmenu;

@@ -2296,9 +2296,10 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		return;
 	}
 	
-	// menu
-	radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
-	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+
 	if(data.button === "right")
 	{
 		createRadialMenu( uniqueID, pointerX, pointerY );
@@ -2482,6 +2483,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	broadcast('releaseControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 	remoteInteraction[uniqueID].releaseControl();
 	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+	
 	// From pointerRelease
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
@@ -2544,9 +2549,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
-	
-	// Menu
-	radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+
 }
 
 function pointerMove(uniqueID, pointerX, pointerY, data) {
@@ -2558,10 +2561,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-
+	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
-
-	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
@@ -3087,6 +3092,17 @@ function updateRadialMenu( uniqueID )
 function radialMenuEvent( data )
 {
 	broadcast('radialMenuEvent', data, 'receivesPointerData');
+	
+	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
+	
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		if( radialMenu.onEvent( data.type, { x: data.x, y: data.y }, data.data ) )
+			return true;
+		else
+			return false;
+	}
 }
 
 function wsRemoveRadialMenu( wsio, data ) {
