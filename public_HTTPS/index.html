@@ -67,8 +67,25 @@
 	var type2App;
 	
 	var hasMouse;
+	var browser;
+	
 	
 	function init() {
+		browser = {};
+		var userAgent = window.navigator.userAgent.toLowerCase();
+		browser.isOpera   = userAgent.indexOf("opera") >= 0;
+		browser.isChrome  = userAgent.indexOf("chrome") >= 0;
+		browser.isWebKit  = userAgent.indexOf("webkit") >= 0;
+		browser.isSafari  = !browser.isChrome && userAgent.indexOf("safari") >= 0;
+		browser.isIE      = !browser.isOpera && userAgent.indexOf("msie") >= 0;
+		browser.isGecko   = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
+		browser.isFirefox = browser.isGecko && userAgent.indexOf("firefox") >= 0;
+		browser.isIOS     = userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0;
+		browser.isAndroid = userAgent.indexOf("android") >= 0;
+		browser.isWindows = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
+		browser.isMac     = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
+		browser.isLinux   = userAgent.indexOf("linux") >= 0;
+
 		hostname = window.location.hostname;
 		port = window.location.port;
 		if(window.location.protocol == "http:" && port == "") port = "80";
@@ -266,7 +283,7 @@
 					interactor.chromeDesktopCaptureEnabled = true;
 			}
 			if(event.data.cmd === "window_selected"){
-				interactor.captureDesktop("chrome", event.data.mediaSourceId);
+				interactor.captureDesktop(event.data.mediaSourceId);
 			}
 		});
 		
@@ -413,29 +430,72 @@
 		}
 	}
 	
+	//////////////////////////////////////////////////////////
+	// Device detection based on UserAgent (bad but hey...)
+	//     based on device.js
+	//////////////////////////////////////////////////////////
+	/*
+	function _find(needle) {
+		return _user_agent.indexOf(needle) !== -1;
+	}
+	function desktop() {
+		return !tablet() && !mobile();
+	};
+	function mobile() {
+		return androidPhone() || iphone();
+	}
+	function tablet() {
+		return ipad() || androidTablet();
+	}
+	function desktop() {
+		return !tablet() && !mobile();
+	}
+	function ios() {
+		return iphone() || ipad();
+	}
+	function iphone() {
+		return _find('iphone');
+	}
+	function ipad() {
+		return _find('ipad');
+	}
+	function android() {
+		return _find('android');
+	}
+	function androidPhone() {
+		return android() && _find('mobile');
+	}
+	function androidTablet() {
+		return android() && !_find('mobile');
+	}
+	*/
+	//////////////////////////////////////////////////////////
+
 	function mouseCheck(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-		if(movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000) return;
-		hasMouse = true;
-		document.title = "SAGE2 UI - Desktop";
-		console.log("Detected as desktop device");
-		
-		document.addEventListener('mousedown',  pointerPress,    false);
-		document.addEventListener('mouseup',    pointerRelease,  false);
-		document.addEventListener('mousemove',  pointerMove,     false);
-		document.addEventListener('wheel',      pointerScroll,   false);
-		document.addEventListener('click',      pointerClick,    false);
-		document.addEventListener('dblclick',   pointerDblClick, false);
-		
-		document.removeEventListener('mousemove', mouseCheck, false);
+		if(!browser.isSafari && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
+		if(browser.isSafari && browser.isIOS) return;
+			hasMouse = true;
+			document.title = "SAGE2 UI - Desktop";
+			console.log("Detected as desktop device");
+			
+			document.addEventListener('mousedown',  pointerPress,    false);
+			document.addEventListener('mouseup',    pointerRelease,  false);
+			document.addEventListener('mousemove',  pointerMove,     false);
+			document.addEventListener('wheel',      pointerScroll,   false);
+			document.addEventListener('click',      pointerClick,    false);
+			document.addEventListener('dblclick',   pointerDblClick, false);
+			
+			document.removeEventListener('mousemove', mouseCheck, false);
+		//}
 	}
 	
 	function pointerClick(event) {
 		handleClick(event.target);
 	}
 	
-	function handleClick(element) {	
+	function handleClick(element) {
 		// Menu Buttons
 		if(element.id === "sage2pointer") {
 			interactor.startSAGE2Pointer(element.id);
@@ -585,11 +645,11 @@
 		
 		// Firefox Share Screen Dialog
 		else if(element.id === "ffShareScreenBtn"){
-			interactor.captureDesktop("firefox", "screen");
+			interactor.captureDesktop("screen");
 			hideDialog('ffShareScreenDialog');
 		}
 		else if(element.id === "ffShareWindowBtn"){
-			interactor.captureDesktop("firefox", "window");
+			interactor.captureDesktop("window");
 			hideDialog('ffShareScreenDialog');
 		}
 		
@@ -954,7 +1014,7 @@
 							<label class="sageLabel">Webpage:</label>
 						</td>
 						<td>
-							<input id="openWebpageUrl" size="80" type="text" value="http://www.nytimes.com/"></input>
+							<input id="openWebpageUrl" type="text" value="http://www.nytimes.com/"></input>
 						</td>
 					</tr>
 				</table>
