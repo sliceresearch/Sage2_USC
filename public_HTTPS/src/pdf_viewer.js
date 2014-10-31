@@ -10,7 +10,7 @@
 
 PDFJS.workerSrc     = 'lib/pdf.worker.js';
 PDFJS.disableWorker = false;
-PDFJS.disableWebGL  = false;
+PDFJS.disableWebGL  = true;
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
@@ -76,16 +76,14 @@ var pdf_viewer = SAGE2_App.extend( {
 					var viewport = page.getViewport(1.0);
 					var w = parseInt(viewport.width, 10);
 					var h = parseInt(viewport.height,10);
-					_this.sendResize(w, h);
 					_this.ratio = w / h;
+					// Depending on the aspect ratio, adjust one dimension
+					if (_this.ratio < 1)
+						_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
+					else
+						_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
+					//_this.sendResize(w, h);
 				});
-
-				
-				/*_this.controls.addTextInput({width:120,action:function(appObj, text){
-					console.log("textInput added" + text);
-				}});*/
-				
-				
 			});
 		}
 		// load new state of same document
@@ -125,7 +123,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		};
 		
 		var renderPdfPage = function() {
-			console.log("rendered page " + renderPage);
+			//console.log("rendered page " + renderPage);
 			
 			if(renderPage === _this.state.page){
 				var data = _this.canvas[renderCanvas].toDataURL().split(',');
