@@ -51,11 +51,11 @@ function radialMenu(){
 		
 		this.thumbWindowctx = this.thumbnailWindowElement.getContext("2d");
 
-		this.resrcPath = "images/radialMenu/"
+		this.resrcPath = "images/radialMenu/";
 		
 		this.menuID = id;
-		this.currentMenuState = 'radialMenu'
-		this.currentRadialState = 'radialMenu'
+		this.currentMenuState = 'radialMenu';
+		this.currentRadialState = 'radialMenu';
 		this.radialMenuCenter = radialMenuCenter;
 		
 		this.settingMenuOpen = false;
@@ -92,8 +92,8 @@ function radialMenu(){
 		// Note: using a different socket to prevent locking up other app animations
 		hostname = window.location.hostname;
 		port = window.location.port;
-		if(window.location.protocol == "http:" && port == "") port = "80";
-		if(window.location.protocol == "https:" && port == "") port = "443";
+		if(window.location.protocol === "http:" && port === "") port = "80";
+		if(window.location.protocol === "https:" && port === "") port = "443";
 		
 		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		this.wsio.open(function() {
@@ -128,96 +128,96 @@ function radialMenu(){
 		});
 		
 		// load thumbnail icons
-		this.idleExitIcon = new Image;
-		this.idleExitIcon.src = this.resrcPath +"exit.svg"
+		this.idleExitIcon = new Image();
+		this.idleExitIcon.src = this.resrcPath +"exit.svg";
 		
-		this.idleImageIcon = new Image;
-		this.idleImageIcon.src = this.resrcPath +"image2.svg"
-		this.idlePDFIcon = new Image;
-		this.idlePDFIcon.src = this.resrcPath +"file.svg"
-		this.idleVideoIcon = new Image;
-		this.idleVideoIcon.src = this.resrcPath +"clapper.svg"
-		this.idleAppIcon = new Image;
-		this.idleAppIcon.src = this.resrcPath +"rocket.svg"
-		this.idleSessionIcon = new Image;
-		this.idleSessionIcon.src = this.resrcPath +"upload.svg"
-		this.idleSaveSessionIcon = new Image;
-		this.idleSaveSessionIcon.src = this.resrcPath +"download.svg"
-		this.idleSettingsIcon = new Image;
-		this.idleSettingsIcon.src = this.resrcPath +"cog.svg"
+		this.idleImageIcon = new Image();
+		this.idleImageIcon.src = this.resrcPath +"image2.svg";
+		this.idlePDFIcon = new Image();
+		this.idlePDFIcon.src = this.resrcPath +"file.svg";
+		this.idleVideoIcon = new Image();
+		this.idleVideoIcon.src = this.resrcPath +"clapper.svg";
+		this.idleAppIcon = new Image();
+		this.idleAppIcon.src = this.resrcPath +"rocket.svg";
+		this.idleSessionIcon = new Image();
+		this.idleSessionIcon.src = this.resrcPath +"upload.svg";
+		this.idleSaveSessionIcon = new Image();
+		this.idleSaveSessionIcon.src = this.resrcPath +"download.svg";
+		this.idleSettingsIcon = new Image();
+		this.idleSettingsIcon.src = this.resrcPath +"cog.svg";
 		
 		// Level 2 icons
-		this.idleFolderIcon = new Image;
-		this.idleFolderIcon.src = this.resrcPath + "open131.svg"
-		this.idleCloseAppIcon = new Image;
-		this.idleCloseAppIcon.src = this.resrcPath + "window27.svg"
-		this.idleCloseAllIcon = new Image;
-		this.idleCloseAllIcon.src = this.resrcPath + "windows24.svg"
-		this.idleMaximizeIcon = new Image;
-		this.idleMaximizeIcon.src = this.resrcPath + "maximize.svg"
-		this.idleTileIcon = new Image;
-		this.idleTileIcon.src = this.resrcPath + "large16.svg"
+		this.idleFolderIcon = new Image();
+		this.idleFolderIcon.src = this.resrcPath + "open131.svg";
+		this.idleCloseAppIcon = new Image();
+		this.idleCloseAppIcon.src = this.resrcPath + "window27.svg";
+		this.idleCloseAllIcon = new Image();
+		this.idleCloseAllIcon.src = this.resrcPath + "windows24.svg";
+		this.idleMaximizeIcon = new Image();
+		this.idleMaximizeIcon.src = this.resrcPath + "maximize.svg";
+		this.idleTileIcon = new Image();
+		this.idleTileIcon.src = this.resrcPath + "large16.svg";
 		
 		// radial menu icons
 		//this.radialMenuIcon = new Image;
 		//this.radialMenuIcon.src = this.resrcPath +"icon_radial_256.png"
-		this.radialMenuIcon = new Image;
-		this.radialMenuIcon.src = this.resrcPath +"icon_radial_button_circle.svg"
-		this.radialMenuLevel2Icon = new Image;
-		this.radialMenuLevel2Icon.src = this.resrcPath +"icon_radial_level2_360.png"
-		this.radialCloseIcon = new Image;
-		this.radialCloseIcon.src = this.resrcPath +"icon_close_128.png"
+		this.radialMenuIcon = new Image();
+		this.radialMenuIcon.src = this.resrcPath +"icon_radial_button_circle.svg";
+		this.radialMenuLevel2Icon = new Image();
+		this.radialMenuLevel2Icon.src = this.resrcPath +"icon_radial_level2_360.png";
+		this.radialCloseIcon = new Image();
+		this.radialCloseIcon.src = this.resrcPath +"icon_close_128.png";
 		
-		this.radialDragIcon = new Image;
-		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg"
+		this.radialDragIcon = new Image();
+		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg";
 		
-		this.glowLine = new Image;
-		this.glowLine.src = this.resrcPath +"glow_lines2A_menu_1024.png"
+		this.glowLine = new Image();
+		this.glowLine.src = this.resrcPath +"glow_lines2A_menu_1024.png";
 		
-		this.glowLineOpen = new Image;
-		this.glowLineOpen.src = this.resrcPath +"glow_lines2A_window_1024.png"
+		this.glowLineOpen = new Image();
+		this.glowLineOpen.src = this.resrcPath +"glow_lines2A_window_1024.png";
 		
-		this.thumbnailWindowFrame = new Image;
-		this.thumbnailWindowFrame.src = this.resrcPath +"thumbnail_window_frame2.png"
+		this.thumbnailWindowFrame = new Image();
+		this.thumbnailWindowFrame.src = this.resrcPath +"thumbnail_window_frame2.png";
 		
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
-		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 )
+		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 );
 		
-		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, 0 )
+		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, 0 );
 		
-		this.radialCloseButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 9, radialMenuRadius )
+		this.radialCloseButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 9, radialMenuRadius );
 		this.radialCloseButton.setOverlayImage( this.idleExitIcon, overlayIconScale );
 		
-		this.radialImageButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 1, radialMenuRadius )
+		this.radialImageButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 1, radialMenuRadius );
 		this.radialImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale );
 		
-		this.radialPDFButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, radialMenuRadius )
+		this.radialPDFButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, radialMenuRadius );
 		this.radialPDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale );
 		
-		this.radialVideoButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 2, radialMenuRadius )
+		this.radialVideoButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 2, radialMenuRadius );
 		this.radialVideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale );
 		
-		this.radialAppButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 3, radialMenuRadius )
+		this.radialAppButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 3, radialMenuRadius );
 		this.radialAppButton.setOverlayImage( this.idleAppIcon, overlayIconScale );
 
-		this.radialSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 4, radialMenuRadius )
+		this.radialSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 4, radialMenuRadius );
 		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, overlayIconScale );
 		
-		this.radialSaveSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 5, radialMenuRadius )
+		this.radialSaveSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 5, radialMenuRadius );
 		this.radialSaveSessionButton.setOverlayImage( this.idleSaveSessionIcon, overlayIconScale );
 		
-		this.radialSettingsButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8, radialMenuRadius )
+		this.radialSettingsButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8, radialMenuRadius );
 		this.radialSettingsButton.setOverlayImage( this.idleSettingsIcon, overlayIconScale );
 		
 		// Radial level 2
 		var menu2ButtonSize = 140;
 		var menuLevel2Radius = radialMenuRadius + radialMenuButtonSize/2 + 10;
 		
-		this.radial2CloseAllButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8.325, menuLevel2Radius )
+		this.radial2CloseAllButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8.325, menuLevel2Radius );
 		this.radial2CloseAllButton.setOverlayImage( this.idleCloseAllIcon, overlayIconScale );
 		
-		this.radial2TileButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 7.675, menuLevel2Radius )
+		this.radial2TileButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 7.675, menuLevel2Radius );
 		this.radial2TileButton.setOverlayImage( this.idleTileIcon, overlayIconScale );
 		
 		this.radial2ImageButton = new radialMenuButton();
@@ -352,14 +352,14 @@ function radialMenu(){
 		// TEMP: Just to clearly see context edge
 		//this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
 		
-		if( this.menuState == 'opening' )
+		if( this.menuState === 'opening' )
 		{
 			if( this.stateTransition < 1 )
 				this.stateTransition += this.stateTransitionTime / 1000;
 			else
 				this.stateTransition = 0;
 		}
-		else if( this.menuState == 'open' )
+		else if( this.menuState === 'open' )
 		{
 			this.stateTransition = 1;
 		}
@@ -373,7 +373,7 @@ function radialMenu(){
 		
 		this.radialDragButton.draw();
 		
-		if( this.currentMenuState == 'radialMenu' )
+		if( this.currentMenuState === 'radialMenu' )
 			this.drawImage( this.ctx, this.glowLine, this.radialMenuCenter, {x: 510 * this.stateTransition * radialMenuScale, y: 510 * this.stateTransition * radialMenuScale}, "rgba(255, 255, 255, 0.9)", 0, true );
 		else
 			this.drawImage( this.ctx, this.glowLineOpen, this.radialMenuCenter, {x: 510 * this.stateTransition * radialMenuScale, y: 510 * this.stateTransition * radialMenuScale}, "rgba(255, 255, 255, 0.9)", 0, true );
