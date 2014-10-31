@@ -337,17 +337,6 @@ span {
 	overflow: auto;
 }
 
-#browserCloseBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
-}
-#browserOpenBtn {
-	position: absolute;
-	right: 90px;
-	bottom: 10px;
-}
-
 #browserItemsContainer {
 	width: 400px;
 	float: left;
@@ -356,6 +345,23 @@ span {
 
 #browserItemsContainer td {
 	padding-bottom: 4px;
+}
+
+#openWebpageUrl {
+	width: 330px;
+	height: 16px;
+}
+
+#browserOpenBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#browserCloseBtn {
+	position: absolute;
+	right: 90px;
+	bottom: 10px;
 }
 
 

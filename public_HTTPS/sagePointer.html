@@ -25,23 +25,26 @@
 		var newWin = window.open(url, name, specs);
 		
 		// Popups blocked
-		if(!newWin || newWin.closed || typeof newWin.closed == 'undefined'){ 
-			 alert("please always allow popups from " + window.location.hostname + ", then refresh page");
+		if(!newWin || newWin.closed || typeof newWin.closed == 'undefined'){
+			var popupNotification = document.getElementById('popupNotification');
+			popupNotification.textContent = "Always allow popups from " + window.location.hostname + " in order to automatically launch the SAGE2 Pointer App";
 		}
-		// sagePointer window successfully opened
-		else{
-			// open page in same window - then close
-			var url = "about:blank";
-			var name = "_self";
-			var specs = "";
-			window.open(url, name, specs);
-			window.close();
-		}
-	}	
+		// else SAGE2 Pointer window successfully opened
+		
+		document.getElementById('openSage2Pointer').addEventListener('click', openSAGE2PointerApp, false);
+	}
+	
+	function openSAGE2PointerApp(event) {
+		var url = "sagePointerApp.html";
+		var name = "";
+		var specs = "left=0,top=0,width=450,height=125,location=no";
+		var newWin = window.open(url, name, specs);
+	}
 </script>
 </head>
 
 <body onload="init()">
-	
+	<button id="openSage2Pointer" type="button">SAGE2 Pointer</button>
+	<p id="popupNotification"></p>
 </body>
 </html>

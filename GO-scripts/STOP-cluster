@@ -1,3 +1,5 @@
 #!/bin/sh
 
+killall -HUP node
 tentakel pkill -HUP chrome
+

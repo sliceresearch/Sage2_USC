@@ -16,7 +16,7 @@ sleep 1.5
 UDD=$HOME/.config/chrome-nfs/traoumad_0
 mkdir -p $UDD/Default
 param="$global_param --user-data-dir=$UDD"
-env DISPLAY=:0.0 google-chrome $param 'https://traoumad.evl.uic.edu/?clientID=0' &
+env DISPLAY=:0.0 google-chrome $param 'https://traoumad.evl.uic.edu/display.html?clientID=0' &
 
 
 sleep 1.5
