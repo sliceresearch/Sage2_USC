@@ -63,7 +63,7 @@ function SAGE2_interaction(wsio) {
 		var loadCallback = function(event) {
 			filesFinished++;
 			if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
-		}
+		};
 
 		for(var i=0; i<files.length; i++){
 			if(files[i].size <= this.maxUploadSize){
@@ -273,7 +273,7 @@ function SAGE2_interaction(wsio) {
 					setTimeout(function() {
 						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
 					}, 4);
-				}
+				};
 				
 				for(var i=0; i<nchunks; i++){
 					var start = i*this.chunk;
