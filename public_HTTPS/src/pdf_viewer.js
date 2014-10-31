@@ -10,7 +10,7 @@
 
 PDFJS.workerSrc     = 'lib/pdf.worker.js';
 PDFJS.disableWorker = false;
-PDFJS.disableWebGL  = false;
+PDFJS.disableWebGL  = true;
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
@@ -25,6 +25,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.ratio   = null;
 		this.currCtx = 0;
 		this.numCtx  = 5;
+		this.src     = null;
 
 		this.enableControls = true;
 	},
@@ -75,16 +76,14 @@ var pdf_viewer = SAGE2_App.extend( {
 					var viewport = page.getViewport(1.0);
 					var w = parseInt(viewport.width, 10);
 					var h = parseInt(viewport.height,10);
-					_this.sendResize(w, h);
 					_this.ratio = w / h;
+					// Depending on the aspect ratio, adjust one dimension
+					if (_this.ratio < 1)
+						_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
+					else
+						_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
+					//_this.sendResize(w, h);
 				});
-
-				
-				/*_this.controls.addTextInput({width:120,action:function(appObj, text){
-					console.log("textInput added" + text);
-				}});*/
-				
-				
 			});
 		}
 		// load new state of same document
@@ -124,10 +123,27 @@ var pdf_viewer = SAGE2_App.extend( {
 		};
 		
 		var renderPdfPage = function() {
-			console.log("rendered page " + renderPage);
+			//console.log("rendered page " + renderPage);
 			
-			if(renderPage === _this.state.page)
-				_this.element.src = _this.canvas[renderCanvas].toDataURL();
+			if(renderPage === _this.state.page){
+				var data = _this.canvas[renderCanvas].toDataURL().split(',');
+				var bin  = atob(data[1]);
+				var mime = data[0].split(':')[1].split(';')[0];
+				
+				var buf = new ArrayBuffer(bin.length);
+				var view = new Uint8Array(buf);
+				for(var i=0; i<view.length; i++) {
+					view[i] = bin.charCodeAt(i);
+				}
+		
+				var blob = new Blob([buf], {type: mime});
+				var source = window.URL.createObjectURL(blob);
+		
+				if(_this.src !== null) window.URL.revokeObjectURL(_this.src);
+				_this.src = source;
+			
+				_this.element.src = _this.src;
+			}
 			
 			// Check for change in the aspect ratio, send a resize if needed
 			//  (done after the render to avoid double rendering issues)

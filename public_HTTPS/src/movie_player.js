@@ -44,7 +44,15 @@ var movie_player = SAGE2_App.extend( {
 			if (_this.element.width  !== _this.element.videoWidth ||
 				_this.element.height !== _this.element.videoHeight) {
 				// send a resize call to the server if needed
-				_this.sendResize(_this.element.videoWidth, _this.element.videoHeight);
+				var w = _this.element.videoWidth;
+				var h = _this.element.videoHeight;
+				var ratio = w / h;
+				// Depending on the aspect ratio, adjust one dimension
+				if (ratio < 1)
+					_this.sendResize(_this.element.width, Math.round(_this.element.width/ratio));
+				else
+					_this.sendResize( Math.round(_this.element.height*ratio), _this.element.height);
+				//_this.sendResize(_this.element.videoWidth, _this.element.videoHeight);
 			}
 		}, false);
 		
@@ -59,17 +67,17 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		
+		this.refresh(date);
 	},
 	
 	event: function(type, position, user, data, date) {
 		var _this = this;
 		
-		if(type === "videoTimeSync"){
+		if (type === "videoTimeSync") {
 			// play a paused video
-			if(data.play && this.element.paused){
+			if (data.play && this.element.paused) {
 				var vidTime = data.videoTime + data.delay + this.playDelay;
-				if(vidTime < this.element.duration){
+				if (vidTime < this.element.duration) {
 					this.element.currentTime = vidTime;
 					this.playTimeout = setTimeout(function() {
 						_this.element.play();
@@ -78,10 +86,11 @@ var movie_player = SAGE2_App.extend( {
 			}
 			
 			// pause a video
-			else if(!data.play){
+			else if (!data.play) {
 				this.element.pause();
-				this.element.currentTime = data.videoTime;
-				if(this.playTimeout !== null) clearTimeout(this.playTimeout);	
+				// if the browser knows the duration before changing the current time
+				if (this.element.duration) this.element.currentTime = data.videoTime;
+				if (this.playTimeout !== null) clearTimeout(this.playTimeout);
 			}
 			
 			// re-sync if more the 1/30 of a second off
