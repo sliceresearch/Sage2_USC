@@ -668,7 +668,7 @@
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 				var spec = controlItems[data.id].handle.controls;
 				if (spec.controlsReady() === true){
-					var handle = createControls(data.id,spec);
+					var handle = spec.createControls(data.id);
 					ctrDiv.appendChild (handle);	
 					ui.main.appendChild(ctrDiv);
 					controlItems[data.id].show = true;
@@ -754,7 +754,8 @@
 				var func = ctrl.parent().data("call");
 				var appId = ctrl.parent().data("appId");
 				var app = applications[appId];
-				func(app,dt);	
+				if (func !== undefined && func !== null)
+					func(app,dt);	
 				//Check whether a request for clone was made.
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
@@ -790,7 +791,8 @@
 				}
 				else{
 					var func = textInput.data("call");
-					func(applications[textInput.data("appId")],getText(textInput));
+					if (func !== undefined && func !== null)
+						func(applications[textInput.data("appId")],getText(textInput));
 				}		
 			}
 		});
