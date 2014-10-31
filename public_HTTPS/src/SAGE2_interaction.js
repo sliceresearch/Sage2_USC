@@ -50,6 +50,20 @@ function SAGE2_interaction(wsio) {
 		var loaded = {};
 		var filesFinished = 0;
 		var total = 0;
+		
+		var progressCallback = function(event) {
+			if(loaded[event.target.id] === undefined) total += event.total;
+			loaded[event.target.id] = event.loaded;
+			var uploaded = 0;
+			for(var key in loaded) uploaded += loaded[key];
+			var pc = uploaded/total;
+			if(_this.fileUploadProgress) _this.fileUploadProgress(pc);
+		};
+		
+		var loadCallback = function(event) {
+			filesFinished++;
+			if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
+		}
 
 		for(var i=0; i<files.length; i++){
 			if(files[i].size <= this.maxUploadSize){
@@ -60,18 +74,8 @@ function SAGE2_interaction(wsio) {
 				xhr = new XMLHttpRequest();
 				xhr.open("POST", "upload", true);
 				xhr.upload.id = "file"+i.toString();
-				xhr.upload.addEventListener('progress', function(event) {
-					if(loaded[event.target.id] === undefined) total += event.total;
-					loaded[event.target.id] = event.loaded;
-					var uploaded = 0;
-					for(var key in loaded) uploaded += loaded[key];
-					var pc = uploaded/total;
-					if(_this.fileUploadProgress) _this.fileUploadProgress(pc);
-				}, false);
-				xhr.addEventListener('load', function(event) {
-					filesFinished++;
-					if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
-				}, false);
+				xhr.upload.addEventListener('progress', progressCallback, false);
+				xhr.addEventListener('load', loadCallback, false);
 				xhr.send(formdata);
 			}
 			else{
@@ -168,13 +172,11 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.startScreenShare = function() {
-		var userAgent = navigator.userAgent.toLowerCase();
-			
-		if(this.chromeDesktopCaptureEnabled === true) {
+		if(browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
 			// post message to start chrome screen share
 			window.postMessage('capture_desktop', '*');
 		}
-		else if(userAgent.indexOf("firefox") >= 0) {
+		else if(browser.isFirefox === true) {
 			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
 			showDialog('ffShareScreenDialog');
 		}
@@ -183,12 +185,12 @@ function SAGE2_interaction(wsio) {
 		}
 	};
 	
-	this.captureDesktop = function(browser, data) {
-		if(browser === "chrome"){
+	this.captureDesktop = function(data) {
+		if(browser.isChrome === true){
 			var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: data, maxWidth: 3840, maxHeight: 2160};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		}
-		else if(browser === "firefox") {
+		else if(browser.isFirefox === true) {
 			navigator.getUserMedia({video: {mediaSource: data}, audio: false}, this.streamSuccess, this.streamFail);
 		}
 	};
@@ -232,7 +234,6 @@ function SAGE2_interaction(wsio) {
 					  Math.min(1920, mediaVideo.videoWidth), 
 					  mediaVideo.videoWidth];
 		
-		var screenShareResolution = document.getElementById('screenShareResolution');
 		for(var i=0; i<4; i++){
 			var height = parseInt(widths[i] * mediaVideo.videoHeight/mediaVideo.videoWidth, 10);
 			screenShareResolution.options[i].value = widths[i] + "x" + height;
@@ -268,12 +269,13 @@ function SAGE2_interaction(wsio) {
 				var _this = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 				
+				var updateMediaStreamChunk = function(index, msg_chunk){
+					setTimeout(function() {
+						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
+					}, 4);
+				}
+				
 				for(var i=0; i<nchunks; i++){
-					function updateMediaStreamChunk(index, msg_chunk){
-						setTimeout(function() {
-							_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
-						}, 4);
-					}
 					var start = i*this.chunk;
 					var end = (i+1)*this.chunk < raw.length ? (i+1)*this.chunk : raw.length;
 					updateMediaStreamChunk(i, raw.substring(start, end));
