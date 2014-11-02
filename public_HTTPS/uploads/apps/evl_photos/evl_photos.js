@@ -70,6 +70,9 @@ var evl_photos = SAGE2_App.extend( {
     this.albums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
             location:"http://lyra.evl.uic.edu:9000/posters/"};
 
+    this.albums[4] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
+            location:"https://sage.evl.uic.edu/evl_Pictures/"};
+
     this.state.imageSet = null;
  },
 
