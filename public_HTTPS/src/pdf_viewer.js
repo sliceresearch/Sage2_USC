@@ -218,7 +218,7 @@ function addWidgetControlsToPdfViewer (_this){
 	}});
 
 	
-	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
+	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", action:function(appObj, date){
 		appObj.refresh(date);
 	}});
 	_this.controls.finishedAddingControls();

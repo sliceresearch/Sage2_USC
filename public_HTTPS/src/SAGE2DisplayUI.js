@@ -8,7 +8,7 @@ function SAGE2DisplayUI() {
 		this.logo.onload = function(event) {
 			_this.resize();
 		};
-		this.logo.src = "images/EVL-LAVA_UI.svg"
+		this.logo.src = "images/EVL-LAVA_UI.svg";
 		this.logoAspect = 3.47828052509;
 		this.fileDrop = false;
 		this.fileUpload = false;
@@ -333,7 +333,7 @@ function SAGE2DisplayUI() {
 	this.keyPress = function(charCode) {
 		this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 		return true;
-	}
+	};
 	
 	this.resize = function() {
 		var displayUI = document.getElementById('displayUI');

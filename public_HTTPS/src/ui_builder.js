@@ -113,7 +113,6 @@ function uiBuilder(json_cfg, clientID) {
 					// This somehow forces a reflow of the div and show the scrollbars as needed
 					// Needed with chrome v36
 					_this.bg.style.display='none';
-					_this.bg.offsetHeight;
 					_this.bg.style.display='block';
 				}
 			};

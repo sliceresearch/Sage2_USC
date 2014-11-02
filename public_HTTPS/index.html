@@ -67,10 +67,24 @@
 	var type2App;
 	
 	var hasMouse;
-	var _user_agent;
-
+	var browser;
+	
+	
 	function init() {
-		_user_agent = window.navigator.userAgent.toLowerCase();
+		browser = {};
+		var userAgent = window.navigator.userAgent.toLowerCase();
+		browser.isOpera   = userAgent.indexOf("opera") >= 0;
+		browser.isChrome  = userAgent.indexOf("chrome") >= 0;
+		browser.isWebKit  = userAgent.indexOf("webkit") >= 0;
+		browser.isSafari  = !browser.isChrome && userAgent.indexOf("safari") >= 0;
+		browser.isIE      = !browser.isOpera && userAgent.indexOf("msie") >= 0;
+		browser.isGecko   = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
+		browser.isFirefox = browser.isGecko && userAgent.indexOf("firefox") >= 0;
+		browser.isIOS     = userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0;
+		browser.isAndroid = userAgent.indexOf("android") >= 0;
+		browser.isWindows = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
+		browser.isMac     = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
+		browser.isLinux   = userAgent.indexOf("linux") >= 0;
 
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -269,7 +283,7 @@
 					interactor.chromeDesktopCaptureEnabled = true;
 			}
 			if(event.data.cmd === "window_selected"){
-				interactor.captureDesktop("chrome", event.data.mediaSourceId);
+				interactor.captureDesktop(event.data.mediaSourceId);
 			}
 		});
 		
@@ -420,6 +434,7 @@
 	// Device detection based on UserAgent (bad but hey...)
 	//     based on device.js
 	//////////////////////////////////////////////////////////
+	/*
 	function _find(needle) {
 		return _user_agent.indexOf(needle) !== -1;
 	}
@@ -453,15 +468,14 @@
 	function androidTablet() {
 		return android() && !_find('mobile');
 	}
+	*/
 	//////////////////////////////////////////////////////////
 
 	function mouseCheck(event) {
-		// Issue: Safari desktop doesnt have movement values (new interactor Yosemite ??)
-		// var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-		// var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-		// if(movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000) return;
-		// Now using UserAgent based detection
-		if (desktop()) {
+		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+		if(!browser.isSafari && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
+		if(browser.isSafari && browser.isIOS) return;
 			hasMouse = true;
 			document.title = "SAGE2 UI - Desktop";
 			console.log("Detected as desktop device");
@@ -474,17 +488,14 @@
 			document.addEventListener('dblclick',   pointerDblClick, false);
 			
 			document.removeEventListener('mousemove', mouseCheck, false);
-		}
+		//}
 	}
 	
 	function pointerClick(event) {
-		console.log('pointerClick');
 		handleClick(event.target);
 	}
 	
 	function handleClick(element) {
-		console.log('Click', element.id);
-
 		// Menu Buttons
 		if(element.id === "sage2pointer") {
 			interactor.startSAGE2Pointer(element.id);
@@ -634,11 +645,11 @@
 		
 		// Firefox Share Screen Dialog
 		else if(element.id === "ffShareScreenBtn"){
-			interactor.captureDesktop("firefox", "screen");
+			interactor.captureDesktop("screen");
 			hideDialog('ffShareScreenDialog');
 		}
 		else if(element.id === "ffShareWindowBtn"){
-			interactor.captureDesktop("firefox", "window");
+			interactor.captureDesktop("window");
 			hideDialog('ffShareScreenDialog');
 		}
 		

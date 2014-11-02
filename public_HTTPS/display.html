@@ -668,7 +668,7 @@
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 				var spec = controlItems[data.id].handle.controls;
 				if (spec.controlsReady() === true){
-					var handle = createControls(data.id,spec);
+					var handle = spec.createControls(data.id);
 					ctrDiv.appendChild (handle);	
 					ui.main.appendChild(ctrDiv);
 					controlItems[data.id].show = true;
@@ -679,7 +679,7 @@
 		});
 
 		wsio.on('requestControlId', function(data) {
-			var ctrl  = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+			var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
 			var regC  = /_controls/;
 			var regB  = /button/;
@@ -705,7 +705,7 @@
 		});
 
 		wsio.on('releaseControlId', function(data){
-			var ctrl = getCtrlUnderPointer(data, ui.offsetX, ui.offsetY);
+			var ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			if (ctrl){
 				var ctrId = ctrl.attr("id");
 				var regS = /slider/;
@@ -728,7 +728,7 @@
 			lockedControlElements[data.ptrId] = null;
 		});
 		wsio.on('executeControlFunction', function(data){
-			var ctrl = getCtrl(data);
+			var ctrl = getWidgetControlById(data);
 			var dt = new Date();
 			if(ctrl){
 				var ctrId = ctrl.attr('id');
@@ -754,7 +754,8 @@
 				var func = ctrl.parent().data("call");
 				var appId = ctrl.parent().data("appId");
 				var app = applications[appId];
-				func(app,dt);	
+				if (func !== undefined && func !== null)
+					func(app,dt);	
 				//Check whether a request for clone was made.
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
@@ -767,7 +768,7 @@
 		});
 
 		wsio.on('moveSliderKnob', function(data){
-			var ctrl = getCtrl(data.ctrl);
+			var ctrl = getWidgetControlById(data.ctrl);
 			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
 			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 			var pos = data.x-ui.offsetX-widgetOffset;
@@ -776,12 +777,12 @@
 			var slider = ctrl.parent();
 
 			var app = getProperty(applications[ctrl.data("appId")],slider.data("appProperty"));
-			app.obj[app.property] = val;
+			app.handle[app.property] = val;
 
 		});
 
 		wsio.on('keyInControl', function(data){
-			var ctrl = getCtrl(data);
+			var ctrl = getWidgetControlById(data);
 			if (ctrl){
 				var textInput = ctrl.parent();
 
@@ -790,7 +791,8 @@
 				}
 				else{
 					var func = textInput.data("call");
-					func(applications[textInput.data("appId")],getText(textInput));
+					if (func !== undefined && func !== null)
+						func(applications[textInput.data("appId")],getText(textInput));
 				}		
 			}
 		});
