@@ -589,6 +589,15 @@
 			// close the file uploader panel
 			hideDialog('uploadDialog');
 		}
+		else if (element.id === "cancelFilesBtn") {
+			// close the file uploader panel
+			hideDialog('uploadDialog');
+		}
+		else if (element.id === "cancelFilesBtn2") {
+			// close the pic uploader panel
+			hideDialog('localfileDialog');
+		}
+
 		else if (element.id === "fileDeleteBtn") {
 			if(selectedFileEntry !== null && confirm("Are you sure you want to delete this file?")){
 				var application = selectedFileEntry.getAttribute("application");
@@ -1172,12 +1181,18 @@
 	<div id="uploadDialog" class="dialog">
 		<span id="localFilesBtn" class="button">Picture</span>
 		<span id="dropboxFilesBtn" class="button">Dropbox</span>
+		<span id="cancelFilesBtn" class="button">Close</span>
 	</div>
 	<div id="localfileDialog" class="dialog">
-		<form name="localForm">
-			<input type="file" id="filenameForUpload" name="myfile" accept="image/*" capture="camera">
-			<input name="Submit" type="submit" value="Upload" onclick="fileUploadFromUI();return false"/>
-		</form>
+		<div id="localfileItems">
+			<form name="localForm">
+				<input type="file" id="filenameForUpload" name="myfile" accept="image/*" capture="camera" class="button">
+				<input name="Submit" type="submit" value="Upload" onclick="fileUploadFromUI();return false" class="button"/>
+			</form>
+			<span id="cancelFilesBtn2" class="button">Close</span>
+			<p>&nbsp; &nbsp; &nbsp;</p>
+			<p align="center"><b>Take or select a picture and upload it</b></p>
+		</div>
 	</div>
 
 	<div id="ffShareScreenDialog" class="dialog">

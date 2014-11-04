@@ -439,8 +439,19 @@ span {
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
-	width: 285px;
-	height: 60px;
+	width:  510px;
+	height: 100px;
+}
+
+#cancelFilesBtn2 {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+}
+
+#localfileItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
 }
 
 
@@ -450,7 +461,7 @@ span {
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
-	width: 285px;
+	width: 310px;
 	height: 60px;
 }
 #localFilesBtn {
@@ -460,10 +471,19 @@ span {
 }
 #dropboxFilesBtn {
 	position: absolute;
+	left: 90px;
+	bottom: 10px;
+}
+#cancelFilesBtn {
+	position: absolute;
 	right: 10px;
 	bottom: 10px;
 }
-
+#cancelFilesBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
 
 #blackoverlay {
 	display: none;
@@ -543,6 +563,7 @@ span {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
+	-webkit-appearance:none;
 }
 
 .button:active {
