@@ -29,6 +29,8 @@ construct: function() {
         this.resizeEvents = "continuous";
         this.svg = null;
 
+    // Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+    this.enableControls = true;
 
     this.currentStation = 0;
 
@@ -224,6 +226,17 @@ load6FailCallback: function()
 
 ////////////////////////////////////////
 
+nextStation: function()
+{
+    this.currentStation += 1;
+    if (this.currentStation >= SAGE2_radarStations.length)
+        {
+        this.currentStation = 0;
+        }
+},
+
+////////////////////////////////////////
+
 update: function ()
 {
     // get new imagery for the radar, warnings, overlay (time)
@@ -321,6 +334,18 @@ startup: function (){
 	    .attr("y", 0)
 	    .attr("height", y)
 	    .attr("width", x);
+
+                // create the widgets
+        console.log("creating controls");
+        this.controls.addButtonGroup();
+        this.controls.addButton({type:"next",action:function(appHandle, date){
+            //This is executed after the button click animation occurs.
+            appHandle.nextStation();
+            appHandle.startup();
+            appHandle.draw(date);
+        }});
+        this.controls.finishedAddingControls(); // Important
+
 	},
 	
 	draw: function(date) {
@@ -343,11 +368,7 @@ startup: function (){
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-             this.currentStation += 1;
-            if (this.currentStation >= SAGE2_radarStations.length)
-                {
-                    this.currentStation = 0;
-                }
+            this.nextStation();
             this.startup();
             this.draw(date);
 		}
