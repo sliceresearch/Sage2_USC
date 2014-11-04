@@ -6,7 +6,7 @@
 	"animation": true,
 	"dependencies": [
 		"scripts/d3.v3.min.js",
-		"photo_Scrapbooks.js"
+		"photo_scrapbooks.js"
 	],
 	"title": "EVL Photo Slideshow",
 	"version": "1.1.0",
