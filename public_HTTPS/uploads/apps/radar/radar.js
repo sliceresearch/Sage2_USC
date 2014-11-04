@@ -316,6 +316,16 @@ startup: function (){
 	},
 
 	load: function(state, date) {
+        // create the widgets
+        console.log("creating controls");
+        this.controls.addButtonGroup();
+        this.controls.addButton({type:"next",action:function(appHandle, date){
+            //This is executed after the button click animation occurs.
+            appHandle.nextStation();
+            appHandle.startup();
+            appHandle.draw(date);
+        }});
+        this.controls.finishedAddingControls(); // Important
 	},
 
 	draw_d3: function(date) {
@@ -334,18 +344,6 @@ startup: function (){
 	    .attr("y", 0)
 	    .attr("height", y)
 	    .attr("width", x);
-
-                // create the widgets
-        console.log("creating controls");
-        this.controls.addButtonGroup();
-        this.controls.addButton({type:"next",action:function(appHandle, date){
-            //This is executed after the button click animation occurs.
-            appHandle.nextStation();
-            appHandle.startup();
-            appHandle.draw(date);
-        }});
-        this.controls.finishedAddingControls(); // Important
-
 	},
 	
 	draw: function(date) {
