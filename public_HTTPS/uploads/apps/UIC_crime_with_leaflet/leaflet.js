@@ -40,6 +40,9 @@ var leaflet = SAGE2_App.extend( {
 		this.resizeEvents = "continuous"; //"onfinish";
 		this.svg      = null;
 
+		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+    	this.enableControls = true;
+
 		// for SAGE2 interaction
 		this.lastZoom = null;
 		this.dragging = null;
@@ -142,6 +145,30 @@ var leaflet = SAGE2_App.extend( {
 		    .attr("height",  height)
 		    .attr("viewBox", box);
 });
+},
+
+changeMap: function()
+{
+	var selectedOnes = null;
+
+	if (this.whichMap === 1)
+		{
+		this.whichMap = 2;
+		this.map.removeLayer(this.map1);
+		this.map2.addTo(this.map);
+
+		selectedOnes = this.g.selectAll("text");
+		selectedOnes.style("fill", "black");
+		}
+	else
+		{
+		this.whichMap = 1;
+		this.map.removeLayer(this.map2);
+		this.map1.addTo(this.map);
+
+		selectedOnes = this.g.selectAll("text");
+		selectedOnes.style("fill", "white");
+		}
 },
 
 dealWithData: function(collection, today)
@@ -263,6 +290,14 @@ dealWithData: function(collection, today)
 
 
 	load: function(state, date) {
+		// create the widgets
+        console.log("creating controls");
+        this.controls.addButtonGroup();
+        this.controls.addButton({type:"next",action:function(appHandle, date){
+            //This is executed after the button click animation occurs.
+            appHandle.changeMap();
+        }});
+        this.controls.finishedAddingControls(); // Important
 	},
 
 	draw_d3: function(date) {
@@ -345,27 +380,7 @@ dealWithData: function(collection, today)
 		if (eventType == "keyboard" && data.character == "m") {
 				// m key down
 				// change map type
-
-				var selectedOnes = null;
-
-				if (this.whichMap === 1)
-					{
-					this.whichMap = 2;
-					this.map.removeLayer(this.map1);
-					this.map2.addTo(this.map);
-
-					selectedOnes = this.g.selectAll("text");
-    				selectedOnes.style("fill", "black");
-					}
-				else
-					{
-					this.whichMap = 1;
-					this.map.removeLayer(this.map2);
-					this.map1.addTo(this.map);
-
-					selectedOnes = this.g.selectAll("text");
-    				selectedOnes.style("fill", "white");
-					}
+				this.changeMap();
 				}
 
 		this.refresh(date);
