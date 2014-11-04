@@ -35,6 +35,9 @@ var evl_photos = SAGE2_App.extend( {
     this.resizeEvents = "continuous"; //onfinish
     this.svg = null;
 
+    // Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+    this.enableControls = true;
+
     this.canvasBackground = "black";
 
     this.canvasWidth = 800;
@@ -249,6 +252,16 @@ newImage: function ()
         this.counter = Math.floor(Math.random() * this.bigList.length);
 },
 
+nextAlbum: function ()
+{
+    this.bigList = null;
+    this.state.imageSet += 1;
+    if (this.state.imageSet >= SAGE2_photoAlbums.length)
+        this.state.imageSet = 0;
+    this.chooseImagery(this.state.imageSet);
+    this.loadInList();
+},
+
 ////////////////////////////////////////
 
 update: function ()
@@ -364,6 +377,15 @@ updateWindow: function (){
             this.state.imageSet = 0; // which album
             }
 
+        // create the widgets
+        console.log("creating controls");
+        this.controls.addButtonGroup();
+        this.controls.addButton({type:"next",action:function(appHandle, date){
+            //This is executed after the button click animation occurs.
+            appHandle.nextAlbum();
+        }});
+        this.controls.finishedAddingControls(); // Important
+
         this.initApp();
 
         this.update();
@@ -394,12 +416,7 @@ updateWindow: function (){
         if (eventType === "pointerMove" ) {
         }
         if (eventType === "pointerRelease" && (data.button === "left") ) {
-            this.bigList = null;
-            this.state.imageSet += 1;
-            if (this.state.imageSet >= SAGE2_photoAlbums.length)
-                this.state.imageSet = 0;
-            this.chooseImagery(this.state.imageSet);
-            this.loadInList();
+            this.nextAlbum();
         }
     }
 	
