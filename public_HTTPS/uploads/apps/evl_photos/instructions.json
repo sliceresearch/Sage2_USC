@@ -1,6 +1,6 @@
 {
 	"main_script": "evl_photos.js",
-	"icon": "photos.png",
+	"icon": "photos.webp",
 	"width": 800,
 	"height": 600,
 	"animation": true,
