@@ -13,8 +13,20 @@
 // Written by Andy Johnson - 2014
 ////////////////////////////////////////
 
-// would be nice to be able to change the parameters for image directory and duration
-// in the application itself
+/*
+    SAGE2_photoAlbums = [];
+    SAGE2_photoAlbums[0] = {list:"http://lyra.evl.uic.edu:9000/evl_Pictures/photos.txt",
+            location:"http://lyra.evl.uic.edu:9000/evl_Pictures/"};
+    SAGE2_photoAlbums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
+            location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
+    SAGE2_photoAlbums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
+            location:"http://cdn.abclocal.go.com/three/wls/webcam/"};
+    SAGE2_photoAlbums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
+            location:"http://lyra.evl.uic.edu:9000/posters/"};
+
+    SAGE2_photoAlbums[4] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
+            location:"https://sage.evl.uic.edu/evl_Pictures/"};
+*/
 
 var evl_photos = SAGE2_App.extend( {
     construct: function() {
@@ -59,20 +71,6 @@ var evl_photos = SAGE2_App.extend( {
     this.listFileNamePhotos = "";
     this.listFileNameLibrary = "";
 
-
-    this.albums = [];
-    this.albums[0] = {list:"http://lyra.evl.uic.edu:9000/evl_Pictures/photos.txt",
-            location:"http://lyra.evl.uic.edu:9000/evl_Pictures/"};
-    this.albums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
-            location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
-    this.albums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
-            location:"http://cdn.abclocal.go.com/three/wls/webcam/"};
-    this.albums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
-            location:"http://lyra.evl.uic.edu:9000/posters/"};
-
-    this.albums[4] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
-            location:"https://sage.evl.uic.edu/evl_Pictures/"};
-
     this.state.imageSet = null;
  },
 
@@ -80,8 +78,8 @@ var evl_photos = SAGE2_App.extend( {
 
 chooseImagery: function(selection)
 {
-    this.listFileNamePhotos = this.albums[selection].list;
-    this.listFileNameLibrary = this.albums[selection].location;
+    this.listFileNamePhotos = SAGE2_photoAlbums[selection].list;
+    this.listFileNameLibrary = SAGE2_photoAlbums[selection].location;
     },
 
 ////////////////////////////////////////
@@ -398,7 +396,7 @@ updateWindow: function (){
         if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.bigList = null;
             this.state.imageSet += 1;
-            if (this.state.imageSet >= this.albums.length)
+            if (this.state.imageSet >= SAGE2_photoAlbums.length)
                 this.state.imageSet = 0;
             this.chooseImagery(this.state.imageSet);
             this.loadInList();
