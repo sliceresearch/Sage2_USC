@@ -292,11 +292,10 @@ dealWithData: function(collection, today)
 	load: function(state, date) {
 		// create the widgets
         console.log("creating controls");
-        this.controls.addButtonGroup();
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.changeMap();
-        }});
+            this.changeMap();
+        }.bind(this)});
         this.controls.finishedAddingControls(); // Important
 	},
 
