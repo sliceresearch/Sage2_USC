@@ -38,33 +38,67 @@ var widget_demo = SAGE2_App.extend( {
 	
 	load: function(state, date) {
 		console.log("creating controls");
-		this.controls.addButtonGroup();
-		this.controls.addButton({type:"next",action:function(appHandle, date){
+		var plusButton = {
+			"state": 0,
+			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
+			"to":"m 6 0 l -12 0 m 6 6 l 0 -12",//"m -3 0 a 6 6 180 1 0 0 1 z",
+			"width":12,
+			"height":12,
+			"fill":"none",
+			"strokeWidth": 1,
+			"delay": 600,
+			"animation":true
+		};
+		var plusButton2 = {
+			"state": 0,
+			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
+			"to":"m 6 0 l -12 0 m 12 0 l -12 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
+			"width":12,
+			"height":12,
+			"fill":"none",
+			"strokeWidth": 1,
+			"delay": 600,
+			"animation":true
+		};
+		this.controls.addButtonType("plus", plusButton);
+		this.controls.addButtonType("plus2", plusButton2);
+		this.controls.addButton({type:"next",sequenceNo:2,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
 			//This is executed after the button click animation occurs.
-			appHandle.colorIdx = (appHandle.colorIdx + 1) % 3;
-			appHandle.draw(date);
-		}});
-		this.controls.addButton({type:"prev",action:function(appHandle, date){
-			appHandle.colorIdx = (appHandle.colorIdx + 2) % 3;
-			appHandle.draw(date);
-		}});
-		this.controls.addButtonGroup();
-		this.controls.addButton({type:"rewind",action:function(appHandle, date){
-			appHandle.brightness = 64; //Reset value
-			appHandle.draw(date);
-		}});
+			this.colorIdx = (this.colorIdx + 1) % 3;
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"prev",sequenceNo:3,action:function(date){
+			this.colorIdx = (this.colorIdx + 2) % 3;
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"rewind",sequenceNo:7,action:function(date){
+			this.brightness = 64; //Reset value
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"plus2",sequenceNo:5,action:function(date){
+			this.displayText = "Pushed plus2 button"; //Reset value
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"plus",sequenceNo:8,action:function(date){
+			this.displayText = "Pushed plus button"; //Reset value
+			this.draw(date);
+		}.bind(this)});
+		
+
+		
+		
+		this.controls.addSeparatorAfterButtons(3,5); // Adds a small gap after button positon 3 and 5
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"
 		//Only simple numerical values can be manipulated using the slider.
-		this.controls.addSlider({begin:64,end:255,increments:1,appHandle:this, property:"brightness", action:function(appHandle, date){
+		this.controls.addSlider({begin:64,end:255,increments:1,appHandle:this, property:"brightness", action:function(date){
 			//Perform refresh or updating actions here
-			appHandle.draw(date);
-		}});
-		this.controls.addTextInput({action:function(appHandle, text){
-			appHandle.displayText = text;
-			console.log(appHandle.displayText);
-			appHandle.draw(date);
-		}});
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addTextInput({action:function(text){
+			this.displayText = text.split(" ")[0];
+			this.draw(date);
+		}.bind(this)});
 		this.controls.finishedAddingControls(); // Important
 	},
 
@@ -101,7 +135,7 @@ var widget_demo = SAGE2_App.extend( {
 		this.ctx.strokeStyle = 	"rgba(0,0,0, 1.0)"; 
 		this.ctx.fillStyle = "rgba(0,0,0,1.0)";
 		this.ctx.fillText("Text demo, displaying first word only:", this.element.width*0.3, this.element.height*0.4);
-		this.ctx.fillText(this.displayText.split(" ")[0], this.element.width*0.45, this.element.height*0.5);
+		this.ctx.fillText(this.displayText, this.element.width*0.45, this.element.height*0.5);
 		
 	},
 	

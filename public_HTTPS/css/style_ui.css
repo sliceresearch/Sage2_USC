@@ -306,6 +306,11 @@ span {
 	float: left;
 	text-align: center;
 }
+#informationContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
 #infoCloseBtn {
 	position: absolute;
 	right: 10px;
@@ -446,7 +451,7 @@ span {
 #cancelFilesBtn2 {
 	position: absolute;
 	right: 10px;
-	top: 10px;
+	top: 12px;
 }
 
 #localfileItems {
@@ -563,7 +568,6 @@ span {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
-	-webkit-appearance:none;
 }
 
 .button:active {

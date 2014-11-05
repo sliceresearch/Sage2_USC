@@ -56,8 +56,9 @@ var buttonType = {
 		"height":12,
 		"strokeWidth": 1,
 		"fill":"#ffffff",
-		"switch": 0,
-		"delay": 400
+		"state": 0,
+		"delay": 400,
+		"animation": true
 	},
 	"play-stop": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
@@ -66,79 +67,87 @@ var buttonType = {
 		"height":12,
 		"strokeWidth": 1,
 		"fill":"#ffffff",
-		"switch": 0,
-		"delay": 400
+		"state": 0,
+		"delay": 400,
+		"animation": true
 	},
 	"next": {
-		"switch": null,
+		"state": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -6 0 l 10 0 l -10 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
 		"width":10,
 		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
-		"delay": 600
+		"delay": 600,
+		"animation": true
 	},
 	"prev": {
-		"switch": null,
+		"state": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m 6 0 l -10 0 l 10 0",
 		"width":10,
 		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
-		"delay":600
+		"delay":600,
+		"animation": true
 
 	},
 	"next-zoom": {
-		"switch": null,
+		"state": null,
 		"from":"m 0 -6 l 4 6 l -4 6",
 		"to":"m -2 -9 l 8 9 l -10 9",
 		"width":10,
 		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
-		"delay": 600
+		"delay": 600,
+		"animation": true
 	},
 	"prev-zoom": {
-		"switch": null,
+		"state": null,
 		"from":"m 0 -6 l -4 6 l 4 6",
 		"to":"m -2 -9 l -8 9 l 10 9",
 		"width":10,
 		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
-		"delay":600
+		"delay":600,
+		"animation": true
 	},
 	"rewind": {
-		"switch": null,
+		"state": null,
 		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
 		"to":"m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0",
 		"width":10,
 		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
-		"delay":600
+		"delay":600,
+		"animation": true
 	},
 	"fastforward": {
-		"switch": null,
+		"state": null,
 		"from":"m 0 -6 l 4 6 l -4 6 m -4 -12 l 4 6 l -4 6",
 		"to":"m 0 -6 l 4 6 l -4 6 m -6 -6 l 10 0 l -10 0 ",
 		"width":10,
 		"height":12,
 		"fill":"none",
 		"strokeWidth": 1,
-		"delay":600
+		"delay":600,
+		"animation": true
 	},
 	"duplicate": {
-		"switch": null,
+		"state": null,
 		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
 		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 3 0 l 0 -3 l 8 0 l 0 10 l -3 0",
 		"width":10,
 		"height":12,
 		"fill":"#999999",
 		"strokeWidth": 1,
-		"delay":600
+		"delay":600,
+		"animation": true
 	}
 
 };
@@ -151,11 +160,10 @@ function SAGE2WidgetControlBar(id) {
 	this.id = id;
 	this.specReady = false;
 	this.itemCount = 0;
-	this.items = [];
-	this.buttonGroups = [];
-	this.buttonGroupIdx = -1;
 	this.hasSlider = false;
 	this.hasTextInput = false;
+	this.buttonSequence = {};
+	this.separatorList = [];
 	this.buttonType = buttonType;
 	this.layoutOptions = {
 		"drawGroupBoundaries":false,
@@ -182,17 +190,6 @@ SAGE2WidgetControlBar.prototype.controlsReady = function(){
 	return this.specReady;
 }
 
-/**
-*	Adds a new button group 
-*	A total of three groups can be added
-*	Each group can hold upto three buttons
-*/
-SAGE2WidgetControlBar.prototype.addButtonGroup = function(){
-	if (this.buttonGroupIdx < 4){
-		this.buttonGroupIdx = this.buttonGroupIdx+1;
-		this.buttonGroups[this.buttonGroupIdx] = [];
-	}
-}
 
 /**
 *	Lets the user add a custom cover for buttons
@@ -227,37 +224,45 @@ SAGE2WidgetControlBar.prototype.setLayoutOptions = function(layoutOptions){
 *	data
 *		.type - one of the several predefined button(cover) types [ex: "next", "prev", and so on]
 *		.action - callback function to specify action after the button has been pressed
-*	action callabck looks like this:
+*	action callback looks like this:
 *	function (appHandle, date){
 *		//use the appHandle to perform button click related action here	
 *	}
 */
 SAGE2WidgetControlBar.prototype.addButton = function(data) {
-	if (this.buttonGroupIdx < 4 && this.buttonGroupIdx > -1 && this.buttonGroups[this.buttonGroupIdx].length <= 3){
+	if (this.itemCount <= 12){
 		var button = new SAGE2WidgetControls.button();
 		button.appId = this.id;
 		button.id = "button" + this.itemCount;
 		button.type = data.type;
 		button.call = data.action || null;
 		button.width = 1.5*ui.widgetControlSize;
-		this.items.push(button);
-		this.buttonGroups[this.buttonGroupIdx].push(button);
+		this.buttonSequence[data.sequenceNo.toString()] = button;
 		this.itemCount++;
 	}
 };
+
+SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparator,secondSeparator,thirdSeparator) {
+	if (firstSeparator !== undefined && firstSeparator !== null)
+		this.separatorList.push(firstSeparator);
+	if (secondSeparator !== undefined && secondSeparator !== null)
+		this.separatorList.push(secondSeparator);
+	if (thirdSeparator !== undefined && thirdSeparator !== null)
+		this.separatorList.push(thirdSeparator);
+}
 
 /**
 *	Adds a text-input bar specification 
 *	data
 *		.action - callback function to specify action after the text has been input and enter key pressed
-*	action callabck looks like this:
+*	action callback looks like this:
 *	function (appHandle, text){
 *		// text contains the string from the text-input widget
 *		// use the appHandle to send text to the app	
 *	}
 */
 SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
-	if (this.hasTextInput === false){
+	if (this.hasTextInput === false && this.itemCount <= 12){
 		this.hasTextInput = true;
 		var textInput = new SAGE2WidgetControls.textInput();
 		textInput.id = "textInput" + this.itemCount;
@@ -265,7 +270,6 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 		textInput.width = 12.0*ui.widgetControlSize;
 		textInput.call = data.action || null;
 		this.textInput = textInput;
-		this.items.push(textInput);
 		this.itemCount++;
 	}
 	
@@ -282,7 +286,7 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 *		.increments - step value for the proerty
 *		alternatively, you can specify .parts - number of increments/step values between .begin and .end
 *		.action - callback function to specify action after the slider has been moved
-*	action callabck looks like this:
+*	action callback looks like this:
 *	function (appHandle, date){
 *		// The bound property will already have been updated by the slider
 *		// use this cal back to perform additional functions like refreshing the app 	
@@ -290,7 +294,7 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 */
 SAGE2WidgetControlBar.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appHandle
-	if (this.hasSlider === false){
+	if (this.hasSlider === false && this.itemCount <= 12){
 		
 		var slider = new SAGE2WidgetControls.slider();
 		slider.id = "slider" + this.itemCount;
@@ -315,7 +319,6 @@ SAGE2WidgetControlBar.prototype.addSlider = function(data){
 
 		this.hasSlider = true;
 		this.slider = slider;
-		this.items.push(slider);
 		this.itemCount++;
 	}
 	
@@ -370,50 +373,84 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 
 
 	
-	/*Place buttons*/
-	var angleRanges = (this.buttonGroups.length===1)? [[56.25,303.75]]:[[56.25,123.75],[236.25,303.75],[146.25,213.75],[326.25,393.75]];
+	/*Compute Angle Range*/
+	var buttonCount = this.itemCount;
+	var startAngle = 0;
+	var endAngle = 360;
+	var sequenceMaximum = 12;
+	var numberOfPads = 0;
 
-	for(var g=0; g < this.buttonGroups.length; g++){
-		var buttons = this.buttonGroups[g];
-		var range = angleRanges[g];
-		var start = range[0];
-		var end = range[1];
-		if (this.layoutOptions.drawGroupBoundaries===true)
+	if (this.hasSlider){
+		buttonCount--;
+		sequenceMaximum--;
+		startAngle += 15;
+		endAngle -= 15;
+		numberOfPads = 2;
+
+	}
+	if (this.hasTextInput){
+		buttonCount--;
+		sequenceMaximum--;
+		startAngle += 15;
+		endAngle -= 15;
+		numberOfPads = 2;
+	}
+	
+	/*Compute Padding */
+
+	for (var i=0;i<this.separatorList.length;i++){
+		if (this.separatorList[i] > -1 && this.separatorList[i] <= sequenceMaximum)
+			numberOfPads++;
+	}
+
+	var padding = 0;
+	if (numberOfPads > 0)
+		padding = 60.0/numberOfPads;
+	var thetaIncrement = (endAngle - startAngle)/sequenceMaximum;
+	var theta = startAngle + padding;
+	/*var start = startAngle;
+	var end = range[1];
+	if (this.layoutOptions.drawGroupBoundaries===true)
 			drawPieSlice(this.controlSVG, start-5,end+5, dimensions.innerR, dimensions.outerR,center);
-		var betweenButtons = (end - start)/buttons.length;
-		var padding = betweenButtons/2;
-		var theta = start + padding;
-		for (var b=0; b<buttons.length;b++){
+	*/
+	for (var idx = 1;idx<= sequenceMaximum;idx++){
+		var key = idx.toString();
+		if (key in this.buttonSequence){
+			var button = this.buttonSequence[key];
 			var point = polarToCartesian(dimensions.radius,theta,center);
 			if (this.layoutOptions.drawSpokes === true)
 				drawSpokeForRadialLayout(this.controlSVG,center,point);
-			this.createButton(buttons[b],point.x,point.y,dimensions.buttonRadius-2);
-			theta = theta + betweenButtons;
+			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
+			for (var i=0;i<this.separatorList.length;i++){
+				if (idx === this.separatorList[i])
+					theta = theta + padding;
+			}
 		}
-
+		theta = theta + thetaIncrement;
 	}
+
 	var d, leftMidOfBar;
 	if (this.hasSlider===true && this.hasTextInput === true){
-		d = makeBarPath(5,45, dimensions.innerR, center, this.slider.width);
-		leftMidOfBar = polarToCartesian(dimensions.innerR,23, center);
+		d = makeBarPath(0,30, dimensions.innerR, center, this.slider.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,15, center);
 		if (this.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
-		d = makeBarPath(315,355, dimensions.innerR, center, this.textInput.width);
-		leftMidOfBar = polarToCartesian(dimensions.innerR,337, center);
+		d = makeBarPath(330,360, dimensions.innerR, center, this.textInput.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,345, center);
 		if (this.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	else if (this.hasSlider===true){
-		d = makeBarPath(340,380, dimensions.innerR, center, this.slider.width);
+		d = makeBarPath(345,375, dimensions.innerR, center, this.slider.width);
 		leftMidOfBar = polarToCartesian(dimensions.innerR,0, center);
 		if (this.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	else if (this.hasTextInput===true){
-		d = makeBarPath(340,380, dimensions.innerR, center, this.textInput.width);
+		d = makeBarPath(345,375, dimensions.innerR, center, this.textInput.width);
 		leftMidOfBar = polarToCartesian(dimensions.innerR,0, center);
 		if (this.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
@@ -448,9 +485,9 @@ function drawControlCenter(paper, center, radius, initialText){
 	controlCenter.attr("class", "widgetBackground");
 	var controlCenterLabel = paper.text(center.x,center.y,initialText);
 	controlCenterLabel.attr("class", "widgetText");
-	controlCenterLabel.attr({
+	/*controlCenterLabel.attr({
 		fontSize: (0.045 * ui.widgetControlSize) + "em"
-	})
+	})*/
 	controlCenterLabel.attr("dy", "0.4em");
 }
 
@@ -504,11 +541,10 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 	});
 	var knobWidth = 3.6*ui.widgetControlSize;
 
-	var knobHeight = 1.5*ui.widgetControlSize;
+	var knobHeight = 1.3*ui.widgetControlSize;
 	var sliderKnob = this.controlSVG.rect(x+0.5*ui.widgetControlSize,y - knobHeight/2, knobWidth, knobHeight);
 	sliderKnob.attr({
 		id:this.slider.id + 'knob',
-		class: "sliderKnob",
 		rx:(knobWidth/16) + "px",
 		ry:(knobHeight/8) + "px",
 		//style:"shape-rendering:crispEdges;",
@@ -517,65 +553,76 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 		stroke: "rgba(230,230,230,1.0)"
 	});
 	var sliderKnobLabel = this.controlSVG.text(x+0.5*ui.widgetControlSize + knobWidth/2.0, y,"-");
-	var fontSize = 0.030 * ui.widgetControlSize;
+	var fontSize = parseInt(knobHeight*0.20) + "px"
 	sliderKnobLabel.attr({
 		id: this.slider.id+ "knobLabel",
-		class:"sliderText",
-		dy:(knobHeight*0.20) + "px",
-		fontSize:fontSize + "em"
+		dy:(knobHeight*0.12) + "px",
+		class:"widgetText",
+		fontSize: fontSize
 	});
 	
-
+	//var callabckFunc = this.slider.call.bind(applications[this.slider.appId]);
 	var slider = this.controlSVG.group(sliderArea,sliderLine,sliderKnob,sliderKnobLabel);
 	sliderKnob.data("appId", this.slider.appId);
 	sliderKnobLabel.data("appId", this.slider.appId);
-	slider.data('begin', this.slider.begin);
+	
 	slider.data("appId", this.slider.appId);
-	slider.data('end', this.slider.end);
-	slider.data('parts', this.slider.parts);
-	slider.data('increments', this.slider.increments);
+
 	slider.data('call', this.slider.call);
 	slider.data('appProperty', this.slider.appProperty);
 	var _this = this;
-	function moveSlider(){
+	var app = getProperty(_this.slider.appHandle,_this.slider.appProperty);
+	var begin = this.slider.begin;
+	var end = this.slider.end;
+	var parts = this.slider.parts;
+	var increments = this.slider.increments;
+	slider.data('begin', this.slider.begin);
+	slider.data('end', this.slider.end);
+	slider.data('parts', this.slider.parts);
+	slider.data('increments', this.slider.increments);
+
+
+	function moveSlider(sliderVal){
 		var slider = sliderKnob.parent();
 		var sliderLine = slider.select("line");
 		var bound = sliderLine.getBBox();
 		var left = bound.x + knobWidth/2.0;
 		var right = bound.x2 - knobWidth/2.0;
-		var begin = slider.data('begin');
-		var end = slider.data('end');
-		var parts = slider.data('parts');
-		var increments = slider.data('increments');
+		
 		var deltaX = (right-left)/parts;
-		var app = getProperty(_this.slider.appHandle,_this.slider.appProperty);
-		var sliderVal = app.handle[app.property];
+		
 		var n = Math.floor(0.5 + (sliderVal-begin)/increments);
 		if (isNaN(n)===true)
 			n = 0;
 
-		var position= left + n*deltaX;
-		var cxVal = sliderKnob.attr('cx');
-		
+		var position= left + n*deltaX;		
 		if(position< left )
 			position = left;
 		else if (position > right )
 			position = right;
-		
-		sliderKnob.animate({x: position - knobWidth/2.0 },100,mina.linear);
-		sliderKnobLabel.attr("text", (n+begin) +" / "+ end );
-		sliderKnobLabel.animate({x: position},100,mina.linear,moveSlider);
+		sliderKnobLabel.attr("text", (n+begin) +" / "+ end);
+		sliderKnob.attr({x: position - knobWidth/2.0});//,1,mina.linear);
+		sliderKnobLabel.attr({x: position});//,1,mina.linear);//fontSize:fontSize + "em"
+		console.log(sliderKnobLabel);
 	}
 	
-	moveSlider();
+
+	Object.observe(app.handle,function(changes){
+		for(var i=0;i<changes.length;i++){
+			if (changes[i].name===app.property)
+				moveSlider(app.handle[app.property]);
+		}
+	});
 	
+	moveSlider(begin);
+
 	return slider;
 }
 
 function mapMoveToSlider(sliderKnob, position){
 	var slider = sliderKnob.parent();
 	var sliderLine = slider.select("line");
-	var knobWidth = sliderKnob.getBBox().w;
+	var knobWidth = sliderKnob.attr("width");
 	var bound = sliderLine.getBBox();
 	var left = bound.x + knobWidth/2.0 ;
 	var right = bound.x2 - knobWidth/2.0 ;
@@ -611,26 +658,30 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 	});
 
 	var type = this.buttonType[buttonSpec.type];
-	var pthf = "M " + cx + " " + cy  + " " + type["from"];
-	var ptht= "M " + cx + " " + cy  + " " + type["to"];
-	var buttonCover = this.controlSVG.path(pthf);
+	var fromPath = "M " + cx + " " + cy  + " " + type["from"];
+	var toPath= "M " + cx + " " + cy  + " " + type["to"];
+	var buttonCover = this.controlSVG.path(fromPath);
 	var coverWidth = type["width"];
 	var coverHeight = type["height"];
 	buttonCover.attr({
 		id: buttonSpec.id + "cover",
-		transform: "s " + (buttonRad/(1.5*coverWidth)) + " " + (buttonRad/coverHeight),
+		transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
 		strokeWidth:type["strokeWidth"],
 		stroke:"rgba(250,250,250,1.0)",
 		style:"stroke-linecap:round; stroke-linejoin:round",
 		fill:type["fill"]
 	});
+	var callabckFunc = buttonSpec.call.bind(applications[ buttonSpec.appId]);
 	var button = this.controlSVG.group(buttonBack,buttonCover);
-
+	var animationInfo = {
+		"fromPath": fromPath,
+		"toPath":toPath,
+		"delay": type["delay"],
+		"state": type["state"],
+		"animation": type["animation"]
+	}
 	buttonCover.data("call",buttonSpec.call);
-	buttonCover.data("switch", type["switch"]) ;
-	buttonCover.data("from",pthf);
-	buttonCover.data("to",ptht);
-	buttonCover.data("delay",type["delay"]);
+	buttonCover.data("animationInfo", animationInfo);
 	buttonCover.data("appId", buttonSpec.appId);
 	buttonBack.data("appId", buttonSpec.appId);
 	button.data("call",buttonSpec.call);
@@ -643,7 +694,7 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 */
 SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	var uiElementSize = ui.widgetControlSize;
-	var textInputAreaHeight = 1.5 * uiElementSize;
+	var textInputAreaHeight = 1.3 * uiElementSize;
 	var fontSize = 0.040 * ui.widgetControlSize;
 
 	var textInputOutline = this.controlSVG.path(outline);
@@ -681,7 +732,7 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	textData.attr({
 		id: this.textInput.id + "TextData",
 		style:"fill: #ffffff; font-family:sans-serif; font-size:" + fontSize + "em; font-weight:lighter; font-style:normal;",
-		dy: (textArea.attr("height")*0.20) + "px"
+		dy: (textArea.attr("height")*0.30) + "px"
 	});
 	var textInput = this.controlSVG.group(textArea,blinker);
 	textInput.add(textData);
@@ -870,7 +921,6 @@ SAGE2WidgetControlBar.prototype.addLabel = function(data){
 
 	var doubleUs = new Array(data.textLength+1).join('W');
 	l.width =  doubleUs.width(font);
-	this.items.push(l);
 	this.itemCount++;
 };
 function createLabel(paper, labelSpec, x, y){

@@ -195,34 +195,32 @@ var pdf_viewer = SAGE2_App.extend( {
 function addWidgetControlsToPdfViewer (_this){
 // UI stuff
 	
-	_this.controls.addButtonGroup();
 
-	_this.controls.addButton({type:"fastforward", action:function(appObj, date){
-		appObj.state.page = appObj.pdfDoc.numPages;
-		appObj.refresh(date);
-	}});
+	_this.controls.addButton({type:"fastforward",sequenceNo:2, action:function(date){
+		this.state.page = this.pdfDoc.numPages;
+		this.refresh(date);
+	}.bind(_this)});
 
-	_this.controls.addButton({type:"rewind", action:function(appObj, date){
-		appObj.state.page = 1;
-		appObj.refresh(date);
-	}});
+	_this.controls.addButton({type:"rewind",sequenceNo:4, action:function(date){
+		this.state.page = 1;
+		this.refresh(date);
+	}.bind(_this)});
 
-	_this.controls.addButtonGroup();
-	_this.controls.addButton({type:"prev", action:function(appObj, date){
-		if(appObj.state.page <= 1) return;
-		appObj.state.page = appObj.state.page - 1;
-		appObj.refresh(date);
-	}});
-	_this.controls.addButton({type:"next", action:function(appObj, date){
-		if (appObj.state.page >= appObj.pdfDoc.numPages) return;
-		appObj.state.page = appObj.state.page + 1;
-		appObj.refresh(date);
-	}});
+	_this.controls.addButton({type:"prev",sequenceNo:8, action:function(date){
+		if(this.state.page <= 1) return;
+		this.state.page = this.state.page - 1;
+		this.refresh(date);
+	}.bind(_this)});
+	_this.controls.addButton({type:"next", sequenceNo:10,action:function(date){
+		if (this.state.page >= this.pdfDoc.numPages) return;
+		this.state.page = this.state.page + 1;
+		this.refresh(date);
+	}.bind(_this)});
 
-	
-	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", action:function(appObj, date){
-		appObj.refresh(date);
-	}});
+	_this.controls.addSeparatorAfterButtons(1,10); // This neatly forms an X out of the four spokes.
+	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", action:function(date){
+		this.refresh(date);
+	}.bind(_this)});
 	_this.controls.finishedAddingControls();
 
 }
