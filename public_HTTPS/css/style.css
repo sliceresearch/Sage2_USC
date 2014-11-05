@@ -90,14 +90,3 @@ body {
 	font-family:sans-serif;
 	fill: rgba(250,250,250,1.0);
 }
-
-.sliderText {
-	text-anchor:middle;
-	font-family:sans-serif;
-	fill: rgba(250,250,250,1.0);
-}
-
-
-.sliderKnob{
-	border-radius: 0.5rem;
-}

@@ -689,6 +689,7 @@
 
 			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
 				var temp = regC.test(ctrId)? null:ctrId;
+				
 				var aId = ctrl.data("appId");
 				/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
 					if(/line/.test(ctrId) || /knob/.test(ctrId))
@@ -700,62 +701,67 @@
 					ctrlId: temp,
 					appId: aId
 				});
-				lockedControlElements[data.ptrId] = temp; 
+				lockedControlElements[data.ptrId] = ctrl; 
 			}
 		});
 
 		wsio.on('releaseControlId', function(data){
-			var ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
-			if (ctrl){
-				var ctrId = ctrl.attr("id");
-				var regS = /slider/;
-				var regB = /button/;
-				var flag = false;
-				var aId = ctrl.data("appId");
-				if (regS.test(ctrId) || (regB.test(ctrId) && (lockedControlElements[data.ptrId] === ctrId))){
-					flag = true;
-				}
-				wsio.emit('releasedControlId', { 
-					addr:data.addr,
-					pointerX: data.x,
-					pointerY: data.y,
-					ctrlId: ctrId,
-					appId: aId,
-					activateControl: flag
-				});
-
-			}
+			var regexSlider = /slider/;
+			var regexButton = /button/;
+			var lockedControl = lockedControlElements[data.ptrId];
 			lockedControlElements[data.ptrId] = null;
+			if (lockedControl){
+				var ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+				var ctrlId = ctrl? ctrl.attr("id"): "";
+				if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
+					wsio.emit('releasedControlId', { 
+						addr:data.addr,
+						pointerX: data.x,
+						pointerY: data.y,
+						ctrlId: lockedControl.attr("id"),
+						appId: lockedControl.data("appId")
+					});
+
+				}
+			}
+			
+
+			
 		});
 		wsio.on('executeControlFunction', function(data){
 			var ctrl = getWidgetControlById(data);
-			var dt = new Date();
 			if(ctrl){
 				var ctrId = ctrl.attr('id');
 				if (/button/.test(ctrId)){
 					ctrl = ctrl.parent().select("path");
-					var swtch = ctrl.data("switch") ;
-					var delay = ctrl.data("delay") ;
-					if (swtch===null){
-						var f = ctrl.data("from");
-						var t = ctrl.data("to");
-						ctrl.animate({"path":t},delay,mina.bounce,function(){
-							ctrl.animate({"path":f},delay,mina.bounce);	
-						});
-						
+					var animationInfo = ctrl.data("animationInfo") ;
+					if (animationInfo.animation === true){
+						var delay = animationInfo.delay;
+						var state = animationInfo.state;
+						var fromPath = animationInfo.fromPath;
+						var toPath = animationInfo.toPath;
+						if (state===null){
+							
+							ctrl.animate({"path":toPath},delay,mina.bounce,function(){
+								ctrl.animate({"path":fromPath},delay,mina.bounce);	
+							});
+							
+						}
+						else{
+							var path = state? fromPath: toPath;
+							animationInfo.state = 1 - animationInfo.state;
+							ctrl.data("animationInfo", animationInfo);
+							ctrl.animate({"path":path},delay,mina.bounce);
+							
+						}
 					}
-					else{
-						var pth = ctrl.data(swtch?"from":"to");
-						ctrl.data("switch", 1 - swtch);
-						ctrl.animate({"path":pth},delay,mina.linear);
-						
-					}
+					
 				}
 				var func = ctrl.parent().data("call");
 				var appId = ctrl.parent().data("appId");
 				var app = applications[appId];
 				if (func !== undefined && func !== null)
-					func(app,dt);	
+					func(new Date());	
 				//Check whether a request for clone was made.
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
@@ -772,11 +778,12 @@
 			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
 			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 			var pos = data.x-ui.offsetX-widgetOffset;
-			
-			var val = mapMoveToSlider(ctrl, pos);
 			var slider = ctrl.parent();
+			var sliderKnob = slider.select("rect");
+			var val = mapMoveToSlider(sliderKnob, pos);
+			
 
-			var app = getProperty(applications[ctrl.data("appId")],slider.data("appProperty"));
+			var app = getProperty(applications[slider.data("appId")],slider.data("appProperty"));
 			app.handle[app.property] = val;
 
 		});
@@ -792,7 +799,7 @@
 				else{
 					var func = textInput.data("call");
 					if (func !== undefined && func !== null)
-						func(applications[textInput.data("appId")],getText(textInput));
+						func(getText(textInput));
 				}		
 			}
 		});

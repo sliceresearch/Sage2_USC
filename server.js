@@ -1385,20 +1385,20 @@ function wsAddNewControl(wsio, data){
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
 	var regTI = /textInput/;
 	var regSl = /slider/;
+	var regButton = /button/;
 	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if (regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
+	if ((regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) && remoteInteraction[data.addr].lockedControl() === null ) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	if (data.ctrlId !==null && regSl.test(data.ctrlId) ) {
+	var regButton = /button/
+	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
-	}
-	if (data.activateControl) {
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
