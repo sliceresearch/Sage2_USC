@@ -237,6 +237,13 @@ nextStation: function()
 
 ////////////////////////////////////////
 
+setStation: function(newStation)
+{
+    this.currentStation = +newStation;
+},
+
+////////////////////////////////////////
+
 update: function ()
 {
     // get new imagery for the radar, warnings, overlay (time)
@@ -318,13 +325,26 @@ startup: function (){
 	load: function(state, date) {
         // create the widgets
         console.log("creating controls");
-        this.controls.addButtonGroup();
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+        this.controls.addButton({type:"next",sequenceNo:3,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.nextStation();
-            appHandle.startup();
-            appHandle.draw(date);
-        }});
+            this.nextStation();
+            this.startup();
+            this.draw(date);
+        }.bind(this)});
+
+        var _this = this;
+
+        for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
+            var loopIdxWithPrefix = "0" + loopIdx;
+            (function(loopIdxWithPrefix){
+                _this.controls.addButton({type:"next", sequenceNo:5+loopIdx, action:function(date){
+                    this.setStation(loopIdxWithPrefix);
+                    this.startup();
+                    this.draw(date);
+                }.bind(_this) });
+            }(loopIdxWithPrefix))
+        }
+
         this.controls.finishedAddingControls(); // Important
 	},
 
