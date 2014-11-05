@@ -73,18 +73,20 @@
 	function init() {
 		browser = {};
 		var userAgent = window.navigator.userAgent.toLowerCase();
-		browser.isOpera   = userAgent.indexOf("opera") >= 0;
-		browser.isChrome  = userAgent.indexOf("chrome") >= 0;
-		browser.isWebKit  = userAgent.indexOf("webkit") >= 0;
-		browser.isSafari  = !browser.isChrome && userAgent.indexOf("safari") >= 0;
-		browser.isIE      = !browser.isOpera && userAgent.indexOf("msie") >= 0;
-		browser.isGecko   = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
-		browser.isFirefox = browser.isGecko && userAgent.indexOf("firefox") >= 0;
-		browser.isIOS     = userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0;
-		browser.isAndroid = userAgent.indexOf("android") >= 0;
-		browser.isWindows = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
-		browser.isMac     = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
-		browser.isLinux   = userAgent.indexOf("linux") >= 0;
+		console.log('agent', userAgent);
+		browser.isOpera    = userAgent.indexOf("opera") >= 0;
+		browser.isChrome   = userAgent.indexOf("chrome") >= 0;
+		browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
+		browser.isSafari   = !browser.isChrome && userAgent.indexOf("safari") >= 0;
+		browser.isIE       = !browser.isOpera && (userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
+		browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
+		browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
+		browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
+		browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0);
+		browser.isAndroid  = userAgent.indexOf("android") >= 0;
+		browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
+		browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
+		browser.isLinux    = userAgent.indexOf("linux") >= 0;
 
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -364,11 +366,11 @@
 		sage2UI.style.borderStyle = "solid";
 		displayUI.fileDrop = false;
 		displayUI.draw();
-		
+
 		// trigger file upload
 		console.log("drop location: " + event.layerX + ", " + event.layerY);
-		var x = event.layerX/event.target.clientWidth;
-		var y = event.layerY/event.target.clientHeight;
+		var x = event.layerX / event.target.clientWidth;
+		var y = event.layerY / event.target.clientHeight;
 		if(event.dataTransfer.files.length > 0) {
 			displayUI.fileUpload = true;
 			displayUI.uploadPercent = 0;
@@ -390,7 +392,25 @@
 			displayUI.draw();
 		}, 500);
 	}
-	
+
+	// Upload a file from the UI (not drag-and-drop)
+	function fileUploadFromUI() {
+		// Hide the dialog
+		hideDialog('localfileDialog');
+
+		// Setup the progress bar
+		var sage2UI = document.getElementById('sage2UI');
+		sage2UI.style.borderStyle = "solid";
+		displayUI.fileDrop = false;
+		displayUI.draw();
+
+		// trigger file upload
+		var thefile = document.getElementById('filenameForUpload');
+		displayUI.fileUpload = true;
+		displayUI.uploadPercent = 0;
+		interactor.uploadFiles(thefile.files, 0, 0);
+	}
+
 	function pointerPress(event) {
 		if(event.target.id === "sage2UI"){
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -474,21 +494,21 @@
 	function mouseCheck(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-		if(!browser.isSafari && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
-		if(browser.isSafari && browser.isIOS) return;
-			hasMouse = true;
-			document.title = "SAGE2 UI - Desktop";
-			console.log("Detected as desktop device");
-			
-			document.addEventListener('mousedown',  pointerPress,    false);
-			document.addEventListener('mouseup',    pointerRelease,  false);
-			document.addEventListener('mousemove',  pointerMove,     false);
-			document.addEventListener('wheel',      pointerScroll,   false);
-			document.addEventListener('click',      pointerClick,    false);
-			document.addEventListener('dblclick',   pointerDblClick, false);
-			
-			document.removeEventListener('mousemove', mouseCheck, false);
-		//}
+		if (!browser.isSafari && !browser.isIE && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
+		if (browser.isSafari  && browser.isIOS) return;
+		if (browser.isIE      && browser.isWinPhone) return;
+		hasMouse = true;
+		document.title = "SAGE2 UI - Desktop";
+		console.log("Detected as desktop device");
+
+		document.addEventListener('mousedown',  pointerPress,    false);
+		document.addEventListener('mouseup',    pointerRelease,  false);
+		document.addEventListener('mousemove',  pointerMove,     false);
+		document.addEventListener('wheel',      pointerScroll,   false);
+		document.addEventListener('click',      pointerClick,    false);
+		document.addEventListener('dblclick',   pointerDblClick, false);
+
+		document.removeEventListener('mousemove', mouseCheck, false);
 	}
 	
 	function pointerClick(event) {
@@ -545,6 +565,45 @@
 			document.getElementById('metadata_text').textContent = "";
 			hideDialog('mediaBrowserDialog');
 		}
+		// Upload files to SAGE2
+		else if (element.id === "fileUploadBtn") {
+			// clear the preview panel
+			selectedFileEntry = null;
+			document.getElementById('thumbnail').src = "images/blank.png";
+			document.getElementById('metadata_text').textContent = "";
+			// close the media browswer
+			hideDialog('mediaBrowserDialog');
+			// open the file uploader panel
+			showDialog('uploadDialog');
+		}
+		// upload files local to the user's device
+		else if (element.id === "localFilesBtn") {
+			// close the file uploader panel
+			hideDialog('uploadDialog');
+			// open the file library
+			//    delay to remove bounce evennt on Chrome/iOS
+			setTimeout(function() {showDialog('localfileDialog');}, 200);			
+		}
+		// upload from Dropbox
+		else if (element.id === "dropboxFilesBtn") {
+			// Not Yet Implemented
+			//   ...
+			// close the file uploader panel
+			hideDialog('uploadDialog');
+		}
+		else if (element.id === "cancelFilesBtn") {
+			// close the file uploader panel
+			hideDialog('uploadDialog');
+		}
+		else if (element.id === "cancelFilesBtn2") {
+			// close the pic uploader panel
+			hideDialog('localfileDialog');
+		}
+		else if (element.id === "localfileUploadBtn") {
+			// trigger the upload function
+			fileUploadFromUI();
+		}
+
 		else if (element.id === "fileDeleteBtn") {
 			if(selectedFileEntry !== null && confirm("Are you sure you want to delete this file?")){
 				var application = selectedFileEntry.getAttribute("application");
@@ -666,7 +725,7 @@
 	function handleDblClick(element) {
 		if(element.id === "sage2UI"){
 			displayUI.pointerDblClick();
-			event.preventDefault();
+			//event.preventDefault();
 		}
 		else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
 			loadSelectedApplication();
@@ -900,7 +959,8 @@
 	}
 </script>
 
-<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
+
 </head>
 
 <body onload="init()" onresize="resize()">
@@ -910,35 +970,35 @@
 		</div>
 		<div id="menuUI">
 			<div id="sage2pointerContainer" class="uiButton">
-				<img id="sage2pointer" src="images/sage2pointer.svg" width="48" height="48"></img>
+				<img alt="pointer" id="sage2pointer" src="images/sage2pointer.svg" width="48" height="48" />
 				<p>SAGE2 Pointer</p>
 			</div>
 			<div id="sharescreenContainer" class="uiButton">
-				<img id="sharescreen" src="images/sharescreen.svg" width="48" height="48"></img>
+				<img alt="sharescreen" id="sharescreen" src="images/sharescreen.svg" width="48" height="48" />
 				<p>Share Screen</p>
 			</div>
 			<div id="applauncherContainer" class="uiButton">
-				<img id="applauncher" src="images/applauncher.svg" width="48" height="48"></img>
+				<img alt="applauncher" id="applauncher" src="images/applauncher.svg" width="48" height="48"/>
 				<p>App Launcher</p>
 			</div>
 			<div id="mediaBrowserContainer" class="uiButton">
-				<img id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"></img>
+				<img alt="mediabrowser" id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"/>
 				<p>Media Browser</p>
 			</div>
 			<div id="browserContainer" class="uiButton">
-				<img id="browser" src="images/browser.svg" width="48" height="48"></img>
+				<img alt="browser" id="browser" src="images/browser.svg" width="48" height="48"/>
 				<p>Web browser</p>
 			</div>
 			<div id="arrangementContainer" class="uiButton">
-				<img id="arrangement" src="images/arrangement.svg" width="48" height="48"></img>
+				<img alt="arrangement" id="arrangement" src="images/arrangement.svg" width="48" height="48"/>
 				<p>Arrangement</p>
 			</div>
 			<div id="settingsContainer" class="uiButton">
-				<img id="settings" src="images/settings.svg" width="48" height="48"></img>
+				<img alt="settings" id="settings" src="images/settings.svg" width="48" height="48"/>
 				<p>Settings</p>
 			</div>
 			<div id="infoContainer" class="uiButton">
-				<img id="info" src="images/info.svg" width="48" height="48"></img>
+				<img alt="info" id="info" src="images/info.svg" width="48" height="48"/>
 				<p>Info</p>
 			</div>
 		</div>
@@ -950,7 +1010,7 @@
 	
 	<!-- dialog for the SAGE2 Pointer Help -->
 	<div id="sage2pointerDialog" class="dialog">
-		<img id="sage2pointerHelp" src="images/SAGE2Pointer-help.svg"></img>
+		<img alt="sage2pointerHelp" id="sage2pointerHelp" src="images/SAGE2Pointer-help.svg"/>
 	</div>
 	
 	<!-- dialog for the App Launcher-->
@@ -971,22 +1031,22 @@
 			<div id="fileListContainer">
 				<ul id="fileListElems">
 					<li>
-						<input type="checkbox" id="images-dir"></input>
+						<input type="checkbox" id="images-dir">
 						<label for="images-dir">Images</label>
 						<ul id="images" class="fileItem"></ul>
 					</li>
 					<li>
-						<input type="checkbox" id="pdfs-dir"></input>
+						<input type="checkbox" id="pdfs-dir">
 						<label for="pdfs-dir">PDFs</label>
 						<ul id="pdfs" class="fileItem"></ul>
 					</li>
 					<li>
-						<input type="checkbox" id="videos-dir"></input>
+						<input type="checkbox" id="videos-dir">
 						<label for="videos-dir">Videos</label>
 						<ul id="videos" class="fileItem"></ul>
 					</li>
 					<li>
-						<input type="checkbox" id="sessions-dir"></input>
+						<input type="checkbox" id="sessions-dir">
 						<label for="sessions-dir">Sessions</label>
 						<ul id="sessions" class="fileItem"></ul>
 					</li>
@@ -994,13 +1054,14 @@
 			</div>
 		</div>
 		<div id="metadata">
-			<img id="thumbnail" src="images/blank.png"></img>
+			<img alt="thumbnail" id="thumbnail" src="images/blank.png"/>
 			<label id="metadata_text"></label>
 		</div>
 		<div id="fileButtons">
 			<span id="fileOpenBtn" class="button">Open</span>
 			<span id="fileCloseBtn" class="button">Close</span>
 			<span id="fileDeleteBtn" class="button">Delete</span>
+			<span id="fileUploadBtn" class="button">Upload</span>
 		</div>
 	</div>
 
@@ -1014,7 +1075,7 @@
 							<label class="sageLabel">Webpage:</label>
 						</td>
 						<td>
-							<input id="openWebpageUrl" type="text" value="http://www.nytimes.com/"></input>
+							<input id="openWebpageUrl" type="text" value="http://www.nytimes.com/">
 						</td>
 					</tr>
 				</table>
@@ -1030,15 +1091,15 @@
 	<div id="arrangementDialog" class="dialog">
 		<div id="arrangementItems">
 			<div id="clearcontentContainer">
-				<img id="clearcontent" src="images/clearcontent.svg" width="64" height="64"></img>
+				<img alt="clearcontent" id="clearcontent" src="images/clearcontent.svg" width="64" height="64"/>
 				<p>Clear All</p>
 			</div>
 			<div id="tilecontentContainer">
-				<img id="tilecontent" src="images/tilecontent.svg" width="64" height="64"></img>
+				<img alt="tilecontent" id="tilecontent" src="images/tilecontent.svg" width="64" height="64"/>
 				<p>Tile Content</p>
 			</div>
 			<div id="savesessionContainer">
-				<img id="savesession" src="images/savesession.svg" width="64" height="64"></img>
+				<img alt="savesession" id="savesession" src="images/savesession.svg" width="64" height="64"/>
 				<p>Save Session</p>
 			</div>
 		</div>
@@ -1051,15 +1112,15 @@
 	<div id="infoDialog" class="dialog">
 		<div id="infoItems">
 			<div id="helpContainer">
-				<img id="helpcontent" src="images/help.svg" width="64" height="64"></img>
+				<img alt="helpcontent" id="helpcontent" src="images/help.svg" width="64" height="64"/>
 				<p>Help</p>
 			</div>
 			<div id="adminContainer">
-				<img id="admincontent" src="images/admin.svg" width="64" height="64"></img>
+				<img alt="admincontent" id="admincontent" src="images/admin.svg" width="64" height="64"/>
 				<p>Admin</p>
 			</div>
-			<div id="infoContainer">
-				<img id="infocontent" src="images/info.svg" width="64" height="64"></img>
+			<div id="informationContainer">
+				<img alt="infocontent" id="infocontent" src="images/info.svg" width="64" height="64"/>
 				<p>Info</p>
 			</div>
 		</div>
@@ -1078,7 +1139,7 @@
 							<label class="sageLabel">Pointer Name:</label>
 						</td>
 						<td>
-							<input id="sage2PointerLabel" type="text"></input>
+							<input id="sage2PointerLabel" type="text">
 						</td>
 					</tr>
 					<tr>
@@ -1112,8 +1173,7 @@
 						</td>
 						<td>
 							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="5">
-								<span id="screenShareQualityIndicator">5</span>
-							</input>
+							<span id="screenShareQualityIndicator">5</span>
 						</td>
 					</tr>
 				</table>
@@ -1123,7 +1183,24 @@
 			<span id="settingsCloseBtn" class="button">Close</span>
 		</div>
 	</div>
-	
+
+	<div id="uploadDialog" class="dialog">
+		<span id="localFilesBtn" class="button">Picture</span>
+		<span id="dropboxFilesBtn" class="button">Dropbox</span>
+		<span id="cancelFilesBtn" class="button">Close</span>
+	</div>
+	<div id="localfileDialog" class="dialog">
+		<div id="localfileItems">
+			<form name="localForm">
+				<input type="file" id="filenameForUpload" name="myfile" accept="image/*" class="button">
+				<span id="localfileUploadBtn" class="button">Upload</span>
+			</form>
+			<span id="cancelFilesBtn2" class="button">Close</span>
+			<p>&nbsp; &nbsp; &nbsp;</p>
+			<p style="text-align:center;"><b>Take or select a picture and upload it</b></p>
+		</div>
+	</div>
+
 	<div id="ffShareScreenDialog" class="dialog">
 		<span id="ffShareScreenBtn" class="button">Share Screen</span>
 		<span id="ffShareWindowBtn" class="button">Share Window</span>

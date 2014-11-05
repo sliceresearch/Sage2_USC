@@ -12,6 +12,15 @@
 // simple radar image app
 // written by andy johnson - summer 2014
 
+/*    SAGE2_radarStations = [
+        "LOT", // Chicago
+        "HMO", // Honolulu
+        "NKX", // San Diego
+        "OKX", // New York City
+        "GRK" // Austin
+    ];
+*/
+
 var radar = SAGE2_App.extend( {
 
 construct: function() {
@@ -20,13 +29,8 @@ construct: function() {
         this.resizeEvents = "continuous";
         this.svg = null;
 
-    this.stations = [
-        "LOT", // Chicago
-        "HMO", // Honolulu
-        "NKX", // San Diego
-        "OKX", // New York City
-        "GRK" // Austin
-    ];
+    // Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+    this.enableControls = true;
 
     this.currentStation = 0;
 
@@ -97,12 +101,12 @@ createURLs: function ()
     var URL5b = "_N0R_Legend_0.gif";
     var URL6b = "_City_Short.gif";
 
-    this.URL1 = URL1a+this.stations[this.currentStation]+URL1b;
-    this.URL2 = URL2a+this.stations[this.currentStation]+URL2b;
-    this.URL3 = URL3a+this.stations[this.currentStation]+URL3b;
-    this.URL4 = URL4a+this.stations[this.currentStation]+URL4b;
-    this.URL5 = URL5a+this.stations[this.currentStation]+URL5b;
-    this.URL6 = URL6a+this.stations[this.currentStation]+URL6b;
+    this.URL1 = URL1a+SAGE2_radarStations[this.currentStation]+URL1b;
+    this.URL2 = URL2a+SAGE2_radarStations[this.currentStation]+URL2b;
+    this.URL3 = URL3a+SAGE2_radarStations[this.currentStation]+URL3b;
+    this.URL4 = URL4a+SAGE2_radarStations[this.currentStation]+URL4b;
+    this.URL5 = URL5a+SAGE2_radarStations[this.currentStation]+URL5b;
+    this.URL6 = URL6a+SAGE2_radarStations[this.currentStation]+URL6b;
 },
 
 ////////////////////////////////////////
@@ -222,6 +226,17 @@ load6FailCallback: function()
 
 ////////////////////////////////////////
 
+nextStation: function()
+{
+    this.currentStation += 1;
+    if (this.currentStation >= SAGE2_radarStations.length)
+        {
+        this.currentStation = 0;
+        }
+},
+
+////////////////////////////////////////
+
 update: function ()
 {
     // get new imagery for the radar, warnings, overlay (time)
@@ -301,6 +316,16 @@ startup: function (){
 	},
 
 	load: function(state, date) {
+        // create the widgets
+        console.log("creating controls");
+        this.controls.addButtonGroup();
+        this.controls.addButton({type:"next",action:function(appHandle, date){
+            //This is executed after the button click animation occurs.
+            appHandle.nextStation();
+            appHandle.startup();
+            appHandle.draw(date);
+        }});
+        this.controls.finishedAddingControls(); // Important
 	},
 
 	draw_d3: function(date) {
@@ -341,11 +366,7 @@ startup: function (){
 		if (eventType === "pointerMove" ) {
 		}
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
-             this.currentStation += 1;
-            if (this.currentStation >= this.stations.length)
-                {
-                    this.currentStation = 0;
-                }
+            this.nextStation();
             this.startup();
             this.draw(date);
 		}

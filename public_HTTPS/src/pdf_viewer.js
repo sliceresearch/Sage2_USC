@@ -8,9 +8,11 @@
 //
 // Copyright (c) 2014
 
-PDFJS.workerSrc     = 'lib/pdf.worker.js';
-PDFJS.disableWorker = false;
-PDFJS.disableWebGL  = true;
+PDFJS.workerSrc       = 'lib/pdf.worker.js';
+PDFJS.disableWorker   = false;
+PDFJS.disableWebGL    = true;
+PDFJS.verbosity       = PDFJS.VERBOSITY_LEVELS.infos;
+PDFJS.maxCanvasPixels = 67108864; // 8k2
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {

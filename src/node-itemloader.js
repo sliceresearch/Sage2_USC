@@ -630,12 +630,25 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var app = this.mime2app[mime_type];
 	if (app === undefined) { callback(null); return; }
 	var dir = this.app2dir[app];
-	
 	var _this = this;
+
 	var url = path.join("uploads", dir, file.name);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
-	var localPath = path.join(this.publicDir, url);
-	
+	var localPath    = path.join(this.publicDir, url);
+
+	// Filename exists, then add date
+	if (fs.existsSync(localPath)) {
+		// Add the date to filename
+		var filen  = file.name;
+		var splits = filen.split('.');
+		var extension   = splits.pop();
+		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
+		// Regenerate path and url
+		url = path.join("uploads", dir, newfilename);
+		external_url = this.hostOrigin + encodeReservedURL(url);
+		localPath    = path.join(this.publicDir, url);
+	}
+
 	fs.rename(file.path, localPath, function(err) {
 		if(err) throw err;
 		

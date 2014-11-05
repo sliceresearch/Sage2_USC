@@ -38,6 +38,13 @@ var image_viewer = SAGE2_App.extend( {
 			this.state.src  = state.src;
 			this.state.type = state.type;
 			this.state.exif = state.exif;
+			// Fix iPhone portrait pictures
+			if (this.state.exif.Orientation === 'Rotate 90 CW') {
+				var ratio = this.element.height / this.element.width;
+				var inv   = 1.0 / ratio;
+				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
+				this.sendResize(this.element.height, this.element.width);
+			}
 			this.pre.innerHTML = this.syntaxHighlight(state.exif);
 		}
 	},
