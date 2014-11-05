@@ -262,6 +262,14 @@ nextAlbum: function ()
     this.loadInList();
 },
 
+setAlbum: function (albumNumber)
+{
+    this.bigList = null;
+    this.state.imageSet = +albumNumber;
+    this.chooseImagery(this.state.imageSet);
+    this.loadInList();
+},
+
 ////////////////////////////////////////
 
 update: function ()
@@ -379,11 +387,22 @@ updateWindow: function (){
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButtonGroup();
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+        this.controls.addButton({type:"next",sequenceNo:3,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.nextAlbum();
-        }});
+            this.nextAlbum();
+        }.bind(this)});
+
+        var _this = this;
+
+        for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++){
+            var loopIdxWithPrefix = "0" + loopIdx;
+            (function(loopIdxWithPrefix){
+                _this.controls.addButton({type:"next", sequenceNo:5+loopIdx, action:function(date){
+                    this.setAlbum(loopIdxWithPrefix);
+                }.bind(_this) });
+            }(loopIdxWithPrefix))
+        }
+
         this.controls.finishedAddingControls(); // Important
 
         this.initApp();
