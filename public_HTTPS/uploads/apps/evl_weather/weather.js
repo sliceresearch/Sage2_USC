@@ -793,22 +793,21 @@ updateWindow: function ()
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButtonGroup();
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.state.itsF = "F";
-            appHandle.updateAll();
-        }});
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+            this.state.itsF = "F";
+            this.updateAll();
+        }.bind(this)});
+        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.state.itsF = "C";
-            appHandle.updateAll();
-        }});
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+            this.state.itsF = "C";
+            this.updateAll();
+        }.bind(this)});
+        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.state.itsF = "K";
-            appHandle.updateAll();
-        }});
+            this.state.itsF = "K";
+            this.updateAll();
+        }.bind(this)});
         this.controls.finishedAddingControls(); // Important
         
 
