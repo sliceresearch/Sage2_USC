@@ -40,7 +40,12 @@ function SAGE2DisplayUI() {
 		}
 		logoX = sage2UI.width/2  - logoW/2;
 		logoY = sage2UI.height/2 - logoH/2;
-		ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+
+		// doesnt seem enough for Internet Explorer: SVG file might not be loaded
+		if (this.logo.complete && this.logo.naturalWidth !== undefined) {
+			// draw the logo in the background
+			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+		}
 		
 		// applications
 		for(i=0; i<this.applications.length; i++){

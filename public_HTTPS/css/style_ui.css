@@ -446,7 +446,7 @@ span {
 #cancelFilesBtn2 {
 	position: absolute;
 	right: 10px;
-	top: 10px;
+	top: 12px;
 }
 
 #localfileItems {
@@ -563,7 +563,6 @@ span {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
-	-webkit-appearance:none;
 }
 
 .button:active {
