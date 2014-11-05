@@ -306,6 +306,11 @@ span {
 	float: left;
 	text-align: center;
 }
+#informationContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
 #infoCloseBtn {
 	position: absolute;
 	right: 10px;
