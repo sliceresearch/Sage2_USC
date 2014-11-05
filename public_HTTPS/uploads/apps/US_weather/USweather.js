@@ -686,22 +686,21 @@ loadInIcons: function()
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButtonGroup();
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.gwin.mode = 0;
-            appHandle.convertToTemp();
-        }});
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+            this.gwin.mode = 0;
+            this.convertToTemp();
+        }.bind(this)});
+        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.gwin.mode = 1;
-            appHandle.convertToIcon();
-        }});
-        this.controls.addButton({type:"next",action:function(appHandle, date){
+            this.gwin.mode = 1;
+            this.convertToIcon();
+        }.bind(this)});
+        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
-            appHandle.gwin.mode = 2;
-            appHandle.convertToNone();
-        }});
+            this.gwin.mode = 2;
+            this.convertToNone();
+        }.bind(this)});
         this.controls.finishedAddingControls(); // Important
         
 
