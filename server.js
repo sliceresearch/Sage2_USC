@@ -78,19 +78,23 @@ if (program.logfile) {
 	var log_stdout = process.stdout;
 
 	// Redirect console.log to a file and still produces an output or not
-	if (program.output) {
-		console.log = function(d) { //
-			log_file.write(util.format(d) + '\n');
-			log_stdout.write(util.format(d) + '\n');
-		};
-	} else {
+	if (program.output === false) {
 		console.log = function(d) { //
 			log_file.write(util.format(d) + '\n');
 			program.interactive = undefined;
 		};
+	} else {
+		console.log = function(d) { //
+			log_file.write(util.format(d) + '\n');
+			log_stdout.write(util.format(d) + '\n');
+		};
 	}
 }
-
+else if (program.output === false) {
+	console.log = function(d) { //
+		program.interactive = undefined;
+	};
+}
 
 // Platform detection
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
