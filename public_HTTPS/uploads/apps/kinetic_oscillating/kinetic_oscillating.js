@@ -12,11 +12,14 @@ var kinetic_oscillating = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.stage  = null;
-		this.layer  = null;
-		this.blobs  = null;
-		this.width  = null;
-		this.height = null;
+		this.stage   = null;
+		this.layer   = null;
+		this.blobs   = null;
+		this.nBlobs  = 0;
+		this.nPoints = 0;
+		this.initialPoints = null;
+		this.width   = null;
+		this.height  = null;
 		this.resizeEvents = "onfinish";
 		this.lastZoom = null;
 	},
@@ -36,32 +39,42 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		this.stage  = new Kinetic.Stage({container: this.element.id, width: this.width, height: this.height});
 		this.layer  = new Kinetic.Layer();
 		
+		this.nBlobs  = 6;
+		this.nPoints = 5;
 		
 		if(isMaster){
 			console.log("I'm master! " + clientID);
+			var blobPoints = new Array(this.nBlobs);
+			var blobOpacity = new Array(this.nBlobs);
+			for(var i=0; i<this.nBlobs; i++){
+				blobPoints[i] = new Array(this.nPoints*2);
+				for(var j=0; j<this.nPoints; j++){
+					blobPoints[i][2*j + 0] = this.width   * Math.random();
+					blobPoints[i][2*j + 1] = this.height  * Math.random();
+				}
+				blobOpacity[i] = Math.random();
+			}
+			this.broadcast("initializeBlobs", {blobPoints: blobPoints, blobOpacity: blobOpacity});
 		}
+	},
+	
+	initializeBlobs: function(data) {
+		this.initialPoints = data.blobPoints;
+		this.initialOpacity = data.blobOpacity;
 		
-
 		var colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
 		this.blobs = [];
 
 		// create 6 blobs
-		for(var n = 0; n < 6; n++) {
-			// build array of random points
-			var points = [];
-			for(var i = 0; i < 5; i++) {
-				points.push(this.width  * Math.random());
-				points.push(this.height * Math.random());
-			}
-
+		for(var n=0; n<this.nBlobs; n++) {
 			var blob = new Kinetic.Line({
-							points: points,
+							points: this.initialPoints[n],
 							fill: colors[n],
 							stroke: 'black',
 							strokeWidth: 2,
 							tension: 0,
 							closed: true,
-							opacity: Math.random(),
+							opacity: this.initialOpacity[n],
 							draggable: true
 						});
 
@@ -76,11 +89,13 @@ var kinetic_oscillating = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
+		if(!this.blobs) return;
+	
 		var period        = 2000;
 		var amplitude     = 1;
 		var centerTension = 0;
 
-		for(var n = 0; n < this.blobs.length; n++) {
+		for(var n=0; n<this.blobs.length; n++) {
 			this.blobs[n].setTension(amplitude * Math.sin(this.t*1000.0 * 2 * Math.PI / period) + centerTension);
 		}
 

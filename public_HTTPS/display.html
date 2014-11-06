@@ -153,6 +153,17 @@
 		wsio.on('setAsMasterDisplay', function() {
 			isMaster = true;
 		});
+		
+		wsio.on('broadcast', function(data) {
+			if(applications[data.app] === undefined){
+				setTimeout(function() {
+					applications[data.app][data.func](data.data);
+				}, 500);
+			}
+			else {
+				applications[data.app][data.func](data.data);
+			}
+		});
 
 		wsio.on('addScript', function(script_data) {
 			var js = document.createElement('script');

@@ -351,6 +351,7 @@ function initializeWSClient(wsio) {
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
 		wsio.on('appResize', wsAppResize);
+		wsio.on('broadcast', wsBroadcast);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
@@ -854,6 +855,13 @@ function wsAppResize(wsio, data) {
 			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		}
 	}
+}
+
+//
+// Broadcast data to all clients who need apps
+//
+function wsBroadcast(wsio, data) {
+	broadcast('broadcast', data, 'requiresFullApps');
 }
 
 
