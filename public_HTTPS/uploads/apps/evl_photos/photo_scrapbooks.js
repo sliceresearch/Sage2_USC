@@ -8,13 +8,11 @@
 // location gives the root directory of the images listed in list
 
     SAGE2_photoAlbums = [];
-    SAGE2_photoAlbums[0] = {list:"http://lyra.evl.uic.edu:9000/evl_Pictures/photos.txt",
-            location:"http://lyra.evl.uic.edu:9000/evl_Pictures/"};
+    SAGE2_photoAlbums[0] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
+            location:"https://sage.evl.uic.edu/evl_Pictures/"};
     SAGE2_photoAlbums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
             location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
     SAGE2_photoAlbums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
             location:"http://cdn.abclocal.go.com/three/wls/webcam/"};
     SAGE2_photoAlbums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
             location:"http://lyra.evl.uic.edu:9000/posters/"};
-    SAGE2_photoAlbums[4] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
-            location:"https://sage.evl.uic.edu/evl_Pictures/"};
