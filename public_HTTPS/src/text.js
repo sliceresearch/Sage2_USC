@@ -207,7 +207,14 @@ function text(){
 
 	
 	this.event = function( type, userId, x, y, data , date, user_color){
+        var curL;
+        var curC;
+        var pre;
+        var post;
+        var t;
+        
         user_color = user_color || [255,0,0];
+	    
 	    if ( type == "pointerPress" ) {
 	       if ( data.button == "left" ) {
 				if ((userId in this.blinkerArr)===false) {
@@ -261,8 +268,8 @@ function text(){
                 var theAsciiCode = data.code; 
 				var ch;
 				if ((userId in this.blinkerArr) === false) return; // Bad code. need to remove once the event handler has been modified.
-				var curL = this.blinkerArr[userId].blinkerL;
-				var curC = this.blinkerArr[userId].blinkerC;
+				curL = this.blinkerArr[userId].blinkerL;
+				curC = this.blinkerArr[userId].blinkerC;
 				console.log(curC);
 				//alert(theAsciiCode);
 				if (theAsciiCode == 13){
@@ -288,14 +295,14 @@ function text(){
 	        // alt, command, up arrow
             //comes in as javascript key code
             var theJavascriptCode = data.code;
-			var curL = userId && this.blinkerArr[userId].blinkerL;
-			var curC = this.blinkerArr[userId].blinkerC;
+			curL = userId && this.blinkerArr[userId].blinkerL;
+			curC = this.blinkerArr[userId].blinkerC;
 			console.log(curC);
 			if (theJavascriptCode == 8){
 				if (curL in this.textArr ){
 					
-					var pre = this.textArr[curL].substring(0,curC-1);
-					var post = this.textArr[curL].substring(curC,this.textArr[curL].length);
+					pre = this.textArr[curL].substring(0,curC-1);
+					post = this.textArr[curL].substring(curC,this.textArr[curL].length);
 					if (curC > 0 ){
 						
 						this.textArr[curL] = pre + post;
@@ -303,7 +310,7 @@ function text(){
 
 					}
 					else if (curL > 1){
-						var t = "";
+						t = "";
 						if (curL-1 in this.textArr){						
 							t =  this.textArr[curL-1];
 						}
@@ -325,8 +332,8 @@ function text(){
 		
 			}
 			else if (theJavascriptCode == 46){
-				var pre = this.textArr[curL].substring(0,curC);
-				var post = this.textArr[curL].substring(curC+1,this.textArr[curL].length);
+				pre = this.textArr[curL].substring(0,curC);
+				post = this.textArr[curL].substring(curC+1,this.textArr[curL].length);
 
 				if ((curL in this.textArr )=== false) return;
 
@@ -334,7 +341,7 @@ function text(){
 					this.textArr[curL] = pre + post;
 				}
 				else{
-					var t = "";
+					t = "";
 					if (curL+1 in this.textArr){
 						t = this.textArr[curL+1];
 						this.textArr.splice(curL+1,1);

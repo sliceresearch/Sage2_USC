@@ -59,21 +59,51 @@ var assets      = require('./src/node-assets');         // manages the list of f
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var radialmenu  = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
 
-var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-console.log("Detected Server OS as: " + platform);
-
-var SAGE2_version = sageutils.getShortVersion();
-console.log("SAGE2 Short Version:", SAGE2_version);
-
 
 
 // Command line arguments
 program
   .version(SAGE2_version)
-  .option('-i, --interactive', 'Interactive prompt')
+  .option('-i, --no-interactive',       'Non interactive prompt')
   .option('-f, --configuration <file>', 'Specify a configuration file')
-  .option('-s, --session [name]', 'Load a session file (last session if omitted)')
+  .option('-l, --logfile [file]',       'Specify a log file')
+  .option('-q, --no-output',            'Quiet, no output')
+  .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .parse(process.argv);
+
+// Logging mechanism
+if (program.logfile) {
+	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
+	var log_file   = fs.createWriteStream(path.resolve(logname), {flags : 'w+'});
+	var log_stdout = process.stdout;
+
+	// Redirect console.log to a file and still produces an output or not
+	if (program.output === false) {
+		console.log = function(d) { //
+			log_file.write(util.format(d) + '\n');
+			program.interactive = undefined;
+		};
+	} else {
+		console.log = function(d) { //
+			log_file.write(util.format(d) + '\n');
+			log_stdout.write(util.format(d) + '\n');
+		};
+	}
+}
+else if (program.output === false) {
+	console.log = function(d) { //
+		program.interactive = undefined;
+	};
+}
+
+// Platform detection
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+console.log("Detected Server OS as: " + platform);
+
+// Version calculation
+var SAGE2_version = sageutils.getShortVersion();
+console.log("SAGE2 Short Version:", SAGE2_version);
+
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
@@ -111,6 +141,7 @@ var itemCount = 0;
 
 // global variables to manage clients
 var clients = [];
+var masterDisplay = null;
 var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
@@ -120,8 +151,8 @@ var radialMenus = {};
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-qr_png.on('readable', function() { console.log('processing QR'); });
-qr_png.on('end',      function() { console.log('QR image generated', qr_out); });
+// qr_png.on('readable', function() { process.stdout.write('.'); });
+qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
@@ -161,6 +192,7 @@ httpServerIndex.httpGET('/config', sendConfig); // send config object to client 
 // create HTTPS server for all SAGE content
 var httpsServerApp = new httpserver("public_HTTPS");
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
+httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
 
 // create HTTPS options - sets up security keys
@@ -213,6 +245,19 @@ function closeWebSocketClient(wsio) {
 	}
 	
 	if(wsio.clientType == "webBrowser") webBrowserClient = null;
+	
+	if(wsio === masterDisplay){
+		var i;
+		masterDisplay = null;
+		for(i=0; i<clients.length; i++){
+			if(clients[i].clientType === "display" && clients[i] !== wsio){
+				masterDisplay = clients[i];
+				clients[i].emit('setAsMasterDisplay');
+				break;
+			}
+		}
+	}
+	
 	removeElement(clients, wsio);
 }
 
@@ -257,19 +302,24 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
 	
-	initializeWSClient(wsio);
-	
-	clients.push(wsio);
-	if (wsio.clientType==="display")
+	if (wsio.clientType==="display") {
+		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-	else
+	}
+	else {
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+	}
+	
+	initializeWSClient(wsio);
+	clients.push(wsio);
 }
 
 function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
+	
+	if(wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
 	
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
@@ -301,6 +351,7 @@ function initializeWSClient(wsio) {
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
 		wsio.on('appResize', wsAppResize);
+		wsio.on('broadcast', wsBroadcast);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
@@ -804,6 +855,13 @@ function wsAppResize(wsio, data) {
 			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		}
 	}
+}
+
+//
+// Broadcast data to all clients who need apps
+//
+function wsBroadcast(wsio, data) {
+	broadcast('broadcast', data, 'requiresFullApps');
 }
 
 
@@ -1384,20 +1442,20 @@ function wsAddNewControl(wsio, data){
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
 	var regTI = /textInput/;
 	var regSl = /slider/;
+	var regButton = /button/;
 	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if (regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
+	if ((regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) && remoteInteraction[data.addr].lockedControl() === null ) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	if (data.ctrlId !==null && regSl.test(data.ctrlId) ) {
+	var regButton = /button/
+	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
-	}
-	if (data.activateControl) {
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
@@ -1495,6 +1553,9 @@ function loadConfiguration() {
 	
 	if (userConfig.ui.titleBarHeight) userConfig.ui.titleBarHeight = parseInt(userConfig.ui.titleBarHeight, 10);
 	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
+
+	if (userConfig.ui.widgetControlSize) userConfig.ui.widgetControlSize = parseInt(userConfig.ui.widgetControlSize, 10);
+	else userConfig.ui.widgetControlSize = Math.round(0.020 * minDim);
 	
 	if (userConfig.ui.titleTextSize) userConfig.ui.titleTextSize = parseInt(userConfig.ui.titleTextSize, 10);
 	else userConfig.ui.titleTextSize  = Math.round(0.015 * minDim);
@@ -1939,6 +2000,19 @@ index.on('listening', function (e) {
 	}
 });*/
 
+// CTRL-C intercept
+process.on('SIGINT', function() {
+	saveSession();
+	assets.saveAssets();
+	if( omicronRunning )
+		omicronManager.disconnect();
+	console.log('');
+	console.log('SAGE2 done');
+	console.log('');
+	process.exit(0);
+});
+
+
 // Start the HTTP server
 index.listen(config.index_port);
 // Start the HTTPS server
@@ -2105,7 +2179,7 @@ function findAppUnderPointer(pointerX, pointerY) {
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
-			if (controls[i].show == true)
+			if (controls[i].show === true)
 				return controls[i];
 			else
 				return null;

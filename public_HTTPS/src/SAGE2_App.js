@@ -54,7 +54,7 @@ var SAGE2_App = Class.extend( {
 		this.startDate = date;
 
 		if (this.enableControls === true)
-			this.controls = new widgetSpec(id);
+			this.controls = new SAGE2WidgetControlBar(id);
 		
 		this.prevDate  = date;
 		this.frame     = 0;
@@ -179,6 +179,10 @@ var SAGE2_App = Class.extend( {
 		msgObject.height = newHeight;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
+	},
+	
+	broadcast: function (funcName, data) {
+		broadcast({app: this.div.id, func: funcName, data: data});
 	},
 
 	// Prints message to local browser console and send to server

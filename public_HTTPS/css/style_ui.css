@@ -224,16 +224,19 @@ span {
 	right: 10px;
 	bottom: 10px;
 }
-
 #fileCloseBtn {
 	position: absolute;
 	right: 90px;
 	bottom: 10px;
 }
-
 #fileDeleteBtn {
 	position: absolute;
 	left: 10px;
+	bottom: 10px;
+}
+#fileUploadBtn {
+	position: absolute;
+	left: 90px;
 	bottom: 10px;
 }
 
@@ -244,6 +247,7 @@ span {
 	-moz-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
+
 
 #arrangementItems {
 	margin: 10px 10px 66px 10px;
@@ -274,6 +278,47 @@ span {
 	bottom: 10px;
 }
 
+
+
+#infoDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+#infoItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+#helpContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#adminContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#infoContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#informationContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#infoCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+
+
 #settingsDialog {
 	top: 50%;
 	left: 50%;
@@ -300,17 +345,6 @@ span {
 	overflow: auto;
 }
 
-#browserCloseBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
-}
-#browserOpenBtn {
-	position: absolute;
-	right: 90px;
-	bottom: 10px;
-}
-
 #browserItemsContainer {
 	width: 400px;
 	float: left;
@@ -319,6 +353,23 @@ span {
 
 #browserItemsContainer td {
 	padding-bottom: 4px;
+}
+
+#openWebpageUrl {
+	width: 330px;
+	height: 16px;
+}
+
+#browserOpenBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#browserCloseBtn {
+	position: absolute;
+	right: 90px;
+	bottom: 10px;
 }
 
 
@@ -380,8 +431,60 @@ span {
 	left: 10px;
 	bottom: 10px;
 }
-
 #ffShareWindowBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+
+#localfileDialog {
+	top: 40%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width:  510px;
+	height: 100px;
+}
+
+#cancelFilesBtn2 {
+	position: absolute;
+	right: 10px;
+	top: 12px;
+}
+
+#localfileItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+
+#uploadDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width: 310px;
+	height: 60px;
+}
+#localFilesBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+#dropboxFilesBtn {
+	position: absolute;
+	left: 90px;
+	bottom: 10px;
+}
+#cancelFilesBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+#cancelFilesBtn {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;

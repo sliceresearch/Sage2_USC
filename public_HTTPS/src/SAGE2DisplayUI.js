@@ -8,7 +8,7 @@ function SAGE2DisplayUI() {
 		this.logo.onload = function(event) {
 			_this.resize();
 		};
-		this.logo.src = "images/EVL-LAVA_UI.svg"
+		this.logo.src = "images/EVL-LAVA_UI.svg";
 		this.logoAspect = 3.47828052509;
 		this.fileDrop = false;
 		this.fileUpload = false;
@@ -40,7 +40,12 @@ function SAGE2DisplayUI() {
 		}
 		logoX = sage2UI.width/2  - logoW/2;
 		logoY = sage2UI.height/2 - logoH/2;
-		ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+
+		// doesnt seem enough for Internet Explorer: SVG file might not be loaded
+		if (this.logo.complete && this.logo.naturalWidth !== undefined) {
+			// draw the logo in the background
+			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+		}
 		
 		// applications
 		for(i=0; i<this.applications.length; i++){
@@ -333,7 +338,7 @@ function SAGE2DisplayUI() {
 	this.keyPress = function(charCode) {
 		this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 		return true;
-	}
+	};
 	
 	this.resize = function() {
 		var displayUI = document.getElementById('displayUI');
