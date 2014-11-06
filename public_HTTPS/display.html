@@ -45,6 +45,7 @@
 	var hostname;
 	var port;
 	var dt;
+	var isMaster;
 	
 	var hostAlias    = {};
 	
@@ -89,6 +90,8 @@
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		console.log("Connected to server: ", window.location.origin);
+		
+		isMaster = false;
 		
 		wsio.open(function() {
 			var clientDescription = {
@@ -145,6 +148,10 @@
 			
 			// Global initialization
 			SAGE2_initialize(startTime);
+		});
+		
+		wsio.on('setAsMasterDisplay', function() {
+			isMaster = true;
 		});
 
 		wsio.on('addScript', function(script_data) {

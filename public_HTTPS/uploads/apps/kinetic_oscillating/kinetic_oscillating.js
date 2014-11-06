@@ -36,6 +36,11 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		this.stage  = new Kinetic.Stage({container: this.element.id, width: this.width, height: this.height});
 		this.layer  = new Kinetic.Layer();
 		
+		
+		if(isMaster){
+			console.log("I'm master! " + clientID);
+		}
+		
 
 		var colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
 		this.blobs = [];

@@ -141,6 +141,7 @@ var itemCount = 0;
 
 // global variables to manage clients
 var clients = [];
+var masterDisplay = null;
 var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
@@ -244,6 +245,19 @@ function closeWebSocketClient(wsio) {
 	}
 	
 	if(wsio.clientType == "webBrowser") webBrowserClient = null;
+	
+	if(wsio === masterDisplay){
+		var i;
+		masterDisplay = null;
+		for(i=0; i<clients.length; i++){
+			if(clients[i].clientType === "display" && clients[i] !== wsio){
+				masterDisplay = clients[i];
+				clients[i].emit('setAsMasterDisplay');
+				break;
+			}
+		}
+	}
+	
 	removeElement(clients, wsio);
 }
 
@@ -288,19 +302,24 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
 	
-	initializeWSClient(wsio);
-	
-	clients.push(wsio);
-	if (wsio.clientType==="display")
+	if (wsio.clientType==="display") {
+		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-	else
+	}
+	else {
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+	}
+	
+	initializeWSClient(wsio);
+	clients.push(wsio);
 }
 
 function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
+	
+	if(wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
 	
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
