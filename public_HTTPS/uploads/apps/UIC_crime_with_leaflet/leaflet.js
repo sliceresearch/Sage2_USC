@@ -183,6 +183,24 @@ changeMap: function()
 		}
 },
 
+zoomIn: function()
+{
+	var z = this.map.getZoom();
+	this.map.setZoom(z+1, {animate: false});
+	this.lastZoom = date;
+	
+	var z2 = this.map.getZoom();
+},
+
+zoomOut: function()
+{
+	var z = this.map.getZoom();
+	this.map.setZoom(z-1, {animate: false});
+	this.lastZoom = date;
+	
+	var z2 = this.map.getZoom();
+},
+
 dealWithData: function(collection, today)
 {
 	var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
@@ -308,6 +326,18 @@ dealWithData: function(collection, today)
             //This is executed after the button click animation occurs.
             this.changeMap();
         }.bind(this)});
+
+
+        this.controls.addButton({type:"fastforward",sequenceNo:6,action:function(date){
+            this.zoomIn();
+        }.bind(this)});
+
+        this.controls.addButton({type:"rewind",sequenceNo:7,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.zoomOut();
+        }.bind(this)});
+
+
         this.controls.finishedAddingControls(); // Important
 	},
 
@@ -368,21 +398,14 @@ dealWithData: function(collection, today)
 
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
-				var z = this.map.getZoom();
-				this.map.setZoom(z+1, {animate: false});
-				this.lastZoom = date;
-				
-				var z2 = this.map.getZoom();
+				this.zoomIn();
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
-				var z = this.map.getZoom();
-				this.map.setZoom(z-1, {animate: false});
-				this.lastZoom = date;
-				
-				var z2 = this.map.getZoom();
+				this.zoomOut();
+
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
