@@ -32,6 +32,13 @@ function addCSS( url, callback ) {
 	document.head.appendChild( fileref );
 }
 
+/*
+SAGE2_policeDistricts = [
+	"1232", 
+	"1231", 
+	"0124"
+	];
+*/
 
 var leaflet = SAGE2_App.extend( {
 	construct: function() {
@@ -133,10 +140,15 @@ var leaflet = SAGE2_App.extend( {
 			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
 			mySelf.g = mySelf.svg.append("g");
 
+/*
 			mySelf.getNewData(mySelf,"1232", date);
 			mySelf.getNewData(mySelf,"1231", date);
 			mySelf.getNewData(mySelf,"0124", date);
+*/
 
+			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++){
+				mySelf.getNewData(mySelf,SAGE2_policeDistricts[loopIdx], date);
+				}
 
 		// attach the SVG into the this.element node provided to us
 		var box="0,0,"+width+","+height;
