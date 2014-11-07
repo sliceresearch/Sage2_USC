@@ -33,10 +33,10 @@ var tweetcloud = SAGE2_App.extend( {
 		var box    = "0,0,"+width+","+height;
 		
 		this.svg = d3.select("#" + id + "_div").append("svg")
+		.attr("id",      id + "_svg")
 		.attr("width",   width)
 		.attr("height",  height)
 		.attr("viewBox", box);
-		this.svg.id = id + "_svg";
 		
 		this.words = [];
 		this.min = 1; //9e12;
@@ -119,18 +119,22 @@ var tweetcloud = SAGE2_App.extend( {
 		// clear content
 		this.svg.selectAll("*").remove();
 		
+		var width  = parseInt(this.element.style.width,  10);
+		var height = parseInt(this.element.style.height, 10);
+		var box    = "0,0,"+width+","+height;
+		this.svg.attr("viewBox", box);
+		
 		this.generateWordCloud();
 	},
 
 	resize: function(date) {
 		this.svg.attr("width",  parseInt(this.element.style.width,  10));
 		this.svg.attr("height", parseInt(this.element.style.height, 10));
-		
-		//this.refresh(date);
 	},
 	
 	event: function(eventType, pos, user, data, date) {
-		
-		//this.refresh(date);
+		if(eventType === "keyboard"){
+			if(data.character === " ") this.refresh(date);
+		}
 	}
 });
