@@ -29,35 +29,36 @@
 // Importing modules (from node_modules directory)
 
 // npm registry: built-in or defined in package.json
+var colors      = require('colors');              // pretty colors in the terminal
 var crypto      = require('crypto');              // https encryption
+var exec        = require('child_process').exec;  // execute child process
+var formidable  = require('formidable');          // upload processor
 var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
 var json5       = require('json5');               // JSON format that allows comments
 var os          = require('os');                  // operating system access
-var util        = require('util');                // node util
 var path        = require('path');                // file path extraction and creation
+var program     = require('commander');           // parsing command-line arguments
+var qrimage     = require('qr-image');            // qr-code generation
+var readline    = require('readline');            // to build an evaluation loop (builtin module)
 var request     = require('request');             // external http requests
 var sprint      = require('sprint');              // pretty formating (sprintf)
-var readline    = require('readline');            // to build an evaluation loop (builtin module)
-var program     = require('commander');           // parsing command-line arguments
-var colors      = require('colors');              // pretty colors in the terminal
-var exec        = require('child_process').exec;  // execute child process
-var formidable  = require('formidable');          // upload processor
-var qrimage     = require('qr-image');            // qr-code generation
+var twit        = require('twit');                // twitter api
+var util        = require('util');                // node util
 
 // custom node modules
-var httpserver  = require('./src/node-httpserver');     // creates web server
-var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
-var loader      = require('./src/node-itemloader');     // handles sage item creation
-var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
-var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var omicron     = require('./src/node-omicron');        // handles Omicron input events
-var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
 var assets      = require('./src/node-assets');         // manages the list of files
-var sageutils   = require('./src/node-utils');          // provides the current version number
+var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
+var httpserver  = require('./src/node-httpserver');     // creates web server
+var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var loader      = require('./src/node-itemloader');     // handles sage item creation
+var omicron     = require('./src/node-omicron');        // handles Omicron input events
 var radialmenu  = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
+var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var sageutils   = require('./src/node-utils');          // provides the current version number
+var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
 
 
 
@@ -107,8 +108,19 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
-console.log(config);
 
+var twitter = null;
+if(config.advanced !== undefined && config.advanced.twitter !== undefined){
+	twitter = new twit({
+		consumer_key:         config.advanced.twitter.consumerKey,
+		consumer_secret:      config.advanced.twitter.consumerSecret,
+		access_token:         config.advanced.twitter.accessToken,
+		access_token_secret:  config.advanced.twitter.accessSecret
+	});
+	delete config.advanced.twitter;
+}
+
+console.log(config);
 
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
@@ -352,6 +364,7 @@ function initializeWSClient(wsio) {
 		wsio.on('updateAppState', wsUpdateAppState);
 		wsio.on('appResize', wsAppResize);
 		wsio.on('broadcast', wsBroadcast);
+		wsio.on('searchTweets', wsSearchTweets);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
@@ -862,6 +875,20 @@ function wsAppResize(wsio, data) {
 //
 function wsBroadcast(wsio, data) {
 	broadcast('broadcast', data, 'requiresFullApps');
+}
+
+//
+// Search tweets using Twitter API
+//
+function wsSearchTweets(wsio, data) {
+	twitter.get('search/tweets', data.query, function(err, info, response) {
+		if(err) throw err;
+		
+		if(data.broadcast === true)
+			broadcast('searchTweetResults', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
+		else
+			wsio.emit('searchTweetResults', {app: data.app, func: data.func, data: {query: data.query, result: info}});
+	});
 }
 
 

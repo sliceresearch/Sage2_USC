@@ -184,6 +184,10 @@ var SAGE2_App = Class.extend( {
 	broadcast: function (funcName, data) {
 		broadcast({app: this.div.id, func: funcName, data: data});
 	},
+	
+	searchTweets: function(funcName, query, broadcast) {
+		searchTweets({app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	},
 
 	// Prints message to local browser console and send to server
 	//   accept a string as parameter: this.log("my message")

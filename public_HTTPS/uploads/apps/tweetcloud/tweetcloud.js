@@ -13,10 +13,11 @@ var tweetcloud = SAGE2_App.extend( {
 		// call super-class 'construct'
 		arguments.callee.superClass.construct.call(this);
 		
-		this.svg   = null;
-		this.words = null;
-		this.min   = null;
-		this.max   = null;
+		this.svg    = null;
+		this.tweets = null;
+		this.words  = null;
+		this.min    = null;
+		this.max    = null;
 		
 		this.resizeEvents = "continuous";
 	},
@@ -38,6 +39,11 @@ var tweetcloud = SAGE2_App.extend( {
 		.attr("height",  height)
 		.attr("viewBox", box);
 		
+		if(isMaster){
+			this.searchTweets("tweetResults", {q: "#UIC", language: "en", count: 100}, true);
+		}
+		
+		this.tweets = [];
 		this.words = [];
 		this.min = 1; //9e12;
 		this.max = 7; //0;
@@ -54,6 +60,17 @@ var tweetcloud = SAGE2_App.extend( {
 
 	load: function(state, date) {
 		
+	},
+	
+	tweetResults: function(data) {
+		var i;
+		
+		this.tweets = [];
+		for(i=0; i<data.result.statuses.length; i++){
+			var text = data.result.statuses[i].text;
+			if(data.result.statuses[i].retweeted_status) text = data.result.statuses[i].retweeted_status.text;
+			this.tweets.push(text);
+		}
 	},
 	
 	generateWordCloud: function() {
