@@ -885,9 +885,9 @@ function wsSearchTweets(wsio, data) {
 		if(err) throw err;
 		
 		if(data.broadcast === true)
-			broadcast('searchTweetResults', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
 		else
-			wsio.emit('searchTweetResults', {app: data.app, func: data.func, data: {query: data.query, result: info}});
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}});
 	});
 }
 
