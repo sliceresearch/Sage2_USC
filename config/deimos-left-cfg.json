@@ -1,7 +1,7 @@
 {
 	"host": "deimos.evl.uic.edu",
-	"port": 443,
-	"index_port": 80,
+	"port": 1442,
+	"index_port": 1081,
 
        "ui": {
                // clock setting: 12-hour or 24-hour
@@ -26,10 +26,6 @@
 		      "color": "#000000",
 		      "image": "images/background/moonvalley3.jpg",
 		      "style": "fit",
-                "watermark": {
-                        "svg": "images/EVL-logo.svg",
-                        "color": "rgba(255, 255, 255, 0.2)"
-                },
 		      },
 	"resolution": {
 		"width": 1080,
