@@ -391,6 +391,43 @@
 				loadApplication();
 			}
 			else {
+				var loadResource = function(idx) {
+					if (dependencies[data.resrc[idx]] === true) {
+						if((idx+1) < data.resrc.length) {
+							loadResource(idx+1);
+						}
+						else {
+							console.log("all resources loaded");
+							loadApplication();
+						}
+					}
+					
+					dependencies[data.resrc[idx]] = false;
+						
+					var js = document.createElement("script");
+					js.addEventListener('error', function(event) {
+						console.log("Error loading script: " + data.resrc[idx]);
+					}, false);
+	
+					js.addEventListener('load', function(event) {
+						dependencies[data.resrc[idx]] = true;
+						
+						if((idx+1) < data.resrc.length) {
+							loadResource(idx+1);
+						}
+						else {
+							console.log("all resources loaded");
+							loadApplication();
+						}
+					});
+					js.type = "text/javascript";
+					js.src = url + "/" + data.resrc[idx];
+					document.head.appendChild(js);
+				};
+				
+				loadResource(0);
+				
+				/*
 				var i;
 				var resources = {};
 				for(i=0; i<data.resrc.length; i++){
@@ -426,6 +463,7 @@
 						document.head.appendChild(js);
 					}
 				});
+				*/
 			}
 			
 			var cornerSize = Math.min(data.width, data.height) / 5;
