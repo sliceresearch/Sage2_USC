@@ -60,7 +60,8 @@ var sagepointer = require('./src/node-sagepointer');    // handles sage pointers
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
 
-
+// Version calculation
+var SAGE2_version = sageutils.getShortVersion();
 
 // Command line arguments
 program
@@ -80,14 +81,31 @@ if (program.logfile) {
 
 	// Redirect console.log to a file and still produces an output or not
 	if (program.output === false) {
-		console.log = function(d) { //
+		console.log = function(d) {
 			log_file.write(util.format(d) + '\n');
 			program.interactive = undefined;
 		};
 	} else {
-		console.log = function(d) { //
-			log_file.write(util.format(d) + '\n');
-			log_stdout.write(util.format(d) + '\n');
+		console.log = function() {
+			if ((Array.prototype.slice.call(arguments)).length == 1 && 
+				typeof Array.prototype.slice.call(arguments)[0] == 'string') {
+				log_stdout.write( (Array.prototype.slice.call(arguments)).toString() + '\n' );
+			}
+			else {
+				var i = 0;
+				var s = "";
+				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];;
+				while (i < args.length) {
+					if (i===0)
+						s = args[i];
+					else
+						s += " " + args[i];
+					i++;
+				}
+				log_stdout.write(s + '\n');
+				log_file.write(s + '\n');
+			}
+
 		};
 	}
 }
@@ -99,10 +117,7 @@ else if (program.output === false) {
 
 // Platform detection
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-console.log("Detected Server OS as: " + platform);
-
-// Version calculation
-var SAGE2_version = sageutils.getShortVersion();
+console.log("Detected Server OS as:", platform);
 console.log("SAGE2 Short Version:", SAGE2_version);
 
 
