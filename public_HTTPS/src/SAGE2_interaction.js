@@ -352,14 +352,14 @@ function SAGE2_interaction(wsio) {
 		if(code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
 		}
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	
 	this.pointerKeyPressMethod = function(event) {
 		var code = parseInt(event.charCode, 10);
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	

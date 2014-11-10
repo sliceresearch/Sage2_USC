@@ -809,7 +809,14 @@
 				touchStartY = trackpadTouches[0].clientY;
 			}
 			else if(trackpadTouches.length === 2) {
-			
+				var touch0X = trackpadTouches[0].clientX;
+				var touch0Y = trackpadTouches[0].clientY;
+				var touch1X = trackpadTouches[1].clientX;
+				var touch1Y = trackpadTouches[1].clientY;
+				touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+				
+				interactor.pointerReleaseMethod({button: 0});
+				touchMode = "scale";
 			}
 		}
 		else if(event.target.id === "sage2MobileLeftButton") {
@@ -850,7 +857,7 @@
 			event.stopPropagation();
 		}
 		else if(event.target.id === "sage2MobileTrackpad") {
-			// nothing
+			if(touchMode === "scale") touchMode = "";
 			event.preventDefault();
 			event.stopPropagation();
 		}
@@ -932,6 +939,18 @@
 				if(touchHold !== null) {
 					clearTimeout(touchHold);
 					touchHold = null;
+				}
+			}
+			else if(touchMode === "scale") {
+				var touch0X = trackpadTouches[0].clientX;
+				var touch0Y = trackpadTouches[0].clientY;
+				var touch1X = trackpadTouches[1].clientX;
+				var touch1Y = trackpadTouches[1].clientY;
+				var newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+				if(Math.abs(newDist - touchDist) > 25){
+					var wheelDelta = parseInt((touchDist-newDist)/256, 10);
+					interactor.pointerScrollMethod({deltaY: wheelDelta});
+					touchDist = newDist;
 				}
 			}
 			
