@@ -18,6 +18,7 @@ var previewWindowOffset = 0.74;
 
 // radial menu buttons
 var radialMenuScale = 1.0;
+var thumbnailWindowMinTextHeight = 24;
 
 var radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
 var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
@@ -48,6 +49,10 @@ function radialMenu(){
 		radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
 		radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
 		
+		this.textHeaderHeight = 18  * radialMenuScale;
+		//if( this.textHeaderHeight < thumbnailWindowMinTextHeight )
+		//	this.textHeaderHeight = thumbnailWindowMinTextHeight;
+				
 		this.element = document.getElementById(id); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
 		
@@ -463,8 +468,8 @@ function radialMenu(){
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale, 5 * radialMenuScale );
 			this.ctx.lineTo( previewImageX - 10 - 40 * radialMenuScale + 2.5 * radialMenuScale, 5 * radialMenuScale ); // Top vertical line
-			this.ctx.lineTo( previewImageX - 10, this.thumbnailWindowPosition.y + 18  * radialMenuScale ); // Angled line
-			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale, this.thumbnailWindowPosition.y + 18  * radialMenuScale ); // Bottom horizontal line
+			this.ctx.lineTo( previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight ); // Angled line
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale, this.thumbnailWindowPosition.y + this.textHeaderHeight ); // Bottom horizontal line
 			this.ctx.closePath();
 
 			this.ctx.fillStyle = '#50505080'
@@ -475,7 +480,7 @@ function radialMenu(){
 			
 			// Thumbnail window - Vert line
 			this.ctx.beginPath();
-			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale , this.thumbnailWindowPosition.y + 18  * radialMenuScale );
+			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale , this.thumbnailWindowPosition.y + this.textHeaderHeight );
 			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale , thumbnailWindowSize.y);
 			this.ctx.strokeStyle = '#ffffff';
 			this.ctx.lineWidth = 5 * radialMenuScale;
@@ -483,8 +488,8 @@ function radialMenu(){
 						
 			// Thumbnail window - Vert line across preview window
 			this.ctx.beginPath();
-			this.ctx.moveTo( previewImageX - 10, this.thumbnailWindowPosition.y + 18  * radialMenuScale );
-			this.ctx.lineTo( previewImageX - 10 + previewImageSize + 20, this.thumbnailWindowPosition.y + 18  * radialMenuScale );
+			this.ctx.moveTo( previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight );
+			this.ctx.lineTo( previewImageX - 10 + previewImageSize + 20, this.thumbnailWindowPosition.y + this.textHeaderHeight );
 			this.ctx.strokeStyle = '#ffffff';
 			this.ctx.lineWidth = 5 * radialMenuScale;
 			this.ctx.stroke();
@@ -492,9 +497,9 @@ function radialMenu(){
 			//this.drawImage( this.ctx, this.thumbnailWindowFrame, {x: (this.thumbnailWindowPosition.x - 38 * radialMenuScale), y: 0}, {x: 1984 * radialMenuScale, y: 1004}, "rgba(255, 255, 255, 0.9)", 0, false );
 			
 			// Filename text
-			this.ctx.font="24px sans-serif";
+			this.ctx.font= parseInt(this.textHeaderHeight)+"px sans-serif";
 			this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
-			this.ctx.fillText( this.hoverOverText, this.thumbnailWindowPosition.x + 15 * radialMenuScale, this.thumbnailWindowPosition.y + 6  * radialMenuScale );
+			this.ctx.fillText( this.hoverOverText, this.thumbnailWindowPosition.x, this.thumbnailWindowPosition.y + this.textHeaderHeight / 1.8 );
 
 			if( this.hoverOverThumbnail )
 				this.ctx.drawImage( this.hoverOverThumbnail, previewImageX, previewImageY, previewImageSize, previewImageSize );
@@ -1205,7 +1210,7 @@ function radialMenu(){
 						curRow++;
 				}
 
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				//currentButton.setPosition( 0 + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
@@ -1228,7 +1233,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1250,7 +1255,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1273,7 +1278,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize * 2 + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize * 2 + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize * 2 + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize * 2 + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1296,7 +1301,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
 			}
