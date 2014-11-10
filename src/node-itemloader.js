@@ -542,7 +542,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 	});
 };
 
-appLoader.prototype.createMediaStream = function(source, type, encoding, name, width, height, callback) {
+appLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, callback) {
 	var aspectRatio = width/height;
 	
 	var metadata         = {};
@@ -556,6 +556,7 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, w
 	var appInstance = {
 		id: null,
 		title: name,
+		color: color,
 		application: "media_stream",
 		type: "application/stream",
 		url: null,

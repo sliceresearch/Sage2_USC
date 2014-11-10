@@ -729,7 +729,7 @@ function wsStartNewMediaStream(wsio, data) {
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.width, data.height, function(appInstance) {
+	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
@@ -2347,10 +2347,17 @@ function getItemPositionSizeType(item) {
 }
 
 function getAppPositionSize(appInstance) {
-	return {id: appInstance.id, application: appInstance.application, left: appInstance.left,
-			top: appInstance.top, width: appInstance.width, height: appInstance.height,
-			icon: appInstance.icon || null
-		};
+	return {
+		id:          appInstance.id,
+		application: appInstance.application,
+		left:        appInstance.left,
+		top:         appInstance.top,
+		width:       appInstance.width,
+		height:      appInstance.height,
+		icon:        appInstance.icon || null,
+		title:       appInstance.title,
+		color:       appInstance.color || null
+	};
 }
 
 // **************  Pointer Functions *****************

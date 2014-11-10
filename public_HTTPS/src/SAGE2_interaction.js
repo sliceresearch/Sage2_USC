@@ -245,7 +245,7 @@ function SAGE2_interaction(wsio) {
 		
 		var frame = this.captureMediaFrame();
 		var raw = atob(frame.split(",")[1]); // base64 to string
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", color: localStorage.SAGE2_ptrColor, src: raw, type: "image/jpeg", encoding: "binary", width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
 
 		this.broadcasting = true;
 	};
