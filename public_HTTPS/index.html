@@ -812,6 +812,10 @@
 		else if(event.target.id === "sage2MobileLeftButton") {
 			interactor.pointerPressMethod({button: 0});
 			touchMode = "translate";
+			touchHold = setTimeout(function() {
+				interactor.pointerKeyDownMethod({keyCode: 8});
+				interactor.pointerKeyUpMethod({keyCode: 8});
+			}, 1500);
 			
 			event.preventDefault();
 			event.stopPropagation();
@@ -920,6 +924,11 @@
 				
 				touchStartX = touchX;
 				touchStartY = touchY;
+				
+				if(touchHold !== null) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
 			}
 			
 			event.preventDefault();

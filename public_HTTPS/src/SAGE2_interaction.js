@@ -333,7 +333,7 @@ function SAGE2_interaction(wsio) {
 		// exit if 'esc' key
 		if(code === 27) {
 			this.stopSAGE2Pointer();
-			event.preventDefault();
+			event.preventDefault && event.preventDefault();
 		}
 		else {
 			this.wsio.emit('keyDown', {code: code});
@@ -342,7 +342,7 @@ function SAGE2_interaction(wsio) {
 			}
 			// if a special key - prevent default (otherwise let continue to keyPress)
 			if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
-				event.preventDefault();
+				event.preventDefault && event.preventDefault();
 			}
 		}
 	};
