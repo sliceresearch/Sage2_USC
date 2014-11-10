@@ -808,6 +808,9 @@
 				touchStartX = trackpadTouches[0].clientX;
 				touchStartY = trackpadTouches[0].clientY;
 			}
+			else if(trackpadTouches.length === 2) {
+			
+			}
 		}
 		else if(event.target.id === "sage2MobileLeftButton") {
 			interactor.pointerPressMethod({button: 0});
@@ -854,6 +857,7 @@
 		else if(event.target.id === "sage2MobileLeftButton") {
 			if(touchMode === "translate") {
 				interactor.pointerReleaseMethod({button: 0});
+				if(touchTap === 2) interactor.pointerDblClickMethod({});
 			}
 			touchMode = "";
 			event.preventDefault();
