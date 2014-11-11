@@ -608,6 +608,11 @@ function uiBuilder(json_cfg, clientID) {
 		for (var i = 0; i < applist.length; i++) {
 			applist[i].style.display = 'none';
 		}
+		// Hide the apps border
+		var applist = document.getElementsByClassName("windowItem");
+		for (var i = 0; i < applist.length; i++) {
+			applist[i].className = 'windowItemNoBorder';
+		}
 	};
 
 	this.showInterface = function() {
@@ -624,6 +629,11 @@ function uiBuilder(json_cfg, clientID) {
 		var applist = document.getElementsByClassName("windowTitle");
 		for (var i = 0; i < applist.length; i++) {
 			applist[i].style.display = 'block';
+		}
+		// Show the apps border
+		var applist = document.getElementsByClassName("windowItemNoBorder");
+		for (var i = 0; i < applist.length; i++) {
+			applist[i].className = 'windowItem';
 		}
 	};
 }
