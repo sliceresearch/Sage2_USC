@@ -55,9 +55,8 @@ body {
 	box-shadow: 8px 0px 15px #222222;
 }
 .windowItemNoBorder {
-	position:absolute;
-	border: 1px none #000000;
-	box-shadow: 8px 0px 15px #222222;
+        border: 0px none #000000;
+        box-shadow: none;
 }
 
 .windowTitle {

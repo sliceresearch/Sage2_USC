@@ -32,7 +32,7 @@ var chronograph = SAGE2_App.extend( {
 	setParameters: function() {
 		// settings: see http://www.3quarks.com/en/SVGClock/
 		if (this.state.mode === 0) {
-			this.element.style.backgroundColor = "rgba(255,255,255,255)";
+			this.element.style.backgroundColor = "rgba(255,255,255,0)";
 			this.addParameter("dial"               , "din 41091.4");
 			this.addParameter("hourHand"           , "din 41092.3");
 			this.addParameter("minuteHand"         , "din 41092.3");
