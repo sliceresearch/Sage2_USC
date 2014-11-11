@@ -122,7 +122,18 @@ function SAGE2_interaction(wsio) {
 			
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 			
+			//console.log(document.querySelector('meta[name=viewport]'));
 			showSAGE2PointerOverlayNoMouse();
+		}
+	};
+	
+	this.stopSAGE2Pointer = function() {
+		if(hasMouse) {
+			document.exitPointerLock();
+		}
+		else {
+			this.wsio.emit('stopSagePointer');
+			hideSAGE2PointerOverlayNoMouse();
 		}
 	};
 	
@@ -290,40 +301,39 @@ function SAGE2_interaction(wsio) {
 	this.pointerPressMethod = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		this.wsio.emit('pointerPress', {button: btn});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerMoveMethod = function(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
 		this.wsio.emit('pointerMove', {deltaX: Math.round(movementX*this.sensitivity), deltaY: Math.round(movementY*this.sensitivity)});	
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerReleaseMethod = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		this.wsio.emit('pointerRelease', {button: btn});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerDblClickMethod = function(event) {
 		this.wsio.emit('pointerDblClick');
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerScrollMethod = function(event) {
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {wheelDelta: event.deltaY});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerKeyDownMethod = function(event) {
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if(code === 27) {
-			document.exitPointerLock();
-			event.preventDefault();
+			this.stopSAGE2Pointer();
+			event.preventDefault && event.preventDefault();
 		}
 		else {
 			this.wsio.emit('keyDown', {code: code});
@@ -332,7 +342,7 @@ function SAGE2_interaction(wsio) {
 			}
 			// if a special key - prevent default (otherwise let continue to keyPress)
 			if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
-				event.preventDefault();
+				event.preventDefault && event.preventDefault();
 			}
 		}
 	};
@@ -342,14 +352,14 @@ function SAGE2_interaction(wsio) {
 		if(code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
 		}
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	
 	this.pointerKeyPressMethod = function(event) {
 		var code = parseInt(event.charCode, 10);
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	

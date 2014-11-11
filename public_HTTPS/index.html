@@ -2,6 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
 <title>SAGE2 UI - Mobile</title>
 <!--<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">-->
 <script type="text/javascript">
@@ -266,6 +267,7 @@
 		touchTime = 0;
 		touchTapTime = 0;
 		touchHold = null;
+		touchMode = "";
 		
 		type2App = {
 			images: "image_viewer",
@@ -552,6 +554,11 @@
 			hideDialog('appLauncherDialog');
 		}
 		
+		// Mobile SAGE2 Pointer
+		else if (element.id === "closeMobileSAGE2Pointer") {
+			interactor.stopSAGE2Pointer();
+		}
+		
 		// Media Browser Dialog
 		else if (element.id === "fileOpenBtn") {
 			loadSelectedFile();
@@ -791,6 +798,44 @@
 			event.preventDefault();
 			event.stopPropagation();
 		}
+		else if(event.target.id === "sage2MobileTrackpad") {
+			var trackpadTouches = [];
+			for(var i=0; i<event.touches.length; i++){
+				if(event.touches[i].target.id === "sage2MobileTrackpad")
+					trackpadTouches.push(event.touches[i]);
+			}
+			if(trackpadTouches.length === 1) {
+				touchStartX = trackpadTouches[0].clientX;
+				touchStartY = trackpadTouches[0].clientY;
+			}
+			else if(trackpadTouches.length === 2) {
+				var touch0X = trackpadTouches[0].clientX;
+				var touch0Y = trackpadTouches[0].clientY;
+				var touch1X = trackpadTouches[1].clientX;
+				var touch1Y = trackpadTouches[1].clientY;
+				touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+				
+				interactor.pointerReleaseMethod({button: 0});
+				touchMode = "scale";
+			}
+		}
+		else if(event.target.id === "sage2MobileLeftButton") {
+			interactor.pointerPressMethod({button: 0});
+			touchMode = "translate";
+			touchHold = setTimeout(function() {
+				interactor.pointerKeyDownMethod({keyCode: 8});
+				interactor.pointerKeyUpMethod({keyCode: 8});
+			}, 1500);
+			
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		else if(event.target.id === "sage2MobileRightButton") {
+			interactor.pointerPressMethod({button: 2});
+			
+			event.preventDefault();
+			event.stopPropagation();
+		}
 		else {
 			event.stopPropagation();
 		}
@@ -808,6 +853,26 @@
 				if(touchTap === 2) displayUI.pointerDblClick();
 			}
 			touchMode = "";
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		else if(event.target.id === "sage2MobileTrackpad") {
+			if(touchMode === "scale") touchMode = "";
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		else if(event.target.id === "sage2MobileLeftButton") {
+			if(touchMode === "translate") {
+				interactor.pointerReleaseMethod({button: 0});
+				if(touchTap === 2) interactor.pointerDblClickMethod({});
+			}
+			touchMode = "";
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		else if(event.target.id === "sage2MobileRightButton") {
+			interactor.pointerReleaseMethod({button: 2});
+			
 			event.preventDefault();
 			event.stopPropagation();
 		}
@@ -855,6 +920,52 @@
 				}
 			}
 			event.preventDefault();
+		}
+		else if(event.target.id === "sage2MobileTrackpad") {
+			var trackpadTouches = [];
+			for(var i=0; i<event.touches.length; i++){
+				if(event.touches[i].target.id === "sage2MobileTrackpad")
+					trackpadTouches.push(event.touches[i]);
+			}
+			if(touchMode === "translate" || touchMode === "") {
+				var touchX = trackpadTouches[0].clientX;
+				var touchY = trackpadTouches[0].clientY;
+				
+				interactor.pointerMoveMethod({movementX: touchX-touchStartX, movementY: touchY-touchStartY});
+				
+				touchStartX = touchX;
+				touchStartY = touchY;
+				
+				if(touchHold !== null) {
+					clearTimeout(touchHold);
+					touchHold = null;
+				}
+			}
+			else if(touchMode === "scale") {
+				var touch0X = trackpadTouches[0].clientX;
+				var touch0Y = trackpadTouches[0].clientY;
+				var touch1X = trackpadTouches[1].clientX;
+				var touch1Y = trackpadTouches[1].clientY;
+				var newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+				if(Math.abs(newDist - touchDist) > 25){
+					var wheelDelta = parseInt((touchDist-newDist)/256, 10);
+					interactor.pointerScrollMethod({deltaY: wheelDelta});
+					touchDist = newDist;
+				}
+			}
+			
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		else if(event.target.id === "sage2MobileLeftButton") {
+			// nothing
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		else if(event.target.id === "sage2MobileRightButton") {
+			// nothing
+			event.preventDefault();
+			event.stopPropagation();
 		}
 	}
 	
@@ -914,6 +1025,10 @@
 	
 	function showSAGE2PointerOverlayNoMouse() {
 		document.getElementById('sage2MobileContainer').style.display = "block";
+	}
+	
+	function hideSAGE2PointerOverlayNoMouse() {
+		document.getElementById('sage2MobileContainer').style.display = "none";
 	}
 	
 	function sagePointerEnabled() {
@@ -1212,6 +1327,7 @@
 			<div id="sage2MobileLeftButton"></div>
 			<div id="sage2MobileRightButton"></div>
 		</div>
+		<img alt="closeMobileSAGE2Pointer" id="closeMobileSAGE2Pointer" src="images/close.svg" width="32" height="32" style="position:absolute; left:6px; top:6px;"/>
 	</div>
 	
 	
