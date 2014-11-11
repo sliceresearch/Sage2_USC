@@ -1,0 +1,17 @@
+{
+	"main_script": "chronograph.js",
+	"icon": "chronograph.webp",
+	"width": 600,
+	"height": 600,
+	"animation": true,
+	"load": {
+	},
+	"dependencies": [
+	],
+	"title": "Chronograph",
+	"version": "1.0.0",
+	"description": "A chronograph written in Canvas 2D",
+	"keywords": [ "clock", "2d", "svg" ],
+	"author": "Luc Renambot <renambot@uic.edu>",
+	"license": "SAGE2-Software-License"
+}
