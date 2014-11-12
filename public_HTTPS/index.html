@@ -303,7 +303,8 @@
 	}
 	
 	function resizeMenuUI() {
-		var menuScale = (window.innerWidth/window.devicePixelRatio) > 768 ? 1.0 : 0.65;
+		//var menuScale = (window.innerWidth/window.devicePixelRatio) > 512 ? 1.0 : 0.65;
+		var menuScale = window.innerWidth > 1024 ? 1.0 : 0.65;
 	
 		var sage2Pointer = document.getElementById('sage2pointer');
 		sage2Pointer.width  = Math.floor(48 * menuScale);
