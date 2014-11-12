@@ -2102,6 +2102,7 @@ if (program.interactive)
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
+				console.log('regenerate\tregenerates the assets');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -2140,6 +2141,10 @@ if (program.interactive)
 
 			case 'assets':
 				assets.listAssets();
+				break;
+
+			case 'regenerate':
+				assets.regenerateAssets();
 				break;
 
 			case 'tile':
