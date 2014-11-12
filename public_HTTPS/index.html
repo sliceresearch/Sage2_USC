@@ -70,8 +70,6 @@
 	var hasMouse;
 	var browser;
 	
-	var pixelRatio;
-	
 	
 	function init() {
 		browser = {};
@@ -90,8 +88,6 @@
 		browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 		browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 		browser.isLinux    = userAgent.indexOf("linux") >= 0;
-		
-		pixelRatio = window.devicePixelRatio;
 		
 		hostname = window.location.hostname;
 		port = window.location.port;
@@ -295,58 +291,60 @@
 			}
 		});
 		
-		initializeMenuUI();
+		resizeMenuUI();
 		resizeDialogs();
 	}
 	
 	function resize() {
-		if (displayUI) displayUI.resize();
+		resizeMenuUI();
 		resizeDialogs();
+		
+		if (displayUI) displayUI.resize();
 	}
 	
-	function initializeMenuUI() {
-		var menuUI = document.getElementById('menuUI');
-		
+	function resizeMenuUI() {
+		var menuScale = (window.innerWidth/window.devicePixelRatio) > 768 ? 1.0 : 0.65;
+	
 		var sage2Pointer = document.getElementById('sage2pointer');
-		sage2Pointer.width  = parseInt(sage2Pointer.width  / pixelRatio, 10);
-		sage2Pointer.height = parseInt(sage2Pointer.height / pixelRatio, 10);
+		sage2Pointer.width  = Math.floor(48 * menuScale);
+		sage2Pointer.height = Math.floor(48 * menuScale);
 		var sharescreen = document.getElementById('sharescreen');
-		sharescreen.width  = parseInt(sharescreen.width  / pixelRatio, 10);
-		sharescreen.height = parseInt(sharescreen.height / pixelRatio, 10);
+		sharescreen.width  = Math.floor(48 * menuScale);
+		sharescreen.height = Math.floor(48 * menuScale);
 		var applauncher = document.getElementById('applauncher');
-		applauncher.width  = parseInt(applauncher.width  / pixelRatio, 10);
-		applauncher.height = parseInt(applauncher.height / pixelRatio, 10);
+		applauncher.width  = Math.floor(48 * menuScale);
+		applauncher.height = Math.floor(48 * menuScale);
 		var mediabrowser = document.getElementById('mediabrowser');
-		mediabrowser.width  = parseInt(mediabrowser.width  / pixelRatio, 10);
-		mediabrowser.height = parseInt(mediabrowser.height / pixelRatio, 10);
+		mediabrowser.width  = Math.floor(48 * menuScale);
+		mediabrowser.height = Math.floor(48 * menuScale);
 		//var webbrowser = document.getElementById('browser');
-		//webbrowser.width  = parseInt(webbrowser.width  / pixelRatio, 10);
-		//webbrowser.height = parseInt(webbrowser.height / pixelRatio, 10);
+		//webbrowser.width  = Math.floor(48 * menuScale);
+		//webbrowser.height = Math.floor(48 * menuScale);
 		var arrangement = document.getElementById('arrangement');
-		arrangement.width  = parseInt(arrangement.width  / pixelRatio, 10);
-		arrangement.height = parseInt(arrangement.height / pixelRatio, 10);
+		arrangement.width  = Math.floor(48 * menuScale);
+		arrangement.height = Math.floor(48 * menuScale);
 		var settings = document.getElementById('settings');
-		settings.width  = parseInt(settings.width  / pixelRatio, 10);
-		settings.height = parseInt(settings.height / pixelRatio, 10);
+		settings.width  = Math.floor(48 * menuScale);
+		settings.height = Math.floor(48 * menuScale);
 		var info = document.getElementById('info');
-		info.width  = parseInt(info.width  / pixelRatio, 10);
-		info.height = parseInt(info.height / pixelRatio, 10);
+		info.width  = Math.floor(48 * menuScale);
+		info.height = Math.floor(48 * menuScale);
 		
 		var uiButton = getCSSProperty("style_ui.css", ".uiButton");
 		if(uiButton !== null){
-			uiButton.style.width  = parseInt(parseInt(uiButton.style.width,  10) / pixelRatio, 10) + "px";
-			uiButton.style.height = parseInt(parseInt(uiButton.style.height, 10) / pixelRatio, 10) + "px";
+			uiButton.style.width  = Math.floor(165 * menuScale) + "px";
+			uiButton.style.height = Math.floor( 64 * menuScale) + "px";
 		}
 		var uiButtonImg = getCSSProperty("style_ui.css", ".uiButton img");
 		if(uiButtonImg !== null){
-			uiButtonImg.style.top  = parseInt(parseInt(uiButtonImg.style.top,  10) / pixelRatio, 10) + "px";
-			uiButtonImg.style.left = parseInt(parseInt(uiButtonImg.style.left, 10) / pixelRatio, 10) + "px";
+			uiButtonImg.style.top  = Math.floor(8 * menuScale) + "px";
+			uiButtonImg.style.left = Math.floor(8 * menuScale) + "px";
 		}
 		var uiButtonP = getCSSProperty("style_ui.css", ".uiButton p");
 		if(uiButtonP !== null){
-			uiButtonP.style.fontSize = parseInt(parseInt(uiButtonP.style.fontSize, 10) / pixelRatio, 10) + "px";
-			uiButtonP.style.top  = parseInt(parseInt(uiButtonP.style.top,  10) / pixelRatio, 10) + "px";
-			uiButtonP.style.left = parseInt(parseInt(uiButtonP.style.left, 10) / pixelRatio, 10) + "px";
+			uiButtonP.style.fontSize = Math.floor(12 * menuScale) + "px";
+			uiButtonP.style.top  = Math.floor(20 * menuScale) + "px";
+			uiButtonP.style.left = Math.floor(64 * menuScale) + "px";
 		}
 	}
 	
