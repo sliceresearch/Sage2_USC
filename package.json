@@ -1,6 +1,6 @@
 {
 	"name": "SAGE2",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"private": true,
 	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
 	"keywords": [

@@ -14,6 +14,7 @@ var SAGE2_App = Class.extend( {
 		this.div          = null;
 		this.element      = null;
 		this.resrcPath    = null;
+		this.moveEvents   = "never";
 		this.resizeEvents = "never";
 		this.state        = {};
 	

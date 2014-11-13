@@ -2845,6 +2845,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerMove(uniqueID, pointerX, pointerY, data) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
 	sagePointers[uniqueID].left += data.deltaX;
 	sagePointers[uniqueID].top += data.deltaY;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
@@ -3342,6 +3345,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	var now  = new Date();
 	
 	if( ct === null ) // Do not open menu over widget
 	{
@@ -3352,7 +3356,17 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 		}
 		else
 		{
-			// Open a 'app' radial menu
+			// Open a 'app' radial menu (or in this case application widget)
+			var elemCtrl = findControlByAppId(elem.id);
+			if (elemCtrl === null) {
+				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch"+uniqueID, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+			}
+			else if (elemCtrl.show === false) {
+				showControl(elemCtrl, pointerX, pointerY) ;
+			}
+			else {
+				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+			}
 		}
 	}
 	updateRadialMenu(uniqueID);
