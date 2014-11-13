@@ -15,8 +15,7 @@ var SAGE2_App = Class.extend( {
 		this.element      = null;
 		this.resrcPath    = null;
 		this.resizeEvents = "never";
-		this.state = {};
-		console.log("SAGE2_App:", this.state);
+		this.state        = {};
 	
 		this.startDate = null;
 		this.prevDate  = null;
@@ -29,11 +28,11 @@ var SAGE2_App = Class.extend( {
 		this.timer  = null;
 		this.maxfps = null;
 		this.redraw = null;
-		this.enableControls = null;
-		this.controls = null;
-		this.cloneable = null;
-		this.requestForClone = null;
 		this.sticky = null;
+		this.controls  = null;
+		this.cloneable = null;
+		this.enableControls  = null;
+		this.requestForClone = null;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
