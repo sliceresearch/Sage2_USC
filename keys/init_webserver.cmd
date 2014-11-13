@@ -5,8 +5,6 @@
 
 # phony password
 password=foobar
-#server=$HOSTNAME
-#server=iridium.evl.optiputer.net
 server=$1
 
 echo "Start: CA"
