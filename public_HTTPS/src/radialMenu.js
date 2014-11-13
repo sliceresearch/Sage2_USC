@@ -37,6 +37,9 @@ var thumbnailPreviewWindowSize = { x: 550, y: 800 };
 
 var radialMenuList = {};
 
+// Mostly for debugging, toggles buttons/thumbnails redrawing on a events (like move)
+var enableEventRedraw = false;
+
 function radialMenu(){
 	this.element    = null;
 	this.ctx        = null;
@@ -45,7 +48,7 @@ function radialMenu(){
 	this.thumbWindowctx = null;
 	
 	this.init = function(id, thumbElem) {
-		radialMenuScale = ui.widgetControlSize * 0.03;
+		//radialMenuScale = ui.widgetControlSize * 0.03;
 		radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
 		radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
 		
@@ -331,17 +334,12 @@ function radialMenu(){
 	};
 	
 	this.draw = function() {
-	
-		if( this.menuState !== 'opening' )
-		{
-			this.ctx.redraw = false;
-			this.thumbWindowctx.redraw = false;
-		}
-		
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
-		this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
 		
+		if( this.thumbWindowctx.redraw )
+			this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
+			
 		if( this.windowInteractionMode === false )
 		{
 			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)"
@@ -378,7 +376,8 @@ function radialMenu(){
 		if( this.currentMenuState !== 'radialMenu' )
 		{
 			// Thumbnail window background
-			this.thumbWindowctx.fillRect(0,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
+			if( this.thumbWindowctx.redraw )
+				this.thumbWindowctx.fillRect(0,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
 			
 			// line from radial menu to thumbnail window
 			this.ctx.beginPath();
@@ -431,13 +430,18 @@ function radialMenu(){
 				currentThumbnailButtons = this.appThumbnailButtons;
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
-				
-			for( i = 0; i < currentThumbnailButtons.length; i++ )
+			
+			console.log("draw()", this.thumbWindowctx.redraw);
+			if( this.thumbWindowctx.redraw )
 			{
-				thumbButton = currentThumbnailButtons[i];
-				thumbButton.draw();
+				for( i = 0; i < currentThumbnailButtons.length; i++ )
+				{
+					thumbButton = currentThumbnailButtons[i];
+					thumbButton.draw();
+				}
+				this.thumbWindowctx.redraw = false;
 			}
-
+			
 			// Preview window
 			previewImageSize = this.element.width * previewWindowWidth;
 			previewImageX = thumbnailWindowSize.x + imageThumbSize/2 - 10;
@@ -696,6 +700,8 @@ function radialMenu(){
 			}
 		}
 		
+		
+		this.ctx.redraw = false;
 	};
 	
 	this.closeMenu = function() {
@@ -711,7 +717,10 @@ function radialMenu(){
 			this.element.width = thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
 			this.element.height = thumbnailWindowSize.y;
 			this.thumbnailWindowElement.style.display = "block";
+			this.thumbWindowctx.redraw = true;
 			
+			console.log("setToggleMenu:draw()", this.thumbWindowctx.redraw);
+			this.draw();
 			return true;
 		}
 		else
@@ -894,10 +903,10 @@ function radialMenu(){
 				thumbButton = currentThumbnailButtons[i];
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
 				buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
-
-				if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
+				
+				if ( thumbButton.isReleased() ) //&& this.scrollOpenContentLock === false )
 				{ 
-					//console.log(thumbButton+" released" );
+					console.log(thumbButton+" released" );
 					if( this.currentMenuState === 'appThumbnailWindow' )
 						this.loadApplication( thumbButton.getData()  );
 					else
@@ -907,8 +916,9 @@ function radialMenu(){
 				{
 					this.hoverOverText = thumbButton.getData().filename;
 					this.hoverOverThumbnail = thumbButton.idleImage;
-					this.hoverOverMeta =  thumbButton.getData().meta;
-						overButton = true;
+					this.hoverOverMeta = thumbButton.getData().meta;
+					overButton = true;
+					this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
 				}
 			}
 		}
@@ -934,7 +944,7 @@ function radialMenu(){
 					this.thumbnailWindowInitialScrollOffset.y = this.thumbnailWindowScrollOffset.y;
 				}
 			}
-			
+			this.ctx.redraw = true;
 		}
 		else if( type === "pointerMove" )
 		{
@@ -966,7 +976,8 @@ function radialMenu(){
 
 				this.thumbnailWindowDragPosition = position;
 				
-				this.thumbWindowctx.redraw = true;
+				if( enableEventRedraw )
+					this.thumbWindowctx.redraw = true;
 				this.updateThumbnailPositions();
 			}
 
@@ -984,14 +995,7 @@ function radialMenu(){
 				this.scrollOpenContentLock = false;
 			}
 		}
-		
-		
-		if( this.ctx.redraw === true || this.thumbWindowctx.redraw === true )
-		{
-			//this.draw();
-			//this.ctx.redraw = false;
-			//this.thumbWindowctx.redraw = false;
-		}
+
 	};
 	
 	// Displays files
@@ -1012,8 +1016,8 @@ function radialMenu(){
 	};
 	
 	this.updateFileList = function(serverFileList) {
-		console.log("updateFileList: ");
-		console.log(serverFileList);
+		//console.log("updateFileList: ");
+		//console.log(serverFileList);
 		
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
@@ -1337,6 +1341,7 @@ function buttonWidget() {
 	this.overlayImage = null;
 	
 	this.useBackgroundColor = true;
+	this.useEventOverColor = false;
 	this.simpleTint = false;
 	
 	this.alignment = 'left';
@@ -1527,16 +1532,18 @@ function buttonWidget() {
 			if( type === "pointerPress" && this.state != 2 )
 			{
 				this.state = 3; // Click state
-				this.ctx.redraw = true;
+				if( this.useEventOverColor )
+					this.ctx.redraw = true;
 			}
 			else if( type === "pointerRelease" )
 			{
 				this.state = 4;
-				this.ctx.redraw = true;
+				if( this.useEventOverColor )
+					this.ctx.redraw = true;
 			}
 			else if( this.state !== 2 )
 			{
-				if( this.state !== 1 )
+				if( this.state !== 1 && this.useEventOverColor )
 					this.ctx.redraw = true;
 				this.state = 1;
 			}
@@ -1545,7 +1552,7 @@ function buttonWidget() {
 		}
 		else
 		{
-			if( this.state !== 0 )
+			if( this.state !== 0 && this.useEventOverColor )
 				this.ctx.redraw = true;
 			this.state = 0;
 			
