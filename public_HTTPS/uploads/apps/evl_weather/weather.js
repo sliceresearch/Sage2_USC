@@ -93,7 +93,7 @@ var weather = SAGE2_App.extend( {
     this.glob.temp_hot            = 85;
     this.glob.temp_nice           = 70;
     this.glob.temp_cold           = 60;
-    this.glob.temp_colderer       = 30;
+    this.glob.temp_colderer       = 32;
     this.glob.temp_coldererer     = 0;
 
     // add the temperature unit into the state

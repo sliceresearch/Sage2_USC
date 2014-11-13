@@ -33,6 +33,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerOffsetX = null; 
 	this.pointerOffsetY = null;
 	this.noDropShadow   = null;
+	this.uiHidden       = null;
 
 	// Aspect ratio of the wall and the browser	
 	this.wallRatio      = null;
@@ -40,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.ratio          = "fit";
 
 	this.pointerItems   = {};
-	this.radialMenus	= {};
+	this.radialMenus    = {};
 	
 	// Get handle on the main div
 	this.bg   = document.getElementById("background");
@@ -326,6 +327,8 @@ function uiBuilder(json_cfg, clientID) {
 			machine.textContent = url;
 		}
 		head.appendChild(fileref);
+		this.uiHidden = false;
+		this.showInterface();
 	};
 	
 	this.updateVersionText = function(data) {
@@ -596,34 +599,50 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.hideInterface = function() {
-		// Hide the top bar
-		this.upperBar.style.display = 'none';
-		// Hide the pointers
-		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].div)
-				this.pointerItems[p].div.style.display = 'none';
-		}
-		// Hide the apps top bar
-		var applist = document.getElementsByClassName("windowTitle");
-		for (var i = 0; i < applist.length; i++) {
-			applist[i].style.display = 'none';
+		if (!this.uiHidden) {
+			// Hide the top bar
+			this.upperBar.style.display = 'none';
+			// Hide the pointers
+			for (var p in this.pointerItems) {
+				if (this.pointerItems[p].div)
+					this.pointerItems[p].div.style.display = 'none';
+			}
+			// Hide the apps top bar
+			var applist = document.getElementsByClassName("windowTitle");
+			for (var i = 0; i < applist.length; i++) {
+				applist[i].style.display = 'none';
+			}
+			// Hide the apps border
+			var itemlist = document.getElementsByClassName("windowItem");
+			for (var i = 0; i < itemlist.length; i++) {
+				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			this.uiHidden = true;
 		}
 	};
 
 	this.showInterface = function() {
-		// Show the top bar
-		this.upperBar.style.display = 'block';
-		// Show the pointers (only if they have a name, ui pointers dont have names)
-		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].label !== "") {
-				if (this.pointerItems[p].isShown === true)
-				 	this.pointerItems[p].div.style.display = 'block';
+		if (this.uiHidden) {
+			// Show the top bar
+			this.upperBar.style.display = 'block';
+			// Show the pointers (only if they have a name, ui pointers dont have names)
+			for (var p in this.pointerItems) {
+				if (this.pointerItems[p].label !== "") {
+					if (this.pointerItems[p].isShown === true)
+						this.pointerItems[p].div.style.display = 'block';
+				}
 			}
-		}
-		// Show the apps top bar
-		var applist = document.getElementsByClassName("windowTitle");
-		for (var i = 0; i < applist.length; i++) {
-			applist[i].style.display = 'block';
+			// Show the apps top bar
+			var applist = document.getElementsByClassName("windowTitle");
+			for (var i = 0; i < applist.length; i++) {
+				applist[i].style.display = 'block';
+			}
+			// Show the apps border
+			var itemlist = document.getElementsByClassName("windowItem");
+			for (var i = 0; i < itemlist.length; i++) {
+				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			this.uiHidden = false;
 		}
 	};
 }

@@ -51,8 +51,12 @@ body {
 
 .windowItem {
 	position:absolute;
-	border: solid 1px #000000;
+	border: 1px solid #000000;
 	box-shadow: 8px 0px 15px #222222;
+}
+.windowItemNoBorder {
+        border: 1px solid rgba(0,0,0,0);
+        box-shadow: none;
 }
 
 .windowTitle {

@@ -88,7 +88,7 @@
 		browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 		browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 		browser.isLinux    = userAgent.indexOf("linux") >= 0;
-
+		
 		hostname = window.location.hostname;
 		port = window.location.port;
 		if(window.location.protocol == "http:" && port == "") port = "80";
@@ -291,12 +291,77 @@
 			}
 		});
 		
+		resizeMenuUI();
 		resizeDialogs();
 	}
 	
 	function resize() {
-		if (displayUI) displayUI.resize();
+		resizeMenuUI();
 		resizeDialogs();
+		
+		if (displayUI) displayUI.resize();
+	}
+	
+	function resizeMenuUI() {
+		//var menuScale = (window.innerWidth/window.devicePixelRatio) > 512 ? 1.0 : 0.65;
+		var menuScale = window.innerWidth > 1024 ? 1.0 : 0.65;
+	
+		var sage2Pointer = document.getElementById('sage2pointer');
+		sage2Pointer.width  = Math.floor(48 * menuScale);
+		sage2Pointer.height = Math.floor(48 * menuScale);
+		var sharescreen = document.getElementById('sharescreen');
+		sharescreen.width  = Math.floor(48 * menuScale);
+		sharescreen.height = Math.floor(48 * menuScale);
+		var applauncher = document.getElementById('applauncher');
+		applauncher.width  = Math.floor(48 * menuScale);
+		applauncher.height = Math.floor(48 * menuScale);
+		var mediabrowser = document.getElementById('mediabrowser');
+		mediabrowser.width  = Math.floor(48 * menuScale);
+		mediabrowser.height = Math.floor(48 * menuScale);
+		//var webbrowser = document.getElementById('browser');
+		//webbrowser.width  = Math.floor(48 * menuScale);
+		//webbrowser.height = Math.floor(48 * menuScale);
+		var arrangement = document.getElementById('arrangement');
+		arrangement.width  = Math.floor(48 * menuScale);
+		arrangement.height = Math.floor(48 * menuScale);
+		var settings = document.getElementById('settings');
+		settings.width  = Math.floor(48 * menuScale);
+		settings.height = Math.floor(48 * menuScale);
+		var info = document.getElementById('info');
+		info.width  = Math.floor(48 * menuScale);
+		info.height = Math.floor(48 * menuScale);
+		
+		var uiButton = getCSSProperty("style_ui.css", ".uiButton");
+		if(uiButton !== null){
+			uiButton.style.width  = Math.floor(165 * menuScale) + "px";
+			uiButton.style.height = Math.floor( 64 * menuScale) + "px";
+		}
+		var uiButtonImg = getCSSProperty("style_ui.css", ".uiButton img");
+		if(uiButtonImg !== null){
+			uiButtonImg.style.top  = Math.floor(8 * menuScale) + "px";
+			uiButtonImg.style.left = Math.floor(8 * menuScale) + "px";
+		}
+		var uiButtonP = getCSSProperty("style_ui.css", ".uiButton p");
+		if(uiButtonP !== null){
+			uiButtonP.style.fontSize = Math.floor(12 * menuScale) + "px";
+			uiButtonP.style.top  = Math.floor(20 * menuScale) + "px";
+			uiButtonP.style.left = Math.floor(64 * menuScale) + "px";
+		}
+	}
+	
+	function getCSSProperty(cssFile, selector) {
+		for(var i=0; i<document.styleSheets.length; i++){
+			var sheet = document.styleSheets[i];
+        	if(sheet.href.indexOf(cssFile) >= 0){
+        		var rules = sheet.cssRules ? sheet.cssRules : sheet.rules;
+        		if(!rules || rules.length === 0) return null;
+        		for(var j=0; j<rules.length; j++){
+                	if(rules[j].selectorText === selector) return rules[j];
+        		}
+        		break;
+        	}
+        }
+        return null;
 	}
 	
 	function resizeDialogs() {
@@ -511,6 +576,17 @@
 		document.addEventListener('dblclick',   pointerDblClick, false);
 
 		document.removeEventListener('mousemove', mouseCheck, false);
+		
+		var uiButtonImg = getCSSProperty("style_ui.css", ".uiButton:hover img");
+		if(uiButtonImg !== null){
+			uiButtonImg.style['-webkit-transform'] = "scale(1.2)";
+			uiButtonImg.style['-moz-transform'] = "scale(1.2)";
+			uiButtonImg.style['transform'] = "scale(1.2)";
+		}
+		var uiButtonP = getCSSProperty("style_ui.css", ".uiButton p");
+		if(uiButtonP !== null){
+			uiButtonP.style.opacity = "0.0";
+		}
 	}
 	
 	function pointerClick(event) {
@@ -519,28 +595,28 @@
 	
 	function handleClick(element) {
 		// Menu Buttons
-		if(element.id === "sage2pointer") {
+		if(element.id === "sage2pointer"      || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 			interactor.startSAGE2Pointer(element.id);
 		}
-		else if(element.id === "sharescreen") {
+		else if(element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
 			interactor.startScreenShare();
 		}
-		else if(element.id === "applauncher") {
+		else if(element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 			wsio.emit('requestAvailableApplications');
 		}
-		else if(element.id === "mediabrowser") {
+		else if(element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
 			wsio.emit('requestStoredFiles');
 		}
-		else if(element.id === "arrangement") {
+		else if(element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
 			showDialog('arrangementDialog');
 		}
-		else if(element.id === "settings") {
+		else if(element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
 			showDialog('settingsDialog');
 		}
-		else if(element.id === "browser") {
+		else if(element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
 			showDialog('browserDialog');
 		}
-		else if(element.id === "info") {
+		else if(element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
 			showDialog('infoDialog');
 		}
 		
@@ -1085,36 +1161,38 @@
 		</div>
 		<div id="menuUI">
 			<div id="sage2pointerContainer" class="uiButton">
-				<img alt="pointer" id="sage2pointer" src="images/sage2pointer.svg" width="48" height="48" />
-				<p>SAGE2 Pointer</p>
+				<img id="sage2pointer" alt="pointer" src="images/sage2pointer.svg" width="48" height="48" />
+				<p id="sage2pointerLabel">SAGE2 Pointer</p>
 			</div>
 			<div id="sharescreenContainer" class="uiButton">
-				<img alt="sharescreen" id="sharescreen" src="images/sharescreen.svg" width="48" height="48" />
-				<p>Share Screen</p>
+				<img id="sharescreen" alt="sharescreen" src="images/sharescreen.svg" width="48" height="48" />
+				<p id="sharescreenLabel">Share Screen</p>
 			</div>
 			<div id="applauncherContainer" class="uiButton">
-				<img alt="applauncher" id="applauncher" src="images/applauncher.svg" width="48" height="48"/>
-				<p>App Launcher</p>
+				<img id="applauncher" alt="applauncher" src="images/applauncher.svg" width="48" height="48"/>
+				<p id="applauncherLabel">App Launcher</p>
 			</div>
-			<div id="mediaBrowserContainer" class="uiButton">
-				<img alt="mediabrowser" id="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"/>
-				<p>Media Browser</p>
+			<div id="mediabrowserContainer" class="uiButton">
+				<img id="mediabrowser" alt="mediabrowser" src="images/mediabrowser.svg" width="48" height="48"/>
+				<p id="mediabrowserLabel">Media Browser</p>
 			</div>
+		<!-- browser commented out for now
 			<div id="browserContainer" class="uiButton">
-				<img alt="browser" id="browser" src="images/browser.svg" width="48" height="48"/>
-				<p>Web browser</p>
+				<img id="browser" alt="browser" src="images/browser.svg" width="48" height="48"/>
+				<p id="browserLabel">Web browser</p>
 			</div>
+		-->
 			<div id="arrangementContainer" class="uiButton">
-				<img alt="arrangement" id="arrangement" src="images/arrangement.svg" width="48" height="48"/>
-				<p>Arrangement</p>
+				<img id="arrangement" alt="arrangement" src="images/arrangement.svg" width="48" height="48"/>
+				<p id="arrangementLabel">Arrangement</p>
 			</div>
 			<div id="settingsContainer" class="uiButton">
-				<img alt="settings" id="settings" src="images/settings.svg" width="48" height="48"/>
-				<p>Settings</p>
+				<img id="settings" alt="settings" src="images/settings.svg" width="48" height="48"/>
+				<p id="settingsLabel">Settings</p>
 			</div>
 			<div id="infoContainer" class="uiButton">
-				<img alt="info" id="info" src="images/info.svg" width="48" height="48"/>
-				<p>Info</p>
+				<img id="info" alt="info" src="images/info.svg" width="48" height="48"/>
+				<p id="infoLabel">Information</p>
 			</div>
 		</div>
 	</div>

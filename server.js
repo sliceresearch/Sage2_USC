@@ -94,7 +94,7 @@ if (program.logfile) {
 			else {
 				var i = 0;
 				var s = "";
-				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];;
+				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
 				while (i < args.length) {
 					if (i===0)
 						s = args[i];
@@ -1495,7 +1495,7 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	var regButton = /button/
+	var regButton = /button/;
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
@@ -2102,6 +2102,7 @@ if (program.interactive)
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
+				console.log('regenerate\tregenerates the assets');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -2140,6 +2141,10 @@ if (program.interactive)
 
 			case 'assets':
 				assets.listAssets();
+				break;
+
+			case 'regenerate':
+				assets.regenerateAssets();
 				break;
 
 			case 'tile':

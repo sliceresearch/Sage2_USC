@@ -88,10 +88,10 @@ span {
 	transition: 100ms ease-in-out;
 }
 
-.uiButton img:hover {
-	-webkit-transform: scale(1.2);
-	-moz-transform: scale(1.2);
-	transform: scale(1.2);
+.uiButton:hover img {
+	-webkit-transform: scale(1.0);
+	-moz-transform: scale(1.0);
+	transform: scale(1.0);
 }
 
 .uiButton p {
@@ -105,14 +105,14 @@ span {
 	color: #FFFFFF;
 	background-color: #787878;
 	border-radius: 8px;
-	opacity: 0.0;
+	opacity: 1.0;
 	cursor: default;
 	-webkit-transition: opacity 100ms ease-in-out;
 	-moz-transition: opacity 100ms ease-in-out;
 	transition: opacity 100ms ease-in-out;
 }
 
-.uiButton img:hover + p {
+.uiButton:hover img + p {
 	opacity: 1.0;
 }
 
@@ -477,11 +477,6 @@ span {
 #dropboxFilesBtn {
 	position: absolute;
 	left: 90px;
-	bottom: 10px;
-}
-#cancelFilesBtn {
-	position: absolute;
-	right: 10px;
 	bottom: 10px;
 }
 #cancelFilesBtn {
