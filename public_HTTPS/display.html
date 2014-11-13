@@ -573,11 +573,8 @@
 			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
 
 			var app = applications[position_data.elemId];
-			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
-				if(app.moved !== undefined) {
-					app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight),
-								ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
-				}
+			if(app !== undefined && (position_data.force || app.moveEvents === "continuous") ) {
+				app.moved && app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight), ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
 			}
 
 		});

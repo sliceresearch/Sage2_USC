@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cd /Applications/sage2-mac
+open -W local/Ghostscript-9.15.pkg
+
+cd /Applications/sage2-mac/keys/
+./GO-mac
+

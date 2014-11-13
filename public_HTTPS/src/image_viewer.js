@@ -25,11 +25,13 @@ var image_viewer = SAGE2_App.extend( {
 		this.state.src  = null;
 		this.state.type = null;
 		this.state.exif = null;
+		this.state.crct = null;
 		
 		this.createLayer("rgba(0,0,0,0.85)");
 		this.pre = document.createElement('pre');
 		this.layer.appendChild(this.pre);
 		this.top = 0;
+		this.state.crct = false;
 	},
 	
 	load: function(state, date) {
@@ -38,14 +40,33 @@ var image_viewer = SAGE2_App.extend( {
 			this.state.src  = state.src;
 			this.state.type = state.type;
 			this.state.exif = state.exif;
-			// Fix iPhone portrait pictures
-			if (this.state.exif.Orientation === 'Rotate 90 CW') {
-				var ratio = this.element.height / this.element.width;
-				var inv   = 1.0 / ratio;
-				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
-				this.sendResize(this.element.height, this.element.width);
-			}
+			this.state.crct = state.crct;
+
 			this.pre.innerHTML = this.syntaxHighlight(state.exif);
+
+			// Fix iPhone picture: various orientations
+			var ratio_elmt = this.element.height / this.element.width;
+			var ratio_exif = this.state.exif.ImageHeight / this.state.exif.ImageWidth;
+			var ratio      = ratio_exif;
+			var inv   = 1.0 / ratio;
+			if (this.state.exif.Orientation === 'Rotate 90 CW') {
+				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
+				if (!this.state.crct)
+					this.sendResize(this.element.height, this.element.width);
+				this.state.crct = true;
+			}
+			else if (this.state.exif.Orientation === 'Rotate 270 CW') {
+				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(-90deg)";
+				if (!this.state.crct)
+					this.sendResize(this.element.height, this.element.width);
+				this.state.crct = true;
+			}
+			else if (this.state.exif.Orientation === 'Rotate 180') {
+				this.element.style.webkitTransform = "rotate(180deg)";
+				this.state.crct = true;
+			} else {
+				this.state.crct = true;
+			}
 		}
 	},
 	

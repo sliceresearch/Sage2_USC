@@ -15,6 +15,7 @@ var bounce = SAGE2_App.extend( {
 		this.ballImg = null;
 		this.sizex   = null;
 		this.sizey   = null;
+		this.moveEvents   = "continuous";
 		this.resizeEvents = "continuous";
 	},
 
@@ -85,8 +86,8 @@ var bounce = SAGE2_App.extend( {
 	moved: function(px, py, wx, wy, date) {
 		// px, py : position in wall coordination
 		// wx, wy : width and height of the wall
-		this.sizex = (px / wx) * this.minDim;
-		this.sizey = (py / wy) * this.minDim;
+		this.sizex = ((px/wx)*0.5 + 0.5) * (0.4*this.minDim);
+		this.sizey = ((py/wy)*0.5 + 0.5) * (0.4*this.minDim);
 		this.refresh(date);
 	},
 

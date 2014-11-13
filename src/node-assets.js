@@ -81,7 +81,7 @@ listAssets = function() {
 	// Print
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		console.log("Asset>", idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
+		console.log("Assets>", idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
 		idx++;
 	}
 };
@@ -560,6 +560,24 @@ listApps = function() {
 	return result;
 };
 
+// regenrate all the assets thumbnails and EXIF data
+//    (needed with version upgrades)
+regenerateAssets = function() {
+	// Make sure the asset folder exists
+	var assetFolder = path.join(AllAssets.root, 'assets');
+	if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
+	var assetFile = path.join(assetFolder, 'assets.json');
+	if (fs.existsSync(assetFile)) {
+		fs.unlinkSync(assetFile);
+		console.log('Assets> successfully deleted', assetFile);
+	}
+	var rootdir = AllAssets.root;
+	var relativ = AllAssets.rel;
+	AllAssets = null;
+	initialize(rootdir, relativ);
+};
+
+
 initialize = function (root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
@@ -601,7 +619,7 @@ initialize = function (root, relativePath) {
 			AllAssets.rel  = relativePath;
 		}
 
-		console.log("Assests> initialize");
+		console.log("Assets> initialize");
 		var thelist = [];
 		var uploadedImages = fs.readdirSync(path.join(root, "images"));
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
@@ -685,6 +703,8 @@ exports.listVideos = listVideos;
 exports.listApps   = listApps;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
+
+exports.regenerateAssets = regenerateAssets;
 
 exports.exifAsync   = exifAsync;
 
