@@ -46,12 +46,12 @@ function getFullVersion(callback) {
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd1 = "git rev-parse --abbrev-ref HEAD";
 	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if(err) { callback(null); return; }
+		if(err) { callback(fullVersion); return; }
 		
 		var branch = stdout.substring(0, stdout.length-1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
 		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-			if(err) { callback(null); return; }
+			if(err) { callback(fullVersion); return; }
 		
 			// parsing the results
 			var result = stdout.replace(/\r?\n|\r/g, "");
