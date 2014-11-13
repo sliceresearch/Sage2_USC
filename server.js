@@ -176,7 +176,7 @@ var mediaStreams = {};
 var radialMenus = {};
 
 // Generating QR-code of URL for UI page
-var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
+var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
 // qr_png.on('readable', function() { process.stdout.write('.'); });
 qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
