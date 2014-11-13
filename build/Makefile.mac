@@ -20,7 +20,7 @@ install:
 	cd sage2 && ../jx_osx64/jx install
 
 package:
-	cp scripts/* sage2/
+	cp scripts/osx64/* sage2/
 	unzip -u -d sage2 mac-bin.zip 
 	cp mac-packages/Ghostscript-9.15.pkg sage2/local/
 	cd sage2 && ../jx_osx64/jx package server.js sage2 -native -slim GO-scripts,extras,public_HTTP,public_HTTPS,keys,config
