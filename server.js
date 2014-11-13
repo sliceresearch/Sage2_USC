@@ -1732,8 +1732,11 @@ function loadConfiguration() {
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
-			if(platform === "Windows"){
+			if (platform === "Windows") {
 				configFile = path.join("config", "defaultWindows-cfg.json");
+			}
+			else if (platform === "Mac OS X") {
+				configFile = path.join("config", "defaultMacOSX-cfg.json");
 			}
 			else {
 				configFile = path.join("config", "defaultLinux-cfg.json");
