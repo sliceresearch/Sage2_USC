@@ -140,57 +140,67 @@ function radialMenu(){
 		});
 		
 		// load thumbnail icons
-		this.idleExitIcon = new Image;
-		this.idleExitIcon.src = this.resrcPath +"exit.svg"
+		this.idleExitIcon = new Image();
+		//this.idleExitIcon.src = this.resrcPath + "exit.svg";
+		this.idleExitIcon.src = "images/ui/close.svg";
 		
-		this.idleImageIcon = new Image;
-		this.idleImageIcon.src = this.resrcPath +"image2.svg"
-		this.idlePDFIcon = new Image;
-		this.idlePDFIcon.src = this.resrcPath +"file.svg"
-		this.idleVideoIcon = new Image;
-		this.idleVideoIcon.src = this.resrcPath +"clapper.svg"
-		this.idleAppIcon = new Image;
-		this.idleAppIcon.src = this.resrcPath +"rocket.svg"
-		this.idleSessionIcon = new Image;
-		this.idleSessionIcon.src = this.resrcPath +"upload.svg"
-		this.idleSaveSessionIcon = new Image;
-		this.idleSaveSessionIcon.src = this.resrcPath +"download.svg"
-		this.idleSettingsIcon = new Image;
-		this.idleSettingsIcon.src = this.resrcPath +"cog.svg"
+		this.idleImageIcon = new Image();
+		//this.idleImageIcon.src = this.resrcPath + "image2.svg";
+		this.idleImageIcon.src = "images/ui/images.svg";
+		this.idlePDFIcon = new Image();
+		//this.idlePDFIcon.src = this.resrcPath + "file.svg";
+		this.idlePDFIcon.src = "images/ui/pdfs.svg";
+		this.idleVideoIcon = new Image();
+		//this.idleVideoIcon.src = this.resrcPath + "clapper.svg";
+		this.idleVideoIcon.src = "images/ui/videos.svg";
+		this.idleAppIcon = new Image();
+		//this.idleAppIcon.src = this.resrcPath + "rocket.svg";
+		this.idleAppIcon.src = "images/ui/applauncher.svg";
+		this.idleSessionIcon = new Image();
+		//this.idleSessionIcon.src = this.resrcPath + "upload.svg";
+		this.idleSessionIcon.src = "images/ui/loadsession.svg";
+		this.idleSaveSessionIcon = new Image();
+		//this.idleSaveSessionIcon.src = this.resrcPath + "download.svg";
+		this.idleSaveSessionIcon.src = "images/ui/savesession.svg";
+		this.idleSettingsIcon = new Image();
+		//this.idleSettingsIcon.src = this.resrcPath + "cog.svg";
+		this.idleSettingsIcon.src = "images/ui/arrangement.svg"
 		
 		// Level 2 icons
-		this.idleFolderIcon = new Image;
-		this.idleFolderIcon.src = this.resrcPath + "open131.svg"
-		this.idleCloseAppIcon = new Image;
-		this.idleCloseAppIcon.src = this.resrcPath + "window27.svg"
-		this.idleCloseAllIcon = new Image;
-		this.idleCloseAllIcon.src = this.resrcPath + "windows24.svg"
-		this.idleMaximizeIcon = new Image;
-		this.idleMaximizeIcon.src = this.resrcPath + "maximize.svg"
-		this.idleTileIcon = new Image;
-		this.idleTileIcon.src = this.resrcPath + "large16.svg"
+		this.idleFolderIcon = new Image();
+		this.idleFolderIcon.src = this.resrcPath + "open131.svg";
+		this.idleCloseAppIcon = new Image();
+		this.idleCloseAppIcon.src = this.resrcPath + "window27.svg";
+		this.idleCloseAllIcon = new Image();
+		//this.idleCloseAllIcon.src = this.resrcPath + "windows24.svg";
+		this.idleCloseAllIcon.src = "images/ui/clearcontent.svg";
+		this.idleMaximizeIcon = new Image();
+		this.idleMaximizeIcon.src = this.resrcPath + "maximize.svg";
+		this.idleTileIcon = new Image();
+		//this.idleTileIcon.src = this.resrcPath + "large16.svg";
+		this.idleTileIcon.src = "images/ui/tilecontent.svg";
 		
 		// radial menu icons
-		//this.radialMenuIcon = new Image;
-		//this.radialMenuIcon.src = this.resrcPath +"icon_radial_256.png"
-		this.radialMenuIcon = new Image;
-		this.radialMenuIcon.src = this.resrcPath +"icon_radial_button_circle.svg"
-		this.radialMenuLevel2Icon = new Image;
-		this.radialMenuLevel2Icon.src = this.resrcPath +"icon_radial_level2_360.png"
-		this.radialCloseIcon = new Image;
-		this.radialCloseIcon.src = this.resrcPath +"icon_close_128.png"
+		//this.radialMenuIcon = new Image();
+		//this.radialMenuIcon.src = this.resrcPath + "icon_radial_256.png";
+		this.radialMenuIcon = new Image();
+		this.radialMenuIcon.src = this.resrcPath + "icon_radial_button_circle.svg";
+		this.radialMenuLevel2Icon = new Image();
+		this.radialMenuLevel2Icon.src = this.resrcPath + "icon_radial_level2_360.png";
+		this.radialCloseIcon = new Image();
+		this.radialCloseIcon.src = this.resrcPath + "icon_close_128.png";
 		
-		this.radialDragIcon = new Image;
-		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg"
+		this.radialDragIcon = new Image();
+		this.radialDragIcon.src = this.resrcPath + "drag-ring.svg";
 		
-		this.glowLine = new Image;
-		this.glowLine.src = this.resrcPath +"glow_lines2A_menu_1024.png"
+		this.glowLine = new Image();
+		this.glowLine.src = this.resrcPath + "glow_lines2A_menu_1024.png";
 		
-		this.glowLineOpen = new Image;
-		this.glowLineOpen.src = this.resrcPath +"glow_lines2A_menu_1024.png"
+		this.glowLineOpen = new Image();
+		this.glowLineOpen.src = this.resrcPath + "glow_lines2A_menu_1024.png";
 		
-		this.thumbnailWindowFrame = new Image;
-		this.thumbnailWindowFrame.src = this.resrcPath +"thumbnail_window_frame2.png"
+		this.thumbnailWindowFrame = new Image();
+		this.thumbnailWindowFrame.src = this.resrcPath +"thumbnail_window_frame2.png";
 		
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
