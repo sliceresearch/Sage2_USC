@@ -32,6 +32,13 @@ function addCSS( url, callback ) {
 	document.head.appendChild( fileref );
 }
 
+/*
+SAGE2_policeDistricts = [
+	"1232", 
+	"1231", 
+	"0124"
+	];
+*/
 
 var leaflet = SAGE2_App.extend( {
 	construct: function() {
@@ -39,6 +46,9 @@ var leaflet = SAGE2_App.extend( {
 
 		this.resizeEvents = "continuous"; //"onfinish";
 		this.svg      = null;
+
+		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+    	this.enableControls = true;
 
 		// for SAGE2 interaction
 		this.lastZoom = null;
@@ -130,10 +140,15 @@ var leaflet = SAGE2_App.extend( {
 			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
 			mySelf.g = mySelf.svg.append("g");
 
+/*
 			mySelf.getNewData(mySelf,"1232", date);
 			mySelf.getNewData(mySelf,"1231", date);
 			mySelf.getNewData(mySelf,"0124", date);
+*/
 
+			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++){
+				mySelf.getNewData(mySelf,SAGE2_policeDistricts[loopIdx], date);
+				}
 
 		// attach the SVG into the this.element node provided to us
 		var box="0,0,"+width+","+height;
@@ -142,6 +157,48 @@ var leaflet = SAGE2_App.extend( {
 		    .attr("height",  height)
 		    .attr("viewBox", box);
 });
+},
+
+changeMap: function()
+{
+	var selectedOnes = null;
+
+	if (this.whichMap === 1)
+		{
+		this.whichMap = 2;
+		this.map.removeLayer(this.map1);
+		this.map2.addTo(this.map);
+
+		selectedOnes = this.g.selectAll("text");
+		selectedOnes.style("fill", "black");
+		}
+	else
+		{
+		this.whichMap = 1;
+		this.map.removeLayer(this.map2);
+		this.map1.addTo(this.map);
+
+		selectedOnes = this.g.selectAll("text");
+		selectedOnes.style("fill", "white");
+		}
+},
+
+zoomIn: function()
+{
+	var z = this.map.getZoom();
+	this.map.setZoom(z+1, {animate: false});
+	this.lastZoom = date;
+	
+	var z2 = this.map.getZoom();
+},
+
+zoomOut: function()
+{
+	var z = this.map.getZoom();
+	this.map.setZoom(z-1, {animate: false});
+	this.lastZoom = date;
+	
+	var z2 = this.map.getZoom();
 },
 
 dealWithData: function(collection, today)
@@ -263,6 +320,25 @@ dealWithData: function(collection, today)
 
 
 	load: function(state, date) {
+		// create the widgets
+        console.log("creating controls");
+        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.changeMap();
+        }.bind(this)});
+
+
+        this.controls.addButton({type:"fastforward",sequenceNo:6,action:function(date){
+            this.zoomIn();
+        }.bind(this)});
+
+        this.controls.addButton({type:"rewind",sequenceNo:7,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.zoomOut();
+        }.bind(this)});
+
+
+        this.controls.finishedAddingControls(); // Important
 	},
 
 	draw_d3: function(date) {
@@ -322,21 +398,14 @@ dealWithData: function(collection, today)
 
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
-				var z = this.map.getZoom();
-				this.map.setZoom(z+1, {animate: false});
-				this.lastZoom = date;
-				
-				var z2 = this.map.getZoom();
+				this.zoomIn();
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
-				var z = this.map.getZoom();
-				this.map.setZoom(z-1, {animate: false});
-				this.lastZoom = date;
-				
-				var z2 = this.map.getZoom();
+				this.zoomOut();
+
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
@@ -345,27 +414,7 @@ dealWithData: function(collection, today)
 		if (eventType == "keyboard" && data.character == "m") {
 				// m key down
 				// change map type
-
-				var selectedOnes = null;
-
-				if (this.whichMap === 1)
-					{
-					this.whichMap = 2;
-					this.map.removeLayer(this.map1);
-					this.map2.addTo(this.map);
-
-					selectedOnes = this.g.selectAll("text");
-    				selectedOnes.style("fill", "black");
-					}
-				else
-					{
-					this.whichMap = 1;
-					this.map.removeLayer(this.map2);
-					this.map1.addTo(this.map);
-
-					selectedOnes = this.g.selectAll("text");
-    				selectedOnes.style("fill", "white");
-					}
+				this.changeMap();
 				}
 
 		this.refresh(date);

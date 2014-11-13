@@ -8,9 +8,11 @@
 //
 // Copyright (c) 2014
 
-PDFJS.workerSrc     = 'lib/pdf.worker.js';
-PDFJS.disableWorker = false;
-PDFJS.disableWebGL  = false;
+PDFJS.workerSrc       = 'lib/pdf.worker.js';
+PDFJS.disableWorker   = false;
+PDFJS.disableWebGL    = true;
+PDFJS.verbosity       = PDFJS.VERBOSITY_LEVELS.infos;
+PDFJS.maxCanvasPixels = 67108864; // 8k2
 
 var pdf_viewer = SAGE2_App.extend( {
 	construct: function() {
@@ -25,6 +27,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.ratio   = null;
 		this.currCtx = 0;
 		this.numCtx  = 5;
+		this.src     = null;
 
 		this.enableControls = true;
 	},
@@ -69,52 +72,20 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.state.page = state.page;
 				_this.state.numPagesShown = state.numPagesShown;
 
+				 addWidgetControlsToPdfViewer (_this);
 				// Getting the size of the page
 				_this.pdfDoc.getPage(1).then(function(page) {
 					var viewport = page.getViewport(1.0);
 					var w = parseInt(viewport.width, 10);
 					var h = parseInt(viewport.height,10);
-					_this.sendResize(w, h);
 					_this.ratio = w / h;
+					// Depending on the aspect ratio, adjust one dimension
+					if (_this.ratio < 1)
+						_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
+					else
+						_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
+					//_this.sendResize(w, h);
 				});
-
-				// UI stuff
-				
-				_this.controls.addButtonGroup();
-				
-				_this.controls.addButton({type:"fastforward", action:function(appObj, date){
-					appObj.state.page = appObj.pdfDoc.numPages;
-					appObj.refresh(date);
-				}});
-				
-				_this.controls.addButton({type:"rewind", action:function(appObj, date){
-					appObj.state.page = 1;
-					appObj.refresh(date);
-				}});
-
-				_this.controls.addButtonGroup();
-				_this.controls.addButton({type:"prev", action:function(appObj, date){
-					if(appObj.state.page <= 1) return;
-					appObj.state.page = appObj.state.page - 1;
-					appObj.refresh(date);
-				}});
-				_this.controls.addButton({type:"next", action:function(appObj, date){
-					if (appObj.state.page >= appObj.pdfDoc.numPages) return;
-					appObj.state.page = appObj.state.page + 1;
-					appObj.refresh(date);
-				}});
-		
-				
-				
-				
-				_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appObj:_this, property:"state.page", action:function(appObj, date){
-					appObj.refresh(date);
-				}});
-				/*_this.controls.addTextInput({width:120,action:function(appObj, text){
-					console.log("textInput added" + text);
-				}});*/
-				
-				
 			});
 		}
 		// load new state of same document
@@ -154,10 +125,27 @@ var pdf_viewer = SAGE2_App.extend( {
 		};
 		
 		var renderPdfPage = function() {
-			console.log("rendered page " + renderPage);
+			//console.log("rendered page " + renderPage);
 			
-			if(renderPage === _this.state.page)
-				_this.element.src = _this.canvas[renderCanvas].toDataURL();
+			if(renderPage === _this.state.page){
+				var data = _this.canvas[renderCanvas].toDataURL().split(',');
+				var bin  = atob(data[1]);
+				var mime = data[0].split(':')[1].split(';')[0];
+				
+				var buf = new ArrayBuffer(bin.length);
+				var view = new Uint8Array(buf);
+				for(var i=0; i<view.length; i++) {
+					view[i] = bin.charCodeAt(i);
+				}
+		
+				var blob = new Blob([buf], {type: mime});
+				var source = window.URL.createObjectURL(blob);
+		
+				if(_this.src !== null) window.URL.revokeObjectURL(_this.src);
+				_this.src = source;
+			
+				_this.element.src = _this.src;
+			}
 			
 			// Check for change in the aspect ratio, send a resize if needed
 			//  (done after the render to avoid double rendering issues)
@@ -202,3 +190,37 @@ var pdf_viewer = SAGE2_App.extend( {
 		}
 	}
 });
+
+
+function addWidgetControlsToPdfViewer (_this){
+// UI stuff
+	
+
+	_this.controls.addButton({type:"fastforward",sequenceNo:2, action:function(date){
+		this.state.page = this.pdfDoc.numPages;
+		this.refresh(date);
+	}.bind(_this)});
+
+	_this.controls.addButton({type:"rewind",sequenceNo:4, action:function(date){
+		this.state.page = 1;
+		this.refresh(date);
+	}.bind(_this)});
+
+	_this.controls.addButton({type:"prev",sequenceNo:8, action:function(date){
+		if(this.state.page <= 1) return;
+		this.state.page = this.state.page - 1;
+		this.refresh(date);
+	}.bind(_this)});
+	_this.controls.addButton({type:"next", sequenceNo:10,action:function(date){
+		if (this.state.page >= this.pdfDoc.numPages) return;
+		this.state.page = this.state.page + 1;
+		this.refresh(date);
+	}.bind(_this)});
+
+	_this.controls.addSeparatorAfterButtons(1,10); // This neatly forms an X out of the four spokes.
+	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", action:function(date){
+		this.refresh(date);
+	}.bind(_this)});
+	_this.controls.finishedAddingControls();
+
+}

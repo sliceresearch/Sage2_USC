@@ -1,0 +1,25 @@
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+[Unit]
+Description=SAGE2 Daemon
+After=multi-user.target
+Wants=display-manager.service
+
+[Service]
+ExecStart=/usr/bin/node server.js
+WorkingDirectory=/home/sage/sage2
+User=sage
+Group=users
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=sage2Server
+Restart=always
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

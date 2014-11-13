@@ -33,6 +33,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerOffsetX = null; 
 	this.pointerOffsetY = null;
 	this.noDropShadow   = null;
+	this.uiHidden       = null;
 
 	// Aspect ratio of the wall and the browser	
 	this.wallRatio      = null;
@@ -40,7 +41,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.ratio          = "fit";
 
 	this.pointerItems   = {};
-	this.radialMenus	= {};
+	this.radialMenus    = {};
 	
 	// Get handle on the main div
 	this.bg   = document.getElementById("background");
@@ -113,7 +114,6 @@ function uiBuilder(json_cfg, clientID) {
 					// This somehow forces a reflow of the div and show the scrollbars as needed
 					// Needed with chrome v36
 					_this.bg.style.display='none';
-					_this.bg.offsetHeight;
 					_this.bg.style.display='block';
 				}
 			};
@@ -220,6 +220,7 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
+			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		} else {
@@ -229,6 +230,7 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
+			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		}
@@ -325,6 +327,8 @@ function uiBuilder(json_cfg, clientID) {
 			machine.textContent = url;
 		}
 		head.appendChild(fileref);
+		this.uiHidden = false;
+		this.showInterface();
 	};
 	
 	this.updateVersionText = function(data) {
@@ -457,11 +461,11 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x, radialMenuSize.y, 9000);
+								radialMenuSize.x * ui.widgetControlSize * 0.03, radialMenuSize.y * ui.widgetControlSize * 0.03, 9000);
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x, radialMenuSize.y, 8900);
+								radialMenuSize.x * ui.widgetControlSize * 0.03, radialMenuSize.y * ui.widgetControlSize * 0.03, 8900);
 			this.main.appendChild(menuElem); 
 			this.main.appendChild(menuElem2); 
 			
@@ -595,34 +599,50 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.hideInterface = function() {
-		// Hide the top bar
-		this.upperBar.style.display = 'none';
-		// Hide the pointers
-		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].div)
-				this.pointerItems[p].div.style.display = 'none';
-		}
-		// Hide the apps top bar
-		var applist = document.getElementsByClassName("windowTitle");
-		for (var i = 0; i < applist.length; i++) {
-			applist[i].style.display = 'none';
+		if (!this.uiHidden) {
+			// Hide the top bar
+			this.upperBar.style.display = 'none';
+			// Hide the pointers
+			for (var p in this.pointerItems) {
+				if (this.pointerItems[p].div)
+					this.pointerItems[p].div.style.display = 'none';
+			}
+			// Hide the apps top bar
+			var applist = document.getElementsByClassName("windowTitle");
+			for (var i = 0; i < applist.length; i++) {
+				applist[i].style.display = 'none';
+			}
+			// Hide the apps border
+			var itemlist = document.getElementsByClassName("windowItem");
+			for (var i = 0; i < itemlist.length; i++) {
+				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			this.uiHidden = true;
 		}
 	};
 
 	this.showInterface = function() {
-		// Show the top bar
-		this.upperBar.style.display = 'block';
-		// Show the pointers (only if they have a name, ui pointers dont have names)
-		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].label !== "") {
-				if (this.pointerItems[p].isShown === true)
-				 	this.pointerItems[p].div.style.display = 'block';
+		if (this.uiHidden) {
+			// Show the top bar
+			this.upperBar.style.display = 'block';
+			// Show the pointers (only if they have a name, ui pointers dont have names)
+			for (var p in this.pointerItems) {
+				if (this.pointerItems[p].label !== "") {
+					if (this.pointerItems[p].isShown === true)
+						this.pointerItems[p].div.style.display = 'block';
+				}
 			}
-		}
-		// Show the apps top bar
-		var applist = document.getElementsByClassName("windowTitle");
-		for (var i = 0; i < applist.length; i++) {
-			applist[i].style.display = 'block';
+			// Show the apps top bar
+			var applist = document.getElementsByClassName("windowTitle");
+			for (var i = 0; i < applist.length; i++) {
+				applist[i].style.display = 'block';
+			}
+			// Show the apps border
+			var itemlist = document.getElementsByClassName("windowItem");
+			for (var i = 0; i < itemlist.length; i++) {
+				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			this.uiHidden = false;
 		}
 	};
 }

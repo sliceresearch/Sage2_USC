@@ -28,7 +28,7 @@ function SAGE2_interaction(wsio) {
 	
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
-	
+
 	this.setInteractionId = function(id) {
 		this.uniqueID = id;
 	};
@@ -50,6 +50,20 @@ function SAGE2_interaction(wsio) {
 		var loaded = {};
 		var filesFinished = 0;
 		var total = 0;
+		
+		var progressCallback = function(event) {
+			if(loaded[event.target.id] === undefined) total += event.total;
+			loaded[event.target.id] = event.loaded;
+			var uploaded = 0;
+			for(var key in loaded) uploaded += loaded[key];
+			var pc = uploaded/total;
+			if(_this.fileUploadProgress) _this.fileUploadProgress(pc);
+		};
+		
+		var loadCallback = function(event) {
+			filesFinished++;
+			if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
+		};
 
 		for(var i=0; i<files.length; i++){
 			if(files[i].size <= this.maxUploadSize){
@@ -60,18 +74,8 @@ function SAGE2_interaction(wsio) {
 				xhr = new XMLHttpRequest();
 				xhr.open("POST", "upload", true);
 				xhr.upload.id = "file"+i.toString();
-				xhr.upload.addEventListener('progress', function(event) {
-					if(loaded[event.target.id] === undefined) total += event.total;
-					loaded[event.target.id] = event.loaded;
-					var uploaded = 0;
-					for(var key in loaded) uploaded += loaded[key];
-					var pc = uploaded/total;
-					if(_this.fileUploadProgress) _this.fileUploadProgress(pc);
-				}, false);
-				xhr.addEventListener('load', function(event) {
-					filesFinished++;
-					if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
-				}, false);
+				xhr.upload.addEventListener('progress', progressCallback, false);
+				xhr.addEventListener('load', loadCallback, false);
 				xhr.send(formdata);
 			}
 			else{
@@ -118,7 +122,18 @@ function SAGE2_interaction(wsio) {
 			
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 			
+			//console.log(document.querySelector('meta[name=viewport]'));
 			showSAGE2PointerOverlayNoMouse();
+		}
+	};
+	
+	this.stopSAGE2Pointer = function() {
+		if(hasMouse) {
+			document.exitPointerLock();
+		}
+		else {
+			this.wsio.emit('stopSagePointer');
+			hideSAGE2PointerOverlayNoMouse();
 		}
 	};
 	
@@ -168,13 +183,11 @@ function SAGE2_interaction(wsio) {
 	};
 	
 	this.startScreenShare = function() {
-		var userAgent = navigator.userAgent.toLowerCase();
-			
-		if(this.chromeDesktopCaptureEnabled === true) {
+		if(browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
 			// post message to start chrome screen share
 			window.postMessage('capture_desktop', '*');
 		}
-		else if(userAgent.indexOf("firefox") >= 0) {
+		else if(browser.isFirefox === true) {
 			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
 			showDialog('ffShareScreenDialog');
 		}
@@ -183,12 +196,12 @@ function SAGE2_interaction(wsio) {
 		}
 	};
 	
-	this.captureDesktop = function(browser, data) {
-		if(browser === "chrome"){
+	this.captureDesktop = function(data) {
+		if(browser.isChrome === true){
 			var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: data, maxWidth: 3840, maxHeight: 2160};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		}
-		else if(browser === "firefox") {
+		else if(browser.isFirefox === true) {
 			navigator.getUserMedia({video: {mediaSource: data}, audio: false}, this.streamSuccess, this.streamFail);
 		}
 	};
@@ -232,7 +245,6 @@ function SAGE2_interaction(wsio) {
 					  Math.min(1920, mediaVideo.videoWidth), 
 					  mediaVideo.videoWidth];
 		
-		var screenShareResolution = document.getElementById('screenShareResolution');
 		for(var i=0; i<4; i++){
 			var height = parseInt(widths[i] * mediaVideo.videoHeight/mediaVideo.videoWidth, 10);
 			screenShareResolution.options[i].value = widths[i] + "x" + height;
@@ -244,7 +256,7 @@ function SAGE2_interaction(wsio) {
 		
 		var frame = this.captureMediaFrame();
 		var raw = atob(frame.split(",")[1]); // base64 to string
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", color: localStorage.SAGE2_ptrColor, src: raw, type: "image/jpeg", encoding: "binary", width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
 
 		this.broadcasting = true;
 	};
@@ -268,12 +280,13 @@ function SAGE2_interaction(wsio) {
 				var _this = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 				
+				var updateMediaStreamChunk = function(index, msg_chunk){
+					setTimeout(function() {
+						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
+					}, 4);
+				};
+				
 				for(var i=0; i<nchunks; i++){
-					function updateMediaStreamChunk(index, msg_chunk){
-						setTimeout(function() {
-							_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
-						}, 4);
-					}
 					var start = i*this.chunk;
 					var end = (i+1)*this.chunk < raw.length ? (i+1)*this.chunk : raw.length;
 					updateMediaStreamChunk(i, raw.substring(start, end));
@@ -288,40 +301,39 @@ function SAGE2_interaction(wsio) {
 	this.pointerPressMethod = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		this.wsio.emit('pointerPress', {button: btn});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerMoveMethod = function(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
 		this.wsio.emit('pointerMove', {deltaX: Math.round(movementX*this.sensitivity), deltaY: Math.round(movementY*this.sensitivity)});	
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerReleaseMethod = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		this.wsio.emit('pointerRelease', {button: btn});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerDblClickMethod = function(event) {
 		this.wsio.emit('pointerDblClick');
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerScrollMethod = function(event) {
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {wheelDelta: event.deltaY});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	this.pointerKeyDownMethod = function(event) {
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if(code === 27) {
-			document.exitPointerLock();
-			event.preventDefault();
+			this.stopSAGE2Pointer();
+			event.preventDefault && event.preventDefault();
 		}
 		else {
 			this.wsio.emit('keyDown', {code: code});
@@ -330,7 +342,7 @@ function SAGE2_interaction(wsio) {
 			}
 			// if a special key - prevent default (otherwise let continue to keyPress)
 			if(code == 8 || code == 9 || (code >= 16 && code <= 46 && code != 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)){
-				event.preventDefault();
+				event.preventDefault && event.preventDefault();
 			}
 		}
 	};
@@ -340,14 +352,14 @@ function SAGE2_interaction(wsio) {
 		if(code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
 		}
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	
 	this.pointerKeyPressMethod = function(event) {
 		var code = parseInt(event.charCode, 10);
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
-		event.preventDefault();
+		event.preventDefault && event.preventDefault();
 	};
 	
 	
@@ -379,7 +391,7 @@ function SAGE2_interaction(wsio) {
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
 	this.streamCanPlay               = this.streamCanPlayMethod.bind(this);
-	
+
 	this.pointerLockError            = this.pointerLockErrorMethod.bind(this);
 	this.pointerLockChange           = this.pointerLockChangeMethod.bind(this);
 	this.pointerPress                = this.pointerPressMethod.bind(this);
@@ -395,7 +407,7 @@ function SAGE2_interaction(wsio) {
 	this.changeSage2PointerColor     = this.changeSage2PointerColorMethod.bind(this);
 	this.changeScreenShareResolution = this.changeScreenShareResolutionMethod.bind(this);
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
-	
+
 	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);

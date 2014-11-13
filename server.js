@@ -29,56 +29,113 @@
 // Importing modules (from node_modules directory)
 
 // npm registry: built-in or defined in package.json
+var colors      = require('colors');              // pretty colors in the terminal
 var crypto      = require('crypto');              // https encryption
+var exec        = require('child_process').exec;  // execute child process
+var formidable  = require('formidable');          // upload processor
 var fs          = require('fs');                  // filesystem access
 var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
 var json5       = require('json5');               // JSON format that allows comments
 var os          = require('os');                  // operating system access
-var util        = require('util');                // node util
 var path        = require('path');                // file path extraction and creation
+var program     = require('commander');           // parsing command-line arguments
+var qrimage     = require('qr-image');            // qr-code generation
+var readline    = require('readline');            // to build an evaluation loop (builtin module)
 var request     = require('request');             // external http requests
 var sprint      = require('sprint');              // pretty formating (sprintf)
-var readline    = require('readline');            // to build an evaluation loop (builtin module)
-var program     = require('commander');           // parsing command-line arguments
-var colors      = require('colors');              // pretty colors in the terminal
-var exec        = require('child_process').exec;  // execute child process
-var formidable  = require('formidable');          // upload processor
-var qrimage     = require('qr-image');            // qr-code generation
+var twit        = require('twit');                // twitter api
+var util        = require('util');                // node util
 
 // custom node modules
-var httpserver  = require('./src/node-httpserver');     // creates web server
-var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
-var loader      = require('./src/node-itemloader');     // handles sage item creation
-var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
-var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var omicron     = require('./src/node-omicron');        // handles Omicron input events
-var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
 var assets      = require('./src/node-assets');         // manages the list of files
+var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
+var httpserver  = require('./src/node-httpserver');     // creates web server
+var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var loader      = require('./src/node-itemloader');     // handles sage item creation
+var omicron     = require('./src/node-omicron');        // handles Omicron input events
+var radialmenu  = require('./src/node-radialmenu');     // radial menu
+var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var sageutils   = require('./src/node-utils');          // provides the current version number
-var radialmenu  = require('./src/node-radialmenu');    // handles sage pointers (creation, location, etc.)
+var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
 
-var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-console.log("Detected Server OS as: " + platform);
-
+// Version calculation
 var SAGE2_version = sageutils.getShortVersion();
-console.log("SAGE2 Short Version:", SAGE2_version);
-
-
 
 // Command line arguments
 program
   .version(SAGE2_version)
-  .option('-i, --interactive', 'Interactive prompt')
+  .option('-i, --no-interactive',       'Non interactive prompt')
   .option('-f, --configuration <file>', 'Specify a configuration file')
-  .option('-s, --session [name]', 'Load a session file (last session if omitted)')
+  .option('-l, --logfile [file]',       'Specify a log file')
+  .option('-q, --no-output',            'Quiet, no output')
+  .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .parse(process.argv);
+
+// Logging mechanism
+if (program.logfile) {
+	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
+	var log_file   = fs.createWriteStream(path.resolve(logname), {flags : 'w+'});
+	var log_stdout = process.stdout;
+
+	// Redirect console.log to a file and still produces an output or not
+	if (program.output === false) {
+		console.log = function(d) {
+			log_file.write(util.format(d) + '\n');
+			program.interactive = undefined;
+		};
+	} else {
+		console.log = function() {
+			if ((Array.prototype.slice.call(arguments)).length == 1 && 
+				typeof Array.prototype.slice.call(arguments)[0] == 'string') {
+				log_stdout.write( (Array.prototype.slice.call(arguments)).toString() + '\n' );
+			}
+			else {
+				var i = 0;
+				var s = "";
+				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
+				while (i < args.length) {
+					if (i===0)
+						s = args[i];
+					else
+						s += " " + args[i];
+					i++;
+				}
+				log_stdout.write(s + '\n');
+				log_file.write(s + '\n');
+			}
+
+		};
+	}
+}
+else if (program.output === false) {
+	console.log = function(d) { //
+		program.interactive = undefined;
+	};
+}
+
+// Platform detection
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+console.log("Detected Server OS as:", platform);
+console.log("SAGE2 Short Version:", SAGE2_version);
+
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
-console.log(config);
 
+var twitter = null;
+if(config.advanced !== undefined && config.advanced.twitter !== undefined){
+	twitter = new twit({
+		consumer_key:         config.advanced.twitter.consumerKey,
+		consumer_secret:      config.advanced.twitter.consumerSecret,
+		access_token:         config.advanced.twitter.accessToken,
+		access_token_secret:  config.advanced.twitter.accessSecret
+	});
+	delete config.advanced.twitter;
+}
+
+console.log(config);
 
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
@@ -111,6 +168,7 @@ var itemCount = 0;
 
 // global variables to manage clients
 var clients = [];
+var masterDisplay = null;
 var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
@@ -120,8 +178,8 @@ var radialMenus = {};
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-qr_png.on('readable', function() { console.log('processing QR'); });
-qr_png.on('end',      function() { console.log('QR image generated', qr_out); });
+// qr_png.on('readable', function() { process.stdout.write('.'); });
+qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
@@ -161,6 +219,7 @@ httpServerIndex.httpGET('/config', sendConfig); // send config object to client 
 // create HTTPS server for all SAGE content
 var httpsServerApp = new httpserver("public_HTTPS");
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
+httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
 
 // create HTTPS options - sets up security keys
@@ -213,6 +272,19 @@ function closeWebSocketClient(wsio) {
 	}
 	
 	if(wsio.clientType == "webBrowser") webBrowserClient = null;
+	
+	if(wsio === masterDisplay){
+		var i;
+		masterDisplay = null;
+		for(i=0; i<clients.length; i++){
+			if(clients[i].clientType === "display" && clients[i] !== wsio){
+				masterDisplay = clients[i];
+				clients[i].emit('setAsMasterDisplay');
+				break;
+			}
+		}
+	}
+	
 	removeElement(clients, wsio);
 }
 
@@ -257,19 +329,24 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
 	
-	initializeWSClient(wsio);
-	
-	clients.push(wsio);
-	if (wsio.clientType==="display")
+	if (wsio.clientType==="display") {
+		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-	else
+	}
+	else {
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+	}
+	
+	initializeWSClient(wsio);
+	clients.push(wsio);
 }
 
 function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
+	
+	if(wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
 	
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
@@ -301,6 +378,8 @@ function initializeWSClient(wsio) {
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
 		wsio.on('appResize', wsAppResize);
+		wsio.on('broadcast', wsBroadcast);
+		wsio.on('searchTweets', wsSearchTweets);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
@@ -650,7 +729,7 @@ function wsStartNewMediaStream(wsio, data) {
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.width, data.height, function(appInstance) {
+	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
@@ -804,6 +883,27 @@ function wsAppResize(wsio, data) {
 			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		}
 	}
+}
+
+//
+// Broadcast data to all clients who need apps
+//
+function wsBroadcast(wsio, data) {
+	broadcast('broadcast', data, 'requiresFullApps');
+}
+
+//
+// Search tweets using Twitter API
+//
+function wsSearchTweets(wsio, data) {
+	twitter.get('search/tweets', data.query, function(err, info, response) {
+		if(err) throw err;
+		
+		if(data.broadcast === true)
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
+		else
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}});
+	});
 }
 
 
@@ -1384,20 +1484,20 @@ function wsAddNewControl(wsio, data){
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
 	var regTI = /textInput/;
 	var regSl = /slider/;
+	var regButton = /button/;
 	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if (regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
+	if ((regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) && remoteInteraction[data.addr].lockedControl() === null ) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	if (data.ctrlId !==null && regSl.test(data.ctrlId) ) {
+	var regButton = /button/;
+	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
-	}
-	if (data.activateControl) {
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
@@ -1495,6 +1595,9 @@ function loadConfiguration() {
 	
 	if (userConfig.ui.titleBarHeight) userConfig.ui.titleBarHeight = parseInt(userConfig.ui.titleBarHeight, 10);
 	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
+
+	if (userConfig.ui.widgetControlSize) userConfig.ui.widgetControlSize = parseInt(userConfig.ui.widgetControlSize, 10);
+	else userConfig.ui.widgetControlSize = Math.round(0.020 * minDim);
 	
 	if (userConfig.ui.titleTextSize) userConfig.ui.titleTextSize = parseInt(userConfig.ui.titleTextSize, 10);
 	else userConfig.ui.titleTextSize  = Math.round(0.015 * minDim);
@@ -1939,6 +2042,19 @@ index.on('listening', function (e) {
 	}
 });*/
 
+// CTRL-C intercept
+process.on('SIGINT', function() {
+	saveSession();
+	assets.saveAssets();
+	if( omicronRunning )
+		omicronManager.disconnect();
+	console.log('');
+	console.log('SAGE2 done');
+	console.log('');
+	process.exit(0);
+});
+
+
 // Start the HTTP server
 index.listen(config.index_port);
 // Start the HTTPS server
@@ -1986,6 +2102,7 @@ if (program.interactive)
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
+				console.log('regenerate\tregenerates the assets');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -2024,6 +2141,10 @@ if (program.interactive)
 
 			case 'assets':
 				assets.listAssets();
+				break;
+
+			case 'regenerate':
+				assets.regenerateAssets();
 				break;
 
 			case 'tile':
@@ -2105,7 +2226,10 @@ function findAppUnderPointer(pointerX, pointerY) {
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
-			return controls[i];
+			if (controls[i].show === true)
+				return controls[i];
+			else
+				return null;
 		}
 	}
 	return null;
@@ -2133,8 +2257,8 @@ function showControl(ctrl, pointerX, pointerY){
 		var dt = new Date();
 		var rightMargin = config.totalWidth - ctrl.width;
 		var bottomMargin = config.totalHeight - ctrl.height;
-		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
-		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY ;
+		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
+		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
 		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 		broadcast('showControl',{id:ctrl.id},'receivesWidgetEvents');	
 	}
@@ -2146,7 +2270,7 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	var bottomMargin = config.totalHeight - ctrl.height;
 	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin:pointerY ;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left-ctrl.height/2, elemTop: ctrl.top-ctrl.height/2},'receivesWidgetEvents');
 }
 
 
@@ -2228,10 +2352,17 @@ function getItemPositionSizeType(item) {
 }
 
 function getAppPositionSize(appInstance) {
-	return {id: appInstance.id, application: appInstance.application, left: appInstance.left,
-			top: appInstance.top, width: appInstance.width, height: appInstance.height,
-			icon: appInstance.icon || null
-		};
+	return {
+		id:          appInstance.id,
+		application: appInstance.application,
+		left:        appInstance.left,
+		top:         appInstance.top,
+		width:       appInstance.width,
+		height:      appInstance.height,
+		icon:        appInstance.icon || null,
+		title:       appInstance.title,
+		color:       appInstance.color || null
+	};
 }
 
 // **************  Pointer Functions *****************
@@ -2553,6 +2684,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerMove(uniqueID, pointerX, pointerY, data) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
 	sagePointers[uniqueID].left += data.deltaX;
 	sagePointers[uniqueID].top += data.deltaY;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
@@ -3052,6 +3186,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	var now  = new Date();
 	
 	if( ct === null ) // Do not open menu over widget
 	{
@@ -3062,7 +3197,17 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 		}
 		else
 		{
-			// Open a 'app' radial menu
+			// Open a 'app' radial menu (or in this case application widget)
+			var elemCtrl = findControlByAppId(elem.id);
+			if (elemCtrl === null) {
+				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch"+uniqueID, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+			}
+			else if (elemCtrl.show === false) {
+				showControl(elemCtrl, pointerX, pointerY) ;
+			}
+			else {
+				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+			}
 		}
 	}
 	updateRadialMenu(uniqueID);

@@ -286,7 +286,7 @@ omicronManager.prototype.runTracker = function()
 			var address = rinfo.address+":"+sourceID;
 			
 			// ServiceTypePointer //////////////////////////////////////////////////
-			if ( serviceType === 0)
+			if ( serviceType === 0 )
 			{  
 				if( eventDebug )
 				{

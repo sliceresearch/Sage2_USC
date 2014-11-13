@@ -18,16 +18,17 @@ var previewWindowOffset = 0.74;
 
 // radial menu buttons
 var radialMenuScale = 1.0;
+var thumbnailWindowMinTextHeight = 24;
 
 var radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
 var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
-var radialMenuAngleSeparation = 35;
-var radialMenuInitAngle = 55;
-var radialMenuAngle= 0;
-var radialMenuRadius = 100;
-var radialMenuButtonSize = 100; // pie image size
-var radialMenuButtonHitboxSize = 50;
-var overlayIconScale = 0.3; // image, pdf, etc image
+var angleSeparation = 35;
+var initAngle = 55;
+var angle = 0;
+var menuRadius = 100;
+var menuButtonSize = 100; // pie image size
+var menuButtonHitboxSize = 50;
+var overlayIconScale = 0.5; // image, pdf, etc image
 
 var thumbnailScrollScale = 1;
 var thumbnailDisableSelectionScrollDistance = 5; // Distance in pixels scroll window can move before button select is cancelled
@@ -35,6 +36,9 @@ var thumbnailWindowSize = { x: 1224, y: 860 };
 var thumbnailPreviewWindowSize = { x: 550, y: 800 };
 
 var radialMenuList = {};
+
+// Mostly for debugging, toggles buttons/thumbnails redrawing on a events (like move)
+var enableEventRedraw = true;
 
 function radialMenu(){
 	this.element    = null;
@@ -44,6 +48,14 @@ function radialMenu(){
 	this.thumbWindowctx = null;
 	
 	this.init = function(id, thumbElem) {
+		//radialMenuScale = ui.widgetControlSize * 0.03;
+		radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
+		radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
+		
+		this.textHeaderHeight = 18  * radialMenuScale;
+		//if( this.textHeaderHeight < thumbnailWindowMinTextHeight )
+		//	this.textHeaderHeight = thumbnailWindowMinTextHeight;
+				
 		this.element = document.getElementById(id); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
 		
@@ -51,11 +63,11 @@ function radialMenu(){
 		
 		this.thumbWindowctx = this.thumbnailWindowElement.getContext("2d");
 
-		this.resrcPath = "images/radialMenu/";
+		this.resrcPath = "images/radialMenu/"
 		
 		this.menuID = id;
-		this.currentMenuState = 'radialMenu';
-		this.currentRadialState = 'radialMenu';
+		this.currentMenuState = 'radialMenu'
+		this.currentRadialState = 'radialMenu'
 		this.radialMenuCenter = radialMenuCenter;
 		
 		this.settingMenuOpen = false;
@@ -71,7 +83,7 @@ function radialMenu(){
 		this.dragPosition = { x: 0, y: 0 };
 		
 		this.dragThumbnailWindow = false;
-		this.thumbnailWindowPosition = { x: (radialMenuCenter.x * 2 + imageThumbSize/2), y: 30 };
+		this.thumbnailWindowPosition = { x: (radialMenuCenter.x * 2 + imageThumbSize/2), y: 30 * radialMenuScale };
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
@@ -92,8 +104,8 @@ function radialMenu(){
 		// Note: using a different socket to prevent locking up other app animations
 		hostname = window.location.hostname;
 		port = window.location.port;
-		if(window.location.protocol === "http:" && port === "") port = "80";
-		if(window.location.protocol === "https:" && port === "") port = "443";
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
 		
 		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		this.wsio.open(function() {
@@ -129,22 +141,22 @@ function radialMenu(){
 		
 		// load thumbnail icons
 		this.idleExitIcon = new Image();
-		this.idleExitIcon.src = this.resrcPath +"exit.svg";
+		this.idleExitIcon.src = "images/ui/close.svg";
 		
 		this.idleImageIcon = new Image();
-		this.idleImageIcon.src = this.resrcPath +"image2.svg";
+		this.idleImageIcon.src = "images/ui/images.svg";
 		this.idlePDFIcon = new Image();
-		this.idlePDFIcon.src = this.resrcPath +"file.svg";
+		this.idlePDFIcon.src = "images/ui/pdfs.svg";
 		this.idleVideoIcon = new Image();
-		this.idleVideoIcon.src = this.resrcPath +"clapper.svg";
+		this.idleVideoIcon.src = "images/ui/videos.svg";
 		this.idleAppIcon = new Image();
-		this.idleAppIcon.src = this.resrcPath +"rocket.svg";
+		this.idleAppIcon.src = "images/ui/applauncher.svg";
 		this.idleSessionIcon = new Image();
-		this.idleSessionIcon.src = this.resrcPath +"upload.svg";
+		this.idleSessionIcon.src = "images/ui/loadsession.svg";
 		this.idleSaveSessionIcon = new Image();
-		this.idleSaveSessionIcon.src = this.resrcPath +"download.svg";
+		this.idleSaveSessionIcon.src = "images/ui/savesession.svg";
 		this.idleSettingsIcon = new Image();
-		this.idleSettingsIcon.src = this.resrcPath +"cog.svg";
+		this.idleSettingsIcon.src = "images/ui/arrangement.svg"
 		
 		// Level 2 icons
 		this.idleFolderIcon = new Image();
@@ -152,97 +164,95 @@ function radialMenu(){
 		this.idleCloseAppIcon = new Image();
 		this.idleCloseAppIcon.src = this.resrcPath + "window27.svg";
 		this.idleCloseAllIcon = new Image();
-		this.idleCloseAllIcon.src = this.resrcPath + "windows24.svg";
+		this.idleCloseAllIcon.src = "images/ui/clearcontent.svg";
 		this.idleMaximizeIcon = new Image();
 		this.idleMaximizeIcon.src = this.resrcPath + "maximize.svg";
 		this.idleTileIcon = new Image();
-		this.idleTileIcon.src = this.resrcPath + "large16.svg";
+		this.idleTileIcon.src = "images/ui/tilecontent.svg";
 		
 		// radial menu icons
-		//this.radialMenuIcon = new Image;
-		//this.radialMenuIcon.src = this.resrcPath +"icon_radial_256.png"
 		this.radialMenuIcon = new Image();
-		this.radialMenuIcon.src = this.resrcPath +"icon_radial_button_circle.svg";
+		this.radialMenuIcon.src = this.resrcPath + "icon_radial_button_circle.svg";
 		this.radialMenuLevel2Icon = new Image();
-		this.radialMenuLevel2Icon.src = this.resrcPath +"icon_radial_level2_360.png";
+		this.radialMenuLevel2Icon.src = this.resrcPath + "icon_radial_level2_360.png";
 		this.radialCloseIcon = new Image();
-		this.radialCloseIcon.src = this.resrcPath +"icon_close_128.png";
+		this.radialCloseIcon.src = this.resrcPath + "icon_close_128.png";
 		
 		this.radialDragIcon = new Image();
-		this.radialDragIcon.src = this.resrcPath +"drag-ring.svg";
+		this.radialDragIcon.src = this.resrcPath + "drag-ring.svg";
 		
 		this.glowLine = new Image();
-		this.glowLine.src = this.resrcPath +"glow_lines2A_menu_1024.png";
+		this.glowLine.src = this.resrcPath + "glow_lines2A_menu_1024.png";
 		
 		this.glowLineOpen = new Image();
-		this.glowLineOpen.src = this.resrcPath +"glow_lines2A_window_1024.png";
+		this.glowLineOpen.src = this.resrcPath + "glow_lines2A_menu_1024.png";
 		
 		this.thumbnailWindowFrame = new Image();
 		this.thumbnailWindowFrame.src = this.resrcPath +"thumbnail_window_frame2.png";
 		
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
-		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 );
+		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 )
 		
-		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, 0 );
+		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 )
 		
-		this.radialCloseButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 9, radialMenuRadius );
+		this.radialCloseButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 9, menuRadius )
 		this.radialCloseButton.setOverlayImage( this.idleExitIcon, overlayIconScale );
 		
-		this.radialImageButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 1, radialMenuRadius );
+		this.radialImageButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 1, menuRadius )
 		this.radialImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale );
 		
-		this.radialPDFButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 0, radialMenuRadius );
+		this.radialPDFButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, menuRadius )
 		this.radialPDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale );
 		
-		this.radialVideoButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 2, radialMenuRadius );
+		this.radialVideoButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 2, menuRadius )
 		this.radialVideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale );
 		
-		this.radialAppButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 3, radialMenuRadius );
+		this.radialAppButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 3, menuRadius )
 		this.radialAppButton.setOverlayImage( this.idleAppIcon, overlayIconScale );
 
-		this.radialSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 4, radialMenuRadius );
+		this.radialSessionButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 4, menuRadius )
 		this.radialSessionButton.setOverlayImage( this.idleSessionIcon, overlayIconScale );
 		
-		this.radialSaveSessionButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 5, radialMenuRadius );
+		this.radialSaveSessionButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 5, menuRadius )
 		this.radialSaveSessionButton.setOverlayImage( this.idleSaveSessionIcon, overlayIconScale );
 		
-		this.radialSettingsButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8, radialMenuRadius );
+		this.radialSettingsButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 8, menuRadius )
 		this.radialSettingsButton.setOverlayImage( this.idleSettingsIcon, overlayIconScale );
 		
 		// Radial level 2
 		var menu2ButtonSize = 140;
-		var menuLevel2Radius = radialMenuRadius + radialMenuButtonSize/2 + 10;
+		var menuLevel2Radius = menuRadius + menuButtonSize/2 + 10;
 		
-		this.radial2CloseAllButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 8.325, menuLevel2Radius );
+		this.radial2CloseAllButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 8.325, menuLevel2Radius )
 		this.radial2CloseAllButton.setOverlayImage( this.idleCloseAllIcon, overlayIconScale );
 		
-		this.radial2TileButton = this.createRadialButton( this.radialMenuIcon, false, radialMenuButtonSize, radialMenuButtonHitboxSize, 'centered', 'circle', 7.675, menuLevel2Radius );
+		this.radial2TileButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 7.675, menuLevel2Radius )
 		this.radial2TileButton.setOverlayImage( this.idleTileIcon, overlayIconScale );
 		
-		this.radial2ImageButton = new radialMenuButton();
+		this.radial2ImageButton = new buttonWidget();
 		this.radial2ImageButton.init(0, this.ctx, null);
 		this.radial2ImageButton.setIdleImage( this.radialMenuIcon );
 		this.radial2ImageButton.useBackgroundColor = false;
-		this.radial2ImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
+		this.radial2ImageButton.setOverlayImage( this.idleImageIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
 		
-		this.radial2PDFButton = new radialMenuButton();
+		this.radial2PDFButton = new buttonWidget();
 		this.radial2PDFButton.init(0, this.ctx, null);
 		this.radial2PDFButton.setIdleImage( this.radialMenuIcon );
 		this.radial2PDFButton.useBackgroundColor = false;
-		this.radial2PDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
+		this.radial2PDFButton.setOverlayImage( this.idlePDFIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
 		
-		this.radial2VideoButton = new radialMenuButton();
+		this.radial2VideoButton = new buttonWidget();
 		this.radial2VideoButton.init(0, this.ctx, null);
 		this.radial2VideoButton.setIdleImage( this.radialMenuIcon );
 		this.radial2VideoButton.useBackgroundColor = false;
-		this.radial2VideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
+		this.radial2VideoButton.setOverlayImage( this.idleVideoIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
 		
-		this.radial2AppButton = new radialMenuButton();
+		this.radial2AppButton = new buttonWidget();
 		this.radial2AppButton.init(0, this.ctx, null);
 		this.radial2AppButton.setIdleImage( this.radialMenuIcon );
 		this.radial2AppButton.useBackgroundColor = false;
-		this.radial2AppButton.setOverlayImage( this.idleAppIcon, overlayIconScale * radialMenuButtonSize/menu2ButtonSize );
+		this.radial2AppButton.setOverlayImage( this.idleAppIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
 		
 
 		this.radial2ImageButton.setSize( menu2ButtonSize, menu2ButtonSize );
@@ -251,10 +261,10 @@ function radialMenu(){
 		this.radial2AppButton.setSize( menu2ButtonSize, menu2ButtonSize );
 	
 		
-		this.radial2ImageButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
-		this.radial2PDFButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
-		this.radial2VideoButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
-		this.radial2AppButton.setHitboxSize( radialMenuButtonHitboxSize, radialMenuButtonHitboxSize );
+		this.radial2ImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radial2PDFButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radial2VideoButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
+		this.radial2AppButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
 		
 		this.radial2ImageButton.alignment = 'centered';
 		this.radial2PDFButton.alignment = 'centered';
@@ -263,31 +273,32 @@ function radialMenu(){
 		this.radial2CloseAllButton.alignment = 'centered';
 		this.radial2TileButton.alignment = 'centered';
 		
-		radialMenuAngle = (radialMenuInitAngle+ radialMenuAngleSeparation * 1) * (Math.PI/180);
-		this.radial2ImageButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
-		this.radial2ImageButton.setRotation( radialMenuAngle- Math.PI/2 );
+		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
+		this.radial2ImageButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2ImageButton.setRotation( angle - Math.PI/2 );
 		
-		radialMenuAngle = (radialMenuInitAngle + radialMenuAngleSeparation * 0) * (Math.PI/180);
-		this.radial2PDFButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
-		this.radial2PDFButton.setRotation( radialMenuAngle- Math.PI/2 );
+		angle = (initAngle + angleSeparation * 0) * (Math.PI/180);
+		this.radial2PDFButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2PDFButton.setRotation( angle - Math.PI/2 );
 		
-		radialMenuAngle = (radialMenuInitAngle + radialMenuAngleSeparation * 2) * (Math.PI/180);
-		this.radial2VideoButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
-		this.radial2VideoButton.setRotation( radialMenuAngle- Math.PI/2 );
+		angle = (initAngle + angleSeparation * 2) * (Math.PI/180);
+		this.radial2VideoButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2VideoButton.setRotation( angle - Math.PI/2 );
 		
-		radialMenuAngle = (radialMenuInitAngle + radialMenuAngleSeparation * 3) * (Math.PI/180);
-		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(radialMenuAngle), radialMenuCenter.y - menuLevel2Radius * Math.sin(radialMenuAngle) );
-		this.radial2AppButton.setRotation( radialMenuAngle- Math.PI/2 );
+		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
+		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2AppButton.setRotation( angle - Math.PI/2 );
 	
 		
 	};
 	
 	this.createRadialButton = function( idleIcon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxShape, radialPos, buttonRadius )
 	{
-		button = new radialMenuButton();
+		button = new buttonWidget();
 		button.init(0, this.ctx, null);
 		button.setIdleImage( idleIcon );
 		button.useBackgroundColor = useBackgroundColor;
+		button.useEventOverColor = true;
 		
 		button.setSize( buttonSize * radialMenuScale, buttonSize * radialMenuScale );
 		button.setHitboxSize( hitboxSize * radialMenuScale, hitboxSize * radialMenuScale );
@@ -295,9 +306,9 @@ function radialMenu(){
 		button.alignment = alignment;
 		button.hitboxShape = hitboxShape;
 		
-		radialMenuAngle= (radialMenuInitAngle+ radialMenuAngleSeparation * radialPos) * (Math.PI/180);
-		button.setPosition( radialMenuCenter.x - buttonRadius * radialMenuScale  * Math.cos(radialMenuAngle), radialMenuCenter.y - buttonRadius * radialMenuScale * Math.sin(radialMenuAngle) );
-		button.setRotation( radialMenuAngle- Math.PI/2 );
+		angle = (initAngle + angleSeparation * radialPos) * (Math.PI/180);
+		button.setPosition( radialMenuCenter.x - buttonRadius * radialMenuScale  * Math.cos(angle), radialMenuCenter.y - buttonRadius * radialMenuScale * Math.sin(angle) );
+		button.setRotation( angle - Math.PI/2 );
 		
 		return button;
 	};
@@ -307,7 +318,7 @@ function radialMenu(){
 		//this.ctx.save();
 		ctx.fillStyle = color
 		//this.ctx.translate( position.x , position.y );
-		//this.ctx.rotate( (radialMenuInitAngle+ radialMenuAngleSeparation * angleIncrement + 90) * (Math.PI/180) );
+		//this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180) );
 		if( centered )
 			ctx.drawImage(image, position.x - size.x/2, position.y - size.y/2, size.x, size.y)
 		else
@@ -322,17 +333,12 @@ function radialMenu(){
 	};
 	
 	this.draw = function() {
-	
-		if( this.menuState !== 'opening' )
-		{
-			this.ctx.redraw = false;
-			this.thumbWindowctx.redraw = false;
-		}
-		
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
-		this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
 		
+		if( this.thumbWindowctx.redraw || this.currentMenuState === 'radialMenu')
+			this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
+			
 		if( this.windowInteractionMode === false )
 		{
 			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)"
@@ -352,28 +358,36 @@ function radialMenu(){
 		// TEMP: Just to clearly see context edge
 		//this.ctx.fillRect(0,0, radialMenuSize.x, radialMenuSize.y)
 		
-		if( this.menuState === 'opening' )
+		if( this.menuState == 'opening' )
 		{
 			if( this.stateTransition < 1 )
 				this.stateTransition += this.stateTransitionTime / 1000;
 			else
 				this.stateTransition = 0;
 		}
-		else if( this.menuState === 'open' )
+		else if( this.menuState == 'open' )
 		{
 			this.stateTransition = 1;
 		}
 		
-		// Thumbnail window background
-		if( this.currentMenuState !== 'radialMenu' )
-		{
-			this.thumbWindowctx.fillRect(0,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
-		}
-		// ------------------------------------------------------
-		
 		this.radialDragButton.draw();
 		
-		if( this.currentMenuState === 'radialMenu' )
+		if( this.currentMenuState !== 'radialMenu' )
+		{
+			// Thumbnail window background
+			if( this.thumbWindowctx.redraw )
+				this.thumbWindowctx.fillRect(0,this.thumbnailWindowPosition.y, thumbnailWindowSize.x * thumbnailWindowWidth, thumbnailWindowSize.y)
+			
+			// line from radial menu to thumbnail window
+			this.ctx.beginPath();
+			this.ctx.moveTo( radialMenuCenter.x + menuButtonSize/4 * radialMenuScale, radialMenuCenter.y );
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale , radialMenuCenter.y );
+			this.ctx.strokeStyle = '#ffffff';
+			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.stroke();
+		}
+		
+		if( this.currentMenuState == 'radialMenu' )
 			this.drawImage( this.ctx, this.glowLine, this.radialMenuCenter, {x: 510 * this.stateTransition * radialMenuScale, y: 510 * this.stateTransition * radialMenuScale}, "rgba(255, 255, 255, 0.9)", 0, true );
 		else
 			this.drawImage( this.ctx, this.glowLineOpen, this.radialMenuCenter, {x: 510 * this.stateTransition * radialMenuScale, y: 510 * this.stateTransition * radialMenuScale}, "rgba(255, 255, 255, 0.9)", 0, true );
@@ -415,13 +429,18 @@ function radialMenu(){
 				currentThumbnailButtons = this.appThumbnailButtons;
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
-				
-			for( i = 0; i < currentThumbnailButtons.length; i++ )
+			
+			console.log("draw()", this.thumbWindowctx.redraw);
+			if( this.thumbWindowctx.redraw )
 			{
-				thumbButton = currentThumbnailButtons[i];
-				thumbButton.draw();
+				for( i = 0; i < currentThumbnailButtons.length; i++ )
+				{
+					thumbButton = currentThumbnailButtons[i];
+					thumbButton.draw();
+				}
+				this.thumbWindowctx.redraw = false;
 			}
-
+			
 			// Preview window
 			previewImageSize = this.element.width * previewWindowWidth;
 			previewImageX = thumbnailWindowSize.x + imageThumbSize/2 - 10;
@@ -435,17 +454,55 @@ function radialMenu(){
 			if( this.currentMenuState !== 'radialMenu' )
 			{
 				this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)"
-				this.ctx.fillRect(previewImageX - 10,this.thumbnailWindowPosition.y + 20, previewImageSize + 20, thumbnailWindowSize.y)
+				this.ctx.fillRect(previewImageX - 10, this.thumbnailWindowPosition.y + 20, previewImageSize + 20, thumbnailWindowSize.y)
 				
 				//this.ctx.fillRect(this.thumbnailWindowPosition.x,5, 720, 50)
 			}
 			
-			this.drawImage( this.ctx, this.thumbnailWindowFrame, {x: (radialMenuCenter.x - radialMenuSize.x/2), y: 0}, {x: 1984, y: 1004}, "rgba(255, 255, 255, 0.9)", 0, false );
+			// Thumbnail window - Horz line bottom
+			//this.ctx.beginPath();
+			//this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale, this.thumbnailWindowPosition.y + 18  * radialMenuScale );
+			//this.ctx.lineTo( previewImageX - 10 + previewImageSize + 20, this.thumbnailWindowPosition.y + 18  * radialMenuScale );
+			//this.ctx.strokeStyle = '#ffffff';
+			//this.ctx.lineWidth = 5 * radialMenuScale;
+			//this.ctx.stroke();
+			
+			// Thumbnail window - Title bar
+			this.ctx.beginPath();
+			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale, 5 * radialMenuScale );
+			this.ctx.lineTo( previewImageX - 10 - 40 * radialMenuScale + 2.5 * radialMenuScale, 5 * radialMenuScale ); // Top vertical line
+			this.ctx.lineTo( previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight ); // Angled line
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale, this.thumbnailWindowPosition.y + this.textHeaderHeight ); // Bottom horizontal line
+			this.ctx.closePath();
+
+			this.ctx.fillStyle = '#50505080'
+			this.ctx.fill();
+			this.ctx.strokeStyle = '#ffffff';
+			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.stroke();
+			
+			// Thumbnail window - Vert line
+			this.ctx.beginPath();
+			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale , this.thumbnailWindowPosition.y + this.textHeaderHeight );
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale , thumbnailWindowSize.y);
+			this.ctx.strokeStyle = '#ffffff';
+			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.stroke();
+						
+			// Thumbnail window - Vert line across preview window
+			this.ctx.beginPath();
+			this.ctx.moveTo( previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight );
+			this.ctx.lineTo( previewImageX - 10 + previewImageSize + 20, this.thumbnailWindowPosition.y + this.textHeaderHeight );
+			this.ctx.strokeStyle = '#ffffff';
+			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.stroke();
+			
+			//this.drawImage( this.ctx, this.thumbnailWindowFrame, {x: (this.thumbnailWindowPosition.x - 38 * radialMenuScale), y: 0}, {x: 1984 * radialMenuScale, y: 1004}, "rgba(255, 255, 255, 0.9)", 0, false );
 			
 			// Filename text
-			this.ctx.font="24px sans-serif";
+			this.ctx.font= parseInt(this.textHeaderHeight)+"px sans-serif";
 			this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)"
-			this.ctx.fillText( this.hoverOverText, this.thumbnailWindowPosition.x, this.thumbnailWindowPosition.y + 8 );
+			this.ctx.fillText( this.hoverOverText, this.thumbnailWindowPosition.x, this.thumbnailWindowPosition.y + this.textHeaderHeight / 1.8 );
 
 			if( this.hoverOverThumbnail )
 				this.ctx.drawImage( this.hoverOverThumbnail, previewImageX, previewImageY, previewImageSize, previewImageSize );
@@ -642,6 +699,8 @@ function radialMenu(){
 			}
 		}
 		
+		
+		this.ctx.redraw = false;
 	};
 	
 	this.closeMenu = function() {
@@ -657,7 +716,9 @@ function radialMenu(){
 			this.element.width = thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
 			this.element.height = thumbnailWindowSize.y;
 			this.thumbnailWindowElement.style.display = "block";
-			
+			this.thumbWindowctx.redraw = true;
+			this.updateThumbnailPositions();
+			this.draw();
 			return true;
 		}
 		else
@@ -765,7 +826,6 @@ function radialMenu(){
 			if( this.setToggleMenu('imageThumbnailWindow') )
 			{
 				this.radialImageButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
@@ -774,7 +834,6 @@ function radialMenu(){
 			if( this.setToggleMenu('pdfThumbnailWindow') )
 			{
 				this.radialPDFButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
@@ -783,7 +842,6 @@ function radialMenu(){
 			if( this.setToggleMenu('videoThumbnailWindow') )
 			{
 				this.radialVideoButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
@@ -792,7 +850,6 @@ function radialMenu(){
 			if( this.setToggleMenu('appThumbnailWindow') )
 			{
 				this.radialAppButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialSessionButton.isClicked() )
@@ -801,7 +858,6 @@ function radialMenu(){
 			if( this.setToggleMenu('sessionThumbnailWindow') )
 			{
 				this.radialSessionButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialSaveSessionButton.isClicked() )
@@ -840,10 +896,10 @@ function radialMenu(){
 				thumbButton = currentThumbnailButtons[i];
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
 				buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
-
+				
 				if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
 				{ 
-					//console.log(thumbButton+" released" );
+					console.log(thumbButton+" released" );
 					if( this.currentMenuState === 'appThumbnailWindow' )
 						this.loadApplication( thumbButton.getData()  );
 					else
@@ -853,8 +909,9 @@ function radialMenu(){
 				{
 					this.hoverOverText = thumbButton.getData().filename;
 					this.hoverOverThumbnail = thumbButton.idleImage;
-					this.hoverOverMeta =  thumbButton.getData().meta;
-						overButton = true;
+					this.hoverOverMeta = thumbButton.getData().meta;
+					overButton = true;
+					this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
 				}
 			}
 		}
@@ -880,7 +937,7 @@ function radialMenu(){
 					this.thumbnailWindowInitialScrollOffset.y = this.thumbnailWindowScrollOffset.y;
 				}
 			}
-			
+			this.ctx.redraw = true;
 		}
 		else if( type === "pointerMove" )
 		{
@@ -912,7 +969,8 @@ function radialMenu(){
 
 				this.thumbnailWindowDragPosition = position;
 				
-				this.thumbWindowctx.redraw = true;
+				if( enableEventRedraw )
+					this.thumbWindowctx.redraw = true;
 				this.updateThumbnailPositions();
 			}
 
@@ -930,14 +988,7 @@ function radialMenu(){
 				this.scrollOpenContentLock = false;
 			}
 		}
-		
-		
-		if( this.ctx.redraw === true || this.thumbWindowctx.redraw === true )
-		{
-			//this.draw();
-			//this.ctx.redraw = false;
-			//this.thumbWindowctx.redraw = false;
-		}
+
 	};
 	
 	// Displays files
@@ -958,8 +1009,8 @@ function radialMenu(){
 	};
 	
 	this.updateFileList = function(serverFileList) {
-		console.log("updateFileList: ");
-		console.log(serverFileList);
+		//console.log("updateFileList: ");
+		//console.log(serverFileList);
 		
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
@@ -983,7 +1034,7 @@ function radialMenu(){
 			{
 				if( imageList[i].filename.search("Thumbs.db") == -1 )
 				{
-					thumbnailButton = new radialMenuButton();
+					thumbnailButton = new buttonWidget();
 					thumbnailButton.init(0, this.thumbWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					thumbnailButton.simpleTint = false;
@@ -1008,7 +1059,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < pdfList.length; i++ )
 			{
-				thumbnailButton = new radialMenuButton();
+				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1032,7 +1083,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < videoList.length; i++ )
 			{
-				thumbnailButton = new radialMenuButton();
+				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1056,7 +1107,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < appList.length; i++ )
 			{
-				thumbnailButton = new radialMenuButton();
+				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1082,7 +1133,7 @@ function radialMenu(){
 		{
 			for( i = 0; i < sessionList.length; i++ )
 			{
-				thumbnailButton = new radialMenuButton();
+				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setIdleImage( this.idleSessionIcon );
@@ -1156,7 +1207,7 @@ function radialMenu(){
 						curRow++;
 				}
 
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				//currentButton.setPosition( 0 + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
@@ -1179,7 +1230,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1201,7 +1252,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1224,7 +1275,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize * 2 + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize * 2 + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize * 2 + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize * 2 + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1247,7 +1298,7 @@ function radialMenu(){
 						curRow++;
 				}
 				
-				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
+				currentButton.setPosition( 0 + this.thumbnailWindowScrollOffset.x + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + this.textHeaderHeight + curRow * (imageThumbSize + thumbSpacer) );
 				
 				curColumn++;
 			}
@@ -1255,14 +1306,14 @@ function radialMenu(){
 
 }
 
-function radialMenuButton() {
+function buttonWidget() {
 	//this.element = null;
 	this.ctx = null;
 	this.resrcPath = null;
 	
 	this.posX = 100;
 	this.posY = 100;
-	this.radialMenuAngle= 0;
+	this.angle = 0;
 	this.width = imageThumbSize;
 	this.height = imageThumbSize;
 	
@@ -1283,6 +1334,7 @@ function radialMenuButton() {
 	this.overlayImage = null;
 	
 	this.useBackgroundColor = true;
+	this.useEventOverColor = false;
 	this.simpleTint = false;
 	
 	this.alignment = 'left';
@@ -1307,7 +1359,7 @@ function radialMenuButton() {
 		this.ctx = ctx
 		this.resrcPath = resrc;
 		
-		//console.log("radialMenuButton init()");
+		//console.log("buttonWidget init()");
 	}
 	 
 	this.setPosition = function( x, y )
@@ -1318,7 +1370,7 @@ function radialMenuButton() {
 	
 	this.setRotation = function(a )
 	{
-		this.radialMenuAngle= a;
+		this.angle = a;
 	}
 	
 	this.setData = function( data )
@@ -1388,7 +1440,7 @@ function radialMenuButton() {
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 		}
-		else if( this.useBackgroundColor )
+		if( this.useBackgroundColor )
 		{
 			if( this.isLit )
 				this.ctx.fillStyle = this.litColor;
@@ -1408,14 +1460,14 @@ function radialMenuButton() {
 		// Draw icon aligned centered
 		if( this.idleImage != null )
 		{
-			//this.ctx.rotate( this.radialMenuAngle);
+			//this.ctx.rotate( this.angle );
 			
 			// draw the original image
 			this.ctx.drawImage( this.idleImage, offset.x, offset.y, this.width, this.height );
 			
 			if( this.isLit === true )
 				this.drawTintImage( this.idleImage, offset, this.width, this.height, this.litColor, 0.5 );
-						
+
 			// Tint the image
 			if( this.state !== 0 )
 			{
@@ -1425,7 +1477,7 @@ function radialMenuButton() {
 				}
 				else
 				{
-					if( this.isLit === false )
+					if( this.isLit === false && this.useEventOverColor)
 						this.drawTintImage( this.idleImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
 				}
 			}
@@ -1473,16 +1525,18 @@ function radialMenuButton() {
 			if( type === "pointerPress" && this.state != 2 )
 			{
 				this.state = 3; // Click state
-				this.ctx.redraw = true;
+				if( this.useEventOverColor )
+					this.ctx.redraw = true;
 			}
 			else if( type === "pointerRelease" )
 			{
 				this.state = 4;
-				this.ctx.redraw = true;
+				if( this.useEventOverColor )
+					this.ctx.redraw = true;
 			}
 			else if( this.state !== 2 )
 			{
-				if( this.state !== 1 )
+				if( this.state !== 1 && this.useEventOverColor )
 					this.ctx.redraw = true;
 				this.state = 1;
 			}
@@ -1491,7 +1545,7 @@ function radialMenuButton() {
 		}
 		else
 		{
-			if( this.state !== 0 )
+			if( this.state !== 0 && this.useEventOverColor )
 				this.ctx.redraw = true;
 			this.state = 0;
 			

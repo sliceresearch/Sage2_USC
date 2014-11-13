@@ -40,7 +40,6 @@
 		"url": "https://github.com/uic-evl/SAGE2"
 	},
 	"dependencies": {
-		"qr-image": "latest",
 		"color": "latest",
 		"colors": "latest",
 		"commander": "latest",
@@ -52,8 +51,10 @@
 		"jshint": "latest",
 		"json5": "latest",
 		"mime": "latest",
+		"qr-image": "latest",
 		"request": "latest",
 		"sprint": "^0.3.1",
+		"twit": "latest",
 		"ws": "latest",
 		"ytdl-core": "latest"
 	},

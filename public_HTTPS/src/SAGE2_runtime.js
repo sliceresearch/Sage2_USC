@@ -190,6 +190,14 @@ function sage2Log(msgObject) {
 	wsio.emit('sage2Log', msgObject);
 }
 
+function broadcast(dataObject) {
+	wsio.emit('broadcast', dataObject);
+}
+
+function searchTweets(tweetObject) {
+	wsio.emit('searchTweets', tweetObject);
+}
+
 function formatAMPM(date) {
 	var hours = date.getHours();
 	var minutes = date.getMinutes();

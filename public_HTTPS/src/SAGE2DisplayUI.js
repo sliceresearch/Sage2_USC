@@ -8,7 +8,7 @@ function SAGE2DisplayUI() {
 		this.logo.onload = function(event) {
 			_this.resize();
 		};
-		this.logo.src = "images/EVL-LAVA_UI.svg"
+		this.logo.src = "images/EVL-LAVA_UI.svg";
 		this.logoAspect = 3.47828052509;
 		this.fileDrop = false;
 		this.fileUpload = false;
@@ -40,7 +40,12 @@ function SAGE2DisplayUI() {
 		}
 		logoX = sage2UI.width/2  - logoW/2;
 		logoY = sage2UI.height/2 - logoH/2;
-		ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+
+		// doesnt seem enough for Internet Explorer: SVG file might not be loaded
+		if (this.logo.complete && this.logo.naturalWidth !== undefined) {
+			// draw the logo in the background
+			ctx.drawImage(this.logo, logoX, logoY, logoW, logoH);
+		}
 		
 		// applications
 		for(i=0; i<this.applications.length; i++){
@@ -67,7 +72,56 @@ function SAGE2DisplayUI() {
 			ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 			
-			if(this.applications[i].iconLoaded === true) {
+			if(this.applications[i].application === "media_stream") {
+				var size = 0.85*Math.min(eWidth, eHeight);
+				
+				var x = eLeft + (eWidth/2) - (size*0.1);
+				var y = eTop + (eHeight/2) + (size*0.2125);
+				var w = size * 0.2;
+				var h = size * 0.15;
+				ctx.fillStyle = "rgba(150, 150, 150, 1.0)";
+				ctx.fillRect(x, y, w, h);
+				
+				var radius = 0.035 * size;
+				x = eLeft + (eWidth/2) - (size*0.2);
+				y = eTop + (eHeight/2) + (size*0.3125);
+				w = size * 0.4;
+				h = size * 0.1;
+				ctx.fillStyle = "rgba(150, 150, 150, 1.0)";
+				this.drawRoundedRect(ctx, x, y, w, h, radius, true, false);
+				
+				var strokeWidth = 0.0209 * size;
+				radius = 0.035 * size;
+				x = eLeft + (eWidth/2) - (size*0.5)    + (strokeWidth/2);
+				y = eTop + (eHeight/2) - (size*0.4125) + (strokeWidth/2);
+				w = size - strokeWidth;
+				h = w * 0.625;
+				if(this.applications[i].color) ctx.fillStyle = this.applications[i].color;
+				else                           ctx.fillStyle = "rgba(150, 180, 220, 1.0)";
+				ctx.lineWidth = strokeWidth;
+				ctx.strokeStyle = "rgba(150, 150, 150, 1.0)";
+				this.drawRoundedRect(ctx, x, y, w, h, radius, true, true);
+				
+				var mediaTextSize = size*0.1;
+				var mediaTextW = (size - 2*strokeWidth) * 0.9;
+				ctx.font = mediaTextSize + "px Verdana";
+				ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+				var mediaTextLines = this.textLineCount(ctx, this.applications[i].title, mediaTextW);
+				var mediaTextLineHeight = mediaTextSize * 1.2;
+				var mediaTextH = mediaTextLineHeight * mediaTextLines;
+				var mediaTextX = (x+w/2) - (mediaTextW/2);
+				var mediaTextY = (y+h/2) - (mediaTextH/2);
+				ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+				this.drawRoundedRect(ctx, mediaTextX, mediaTextY, mediaTextW, mediaTextH, radius, true, false);
+				
+				
+				var mediaTextX = (x+w/2) + mediaTextSize*0.175;
+				var mediaTextY = (y+h/2) - ((mediaTextLines-1)/2)*mediaTextLineHeight + mediaTextSize*0.333;
+				ctx.textAlign = "center";
+				ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+				this.wrapText(ctx, this.applications[i].title, mediaTextX, mediaTextY, mediaTextW, mediaTextLineHeight);	
+			}
+			else if(this.applications[i].iconLoaded === true) {
 				var size = 0.85*Math.min(eWidth, eHeight);
 				var x = eLeft + (eWidth/2) - (size/2);
 				var y = eTop + (eHeight/2) - (size/2);
@@ -333,7 +387,7 @@ function SAGE2DisplayUI() {
 	this.keyPress = function(charCode) {
 		this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 		return true;
-	}
+	};
 	
 	this.resize = function() {
 		var displayUI = document.getElementById('displayUI');

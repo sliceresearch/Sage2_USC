@@ -81,7 +81,7 @@ listAssets = function() {
 	// Print
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		console.log("Asset>", idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
+		console.log("Assets>", idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
 		idx++;
 	}
 };
@@ -113,7 +113,7 @@ addFile = function(filename,exif) {
 	AllAssets.list[anAsset.id] = anAsset;
 	
 	// Path for the file system
-	var thumb = path.join(AllAssets.root, 'assets', exif.FileName);
+	var thumb  = path.join(AllAssets.root, 'assets', exif.FileName);
 	// Path for the https server
 	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName);
 
@@ -225,7 +225,7 @@ addFile = function(filename,exif) {
 			size: size512
 		});
 		
-		var ffmpeg256 = ffmpeg(filename)
+		var ffmpeg256 = ffmpeg(filename);
 		if(ffmpegPath !== null) ffmpeg256.setFfmpegPath(ffmpegPath);
 		ffmpeg256.on('end', function() {
 			var tmpImg = path.join(AllAssets.root, 'assets', exif.FileName+'_'+size256+'_1.png');
@@ -251,10 +251,10 @@ addFile = function(filename,exif) {
 		}
 		else {
 			// Path for the node server
-			var thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
+			thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
 			// Path for the https server
-			var rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
-			
+			rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
+
 			var averageColorOfImage = function(err, buffer) {
 				if(err) throw err;
 				
@@ -382,7 +382,6 @@ deletePDF = function(filename) {
 		
 		console.log("Server> successfully deleted file:", filename);
 		// Delete the metadata
-		console.log(filepath)
 		delete AllAssets.list[filepath];
 	});
 };
@@ -561,6 +560,24 @@ listApps = function() {
 	return result;
 };
 
+// regenrate all the assets thumbnails and EXIF data
+//    (needed with version upgrades)
+regenerateAssets = function() {
+	// Make sure the asset folder exists
+	var assetFolder = path.join(AllAssets.root, 'assets');
+	if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
+	var assetFile = path.join(assetFolder, 'assets.json');
+	if (fs.existsSync(assetFile)) {
+		fs.unlinkSync(assetFile);
+		console.log('Assets> successfully deleted', assetFile);
+	}
+	var rootdir = AllAssets.root;
+	var relativ = AllAssets.rel;
+	AllAssets = null;
+	initialize(rootdir, relativ);
+};
+
+
 initialize = function (root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
@@ -602,7 +619,7 @@ initialize = function (root, relativePath) {
 			AllAssets.rel  = relativePath;
 		}
 
-		console.log("Assests> initialize");
+		console.log("Assets> initialize");
 		var thelist = [];
 		var uploadedImages = fs.readdirSync(path.join(root, "images"));
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
@@ -686,6 +703,8 @@ exports.listVideos = listVideos;
 exports.listApps   = listApps;
 exports.addFile    = addFile;
 exports.addURL     = addURL;
+
+exports.regenerateAssets = regenerateAssets;
 
 exports.exifAsync   = exifAsync;
 

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>SAGE2 site index</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//
+	// Copyright (c) 2014
+</script>
+
+<script type="text/javascript">
+	var json_cfg;
+	var hostname;
+	var port;
+	
+	function init() {
+		hostname = window.location.hostname;
+		port = window.location.port;
+		if(window.location.protocol == "http:" && port == "") port = "80";
+		if(window.location.protocol == "https:" && port == "") port = "443";
+	
+		xhr = new XMLHttpRequest();
+		xhr.open("GET", "/config", true);
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState == 4 && xhr.status == 200){
+				json_cfg = JSON.parse(xhr.responseText);
+				initializePageList();
+			}
+		};
+		xhr.send();
+	}
+	
+	function initializePageList() {
+		var userInteraction = document.getElementById('userInteraction');
+		var audio       = document.getElementById('audio');
+		var display     = document.getElementById('display');
+		var information = document.getElementById('information');
+		var experiments = document.getElementById('experiments');
+		var remotesites = document.getElementById('remotesites');
+
+		var https_port;
+		if (typeof json_cfg.rproxy_port != "undefined")
+			https_port = ":" + json_cfg.rproxy_port.toString();
+		else
+			https_port = ":" + json_cfg.port.toString();
+		if (https_port == ":443") https_port = "";
+		
+		// User Interaction
+		var sageUI = document.createElement('p');
+		var sageUI_link = document.createElement('a');
+		sageUI_link.textContent = "SAGE UI";
+        sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","");
+
+		sageUI_link.target = "_blank";
+		sageUI.appendChild(sageUI_link);
+		var sagePointer = document.createElement('p');
+		var sagePointer_link = document.createElement('a');
+		sagePointer_link.textContent = "SAGE Pointer";
+		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "sagePointer.html";
+		sagePointer_link.target = "_blank";
+		sagePointer.appendChild(sagePointer_link);
+		
+		userInteraction.appendChild(sageUI);
+		userInteraction.appendChild(sagePointer);
+		
+		// Audio
+		var audioManager = document.createElement('p');
+		var audioManager_link = document.createElement('a');
+		audioManager_link.textContent = "Audio Manager";
+		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "audioManager.html";
+		audioManager_link.target = "_blank";
+		audioManager.appendChild(audioManager_link);
+		
+		audio.appendChild(audioManager);
+		
+		// Display
+		for(var i=0; i<json_cfg.displays.length; i++){
+			var displayClient = document.createElement('p');
+			var displayClient_link = document.createElement('a');
+			displayClient_link.textContent = "Display (client " + i.toString() + ")";
+			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
+			displayClient_link.target = "_blank";
+			displayClient.appendChild(displayClient_link);
+		
+			display.appendChild(displayClient);
+		}
+		// Add the overview client
+		var i = -1;
+		var displayClient = document.createElement('p');
+		var displayClient_link = document.createElement('a');
+		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
+		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
+		displayClient_link.target = "_blank";
+		displayClient.appendChild(displayClient_link);
+		display.appendChild(displayClient);
+
+		// Info
+		var info2 = document.createElement('p');
+		info2.innerHTML = "Host: " + json_cfg.host;
+		var info3 = document.createElement('p');
+		info3.innerHTML = "Resolution: " + json_cfg.totalWidth + "x" +  json_cfg.totalHeight + " pixels";
+		var info4 = document.createElement('p');
+		info4.innerHTML  = "Tiles: " + json_cfg.layout.columns + " by " + json_cfg.layout.rows;
+		info4.innerHTML += " (" + json_cfg.resolution.width + "x" + json_cfg.resolution.height +")";
+		information.appendChild(info2);
+		information.appendChild(info3);
+		information.appendChild(info4);
+		if (json_cfg.version) {
+			var info5 = document.createElement('p');
+			info5.innerHTML  = "Version: " + json_cfg.version.base + "-" +json_cfg.version.branch +"-" + json_cfg.version.commit +" - " + json_cfg.version.date;		
+			information.appendChild(info5);
+		}
+
+		// Remote sites
+		var remotes = document.createElement('ol');
+		var rs, lrs;
+		for (var i = 0; i < json_cfg.remote_sites.length; i++) {
+			rs  = document.createElement('li');
+			lrs = document.createElement('a');
+			lrs.textContent = json_cfg.remote_sites[i].name;
+			lrs.href = "http://" + json_cfg.remote_sites[i].host; // assumes on port 80
+			lrs.target = "_blank";
+			rs.appendChild(lrs);
+			remotes.appendChild(rs);
+		};
+		remotesites.appendChild(remotes);
+
+		var drawingClient = document.createElement('p');
+		var drawingClient_link = document.createElement('a');
+		drawingClient_link.textContent = "Drawing application";
+		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "drawing.html";
+		drawingClient_link.target = "_blank";
+		drawingClient.appendChild(drawingClient_link);
+		experiments.appendChild(drawingClient);
+	}
+</script>
+
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
+</head>
+
+<body onload="init()">
+
+	<header>
+		<h1>SAGE2 Administrator Controls</h1>
+	</header>
+
+	<main>
+
+		<section id="userInteraction" class="siteType">
+			<h2>User Interaction Pages</h2>
+		</section>
+
+		<section id="audio" class="siteType">
+			<h2>Audio Pages</h2>
+		</section>
+
+		<section id="display" class="siteType">
+			<h2>Display Pages</h2>
+		</section>
+
+		<section id="remotesites" class="siteType">
+			<h2>Remote Sites</h2>
+		</section>
+
+		<section id="information" class="siteType">
+			<h2>Configuration</h2>
+		</section>
+
+		<section id="experiments" class="siteType">
+			<h2>Experiments</h2>
+		</section>
+
+		<section id="help" class="siteType">
+			<h2>Help</h2>
+			<p><a href="/help/index.html#sharing">Enable desktop sharing</a></p>
+			<p><a href="/help/index.html#pointer">Pointer usage</a></p>
+			<p><a href="/help/index.html#content">Sharing content</a></p>
+		</section>
+
+	</main>
+
+</body>
+</html>
+
