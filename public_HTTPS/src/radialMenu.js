@@ -28,7 +28,7 @@ var angle = 0;
 var menuRadius = 100;
 var menuButtonSize = 100; // pie image size
 var menuButtonHitboxSize = 50;
-var overlayIconScale = 0.3; // image, pdf, etc image
+var overlayIconScale = 0.5; // image, pdf, etc image
 
 var thumbnailScrollScale = 1;
 var thumbnailDisableSelectionScrollDistance = 5; // Distance in pixels scroll window can move before button select is cancelled
@@ -38,7 +38,7 @@ var thumbnailPreviewWindowSize = { x: 550, y: 800 };
 var radialMenuList = {};
 
 // Mostly for debugging, toggles buttons/thumbnails redrawing on a events (like move)
-var enableEventRedraw = false;
+var enableEventRedraw = true;
 
 function radialMenu(){
 	this.element    = null;
@@ -141,29 +141,21 @@ function radialMenu(){
 		
 		// load thumbnail icons
 		this.idleExitIcon = new Image();
-		//this.idleExitIcon.src = this.resrcPath + "exit.svg";
 		this.idleExitIcon.src = "images/ui/close.svg";
 		
 		this.idleImageIcon = new Image();
-		//this.idleImageIcon.src = this.resrcPath + "image2.svg";
 		this.idleImageIcon.src = "images/ui/images.svg";
 		this.idlePDFIcon = new Image();
-		//this.idlePDFIcon.src = this.resrcPath + "file.svg";
 		this.idlePDFIcon.src = "images/ui/pdfs.svg";
 		this.idleVideoIcon = new Image();
-		//this.idleVideoIcon.src = this.resrcPath + "clapper.svg";
 		this.idleVideoIcon.src = "images/ui/videos.svg";
 		this.idleAppIcon = new Image();
-		//this.idleAppIcon.src = this.resrcPath + "rocket.svg";
 		this.idleAppIcon.src = "images/ui/applauncher.svg";
 		this.idleSessionIcon = new Image();
-		//this.idleSessionIcon.src = this.resrcPath + "upload.svg";
 		this.idleSessionIcon.src = "images/ui/loadsession.svg";
 		this.idleSaveSessionIcon = new Image();
-		//this.idleSaveSessionIcon.src = this.resrcPath + "download.svg";
 		this.idleSaveSessionIcon.src = "images/ui/savesession.svg";
 		this.idleSettingsIcon = new Image();
-		//this.idleSettingsIcon.src = this.resrcPath + "cog.svg";
 		this.idleSettingsIcon.src = "images/ui/arrangement.svg"
 		
 		// Level 2 icons
@@ -172,17 +164,13 @@ function radialMenu(){
 		this.idleCloseAppIcon = new Image();
 		this.idleCloseAppIcon.src = this.resrcPath + "window27.svg";
 		this.idleCloseAllIcon = new Image();
-		//this.idleCloseAllIcon.src = this.resrcPath + "windows24.svg";
 		this.idleCloseAllIcon.src = "images/ui/clearcontent.svg";
 		this.idleMaximizeIcon = new Image();
 		this.idleMaximizeIcon.src = this.resrcPath + "maximize.svg";
 		this.idleTileIcon = new Image();
-		//this.idleTileIcon.src = this.resrcPath + "large16.svg";
 		this.idleTileIcon.src = "images/ui/tilecontent.svg";
 		
 		// radial menu icons
-		//this.radialMenuIcon = new Image();
-		//this.radialMenuIcon.src = this.resrcPath + "icon_radial_256.png";
 		this.radialMenuIcon = new Image();
 		this.radialMenuIcon.src = this.resrcPath + "icon_radial_button_circle.svg";
 		this.radialMenuLevel2Icon = new Image();
@@ -310,6 +298,7 @@ function radialMenu(){
 		button.init(0, this.ctx, null);
 		button.setIdleImage( idleIcon );
 		button.useBackgroundColor = useBackgroundColor;
+		button.useEventOverColor = true;
 		
 		button.setSize( buttonSize * radialMenuScale, buttonSize * radialMenuScale );
 		button.setHitboxSize( hitboxSize * radialMenuScale, hitboxSize * radialMenuScale );
@@ -347,7 +336,7 @@ function radialMenu(){
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
-		if( this.thumbWindowctx.redraw )
+		if( this.thumbWindowctx.redraw || this.currentMenuState === 'radialMenu')
 			this.thumbWindowctx.clearRect(0,0, this.thumbnailWindowElement.width, this.thumbnailWindowElement.height);
 			
 		if( this.windowInteractionMode === false )
@@ -728,8 +717,7 @@ function radialMenu(){
 			this.element.height = thumbnailWindowSize.y;
 			this.thumbnailWindowElement.style.display = "block";
 			this.thumbWindowctx.redraw = true;
-			
-			console.log("setToggleMenu:draw()", this.thumbWindowctx.redraw);
+			this.updateThumbnailPositions();
 			this.draw();
 			return true;
 		}
@@ -838,7 +826,6 @@ function radialMenu(){
 			if( this.setToggleMenu('imageThumbnailWindow') )
 			{
 				this.radialImageButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
@@ -847,7 +834,6 @@ function radialMenu(){
 			if( this.setToggleMenu('pdfThumbnailWindow') )
 			{
 				this.radialPDFButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
@@ -856,7 +842,6 @@ function radialMenu(){
 			if( this.setToggleMenu('videoThumbnailWindow') )
 			{
 				this.radialVideoButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
@@ -865,7 +850,6 @@ function radialMenu(){
 			if( this.setToggleMenu('appThumbnailWindow') )
 			{
 				this.radialAppButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialSessionButton.isClicked() )
@@ -874,7 +858,6 @@ function radialMenu(){
 			if( this.setToggleMenu('sessionThumbnailWindow') )
 			{
 				this.radialSessionButton.isLit = true;
-				this.updateThumbnailPositions();
 			}
 		}
 		if( this.radialSaveSessionButton.isClicked() )
@@ -914,7 +897,7 @@ function radialMenu(){
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
 				buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
-				if ( thumbButton.isReleased() ) //&& this.scrollOpenContentLock === false )
+				if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
 				{ 
 					console.log(thumbButton+" released" );
 					if( this.currentMenuState === 'appThumbnailWindow' )
@@ -1457,7 +1440,7 @@ function buttonWidget() {
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 		}
-		else if( this.useBackgroundColor )
+		if( this.useBackgroundColor )
 		{
 			if( this.isLit )
 				this.ctx.fillStyle = this.litColor;
@@ -1484,7 +1467,7 @@ function buttonWidget() {
 			
 			if( this.isLit === true )
 				this.drawTintImage( this.idleImage, offset, this.width, this.height, this.litColor, 0.5 );
-						
+
 			// Tint the image
 			if( this.state !== 0 )
 			{
@@ -1494,7 +1477,7 @@ function buttonWidget() {
 				}
 				else
 				{
-					if( this.isLit === false )
+					if( this.isLit === false && this.useEventOverColor)
 						this.drawTintImage( this.idleImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
 				}
 			}
