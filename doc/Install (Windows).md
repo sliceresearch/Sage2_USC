@@ -1,53 +1,64 @@
-Install for Windows (7 or 8)
-=======
+### Install for Windows (7 or 8.1) ###
 
-**Last revision:** 01 May 2014
+**Last revision:** 14 November 2014
 
-## Download
+##### Download #####
 
-* Download [Node.js](http://nodejs.org/) and install (follow installer instructions)
 * Download [7-Zip](http://www.7-zip.org/) and install (follow installer instructions)
+* Download [Node.js](http://nodejs.org/) and install (follow installer instructions)
 * Download [ImageMagick](http://www.imagemagick.org/script/binary-releases.php#windows) and install (follow installer instructions)
-* Download [FFMpeg](http://ffmpeg.zeranoe.com/builds/)
-* Download [Poppler-utils](http://manifestwebdesign.com/2013/01/09/xpdf-and-poppler-utils-on-windows/)
+* Download [Ghostscript](http://www.ghostscript.com/download/gsdnld.html) and install (follow installer instructions)
+* Download [Git for Windows](https://msysgit.github.io) and install (follow installer instructions)
 * Download [TortoiseGit](https://code.google.com/p/tortoisegit/wiki/Download) and install (follow installer instructions)
-* Download [Git for Windows](https://msysgit.github.io) (follow installer instructions)
+* Download [FFMpeg](http://ffmpeg.zeranoe.com/builds/)
+* Download [ExifTool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
 
-## Install FFMpeg
+##### Install FFMpeg #####
 
 * Move downloaded FFMpeg 7z file to 'C:'
 * Right-click on downloaded FFMpeg 7z file
     * 7-Zip > Extract Here
 * Rename extracted directory 'FFMpeg'
 
-## Install Poppler
+##### Install ExifTool #####
 
-* Create directory 'C:\Poppler'
-* Move downloaded Poppler-utils zip file to 'C:\Poppler'
-* Right click on downloaded Poppler-utils zip file
+* Move downloaded Exiftool file to 'C:\Exiftool' (create directory if needed)
+* Right-click on downloaded Exiftool file
     * 7-Zip > Extract Here
+* Rename binary to 'exiftool.exe'
 
-## Set Environment
+##### Set Environment #####
 
-* Add 'C:\FFMpeg\bin;C:\Poppler' to you PATH variable
+* For Windows 7
+    * Right-click 'Computer'
+    * Click 'Properties'
+    * Click 'Advanced System Properties'
+* For Windows 8.1
+    * Click Windows Logo and type 'e'
+    * Click 'Edit the system environment variables'
+* Click 'Environment Variables'
+* Add 'C:\FFMpeg\bin;C:\Exiftool;C:\Program Files (x86)\Git\bin' to your system PATH variable
 * You may have to log out and log back in for the environment variables to apply
 
 ![Edit Windows PATH](https://googledrive.com/host/0BwqgaaHTZg2ySnNsZ0Zmd2llRkk/Windows%20PATH.jpg)
 
-## Clone SAGE2
+##### Clone SAGE2 #####
 In directory where you want to install SAGE2, right-click and select 'Git Clone'
 
 * Set URL to 'https://bitbucket.org/sage2/sage2.git'
 * Set directory to where you want to install SAGE2
 
-## Generate HTTPS Keys
+##### Generate HTTPS Keys #####
 
 * Edit '<SAGE2_directory>\keys\GO-windows.bat'
     * Add lines with list of hostnames for your server
     * Save file
 * Double click 'GO-windows.bat'
+    * On Windows 8.1 you will need right click and select 'Run as Administrator'
 
-## Install Node.js Modules
+##### Install Node.js Modules #####
 * Launch command prompt (`cmd.exe`)
     * `cd <SAGE2_directory>`
     * `npm install`
+
+###### Return to the [main page](https://bitbucket.org/sage2/sage2/wiki/Home) for configuration and running SAGE2 ######
