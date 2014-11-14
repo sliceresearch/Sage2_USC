@@ -455,14 +455,15 @@ function uiBuilder(json_cfg, clientID) {
 
 		if( !menuElem )
 		{
+			var radialMenuScale = 1; //ui.widgetControlSize * 0.03;
 			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * ui.widgetControlSize * 0.03, radialMenuSize.y * ui.widgetControlSize * 0.03, 9000);
+								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9000);
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * ui.widgetControlSize * 0.03, radialMenuSize.y * ui.widgetControlSize * 0.03, 8900);
+								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 8900);
 			this.main.appendChild(menuElem); 
 			this.main.appendChild(menuElem2); 
 			
