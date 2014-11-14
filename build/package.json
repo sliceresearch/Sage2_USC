@@ -1,0 +1,17 @@
+{
+  "name": "sage2build",
+  "version": "1.0.0",
+  "description": "build and packaging process for SAGE2",
+  "main": "build.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sage2"
+  ],
+  "author": "Luc Renambot (renambot@gmail.com)",
+  "license": "SAGE2-License",
+  "dependencies": {
+    "appdmg": "^0.2.2"
+  }
+}
