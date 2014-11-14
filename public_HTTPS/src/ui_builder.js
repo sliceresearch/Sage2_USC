@@ -512,7 +512,7 @@ function uiBuilder(json_cfg, clientID) {
 					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 					menuElem.style.display = "block";
 					menu.thumbnailWindowElement.style.display = "block";
-					
+
 					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 					
 					if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )

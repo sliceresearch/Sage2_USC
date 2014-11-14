@@ -1,9 +1,9 @@
 #!/bin/sh
 
-cd /Applications/sage2-mac/
+cd /Applications/SAGE2/
 
-export PATH=/Applications/sage2-mac/local/bin:$PATH
-export DYLD_LIBRARY_PATH=/Applications/sage2-mac/local/lib
+export PATH=/Applications/SAGE2/local/bin:$PATH
+export DYLD_LIBRARY_PATH=/Applications/SAGE2/local/lib
 
 killall -9 sage2
 

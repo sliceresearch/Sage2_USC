@@ -3,5 +3,5 @@
 
 killall -9 sage2
 
-./sage2 -- -sl
+xterm -e "./sage2 -- -sl" &
 
