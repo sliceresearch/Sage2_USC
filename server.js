@@ -125,15 +125,18 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 var config = loadConfiguration();
 
 var twitter = null;
-if(config.advanced !== undefined && config.advanced.twitter !== undefined){
+if(config.apis !== undefined && config.apis.twitter !== undefined){
 	twitter = new twit({
-		consumer_key:         config.advanced.twitter.consumerKey,
-		consumer_secret:      config.advanced.twitter.consumerSecret,
-		access_token:         config.advanced.twitter.accessToken,
-		access_token_secret:  config.advanced.twitter.accessSecret
+		consumer_key:         config.apis.twitter.consumerKey,
+		consumer_secret:      config.apis.twitter.consumerSecret,
+		access_token:         config.apis.twitter.accessToken,
+		access_token_secret:  config.apis.twitter.accessSecret
 	});
-	delete config.advanced.twitter;
 }
+
+// remove API keys from being investigated further
+if(config.apis !== undefined) delete config.apis;
+
 
 console.log(config);
 
@@ -149,9 +152,9 @@ sageutils.getFullVersion(function(version) {
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
 var ffmpegOptions = {};
-if(config.advanced !== undefined){
-	if(config.advanced.ImageMagick !== undefined) imConstraints.appPath = config.advanced.ImageMagick;
-	if(config.advanced.FFMpeg !== undefined)      ffmpegOptions.appPath = config.advanced.FFMpeg;
+if(config.dependencies !== undefined){
+	if(config.dependencies.ImageMagick !== undefined) imConstraints.appPath = config.dependencies.ImageMagick;
+	if(config.dependencies.FFMpeg !== undefined)      ffmpegOptions.appPath = config.dependencies.FFMpeg;
 }
 var imageMagick = gm.subClass(imConstraints);
 assets.setupBinaries(imConstraints, ffmpegOptions);
@@ -1733,10 +1736,10 @@ function loadConfiguration() {
 		}
 		else{
 			if(platform === "Windows"){
-				configFile = path.join("config", "defaultWindows-cfg.json");
+				configFile = path.join("config", "defaultWin-cfg.json");
 			}
 			else {
-				configFile = path.join("config", "defaultLinux-cfg.json");
+				configFile = path.join("config", "default-cfg.json");
 			}
 			console.log("Using default configuration file: " + configFile);
 		}
@@ -1756,6 +1759,7 @@ function loadConfiguration() {
 	userConfig.totalHeight    = userConfig.resolution.height * userConfig.layout.rows;
 	
 	var minDim = Math.min(userConfig.totalWidth, userConfig.totalHeight);
+	var maxDim = Math.max(userConfig.totalWidth, userConfig.totalHeight);
 	
 	if (userConfig.ui.titleBarHeight) userConfig.ui.titleBarHeight = parseInt(userConfig.ui.titleBarHeight, 10);
 	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
@@ -1770,14 +1774,14 @@ function loadConfiguration() {
 	else userConfig.ui.pointerSize = Math.round(0.08 * minDim);
 
 	if (userConfig.ui.minWindowWidth) userConfig.ui.minWindowWidth = parseInt(userConfig.ui.minWindowWidth, 10);
-	else userConfig.ui.minWindowWidth  = Math.round(0.08 * userConfig.totalWidth);  // 8%
+	else userConfig.ui.minWindowWidth  = Math.round(0.08 * minDim);  // 8%
 	if (userConfig.ui.minWindowHeight) userConfig.ui.minWindowHeight = parseInt(userConfig.ui.minWindowHeight, 10);
-	else userConfig.ui.minWindowHeight = Math.round(0.08 * userConfig.totalHeight); // 8%
+	else userConfig.ui.minWindowHeight = Math.round(0.08 * minDim); // 8%
 
 	if (userConfig.ui.maxWindowWidth) userConfig.ui.maxWindowWidth = parseInt(userConfig.ui.maxWindowWidth, 10);
-	else userConfig.ui.maxWindowWidth  = Math.round( 1.2 * userConfig.totalWidth);  // 120%
+	else userConfig.ui.maxWindowWidth  = Math.round( 1.2 * maxDim);  // 120%
 	if (userConfig.ui.maxWindowHeight) userConfig.ui.maxWindowHeight = parseInt(userConfig.ui.maxWindowHeight, 10);
-	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * userConfig.totalHeight); // 120%
+	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * maxDim); // 120%
 
 	// Set default values if missing
 	if (userConfig.port === undefined) userConfig.port = 443;
@@ -1822,10 +1826,13 @@ function setupDisplayBackground() {
 	var tmpImg, imgExt;
 
 	// background image
-	if(config.background.image !== undefined && config.background.image !== null){
-		var bg_file = path.join(public_https, config.background.image);
+	if(config.background.image !== undefined && config.background.image.url !== undefined){
+		var bg_file = path.join(public_https, config.background.image.url);
 
-		if (config.background.style == "fit") {
+		if (config.background.image.style === "tile") {
+			// do nothing
+		}
+		else if (config.background.image.style === "fit") {
 			var result = exiftool.file(bg_file, function(err, data) {
 				if (err) {
 					console.log("Error processing background image:", bg_file, err);
@@ -1848,7 +1855,8 @@ function setupDisplayBackground() {
 				}
 			} );
 		}
-		else if(config.background.style == "stretch"){
+		else {
+			config.background.image.style === "stretch"
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		

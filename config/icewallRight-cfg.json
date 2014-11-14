@@ -8,10 +8,7 @@
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"show_version": true,
-		"menubar": {
-			"textColor": "rgba(255, 255, 255, 1.0)"
-		}
+		"show_version": true
 	},
 	"resolution": {
 		"width": 3072,
@@ -23,7 +20,6 @@
 	},
 	"displays": [
 		{
-			"ID": 0,
 			"row": 0,
 			"column": 0
 		}

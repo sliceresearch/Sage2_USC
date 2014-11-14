@@ -120,10 +120,20 @@ function uiBuilder(json_cfg, clientID) {
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
 		} else {
-			if (typeof this.json_cfg.background.image !== "undefined" && this.json_cfg.background.image !== null) {
+			document.body.style.backgroundColor = "#000000";
+			this.bg.style.backgroundColor = this.json_cfg.background.color || "#333333";
+			this.bg.style.top    = "0px";
+			this.bg.style.left   = "0px";
+			this.bg.style.width  = this.json_cfg.resolution.width + "px";
+			this.bg.style.height = this.json_cfg.resolution.height + "px";
+			
+			this.main.style.width  = this.json_cfg.resolution.width  + "px";
+			this.main.style.height = this.json_cfg.resolution.height + "px";
+			
+			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
 				var bgImg = new Image();
 				bgImg.addEventListener('load', function() {				
-					if(_this.json_cfg.background.style == "tile"){
+					if(_this.json_cfg.background.image.style == "tile"){
 						var top = -1 * (_this.offsetY % bgImg.naturalHeight);
 						var left = -1 * (_this.offsetX % bgImg.naturalWidth);
 						
@@ -144,11 +154,13 @@ function uiBuilder(json_cfg, clientID) {
 					}
 					else {
 						var bgImgFinal;
-						var ext = _this.json_cfg.background.image.lastIndexOf(".");
-						if(_this.json_cfg.background.style == "fit" && (bgImg.naturalWidth != _this.json_cfg.totalWidth || bgImg.naturalHeight != _this.json_cfg.totalHeight))
-							bgImgFinal = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+						var ext = _this.json_cfg.background.image.url.lastIndexOf(".");
+						if(_this.json_cfg.background.image.style === "fit" && (bgImg.naturalWidth !== _this.json_cfg.totalWidth || bgImg.naturalHeight !== _this.json_cfg.totalHeight))
+							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + ".png";
 						else
-							bgImgFinal = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.url.substring(ext);
+						
+						console.log(bgImgFinal);
 						
 						_this.bg.style.top    = "0px";
 						_this.bg.style.left   = "0px";
@@ -166,26 +178,11 @@ function uiBuilder(json_cfg, clientID) {
 						_this.main.style.height = _this.json_cfg.resolution.height + "px";
 					}
 				}, false);
-				bgImg.src = this.json_cfg.background.image;
-			}
-			else {
-				this.bg.style.top    = "0px";
-				this.bg.style.left   = "0px";
-				this.bg.style.width  = this.json_cfg.resolution.width + "px";
-				this.bg.style.height = this.json_cfg.resolution.height + "px";
-				
-				this.main.style.width  = this.json_cfg.resolution.width  + "px";
-				this.main.style.height = this.json_cfg.resolution.height + "px";
+				bgImg.src = this.json_cfg.background.image.url;
 			}
 			
-			if (json_cfg.background.clip === true) {
+			if (this.json_cfg.background.clip !== undefined && this.json_cfg.background.clip === true) {
 				this.main.style.overflow = "hidden";
-
-				if (this.json_cfg.background.image === null) {
-					// if no image and clip, set the color of the div instead
-					document.body.style.backgroundColor = '#000000';
-					this.main.style.backgroundColor = this.json_cfg.background.color;
-				}
 			}
 		}
 	};

@@ -1,70 +1,71 @@
 {
-	"host": "marrinan.evl.uic.edu",
-	"port": 9090,
-	"index_port": 9292,
-	"background": {
-		"color": "#AA3311",
-		"image": "images/background/minneapolis_skyline_tm.jpg",
-		"style": "stretch",
-		"watermark": {
-			"svg": "images/EVL-logo.svg",
-			"color": "rgba(255, 255, 255, 0.75)"
+	host: "marrinan.evl.uic.edu",
+	port: 9090,
+	index_port: 9292,
+	background: {
+		color: "#AA3311",
+		image: {
+			url: "images/background/minneapolis_skyline_tm.jpg",
+			style: "stretch"
 		},
-		"clip": true
+		watermark: {
+			svg: "images/EVL-logo.svg",
+			color: "rgba(255, 255, 255, 0.75)"
+		},
+		clip: true
 	},
-	"ui": {
-		"clock": 12,
-		"show_url": true,
-		"show_version": true,
-		"menubar": {
-			"backgroundColor": "rgba(24, 30, 79, 0.5)",
-			"textColor": "rgba(235, 230, 175, 1.0)",
-			"remoteConnectedColor": "rgba(96, 171, 224, 1.0)",
-			"remoteDisconnectedColor": "rgba(100, 100, 100, 1.0)"
+	ui: {
+		clock: 12,
+		show_url: true,
+		show_version: true,
+		menubar: {
+			backgroundColor: "rgba(24, 30, 79, 0.5)",
+			textColor: "rgba(235, 230, 175, 1.0)",
+			remoteConnectedColor: "rgba(96, 171, 224, 1.0)",
+			remoteDisconnectedColor: "rgba(100, 100, 100, 1.0)"
 		} 
 	},
-	"resolution": {
-		"width": 1440,
-		"height": 720
+	resolution: {
+		width: 1440,
+		height: 720
 	},
-	"layout": {
-		"rows": 1,
-		"columns": 1
+	layout: {
+		rows: 1,
+		columns: 1
 	},
-	"displays": [
+	displays: [
 		{
-			"ID": 0,
-			"row": 0,
-			"column": 0
+			row: 0,
+			column: 0
 		}
 	],
-	"alternate_hosts": [
+	alternate_hosts: [
 		"localhost",
 		"127.0.0.1"
 	],
-	"remote_sites": [
+	remote_sites: [
 		{
-			"name": "IceWallTM",
-			"host": "thor.evl.uic.edu",
-			"port": 7070
+			name: "IceWallTM",
+			host: "thor.evl.uic.edu",
+			port: 7070
 		},
 		{
-			"name": "Cyber-Commons",
-			"host": "iridium.evl.uic.edu",
-			"port": 443
+			name: "Cyber-Commons",
+			host: "iridium.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "CAVE2",
-			"host": "lyra.evl.uic.edu",
-			"port": 443
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
 		}
 	],
-	"advanced": {
-		"twitter": {
-			"consumerKey": "fuyVLmYL4QMG8dhg4UDxiGYKK",
-			"consumerSecret": "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
-			"accessToken": "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
-			"accessSecret": "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
+	apis: {
+		twitter: {
+			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
+			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
+			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
+			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
 		}
 	}
 }

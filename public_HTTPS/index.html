@@ -352,7 +352,7 @@
 	function getCSSProperty(cssFile, selector) {
 		for(var i=0; i<document.styleSheets.length; i++){
 			var sheet = document.styleSheets[i];
-        	if(sheet.href.indexOf(cssFile) >= 0){
+        	if(sheet.href && sheet.href.indexOf(cssFile) >= 0){
         		var rules = sheet.cssRules ? sheet.cssRules : sheet.rules;
         		if(!rules || rules.length === 0) return null;
         		for(var j=0; j<rules.length; j++){
