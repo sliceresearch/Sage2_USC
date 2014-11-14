@@ -429,8 +429,7 @@ function radialMenu(){
 				currentThumbnailButtons = this.appThumbnailButtons;
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
-			
-			console.log("draw()", this.thumbWindowctx.redraw);
+
 			if( this.thumbWindowctx.redraw )
 			{
 				for( i = 0; i < currentThumbnailButtons.length; i++ )
@@ -705,6 +704,10 @@ function radialMenu(){
 	
 	this.closeMenu = function() {
 		this.visible = false;
+		
+		if( this.sendsToServer === true )
+			this.wsio.emit('removeRadialMenu', { id: this.menuID } );
+		
 		console.log("Closing menu" );
 	};
 	
@@ -712,6 +715,8 @@ function radialMenu(){
 	{
 		if( this.currentMenuState !== type )
 		{
+			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
+			
 			this.currentMenuState = type;
 			this.element.width = thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
 			this.element.height = thumbnailWindowSize.y;
@@ -719,6 +724,10 @@ function radialMenu(){
 			this.thumbWindowctx.redraw = true;
 			this.updateThumbnailPositions();
 			this.draw();
+
+			if( this.sendsToServer === true )
+				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: true } );
+			
 			return true;
 		}
 		else
@@ -728,6 +737,9 @@ function radialMenu(){
 			this.element.height = radialMenuSize.y;
 			this.thumbnailWindowElement.style.display = "None";
 			
+			if( this.sendsToServer === true )
+				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: false } );
+				
 			return false;
 		}
 	};
@@ -745,18 +757,24 @@ function radialMenu(){
 	{
 		pointerX = data.x - data.windowX - offset.x;
 		pointerY = data.y - data.windowY - offset.y;
-				
+
 		if( this.windowInteractionMode === false && pointerX > 0 && pointerX < radialMenuSize.x && pointerY > 0 && pointerY < radialMenuSize.y && buttonOverCount === 0 )
 		{
 			dragOffset = this.dragPosition;
+			
 			this.element.style.left    = (data.x - offset.x - dragOffset.x).toString() + "px";
 			this.element.style.top     = (data.y - offset.y - dragOffset.y).toString()  + "px";
+			
+			if( this.sendsToServer === true )
+			{
+				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x), y: (data.y - dragOffset.y), radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
+			}
 		}
 		
 		this.thumbnailWindowElement.style.left = (data.windowX + this.thumbnailWindowPosition.x).toString() + "px";
 		this.thumbnailWindowElement.style.top = (data.windowY + this.thumbnailWindowPosition.y).toString()  + "px";
-		//this.thumbnailWindowElement.style.left = (data.windowX + this.thumbnailWindowScrollOffset.x).toString() + "px";
-		//this.thumbnailWindowElement.style.top = (data.windowY + this.thumbnailWindowScrollOffset.y).toString()  + "px";
+		
+		
 	};
 	
 	this.onEvent = function(type, position, user, data) {
@@ -894,24 +912,30 @@ function radialMenu(){
 			for( i = 0; i < currentThumbnailButtons.length; i++ )
 			{
 				thumbButton = currentThumbnailButtons[i];
-				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
-				buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
-				if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
-				{ 
-					console.log(thumbButton+" released" );
-					if( this.currentMenuState === 'appThumbnailWindow' )
-						this.loadApplication( thumbButton.getData()  );
-					else
-						this.loadFileFromServer( thumbButton.getData()  );
-				}
-				if ( thumbButton.isPositionOver(user.id, thumbEventPos)  )
+				
+				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
+				
+				// Prevent clicking on hidden thumbnails under preview window
+				if( thumbEventPos.x < thumbnailWindowSize.x - thumbnailPreviewWindowSize.x + imageThumbSize + 10 )
 				{
-					this.hoverOverText = thumbButton.getData().filename;
-					this.hoverOverThumbnail = thumbButton.idleImage;
-					this.hoverOverMeta = thumbButton.getData().meta;
-					overButton = true;
-					this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
+					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
+				
+					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
+					{ 
+						if( this.currentMenuState === 'appThumbnailWindow' )
+							this.loadApplication( thumbButton.getData()  );
+						else
+							this.loadFileFromServer( thumbButton.getData()  );
+					}
+					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  )
+					{
+						this.hoverOverText = thumbButton.getData().filename;
+						this.hoverOverThumbnail = thumbButton.idleImage;
+						this.hoverOverMeta = thumbButton.getData().meta;
+						overButton = true;
+						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
+					}
 				}
 			}
 		}

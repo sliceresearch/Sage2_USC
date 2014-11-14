@@ -440,13 +440,15 @@ function initializeWSClient(wsio) {
 	
 	if ( wsio.clientType === "radialMenu" )
 	{
-		//wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		wsio.on('radialMenuMoved', wsRadialMenuMoved);
+		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		wsio.on('radialMenuWindowToggle', wsRadialMenuThumbnailWindow);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( !(wsio.clientID in radialMenus) )
+		if ( radialMenus[wsio.clientID].wsio === undefined )
 		{
 			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			radialMenus[wsio.clientID] = wsio;
+			radialMenus[wsio.clientID].wsio = wsio;
 		} else {
 			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
 			wsio.emit("disableSendToServer", uniqueID);
@@ -2594,9 +2596,10 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		return;
 	}
 	
-	// menu
-	radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
-	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+
 	if(data.button === "right")
 	{
 		createRadialMenu( uniqueID, pointerX, pointerY );
@@ -2780,6 +2783,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	broadcast('releaseControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 	remoteInteraction[uniqueID].releaseControl();
 	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+	
 	// From pointerRelease
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
@@ -2842,9 +2849,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
-	
-	// Menu
-	radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+
 }
 
 function pointerMove(uniqueID, pointerX, pointerY, data) {
@@ -2859,10 +2864,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-
+	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
-
-	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
@@ -2948,7 +2955,11 @@ function pointerPosition( uniqueID, data ) {
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-
+	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
@@ -2961,7 +2972,14 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+		
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+		
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+		
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
 		if(data.wheelDelta > 0) scale = 1.0 / scale;
@@ -2981,8 +2999,7 @@ function pointerScroll( uniqueID, data ) {
 		}
 	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		var pointerX = sagePointers[uniqueID].left;
-		var pointerY = sagePointers[uniqueID].top;
+		
 		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if( elem !== null ){
@@ -3022,7 +3039,11 @@ function pointerDraw(uniqueID, data) {
 function pointerDblClick(uniqueID, pointerX, pointerY) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+		
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if (elem !== null) {
 		if( elem.application === 'thumbnailBrowser' )
@@ -3340,11 +3361,9 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	
-	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu", uniqueID);
-	radialMenus[uniqueID].top = pointerY;
-	radialMenus[uniqueID].left = pointerX;
-
-	
+	radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
+	radialMenus[uniqueID+"_menu"].top = pointerY;
+	radialMenus[uniqueID+"_menu"].left = pointerX;
 	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3399,12 +3418,41 @@ function updateRadialMenu( uniqueID )
 function radialMenuEvent( data )
 {
 	broadcast('radialMenuEvent', data, 'receivesPointerData');
+	
+	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
+	
+	var radialMenu = radialMenus[data.id+"_menu"];
+	if( radialMenu !== undefined )
+	{
+		if( radialMenu.onEvent( data.type, { x: data.x, y: data.y }, data.data ) )
+		{
+			return true;
+		}
+		else
+			return false;
+	}
 }
 
 function wsRemoveRadialMenu( wsio, data ) {
-	//console.log("Removed radial menu ID: " + data.id);
-	//radialMenus[data.id] = null;
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.visible = false;
+	}
+}
 
-	var elem = findAppById(data.id);
-	if(elem !== null) deleteApplication( elem );
+function wsRadialMenuThumbnailWindow( wsio, data ) {
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.openThumbnailWindow( data );
+	}
+}
+
+function wsRadialMenuMoved( wsio, data ) {
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.setPosition( data );
+	}
 }
