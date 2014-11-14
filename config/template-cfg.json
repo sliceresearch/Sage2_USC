@@ -24,10 +24,10 @@
 		},
 		auto_hide_ui: false,    // auto-hide the wall UI (menu bar, application title bars, etc.)
 		auto_hide_delay: 30,    // delay in seconds
-		minWindowWidth:  220,   // default:   8% wall width
-		minWindowHeight: 120,   // default:   8% wall height
-		maxWindowWidth:  2048,  // default: 120% wall width
-		maxWindowHeight: 2048   // default: 120% wall height
+		minWindowWidth:  220,   // default:   8% wall minimum dimension
+		minWindowHeight: 120,   // default:   8% wall minimum dimension
+		maxWindowWidth:  2048,  // default: 120% wall maximum dimension
+		maxWindowHeight: 2048   // default: 120% wall maximum dimension
 	},
 	resolution: {
 		width: 1280,
@@ -39,7 +39,6 @@
 	},
 	displays: [
 		{
-			ID: 0,
 			row: 0,
 			column: 0
 		}
