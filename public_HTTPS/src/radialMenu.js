@@ -715,6 +715,8 @@ function radialMenu(){
 	{
 		if( this.currentMenuState !== type )
 		{
+			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
+			
 			this.currentMenuState = type;
 			this.element.width = thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
 			this.element.height = thumbnailWindowSize.y;
@@ -722,6 +724,10 @@ function radialMenu(){
 			this.thumbWindowctx.redraw = true;
 			this.updateThumbnailPositions();
 			this.draw();
+
+			if( this.sendsToServer === true )
+				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: true } );
+			
 			return true;
 		}
 		else
@@ -731,6 +737,9 @@ function radialMenu(){
 			this.element.height = radialMenuSize.y;
 			this.thumbnailWindowElement.style.display = "None";
 			
+			if( this.sendsToServer === true )
+				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: false } );
+				
 			return false;
 		}
 	};
@@ -758,7 +767,7 @@ function radialMenu(){
 			
 			if( this.sendsToServer === true )
 			{
-				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - offset.x - dragOffset.x), y: (data.y - offset.y - dragOffset.y), radialMenuSize: radialMenuSize } );
+				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - offset.x - dragOffset.x), y: (data.y - offset.y - dragOffset.y), radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
 			}
 		}
 		

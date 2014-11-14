@@ -442,6 +442,7 @@ function initializeWSClient(wsio) {
 	{
 		wsio.on('radialMenuMoved', wsRadialMenuMoved);
 		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		wsio.on('radialMenuWindowToggle', wsRadialMenuThumbnailWindow);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
 		if ( radialMenus[wsio.clientID].wsio === undefined )
@@ -3256,6 +3257,14 @@ function wsRemoveRadialMenu( wsio, data ) {
 	if( radialMenu !== undefined )
 	{
 		radialMenu.visible = false;
+	}
+}
+
+function wsRadialMenuThumbnailWindow( wsio, data ) {
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.openThumbnailWindow( data );
 	}
 }
 
