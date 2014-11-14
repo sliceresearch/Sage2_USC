@@ -5,7 +5,7 @@ default: all
 all: download stage install binary package
 
 package:
-	echo "Done"
+	zip -r -9 SAGE2-linux64.zip SAGE2
 
 download:
 	wget http://s3.amazonaws.com/nodejx/jx_suse64.zip
@@ -27,7 +27,7 @@ binary:
 
 clean:
 	/bin/rm -f jx_suse64.zip
-	/bin/rm -fr sage2 sage2.tar
+	/bin/rm -fr SAGE2 sage2.tar
 
 #
 # files to keep in SAGE2:
