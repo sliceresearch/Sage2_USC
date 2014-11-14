@@ -1,0 +1,10 @@
+#!/bin/sh
+
+zypper install -t pattern devel_C_C++
+zypper install git openssl mozilla-nss-tools ImageMagick exiftool libcap-progs
+zypper ar http://packman.inode.at/suse/13.1 Packman_13.1
+zypper ar http://dl.google.com/linux/chrome/rpm/stable/x86_64 Google_chrome
+zypper refresh
+zypper install ffmpeg
+zypper install google-chrome-stable
+
