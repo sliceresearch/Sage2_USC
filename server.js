@@ -440,13 +440,13 @@ function initializeWSClient(wsio) {
 	
 	if ( wsio.clientType === "radialMenu" )
 	{
-		//wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		wsio.on('radialMenuMoved', wsRadialMenuMoved);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( !(wsio.clientID in radialMenus) )
+		if ( radialMenus[wsio.clientID].wsio === undefined )
 		{
 			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			radialMenus[wsio.clientID] = wsio;
+			radialMenus[wsio.clientID].wsio = wsio;
 		} else {
 			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
 			wsio.emit("disableSendToServer", uniqueID);
@@ -3178,11 +3178,9 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	
-	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu", uniqueID);
-	radialMenus[uniqueID].top = pointerY;
-	radialMenus[uniqueID].left = pointerX;
-
-	
+	radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
+	radialMenus[uniqueID+"_menu"].top = pointerY;
+	radialMenus[uniqueID+"_menu"].left = pointerX;
 	
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3240,11 +3238,13 @@ function radialMenuEvent( data )
 	
 	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
 	
-	var radialMenu = radialMenus[data.id];
+	var radialMenu = radialMenus[data.id+"_menu"];
 	if( radialMenu !== undefined )
 	{
 		if( radialMenu.onEvent( data.type, { x: data.x, y: data.y }, data.data ) )
+		{
 			return true;
+		}
 		else
 			return false;
 	}
@@ -3253,7 +3253,15 @@ function radialMenuEvent( data )
 function wsRemoveRadialMenu( wsio, data ) {
 	//console.log("Removed radial menu ID: " + data.id);
 	//radialMenus[data.id] = null;
-
+	
 	var elem = findAppById(data.id);
 	if(elem !== null) deleteApplication( elem );
+}
+
+function wsRadialMenuMoved( wsio, data ) {
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.setPosition( data );
+	}
 }

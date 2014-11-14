@@ -745,18 +745,24 @@ function radialMenu(){
 	{
 		pointerX = data.x - data.windowX - offset.x;
 		pointerY = data.y - data.windowY - offset.y;
-				
+
 		if( this.windowInteractionMode === false && pointerX > 0 && pointerX < radialMenuSize.x && pointerY > 0 && pointerY < radialMenuSize.y && buttonOverCount === 0 )
 		{
 			dragOffset = this.dragPosition;
+			
 			this.element.style.left    = (data.x - offset.x - dragOffset.x).toString() + "px";
 			this.element.style.top     = (data.y - offset.y - dragOffset.y).toString()  + "px";
+			
+			if( this.sendsToServer === true )
+			{
+				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - offset.x - dragOffset.x), y: (data.y - offset.y - dragOffset.y), radialMenuSize: radialMenuSize } );
+			}
 		}
 		
 		this.thumbnailWindowElement.style.left = (data.windowX + this.thumbnailWindowPosition.x).toString() + "px";
 		this.thumbnailWindowElement.style.top = (data.windowY + this.thumbnailWindowPosition.y).toString()  + "px";
-		//this.thumbnailWindowElement.style.left = (data.windowX + this.thumbnailWindowScrollOffset.x).toString() + "px";
-		//this.thumbnailWindowElement.style.top = (data.windowY + this.thumbnailWindowScrollOffset.y).toString()  + "px";
+		
+		
 	};
 	
 	this.onEvent = function(type, position, user, data) {
