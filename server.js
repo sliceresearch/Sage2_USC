@@ -2788,7 +2788,11 @@ function pointerPosition( uniqueID, data ) {
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-
+	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
@@ -2801,7 +2805,14 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+		
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+		
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+		
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
 		if(data.wheelDelta > 0) scale = 1.0 / scale;
@@ -2821,8 +2832,7 @@ function pointerScroll( uniqueID, data ) {
 		}
 	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		var pointerX = sagePointers[uniqueID].left;
-		var pointerY = sagePointers[uniqueID].top;
+		
 		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if( elem !== null ){
@@ -2862,7 +2872,11 @@ function pointerDraw(uniqueID, data) {
 function pointerDblClick(uniqueID, pointerX, pointerY) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+		
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if (elem !== null) {
 		if( elem.application === 'thumbnailBrowser' )
