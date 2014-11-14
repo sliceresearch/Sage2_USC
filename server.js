@@ -441,6 +441,7 @@ function initializeWSClient(wsio) {
 	if ( wsio.clientType === "radialMenu" )
 	{
 		wsio.on('radialMenuMoved', wsRadialMenuMoved);
+		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
 		if ( radialMenus[wsio.clientID].wsio === undefined )
@@ -3251,11 +3252,11 @@ function radialMenuEvent( data )
 }
 
 function wsRemoveRadialMenu( wsio, data ) {
-	//console.log("Removed radial menu ID: " + data.id);
-	//radialMenus[data.id] = null;
-	
-	var elem = findAppById(data.id);
-	if(elem !== null) deleteApplication( elem );
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.visible = false;
+	}
 }
 
 function wsRadialMenuMoved( wsio, data ) {

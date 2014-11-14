@@ -429,8 +429,7 @@ function radialMenu(){
 				currentThumbnailButtons = this.appThumbnailButtons;
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
-			
-			console.log("draw()", this.thumbWindowctx.redraw);
+
 			if( this.thumbWindowctx.redraw )
 			{
 				for( i = 0; i < currentThumbnailButtons.length; i++ )
@@ -705,6 +704,10 @@ function radialMenu(){
 	
 	this.closeMenu = function() {
 		this.visible = false;
+		
+		if( this.sendsToServer === true )
+			this.wsio.emit('removeRadialMenu', { id: this.menuID } );
+		
 		console.log("Closing menu" );
 	};
 	
@@ -905,7 +908,6 @@ function radialMenu(){
 				
 				if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
 				{ 
-					console.log(thumbButton+" released" );
 					if( this.currentMenuState === 'appThumbnailWindow' )
 						this.loadApplication( thumbButton.getData()  );
 					else
