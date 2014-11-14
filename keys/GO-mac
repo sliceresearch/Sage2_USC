@@ -19,3 +19,6 @@ for f in `echo $servers`
 do
 	./init_webserver.cmd $f
 done
+
+/usr/bin/security add-trusted-cert -d -r trustRoot localhost-server.crt
+

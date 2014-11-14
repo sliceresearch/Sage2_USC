@@ -1,0 +1,20 @@
+#!/bin/sh
+
+open -a Terminal /Applications/SAGE2/GO-server
+
+sleep 3
+
+# create folder to store chrome session
+mkdir -p /Applications/SAGE2/chrome/session1
+
+global_param="--args --new-window --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+param="$global_param --user-data-dir=/Applications/SAGE2/chrome/session1"
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $param --window-size=640,480 --window-position=0,0 --app=https://localhost:9090/audioManager.html  &
+sleep 1
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $param --window-size=1920,1080 --app=https://localhost:9090/display.html\?clientID=0  &
+
+sleep 1
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param --window-size=800,600 --window-position=0,0 https://localhost:9090/  &
+
+

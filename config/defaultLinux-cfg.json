@@ -24,14 +24,10 @@
 		},
 		auto_hide_ui: false,    // auto-hide the wall UI (menu bar, application title bars, etc.)
 		auto_hide_delay: 30,    // delay in seconds
-		minWindowWidth:  220,   // default:   8% wall width
-		minWindowHeight: 120,   // default:   8% wall height
-		maxWindowWidth:  2048,  // default: 120% wall width
-		maxWindowHeight: 2048   // default: 120% wall height
 	},
 	resolution: {
-		width: 1280,
-		height: 720
+		width: 1920,
+		height: 1080
 	},
 	layout: {
 		rows: 1,
@@ -48,5 +44,15 @@
 		"127.0.0.1"
 	],
 	remote_sites: [
+                {
+                        "name": "Room1",
+                        "host": "room1.example.com",
+                        "port": 443
+                },
+                {
+                        "name": "Room2",
+                        "host": "room2.example.com",
+                        "port": 443
+                }
 	]
 }

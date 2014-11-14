@@ -1,0 +1,14 @@
+#!/bin/sh
+
+open -a Terminal /Applications/sage2-mac/GO-server
+
+sleep 3
+
+global_param="--args --new-window --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param  --window-size=1440,900 --app=https://localhost:9090/\?clientID=0  &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param  --window-position=0,0 https://localhost:9090/audioManager.html  &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param  --window-position=0,0 https://localhost:9090/sageUI.html  &
+
+
+

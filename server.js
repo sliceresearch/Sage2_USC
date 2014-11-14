@@ -176,7 +176,7 @@ var mediaStreams = {};
 var radialMenus = {};
 
 // Generating QR-code of URL for UI page
-var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
+var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
 // qr_png.on('readable', function() { process.stdout.write('.'); });
 qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
@@ -1153,6 +1153,170 @@ function fitWithin(app, x, y, width, height, margin) {
 	return [newAppX, newAppY, newAppWidth, newAppHeight];
 }
 
+// Create a 2D array
+function Create2DArray(rows) {
+  var arr = [];
+  for (var i=0;i<rows;i++) {
+     arr[i] = [];
+  }
+  return arr;
+}
+// Calculate the euclidian distance between two objects with .x and .y fields
+function distance2D(p1, p2) {
+	var d = 0.0;
+	d = Math.sqrt( Math.pow((p1.x-p2.x),2) + Math.pow((p1.y-p2.y),2) );
+	return d;
+}
+function findMinimum(arr) {
+	var val = Number.MAX_VALUE;
+	var idx = 0;
+	for (var i=0;i<arr.length;i++) {
+		if (arr[i]<val) {
+			val = arr[i];
+			idx = i;
+		}
+	}
+	return idx;
+}
+function printMatrix(dist) {
+	var i, j;
+	for (i=0; i<applications.length; i++) {
+		process.stdout.write(i.toString());
+		for (j=0; j<applications.length; j++) {
+			process.stdout.write(" " + dist[i][j].toFixed(2));
+		}
+		process.stdout.write('\n');
+	}
+}
+
+function tileApplications2() {
+	var app;
+	var i, j, c, r;
+	var numCols, numRows;
+
+	var displayAr  = config.totalWidth / config.totalHeight;
+	var arDiff     = displayAr / averageWindowAspectRatio();
+	var numWindows = applications.length;
+
+	// 3 scenarios... windows are on average the same aspect ratio as the display
+	if (arDiff >= 0.7 && arDiff <= 1.3) {
+		numCols = Math.ceil(Math.sqrt( numWindows ));
+		numRows = Math.ceil(numWindows / numCols);
+	}
+    else if (arDiff < 0.7) {
+		// windows are much wider than display
+		c = Math.round(1 / (arDiff/2.0));
+		if (numWindows <= c) {
+			numRows = numWindows;
+			numCols = 1;
+		}
+		else {
+			numCols = Math.max(2, Math.round(numWindows / c));
+			numRows = Math.round(Math.ceil(numWindows / numCols));
+		}
+	}
+	else {
+		// windows are much taller than display
+		c = Math.round(arDiff*2);
+		if (numWindows <= c) {
+			numCols = numWindows;
+			numRows = 1;
+		}
+		else {
+			numRows = Math.max(2, Math.round(numWindows / c));
+			numCols = Math.round(Math.ceil(numWindows / numRows));
+		}
+	}
+
+    // determine the bounds of the tiling area
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
+	var areaX = 0;
+	var areaY = Math.round(1.5 * titleBar); // keep 0.5 height as margin
+	if (config.ui.auto_hide_ui===true) areaY = - config.ui.titleBarHeight;
+
+	var areaW = config.totalWidth;
+	var areaH = config.totalHeight-(1.0*titleBar);
+
+	var tileW = Math.floor(areaW / numCols);
+	var tileH = Math.floor(areaH / numRows);
+
+	var padding = 4;
+	// if only one application, no padding, i.e maximize
+	if (applications.length===1) padding = 0;
+
+    var centroidsApps  = [];
+    var centroidsTiles = [];
+    r = numRows-1;
+    c = 0;
+    // Caculate apps and tiles centers
+    for (i=0; i<applications.length; i++) {
+		app =  applications[i];
+		centroidsApps[i] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
+		console.log('centroid appl:', i, app.title, centroidsApps[i]);
+
+		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
+		console.log('centroid tile:', i, centroidsTiles[i]);
+
+        c += 1;
+        if (c === numCols) {
+            c  = 0;
+            r -= 1;
+        }
+	}
+	// Calculate distances
+	var distances = Create2DArray(applications.length);
+	for (i=0; i<applications.length; i++) {
+		for (j=0; j<applications.length; j++) {
+			var d = distance2D(centroidsApps[i], centroidsTiles[j]);
+			distances[i][j] = d;
+		}
+	}
+	// dump the matrix
+	printMatrix(distances);
+	for (i=0; i<applications.length; i++) {
+		var idx = findMinimum(distances[i]);
+		console.log('Min:', i, idx, distances[i][idx].toFixed(2));
+	}
+
+    r = numRows-1;
+    c = 0;
+	for (i=0; i<applications.length; i++) {
+		// pick an app
+		var appid = findMinimum(distances[i]);
+		// get the application
+		app =  applications[ appid ];
+
+		console.log('Round:', i, appid, distances[i][appid].toFixed(2), app.title);
+		for (j=0; j<applications.length; j++) distances[j][appid] = Number.MAX_VALUE;
+
+		// calculate new dimensions
+		console.log('tiling:', i, c, r, app.title);
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
+
+		printMatrix(distances);
+
+        // update the data structure
+        app.left   = newdims[0];
+        app.top    = newdims[1] - titleBar;
+		app.width  = newdims[2];
+		app.height = newdims[3];
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							force: true, date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+
+        c += 1;
+        if (c === numCols) {
+            c  = 0;
+            r -= 1;
+        }
+    }
+}
+
 function tileApplications() {
 	var app;
 	var i, c, r;
@@ -1570,8 +1734,11 @@ function loadConfiguration() {
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
-			if(platform === "Windows"){
+			if (platform === "Windows") {
 				configFile = path.join("config", "defaultWindows-cfg.json");
+			}
+			else if (platform === "Mac OS X") {
+				configFile = path.join("config", "defaultMacOSX-cfg.json");
 			}
 			else {
 				configFile = path.join("config", "defaultLinux-cfg.json");

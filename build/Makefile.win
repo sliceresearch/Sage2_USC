@@ -2,11 +2,10 @@
 
 default: all
 
-all: download stage install package
+all: download stage install binary package
 
-dmg:
-	/bin/rm -f dmg/SAGE2.dmg
-	./node_modules/.bin/appdmg dmg/app.json dmg/SAGE2.dmg
+package:
+	echo "Done."
 
 download:
 	wget http://s3.amazonaws.com/nodejx/jx_suse64.zip
@@ -19,12 +18,12 @@ stage:
 install:
 	cd sage2 && ../jx_linux64/jx install
 
-package:
-	cp scripts/* sage2/
+binary:
+	cp scripts/win/* sage2/
 	unzip -u -d sage2 mac-bin.zip 
-	cp mac-packages/Ghostscript-9.15.pkg sage2/local/
 	cd sage2 && ../jx_linux64/jx package server.js sage2 -native -slim GO-scripts,extras,public_HTTP,public_HTTPS,keys,config
-	rm -fr sage2/doc sage2/extras sage2/GO-scripts sage2/node_modules sage2/package.json sage2/server.js sage2/src
+	rm -fr sage2/doc sage2/extras sage2/GO-scripts sage2/node_modules sage2/package.json sage2/server.js sage2/src sage/build
+	mv sage2 SAGE2
 
 clean:
 	/bin/rm -f jx_suse64.zip
