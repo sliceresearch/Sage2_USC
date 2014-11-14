@@ -912,23 +912,30 @@ function radialMenu(){
 			for( i = 0; i < currentThumbnailButtons.length; i++ )
 			{
 				thumbButton = currentThumbnailButtons[i];
-				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
-				buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
-				if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
-				{ 
-					if( this.currentMenuState === 'appThumbnailWindow' )
-						this.loadApplication( thumbButton.getData()  );
-					else
-						this.loadFileFromServer( thumbButton.getData()  );
-				}
-				if ( thumbButton.isPositionOver(user.id, thumbEventPos)  )
+				
+				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x, y: position.y - this.thumbnailWindowPosition.y };
+				
+				// Prevent clicking on hidden thumbnails under preview window
+				if( thumbEventPos.x < thumbnailWindowSize.x - thumbnailPreviewWindowSize.x + imageThumbSize + 10 )
 				{
-					this.hoverOverText = thumbButton.getData().filename;
-					this.hoverOverThumbnail = thumbButton.idleImage;
-					this.hoverOverMeta = thumbButton.getData().meta;
-					overButton = true;
-					this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
+					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
+				
+					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
+					{ 
+						if( this.currentMenuState === 'appThumbnailWindow' )
+							this.loadApplication( thumbButton.getData()  );
+						else
+							this.loadFileFromServer( thumbButton.getData()  );
+					}
+					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  )
+					{
+						this.hoverOverText = thumbButton.getData().filename;
+						this.hoverOverThumbnail = thumbButton.idleImage;
+						this.hoverOverMeta = thumbButton.getData().meta;
+						overButton = true;
+						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
+					}
 				}
 			}
 		}
