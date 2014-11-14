@@ -767,7 +767,7 @@ function radialMenu(){
 			
 			if( this.sendsToServer === true )
 			{
-				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - offset.x - dragOffset.x), y: (data.y - offset.y - dragOffset.y), radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
+				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x), y: (data.y - dragOffset.y), radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
 			}
 		}
 		
