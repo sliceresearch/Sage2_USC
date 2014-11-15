@@ -3363,11 +3363,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
-	
-	radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
-	radialMenus[uniqueID+"_menu"].top = pointerY;
-	radialMenus[uniqueID+"_menu"].left = pointerX;
-	
+		
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	var now  = new Date();
@@ -3376,6 +3372,10 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	{
 		if( elem === null )
 		{
+			radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
+			radialMenus[uniqueID+"_menu"].top = pointerY;
+			radialMenus[uniqueID+"_menu"].left = pointerX;
+	
 			// Open a 'media' radial menu
 			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 		}
