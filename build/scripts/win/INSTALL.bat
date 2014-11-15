@@ -1,3 +1,5 @@
+REM Run me as administrator
+pushd %~dp0
 cd packages
 start /wait ChromeSetup.exe /silent /install
 start /wait ImageMagick-6.8.9-8-Q16-x64-dll.exe /silent 
@@ -11,3 +13,4 @@ C:
 setx Path "%Path%;c:\local\bin;c:\Program Files (x86)\Git\bin"
 cd C:\SAGE2\keys
 start GO-windows.bat
+exit
