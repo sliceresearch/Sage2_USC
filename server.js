@@ -1901,7 +1901,8 @@ function setupHttpsOptions() {
 			// Load the certificate files
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
-			server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
+			if(fs.existsSync(path.join("keys", config.host + "-ca.crt")))
+				server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
 			certs[config.host] = crypto.createCredentials({
 					key:  server_key,
