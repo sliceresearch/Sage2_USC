@@ -62,12 +62,27 @@ var tweetcloud = SAGE2_App.extend( {
 		queryText.style.position = "absolute";
 		queryText.style.top = "50%";
 		queryText.style.left = (width*0.015).toString() + "px";
-		queryText.style['-webkit-transform'] = "translate(0%, -50%)";
-		queryText.style['-moz-transform'] = "translate(0%, -50%)";
-		queryText.style['transform'] = "translate(0%, -50%)";
+		queryText.style.webkitTransform = "translate(0%, -50%)";
+		queryText.style.mozTransform = "translate(0%, -50%)";
+		queryText.style.transform = "translate(0%, -50%)";
+		
+		var error = document.createElement('p');
+		error.id = id + "_error";
+		error.textContent = "";
+		error.style.fontFamily = "Verdana,Arial,sans-serif";
+		error.style.fontSize = (0.025*width).toString() + "px";
+		error.style.textIndent = "0px";
+		error.style.color = "#000000";
+		error.style.position = "absolute";
+		error.style.top = "50%";
+		error.style.left = "50%";
+		error.style.webkitTransform = "translate(-50%, -50%)";
+		error.style.mozTransform = "translate(-50%, -50%)";
+		error.style.transform = "translate(-50%, -50%)";
 		
 		queryDiv.appendChild(queryText);
 		this.element.appendChild(queryDiv);
+		this.element.appendChild(error);
 		
 		queryDiv.style.width = (queryText.clientWidth + (width*0.03)).toString() + "px";
 		
@@ -99,6 +114,13 @@ var tweetcloud = SAGE2_App.extend( {
 	
 	tweetResults: function(data) {
 		// only executed by master - since only master called searchTweets
+		if(data.err !== null) {
+			var error = document.getElementById(this.div.id + "_error");
+			error.textContent = "Error:" + data.err.message;
+			
+			return;
+		}
+		
 		var i;
 		this.tweets = [];
 		for(i=0; i<data.result.statuses.length; i++){
@@ -118,6 +140,7 @@ var tweetcloud = SAGE2_App.extend( {
 		this.tweets.sort(this.sortByDateFunc);
 		this.tweets = this.tweets.slice(Math.max(0, this.tweets.length-200));
 		
+		document.getElementById(this.div.id + "_error").textContent = "";
 		this.createWords(data.query.q);
 	},
 	

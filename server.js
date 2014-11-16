@@ -901,13 +901,19 @@ function wsBroadcast(wsio, data) {
 // Search tweets using Twitter API
 //
 function wsSearchTweets(wsio, data) {
-	twitter.get('search/tweets', data.query, function(err, info, response) {
-		if(err) throw err;
-		
+	if(twitter === null) {
 		if(data.broadcast === true)
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}}, 'requiresFullApps');
 		else
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}});
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+		return;
+	}
+	
+	twitter.get('search/tweets', data.query, function(err, info, response) {
+		if(data.broadcast === true)
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}}, 'requiresFullApps');
+		else
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
 	});
 }
 
