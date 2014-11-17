@@ -47,6 +47,7 @@ var widget_demo = SAGE2_App.extend( {
 			"fill":"none",
 			"strokeWidth": 1,
 			"delay": 600,
+			"textual":false,
 			"animation":true
 		};
 		var plusButton2 = {
@@ -58,10 +59,17 @@ var widget_demo = SAGE2_App.extend( {
 			"fill":"none",
 			"strokeWidth": 1,
 			"delay": 600,
+			"textual":false,
 			"animation":true
 		};
+		var plusButton3 = {
+			"textual":true,
+			"label":"Watch",
+			"fill":"rgba(250,250,250,1.0)",
+			"animation":false
+		};
 		this.controls.addButtonType("plus", plusButton);
-		this.controls.addButtonType("plus2", plusButton2);
+		this.controls.addButtonType("plus3", plusButton3);
 		this.controls.addButton({type:"next",sequenceNo:2,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
 			//This is executed after the button click animation occurs.
 			this.colorIdx = (this.colorIdx + 1) % 3;
@@ -75,7 +83,7 @@ var widget_demo = SAGE2_App.extend( {
 			this.brightness = 64; //Reset value
 			this.draw(date);
 		}.bind(this)});
-		this.controls.addButton({type:"plus2",sequenceNo:5,action:function(date){
+		this.controls.addButton({type:"plus3",sequenceNo:5,action:function(date){
 			this.displayText = "Pushed plus2 button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
@@ -88,14 +96,18 @@ var widget_demo = SAGE2_App.extend( {
 		
 		
 		this.controls.addSeparatorAfterButtons(3,5); // Adds a small gap after button positon 3 and 5
+		
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"
 		//Only simple numerical values can be manipulated using the slider.
-		this.controls.addSlider({begin:64,end:255,increments:1,appHandle:this, property:"brightness", action:function(date){
+		var formatFunction = function(value,end){
+			return value + ":" + end;
+		}
+		this.controls.addSlider({begin:64,end:255,increments:1,appHandle:this, property:"brightness", labelFormatFunction:formatFunction , action:function(date){
 			//Perform refresh or updating actions here
 			this.draw(date);
 		}.bind(this)});
-		this.controls.addTextInput({action:function(text){
+		this.controls.addTextInput({defaultText: "Default Text!!",action:function(text){
 			this.displayText = text.split(" ")[0];
 			this.draw(date);
 		}.bind(this)});

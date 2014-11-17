@@ -80,6 +80,7 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay": 600,
+		"textual":false,
 		"animation": true
 	},
 	"prev": {
@@ -91,6 +92,7 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600,
+		"textual":false,
 		"animation": true
 
 	},
@@ -103,6 +105,7 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay": 600,
+		"textual":false,
 		"animation": true
 	},
 	"prev-zoom": {
@@ -114,6 +117,7 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600,
+		"textual":false,
 		"animation": true
 	},
 	"rewind": {
@@ -125,6 +129,7 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600,
+		"textual":false,
 		"animation": true
 	},
 	"fastforward": {
@@ -136,6 +141,7 @@ var buttonType = {
 		"fill":"none",
 		"strokeWidth": 1,
 		"delay":600,
+		"textual":false,
 		"animation": true
 	},
 	"duplicate": {
@@ -147,6 +153,7 @@ var buttonType = {
 		"fill":"#999999",
 		"strokeWidth": 1,
 		"delay":600,
+		"textual":false,
 		"animation": true
 	}
 
@@ -269,6 +276,7 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 		textInput.appId = this.id;
 		textInput.width = 12.0*ui.widgetControlSize;
 		textInput.call = data.action || null;
+		textInput.defaultText = data.defaultText || "";
 		this.textInput = textInput;
 		this.itemCount++;
 	}
@@ -313,6 +321,7 @@ SAGE2WidgetControlBar.prototype.addSlider = function(data){
 		slider.appProperty = data.property;
 		slider.appHandle = data.appHandle;
 		slider.sliderVal = data.begin;
+		slider.knobLabelFormatFunction = data.labelFormatFunction;
 		slider.width = 12.0*ui.widgetControlSize;
 		if (slider.parts < 1)
 			return;
@@ -336,8 +345,9 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 	var dimensions = {};
 	dimensions.buttonRadius = 0.8 * ui.widgetControlSize;
 	dimensions.radius = dimensions.buttonRadius * 5.027 ; // tan(78.5): angle subtended at the center is 22.5
+	dimensions.secondRadius = dimensions.radius *0.75;
 	dimensions.innerR = dimensions.radius - dimensions.buttonRadius -3; // for the pie slice
-	dimensions.outerR = dimensions.radius + dimensions.buttonRadius +3;
+	dimensions.outerR = ui.widgetControlSize * 6.0;
 
 	size.height = dimensions.outerR * 2 + 5;
 	size.width = size.height;
@@ -417,7 +427,7 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 		var key = idx.toString();
 		if (key in this.buttonSequence){
 			var button = this.buttonSequence[key];
-			var point = polarToCartesian(dimensions.radius,theta,center);
+			var point = polarToCartesian(dimensions.secondRadius,theta,center);
 			if (this.layoutOptions.drawSpokes === true)
 				drawSpokeForRadialLayout(this.controlSVG,center,point);
 			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
@@ -456,7 +466,7 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
-	drawControlCenter(this.controlSVG,center, dimensions.innerR - 2*dimensions.buttonRadius, "SAGE2");
+	drawControlCenter(this.controlSVG,center, 1.8*dimensions.buttonRadius, "SAGE2");
 	var ctrHandle = document.getElementById(ctrId + "SVG");
 	return ctrHandle;
 }
@@ -485,9 +495,9 @@ function drawControlCenter(paper, center, radius, initialText){
 	controlCenter.attr("class", "widgetBackground");
 	var controlCenterLabel = paper.text(center.x,center.y,initialText);
 	controlCenterLabel.attr("class", "widgetText");
-	/*controlCenterLabel.attr({
-		fontSize: (0.045 * ui.widgetControlSize) + "em"
-	})*/
+	controlCenterLabel.attr({
+		fontSize: (0.030 * ui.widgetControlSize) + "em"
+	});
 	controlCenterLabel.attr("dy", "0.4em");
 }
 
@@ -553,12 +563,12 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 		stroke: "rgba(230,230,230,1.0)"
 	});
 	var sliderKnobLabel = this.controlSVG.text(x+0.5*ui.widgetControlSize + knobWidth/2.0, y,"-");
-	var fontSize = parseInt(knobHeight*0.20) + "px"
+	var fontSize = 0.045 * ui.widgetControlSize;
 	sliderKnobLabel.attr({
 		id: this.slider.id+ "knobLabel",
-		dy:(knobHeight*0.12) + "px",
+		dy:(knobHeight*0.22) + "px",
 		class:"widgetText",
-		fontSize: fontSize
+		fontSize: fontSize + "em"
 	});
 	
 	//var callabckFunc = this.slider.call.bind(applications[this.slider.appId]);
@@ -580,8 +590,14 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 	slider.data('end', this.slider.end);
 	slider.data('parts', this.slider.parts);
 	slider.data('increments', this.slider.increments);
+	var formatFunction = this.slider.knobLabelFormatFunction;
+	if (!formatFunction){
+		formatFunction = function(val,end){
+			return val + " / " + end;
+		}
 
-
+	}
+		
 	function moveSlider(sliderVal){
 		var slider = sliderKnob.parent();
 		var sliderLine = slider.select("line");
@@ -600,10 +616,10 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 			position = left;
 		else if (position > right )
 			position = right;
-		sliderKnobLabel.attr("text", (n+begin) +" / "+ end);
+		slider
+		sliderKnobLabel.attr("text", formatFunction(n+begin,end));
 		sliderKnob.attr({x: position - knobWidth/2.0});//,1,mina.linear);
 		sliderKnobLabel.attr({x: position});//,1,mina.linear);//fontSize:fontSize + "em"
-		console.log(sliderKnobLabel);
 	}
 	
 
@@ -614,8 +630,9 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 		}
 	});
 	
-	moveSlider(begin);
-
+	//moveSlider(begin);
+	app.handle[app.property] = begin+1;
+	app.handle[app.property] = begin;
 	return slider;
 }
 
@@ -656,13 +673,57 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
-
+	var info;
 	var type = this.buttonType[buttonSpec.type];
-	var fromPath = "M " + cx + " " + cy  + " " + type["from"];
-	var toPath= "M " + cx + " " + cy  + " " + type["to"];
-	var buttonCover = this.controlSVG.path(fromPath);
-	var coverWidth = type["width"];
-	var coverHeight = type["height"];
+	
+	var buttonCover;
+	
+	if (type.textual === true){
+		buttonCover = this.controlSVG.text(cx,cy,type["label"].slice(0,5));
+		var coverFontSize = buttonRad/8.0;
+		buttonCover.attr({
+			id: buttonSpec.id + "cover",
+			class: "widgetText",
+			//transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
+			fontSize:(0.040 * buttonRad) + "em",
+			dy: (0.16 * ui.widgetControlSize) + "px",
+			stroke:"none",
+			fill:type["fill"]
+		});
+		info = {
+			"label": type["label"].slice(0,5),
+			"animation": type["animation"],
+			"textual": type["textual"]
+		};
+		
+	}
+	else{
+		var fromPath = type["from"];
+		var toPath= type["to"];
+		var coverWidth = type["width"];
+		var coverHeight = type["height"];
+		fromPath = "M " + cx + " " + cy  + " " + fromPath;
+		toPath = "M " + cx + " " + cy  + " " + toPath;
+		buttonCover = this.controlSVG.path(fromPath);
+		buttonCover.attr({
+			id: buttonSpec.id + "cover",
+			transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
+			strokeWidth:type["strokeWidth"],
+			stroke:"rgba(250,250,250,1.0)",
+			style:"stroke-linecap:round; stroke-linejoin:round",
+			fill:type["fill"]
+		});
+		info = {
+			"fromPath": fromPath,
+			"toPath":toPath,
+			"delay": type["delay"],
+			"state": type["state"],
+			"animation": type["animation"],
+			"textual": type["textual"]
+		};
+		
+	}
+	/*	
 	buttonCover.attr({
 		id: buttonSpec.id + "cover",
 		transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
@@ -671,17 +732,12 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		style:"stroke-linecap:round; stroke-linejoin:round",
 		fill:type["fill"]
 	});
+	*/
 	var callabckFunc = buttonSpec.call.bind(applications[ buttonSpec.appId]);
 	var button = this.controlSVG.group(buttonBack,buttonCover);
-	var animationInfo = {
-		"fromPath": fromPath,
-		"toPath":toPath,
-		"delay": type["delay"],
-		"state": type["state"],
-		"animation": type["animation"]
-	}
+	
 	buttonCover.data("call",buttonSpec.call);
-	buttonCover.data("animationInfo", animationInfo);
+	buttonCover.data("animationInfo", info);
 	buttonCover.data("appId", buttonSpec.appId);
 	buttonBack.data("appId", buttonSpec.appId);
 	button.data("call",buttonSpec.call);
@@ -695,7 +751,7 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	var uiElementSize = ui.widgetControlSize;
 	var textInputAreaHeight = 1.3 * uiElementSize;
-	var fontSize = 0.040 * ui.widgetControlSize;
+	var fontSize = 0.045 * ui.widgetControlSize;
 
 	var textInputOutline = this.controlSVG.path(outline);
 	textInputOutline.attr("class","widgetBackground");
@@ -720,19 +776,21 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 		strokeWidth:1
 	});
 
-	var show = function() {
-		blinker.animate({"stroke":"#ffffff"},800,mina.easein,hide);
+	var blink = function() {
+		console.log("blinking!");
+		blinker.animate({"stroke":"rgba(100,100,100,1.0)"},400,mina.easein,function(){
+			blinker.animate({"stroke":"rgba(255,255,255,1.0)"},400,mina.easeout);
+		});
 	};
 
-	var hide = function() {
-		blinker.animate({"stroke":"#000000"},200,mina.easeout,show);
-	};
+	
 
 	var textData = this.controlSVG.text(x+2, y,"");
 	textData.attr({
 		id: this.textInput.id + "TextData",
-		style:"fill: #ffffff; font-family:sans-serif; font-size:" + fontSize + "em; font-weight:lighter; font-style:normal;",
-		dy: (textArea.attr("height")*0.30) + "px"
+		class: "textInput",
+		fontSize: fontSize + "em",
+		dy: (textArea.attr("height")*0.25) + "px"
 	});
 	var textInput = this.controlSVG.group(textArea,blinker);
 	textInput.add(textData);
@@ -740,7 +798,6 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	textData.data("appId",this.textInput.appId);
 	blinker.data("appId", this.textInput.appId);
 	textInput.data("appId", this.textInput.appId);
-	blinker.data("show", show); // Find out how to stop animating the blinker
 	textInput.data("buffer","");
 	textInput.data("blinkerPosition",0) ;
 	textInput.data("blinkerSuf"," " + (y-textInputAreaHeight/2.0 +2) + " l 0 " + (textInputAreaHeight - 4));
@@ -750,9 +807,13 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	textInput.data("prefix", "");
 	textInput.data("suffix", "");
 	textInput.data("tail", "");
-	
-	show();
+	textInput.data("blinkCallback", blink);
 
+	if (this.textInput.defaultText){
+		for(var i=0;i<this.textInput.defaultText.length;i++){
+			insertText(textInput,this.textInput.defaultText.charCodeAt(i),true);
+		}
+	}
 	return textInput;
 }
 

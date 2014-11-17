@@ -636,20 +636,17 @@ function wsKeyDown(wsio, data) {
 	}
 
 
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
-	if (lockedControl !== null) {
-		var event = {code: data.code, printable:false, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-		broadcast('keyInControl', event ,'receivesWidgetEvents');
-		if (data.code == 13) { //Enter key
-			remoteInteraction[uniqueID].dropControl();
-		} 
-		return;
-	}
-
+	
 
 	//SEND SPECIAL KEY EVENT only will come here
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
+
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null){
+		return;
+	}
+
 	
 	if(remoteInteraction[uniqueID].appInteractionMode()){		
 		keyDown(uniqueID, pointerX, pointerY, data);
@@ -674,10 +671,28 @@ function wsKeyUp(wsio, data) {
 	else if(data.code == 91 || data.code == 92 || data.code == 93){ // command
 		remoteInteraction[uniqueID].CMD = false;
 	}
-	
+
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 	
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+
+	if (lockedControl !== null) {
+		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
+		if (data.code == 13) { //Enter key
+			remoteInteraction[uniqueID].dropControl();
+		} 
+		return;
+	}
+	else if (control!==null){
+		return;
+	}
+	
+	
+
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
 	if(elem !== null){
@@ -696,6 +711,9 @@ function wsKeyPress(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	var control = findControlsUnderPointer(pointerX,pointerY);
 
 	if(data.code == 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible){ // shift + tab
 		remoteInteraction[uniqueID].toggleModes();
@@ -703,15 +721,15 @@ function wsKeyPress(wsio, data) {
 	}
 	else if (lockedControl !== null){
 		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-		broadcast('keyInControl', event ,'receivesWidgetEvents');
+		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code === 13){ //Enter key
 			remoteInteraction[uniqueID].dropControl();
 		} 
 	}
+	else if(control!==null){
+		return;
+	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		var pointerX = sagePointers[uniqueID].left;
-		var pointerY = sagePointers[uniqueID].top;
-		
 		keyPress(uniqueID, pointerX, pointerY, data);
 	}
 
@@ -1657,14 +1675,22 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if ((regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) && remoteInteraction[data.addr].lockedControl() === null ) {
+	//console.log("lock:", remoteInteraction[data.addr].lockedControl() );
+	var lockedControl = remoteInteraction[data.addr].lockedControl(); 
+	if (lockedControl){
+		//If a text input widget was locked, drop it
+		var appdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		broadcast('dropTextInputControl', appdata ,'receivesWidgetEvents');
+		remoteInteraction[data.addr].dropControl();
+	}
+	if (regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	var regButton = /button/;
+	var regButton = /button/
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
@@ -2578,7 +2604,6 @@ function togglePointerMode(uniqueID) {
 
 function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	if ( sagePointers[uniqueID] === undefined ) return;
-	remoteInteraction[uniqueID].dropControl();
 	
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
@@ -2591,8 +2616,17 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(ct.show === true) hideControl(ct);
 		}
 		return ;
+	}else{
+		var lockedControl = remoteInteraction[uniqueID].lockedControl(); //If a text input widget was locked, drop it
+		if (lockedControl !== null) {
+			var data = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+			broadcast('dropTextInputControl', data ,'receivesWidgetEvents');
+			remoteInteraction[uniqueID].dropControl();
+		}
 	}
-
+	
+	
+	
 	// Middle click switches interaction mode too
 	if (data.button === "middle") {
 		togglePointerMode(uniqueID);
@@ -2696,7 +2730,6 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 
 }
-
 /*
 function pointerPressRight( address, pointerX, pointerY ) {
 	if ( sagePointers[address] === undefined ) return;
@@ -2958,7 +2991,9 @@ function pointerPosition( uniqueID, data ) {
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null)
+		return;
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
@@ -2978,7 +3013,11 @@ function pointerScroll( uniqueID, data ) {
 		
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
-		
+	
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null)
+		return;
+
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
 		return; // Radial menu is using the event
@@ -3042,6 +3081,12 @@ function pointerDraw(uniqueID, data) {
 function pointerDblClick(uniqueID, pointerX, pointerY) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
+
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null){
+		console.log("finding control!");
+		return;
+	}
 		
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY }  ) === true )

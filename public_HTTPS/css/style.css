@@ -86,11 +86,18 @@ body {
 
 .widgetBackground{
 	fill: rgba(140,140,140,1.0);
-	stroke: rgba(180,180,180,1.0);
+	stroke: rgba(230,230,230,1.0);
 	stroke-width:1;
 }
 .widgetText {
 	text-anchor:middle;
 	font-family:sans-serif;
 	fill: rgba(250,250,250,1.0);
+}
+
+.textInput{
+	font-family:sans-serif;
+	fill: rgba(250,250,250,1.0);
+	font-weight:lighter; 
+	font-style:normal;
 }
