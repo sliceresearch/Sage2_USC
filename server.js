@@ -919,13 +919,19 @@ function wsBroadcast(wsio, data) {
 // Search tweets using Twitter API
 //
 function wsSearchTweets(wsio, data) {
-	twitter.get('search/tweets', data.query, function(err, info, response) {
-		if(err) throw err;
-		
+	if(twitter === null) {
 		if(data.broadcast === true)
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}}, 'requiresFullApps');
 		else
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}});
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+		return;
+	}
+	
+	twitter.get('search/tweets', data.query, function(err, info, response) {
+		if(data.broadcast === true)
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}}, 'requiresFullApps');
+		else
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
 	});
 }
 
@@ -1927,7 +1933,8 @@ function setupHttpsOptions() {
 			// Load the certificate files
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
-			server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
+			if(fs.existsSync(path.join("keys", config.host + "-ca.crt")))
+				server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
 			certs[config.host] = crypto.createCredentials({
 					key:  server_key,
@@ -3408,11 +3415,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
-	
-	radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
-	radialMenus[uniqueID+"_menu"].top = pointerY;
-	radialMenus[uniqueID+"_menu"].left = pointerX;
-	
+		
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	var now  = new Date();
@@ -3421,6 +3424,10 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	{
 		if( elem === null )
 		{
+			radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
+			radialMenus[uniqueID+"_menu"].top = pointerY;
+			radialMenus[uniqueID+"_menu"].left = pointerX;
+	
 			// Open a 'media' radial menu
 			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 		}
