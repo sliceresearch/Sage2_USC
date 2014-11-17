@@ -585,9 +585,14 @@
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop = position_data.elemTop - ui.offsetY;
 			var selectedControl = document.getElementById(position_data.elemId);
-
-			selectedControl.style.left = eLeft.toString() + "px";
-			selectedControl.style.top = eTop.toString() + "px";
+			
+			if(selectedControl !== undefined && selectedControl !== null) {
+				selectedControl.style.left = eLeft.toString() + "px";
+				selectedControl.style.top = eTop.toString() + "px";
+			}
+			else {
+				console.log("cannot find control: " + position_data.elemId);
+			}
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
