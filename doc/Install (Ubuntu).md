@@ -1,13 +1,13 @@
-### Install for Ubuntu (14.04) ###
+### Install for Ubuntu (14.04)
 
 **Last revision:** 01 May 2014
 
-##### Download #####
+##### Download
 
 * Download [Node.js](http://nodejs.org/)
 * Download [FFMpeg](http://www.ffmpeg.org/download.html) (2.2.1 "Muybridge" gzip tarball)
 
-##### Install Dependencies #####
+##### Install Dependencies
 
 * Open Terminal
     * `sudo apt-get install g++`
@@ -18,7 +18,7 @@
     * `sudo apt-get install git`
     * `sudo apt-get install libimage-exiftool-perl`
 
-##### Install Node.js #####
+##### Install Node.js
 * Open Terminal
     * `cd <Downloads_directory>`
     * `tar xzvf <downloaded_nodejs_tar.gz>`
@@ -27,7 +27,7 @@
     * `make`
     * `sudo make install`
 
-##### Install FFMpeg #####
+##### Install FFMpeg
 * Open Terminal
     * `cd <Downloads_directory>`
     * `tar xzvf <downloaded_ffmpeg_tar.gz>`
@@ -36,13 +36,13 @@
     * `make`
     * `sudo make install`
 
-##### Clone SAGE2 #####
+##### Clone SAGE2
 
 * Open Terminal
     * `cd <directory_to_install_SAGE2>`
     * `git clone https://bitbucket.org/sage2/sage2.git`
 
-##### Generate HTTPS Keys #####
+##### Generate HTTPS Keys
 
 * Open the file 'GO-linux' inside the '<SAGE2_directory>/keys/' folder
     * Add additional host names for your server in the variable `servers`  (optional)
@@ -51,10 +51,9 @@
     * `cd <SAGE2_directory>/keys`
     * `./GO-linux`
 
-##### Install Node.js Modules #####
+##### Install Node.js Modules
 
 * Open Terminal
      * `cd <SAGE2_directory>`
      * `npm install`
 
-###### Return to the [main page](https://bitbucket.org/sage2/sage2/wiki/Home) for configuration and running SAGE2 ######

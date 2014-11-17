@@ -1,8 +1,10 @@
-### Install for Linux openSUSE (13.1) ###
+### Install for Linux openSUSE (13.1)
+
+**Last revision:** DD Month YYYY
 
 For older versions of openSUSE (and future versions), the name of the packages might change slightly, but the instructions remain mostly valid.
 
-##### Install Dependencies #####
+##### Install Dependencies
 * In a Terminal window as 'root' user (or using a sudo command) 
  * The default version of nodejs provided by default is usually pretty old. It seems better to add the NodeJS repository to the system and install it from there:
     * `zypper ar http://download.opensuse.org/repositories/devel:/languages:/nodejs/openSUSE_13.1/ Node.js`
@@ -30,14 +32,14 @@ For older versions of openSUSE (and future versions), the name of the packages m
      * `zypper install ffmpeg` : Viewer and Converter for Images
      * `zypper install google-chrome-stable`: Google Chrome browser
 
-##### Clone SAGE2 #####
+##### Clone SAGE2
 
 * Open Terminal
     * `cd <directory_to_install_SAGE2>`
     * `env GIT_SSL_NO_VERIFY=true git clone https://bitbucket.org/sage2/sage2.git`
          * enter bitbucket login information when asked
 
-##### Generate HTTPS Keys #####
+##### Generate HTTPS Keys
 * Open the file 'GO-linux' inside the '<SAGE2_directory>/keys/' folder
  * Add additional host names for your server in the variable `servers` (optional)
     * for instance add the short name and the fully qualified domain name of your server
@@ -46,10 +48,9 @@ For older versions of openSUSE (and future versions), the name of the packages m
  * `cd <SAGE2_directory>/keys`
  * `./GO-linux`
 
-##### Install Node.js Modules #####
+##### Install Node.js Modules
 * Open Terminal
  * `cd <SAGE2_directory>`
  * `npm install`
 
 
-###### Return to the [main page](https://bitbucket.org/sage2/sage2/wiki/Home) for configuration and running SAGE2 ######

@@ -1,4 +1,4 @@
-### SAGE2 Application Methods: ###
+### SAGE2 Application Methods:
 | Method                                        | Parameters                                               |
 | --------------------------------------------- | -------------------------------------------------------- |
 | `init(id, width, height, resrc, date)`        | `id` is canvas element id, `width` is the initial application width, `height` is the initial application height, `resrc` is path to resource directory, `date` is the date |
@@ -150,7 +150,7 @@ init: function(id, width, height, resrc, date) {
 
 ```
 
-### Button ###
+### Button
 
 To add a button to the widget bar, the application may call addButton function on the controls. AddButton function takes one object with two properties, namely type and action. Type specifies the type of the button (appearance and animation of the button) and action is the callback that is executed when the button is clicked.
 
@@ -163,7 +163,7 @@ this.controls.addButton({type:"rewind", action:function(appObj, date){
 }});
 ```
 
-### Slider ###
+### Slider
 
 To add a slider to the widget bar, the application may call addSlider function on the controls. addSlider function takes an object with the following properties:
 
@@ -192,7 +192,7 @@ this.controls.addSlider({
                         });
 ```
 
-### Text Input ###
+### Text Input
 
 To add a slider to the widget bar, the application may call addSlider function on the controls. addSlider function takes an object with two properties, namely width and action. Width specifies the width of the text input widget (in pixels) and action is the callback that is executed when the Enter key is hit, which marks the end of the input.
 
@@ -203,7 +203,7 @@ this.controls.addTextInput({ width: , action: function(appObj, text){
         // text data from the widget is sent to this callback.
 }});
 ```
-### Label ###
+### Label
 
 To add a label to the widget bar, the application may call addLabel function on the controls. addLabel function takes an object with three properties, namely textLength, appObj and property. textLength specifies the maximum length of the string that will be displayed in the label. appObj is the instance of the application that this widget is bound to. property is the property of the appObj whose value will be converted to a string to be displayed in the label.
 

@@ -3,14 +3,14 @@ SAGE2
 
 Browser based implementation of SAGE. A cluster-based html viewer used for displaying elements across multiple browser windows. Based on Node.js, ffmpeg, poplar, image magic, and other JS libraries.
 
-### Install SAGE2 ###
+### Install SAGE2
 * [Install (Windows)](https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows))
 * [Install (Mac OS X)](https://bitbucket.org/sage2/sage2/wiki/Install%20(Mac%20OS%20X))
 * [Install (openSUSE)](https://bitbucket.org/sage2/sage2/wiki/Install%20(openSUSE))
 * [Install (Ubuntu)](https://bitbucket.org/sage2/sage2/wiki/Install%20(Ubuntu))
 
 
-#### Configure ####
+#### Configure
 * Create a [configuration file](https://bitbucket.org/sage2/sage2/wiki/Configuration) for your display environment
 * Save file in <SAGE2_directory>/config
 * Select your configuration file
@@ -19,7 +19,7 @@ Browser based implementation of SAGE. A cluster-based html viewer used for displ
     * Option 2: create a file 'config.txt' in <SAGE2_directory>  
 Specify the path to your configuration file in 'config.txt'
 
-#### Run ####
+#### Run
 * Open Terminal / Cmd
     * `cd <SAGE2_directory>`
     * `node server.js` (options: `-i` interactive prompt, `-f <file>` specify a configuration file)
@@ -36,7 +36,7 @@ Specify the path to your configuration file in 'config.txt'
         * SAGE Pointer: `https://<host>:<port>/sagePointer.html` (Allow pop-ups)
 * Create a [one button SAGE2 launcher](https://bitbucket.org/sage2/sage2/wiki/Launch%20(Server%20%26%20Displays)) for the server and displays
 
-#### Supported File Types ####
+#### Supported File Types
 * Images
     * JPEG
     * PNG
@@ -49,17 +49,17 @@ Specify the path to your configuration file in 'config.txt'
     * WEBM
 * PDFs
 
-### Configure SAGE2 ###
+### Configure SAGE2
 * [Configuration Specification](https://bitbucket.org/sage2/sage2/wiki/Configuration)
 
-### Launch SAGE2 ###
+### Launch SAGE2
 * [Launch (Server & Displays)](https://bitbucket.org/sage2/sage2/wiki/Launch%20(Server%20%26%20Displays))
 
-### Develop for SAGE2 ###
+### Develop for SAGE2
 * [SAGE2 Application API](https://bitbucket.org/sage2/sage2/wiki/SAGE2%20Application%20API)
 
-### Startup Scripts ###
+### Startup Scripts
 * [Using systemd to launch SAGE2](https://bitbucket.org/sage2/sage2/wiki/systemd%20startup) (Tested on OpenSuse 13.1)
 
-##### Notice #####
+##### Notice
 SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGE™ and SAGE2™).
