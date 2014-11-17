@@ -28,6 +28,8 @@ function radialmenu(id, ptrID) {
 	this.radialMenuScale = 1.0;
 	this.radialMenuSize = { x: 425 * this.radialMenuScale, y: 425 * this.radialMenuScale };
 	this.thumbnailWindowSize = { x: 1224, y: 860 };
+	
+	this.activeEventIDs = [];
 }
 
 radialmenu.prototype.start = function() {
@@ -50,29 +52,47 @@ radialmenu.prototype.setPosition = function(data) {
 	this.top = data.y + this.radialMenuSize.y/2;
 };
 
-radialmenu.prototype.onEvent = function(type, position, data) {
-	
+radialmenu.prototype.hasEventID = function(id) {
+	if( this.activeEventIDs.indexOf(id) === -1 )
+		return false;
+	else
+		return true;
+};
 
-	if( this.visible === true && type !== "pointerRelease" )
+radialmenu.prototype.onEvent = function(data) {
+	
+	var idIndex = this.activeEventIDs.indexOf(data.id);
+	if( idIndex !== -1 && data.type === "pointerRelease" )
+		this.activeEventIDs.splice( idIndex );
+				
+	if( this.visible === true && data.type !== "pointerRelease" )
 	{
 		// Press over radial menu, drag menu
 		//console.log((this.left - this.radialMenuSize.x/2), " < ", position.x, " < ", (this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x) );
 		//console.log((this.top - this.radialMenuSize.y/2), " < ", position.y, " < ", (this.top - this.radialMenuSize.y/2 + this.radialMenuSize.y) );
 		
-		if( position.x > this.left - this.radialMenuSize.x/2 && position.x <  this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x 
-			&& position.y > this.top  - this.radialMenuSize.y/2 && position.y < this.top - this.radialMenuSize.y/2 + this.radialMenuSize.y )
+		if( data.x > this.left - this.radialMenuSize.x/2 && data.x <  this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x 
+			&& data.y > this.top  - this.radialMenuSize.y/2 && data.y < this.top - this.radialMenuSize.y/2 + this.radialMenuSize.y )
 		{
 			//this.windowInteractionMode = false;
 			//console.log("over menu");
+			if( this.visible === true && data.type === "pointerPress" )
+				this.activeEventIDs.push( data.id );
+		
 			return true;
 		}
-		else if( position.x > this.left + this.radialMenuSize.x/2 && position.x <  this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x 
-			&& position.y > this.top - this.radialMenuSize.y/2 && position.y < this.top - this.radialMenuSize.y/2 + this.thumbnailWindowSize.y )
+		else if( data.x > this.left + this.radialMenuSize.x/2 && data.x <  this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x 
+			&& data.y > this.top - this.radialMenuSize.y/2 && data.y < this.top - this.radialMenuSize.y/2 + this.thumbnailWindowSize.y )
 		{
 			//this.windowInteractionMode = false;
 			//console.log("over thumb");
 			if( this.thumbnailWindowOpen === true )
+			{
+				if( this.visible === true && data.type === "pointerPress" )
+					this.activeEventIDs.push( data.id );
+				
 				return true;
+			}
 			else
 				return false;
 		}

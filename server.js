@@ -3479,7 +3479,9 @@ function radialMenuEvent( data )
 	var radialMenu = radialMenus[data.id+"_menu"];
 	if( radialMenu !== undefined )
 	{
-		if( radialMenu.onEvent( data.type, { x: data.x, y: data.y }, data.data ) )
+		radialMenu.onEvent( data )
+		
+		if( radialMenu.hasEventID(data.id) )
 		{
 			return true;
 		}
