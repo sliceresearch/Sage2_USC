@@ -11,12 +11,19 @@ end tell'
  
 sleep 5
 
-global_param="--new-window  --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--args --new-window  --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param --window-size=640,480 --window-position=0,0 --app=https://localhost:1442/audioManager.html  &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param --window-size=640,480 --window-position=0,0 --app=https://localhost:1443/audioManager.html  &
+
+sleep 1
 
 UDD=$HOME/.config/chrome-nfs/mac0
 mkdir -p $UDD/Default
 param="$global_param --window-position=0,0 --window-size=1080,1920 --user-data-dir=$UDD --app=https://localhost:1442/display.html?clientID="
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $param &
+
+sleep 1
 
 UDD=$HOME/.config/chrome-nfs/mac1
 mkdir -p $UDD/Default
