@@ -422,7 +422,7 @@ appLoader.prototype.readInstructionsFile = function(instructionsFile, callback) 
         instr.metadata = {};
         if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
             instr.metadata.title = instructions.title;
-        else instr.metadata.title = uploadedApps[i];
+        else instr.metadata.title = instr.appName;
         if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
             instr.metadata.version = instructions.version;
         else metadata.version = "1.0.0";
@@ -444,7 +444,8 @@ appLoader.prototype.readInstructionsFile = function(instructionsFile, callback) 
             instr.directory = ""
             if (instructions.directory !== undefined && instructions.directory !== null && instructions.directory !== "")
                 instr.directory = instructions.directory;
-            this.registryManager.register(uploadedApps[i], instructions.fileTypes, directory);
+            if(this.registryManager ===undefined || this.registryManager === null) this.registryManager = new registry();
+            this.registryManager.register(instr.appName, instructions.fileTypes, instr.directory);
             this.registryManager.writeRegistry();
         }
         instr.resizeMode = "proportional";
