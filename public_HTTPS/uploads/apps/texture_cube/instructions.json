@@ -1,5 +1,6 @@
 {
 	"main_script": "texture_cube.js",
+	"icon": "cube.webp",
 	"width": 400,
 	"height": 300,
 	"animation": true,

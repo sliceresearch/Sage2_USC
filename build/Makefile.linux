@@ -1,0 +1,35 @@
+.PHONY: package
+
+default: all
+
+all: download stage install binary package
+
+package:
+	zip -r -9 SAGE2-linux64.zip SAGE2
+
+download:
+	wget http://s3.amazonaws.com/nodejx/jx_suse64.zip
+	git archive --format=tar --remote=ssh://git@bitbucket.org:renambot/sage2/sage2.git --prefix=sage2/ --output="sage2.tar" master
+
+stage:
+	unzip -ju -d jx_linux64 jx_suse64.zip
+	tar xvf sage2.tar
+
+install:
+	cd sage2 && ../jx_linux64/jx install
+
+binary:
+	cp scripts/linux64/* sage2/
+	mkdir -p sage2/local
+	cd sage2 && ../jx_linux64/jx package server.js sage2 -native -slim GO-scripts,extras,public_HTTP,public_HTTPS,keys,config,build,local
+	rm -fr sage2/doc sage2/extras sage2/GO-scripts sage2/node_modules sage2/package.json sage2/server.js sage2/src sage2/build
+	mv sage2 SAGE2
+
+clean:
+	/bin/rm -f jx_suse64.zip
+	/bin/rm -fr SAGE2 sage2.tar
+
+#
+# files to keep in SAGE2:
+# config local  public_HTTPS tmp keys  public_HTTP sessions server.js
+

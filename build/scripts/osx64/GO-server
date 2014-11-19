@@ -1,0 +1,11 @@
+#!/bin/sh
+
+cd /Applications/SAGE2/
+
+export PATH=/Applications/SAGE2/local/bin:$PATH
+export DYLD_LIBRARY_PATH=/Applications/SAGE2/local/lib
+
+killall -9 sage2
+
+./sage2 -- -sl
+

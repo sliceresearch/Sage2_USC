@@ -33,6 +33,7 @@ function uiBuilder(json_cfg, clientID) {
 	this.pointerOffsetX = null; 
 	this.pointerOffsetY = null;
 	this.noDropShadow   = null;
+	this.uiHidden       = null;
 
 	// Aspect ratio of the wall and the browser	
 	this.wallRatio      = null;
@@ -40,7 +41,8 @@ function uiBuilder(json_cfg, clientID) {
 	this.ratio          = "fit";
 
 	this.pointerItems   = {};
-
+	this.radialMenus    = {};
+	
 	// Get handle on the main div
 	this.bg   = document.getElementById("background");
 	this.main = document.getElementById("main");
@@ -112,17 +114,26 @@ function uiBuilder(json_cfg, clientID) {
 					// This somehow forces a reflow of the div and show the scrollbars as needed
 					// Needed with chrome v36
 					_this.bg.style.display='none';
-					_this.bg.offsetHeight;
 					_this.bg.style.display='block';
 				}
 			};
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
 		} else {
-			if (typeof this.json_cfg.background.image !== "undefined" && this.json_cfg.background.image !== null) {
+			document.body.style.backgroundColor = "#000000";
+			this.bg.style.backgroundColor = this.json_cfg.background.color || "#333333";
+			this.bg.style.top    = "0px";
+			this.bg.style.left   = "0px";
+			this.bg.style.width  = this.json_cfg.resolution.width + "px";
+			this.bg.style.height = this.json_cfg.resolution.height + "px";
+			
+			this.main.style.width  = this.json_cfg.resolution.width  + "px";
+			this.main.style.height = this.json_cfg.resolution.height + "px";
+			
+			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
 				var bgImg = new Image();
 				bgImg.addEventListener('load', function() {				
-					if(_this.json_cfg.background.style == "tile"){
+					if(_this.json_cfg.background.image.style == "tile"){
 						var top = -1 * (_this.offsetY % bgImg.naturalHeight);
 						var left = -1 * (_this.offsetX % bgImg.naturalWidth);
 						
@@ -143,11 +154,13 @@ function uiBuilder(json_cfg, clientID) {
 					}
 					else {
 						var bgImgFinal;
-						var ext = _this.json_cfg.background.image.lastIndexOf(".");
-						if(_this.json_cfg.background.style == "fit" && (bgImg.naturalWidth != _this.json_cfg.totalWidth || bgImg.naturalHeight != _this.json_cfg.totalHeight))
-							bgImgFinal = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + ".png";
+						var ext = _this.json_cfg.background.image.url.lastIndexOf(".");
+						if(_this.json_cfg.background.image.style === "fit" && (bgImg.naturalWidth !== _this.json_cfg.totalWidth || bgImg.naturalHeight !== _this.json_cfg.totalHeight))
+							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + ".png";
 						else
-							bgImgFinal = _this.json_cfg.background.image.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.substring(ext);
+							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.url.substring(ext);
+						
+						console.log(bgImgFinal);
 						
 						_this.bg.style.top    = "0px";
 						_this.bg.style.left   = "0px";
@@ -165,26 +178,11 @@ function uiBuilder(json_cfg, clientID) {
 						_this.main.style.height = _this.json_cfg.resolution.height + "px";
 					}
 				}, false);
-				bgImg.src = this.json_cfg.background.image;
-			}
-			else {
-				this.bg.style.top    = "0px";
-				this.bg.style.left   = "0px";
-				this.bg.style.width  = this.json_cfg.resolution.width + "px";
-				this.bg.style.height = this.json_cfg.resolution.height + "px";
-				
-				this.main.style.width  = this.json_cfg.resolution.width  + "px";
-				this.main.style.height = this.json_cfg.resolution.height + "px";
+				bgImg.src = this.json_cfg.background.image.url;
 			}
 			
-			if (json_cfg.background.clip === true) {
+			if (this.json_cfg.background.clip !== undefined && this.json_cfg.background.clip === true) {
 				this.main.style.overflow = "hidden";
-
-				if (this.json_cfg.background.image === null) {
-					// if no image and clip, set the color of the div instead
-					document.body.style.backgroundColor = '#000000';
-					this.main.style.backgroundColor = this.json_cfg.background.color;
-				}
 			}
 		}
 	};
@@ -219,6 +217,7 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
+			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
 		} else {
@@ -228,8 +227,9 @@ function uiBuilder(json_cfg, clientID) {
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
-			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
+			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		}
 		if (this.json_cfg.ui.noDropShadow === true) this.noDropShadow = true;
 		else this.noDropShadow = false;
@@ -324,6 +324,8 @@ function uiBuilder(json_cfg, clientID) {
 			machine.textContent = url;
 		}
 		head.appendChild(fileref);
+		this.uiHidden = false;
+		this.showInterface();
 	};
 	
 	this.updateVersionText = function(data) {
@@ -392,18 +394,25 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.createSagePointer = function(pointer_data) {
-		var pointerElem = createDrawingElement(pointer_data.id, "pointerItem",
-							pointer_data.left - this.pointerOffsetX - this.offsetX,
-							pointer_data.top  - this.pointerOffsetY - this.offsetY,
-							this.pointerWidth, this.pointerHeight, 10000);
+		var pointerElem = document.createElement('div');
+		pointerElem.id = pointer_data.id;
+		pointerElem.className = "pointerItem";
+		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
+		pointerElem.style.top = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem); 
-
+		
 		var ptr = new pointer(); 
-		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color) ;
-		ptr.draw();
+		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
 
-		if (pointer_data.visible) pointerElem.style.display = "block";
-		else pointerElem.style.display = "none";
+		if (pointer_data.visible) {
+			pointerElem.style.display = "block";
+			ptr.isShown = true;
+		}
+		else {
+			pointerElem.style.display = "none";
+			ptr.isShown = false;
+		}
 
 		// keep track of the pointers
         this.pointerItems[pointerElem.id] = ptr;
@@ -418,24 +427,129 @@ function uiBuilder(json_cfg, clientID) {
 
 	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
-	    this.pointerItems[pointerElem.id].draw();
+		
+		this.pointerItems[pointerElem.id].isShown = true;
 	};
 
 	this.hideSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 		pointerElem.style.display = "none";
+		this.pointerItems[pointerElem.id].isShown = false;
 	};
 
 	this.updateSagePointerPosition = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
-		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top  = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		var translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+		pointerElem.style['-webkit-transform'] = translate;
+		pointerElem.style['-moz-transform']    = translate;
+		pointerElem.style['transform']         = translate;
 	};
+	
 	this.changeSagePointerMode = function(pointer_data) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
-		this.pointerItems[pointer_data.id].draw();
 	};
+	
+	this.createRadialMenu = function(data) {
 
+		var menuElem = document.getElementById(data.id+"_menu");
+
+		if( !menuElem )
+		{
+			var radialMenuScale = 1; //ui.widgetControlSize * 0.03;
+			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
+								data.x  - this.offsetX,
+								data.y - this.offsetY,
+								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9000);
+			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
+								data.x  - this.offsetX,
+								data.y - this.offsetY,
+								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 8900);
+			this.main.appendChild(menuElem); 
+			this.main.appendChild(menuElem2); 
+			
+			var menu = new radialMenu();
+			
+			menu.init(data.id+"_menu", menuElem2) ;
+			
+			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+			
+			menu.thumbnailWindowElement.style.left = menuElem.style.left;
+			menu.thumbnailWindowElement.style.top = menuElem.style.top;
+			
+			// keep track of the menus
+			this.radialMenus[data.id+"_menu"] = menu;
+			this.radialMenus[data.id+"_menu"].draw();
+		}
+		if( this.radialMenus[menuElem.id].visible === false )
+		{
+			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+			
+			this.radialMenus[menuElem.id].thumbnailWindowElement.style.left = menuElem.style.left;
+			this.radialMenus[menuElem.id].thumbnailWindowElement.style.top = menuElem.style.top;
+			
+			this.radialMenus[menuElem.id].visible = true;
+			menuElem.style.display = "block";
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
+	this.radialMenuEvent = function(data) {
+		
+		for (var menuID in this.radialMenus) {
+			var menuElem = document.getElementById(menuID);
+			var menu = this.radialMenus[menuID];
+
+			if( menuElem !== null )
+			{
+				var rect = menuElem.getBoundingClientRect();
+				
+				pointerX = data.x - rect.left - this.offsetX;
+				pointerY = data.y - rect.top - this.offsetY;
+					
+				if( menu.visible )
+				{
+					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
+					menuElem.style.display = "block";
+					menu.thumbnailWindowElement.style.display = "block";
+
+					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
+					
+					if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
+					{
+						menu.draw();
+					}
+				}
+				else
+				{
+					menuElem.style.display = "none";
+					menu.thumbnailWindowElement.style.display = "none";
+				}
+			}
+		}
+	};
+	
+	this.updateRadialMenu = function(data) {
+		
+		var menuElem = document.getElementById(data.id+"_menu");
+		if( menuElem !== null )
+		{
+			this.radialMenus[menuElem.id].updateFileList(data.fileList);
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
+	this.updateRadialMenuApps = function(data) {
+		console.log("updateRadialMenuApps");
+		var menuElem = document.getElementById(data.id+"_menu");
+		if( menuElem !== null )
+		{
+			this.radialMenus[menuElem.id].updateAppFileList(data.fileList);
+			this.radialMenus[menuElem.id].draw();
+		}
+	};
+	
 	this.addRemoteSite = function(data) {
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
@@ -483,30 +597,50 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.hideInterface = function() {
-		// Hide the top bar
-		this.upperBar.style.display = 'none';
-		// Hide the pointers
-		for (var p in this.pointerItems) {
-			this.pointerItems[p].element.style.display = 'none';
-		}
-		// Hide the apps top bar
-		var applist = document.getElementsByClassName("windowTitle");
-		for (var i = 0; i < applist.length; i++) {
-			applist[i].style.display = 'none';
+		if (!this.uiHidden) {
+			// Hide the top bar
+			this.upperBar.style.display = 'none';
+			// Hide the pointers
+			for (var p in this.pointerItems) {
+				if (this.pointerItems[p].div)
+					this.pointerItems[p].div.style.display = 'none';
+			}
+			// Hide the apps top bar
+			var applist = document.getElementsByClassName("windowTitle");
+			for (var i = 0; i < applist.length; i++) {
+				applist[i].style.display = 'none';
+			}
+			// Hide the apps border
+			var itemlist = document.getElementsByClassName("windowItem");
+			for (var i = 0; i < itemlist.length; i++) {
+				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			this.uiHidden = true;
 		}
 	};
+
 	this.showInterface = function() {
-		// Show the top bar
-		this.upperBar.style.display = 'block';
-		// Show the pointers (only if they have a name, ui pointers dont have names)
-		for (var p in this.pointerItems) {
-			if (this.pointerItems[p].label !== "")
-				this.pointerItems[p].element.style.display = 'block';
-		}
-		// Show the apps top bar
-		var applist = document.getElementsByClassName("windowTitle");
-		for (var i = 0; i < applist.length; i++) {
-			applist[i].style.display = 'block';
+		if (this.uiHidden) {
+			// Show the top bar
+			this.upperBar.style.display = 'block';
+			// Show the pointers (only if they have a name, ui pointers dont have names)
+			for (var p in this.pointerItems) {
+				if (this.pointerItems[p].label !== "") {
+					if (this.pointerItems[p].isShown === true)
+						this.pointerItems[p].div.style.display = 'block';
+				}
+			}
+			// Show the apps top bar
+			var applist = document.getElementsByClassName("windowTitle");
+			for (var i = 0; i < applist.length; i++) {
+				applist[i].style.display = 'block';
+			}
+			// Show the apps border
+			var itemlist = document.getElementsByClassName("windowItem");
+			for (var i = 0; i < itemlist.length; i++) {
+				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			this.uiHidden = false;
 		}
 	};
 }

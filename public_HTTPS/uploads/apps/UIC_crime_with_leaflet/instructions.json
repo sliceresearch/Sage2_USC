@@ -1,16 +1,17 @@
 {
 	"main_script": "leaflet.js",
-	"icon": "watch.jpg",
+	"icon": "watch.png",
 	"width": 800,
 	"height": 600,
 	"animation": true,
 	"resize": "free",
 	"dependencies": [
 		"scripts/d3.v3.min.js",
-		"scripts/leaflet.js"
+		"scripts/leaflet.js",
+		"policeDistricts.js"
 	],
 	"title": "UIC crime",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Shows crime data around UIC with D3.js and leaflet map API",
 	"keywords": [ "crime", "map", "leaflet", "d3", "geo" ],
 	"author": "Andrew Johnson <lenzman@me.com>",

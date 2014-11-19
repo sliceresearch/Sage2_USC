@@ -2,43 +2,40 @@
 	Configuration for CAVE2
 */
 {
-	"host": "lyra.evl.uic.edu", // hostname of the web server
-	"port": 443, // port of the HTTPS server: 443 for default
-	"index_port": 80, // port of the HTTP public page: 80 for default
+	"host": "lyra.evl.uic.edu",
+	"port": 443,
+	"index_port": 80,
 	"background": {
-		"color": "#333333", // background color: used if no image or if image has transparency
-		"image": "images/background/chicago-pano-october-2011-bw.jpg",
-		"style": "stretch", // stretch image to fit entire large display
-		"clip": true // clip the viewport on each display
+		"color": "#333333",
+		"image": {
+			"url": "images/background/chicago-pano-october-2011-bw.jpg",
+			"style": "stretch"
+		},
+		"clip": true
 	},
 	"ui": {
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
-		"menubar": {
-			"textColor": "rgba(255, 255, 255, 1.0)"
-		}
 	},
-	"resolution": { // resolution of each display
+	"resolution": {
 		"width": 1366,
 		"height":  1536
 	},
 	// for experimental features: true/false
-	experimental: {
-		"webbrowser": false,  // enable the awesomium module
-		
+	"experimental": {
 		"omicron": // enable omicron input module
 		{
 			// Standard 'SAGE' connection
 			// SAGE listens for a sageinputserver to stream events
-			enable: true,
-			dataPort: 20015,
+			"enable": true,
+			"dataPort": 20015,
 			
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events
-			useOinputserver: true,
-			inputServerIP: "cave2tracker.evl.uic.edu",
-			msgPort: 28000
+			"useOinputserver": true,
+			"inputServerIP": "cave2tracker.evl.uic.edu",
+			"msgPort": 28000
 		}
 	},
 	"layout": {
@@ -47,182 +44,146 @@
 	},
 	"displays": [
 		{
-			"ID": 0,
 			"row": 0,
 			"column": 0
 		},
 		{
-			"ID": 1,
 			"row": 1,
 			"column": 0
 		},
 		{
-			"ID": 2,
 			"row": 0,
 			"column": 1
 		},
 		{
-			"ID": 3,
 			"row": 1,
 			"column": 1
 		},
 		{
-			"ID": 4,
 			"row": 0,
 			"column": 2
 		},
 		{
-			"ID": 5,
 			"row": 1,
 			"column": 2
 		},
 		{
-			"ID": 6,
 			"row": 0,
 			"column": 3
 		},
 		{
-			"ID": 7,
 			"row": 1,
 			"column": 3
 		},
 		{
-			"ID": 8,
 			"row": 0,
 			"column": 4
 		},
 		{
-			"ID": 9,
 			"row": 1,
 			"column": 4
 		},
 		{
-			"ID": 10,
 			"row": 0,
 			"column": 5
 		},
 		{
-			"ID": 11,
 			"row": 1,
 			"column": 5
 		},
 		{
-			"ID": 12,
 			"row": 0,
 			"column": 6
 		},
 		{
-			"ID": 13,
 			"row": 1,
 			"column": 6
 		},
 		{
-			"ID": 14,
 			"row": 0,
 			"column": 7
 		},
 		{
-			"ID": 15,
 			"row": 1,
 			"column": 7
 		},
 		{
-			"ID": 16,
 			"row": 0,
 			"column": 8
 		},
 		{
-			"ID": 17,
 			"row": 1,
 			"column": 8
 		},
 		{
-			"ID": 18,
 			"row": 0,
 			"column": 9
 		},
 		{
-			"ID": 19,
 			"row": 1,
 			"column": 9
 		},
 		{
-			"ID": 20,
 			"row": 0,
 			"column": 10
 		},
 		{
-			"ID": 21,
 			"row": 1,
 			"column": 10
 		},
 		{
-			"ID": 22,
 			"row": 0,
 			"column": 11
 		},
 		{
-			"ID": 23,
 			"row": 1,
 			"column": 11
 		},
 		{
-			"ID": 24,
 			"row": 0,
 			"column": 12
 		},
 		{
-			"ID": 25,
 			"row": 1,
 			"column": 12
 		},
 		{
-			"ID": 26,
 			"row": 0,
 			"column": 13
 		},
 		{
-			"ID": 27,
 			"row": 1,
 			"column": 13
 		},
 		{
-			"ID": 28,
 			"row": 0,
 			"column": 14
 		},
 		{
-			"ID": 29,
 			"row": 1,
 			"column": 14
 		},
 		{
-			"ID": 30,
 			"row": 0,
 			"column": 15
 		},
 		{
-			"ID": 31,
 			"row": 1,
 			"column": 15
 		},
 		{
-			"ID": 32,
 			"row": 0,
 			"column": 16
 		},
 		{
-			"ID": 33,
 			"row": 1,
 			"column": 16
 		},
 		{
-			"ID": 34,
 			"row": 0,
 			"column": 17
 		},
 		{
-			"ID": 35,
 			"row": 1,
 			"column": 17
 		}

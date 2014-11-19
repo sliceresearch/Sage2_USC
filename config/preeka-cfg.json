@@ -8,17 +8,16 @@
 
 	background: {
 		color: "#9a9a9a",
-		image: "images/background/dbgrid.png",
-		style: "tile"
+		image: {
+			url: "images/background/dbgrid.png",
+			style: "tile"
+		}
 	},
 
 	ui: {
 		show_url: false,
 		show_version: false,
 		clock: 12,
-		menubar: {
-			textColor: "rgba(255, 255, 255, 1.0)"
-		},
 		auto_hide_ui: true,
 		auto_hide_delay: 20,
 		noDropShadow: true,
@@ -38,27 +37,22 @@
 	},
 	displays: [
 		{
-			ID: 0,
 			row: 0,
 			column: 0
 		},
 		{
-			ID: 1,
 			row: 1,
 			column: 0
 		},
 		{
-			ID: 2,
 			row: 2,
 			column: 0
 		},
 		{
-			ID: 3,
 			row: 3,
 			column: 0
 		},
 		{
-			ID: 4,
 			row: 4,
 			column: 0
 		}
@@ -88,7 +82,5 @@
 			host: "mesaverde.evl.uic.edu",
 			port: 443
 		}
-	],
-	advanced: {
-	}
+	]
 }

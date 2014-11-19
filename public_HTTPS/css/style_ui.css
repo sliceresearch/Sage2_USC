@@ -1,0 +1,649 @@
+@charset "UTF-8";
+
+/* SAGE2 is available for use under the SAGE2 Software License
+ * 
+ * University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+ * and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+ * Applications (LAVA)
+ * 
+ * See full text, terms and conditions in the LICENSE.txt included file
+ *
+ * Copyright (c) 2014
+ */
+
+/* CSS Document */
+
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	margin: 0px;
+	padding: 0px;
+}
+
+p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
+label {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
+span {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+}
+
+#mainUI {
+	margin: 0px;
+	overflow: auto;
+}
+
+#displayUI {
+	position: relative;
+	float: left;
+	margin: 10px 10px 0px 10px;
+}
+
+#sage2UI {
+	border: solid 2px #565656;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+#menuUI {
+	float: left;
+}
+
+#textWidthTest {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	white-space: nowrap;
+	position: absolute;
+	visibility: hidden;
+	height: auto;
+	width: auto;
+}
+
+.uiButton {
+	position: relative;
+	width: 165px;
+	height: 64px;
+}
+
+.uiButton img {
+	position: absolute;
+	top: 8px;
+    left: 8px;
+	-webkit-transition: 100ms ease-in-out;
+	-moz-transition: 100ms ease-in-out;
+	transition: 100ms ease-in-out;
+}
+
+.uiButton:hover img {
+	-webkit-transform: scale(1.0);
+	-moz-transform: scale(1.0);
+	transform: scale(1.0);
+}
+
+.uiButton p {
+	position: absolute;
+	top: 20px;
+	left: 64px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	white-space: nowrap;
+	padding: 2px 4px 2px 4px;
+	color: #FFFFFF;
+	background-color: #787878;
+	border-radius: 8px;
+	opacity: 1.0;
+	cursor: default;
+	-webkit-transition: opacity 100ms ease-in-out;
+	-moz-transition: opacity 100ms ease-in-out;
+	transition: opacity 100ms ease-in-out;
+}
+
+.uiButton:hover img + p {
+	opacity: 1.0;
+}
+
+.clear {
+	clear: both;
+}
+
+
+/***** Light Box    *****/
+#sage2pointerDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#appLauncherDialog {
+	left: 15%;
+	top: 15%;
+	width: 70%;
+	height: 70%;
+}
+
+#appListContainer {
+	position: absolute;
+	left: 12px;
+	top: 12px;
+	margin: 0px;
+	overflow: scroll;
+}
+
+#appList {
+	width: 100%;
+	background-color: #484848;
+}
+
+#appList p {
+	color: #FFFFFF;
+}
+
+#appOpenBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#appCloseBtn {
+	position: absolute;
+	right: 75px;
+	bottom: 10px;
+}
+
+#mediaBrowserDialog {
+	left: 25%;
+	top: 25%;
+	width: 50%;
+	height: 50%;
+}
+
+#fileListContainer {
+	position: absolute;
+	left: 12px;
+	top: 12px;
+	margin: 0px;
+	background-color: #484848;
+	overflow: scroll;
+}
+
+#fileListElems {
+	text-align: left;
+}
+
+#fileListElems label {
+	color: #FFFFFF;
+}
+
+#fileListElems li {
+	color: #FFFFFF;
+}
+
+#metadata {
+	position: absolute;
+	margin: 0px;
+	padding: 0px;
+	top: 12px;
+	text-align: center;
+	background-color: #484848;
+	border-left: solid 1px #000000;
+}
+
+#thumbnail {
+	margin-top: 5%;
+	border: none;
+}
+
+#metadata_text {
+	display: block;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+
+#fileOpenBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+#fileCloseBtn {
+	position: absolute;
+	right: 75px;
+	bottom: 10px;
+}
+#fileDeleteBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+#fileUploadBtn {
+	position: absolute;
+	left: 82px;
+	bottom: 10px;
+}
+
+#arrangementDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+
+#arrangementItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+#clearcontentContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#tilecontentContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#savesessionContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#arrangementCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+
+
+#infoDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+#infoItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+#helpContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#adminContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#infoContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#informationContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+#infoCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+
+
+#settingsDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#settingsItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+#browserDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#browserItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+#browserItemsContainer {
+	width: 400px;
+	float: left;
+	margin-right: 10px;
+}
+
+#browserItemsContainer td {
+	padding-bottom: 4px;
+}
+
+#openWebpageUrl {
+	width: 330px;
+	height: 16px;
+}
+
+#browserOpenBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#browserCloseBtn {
+	position: absolute;
+	right: 90px;
+	bottom: 10px;
+}
+
+
+#sage2PointerSettingsContainer {
+	width: 225px;
+	float: left;
+	margin-right: 10px;
+}
+
+#screenSharingSettingsContainer {
+	width: 225px;
+	float: left;
+}
+
+#sage2PointerSettingsContainer td {
+	padding-bottom: 4px;
+}
+
+#screenSharingSettingsContainer td {
+	padding-bottom: 4px;
+}
+
+#sage2PointerLabel {
+	width: 120px;
+	height: 16px;
+}
+
+#sage2PointerColor {
+	width: 50px;
+	height: 25px;
+}
+
+#screenShareQuality {
+	width: 100px;
+}
+
+#screenShareQualityIndicator {
+	margin-left: 4px;
+}
+
+#settingsCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#ffShareScreenDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width: 265px;
+	height: 60px;
+}
+
+#ffShareScreenBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+#ffShareWindowBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+
+#localfileDialog {
+	top: 40%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width:  510px;
+	height: 100px;
+}
+
+#cancelFilesBtn2 {
+	position: absolute;
+	right: 10px;
+	top: 12px;
+}
+
+#localfileItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+
+#uploadDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	width: 310px;
+	height: 60px;
+}
+#localFilesBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+}
+#dropboxFilesBtn {
+	position: absolute;
+	left: 90px;
+	bottom: 10px;
+}
+#cancelFilesBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#blackoverlay {
+	display: none;
+	position: fixed;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: #000000;
+	z-index: 1001;
+	opacity: .65;
+	cursor: default;
+}
+
+#sage2MobileContainer {
+	display: none;
+	position: fixed;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: #464646;
+	z-index: 1001;
+	cursor: default;
+}
+
+#sage2Mobile {
+	width: 100%;
+	height: 100%;
+}
+
+#sage2MobileTrackpad {
+	width: 100%;
+	height: 80%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileButtons {
+	width: 100%;
+	height: 20%;
+}
+
+#sage2MobileLeftButton {
+	float: left;
+	width: 50%;
+	height: 100%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileRightButton {
+	float: left;
+	width: 50%;
+	height: 100%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+.fileItem {
+	cursor: default;
+}
+
+.button {
+	padding: 10px 12px 10px 12px;
+	border-radius: 12px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-color: #787878;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+.button:active {
+	background-color: #565656;
+}
+
+.dialog {
+	display: none;
+	position: absolute;
+	border: 4px solid #787878;
+	border-radius: 12px;
+	background-color: #FFFFFF;
+	z-index:1002;
+	overflow: hidden;
+	cursor: default;
+}
+
+/***** File Browser *****/
+
+.css-treeview {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+.css-treeview ul,
+.css-treeview li {
+	padding: 0px;
+	margin: 6px 3px 0px 3px;
+	list-style: none;
+	display: block;
+	white-space: nowrap;
+}
+
+.css-treeview input {
+	position: absolute;
+	opacity: 0;
+}
+
+.css-treeview label {
+	cursor: pointer;
+}
+
+.css-treeview input + label {
+	background: url('../images/dir-closed.svg') no-repeat;
+	background-size: 32px 17px;
+    padding: 3px 0px 3px 42px;
+    background-position: 0px 0px;
+}
+
+.css-treeview input:checked + label {
+	background: url('../images/dir-open.svg') no-repeat;
+	background-size: 32px 17px;
+}
+
+.css-treeview input ~ ul {
+	margin: 0px;
+	display: none;
+}
+
+.css-treeview input ~ ul > li {
+	margin: 0px;
+	padding-left: 48px;
+	font-size: 11px;
+}
+
+.css-treeview input:checked ~ ul {
+	display: block;
+}
+
+/******** Text - Width Test ********/
+#textWidthTest {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	visibility: hidden;
+	height: auto;
+	width: auto;
+	white-space: nowrap;
+}

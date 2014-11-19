@@ -16,9 +16,6 @@
 		clock: 12,
 		show_version: true,
 		show_url:     true,
-		"menubar": {
-			"textColor": "rgba(255, 255, 255, 1.0)"
-		}
 	},
 	resolution: {
 		width: 700,
@@ -26,9 +23,7 @@
 	},
 	// for experimental features: true/false
 	experimental: {
-		"webbrowser": false,  // enable the awesomium module
-		"omicron": // enable omicron input module
-		{
+		omicron: { // enable omicron input module
 			enable: true,
 			dataPort: 30005,
 			
@@ -50,12 +45,10 @@
 	},
 	displays: [
 		{
-			ID: 0,
 			row: 0,
 			column: 0
 		},
 		{
-			ID: 1,
 			row: 0,
 			column: 1
 		},

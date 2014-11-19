@@ -1,0 +1,51 @@
+/*
+	default configuration of the server - Mac OS X, and Linux
+*/
+{
+	host: "localhost", // hostname of the web server
+	port: 9090,        // port of the HTTPS server: 443 for default
+	index_port: 9292,  // port of the HTTP public page
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+	ui: {
+		clock: 12,           // clock setting: 12-hour or 24-hour
+		show_version: true,  // shows SAGE2 version in menu bar
+		show_url: true,      // shows SAGE2 url in menu bar
+		menubar: {
+			backgroundColor: "rgba(0, 0, 0, 0.5)",
+			textColor: "rgba(255, 255, 255, 1.0)",
+			remoteConnectedColor: "rgba(55, 153, 130, 1.0)",
+			remoteDisconnectedColor: "rgba(173, 42, 42, 1.0)"
+		},
+		auto_hide_ui: false,    // auto-hide the wall UI (menu bar, application title bars, etc.)
+		auto_hide_delay: 30,    // delay in seconds
+		minWindowWidth:  220,   // default:   8% wall minimum dimension
+		minWindowHeight: 120,   // default:   8% wall minimum dimension
+		maxWindowWidth:  2048,  // default: 120% wall maximum dimension
+		maxWindowHeight: 2048   // default: 120% wall maximum dimension
+	},
+	resolution: {
+		width: 1280,
+		height: 720
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	]
+}

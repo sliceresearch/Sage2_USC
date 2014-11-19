@@ -1,0 +1,17 @@
+{
+	"main_script": "widget_demo.js",
+	"icon": "widget.webp",
+	"type": "canvas",
+	"width": 600,
+	"height": 720,
+	"animation": "timer",
+	"interval": 250,
+	"dependencies": [
+	],
+	"title": "Widget Demo",
+	"version": "1.0.0",
+	"description": "A simple demo app to show widget in action",
+	"keywords": [ "demo", "widget"],
+	"author": "Krishna Bharadwaj <krishnaknbharadwaj@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

@@ -1,0 +1,72 @@
+{
+	host: "deimos.evl.uic.edu",
+	port: 1442,
+	index_port: 1081,
+	ui: {
+		// clock setting: 12-hour or 24-hour
+		clock: 12,
+		
+		show_version: false,
+		show_url:     false,
+		auto_hide_ui: true,
+		auto_hide_delay: 10,
+		
+		menubar: {
+			textColor: "rgba(255, 255, 255, 1.0)"
+		},
+
+		// User specified values (in pixel)
+		titleBarHeight: 30,
+		titleTextSize:  18,
+		pointerSize:    120,
+		noDropShadow:   true,
+	},
+
+	background: {
+		color: "#000000",
+		image: {
+			url: "images/background/moonvalley3.jpg",
+			style: "fit"
+		}
+	},
+	resolution: {
+		width: 1080,
+		height: 1920
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1"
+	],
+	remote_sites: [
+		{
+			name: "Classroom",
+			host: "iridium.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Green Table",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Right",
+			host: "deimos.evl.uic.edu",
+			port: 1443
+		}
+	]
+}

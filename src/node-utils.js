@@ -44,63 +44,30 @@ function getFullVersion(callback) {
 
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
-	var cmd = "git log --date=\"short\" --format=\"%d|%h|%ad\" -n 1";
-	exec(cmd, { cwd:  dirroot, timeout: 3000}, function(err, stdout, stderr) {
+	var cmd1 = "git rev-parse --abbrev-ref HEAD";
+	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
 		if(err) { callback(fullVersion); return; }
 		
-		// parsing the results
-		var result = stdout.replace(/\r?\n|\r/g, "");
-		var parse = result.split("|");
-		var branchList = parse[0].split(",");
-		var branch = branchList[branchList.length-1];
+		var branch = stdout.substring(0, stdout.length-1);
+		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
+		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
+			if(err) { callback(fullVersion); return; }
 		
-		// filling up the object
-		fullVersion.branch = branch.substring(1, branch.length-1);
-		fullVersion.commit = parse[1];
-		fullVersion.date   = parse[2].replace(/-/g, "/");
+			// parsing the results
+			var result = stdout.replace(/\r?\n|\r/g, "");
+			var parse = result.split("|");
 		
-		// return the object in the callback paramter
-		callback(fullVersion);
+			// filling up the object
+			fullVersion.branch = branch; //branch.substring(1, branch.length-1);
+			fullVersion.commit = parse[0];
+			fullVersion.date   = parse[1].replace(/-/g, "/");
+		
+			// return the object in the callback paramter
+			callback(fullVersion);
+		});
 	});
-}
-
-/**
- * Utility function to compare two strings independently of case.
- * Used for sorting
- *
- * @method compareString
- * @param a {String} first string
- * @param b {String} second string
- */
-function compareString(a, b) {
-	var nA = a.toLowerCase();
-	var nB = b.toLowerCase();
-	if (nA < nB) return -1;
-	else if(nA > nB) return 1;
-	return 0;
-}
-
-/**
- * Utility function to compare two objects based on filename independently of case.
- * Needs a .exif.FileName field
- * Used for sorting
- *
- * @method compareFilename
- * @param a {Object} first object
- * @param b {Object} second object
- */
-function compareFilename(a, b) {
-	var nA = a.exif.FileName.toLowerCase();
-	var nB = b.exif.FileName.toLowerCase();
-	if (nA < nB) return -1;
-	else if(nA > nB) return 1;
-	return 0;
 }
 
 
 exports.getShortVersion = getShortVersion;
 exports.getFullVersion  = getFullVersion;
-
-exports.compareString   = compareString;
-exports.compareFilename = compareFilename;
-

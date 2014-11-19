@@ -3,7 +3,7 @@
 tentakel pkill -HUP chrome
 
 
-global_param="--window-size=1366,1536 --window-position=0,0 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble"
+global_param="--window-size=1366,1536 --window-position=0,0 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
 
 
 machines="10.0.8.201 10.0.8.202 10.0.8.203 10.0.8.204 10.0.8.205 10.0.8.206 10.0.8.207 10.0.8.208 10.0.8.209 10.0.8.210 10.0.8.211 10.0.8.212 10.0.8.213 10.0.8.214 10.0.8.215 10.0.8.216 10.0.8.217 10.0.8.218 10.0.8.219 10.0.8.220 10.0.8.221 10.0.8.222 10.0.8.223 10.0.8.224 10.0.8.225 10.0.8.226 10.0.8.227 10.0.8.228 10.0.8.229 10.0.8.230 10.0.8.231 10.0.8.232 10.0.8.233 10.0.8.234 10.0.8.235 10.0.8.236"

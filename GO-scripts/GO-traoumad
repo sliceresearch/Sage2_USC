@@ -1,0 +1,46 @@
+#!/bin/sh
+
+killall -HUP chrome
+
+global_param="--new-window --window-size=3840,1080  --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+
+# Launch Audio Manager
+UDD=$HOME/.config/chrome-nfs/traoumad_audio
+mkdir -p $UDD/Default
+audio_param="--new-window --window-size=768,580 --allow-file-access-from-files --user-data-dir=$UDD"
+env DISPLAY=:0.0 google-chrome $audio_param 'https://traoumad.evl.uic.edu/audioManager.html' &
+
+sleep 1.5
+
+# Launch Display (client 0)
+UDD=$HOME/.config/chrome-nfs/traoumad_0
+mkdir -p $UDD/Default
+param="$global_param --user-data-dir=$UDD"
+env DISPLAY=:0.0 google-chrome $param 'https://traoumad.evl.uic.edu/display.html?clientID=0' &
+
+
+sleep 1.5
+export DISPLAY=:0.0
+
+# Move Audio Manager to the proper screen
+result="$(xdotool search --name 'Audio Manager - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
+
+
+# Move Display Client to the proper screen
+result="$(xdotool search --name 'SAGE2: Display - Google Chrome')"
+arr=($result)
+aLen=${#arr[@]}
+lastElem=`expr $aLen - 1`
+
+#xdotool windowmove ${arr[$lastElem]} 0 0
+xdotool windowmove ${arr[0]} 0 0
+
+xdotool mousemove --sync 10 10
+xdotool mousemove --sync 0 0
+

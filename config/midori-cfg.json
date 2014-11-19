@@ -1,0 +1,81 @@
+/*
+	default configuration of the server - Windows
+*/
+{
+	host: "midori.evl.uic.edu", // hostname of the web server
+	port: 443,                  // port of the HTTPS server: 443 for default
+	index_port: 80,             // port of the HTTP public page
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		},
+		clip: true
+	},
+	ui: {
+		clock: 24,             // clock setting: 12-hour or 24-hour
+		show_version: false,   // shows SAGE2 version in menu bar
+		show_url: true,        // shows SAGE2 url in menu bar
+		noDropShadow: true,    // don't show drop shadow on wall UI decoration
+		auto_hide_ui: true,    // auto-hide the wall UI (menu bar, application title bars, etc.)
+		auto_hide_delay: 120,  // delay in seconds
+	},
+	resolution: {
+		width: 12288,
+		height: 2160
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1",
+		"localhost"
+	],
+	remote_sites: [
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Cyber-Commons",
+			host: "iridium.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
+		}
+	],
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/local/bin/"
+	},
+	apis: {
+		twitter: {
+			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
+			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
+			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
+			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
+		}
+    }
+}

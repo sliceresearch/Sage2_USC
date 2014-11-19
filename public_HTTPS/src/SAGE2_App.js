@@ -14,9 +14,9 @@ var SAGE2_App = Class.extend( {
 		this.div          = null;
 		this.element      = null;
 		this.resrcPath    = null;
+		this.moveEvents   = "never";
 		this.resizeEvents = "never";
-		this.state = {};
-		console.log("SAGE2_App:", this.state);
+		this.state        = {};
 	
 		this.startDate = null;
 		this.prevDate  = null;
@@ -29,11 +29,11 @@ var SAGE2_App = Class.extend( {
 		this.timer  = null;
 		this.maxfps = null;
 		this.redraw = null;
-		this.enableControls = null;
-		this.controls = null;
-		this.cloneable = null;
-		this.requestForClone = null;
 		this.sticky = null;
+		this.controls  = null;
+		this.cloneable = null;
+		this.enableControls  = null;
+		this.requestForClone = null;
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -54,7 +54,7 @@ var SAGE2_App = Class.extend( {
 		this.startDate = date;
 
 		if (this.enableControls === true)
-			this.controls = new widgetSpec(id);
+			this.controls = new SAGE2WidgetControlBar(id);
 		
 		this.prevDate  = date;
 		this.frame     = 0;
@@ -179,6 +179,14 @@ var SAGE2_App = Class.extend( {
 		msgObject.height = newHeight;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
+	},
+	
+	broadcast: function (funcName, data) {
+		broadcast({app: this.div.id, func: funcName, data: data});
+	},
+	
+	searchTweets: function(funcName, query, broadcast) {
+		searchTweets({app: this.div.id, func: funcName, query: query, broadcast: broadcast});
 	},
 
 	// Prints message to local browser console and send to server

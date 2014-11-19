@@ -182,18 +182,18 @@ var googlemaps = SAGE2_App.extend( {
 			this.scrollAmount += data.wheelDelta;
 			
 			if (this.scrollAmount >= 128) {
-				// zoom in
+				// zoom out
 				var z = this.map.getZoom();
-				this.map.setZoom(z+1);
+				this.map.setZoom(z-1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
 				
 				this.scrollAmount -= 128;
 			}
 			else if (this.scrollAmount <= -128) {
-				// zoom out
+				// zoom in
 				var z = this.map.getZoom();
-				this.map.setZoom(z-1);
+				this.map.setZoom(z+1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
 				

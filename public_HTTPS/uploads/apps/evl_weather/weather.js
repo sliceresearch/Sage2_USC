@@ -21,6 +21,9 @@ var weather = SAGE2_App.extend( {
         this.resizeEvents = "continuous"; //onfinish
         this.svg = null;
 
+    // Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+    this.enableControls = true;
+
     this.gwin = {};
     this.myTag = "";
   
@@ -90,7 +93,7 @@ var weather = SAGE2_App.extend( {
     this.glob.temp_hot            = 85;
     this.glob.temp_nice           = 70;
     this.glob.temp_cold           = 60;
-    this.glob.temp_colderer       = 30;
+    this.glob.temp_colderer       = 32;
     this.glob.temp_coldererer     = 0;
 
     // add the temperature unit into the state
@@ -787,6 +790,27 @@ updateWindow: function ()
         } else {
             this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
         }
+
+        // create the widgets
+        console.log("creating controls");
+        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.state.itsF = "F";
+            this.updateAll();
+        }.bind(this)});
+        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.state.itsF = "C";
+            this.updateAll();
+        }.bind(this)});
+        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.state.itsF = "K";
+            this.updateAll();
+        }.bind(this)});
+        this.controls.finishedAddingControls(); // Important
+        
+
         this.refresh(date);
 	},
 

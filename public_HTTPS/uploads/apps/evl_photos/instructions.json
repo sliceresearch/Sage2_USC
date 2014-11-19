@@ -1,14 +1,15 @@
 {
 	"main_script": "evl_photos.js",
-	"icon": "photos.jpg",
+	"icon": "photos.webp",
 	"width": 800,
 	"height": 600,
 	"animation": true,
 	"dependencies": [
-		"scripts/d3.v3.min.js"
+		"scripts/d3.v3.min.js",
+		"photo_scrapbooks.js"
 	],
 	"title": "EVL Photo Slideshow",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A slideshow of EVL history",
 	"keywords": [ "d3", "picture", "history", "slideshow" ],
 	"author": "Andrew Johnson <lenzman@me.com>",

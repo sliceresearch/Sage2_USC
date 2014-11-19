@@ -1,0 +1,39 @@
+/*
+	default configuration of the server - Mac OS X, and Linux
+*/
+{
+	host: "localhost",
+	port: 9090,
+	index_port: 9292,
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+	ui: {
+		clock: 12,
+		show_version: true,
+		show_url: true,
+	},
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	]
+}

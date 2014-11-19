@@ -1,6 +1,6 @@
 {
 	"main_script": "cave2_monitor.js",
-	"icon": "CAVE2logo.png",
+	"icon": "cave2b.webp",
 	"width": 1260,
 	"height": 630,
 	"animation": true,
