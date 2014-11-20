@@ -101,12 +101,12 @@ createURLs: function ()
     var URL5b = "_N0R_Legend_0.gif";
     var URL6b = "_City_Short.gif";
 
-    this.URL1 = URL1a+SAGE2_radarStations[this.currentStation]+URL1b;
-    this.URL2 = URL2a+SAGE2_radarStations[this.currentStation]+URL2b;
-    this.URL3 = URL3a+SAGE2_radarStations[this.currentStation]+URL3b;
-    this.URL4 = URL4a+SAGE2_radarStations[this.currentStation]+URL4b;
-    this.URL5 = URL5a+SAGE2_radarStations[this.currentStation]+URL5b;
-    this.URL6 = URL6a+SAGE2_radarStations[this.currentStation]+URL6b;
+    this.URL1 = URL1a+SAGE2_radarStations[this.currentStation].code+URL1b;
+    this.URL2 = URL2a+SAGE2_radarStations[this.currentStation].code+URL2b;
+    this.URL3 = URL3a+SAGE2_radarStations[this.currentStation].code+URL3b;
+    this.URL4 = URL4a+SAGE2_radarStations[this.currentStation].code+URL4b;
+    this.URL5 = URL5a+SAGE2_radarStations[this.currentStation].code+URL5b;
+    this.URL6 = URL6a+SAGE2_radarStations[this.currentStation].code+URL6b;
 },
 
 ////////////////////////////////////////
