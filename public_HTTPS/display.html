@@ -694,7 +694,6 @@
 		wsio.on('requestNewControl', function(data){
 			var dt = new Date(data.date);
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
-			console.log("requestNewControl", data);
 			if (data.elemId !== undefined && data.elemId !== null){
 				if(controlItems[data.elemId+"_controls"] !== undefined){
 					var spec = controlItems[data.elemId+ "_controls"].handle.controls;
@@ -717,7 +716,6 @@
 
 		wsio.on('createControl', function(data){
 			if (controlItems[data.id].show === false) {
-				console.log("createControl", data);
 				var ctrDiv =  document.createElement("div");
 				ctrDiv.id = data.id;
 				ctrDiv.className = "windowControls";
@@ -741,7 +739,6 @@
 		});
 
 		wsio.on('requestControlId', function(data) {
-			console.log("requestControlID", data);
 			var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
 			var regC  = /_controls/;
@@ -786,7 +783,6 @@
 			var regexSlider = /slider/;
 			var regexButton = /button/;
 			var regexTextInput = /textInput/;
-			console.log("releaseControlId", data);
 			var lockedControl = lockedControlElements[data.ptrId];
 			
 			if (lockedControl){
@@ -810,7 +806,6 @@
 			
 		});
 		wsio.on('executeControlFunction', function(data){
-			console.log("executeControl", data);
 			var ctrl = getWidgetControlById(data);
 			if(ctrl){
 				var ctrId = ctrl.attr('id');
@@ -856,7 +851,6 @@
 		});
 
 		wsio.on('moveSliderKnob', function(data){
-			console.log("moveSliderKnob", data);
 			var ctrl = getWidgetControlById(data.ctrl);
 			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");
 			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
