@@ -155,6 +155,12 @@ var buttonType = {
 		"delay":600,
 		"textual":false,
 		"animation": true
+	},
+	"default":{
+		"textual":true,
+		"label":"Hello",
+		"fill":"rgba(250,250,250,1.0)",
+		"animation":false
 	}
 
 };
@@ -674,7 +680,17 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		stroke: "rgba(230,230,230,1.0)"
 	});
 	var info;
-	var type = this.buttonType[buttonSpec.type];
+	var type;
+	if (typeof buttonSpec.type === "string" ){
+		type = this.buttonType[buttonSpec.type];
+	}
+	else{
+		type = buttonSpec.type;
+	}
+
+	if (type === null || type === undefined){
+		type = this.buttonType["default"];
+	}
 	
 	var buttonCover;
 	
