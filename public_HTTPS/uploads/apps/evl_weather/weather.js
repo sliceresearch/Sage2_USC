@@ -791,19 +791,43 @@ updateWindow: function ()
             this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
         }
 
+        var kButton = {
+            "textual":true,
+            "label":"K",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var cButton = {
+            "textual":true,
+            "label":"C",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var fButton = {
+            "textual":true,
+            "label":"F",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+
+        this.controls.addButtonType("c", cButton);
+        this.controls.addButtonType("k", kButton);
+        this.controls.addButtonType("f", fButton);
+
+        this.controls.addButton({type:"f",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "F";
             this.updateAll();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
+        this.controls.addButton({type:"c",sequenceNo:5,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "C";
             this.updateAll();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
+        this.controls.addButton({type:"k",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "K";
             this.updateAll();
