@@ -1831,7 +1831,7 @@ function getUniqueAppId() {
 
 function getApplications() {
 	var uploadedApps = assets.listApps();
-	uploadedApps.sort(sageutils.compareFilename);
+	uploadedApps.sort(sageutils.compareTitle);
 	
 	return uploadedApps;
 }
