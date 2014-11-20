@@ -334,10 +334,19 @@ startup: function (){
 
         var _this = this;
 
+        
+
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
             (function(loopIdxWithPrefix){
-                _this.controls.addButton({type:"next", sequenceNo:5+loopIdx, action:function(date){
+                var siteButton = {
+                    "textual":true,
+                    "label":SAGE2_radarStations[loopIdx].name,
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
+
+                _this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, action:function(date){
                     this.setStation(loopIdxWithPrefix);
                     this.startup();
                     this.draw(date);
