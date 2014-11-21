@@ -397,7 +397,15 @@ updateWindow: function (){
         for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
             (function(loopIdxWithPrefix){
-                _this.controls.addButton({type:"next", sequenceNo:5+loopIdx, action:function(date){
+
+            var albumButton = {
+                    "textual":true,
+                    "label":SAGE2_photoAlbums[loopIdx].name,
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
+
+                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx, action:function(date){
                     this.setAlbum(loopIdxWithPrefix);
                 }.bind(_this) });
             }(loopIdxWithPrefix))
