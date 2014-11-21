@@ -322,7 +322,15 @@ dealWithData: function(collection, today)
 	load: function(state, date) {
 		// create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+
+        var viewButton = {
+                    "textual":true,
+                    "label":"view",
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
+
+        this.controls.addButton({type:viewButton,sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
             this.changeMap();
         }.bind(this)});
