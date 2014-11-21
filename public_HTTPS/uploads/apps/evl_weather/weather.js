@@ -400,9 +400,11 @@ weatherOutsideCallback: function(error, weatherOut)
     var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
 
    // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
-    // and its between 6pm and 6am then add"-night" to the icon name
+    // and its between local sunset and sunrise then add"-night" to the icon name
  
      var currentHour = new Date().getHours(); // 0-23
+     var currentMinutes = new Date().getMinutes() / 60;
+     var currentTime = currentHour + currentMinutes;
 
     // sometimes the current conditions come back empty
     if (weatherName == "")
@@ -412,9 +414,18 @@ weatherOutsideCallback: function(error, weatherOut)
     this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
     //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
 
+    // get today's sunrise and sunset times for evl (not chicago) today 
+    var times = SunCalc.getTimes(new Date(), 41.869911, -87.647593);
+    var sunrise = times.sunrise.getHours() + times.sunrise.getMinutes()/60;
+    var sunset = times.sunset.getHours() + times.sunset.getMinutes()/60;
+
+
+
     // if its night time then swap out the sun icons for the moon icons
-    if ( (currentHour < 7) || (currentHour > 18) )
+    if ( (currentTime < sunrise) || (currentTime > sunset) )
         {
+        //alert("night time");
+
         if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
             (weatherName == "clear"))
             {
