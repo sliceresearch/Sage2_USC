@@ -137,8 +137,19 @@ if(config.apis !== undefined && config.apis.twitter !== undefined){
 // remove API keys from being investigated further
 if(config.apis !== undefined) delete config.apis;
 
-
 console.log(config);
+
+// register with EVL's server
+request({
+    "rejectUnauthorized": false,
+    "url": 'https://sage.evl.uic.edu/register',
+    "form": config,
+    "method": "POST"},
+    function(err, response, body){
+	    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+	}
+);
+
 
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
@@ -230,7 +241,7 @@ var options = setupHttpsOptions();
 
 
 // initializes HTTP and HTTPS servers
-var index = http.createServer(httpServerIndex.onrequest);
+var index  = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
 
 var startTime = new Date();
@@ -2249,14 +2260,24 @@ index.on('listening', function (e) {
 
 // CTRL-C intercept
 process.on('SIGINT', function() {
-	saveSession();
-	assets.saveAssets();
-	if( omicronRunning )
-		omicronManager.disconnect();
-	console.log('');
-	console.log('SAGE2 done');
-	console.log('');
-	process.exit(0);
+	// un-register with EVL's server
+	request({
+	    "rejectUnauthorized": false,
+	    "url": 'https://sage.evl.uic.edu/unregister',
+	    "form": config,
+	    "method": "POST"},
+	    function(err, response, body){
+		    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+			saveSession();
+			assets.saveAssets();
+			if( omicronRunning )
+				omicronManager.disconnect();
+			console.log('');
+			console.log('SAGE2 done');
+			console.log('');
+			process.exit(0);
+		}
+	);
 });
 
 
@@ -2369,14 +2390,26 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
-				saveSession();
-				assets.saveAssets();
-				if( omicronRunning )
-					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
-				process.exit(0);
+				// un-register with EVL's server
+				request({
+				    "rejectUnauthorized": false,
+				    "url": 'https://sage.evl.uic.edu/unregister',
+				    "form": config,
+				    "method": "POST"},
+				    function(err, response, body){
+					    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+
+						saveSession();
+						assets.saveAssets();
+						if( omicronRunning )
+							omicronManager.disconnect();
+						console.log('');
+						console.log('SAGE2 done');
+						console.log('');
+						process.exit(0);
+
+					}
+				);
 				break;
 			default:
 				console.log('Say what? I might have heard `' + line.trim() + '`');
@@ -2388,14 +2421,22 @@ if (program.interactive)
 		// Close with CTRL-D or CTRL-C
 		// Only synchronous code!
 		// Saving stuff
-		saveSession();
-		assets.saveAssets();
-		if( omicronRunning )
-			omicronManager.disconnect();
-		console.log('');
-		console.log('SAGE2 done');
-		console.log('');
-		process.exit(0);
+		request({
+		    "rejectUnauthorized": false,
+		    "url": 'https://sage.evl.uic.edu/unregister',
+		    "form": config,
+		    "method": "POST"},
+		    function(err, response, body){
+			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+				saveSession();
+				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+		});
 	});
 }
 
