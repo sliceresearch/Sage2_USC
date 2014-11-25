@@ -39,8 +39,7 @@ function sagePointer(wsio) {
 	this.desktopCaptureEnabled = false;
 	
 	this.chunk = 32 * 1024; // 32 KB
-	//this.maxUploadSize = 500 * (1024*1024); // 500 MB
-	this.maxUploadSize = 2 * (1024*1024*1024); // 2GB just as a precaution
+	this.maxUploadSize = 20 * (1024*1024*1024); // 20GB just as a precaution
 
 	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
 	if(localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
@@ -357,7 +356,7 @@ function sagePointer(wsio) {
 					xhr.send(formdata);
 				}
 				else{
-					alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024*1024)) + " MB)");
+					alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024*1024*1024)) + " GB)");
 				}
 			}
 		}

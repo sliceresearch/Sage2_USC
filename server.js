@@ -2029,6 +2029,8 @@ function sendConfig(req, res) {
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
 	var position = [ 0, 0 ];
+	// Limits the amount of memory all fields together (except files) can allocate in bytes.
+	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
 	form.type          = 'multipart';
 	form.multiples     = true;
