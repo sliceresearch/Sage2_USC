@@ -2474,8 +2474,20 @@ function findAppUnderPointer(pointerX, pointerY) {
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
-			if (controls[i].show === true)
-				return controls[i];
+			var centerX = controls[i].left + controls[i].height/2.0;
+			var centerY = controls[i].top + controls[i].height/2.0;
+			var dist = Math.sqrt((pointerX - centerX)*(pointerX - centerX) + (pointerY - centerY)*(pointerY - centerY));
+			var barMinX = controls[i].left + controls[i].height;
+			var barMinY = controls[i].top + controls[i].height/2 - controls[i].barHeight/2;
+			var barMaxX = controls[i].left + controls[i].width;
+			var barMaxY = controls[i].top + controls[i].height/2 + controls[i].barHeight/2;
+			if (dist<=controls[i].height/2.0 || ((pointerX >= barMinX && pointerX <= barMaxX) && (pointerY >= barMinY && pointerY <= barMaxY))) {
+				if (controls[i].show === true){
+					return controls[i];
+				}
+				else
+					return null;
+			}
 			else
 				return null;
 		}

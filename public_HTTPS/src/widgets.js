@@ -357,12 +357,13 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 
 	size.height = dimensions.outerR * 2 + 5;
 	size.width = size.height;
+	size.barHeight = dimensions.buttonRadius*4;
 
 	if (this.hasSlider === true){
-		size.width = size.width  + this.slider.width ;
+		size.width = size.width  + this.slider.width  - dimensions.innerR;
 	}
 	else if ( this.hasTextInput === true){
-		size.width = size.width  + this.textInput.width;
+		size.width = size.width  + this.textInput.width - dimensions.innerR;
 	}
 	this.controlDimensions = dimensions;
 	return size;
