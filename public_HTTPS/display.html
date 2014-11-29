@@ -193,6 +193,23 @@
 			}
 		});
 		
+		wsio.on('hideui', function(param) {
+			if (param) {
+				clearTimeout(uiTimer);
+				ui.showInterface();
+				uiTimerDelay = param.delay;
+				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+			} else
+				if (ui.uiHidden===true) {
+					clearTimeout(uiTimer);
+					uiTimer = null;
+					ui.showInterface();
+				}
+				else {
+					ui.hideInterface();
+				}
+		});
+
 		wsio.on('setupSAGE2Version', function(version) {
 			ui.updateVersionText(version);
 		});

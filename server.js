@@ -2331,6 +2331,7 @@ if (program.interactive)
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
 				console.log('regenerate\tregenerates the assets');
+				console.log('hideui\thide/show/delay the user interface');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -2349,6 +2350,14 @@ if (program.interactive)
 				break;
 			case 'sessions':
 				printListSessions();
+				break;
+			case 'hideui':
+				// if argument provided, used as auto_hide delay in second
+				//   otherwise, it flips a switch
+				if (command[1] !== undefined)
+					broadcast('hideui', {delay:parseInt(command[1],10)}, 'requiresFullApps');
+				else
+					broadcast('hideui', null, 'requiresFullApps');
 				break;
 
 			case 'close':
