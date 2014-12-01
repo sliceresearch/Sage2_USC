@@ -75,6 +75,8 @@ function uiBuilder(json_cfg, clientID) {
 
 			// put the scale up to the top left
 			this.bg.style.webkitTransformOrigin = "0% 0%";
+			this.bg.style.mozTransformOrigin = "0% 0%";
+			this.bg.style.transformOrigin = "0% 0%";
 
 			// calculate the scale ratio to make it fit
 			this.browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
@@ -84,6 +86,8 @@ function uiBuilder(json_cfg, clientID) {
 			else
 				newratio = document.documentElement.clientHeight / wallHeight;
 			this.bg.style.webkitTransform = "scale("+(newratio)+")";
+			this.bg.style.mozTransform = "scale("+(newratio)+")";
+			this.bg.style.transform = "scale("+(newratio)+")";
 
 			window.onresize = function(event) {
 				// recalculate after every window resize
@@ -95,6 +99,8 @@ function uiBuilder(json_cfg, clientID) {
 					else
 						newratio = document.documentElement.clientHeight / wallHeight;
 					_this.bg.style.webkitTransform = "scale("+(newratio)+")";
+					_this.bg.style.mozTransform = "scale("+(newratio)+")";
+					_this.bg.style.transform = "scale("+(newratio)+")";
 				}
 			};
 			window.onkeydown = function (event) {
@@ -102,6 +108,8 @@ function uiBuilder(json_cfg, clientID) {
 				if (event.keyCode === 70) {
 					if (_this.ratio === "fit") {
 						_this.bg.style.webkitTransform = "scale(1)";
+						_this.bg.style.mozTransform = "scale(1)";
+						_this.bg.style.transform = "scale(1)";
 						_this.ratio = "full";
 					} else if (_this.ratio === "full") {
 						var newratio;
@@ -110,6 +118,8 @@ function uiBuilder(json_cfg, clientID) {
 						else
 							newratio = document.documentElement.clientHeight / wallHeight;
 						_this.bg.style.webkitTransform = "scale("+(newratio)+")";
+						_this.bg.style.mozTransform = "scale("+(newratio)+")";
+						_this.bg.style.transform = "scale("+(newratio)+")";
 						_this.ratio = "fit";
 					}
 					// This somehow forces a reflow of the div and show the scrollbars as needed
@@ -189,7 +199,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.setTime = function (val) {
-			// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
+		// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
 		var now;
 		if (this.json_cfg.ui.clock == 12) now = formatAMPM(val);
 		else now = format24Hr(val);
@@ -237,7 +247,7 @@ function uiBuilder(json_cfg, clientID) {
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
-		this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better"
+		//this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better" - necessary?
 		this.upperBar.id = "upperBar";
 		
 		var textColor = "rgba(255, 255, 255, 1.0)";
@@ -285,6 +295,8 @@ function uiBuilder(json_cfg, clientID) {
 		// center vertically: position top 50% and then translate by -50%
 		this.clock.style.top        = "50%";
 		this.clock.style.webkitTransform  = "translateY(-50%)";
+		this.clock.style.mozTransform  = "translateY(-50%)";
+		this.clock.style.transform  = "translateY(-50%)";
 		
 		machine.style.position   = "absolute";
 		machine.style.whiteSpace = "nowrap";
@@ -293,14 +305,18 @@ function uiBuilder(json_cfg, clientID) {
 		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
 		machine.style.top        = "50%";
 		machine.style.webkitTransform  = "translateY(-50%)";
+		machine.style.mozTransform  = "translateY(-50%)";
+		machine.style.transform  = "translateY(-50%)";
 		
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		version.style.color      = textColor;
-		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
+		version.style.right      = ((6*this.titleBarHeight) + this.offsetX).toString() + "px";
 		version.style.top        = "50%";
 		version.style.webkitTransform  = "translateY(-50%)";
+		version.style.mozTransform  = "translateY(-50%)";
+		version.style.transform  = "translateY(-50%)";
 		
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		logo.data = "images/EVL-LAVA.svg";
@@ -351,8 +367,11 @@ function uiBuilder(json_cfg, clientID) {
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
-		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
-		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
+		logo.style.right      = (this.titleBarHeight + this.offsetX).toString() + "px";
+		logo.style.top        = "50%";
+		logo.style.webkitTransform  = "translateY(-50%)";
+		logo.style.mozTransform  = "translateY(-50%)";
+		logo.style.transform  = "translateY(-50%)";
 		
 		var textColor = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
