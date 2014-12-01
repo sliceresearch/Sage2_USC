@@ -12,9 +12,6 @@
 // Generic functions used by all SAGE2 applications
 //
 
-// access a property using a string literal within a pair of square brackets
-/* jshint -W069 */
-
 
 function uiBuilder(json_cfg, clientID) {
 
@@ -446,7 +443,7 @@ function uiBuilder(json_cfg, clientID) {
 		var translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
 		pointerElem.style['-webkit-transform'] = translate;
 		pointerElem.style['-moz-transform']    = translate;
-		pointerElem.style['transform']         = translate;
+		pointerElem.style['transform']         = translate; // jshint ignore:line
 	};
 	
 	this.changeSagePointerMode = function(pointer_data) {
