@@ -1888,8 +1888,7 @@ function setupDisplayBackground() {
 			} );
 		}
 		else {
-			// not sure here, about next line: leftover from previous tests ?
-			// config.background.image.style === "stretch"
+			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		
