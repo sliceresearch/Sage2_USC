@@ -23,8 +23,9 @@ var mime      = require('mime');
 var request   = require('request');
 var ytdl      = require('ytdl-core');
 
-var exiftool  = require('../src/node-exiftool');      // gets exif tags for images
-var assets    = require('../src/node-assets');        // asset management
+var videodecoder = require('../src/node-livevideodecoder');  // decodes video to raw frames
+var exiftool     = require('../src/node-exiftool');          // gets exif tags for images
+var assets       = require('../src/node-assets');            // asset management
 
 var imageMagick;
 mime.default_type = "application/custom";
@@ -38,7 +39,7 @@ function encodeReservedURL(url) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarHeight, imConstraints) {
+function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarHeight, imOptions, ffmpegOptions) {
 	this.publicDir = publicDir;
 	this.hostOrigin = hostOrigin;
 	this.displayWidth = displayWidth;
@@ -68,7 +69,8 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
     	"custom_app": "apps"
     };
 	
-	imageMagick = gm.subClass(imConstraints);
+	imageMagick = gm.subClass(imOptions);
+	this.ffmpegPath = ffmpegOptions.appPath;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -313,10 +315,63 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 
 
 appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_url, name, callback) {
+	var _this = this;
+	var video = new videodecoder({ffmpegPath: this.ffmpegPath});
+	
+	video.onmetadata = function(err, data) {
+		var metadata = {title: "Video Player", version: "1.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
+		var exif = assets.getExifData(file);
+		
+		var appInstance = {
+			id: null,
+			title: name,
+			application: "movie_player",
+			icon: exif.SAGE2thumbnail,
+			type: mime_type,
+			url: external_url,
+			data: {
+				play: false,
+				frame: 0,
+				numframes: data.numframes,
+				framerate: data.framerate
+			},
+			resrc: null,
+			left:  _this.titleBarHeight,
+			top:   1.5 * _this.titleBarHeight,
+			width:  data.width,
+			height: data.height,
+			native_width:    data.width,
+			native_height:   data.height,
+			previous_left:   null,
+			previous_top:    null,
+			previous_width:  null,
+			previous_height: null,
+			maximized:       false,
+			aspect:          data.width / data.height,
+			animation:       false,
+			metadata:        metadata,
+			date:            new Date()
+		};
+		_this.scaleAppToFitDisplay(appInstance);
+		callback(appInstance);
+	};
+	video.onstartdecode = function() {
+		
+	};
+	video.onstopdecode = function(err, finish) {
+		
+	};
+	video.onnewframe = function(frameIdx, yuvBuffer) {
+	
+	};
+	
+	video.initializeLiveDecoder(file);
+	
+	/*
 	// Query the exif data
 	var dims = assets.getDimensions(file);
 	var mime = assets.getMimeType(file);
-
+	
 	if (mime === 'video/quicktime' && mime_type === 'video/mp4')
 		mime = 'video/mp4';
 
@@ -367,6 +422,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			return;
 		}
 	}
+	*/
 };
 
 
