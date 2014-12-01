@@ -82,7 +82,6 @@
 			host: "mesaverde.evl.uic.edu",
 			port: 443
 		}
-<<<<<<< HEAD
 	],
         "advanced": {
                 "twitter": {
@@ -92,7 +91,4 @@
                         "accessSecret": "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
                 }
         }
-=======
-	]
->>>>>>> 2c29e98a9ba1717f803bd27bfccf336f5152512a
 }
