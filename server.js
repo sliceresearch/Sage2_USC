@@ -1300,7 +1300,7 @@ function tileApplications() {
 	}
 
 	// Calculate distances
-	var distances = Create2DArray(applications.length);
+	var distances = new Create2DArray(applications.length);
 	for (i=0; i<applications.length; i++) {
 		for (j=0; j<numCells; j++) {
 			var d = distance2D(centroidsApps[i], centroidsTiles[j]);
@@ -1696,7 +1696,7 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	var regButton = /button/
+	var regButton = /button/;
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
@@ -1888,7 +1888,8 @@ function setupDisplayBackground() {
 			} );
 		}
 		else {
-			config.background.image.style === "stretch"
+			// not sure here, about next line: leftover from previous tests ?
+			// config.background.image.style === "stretch"
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		
@@ -2656,7 +2657,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	if (ct !== null) {
-		if(data.button === "left"){
+		if (data.button === "left") {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
 			broadcast('requestControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		}
@@ -2664,11 +2665,11 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(ct.show === true) hideControl(ct);
 		}
 		return ;
-	}else{
+	} else {
 		var lockedControl = remoteInteraction[uniqueID].lockedControl(); //If a text input widget was locked, drop it
 		if (lockedControl !== null) {
-			var data = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-			broadcast('dropTextInputControl', data ,'receivesWidgetEvents');
+			var msgdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+			broadcast('dropTextInputControl', msgdata ,'receivesWidgetEvents');
 			remoteInteraction[uniqueID].dropControl();
 		}
 	}
@@ -3519,7 +3520,7 @@ function radialMenuEvent( data )
 	var radialMenu = radialMenus[data.id+"_menu"];
 	if( radialMenu !== undefined )
 	{
-		radialMenu.onEvent( data )
+		radialMenu.onEvent( data );
 		
 		if( radialMenu.hasEventID(data.id) )
 		{
