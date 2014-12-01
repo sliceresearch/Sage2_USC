@@ -366,63 +366,6 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	};
 	
 	video.initializeLiveDecoder(file);
-	
-	/*
-	// Query the exif data
-	var dims = assets.getDimensions(file);
-	var mime = assets.getMimeType(file);
-	
-	if (mime === 'video/quicktime' && mime_type === 'video/mp4')
-		mime = 'video/mp4';
-
-	if (dims && mime) {
-		if (mime === "video/mp4" || mime === "video/webm" || mime === "video/x-m4v" ) {
-			var metadata         = {};
-			metadata.title       = "Video Player";
-			metadata.version     = "1.0.0";
-			metadata.description = "Video player for SAGE2";
-			metadata.author      = "SAGE2";
-			metadata.license     = "SAGE2-Software-License";
-			metadata.keywords    = ["video", "movie", "player"];
-			
-			var exif = assets.getExifData(file);
-			
-			var appInstance = {
-				id: null,
-				title: name,
-				application: "movie_player",
-				icon: exif.SAGE2thumbnail,
-				type: mime_type,
-				url: external_url,
-				data: {
-					src: external_url,
-					type: mime,
-					play: false,
-					time: 0.0
-				},
-				resrc: null,
-				left:  this.titleBarHeight,
-				top:   1.5 * this.titleBarHeight,
-				width:  dims.width,
-				height: dims.height,
-				native_width:    dims.width,
-				native_height:   dims.height,
-				previous_left:   null,
-				previous_top:    null,
-				previous_width:  null,
-				previous_height: null,
-				maximized:       false,
-				aspect:          dims.width / dims.height,
-				animation:       false,
-				metadata:        metadata,
-				date:            new Date()
-			};
-			this.scaleAppToFitDisplay(appInstance);
-			callback(appInstance);
-			return;
-		}
-	}
-	*/
 };
 
 

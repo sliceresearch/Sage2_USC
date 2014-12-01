@@ -105,7 +105,7 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-addFile = function(filename,exif) {
+addFile = function(filename, exif) {
 	// Add the asset in the array
 	var anAsset = new Asset();
 	anAsset.setFilename(filename);
