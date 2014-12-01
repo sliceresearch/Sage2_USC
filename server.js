@@ -1216,21 +1216,21 @@ function findMinimum(arr) {
 	}
 	return idx;
 }
-function printMatrix(dist) {
+function printMatrix(dist, m, n) {
 	var i, j;
-	for (i=0; i<applications.length; i++) {
+	for (i=0; i<m; i++) {
 		process.stdout.write(i.toString());
-		for (j=0; j<applications.length; j++) {
+		for (j=0; j<n; j++) {
 			process.stdout.write(" " + dist[i][j].toFixed(2));
 		}
 		process.stdout.write('\n');
 	}
 }
 
-function tileApplications2() {
+function tileApplications() {
 	var app;
 	var i, j, c, r;
-	var numCols, numRows;
+	var numCols, numRows, numCells;
 
 	var displayAr  = config.totalWidth / config.totalHeight;
 	var arDiff     = displayAr / averageWindowAspectRatio();
@@ -1265,6 +1265,7 @@ function tileApplications2() {
 			numCols = Math.round(Math.ceil(numWindows / numRows));
 		}
 	}
+	numCells = numRows * numCols;
 
     // determine the bounds of the tiling area
 	var titleBar = config.ui.titleBarHeight;
@@ -1285,54 +1286,46 @@ function tileApplications2() {
 
     var centroidsApps  = [];
     var centroidsTiles = [];
-    r = numRows-1;
-    c = 0;
-    // Caculate apps and tiles centers
+
+    // Caculate apps centers
     for (i=0; i<applications.length; i++) {
 		app =  applications[i];
 		centroidsApps[i] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
-		console.log('centroid appl:', i, app.title, centroidsApps[i]);
-
-		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
-		console.log('centroid tile:', i, centroidsTiles[i]);
-
-        c += 1;
-        if (c === numCols) {
-            c  = 0;
-            r -= 1;
-        }
 	}
+    // Caculate tiles centers
+	for (i=0; i<numCells; i++) {
+		c = i % numCols;
+		r = Math.floor(i / numCols);
+		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
+	}
+
 	// Calculate distances
 	var distances = Create2DArray(applications.length);
 	for (i=0; i<applications.length; i++) {
-		for (j=0; j<applications.length; j++) {
+		for (j=0; j<numCells; j++) {
 			var d = distance2D(centroidsApps[i], centroidsTiles[j]);
 			distances[i][j] = d;
 		}
 	}
 	// dump the matrix
-	printMatrix(distances);
-	for (i=0; i<applications.length; i++) {
-		var idx = findMinimum(distances[i]);
-		console.log('Min:', i, idx, distances[i][idx].toFixed(2));
-	}
+	//printMatrix(distances, applications.length, numCells);
+	// for (i=0; i<applications.length; i++) {
+	// 	var idx = findMinimum(distances[i]);
+	// 	console.log('Min:', i, idx, distances[i][idx].toFixed(2));
+	// }
 
-    r = numRows-1;
-    c = 0;
 	for (i=0; i<applications.length; i++) {
-		// pick an app
-		var appid = findMinimum(distances[i]);
 		// get the application
-		app =  applications[ appid ];
-
-		console.log('Round:', i, appid, distances[i][appid].toFixed(2), app.title);
-		for (j=0; j<applications.length; j++) distances[j][appid] = Number.MAX_VALUE;
+		app =  applications[i];
+		// pick a cell
+		var cellid = findMinimum(distances[i]);
+		// put infinite value to disable the chosen cell
+		for (j=0; j<applications.length; j++) distances[j][cellid] = Number.MAX_VALUE;
 
 		// calculate new dimensions
-		console.log('tiling:', i, c, r, app.title);
+		c = cellid % numCols;
+		r = Math.floor(cellid / numCols);
         var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
-
-		printMatrix(distances);
 
         // update the data structure
         app.left   = newdims[0];
@@ -1346,16 +1339,12 @@ function tileApplications2() {
 							force: true, date: new Date()};
 		// send the order
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
-
-        c += 1;
-        if (c === numCols) {
-            c  = 0;
-            r -= 1;
-        }
     }
 }
 
-function tileApplications() {
+// Old tiling function
+//
+function tileApplications1() {
 	var app;
 	var i, c, r;
 	var numCols, numRows;
