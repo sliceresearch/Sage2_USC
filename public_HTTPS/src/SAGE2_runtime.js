@@ -287,7 +287,7 @@ function CSVToArray(strData, strDelimiter){
 
 	// Keep looping over the regular expression matches
 	// until we can no longer find a match.
-	while (arrMatches = objPattern.exec( strData )) {
+	while (arrMatches = objPattern.exec( strData )) {  // jshint ignore:line
 
 		// Get the delimiter that was found.
 		var strMatchedDelimiter = arrMatches[ 1 ];
@@ -346,7 +346,7 @@ function allTrueDict(dict) {
 }
 
 function getParameterByName(name) {
-	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]"); // jshint ignore:line
 	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
 	results = regex.exec(location.search);
 	return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));

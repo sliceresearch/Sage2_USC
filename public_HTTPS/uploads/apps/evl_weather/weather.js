@@ -93,7 +93,7 @@ var weather = SAGE2_App.extend( {
     this.glob.temp_hot            = 85;
     this.glob.temp_nice           = 70;
     this.glob.temp_cold           = 60;
-    this.glob.temp_colderer       = 30;
+    this.glob.temp_colderer       = 32;
     this.glob.temp_coldererer     = 0;
 
     // add the temperature unit into the state
@@ -400,9 +400,11 @@ weatherOutsideCallback: function(error, weatherOut)
     var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
 
    // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
-    // and its between 6pm and 6am then add"-night" to the icon name
+    // and its between local sunset and sunrise then add"-night" to the icon name
  
      var currentHour = new Date().getHours(); // 0-23
+     var currentMinutes = new Date().getMinutes() / 60;
+     var currentTime = currentHour + currentMinutes;
 
     // sometimes the current conditions come back empty
     if (weatherName == "")
@@ -412,9 +414,18 @@ weatherOutsideCallback: function(error, weatherOut)
     this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
     //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
 
+    // get today's sunrise and sunset times for evl (not chicago) today 
+    var times = SunCalc.getTimes(new Date(), 41.869911, -87.647593);
+    var sunrise = times.sunrise.getHours() + times.sunrise.getMinutes()/60;
+    var sunset = times.sunset.getHours() + times.sunset.getMinutes()/60;
+
+
+
     // if its night time then swap out the sun icons for the moon icons
-    if ( (currentHour < 7) || (currentHour > 18) )
+    if ( (currentTime < sunrise) || (currentTime > sunset) )
         {
+        //alert("night time");
+
         if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
             (weatherName == "clear"))
             {
@@ -791,19 +802,43 @@ updateWindow: function ()
             this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
         }
 
+        var kButton = {
+            "textual":true,
+            "label":"K",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var cButton = {
+            "textual":true,
+            "label":"C",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var fButton = {
+            "textual":true,
+            "label":"F",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+
+        this.controls.addButtonType("c", cButton);
+        this.controls.addButtonType("k", kButton);
+        this.controls.addButtonType("f", fButton);
+
+        this.controls.addButton({type:"f",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "F";
             this.updateAll();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
+        this.controls.addButton({type:"c",sequenceNo:5,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "C";
             this.updateAll();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
+        this.controls.addButton({type:"k",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "K";
             this.updateAll();

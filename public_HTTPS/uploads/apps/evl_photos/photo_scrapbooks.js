@@ -9,10 +9,14 @@
 
     SAGE2_photoAlbums = [];
     SAGE2_photoAlbums[0] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
-            location:"https://sage.evl.uic.edu/evl_Pictures/"};
+            location:"https://sage.evl.uic.edu/evl_Pictures/",
+        	name:"evl"};
     SAGE2_photoAlbums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
-            location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
+            location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/",
+        	name:"pond"};
     SAGE2_photoAlbums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
-            location:"http://cdn.abclocal.go.com/three/wls/webcam/"};
+            location:"http://cdn.abclocal.go.com/three/wls/webcam/",
+        	name:"chi"};
     SAGE2_photoAlbums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
-            location:"http://lyra.evl.uic.edu:9000/posters/"};
+            location:"http://lyra.evl.uic.edu:9000/posters/",
+        	name:"movie"};

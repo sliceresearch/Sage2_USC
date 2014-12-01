@@ -1,0 +1,51 @@
+/*
+	default configuration of the server - Windows
+*/
+{
+	host: "localhost",
+	port: 9090,
+	index_port: 9292,
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+	ui: {
+		clock: 12,
+		show_version: true,
+		show_url: true,
+	},
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	],
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/local/bin/"
+    },
+    apis: {
+		twitter: {
+			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
+			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
+			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
+			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
+		}
+	}
+}

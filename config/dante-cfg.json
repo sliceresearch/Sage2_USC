@@ -1,72 +1,70 @@
 {
-	"host": "dante.evl.uic.edu",
-	"port": 443,
-	"index_port": 80,
-	"background": {
-		"color": "#333333",
-        "watermark": {
-			"svg": "images/EVL-LAVA.svg",
-			"color": "rgba(255, 255, 255, 0.5)"
-		}
+	host: "dante.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		color: "#333333",
+        watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		},
+		clip: false
 	},
-    "ui": {
-		"clock": 12,           // clock setting: 12-hour or 24-hour
-		"show_version": true,  // shows SAGE2 version in menu bar
-		"show_url": true,      // shows SAGE2 url in menu bar
+    ui: {
+		clock: 12,           // clock setting: 12-hour or 24-hour
+		show_version: true,  // shows SAGE2 version in menu bar
+		show_url: true,      // shows SAGE2 url in menu bar
     },
-	"resolution": {
-		"width": 4080,
-		"height": 768
+	resolution: {
+		width: 4080,
+		height: 768
 	},
-	"layout": {
-		"rows": 3,
-		"columns": 1
+	layout: {
+		rows: 3,
+		columns: 1
 	},
-	"displays": [
+	displays: [
 		{
-			"ID": 0,
-			"row": 0,
-			"column": 0
+			row: 0,
+			column: 0
 		},
 		{
-			"ID": 1,
-			"row": 1,
-			"column": 0
+			row: 1,
+			column: 0
 		},
 		{
-			"ID": 2,
-			"row": 2,
-			"column": 0
+			row: 2,
+			column: 0
 		}
 	],
-	"alternate_hosts": [
+	alternate_hosts: [
 		"localhost",
 		"127.0.0.1"
 	],
-	"remote_sites": [
+	remote_sites: [
 		{
-			"name": "Cyber-Commons",
-			"host": "iridium.evl.uic.edu",
-			"port": 443
+			name: "Cyber-Commons",
+			host: "iridium.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "CAVE2",
-			"host": "lyra.evl.uic.edu",
-			"port": 443
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "IceWall",
-			"host": "thor.evl.uic.edu",
-			"port": 443
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "Green Room",
-			"host": "mesaverde.evl.uic.edu",
-			"port": 443
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
 		}
 	],
-	"advanced": {
-		"ImageMagick": "C:/Program Files/ImageMagick-6.8.9-Q16/",
-        "FFMpeg": "C:/FFMpeg/bin/"
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+        FFMpeg: "C:/FFMpeg/bin/"
 	}
 }

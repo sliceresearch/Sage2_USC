@@ -684,19 +684,42 @@ loadInIcons: function()
             this.state.itsF = "F"; // Fahrenheit or Celsius
         }
 
+        var tempButton = {
+            "textual":true,
+            "label":"Temp",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var iconButton = {
+            "textual":true,
+            "label":"Icon",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var colorButton = {
+            "textual":true,
+            "label":"Color",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+
+        this.controls.addButtonType("temp", tempButton);
+        this.controls.addButtonType("icon", iconButton);
+        this.controls.addButtonType("color", colorButton);
+
+        this.controls.addButton({type:"temp",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
             this.gwin.mode = 0;
             this.convertToTemp();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
+        this.controls.addButton({type:"icon",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
             this.gwin.mode = 1;
             this.convertToIcon();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
+        this.controls.addButton({type:"color",sequenceNo:8,action:function(date){
             //This is executed after the button click animation occurs.
             this.gwin.mode = 2;
             this.convertToNone();

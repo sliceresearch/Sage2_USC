@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# setup the db for certificates
+/bin/rm -fr $HOME/.pki/nssdb
+mkdir -p $HOME/.pki/nssdb
+/bin/rm -f /tmp/pwdfile
+echo "" >  /tmp/pwdfile
+echo "" >> /tmp/pwdfile
+certutil -d sql:$HOME/.pki/nssdb -N -f /tmp/pwdfile
+/bin/rm -f /tmp/pwdfile
+
+# generate the keys
+cd keys/
+./GO-linux
+

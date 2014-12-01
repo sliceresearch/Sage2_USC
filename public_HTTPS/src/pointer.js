@@ -147,7 +147,7 @@ function pointer() {
 	    if(this.mode === 0) {
 	    	//this.pointerIcon1.attr({display: "none"});
 	    	//this.pointerIcon2.attr({display: ""});
-	    	this.winModeIcon.attr({display: ""});
+	    	this.winModeIcon.attr({display: "none"});
 	    	this.appModeIcon.attr({display: "none"});
 	    }
 	    // application interaction

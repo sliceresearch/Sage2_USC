@@ -7,7 +7,7 @@
 	"dependencies": [
 		  "openseadragon.min.js"
 	],
-	"title": "Zoom Image Viewer",
+	"title": "Multi-Res Image Viewer",
 	"version": "1.0.0",
 	"description": "High-resolution Image Viewer using the Openseadragon API",
 	"keywords": [ "openseadragon", "image", "viewer" ],

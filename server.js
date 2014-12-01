@@ -94,7 +94,7 @@ if (program.logfile) {
 			else {
 				var i = 0;
 				var s = "";
-				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];;
+				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
 				while (i < args.length) {
 					if (i===0)
 						s = args[i];
@@ -125,17 +125,31 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 var config = loadConfiguration();
 
 var twitter = null;
-if(config.advanced !== undefined && config.advanced.twitter !== undefined){
+if(config.apis !== undefined && config.apis.twitter !== undefined){
 	twitter = new twit({
-		consumer_key:         config.advanced.twitter.consumerKey,
-		consumer_secret:      config.advanced.twitter.consumerSecret,
-		access_token:         config.advanced.twitter.accessToken,
-		access_token_secret:  config.advanced.twitter.accessSecret
+		consumer_key:         config.apis.twitter.consumerKey,
+		consumer_secret:      config.apis.twitter.consumerSecret,
+		access_token:         config.apis.twitter.accessToken,
+		access_token_secret:  config.apis.twitter.accessSecret
 	});
-	delete config.advanced.twitter;
 }
 
+// remove API keys from being investigated further
+if(config.apis !== undefined) delete config.apis;
+
 console.log(config);
+
+// register with EVL's server
+request({
+    "rejectUnauthorized": false,
+    "url": 'https://sage.evl.uic.edu/register',
+    "form": config,
+    "method": "POST"},
+    function(err, response, body){
+	    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+	}
+);
+
 
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
@@ -149,9 +163,9 @@ sageutils.getFullVersion(function(version) {
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
 var ffmpegOptions = {};
-if(config.advanced !== undefined){
-	if(config.advanced.ImageMagick !== undefined) imConstraints.appPath = config.advanced.ImageMagick;
-	if(config.advanced.FFMpeg !== undefined)      ffmpegOptions.appPath = config.advanced.FFMpeg;
+if(config.dependencies !== undefined){
+	if(config.dependencies.ImageMagick !== undefined) imConstraints.appPath = config.dependencies.ImageMagick;
+	if(config.dependencies.FFMpeg !== undefined)      ffmpegOptions.appPath = config.dependencies.FFMpeg;
 }
 var imageMagick = gm.subClass(imConstraints);
 assets.setupBinaries(imConstraints, ffmpegOptions);
@@ -176,7 +190,7 @@ var mediaStreams = {};
 var radialMenus = {};
 
 // Generating QR-code of URL for UI page
-var qr_png = qrimage.image(hostOrigin+'sageUI.html', { ec_level:'M', size: 15, margin:3, type: 'png' });
+var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
 // qr_png.on('readable', function() { process.stdout.write('.'); });
 qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
@@ -227,7 +241,7 @@ var options = setupHttpsOptions();
 
 
 // initializes HTTP and HTTPS servers
-var index = http.createServer(httpServerIndex.onrequest);
+var index  = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
 
 var startTime = new Date();
@@ -440,13 +454,15 @@ function initializeWSClient(wsio) {
 	
 	if ( wsio.clientType === "radialMenu" )
 	{
-		//wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		wsio.on('radialMenuMoved', wsRadialMenuMoved);
+		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
+		wsio.on('radialMenuWindowToggle', wsRadialMenuThumbnailWindow);
 		
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( !(wsio.clientID in radialMenus) )
+		if ( radialMenus[wsio.clientID].wsio === undefined )
 		{
 			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			radialMenus[wsio.clientID] = wsio;
+			radialMenus[wsio.clientID].wsio = wsio;
 		} else {
 			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
 			wsio.emit("disableSendToServer", uniqueID);
@@ -631,20 +647,17 @@ function wsKeyDown(wsio, data) {
 	}
 
 
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
-	if (lockedControl !== null) {
-		var event = {code: data.code, printable:false, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-		broadcast('keyInControl', event ,'receivesWidgetEvents');
-		if (data.code == 13) { //Enter key
-			remoteInteraction[uniqueID].dropControl();
-		} 
-		return;
-	}
-
+	
 
 	//SEND SPECIAL KEY EVENT only will come here
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
+
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null){
+		return;
+	}
+
 	
 	if(remoteInteraction[uniqueID].appInteractionMode()){		
 		keyDown(uniqueID, pointerX, pointerY, data);
@@ -669,10 +682,28 @@ function wsKeyUp(wsio, data) {
 	else if(data.code == 91 || data.code == 92 || data.code == 93){ // command
 		remoteInteraction[uniqueID].CMD = false;
 	}
-	
+
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 	
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+
+	if (lockedControl !== null) {
+		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
+		if (data.code == 13) { //Enter key
+			remoteInteraction[uniqueID].dropControl();
+		} 
+		return;
+	}
+	else if (control!==null){
+		return;
+	}
+	
+	
+
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
 	if(elem !== null){
@@ -691,6 +722,9 @@ function wsKeyPress(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+	var control = findControlsUnderPointer(pointerX,pointerY);
 
 	if(data.code == 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible){ // shift + tab
 		remoteInteraction[uniqueID].toggleModes();
@@ -698,15 +732,15 @@ function wsKeyPress(wsio, data) {
 	}
 	else if (lockedControl !== null){
 		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-		broadcast('keyInControl', event ,'receivesWidgetEvents');
+		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code === 13){ //Enter key
 			remoteInteraction[uniqueID].dropControl();
 		} 
 	}
+	else if(control!==null){
+		return;
+	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		var pointerX = sagePointers[uniqueID].left;
-		var pointerY = sagePointers[uniqueID].top;
-		
 		keyPress(uniqueID, pointerX, pointerY, data);
 	}
 
@@ -896,13 +930,19 @@ function wsBroadcast(wsio, data) {
 // Search tweets using Twitter API
 //
 function wsSearchTweets(wsio, data) {
-	twitter.get('search/tweets', data.query, function(err, info, response) {
-		if(err) throw err;
-		
+	if(twitter === null) {
 		if(data.broadcast === true)
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}}, 'requiresFullApps');
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}}, 'requiresFullApps');
 		else
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info}});
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+		return;
+	}
+	
+	twitter.get('search/tweets', data.query, function(err, info, response) {
+		if(data.broadcast === true)
+			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}}, 'requiresFullApps');
+		else
+			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
 	});
 }
 
@@ -1151,7 +1191,160 @@ function fitWithin(app, x, y, width, height, margin) {
 	return [newAppX, newAppY, newAppWidth, newAppHeight];
 }
 
+// Create a 2D array
+function Create2DArray(rows) {
+  var arr = [];
+  for (var i=0;i<rows;i++) {
+     arr[i] = [];
+  }
+  return arr;
+}
+// Calculate the euclidian distance between two objects with .x and .y fields
+function distance2D(p1, p2) {
+	var d = 0.0;
+	d = Math.sqrt( Math.pow((p1.x-p2.x),2) + Math.pow((p1.y-p2.y),2) );
+	return d;
+}
+function findMinimum(arr) {
+	var val = Number.MAX_VALUE;
+	var idx = 0;
+	for (var i=0;i<arr.length;i++) {
+		if (arr[i]<val) {
+			val = arr[i];
+			idx = i;
+		}
+	}
+	return idx;
+}
+function printMatrix(dist, m, n) {
+	var i, j;
+	for (i=0; i<m; i++) {
+		process.stdout.write(i.toString());
+		for (j=0; j<n; j++) {
+			process.stdout.write(" " + dist[i][j].toFixed(2));
+		}
+		process.stdout.write('\n');
+	}
+}
+
 function tileApplications() {
+	var app;
+	var i, j, c, r;
+	var numCols, numRows, numCells;
+
+	var displayAr  = config.totalWidth / config.totalHeight;
+	var arDiff     = displayAr / averageWindowAspectRatio();
+	var numWindows = applications.length;
+
+	// 3 scenarios... windows are on average the same aspect ratio as the display
+	if (arDiff >= 0.7 && arDiff <= 1.3) {
+		numCols = Math.ceil(Math.sqrt( numWindows ));
+		numRows = Math.ceil(numWindows / numCols);
+	}
+    else if (arDiff < 0.7) {
+		// windows are much wider than display
+		c = Math.round(1 / (arDiff/2.0));
+		if (numWindows <= c) {
+			numRows = numWindows;
+			numCols = 1;
+		}
+		else {
+			numCols = Math.max(2, Math.round(numWindows / c));
+			numRows = Math.round(Math.ceil(numWindows / numCols));
+		}
+	}
+	else {
+		// windows are much taller than display
+		c = Math.round(arDiff*2);
+		if (numWindows <= c) {
+			numCols = numWindows;
+			numRows = 1;
+		}
+		else {
+			numRows = Math.max(2, Math.round(numWindows / c));
+			numCols = Math.round(Math.ceil(numWindows / numRows));
+		}
+	}
+	numCells = numRows * numCols;
+
+    // determine the bounds of the tiling area
+	var titleBar = config.ui.titleBarHeight;
+	if (config.ui.auto_hide_ui===true) titleBar = 0;
+	var areaX = 0;
+	var areaY = Math.round(1.5 * titleBar); // keep 0.5 height as margin
+	if (config.ui.auto_hide_ui===true) areaY = - config.ui.titleBarHeight;
+
+	var areaW = config.totalWidth;
+	var areaH = config.totalHeight-(1.0*titleBar);
+
+	var tileW = Math.floor(areaW / numCols);
+	var tileH = Math.floor(areaH / numRows);
+
+	var padding = 4;
+	// if only one application, no padding, i.e maximize
+	if (applications.length===1) padding = 0;
+
+    var centroidsApps  = [];
+    var centroidsTiles = [];
+
+    // Caculate apps centers
+    for (i=0; i<applications.length; i++) {
+		app =  applications[i];
+		centroidsApps[i] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
+	}
+    // Caculate tiles centers
+	for (i=0; i<numCells; i++) {
+		c = i % numCols;
+		r = Math.floor(i / numCols);
+		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
+	}
+
+	// Calculate distances
+	var distances = new Create2DArray(applications.length);
+	for (i=0; i<applications.length; i++) {
+		for (j=0; j<numCells; j++) {
+			var d = distance2D(centroidsApps[i], centroidsTiles[j]);
+			distances[i][j] = d;
+		}
+	}
+	// dump the matrix
+	//printMatrix(distances, applications.length, numCells);
+	// for (i=0; i<applications.length; i++) {
+	// 	var idx = findMinimum(distances[i]);
+	// 	console.log('Min:', i, idx, distances[i][idx].toFixed(2));
+	// }
+
+	for (i=0; i<applications.length; i++) {
+		// get the application
+		app =  applications[i];
+		// pick a cell
+		var cellid = findMinimum(distances[i]);
+		// put infinite value to disable the chosen cell
+		for (j=0; j<applications.length; j++) distances[j][cellid] = Number.MAX_VALUE;
+
+		// calculate new dimensions
+		c = cellid % numCols;
+		r = Math.floor(cellid / numCols);
+        var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
+
+        // update the data structure
+        app.left   = newdims[0];
+        app.top    = newdims[1] - titleBar;
+		app.width  = newdims[2];
+		app.height = newdims[3];
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							force: true, date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+    }
+}
+
+// Old tiling function
+//
+function tileApplications1() {
 	var app;
 	var i, c, r;
 	var numCols, numRows;
@@ -1488,14 +1681,22 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
 		remoteInteraction[data.addr].releaseControl();
 	}
-	if ((regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) && remoteInteraction[data.addr].lockedControl() === null ) {
+	//console.log("lock:", remoteInteraction[data.addr].lockedControl() );
+	var lockedControl = remoteInteraction[data.addr].lockedControl(); 
+	if (lockedControl){
+		//If a text input widget was locked, drop it
+		var appdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		broadcast('dropTextInputControl', appdata ,'receivesWidgetEvents');
+		remoteInteraction[data.addr].dropControl();
+	}
+	if (regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
 		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
 	}
 }
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	var regButton = /button/
+	var regButton = /button/;
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
@@ -1568,12 +1769,10 @@ function loadConfiguration() {
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
-			if(platform === "Windows"){
-				configFile = path.join("config", "defaultWindows-cfg.json");
-			}
-			else {
-				configFile = path.join("config", "defaultLinux-cfg.json");
-			}
+			if(platform === "Windows")
+				configFile = path.join("config", "defaultWin-cfg.json");
+			else
+				configFile = path.join("config", "default-cfg.json");
 			console.log("Using default configuration file: " + configFile);
 		}
 	}
@@ -1592,6 +1791,7 @@ function loadConfiguration() {
 	userConfig.totalHeight    = userConfig.resolution.height * userConfig.layout.rows;
 	
 	var minDim = Math.min(userConfig.totalWidth, userConfig.totalHeight);
+	var maxDim = Math.max(userConfig.totalWidth, userConfig.totalHeight);
 	
 	if (userConfig.ui.titleBarHeight) userConfig.ui.titleBarHeight = parseInt(userConfig.ui.titleBarHeight, 10);
 	else userConfig.ui.titleBarHeight = Math.round(0.025 * minDim);
@@ -1606,14 +1806,14 @@ function loadConfiguration() {
 	else userConfig.ui.pointerSize = Math.round(0.08 * minDim);
 
 	if (userConfig.ui.minWindowWidth) userConfig.ui.minWindowWidth = parseInt(userConfig.ui.minWindowWidth, 10);
-	else userConfig.ui.minWindowWidth  = Math.round(0.08 * userConfig.totalWidth);  // 8%
+	else userConfig.ui.minWindowWidth  = Math.round(0.08 * minDim);  // 8%
 	if (userConfig.ui.minWindowHeight) userConfig.ui.minWindowHeight = parseInt(userConfig.ui.minWindowHeight, 10);
-	else userConfig.ui.minWindowHeight = Math.round(0.08 * userConfig.totalHeight); // 8%
+	else userConfig.ui.minWindowHeight = Math.round(0.08 * minDim); // 8%
 
 	if (userConfig.ui.maxWindowWidth) userConfig.ui.maxWindowWidth = parseInt(userConfig.ui.maxWindowWidth, 10);
-	else userConfig.ui.maxWindowWidth  = Math.round( 1.2 * userConfig.totalWidth);  // 120%
+	else userConfig.ui.maxWindowWidth  = Math.round( 1.2 * maxDim);  // 120%
 	if (userConfig.ui.maxWindowHeight) userConfig.ui.maxWindowHeight = parseInt(userConfig.ui.maxWindowHeight, 10);
-	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * userConfig.totalHeight); // 120%
+	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * maxDim); // 120%
 
 	// Set default values if missing
 	if (userConfig.port === undefined) userConfig.port = 443;
@@ -1631,7 +1831,7 @@ function getUniqueAppId() {
 
 function getApplications() {
 	var uploadedApps = assets.listApps();
-	uploadedApps.sort(sageutils.compareFilename);
+	uploadedApps.sort(sageutils.compareTitle);
 	
 	return uploadedApps;
 }
@@ -1658,10 +1858,13 @@ function setupDisplayBackground() {
 	var tmpImg, imgExt;
 
 	// background image
-	if(config.background.image !== undefined && config.background.image !== null){
-		var bg_file = path.join(public_https, config.background.image);
+	if(config.background.image !== undefined && config.background.image.url !== undefined){
+		var bg_file = path.join(public_https, config.background.image.url);
 
-		if (config.background.style == "fit") {
+		if (config.background.image.style === "tile") {
+			// do nothing
+		}
+		else if (config.background.image.style === "fit") {
 			var result = exiftool.file(bg_file, function(err, data) {
 				if (err) {
 					console.log("Error processing background image:", bg_file, err);
@@ -1684,7 +1887,8 @@ function setupDisplayBackground() {
 				}
 			} );
 		}
-		else if(config.background.style == "stretch"){
+		else {
+			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 		
@@ -1729,7 +1933,8 @@ function setupHttpsOptions() {
 			// Load the certificate files
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
-			server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
+			if(fs.existsSync(path.join("keys", config.host + "-ca.crt")))
+				server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
 			certs[config.host] = crypto.createCredentials({
 					key:  server_key,
@@ -1813,6 +2018,8 @@ function sendConfig(req, res) {
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
 	var position = [ 0, 0 ];
+	// Limits the amount of memory all fields together (except files) can allocate in bytes.
+	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
 	form.type          = 'multipart';
 	form.multiples     = true;
@@ -2044,14 +2251,24 @@ index.on('listening', function (e) {
 
 // CTRL-C intercept
 process.on('SIGINT', function() {
-	saveSession();
-	assets.saveAssets();
-	if( omicronRunning )
-		omicronManager.disconnect();
-	console.log('');
-	console.log('SAGE2 done');
-	console.log('');
-	process.exit(0);
+	// un-register with EVL's server
+	request({
+	    "rejectUnauthorized": false,
+	    "url": 'https://sage.evl.uic.edu/unregister',
+	    "form": config,
+	    "method": "POST"},
+	    function(err, response, body){
+		    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+			saveSession();
+			assets.saveAssets();
+			if( omicronRunning )
+				omicronManager.disconnect();
+			console.log('');
+			console.log('SAGE2 done');
+			console.log('');
+			process.exit(0);
+		}
+	);
 });
 
 
@@ -2102,6 +2319,8 @@ if (program.interactive)
 				console.log('save\t\tsave state of running applications into a session');
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
+				console.log('regenerate\tregenerates the assets');
+				console.log('hideui\thide/show/delay the user interface');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -2120,6 +2339,14 @@ if (program.interactive)
 				break;
 			case 'sessions':
 				printListSessions();
+				break;
+			case 'hideui':
+				// if argument provided, used as auto_hide delay in second
+				//   otherwise, it flips a switch
+				if (command[1] !== undefined)
+					broadcast('hideui', {delay:parseInt(command[1],10)}, 'requiresFullApps');
+				else
+					broadcast('hideui', null, 'requiresFullApps');
 				break;
 
 			case 'close':
@@ -2142,6 +2369,10 @@ if (program.interactive)
 				assets.listAssets();
 				break;
 
+			case 'regenerate':
+				assets.regenerateAssets();
+				break;
+
 			case 'tile':
 				tileApplications();
 				break;
@@ -2159,14 +2390,26 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
-				saveSession();
-				assets.saveAssets();
-				if( omicronRunning )
-					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
-				process.exit(0);
+				// un-register with EVL's server
+				request({
+				    "rejectUnauthorized": false,
+				    "url": 'https://sage.evl.uic.edu/unregister',
+				    "form": config,
+				    "method": "POST"},
+				    function(err, response, body){
+					    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+
+						saveSession();
+						assets.saveAssets();
+						if( omicronRunning )
+							omicronManager.disconnect();
+						console.log('');
+						console.log('SAGE2 done');
+						console.log('');
+						process.exit(0);
+
+					}
+				);
 				break;
 			default:
 				console.log('Say what? I might have heard `' + line.trim() + '`');
@@ -2178,14 +2421,22 @@ if (program.interactive)
 		// Close with CTRL-D or CTRL-C
 		// Only synchronous code!
 		// Saving stuff
-		saveSession();
-		assets.saveAssets();
-		if( omicronRunning )
-			omicronManager.disconnect();
-		console.log('');
-		console.log('SAGE2 done');
-		console.log('');
-		process.exit(0);
+		request({
+		    "rejectUnauthorized": false,
+		    "url": 'https://sage.evl.uic.edu/unregister',
+		    "form": config,
+		    "method": "POST"},
+		    function(err, response, body){
+			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+				saveSession();
+				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+		});
 	});
 }
 
@@ -2263,9 +2514,9 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	var dt = new Date();
 	var rightMargin = config.totalWidth - ctrl.width;
 	var bottomMargin = config.totalHeight - ctrl.height;
-	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
-	ctrl.top = (pointerY > bottomMargin)? bottomMargin:pointerY ;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left-ctrl.height/2, elemTop: ctrl.top-ctrl.height/2},'receivesWidgetEvents');
+	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
+	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 }
 
 
@@ -2401,12 +2652,11 @@ function togglePointerMode(uniqueID) {
 
 function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	if ( sagePointers[uniqueID] === undefined ) return;
-	remoteInteraction[uniqueID].dropControl();
 	
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	if (ct !== null) {
-		if(data.button === "left"){
+		if (data.button === "left") {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
 			broadcast('requestControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		}
@@ -2414,17 +2664,27 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(ct.show === true) hideControl(ct);
 		}
 		return ;
+	} else {
+		var lockedControl = remoteInteraction[uniqueID].lockedControl(); //If a text input widget was locked, drop it
+		if (lockedControl !== null) {
+			var msgdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+			broadcast('dropTextInputControl', msgdata ,'receivesWidgetEvents');
+			remoteInteraction[uniqueID].dropControl();
+		}
 	}
-
+	
+	
+	
 	// Middle click switches interaction mode too
 	if (data.button === "middle") {
 		togglePointerMode(uniqueID);
 		return;
 	}
 	
-	// menu
-	radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
-	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+
 	if(data.button === "right")
 	{
 		createRadialMenu( uniqueID, pointerX, pointerY );
@@ -2518,7 +2778,6 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 
 }
-
 /*
 function pointerPressRight( address, pointerX, pointerY ) {
 	if ( sagePointers[address] === undefined ) return;
@@ -2608,6 +2867,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	broadcast('releaseControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 	remoteInteraction[uniqueID].releaseControl();
 	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+	
 	// From pointerRelease
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	
@@ -2670,12 +2933,13 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
-	
-	// Menu
-	radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
+
 }
 
 function pointerMove(uniqueID, pointerX, pointerY, data) {
+	if( sagePointers[uniqueID] === undefined )
+		return;
+		
 	sagePointers[uniqueID].left += data.deltaX;
 	sagePointers[uniqueID].top += data.deltaY;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
@@ -2684,10 +2948,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-
+	
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
-
-	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  );
 	
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
@@ -2773,7 +3039,13 @@ function pointerPosition( uniqueID, data ) {
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null)
+		return;
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
@@ -2786,7 +3058,18 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
+		
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
 	
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null)
+		return;
+
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+		return; // Radial menu is using the event
+		
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
 		if(data.wheelDelta > 0) scale = 1.0 / scale;
@@ -2806,8 +3089,7 @@ function pointerScroll( uniqueID, data ) {
 		}
 	}
 	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		var pointerX = sagePointers[uniqueID].left;
-		var pointerY = sagePointers[uniqueID].top;
+		
 		var elem = findAppUnderPointer(pointerX, pointerY);
 
 		if( elem !== null ){
@@ -2847,7 +3129,16 @@ function pointerDraw(uniqueID, data) {
 function pointerDblClick(uniqueID, pointerX, pointerY) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-	
+
+	var control = findControlsUnderPointer(pointerX,pointerY);
+	if (control!==null){
+		return;
+	}
+		
+	// Radial Menu
+	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+		return; // Radial menu is using the event
+		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	if (elem !== null) {
 		if( elem.application === 'thumbnailBrowser' )
@@ -3164,26 +3455,35 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 /******** Radial Menu section ****************************************************************/
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
-	
-	radialMenus[uniqueID] = new radialmenu(uniqueID+"_menu", uniqueID);
-	radialMenus[uniqueID].top = pointerY;
-	radialMenus[uniqueID].left = pointerX;
-
-	
-	
+		
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	var now  = new Date();
 	
 	if( ct === null ) // Do not open menu over widget
 	{
 		if( elem === null )
 		{
+			radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
+			radialMenus[uniqueID+"_menu"].top = pointerY;
+			radialMenus[uniqueID+"_menu"].left = pointerX;
+	
 			// Open a 'media' radial menu
 			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 		}
 		else
 		{
-			// Open a 'app' radial menu
+			// Open a 'app' radial menu (or in this case application widget)
+			var elemCtrl = findControlByAppId(elem.id);
+			if (elemCtrl === null) {
+				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch"+uniqueID, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+			}
+			else if (elemCtrl.show === false) {
+				showControl(elemCtrl, pointerX, pointerY) ;
+			}
+			else {
+				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+			}
 		}
 	}
 	updateRadialMenu(uniqueID);
@@ -3213,12 +3513,43 @@ function updateRadialMenu( uniqueID )
 function radialMenuEvent( data )
 {
 	broadcast('radialMenuEvent', data, 'receivesPointerData');
+	
+	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
+	
+	var radialMenu = radialMenus[data.id+"_menu"];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.onEvent( data );
+		
+		if( radialMenu.hasEventID(data.id) )
+		{
+			return true;
+		}
+		else
+			return false;
+	}
 }
 
 function wsRemoveRadialMenu( wsio, data ) {
-	//console.log("Removed radial menu ID: " + data.id);
-	//radialMenus[data.id] = null;
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.visible = false;
+	}
+}
 
-	var elem = findAppById(data.id);
-	if(elem !== null) deleteApplication( elem );
+function wsRadialMenuThumbnailWindow( wsio, data ) {
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.openThumbnailWindow( data );
+	}
+}
+
+function wsRadialMenuMoved( wsio, data ) {
+	var radialMenu = radialMenus[data.id];
+	if( radialMenu !== undefined )
+	{
+		radialMenu.setPosition( data );
+	}
 }

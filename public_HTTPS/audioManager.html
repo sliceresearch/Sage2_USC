@@ -23,6 +23,8 @@
 	var port;
 	var dt;
 	
+	var autoplay;
+	
 	var hostAlias = {};
 	
 	var videos = {};
@@ -32,6 +34,8 @@
 		port = window.location.port;
 		if(window.location.protocol == "http:" && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
+		
+		autoplay = true;
 		
 		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
 		
@@ -111,6 +115,12 @@
 				vid.addEventListener('canplay', function() {
 					console.log("video can now play"); // Video is loaded and can be played
 					vid.ready = true;
+					if(autoplay === true) {
+						var clientTime = new Date();
+						var serverTime = new Date(clientTime.getTime() - dt);
+						playPauseVideo(data.id);
+						//wsio.emit('updateVideoTime', {elemId: vid.id, time: vid.currentTime, play: true, sent: serverTime});
+					}
 				}, false);
 				
 				vid.addEventListener('ended', function() {
@@ -141,7 +151,7 @@
 				source.type = data.data.type;
 				vid.appendChild(source);
 				
-				vid.style.display = "none";
+				//vid.style.display = "none";
 				
 				videos[vid.id] = {interval: null};
 				

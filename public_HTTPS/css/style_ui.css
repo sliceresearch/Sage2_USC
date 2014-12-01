@@ -88,10 +88,10 @@ span {
 	transition: 100ms ease-in-out;
 }
 
-.uiButton img:hover {
-	-webkit-transform: scale(1.2);
-	-moz-transform: scale(1.2);
-	transform: scale(1.2);
+.uiButton:hover img {
+	-webkit-transform: scale(1.0);
+	-moz-transform: scale(1.0);
+	transform: scale(1.0);
 }
 
 .uiButton p {
@@ -105,14 +105,14 @@ span {
 	color: #FFFFFF;
 	background-color: #787878;
 	border-radius: 8px;
-	opacity: 0.0;
+	opacity: 1.0;
 	cursor: default;
 	-webkit-transition: opacity 100ms ease-in-out;
 	-moz-transition: opacity 100ms ease-in-out;
 	transition: opacity 100ms ease-in-out;
 }
 
-.uiButton img:hover + p {
+.uiButton:hover img + p {
 	opacity: 1.0;
 }
 
@@ -162,7 +162,7 @@ span {
 
 #appCloseBtn {
 	position: absolute;
-	right: 90px;
+	right: 75px;
 	bottom: 10px;
 }
 
@@ -226,7 +226,7 @@ span {
 }
 #fileCloseBtn {
 	position: absolute;
-	right: 90px;
+	right: 75px;
 	bottom: 10px;
 }
 #fileDeleteBtn {
@@ -236,7 +236,7 @@ span {
 }
 #fileUploadBtn {
 	position: absolute;
-	left: 90px;
+	left: 82px;
 	bottom: 10px;
 }
 
@@ -484,11 +484,6 @@ span {
 	right: 10px;
 	bottom: 10px;
 }
-#cancelFilesBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
-}
 
 #blackoverlay {
 	display: none;
@@ -559,7 +554,7 @@ span {
 }
 
 .button {
-	padding: 12px 16px 12px 16px;
+	padding: 10px 12px 10px 12px;
 	border-radius: 12px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;

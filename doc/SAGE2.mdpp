@@ -2,13 +2,15 @@
 
 !TOC
 
-!INCLUDE "README.md"
-!INCLUDE "Install (Mac OSX).md"
+!INCLUDE "Home.md"
+!INCLUDE "Install (Mac OS X).md"
 !INCLUDE "Install (Ubuntu).md"
 !INCLUDE "Install (Windows).md"
 !INCLUDE "Install (openSUSE).md"
 !INCLUDE "Configuration.md"
 !INCLUDE "Launch (Server & Displays).md"
 !INCLUDE "SAGE2 Application API.md"
+!INCLUDE "systemd startup.md"
 
 !REF
+

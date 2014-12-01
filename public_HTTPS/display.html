@@ -156,6 +156,7 @@
 		
 		wsio.on('broadcast', function(data) {
 			if(applications[data.app] === undefined){
+				// should have better way to determine if app is loaded
 				setTimeout(function() {
 					applications[data.app][data.func](data.data);
 				}, 500);
@@ -193,6 +194,23 @@
 			}
 		});
 		
+		wsio.on('hideui', function(param) {
+			if (param) {
+				clearTimeout(uiTimer);
+				ui.showInterface();
+				uiTimerDelay = param.delay;
+				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+			} else
+				if (ui.uiHidden===true) {
+					clearTimeout(uiTimer);
+					uiTimer = null;
+					ui.showInterface();
+				}
+				else {
+					ui.hideInterface();
+				}
+		});
+
 		wsio.on('setupSAGE2Version', function(version) {
 			ui.updateVersionText(version);
 		});
@@ -270,13 +288,18 @@
 
 			var date = new Date(data.date);
 
+			var translate = "translate(" + data.left + "px," + data.top + "px)";
+			
 			var windowTitle = document.createElement("div");
 			windowTitle.id  = data.id + "_title";
 			windowTitle.className    = "windowTitle";
 			windowTitle.style.width  = data.width.toString() + "px";
 			windowTitle.style.height = ui.titleBarHeight.toString() + "px";
-			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
-			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
+			windowTitle.style.left   = (-ui.offsetX).toString() + "px";
+			windowTitle.style.top    = (-ui.offsetY).toString() + "px";
+			windowTitle.style.webkitTransform = translate;
+			windowTitle.style.mozTransform    = translate;
+			windowTitle.style.transform       = translate;
 			windowTitle.style.zIndex = itemCount.toString();
 			if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 			ui.main.appendChild(windowTitle);
@@ -299,11 +322,14 @@
 			var windowItem = document.createElement("div");
 			windowItem.id  = data.id;
 			windowItem.className      = "windowItem";
-			windowItem.style.left     = (data.left-ui.offsetX).toString() + "px";
-			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
+			windowItem.style.left     = (-ui.offsetX).toString() + "px";
+			windowItem.style.top      = (ui.titleBarHeight-ui.offsetY).toString() + "px";
+			windowItem.style.webkitTransform = translate;
+			windowItem.style.mozTransform    = translate;
+			windowItem.style.transform       = translate;
 			windowItem.style.overflow = "hidden";
 			windowItem.style.zIndex   = (itemCount+1).toString();
-			if (ui.noDropShadow===true) windowItem.style.boxShadow = "none";
+			if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
@@ -561,6 +587,8 @@
 			resetIdle();
 
 			var date  = new Date(position_data.date);
+			
+			/*
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
 			
@@ -571,13 +599,22 @@
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
 			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
+			*/
+			
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+			
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
 
 			var app = applications[position_data.elemId];
-			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
-				if(app.moved !== undefined) {
-					app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight),
-								ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
-				}
+			if(app !== undefined && (position_data.force || app.moveEvents === "continuous") ) {
+				app.moved && app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight), ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
 			}
 
 		});
@@ -588,14 +625,20 @@
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop = position_data.elemTop - ui.offsetY;
 			var selectedControl = document.getElementById(position_data.elemId);
-
-			selectedControl.style.left = eLeft.toString() + "px";
-			selectedControl.style.top = eTop.toString() + "px";
+			
+			if(selectedControl !== undefined && selectedControl !== null) {
+				selectedControl.style.left = eLeft.toString() + "px";
+				selectedControl.style.top = eTop.toString() + "px";
+			}
+			else {
+				console.log("cannot find control: " + position_data.elemId);
+			}
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
 			resetIdle();
-
+			
+			/*
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
 			
@@ -607,6 +650,19 @@
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
 			selectedElem.style.top  = (eTop+ui.titleBarHeight).toString() + "px";
+			*/
+			
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+			selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+			
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
 			
 			var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 			var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
@@ -743,12 +799,26 @@
 			var regB  = /button/;
 			var regS  = /slider/;
 			var regTI = /textInput/;
-			
+			if (lockedControlElements[data.ptrId]){
+				var lckedCtrl = lockedControlElements[data.ptrId];
+				var lckedCtrlId = lckedCtrl.attr("id");
+				if (regTI.test(lckedCtrlId)){
+					var textInput = lckedCtrl.parent();
+					var blinkControlHandle = textInput.data("blinkControlHandle");
+					clearInterval(blinkControlHandle);	
+				}
+				
+			}
 
 			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
 				var temp = regC.test(ctrId)? null:ctrId;
 				
 				var aId = ctrl.data("appId");
+				if(regTI.test(ctrId)===true){
+					var textInput = ctrl.parent();
+					var blinkControlHandle = setInterval(textInput.data("blinkCallback"),1000);
+					textInput.data("blinkControlHandle",blinkControlHandle);
+				}
 				/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
 					if(/line/.test(ctrId) || /knob/.test(ctrId))
 				}*/
@@ -766,9 +836,12 @@
 		wsio.on('releaseControlId', function(data){
 			var regexSlider = /slider/;
 			var regexButton = /button/;
+			var regexTextInput = /textInput/;
 			var lockedControl = lockedControlElements[data.ptrId];
-			lockedControlElements[data.ptrId] = null;
+			
 			if (lockedControl){
+				if (regexTextInput.test(lockedControl.attr("id"))===false)
+					lockedControlElements[data.ptrId] = null;
 				var ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 				var ctrlId = ctrl? ctrl.attr("id"): "";
 				if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
@@ -791,9 +864,9 @@
 			if(ctrl){
 				var ctrId = ctrl.attr('id');
 				if (/button/.test(ctrId)){
-					ctrl = ctrl.parent().select("path");
+					ctrl = ctrl.parent().select("path") || ctrl.parent().select("text");
 					var animationInfo = ctrl.data("animationInfo") ;
-					if (animationInfo.animation === true){
+					if (animationInfo.textual === false && animationInfo.animation === true){
 						var delay = animationInfo.delay;
 						var state = animationInfo.state;
 						var fromPath = animationInfo.fromPath;
@@ -846,7 +919,7 @@
 
 		});
 
-		wsio.on('keyInControl', function(data){
+		wsio.on('keyInTextInputWidget', function(data){
 			var ctrl = getWidgetControlById(data);
 			if (ctrl){
 				var textInput = ctrl.parent();
@@ -856,9 +929,19 @@
 				}
 				else{
 					var func = textInput.data("call");
+					var blinkControlHandle = textInput.data("blinkControlHandle");
+					clearInterval(blinkControlHandle);
 					if (func !== undefined && func !== null)
 						func(getText(textInput));
 				}		
+			}
+		});
+		wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+			var ctrl = getWidgetControlById(data);
+			if (ctrl){
+				var textInput = ctrl.parent();
+				var blinkControlHandle = textInput.data("blinkControlHandle");
+				clearInterval(blinkControlHandle);		
 			}
 		});
 	}
