@@ -105,7 +105,10 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-addFile = function(filename,exif) {
+addFile = function(filename, exif) {
+	if (exif.MIMEType === 'application/vnd.adobe.photoshop')
+		exif.MIMEType = 'image/vnd.adobe.photoshop';
+	
 	// Add the asset in the array
 	var anAsset = new Asset();
 	anAsset.setFilename(filename);
@@ -118,7 +121,7 @@ addFile = function(filename,exif) {
 	var rthumb = path.join(AllAssets.rel, 'assets', exif.FileName);
 
 	// If it's an image, process for thumbnail
-	if (exif.MIMEType === 'application/vnd.adobe.photoshop' || exif.MIMEType.indexOf('image/') > -1) {
+	if (exif.MIMEType.indexOf('image/') > -1) {
 		imageMagick(filename+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", "1024x1024").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", "1024x1024").write(thumb+'_1024.png', function(err) {
 			if (err) {
 				console.log("Assets> cannot generate 1024x1024 thumbnail for:", filename);
