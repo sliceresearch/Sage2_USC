@@ -258,12 +258,12 @@ function sagePointer(wsio) {
 				var _this = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 				
+				function updateMediaStreamChunk(index, msg_chunk) { // jshint ignore:line
+					setTimeout(function() {
+						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
+					}, 4);
+				}
 				for(var i=0; i<nchunks; i++){
-					function updateMediaStreamChunk(index, msg_chunk){
-						setTimeout(function() {
-							_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
-						}, 4);
-					}
 					var start = i*this.chunk;
 					var end = (i+1)*this.chunk < raw.length ? (i+1)*this.chunk : raw.length;
 					updateMediaStreamChunk(i, raw.substring(start, end));
@@ -327,7 +327,7 @@ function sagePointer(wsio) {
 					formdata.append("dropX", dropX);
 					formdata.append("dropY", dropY);
 
-					xhr = new XMLHttpRequest();
+					var xhr = new XMLHttpRequest();
 					xhr.open("POST", "upload", true);
 					xhr.upload.id = "file"+i.toString();
 					xhr.upload.addEventListener('progress', function(event) {
@@ -352,7 +352,7 @@ function sagePointer(wsio) {
 								}
 							}, 500);
 						}
-					}, false);
+					}, false); // jshint ignore:line
 					xhr.send(formdata);
 				}
 				else{

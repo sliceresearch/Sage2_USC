@@ -113,7 +113,7 @@ function windowManager(id, ws) {
 						applicationIcon.onload = function() {
 							// wait for the icon to load for drawing it
 							self.ctx.drawImage(applicationIcon, x, y, size, size);
-						};
+						}; // jshint ignore:line
 					}
 				} else {
 					// by default, use the canvas icon

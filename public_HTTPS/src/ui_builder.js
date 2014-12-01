@@ -12,6 +12,10 @@
 // Generic functions used by all SAGE2 applications
 //
 
+// access a property using a string literal within a pair of square brackets
+/* jshint -W069 */
+
+
 function uiBuilder(json_cfg, clientID) {
 
 	// Save the wall configuration object
@@ -597,6 +601,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.hideInterface = function() {
+		var i;
 		if (!this.uiHidden) {
 			// Hide the top bar
 			this.upperBar.style.display = 'none';
@@ -607,12 +612,12 @@ function uiBuilder(json_cfg, clientID) {
 			}
 			// Hide the apps top bar
 			var applist = document.getElementsByClassName("windowTitle");
-			for (var i = 0; i < applist.length; i++) {
+			for (i = 0; i < applist.length; i++) {
 				applist[i].style.display = 'none';
 			}
 			// Hide the apps border
 			var itemlist = document.getElementsByClassName("windowItem");
-			for (var i = 0; i < itemlist.length; i++) {
+			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
 			this.uiHidden = true;
@@ -620,6 +625,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.showInterface = function() {
+		var i;
 		if (this.uiHidden) {
 			// Show the top bar
 			this.upperBar.style.display = 'block';
@@ -632,12 +638,12 @@ function uiBuilder(json_cfg, clientID) {
 			}
 			// Show the apps top bar
 			var applist = document.getElementsByClassName("windowTitle");
-			for (var i = 0; i < applist.length; i++) {
+			for (i = 0; i < applist.length; i++) {
 				applist[i].style.display = 'block';
 			}
 			// Show the apps border
 			var itemlist = document.getElementsByClassName("windowItem");
-			for (var i = 0; i < itemlist.length; i++) {
+			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
 			this.uiHidden = false;
