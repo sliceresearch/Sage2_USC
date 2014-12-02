@@ -112,7 +112,6 @@ generateImageThumbnails = function(infile, outfile, sizes, index) {
 	if(index >= sizes.length) return;
 
 	imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
-		console.log("Done:", infile, sizes[index]);
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
@@ -122,67 +121,86 @@ generateImageThumbnails = function(infile, outfile, sizes, index) {
 	});
 };
 
-generatePdfThumbnails = function(infile, outfile, width, height, sizes) {
+generatePdfThumbnails = function(infile, outfile, width, height, sizes, index) {
 	imageMagick(width, height, "#ffffff").append(infile+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
 		if (err) {
 			console.log("Assets> cannot generate thumbnails for:", infile);
 			return;
 		}
 		
-		sizes.forEach(function(element, index, array) {
-			imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", element+"x"+element).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", element+"x"+element).write(outfile+'_'+element+'.png', function (err) {
-				if (err) {
-					console.log("Assets> cannot generate "+element+"x"+element+" thumbnail for:", infile);
-					return;
-				}
-			});
-		});
+		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index);
 	});
 };
 
-generateVideoThumbnails = function(infile, outfile, width, height, sizes) {
-	var aspect = width/height;
+generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index) {
+	// initial call, index is not specified
+	index = index || 0;
+	// are we done yet
+	if(index >= sizes.length) return;
 	
-	sizes.forEach(function(element, index, array) {
-		var size = element + "x" + Math.round(element/aspect);
-		if(aspect < 1.0) size = Math.round(element*aspect) + "x" + element;
-		
-		var cmd = ffmpeg(infile);
-		if(ffmpegPath !== null) cmd.setFfmpegPath(ffmpegPath);
-		cmd.on('end', function() {
-			var tmpImg = outfile+'_'+size+'_1.png';
-			imageMagick(tmpImg).command("convert").in("-resize", element+"x"+element).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", element+"x"+element).write(outfile+'_'+element+'.png', function(err) {
-				if (err) {
-					console.log("Assets> cannot generate "+element+"x"+element+" thumbnail for:", filename);
-					return;
-				}
-				fs.unlink(tmpImg, function (err) {
-					if(err) throw err;
-				});
-			});
-		}).screenshots({
-			timestamps: ["10%"], 
-			filename: path.basename(outfile)+"_%r_%i.png", 
-			folder: path.dirname(outfile), 
-			size: size
-		});
+	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function (err) {
+		if (err) {
+			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			return;
+		}
+		// recursive call to generate the next size
+		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index+1);
 	});
 };
 
-generateAppThumbnails = function(infile, outfile, color, sizes) {
-	sizes.forEach(function(element, index, array) {
-		var radius = Math.round(element/2);
-		var edge   = Math.round(element/128);
-		var corner = Math.round(element/6.5641);
-		var width  = Math.round(element/1.4382);
-		var circle = radius + " " + radius + " " + edge + " " + radius;
-		var img = corner + " " + corner + " " + width + " " + width;
-		imageMagick(element, element, "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+color.r+","+color.g+","+color.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+element+'.png', function(err) {
+generateVideoThumbnails = function(infile, outfile, width, height, sizes, index) {
+	// initial call, index is not specified
+	index = index || 0;
+	// are we done yet
+	if(index >= sizes.length) return;
+	
+	var aspect = width/height;
+	var size = sizes[index] + "x" + Math.round(sizes[index]/aspect);
+	if(aspect < 1.0) size = Math.round(sizes[index]*aspect) + "x" + sizes[index];
+	
+	var cmd = ffmpeg(infile);
+	if(ffmpegPath !== null) cmd.setFfmpegPath(ffmpegPath);
+	cmd.on('end', function() {
+		var tmpImg = outfile+'_'+size+'_1.png';
+		imageMagick(tmpImg).command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
 			if (err) {
-				console.log("Assets> cannot generate "+element+"x"+element+" thumbnail for:", filename);
+				console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 				return;
 			}
+			fs.unlink(tmpImg, function (err) {
+				if (err) throw err;
+			});
+			// recursive call to generate the next size
+			generateVideoThumbnails(infile, outfile, width, height, sizes, index+1);
 		});
+	}).screenshots({
+		timestamps: ["10%"], 
+		filename: path.basename(outfile)+"_%r_%i.png", 
+		folder: path.dirname(outfile), 
+		size: size
+	});
+};
+
+generateAppThumbnails = function(infile, outfile, color, sizes, index) {
+	// initial call, index is not specified
+	index = index || 0;
+	// are we done yet
+	if(index >= sizes.length) return;
+	
+	var radius = Math.round(sizes[index]/2);
+	var edge   = Math.round(sizes[index]/128);
+	var corner = Math.round(sizes[index]/6.5641);
+	var width  = Math.round(sizes[index]/1.4382);
+	var circle = radius + " " + radius + " " + edge + " " + radius;
+	var img = corner + " " + corner + " " + width + " " + width;
+	
+	imageMagick(sizes[index], sizes[index], "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+color.r+","+color.g+","+color.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+sizes[index]+'.png', function(err) {
+		if (err) {
+			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			return;
+		}
+		// recursive call to generate the next size
+		generateAppThumbnails(infile, outfile, color, sizes, index+1)
 	});
 };
 
