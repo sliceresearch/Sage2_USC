@@ -105,14 +105,20 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-generateImageThumbnails = function(infile, outfile, sizes) {
-	sizes.forEach(function(element, index, array) {
-		imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", element+"x"+element).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", element+"x"+element).write(outfile+'_'+element+'.png', function(err) {
-			if (err) {
-				console.log("Assets> cannot generate "+element+"x"+element+" thumbnail for:", infile);
-				return;
-			}
-		});
+generateImageThumbnails = function(infile, outfile, sizes, index) {
+	// initial call, index is not specified
+	index = index || 0;
+	// are we done yet
+	if(index >= sizes.length) return;
+
+	imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+		console.log("Done:", infile, sizes[index]);
+		if (err) {
+			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			return;
+		}
+		// recursive call to generate the next size
+		generateImageThumbnails(infile, outfile, sizes, index+1);
 	});
 };
 
