@@ -112,7 +112,6 @@ generateImageThumbnails = function(infile, outfile, sizes, index) {
 	if(index >= sizes.length) return;
 
 	imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
-		console.log("Done:", infile, sizes[index]);
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
