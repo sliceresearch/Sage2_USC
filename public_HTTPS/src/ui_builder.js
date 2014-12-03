@@ -153,7 +153,7 @@ function uiBuilder(json_cfg, clientID) {
 						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
 						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
 						
-						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
+						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
 						_this.bg.style.backgroundSize     = bgImg.naturalWidth +"px " + bgImg.naturalHeight + "px";
@@ -170,8 +170,6 @@ function uiBuilder(json_cfg, clientID) {
 							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + ".png";
 						else
 							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.url.substring(ext);
-						
-						console.log(bgImgFinal);
 						
 						_this.bg.style.top    = "0px";
 						_this.bg.style.left   = "0px";
