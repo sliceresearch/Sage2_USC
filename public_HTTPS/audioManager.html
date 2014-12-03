@@ -103,6 +103,7 @@
 				
 				var vid = document.createElement('audio');
 				vid.id = data.id;
+				vid.volume = 0.8;
 				vid.style.display = "none";
 				
 				vid.addEventListener('canplay', function() {
@@ -142,6 +143,7 @@
 				volumeSlider.max = 10;
 				volumeSlider.step = 1;
 				volumeSlider.value = 8;
+				volumeSlider.addEventListener('input', changeVolume, false);
 				volume.appendChild(volumeSlider);
 				
 				var play = document.createElement('td');
@@ -200,6 +202,16 @@
 		var elem = document.getElementById(id);
 		if(elem !== undefined && elem !== null)
 			elem.parentNode.removeChild(elem);
+	}
+	
+	function changeVolume(event) {
+		var vol = document.getElementById(event.target.id).value / 10;
+		var videoId = event.target.id.substring(0, event.target.id.length-13);
+		changeVideoVolume(videoId, vol);
+	}
+	
+	function changeVideoVolume(videoId, volume) {
+		document.getElementById(videoId).volume = volume;
 	}
 	
 	function playVideo(id) {
