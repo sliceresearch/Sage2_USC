@@ -219,6 +219,7 @@ var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.t
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
+var appHandles = {};
 
 
 // sets up the background for the display clients (image or color)
@@ -413,6 +414,8 @@ function initializeWSClient(wsio) {
 		wsio.on('openNewWebpage', wsOpenNewWebpage);
 	}
 	if(wsio.messages.sendsVideoSynchonization){
+		wsio.on('playVideo', wsPlayVideo);
+		wsio.on('pauseVideo', wsPauseVideo);
 		wsio.on('updateVideoTime', wsUpdateVideoTime);
 	}
 	if(wsio.messages.sharesContentWithRemoteServer){
@@ -1493,8 +1496,22 @@ function wsLoadFileFromServer(wsio, data) {
 		loadSession(data.filename);
 	}
 	else {
-		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
+		appLoader.loadFileFromLocalStorage(data, function(appInstance, handle) {
 			appInstance.id = getUniqueAppId();
+			
+			if(appInstance.application === "movie_player"){
+				handle.onstartdecode = function() {
+					console.log("start decoding");
+				};
+				handle.onstopdecode = function(err, finish) {
+					console.log("stop decoding");
+				};
+				handle.onnewframe = function(frameIdx, yuvBuffer) {
+					console.log("received frame: " + frameIdx);
+				};
+				
+				appHandles[appInstance.id] = handle;
+			}
 			
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
@@ -1578,6 +1595,16 @@ function wsOpenNewWebpage(wsio, data) {
 
 
 // **************  Video / Audio Synchonization *****************
+
+function wsPlayVideo(wsio, data) {
+	if(appHandles[data.id] === undefined || appHandles[data.id] === null) return;
+	
+	appHandles[data.id].startLiveDecoding();
+}
+
+function wsPauseVideo(wsio, data) {
+	
+}
 
 function wsUpdateVideoTime(wsio, data) {
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');

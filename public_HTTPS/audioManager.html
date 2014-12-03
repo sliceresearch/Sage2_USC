@@ -21,13 +21,8 @@
 	var wsio;
 	var hostname;
 	var port;
-	var dt;
-	
 	var autoplay;
-	
 	var hostAlias = {};
-	
-	var videos = {};
 	
 	function init() {
 		hostname = window.location.hostname;
@@ -103,117 +98,71 @@
 		
 		wsio.on('createAppWindow', function(data) {
 			if(data.application === "movie_player"){
-				var main = document.getElementById("main");
+				var main = document.getElementById('main');
+				var videosTable = document.getElementById('videos');
 				
-				var vid = document.createElement("video");
+				var vid = document.createElement('audio');
 				vid.id = data.id;
-				vid.width = 800;
-				vid.height = vid.width / data.aspect;
-				vid.controls = false;
-				vid.ready = false;
+				vid.style.display = "none";
 				
 				vid.addEventListener('canplay', function() {
 					console.log("video can now play"); // Video is loaded and can be played
-					vid.ready = true;
-					if(autoplay === true) {
-						var clientTime = new Date();
-						var serverTime = new Date(clientTime.getTime() - dt);
-						playPauseVideo(data.id);
-						//wsio.emit('updateVideoTime', {elemId: vid.id, time: vid.currentTime, play: true, sent: serverTime});
-					}
+					if(autoplay === true) playVideo(data.id);
 				}, false);
 				
 				vid.addEventListener('ended', function() {
 					console.log("video ended");
-					vid.currentTime = 0;
-					vid.pause();
-					vid.style.display = "none";
-					clearInterval(videos[vid.id].interval);
-					var clientTime = new Date();
-					var serverTime = new Date(clientTime.getTime() - dt);
-					wsio.emit('updateVideoTime', {elemId: vid.id, time: vid.currentTime, play: false, sent: serverTime});
+					if(autoplay === true) vid.currentTime = 0;
 				}, false);
 				
 				
-				var a = document.createElement("a");
-				a.href = data.data.src;
-				var url = data.data.src;
-				if(hostAlias[a.hostname] !== undefined)
-					url = data.url.replace(a.hostname, hostAlias[a.hostname]);
-				
-				console.log("URL: " + data.url);
-				console.log("SRC: " + url);
-				
-				var source = document.createElement("source");
+				var url = cleanURL(data.url);
+				var source = document.createElement('source');
 				var param = url.indexOf('?');
 				if(param >= 0) source.src = url + "&clientID=audio";
 				else source.src = url + "?clientID=audio";
-				source.type = data.data.type;
+				source.type = data.type;
 				vid.appendChild(source);
 				
-				//vid.style.display = "none";
+				var videoRow = document.createElement('tr');
+				videoRow.id = data.id + "_row";
+				var title = document.createElement('td');
+				title.id = data.id + "_title";
+				title.className = "videoTitle";
+				title.textContent = data.title;
 				
-				videos[vid.id] = {interval: null};
+				var volume = document.createElement('td');
+				volume.id = data.id + "_volume";
+				volume.className = "videoVolume";
+				var volumeSlider = document.createElement('input');
+				volumeSlider.id = data.id + "_volumeSlider";
+				volumeSlider.className = "videoVolumeSlider";
+				volumeSlider.type = "range";
+				volumeSlider.min = 0;
+				volumeSlider.max = 10;
+				volumeSlider.step = 1;
+				volumeSlider.value = 8;
+				volume.appendChild(volumeSlider);
+				
+				var play = document.createElement('td');
+				play.id = data.id + "_play";
+				play.className = "videoPlay";
+				play.textContent = "Pause";
+				
+				videoRow.appendChild(title);
+				videoRow.appendChild(volume);
+				videoRow.appendChild(play);
 				
 				main.appendChild(vid);
+				videosTable.appendChild(videoRow);
 			}
 			
 			if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 		});
 		
-		/*
-		wsio.on('addNewElement', function(elem_data) {
-			var main = document.getElementById("main");
-			
-			if(elem_data.type == "video" || elem_data.type == "youtube"){
-				var vid = document.createElement("video");
-				vid.id = elem_data.id;
-				vid.width = 800;
-				vid.height = vid.width / elem_data.aspect;
-				vid.controls = false;
-				vid.ready = false
-				vid.style.backgroundColor = "#333333";
-				if(elem_data.resrc != null) vid.poster = elem_data.resrc;
-				
-				vid.addEventListener('canplay', function() {
-					console.log("video can now play"); // Video is loaded and can be played
-					vid.ready = true;
-				}, false);
-				vid.addEventListener('ended', function() {
-					console.log("video ended");
-					vid.currentTime = 0;
-					vid.pause();
-					vid.style.display = "none";
-					clearInterval(videos[vid.id].interval);
-					var clientTime = new Date();
-					var serverTime = new Date(clientTime.getTime() - dt);
-					wsio.emit('updateVideoTime', {elemId: vid.id, time: vid.currentTime, play: false, sent: serverTime});
-				}, false);
-				
-				console.log(elem_data.src);
-				
-				var source = document.createElement("source");
-				var param = elem_data.src.indexOf('?');
-				if(param >= 0) source.src = elem_data.src + "&clientID=audio";
-				else source.src = elem_data.src + "?clientID=audio";
-				source.type = "video/mp4";
-				vid.appendChild(source);
-				
-				vid.style.display = "none";
-				
-				videos[vid.id] = {interval: null};
-				
-				main.appendChild(vid);
-			}
-		});
-		*/
-		
 		wsio.on('deleteElement', function(elem_data) {
-			var deleteElem = document.getElementById(elem_data.elemId);
-			if(deleteElem != null){
-				clearInterval(videos[deleteElem.id].interval);
-				deleteElem.parentNode.removeChild(deleteElem);
-			}
+			deleteElement(elem_data.elemId);
+			deleteElement(elem_data.elemId + "_row");
 		});
 		
 		wsio.on('animateCanvas', function(data) {
@@ -221,6 +170,7 @@
 		});
 		
 		wsio.on('eventInItem', function(event_data) {
+			/*
 			var selectedElem = document.getElementById(event_data.id);
 			if(selectedElem === undefined || selectedElem === null) return;
 			
@@ -231,38 +181,33 @@
 					playPauseVideo(event_data.id);
 				}
 			}
+			*/
 		});
 	}
 	
-	function playPauseVideo(elemId) {
-		var videoElem = document.getElementById(elemId);
-		var allVideos = document.getElementsByTagName("video");
-		
-		for(var i=0; i<allVideos.length; i++){
-			allVideos[i].style.display = "none";
-		}
-		
-		if(videoElem.paused == true){
-			videoElem.play();
-			videoElem.style.display = "block";
-			var clientTime = new Date();
-			var serverTime = new Date(clientTime.getTime() - dt);
-			
-			wsio.emit('updateVideoTime', {elemId: videoElem.id, time: videoElem.currentTime, play: true, sent: serverTime});
-			videos[videoElem.id].interval = setInterval(function() {
-				var clientTime = new Date();
-				var serverTime = new Date(clientTime.getTime() - dt);
-				wsio.emit('updateVideoTime', {elemId: videoElem.id, time: videoElem.currentTime, play: true, sent: serverTime});
-			}, 2000);
-		}
-		else{
-			videoElem.pause();
-			videoElem.style.display = "none";
-			clearInterval(videos[videoElem.id].interval);
-			var clientTime = new Date();
-			var serverTime = new Date(clientTime.getTime() - dt);
-			wsio.emit('updateVideoTime', {elemId: videoElem.id, time: videoElem.currentTime, play: false, sent: serverTime});
-		}
+	function cleanURL(url) {
+		var a = document.createElement('a');
+		a.href = url;
+		var clean = url;
+	
+		if(hostAlias[a.hostname] !== undefined)
+			clean = url.replace(a.hostname, hostAlias[a.hostname]);
+	
+		return clean;
+	}
+	
+	function deleteElement(id) {
+		var elem = document.getElementById(id);
+		if(elem !== undefined && elem !== null)
+			elem.parentNode.removeChild(elem);
+	}
+	
+	function playVideo(id) {
+		wsio.emit('playVideo', {id: id});
+	}
+	
+	function pauseVideo(id) {
+		wsio.emit('pauseVideo', {id: id});
 	}
 </script>
 
@@ -272,7 +217,13 @@
 
 <body onload="init()">
 	<div id="main">
-		
+		<table id="videos">
+			<tr>
+				<td class="videoTitle"><b>Video</b></td>
+				<td class="videoVolume"><b>Volume</b></td>
+				<td class="videoPlay"><b>Play/Pause</b></td>
+			</tr>
+		</table>
 	</div>
 </body>
 </html>

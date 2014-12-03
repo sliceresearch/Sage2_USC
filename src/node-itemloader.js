@@ -319,7 +319,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	var video = new videodecoder({ffmpegPath: this.ffmpegPath});
 	
 	video.onmetadata = function(err, data) {
-		var metadata = {title: "Video Player", version: "1.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
+		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
 		var exif = assets.getExifData(file);
 		
 		var appInstance = {
@@ -353,16 +353,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			date:            new Date()
 		};
 		_this.scaleAppToFitDisplay(appInstance);
-		callback(appInstance);
-	};
-	video.onstartdecode = function() {
-		
-	};
-	video.onstopdecode = function(err, finish) {
-		
-	};
-	video.onnewframe = function(frameIdx, yuvBuffer) {
-	
+		callback(appInstance, video);
 	};
 	
 	video.initializeLiveDecoder(file);
@@ -606,8 +597,8 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 	var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
 	
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance) {
-		callback(appInstance);
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance, handle) {
+		callback(appInstance, handle);
 	});
 };
 
@@ -620,8 +611,8 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var localPath = path.join(this.publicDir, url);
 	var mime_type = mime.lookup(localPath);
 	
-	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance) {
-		callback(appInstance);
+	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
+		callback(appInstance, handle);
 	});
 };
 
@@ -660,15 +651,15 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				} else {
 					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data);
-					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
-						callback(appInstance);
+					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+						callback(appInstance, handle);
 					});
 				}
 			});
 		}
 		else {
-			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance) {
-				callback(appInstance);
+			_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+				callback(appInstance, handle);
 			});
 		}
 	});
@@ -683,17 +674,17 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 		
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-				callback(appInstance);
+				callback(appInstance, null);
 			});
 		}
 		else if(app === "movie_player"){
-			this.loadVideoFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-				callback(appInstance);
+			this.loadVideoFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance, handle) {
+				callback(appInstance, handle);
 			});
 		}
 		else if(app === "pdf_viewer"){
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-				callback(appInstance);
+				callback(appInstance, null);
 			});
 		}
 		else if(app === "custom_app"){
@@ -702,12 +693,12 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				var url = path.join("uploads", dir, name);
 				var external_url = this.hostOrigin + encodeReservedURL(url);
 				this.loadZipAppFromFile(appData.path, appData.type, url, external_url, name, function(appInstance) {
-					callback(appInstance);
+					callback(appInstance, null);
 				});
 			}
 			else {
 				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-					callback(appInstance);
+					callback(appInstance, null);
 				});
 			}
 		}
@@ -718,25 +709,25 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 		
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
-				callback(appInstance);
+				callback(appInstance, null);
 			});
 		}
 		else if(app === "movie_player"){
 			if(appData.type === "video/youtube"){
-				this.loadYoutubeFromURL(appData.url, function(appInstance) {
-					callback(appInstance);
+				this.loadYoutubeFromURL(appData.url, function(appInstance, handle) {
+					callback(appInstance, handle);
 				});
 			}
 			else {
 				// Fixed size since cant process exif on URL yet
-				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance) {
-					callback(appInstance);
+				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance, handle) {
+					callback(appInstance, handle);
 				});
 			}
 		}
 		else if(app === "pdf_viewer"){
 			this.loadPdfFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
-				callback(appInstance);
+				callback(appInstance, null);
 			});
 		}
 	}
@@ -767,7 +758,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			date: new Date()
 		};
 		this.scaleAppToFitDisplay(appInstance);
-		callback(appInstance);
+		callback(appInstance, null);
 	}
 };
 

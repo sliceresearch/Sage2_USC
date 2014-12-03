@@ -368,7 +368,7 @@ function moveItemToFront(elem) {
 }
 
 function cleanURL(url) {
-	var a = document.createElement("a");
+	var a = document.createElement('a');
 	a.href = url;
 	var clean = url;
 	
