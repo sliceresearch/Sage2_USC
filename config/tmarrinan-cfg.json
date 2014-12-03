@@ -26,21 +26,17 @@
 		}
 	},
 	resolution: {
-		width: 720,
+		width: 1440,
 		height: 720
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
