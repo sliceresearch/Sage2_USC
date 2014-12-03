@@ -13,12 +13,17 @@
 		image: {
 			url: "images/background/dbgrid.png",
 			style: "tile"
-		}
+		},
+                watermark: {
+                        svg: "images/EVL-LAVA.svg",
+                        color: "rgba(255, 255, 255, 0.25)"
+                }
 	},
 	ui: {
 		clock: 24,
 		show_url: true,
-		show_version: true
+		show_version: true,
+		noDropShadow: true
 	},
 	resolution: {
 		width: 3840,
