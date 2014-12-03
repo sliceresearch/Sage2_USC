@@ -55,6 +55,7 @@ var httpserver  = require('./src/node-httpserver');     // creates web server
 var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
 var loader      = require('./src/node-itemloader');     // handles sage item creation
 var omicron     = require('./src/node-omicron');        // handles Omicron input events
+var pixelblock  = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
 var radialmenu  = require('./src/node-radialmenu');     // radial menu
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var sageutils   = require('./src/node-utils');          // provides the current version number
@@ -1500,6 +1501,11 @@ function wsLoadFileFromServer(wsio, data) {
 			appInstance.id = getUniqueAppId();
 			
 			if(appInstance.application === "movie_player"){
+				var blocksize = 128;
+				var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
+				var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
+				handle.videoBuffer = new Array(horizontalBlocks*verticalBlocks);
+				
 				handle.onstartdecode = function() {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
 				};
@@ -1507,7 +1513,17 @@ function wsLoadFileFromServer(wsio, data) {
 					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
 				};
 				handle.onnewframe = function(frameIdx, yuvBuffer) {
-					console.log("received frame: " + frameIdx);
+					var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, appInstance.native_width, appInstance.native_height, blocksize);
+	
+					var idBuffer = new Buffer(appInstance.id+"|");
+					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
+					var dateBuffer = intToByteBuffer(Date.now(), 8);
+					for(var i=0; i<blockBuffers.length; i++){
+						var blockIdxBuffer = intToByteBuffer(i, 2);
+						handle.videoBuffer[i] = Buffer.concat([blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+					}
+	
+					//sendFrameToClientsIfReady(frameIdx);
 				};
 				
 				appHandles[appInstance.id] = handle;
@@ -2617,6 +2633,27 @@ function moveElementToEnd(list, elem) {
 		list[i] = list[i+1];
 	}
 	list[list.length-1] = elem;
+}
+
+function intToByteBuffer(aInt, bytes) {
+	var buf = new Buffer(bytes);
+	var byteVal;
+	var num = aInt;
+	for(var i=0; i<bytes; i++){
+		byteVal = num & 0xff;
+		buf[i] = byteVal;
+		num = (num - byteVal) / 256;
+	}
+	
+	return buf;
+}
+
+function byteBufferToInt(buf) {
+	var value = 0;
+	for(var i=buf.length-1; i>=0; i--){
+		value = (value * 256) + buf[i];
+	}
+	return value;
 }
 
 function getItemPositionSizeType(item) {
