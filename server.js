@@ -220,7 +220,7 @@ var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.t
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
-var appHandles = {};
+var videoHandles = {};
 
 
 // sets up the background for the display clients (image or color)
@@ -1497,36 +1497,50 @@ function wsLoadFileFromServer(wsio, data) {
 		loadSession(data.filename);
 	}
 	else {
-		appLoader.loadFileFromLocalStorage(data, function(appInstance, handle) {
+		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			appInstance.id = getUniqueAppId();
 			
 			if(appInstance.application === "movie_player"){
+				var i;
+				var j;
 				var blocksize = 128;
 				var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
 				var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
-				handle.videoBuffer = new Array(horizontalBlocks*verticalBlocks);
+				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
 				
-				handle.onstartdecode = function() {
+				videohandle.onstartdecode = function() {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
 				};
-				handle.onstopdecode = function(err, finish) {
+				videohandle.onstopdecode = function(err, finish) {
 					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
 				};
-				handle.onnewframe = function(frameIdx, yuvBuffer) {
+				videohandle.onnewframe = function(frameIdx, yuvBuffer) {
+					videoHandles[appInstance.id].frameIdx = frameIdx;
 					var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, appInstance.native_width, appInstance.native_height, blocksize);
 	
 					var idBuffer = new Buffer(appInstance.id+"|");
 					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
 					var dateBuffer = intToByteBuffer(Date.now(), 8);
-					for(var i=0; i<blockBuffers.length; i++){
+					for(i=0; i<blockBuffers.length; i++){
 						var blockIdxBuffer = intToByteBuffer(i, 2);
-						handle.videoBuffer[i] = Buffer.concat([blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
 					}
 	
-					//sendFrameToClientsIfReady(frameIdx);
+					handleNewVideoFrame(videoHandles[appInstance.id].frameIdx, videoHandles[appInstance.id].pixelbuffer, videoHandles[appInstance.id].clients);
 				};
 				
-				appHandles[appInstance.id] = handle;
+				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, clients: {}};
+				for(i=0; i<clients.length; i++){
+					if(clients[i].messages.receivesMediaStreamFrames){
+						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+						videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], newFrameGenerated: false, readyForNextFrame: true, blockList: []};
+						// calculate blockList --> first just add all blocks to everyone
+						for(j=0; j<videoBuffer.length; j++){
+							videoHandles[appInstance.id].clients[clientAddress].blockList.push(j);
+						}
+					}
+				}
+			
 			}
 			
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
@@ -1534,6 +1548,24 @@ function wsLoadFileFromServer(wsio, data) {
 
 			applications.push(appInstance);
 		});
+	}
+}
+
+// move this function elsewhere
+function handleNewVideoFrame(frameIdx, videoBuffer, clients) {
+	var i;
+	var key;
+	for(key in clients) {
+		clients[key].newFrameGenerated = true;
+		if(clients[key].readyForNextFrame === true){
+			clients[key].readyForNextFrame = false;
+			clients[key].newFrameGenerated = false;
+			for(var i=0; i<videoBuffer.length; i++){
+				if(clients[key].blockList.indexOf(i) >= 0){
+					clients[key].wsio.emit('updateVideoFrame', videoBuffer[i]);
+				}
+			}
+		}
 	}
 }
 
@@ -1613,13 +1645,15 @@ function wsOpenNewWebpage(wsio, data) {
 // **************  Video / Audio Synchonization *****************
 
 function wsPlayVideo(wsio, data) {
-	if(appHandles[data.id] === undefined || appHandles[data.id] === null) return;
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	appHandles[data.id].startLiveDecoding();
+	videoHandles[data.id].decoder.startLiveDecoding();
 }
 
 function wsPauseVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
+	videoHandles[data.id].decoder.pauseLiveDecoding();
 }
 
 function wsUpdateVideoTime(wsio, data) {

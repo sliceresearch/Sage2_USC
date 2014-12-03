@@ -396,6 +396,29 @@ function isEmpty(obj) {
 
 	return true;
 }
+
+function byteBufferToInt(buf) {
+	var value = 0;
+	for(var i=buf.length-1; i>=0; i--){
+		value = (value * 256) + buf[i];
+	}
+	return value;
+}
+
+function byteBufferToString(buf, terminal) {
+	var cchar = String.fromCharCode(buf[0]);
+	var str = "";
+	var i = 1;
+	
+	while(cchar !== terminal){
+		str += cchar;
+		cchar = String.fromCharCode(buf[i]);
+		i++;
+		if(i >= buf.length) break;
+	}
+	
+	return str;
+}
 	
 
 // Redefine random function to work in distributed fashion
