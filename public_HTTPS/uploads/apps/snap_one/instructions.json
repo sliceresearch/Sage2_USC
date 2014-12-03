@@ -1,0 +1,15 @@
+{
+	"main_script": "snap_one.js",
+	"icon": "snap_one.webp",
+	"width": 600,
+	"height": 600,
+	"animation": true,
+	"dependencies": [
+	],
+	"title": "Snap SVG example",
+	"version": "1.0.0",
+	"description": "Example application using Snap.svg",
+	"keywords": [ "snap", "svg", "example" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
+}
