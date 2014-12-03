@@ -149,7 +149,7 @@
 				var play = document.createElement('td');
 				play.id = data.id + "_play";
 				play.className = "videoPlay";
-				play.textContent = "Pause";
+				play.textContent = "Paused";
 				
 				videoRow.appendChild(title);
 				videoRow.appendChild(volume);
@@ -160,6 +160,16 @@
 			}
 			
 			if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+		});
+		
+		wsio.on('videoPlaying', function(data) {
+			document.getElementById(data.id).play();
+			document.getElementById(data.id + "_play").textContent = "Playing";
+		});
+		
+		wsio.on('videoPaused', function(data) {
+			document.getElementById(data.id).pause();
+			document.getElementById(data.id + "_play").textContent = "Paused";
 		});
 		
 		wsio.on('deleteElement', function(elem_data) {

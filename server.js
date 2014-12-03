@@ -1501,10 +1501,10 @@ function wsLoadFileFromServer(wsio, data) {
 			
 			if(appInstance.application === "movie_player"){
 				handle.onstartdecode = function() {
-					console.log("start decoding");
+					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
 				};
 				handle.onstopdecode = function(err, finish) {
-					console.log("stop decoding");
+					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
 				};
 				handle.onnewframe = function(frameIdx, yuvBuffer) {
 					console.log("received frame: " + frameIdx);
