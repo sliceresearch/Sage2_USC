@@ -306,11 +306,12 @@ function uiBuilder(json_cfg, clientID) {
 		machine.style.mozTransform  = "translateY(-50%)";
 		machine.style.transform  = "translateY(-50%)";
 		
+		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		version.style.color      = textColor;
-		version.style.right      = ((6*this.titleBarHeight) + this.offsetX).toString() + "px";
+		version.style.right      = ((6*this.titleBarHeight) + rightOffset).toString() + "px";
 		version.style.top        = "50%";
 		version.style.webkitTransform  = "translateY(-50%)";
 		version.style.mozTransform  = "translateY(-50%)";
@@ -361,11 +362,13 @@ function uiBuilder(json_cfg, clientID) {
 		
 		var height = 0.95 * this.titleBarHeight;
 		var width  = height * (bbox.width/bbox.height);
+		
+		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
 	
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
-		logo.style.right      = (this.titleBarHeight + this.offsetX).toString() + "px";
+		logo.style.right      = (this.titleBarHeight + rightOffset).toString() + "px";
 		logo.style.top        = "50%";
 		logo.style.webkitTransform  = "translateY(-50%)";
 		logo.style.mozTransform  = "translateY(-50%)";
