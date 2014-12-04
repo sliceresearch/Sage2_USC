@@ -21,7 +21,7 @@ function SAGE2DisplayUI() {
 	};
 	
 	this.draw = function() {
-		var i;
+		var i, size, x, y, width, height;
 		var sage2UI = document.getElementById('sage2UI');
 		var ctx = sage2UI.getContext('2d');
 		
@@ -73,12 +73,12 @@ function SAGE2DisplayUI() {
 			ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 			
 			if(this.applications[i].application === "media_stream") {
-				var size = 0.85*Math.min(eWidth, eHeight);
+				size = 0.85*Math.min(eWidth, eHeight);
 				
-				var x = eLeft + (eWidth/2) - (size*0.1);
-				var y = eTop + (eHeight/2) + (size*0.2125);
-				var w = size * 0.2;
-				var h = size * 0.15;
+				x = eLeft + (eWidth/2) - (size*0.1);
+				y = eTop + (eHeight/2) + (size*0.2125);
+				w = size * 0.2;
+				h = size * 0.15;
 				ctx.fillStyle = "rgba(150, 150, 150, 1.0)";
 				ctx.fillRect(x, y, w, h);
 				
@@ -115,16 +115,16 @@ function SAGE2DisplayUI() {
 				this.drawRoundedRect(ctx, mediaTextX, mediaTextY, mediaTextW, mediaTextH, radius, true, false);
 				
 				
-				var mediaTextX = (x+w/2) + mediaTextSize*0.175;
-				var mediaTextY = (y+h/2) - ((mediaTextLines-1)/2)*mediaTextLineHeight + mediaTextSize*0.333;
+				mediaTextX = (x+w/2) + mediaTextSize*0.175;
+				mediaTextY = (y+h/2) - ((mediaTextLines-1)/2)*mediaTextLineHeight + mediaTextSize*0.333;
 				ctx.textAlign = "center";
 				ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 				this.wrapText(ctx, this.applications[i].title, mediaTextX, mediaTextY, mediaTextW, mediaTextLineHeight);	
 			}
 			else if(this.applications[i].iconLoaded === true) {
-				var size = 0.85*Math.min(eWidth, eHeight);
-				var x = eLeft + (eWidth/2) - (size/2);
-				var y = eTop + (eHeight/2) - (size/2);
+				size = 0.85*Math.min(eWidth, eHeight);
+				x = eLeft + (eWidth/2) - (size/2);
+				y = eTop + (eHeight/2) - (size/2);
 				
 				ctx.drawImage(this.applications[i].icon, x, y, size, size);
 			}

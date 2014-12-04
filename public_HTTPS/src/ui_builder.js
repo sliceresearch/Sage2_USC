@@ -12,6 +12,7 @@
 // Generic functions used by all SAGE2 applications
 //
 
+
 function uiBuilder(json_cfg, clientID) {
 
 	// Save the wall configuration object
@@ -74,6 +75,8 @@ function uiBuilder(json_cfg, clientID) {
 
 			// put the scale up to the top left
 			this.bg.style.webkitTransformOrigin = "0% 0%";
+			this.bg.style.mozTransformOrigin = "0% 0%";
+			this.bg.style.transformOrigin = "0% 0%";
 
 			// calculate the scale ratio to make it fit
 			this.browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
@@ -83,6 +86,8 @@ function uiBuilder(json_cfg, clientID) {
 			else
 				newratio = document.documentElement.clientHeight / wallHeight;
 			this.bg.style.webkitTransform = "scale("+(newratio)+")";
+			this.bg.style.mozTransform = "scale("+(newratio)+")";
+			this.bg.style.transform = "scale("+(newratio)+")";
 
 			window.onresize = function(event) {
 				// recalculate after every window resize
@@ -94,6 +99,8 @@ function uiBuilder(json_cfg, clientID) {
 					else
 						newratio = document.documentElement.clientHeight / wallHeight;
 					_this.bg.style.webkitTransform = "scale("+(newratio)+")";
+					_this.bg.style.mozTransform = "scale("+(newratio)+")";
+					_this.bg.style.transform = "scale("+(newratio)+")";
 				}
 			};
 			window.onkeydown = function (event) {
@@ -101,6 +108,8 @@ function uiBuilder(json_cfg, clientID) {
 				if (event.keyCode === 70) {
 					if (_this.ratio === "fit") {
 						_this.bg.style.webkitTransform = "scale(1)";
+						_this.bg.style.mozTransform = "scale(1)";
+						_this.bg.style.transform = "scale(1)";
 						_this.ratio = "full";
 					} else if (_this.ratio === "full") {
 						var newratio;
@@ -109,6 +118,8 @@ function uiBuilder(json_cfg, clientID) {
 						else
 							newratio = document.documentElement.clientHeight / wallHeight;
 						_this.bg.style.webkitTransform = "scale("+(newratio)+")";
+						_this.bg.style.mozTransform = "scale("+(newratio)+")";
+						_this.bg.style.transform = "scale("+(newratio)+")";
 						_this.ratio = "fit";
 					}
 					// This somehow forces a reflow of the div and show the scrollbars as needed
@@ -142,7 +153,7 @@ function uiBuilder(json_cfg, clientID) {
 						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
 						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
 						
-						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image + ")";
+						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
 						_this.bg.style.backgroundSize     = bgImg.naturalWidth +"px " + bgImg.naturalHeight + "px";
@@ -159,8 +170,6 @@ function uiBuilder(json_cfg, clientID) {
 							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + ".png";
 						else
 							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.url.substring(ext);
-						
-						console.log(bgImgFinal);
 						
 						_this.bg.style.top    = "0px";
 						_this.bg.style.left   = "0px";
@@ -188,7 +197,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.setTime = function (val) {
-			// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
+		// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
 		var now;
 		if (this.json_cfg.ui.clock == 12) now = formatAMPM(val);
 		else now = format24Hr(val);
@@ -236,7 +245,7 @@ function uiBuilder(json_cfg, clientID) {
 
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
-		this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better"
+		//this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better" - necessary?
 		this.upperBar.id = "upperBar";
 		
 		var textColor = "rgba(255, 255, 255, 1.0)";
@@ -263,7 +272,7 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
 		this.upperBar.appendChild(logo);
-		this.bg.appendChild(watermark);
+		this.main.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
 		
 		var backgroundColor = "rgba(0, 0, 0, 0.5)";
@@ -284,6 +293,8 @@ function uiBuilder(json_cfg, clientID) {
 		// center vertically: position top 50% and then translate by -50%
 		this.clock.style.top        = "50%";
 		this.clock.style.webkitTransform  = "translateY(-50%)";
+		this.clock.style.mozTransform  = "translateY(-50%)";
+		this.clock.style.transform  = "translateY(-50%)";
 		
 		machine.style.position   = "absolute";
 		machine.style.whiteSpace = "nowrap";
@@ -292,14 +303,19 @@ function uiBuilder(json_cfg, clientID) {
 		machine.style.left       = (-this.offsetX + (6*this.titleBarHeight)).toString() + "px";
 		machine.style.top        = "50%";
 		machine.style.webkitTransform  = "translateY(-50%)";
+		machine.style.mozTransform  = "translateY(-50%)";
+		machine.style.transform  = "translateY(-50%)";
 		
+		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		version.style.color      = textColor;
-		version.style.left       = (this.json_cfg.totalWidth - this.offsetX - (18*this.titleBarHeight)).toString() + "px";
+		version.style.right      = ((6*this.titleBarHeight) + rightOffset).toString() + "px";
 		version.style.top        = "50%";
 		version.style.webkitTransform  = "translateY(-50%)";
+		version.style.mozTransform  = "translateY(-50%)";
+		version.style.transform  = "translateY(-50%)";
 		
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		logo.data = "images/EVL-LAVA.svg";
@@ -346,12 +362,17 @@ function uiBuilder(json_cfg, clientID) {
 		
 		var height = 0.95 * this.titleBarHeight;
 		var width  = height * (bbox.width/bbox.height);
+		
+		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
 	
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
-		logo.style.left       = (this.json_cfg.totalWidth - this.offsetX - width - this.titleBarHeight).toString() + "px";
-		logo.style.top        = (0.025*this.titleBarHeight).toString() + "px";
+		logo.style.right      = (this.titleBarHeight + rightOffset).toString() + "px";
+		logo.style.top        = "50%";
+		logo.style.webkitTransform  = "translateY(-50%)";
+		logo.style.mozTransform  = "translateY(-50%)";
+		logo.style.transform  = "translateY(-50%)";
 		
 		var textColor = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
@@ -440,9 +461,9 @@ function uiBuilder(json_cfg, clientID) {
 	this.updateSagePointerPosition = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 		var translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
-		pointerElem.style['-webkit-transform'] = translate;
-		pointerElem.style['-moz-transform']    = translate;
-		pointerElem.style['transform']         = translate;
+		pointerElem.style.webkitTransform = translate;
+		pointerElem.style.mozTransform    = translate;
+		pointerElem.style.transform       = translate;
 	};
 	
 	this.changeSagePointerMode = function(pointer_data) {
@@ -597,6 +618,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.hideInterface = function() {
+		var i;
 		if (!this.uiHidden) {
 			// Hide the top bar
 			this.upperBar.style.display = 'none';
@@ -607,12 +629,12 @@ function uiBuilder(json_cfg, clientID) {
 			}
 			// Hide the apps top bar
 			var applist = document.getElementsByClassName("windowTitle");
-			for (var i = 0; i < applist.length; i++) {
+			for (i = 0; i < applist.length; i++) {
 				applist[i].style.display = 'none';
 			}
 			// Hide the apps border
 			var itemlist = document.getElementsByClassName("windowItem");
-			for (var i = 0; i < itemlist.length; i++) {
+			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
 			this.uiHidden = true;
@@ -620,6 +642,7 @@ function uiBuilder(json_cfg, clientID) {
 	};
 
 	this.showInterface = function() {
+		var i;
 		if (this.uiHidden) {
 			// Show the top bar
 			this.upperBar.style.display = 'block';
@@ -632,12 +655,12 @@ function uiBuilder(json_cfg, clientID) {
 			}
 			// Show the apps top bar
 			var applist = document.getElementsByClassName("windowTitle");
-			for (var i = 0; i < applist.length; i++) {
+			for (i = 0; i < applist.length; i++) {
 				applist[i].style.display = 'block';
 			}
 			// Show the apps border
 			var itemlist = document.getElementsByClassName("windowItem");
-			for (var i = 0; i < itemlist.length; i++) {
+			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
 			this.uiHidden = false;

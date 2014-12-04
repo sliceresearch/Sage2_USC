@@ -13,29 +13,30 @@
 		image: {
 			url: "images/background/dbgrid.png",
 			style: "tile"
-		}
+		},
+                watermark: {
+                        svg: "images/EVL-LAVA.svg",
+                        color: "rgba(255, 255, 255, 0.25)"
+                }
 	},
 	ui: {
 		clock: 24,
 		show_url: true,
-		show_version: true
+		show_version: true,
+		noDropShadow: true
 	},
 	resolution: {
-		width: 1920,
+		width: 3840,
 		height: 1080
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
