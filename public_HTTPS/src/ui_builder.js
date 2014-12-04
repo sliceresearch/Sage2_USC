@@ -516,8 +516,8 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 			
-			menu.thumbnailWindowElement.style.left = menuElem.style.left;
-			menu.thumbnailWindowElement.style.top = menuElem.style.top;
+			menu.thumbnailScrollWindowElement.style.left = menuElem.style.left;
+			menu.thumbnailScrollWindowElement.style.top = menuElem.style.top;
 			
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
@@ -528,8 +528,8 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
 			
-			this.radialMenus[menuElem.id].thumbnailWindowElement.style.left = menuElem.style.left;
-			this.radialMenus[menuElem.id].thumbnailWindowElement.style.top = menuElem.style.top;
+			this.radialMenus[menuElem.id].thumbnailScrollWindowElement.style.left = menuElem.style.left;
+			this.radialMenus[menuElem.id].thumbnailScrollWindowElement.style.top = menuElem.style.top;
 			
 			this.radialMenus[menuElem.id].visible = true;
 			menuElem.style.display = "block";
@@ -554,11 +554,11 @@ function uiBuilder(json_cfg, clientID) {
 				{
 					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 					menuElem.style.display = "block";
-					menu.thumbnailWindowElement.style.display = "block";
+					menu.thumbnailScrollWindowElement.style.display = "block";
 
 					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 					
-					if( menu.ctx.redraw === true || menu.thumbWindowctx.redraw === true )
+					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true )
 					{
 						menu.draw();
 					}
@@ -566,7 +566,7 @@ function uiBuilder(json_cfg, clientID) {
 				else
 				{
 					menuElem.style.display = "none";
-					menu.thumbnailWindowElement.style.display = "none";
+					menu.thumbnailScrollWindowElement.style.display = "none";
 				}
 			}
 		}

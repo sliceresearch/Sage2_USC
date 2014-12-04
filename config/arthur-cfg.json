@@ -16,10 +16,11 @@
 		clock: 12,
 		show_version: true,
 		show_url: true,
+		widgetControlSize: 28
 	},
 	resolution: {
 		width: 2560,
-		height: 1200
+		height: 1600
 	},
 	layout: {
 		rows: 1,
