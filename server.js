@@ -342,6 +342,8 @@ function wsAddClient(wsio, data) {
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
+	wsio.messages.requestsFileHandling				= data.requestsFileHandling				|| false;
+
 	
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
@@ -432,6 +434,11 @@ function initializeWSClient(wsio) {
 	}
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
+	}
+
+	if (wsio.messages.requestsFileHandling){
+		wsio.on('writeToFile', wsWriteToFile);
+		wsio.on('readFromFile', wsReadFromFile);
 	}
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
@@ -858,6 +865,32 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 		}
 	}
 }
+
+// **************  File Manipulation Functions for Apps ************
+
+function wsWriteToFile (wsio, data){
+	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
+	fs.writeFile(fullPath, data.buffer, function(err){
+		if (err) {
+			console.log("Error: Could not write to file - " + fullpath);
+		}
+	});
+}
+
+function wsReadFromFile (wsio, data){
+	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
+	fs.readFile(fullPath,{encoding:'utf8'}, function(err, fileContent){
+		if (err) {
+			console.log("Error: Could not read from file - " + fullpath);
+		}
+		else{
+			var fileData = {id: data.id, fileName: data.fileName, buffer:fileContent};
+			broadcast('receiveFileData', fileData, 'requestsFileHandling')
+		}
+		
+	});
+}
+
 
 // **************  Application Animation Functions *****************
 
@@ -2481,7 +2514,7 @@ function findControlsUnderPointer(pointerX, pointerY) {
 			var barMinY = controls[i].top + controls[i].height/2 - controls[i].barHeight/2;
 			var barMaxX = controls[i].left + controls[i].width;
 			var barMaxY = controls[i].top + controls[i].height/2 + controls[i].barHeight/2;
-			if (dist<=controls[i].height/2.0 || ((pointerX >= barMinX && pointerX <= barMaxX) && (pointerY >= barMinY && pointerY <= barMaxY))) {
+			if (dist<=controls[i].height/2.0 || (controls[i].hasSideBar && (pointerX >= barMinX && pointerX <= barMaxX) && (pointerY >= barMinY && pointerY <= barMaxY))) {
 				if (controls[i].show === true){
 					return controls[i];
 				}

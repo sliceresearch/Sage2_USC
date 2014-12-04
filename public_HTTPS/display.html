@@ -114,7 +114,9 @@
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
 				receivesWidgetEvents: true,
-				requestsAppClone: true
+				requestsAppClone: true,
+				requestsFileHandling: true
+
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -706,6 +708,7 @@
 							width:size.width,
 							height:size.height,
 							barHeight: size.barHeight,
+							hasSideBar: size.hasSideBar,
 							show: true,
 							date: dt 
 						});
@@ -890,6 +893,13 @@
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);		
 			}
+		});
+
+		wsio.on('receiveFileData', function(data){
+			var app = applications[data.id];
+			app.fileDataBuffer = data.buffer;
+			app.fileReceived = true;
+			console.log("file Data:",app.fileDataBuffer);
 		});
 	}
 
