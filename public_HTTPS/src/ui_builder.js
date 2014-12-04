@@ -272,7 +272,7 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
 		this.upperBar.appendChild(logo);
-		this.bg.appendChild(watermark);
+		this.main.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
 		
 		var backgroundColor = "rgba(0, 0, 0, 0.5)";
