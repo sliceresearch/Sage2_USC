@@ -477,20 +477,41 @@ function uiBuilder(json_cfg, clientID) {
 		if( !menuElem )
 		{
 			var radialMenuScale = 1; //ui.widgetControlSize * 0.03;
+
+			radialMenuContentWindowDiv = document.createElement("div");
+			
+			radialMenuContentWindowDiv.id  = data.id+"_menuDiv"; 
+			radialMenuContentWindowDiv.style.width        = (radialMenuSize.x * radialMenuScale).toString() + "px";
+			radialMenuContentWindowDiv.style.height       =  (radialMenuSize.y * radialMenuScale).toString() + "px";
+			radialMenuContentWindowDiv.style.overflow           = "hidden";
+			radialMenuContentWindowDiv.style.position   = "absolute";
+			radialMenuContentWindowDiv.style.left   = (data.x - this.offsetX).toString() + "px";
+			radialMenuContentWindowDiv.style.top    = (data.y - this.offsetY).toString() + "px";
+			
 			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
 								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9000);
+
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
+								0,
+								0,
+								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9001);
+			menuElem3 = createDrawingElement(data.id+"_menuWindow2", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 8900);
-			this.main.appendChild(menuElem); 
-			this.main.appendChild(menuElem2); 
+								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9002);
+			
+			
+			this.main.appendChild(menuElem);
+			this.main.appendChild(radialMenuContentWindowDiv);
+			this.main.appendChild(menuElem3); 
+			
+			radialMenuContentWindowDiv.appendChild(menuElem2); 
 			
 			var menu = new radialMenu();
 			
-			menu.init(data.id+"_menu", menuElem2) ;
+			menu.init(data.id, menuElem2, menuElem3) ;
 			
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
