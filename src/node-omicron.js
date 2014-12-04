@@ -573,7 +573,7 @@ omicronManager.prototype.runTracker = function()
 					if( (e.flags & clickDragButton) == clickDragButton )
 					{
 						//console.log("wandPointer press");
-						pointerPress( address, posX, posY );
+						pointerPress( address, posX, posY, { button: "left" } );
 					}
 					else if( lastWandFlags === 0 && (e.flags & showHideButton) == showHideButton )
 					{
@@ -625,7 +625,7 @@ omicronManager.prototype.runTracker = function()
 					if( (lastWandFlags & clickDragButton) == clickDragButton )
 					{
 						//console.log("wandPointer release");
-						pointerRelease( address, posX, posY );
+						pointerRelease( address, posX, posY, { button: "left" } );
 						
 						lastWandFlags = 0;
 					}
