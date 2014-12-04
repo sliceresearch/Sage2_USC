@@ -81,21 +81,32 @@ var snap_one = SAGE2_App.extend( {
 
 		// get the SAGE2 server configuration information
 		//   readFile from SAGE2 runtime
-		readFile("//"+window.location.host+"/config", function (err, data) {
-			if (err) console.log('Error retrieving JSON data', err);
-			else {
-				// hostname
-				var t1 = _myself.svg.text(5, 5, "Host: " + data.host);
-				t1.attr( { fill: "#333333", "font-size": "5px" });
-				t1.attr({ fontFamily: 'Arimo', textAnchor: 'left'});
 
-				// display configuration
-				var t2 = _myself.svg.text(5, 12, "Display: " + data.resolution.width + "x" + data.resolution.height +
-												 " [" + data.layout.rows + "x" + data.layout.columns + "]");
-				t2.attr( { fill: "#333333", "font-size": "5px" });
-				t2.attr({ fontFamily: 'Arimo', textAnchor: 'left'});
-			}
-		}, "JSON");
+		// Only the 'master' display node is doing the query
+		if (isMaster) {
+			readFile("//"+window.location.host+"/config", function (err, data) {
+				if (err) console.log('Error retrieving JSON data', err);
+				else {
+					// broadcast the data to all display nodes
+					_myself.broadcast("onMessage", data);
+				}
+			}, "JSON");
+		}
+	},
+
+	// get messages from the server through a broadcast call
+	onMessage: function(data) {
+		// hostname
+		var t1 = this.svg.text(5, 5, "Host: " + data.host);
+		t1.attr( { fill: "#333333", "font-size": "5px" });
+		t1.attr({ fontFamily: 'Arimo', textAnchor: 'left'});
+
+		// display configuration
+		var t2 = this.svg.text(5, 12, "Display: " + data.resolution.width + "x" + data.resolution.height +
+										 " [" + data.layout.rows + "x" + data.layout.columns + "]");
+		t2.attr( { fill: "#333333", "font-size": "5px" });
+		t2.attr({ fontFamily: 'Arimo', textAnchor: 'left'});
+
 	},
 
 	load: function(state, date) {
