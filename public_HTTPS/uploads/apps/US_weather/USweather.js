@@ -182,6 +182,16 @@ jsonCallback: function(err, json)
 
 makeCallback: function (lat, lon, weatherOut)
 {
+    this.broadcast("newWeather", {lat: lat, lon: lon, weatherOut: weatherOut});
+
+},
+
+newWeather: function(data){
+
+    var lat = data.lat;
+    var lon = data.lon;
+    var weatherOut = data.weatherOut;
+
     var iconSet;
     var weather;
     var weatherIcon;
@@ -253,6 +263,8 @@ updateOutsideTemp: function ()
     var lat, lon;
     var MeSelf = this;
 
+if(isMaster){
+
     for (lat = this.gwin.latMaxTemp; lat >= this.gwin.latMinTemp; lat -= 2.2)
         for (lon = this.gwin.lonMinTemp; lon <= this.gwin.lonMaxTemp; lon += 2.7)
             {
@@ -301,7 +313,8 @@ updateOutsideTemp: function ()
                 }
                 
 
-            if (Math.random() > 0.95) // cut down on accesses at once
+            if (Math.random() > 0.80) // cut down on accesses at once
+                                        // cut down less now that just master is fetching
             (function(lat,lon, replace)
                 {
                 if (replace === 1)
@@ -330,6 +343,9 @@ updateOutsideTemp: function ()
                         });
                 }(lat,lon, replace));
             }
+
+}
+
 },
 
 ////////////////////////////////////////
