@@ -284,7 +284,11 @@
 			console.log(appId, blockIdx, frameIdx, new Date(date));
 			if(applications[appId] !== undefined &&applications[appId] !== null){
 				applications[appId].textureData(blockIdx, yuvBuffer);
-				applications[appId].draw(new Date(date));
+				
+				// only should be called once all blocks for this display are loaded
+				if(applications[appId].receivedBlocks.every(isTrue) === true){
+					applications[appId].draw(new Date(date));
+				}
 			}
 		});
 		
@@ -380,7 +384,7 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
-						app.init(data.id, data.width, data.height, url, date);
+						app.init(data.id, data.left-ui.offsetX, data.top+ui.titleBarHeight-ui.offsetY, data.width, data.height, url, date);
 
 						if(app.state !== undefined && clientID===0){
 							Object.observe(app.state, function (changes) {
@@ -407,7 +411,7 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, url, date);
+					app.init(data.id, data.left-ui.offsetX, data.top+ui.titleBarHeight-ui.offsetY, data.width, data.height, url, date);
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {

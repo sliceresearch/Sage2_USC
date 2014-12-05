@@ -24,18 +24,25 @@ var movie_player = SAGE2_App.extend( {
 		this.uTexture         = [];
 		this.vTexture         = [];
 		this.video            = null;
+		this.validBlocks      = [];
+		this.receivedBlocks   = [];
 	
 		this.squareVertexPositionBuffer     = [];
 		this.squareVertexTextureCoordBuffer = [];
 		this.squareVertexIndexBuffer        = [];
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(id, x, y, width, height, resrc, date) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
 		
 		// application specific 'init'
 		this.maxSize = 128; // block size
+		this.appX = x;
+		this.appY = y;
+		this.appW = width;
+		this.appH = height;
+		
 		this.initGL();
 		if(this.gl){
 			this.gl.clearColor(0.5, 0.5, 0.5, 1.0);
@@ -52,6 +59,28 @@ var movie_player = SAGE2_App.extend( {
 		this.gl = this.element.getContext("webgl");
 		if(!this.gl) this.gl = this.element.getContext("experimental-webgl");
 		if(!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
+	},
+	
+	calculateValidBlocks: function(x, y, width, height) {
+		var renderBlockSize  = this.maxSize * width/this.video.width;
+		for(var i=0; i<this.verticalBlocks; i++){
+			for(var j=0; j<this.horizontalBlocks; j++){
+				var blockIdx = i*this.horizontalBlocks+j;
+				var left = j*renderBlockSize + x;
+				var top  = i*renderBlockSize + y;
+				if((left+renderBlockSize) >= 0 && left <= (ui.json_cfg.resolution.width) &&
+				   (top +renderBlockSize) >= 0 && top  <= (ui.json_cfg.resolution.height)) {
+					this.validBlocks.push(blockIdx);
+				}
+			}
+		}
+		this.setValidBlocksFalse();
+	},
+	
+	setValidBlocksFalse: function() {
+		for(var i=0; i<this.validBlocks.length; i++){
+			this.receivedBlocks[this.validBlocks[i]] = false;
+		}
 	},
 	
 	initShaders: function(callback) {
@@ -260,6 +289,7 @@ var movie_player = SAGE2_App.extend( {
 	
 	textureData: function(blockIdx, yuvBuffer) {
 		this.yuvBuffer[blockIdx] = yuvBuffer;
+		this.receivedBlocks[blockIdx] = true;
 	},
 	
 	updateTextures: function() {
@@ -290,6 +320,8 @@ var movie_player = SAGE2_App.extend( {
 				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
         	}
         }
+        
+        this.setValidBlocksFalse();
     },
 	
 	load: function(state, date) {
@@ -297,7 +329,9 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.horizontalBlocks = Math.ceil(this.video.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.video.height/this.maxSize);
+		this.receivedBlocks = initializeArray(this.horizontalBlocks*this.verticalBlocks, true);
 		
+		this.calculateValidBlocks(this.appX, this.appY, this.appW, this.appH);
 		this.initBuffers();
 		this.initTextures();
 	},
@@ -345,12 +379,17 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		
+		this.appW = this.element.width;
+		this.appH = this.element.height;
 	},
 	
 	moved: function(px, py, wx, wy, date) {
 		// px, py : position in wall coordination
 		// wx, wy : width and height of the wall
+		this.appX = px - ui.offsetX;
+		this.appY = py + ui.titleBarHeight - ui.offsetY;
+		
+		this.calculateValidBlocks(this.appX, this.appY, this.appW, this.appH);
 	},
 	
 	event: function(type, position, user, data, date) {

@@ -378,6 +378,10 @@ function cleanURL(url) {
 	return clean;
 }
 
+function isTrue(element, index, array) {
+	return (element === true);
+}
+
 function isEmpty(obj) {
 	// undefined and null are "empty"
 	if (obj === undefined || obj === null) return true;
@@ -395,6 +399,14 @@ function isEmpty(obj) {
 	}
 
 	return true;
+}
+
+function initializeArray(size, value) {
+	var arr = new Array(size);
+	for(var i=0; i<size; i++){
+		arr[i] = value;
+	}
+	return arr;
 }
 
 function byteBufferToInt(buf) {
