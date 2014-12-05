@@ -9,7 +9,7 @@
 		"scripts/suncalc.js"
 	],
 	"title": "EVL Weather Map",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "EVL weather monitoring",
 	"keywords": [ "d3", "2d", "temperature", "weather" ],
 	"author": "Andrew Johnson <lenzman@me.com>",
