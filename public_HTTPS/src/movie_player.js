@@ -12,6 +12,9 @@ var movie_player = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 		
+		this.moveEvents   = "continuous";
+		this.resizeEvents = "continuous";
+		
 		this.gl               = null;
 		this.shaderProgram    = null;
 	
@@ -62,7 +65,7 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	calculateValidBlocks: function(x, y, width, height) {
-		console.log("sizes:", width, this.video.width)
+		this.validBlocks = [];
 		var renderBlockSize  = this.maxSize * width/this.video.width;
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
@@ -75,7 +78,6 @@ var movie_player = SAGE2_App.extend( {
 				}
 			}
 		}
-		console.log(this.validBlocks)
 		this.setValidBlocksFalse();
 	},
 	
@@ -383,6 +385,8 @@ var movie_player = SAGE2_App.extend( {
 	resize: function(date) {
 		this.appW = this.element.width;
 		this.appH = this.element.height;
+		
+		this.calculateValidBlocks(this.appX, this.appY, this.appW, this.appH);
 	},
 	
 	moved: function(px, py, wx, wy, date) {
