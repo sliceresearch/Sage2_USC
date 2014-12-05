@@ -62,6 +62,7 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	calculateValidBlocks: function(x, y, width, height) {
+		console.log("sizes:", width, this.video.width)
 		var renderBlockSize  = this.maxSize * width/this.video.width;
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
@@ -74,6 +75,7 @@ var movie_player = SAGE2_App.extend( {
 				}
 			}
 		}
+		console.log(this.validBlocks)
 		this.setValidBlocksFalse();
 	},
 	

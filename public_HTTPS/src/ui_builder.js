@@ -191,6 +191,7 @@ function uiBuilder(json_cfg, clientID) {
 			}
 			
 			if (this.json_cfg.background.clip !== undefined && this.json_cfg.background.clip === true) {
+				this.bg.style.overflow = "hidden";
 				this.main.style.overflow = "hidden";
 			}
 		}

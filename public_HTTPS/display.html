@@ -281,13 +281,14 @@
 			var date      = byteBufferToInt(data.subarray(appId.length+7, appId.length+15));
 			var yuvBuffer = data.subarray(appId.length+15, data.length);
 			
-			console.log(appId, blockIdx, frameIdx, new Date(date));
 			if(applications[appId] !== undefined &&applications[appId] !== null){
-				applications[appId].textureData(blockIdx, yuvBuffer);
+				if(applications[appId].validBlocks.indexOf(blockIdx) < 0) return;
 				
-				// only should be called once all blocks for this display are loaded
+				applications[appId].textureData(blockIdx, yuvBuffer);
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
 					applications[appId].draw(new Date(date));
+					applications[appId].setValidBlocksFalse();
+					wsio.emit('requestVideoFrame', {id: appId});
 				}
 			}
 		});
