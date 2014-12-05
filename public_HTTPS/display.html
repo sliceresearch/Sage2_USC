@@ -282,6 +282,10 @@
 			var yuvBuffer = data.subarray(appId.length+15, data.length);
 			
 			console.log(appId, blockIdx, frameIdx, new Date(date));
+			if(applications[appId] !== undefined &&applications[appId] !== null){
+				applications[appId].textureData(blockIdx, yuvBuffer);
+				applications[appId].draw(new Date(date));
+			}
 		});
 		
 		wsio.on('updateWebpageStreamFrame', function(data) {
@@ -396,6 +400,7 @@
 					}, false);
 					js.type = "text/javascript";
 					js.src = url + "/" + data.application + ".js";
+					console.log(url + "/" + data.application + ".js");
 					document.head.appendChild(js);
 				}
 			

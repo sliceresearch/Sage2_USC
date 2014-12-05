@@ -330,6 +330,8 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			type: mime_type,
 			url: external_url,
 			data: {
+				width: data.width,
+				height: data.height,
 				play: false,
 				frame: 0,
 				numframes: data.numframes,
