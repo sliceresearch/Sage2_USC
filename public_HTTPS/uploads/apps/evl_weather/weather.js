@@ -364,6 +364,14 @@ drawBasicStuff: function ()
 
 weatherOutsideCallback: function(error, weatherOut)
 {
+    this.broadcast("weatherOutsideCallbackNode", {error:error, weatherOut: weatherOut});
+},
+
+weatherOutsideCallbackNode: function(data){
+    
+    var error = data.error;
+    var weatherOut = data.weatherOut;
+
     if(error)
         {
         console.log("weatherOutsideCallback - error");
@@ -445,7 +453,9 @@ weatherOutsideCallback: function(error, weatherOut)
 
 updateOutsideTemp: function ()
 {
-    d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", this.weatherOutsideCallbackFunc);
+    if(isMaster){
+        d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", this.weatherOutsideCallbackFunc);
+    }
 },
 
 ////////////////////////////////////////
@@ -537,6 +547,14 @@ convertTimeFormat: function()
 
 weatherInsideCallback: function(error, datasetTextIn)
 {
+    this.broadcast("weatherInsideCallbackNode", {error:error, datasetTextIn: datasetTextIn});
+},
+
+weatherInsideCallbackNode: function(data){
+
+    var error = data.error;
+    var datasetTextIn = data.datasetTextIn;
+
     if (error)
         {
         console.log("weatherInsideCallback - error");
@@ -617,13 +635,15 @@ weatherInsideCallback: function(error, datasetTextIn)
 
 updateInsideTemp: function ()
 {
-// need to add a random number to the end of the request to avoid browser caching
-// http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
+    if(isMaster){
+    // need to add a random number to the end of the request to avoid browser caching
+    // http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
 
-    // d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
-     d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' +
-    //d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
-         Math.floor(Math.random() * 10000000), this.weatherInsideCallbackFunc);
+        // d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
+         d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' +
+        //d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
+             Math.floor(Math.random() * 10000000), this.weatherInsideCallbackFunc);
+    }
 },
 
 ////////////////////////////////////////
