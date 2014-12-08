@@ -351,7 +351,7 @@ startup: function (){
                     this.startup();
                     this.draw(date);
                 }.bind(_this) });
-            }(loopIdxWithPrefix))
+            }(loopIdxWithPrefix));
         }
 
         this.controls.finishedAddingControls(); // Important
