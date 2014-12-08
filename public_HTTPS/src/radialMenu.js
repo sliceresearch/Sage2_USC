@@ -920,7 +920,7 @@ function radialMenu(){
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x + 18  * radialMenuScale, y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight };
 				
 				// Prevent clicking on hidden thumbnails under preview window
-				if( thumbEventPos.x < thumbnailWindowSize.x - thumbnailPreviewWindowSize.x + imageThumbSize + 10 )
+				if( thumbEventPos.x < thumbnailWindowSize.x - thumbnailPreviewWindowSize.x + imageThumbSize*3 + 10 )
 				{
 					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
@@ -1224,7 +1224,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'imageThumbnailWindow' )
 			for( i = 0; i < this.imageThumbnailButtons.length; i++ )
 			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
+				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
 				currentButton = this.imageThumbnailButtons[i];
 				
 				
@@ -1248,7 +1248,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'pdfThumbnailWindow' )
 			for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
 			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
+				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
 				currentButton = this.pdfThumbnailButtons[i];
 				
 				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
@@ -1270,7 +1270,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'videoThumbnailWindow' )
 			for( i = 0; i < this.videoThumbnailButtons.length; i++ )
 			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
+				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
 				currentButton = this.videoThumbnailButtons[i];
 				
 				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
@@ -1316,7 +1316,7 @@ function radialMenu(){
 		if( this.currentMenuState === 'sessionThumbnailWindow' )
 			for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
 			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize + thumbSpacer));
+				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
 				currentButton = this.sessionThumbnailButtons[i];
 				
 				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
