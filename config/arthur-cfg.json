@@ -16,7 +16,7 @@
 		clock: 12,
 		show_version: true,
 		show_url: true,
-		widgetControlSize: 28
+		widgetControlSize: 50
 	},
 	resolution: {
 		width: 2560,

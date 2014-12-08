@@ -476,7 +476,7 @@ function uiBuilder(json_cfg, clientID) {
 
 		if( !menuElem )
 		{
-			var radialMenuScale = 1; //ui.widgetControlSize * 0.03;
+			var radialMenuScale = ui.widgetControlSize * 0.03;
 
 			radialMenuContentWindowDiv = document.createElement("div");
 			
@@ -487,6 +487,7 @@ function uiBuilder(json_cfg, clientID) {
 			radialMenuContentWindowDiv.style.position   = "absolute";
 			radialMenuContentWindowDiv.style.left   = (data.x - this.offsetX).toString() + "px";
 			radialMenuContentWindowDiv.style.top    = (data.y - this.offsetY).toString() + "px";
+			radialMenuContentWindowDiv.style.zIndex = 9000;
 			
 			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX,
@@ -516,9 +517,6 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 			
-			menu.thumbnailScrollWindowElement.style.left = menuElem.style.left;
-			menu.thumbnailScrollWindowElement.style.top = menuElem.style.top;
-			
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -530,7 +528,7 @@ function uiBuilder(json_cfg, clientID) {
 			
 			this.radialMenus[menuElem.id].thumbnailScrollWindowElement.style.left = menuElem.style.left;
 			this.radialMenus[menuElem.id].thumbnailScrollWindowElement.style.top = menuElem.style.top;
-			
+						
 			this.radialMenus[menuElem.id].visible = true;
 			menuElem.style.display = "block";
 			this.radialMenus[menuElem.id].draw();
@@ -555,7 +553,8 @@ function uiBuilder(json_cfg, clientID) {
 					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 					menuElem.style.display = "block";
 					menu.thumbnailScrollWindowElement.style.display = "block";
-
+					menu.thumbnailWindowDiv.style.display = "block";
+					
 					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 					
 					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true )
@@ -567,6 +566,7 @@ function uiBuilder(json_cfg, clientID) {
 				{
 					menuElem.style.display = "none";
 					menu.thumbnailScrollWindowElement.style.display = "none";
+					menu.thumbnailWindowDiv.style.display = "none";
 				}
 			}
 		}
