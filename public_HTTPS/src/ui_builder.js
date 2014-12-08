@@ -525,9 +525,6 @@ function uiBuilder(json_cfg, clientID) {
 		{
 			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
-			
-			this.radialMenus[menuElem.id].thumbnailScrollWindowElement.style.left = menuElem.style.left;
-			this.radialMenus[menuElem.id].thumbnailScrollWindowElement.style.top = menuElem.style.top;
 						
 			this.radialMenus[menuElem.id].visible = true;
 			menuElem.style.display = "block";
