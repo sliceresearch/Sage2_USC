@@ -9,9 +9,9 @@
 		"photo_scrapbooks.js"
 	],
 	"title": "EVL Photo Slideshow",
-	"version": "1.1.0",
-	"description": "A slideshow of EVL history",
-	"keywords": [ "d3", "picture", "history", "slideshow" ],
+	"version": "1.1.1",
+	"description": "A slideshow / webcam viewer",
+	"keywords": [ "d3", "picture", "history", "slideshow", "webcam" ],
 	"author": "Andrew Johnson <lenzman@me.com>",
 	"license": "SAGE2-Software-License"
 }

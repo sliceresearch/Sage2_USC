@@ -13,10 +13,12 @@ var zoom = SAGE2_App.extend( {
 		arguments.callee.superClass.construct.call(this);
 
 		this.resizeEvents = "continuous";
-		this.viewer = null;
-		this.lastZoom = null;
-		this.dragging = null;
-		this.position = null;
+		this.viewer    = null;
+		this.lastZoom  = null;
+		this.lastClick = null;
+		this.isShift   = null;
+		this.dragging  = null;
+		this.position  = null;
 	},
 	
 	init: function(id, width, height, resrc, date) {
@@ -25,17 +27,19 @@ var zoom = SAGE2_App.extend( {
 		
 		// application specific 'init'
 		this.element.id = "div" + id;
-		this.lastZoom = date;
-		this.dragging = false;
-		this.position = {x:0,y:0};
+		this.lastZoom  = date;
+		this.lastClick = date;
+		this.dragging  = false;
+		this.isShift   = false;
+		this.position  = {x:0,y:0};
 
 		// create the image viewer with the right data and path
 		this.viewer = OpenSeadragon({
 			id: this.element.id,      // suppporting div
 			prefixUrl:   this.resrcPath + "/images/",
 			// change tileSources for your dataset
-			//tileSources: this.resrcPath + "chicago.dzi"
-			tileSources: this.resrcPath + "halfdome.dzi"
+			tileSources: this.resrcPath + "chicago.dzi"
+			//tileSources: this.resrcPath + "halfdome.dzi"
 		});
 	},
 	
@@ -51,23 +55,30 @@ var zoom = SAGE2_App.extend( {
 
 	event: function(eventType, position, user_id, data, date) {
 		//console.log("Zoom event", eventType, position, user_id, data, date);
-
 		if (eventType === "pointerPress" && (data.button === "left") ) {
-			this.dragging = true;
+			if ( (date - this.lastClick) < 350) {
+				// double click
+				if (this.isShift) {
+					this.viewer.viewport.zoomBy(0.6);
+				} else {
+					this.viewer.viewport.zoomBy(1.4);					
+				}
+				this.viewer.viewport.applyConstraints();
+				this.lastZoom = date;
+			} else {
+				// not a double clikc
+				this.dragging = true;
+			}
+			// keep values up to date
 			this.position.x = position.x;
 			this.position.y = position.y;
+			this.lastClick  = date;
 		}
 		if (eventType === "pointerMove" && this.dragging ) {
-			//var center = this.viewer.viewport.pixelFromPoint( this.viewer.viewport.getCenter( true ) );
-			//var target = this.viewer.viewport.pointFromPixel(
-			//new OpenSeadragon.Point(  (itemX-this.position.x),  (itemY-this.position.y) ) );
-			//var offset = new OpenSeadragon.Point(this.position.x-itemX, this.position.y-itemY);
-			//console.log("off ", offset);
-			//var pt = this.viewer.viewport.viewerElementToViewportCoordinates(offset);
-			//console.log("pt ", pt);
-			//this.viewer.viewport.panTo(target, false);
-			//this.viewer.viewport.applyConstraints();
-
+            var delta = new OpenSeadragon.Point(this.position.x - position.x, this.position.y - position.y);
+            this.viewer.viewport.panBy(
+                this.viewer.viewport.deltaPointsFromPixels(delta)
+            );
 			this.position.x = position.x;
 			this.position.y = position.y;
 		}
@@ -79,17 +90,17 @@ var zoom = SAGE2_App.extend( {
 
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
-			var amount = data.scale;
+			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;
 			if (amount >= 1 && (diff>300)) {
 				// zoom in
-				this.viewer.viewport.zoomBy(1.2);
+				this.viewer.viewport.zoomBy(0.8);
 				this.viewer.viewport.applyConstraints();
 				this.lastZoom = date;
 			}
 			else if (amount <= 1 && (diff>300)) {
 				// zoom out
-				this.viewer.viewport.zoomBy(0.8);
+				this.viewer.viewport.zoomBy(1.2);
 				this.viewer.viewport.applyConstraints();
 				this.lastZoom = date;
 			}
@@ -97,15 +108,20 @@ var zoom = SAGE2_App.extend( {
 
 		if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
 			// shift down
+			this.isShift = true;
 			// zoom in
-			this.viewer.viewport.zoomBy(1.1);
-			this.viewer.viewport.applyConstraints();
+			//this.viewer.viewport.zoomBy(1.1);
+			//this.viewer.viewport.applyConstraints();
+		}
+		else if (eventType == "specialKey" && data.code == 16 && data.state == "up") {
+			// shift up
+			this.isShift = false;
 		}
 		else if (eventType == "specialKey" && data.code == 17 && data.state == "down") {
 			// control down
 			// zoom out
-			this.viewer.viewport.zoomBy(0.9);
-			this.viewer.viewport.applyConstraints();
+			//this.viewer.viewport.zoomBy(0.9);
+			//this.viewer.viewport.applyConstraints();
 		}
 		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
 			// left

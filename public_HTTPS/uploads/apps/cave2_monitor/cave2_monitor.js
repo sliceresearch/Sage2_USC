@@ -335,6 +335,14 @@ drawBasicStuff: function ()
 
 network1Callback: function(error, datasetTextIn)
 {
+this.broadcast("network1CallbackNode", {error:error, datasetTextIn:datasetTextIn});
+},  
+
+network1CallbackNode: function(data){
+
+    var error = data.error;
+    var datasetTextIn = data.datasetTextIn;
+
     var status, parsedNet1, line;
 
     if (error)
@@ -384,8 +392,17 @@ network1Callback: function(error, datasetTextIn)
         }
 },
 
+
 network2Callback: function(error, datasetTextIn)
 {
+    this.broadcast("network2CallbackNode", {error:error, datasetTextIn:datasetTextIn});
+},
+
+network2CallbackNode: function(data){
+
+    var error = data.error;
+    var datasetTextIn = data.datasetTextIn;
+
     var status, parsedNet2, line;
 
     if (error)
@@ -439,6 +456,14 @@ network2Callback: function(error, datasetTextIn)
 
 weatherInsideCallback: function(error, datasetTextIn)
 {
+    this.broadcast("weatherInsideCallbackNode", {error:error, datasetTextIn:datasetTextIn});
+},
+
+weatherInsideCallbackNode: function(data){
+
+    var error = data.error;
+    var datasetTextIn = data.datasetTextIn;
+
     if (error)
         {
         console.log("lyra data Callback - error");
@@ -516,20 +541,26 @@ weatherInsideCallback: function(error, datasetTextIn)
 
 updateInsideTemp: function ()
 { 
+ if(isMaster){   
      d3.text("http://lyra.evl.uic.edu:9000/html/cluster.txt" + '?' +
          Math.floor(Math.random() * 10000000), this.weatherInsideCallbackFunc);
+ }
 },
 
 updateNetwork1: function ()
 { 
+    if(isMaster){
      d3.text("http://lyra.evl.uic.edu:9000/html/ping.txt" + '?' +
          Math.floor(Math.random() * 10000000), this.network1CallbackFunc);
+ }
 },
 
 updateNetwork2: function ()
 { 
+    if(isMaster){
      d3.text("http://lyra.evl.uic.edu:9000/html/pingcavewave.txt" + '?' +
          Math.floor(Math.random() * 10000000), this.network2CallbackFunc);
+ }
 },
 
 drawOneNode: function (x, y, proc, p, row)

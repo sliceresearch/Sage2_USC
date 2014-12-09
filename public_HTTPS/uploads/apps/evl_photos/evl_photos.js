@@ -120,6 +120,14 @@ imageLoadFailedCallback: function()
 
 listFileCallback: function(error, data)
 {
+    this.broadcast("listFileCallbackNode", {error:error, data:data});
+},
+
+listFileCallbackNode: function(data){
+
+    var error = data.error;
+    var data = data.data;
+    
     if(error)
         {
         console.log(this.appName + "listFileCallback - error");
@@ -236,10 +244,11 @@ drawEverything: function ()
 
 loadInList: function ()
 {
-    this.listFileName = this.listFileNamePhotos;
-    d3.text(this.listFileName, this.listFileCallbackFunc);
+    if(isMaster){
+        this.listFileName = this.listFileNamePhotos;
+        d3.text(this.listFileName, this.listFileCallbackFunc);
+}
 
-//    readFile(this.listFileName, this.listFileCallbackFunc);
 },
 
 ////////////////////////////////////////
