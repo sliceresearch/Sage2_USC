@@ -71,26 +71,9 @@ var movie_player = SAGE2_App.extend( {
 		this.changeBlockList = true;
 	},
 	
-	calculateValidBlocks: function(x, y, width, height) {
-		this.validBlocks = [];
-		var renderBlockSize  = this.maxSize * width/this.video.width;
-		for(var i=0; i<this.verticalBlocks; i++){
-			for(var j=0; j<this.horizontalBlocks; j++){
-				var blockIdx = i*this.horizontalBlocks+j;
-				var left = j*renderBlockSize + x;
-				var top  = i*renderBlockSize + y;
-				if((left+renderBlockSize) >= 0 && left <= (ui.json_cfg.resolution.width) &&
-				   (top +renderBlockSize) >= 0 && top  <= (ui.json_cfg.resolution.height)) {
-					this.validBlocks.push(blockIdx);
-				}
-			}
-		}
-		this.setValidBlocksFalse();
-	},
-	
 	setValidBlocksFalse: function() {
 		for(var i=0; i<this.receivedBlocks.length; i++){
-			if(this.validBlocks.indexOf(i) <= 0) this.receivedBlocks[i] = false;
+			if(this.validBlocks.indexOf(i) >= 0) this.receivedBlocks[i] = false;
 			else                                 this.receivedBlocks[i] = true;
 		}
 	},
@@ -341,9 +324,8 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.horizontalBlocks = Math.ceil(this.video.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.video.height/this.maxSize);
-		this.receivedBlocks = initializeArray(this.horizontalBlocks*this.verticalBlocks, true);
+		this.receivedBlocks = initializeArray(this.horizontalBlocks*this.verticalBlocks, false);
 		
-		this.calculateValidBlocks(this.appX, this.appY, this.appW, this.appH);
 		this.initBuffers();
 		this.initTextures();
 	},
@@ -359,44 +341,40 @@ var movie_player = SAGE2_App.extend( {
 		}
 		
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-		
+	
 		this.updateTextures();
 
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
 				var blockIdx = i*this.horizontalBlocks+j;
-				
+			
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
 				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
-		
+	
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
 				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute, this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
-		
+	
 				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
 				this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
-	
+
 				this.gl.activeTexture(this.gl.TEXTURE1);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.uTexture[blockIdx]);
 				this.gl.uniform1i(this.shaderProgram.samplerUniform2, 1);
-		
+	
 				this.gl.activeTexture(this.gl.TEXTURE2);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.vTexture[blockIdx]);
 				this.gl.uniform1i(this.shaderProgram.samplerUniform3, 2);
-	
+
 				this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
 				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems, this.gl.UNSIGNED_SHORT, 0);
 			}
 		}
-		
-		if(this.changeBlockList === true) this.validBlocks = this.newBlockList;
 	},
 	
 	resize: function(date) {
 		this.appW = this.element.width;
 		this.appH = this.element.height;
-		
-		this.calculateValidBlocks(this.appX, this.appY, this.appW, this.appH);
 	},
 	
 	moved: function(px, py, wx, wy, date) {
@@ -404,8 +382,6 @@ var movie_player = SAGE2_App.extend( {
 		// wx, wy : width and height of the wall
 		this.appX = px - ui.offsetX;
 		this.appY = py + ui.titleBarHeight - ui.offsetY;
-		
-		this.calculateValidBlocks(this.appX, this.appY, this.appW, this.appH);
 	},
 	
 	event: function(type, position, user, data, date) {

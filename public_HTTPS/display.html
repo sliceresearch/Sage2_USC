@@ -282,21 +282,22 @@
 			var yuvBuffer = data.subarray(appId.length+15, data.length);
 			
 			if(applications[appId] !== undefined && applications[appId] !== null){
-				if(applications[appId].validBlocks.indexOf(blockIdx) < 0) return;
-				
 				applications[appId].textureData(blockIdx, yuvBuffer);
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
 					applications[appId].draw(new Date(date));
 					applications[appId].setValidBlocksFalse();
 					wsio.emit('requestVideoFrame', {id: appId});
 				}
+				
+				console.log(applications[appId].receivedBlocks);
+				console.log(applications[appId].validBlocks);
 			}
 		});
 		
 		wsio.on('updateValidStreamBlocks', function(data) {
 			if(applications[data.id] !== undefined && applications[data.id] !== null){
-				applications[data.id].updateValidBlocks(data.validBlocks);
-				
+				applications[data.id].validBlocks = data.blockList;
+				applications[data.id].setValidBlocksFalse();
 			}
 		});
 		
