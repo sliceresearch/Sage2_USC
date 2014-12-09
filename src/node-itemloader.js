@@ -652,9 +652,10 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 					console.log("internal error");
 				} else {
 					console.log("EXIF> Adding", data.FileName);
-					assets.addFile(data.SourceFile, data);
-					_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-						callback(appInstance, handle);
+					assets.addFile(data.SourceFile, data, function() {
+						_this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+							callback(appInstance, handle);
+						});
 					});
 				}
 			});
