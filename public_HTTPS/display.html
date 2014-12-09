@@ -288,9 +288,6 @@
 					applications[appId].setValidBlocksFalse();
 					wsio.emit('requestVideoFrame', {id: appId});
 				}
-				
-				console.log(applications[appId].receivedBlocks);
-				console.log(applications[appId].validBlocks);
 			}
 		});
 		
