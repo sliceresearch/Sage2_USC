@@ -27,6 +27,8 @@ var movie_player = SAGE2_App.extend( {
 		this.uTexture         = [];
 		this.vTexture         = [];
 		this.video            = null;
+		this.changeBlockList  = false;
+		this.newBlockList     = null;
 		this.validBlocks      = [];
 		this.receivedBlocks   = [];
 	
@@ -64,6 +66,11 @@ var movie_player = SAGE2_App.extend( {
 		if(!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
 	},
 	
+	updateValidBlocks: function(validBlocks) {
+		this.newBlockList = validBlocks;
+		this.changeBlockList = true;
+	},
+	
 	calculateValidBlocks: function(x, y, width, height) {
 		this.validBlocks = [];
 		var renderBlockSize  = this.maxSize * width/this.video.width;
@@ -82,8 +89,9 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	setValidBlocksFalse: function() {
-		for(var i=0; i<this.validBlocks.length; i++){
-			this.receivedBlocks[this.validBlocks[i]] = false;
+		for(var i=0; i<this.receivedBlocks.length; i++){
+			if(this.validBlocks.indexOf(i) <= 0) this.receivedBlocks[i] = false;
+			else                                 this.receivedBlocks[i] = true;
 		}
 	},
 	
@@ -380,6 +388,8 @@ var movie_player = SAGE2_App.extend( {
 				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems, this.gl.UNSIGNED_SHORT, 0);
 			}
 		}
+		
+		if(this.changeBlockList === true) this.validBlocks = this.newBlockList;
 	},
 	
 	resize: function(date) {

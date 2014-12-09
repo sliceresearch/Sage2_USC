@@ -1500,6 +1500,11 @@ function wsLoadFileFromServer(wsio, data) {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			appInstance.id = getUniqueAppId();
 			
+			broadcast('createAppWindow', appInstance, 'requiresFullApps');
+			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+			applications.push(appInstance);
+			
 			if(appInstance.application === "movie_player"){
 				var i;
 				var j;
@@ -1530,23 +1535,15 @@ function wsLoadFileFromServer(wsio, data) {
 				};
 				
 				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, clients: {}};
+				
 				for(i=0; i<clients.length; i++){
 					if(clients[i].messages.receivesMediaStreamFrames){
 						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
 						videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], newFrameGenerated: false, readyForNextFrame: true, blockList: []};
-						// calculate blockList --> first just add all blocks to everyone
-						for(j=0; j<videoBuffer.length; j++){
-							videoHandles[appInstance.id].clients[clientAddress].blockList.push(j);
-						}
 					}
 				}
-			
+				calculateValidBlocks(appInstance, blocksize);
 			}
-			
-			broadcast('createAppWindow', appInstance, 'requiresFullApps');
-			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-			applications.push(appInstance);
 		});
 	}
 }
@@ -1566,6 +1563,40 @@ function handleNewVideoFrame(frameIdx, videoBuffer, clients) {
 				}
 			}
 		}
+	}
+}
+
+// move this function elsewhere
+function calculateValidBlocks(app, blockSize) {
+	var i, j, key;
+	
+	var horizontalBlocks = Math.ceil(app.native_width /blockSize);
+	var verticalBlocks   = Math.ceil(app.native_height/blockSize);
+	var renderBlockSize  = blockSize * app.width / app.native_width;
+	
+	for(key in videoHandles[app.id].clients){
+		for(i=0; i<verticalBlocks; i++){
+			for(var j=0; j<horizontalBlocks; j++){
+				var blockIdx = i*horizontalBlocks+j;
+				
+				if(videoHandles[app.id].clients[key].wsio.clientID < 0){
+					videoHandles[app.id].clients[key].blockList.push(blockIdx);
+				}
+				else {
+					var display = config.displays[videoHandles[app.id].clients[key].wsio.clientID];
+					var left = j*renderBlockSize + app.left;
+					var top  = i*renderBlockSize + app.top;
+					var offsetX = config.resolution.width  * display.column;
+					var offsetY = config.resolution.height * display.row;
+					
+					if((left+renderBlockSize) >= offsetX && left <= (offsetX+config.resolution.width) &&
+					   (top +renderBlockSize) >= offsetY && top  <= (offsetY+config.resolution.height)) {
+						videoHandles[app.id].clients[key].blockList.push(blockIdx);
+					}
+				}
+			}
+		}
+		videoHandles[app.id].clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: videoHandles[app.id].clients[key].blockList});
 	}
 }
 

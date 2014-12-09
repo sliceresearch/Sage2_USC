@@ -281,7 +281,7 @@
 			var date      = byteBufferToInt(data.subarray(appId.length+7, appId.length+15));
 			var yuvBuffer = data.subarray(appId.length+15, data.length);
 			
-			if(applications[appId] !== undefined &&applications[appId] !== null){
+			if(applications[appId] !== undefined && applications[appId] !== null){
 				if(applications[appId].validBlocks.indexOf(blockIdx) < 0) return;
 				
 				applications[appId].textureData(blockIdx, yuvBuffer);
@@ -290,6 +290,13 @@
 					applications[appId].setValidBlocksFalse();
 					wsio.emit('requestVideoFrame', {id: appId});
 				}
+			}
+		});
+		
+		wsio.on('updateValidStreamBlocks', function(data) {
+			if(applications[data.id] !== undefined && applications[data.id] !== null){
+				applications[data.id].updateValidBlocks(data.validBlocks);
+				
 			}
 		});
 		

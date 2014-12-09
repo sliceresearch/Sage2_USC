@@ -17,7 +17,7 @@ var image_viewer = SAGE2_App.extend( {
 		this.top = null;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(id, x, y, width, height, resrc, date) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, id, "img", width, height, resrc, date);
 		
