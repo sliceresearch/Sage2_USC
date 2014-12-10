@@ -1,0 +1,16 @@
+{
+	"main_script": "atom_smasher.js",
+	"icon": "threejs.webp",
+	"width": 4230,
+	"height": 4230,
+	"animation": true,
+	"dependencies": [
+		"scripts/three.min.js"
+	],
+	"title": "Atom Smasher",
+	"version": "1.0.0",
+	"description": "Three.js animation simulating particle collisions",
+	"keywords": [ "three.js" ],
+	"author": "Todd Margolis <tmargo@gmail.com>",
+	"license": "UCSD"
+}
