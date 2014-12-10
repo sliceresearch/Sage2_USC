@@ -368,7 +368,7 @@ function moveItemToFront(elem) {
 }
 
 function cleanURL(url) {
-	var a = document.createElement("a");
+	var a = document.createElement('a');
 	a.href = url;
 	var clean = url;
 	
@@ -376,6 +376,10 @@ function cleanURL(url) {
 		clean = url.replace(a.hostname, hostAlias[a.hostname]);
 	
 	return clean;
+}
+
+function isTrue(element, index, array) {
+	return (element === true);
 }
 
 function isEmpty(obj) {
@@ -395,6 +399,37 @@ function isEmpty(obj) {
 	}
 
 	return true;
+}
+
+function initializeArray(size, value) {
+	var arr = new Array(size);
+	for(var i=0; i<size; i++){
+		arr[i] = value;
+	}
+	return arr;
+}
+
+function byteBufferToInt(buf) {
+	var value = 0;
+	for(var i=buf.length-1; i>=0; i--){
+		value = (value * 256) + buf[i];
+	}
+	return value;
+}
+
+function byteBufferToString(buf, terminal) {
+	var cchar = String.fromCharCode(buf[0]);
+	var str = "";
+	var i = 1;
+	
+	while(cchar !== terminal){
+		str += cchar;
+		cchar = String.fromCharCode(buf[i]);
+		i++;
+		if(i >= buf.length) break;
+	}
+	
+	return str;
 }
 	
 
