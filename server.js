@@ -1520,10 +1520,11 @@ function wsLoadFileFromServer(wsio, data) {
 				var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
 				var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
 				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
-				var firstFrame = true;
+				var start = null;
 				
 				videohandle.onstartdecode = function() {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
+					start = Date.now()
 				};
 				videohandle.onstopdecode = function(err, finish) {
 					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
