@@ -55,6 +55,7 @@ var httpserver  = require('./src/node-httpserver');     // creates web server
 var interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
 var loader      = require('./src/node-itemloader');     // handles sage item creation
 var omicron     = require('./src/node-omicron');        // handles Omicron input events
+var pixelblock  = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
 var radialmenu  = require('./src/node-radialmenu');     // radial menu
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var sageutils   = require('./src/node-utils');          // provides the current version number
@@ -215,10 +216,11 @@ assets.initialize(uploadsFolder, 'uploads');
 
 var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight,
 						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
-						imConstraints);
+						imConstraints, ffmpegOptions);
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
+var videoHandles = {};
 
 
 // sets up the background for the display clients (image or color)
@@ -385,6 +387,7 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaStream',           wsStopMediaStream);
 	}
 	if(wsio.messages.receivesMediaStreamFrames){
+		wsio.on('requestVideoFrame', wsRequestVideoFrame);
 		wsio.on('receivedMediaStreamFrame',  wsReceivedMediaStreamFrame);
 		wsio.on('receivedRemoteMediaStreamFrame',  wsReceivedRemoteMediaStreamFrame);
 	}
@@ -413,6 +416,8 @@ function initializeWSClient(wsio) {
 		wsio.on('openNewWebpage', wsOpenNewWebpage);
 	}
 	if(wsio.messages.sendsVideoSynchonization){
+		wsio.on('playVideo', wsPlayVideo);
+		wsio.on('pauseVideo', wsPauseVideo);
 		wsio.on('updateVideoTime', wsUpdateVideoTime);
 	}
 	if(wsio.messages.sharesContentWithRemoteServer){
@@ -822,6 +827,13 @@ function wsPrintDebugInfo(wsio, data) {
 	console.log(
 		sprint("Node %2d> ", data.node).blue + sprint("[%s] ",data.app).green,
 		data.message);
+}
+
+function wsRequestVideoFrame(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
+	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
+	handleNewClientReady(videoHandles[data.id]);
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
@@ -1493,14 +1505,136 @@ function wsLoadFileFromServer(wsio, data) {
 		loadSession(data.filename);
 	}
 	else {
-		appLoader.loadFileFromLocalStorage(data, function(appInstance) {
+		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			appInstance.id = getUniqueAppId();
 			
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 			applications.push(appInstance);
+			
+			if(appInstance.application === "movie_player"){
+				var i;
+				var j;
+				var blocksize = 128;
+				var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
+				var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
+				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
+				var start = null;
+				
+				videohandle.onstartdecode = function() {
+					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
+					start = Date.now()
+				};
+				videohandle.onstopdecode = function(err, finish) {
+					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
+				};
+				videohandle.onnewframe = function(frameIdx, yuvBuffer) {
+					videoHandles[appInstance.id].frameIdx = frameIdx;
+					var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, appInstance.native_width, appInstance.native_height, blocksize);
+	
+					var idBuffer = new Buffer(appInstance.id+"|");
+					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
+					var dateBuffer = intToByteBuffer(Date.now(), 8);
+					for(i=0; i<blockBuffers.length; i++){
+						var blockIdxBuffer = intToByteBuffer(i, 2);
+						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+					}
+	
+					handleNewVideoFrame(videoHandles[appInstance.id]);
+				};
+				
+				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
+				
+				for(i=0; i<clients.length; i++){
+					if(clients[i].messages.receivesMediaStreamFrames){
+						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+						videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+					}
+				}
+				calculateValidBlocks(appInstance, blocksize);
+			}
 		});
+	}
+}
+
+// move this function elsewhere
+function handleNewVideoFrame(video) {
+	var i;
+	var key;
+	
+	video.newFrameGenerated = true;
+	for(key in video.clients) {
+		if(video.clients[key].readyForNextFrame !== true){
+			return false;
+		}
+	}
+	video.newFrameGenerated = false;
+	for(key in video.clients) {
+		video.clients[key].readyForNextFrame = false;
+		for(i=0; i<video.pixelbuffer.length; i++){
+			if(video.clients[key].blockList.indexOf(i) >= 0){
+				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
+			}
+		}
+	}
+	return true;
+}
+
+// move this function elsewhere
+function handleNewClientReady(video) {
+	if(video.newFrameGenerated !== true) return;
+	
+	var i;
+	var key;
+	for(key in video.clients) {
+		if(video.clients[key].readyForNextFrame !== true){
+			return false;
+		}
+	}
+	video.newFrameGenerated = false;
+	for(key in video.clients) {
+		video.clients[key].readyForNextFrame = false;
+		for(i=0; i<video.pixelbuffer.length; i++){
+			if(video.clients[key].blockList.indexOf(i) >= 0){
+				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
+			}
+		}
+	}
+	return true;
+}
+
+// move this function elsewhere
+function calculateValidBlocks(app, blockSize) {
+	var i, j, key;
+	
+	var horizontalBlocks = Math.ceil(app.native_width /blockSize);
+	var verticalBlocks   = Math.ceil(app.native_height/blockSize);
+	var renderBlockSize  = blockSize * app.width / app.native_width;
+	
+	for(key in videoHandles[app.id].clients){
+		for(i=0; i<verticalBlocks; i++){
+			for(var j=0; j<horizontalBlocks; j++){
+				var blockIdx = i*horizontalBlocks+j;
+				
+				if(videoHandles[app.id].clients[key].wsio.clientID < 0){
+					videoHandles[app.id].clients[key].blockList.push(blockIdx);
+				}
+				else {
+					var display = config.displays[videoHandles[app.id].clients[key].wsio.clientID];
+					var left = j*renderBlockSize + app.left;
+					var top  = i*renderBlockSize + app.top;
+					var offsetX = config.resolution.width  * display.column;
+					var offsetY = config.resolution.height * display.row;
+					
+					if((left+renderBlockSize) >= offsetX && left <= (offsetX+config.resolution.width) &&
+					   (top +renderBlockSize) >= offsetY && top  <= (offsetY+config.resolution.height)) {
+						videoHandles[app.id].clients[key].blockList.push(blockIdx);
+					}
+				}
+			}
+		}
+		videoHandles[app.id].clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: videoHandles[app.id].clients[key].blockList});
 	}
 }
 
@@ -1578,6 +1712,18 @@ function wsOpenNewWebpage(wsio, data) {
 
 
 // **************  Video / Audio Synchonization *****************
+
+function wsPlayVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	
+	videoHandles[data.id].decoder.startLiveDecoding();
+}
+
+function wsPauseVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	
+	videoHandles[data.id].decoder.pauseLiveDecoding();
+}
 
 function wsUpdateVideoTime(wsio, data) {
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');
@@ -2590,6 +2736,27 @@ function moveElementToEnd(list, elem) {
 		list[i] = list[i+1];
 	}
 	list[list.length-1] = elem;
+}
+
+function intToByteBuffer(aInt, bytes) {
+	var buf = new Buffer(bytes);
+	var byteVal;
+	var num = aInt;
+	for(var i=0; i<bytes; i++){
+		byteVal = num & 0xff;
+		buf[i] = byteVal;
+		num = (num - byteVal) / 256;
+	}
+	
+	return buf;
+}
+
+function byteBufferToInt(buf) {
+	var value = 0;
+	for(var i=buf.length-1; i>=0; i--){
+		value = (value * 256) + buf[i];
+	}
+	return value;
 }
 
 function getItemPositionSizeType(item) {

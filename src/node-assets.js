@@ -69,7 +69,7 @@ setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
 	imageMagick = gm.subClass(imOptions);
 	if(ffmpegOptions.appPath !== undefined){
-		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg.exe";
+		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg";
 	}
 };
 

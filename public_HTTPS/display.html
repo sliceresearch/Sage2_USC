@@ -88,7 +88,7 @@
 		clientID = parseInt(getParameterByName("clientID")) || 0;
 		console.log("clientID: " + clientID);
 		
-		wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		wsio = new websocketIO();
 		console.log("Connected to server: ", window.location.origin);
 		
 		isMaster = false;
@@ -274,6 +274,32 @@
 			}
 		});
 		
+		wsio.on('updateVideoFrame', function(data) {
+			var appId     = byteBufferToString(data, "|");
+			var blockIdx  = byteBufferToInt(data.subarray(appId.length+1, appId.length+ 3));
+			var frameIdx  = byteBufferToInt(data.subarray(appId.length+3, appId.length+ 7));
+			var date      = byteBufferToInt(data.subarray(appId.length+7, appId.length+15));
+			var yuvBuffer = data.subarray(appId.length+15, data.length);
+			
+			if(applications[appId] !== undefined && applications[appId] !== null){
+				applications[appId].textureData(blockIdx, yuvBuffer);
+				if(applications[appId].receivedBlocks.every(isTrue) === true){
+					console.log("video: " + (frameIdx / applications[appId].video.framerate));
+					
+					applications[appId].draw(new Date(date));
+					applications[appId].setValidBlocksFalse();
+					wsio.emit('requestVideoFrame', {id: appId});
+				}
+			}
+		});
+		
+		wsio.on('updateValidStreamBlocks', function(data) {
+			if(applications[data.id] !== undefined && applications[data.id] !== null){
+				applications[data.id].validBlocks = data.blockList;
+				applications[data.id].setValidBlocksFalse();
+			}
+		});
+		
 		wsio.on('updateWebpageStreamFrame', function(data) {
 			wsio.emit('receivedWebpageStreamFrame', {id: data.id, client: clientID});
 		
@@ -366,7 +392,7 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
-						app.init(data.id, data.width, data.height, url, date);
+						app.init(data.id, data.left-ui.offsetX, data.top+ui.titleBarHeight-ui.offsetY, data.width, data.height, url, date);
 
 						if(app.state !== undefined && clientID===0){
 							Object.observe(app.state, function (changes) {
@@ -386,13 +412,14 @@
 					}, false);
 					js.type = "text/javascript";
 					js.src = url + "/" + data.application + ".js";
+					console.log(url + "/" + data.application + ".js");
 					document.head.appendChild(js);
 				}
 			
 				// load existing app
 				else {
 					var app = new window[data.application];
-					app.init(data.id, data.width, data.height, url, date);
+					app.init(data.id, data.left-ui.offsetX, data.top+ui.titleBarHeight-ui.offsetY, data.width, data.height, url, date);
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {
