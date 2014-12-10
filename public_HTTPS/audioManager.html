@@ -115,6 +115,9 @@
 					console.log("video ended");
 					if(autoplay === true) vid.currentTime = 0;
 				}, false);
+				vid.addEventListener('timeupdate', function() {
+					document.getElementById(data.id + "_time").textContent = timeToHHMMSS(vid.currentTime);
+				}, false);
 				
 				
 				var url = cleanURL(data.url);
@@ -146,6 +149,11 @@
 				volumeSlider.addEventListener('input', changeVolume, false);
 				volume.appendChild(volumeSlider);
 				
+				var time = document.createElement('td');
+				time.id = data.id + "_time";
+				time.className = "videoTime";
+				time.textContent = "00:00:00";
+				
 				var play = document.createElement('td');
 				play.id = data.id + "_play";
 				play.className = "videoPlay";
@@ -153,6 +161,7 @@
 				
 				videoRow.appendChild(title);
 				videoRow.appendChild(volume);
+				videoRow.appendChild(time);
 				videoRow.appendChild(play);
 				
 				main.appendChild(vid);
@@ -214,6 +223,15 @@
 			elem.parentNode.removeChild(elem);
 	}
 	
+	function timeToHHMMSS(sec) {
+		var totalSec = Math.floor(sec);
+		var hh = Math.floor(totalSec / 3600) % 24;
+		var mm = Math.floor(totalSec /   60) % 60;
+		var ss = totalSec % 60;
+
+		return (hh < 10 ? "0" + hh : hh) + ":" + (mm < 10 ? "0" + mm : mm) + ":" + (ss  < 10 ? "0" + ss : ss);
+	}
+	
 	function changeVolume(event) {
 		var vol = document.getElementById(event.target.id).value / 10;
 		var videoId = event.target.id.substring(0, event.target.id.length-13);
@@ -243,6 +261,7 @@
 			<tr>
 				<td class="videoTitle"><b>Video</b></td>
 				<td class="videoVolume"><b>Volume</b></td>
+				<td class="videoTime"><b>Time</b></td>
 				<td class="videoPlay"><b>Play/Pause</b></td>
 			</tr>
 		</table>

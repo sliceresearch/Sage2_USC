@@ -387,6 +387,7 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaStream',           wsStopMediaStream);
 	}
 	if(wsio.messages.receivesMediaStreamFrames){
+		wsio.on('requestVideoFrame', wsRequestVideoFrame);
 		wsio.on('receivedMediaStreamFrame',  wsReceivedMediaStreamFrame);
 		wsio.on('receivedRemoteMediaStreamFrame',  wsReceivedRemoteMediaStreamFrame);
 	}
@@ -826,6 +827,13 @@ function wsPrintDebugInfo(wsio, data) {
 	console.log(
 		sprint("Node %2d> ", data.node).blue + sprint("[%s] ",data.app).green,
 		data.message);
+}
+
+function wsRequestVideoFrame(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
+	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
+	handleNewClientReady(videoHandles[data.id]);
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
@@ -1512,6 +1520,7 @@ function wsLoadFileFromServer(wsio, data) {
 				var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
 				var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
 				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
+				var firstFrame = true;
 				
 				videohandle.onstartdecode = function() {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
@@ -1531,15 +1540,15 @@ function wsLoadFileFromServer(wsio, data) {
 						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
 					}
 	
-					handleNewVideoFrame(videoHandles[appInstance.id].frameIdx, videoHandles[appInstance.id].pixelbuffer, videoHandles[appInstance.id].clients);
+					handleNewVideoFrame(videoHandles[appInstance.id]);
 				};
 				
-				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, clients: {}};
+				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
 				
 				for(i=0; i<clients.length; i++){
 					if(clients[i].messages.receivesMediaStreamFrames){
 						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], newFrameGenerated: false, readyForNextFrame: true, blockList: []};
+						videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
 					}
 				}
 				calculateValidBlocks(appInstance, blocksize);
@@ -1549,21 +1558,49 @@ function wsLoadFileFromServer(wsio, data) {
 }
 
 // move this function elsewhere
-function handleNewVideoFrame(frameIdx, videoBuffer, clients) {
+function handleNewVideoFrame(video) {
 	var i;
 	var key;
-	for(key in clients) {
-		clients[key].newFrameGenerated = true;
-		if(clients[key].readyForNextFrame === true){
-			clients[key].readyForNextFrame = false;
-			clients[key].newFrameGenerated = false;
-			for(var i=0; i<videoBuffer.length; i++){
-				if(clients[key].blockList.indexOf(i) >= 0){
-					clients[key].wsio.emit('updateVideoFrame', videoBuffer[i]);
-				}
+	
+	video.newFrameGenerated = true;
+	for(key in video.clients) {
+		if(video.clients[key].readyForNextFrame !== true){
+			return false;
+		}
+	}
+	video.newFrameGenerated = false;
+	for(key in video.clients) {
+		video.clients[key].readyForNextFrame = false;
+		for(i=0; i<video.pixelbuffer.length; i++){
+			if(video.clients[key].blockList.indexOf(i) >= 0){
+				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
 			}
 		}
 	}
+	return true;
+}
+
+// move this function elsewhere
+function handleNewClientReady(video) {
+	if(video.newFrameGenerated !== true) return;
+	
+	var i;
+	var key;
+	for(key in video.clients) {
+		if(video.clients[key].readyForNextFrame !== true){
+			return false;
+		}
+	}
+	video.newFrameGenerated = false;
+	for(key in video.clients) {
+		video.clients[key].readyForNextFrame = false;
+		for(i=0; i<video.pixelbuffer.length; i++){
+			if(video.clients[key].blockList.indexOf(i) >= 0){
+				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
+			}
+		}
+	}
+	return true;
 }
 
 // move this function elsewhere
