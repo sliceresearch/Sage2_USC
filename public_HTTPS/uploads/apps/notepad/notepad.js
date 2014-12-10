@@ -453,13 +453,13 @@ var notepad = SAGE2_App.extend( {
         this.refresh( date ); //redraw    
 	},
 	quit: function(){
-		if(isMaster){
+		/*if(isMaster){
 			this.fileWrite = true;
 			this.fileName = "Sample.txt";
 			this.fileDataBuffer = this.joinText();
 			this.writeToFile();
 			console.log("Quitting notepad");
-		}
+		}*/
 	}
 	 
 });    

@@ -156,6 +156,18 @@ var buttonType = {
 		"textual":false,
 		"animation": true
 	},
+	"new": {
+		"state": null,
+		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
+		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 6 6 l 0 4 m -2 -2 l 4 0",
+		"width":8,
+		"height":10,
+		"fill":"none",
+		"strokeWidth": 1,
+		"delay":600,
+		"textual":false,
+		"animation": true
+	},
 	"default":{
 		"textual":true,
 		"label":"Hello",
@@ -375,12 +387,22 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 };
 
 /**
+*	Creates default close and radial menu buttons
+*/
+/*SAGE2WidgetControlBar.prototype.addDefaultButtons = function(){
+	this.addButton({type:"close",sequenceNo:9,action:function(date){
+		this.displayText = "Pushed watch button"; //Reset value
+		this.draw(date);
+	}.bind(this)});
+}*/
+
+/**
 *	Creates control bar and elements from the layout options and element specifications
 */
 SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var size = this.computeSize();
 	var dimensions = this.controlDimensions;
-	
+	//this.addDefaultButtons();
 	this.controlSVG = new Snap(size.width, size.height);
 	var center = {x:size.height/2.0,y:size.height/2.0}; //change to reflect controlSVG center
 

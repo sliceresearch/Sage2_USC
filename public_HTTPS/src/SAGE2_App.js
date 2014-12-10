@@ -32,6 +32,7 @@ var SAGE2_App = Class.extend( {
 		this.sticky = null;
 		this.controls  = null;
 		this.cloneable = null;
+		this.cloneData = null; // If the clone is not a fresh copy, this variable holds data to be loaded into the clone
 		this.enableControls  = null;
 		this.requestForClone = null;
 
@@ -136,7 +137,7 @@ var SAGE2_App = Class.extend( {
 	/////////////////////////////////////////////////////////////////////
 	//Funtions for file read and write
 	/////////////////////////////////////////////////////////////////////
-	readFromFile: function(){
+	/*readFromFile: function(){
 		if (this.fileRead === true){
 			wsio.emit('readFromFile',{id:this.id,fileName:this.fileName});
 			this.fileRead = false;
@@ -147,7 +148,7 @@ var SAGE2_App = Class.extend( {
 			wsio.emit('writeToFile', {fileName:this.fileName,buffer:this.fileDataBuffer});
 			this.fileWrite = false;
 		}
-	},
+	},*/
 	/////////////////////////////////////////////////////////////////////
 	preDraw: function(date) {
 		this.t  = (date.getTime() - this.startDate.getTime()) / 1000; // total time since start of program (sec)

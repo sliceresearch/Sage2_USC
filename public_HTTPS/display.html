@@ -901,7 +901,8 @@
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
 					console.log("cloning app:" + appId);
-					wsio.emit('createAppClone', {id : appId});
+					if(isMaster)
+						wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 				}
 				
 			}
@@ -949,12 +950,12 @@
 			}
 		});
 
-		wsio.on('receiveFileData', function(data){
+		/*wsio.on('receiveFileData', function(data){
 			var app = applications[data.id];
 			app.fileDataBuffer = data.buffer;
 			app.fileReceived = true;
 			console.log("file Data:",app.fileDataBuffer);
-		});
+		});*/
 	}
 
 </script>

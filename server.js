@@ -59,7 +59,7 @@ var radialmenu  = require('./src/node-radialmenu');     // radial menu
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
-
+var stickyItems = require('./src/node-stickyitems');
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 
@@ -188,7 +188,7 @@ var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
 var radialMenus = {};
-
+var stickyAppHandler = new stickyItems();
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
@@ -436,10 +436,10 @@ function initializeWSClient(wsio) {
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
 
-	if (wsio.messages.requestsFileHandling){
+	/*if (wsio.messages.requestsFileHandling){
 		wsio.on('writeToFile', wsWriteToFile);
 		wsio.on('readFromFile', wsReadFromFile);
-	}
+	}*/
 	
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
@@ -615,7 +615,12 @@ function wsPointerScrollStart(wsio, data) {
 
 	if (elem !== null) {
 		remoteInteraction[uniqueID].selectScrollItem(elem);
+		//Retain the order to items sticking on this element
+		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
+		for (var idx in stickyList){
+			newOrder = moveAppToFront(stickyList[idx].id);
+		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 }
@@ -867,7 +872,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 }
 
 // **************  File Manipulation Functions for Apps ************
-
+/*
 function wsWriteToFile (wsio, data){
 	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
 	fs.writeFile(fullPath, data.buffer, function(err){
@@ -891,7 +896,7 @@ function wsReadFromFile (wsio, data){
 	});
 }
 
-
+*/
 // **************  Application Animation Functions *****************
 
 function wsFinishedRenderingAppFrame(wsio, data) {
@@ -1738,30 +1743,34 @@ function wsReleasedControlId(wsio, data){
 /******************** Clone Request Methods ****************************/
 
 function wsCreateAppClone(wsio, data){
-	
 	var app = findAppById(data.id);
-	if (app !== null){
-		var clone = {
-			id:getUniqueAppId(),
-			left: app.left + 5, // modify such that if the new position is off the screen, then reset the position to 0,0
-			top: app.top + 5,
-			width: app.width,
-			height:app.height,
-			data:app.data,
-			resrc: app.resrc,
-			animation: app.animation,
-			date: new Date(),
-			title: app.title,
-			url: app.url,
-			metadata: app.metadata,
-			application: app.application
-		};
-
+	var appData = {application: "custom_app", filename: app.application};
+	appLoader.loadFileFromLocalStorage(appData, function(clone) {
+		clone.id = getUniqueAppId();
+		clone.left = app.left + 5;
+		clone.top = app.top + 5;
+		clone.width = app.width;
+		clone.height = app.height;
+		if(clone.animation){
+			var i;
+			appAnimations[clone.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[clone.id].clients[clientAddress] = false;
+				}
+			}
+		}
+		if (clone.data)
+			clone.data.loadData = data.cloneData;
+		else
+			clone.data = {loadData:data.cloneData};
+		
 		broadcast('createAppWindow', clone, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
-		applications.push(clone);	
-	}
-	
+
+		applications.push(clone);
+	});	
 }
 
 /******************** Clone Request Methods ****************************/
@@ -2817,8 +2826,11 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				broadcast('eventInItem', event, 'receivesInputEvents');
 			}
 		}
-
+		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
+		for (var idx in stickyList){
+			newOrder = moveAppToFront(stickyList[idx].id);
+		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 
@@ -3014,10 +3026,19 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	
 	// move / resize window
 	if(remoteInteraction[uniqueID].windowManagementMode()){
+		
 		var updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
 		var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
+
 		if(updatedMoveItem !== null){
+			//Attach the app to the background app if it is sticky
+			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
+			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
+			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
+			for (var idx=0;idx<updatedStickyItems.length;idx++){
+				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
+			}
 		}
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
@@ -3078,7 +3099,16 @@ function pointerPosition( uniqueID, data ) {
 	
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
-	if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+	if(updatedItem !== null){
+		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
+		attachAppIfSticky(backgroundItem,updatedItem.elemId);
+		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
+		for (var idx=0;idx<updatedStickyItems.length;idx++){
+			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
+		}
+	}
+	//if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 }
 
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
@@ -3095,7 +3125,12 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 
 	if(elem !== null){
 		remoteInteraction[uniqueID].selectScrollItem(elem, pointerX, pointerY);
+		//Retain the order to items sticking on this element
+		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
+		for (var idx in stickyList){
+			newOrder = moveAppToFront(stickyList[idx].id);
+		}
 		broadcast('updateItemOrder', newOrder, 'receivesWindowModification');
 	}
 }
@@ -3460,6 +3495,7 @@ function deleteApplication( elem ) {
 
 		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
 	}
+	stickyAppHandler.removeElement(elem);
 	removeElement(applications, elem);
 }
 
@@ -3597,4 +3633,14 @@ function wsRadialMenuMoved( wsio, data ) {
 	{
 		radialMenu.setPosition( data );
 	}
+}
+
+
+function attachAppIfSticky(backgroundItem, appId){
+	var app = findAppById(appId);
+	if (app.sticky !== true) return;
+	//console.log("sticky:",app.sticky);
+	stickyAppHandler.detachStickyItem(app);
+	if (backgroundItem !== null)
+		stickyAppHandler.attachStickyItem(backgroundItem,app);
 }
