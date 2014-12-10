@@ -284,8 +284,6 @@
 			if(applications[appId] !== undefined && applications[appId] !== null){
 				applications[appId].textureData(blockIdx, yuvBuffer);
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
-					console.log("video: " + (frameIdx / applications[appId].video.framerate));
-					
 					applications[appId].draw(new Date(date));
 					applications[appId].setValidBlocksFalse();
 					wsio.emit('requestVideoFrame', {id: appId});
