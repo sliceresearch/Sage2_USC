@@ -769,7 +769,7 @@ function radialMenu(){
 			
 			if( this.sendsToServer === true )
 			{
-				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x), y: (data.y - dragOffset.y), radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
+				//this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)-radialMenuSize.x/2, y: (data.y - dragOffset.y)-radialMenuSize.y/2, radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
 			}
 		}
 		

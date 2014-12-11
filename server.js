@@ -3464,12 +3464,14 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	{
 		if( elem === null )
 		{
-			radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
-			radialMenus[uniqueID+"_menu"].top = pointerY;
-			radialMenus[uniqueID+"_menu"].left = pointerX;
+			
+			var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
+			radialMenus[uniqueID+"_menu"] = newRadialMenu;
+			
+			newRadialMenu.setPosition({x: pointerX, y: pointerY});
 	
 			// Open a 'media' radial menu
-			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
+			broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
 		}
 		else
 		{
@@ -3512,17 +3514,21 @@ function updateRadialMenu( uniqueID )
 
 function radialMenuEvent( data )
 {
-	broadcast('radialMenuEvent', data, 'receivesPointerData');
-	
 	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
 	
 	var radialMenu = radialMenus[data.id+"_menu"];
 	if( radialMenu !== undefined )
 	{
-		radialMenu.onEvent( data );
+		
+		if( radialMenu.onEvent( data ) )
+		{
+			// Broadcast event if event is in radial menu bounding box
+			broadcast('radialMenuEvent', data, 'receivesPointerData');
+		}
 		
 		if( radialMenu.hasEventID(data.id) )
 		{
+			
 			return true;
 		}
 		else
