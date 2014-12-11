@@ -604,13 +604,7 @@ function wsPointerScrollStart(wsio, data) {
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 
-	var elem = findAppUnderPointer(pointerX, pointerY);
-
-	if (elem !== null) {
-		remoteInteraction[uniqueID].selectScrollItem(elem);
-		var newOrder = moveAppToFront(elem.id);
-		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
-	}
+	pointerScrollStart( uniqueID, pointerX, pointerY );
 }
 
 function wsPointerScroll(wsio, data) {
@@ -2939,7 +2933,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
-		
+	console.log("PointerMove", data);
 	sagePointers[uniqueID].left += data.deltaX;
 	sagePointers[uniqueID].top += data.deltaY;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
@@ -3037,15 +3031,24 @@ function pointerPosition( uniqueID, data ) {
 }
 
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
+	console.log("pointerScrollStart");
+
 	if( sagePointers[uniqueID] === undefined )
 		return;
+		
+	console.log("pointerScrollStart - valid ID", uniqueID);
 	var control = findControlsUnderPointer(pointerX,pointerY);
 	if (control!==null)
 		return;
+	
+	console.log("pointerScrollStart - no controls");
+	
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
-		
+	
+	console.log("pointerScrollStart - not used by menu");
+	
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
@@ -3053,23 +3056,25 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 		var newOrder = moveAppToFront(elem.id);
 		broadcast('updateItemOrder', newOrder, 'receivesWindowModification');
 	}
+
 }
 
 function pointerScroll( uniqueID, data ) {
+	console.log("pointerScroll ", uniqueID, data);
 	if( sagePointers[uniqueID] === undefined )
 		return;
-		
+	console.log("PointerScroll valid ID");
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 	
 	var control = findControlsUnderPointer(pointerX,pointerY);
 	if (control!==null)
 		return;
-
+	console.log("pointerScroll - no controls");
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
 		return; // Radial menu is using the event
-		
+	console.log("pointerScroll - menu to using event");
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		var scale = 1.0 + Math.abs(data.wheelDelta)/512;
 		if(data.wheelDelta > 0) scale = 1.0 / scale;
@@ -3464,14 +3469,12 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	{
 		if( elem === null )
 		{
-			
-			var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
-			radialMenus[uniqueID+"_menu"] = newRadialMenu;
-			
-			newRadialMenu.setPosition({x: pointerX, y: pointerY});
+			radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
+			radialMenus[uniqueID+"_menu"].top = pointerY;
+			radialMenus[uniqueID+"_menu"].left = pointerX;
 	
 			// Open a 'media' radial menu
-			broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
+			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
 		}
 		else
 		{
@@ -3514,21 +3517,17 @@ function updateRadialMenu( uniqueID )
 
 function radialMenuEvent( data )
 {
+	broadcast('radialMenuEvent', data, 'receivesPointerData');
+	
 	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
 	
 	var radialMenu = radialMenus[data.id+"_menu"];
 	if( radialMenu !== undefined )
 	{
-		
-		if( radialMenu.onEvent( data ) )
-		{
-			// Broadcast event if event is in radial menu bounding box
-			broadcast('radialMenuEvent', data, 'receivesPointerData');
-		}
+		radialMenu.onEvent( data );
 		
 		if( radialMenu.hasEventID(data.id) )
 		{
-			
 			return true;
 		}
 		else
