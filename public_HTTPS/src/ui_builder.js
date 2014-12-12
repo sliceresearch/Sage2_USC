@@ -476,7 +476,7 @@ function uiBuilder(json_cfg, clientID) {
 
 		if( !menuElem )
 		{
-			var radialMenuScale = ui.widgetControlSize * 0.03;
+			var radialMenuScale = 1;
 
 			radialMenuContentWindowDiv = document.createElement("div");
 			
@@ -492,7 +492,7 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9000);
+								data.radialMenuSize.x, data.radialMenuSize.y, 9000);
 
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
 								0,
@@ -512,7 +512,7 @@ function uiBuilder(json_cfg, clientID) {
 			
 			var menu = new radialMenu();
 			
-			menu.init(data.id, menuElem2, menuElem3) ;
+			menu.init(data, menuElem2, menuElem3) ;
 			
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";

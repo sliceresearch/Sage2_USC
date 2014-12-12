@@ -50,10 +50,11 @@ function radialMenu(){
 	this.thumbnailScrollWindowElement2 = null;
 	this.thumbScrollWindowctx2 = null;
 	
-	this.init = function(id, thumbElem, thumbElem2) {
-		radialMenuScale = ui.widgetControlSize * 0.03;
+	this.init = function(data, thumbElem, thumbElem2) {
+		var id = data.id;
+		radialMenuScale = data.radialMenuScale;
 		radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
-		radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
+		radialMenuSize = data.radialMenuSize;
 		
 		thumbnailWindowSize.x *= radialMenuScale;
 		thumbnailWindowSize.y *= radialMenuScale;
@@ -769,7 +770,7 @@ function radialMenu(){
 			
 			if( this.sendsToServer === true )
 			{
-				//this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)-radialMenuSize.x/2, y: (data.y - dragOffset.y)-radialMenuSize.y/2, radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
+				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)+radialMenuSize.x/2, y: (data.y - dragOffset.y)+radialMenuSize.y/2, radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
 			}
 		}
 		

@@ -36,7 +36,7 @@ function radialmenu(id, ptrID, ui) {
 }
 
 radialmenu.prototype.getInfo = function() {
-	return { id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: this.thumbnailWindowSize };
+	return { id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale };
 };
 
 radialmenu.prototype.start = function() {
@@ -81,11 +81,10 @@ radialmenu.prototype.onEvent = function(data) {
 			(data.y > this.top  - this.radialMenuSize.y/2) && (data.y < this.top - this.radialMenuSize.y/2  + this.radialMenuSize.y) )
 		{
 			//this.windowInteractionMode = false;
-			//console.log("over menu");
+
 			if( this.visible === true && data.type === "pointerPress" )
 				this.activeEventIDs.push( data.id );
-		
-			//console.log("over menu");
+
 			return true;
 		}
 		// Else if over thumbnail window bounding box
@@ -93,18 +92,16 @@ radialmenu.prototype.onEvent = function(data) {
 				 (data.y > this.top - this.radialMenuSize.y/2)  && (data.y < this.top - this.radialMenuSize.y/2  + this.thumbnailWindowSize.y) )
 		{
 			//this.windowInteractionMode = false;
-			//console.log("over thumb");
+
 			if( this.thumbnailWindowOpen === true )
 			{
 				if( this.visible === true && data.type === "pointerPress" )
 					this.activeEventIDs.push( data.id );
-				
+
 				return true;
 			}
-			else
-				return false;
 		}
-		
+
 	}
 	return false;
 };
