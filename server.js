@@ -3458,14 +3458,34 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	{
 		if( elem === null )
 		{
+			var validLocation = true;
+			var newMenuPos = {x: pointerX, y: pointerY};
 			
-			var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
-			radialMenus[uniqueID+"_menu"] = newRadialMenu;
+			// Make sure there's enough distance from other menus
+			for (var existingMenuID in radialMenus)
+			{
+				var existingRadialMenu = radialMenus[existingMenuID];
+				var prevMenuPos = { x: existingRadialMenu.left, y: existingRadialMenu.top };
+				
+				var distance = Math.sqrt( Math.pow( Math.abs(newMenuPos.x - prevMenuPos.x), 2 ) + Math.pow( Math.abs(newMenuPos.y - prevMenuPos.y), 2 ) );
+				
+				if( existingRadialMenu.visible && distance < existingRadialMenu.radialMenuSize.x )
+				{
+					validLocation = false;
+					console.log("Menu is too close to existing menu");
+				}
+			}
 			
-			newRadialMenu.setPosition({x: pointerX, y: pointerY});
-	
-			// Open a 'media' radial menu
-			broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
+			if( validLocation )
+			{
+				var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
+				radialMenus[uniqueID+"_menu"] = newRadialMenu;
+				
+				newRadialMenu.setPosition(newMenuPos);
+		
+				// Open a 'media' radial menu
+				broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
+			}
 		}
 		else
 		{
@@ -3534,7 +3554,10 @@ function radialMenuEvent( data )
 function isEventOnMenu( data )
 {
 	var radialMenu = radialMenus[data.id+"_menu"];
-	return radialMenu.isEventOnMenu( data );
+	if( radialMenu !== undefined )
+		return radialMenu.isEventOnMenu( data );
+	else
+		return false;
 }
 
 function wsRemoveRadialMenu( wsio, data ) {
