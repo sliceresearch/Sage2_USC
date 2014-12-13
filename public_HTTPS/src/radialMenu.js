@@ -711,6 +711,9 @@ function radialMenu(){
 		if( this.sendsToServer === true )
 			this.wsio.emit('removeRadialMenu', { id: this.menuID } );
 		
+		this.currentMenuState = 'radialMenu';
+		this.resetRadialButtonLitState();
+		
 		console.log("Closing menu" );
 	};
 	
@@ -738,7 +741,7 @@ function radialMenu(){
 			this.currentMenuState = 'radialMenu';
 			this.element.width = radialMenuSize.x;
 			this.element.height = radialMenuSize.y;
-			this.thumbnailScrollWindowElement.style.display = "None";
+			//this.thumbnailScrollWindowElement.style.display = "None";
 			
 			if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: false } );
