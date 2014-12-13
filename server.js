@@ -3037,7 +3037,7 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if (control!==null)
 		return;
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
 		
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3061,7 +3061,7 @@ function pointerScroll( uniqueID, data ) {
 		return;
 
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
 		return; // Radial menu is using the event
 		
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
@@ -3130,7 +3130,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 	}
 		
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
 		
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3506,6 +3506,7 @@ function updateRadialMenu( uniqueID )
 	broadcast('updateRadialMenu', {id: uniqueID, fileList: list}, 'receivesPointerData');
 }
 
+// Standard case: Checks for event down and up events to determine menu ownership of event
 function radialMenuEvent( data )
 {
 	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
@@ -3522,7 +3523,6 @@ function radialMenuEvent( data )
 		
 		if( radialMenu.hasEventID(data.id) )
 		{
-			
 			return true;
 		}
 		else
@@ -3530,8 +3530,16 @@ function radialMenuEvent( data )
 	}
 }
 
+// Special case: just check if event is over menu (used for one-time events that don't use a start/end event)
+function isEventOnMenu( data )
+{
+	var radialMenu = radialMenus[data.id+"_menu"];
+	return radialMenu.isEventOnMenu( data );
+}
+
 function wsRemoveRadialMenu( wsio, data ) {
 	var radialMenu = radialMenus[data.id];
+	
 	if( radialMenu !== undefined )
 	{
 		radialMenu.visible = false;

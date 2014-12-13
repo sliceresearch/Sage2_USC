@@ -63,6 +63,29 @@ radialmenu.prototype.hasEventID = function(id) {
 		return true;
 };
 
+radialmenu.prototype.isEventOnMenu = function(data) {
+	if( this.visible === true)
+	{
+		// If over radial menu bounding box
+		if( (data.x > this.left - this.radialMenuSize.x/2) && (data.x < this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x) &&
+			(data.y > this.top  - this.radialMenuSize.y/2) && (data.y < this.top - this.radialMenuSize.y/2  + this.radialMenuSize.y) )
+		{
+			return true;
+		}
+		// Else if over thumbnail window bounding box
+		else if( (data.x > this.left + this.radialMenuSize.x/2) && (data.x < this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x) &&
+				 (data.y > this.top - this.radialMenuSize.y/2)  && (data.y < this.top - this.radialMenuSize.y/2  + this.thumbnailWindowSize.y) )
+		{
+			if( this.thumbnailWindowOpen === true )
+			{
+				return true;
+			}
+		}
+
+	}
+	return false;
+};
+
 radialmenu.prototype.onEvent = function(data) {
 	
 	var idIndex = this.activeEventIDs.indexOf(data.id);
