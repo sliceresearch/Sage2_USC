@@ -114,7 +114,9 @@
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
 				receivesWidgetEvents: true,
-				requestsAppClone: true
+				requestsAppClone: true,
+				requestsFileHandling: true
+
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -759,6 +761,8 @@
 							top:data.y,
 							width:size.width,
 							height:size.height,
+							barHeight: size.barHeight,
+							hasSideBar: size.hasSideBar,
 							show: true,
 							date: dt 
 						});
@@ -897,7 +901,8 @@
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
 					console.log("cloning app:" + appId);
-					wsio.emit('createAppClone', {id : appId});
+					if(isMaster)
+						wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 				}
 				
 			}
@@ -944,6 +949,13 @@
 				clearInterval(blinkControlHandle);		
 			}
 		});
+
+		/*wsio.on('receiveFileData', function(data){
+			var app = applications[data.id];
+			app.fileDataBuffer = data.buffer;
+			app.fileReceived = true;
+			console.log("file Data:",app.fileDataBuffer);
+		});*/
 	}
 
 </script>

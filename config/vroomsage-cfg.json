@@ -1,0 +1,144 @@
+{
+	host: "vroomsage.ucsd.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		image: {
+			url: "images/background/chicago-pano-october-VROOM.jpg",
+			style: "stretch"
+		},
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(55, 55, 55, 0.3)"
+		},
+		clip: true
+	},
+	ui: {
+		clock: 24,
+		show_url: true,
+		show_version: false,
+		maxWindowWidth : 16384,
+		maxWindowHeight : 8196,
+		noDropShadow: true,
+		titleBarHeight: 75,
+		titleTextSize:  60,
+		pointerSize:   220,
+		widgetControlSize: 60
+	},
+	resolution: {
+		width: 3840,
+		height: 1080
+	},
+	layout: {
+		rows: 4,
+		columns: 4
+	},
+	displays: [
+		{
+			row: 3,
+			column: 0
+		},
+		{
+			row: 2,
+			column: 0
+		},
+		{
+			row: 3,
+			column: 1
+		},
+		{
+			row: 2,
+			column: 1
+		},
+		{
+			row: 3,
+			column: 2
+		},
+		{
+			row: 2,
+			column: 2
+		},
+		{
+			row: 3,
+			column: 3
+		},
+		{
+			row: 2,
+			column: 3
+		},
+		{
+			row: 1,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 0
+		},
+		{
+			row: 1,
+			column: 1
+		},
+		{
+			row: 0,
+			column: 1
+		},
+		{
+			row: 1,
+			column: 2
+		},
+		{
+			row: 0,
+			column: 2
+		},
+		{
+			row: 1,
+			column: 3
+		},
+		{
+			row: 0,
+			column: 3
+		}
+	],
+	alternate_hosts: [ 
+		"localhost",
+		"vroomsage.local",
+		"vroomsage.calit2.net",
+		"67.58.54.5",
+		"137.110.116.15"
+	],
+	remote_sites: [
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "LAVA",
+			host: "canoe-lava-2.manoa.hawaii.edu",
+			port: 443
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
+		}
+	],
+	apis: {
+		twitter: {
+			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
+			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
+			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
+			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
+		}
+	}
+}
