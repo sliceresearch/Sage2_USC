@@ -187,6 +187,7 @@ appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw
 		aspect: aspectRatio,
 		animation: false,
 		metadata: metadata,
+		sticky: false,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -252,6 +253,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		aspect: aspectRatio,
 		animation: false,
 		metadata: metadata,
+		sticky: false,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -429,6 +431,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		aspect:    aspectRatio,
 		animation: false,
 		metadata: metadata,
+		sticky: false,
 		date:      new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -477,6 +480,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			animation: instructions.animation,
 			metadata: exif.metadata,
 			resizeMode: resizeMode,
+			sticky:instructions.sticky,
 			date: new Date()
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
@@ -532,6 +536,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 					animation: instructions.animation,
 					metadata: exif.metadata,
 					resizeMode: resizeMode,
+					sticky:instructions.sticky,
 					date: new Date()
 				};
 				_this.scaleAppToFitDisplay(appInstance);
@@ -594,6 +599,7 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
+		sticky:false,
 		metadata: metadata,
 		date: new Date()
 	};
@@ -781,6 +787,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			aspect: appData.application.aspect,
 			animation: appData.application.animation,
 			metadata: appData.application.metadata,
+			sticky:appData.application.sticky,
 			date: new Date()
 		};
 		this.scaleAppToFitDisplay(appInstance);

@@ -1,0 +1,15 @@
+{
+	"main_script": "sticky_note.js",
+	"width": 600,
+	"height": 600,
+	"animation": true,
+	"sticky": true,
+	"dependencies": [
+	],
+	"title": "Sticky Note",
+	"version": "1.0.0",
+	"description": "It sticks!",
+	"keywords": [ "svg", "note" ],
+	"author": "Krishna Bharadwaj <krishnaknbharadwaj@gmail.com",
+	"license": "SAGE2-Software-License"
+}

@@ -105,7 +105,7 @@ imageLoadCallback: function()
     {
     this.okToDraw = 10.0;
     this.image1 = this.image3; // image1 is now the new image
-    console.log("imageLoadCallback");
+    console.log(this.appName + "imageLoadCallback");
     this.newImage();
     },
 
@@ -126,7 +126,7 @@ listFileCallback: function(error, data)
 listFileCallbackNode: function(data){
 
     var error = data.error;
-    var data = data.data;
+    var localData = data.data;
     
     if(error)
         {
@@ -134,13 +134,13 @@ listFileCallbackNode: function(data){
         return;
         }
 
-   if(data === null)
+   if(localData === null)
         {
         console.log(this.appName + "list of photos is empty");
         return;
         }
 
-    this.bigList = d3.csv.parse(data);
+    this.bigList = d3.csv.parse(localData);
     console.log(this.appName + "loaded in list of " + this.bigList.length + " images" );
 
     this.newImage();
@@ -188,6 +188,9 @@ drawEverything: function ()
                     image2DrawWidth  =  this.canvasWidth;
                     image2DrawHeight = this.canvasWidth / image2ratio;
                     }
+
+// I think this is doing a load from the web each time during the blending
+// or is it just telling me its unhappy each time I use that image ???
 
             if (this.okToDraw > 1)
                 this.sampleSVG.append("svg:image")
@@ -283,6 +286,8 @@ setAlbum: function (albumNumber)
 
 update: function ()
 {
+    console.log(this.appName + "UPDATE");
+
     if (this.bigList === null)
     {
         console.log(this.appName + "list of photos not populated yet");
@@ -302,31 +307,20 @@ update: function ()
 
     // this also appends a random number to the end of the request to avoid browser caching
     // in case this is a single image repeatedly loaded from a webcam
+    
     this.fileName = this.listFileNameLibrary + escape(this.bigList[this.counter].name) + '?' + Math.floor(Math.random() * 10000000);
  
+console.log(this.appName + this.fileName);
+    // code tries to repeatedly load the new image and the previous image
+
     this.image2 = this.image1; // image2 is the previous image
 
-    this.image3 = new Image;
+    this.image3 = new Image();
     this.image3.src = this.fileName;
 
     this.image3.onload = this.imageLoadCallbackFunc;
     this.image3.onerror = this.imageLoadFailedCallbackFunc;
-/*
-    var me = this;
-    var extension = this.fileName.substring(this.fileName.lastIndexOf(".") +1, this.fileName.length).toLowerCase();
-    if (extension === "jpg")
-        extension = "jpeg";
 
-    console.log(extension);
-    readFile(this.fileName,function(error, data){
-        me.image3 = new Image; // image3 stores new image while its being loaded in
-        //me.image3.src = this.fileName;
-        me.image3.src = "data:image/"+extension+";base64,"+btoa(data);
-
-        me.image3.onload = this.imageLoadCallbackFunc;
-        me.image3.onerror = this.imageLoadFailedCallbackFunc;
-        })
-*/
 },
 
 ////////////////////////////////////////
@@ -387,7 +381,7 @@ updateWindow: function (){
 	load: function(state, date) {
         console.log("looking for a state", state);
         if (state){
-            console.log("I have state " + state)
+            console.log("I have state " + state);
             this.state.imageSet = state.imageSet;
             }
         else {
@@ -417,7 +411,7 @@ updateWindow: function (){
                 _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx, action:function(date){
                     this.setAlbum(loopIdxWithPrefix);
                 }.bind(_this) });
-            }(loopIdxWithPrefix))
+            }(loopIdxWithPrefix));
         }
 
         this.controls.finishedAddingControls(); // Important

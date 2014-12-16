@@ -114,7 +114,9 @@
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
 				receivesWidgetEvents: true,
-				requestsAppClone: true
+				requestsAppClone: true,
+				requestsFileHandling: true
+
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -275,7 +277,7 @@
 		});
 		
 		wsio.on('updateVideoFrame', function(data) {
-			var appId     = byteBufferToString(data, "|");
+			var appId     = byteBufferToString(data);
 			var blockIdx  = byteBufferToInt(data.subarray(appId.length+1, appId.length+ 3));
 			var frameIdx  = byteBufferToInt(data.subarray(appId.length+3, appId.length+ 7));
 			var date      = byteBufferToInt(data.subarray(appId.length+7, appId.length+15));
@@ -284,8 +286,6 @@
 			if(applications[appId] !== undefined && applications[appId] !== null){
 				applications[appId].textureData(blockIdx, yuvBuffer);
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
-					console.log("video: " + (frameIdx / applications[appId].video.framerate));
-					
 					applications[appId].draw(new Date(date));
 					applications[appId].setValidBlocksFalse();
 					wsio.emit('requestVideoFrame', {id: appId});
@@ -786,6 +786,8 @@
 							top:data.y,
 							width:size.width,
 							height:size.height,
+							barHeight: size.barHeight,
+							hasSideBar: size.hasSideBar,
 							show: true,
 							date: dt 
 						});
@@ -924,7 +926,8 @@
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
 					console.log("cloning app:" + appId);
-					wsio.emit('createAppClone', {id : appId});
+					if(isMaster)
+						wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 				}
 				
 			}
@@ -971,6 +974,13 @@
 				clearInterval(blinkControlHandle);		
 			}
 		});
+
+		/*wsio.on('receiveFileData', function(data){
+			var app = applications[data.id];
+			app.fileDataBuffer = data.buffer;
+			app.fileReceived = true;
+			console.log("file Data:",app.fileDataBuffer);
+		});*/
 	}
 
 </script>
