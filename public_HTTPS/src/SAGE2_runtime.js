@@ -417,18 +417,15 @@ function byteBufferToInt(buf) {
 	return value;
 }
 
-function byteBufferToString(buf, terminal) {
-	var cchar = String.fromCharCode(buf[0]);
+function byteBufferToString(buf) {
 	var str = "";
-	var i = 1;
+	var i = 0;
 	
-	while(cchar !== terminal){
-		str += cchar;
-		cchar = String.fromCharCode(buf[i]);
+	while(buf[i] !== 0 && i < buf.length) {
+		str += String.fromCharCode(buf[i]);
 		i++;
-		if(i >= buf.length) break;
 	}
-	
+
 	return str;
 }
 	

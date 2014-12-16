@@ -17,8 +17,8 @@ var WebSocket = require('ws');
 var WebSocketServer = WebSocket.Server;
 
 function websocketIOServer(data) {
-	if(data.server !== undefined)    this.wss = new WebSocketServer({server: data.server});
-	else if(data.port !== undefined) this.wss = new WebSocketServer({port: data.port});
+	if(data.server !== undefined)    this.wss = new WebSocketServer({server: data.server, perMessageDeflate: false});
+	else if(data.port !== undefined) this.wss = new WebSocketServer({port: data.port, perMessageDeflate: false});
 }
 
 websocketIOServer.prototype.onconnection = function(callback) {
@@ -55,18 +55,15 @@ function websocketIO(ws, strictSSL, openCallback) {
 			}
 		}
 		else{
-			var cchar = String.fromCharCode(message[0]);
+			var i = 0;
 			var func = "";
-			var i = 1;
 			
-			while(cchar !== "|"){
-				func += cchar;
-				cchar = String.fromCharCode(message[i]);
+			while(message[i] !== 0 && i < message.length) {
+				func += String.fromCharCode(message[i]);
 				i++;
 			}
-			
-			var buf = message.slice(i, message.length);
-			
+	
+			var buf = message.slice(i+1, message.length);
 			_this.messages[func](_this, buf);
 		}
 	});
@@ -91,7 +88,7 @@ websocketIO.prototype.emit = function(name, data) {
 	
 	// send binary data as array buffer
 	if(Buffer.isBuffer(data)){
-		var funcName = new Buffer(name+"|");
+		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
 		var message = Buffer.concat([funcName, data]);
 		
 		try {
@@ -111,7 +108,7 @@ websocketIO.prototype.emit = function(name, data) {
 		// double error handling
 		try {
 			var msgString = JSON.stringify(message);
-			this.ws.send(msgString, function(err){
+			this.ws.send(msgString, {binary: false, mask: false}, function(err){
 				if(err) console.log("---ERROR (ws.send)---");
 				// else success
 			});

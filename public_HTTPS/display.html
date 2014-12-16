@@ -277,7 +277,7 @@
 		});
 		
 		wsio.on('updateVideoFrame', function(data) {
-			var appId     = byteBufferToString(data, "|");
+			var appId     = byteBufferToString(data);
 			var blockIdx  = byteBufferToInt(data.subarray(appId.length+1, appId.length+ 3));
 			var frameIdx  = byteBufferToInt(data.subarray(appId.length+3, appId.length+ 7));
 			var date      = byteBufferToInt(data.subarray(appId.length+7, appId.length+15));

@@ -1571,7 +1571,7 @@ function wsLoadFileFromServer(wsio, data) {
 					videoHandles[appInstance.id].frameIdx = frameIdx;
 					var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, appInstance.native_width, appInstance.native_height, blocksize);
 	
-					var idBuffer = new Buffer(appInstance.id+"|");
+					var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
 					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
 					var dateBuffer = intToByteBuffer(Date.now(), 8);
 					for(i=0; i<blockBuffers.length; i++){

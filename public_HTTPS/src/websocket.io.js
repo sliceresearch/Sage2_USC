@@ -32,17 +32,15 @@ function websocketIO(url) {
 			else{
 				var uInt8 = new Uint8Array(msg.data);
 				
-				var cchar = String.fromCharCode(uInt8[0]);
+				var i = 0;
 				var func = "";
-				var i = 1;
-				
-				while(cchar !== "|"){
-					func += cchar;
-					cchar = String.fromCharCode(uInt8[i]);
+			
+				while(uInt8[i] !== 0 && i < uInt8.length) {
+					func += String.fromCharCode(uInt8[i]);
 					i++;
 				}
 				
-				var buffer = uInt8.subarray(i, uInt8.length);
+				var buffer = uInt8.subarray(i+1, uInt8.length);
 				_this.messages[func](buffer);
 			}
 		};
@@ -66,17 +64,13 @@ function websocketIO(url) {
 	
 		// send binary data as array buffer
 		if(data instanceof Uint8Array){
-			var start = Date.now();
-		
-			name += "|";
-			var funcName = new Uint8Array(name.length);
+			var funcName = new Uint8Array(name.length+1);
 			for(var i=0; i<name.length; i++){
 				funcName[i] = name.charCodeAt(i);
 			}
 			var message = new Uint8Array(funcName.length + data.length);
 			message.set(funcName, 0);
 			message.set(data, funcName.length);
-			var end = Date.now();
 			
 			this.ws.send(message.buffer);
 		}
