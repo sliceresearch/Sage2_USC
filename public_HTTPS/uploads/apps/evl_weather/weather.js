@@ -415,7 +415,7 @@ weatherOutsideCallbackNode: function(data){
      var currentTime = currentHour + currentMinutes;
 
     // sometimes the current conditions come back empty
-    if (weatherName == "")
+    if (weatherName === "")
         weatherName = "unknown";
     
     // set the default daylight icon for this weather

@@ -48,9 +48,10 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.mime2app = {
 		"image/jpeg": "image_viewer", 
 		"image/webp": "image_viewer", 
-		"image/png": "image_viewer",
-		"image/bmp": "image_viewer",
+		"image/png":  "image_viewer",
+		"image/bmp":  "image_viewer",
 		"image/tiff": "image_viewer",
+		"image/svg+xml": "image_viewer",
 		"image/vnd.adobe.photoshop": "image_viewer",
 		"video/mp4": "movie_player",
 		"video/x-m4v": "movie_player",
@@ -186,6 +187,7 @@ appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw
 		aspect: aspectRatio,
 		animation: false,
 		metadata: metadata,
+		sticky: false,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -251,6 +253,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		aspect: aspectRatio,
 		animation: false,
 		metadata: metadata,
+		sticky: false,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -269,6 +272,28 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 
 			// Query the exif data
 			var dims = assets.getDimensions(file);
+			var exif = assets.getExifData(file);
+
+			if (dims) {
+				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+					callback(appInstance);
+				});
+			} else {
+				console.log("File not recognized:", file, mime_type, url);
+			}
+		});
+	}
+	// SVG file
+	else if (mime_type === "image/svg+xml") {
+		fs.readFile(file, function (err, data) {
+			if(err) {
+				console.log("Error> opening file", file);
+				return; // throw err;
+			}
+
+			// Query the exif data
+			var box  = assets.getTag(file, "ViewBox").split(' ');
+			var dims = {width:parseInt(box[2]), height:parseInt(box[3])};
 			var exif = assets.getExifData(file);
 
 			if (dims) {
@@ -406,6 +431,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		aspect:    aspectRatio,
 		animation: false,
 		metadata: metadata,
+		sticky: false,
 		date:      new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -454,6 +480,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 			animation: instructions.animation,
 			metadata: exif.metadata,
 			resizeMode: resizeMode,
+			sticky:instructions.sticky,
 			date: new Date()
 		};
 		//_this.scaleAppToFitDisplay(appInstance);
@@ -509,6 +536,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 					animation: instructions.animation,
 					metadata: exif.metadata,
 					resizeMode: resizeMode,
+					sticky:instructions.sticky,
 					date: new Date()
 				};
 				_this.scaleAppToFitDisplay(appInstance);
@@ -571,6 +599,7 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 		maximized: false,
 		aspect: aspectRatio,
 		animation: false,
+		sticky:false,
 		metadata: metadata,
 		date: new Date()
 	};
@@ -758,6 +787,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			aspect: appData.application.aspect,
 			animation: appData.application.animation,
 			metadata: appData.application.metadata,
+			sticky:appData.application.sticky,
 			date: new Date()
 		};
 		this.scaleAppToFitDisplay(appInstance);

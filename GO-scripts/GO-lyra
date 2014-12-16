@@ -10,9 +10,13 @@ do
 	node=`printf lyra-%02d $i`
 	idx=`expr $i - 1`
 	echo "================= $node: client $idx ================="
-	UDD="$HOME/.config/chrome-nfs/$node"
+	#UDD="$HOME/.config/chrome-nfs/$node"
+	#mkdir -p $UDD
+	UDD="/scratch/evl/evldemo/chrome/$node"
+	ssh $node mkdir -p $UDD
+
 	param="$global_param --user-data-dir=$UDD"
 	
-	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'https://$server?clientID=$idx'" &
+	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param '--app=https://$server/display.html?clientID=$idx'" &
 	ssh -fx $node "sleep 5; env DISPLAY=:0.0 xdotool mousemove --sync 10 10; env DISPLAY=:0.0 xdotool mousemove --sync 0 0" &
 done

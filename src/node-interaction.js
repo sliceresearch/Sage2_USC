@@ -138,7 +138,6 @@ interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 	this.selectedMoveItem.left = pointerX + this.selectOffsetX;
 	this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
 	this.selectedMoveItem.maximized = false;
-
 	return {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left, elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width, elemHeight: this.selectedMoveItem.height, date: new Date()};
 };
 
@@ -639,5 +638,8 @@ interaction.prototype.windowManagementMode = function(){
 interaction.prototype.appInteractionMode = function(){
     return this.interactionMode == MODE.APP_INTERACTION;
 };
+
+
+
 
 module.exports = interaction;

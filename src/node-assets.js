@@ -114,7 +114,9 @@ generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
 		return;
 	}
 
-	imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+	// seems to have an issue with noProfile
+	//imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+	imageMagick(infile+"[0]").bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
@@ -354,6 +356,14 @@ getDimensions = function (id) {
 	if (id in AllAssets.list)
 		return {width:  AllAssets.list[id].exif.ImageWidth,
 				height: AllAssets.list[id].exif.ImageHeight };
+	else
+		return null;
+};
+
+getTag = function (id, tag) {
+	id = path.resolve(id);
+	if (id in AllAssets.list)
+		return AllAssets.list[id].exif[tag];
 	else
 		return null;
 };
@@ -652,5 +662,6 @@ exports.deletePDF   = deletePDF;
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
 exports.getExifData   = getExifData;
+exports.getTag        = getTag;
 
 exports.setupBinaries = setupBinaries;

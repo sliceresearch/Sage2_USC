@@ -104,8 +104,8 @@ var leaflet = SAGE2_App.extend( {
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
 		// Get width height from the supporting div		
-		var width  = this.element.clientWidth;
-		var height = this.element.clientHeight;
+		var myWidth  = this.element.clientWidth;
+		var myHeight = this.element.clientHeight;
 
 		this.element.id = "div" + id;
 		var mySelf = this;
@@ -155,10 +155,10 @@ var leaflet = SAGE2_App.extend( {
 				}
 
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
+		var box="0,0,"+myWidth+","+myHeight;
 		mySelf.svg = d3.select(mySelf.element).append("svg")
-		    .attr("width",   width)
-		    .attr("height",  height)
+		    .attr("width",   myWidth)
+		    .attr("height",  myHeight)
 		    .attr("viewBox", box);
 });
 },
