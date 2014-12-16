@@ -428,7 +428,7 @@ exifAsync = function(cmds, cb) {
 		else {
 			exiftool.file(file, function(err,data) {
 				if (err) {
-					console.log("internal error");
+					console.log("internal error for file", file);
 					cb(err);
 				} else {
 					console.log("EXIF> Adding " + data.FileName);

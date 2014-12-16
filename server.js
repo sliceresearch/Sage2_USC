@@ -1609,11 +1609,13 @@ function handleNewVideoFrame(video) {
 	}
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
-		video.clients[key].readyForNextFrame = false;
 		for(i=0; i<video.pixelbuffer.length; i++){
+			var hasBlock = false;
 			if(video.clients[key].blockList.indexOf(i) >= 0){
+				hasBlock = true;
 				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
 			}
+			if(hasBlock === true) video.clients[key].readyForNextFrame = false;
 		}
 	}
 	return true;
@@ -1632,11 +1634,13 @@ function handleNewClientReady(video) {
 	}
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
-		video.clients[key].readyForNextFrame = false;
 		for(i=0; i<video.pixelbuffer.length; i++){
+			var hasBlock = false;
 			if(video.clients[key].blockList.indexOf(i) >= 0){
+				hasBlock = true;
 				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
 			}
+			if(hasBlock === true) video.clients[key].readyForNextFrame = false;
 		}
 	}
 	return true;

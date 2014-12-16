@@ -55,7 +55,7 @@ function fileSpawn(filename, done) {
 function file(filename, done) {
 	ChildProcess.exec('exiftool -json \"' + filename + '\"', function (error, stdout, stderr) {
 		if (error !== null) {
-			done(stderr);
+			done(error);
 		}
 		else {
 			var metadata = JSON.parse(stdout);
