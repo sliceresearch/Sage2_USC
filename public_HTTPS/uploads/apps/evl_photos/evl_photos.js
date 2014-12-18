@@ -78,12 +78,13 @@ var evl_photos = SAGE2_App.extend( {
  },
 
 ////////////////////////////////////////
+// choose a specific image library from those loaded to cycle through
 
 chooseImagery: function(selection)
 {
     this.listFileNamePhotos = SAGE2_photoAlbums[selection].list;
     this.listFileNameLibrary = SAGE2_photoAlbums[selection].location;
-    },
+},
 
 ////////////////////////////////////////
 
@@ -96,7 +97,7 @@ initApp: function()
     this.chooseImagery(this.state.imageSet);
 
     this.loadInList();
-    this.newImage();
+    //this.newImage();
 },
 
 ////////////////////////////////////////
@@ -106,17 +107,18 @@ imageLoadCallback: function()
     this.okToDraw = 10.0;
     this.image1 = this.image3; // image1 is now the new image
     console.log(this.appName + "imageLoadCallback");
-    this.newImage();
+    ////this.newImage();
     },
 
 imageLoadFailedCallback: function()
     {
     console.log(this.appName + "image load failed on " + this.fileName);
-    this.newImage();
+    ////this.newImage();
     this.update();
     },
 
 ////////////////////////////////////////
+// send the list of images in the current image library to all of the client nodes
 
 listFileCallback: function(error, data)
 {
@@ -143,12 +145,13 @@ listFileCallbackNode: function(data){
     this.bigList = d3.csv.parse(localData);
     console.log(this.appName + "loaded in list of " + this.bigList.length + " images" );
 
-    this.newImage();
+    ////this.newImage();
     this.update();
     this.drawEverything();
 },
 
 ////////////////////////////////////////
+// blend from the current image to a new image if there is a new image to show
 
 drawEverything: function ()
 {
@@ -188,9 +191,6 @@ drawEverything: function ()
                     image2DrawWidth  =  this.canvasWidth;
                     image2DrawHeight = this.canvasWidth / image2ratio;
                     }
-
-// I think this is doing a load from the web each time during the blending
-// or is it just telling me its unhappy each time I use that image ???
 
             if (this.okToDraw > 1)
                 this.sampleSVG.append("svg:image")
@@ -235,26 +235,37 @@ drawEverything: function ()
         this.okToDraw -= 1.0;
         }
 
-    this.updateCounter += 1;
-    if (this.updateCounter > this.loadTimer)
+
+    // if enough time has passed grab a new image and display it
+
+    if(isMaster)
         {
-        this.update();
-        this.updateCounter = 0;
+        this.updateCounter += 1;
+
+        if (this.updateCounter > this.loadTimer)
+            {
+            this.update();
+            }
         }
 },  
 
 ////////////////////////////////////////
+// the master loads in the text file containing ths list of images in this photo album
 
 loadInList: function ()
 {
-    if(isMaster){
+    if(isMaster)
+        {
         this.listFileName = this.listFileNamePhotos;
         d3.text(this.listFileName, this.listFileCallbackFunc);
-}
+        }
 
 },
 
 ////////////////////////////////////////
+// choose a random image from the current photo album
+// only the master should pick a new image (but right now each clients does)
+// if all the random numbers are in sync this will work - but not completely safe
 
 newImage: function ()
 {
@@ -264,6 +275,7 @@ newImage: function ()
         this.counter = Math.floor(Math.random() * this.bigList.length);
 },
 
+// move to the next photo album
 nextAlbum: function ()
 {
     this.bigList = null;
@@ -274,6 +286,7 @@ nextAlbum: function ()
     this.loadInList();
 },
 
+// choose a particular photo album
 setAlbum: function (albumNumber)
 {
     this.bigList = null;
@@ -283,22 +296,36 @@ setAlbum: function (albumNumber)
 },
 
 ////////////////////////////////////////
+// update tries to load in a new image (set in the newImage function)
+// this image may be a completely new image (from a file) 
+// or a more recent version of the same image from a webcam
 
 update: function ()
 {
-    console.log(this.appName + "UPDATE");
-
-    if (this.bigList === null)
+    if(isMaster)
     {
+    //console.log(this.appName + "UPDATE");
+
+    // reset the timer counting towards the next image swap 
+    this.updateCounter = 0;
+
+
+    // if there is no big list of images to pick from then get out
+    if (this.bigList === null)
+        {
         console.log(this.appName + "list of photos not populated yet");
         return;
-    }
+        }
 
+    // randomly pick a new image to show from the current photo album
+    // which can be showing the same image if the album represents a webcam
+
+    this.newImage();
+
+    // if there is no image name for that nth image then get out
     if (this.bigList[this.counter] === null)
         {   
         console.log(this.appName + "cant find filename of image number "+this.counter);
-        this.newImage();
-        this.update(); // potential for infinite loop here
         return;
         }
 
@@ -307,23 +334,37 @@ update: function ()
 
     // this also appends a random number to the end of the request to avoid browser caching
     // in case this is a single image repeatedly loaded from a webcam
+
+    // ideally this random number should come from the master to guarantee identical values across clients
     
     this.fileName = this.listFileNameLibrary + escape(this.bigList[this.counter].name) + '?' + Math.floor(Math.random() * 10000000);
- 
-console.log(this.appName + this.fileName);
-    // code tries to repeatedly load the new image and the previous image
+    
+    this.broadcast("updateNode", {data:this.fileName});
+    }
+},
 
-    this.image2 = this.image1; // image2 is the previous image
+updateNode: function(data){
 
-    this.image3 = new Image();
+    this.fileName = data.data;
+    
+   if(this.fileName === null)
+        {
+        console.log(this.appName + "no filename of new photo to load");
+        return;
+        }
+    //console.log(this.appName + this.fileName);
+
+    this.image2 = this.image1; // image2 is the previous image (needed for fading)
+
+    this.image3 = new Image(); // image3 is the new image to be loaded
     this.image3.src = this.fileName;
 
     this.image3.onload = this.imageLoadCallbackFunc;
     this.image3.onerror = this.imageLoadFailedCallbackFunc;
-
 },
 
 ////////////////////////////////////////
+// if the window gets reshaped then update my drawing area
 
 updateWindow: function (){
 
@@ -380,7 +421,8 @@ updateWindow: function (){
 
 	load: function(state, date) {
         console.log("looking for a state", state);
-        if (state){
+        if (state)
+            {
             console.log("I have state " + state);
             this.state.imageSet = state.imageSet;
             }
