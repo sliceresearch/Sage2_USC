@@ -941,8 +941,10 @@ function radialMenu(){
 						this.hoverOverThumbnail = thumbButton.idleImage;
 						this.hoverOverMeta = thumbButton.getData().meta;
 						overButton = true;
-						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
 					}
+					
+					if( thumbButton.isFirstOver()  ) // Only occurs on first pointerMove event over button
+						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
 				}
 			}
 		}
@@ -996,13 +998,8 @@ function radialMenu(){
 					{
 						this.scrollOpenContentLock = true;
 					}
-				//}
 
 				this.thumbnailWindowDragPosition = position;
-				
-				if( enableEventRedraw )
-					this.thumbScrollWindowctx.redraw = true;
-				//this.updateThumbnailPositions();
 			}
 
 		}
@@ -1382,6 +1379,7 @@ function buttonWidget() {
 	// 2  = Pressed
 	// 3  = Clicked
 	// 4  = Released
+	// 5	= OverEnter (First over event)
 	this.state = 0;
 	
 	this.buttonData = {};
@@ -1455,7 +1453,7 @@ function buttonWidget() {
 		this.ctx.save();
 		this.ctx.translate( translate.x, translate.y );
 			
-		if( this.state === 1 )
+		if( this.state === 5 )
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
 		}
@@ -1555,7 +1553,12 @@ function buttonWidget() {
 	{
 		if( this.isPositionOver( user, position ) )
 		{
-			if( type === "pointerPress" && this.state != 2 )
+			if( this.state === 5 )
+			{
+				this.state = 1;
+			}
+			
+			if( type === "pointerPress" && this.state !== 2 )
 			{
 				this.state = 3; // Click state
 				if( this.useEventOverColor )
@@ -1569,9 +1572,14 @@ function buttonWidget() {
 			}
 			else if( this.state !== 2 )
 			{
-				if( this.state !== 1 && this.useEventOverColor )
-					this.ctx.redraw = true;
-				this.state = 1;
+				if( this.state !== 1 )
+				{
+					this.state = 5;
+					if( this.useEventOverColor )
+						this.ctx.redraw = true;
+				}
+				else
+					this.state = 1;
 			}
 			
 			return 1;
@@ -1613,6 +1621,16 @@ function buttonWidget() {
 			else
 				return false;
 		}
+	};
+	
+	this.isFirstOver = function()
+	{
+		if ( this.state === 5 )
+		{
+			return true;
+		}
+		else
+			return false;
 	};
 	
 	this.isOver = function()
