@@ -2,7 +2,7 @@
 	based on default configuration of the server - Windows
 */
 {
-	host: "localhost",
+	host: "nishimoto.evl.uic.edu",
 	port: 9090,
 	index_port: 9292,
 	background: {
