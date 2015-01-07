@@ -2,7 +2,7 @@
 
 killall -HUP chrome
 
-global_param="--new-window --window-size=3840,1080  --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--new-window --window-size=3840,1080  --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
 
 # Launch Audio Manager
 UDD=$HOME/.config/chrome-nfs/traoumad_audio

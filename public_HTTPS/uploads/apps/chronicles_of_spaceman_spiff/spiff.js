@@ -250,7 +250,19 @@ update: function ()
 
 updateSlim: function ()
 {
-    this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
+    if(isMaster){
+        var comicFileName = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
+        this.broadcast("updateSlimNode", {comicFileName: comicFileName});
+    }
+},
+
+updateSlimNode: function(data)
+{
+    if (data.comicFileName === null)
+        return;
+
+    this.image1.src = data.comicFileName;
+    //this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
     this.image1.onload = this.loadSuccessCallbackFunc;
     this.image1.onerror = this.loadFailCallbackFunc;
 },

@@ -3,7 +3,7 @@
 tentakel pkill -HUP chrome
 
 server=iridium.evl.optiputer.net
-global_param="--window-size=4098,768 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--window-size=4098,768 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
 
 UDD="$HOME/.config/chrome-nfs/orion00"
 mkdir -p $UDD/Default
