@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <defs>
+  <filter id="svg_1_blur">
+   <feGaussianBlur stdDeviation="0.5"/>
+  </filter>
+  <filter id="svg_4_blur">
+   <feGaussianBlur stdDeviation="0.4"/>
+  </filter>
+  <filter id="svg_3_blur">
+   <feGaussianBlur stdDeviation="0.4"/>
+  </filter>
+  <radialGradient spreadMethod="pad" id="svg_2">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.047090517241379304,0) scale(0.9058189655172414,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_5">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.9550000000000001,0) scale(-0.91,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_6">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.04500000000000004,0) scale(0.9099999999999999,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_7">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.9550000000000001,0) scale(-0.91,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_11">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.04500000000000004,0) scale(0.9099999999999999,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_12">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.9550000000000001,0) scale(-0.91,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_13">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <radialGradient gradientTransform="translate(0.04500000000000004,0) scale(0.9099999999999999,1)" r="0.5" cy="0.5" cx="0.5" spreadMethod="pad" id="svg_14">
+   <stop offset="0" stop-color="#bcbcbc"/>
+   <stop offset="1" stop-color="#434343"/>
+  </radialGradient>
+  <filter height="200%" width="200%" y="-50%" x="-50%" id="svg_15_blur">
+   <feGaussianBlur stdDeviation="4" in="SourceGraphic"/>
+  </filter>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <circle stroke="#e0dbdb" fill-opacity="0.5" id="svg_1" r="160" cy="200" cx="200" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="2,2" stroke-width="6" fill="url(#svg_14)" filter="url(#svg_1_blur)"/>
+  <ellipse ry="19.847168" rx="38.666667" id="svg_4" cy="39.508301" cx="200" stroke-linecap="null" stroke-linejoin="null" stroke-width="2" fill="#5b5b5b" fill-opacity="0.95" filter="url(#svg_4_blur)" stroke="#e0dbdb"/>
+  <line fill="none" stroke-width="2" stroke-linejoin="null" stroke-linecap="null" fill-opacity="0.8" x1="200" y1="27.93946" x2="200" y2="50.958015" id="svg_3" stroke="#e0dbdb" filter="url(#svg_3_blur)"/>
+  <line fill="none" stroke-width="2" stroke-linejoin="null" stroke-linecap="null" fill-opacity="0.8" x1="215" y1="27.93946" x2="215" y2="50.958015" stroke="#e0dbdb" filter="url(#svg_3_blur)" id="svg_8"/>
+  <line fill="none" stroke-width="2" stroke-linejoin="null" stroke-linecap="null" fill-opacity="0.8" x1="185" y1="27.93946" x2="185" y2="50.958015" stroke="#e0dbdb" filter="url(#svg_3_blur)" id="svg_9"/>
+  <ellipse ry="19.847168" rx="38.666667" cy="355.999992" cx="200" stroke-linecap="null" stroke-linejoin="null" stroke-width="2" fill="#5b5b5b" fill-opacity="0.95" filter="url(#svg_4_blur)" stroke="#e0dbdb" id="svg_10"/>
+  <circle filter="url(#svg_15_blur)" id="svg_15" stroke="#e0dbdb" fill-opacity="0.01" r="160" cy="200" cx="200" stroke-linecap="null" stroke-linejoin="null" stroke-width="6" fill="#bcbcbc"/>
+ </g>
+</svg>
