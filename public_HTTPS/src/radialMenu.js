@@ -922,12 +922,12 @@ function radialMenu(){
 				
 				
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x + 18  * radialMenuScale, y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight };
-				
-				console.log(thumbEventPos);
+
 				// Prevent clicking on hidden thumbnails under preview window
 				var thumbnailWindowDivWidth = thumbnailWindowSize.x + imageThumbSize/2 - 10 - radialMenuSize.x - 25 * radialMenuScale; // Should match where 'this.thumbnailWindowDiv.style.width' is assigned
 				if( thumbEventPos.x >= 0 && thumbEventPos.x <= thumbnailWindowDivWidth )
 				{
+					thumbEventPos.x -= this.thumbnailWindowScrollOffset.x;
 					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
 					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
@@ -1000,7 +1000,6 @@ function radialMenu(){
 					{
 						this.scrollOpenContentLock = true;
 					}
-					console.log(this.thumbnailWindowScrollOffset.x);
 					
 					this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString()+"px";
 					
@@ -1258,18 +1257,6 @@ function radialMenu(){
 			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
 			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize * 2 + thumbSpacer);
 		}
-
-		// Limits on scroll distance ----------------------------------------
-		if( this.thumbnailWindowScrollOffset.x > 0 )
-		{
-			this.thumbnailWindowScrollOffset.x = 0;
-			this.scrollOpenContentLock = true;
-		}
-		
-		if( this.thumbnailWindowScrollOffset.x < maxScrollPosX )
-			this.thumbnailWindowScrollOffset.x = maxScrollPosX;
-		// --------------------------------------------------------------------
-
 
 		if( this.currentMenuState === 'imageThumbnailWindow' )
 		{
