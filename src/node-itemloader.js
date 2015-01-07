@@ -849,35 +849,10 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 		}
         else {
-            console.log(appData);
-            console.log("Trying to Loading file: " + dir + " " + appData.name);
-            // XXX - Maybe use some kind of plugin?
-            // If this is a histology image, then convert it into a pyramidal tiff
-            if (app === "histologyViewer") {
-                console.log("Loader> NDPI Image detected. Converting into pyramidal tiff.");
-                var filePath = path.join(this.publicDir, appData.url);
-                var spawn = require('child_process').spawn,
-                    ndpi = spawn('./src/bin/ndpi', [filePath]);
-
-                    ndpi.stdout.on('data', function (data) {
-                      console.log('stdout: ' + data);
-                      });
-
-                    ndpi.stderr.on('data', function (data) {
-                        console.log('stderr: ' + data);
-                        });
-                    ndpi.on('close', function (code) {
-                        console.log('out: ' + code);
-                        this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-                            callback(appInstance);
-                        }.bind(this));
-                }.bind(this));
-            } else {
             this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-					callback(appInstance);
-				});
-            }
-}
+                callback(appInstance);
+            });
+        }
 	}
 
 	else if(appData.location === "url") {
