@@ -250,9 +250,15 @@ var startTime = new Date();
 
 
 // creates a WebSocket server - 2 way communication between server and all browser clients
-var wsioServer = new websocketIO.Server({server: server});
+var wsioServer  = new websocketIO.Server({server: index});
+var wsioServerS = new websocketIO.Server({server: server});
 
 wsioServer.onconnection(function(wsio) {
+	wsio.onclose(closeWebSocketClient);
+	wsio.on('addClient', wsAddClient);
+});
+
+wsioServerS.onconnection(function(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
 });
