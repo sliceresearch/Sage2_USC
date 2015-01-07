@@ -1,0 +1,24 @@
+#!/bin/sh
+
+tentakel pkill -HUP chrome
+
+#server="67.58.54.5"
+server="vroomsage.ucsd.edu"
+global_param="--new-window --window-size=3840,1080 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+
+for i in {0..15}
+do
+	n=$(($i+1))
+	node=`printf vroom-%01d $n`
+	echo "================= $node: client $i ================="
+	UDD="$HOME/.config/chrome-nfs/$node"
+	mkdir -p $UDD
+	param="$global_param --user-data-dir=$UDD"
+	cmd="env DISPLAY=:0.0 google-chrome $param 'https://$server/display.html?clientID=$i'"
+	echo $cmd
+	
+	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'https://$server/display.html?clientID=$i'" &
+	ssh -fx $node 'sleep 5; env DISPLAY=:0.0 xdotool mousemove --sync 10 10; env DISPLAY=:0.0 xdotool mousemove --sync 0 0' &
+
+
+done

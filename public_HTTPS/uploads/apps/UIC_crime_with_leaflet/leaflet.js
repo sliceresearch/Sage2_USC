@@ -74,6 +74,8 @@ var leaflet = SAGE2_App.extend( {
 
 	getNewData: function(meSelf, beat, date){
 
+	if(isMaster){
+
 		var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
 
 		d3.json(query, function(collection) {
@@ -91,6 +93,8 @@ var leaflet = SAGE2_App.extend( {
 			if (meSelf.currentBeats === meSelf.numBeats)
 				meSelf.dealWithData(meSelf.bigCollection, date);
 		});
+	}
+
 	},
 
 
@@ -100,8 +104,8 @@ var leaflet = SAGE2_App.extend( {
 		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
 
 		// Get width height from the supporting div		
-		var width  = this.element.clientWidth;
-		var height = this.element.clientHeight;
+		var myWidth  = this.element.clientWidth;
+		var myHeight = this.element.clientHeight;
 
 		this.element.id = "div" + id;
 		var mySelf = this;
@@ -151,10 +155,10 @@ var leaflet = SAGE2_App.extend( {
 				}
 
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
+		var box="0,0,"+myWidth+","+myHeight;
 		mySelf.svg = d3.select(mySelf.element).append("svg")
-		    .attr("width",   width)
-		    .attr("height",  height)
+		    .attr("width",   myWidth)
+		    .attr("height",  myHeight)
 		    .attr("viewBox", box);
 });
 },
@@ -203,12 +207,23 @@ zoomOut: function()
 
 dealWithData: function(collection, today)
 {
+this.broadcast("dealWithDataNode", {collection:collection, today:today});
+},
+
+dealWithDataNode: function(data){
+
+	var collection = data.collection;
+   // var today = data.today;
+
 	var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
 
-	//var today = new Date();
+	// the today that comes along through the function is not in the same format
+	// this one will be today in javascript date format
+	
+	var today = new Date();
 
 
-		collection.forEach(function(d) {
+	collection.forEach(function(d) {
 
 		if (d.latitude && d.longitude)
 			{
@@ -223,6 +238,8 @@ dealWithData: function(collection, today)
 				// date difference is in milliseconds
 				d.myDate = parseDate(d.date_of_occurrence);
 				d.daysAgo = (today - d.myDate) / 1000 / 60 / 60 / 24; //7-373
+
+				console.log(today, "X", d.myDate);
 
 				if (d.daysAgo < 31)
 					d.inLastMonth = 1;
@@ -322,7 +339,15 @@ dealWithData: function(collection, today)
 	load: function(state, date) {
 		// create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+
+        var viewButton = {
+                    "textual":true,
+                    "label":"view",
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
+
+        this.controls.addButton({type:viewButton,sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
             this.changeMap();
         }.bind(this)});
@@ -352,9 +377,13 @@ dealWithData: function(collection, today)
 			{
 			this.currentBeats = 0;
 
-			this.getNewData(this,"1232", date);
-			this.getNewData(this,"1231", date);
-			this.getNewData(this,"0124", date);
+			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++){
+				mySelf.getNewData(mySelf,SAGE2_policeDistricts[loopIdx], date);
+				}
+
+			//this.getNewData(this,"1232", date);
+			//this.getNewData(this,"1231", date);
+			//this.getNewData(this,"0124", date);
 			}
 
 		

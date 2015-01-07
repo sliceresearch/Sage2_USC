@@ -10,11 +10,11 @@ package:
 
 download:
 	wget http://s3.amazonaws.com/nodejx/jx_osx64.zip
-	git archive --format=tar --remote=ssh://git@bitbucket.org:renambot/sage2/sage2.git --prefix=sage2/ --output="sage2.tar" master
+	git archive --format=zip --remote=ssh://git@bitbucket.org/sage2/sage2.git --prefix=sage2/ --output="sage2.zip" release-v0.3.0
 
 stage:
 	unzip -ju -d jx_osx64 jx_osx64.zip
-	tar xvf sage2.tar
+	unzip sage2.zip
 
 install:
 	cd sage2 && ../jx_osx64/jx install
@@ -28,7 +28,7 @@ binary:
 
 clean:
 	/bin/rm -f jx_osx64.zip
-	/bin/rm -fr SAGE2 sage2.tar dmg/SAGE2.dmg
+	/bin/rm -fr SAGE2 sage2.zip dmg/SAGE2.dmg
 
 #
 # files to keep in SAGE2:

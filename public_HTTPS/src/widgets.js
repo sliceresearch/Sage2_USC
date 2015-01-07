@@ -13,7 +13,7 @@
  *
  * @class SAGE2WidgetControls, SAGE2WidgetControlBar
  */
-
+//"use strict";
 
 var SAGE2WidgetControls = {
 	button: function () {
@@ -47,7 +47,7 @@ var SAGE2WidgetControls = {
 		this.appProperty = null;
 	}
 
-}
+};
 var buttonType = {
 	"play-pause": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
@@ -155,6 +155,24 @@ var buttonType = {
 		"delay":600,
 		"textual":false,
 		"animation": true
+	},
+	"new": {
+		"state": null,
+		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
+		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 6 6 l 0 4 m -2 -2 l 4 0",
+		"width":8,
+		"height":10,
+		"fill":"none",
+		"strokeWidth": 1,
+		"delay":600,
+		"textual":false,
+		"animation": true
+	},
+	"default":{
+		"textual":true,
+		"label":"Hello",
+		"fill":"rgba(250,250,250,1.0)",
+		"animation":false
 	}
 
 };
@@ -188,14 +206,14 @@ function SAGE2WidgetControlBar(id) {
 */
 SAGE2WidgetControlBar.prototype.finishedAddingControls = function(){
 	this.specReady = true;
-}
+};
 
 /**
 *	Check whether control specification is ready (used before creating widget elements from specification)
 */
 SAGE2WidgetControlBar.prototype.controlsReady = function(){
 	return this.specReady;
-}
+};
 
 
 /**
@@ -206,7 +224,7 @@ SAGE2WidgetControlBar.prototype.addButtonType = function(type, buttonData){
 	if (this.buttonType[type] === undefined || this.buttonType[type] === null){
 		this.buttonType[type] = buttonData;
 	}
-}
+};
 
 /**
 *	
@@ -220,11 +238,13 @@ SAGE2WidgetControlBar.prototype.addButtonType = function(type, buttonData){
 */
 SAGE2WidgetControlBar.prototype.setLayoutOptions = function(layoutOptions){
 	if (layoutOptions.drawBackground) this.layoutOptions.drawBackground = layoutOptions.drawBackground;
-	if (layoutOptions.drawGroupBoundaries && layout.drawBackground === false) this.layoutOptions.drawGroupBoundaries = layoutOptions.drawGroupBoundaries;
+	if ((layoutOptions.drawGroupBoundaries === true) && (layoutOptions.drawBackground === false)) {
+		this.layoutOptions.drawGroupBoundaries = layoutOptions.drawGroupBoundaries;
+	}
 	if (layoutOptions.shape) this.layoutOptions.shape = layoutOptions.shape;
 	if (layoutOptions.drawSpokes) this.layoutOptions.drawSpokes = layoutOptions.drawSpokes;
 	if (layoutOptions.drawSquareButtons) this.layoutOptions.drawSquareButtons = layoutOptions.drawSquareButtons;
-}
+};
 
 /**
 *	Adds a button specification 
@@ -256,7 +276,7 @@ SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparat
 		this.separatorList.push(secondSeparator);
 	if (thirdSeparator !== undefined && thirdSeparator !== null)
 		this.separatorList.push(thirdSeparator);
-}
+};
 
 /**
 *	Adds a text-input bar specification 
@@ -351,16 +371,30 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 
 	size.height = dimensions.outerR * 2 + 5;
 	size.width = size.height;
+	size.barHeight = dimensions.buttonRadius*4;
+	size.hasSideBar = false;
 
 	if (this.hasSlider === true){
-		size.width = size.width  + this.slider.width ;
+		size.width = size.width  + this.slider.width  - dimensions.innerR;
+		size.hasSideBar = true;
 	}
 	else if ( this.hasTextInput === true){
-		size.width = size.width  + this.textInput.width;
+		size.width = size.width  + this.textInput.width - dimensions.innerR;
+		size.hasSideBar = true;
 	}
 	this.controlDimensions = dimensions;
 	return size;
-}
+};
+
+/**
+*	Creates default close and radial menu buttons
+*/
+/*SAGE2WidgetControlBar.prototype.addDefaultButtons = function(){
+	this.addButton({type:"close",sequenceNo:9,action:function(date){
+		this.displayText = "Pushed watch button"; //Reset value
+		this.draw(date);
+	}.bind(this)});
+}*/
 
 /**
 *	Creates control bar and elements from the layout options and element specifications
@@ -368,8 +402,8 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var size = this.computeSize();
 	var dimensions = this.controlDimensions;
-	
-	this.controlSVG = Snap(size.width, size.height);
+	//this.addDefaultButtons();
+	this.controlSVG = new Snap(size.width, size.height);
 	var center = {x:size.height/2.0,y:size.height/2.0}; //change to reflect controlSVG center
 
 	this.controlSVG.attr({
@@ -431,7 +465,7 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 			if (this.layoutOptions.drawSpokes === true)
 				drawSpokeForRadialLayout(this.controlSVG,center,point);
 			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
-			for (var i=0;i<this.separatorList.length;i++){
+			for (i=0;i<this.separatorList.length;i++){
 				if (idx === this.separatorList[i])
 					theta = theta + padding;
 			}
@@ -469,7 +503,7 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	drawControlCenter(this.controlSVG,center, 1.8*dimensions.buttonRadius, "SAGE2");
 	var ctrHandle = document.getElementById(ctrId + "SVG");
 	return ctrHandle;
-}
+};
 
 function drawSpokeForRadialLayout(paper,center,point){
 	var spoke = paper.line(center.x,center.y,point.x,point.y);
@@ -507,11 +541,9 @@ function drawPieSlice(paper, start,end, innerR, outerR, center){
 	var pointC= polarToCartesian(outerR,end,center);
 	var pointD = polarToCartesian(innerR,end,center);
 	
-	var d = "M " + pointA.x + " " + pointA.y
-		+ "L " + pointB.x + " " + pointB.y
-		+ "A " + outerR + " " + outerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y 
-		+ "L " + pointD.x + " " + pointD.y
-		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
+	var d = "M " + pointA.x + " " + pointA.y + "L " + pointB.x + " " + pointB.y +
+		"A " + outerR + " " + outerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y + "L " + pointD.x + " " + pointD.y +
+		"A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
 
 	var groupBoundaryPath = paper.path(d);
 	groupBoundaryPath.attr("class", "widgetBackground");
@@ -524,11 +556,9 @@ function makeBarPath(start,end, innerR, center, width){
 	var pointC= polarToCartesian(innerR,end,center2);
 	var pointD = polarToCartesian(innerR,end,center);
 	
-	var d = "M " + pointA.x + " " + pointA.y
-		+ "L " + pointB.x + " " + pointB.y
-		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y 
-		+ "L " + pointD.x + " " + pointD.y
-		+ "A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
+	var d = "M " + pointA.x + " " + pointA.y + "L " + pointB.x + " " + pointB.y +
+		"A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 0 + " " + pointC.x + " " + pointC.y + "L " + pointD.x + " " + pointD.y +
+		"A " + innerR + " " + innerR + " " + 0 + " " + 0 + " " + 1 + " " + pointA.x + " " + pointA.y + "";
 
 	return d;
 }
@@ -674,7 +704,17 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		stroke: "rgba(230,230,230,1.0)"
 	});
 	var info;
-	var type = this.buttonType[buttonSpec.type];
+	var type;
+	if (typeof buttonSpec.type === "string" ){
+		type = this.buttonType[buttonSpec.type];
+	}
+	else{
+		type = buttonSpec.type;
+	}
+
+	if (type === null || type === undefined){
+		type = this.buttonType["default"];
+	}
 	
 	var buttonCover;
 	

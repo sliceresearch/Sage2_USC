@@ -32,8 +32,18 @@ var SAGE2_App = Class.extend( {
 		this.sticky = null;
 		this.controls  = null;
 		this.cloneable = null;
+		this.cloneData = null; // If the clone is not a fresh copy, this variable holds data to be loaded into the clone
 		this.enableControls  = null;
 		this.requestForClone = null;
+
+		//File Handling
+		this.id = null;
+		this.filePath = null;
+		this.fileDataBuffer = null;
+		this.fileRead = null;
+		this.fileWrite = null;
+		this.fileReceived = null;
+
 	},
 	
 	init: function(id, elem, width, height, resrc, date) {
@@ -71,6 +81,14 @@ var SAGE2_App = Class.extend( {
 
 		// Top layer
 		this.layer     = null;
+		//App ID
+		this.id = id;
+		//File Handling
+		this.fileName = "";
+		this.fileDataBuffer = null;
+		this.fileRead = false;
+		this.fileWrite = false;
+		this.fileReceived = false;
 	},
 
 	// Functions to create and manager another layered DVI ontop the app
@@ -117,7 +135,21 @@ var SAGE2_App = Class.extend( {
 		else return false;
 	},
 	/////////////////////////////////////////////////////////////////////
-
+	//Funtions for file read and write
+	/////////////////////////////////////////////////////////////////////
+	/*readFromFile: function(){
+		if (this.fileRead === true){
+			wsio.emit('readFromFile',{id:this.id,fileName:this.fileName});
+			this.fileRead = false;
+		}
+	},
+	writeToFile: function(){
+		if (this.fileWrite === true){
+			wsio.emit('writeToFile', {fileName:this.fileName,buffer:this.fileDataBuffer});
+			this.fileWrite = false;
+		}
+	},*/
+	/////////////////////////////////////////////////////////////////////
 	preDraw: function(date) {
 		this.t  = (date.getTime() - this.startDate.getTime()) / 1000; // total time since start of program (sec)
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000; // delta time since last frame (sec)
@@ -159,6 +191,7 @@ var SAGE2_App = Class.extend( {
 		}
 		// update time and misc
 		this.postDraw(date);
+		//Check for read or write file after draw and 
 	},
 
 	// Called by SAGE2 core

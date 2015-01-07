@@ -364,6 +364,14 @@ drawBasicStuff: function ()
 
 weatherOutsideCallback: function(error, weatherOut)
 {
+    this.broadcast("weatherOutsideCallbackNode", {error:error, weatherOut: weatherOut});
+},
+
+weatherOutsideCallbackNode: function(data){
+    
+    var error = data.error;
+    var weatherOut = data.weatherOut;
+
     if(error)
         {
         console.log("weatherOutsideCallback - error");
@@ -400,21 +408,32 @@ weatherOutsideCallback: function(error, weatherOut)
     var weatherName = this.gwin.weatherIcon.substring(28, this.gwin.weatherIcon.length-4);
 
    // if weatherName == "clear" or "partly cloudy" or "mostly cloudy"
-    // and its between 6pm and 6am then add"-night" to the icon name
+    // and its between local sunset and sunrise then add"-night" to the icon name
  
      var currentHour = new Date().getHours(); // 0-23
+     var currentMinutes = new Date().getMinutes() / 60;
+     var currentTime = currentHour + currentMinutes;
 
     // sometimes the current conditions come back empty
-    if (weatherName == "")
+    if (weatherName === "")
         weatherName = "unknown";
     
     // set the default daylight icon for this weather
     this.gwin.weatherImage.src = this.resrcPath + "icons/"+weatherName+".svg";
     //this.gwin.weatherImage.src = "./icons/"+weatherName+".svg";
 
+    // get today's sunrise and sunset times for evl (not chicago) today 
+    var times = SunCalc.getTimes(new Date(), 41.869911, -87.647593);
+    var sunrise = times.sunrise.getHours() + times.sunrise.getMinutes()/60;
+    var sunset = times.sunset.getHours() + times.sunset.getMinutes()/60;
+
+
+
     // if its night time then swap out the sun icons for the moon icons
-    if ( (currentHour < 7) || (currentHour > 18) )
+    if ( (currentTime < sunrise) || (currentTime > sunset) )
         {
+        //alert("night time");
+
         if ((weatherName == "mostlycloudy") || (weatherName == "partlycloudy") ||
             (weatherName == "clear"))
             {
@@ -434,7 +453,9 @@ weatherOutsideCallback: function(error, weatherOut)
 
 updateOutsideTemp: function ()
 {
-    d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", this.weatherOutsideCallbackFunc);
+    if(isMaster){
+        d3.json("https://query.yahooapis.com/v1/public/yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'Chicago%2C%20IL'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", this.weatherOutsideCallbackFunc);
+    }
 },
 
 ////////////////////////////////////////
@@ -526,6 +547,14 @@ convertTimeFormat: function()
 
 weatherInsideCallback: function(error, datasetTextIn)
 {
+    this.broadcast("weatherInsideCallbackNode", {error:error, datasetTextIn: datasetTextIn});
+},
+
+weatherInsideCallbackNode: function(data){
+
+    var error = data.error;
+    var datasetTextIn = data.datasetTextIn;
+
     if (error)
         {
         console.log("weatherInsideCallback - error");
@@ -606,13 +635,15 @@ weatherInsideCallback: function(error, datasetTextIn)
 
 updateInsideTemp: function ()
 {
-// need to add a random number to the end of the request to avoid browser caching
-// http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
+    if(isMaster){
+    // need to add a random number to the end of the request to avoid browser caching
+    // http://stackoverflow.com/questions/13053096/avoid-data-caching-when-using-d3-text
 
-    // d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
-     d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' +
-    //d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
-         Math.floor(Math.random() * 10000000), this.weatherInsideCallbackFunc);
+        // d3.text("ftp://ftp.evl.uic.edu/pub/INcoming/andy/Final_temps.txt" + '?' + 
+         d3.text("http://lyra.evl.uic.edu:9000/TEMPS/Final_temps.txt" + '?' +
+        //d3.text("http://www.evl.uic.edu/aej/TEMPS/Final_temps.txt" + '?' + 
+             Math.floor(Math.random() * 10000000), this.weatherInsideCallbackFunc);
+    }
 },
 
 ////////////////////////////////////////
@@ -791,19 +822,43 @@ updateWindow: function ()
             this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
         }
 
+        var kButton = {
+            "textual":true,
+            "label":"K",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var cButton = {
+            "textual":true,
+            "label":"C",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var fButton = {
+            "textual":true,
+            "label":"F",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:4,action:function(date){
+
+        this.controls.addButtonType("c", cButton);
+        this.controls.addButtonType("k", kButton);
+        this.controls.addButtonType("f", fButton);
+
+        this.controls.addButton({type:"f",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "F";
             this.updateAll();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:5,action:function(date){
+        this.controls.addButton({type:"c",sequenceNo:5,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "C";
             this.updateAll();
         }.bind(this)});
-        this.controls.addButton({type:"next",sequenceNo:6,action:function(date){
+        this.controls.addButton({type:"k",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
             this.state.itsF = "K";
             this.updateAll();

@@ -101,12 +101,12 @@ createURLs: function ()
     var URL5b = "_N0R_Legend_0.gif";
     var URL6b = "_City_Short.gif";
 
-    this.URL1 = URL1a+SAGE2_radarStations[this.currentStation]+URL1b;
-    this.URL2 = URL2a+SAGE2_radarStations[this.currentStation]+URL2b;
-    this.URL3 = URL3a+SAGE2_radarStations[this.currentStation]+URL3b;
-    this.URL4 = URL4a+SAGE2_radarStations[this.currentStation]+URL4b;
-    this.URL5 = URL5a+SAGE2_radarStations[this.currentStation]+URL5b;
-    this.URL6 = URL6a+SAGE2_radarStations[this.currentStation]+URL6b;
+    this.URL1 = URL1a+SAGE2_radarStations[this.currentStation].code+URL1b;
+    this.URL2 = URL2a+SAGE2_radarStations[this.currentStation].code+URL2b;
+    this.URL3 = URL3a+SAGE2_radarStations[this.currentStation].code+URL3b;
+    this.URL4 = URL4a+SAGE2_radarStations[this.currentStation].code+URL4b;
+    this.URL5 = URL5a+SAGE2_radarStations[this.currentStation].code+URL5b;
+    this.URL6 = URL6a+SAGE2_radarStations[this.currentStation].code+URL6b;
 },
 
 ////////////////////////////////////////
@@ -167,6 +167,7 @@ load2SuccessCallback: function()
 load2FailCallback: function()
 {
     this.OK2 = 0;
+
     this.image2.src = this.URL2+ '?' + Math.floor(Math.random() * 10000000);
     this.image2.onload = this.load2SuccessCallbackFunc;
     this.image2.onerror = this.load2FailCallbackFunc; 
@@ -248,15 +249,26 @@ update: function ()
 {
     // get new imagery for the radar, warnings, overlay (time)
 
-    this.image3.src = this.URL3+ '?' + Math.floor(Math.random() * 10000000);
+    if(isMaster){
+        var commonRandom = Math.floor(Math.random() * 10000000);
+        this.broadcast("updateNode", {commonRandom:commonRandom});
+    }
+},
+
+
+updateNode: function(data)
+    {
+    var localRandom = data.commonRandom;
+
+    this.image3.src = this.URL3+ '?' + localRandom;
     this.image3.onload = this.load3SuccessCallbackFunc;
     this.image3.onerror = this.load3FailCallbackFunc; 
 
-    this.image4.src = this.URL4+ '?' + Math.floor(Math.random() * 10000000);
+    this.image4.src = this.URL4+ '?' + localRandom;
     this.image4.onload = this.load4SuccessCallbackFunc;
     this.image4.onerror = this.load4FailCallbackFunc; 
 
-    this.image5.src = this.URL5+ '?' + Math.floor(Math.random() * 10000000);
+    this.image5.src = this.URL5+ '?' + localRandom;
     this.image5.onload = this.load5SuccessCallbackFunc;
     this.image5.onerror = this.load5FailCallbackFunc;
 },
@@ -271,22 +283,33 @@ startup: function (){
     this.initApp();
     this.createURLs();
 
+
+    // the master generates one random number and sends it to everyone for the load
+
+    if(isMaster){
+        var commonRandom = Math.floor(Math.random() * 10000000);
+        this.broadcast("startupNode", {commonRandom:commonRandom});
+    }
+},
+
+startupNode: function(data)
+    {
+    var localRandom = data.commonRandom;
+
     // TOPO
-    this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
+    this.image1.src = this.URL1+ '?' + localRandom;
     this.image1.onload = this.load1SuccessCallbackFunc;
     this.image1.onerror = this.load1FailCallbackFunc; 
 
     // Counties
-    this.image2.src = this.URL2+ '?' + Math.floor(Math.random() * 10000000);
+    this.image2.src = this.URL2+ '?' + localRandom;
     this.image2.onload = this.load2SuccessCallbackFunc;
     this.image2.onerror = this.load2FailCallbackFunc; 
 
     // Cities
-    this.image6.src = this.URL6+ '?' + Math.floor(Math.random() * 10000000);
+    this.image6.src = this.URL6+ '?' + localRandom;
     this.image6.onload = this.load6SuccessCallbackFunc;
     this.image6.onerror = this.load6FailCallbackFunc; 
-
-    //this.updateWindow();
 },
 
 
@@ -334,15 +357,24 @@ startup: function (){
 
         var _this = this;
 
+        
+
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
             (function(loopIdxWithPrefix){
-                _this.controls.addButton({type:"next", sequenceNo:5+loopIdx, action:function(date){
+                var siteButton = {
+                    "textual":true,
+                    "label":SAGE2_radarStations[loopIdx].name,
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
+
+                _this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, action:function(date){
                     this.setStation(loopIdxWithPrefix);
                     this.startup();
                     this.draw(date);
                 }.bind(_this) });
-            }(loopIdxWithPrefix))
+            }(loopIdxWithPrefix));
         }
 
         this.controls.finishedAddingControls(); // Important

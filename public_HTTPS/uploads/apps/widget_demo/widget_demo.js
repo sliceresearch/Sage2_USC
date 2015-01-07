@@ -38,18 +38,7 @@ var widget_demo = SAGE2_App.extend( {
 	
 	load: function(state, date) {
 		console.log("creating controls");
-		var plusButton = {
-			"state": 0,
-			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
-			"to":"m 6 0 l -12 0 m 6 6 l 0 -12",//"m -3 0 a 6 6 180 1 0 0 1 z",
-			"width":12,
-			"height":12,
-			"fill":"none",
-			"strokeWidth": 1,
-			"delay": 600,
-			"textual":false,
-			"animation":true
-		};
+		
 		var plusButton2 = {
 			"state": 0,
 			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
@@ -62,14 +51,15 @@ var widget_demo = SAGE2_App.extend( {
 			"textual":false,
 			"animation":true
 		};
-		var plusButton3 = {
+		var watchButton = {
 			"textual":true,
 			"label":"Watch",
 			"fill":"rgba(250,250,250,1.0)",
 			"animation":false
 		};
-		this.controls.addButtonType("plus", plusButton);
-		this.controls.addButtonType("plus3", plusButton3);
+		
+		//this.controls.addButtonType("plus", plusButton);
+		this.controls.addButtonType("watch", watchButton);
 		this.controls.addButton({type:"next",sequenceNo:2,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
 			//This is executed after the button click animation occurs.
 			this.colorIdx = (this.colorIdx + 1) % 3;
@@ -83,15 +73,41 @@ var widget_demo = SAGE2_App.extend( {
 			this.brightness = 64; //Reset value
 			this.draw(date);
 		}.bind(this)});
-		this.controls.addButton({type:"plus3",sequenceNo:5,action:function(date){
-			this.displayText = "Pushed plus2 button"; //Reset value
+		this.controls.addButton({type:"watch",sequenceNo:5,action:function(date){
+			this.displayText = "Pushed watch button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
-		this.controls.addButton({type:"plus",sequenceNo:8,action:function(date){
+
+
+		//Alternative way to specify button type for just one button.
+		var plusButton = {
+			"state": 0,
+			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
+			"to":"m 6 0 l -12 0 m 6 6 l 0 -12",//"m -3 0 a 6 6 180 1 0 0 1 z",
+			"width":12,
+			"height":12,
+			"fill":"none",
+			"strokeWidth": 1,
+			"delay": 600,
+			"textual":false,
+			"animation":true
+		};
+		this.controls.addButton({type:plusButton,sequenceNo:8,action:function(date){
 			this.displayText = "Pushed plus button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
+
 		
+		var helpButton = {
+			"textual":true,
+			"label":"Help",
+			"fill":"rgba(250,250,250,1.0)",
+			"animation":false
+		};
+		this.controls.addButton({type:helpButton,sequenceNo:9,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
+			this.displayText = "Pushed Help button"; //Reset value
+			this.draw(date);
+		}.bind(this)});
 
 		
 		

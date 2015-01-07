@@ -1,0 +1,14 @@
+{
+	"main_script": "stereo_viewer.js",
+	"icon": "stereo_viewer.webp",
+	"width": 4000,
+	"height": 2000,
+	"dependencies": [
+	],
+	"title": "Stereo image viewer",
+	"version": "1.0.0",
+	"description": "Display stereo images",
+	"keywords": [ "3d", "stereo", "viewer" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

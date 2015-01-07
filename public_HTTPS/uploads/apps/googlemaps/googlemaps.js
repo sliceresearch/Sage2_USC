@@ -28,7 +28,6 @@ var googlemaps = SAGE2_App.extend( {
 		this.dragging     = null;
 		this.position     = null;
 		this.scrollAmount = null;
-		this.APIKEY       = null;  // google maps developer API key
 	},
 
 	init: function(id, width, height, resrc, date) {
@@ -51,9 +50,8 @@ var googlemaps = SAGE2_App.extend( {
 
 		// need a global handler for the callback (i.e. scope pollution)
 		googlemaps_self = this;
-		this.APIKEY = "AIzaSyBeN2YI0iJIvbGFES3uIpoP4h1DrWaqyBk"; // EVL's key
 		// load google maps
-		addScript('https://maps.googleapis.com/maps/api/js?key=' + this.APIKEY + '&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
+		addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
 	},
 
 

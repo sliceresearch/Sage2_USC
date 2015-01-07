@@ -114,7 +114,9 @@
 				receivesRemoteServerInfo: true,
 				requestsWidgetControl: true,
 				receivesWidgetEvents: true,
-				requestsAppClone: true
+				requestsAppClone: true,
+				requestsFileHandling: true
+
 			};
 			wsio.emit('addClient', clientDescription);
 			log("open websocket");
@@ -156,6 +158,7 @@
 		
 		wsio.on('broadcast', function(data) {
 			if(applications[data.app] === undefined){
+				// should have better way to determine if app is loaded
 				setTimeout(function() {
 					applications[data.app][data.func](data.data);
 				}, 500);
@@ -193,6 +196,23 @@
 			}
 		});
 		
+		wsio.on('hideui', function(param) {
+			if (param) {
+				clearTimeout(uiTimer);
+				ui.showInterface();
+				uiTimerDelay = param.delay;
+				uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
+			} else
+				if (ui.uiHidden===true) {
+					clearTimeout(uiTimer);
+					uiTimer = null;
+					ui.showInterface();
+				}
+				else {
+					ui.hideInterface();
+				}
+		});
+
 		wsio.on('setupSAGE2Version', function(version) {
 			ui.updateVersionText(version);
 		});
@@ -270,13 +290,18 @@
 
 			var date = new Date(data.date);
 
+			var translate = "translate(" + data.left + "px," + data.top + "px)";
+			
 			var windowTitle = document.createElement("div");
 			windowTitle.id  = data.id + "_title";
 			windowTitle.className    = "windowTitle";
 			windowTitle.style.width  = data.width.toString() + "px";
 			windowTitle.style.height = ui.titleBarHeight.toString() + "px";
-			windowTitle.style.left   = (data.left-ui.offsetX).toString() + "px";
-			windowTitle.style.top    = (data.top-ui.offsetY).toString() + "px";
+			windowTitle.style.left   = (-ui.offsetX).toString() + "px";
+			windowTitle.style.top    = (-ui.offsetY).toString() + "px";
+			windowTitle.style.webkitTransform = translate;
+			windowTitle.style.mozTransform    = translate;
+			windowTitle.style.transform       = translate;
 			windowTitle.style.zIndex = itemCount.toString();
 			if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 			ui.main.appendChild(windowTitle);
@@ -299,11 +324,14 @@
 			var windowItem = document.createElement("div");
 			windowItem.id  = data.id;
 			windowItem.className      = "windowItem";
-			windowItem.style.left     = (data.left-ui.offsetX).toString() + "px";
-			windowItem.style.top      = (data.top+ui.titleBarHeight-ui.offsetY).toString() + "px";
+			windowItem.style.left     = (-ui.offsetX).toString() + "px";
+			windowItem.style.top      = (ui.titleBarHeight-ui.offsetY).toString() + "px";
+			windowItem.style.webkitTransform = translate;
+			windowItem.style.mozTransform    = translate;
+			windowItem.style.transform       = translate;
 			windowItem.style.overflow = "hidden";
 			windowItem.style.zIndex   = (itemCount+1).toString();
-			if (ui.noDropShadow===true) windowItem.style.boxShadow = "none";
+			if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
@@ -561,6 +589,8 @@
 			resetIdle();
 
 			var date  = new Date(position_data.date);
+			
+			/*
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
 			
@@ -571,6 +601,18 @@
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
 			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
+			*/
+			
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+			
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
 
 			var app = applications[position_data.elemId];
 			if(app !== undefined && (position_data.force || app.moveEvents === "continuous") ) {
@@ -597,7 +639,8 @@
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
 			resetIdle();
-
+			
+			/*
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop  = position_data.elemTop  - ui.offsetY;
 			
@@ -609,6 +652,19 @@
 			var selectedElem = document.getElementById(position_data.elemId);
 			selectedElem.style.left = eLeft.toString() + "px";
 			selectedElem.style.top  = (eTop+ui.titleBarHeight).toString() + "px";
+			*/
+			
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+			selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+			
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
 			
 			var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 			var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
@@ -705,6 +761,8 @@
 							top:data.y,
 							width:size.width,
 							height:size.height,
+							barHeight: size.barHeight,
+							hasSideBar: size.hasSideBar,
 							show: true,
 							date: dt 
 						});
@@ -739,7 +797,6 @@
 		});
 
 		wsio.on('requestControlId', function(data) {
-
 			var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";
 			var regC  = /_controls/;
@@ -784,7 +841,6 @@
 			var regexSlider = /slider/;
 			var regexButton = /button/;
 			var regexTextInput = /textInput/;
-
 			var lockedControl = lockedControlElements[data.ptrId];
 			
 			if (lockedControl){
@@ -845,7 +901,8 @@
 				if(app.cloneable === true && app.requestForClone === true){
 					app.requestForClone = false;
 					console.log("cloning app:" + appId);
-					wsio.emit('createAppClone', {id : appId});
+					if(isMaster)
+						wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 				}
 				
 			}
@@ -892,6 +949,13 @@
 				clearInterval(blinkControlHandle);		
 			}
 		});
+
+		/*wsio.on('receiveFileData', function(data){
+			var app = applications[data.id];
+			app.fileDataBuffer = data.buffer;
+			app.fileReceived = true;
+			console.log("file Data:",app.fileDataBuffer);
+		});*/
 	}
 
 </script>

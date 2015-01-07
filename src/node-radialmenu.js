@@ -71,8 +71,8 @@ radialmenu.prototype.onEvent = function(data) {
 		//console.log((this.left - this.radialMenuSize.x/2), " < ", position.x, " < ", (this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x) );
 		//console.log((this.top - this.radialMenuSize.y/2), " < ", position.y, " < ", (this.top - this.radialMenuSize.y/2 + this.radialMenuSize.y) );
 		
-		if( data.x > this.left - this.radialMenuSize.x/2 && data.x <  this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x 
-			&& data.y > this.top  - this.radialMenuSize.y/2 && data.y < this.top - this.radialMenuSize.y/2 + this.radialMenuSize.y )
+		if( (data.x > this.left - this.radialMenuSize.x/2) && (data.x < this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x) &&
+			(data.y > this.top  - this.radialMenuSize.y/2) && (data.y < this.top - this.radialMenuSize.y/2  + this.radialMenuSize.y) )
 		{
 			//this.windowInteractionMode = false;
 			//console.log("over menu");
@@ -81,8 +81,8 @@ radialmenu.prototype.onEvent = function(data) {
 		
 			return true;
 		}
-		else if( data.x > this.left + this.radialMenuSize.x/2 && data.x <  this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x 
-			&& data.y > this.top - this.radialMenuSize.y/2 && data.y < this.top - this.radialMenuSize.y/2 + this.thumbnailWindowSize.y )
+		else if( (data.x > this.left + this.radialMenuSize.x/2) && (data.x < this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x) &&
+				 (data.y > this.top - this.radialMenuSize.y/2)  && (data.y < this.top - this.radialMenuSize.y/2  + this.thumbnailWindowSize.y) )
 		{
 			//this.windowInteractionMode = false;
 			//console.log("over thumb");

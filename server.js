@@ -59,7 +59,7 @@ var radialmenu  = require('./src/node-radialmenu');     // radial menu
 var sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
-
+var stickyItems = require('./src/node-stickyitems');
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 
@@ -137,8 +137,19 @@ if(config.apis !== undefined && config.apis.twitter !== undefined){
 // remove API keys from being investigated further
 if(config.apis !== undefined) delete config.apis;
 
-
 console.log(config);
+
+// register with EVL's server
+request({
+    "rejectUnauthorized": false,
+    "url": 'https://sage.evl.uic.edu/register',
+    "form": config,
+    "method": "POST"},
+    function(err, response, body){
+	    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+	}
+);
+
 
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
@@ -177,7 +188,7 @@ var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
 var radialMenus = {};
-
+var stickyAppHandler = new stickyItems();
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
@@ -230,7 +241,7 @@ var options = setupHttpsOptions();
 
 
 // initializes HTTP and HTTPS servers
-var index = http.createServer(httpServerIndex.onrequest);
+var index  = http.createServer(httpServerIndex.onrequest);
 var server = https.createServer(options, httpsServerApp.onrequest);
 
 var startTime = new Date();
@@ -331,6 +342,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
+	wsio.messages.requestsFileHandling				= data.requestsFileHandling				|| false;
 
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
@@ -422,6 +434,11 @@ function initializeWSClient(wsio) {
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
+
+	/*if (wsio.messages.requestsFileHandling){
+		wsio.on('writeToFile', wsWriteToFile);
+		wsio.on('readFromFile', wsReadFromFile);
+	}*/
 
 	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
 	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
@@ -597,7 +614,12 @@ function wsPointerScrollStart(wsio, data) {
 
 	if (elem !== null) {
 		remoteInteraction[uniqueID].selectScrollItem(elem);
+		//Retain the order to items sticking on this element
+		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
+		for (var idx in stickyList){
+			newOrder = moveAppToFront(stickyList[idx].id);
+		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 }
@@ -845,6 +867,32 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 	}
 }
 
+// **************  File Manipulation Functions for Apps ************
+/*
+function wsWriteToFile (wsio, data){
+	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
+	fs.writeFile(fullPath, data.buffer, function(err){
+		if (err) {
+			console.log("Error: Could not write to file - " + fullpath);
+		}
+	});
+}
+
+function wsReadFromFile (wsio, data){
+	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
+	fs.readFile(fullPath,{encoding:'utf8'}, function(err, fileContent){
+		if (err) {
+			console.log("Error: Could not read from file - " + fullpath);
+		}
+		else{
+			var fileData = {id: data.id, fileName: data.fileName, buffer:fileContent};
+			broadcast('receiveFileData', fileData, 'requestsFileHandling')
+		}
+
+	});
+}
+
+*/
 // **************  Application Animation Functions *****************
 
 function wsFinishedRenderingAppFrame(wsio, data) {
@@ -1202,21 +1250,21 @@ function findMinimum(arr) {
 	}
 	return idx;
 }
-function printMatrix(dist) {
+function printMatrix(dist, m, n) {
 	var i, j;
-	for (i=0; i<applications.length; i++) {
+	for (i=0; i<m; i++) {
 		process.stdout.write(i.toString());
-		for (j=0; j<applications.length; j++) {
+		for (j=0; j<n; j++) {
 			process.stdout.write(" " + dist[i][j].toFixed(2));
 		}
 		process.stdout.write('\n');
 	}
 }
 
-function tileApplications2() {
+function tileApplications() {
 	var app;
 	var i, j, c, r;
-	var numCols, numRows;
+	var numCols, numRows, numCells;
 
 	var displayAr  = config.totalWidth / config.totalHeight;
 	var arDiff     = displayAr / averageWindowAspectRatio();
@@ -1251,6 +1299,7 @@ function tileApplications2() {
 			numCols = Math.round(Math.ceil(numWindows / numRows));
 		}
 	}
+	numCells = numRows * numCols;
 
     // determine the bounds of the tiling area
 	var titleBar = config.ui.titleBarHeight;
@@ -1271,54 +1320,46 @@ function tileApplications2() {
 
     var centroidsApps  = [];
     var centroidsTiles = [];
-    r = numRows-1;
-    c = 0;
-    // Caculate apps and tiles centers
+
+    // Caculate apps centers
     for (i=0; i<applications.length; i++) {
 		app =  applications[i];
 		centroidsApps[i] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
-		console.log('centroid appl:', i, app.title, centroidsApps[i]);
-
-		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
-		console.log('centroid tile:', i, centroidsTiles[i]);
-
-        c += 1;
-        if (c === numCols) {
-            c  = 0;
-            r -= 1;
-        }
 	}
+    // Caculate tiles centers
+	for (i=0; i<numCells; i++) {
+		c = i % numCols;
+		r = Math.floor(i / numCols);
+		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
+	}
+
 	// Calculate distances
-	var distances = Create2DArray(applications.length);
+	var distances = new Create2DArray(applications.length);
 	for (i=0; i<applications.length; i++) {
-		for (j=0; j<applications.length; j++) {
+		for (j=0; j<numCells; j++) {
 			var d = distance2D(centroidsApps[i], centroidsTiles[j]);
 			distances[i][j] = d;
 		}
 	}
 	// dump the matrix
-	printMatrix(distances);
-	for (i=0; i<applications.length; i++) {
-		var idx = findMinimum(distances[i]);
-		console.log('Min:', i, idx, distances[i][idx].toFixed(2));
-	}
+	//printMatrix(distances, applications.length, numCells);
+	// for (i=0; i<applications.length; i++) {
+	// 	var idx = findMinimum(distances[i]);
+	// 	console.log('Min:', i, idx, distances[i][idx].toFixed(2));
+	// }
 
-    r = numRows-1;
-    c = 0;
 	for (i=0; i<applications.length; i++) {
-		// pick an app
-		var appid = findMinimum(distances[i]);
 		// get the application
-		app =  applications[ appid ];
-
-		console.log('Round:', i, appid, distances[i][appid].toFixed(2), app.title);
-		for (j=0; j<applications.length; j++) distances[j][appid] = Number.MAX_VALUE;
+		app =  applications[i];
+		// pick a cell
+		var cellid = findMinimum(distances[i]);
+		// put infinite value to disable the chosen cell
+		for (j=0; j<applications.length; j++) distances[j][cellid] = Number.MAX_VALUE;
 
 		// calculate new dimensions
-		console.log('tiling:', i, c, r, app.title);
+		c = cellid % numCols;
+		r = Math.floor(cellid / numCols);
         var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
-
-		printMatrix(distances);
 
         // update the data structure
         app.left   = newdims[0];
@@ -1332,16 +1373,12 @@ function tileApplications2() {
 							force: true, date: new Date()};
 		// send the order
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
-
-        c += 1;
-        if (c === numCols) {
-            c  = 0;
-            r -= 1;
-        }
     }
 }
 
-function tileApplications() {
+// Old tiling function
+//
+function tileApplications1() {
 	var app;
 	var i, c, r;
 	var numCols, numRows;
@@ -1693,7 +1730,7 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 
 function wsReleasedControlId(wsio, data){
 	var regSl = /slider/;
-	var regButton = /button/
+	var regButton = /button/;
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
@@ -1702,30 +1739,34 @@ function wsReleasedControlId(wsio, data){
 /******************** Clone Request Methods ****************************/
 
 function wsCreateAppClone(wsio, data){
-
 	var app = findAppById(data.id);
-	if (app !== null){
-		var clone = {
-			id:getUniqueAppId(),
-			left: app.left + 5, // modify such that if the new position is off the screen, then reset the position to 0,0
-			top: app.top + 5,
-			width: app.width,
-			height:app.height,
-			data:app.data,
-			resrc: app.resrc,
-			animation: app.animation,
-			date: new Date(),
-			title: app.title,
-			url: app.url,
-			metadata: app.metadata,
-			application: app.application
-		};
+	var appData = {application: "custom_app", filename: app.application};
+	appLoader.loadFileFromLocalStorage(appData, function(clone) {
+		clone.id = getUniqueAppId();
+		clone.left = app.left + 5;
+		clone.top = app.top + 5;
+		clone.width = app.width;
+		clone.height = app.height;
+		if(clone.animation){
+			var i;
+			appAnimations[clone.id] = {clients: {}, date: new Date()};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.requiresFullApps){
+					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					appAnimations[clone.id].clients[clientAddress] = false;
+				}
+			}
+		}
+		if (clone.data)
+			clone.data.loadData = data.cloneData;
+		else
+			clone.data = {loadData:data.cloneData};
 
 		broadcast('createAppWindow', clone, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
-		applications.push(clone);
-	}
 
+		applications.push(clone);
+	});
 }
 
 /******************** Clone Request Methods ****************************/
@@ -1828,7 +1869,7 @@ function getUniqueAppId() {
 
 function getApplications() {
 	var uploadedApps = assets.listApps();
-	uploadedApps.sort(sageutils.compareFilename);
+	uploadedApps.sort(sageutils.compareTitle);
 
 	return uploadedApps;
 }
@@ -1884,7 +1925,7 @@ function setupDisplayBackground() {
 			} );
 		}
 		else {
-			config.background.image.style === "stretch"
+			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
 
@@ -2014,6 +2055,8 @@ function sendConfig(req, res) {
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
 	var position = [ 0, 0 ];
+	// Limits the amount of memory all fields together (except files) can allocate in bytes.
+	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
 	form.type          = 'multipart';
 	form.multiples     = true;
@@ -2245,14 +2288,24 @@ index.on('listening', function (e) {
 
 // CTRL-C intercept
 process.on('SIGINT', function() {
-	saveSession();
-	assets.saveAssets();
-	if( omicronRunning )
-		omicronManager.disconnect();
-	console.log('');
-	console.log('SAGE2 done');
-	console.log('');
-	process.exit(0);
+	// un-register with EVL's server
+	request({
+	    "rejectUnauthorized": false,
+	    "url": 'https://sage.evl.uic.edu/unregister',
+	    "form": config,
+	    "method": "POST"},
+	    function(err, response, body){
+		    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+			saveSession();
+			assets.saveAssets();
+			if( omicronRunning )
+				omicronManager.disconnect();
+			console.log('');
+			console.log('SAGE2 done');
+			console.log('');
+			process.exit(0);
+		}
+	);
 });
 
 
@@ -2304,6 +2357,7 @@ if (program.interactive)
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
 				console.log('regenerate\tregenerates the assets');
+				console.log('hideui\thide/show/delay the user interface');
 				console.log('sessions\tlist the available sessions');
 				console.log('exit\t\tstop SAGE2');
 				break;
@@ -2322,6 +2376,14 @@ if (program.interactive)
 				break;
 			case 'sessions':
 				printListSessions();
+				break;
+			case 'hideui':
+				// if argument provided, used as auto_hide delay in second
+				//   otherwise, it flips a switch
+				if (command[1] !== undefined)
+					broadcast('hideui', {delay:parseInt(command[1],10)}, 'requiresFullApps');
+				else
+					broadcast('hideui', null, 'requiresFullApps');
 				break;
 
 			case 'close':
@@ -2365,14 +2427,26 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
-				saveSession();
-				assets.saveAssets();
-				if( omicronRunning )
-					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
-				process.exit(0);
+				// un-register with EVL's server
+				request({
+				    "rejectUnauthorized": false,
+				    "url": 'https://sage.evl.uic.edu/unregister',
+				    "form": config,
+				    "method": "POST"},
+				    function(err, response, body){
+					    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+
+						saveSession();
+						assets.saveAssets();
+						if( omicronRunning )
+							omicronManager.disconnect();
+						console.log('');
+						console.log('SAGE2 done');
+						console.log('');
+						process.exit(0);
+
+					}
+				);
 				break;
 			default:
 				console.log('Say what? I might have heard `' + line.trim() + '`');
@@ -2384,14 +2458,22 @@ if (program.interactive)
 		// Close with CTRL-D or CTRL-C
 		// Only synchronous code!
 		// Saving stuff
-		saveSession();
-		assets.saveAssets();
-		if( omicronRunning )
-			omicronManager.disconnect();
-		console.log('');
-		console.log('SAGE2 done');
-		console.log('');
-		process.exit(0);
+		request({
+		    "rejectUnauthorized": false,
+		    "url": 'https://sage.evl.uic.edu/unregister',
+		    "form": config,
+		    "method": "POST"},
+		    function(err, response, body){
+			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+				saveSession();
+				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+		});
 	});
 }
 
@@ -2427,8 +2509,20 @@ function findAppUnderPointer(pointerX, pointerY) {
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
-			if (controls[i].show === true)
-				return controls[i];
+			var centerX = controls[i].left + controls[i].height/2.0;
+			var centerY = controls[i].top + controls[i].height/2.0;
+			var dist = Math.sqrt((pointerX - centerX)*(pointerX - centerX) + (pointerY - centerY)*(pointerY - centerY));
+			var barMinX = controls[i].left + controls[i].height;
+			var barMinY = controls[i].top + controls[i].height/2 - controls[i].barHeight/2;
+			var barMaxX = controls[i].left + controls[i].width;
+			var barMaxY = controls[i].top + controls[i].height/2 + controls[i].barHeight/2;
+			if (dist<=controls[i].height/2.0 || (controls[i].hasSideBar && (pointerX >= barMinX && pointerX <= barMaxX) && (pointerY >= barMinY && pointerY <= barMaxY))) {
+				if (controls[i].show === true){
+					return controls[i];
+				}
+				else
+					return null;
+			}
 			else
 				return null;
 		}
@@ -2469,9 +2563,9 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	var dt = new Date();
 	var rightMargin = config.totalWidth - ctrl.width;
 	var bottomMargin = config.totalHeight - ctrl.height;
-	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX;
-	ctrl.top = (pointerY > bottomMargin)? bottomMargin:pointerY ;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left-ctrl.height/2, elemTop: ctrl.top-ctrl.height/2},'receivesWidgetEvents');
+	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
+	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
 }
 
 
@@ -2610,7 +2704,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	if (ct !== null) {
-		if(data.button === "left"){
+		if (data.button === "left") {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
 			broadcast('requestControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		}
@@ -2618,11 +2712,11 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(ct.show === true) hideControl(ct);
 		}
 		return ;
-	}else{
+	} else {
 		var lockedControl = remoteInteraction[uniqueID].lockedControl(); //If a text input widget was locked, drop it
 		if (lockedControl !== null) {
-			var data = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-			broadcast('dropTextInputControl', data ,'receivesWidgetEvents');
+			var msgdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+			broadcast('dropTextInputControl', msgdata ,'receivesWidgetEvents');
 			remoteInteraction[uniqueID].dropControl();
 		}
 	}
@@ -2726,8 +2820,11 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				broadcast('eventInItem', event, 'receivesInputEvents');
 			}
 		}
-
+		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
+		for (var idx in stickyList){
+			newOrder = moveAppToFront(stickyList[idx].id);
+		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 }
@@ -2922,10 +3019,19 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 	// move / resize window
 	if(remoteInteraction[uniqueID].windowManagementMode()){
+
 		var updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
 		var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
+
 		if(updatedMoveItem !== null){
+			//Attach the app to the background app if it is sticky
+			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
+			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
+			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
+			for (var idx=0;idx<updatedStickyItems.length;idx++){
+				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
+			}
 		}
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
@@ -2986,7 +3092,16 @@ function pointerPosition( uniqueID, data ) {
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
-	if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+	if(updatedItem !== null){
+		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
+		attachAppIfSticky(backgroundItem,updatedItem.elemId);
+		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
+		for (var idx=0;idx<updatedStickyItems.length;idx++){
+			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
+		}
+	}
+	//if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 }
 
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
@@ -3003,7 +3118,12 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 
 	if(elem !== null){
 		remoteInteraction[uniqueID].selectScrollItem(elem, pointerX, pointerY);
+		//Retain the order to items sticking on this element
+		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
+		for (var idx in stickyList){
+			newOrder = moveAppToFront(stickyList[idx].id);
+		}
 		broadcast('updateItemOrder', newOrder, 'receivesWindowModification');
 	}
 }
@@ -3085,7 +3205,6 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 
 	var control = findControlsUnderPointer(pointerX,pointerY);
 	if (control!==null){
-		console.log("finding control!");
 		return;
 	}
 
@@ -3369,6 +3488,7 @@ function deleteApplication( elem ) {
 
 		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
 	}
+	stickyAppHandler.removeElement(elem);
 	removeElement(applications, elem);
 }
 
@@ -3473,7 +3593,7 @@ function radialMenuEvent( data )
 	var radialMenu = radialMenus[data.id+"_menu"];
 	if( radialMenu !== undefined )
 	{
-		radialMenu.onEvent( data )
+		radialMenu.onEvent( data );
 
 		if( radialMenu.hasEventID(data.id) )
 		{
@@ -3506,4 +3626,14 @@ function wsRadialMenuMoved( wsio, data ) {
 	{
 		radialMenu.setPosition( data );
 	}
+}
+
+
+function attachAppIfSticky(backgroundItem, appId){
+	var app = findAppById(appId);
+	if (app.sticky !== true) return;
+	//console.log("sticky:",app.sticky);
+	stickyAppHandler.detachStickyItem(app);
+	if (backgroundItem !== null)
+		stickyAppHandler.attachStickyItem(backgroundItem,app);
 }

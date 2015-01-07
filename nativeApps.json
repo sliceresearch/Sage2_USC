@@ -14,6 +14,7 @@
                 "image/png",
                 "image/bmp",
                 "image/tiff",
+                "image/svg+xml",
                 "image/vnd.adobe.photoshop"
             ]
         },

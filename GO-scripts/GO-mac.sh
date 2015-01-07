@@ -1,7 +1,7 @@
 #!/bin/sh
 sleep 1
 
-global_param="--new-window --window-size=700,700 --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--new-window --window-size=700,700 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
 
 UDD=$HOME/.config/chrome-nfs/mac0
 mkdir -p $UDD/Default

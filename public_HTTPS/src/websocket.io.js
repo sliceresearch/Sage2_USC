@@ -41,7 +41,7 @@ function websocketIO(protocol, host, port) {
 		this.ws.onclose = function(evt) {
 			console.log("wsio closed");
 			if('close' in _this.messages)
-				_this.messages['close'](evt);
+				_this.messages.close(evt);
 		};
 	};
 	
