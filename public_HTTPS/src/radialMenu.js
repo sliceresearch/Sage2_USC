@@ -1183,6 +1183,29 @@ function radialMenu(){
 		this.updateThumbnailPositions();
 	};
 	
+	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbSize, thumbSpacer, maxRows, neededColumns )
+	{
+		var curRow = 0;
+		var curColumn = 0;
+		
+		this.thumbnailScrollWindowElement.width = (imageThumbSize + thumbSpacer) * neededColumns;
+		for( i = 0; i < thumbnailSourceList.length; i++ )
+		{
+			currentButton = thumbnailSourceList[i];
+			
+			
+			if( curColumn+1 > neededColumns )
+			{
+				curColumn = 0;
+				
+				if( curRow < maxRows - 1 )
+					curRow++;
+			}
+			currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
+			curColumn++;
+		}
+	};
+	
 	this.updateThumbnailPositions = function()
 	{
 		var curRow = 0;
@@ -1198,25 +1221,39 @@ function radialMenu(){
 		var maxCols = Math.floor((thumbWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize + thumbSpacer));
 		
 		var neededColumns = Math.ceil(this.imageThumbnailButtons.length / maxRows );
+		if( this.imageThumbnailButtons.length < maxRows )
+			neededColumns = maxRows;
+		
 		if( this.currentMenuState === 'pdfThumbnailWindow' )
-			neededColumns = Math.ceil(this.pdfThumbnailButtons.length / ( maxRows * maxCols ));
+		{
+			if( this.pdfThumbnailButtons.length > maxRows )
+				neededColumns = Math.ceil(this.pdfThumbnailButtons.length / maxRows );
+			else
+				neededColumns = maxRows;
+		}
 		else if( this.currentMenuState === 'videoThumbnailWindow' )
-			neededColumns = Math.ceil(this.videoThumbnailButtons.length / ( maxRows * maxCols ));
+		{
+			if( this.videoThumbnailButtons.length > maxRows )
+				neededColumns = Math.ceil(this.videoThumbnailButtons.length / maxRows );
+			else
+				neededColumns = maxRows;
+		}
 		else if( this.currentMenuState === 'sessionThumbnailWindow' )
-			neededColumns = Math.ceil(this.sessionThumbnailButtons.length / ( maxRows * maxCols ));
+		{
+			if( this.sessionThumbnailButtons.length > maxRows )
+				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows );
+			else
+				neededColumns = maxRows;
+		}
 			
 		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer);
-		
-		console.log("thumbnails: ", this.imageThumbnailButtons.length);
-		console.log("maxRows: ", maxRows);
-		console.log("neededColumns: ", neededColumns);
 		
 		// Special thumbnail size for custom apps
 		if( this.currentMenuState === 'appThumbnailWindow' )
 		{
 			maxRows = Math.floor((thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize * 2 + thumbSpacer));
 			maxCols = Math.floor((thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize * 2 + thumbSpacer));
-			neededColumns = Math.ceil(this.appThumbnailButtons.length / ( maxRows * maxCols ));
+			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
 			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize * 2 + thumbSpacer);
 		}
 
@@ -1231,119 +1268,30 @@ function radialMenu(){
 			this.thumbnailWindowScrollOffset.x = maxScrollPosX;
 		// --------------------------------------------------------------------
 
-		var nextCol;
-		var currentButton;
-		curRow = 0;
-		curColumn = 0;
+
 		if( this.currentMenuState === 'imageThumbnailWindow' )
 		{
-			this.thumbnailScrollWindowElement.width = (imageThumbSize + thumbSpacer) * neededColumns;
-			for( i = 0; i < this.imageThumbnailButtons.length; i++ )
-			{
-				currentButton = this.imageThumbnailButtons[i];
-				
-				
-				if( curColumn+1 > neededColumns )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				curColumn++;
-			}
+			this.setThumbnailPosition( this.imageThumbnailButtons, imageThumbSize, thumbSpacer, maxRows, neededColumns );
 		}
 
-		curRow = 0;
-		curColumn = 0;
 		if( this.currentMenuState === 'pdfThumbnailWindow' )
-			for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.pdfThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
+		{
+			this.setThumbnailPosition( this.pdfThumbnailButtons, imageThumbSize, thumbSpacer, maxRows, neededColumns );
+		}
+
 		if( this.currentMenuState === 'videoThumbnailWindow' )
-			for( i = 0; i < this.videoThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.videoThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
+		{
+			this.setThumbnailPosition( this.videoThumbnailButtons, imageThumbSize, thumbSpacer, maxRows, neededColumns );
+		}
+		
 		if( this.currentMenuState === 'appThumbnailWindow' )
 		{
-			for( i = 0; i < this.appThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize * 2 + thumbSpacer));
-				currentButton = this.appThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize * 2 + thumbSpacer), curRow * (imageThumbSize * 2 + thumbSpacer) );
-				
-				curColumn++;
-			}
+			this.setThumbnailPosition( this.appThumbnailButtons, imageThumbSize * 2, thumbSpacer, maxRows, neededColumns );
 		}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
+
 		if( this.currentMenuState === 'sessionThumbnailWindow' )
-			for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.sessionThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
+			this.setThumbnailPosition( this.sessionThumbnailButtons, imageThumbSize * 2, thumbSpacer, maxRows, neededColumns );
+
 	};
 
 }
