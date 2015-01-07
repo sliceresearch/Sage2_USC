@@ -923,8 +923,10 @@ function radialMenu(){
 				
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x + 18  * radialMenuScale, y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight };
 				
+				console.log(thumbEventPos);
 				// Prevent clicking on hidden thumbnails under preview window
-				if( thumbEventPos.x < thumbnailWindowSize.x - thumbnailPreviewWindowSize.x + imageThumbSize*3 + 10 )
+				var thumbnailWindowDivWidth = thumbnailWindowSize.x + imageThumbSize/2 - 10 - radialMenuSize.x - 25 * radialMenuScale; // Should match where 'this.thumbnailWindowDiv.style.width' is assigned
+				if( thumbEventPos.x >= 0 && thumbEventPos.x <= thumbnailWindowDivWidth )
 				{
 					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
