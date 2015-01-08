@@ -40,7 +40,6 @@ registryManager.prototype.initialize = function(assetsFolder) {
     }
 
     this.scanNativeApps();
-
 }
 
 registryManager.prototype.mimeRegister = function(fileType) {
