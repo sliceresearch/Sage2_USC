@@ -44,7 +44,6 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.displayWidth = displayWidth;
 	this.displayHeight = displayHeight;
 	this.titleBarHeight = titleBarHeight;
-    this.registryManager= new registry();
 
     this.app2dir = {
     	"image_viewer": "images",
@@ -748,13 +747,16 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 };
 
 appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
-	var mime_type = mime.lookup(file.name);
-	var app = this.registryManager.type2app[mime_type];
-	if (app === undefined) { callback(null); return; }
-	var dir = this.app2dir[app];
-    if (dir === null || dir === undefined || dir === "") {
-        dir = this.registryManager.type2dir[mime_type];
-    }
+    var mime_type = mime.lookup(file.name);
+	var app = registry.getDefaultApp(file.name);
+	if (app === undefined || app === "") { callback(null); return; }
+
+    // XXX
+    var dir = "";
+    //var dir = this.app2dir[app];
+    //if (dir === null || dir === undefined || dir === "") {
+    //    dir = this.registryManager.type2dir[mime_type];
+    //}
 
 	var _this = this;
     if (!fs.existsSync(path.join(this.publicDir, "uploads", dir))) {
@@ -805,16 +807,14 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
-    console.log("AppData: ");
-    console.log(appData);
-
 	if(appData.location === "file") {
-		app = this.registryManager.type2app[appData.type];
+		app = registry.getDefaultApp(appData.path);
 
-		var dir = this.app2dir[app];
-        if (dir === null || dir === undefined || dir === "") {
-            dir = this.registryManager.type2dir[appData.type];
-        }
+        var dir = "";
+		//var dir = this.app2dir[app];
+        //if (dir === null || dir === undefined || dir === "") {
+        //    dir = this.registryManager.type2dir[appData.type];
+        //}
 
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
@@ -849,9 +849,9 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 		}
         else {
-            this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-                callback(appInstance);
-            });
+            //this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
+            //    callback(appInstance);
+            //});
         }
 	}
 

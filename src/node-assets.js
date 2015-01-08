@@ -21,6 +21,7 @@ var color     = require('color');
 var gm        = require('gm');                   // imagesmagick
 var ffmpeg    = require('fluent-ffmpeg');        // ffmpeg
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
+var registry  = require('../src/node-registry');
 
 
 // Global variable to handle iamgeMagick configuration
@@ -132,7 +133,7 @@ generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, c
 			console.log("Assets> cannot generate thumbnails for:", infile);
 			return;
 		}
-		
+
 		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index, callback);
 	});
 };
@@ -145,7 +146,7 @@ generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, ca
 		callback();
 		return;
 	}
-	
+
 	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function (err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
@@ -164,11 +165,11 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index,
 		callback();
 		return;
 	}
-	
+
 	var aspect = width/height;
 	var size = sizes[index] + "x" + Math.round(sizes[index]/aspect);
 	if(aspect < 1.0) size = Math.round(sizes[index]*aspect) + "x" + sizes[index];
-	
+
 	var cmd = ffmpeg(infile);
 	if(ffmpegPath !== null) cmd.setFfmpegPath(ffmpegPath);
 	cmd.on('end', function() {
@@ -185,9 +186,9 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index,
 			generateVideoThumbnails(infile, outfile, width, height, sizes, index+1, callback);
 		});
 	}).screenshots({
-		timestamps: ["10%"], 
-		filename: path.basename(outfile)+"_%r_%i.png", 
-		folder: path.dirname(outfile), 
+		timestamps: ["10%"],
+		filename: path.basename(outfile)+"_%r_%i.png",
+		folder: path.dirname(outfile),
 		size: size
 	});
 };
@@ -200,14 +201,14 @@ generateAppThumbnails = function(infile, outfile, color, sizes, index, callback)
 		callback();
 		return;
 	}
-	
+
 	var radius = Math.round(sizes[index]/2);
 	var edge   = Math.round(sizes[index]/128);
 	var corner = Math.round(sizes[index]/6.5641);
 	var width  = Math.round(sizes[index]/1.4382);
 	var circle = radius + " " + radius + " " + edge + " " + radius;
 	var img = corner + " " + corner + " " + width + " " + width;
-	
+
 	imageMagick(sizes[index], sizes[index], "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+color.r+","+color.g+","+color.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+sizes[index]+'.png', function(err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
@@ -221,13 +222,13 @@ generateAppThumbnails = function(infile, outfile, color, sizes, index, callback)
 addFile = function(filename, exif, callback) {
 	if (exif.MIMEType === 'application/vnd.adobe.photoshop')
 		exif.MIMEType = 'image/vnd.adobe.photoshop';
-	
+
 	// Add the asset in the array
 	var anAsset = new Asset();
 	anAsset.setFilename(filename);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
-	
+
 	// Path for the file system
 	var thumb  = path.join(AllAssets.root, 'assets', exif.FileName);
 	// Path for the https server
@@ -259,10 +260,10 @@ addFile = function(filename, exif, callback) {
 			thumb  = path.join(AllAssets.root, 'assets', 'apps', exif.FileName);
 			// Path for the https server
 			rthumb = path.join(AllAssets.rel, 'assets', 'apps', exif.FileName);
-			
+
 			var primaryColorOfImage = function(err, buffer) {
 				if(err) throw err;
-				
+
 				var result = buffer.toString();
 				var colors = result.substring(1, result.length-1).split("\n");
 				var primaryColor = {r: 0, g: 0, b: 0};
@@ -272,13 +273,13 @@ addFile = function(filename, exif, callback) {
 					var rgbStart = cInfo.indexOf("(");
 					var rgbEnd = cInfo.indexOf(")");
 					if(rgbStart < 0 || rgbEnd < 0) continue;
-					
+
 					var rawCount = parseInt(cInfo.substring(0, rgbStart-2), 10);
 					var red   = parseInt(cInfo.substring(rgbStart+1, rgbStart+ 4), 10);
 					var green = parseInt(cInfo.substring(rgbStart+5, rgbStart+ 8), 10);
 					var blue  = parseInt(cInfo.substring(rgbStart+9, rgbStart+12), 10);
 					var alpha = parseInt(cInfo.substring(rgbStart+13, rgbStart+16), 10);
-					
+
 					var rgb = color({r: red, g: green, b: blue});
 					var hsv = rgb.hsv();
 					var ms = (hsv.s+1) / 100;
@@ -292,7 +293,7 @@ addFile = function(filename, exif, callback) {
 						primaryColor.b = blue;
 					}
 				}
-				
+
 				// use tinted primary color as background
 				var tint = 0.4; // 0.0 --> white, 1.0 --> original color
 				var primaryTint = {
@@ -300,12 +301,12 @@ addFile = function(filename, exif, callback) {
 					g: Math.round(255 - ((255 - primaryColor.g) * tint)),
 					b: Math.round(255 - ((255 - primaryColor.b) * tint))
 				};
-				
+
 				generateAppThumbnails(exif.icon, thumb, primaryTint, [1024, 512, 256], null, function() {
 					callback();
 				});
 			};
-			
+
 			imageMagick(exif.icon).command("convert").in("-colors", "32").in("-depth", "8").in("-format", "'%c'").toBuffer("histogram:info", primaryColorOfImage);
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		}
@@ -316,7 +317,7 @@ deletePDF = function(filename) {
 	var filepath = path.resolve(AllAssets.root, 'pdfs', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
-		
+
 		console.log("Server> successfully deleted file:", filename);
 		// Delete the metadata
 		delete AllAssets.list[filepath];
@@ -389,7 +390,7 @@ exifAsync = function(cmds, cb) {
 	var execNext = function() {
 		var file = cmds.shift();
 		if(fs.lstatSync(file).isDirectory()){
-			var instuctionsFile   = path.join(file, "instructions.json");		
+			var instuctionsFile   = path.join(file, "instructions.json");
 			var instructions      = json5.parse(fs.readFileSync(instuctionsFile, 'utf8'));
 			var appIcon = null;
 			if(instructions.icon) {
@@ -397,7 +398,7 @@ exifAsync = function(cmds, cb) {
 			}
 			var app = path.basename(file);
 			console.log("EXIF> Adding " + app + " (App)");
-			
+
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
 				metadata.title = instructions.title;
@@ -417,9 +418,12 @@ exifAsync = function(cmds, cb) {
 			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
-			
+            if(instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes)) {
+                metadata.fileTypes = instructions.fileTypes;
+                registry.register(app, instructions.fileTypes);
+            } else metadata.fileTypes = [];
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
-			
+
 			addFile(file, exif, function() {
 				if (cmds.length > 0) execNext();
 				else cb(null);
@@ -529,15 +533,16 @@ initialize = function (root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
-		
+
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
 		if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
-		
+        registry.initialize(assetFolder);
+
 		// Make sure the asset/apps folder exists
 		var assetAppsFolder = path.join(assetFolder, 'apps');
 		if (!fs.existsSync(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
-		
+
 		// Make sure unknownapp images exist
 		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.png');
 		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.png');
@@ -548,7 +553,7 @@ initialize = function (root, relativePath) {
 		var unknownapp_1024Img = path.resolve(root, '..', 'images', 'unknownapp_1024.png');
 		var unknownapp_1024 = path.join(assetAppsFolder, 'unknownapp_1024.png');
 		if (!fs.existsSync(unknownapp_1024)) fs.createReadStream(unknownapp_1024Img).pipe(fs.createWriteStream(unknownapp_1024));
-		
+
 		AllAssets = {};
 
 		var assetFile = path.join(assetFolder, 'assets.json');
@@ -575,7 +580,20 @@ initialize = function (root, relativePath) {
 		var i;
 		var excludes = [ '.DS_Store' ];
 		var item;
-		for(i=0; i<uploadedImages.length; i++) {
+        // Start with the apps so we can register filetypes
+		for(i=0; i<uploadedApps.length; i++){
+			var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
+			if (fs.lstatSync(applicationDir).isDirectory()) {
+				item = applicationDir;
+				if (item in AllAssets.list) {
+					AllAssets.list[item].Valid = true;
+				} else {
+					thelist.push(item);
+				}
+			}
+		}
+
+        for(i=0; i<uploadedImages.length; i++) {
 			if (excludes.indexOf(uploadedImages[i]) === -1) {
 				item = path.resolve(root, "images", uploadedImages[i]);
 				if (item in AllAssets.list) {
@@ -605,18 +623,7 @@ initialize = function (root, relativePath) {
 				}
 			}
 		}
-		for(i=0; i<uploadedApps.length; i++){
-			var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
-			if (fs.lstatSync(applicationDir).isDirectory()) {
-				item = applicationDir;
-				if (item in AllAssets.list) {
-					AllAssets.list[item].Valid = true;
-				} else {
-					thelist.push(item);
-				}
-			}
-		}
-		
+
 		// delete the elements which not there anymore
 		for (item in AllAssets.list) {
 			if (AllAssets.list[item].Valid === false) {
