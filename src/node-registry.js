@@ -35,9 +35,7 @@ registryManager.prototype.initialize = function(assetsFolder) {
     this.db = new jsonDB(path.join(assetsFolder, this.registryFile), true, true);
 
     // Check if custom.type exists
-    if (fs.existsSync(path.join(assetsFolder, this.mimeFile))) {
-        mime.load(path.join(assetsFolder, this.mimeFile));
-    }
+    mime.load(this.mimeFile);
 
     this.scanNativeApps();
 }
@@ -45,8 +43,6 @@ registryManager.prototype.initialize = function(assetsFolder) {
 registryManager.prototype.mimeRegister = function(fileType) {
     var type = mime.lookup(fileType);
 
-    // XXX -What happens when multiple fileTypes?
-    console.log("Found: " + type + " with fileType: " + fileType);
     if (type === undefined || type === null || type === 'application/custom') {
         var map = {};
         map['application/' + fileType] = [ fileType ];
@@ -55,7 +51,6 @@ registryManager.prototype.mimeRegister = function(fileType) {
 
         type = mime.lookup(fileType);
     }
-    console.log("Registered as: " + type);
     return type;
 }
 
@@ -85,18 +80,33 @@ registryManager.prototype.register = function(name, types) {
         var newApp = {};
         newApp.applications = [ name ];
 
+        // Check if the entry exists
         try {
-            this.db.push(type, newApp, false);
+            var apps = this.db.getData(type + '/applications');
+            if (apps.indexOf(name) < 0) {
+                this.push(type, newApp, false);
+            }
         } catch(error) {
-            console.error(error);
+            // Entry does not exist. Add it.
+            this.push(type, newApp, false);
         }
+
 
         try {
             this.db.getData(type + '/default');
         } catch(error) {
-            this.db.push(type + '/default', name);
+            this.push(type + '/default', name, true);
         }
     }
+}
+
+registryManager.prototype.push = function(key, value, overwrite) {
+    try {
+        this.db.push(key, value, overwrite);
+    } catch(error) {
+        console.error(error);
+    }
+
 }
 
 registryManager.prototype.getDefaultApp = function(file) {
@@ -111,7 +121,6 @@ registryManager.prototype.getDefaultApp = function(file) {
 }
 
 registryManager.prototype.setDefaultApplication = function(app, type) {
-    this.type2app[type] = app;
 }
 
 module.exports = new registryManager();
