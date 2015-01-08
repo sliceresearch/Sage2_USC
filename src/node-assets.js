@@ -418,10 +418,10 @@ exifAsync = function(cmds, cb) {
 			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
-            if(instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes)) {
-                metadata.fileTypes = instructions.fileTypes;
-                registry.register(app, instructions.fileTypes);
-            } else metadata.fileTypes = [];
+			if(instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes)) {
+				metadata.fileTypes = instructions.fileTypes;
+				registry.register(app, instructions.fileTypes);
+			} else metadata.fileTypes = [];
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
 			addFile(file, exif, function() {
@@ -537,7 +537,7 @@ initialize = function (root, relativePath) {
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
 		if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
-        registry.initialize(assetFolder);
+		registry.initialize(assetFolder);
 
 		// Make sure the asset/apps folder exists
 		var assetAppsFolder = path.join(assetFolder, 'apps');
