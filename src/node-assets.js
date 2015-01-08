@@ -133,7 +133,7 @@ generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, c
 			console.log("Assets> cannot generate thumbnails for:", infile);
 			return;
 		}
-
+		
 		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index, callback);
 	});
 };
@@ -146,7 +146,7 @@ generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, ca
 		callback();
 		return;
 	}
-
+	
 	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function (err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
@@ -420,7 +420,7 @@ exifAsync = function(cmds, cb) {
 			else metadata.keywords = [];
 			if(instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes)) {
 				metadata.fileTypes = instructions.fileTypes;
-				registry.register(app, instructions.fileTypes);
+				registry.register(app, instructions.fileTypes, false);
 			} else metadata.fileTypes = [];
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 

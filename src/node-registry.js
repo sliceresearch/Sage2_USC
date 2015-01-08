@@ -66,16 +66,18 @@ registryManager.prototype.scanNativeApps = function() {
             var app = nativeApps.applications[i];
             if (app.name !== undefined && app.name !== null && app.name !== "" &&
                 app.types !== undefined && app.types !== null && Array.isArray(app.types) ) {
-                this.register(app.name, app.types);
+                this.register(app.name, app.types, true);
             }
         }
     }
 }
 
-registryManager.prototype.register = function(name, types) {
+registryManager.prototype.register = function(name, types, mime) {
+    var type;
     for(var i=0; i<types.length; i++) {
-
-        var type = '/' + this.mimeRegister(types[i]);
+        
+        if(mime) type = '/' + types[i];
+        else type = '/' + this.mimeRegister(types[i]);
 
         var newApp = {};
         newApp.applications = [ name ];

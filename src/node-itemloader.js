@@ -430,112 +430,6 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
-appLoader.prototype.readInstructionsFile = function(instructionsFile, callback) {
-    var thumbnailHostPath = null;
-    var instr = {};
-    fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
-		if(err) throw err;
-
-        var instructions = JSON.parse(json_str);
-        instr.width = instructions.width;
-        instr.height = instructions.height;
-        instr.aspectRatio = instructions.width / instructions.height;
-        // if icon provided, build the url to it
-        instr.icon  = instructions.icon ? url+"/"+instructions.icon : null;
-        instr.appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
-
-        instr.metadata = {};
-        if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
-            instr.metadata.title = instructions.title;
-        else instr.metadata.title = instr.appName;
-        if (instructions.version !== undefined && instructions.version !== null && instructions.version !== "")
-            instr.metadata.version = instructions.version;
-        else metadata.version = "1.0.0";
-        if (instructions.description !== undefined && instructions.description !== null && instructions.description !== "")
-            instr.metadata.description = instructions.description;
-        else metadata.description = "-";
-        if (instructions.author !== undefined && instructions.author !== null && instructions.author !== "")
-            instr.metadata.author = instructions.author;
-        else metadata.author = "SAGE2";
-        if (instructions.license !== undefined && instructions.license !== null && instructions.license !== "")
-            instr.metadata.license = instructions.license;
-        else metadata.license = "-";
-        if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
-            instr.metadata.keywords = instructions.keywords;
-        else metadata.keywords = [];
-        if (instructions.dependencies !== undefined && instructions.dependencies !== null && instructions.dependencies !== "")
-            instr.dependencies = instructions.dependencies;
-        if (instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes) ) {
-            instr.directory = ""
-            if (instructions.directory !== undefined && instructions.directory !== null && instructions.directory !== "")
-                instr.directory = instructions.directory;
-            if(this.registryManager ===undefined || this.registryManager === null) this.registryManager = new registry();
-            this.registryManager.register(instr.appName, instructions.fileTypes, instr.directory);
-            this.registryManager.writeRegistry();
-        }
-        instr.resizeMode = "proportional";
-		if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
-			instr.resizeMode = instructions.resize;
-
-        callback(instr);
-    });
-
-}
-
-appLoader.prototype.loadApp = function(file, mime_type, url, external_url, name, callback) {
-	var _this = this;
-
-    // Find the app!!
-    var appName = this.registryManager.type2app[mime_type];
-	console.log("Loader> Loading %s with %s", mime_type, appName);
-
-    var instructionsFile = path.join(this.publicDir, "uploads", "apps", appName, "instructions.json");
-    console.log("Reading: %s", instructionsFile);
-    this.readInstructionsFile(instructionsFile, function(instructions) {
-        console.log(instructions);
-
-        // Find the app
-        // Create the correct external url
-        var app_url = path.join("uploads", "apps", appName);
-        var app_external_url = _this.hostOrigin + encodeReservedURL(app_url);
-
-
-        var appInstance = {
-            id: null,
-            title: instructions.metadata.title,
-            application: instructions.appName,
-            type: instructions.mime_type,
-            url: app_external_url,
-            data: {
-                src: file,
-                //type: file,
-                //encoding: encoding
-            },
-            resrc: instructions.dependencies,
-            icon: instructions.icon,
-            left: _this.titleBarHeight,
-            top: 1.5*_this.titleBarHeight,
-            width: instructions.width,
-            height: instructions.height,
-            native_width: instructions.width,
-            native_height: instructions.height,
-            previous_left: null,
-            previous_top: null,
-            previous_width: null,
-            previous_height: null,
-            maximized: false,
-            aspect: instructions.aspectRatio,
-            animation: instructions.animation,
-            metadata: instructions.metadata,
-            resizeMode: instructions.resizeMode,
-            date: new Date()
-        };
-        console.log(appInstance);
-        callback(appInstance);
-    });
-};
-
-
 appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 	var zipFolder = file;
@@ -808,13 +702,9 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	var app = null;
 
 	if(appData.location === "file") {
-		app = registry.getDefaultApp(appData.path);
+		app = registry.getDefaultApp(appData.type);
 
-        var dir = "";
-		//var dir = this.app2dir[app];
-        //if (dir === null || dir === undefined || dir === "") {
-        //    dir = this.registryManager.type2dir[appData.type];
-        //}
+		var dir = this.app2dir[app];
 
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
@@ -848,15 +738,10 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 		}
-        else {
-            //this.loadApp(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
-            //    callback(appInstance);
-            //});
-        }
 	}
 
 	else if(appData.location === "url") {
-		app = this.registryManager.type2app[appData.type];
+	    var app = registry.getDefaultApp(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
