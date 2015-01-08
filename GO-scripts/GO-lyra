@@ -2,17 +2,33 @@
 
 tentakel pkill -HUP chrome
 
+#tentakel rm -fr   /scratch/evl/evldemo/chrome
+#tentakel mkdir -p /scratch/evl/evldemo/chrome
+
+
 server="lyra.evl.optiputer.net"
-global_param="--window-size=1366,1536 --window-position=0,0 --kiosk --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--window-size=1366,1536 --window-position=0,0 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
 
 for i in {1..36}
 do
 	node=`printf lyra-%02d $i`
 	idx=`expr $i - 1`
 	echo "================= $node: client $idx ================="
-	UDD="$HOME/.config/chrome-nfs/$node"
+	#UDD="$HOME/.config/chrome-nfs/$node"
+	#mkdir -p $UDD
+	UDD="/scratch/evl/evldemo/chrome/$node"
+	ssh $node mkdir -p $UDD
+
 	param="$global_param --user-data-dir=$UDD"
 	
-	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'https://$server?clientID=$idx'" &
+	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param '--app=https://$server/display.html?clientID=$idx'" &
+done
+
+tentakel /home/evl/evldemo/sage2/Fullscreen
+
+for i in {1..36}
+do
+	node=`printf lyra-%02d $i`
 	ssh -fx $node "sleep 5; env DISPLAY=:0.0 xdotool mousemove --sync 10 10; env DISPLAY=:0.0 xdotool mousemove --sync 0 0" &
 done
+

@@ -134,9 +134,30 @@ var notepad = SAGE2_App.extend( {
 			var strText = fs.readFileSync(file,'utf8');
 			this.textArr = strText.split("\n");
 		}*/
+		if (isMaster){
+			this.fileRead = true;
+			this.fileName = "Sample.txt";
+			//this.fileDataBuffer = this.joinText();
+			this.readFromFile();
+		}
 		
 	},
 	
+	joinText: function(){
+		var buffer = "";
+		for (var parts = 0;parts < this.range.length;parts++){
+			var start = this.range[parts][0];
+			var end = this.range[parts][1];
+			for (var i=start;i<=end;i++){
+				
+				if (i in this.textArr){
+					buffer = buffer + this.textArr[i];
+				}
+				buffer = buffer + "\r\n";
+			}
+		}
+		return buffer;
+	},
 	
 	displayText: function(){
 		var lno = 1;
@@ -430,6 +451,15 @@ var notepad = SAGE2_App.extend( {
 	    }
 
         this.refresh( date ); //redraw    
+	},
+	quit: function(){
+		/*if(isMaster){
+			this.fileWrite = true;
+			this.fileName = "Sample.txt";
+			this.fileDataBuffer = this.joinText();
+			this.writeToFile();
+			console.log("Quitting notepad");
+		}*/
 	}
 	 
 });    

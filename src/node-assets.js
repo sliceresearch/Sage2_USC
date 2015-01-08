@@ -105,38 +105,46 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-generateImageThumbnails = function(infile, outfile, sizes, index) {
+generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
-	if(index >= sizes.length) return;
+	if(index >= sizes.length) {
+		callback();
+		return;
+	}
 
-	imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+	// seems to have an issue with noProfile
+	//imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+	imageMagick(infile+"[0]").bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
 		}
 		// recursive call to generate the next size
-		generateImageThumbnails(infile, outfile, sizes, index+1);
+		generateImageThumbnails(infile, outfile, sizes, index+1, callback);
 	});
 };
 
-generatePdfThumbnails = function(infile, outfile, width, height, sizes, index) {
+generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
 	imageMagick(width, height, "#ffffff").append(infile+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
 		if (err) {
 			console.log("Assets> cannot generate thumbnails for:", infile);
 			return;
 		}
 		
-		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index);
+		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index, callback);
 	});
 };
 
-generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index) {
+generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
-	if(index >= sizes.length) return;
+	if(index >= sizes.length) {
+		callback();
+		return;
+	}
 	
 	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function (err) {
 		if (err) {
@@ -144,15 +152,18 @@ generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index) {
 			return;
 		}
 		// recursive call to generate the next size
-		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index+1);
+		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index+1, callback);
 	});
 };
 
-generateVideoThumbnails = function(infile, outfile, width, height, sizes, index) {
+generateVideoThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
-	if(index >= sizes.length) return;
+	if(index >= sizes.length) {
+		callback();
+		return;
+	}
 	
 	var aspect = width/height;
 	var size = sizes[index] + "x" + Math.round(sizes[index]/aspect);
@@ -171,7 +182,7 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index)
 				if (err) throw err;
 			});
 			// recursive call to generate the next size
-			generateVideoThumbnails(infile, outfile, width, height, sizes, index+1);
+			generateVideoThumbnails(infile, outfile, width, height, sizes, index+1, callback);
 		});
 	}).screenshots({
 		timestamps: ["10%"], 
@@ -181,11 +192,14 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index)
 	});
 };
 
-generateAppThumbnails = function(infile, outfile, color, sizes, index) {
+generateAppThumbnails = function(infile, outfile, color, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
-	if(index >= sizes.length) return;
+	if(index >= sizes.length) {
+		callback();
+		return;
+	}
 	
 	var radius = Math.round(sizes[index]/2);
 	var edge   = Math.round(sizes[index]/128);
@@ -200,11 +214,11 @@ generateAppThumbnails = function(infile, outfile, color, sizes, index) {
 			return;
 		}
 		// recursive call to generate the next size
-		generateAppThumbnails(infile, outfile, color, sizes, index+1)
+		generateAppThumbnails(infile, outfile, color, sizes, index+1, callback)
 	});
 };
 
-addFile = function(filename, exif) {
+addFile = function(filename, exif, callback) {
 	if (exif.MIMEType === 'application/vnd.adobe.photoshop')
 		exif.MIMEType = 'image/vnd.adobe.photoshop';
 	
@@ -221,17 +235,24 @@ addFile = function(filename, exif) {
 
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
-		generateImageThumbnails(filename, thumb, [1024, 512, 256]);
+		generateImageThumbnails(filename, thumb, [1024, 512, 256], null, function() {
+			callback();
+		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/pdf') {
-		generatePdfThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [1024, 512, 256]);
+		generatePdfThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [1024, 512, 256], null, function() {
+			callback();
+		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
-		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [1024, 512, 256]);
+		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [1024, 512, 256], null, function() {
+			callback();
+		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/custom') {
 		if (exif.icon === null || ! fs.existsSync(exif.icon) ) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
+			callback();
 		}
 		else {
 			// Path for the node server
@@ -280,7 +301,9 @@ addFile = function(filename, exif) {
 					b: Math.round(255 - ((255 - primaryColor.b) * tint))
 				};
 				
-				generateAppThumbnails(exif.icon, thumb, primaryTint, [1024, 512, 256]);
+				generateAppThumbnails(exif.icon, thumb, primaryTint, [1024, 512, 256], null, function() {
+					callback();
+				});
 			};
 			
 			imageMagick(exif.icon).command("convert").in("-colors", "32").in("-depth", "8").in("-format", "'%c'").toBuffer("histogram:info", primaryColorOfImage);
@@ -337,6 +360,14 @@ getDimensions = function (id) {
 		return null;
 };
 
+getTag = function (id, tag) {
+	id = path.resolve(id);
+	if (id in AllAssets.list)
+		return AllAssets.list[id].exif[tag];
+	else
+		return null;
+};
+
 getMimeType = function (id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list)
@@ -389,9 +420,10 @@ exifAsync = function(cmds, cb) {
 			
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 			
-			addFile(file, exif);
-			if (cmds.length) execNext();
-			else cb(null);
+			addFile(file, exif, function() {
+				if (cmds.length > 0) execNext();
+				else cb(null);
+			});
 		}
 		else {
 			exiftool.file(file, function(err,data) {
@@ -400,14 +432,15 @@ exifAsync = function(cmds, cb) {
 					cb(err);
 				} else {
 					console.log("EXIF> Adding " + data.FileName);
-					addFile(data.SourceFile, data);
-					if (cmds.length) execNext();
-					else cb(null);
+					addFile(data.SourceFile, data, function() {
+						if (cmds.length > 0) execNext();
+						else cb(null);
+					});
 				}
 			});
 		}
 	};
-	if (cmds.length>0) execNext();
+	if (cmds.length > 0) execNext();
 };
 
 // exifSync = function(cmds, cb) {
@@ -629,5 +662,6 @@ exports.deletePDF   = deletePDF;
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
 exports.getExifData   = getExifData;
+exports.getTag        = getTag;
 
 exports.setupBinaries = setupBinaries;
