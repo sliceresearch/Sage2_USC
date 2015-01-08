@@ -35,7 +35,10 @@ registryManager.prototype.initialize = function(assetsFolder) {
     this.db = new jsonDB(path.join(assetsFolder, this.registryFile), true, true);
 
     // Check if custom.type exists
-    mime.load(this.mimeFile);
+    if (!fs.existsSync(this.mimeFile)) {
+        fs.writeFileSync(this.mimeFile);
+    }
+    mime.load(path.join(this.mimeFile));
 
     this.scanNativeApps();
 }
