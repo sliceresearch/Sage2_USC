@@ -215,7 +215,7 @@ generateAppThumbnails = function(infile, outfile, color, sizes, index, callback)
 			return;
 		}
 		// recursive call to generate the next size
-		generateAppThumbnails(infile, outfile, color, sizes, index+1, callback)
+		generateAppThumbnails(infile, outfile, color, sizes, index+1, callback);
 	});
 };
 

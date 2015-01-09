@@ -41,7 +41,7 @@ registryManager.prototype.initialize = function(assetsFolder) {
     mime.load(path.join(this.mimeFile));
 
     this.scanNativeApps();
-}
+};
 
 registryManager.prototype.mimeRegister = function(fileType) {
     var type = mime.lookup(fileType);
@@ -55,7 +55,7 @@ registryManager.prototype.mimeRegister = function(fileType) {
         type = mime.lookup(fileType);
     }
     return type;
-}
+};
 
 registryManager.prototype.scanNativeApps = function() {
     var jsonString = fs.readFileSync(this.nativeAppsFile, 'utf8');
@@ -73,7 +73,7 @@ registryManager.prototype.scanNativeApps = function() {
             }
         }
     }
-}
+};
 
 registryManager.prototype.register = function(name, types, mime) {
     var type;
@@ -103,7 +103,7 @@ registryManager.prototype.register = function(name, types, mime) {
             this.push(type + '/default', name, true);
         }
     }
-}
+};
 
 registryManager.prototype.push = function(key, value, overwrite) {
     try {
@@ -112,7 +112,7 @@ registryManager.prototype.push = function(key, value, overwrite) {
         console.error(error);
     }
 
-}
+};
 
 registryManager.prototype.getDefaultApp = function(file) {
     var defaultApp = "";
@@ -123,9 +123,9 @@ registryManager.prototype.getDefaultApp = function(file) {
         console.error("No default app for " + file);
     }
     return defaultApp;
-}
+};
 
 registryManager.prototype.setDefaultApplication = function(app, type) {
-}
+};
 
 module.exports = new registryManager();

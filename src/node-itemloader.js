@@ -699,10 +699,9 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 };
 
 appLoader.prototype.loadApplication = function(appData, callback) {
-	var app = null;
+	var app = registry.getDefaultApp(appData.type);
 
 	if(appData.location === "file") {
-		app = registry.getDefaultApp(appData.type);
 
 		var dir = this.app2dir[app];
 
@@ -741,7 +740,6 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
-	    var app = registry.getDefaultApp(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
