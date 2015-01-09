@@ -1221,30 +1221,27 @@ function radialMenu(){
 		var maxRows = Math.floor((thumbWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize + thumbSpacer));
 		var maxCols = Math.floor((thumbWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize + thumbSpacer));
 		
-		var neededColumns = Math.ceil(this.imageThumbnailButtons.length / maxRows );
-		if( this.imageThumbnailButtons.length < maxRows )
-			neededColumns = maxRows;
-		
-		if( this.currentMenuState === 'pdfThumbnailWindow' )
+		var neededColumns = maxRows;
+
+		if( this.currentMenuState === 'imageThumbnailWindow' )
+		{
+			if( this.imageThumbnailButtons.length > maxRows )
+				neededColumns = Math.ceil(this.imageThumbnailButtons.length / maxRows );
+		}
+		else if( this.currentMenuState === 'pdfThumbnailWindow' )
 		{
 			if( this.pdfThumbnailButtons.length > maxRows )
 				neededColumns = Math.ceil(this.pdfThumbnailButtons.length / maxRows );
-			else
-				neededColumns = maxRows;
 		}
 		else if( this.currentMenuState === 'videoThumbnailWindow' )
 		{
 			if( this.videoThumbnailButtons.length > maxRows )
 				neededColumns = Math.ceil(this.videoThumbnailButtons.length / maxRows );
-			else
-				neededColumns = maxRows;
 		}
 		else if( this.currentMenuState === 'sessionThumbnailWindow' )
 		{
 			if( this.sessionThumbnailButtons.length > maxRows )
 				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows );
-			else
-				neededColumns = maxRows;
 		}
 			
 		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer);
@@ -1279,7 +1276,7 @@ function radialMenu(){
 		}
 
 		if( this.currentMenuState === 'sessionThumbnailWindow' )
-			this.setThumbnailPosition( this.sessionThumbnailButtons, imageThumbSize * 2, thumbSpacer, maxRows, neededColumns );
+			this.setThumbnailPosition( this.sessionThumbnailButtons, imageThumbSize, thumbSpacer, maxRows, neededColumns );
 
 	};
 
