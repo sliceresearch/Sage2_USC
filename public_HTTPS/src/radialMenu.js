@@ -1225,22 +1225,22 @@ function radialMenu(){
 
 		if( this.currentMenuState === 'imageThumbnailWindow' )
 		{
-			if( this.imageThumbnailButtons.length > maxRows )
+			if( this.imageThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.imageThumbnailButtons.length / maxRows );
 		}
 		else if( this.currentMenuState === 'pdfThumbnailWindow' )
 		{
-			if( this.pdfThumbnailButtons.length > maxRows )
+			if( this.pdfThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.pdfThumbnailButtons.length / maxRows );
 		}
 		else if( this.currentMenuState === 'videoThumbnailWindow' )
 		{
-			if( this.videoThumbnailButtons.length > maxRows )
+			if( this.videoThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.videoThumbnailButtons.length / maxRows );
 		}
 		else if( this.currentMenuState === 'sessionThumbnailWindow' )
 		{
-			if( this.sessionThumbnailButtons.length > maxRows )
+			if( this.sessionThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows );
 		}
 			

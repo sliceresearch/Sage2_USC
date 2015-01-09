@@ -79,7 +79,7 @@ stickyItems.prototype.getStickingItems = function(elemId){
 	if (this.stickyItemParent[elemId])
 		return this.stickyItemParent[elemId];
 	return [];
-}
+};
 module.exports = stickyItems;
 
 

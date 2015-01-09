@@ -1,0 +1,45 @@
+{
+    "applications": [
+        {
+            "name": "pdf_viewer",
+            "types": [
+                "application/pdf"
+            ]
+        },
+        {
+            "name": "image_viewer",
+            "types": [
+                "image/jpeg",
+                "image/webp",
+                "image/png",
+                "image/bmp",
+                "image/tiff",
+                "image/svg+xml",
+                "image/vnd.adobe.photoshop"
+            ]
+        },
+        {
+            "name": "movie_player",
+            "types": [
+                "video/mp4",
+                "video/x-m4v",
+                "video/webm",
+                "video/youtube"
+            ]
+        },
+        {
+            "name": "custom_app",
+            "types": [
+                "application/zip",
+                "application/x-zip-compressed",
+                "application/custom"
+            ]
+        },
+        {
+            "name": "media_stream",
+            "types": [
+                "application/stream"
+            ]
+        }
+    ]
+}
