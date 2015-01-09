@@ -1570,7 +1570,7 @@ function wsLoadFileFromServer(wsio, data) {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
 					start = Date.now();
 				});
-				videohandle.on('stop', function() {
+				videohandle.on('end', function() {
 					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
 				});
 				videohandle.on('frame', function(frameIdx, buffer) {

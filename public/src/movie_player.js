@@ -12,8 +12,9 @@ var movie_player = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 		
-		this.moveEvents   = "continuous";
-		this.resizeEvents = "continuous";
+		this.moveEvents     = "continuous";
+		this.resizeEvents   = "continuous";
+		this.enableControls = true;
 		
 		this.gl               = null;
 		this.shaderProgram    = null;
@@ -31,6 +32,8 @@ var movie_player = SAGE2_App.extend( {
 		this.newBlockList     = null;
 		this.validBlocks      = [];
 		this.receivedBlocks   = [];
+		
+		this.state.frame = 0;
 	
 		this.squareVertexPositionBuffer     = [];
 		this.squareVertexTextureCoordBuffer = [];
@@ -43,21 +46,46 @@ var movie_player = SAGE2_App.extend( {
 		
 		// application specific 'init'
 		this.maxSize = 128; // block size
-		this.appX = x;
-		this.appY = y;
-		this.appW = width;
-		this.appH = height;
 		
 		this.initGL();
 		if(this.gl){
+			this.div.style.backgroundColor = "#000000";
+			
 			this.gl.clearColor(0.5, 0.5, 0.5, 1.0);
-			
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-			
 			this.initShaders(function() {
 				// shaders compiled
 			});
 		}
+	},
+	
+	initWidgets: function() {
+		var _this = this;
+		
+		this.controls.addButton({type: "fastforward", sequenceNo: 2, action: function(date) {
+			
+		}});
+		this.controls.addButton({type: "rewind", sequenceNo: 4, action: function(date) {
+			
+		}});
+		this.controls.addButton({type: "prev", sequenceNo: 8, action: function(date) {
+			if(isMaster) {
+				console.log("play: " + _this.div.id);
+				wsio.emit('playVideo', {id: _this.div.id});
+			}
+		}});
+		this.controls.addButton({type: "next", sequenceNo: 10,action: function(date) {
+			if(isMaster) {
+				console.log("pause: " + _this.div.id);
+				wsio.emit('pauseVideo', {id: _this.div.id});
+			}
+		}});
+		this.controls.addSeparatorAfterButtons(1, 10); // This neatly forms an X out of the four spokes.
+		
+		this.controls.addSlider({begin: 1, end: this.video.numframes, increments: 1, appHandle: this, property: "state.frame", action: function(date) {
+			
+		}});
+		this.controls.finishedAddingControls();
 	},
 	
 	initGL: function() {
@@ -328,6 +356,7 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.initBuffers();
 		this.initTextures();
+		this.initWidgets();
 	},
 	
 	draw: function(date) {
@@ -373,17 +402,15 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		this.appW = this.element.width;
-		this.appH = this.element.height;
-		
 		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+		this.refresh(date);
 	},
 	
 	moved: function(px, py, wx, wy, date) {
 		// px, py : position in wall coordination
 		// wx, wy : width and height of the wall
-		this.appX = px - ui.offsetX;
-		this.appY = py + ui.titleBarHeight - ui.offsetY;
+		
+		this.refresh(date);
 	},
 	
 	event: function(type, position, user, data, date) {
