@@ -45,13 +45,6 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 	this.displayHeight = displayHeight;
 	this.titleBarHeight = titleBarHeight;
 
-    this.app2dir = {
-    	"image_viewer": "images",
-    	"movie_player": "videos",
-    	"pdf_viewer": "pdfs",
-    	"custom_app": "apps"
-    };
-
 	imageMagick = gm.subClass(imConstraints);
 }
 
@@ -628,7 +621,7 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var app = file.application;
-	var dir = this.app2dir[app];
+	var dir = registry.getDirectory(file.filename);
 
 	var url = path.join("uploads", dir, file.filename);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
@@ -645,12 +638,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var app = registry.getDefaultApp(file.name);
 	if (app === undefined || app === "") { callback(null); return; }
 
-    // XXX
-    var dir = "";
-    //var dir = this.app2dir[app];
-    //if (dir === null || dir === undefined || dir === "") {
-    //    dir = this.registryManager.type2dir[mime_type];
-    //}
+    var dir = registry.getDirectory(file.name);
 
 	var _this = this;
     if (!fs.existsSync(path.join(this.publicDir, "uploads", dir))) {
@@ -703,7 +691,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 
 	if(appData.location === "file") {
 
-		var dir = this.app2dir[app];
+		var dir = registry.getDirectory(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {

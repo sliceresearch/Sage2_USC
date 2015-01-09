@@ -69,13 +69,13 @@ registryManager.prototype.scanNativeApps = function() {
             var app = nativeApps.applications[i];
             if (app.name !== undefined && app.name !== null && app.name !== "" &&
                 app.types !== undefined && app.types !== null && Array.isArray(app.types) ) {
-                this.register(app.name, app.types, true);
+                this.register(app.name, app.types, app.directory, true);
             }
         }
     }
 };
 
-registryManager.prototype.register = function(name, types, mime) {
+registryManager.prototype.register = function(name, types, directory, mime) {
     var type;
     for(var i=0; i<types.length; i++) {
         
@@ -95,6 +95,7 @@ registryManager.prototype.register = function(name, types, mime) {
             // Entry does not exist. Add it.
             this.push(type, newApp, false);
         }
+        this.push(type + '/directory', directory, true);
 
 
         try {
@@ -123,6 +124,18 @@ registryManager.prototype.getDefaultApp = function(file) {
         console.error("No default app for " + file);
     }
     return defaultApp;
+};
+
+registryManager.prototype.getDirectory = function(file) {
+    var dir = "";
+    var type = '/' + mime.lookup(file);
+    try {
+        dir = this.db.getData(type + '/directory');
+    } catch(error) {
+        console.error("No directory for " + file);
+    }
+    return dir;
+
 };
 
 registryManager.prototype.setDefaultApplication = function(app, type) {

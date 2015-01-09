@@ -418,9 +418,11 @@ exifAsync = function(cmds, cb) {
 			if (instructions.keywords !== undefined && instructions.keywords !== null && Array.isArray(instructions.keywords) )
 				metadata.keywords = instructions.keywords;
 			else metadata.keywords = [];
-			if(instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes)) {
-				metadata.fileTypes = instructions.fileTypes;
-				registry.register(app, instructions.fileTypes, false);
+			if(instructions.fileTypes !== undefined && instructions.fileTypes !== null && Array.isArray(instructions.fileTypes)
+					&& instructions.directory !== undefined && instructions.directory !== null && instructions.directory !== "") {
+						metadata.fileTypes = instructions.fileTypes;
+						metadata.directory = instructions.directory;
+						registry.register(app, instructions.fileTypes, instructions.directory, false);
 			} else metadata.fileTypes = [];
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
