@@ -173,10 +173,10 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 
 // global variables for various paths
-var public_https = "public_HTTPS"; // directory where HTTPS content is stored
+var public_dir = "public"; // directory where HTTPS content is stored
 var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" 
 		: "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
-var uploadsFolder = path.join(public_https, "uploads"); // directory where files are uploaded
+var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
 var itemCount = 0;
@@ -214,7 +214,7 @@ if (!fs.existsSync(sessionFolder)) {
 // Build the list of existing assets
 assets.initialize(uploadsFolder, 'uploads');
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight,
+var appLoader = new loader(public_dir, hostOrigin, config.totalWidth, config.totalHeight,
 						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
 						imConstraints, ffmpegOptions);
 var applications = [];
@@ -227,13 +227,13 @@ var videoHandles = {};
 setupDisplayBackground();
 
 
-// create HTTP server for index page (Table of Contents)
-var httpServerIndex = new httpserver("public_HTTP");
+// create HTTP server for insecure content
+var httpServerIndex = new httpserver(public_dir);
 httpServerIndex.httpGET('/config', sendConfig); // send config object to client using http request
 
 
-// create HTTPS server for all SAGE content
-var httpsServerApp = new httpserver("public_HTTPS");
+// create HTTPS server for secure content
+var httpsServerApp = new httpserver(public_dir);
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
 httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
@@ -2057,7 +2057,7 @@ function setupDisplayBackground() {
 
 	// background image
 	if(config.background.image !== undefined && config.background.image.url !== undefined){
-		var bg_file = path.join(public_https, config.background.image.url);
+		var bg_file = path.join(public_dir, config.background.image.url);
 
 		if (config.background.image.style === "tile") {
 			// do nothing
@@ -2075,7 +2075,7 @@ function setupDisplayBackground() {
 					sliceBackgroundImage(bg_file, bg_file);
 				}
 				else {
-					tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
+					tmpImg = path.join(public_dir, "images", "background", "tmp_background.png");
 					var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 			
 					imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
@@ -2088,7 +2088,7 @@ function setupDisplayBackground() {
 		else {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
-			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
+			tmpImg = path.join(public_dir, "images", "background", "tmp_background" + imgExt);
 		
 			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
