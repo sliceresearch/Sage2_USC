@@ -171,7 +171,7 @@ var movie_player = SAGE2_App.extend( {
 				var bWidth  = (j+1)*this.maxSize > this.video.width  ? this.video.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.video.height ? this.video.height-(i*this.maxSize) : this.maxSize;
 				var bX = j*this.maxSize;
-				var bY = (i)*this.maxSize;
+				var bY = i*this.maxSize;
 				
 				var left   =  (bX         /this.video.width *2.0) - 1.0;
 				var right  = ((bX+bWidth) /this.video.width *2.0) - 1.0;
@@ -375,6 +375,8 @@ var movie_player = SAGE2_App.extend( {
 	resize: function(date) {
 		this.appW = this.element.width;
 		this.appH = this.element.height;
+		
+		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 	},
 	
 	moved: function(px, py, wx, wy, date) {

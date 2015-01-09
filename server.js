@@ -2693,6 +2693,16 @@ function findAppUnderPointer(pointerX, pointerY) {
 	return null;
 }
 
+function findAppById(id) {
+	var i;
+	for(i=0; i<applications.length; i++) {
+		if(applications[i].id === id){
+			return applications[i];
+		}
+	}
+	return null;
+}
+
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
@@ -3234,10 +3244,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
 
 		if(updatedMoveItem !== null){
+			var updatedApp = findAppById(updatedMoveItem.elemId);
 			//Attach the app to the background app if it is sticky
 			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 			for (var idx=0;idx<updatedStickyItems.length;idx++){
 				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3245,6 +3257,8 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		}
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
+			var updatedApp = findAppById(updatedResizeItem.elemId);
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		}
 		// update hover corner (for resize)
 		else{
@@ -3303,9 +3317,11 @@ function pointerPosition( uniqueID, data ) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if(updatedItem !== null){
+		var updatedApp = findAppById(updatedItem.elemId);
 		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
 		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 		for (var idx=0;idx<updatedStickyItems.length;idx++){
 			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3359,7 +3375,9 @@ function pointerScroll( uniqueID, data ) {
 	
 		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
 		if(updatedItem !== null){
+			var updatedApp = findAppById(updatedItem.elemId);
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 
 			if(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] !== undefined){
 				clearTimeout(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId]);
