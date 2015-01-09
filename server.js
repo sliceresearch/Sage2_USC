@@ -1566,9 +1566,32 @@ function wsLoadFileFromServer(wsio, data) {
 				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
 				var start = null;
 				
+				videohandle.on('start', function() {
+					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
+					start = Date.now();
+				});
+				videohandle.on('stop', function() {
+					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
+				});
+				videohandle.on('frame', function(frameIdx, buffer) {
+					videoHandles[appInstance.id].frameIdx = frameIdx;
+					var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.native_width, appInstance.native_height, blocksize);
+	
+					var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
+					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
+					var dateBuffer = intToByteBuffer(Date.now(), 8);
+					for(i=0; i<blockBuffers.length; i++){
+						var blockIdxBuffer = intToByteBuffer(i, 2);
+						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+					}
+	
+					handleNewVideoFrame(videoHandles[appInstance.id]);
+				});
+				
+				/*
 				videohandle.onstartdecode = function() {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
-					start = Date.now()
+					start = Date.now();
 				};
 				videohandle.onstopdecode = function(err, finish) {
 					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
@@ -1587,6 +1610,7 @@ function wsLoadFileFromServer(wsio, data) {
 	
 					handleNewVideoFrame(videoHandles[appInstance.id]);
 				};
+				*/
 				
 				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
 				
@@ -1764,13 +1788,15 @@ function wsOpenNewWebpage(wsio, data) {
 function wsPlayVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.startLiveDecoding();
+	//videoHandles[data.id].decoder.startLiveDecoding();
+	videoHandles[data.id].decoder.play();
 }
 
 function wsPauseVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.pauseLiveDecoding();
+	//videoHandles[data.id].decoder.pauseLiveDecoding();
+	videoHandles[data.id].decoder.pause();
 }
 
 function wsUpdateVideoTime(wsio, data) {
