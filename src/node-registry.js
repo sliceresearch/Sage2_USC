@@ -126,6 +126,16 @@ registryManager.prototype.getDefaultApp = function(file) {
     return defaultApp;
 };
 
+registryManager.prototype.getDefaultAppFromMime = function(type) {
+    var defaultApp = "";
+    try {
+        defaultApp = this.db.getData('/' + type + '/default');
+    } catch(error) {
+        console.error("No default app for " + type);
+    }
+    return defaultApp;
+};
+
 registryManager.prototype.getDirectory = function(file) {
     var dir = "";
     var type = '/' + mime.lookup(file);

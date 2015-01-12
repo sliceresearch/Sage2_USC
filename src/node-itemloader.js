@@ -118,6 +118,8 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	var _this = this;
 
+	console.log('appLoader.prototype.loadYoutubeFromURL: ' , url);
+
 	ytdl.getInfo(url, function(err, info){
 		if(err) throw err;
 
@@ -135,6 +137,8 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 		var aspectRatio = 16/9;
 		var resolutionY = mp4.resolution;
 		var resolutionX = resolutionY * aspectRatio;
+
+	console.log('VIDEO', info.formats[mp4.index].url, name, resolutionX, resolutionY);
 
 		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
 			function(appInstance) {
@@ -708,10 +712,10 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 };
 
 appLoader.prototype.loadApplication = function(appData, callback) {
-	var app = registry.getDefaultApp(appData.type);
 
 	if(appData.location === "file") {
 
+		app = registry.getDefaultApp(appData.type);
 		var dir = registry.getDirectory(appData.type);
 
 		if(app === "image_viewer"){
@@ -749,6 +753,8 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
+
+		app = registry.getDefaultAppFromMime(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
