@@ -13,17 +13,18 @@
  */
 
 
-var fs        = require('fs');
-var path      = require('path');
-var url       = require('url');
+var fs           = require('fs');
+var path         = require('path');
+var url          = require('url');
 
-var unzip     = require('decompress-zip');
-var gm        = require('gm');
-var mime      = require('mime');
-var request   = require('request');
-var ytdl      = require('ytdl-core');
+var unzip        = require('decompress-zip');
+var gm           = require('gm');
+var mime         = require('mime');
+var request      = require('request');
+var videodemuxer = require('node-demux');                    // decodes video to raw frames
+var ytdl         = require('ytdl-core');
 
-var videodecoder = require('../src/node-livevideodecoder');  // decodes video to raw frames
+//var videodecoder = require('../src/node-livevideodecoder');  // decodes video to raw frames
 var exiftool     = require('../src/node-exiftool');          // gets exif tags for images
 var assets       = require('../src/node-assets');            // asset management
 
@@ -341,8 +342,50 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 
 appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
-	var video = new videodecoder({ffmpegPath: this.ffmpegPath});
+	var video = new videodemuxer();
+	video.on('metadata', function(data) {
+		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
+		var exif = assets.getExifData(file);
+		
+		var appInstance = {
+			id: null,
+			title: name,
+			application: "movie_player",
+			icon: exif.SAGE2thumbnail,
+			type: mime_type,
+			url: external_url,
+			data: {
+				width: data.width,
+				height: data.height,
+				play: false,
+				frame: 0,
+				numframes: data.num_frames,
+				framerate: data.frame_rate
+			},
+			resrc: null,
+			left:  _this.titleBarHeight,
+			top:   1.5 * _this.titleBarHeight,
+			width:  data.width,
+			height: data.height,
+			native_width:    data.width,
+			native_height:   data.height,
+			previous_left:   null,
+			previous_top:    null,
+			previous_width:  null,
+			previous_height: null,
+			maximized:       false,
+			aspect:          data.width / data.height,
+			animation:       false,
+			metadata:        metadata,
+			date:            new Date()
+		};
+		_this.scaleAppToFitDisplay(appInstance);
+		callback(appInstance, video);
+	});
+	video.load(file);
 	
+	/*
+	var video = new videodecoder({ffmpegPath: this.ffmpegPath});
 	video.onmetadata = function(err, data) {
 		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
 		var exif = assets.getExifData(file);
@@ -384,6 +427,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	};
 	
 	video.initializeLiveDecoder(file);
+	*/
 };
 
 

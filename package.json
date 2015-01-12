@@ -51,6 +51,7 @@
 		"jshint": "latest",
 		"json5": "latest",
 		"mime": "latest",
+		"node-demux": "latest",
 		"qr-image": "latest",
 		"request": "latest",
 		"sprint": "^0.3.1",

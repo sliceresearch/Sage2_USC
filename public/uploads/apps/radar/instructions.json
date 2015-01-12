@@ -9,7 +9,7 @@
 		"radarStations.js"
 	],
 	"title": "Radar Maps",
-	"version": "1.0.1",
+	"version": "1.2",
 	"description": "Radar maps of various locations",
 	"keywords": [ "maps", "d3", "geo", "weather" ],
 	"author": "Andrew Johnson <lenzman@me.com>",

@@ -173,10 +173,10 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 
 // global variables for various paths
-var public_https = "public_HTTPS"; // directory where HTTPS content is stored
+var public_dir = "public"; // directory where HTTPS content is stored
 var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" 
 		: "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
-var uploadsFolder = path.join(public_https, "uploads"); // directory where files are uploaded
+var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
 var itemCount = 0;
@@ -214,7 +214,7 @@ if (!fs.existsSync(sessionFolder)) {
 // Build the list of existing assets
 assets.initialize(uploadsFolder, 'uploads');
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight,
+var appLoader = new loader(public_dir, hostOrigin, config.totalWidth, config.totalHeight,
 						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
 						imConstraints, ffmpegOptions);
 var applications = [];
@@ -227,13 +227,13 @@ var videoHandles = {};
 setupDisplayBackground();
 
 
-// create HTTP server for index page (Table of Contents)
-var httpServerIndex = new httpserver("public_HTTP");
+// create HTTP server for insecure content
+var httpServerIndex = new httpserver(public_dir);
 httpServerIndex.httpGET('/config', sendConfig); // send config object to client using http request
 
 
-// create HTTPS server for all SAGE content
-var httpsServerApp = new httpserver("public_HTTPS");
+// create HTTPS server for secure content
+var httpsServerApp = new httpserver(public_dir);
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
 httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
@@ -250,9 +250,15 @@ var startTime = new Date();
 
 
 // creates a WebSocket server - 2 way communication between server and all browser clients
-var wsioServer = new websocketIO.Server({server: server});
+var wsioServer  = new websocketIO.Server({server: index});
+var wsioServerS = new websocketIO.Server({server: server});
 
 wsioServer.onconnection(function(wsio) {
+	wsio.onclose(closeWebSocketClient);
+	wsio.on('addClient', wsAddClient);
+});
+
+wsioServerS.onconnection(function(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
 });
@@ -1560,9 +1566,32 @@ function wsLoadFileFromServer(wsio, data) {
 				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
 				var start = null;
 				
+				videohandle.on('start', function() {
+					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
+					start = Date.now();
+				});
+				videohandle.on('end', function() {
+					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
+				});
+				videohandle.on('frame', function(frameIdx, buffer) {
+					videoHandles[appInstance.id].frameIdx = frameIdx;
+					var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.native_width, appInstance.native_height, blocksize);
+	
+					var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
+					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
+					var dateBuffer = intToByteBuffer(Date.now(), 8);
+					for(i=0; i<blockBuffers.length; i++){
+						var blockIdxBuffer = intToByteBuffer(i, 2);
+						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+					}
+	
+					handleNewVideoFrame(videoHandles[appInstance.id]);
+				});
+				
+				/*
 				videohandle.onstartdecode = function() {
 					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
-					start = Date.now()
+					start = Date.now();
 				};
 				videohandle.onstopdecode = function(err, finish) {
 					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
@@ -1581,6 +1610,7 @@ function wsLoadFileFromServer(wsio, data) {
 	
 					handleNewVideoFrame(videoHandles[appInstance.id]);
 				};
+				*/
 				
 				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
 				
@@ -1758,13 +1788,15 @@ function wsOpenNewWebpage(wsio, data) {
 function wsPlayVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.startLiveDecoding();
+	//videoHandles[data.id].decoder.startLiveDecoding();
+	videoHandles[data.id].decoder.play();
 }
 
 function wsPauseVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.pauseLiveDecoding();
+	//videoHandles[data.id].decoder.pauseLiveDecoding();
+	videoHandles[data.id].decoder.pause();
 }
 
 function wsUpdateVideoTime(wsio, data) {
@@ -2051,7 +2083,7 @@ function setupDisplayBackground() {
 
 	// background image
 	if(config.background.image !== undefined && config.background.image.url !== undefined){
-		var bg_file = path.join(public_https, config.background.image.url);
+		var bg_file = path.join(public_dir, config.background.image.url);
 
 		if (config.background.image.style === "tile") {
 			// do nothing
@@ -2069,7 +2101,7 @@ function setupDisplayBackground() {
 					sliceBackgroundImage(bg_file, bg_file);
 				}
 				else {
-					tmpImg = path.join(public_https, "images", "background", "tmp_background.png");
+					tmpImg = path.join(public_dir, "images", "background", "tmp_background.png");
 					var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 			
 					imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err) {
@@ -2082,7 +2114,7 @@ function setupDisplayBackground() {
 		else {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
-			tmpImg = path.join(public_https, "images", "background", "tmp_background" + imgExt);
+			tmpImg = path.join(public_dir, "images", "background", "tmp_background" + imgExt);
 		
 			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
@@ -2661,6 +2693,16 @@ function findAppUnderPointer(pointerX, pointerY) {
 	return null;
 }
 
+function findAppById(id) {
+	var i;
+	for(i=0; i<applications.length; i++) {
+		if(applications[i].id === id){
+			return applications[i];
+		}
+	}
+	return null;
+}
+
 function findControlsUnderPointer(pointerX, pointerY) {
 	for(var i=controls.length-1; i>=0; i--){
 		if (controls[i]!== null && pointerX >= controls[i].left && pointerX <= (controls[i].left+controls[i].width) && pointerY >= controls[i].top && pointerY <= (controls[i].top+controls[i].height)){
@@ -3202,10 +3244,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
 
 		if(updatedMoveItem !== null){
+			var updatedApp = findAppById(updatedMoveItem.elemId);
 			//Attach the app to the background app if it is sticky
 			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 			for (var idx=0;idx<updatedStickyItems.length;idx++){
 				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3213,6 +3257,8 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		}
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
+			var updatedApp = findAppById(updatedResizeItem.elemId);
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		}
 		// update hover corner (for resize)
 		else{
@@ -3271,9 +3317,11 @@ function pointerPosition( uniqueID, data ) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if(updatedItem !== null){
+		var updatedApp = findAppById(updatedItem.elemId);
 		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
 		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 		for (var idx=0;idx<updatedStickyItems.length;idx++){
 			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3327,7 +3375,9 @@ function pointerScroll( uniqueID, data ) {
 	
 		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
 		if(updatedItem !== null){
+			var updatedApp = findAppById(updatedItem.elemId);
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 
 			if(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] !== undefined){
 				clearTimeout(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId]);
