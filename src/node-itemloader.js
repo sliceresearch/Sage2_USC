@@ -614,7 +614,7 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
 
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance) {
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false}, function(appInstance) {
 		callback(appInstance);
 	});
 };
