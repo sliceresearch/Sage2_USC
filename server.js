@@ -3606,34 +3606,42 @@ function updateRadialMenu( uniqueID )
 function radialMenuEvent( data )
 {
 	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
-	
-	var radialMenu = radialMenus[data.id+"_menu"];
-	if( radialMenu !== undefined )
+	for (var key in radialMenus)
 	{
-		
-		if( radialMenu.onEvent( data ) )
+		var radialMenu = radialMenus[key];
+		//console.log(data.id+"_menu: " + radialMenu);
+		if( radialMenu !== undefined )
 		{
-			// Broadcast event if event is in radial menu bounding box
-			broadcast('radialMenuEvent', data, 'receivesPointerData');
+			if( radialMenu.onEvent( data ) )
+			{
+				// Broadcast event if event is in radial menu bounding box
+				broadcast('radialMenuEvent', data, 'receivesPointerData');
+			}
+			
+			if( radialMenu.hasEventID(data.id) )
+			{
+				return true;
+			}
 		}
-		
-		if( radialMenu.hasEventID(data.id) )
-		{
-			return true;
-		}
-		else
-			return false;
 	}
+	
+	return false;
 }
 
 // Special case: just check if event is over menu (used for one-time events that don't use a start/end event)
 function isEventOnMenu( data )
 {
-	var radialMenu = radialMenus[data.id+"_menu"];
-	if( radialMenu !== undefined )
-		return radialMenu.isEventOnMenu( data );
-	else
-		return false;
+	var overMenu = false;
+	for (var key in radialMenus)
+	{
+		var radialMenu = radialMenus[key];
+		if( radialMenu !== undefined )
+			overMenu =  radialMenu.isEventOnMenu( data );
+			
+		if( overMenu )
+			return true;
+	}
+	return false;
 }
 
 function wsRemoveRadialMenu( wsio, data ) {

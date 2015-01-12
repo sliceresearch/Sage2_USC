@@ -284,7 +284,7 @@ omicronManager.prototype.runTracker = function()
 			
 			// Appending sourceID to pointer address ID
 			var address = rinfo.address+":"+sourceID;
-			
+				
 			// ServiceTypePointer //////////////////////////////////////////////////
 			if ( serviceType === 0 )
 			{  
