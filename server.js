@@ -213,9 +213,7 @@ if (!fs.existsSync(sessionFolder)) {
 // Build the list of existing assets
 assets.initialize(uploadsFolder, 'uploads');
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight,
-						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
-						imConstraints);
+var appLoader = new loader(public_https, hostOrigin, config, imConstraints);
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};

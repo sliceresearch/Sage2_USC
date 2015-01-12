@@ -38,12 +38,13 @@ function encodeReservedURL(url) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarHeight, imConstraints) {
-	this.publicDir = publicDir;
-	this.hostOrigin = hostOrigin;
-	this.displayWidth = displayWidth;
-	this.displayHeight = displayHeight;
-	this.titleBarHeight = titleBarHeight;
+function appLoader(publicDir, hostOrigin, config, imConstraints) {
+	this.publicDir      = publicDir;
+	this.hostOrigin     = hostOrigin;
+	this.configuration  = config;
+	this.displayWidth   = config.totalWidth;
+	this.displayHeight  = config.totalHeight;
+	this.titleBarHeight = (config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight;
 
 	imageMagick = gm.subClass(imConstraints);
 }
@@ -52,9 +53,10 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 
 
 appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
-	var wallRatio = this.displayWidth / (this.displayHeight-this.titleBarHeight);
-	var iWidth    = appInstance.native_width;
-	var iHeight   = appInstance.native_height;
+	var wallRatio   = this.displayWidth / (this.displayHeight-this.titleBarHeight);
+	var iWidth      = appInstance.native_width;
+	var iHeight     = appInstance.native_height;
+	var aspectRatio = iWidth / iHeight;
 	// Image wider than wall
 	if(iWidth > (this.displayWidth - (2*this.titleBarHeight)) && appInstance.aspect >= wallRatio) {
 		// Image wider than wall
@@ -68,7 +70,25 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 		iWidth  = iHeight*appInstance.aspect;
 	}
 
-	appInstance.width = iWidth;
+	// Check against min dimensions
+	if(iWidth < this.configuration.ui.minWindowWidth){
+		iWidth  = this.configuration.ui.minWindowWidth;
+		iHeight = iWidth / aspectRatio;
+	}
+	if(iWidth > this.configuration.ui.maxWindowWidth){
+		iWidth  = this.configuration.ui.maxWindowWidth;
+		iHeight = iWidth / aspectRatio;
+	}
+	if(iHeight < this.configuration.ui.minWindowHeight){
+		iHeight = this.configuration.ui.minWindowHeight;
+		iWidth  = iHeight * aspectRatio;
+	}
+	if(iHeight > this.configuration.ui.maxWindowHeight){
+		iHeight = this.configuration.ui.maxWindowHeight;
+		iWidth  = iHeight * aspectRatio;
+	}
+
+	appInstance.width  = iWidth;
 	appInstance.height = iHeight;
 };
 
@@ -189,6 +209,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 
 
 appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, exif_data, callback) {
+
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
 
