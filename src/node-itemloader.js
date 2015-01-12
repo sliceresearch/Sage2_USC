@@ -105,6 +105,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 				if (info.ImageWidth && info.ImageHeight) {
 					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
 						function(appInstance) {
+							_this.scaleAppToFitDisplay(appInstance);
 							callback(appInstance);
 						}
 					);
@@ -117,8 +118,6 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 
 appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	var _this = this;
-
-	console.log('appLoader.prototype.loadYoutubeFromURL: ' , url);
 
 	ytdl.getInfo(url, function(err, info){
 		if(err) throw err;
@@ -138,10 +137,9 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 		var resolutionY = mp4.resolution;
 		var resolutionX = resolutionY * aspectRatio;
 
-	console.log('VIDEO', info.formats[mp4.index].url, name, resolutionX, resolutionY);
-
 		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
 			function(appInstance) {
+				_this.scaleAppToFitDisplay(appInstance);
 				callback(appInstance);
 		});
 	});

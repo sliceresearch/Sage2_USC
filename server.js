@@ -3642,3 +3642,4 @@ function attachAppIfSticky(backgroundItem, appId){
 	if (backgroundItem !== null)
 		stickyAppHandler.attachStickyItem(backgroundItem,app);
 }
+
