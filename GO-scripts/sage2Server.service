@@ -11,7 +11,7 @@ After=multi-user.target
 Wants=display-manager.service
 
 [Service]
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node server.js -i
 WorkingDirectory=/home/sage/sage2
 User=sage
 Group=users

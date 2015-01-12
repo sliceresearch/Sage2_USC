@@ -129,16 +129,30 @@
 
 			// Show plugin version
 			pluginVersion = document.getElementById('pluginVersion');
-			pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
+			if (plugin.version)
+				pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
+			else
+				pluginVersion.innerHTML = "Plugin Version: n/a";
 
 			var pluginInformation = document.getElementById('pluginInformation');
-			var isWacom      = plugin.penAPI.isWacom;
-			var version      = plugin.penAPI.version;
-			var tabletModel  = plugin.penAPI.tabletModel;
-			var info         = "Plugin information: isWacom:" + isWacom;
-			info += " version:" + version;
-			info += " tabletModel:" + tabletModel;
-			pluginInformation.innerHTML = info;
+
+			var isWacom, version, tabletModel, info;
+			if (plugin.penAPI) {
+				isWacom      = plugin.penAPI.isWacom;
+				version      = plugin.penAPI.version;
+				tabletModel  = plugin.penAPI.tabletModel;
+				info  = "Plugin information: isWacom:" + isWacom;
+				info += " version:" + version;
+				info += " tabletModel:" + tabletModel;
+				pluginInformation.innerHTML = info;
+			} else {
+				isWacom      = false;
+				version      = 0;
+				tabletModel  = "n/a";
+				info  = "Plugin information n/a";
+				pluginInformation.innerHTML = info;
+			}
+
 
 			// Toolbar
 			var uiStage = new Kinetic.Stage({
