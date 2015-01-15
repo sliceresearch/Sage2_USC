@@ -19,6 +19,69 @@
 var SAGE2_version = require('../package.json').version;
 var exec   = require('child_process').exec;
 var path   = require('path');
+var fs     = require('fs');                  // filesystem access
+var crypto = require('crypto');              // https encryption
+var tls    = require('tls');                 // https encryption
+var semver = require('semver');              // parse version numbers
+
+
+/**
+ * Parse nodejs version number
+ */
+
+var _NODE_VERSION = 0;
+if ( semver.gte(process.versions.node, '0.10.0') ) {
+	_NODE_VERSION = 10;
+	if ( semver.gte(process.versions.node, '0.11.0') )
+		_NODE_VERSION = 11;
+	if ( semver.gt(process.versions.node, '0.11.14') )
+		_NODE_VERSION = 1;
+} else {
+	console.error("Old version of Node.js. Please update");
+	process.exit(1);
+}
+console.log("Node version:", _NODE_VERSION.toString().red, '(', process.versions.node, ')');
+
+/**
+ * Test if file is exists and readable
+ *
+ * @method fileExists
+ * @param filename {String} name of the file to be tested
+ * @return {Bool} true if readable
+ */
+function fileExists(filename) {
+	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
+		return fs.existsSync(filename);
+	} else {
+		// Versions 1.x or above
+		try {
+			fs.accessSync(filename, fs.R_OK);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
+}
+
+/**
+ * Create a SSL context / credentials
+ *
+ * @method secureContext
+ * @param key {String} public key
+ * @param crt {String} private key
+ * @param ca  {String} CA key
+ * @return {Object} secure context
+ */
+function secureContext(key, crt, ca) {
+	if (_NODE_VERSION === 10) {
+		var ctx = crypto.createCredentials({key: key, cert: crt, ca: ca});
+		return ctx.context;
+	} else {
+		// Versions 11 or 1.x or above
+		var ctx = tls.createSecureContext({key: key, cert: crt, ca: ca});
+		return ctx.context;
+	}
+}
 
 
 /**
@@ -118,9 +181,12 @@ function compareTitle(a, b) {
 	return 0;
 }
 
+exports.nodeVersion     = _NODE_VERSION;
 exports.getShortVersion = getShortVersion;
 exports.getFullVersion  = getFullVersion;
 
+exports.secureContext   = secureContext;
+exports.fileExists      = fileExists;
 exports.compareString   = compareString;
 exports.compareFilename = compareFilename;
 exports.compareTitle    = compareTitle;

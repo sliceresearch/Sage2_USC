@@ -25,6 +25,7 @@ var ytdl      = require('ytdl-core');
 
 var exiftool  = require('../src/node-exiftool');      // gets exif tags for images
 var assets    = require('../src/node-assets');        // asset management
+var sageutils = require('../src/node-utils');         // provides utility functions
 
 var imageMagick;
 mime.default_type = "application/custom";
@@ -668,7 +669,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var localPath    = path.join(this.publicDir, url);
 
 	// Filename exists, then add date
-	if (fs.existsSync(localPath)) {
+	if (sageutils.fileExists(localPath)) {
 		// Add the date to filename
 		var filen  = file.name;
 		var splits = filen.split('.');
