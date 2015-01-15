@@ -73,14 +73,14 @@ function fileExists(filename) {
  * @return {Object} secure context
  */
 function secureContext(key, crt, ca) {
+	var ctx;
 	if (_NODE_VERSION === 10) {
-		var ctx = crypto.createCredentials({key: key, cert: crt, ca: ca});
-		return ctx.context;
+		ctx = crypto.createCredentials({key: key, cert: crt, ca: ca});
 	} else {
 		// Versions 11 or 1.x or above
-		var ctx = tls.createSecureContext({key: key, cert: crt, ca: ca});
-		return ctx.context;
+		ctx = tls.createSecureContext({key: key, cert: crt, ca: ca});
 	}
+	return ctx.context;
 }
 
 
