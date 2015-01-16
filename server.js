@@ -1695,7 +1695,7 @@ function calculateValidBlocks(app, blockSize) {
 				else {
 					var display = config.displays[videoHandles[app.id].clients[key].wsio.clientID];
 					var left = j*renderBlockSize + app.left;
-					var top  = i*renderBlockSize + app.top;
+					var top  = i*renderBlockSize + app.top + config.ui.titleBarHeight;
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
 					

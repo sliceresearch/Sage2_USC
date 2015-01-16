@@ -106,8 +106,8 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	initGL: function() {
-		this.gl = this.element.getContext("webgl");
-		if(!this.gl) this.gl = this.element.getContext("experimental-webgl");
+		this.gl = this.canvas.getContext("webgl");
+		if(!this.gl) this.gl = this.canvas.getContext("experimental-webgl");
 		if(!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
 	},
 	
@@ -422,11 +422,13 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resizeCanvas: function(x, y, width, height) {
-		
+		// must update this
+		this.canvas.width  = parseInt(this.element.style.width,  10);
+		this.canvas.height = parseInt(this.element.style.height, 10);
 	},
 	
 	resize: function(date) {
-		//this.resizeCanvas();
+		this.resizeCanvas();
 		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		
 		var left   = -1;
