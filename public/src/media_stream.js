@@ -15,9 +15,9 @@ var media_stream = SAGE2_App.extend( {
 		this.src = null;
 	},
 	
-	init: function(id, x, y, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "img", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "img", data);
 		
 		// application specific 'init'
 	},

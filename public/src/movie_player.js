@@ -42,13 +42,13 @@ var movie_player = SAGE2_App.extend( {
 		this.squareVertexIndexBuffer        = [];
 	},
 	
-	init: function(id, x, y, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		//arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 		this.canvas = document.createElement('canvas');
+		this.canvas.id = data.id + "_canvas";
+		this.canvas.style.position = "absolute";
 		this.element.appendChild(this.canvas);
-		this.resizeCanvas(x, y, width, height);
 		
 		
 		// application specific 'init'
@@ -63,15 +63,10 @@ var movie_player = SAGE2_App.extend( {
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 			
 			this.pMatrix = mat4.create();
-			var left   = -1;
-			var right  =  1;
-			var bottom = -1;
-			var top    =  1;
-			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
 			
 			this.initShaders(function() {
 				// shaders compiled
-				_this.gl.uniformMatrix4fv(_this.shaderProgram.pMatrixUniform, false, _this.pMatrix);
+				_this.resizeCanvas();
 			});
 		}
 	},
@@ -421,30 +416,54 @@ var movie_player = SAGE2_App.extend( {
 		}
 	},
 	
-	resizeCanvas: function(x, y, width, height) {
+	resizeCanvas: function() {
 		// must update this
-		this.canvas.width  = parseInt(this.element.style.width,  10);
-		this.canvas.height = parseInt(this.element.style.height, 10);
+		console.log(this.sage2_x, this.sage2_y, this.sage2_width, this.sage2_height);
+		var localX = this.sage2_x - ui.offsetX;
+		var localY = this.sage2_y - ui.offsetY;
+		var localRight  = localX + this.sage2_width;
+		var localBottom = localY + this.sage2_height;
+		var viewX = Math.max(localX, 0);
+		var viewY = Math.max(localY, 0);
+		var viewRight  = Math.min(localRight,  ui.json_cfg.resolution.width);
+		var viewBottom = Math.min(localBottom, ui.json_cfg.resolution.height);
+		var localWidth  = viewRight  - viewX;
+		var localHeight = viewBottom - viewY;
+		
+		// completely off-screen
+		if(localWidth <= 0 || localHeight <= 0) {
+			this.canvas.width  = 1;
+			this.canvas.height = 1;
+			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+		}
+		else {
+			this.canvas.width  = localWidth;
+			this.canvas.height = localHeight;
+			this.canvas.style.left = (viewX-localX) + "px";
+			this.canvas.style.top  = (viewY-localY) + "px";
+			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+			
+			var left   = ((viewX     -localX) / (localRight -localX) * 2.0) - 1.0;
+			var right  = ((viewRight -localX) / (localRight -localX) * 2.0) - 1.0;
+			var bottom = ((viewY     -localY) / (localBottom-localY) * 2.0) - 1.0;
+			var top    = ((viewBottom-localY) / (localBottom-localY) * 2.0) - 1.0;
+			
+			console.log(left, right, bottom, top);
+			
+			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
+			this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
+		}
 	},
 	
 	resize: function(date) {
-		this.resizeCanvas(); // update with proper x, y, width, height
+		this.resizeCanvas();
 		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-		
-		var left   = -1;
-		var right  =  1;
-		var bottom = -1;
-		var top    =  1;
-		mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
-		this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
 		
 		this.refresh(date);
 	},
 	
-	moved: function(px, py, wx, wy, date) {
-		// px, py : position in wall coordination
-		// wx, wy : width and height of the wall
-		this.resizeCanvas(); // update with proper x, y, width, height
+	moved: function(date) {
+		this.resizeCanvas();
 		
 		this.refresh(date);
 	},

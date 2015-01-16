@@ -385,6 +385,16 @@
 			}
 
 			function loadApplication() {
+				var init = {
+					id:     data.id,
+					x:      data.left,
+					y:      data.top+ui.titleBarHeight,
+					width:  data.width,
+					height: data.height, 
+					resrc:  url,
+					date:   date
+				}
+				
 				// load new app
 				if(window[data.application] === undefined) {
 					var js = document.createElement("script");
@@ -393,7 +403,7 @@
 					}, false);
 					js.addEventListener('load', function(event) {
 						var app = new window[data.application];
-						app.init(data.id, data.left-ui.offsetX, data.top+ui.titleBarHeight-ui.offsetY, data.width, data.height, url, date);
+						app.init(init);
 
 						if(app.state !== undefined && clientID===0){
 							Object.observe(app.state, function (changes) {
@@ -420,7 +430,7 @@
 				// load existing app
 				else {
 					var app = new window[data.application];
-					app.init(data.id, data.left-ui.offsetX, data.top+ui.titleBarHeight-ui.offsetY, data.width, data.height, url, date);
+					app.init(init);
 
 					if(app.state !== undefined && clientID===0){
 						Object.observe(app.state, function(changes) {
@@ -616,19 +626,6 @@
 
 			var date  = new Date(position_data.date);
 			
-			/*
-			var eLeft = position_data.elemLeft - ui.offsetX;
-			var eTop  = position_data.elemTop  - ui.offsetY;
-			
-			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-			selectedElemTitle.style.left = eLeft.toString() + "px";
-			selectedElemTitle.style.top = eTop.toString()   + "px";
-			
-			var selectedElem = document.getElementById(position_data.elemId);
-			selectedElem.style.left = eLeft.toString() + "px";
-			selectedElem.style.top = (eTop+ui.titleBarHeight).toString() + "px";
-			*/
-			
 			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
 			selectedElemTitle.style.webkitTransform = translate;
@@ -641,8 +638,12 @@
 			selectedElem.style.transform       = translate;
 
 			var app = applications[position_data.elemId];
-			if(app !== undefined && (position_data.force || app.moveEvents === "continuous") ) {
-				app.moved && app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight), ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
+			if(app !== undefined) {
+				app.sage2_x      = parseInt(position_data.elemLeft, 10);
+				app.sage2_y      = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+				if(position_data.force || app.moveEvents === "continuous") {
+					app.moved && app.moved(date);
+				}
 			}
 
 		});
@@ -665,20 +666,6 @@
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
 			resetIdle();
-			
-			/*
-			var eLeft = position_data.elemLeft - ui.offsetX;
-			var eTop  = position_data.elemTop  - ui.offsetY;
-			
-			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-			selectedElemTitle.style.left  = eLeft.toString() + "px";
-			selectedElemTitle.style.top   = eTop.toString()  + "px";
-			selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
-			
-			var selectedElem = document.getElementById(position_data.elemId);
-			selectedElem.style.left = eLeft.toString() + "px";
-			selectedElem.style.top  = (eTop+ui.titleBarHeight).toString() + "px";
-			*/
 			
 			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
@@ -713,12 +700,17 @@
 			}
 
 			var app = applications[position_data.elemId];
-			if(app !== undefined && (position_data.force || app.resizeEvents === "continuous") ) {
-				var date = new Date(position_data.date);
-				app.resize(date);
-				if(app.moved !== undefined) {
-					app.moved(Math.round(position_data.elemLeft), Math.round(position_data.elemTop+ui.titleBarHeight),
-								ui.json_cfg.totalWidth, ui.json_cfg.totalHeight, date);
+			if(app !== undefined) {
+				app.sage2_x      = parseInt(position_data.elemLeft, 10);
+				app.sage2_y      = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+				app.sage2_width  = parseInt(position_data.elemWidth, 10);
+				app.sage2_height = parseInt(position_data.elemHeight, 10);
+				if(position_data.force || app.resizeEvents === "continuous") {
+					var date = new Date(position_data.date);
+					app.resize(date);
+					if(app.moved !== undefined) {
+						app.moved(date);
+					}
 				}
 			}
 		});

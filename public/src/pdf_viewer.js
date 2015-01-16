@@ -32,9 +32,9 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.enableControls = true;
 	},
 	
-	init: function(id, x, y, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "img", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "img", data);
 		
 		// application specific 'init'
 		for(var i=0; i<this.numCtx; i++){

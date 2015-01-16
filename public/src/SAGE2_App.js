@@ -46,27 +46,32 @@ var SAGE2_App = Class.extend( {
 
 	},
 	
-	init: function(id, elem, width, height, resrc, date) {
-		this.div     = document.getElementById(id);
+	init: function(elem, data) {
+		this.div     = document.getElementById(data.id);
 		this.element = document.createElement(elem);
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
 		if (elem === "div") {
-			this.element.style.width  = width  + "px";
-			this.element.style.height = height + "px";
+			this.element.style.width  = data.width  + "px";
+			this.element.style.height = data.height + "px";
 		} else {
-			this.element.width  = width;
-			this.element.height = height;
+			this.element.width  = data.width;
+			this.element.height = data.height;
 		}
 		this.div.appendChild(this.element);
 		
-		this.resrcPath = resrc + "/";
-		this.startDate = date;
+		this.resrcPath = data.resrc + "/";
+		this.startDate = data.date;
+		
+		this.sage2_x      = data.x;
+		this.sage2_y      = data.y;
+		this.sage2_width  = data.width;
+		this.sage2_height = data.height;
 
 		if (this.enableControls === true)
-			this.controls = new SAGE2WidgetControlBar(id);
+			this.controls = new SAGE2WidgetControlBar(data.id);
 		
-		this.prevDate  = date;
+		this.prevDate  = data.date;
 		this.frame     = 0;
 		
 		// Measurement variables
@@ -82,7 +87,7 @@ var SAGE2_App = Class.extend( {
 		// Top layer
 		this.layer     = null;
 		//App ID
-		this.id = id;
+		this.id = data.id;
 		//File Handling
 		this.fileName = "";
 		this.fileDataBuffer = null;
