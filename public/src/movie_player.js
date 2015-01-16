@@ -16,8 +16,10 @@ var movie_player = SAGE2_App.extend( {
 		this.resizeEvents   = "continuous";
 		this.enableControls = true;
 		
+		this.canvas           = null;
 		this.gl               = null;
 		this.shaderProgram    = null;
+		this.pMatrix          = null;
 	
 		this.ctx              = null;
 		this.maxSize          = null;
@@ -42,19 +44,34 @@ var movie_player = SAGE2_App.extend( {
 	
 	init: function(id, x, y, width, height, resrc, date) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		//arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		this.canvas = document.createElement('canvas');
+		this.element.appendChild(this.canvas);
+		this.resizeCanvas(x, y, width, height);
+		
 		
 		// application specific 'init'
 		this.maxSize = 128; // block size
 		
 		this.initGL();
 		if(this.gl){
+			var _this = this;
 			this.div.style.backgroundColor = "#000000";
 			
 			this.gl.clearColor(0.5, 0.5, 0.5, 1.0);
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+			
+			this.pMatrix = mat4.create();
+			var left   = -1;
+			var right  =  1;
+			var bottom = -1;
+			var top    =  1;
+			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
+			
 			this.initShaders(function() {
 				// shaders compiled
+				_this.gl.uniformMatrix4fv(_this.shaderProgram.pMatrixUniform, false, _this.pMatrix);
 			});
 		}
 	},
@@ -131,6 +148,9 @@ var movie_player = SAGE2_App.extend( {
 			// set texture coord array
 			_this.shaderProgram.textureCoordAttribute = _this.gl.getAttribLocation(_this.shaderProgram, "a_texCoord");
 			_this.gl.enableVertexAttribArray(_this.shaderProgram.textureCoordAttribute);
+			
+			//set view matrix
+			_this.shaderProgram.pMatrixUniform = _this.gl.getUniformLocation(_this.shaderProgram, "p_matrix");
 			
 			// set image texture
 			_this.shaderProgram.samplerUniform1 = _this.gl.getUniformLocation(_this.shaderProgram, "y_image");
@@ -401,14 +421,28 @@ var movie_player = SAGE2_App.extend( {
 		}
 	},
 	
+	resizeCanvas: function(x, y, width, height) {
+		
+	},
+	
 	resize: function(date) {
+		//this.resizeCanvas();
 		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+		
+		var left   = -1;
+		var right  =  1;
+		var bottom = -1;
+		var top    =  1;
+		mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
+		this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
+		
 		this.refresh(date);
 	},
 	
 	moved: function(px, py, wx, wy, date) {
 		// px, py : position in wall coordination
 		// wx, wy : width and height of the wall
+		//this.resizeCanvas();
 		
 		this.refresh(date);
 	},
