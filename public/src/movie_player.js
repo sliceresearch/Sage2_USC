@@ -417,8 +417,6 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resizeCanvas: function() {
-		// must update this
-		console.log(this.sage2_x, this.sage2_y, this.sage2_width, this.sage2_height);
 		var localX = this.sage2_x - ui.offsetX;
 		var localY = this.sage2_y - ui.offsetY;
 		var localRight  = localX + this.sage2_width;
@@ -448,8 +446,6 @@ var movie_player = SAGE2_App.extend( {
 			var bottom = ((viewY     -localY) / (localBottom-localY) * 2.0) - 1.0;
 			var top    = ((viewBottom-localY) / (localBottom-localY) * 2.0) - 1.0;
 			
-			console.log(left, right, bottom, top);
-			
 			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
 			this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
 		}
@@ -457,7 +453,6 @@ var movie_player = SAGE2_App.extend( {
 	
 	resize: function(date) {
 		this.resizeCanvas();
-		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		
 		this.refresh(date);
 	},
