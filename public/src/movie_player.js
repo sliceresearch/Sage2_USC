@@ -428,7 +428,7 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resize: function(date) {
-		this.resizeCanvas();
+		this.resizeCanvas(); // update with proper x, y, width, height
 		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		
 		var left   = -1;
@@ -444,7 +444,7 @@ var movie_player = SAGE2_App.extend( {
 	moved: function(px, py, wx, wy, date) {
 		// px, py : position in wall coordination
 		// wx, wy : width and height of the wall
-		//this.resizeCanvas();
+		this.resizeCanvas(); // update with proper x, y, width, height
 		
 		this.refresh(date);
 	},
