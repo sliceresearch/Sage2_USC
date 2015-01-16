@@ -30,7 +30,6 @@
 
 // npm registry: built-in or defined in package.json
 var colors      = require('colors');              // pretty colors in the terminal
-var crypto      = require('crypto');              // https encryption
 var exec        = require('child_process').exec;  // execute child process
 var formidable  = require('formidable');          // upload processor
 var fs          = require('fs');                  // filesystem access
@@ -73,6 +72,7 @@ program
   .option('-q, --no-output',            'Quiet, no output')
   .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .parse(process.argv);
+
 
 // Logging mechanism
 if (program.logfile) {
@@ -201,22 +201,20 @@ qr_png.pipe(fs.createWriteStream(qr_out));
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
 console.log("Temp folder: ".green, process.env.TMPDIR);
-if(!fs.existsSync(process.env.TMPDIR)){
+if(!sageutils.fileExists(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
 
 // Make sure session folder exists
 var sessionFolder = path.join(__dirname, "sessions");
-if (!fs.existsSync(sessionFolder)) {
+if (!sageutils.fileExists(sessionFolder)) {
      fs.mkdirSync(sessionFolder);
 }
 
 // Build the list of existing assets
 assets.initialize(uploadsFolder, 'uploads');
 
-var appLoader = new loader(public_dir, hostOrigin, config.totalWidth, config.totalHeight,
-						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
-						imConstraints, ffmpegOptions);
+var appLoader = new loader(public_dir, hostOrigin, config, imConstraints, ffmpegOptions);
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
@@ -1966,7 +1964,7 @@ function loadConfiguration() {
 	}
 	else {
 	// Read config.txt - if exists and specifies a user defined config, then use it
-	if(fs.existsSync("config.txt")){
+	if(sageutils.fileExists("config.txt")){
 		var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
 		for(var i =0; i<lines.length; i++){
 			var text = "";
@@ -1989,7 +1987,7 @@ function loadConfiguration() {
 		var dot = hn.indexOf(".");
 		if(dot >= 0) hn = hn.substring(0, dot);
 		configFile = path.join("config", hn + "-cfg.json");
-		if(fs.existsSync(configFile)){
+		if(sageutils.fileExists(configFile)){
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
@@ -2001,7 +1999,7 @@ function loadConfiguration() {
 		}
 	}
 	
-	if (! fs.existsSync(configFile)) {
+	if (! sageutils.fileExists(configFile)) {
 		console.log("\n----------");
 		console.log("Cannot find configuration file:", configFile);
 		console.log("----------\n\n");
@@ -2153,18 +2151,14 @@ function setupHttpsOptions() {
 	// add the default cert from the hostname specified in the config file
 	try {
 		// first try the filename based on the hostname-server.key
-		if (fs.existsSync(path.join("keys", config.host + "-server.key"))) {
+		if (sageutils.fileExists(path.join("keys", config.host + "-server.key"))) {
 			// Load the certificate files
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
-			if(fs.existsSync(path.join("keys", config.host + "-ca.crt")))
+			if(sageutils.fileExists(path.join("keys", config.host + "-ca.crt")))
 				server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
-			certs[config.host] = crypto.createCredentials({
-					key:  server_key,
-					cert: server_crt,
-					ca:   server_ca
-			}).context;
+			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
 		} else {
 			// remove the hostname from the FQDN and search for wildcard certificate
 			//    syntax: _.rest.com.key or _.rest.bigger.com.key
@@ -2172,10 +2166,9 @@ function setupHttpsOptions() {
 			console.log("Domain:", domain);
 			server_key = fs.readFileSync( path.join("keys", domain + ".key") );
 			server_crt = fs.readFileSync( path.join("keys", domain + ".crt") );
-			certs[config.host] = crypto.createCredentials({
-				key: server_key, cert: server_crt,
+			server_ca  = fs.readFileSync( path.join("keys", domain + "-ca.crt"));
 				// no need for CA
-			}).context;
+			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
 	}
 	}
 	catch (e) {
@@ -2190,12 +2183,12 @@ function setupHttpsOptions() {
 	for(var h in config.alternate_hosts){
 		try {
 			var alth = config.alternate_hosts[h];
-			certs[ alth ] = crypto.createCredentials({
-				key:  fs.readFileSync(path.join("keys", alth + "-server.key")),
-				cert: fs.readFileSync(path.join("keys", alth + "-server.crt")),
+			certs[ alth ] = sageutils.secureContext(
+				fs.readFileSync(path.join("keys", alth + "-server.key")),
+				fs.readFileSync(path.join("keys", alth + "-server.crt")),
 				// CA is only needed for self-signed certs
-				ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt"))
-			}).context;
+				fs.readFileSync(path.join("keys", alth + "-ca.crt"))
+			);
 		}
 		catch (e) {
 			console.log("\n----------");
@@ -2209,25 +2202,40 @@ function setupHttpsOptions() {
 
 	console.log(certs);
 
-	var httpsOptions = {
-		// server default keys
-		key:  server_key,
-		cert: server_crt,
-		ca:   server_ca,
-		requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
-		rejectUnauthorized: false,
-		// callback to handle multi-homed machines
-		SNICallback: function(servername){
-			if(certs.hasOwnProperty(servername)){
-				return certs[servername];
+	var httpsOptions;
+
+	if (sageutils.nodeVersion != 1) {
+		httpsOptions = {
+			// server default keys
+			key:  server_key,
+			cert: server_crt,
+			ca:   server_ca,
+			requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
+			rejectUnauthorized: false,
+			// callback to handle multi-homed machines
+			SNICallback: function(servername){
+				if(certs.hasOwnProperty(servername)){
+					return certs[servername];
+				}
+				else{
+					console.log("SNI> Unknown host, cannot find a certificate for ", servername);
+					return null;
+				}
 			}
-			else{
-				console.log("SNI> Unknown host, cannot find a certificate for ", servername);
-				return null;
-			}
-		}
-	};
-	
+		};
+	} else {
+		console.log('Node v1.x : NO SNI support');
+			// PROBLEM: Bug SNI support in io.js v1.0
+		httpsOptions = {
+			// server default keys
+			key:  server_key,
+			cert: server_crt,
+			ca:   server_ca,
+			requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
+			rejectUnauthorized: false
+		};
+	}
+
 	return httpsOptions;
 }
 

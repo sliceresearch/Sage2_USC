@@ -8,15 +8,22 @@
 	"background": {
 		"color": "#333333",
 		"image": {
-			"url": "images/background/chicago-pano-october-2011-bw.jpg",
-			"style": "stretch"
+			url: "images/background/chicago-pano-october-CAVE2.jpg",
+			style: "tile"
 		},
+                watermark: {
+                        svg: "images/EVL-logo.svg",
+                        color: "rgba(25, 25, 255, 0.25)"
+                },
 		"clip": true
 	},
 	"ui": {
-		"clock": 12,
+		"clock": 24,
 		"show_url": true,
-		"show_version": true,
+		"show_version":  true,
+                noDropShadow:    true,
+		minWindowWidth:  500,
+		minWindowHeight: 500,
 	},
 	"resolution": {
 		"width": 1366,

@@ -21,13 +21,13 @@ var unzip        = require('decompress-zip');
 var gm           = require('gm');
 var mime         = require('mime');
 var request      = require('request');
-var videodemuxer = require('node-demux');                    // decodes video to raw frames
+var videodemuxer = require('node-demux');
 var ytdl         = require('ytdl-core');
 
-//var videodecoder = require('../src/node-livevideodecoder');  // decodes video to raw frames
 var exiftool  = require('../src/node-exiftool');        // gets exif tags for images
 var assets    = require('../src/node-assets');          // asset management
-var registry  = require('../src/node-registry');  // Registry Manager
+var sageutils = require('../src/node-utils');           // provides utility functions
+var registry  = require('../src/node-registry');        // Registry Manager
 
 var imageMagick;
 mime.default_type = "application/custom";
@@ -40,37 +40,14 @@ function encodeReservedURL(url) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarHeight, imOptions, ffmpegOptions) {
-	this.publicDir = publicDir;
-	this.hostOrigin = hostOrigin;
-	this.displayWidth = displayWidth;
-	this.displayHeight = displayHeight;
-	this.titleBarHeight = titleBarHeight;
-	this.mime2app = {
-		"image/jpeg": "image_viewer", 
-		"image/webp": "image_viewer", 
-		"image/png":  "image_viewer",
-		"image/bmp":  "image_viewer",
-		"image/tiff": "image_viewer",
-		"image/svg+xml": "image_viewer",
-		"image/vnd.adobe.photoshop": "image_viewer",
-		"video/mp4": "movie_player",
-		"video/x-m4v": "movie_player",
-		"video/webm": "movie_player",
-		"video/youtube": "movie_player",
-		"application/pdf": "pdf_viewer", 
-		"application/zip": "custom_app",
-		"application/x-zip-compressed": "custom_app",
-		"application/custom": "custom_app",
-		"application/stream": "media_stream"
-    };
-    this.app2dir = {
-    	"image_viewer": "images",
-    	"movie_player": "videos",
-    	"pdf_viewer": "pdfs",
-    	"custom_app": "apps"
-    };
-	
+function appLoader(publicDir, hostOrigin, config, imOptions, ffmpegOptions) {
+	this.publicDir      = publicDir;
+	this.hostOrigin     = hostOrigin;
+	this.configuration  = config;
+	this.displayWidth   = config.totalWidth;
+	this.displayHeight  = config.totalHeight;
+	this.titleBarHeight = (config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight;
+
 	imageMagick = gm.subClass(imOptions);
 	this.ffmpegPath = ffmpegOptions.appPath;
 }
@@ -79,9 +56,10 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 
 
 appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
-	var wallRatio = this.displayWidth / (this.displayHeight-this.titleBarHeight);
-	var iWidth    = appInstance.native_width;
-	var iHeight   = appInstance.native_height;
+	var wallRatio   = this.displayWidth / (this.displayHeight-this.titleBarHeight);
+	var iWidth      = appInstance.native_width;
+	var iHeight     = appInstance.native_height;
+	var aspectRatio = iWidth / iHeight;
 	// Image wider than wall
 	if(iWidth > (this.displayWidth - (2*this.titleBarHeight)) && appInstance.aspect >= wallRatio) {
 		// Image wider than wall
@@ -95,7 +73,25 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 		iWidth  = iHeight*appInstance.aspect;
 	}
 
-	appInstance.width = iWidth;
+	// Check against min dimensions
+	if(iWidth < this.configuration.ui.minWindowWidth){
+		iWidth  = this.configuration.ui.minWindowWidth;
+		iHeight = iWidth / aspectRatio;
+	}
+	if(iWidth > this.configuration.ui.maxWindowWidth){
+		iWidth  = this.configuration.ui.maxWindowWidth;
+		iHeight = iWidth / aspectRatio;
+	}
+	if(iHeight < this.configuration.ui.minWindowHeight){
+		iHeight = this.configuration.ui.minWindowHeight;
+		iWidth  = iHeight * aspectRatio;
+	}
+	if(iHeight > this.configuration.ui.maxWindowHeight){
+		iHeight = this.configuration.ui.maxWindowHeight;
+		iWidth  = iHeight * aspectRatio;
+	}
+
+	appInstance.width  = iWidth;
 	appInstance.height = iHeight;
 };
 
@@ -112,6 +108,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 				if (info.ImageWidth && info.ImageHeight) {
 					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
 						function(appInstance) {
+							_this.scaleAppToFitDisplay(appInstance);
 							callback(appInstance);
 						}
 					);
@@ -145,6 +142,7 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 
 		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
 			function(appInstance) {
+				_this.scaleAppToFitDisplay(appInstance);
 				callback(appInstance);
 		});
 	});
@@ -216,6 +214,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 
 
 appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, exif_data, callback) {
+
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
 
@@ -708,7 +707,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var localPath = path.join(this.publicDir, url);
 
 	// Filename exists, then add date
-	if (fs.existsSync(localPath)) {
+	if (sageutils.fileExists(localPath)) {
 		// Add the date to filename
 		var filen  = file.name;
 		var splits = filen.split('.');
@@ -746,10 +745,10 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 };
 
 appLoader.prototype.loadApplication = function(appData, callback) {
-	var app = registry.getDefaultApp(appData.type);
 
 	if(appData.location === "file") {
 
+		app = registry.getDefaultApp(appData.type);
 		var dir = registry.getDirectory(appData.type);
 
 		if(app === "image_viewer"){
@@ -787,6 +786,8 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
+
+		app = registry.getDefaultAppFromMime(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {

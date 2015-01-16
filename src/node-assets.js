@@ -21,8 +21,8 @@ var color     = require('color');
 var gm        = require('gm');                   // imagesmagick
 var ffmpeg    = require('fluent-ffmpeg');        // ffmpeg
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
+var sageutils = require('../src/node-utils');    // provides utility functions
 var registry  = require('../src/node-registry');
-
 
 // Global variable to handle iamgeMagick configuration
 var imageMagick = null;
@@ -251,7 +251,7 @@ addFile = function(filename, exif, callback) {
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/custom') {
-		if (exif.icon === null || ! fs.existsSync(exif.icon) ) {
+		if (exif.icon === null || ! sageutils.fileExists(exif.icon) ) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 			callback();
 		}
@@ -517,9 +517,9 @@ listApps = function() {
 regenerateAssets = function() {
 	// Make sure the asset folder exists
 	var assetFolder = path.join(AllAssets.root, 'assets');
-	if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
+	if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
 	var assetFile = path.join(assetFolder, 'assets.json');
-	if (fs.existsSync(assetFile)) {
+	if (sageutils.fileExists(assetFile)) {
 		fs.unlinkSync(assetFile);
 		console.log('Assets> successfully deleted', assetFile);
 	}
@@ -537,28 +537,28 @@ initialize = function (root, relativePath) {
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
-		if (!fs.existsSync(assetFolder)) fs.mkdirSync(assetFolder);
+		if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
 		registry.initialize(assetFolder);
 
 		// Make sure the asset/apps folder exists
 		var assetAppsFolder = path.join(assetFolder, 'apps');
-		if (!fs.existsSync(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
+		if (!sageutils.fileExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
 
 		// Make sure unknownapp images exist
 		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.png');
 		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.png');
-		if (!fs.existsSync(unknownapp_256)) fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
+		if (!sageutils.fileExists(unknownapp_256)) fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
 		var unknownapp_512Img = path.resolve(root, '..', 'images', 'unknownapp_512.png');
 		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.png');
-		if (!fs.existsSync(unknownapp_512)) fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+		if (!sageutils.fileExists(unknownapp_512)) fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
 		var unknownapp_1024Img = path.resolve(root, '..', 'images', 'unknownapp_1024.png');
 		var unknownapp_1024 = path.join(assetAppsFolder, 'unknownapp_1024.png');
-		if (!fs.existsSync(unknownapp_1024)) fs.createReadStream(unknownapp_1024Img).pipe(fs.createWriteStream(unknownapp_1024));
+		if (!sageutils.fileExists(unknownapp_1024)) fs.createReadStream(unknownapp_1024Img).pipe(fs.createWriteStream(unknownapp_1024));
 
 		AllAssets = {};
 
 		var assetFile = path.join(assetFolder, 'assets.json');
-		if (fs.existsSync(assetFile)) {
+		if (sageutils.fileExists(assetFile)) {
 			var data    = fs.readFileSync(assetFile);
 			var oldList = JSON.parse(data);
 			AllAssets.root = root;
