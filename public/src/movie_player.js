@@ -48,6 +48,7 @@ var movie_player = SAGE2_App.extend( {
 		this.canvas = document.createElement('canvas');
 		this.canvas.id = data.id + "_canvas";
 		this.canvas.style.position = "absolute";
+		this.canvas.style.border = "solid 4px #AA1111";
 		this.element.appendChild(this.canvas);
 		
 		
@@ -443,8 +444,8 @@ var movie_player = SAGE2_App.extend( {
 			
 			var left   = ((viewX     -localX) / (localRight -localX) * 2.0) - 1.0;
 			var right  = ((viewRight -localX) / (localRight -localX) * 2.0) - 1.0;
-			var bottom = ((viewY     -localY) / (localBottom-localY) * 2.0) - 1.0;
-			var top    = ((viewBottom-localY) / (localBottom-localY) * 2.0) - 1.0;
+			var top    = ((1.0 - (viewY     -localY) / (localBottom-localY)) * 2.0) - 1.0;
+			var bottom = ((1.0 - (viewBottom-localY) / (localBottom-localY)) * 2.0) - 1.0;
 			
 			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
 			this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
