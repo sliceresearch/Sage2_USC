@@ -23,9 +23,16 @@
 #      _.evl.uic.edu.key
 
 
+# Reset the key database
+rm -fr ~/.pki/nssdb
+mkdir -p  ~/.pki/nssdb
+certutil -d sql:$HOME/.pki/nssdb -N
+
+# Generate new keys
 servers="$HOSTNAME localhost 127.0.0.1"
 
 for f in `echo $servers`
 do
 	./init_webserver.sh $f
 done
+
