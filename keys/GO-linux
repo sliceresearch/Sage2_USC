@@ -26,7 +26,10 @@
 # Reset the key database
 rm -fr ~/.pki/nssdb
 mkdir -p  ~/.pki/nssdb
-certutil -d sql:$HOME/.pki/nssdb -N
+echo "" > /tmp/pass
+echo "" >> /tmp/pass
+certutil -f /tmp/pass -d sql:$HOME/.pki/nssdb -N
+/bin/rm -f /tmp/pass
 
 # Generate new keys
 servers="$HOSTNAME localhost 127.0.0.1"
