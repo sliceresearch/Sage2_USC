@@ -49,7 +49,7 @@ var movie_player = SAGE2_App.extend( {
 		this.canvas = document.createElement('canvas');
 		this.canvas.id = data.id + "_canvas";
 		this.canvas.style.position = "absolute";
-		this.canvas.style.border = "solid 4px #AA1111";
+		//this.canvas.style.border = "solid 4px #AA1111";
 		this.element.appendChild(this.canvas);
 		
 		
@@ -69,6 +69,7 @@ var movie_player = SAGE2_App.extend( {
 			this.initShaders(function() {
 				// shaders compiled
 				_this.resizeCanvas();
+				_this.refresh(data.date);
 			});
 		}
 	},
