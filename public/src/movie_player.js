@@ -35,6 +35,7 @@ var movie_player = SAGE2_App.extend( {
 		this.validBlocks      = [];
 		this.receivedBlocks   = [];
 		
+		this.state.paused = true;
 		this.state.frame = 0;
 	
 		this.squareVertexPositionBuffer     = [];
@@ -81,21 +82,26 @@ var movie_player = SAGE2_App.extend( {
 		this.controls.addButton({type: "rewind", sequenceNo: 4, action: function(date) {
 			
 		}});
-		this.controls.addButton({type: "prev", sequenceNo: 8, action: function(date) {
+		this.controls.addButton({type: "play-pause", sequenceNo: 8, action: function(date) {
 			if(isMaster) {
-				console.log("play: " + _this.div.id);
-				wsio.emit('playVideo', {id: _this.div.id});
+				if(_this.state.paused === true) {
+					console.log("play: " + _this.div.id);
+					wsio.emit('playVideo', {id: _this.div.id});
+					_this.state.paused = false;
+				}
+				else {
+					console.log("pause: " + _this.div.id);
+					wsio.emit('pauseVideo', {id: _this.div.id});
+					_this.state.paused = true;
+				}
 			}
 		}});
 		this.controls.addButton({type: "next", sequenceNo: 10,action: function(date) {
-			if(isMaster) {
-				console.log("pause: " + _this.div.id);
-				wsio.emit('pauseVideo', {id: _this.div.id});
-			}
+			
 		}});
 		this.controls.addSeparatorAfterButtons(1, 10); // This neatly forms an X out of the four spokes.
 		
-		this.controls.addSlider({begin: 1, end: this.video.numframes, increments: 1, appHandle: this, property: "state.frame", action: function(date) {
+		this.controls.addSlider({begin: 0, end: this.video.numframes-1, increments: 1, appHandle: this, property: "state.frame", action: function(date) {
 			
 		}});
 		this.controls.finishedAddingControls();
@@ -326,7 +332,8 @@ var movie_player = SAGE2_App.extend( {
 		}
 	},
 	
-	textureData: function(blockIdx, yuvBuffer) {
+	textureData: function(frameIdx, blockIdx, yuvBuffer) {
+		this.state.frame = frameIdx;
 		this.yuvBuffer[blockIdx] = yuvBuffer;
 		this.receivedBlocks[blockIdx] = true;
 	},
