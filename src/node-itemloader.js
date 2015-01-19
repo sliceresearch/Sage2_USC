@@ -23,9 +23,10 @@ var mime      = require('mime');
 var request   = require('request');
 var ytdl      = require('ytdl-core');
 
-var exiftool  = require('../src/node-exiftool');        // gets exif tags for images
-var assets    = require('../src/node-assets');          // asset management
-var registry  = require('../src/node-registry');  // Registry Manager
+var exiftool  = require('../src/node-exiftool');      // gets exif tags for images
+var assets    = require('../src/node-assets');        // asset management
+var sageutils = require('../src/node-utils');         // provides utility functions
+var registry  = require('../src/node-registry');      // Registry Manager
 
 var imageMagick;
 mime.default_type = "application/custom";
@@ -38,19 +39,13 @@ function encodeReservedURL(url) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarHeight, imConstraints) {
-	this.publicDir = publicDir;
-	this.hostOrigin = hostOrigin;
-	this.displayWidth = displayWidth;
-	this.displayHeight = displayHeight;
-	this.titleBarHeight = titleBarHeight;
-
-    this.app2dir = {
-    	"image_viewer": "images",
-    	"movie_player": "videos",
-    	"pdf_viewer": "pdfs",
-    	"custom_app": "apps"
-    };
+function appLoader(publicDir, hostOrigin, config, imConstraints) {
+	this.publicDir      = publicDir;
+	this.hostOrigin     = hostOrigin;
+	this.configuration  = config;
+	this.displayWidth   = config.totalWidth;
+	this.displayHeight  = config.totalHeight;
+	this.titleBarHeight = (config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight;
 
 	imageMagick = gm.subClass(imConstraints);
 }
@@ -59,9 +54,10 @@ function appLoader(publicDir, hostOrigin, displayWidth, displayHeight, titleBarH
 
 
 appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
-	var wallRatio = this.displayWidth / (this.displayHeight-this.titleBarHeight);
-	var iWidth    = appInstance.native_width;
-	var iHeight   = appInstance.native_height;
+	var wallRatio   = this.displayWidth / (this.displayHeight-this.titleBarHeight);
+	var iWidth      = appInstance.native_width;
+	var iHeight     = appInstance.native_height;
+	var aspectRatio = iWidth / iHeight;
 	// Image wider than wall
 	if(iWidth > (this.displayWidth - (2*this.titleBarHeight)) && appInstance.aspect >= wallRatio) {
 		// Image wider than wall
@@ -75,7 +71,25 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 		iWidth  = iHeight*appInstance.aspect;
 	}
 
-	appInstance.width = iWidth;
+	// Check against min dimensions
+	if(iWidth < this.configuration.ui.minWindowWidth){
+		iWidth  = this.configuration.ui.minWindowWidth;
+		iHeight = iWidth / aspectRatio;
+	}
+	if(iWidth > this.configuration.ui.maxWindowWidth){
+		iWidth  = this.configuration.ui.maxWindowWidth;
+		iHeight = iWidth / aspectRatio;
+	}
+	if(iHeight < this.configuration.ui.minWindowHeight){
+		iHeight = this.configuration.ui.minWindowHeight;
+		iWidth  = iHeight * aspectRatio;
+	}
+	if(iHeight > this.configuration.ui.maxWindowHeight){
+		iHeight = this.configuration.ui.maxWindowHeight;
+		iWidth  = iHeight * aspectRatio;
+	}
+
+	appInstance.width  = iWidth;
 	appInstance.height = iHeight;
 };
 
@@ -92,6 +106,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 				if (info.ImageWidth && info.ImageHeight) {
 					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
 						function(appInstance) {
+							_this.scaleAppToFitDisplay(appInstance);
 							callback(appInstance);
 						}
 					);
@@ -125,6 +140,7 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 
 		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
 			function(appInstance) {
+				_this.scaleAppToFitDisplay(appInstance);
 				callback(appInstance);
 		});
 	});
@@ -196,6 +212,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 
 
 appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, exif_data, callback) {
+
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
 
@@ -621,14 +638,14 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
 
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance) {
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false}, function(appInstance) {
 		callback(appInstance);
 	});
 };
 
 appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var app = file.application;
-	var dir = this.app2dir[app];
+	var dir = registry.getDirectory(file.filename);
 
 	var url = path.join("uploads", dir, file.filename);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
@@ -645,12 +662,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var app = registry.getDefaultApp(file.name);
 	if (app === undefined || app === "") { callback(null); return; }
 
-    // XXX
-    var dir = "";
-    //var dir = this.app2dir[app];
-    //if (dir === null || dir === undefined || dir === "") {
-    //    dir = this.registryManager.type2dir[mime_type];
-    //}
+    var dir = registry.getDirectory(file.name);
 
 	var _this = this;
     if (!fs.existsSync(path.join(this.publicDir, "uploads", dir))) {
@@ -661,7 +673,7 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var localPath = path.join(this.publicDir, url);
 
 	// Filename exists, then add date
-	if (fs.existsSync(localPath)) {
+	if (sageutils.fileExists(localPath)) {
 		// Add the date to filename
 		var filen  = file.name;
 		var splits = filen.split('.');
@@ -699,11 +711,11 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 };
 
 appLoader.prototype.loadApplication = function(appData, callback) {
-	var app = registry.getDefaultApp(appData.type);
 
 	if(appData.location === "file") {
 
-		var dir = this.app2dir[app];
+		app = registry.getDefaultApp(appData.type);
+		var dir = registry.getDirectory(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
@@ -740,6 +752,8 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
+
+		app = registry.getDefaultAppFromMime(appData.type);
 
 		if(app === "image_viewer"){
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {

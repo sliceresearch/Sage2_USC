@@ -4,7 +4,8 @@
             "name": "pdf_viewer",
             "types": [
                 "application/pdf"
-            ]
+            ],
+            "directory": "pdfs"
         },
         {
             "name": "image_viewer",
@@ -16,7 +17,8 @@
                 "image/tiff",
                 "image/svg+xml",
                 "image/vnd.adobe.photoshop"
-            ]
+            ],
+            "directory": "images"
         },
         {
             "name": "movie_player",
@@ -25,7 +27,8 @@
                 "video/x-m4v",
                 "video/webm",
                 "video/youtube"
-            ]
+            ],
+            "directory": "videos"
         },
         {
             "name": "custom_app",
@@ -33,7 +36,8 @@
                 "application/zip",
                 "application/x-zip-compressed",
                 "application/custom"
-            ]
+            ],
+            "directory": "apps"
         },
         {
             "name": "media_stream",
