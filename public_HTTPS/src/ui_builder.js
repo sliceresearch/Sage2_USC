@@ -476,13 +476,11 @@ function uiBuilder(json_cfg, clientID) {
 
 		if( !menuElem )
 		{
-			var radialMenuScale = 1;
-
 			radialMenuContentWindowDiv = document.createElement("div");
 			
 			radialMenuContentWindowDiv.id  = data.id+"_menuDiv"; 
-			radialMenuContentWindowDiv.style.width        = (radialMenuSize.x * radialMenuScale).toString() + "px";
-			radialMenuContentWindowDiv.style.height       =  (radialMenuSize.y * radialMenuScale).toString() + "px";
+			radialMenuContentWindowDiv.style.width        = (data.radialMenuSize.x).toString() + "px";
+			radialMenuContentWindowDiv.style.height       =  (data.radialMenuSize.y).toString() + "px";
 			radialMenuContentWindowDiv.style.overflow           = "hidden";
 			radialMenuContentWindowDiv.style.position   = "absolute";
 			radialMenuContentWindowDiv.style.left   = (data.x - this.offsetX).toString() + "px";
@@ -497,11 +495,11 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
 								0,
 								0,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9001);
+								data.radialMenuSize.x, data.radialMenuSize.y, 9001);
 			menuElem3 = createDrawingElement(data.id+"_menuWindow2", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9002);
+								data.radialMenuSize.x, data.radialMenuSize.y, 9002);
 			
 			
 			this.main.appendChild(menuElem);

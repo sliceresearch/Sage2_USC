@@ -41,6 +41,25 @@
 		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
 		FFMpeg: "C:/Workspace/EVL/SAGE2/local/bin/"
     },
+	// for experimental features: true/false
+	experimental: {
+		omicron: { // enable omicron input module
+			enable: true,
+			host: "131.193.76.121",
+			dataPort: 30005,
+			
+			// Touch gestures
+			zoomGestureScale: 520,
+			acceleratedDragScale: 0,
+			
+			// Note if the following is enabled the server will attempt
+			// to connect to the specified Omicron oinputserver
+			// (By default the server listens for an Omicron sageinputserver to connect to it)
+			useOinputserver: true,
+			inputServerIP: "omgtracker.evl.uic.edu",
+			msgPort: 28000
+		}
+	},
     apis: {
 		twitter: {
 			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
