@@ -53,6 +53,9 @@ function radialMenu(){
 	this.thumbnailWindowSize = thumbnailWindowSize;
 	this.imageThumbSize = imageThumbSize;
 	
+	// This is the number of thumbnails in the window WITHOUT scrolling
+	this.thumbnailGridSize = { x: 10, y: 10 }; // Overwritten in setThumbnailPosition().
+	
 	this.init = function(data, thumbElem, thumbElem2) {
 		var id = data.id;
 		radialMenuScale = data.radialMenuScale;
@@ -89,6 +92,7 @@ function radialMenu(){
 		this.ctx.redraw = true;
 		this.dragPosition = { x: 0, y: 0 };
 		
+		this.notEnoughThumbnailsToScroll = false; // Flag to stop scrolling if there are not enough thumbnails
 		this.dragThumbnailWindow = false;
 		this.thumbnailWindowPosition = { x: (radialMenuCenter.x * 2 + this.imageThumbSize/2), y: 30 * radialMenuScale };
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
@@ -981,18 +985,30 @@ function radialMenu(){
 		{
 			if( this.dragThumbnailWindow === true )
 			{
-				if( this.thumbnailWindowScrollOffset.x <= 0 )
+				// Controls the content window scrolling.
+				// Note:Scrolling is +right, -left so offset should always be negative				
+				if( this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false )
 				{
 					var scrollDist = 0;
-		
+					
+					nextScrollPos = this.thumbnailWindowScrollOffset;
+					
+					nextScrollPos.x += (position.x - this.thumbnailWindowDragPosition.x) * thumbnailScrollScale;
+					nextScrollPos.y += (position.y - this.thumbnailWindowDragPosition.y) * thumbnailScrollScale;
+					
+					if( nextScrollPos.x > 0 )
+						nextScrollPos.x = 0;
+					if( nextScrollPos.y > 0 )
+						nextScrollPos.y = 0;
+					
 					if( this.thumbnailWindowScrollLock.x === false )
 					{
-						this.thumbnailWindowScrollOffset.x += (position.x - this.thumbnailWindowDragPosition.x) * thumbnailScrollScale;
+						this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
 						scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
 					}
 					if( this.thumbnailWindowScrollLock.y === false )
 					{
-						this.thumbnailWindowScrollOffset.y += (position.y - this.thumbnailWindowDragPosition.y) * thumbnailScrollScale;
+						this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
 						scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
 					}
 
@@ -1192,7 +1208,7 @@ function radialMenu(){
 		var curRow = 0;
 		var curColumn = 0;
 		
-		this.thumbnailScrollWindowElement.width = (this.imageThumbSize + thumbSpacer) * neededColumns;
+		this.thumbnailScrollWindowElement.width = (imageThumbSize + thumbSpacer) * neededColumns;
 		for( i = 0; i < thumbnailSourceList.length; i++ )
 		{
 			currentButton = thumbnailSourceList[i];
@@ -1205,7 +1221,7 @@ function radialMenu(){
 				if( curRow < maxRows - 1 )
 					curRow++;
 			}
-			currentButton.setPosition( curColumn * (this.imageThumbSize + thumbSpacer),  curRow * (this.imageThumbSize + thumbSpacer) );
+			currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
 			curColumn++;
 		}
 	};
@@ -1246,7 +1262,7 @@ function radialMenu(){
 			if( this.sessionThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows );
 		}
-			
+		
 		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize + thumbSpacer);
 		
 		// Special thumbnail size for custom apps
@@ -1257,7 +1273,17 @@ function radialMenu(){
 			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
 			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize * 2 + thumbSpacer);
 		}
-
+		
+		this.thumbnailGridSize = { x: maxRows, y: maxCols };
+		if( neededColumns > maxRows )
+			this.notEnoughThumbnailsToScroll = false;
+		else
+		{
+			this.notEnoughThumbnailsToScroll = true;
+			this.thumbnailWindowScrollOffset.x = 0;
+			this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString()+"px";
+		}
+		
 		if( this.currentMenuState === 'imageThumbnailWindow' )
 		{
 			this.setThumbnailPosition( this.imageThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
