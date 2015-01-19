@@ -265,7 +265,7 @@ omicronManager.prototype.runTracker = function()
 			var serviceType = e.serviceType;
 			//console.log("Event service type: " + serviceType);
 			
-			console.log(e.sourceId, e.posx, e.posy, e.posz);
+			//console.log(e.sourceId, e.posx, e.posy, e.posz);
 			// serviceID:
 			// (Note: this depends on the order the services are specified on the server)
 			//		0 = Touch

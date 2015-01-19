@@ -350,7 +350,7 @@ function radialMenu(){
 	
 	this.animate = function( data )
 	{
-		console.log(data);
+		//console.log(data);
 	};
 	
 	this.draw = function() {
