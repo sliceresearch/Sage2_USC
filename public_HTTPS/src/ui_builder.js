@@ -558,7 +558,7 @@ function uiBuilder(json_cfg, clientID) {
 					}
 				}
 				// If instead of else in case event triggered close menu
-				if( menu.visible == false )
+				if( menu.visible === false )
 				{
 					menuElem.style.display = "none";
 					menu.thumbnailScrollWindowElement.style.display = "none";
