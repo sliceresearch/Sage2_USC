@@ -3559,9 +3559,11 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 					console.log("Menu is too close to existing menu");
 				}
 			}
-			
-			if( validLocation )
+						
+			if( validLocation && radialMenus[uniqueID+"_menu"] === undefined )
 			{
+				console.log(radialMenus[uniqueID+"_menu"]);
+				
 				var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
 				radialMenus[uniqueID+"_menu"] = newRadialMenu;
 				
