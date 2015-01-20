@@ -33,7 +33,7 @@ var stereo_image = SAGE2_App.extend( {
 		this.stereoImg = new Image();
 		this.stereoImg.addEventListener('load', function() {
 			_this.stereoImgLoaded = true;
-			_this.sendResize(this.stereoImg.naturalWidth/2, this.stereoImg.naturalHeight);
+			_this.sendResize(_this.stereoImg.naturalWidth/2, _this.stereoImg.naturalHeight);
 			_this.refresh(date);
 		}, false);
 		this.stereoImg.src = this.resrcPath + "3dpics/adler.jps";
@@ -210,7 +210,7 @@ var stereo_image = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	moved: function(date) {
+	moved: function(px, py, wx, wy, date) {
 		this.refresh(date);
 	},
 	
