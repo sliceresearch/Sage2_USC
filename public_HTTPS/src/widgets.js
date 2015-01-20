@@ -413,16 +413,7 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 /**
 *	Creates default close and radial menu buttons
 */
-/*
-function wsCloseAppFromControl(wsio, data){
-	var app = findAppById(data.appId);
-	if (app)
-		deleteApplication(app);
-}
 
-function wsOpenRadialMenuFromControl(wsio, data){
-	createRadialMenu( data.id, data.x, data.y );
-}*/
 
 SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
 	console.log("Id:", data);
@@ -440,7 +431,7 @@ SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
 		"fill":"rgba(250,250,250,1.0)",
 		"animation":false
 	};
-	this.addButton({type:"play-pause",sequenceNo:data.sequence.radial,action:function(date){
+	this.addButton({type:radialButtonType,sequenceNo:data.sequence.radial,action:function(date){
 		//if (isMaster)
 		//	wsio.emit('openRadialMenuFromControl',{appId:data.id});
 	}});
@@ -494,7 +485,7 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 		outerSequence--;
 	this.addDefaultButtons({
 		id:ctrId.slice(0,ctrId.lastIndexOf("_")),
-		sequence:{closeApp: outerSequence/2 + innerSequence, closeBar: outerSequence/2 + innerSequence +1, radial: outerSequence/2 + innerSequence + 2}
+		sequence:{closeApp: parseInt(outerSequence/2 + innerSequence), closeBar: parseInt(outerSequence/2 + innerSequence +1), radial: parseInt(outerSequence/2 + innerSequence + 2)}
 	});
 	var innerThetaIncrement = (endAngle - startAngle)/innerSequence;
 	var outerThetaIncrement = (endAngle - startAngle)/outerSequence;
@@ -664,6 +655,8 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 	slider.data("appId", this.slider.appId);
 
 	slider.data('call', this.slider.call);
+	slider.data('lockCall', this.slider.lockCall);
+	slider.data('updateCall', this.slider.updateCall);
 	slider.data('appProperty', this.slider.appProperty);
 	var _this = this;
 	var app = getProperty(_this.slider.appHandle,_this.slider.appProperty);

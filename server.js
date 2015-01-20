@@ -1725,7 +1725,8 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 	if (regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
 		var appData = {ctrlId:data.ctrlId,appId:data.appId};
 		remoteInteraction[data.addr].lockControl(appData);
-		broadcast('sliderKnobLockAction', appData, 'receivesWidgetEvents');
+		if (regSl.test(appData.ctrlId) && /knob/.test(appData.ctrlId))
+			broadcast('sliderKnobLockAction', appData, 'receivesWidgetEvents');
 	}
 }
 

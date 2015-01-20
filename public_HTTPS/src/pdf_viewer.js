@@ -217,7 +217,6 @@ function addWidgetControlsToPdfViewer (_this){
 		this.refresh(date);
 	}.bind(_this)});
 
-	_this.controls.addSeparatorAfterButtons(1,10); // This neatly forms an X out of the four spokes.
 	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", action:function(date){
 		this.refresh(date);
 	}.bind(_this)});

@@ -877,19 +877,16 @@
 						var fromPath = animationInfo.fromPath;
 						var toPath = animationInfo.toPath;
 						if (state===null){
-							console.log("state:"+ state);
 							ctrl.animate({"path":toPath},delay,mina.bounce,function(){
 								ctrl.animate({"path":fromPath},delay,mina.bounce);	
 							});
 							
 						}
 						else{
-							console.log("state:"+ state);
-							var path = (state===0)? fromPath: toPath;
+							var path = (state===1)? fromPath: toPath;
 							animationInfo.state = 1 - animationInfo.state;
 							ctrl.data("animationInfo", animationInfo);
 							ctrl.animate({"path":path},delay,mina.bounce);
-							
 						}
 					}
 					
@@ -911,10 +908,22 @@
 			
 		});
 		wsio.on('sliderKnobLockAction', function(data){
-			if (/slider/.test(data.ctrlId)){
+			console.log("knobLockMessage");
+			if (/slider/.test(data.ctrlId) && /knob/.test(data.ctrlId)){
+				console.log("knobLockMessageInside");
 				var ctrl = getWidgetControlById(data);
 				var slider = ctrl.parent();
+				var func = ctrl.parent().data("lockCall");
+				if (func !== undefined && func !== null)
+					func(new Date());	
 			}
+		});
+		wsio.on('sliderKnobLockAction', function(data){
+			var ctrl = getWidgetControlById(data);
+			var slider = ctrl.parent();
+			var func = slider.data("lockCall");
+			if (func !== undefined && func !== null)
+				func(new Date());	
 		});
 		wsio.on('moveSliderKnob', function(data){
 			var ctrl = getWidgetControlById(data.ctrl);
@@ -928,7 +937,9 @@
 
 			var app = getProperty(applications[slider.data("appId")],slider.data("appProperty"));
 			app.handle[app.property] = val;
-
+			var func = slider.data("updateCall");
+				if (func !== undefined && func !== null)
+					func(new Date());
 		});
 
 		wsio.on('keyInTextInputWidget', function(data){

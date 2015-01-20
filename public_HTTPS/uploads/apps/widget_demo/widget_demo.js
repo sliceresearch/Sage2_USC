@@ -111,7 +111,7 @@ var widget_demo = SAGE2_App.extend( {
 
 		
 		
-		this.controls.addSeparatorAfterButtons(3,5); // Adds a small gap after button positon 3 and 5
+		//this.controls.addSeparatorAfterButtons(3,5); // Adds a small gap after button positon 3 and 5
 		
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"
@@ -119,10 +119,26 @@ var widget_demo = SAGE2_App.extend( {
 		var formatFunction = function(value,end){
 			return value + ":" + end;
 		}
-		this.controls.addSlider({begin:64,end:255,increments:1,appHandle:this, property:"brightness", labelFormatFunction:formatFunction , action:function(date){
-			//Perform refresh or updating actions here
-			this.draw(date);
-		}.bind(this)});
+		this.controls.addSlider({
+			begin:64,
+			end:255,
+			increments:1,
+			appHandle:this, 
+			property:"brightness", 
+			labelFormatFunction:formatFunction,
+			lockAction:function(date){
+				//Occurs the first time the slider knob is pressed on
+				console.log("lock action");
+			}, 
+			updateAction:function(date){
+				//Occurs everytime the knob moves
+				console.log("update action");
+			}, 
+			action:function(date){
+				//This is the action that happens after releasing the slider
+				this.draw(date);
+			}.bind(this)
+		});
 		this.controls.addTextInput({defaultText: "Default Text!!",action:function(text){
 			this.displayText = text.split(" ")[0];
 			this.draw(date);
