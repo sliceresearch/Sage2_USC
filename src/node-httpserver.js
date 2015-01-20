@@ -17,6 +17,8 @@ var url  = require('url');
 var mime = require('mime');
 var path = require('path');
 
+var sageutils = require('../src/node-utils');    // provides utility functions
+
 mime.default_type = "text/plain";
 
 function httpserver(publicDirectory) {
@@ -51,7 +53,7 @@ httpserver.prototype.onreq = function(req, res) {
 		var pathname = this.publicDirectory + getName;
 
 		// redirect a folder path to its containing index.html
-		if (fs.existsSync(pathname)) {
+		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);
 			if (stats.isDirectory()) {
 				this.redirect(res, path.join(getName, "index.html"));

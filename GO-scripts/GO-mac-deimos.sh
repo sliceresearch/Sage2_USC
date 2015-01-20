@@ -11,7 +11,7 @@ end tell'
  
 sleep 5
 
-global_param="--args --new-window  --disable-popup-blocking --nfirst-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--args --new-window  --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
 
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param --window-size=640,480 --window-position=0,0 --app=https://localhost:1442/audioManager.html  &
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $global_param --window-size=640,480 --window-position=0,0 --app=https://localhost:1443/audioManager.html  &

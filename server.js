@@ -30,7 +30,6 @@
 
 // npm registry: built-in or defined in package.json
 var colors      = require('colors');              // pretty colors in the terminal
-var crypto      = require('crypto');              // https encryption
 var exec        = require('child_process').exec;  // execute child process
 var formidable  = require('formidable');          // upload processor
 var fs          = require('fs');                  // filesystem access
@@ -72,6 +71,7 @@ program
   .option('-q, --no-output',            'Quiet, no output')
   .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .parse(process.argv);
+
 
 // Logging mechanism
 if (program.logfile) {
@@ -205,22 +205,20 @@ qr_png.pipe(fs.createWriteStream(qr_out));
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
 console.log("Temp folder: ".green, process.env.TMPDIR);
-if(!fs.existsSync(process.env.TMPDIR)){
+if(!sageutils.fileExists(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
 
 // Make sure session folder exists
 var sessionFolder = path.join(__dirname, "sessions");
-if (!fs.existsSync(sessionFolder)) {
+if (!sageutils.fileExists(sessionFolder)) {
      fs.mkdirSync(sessionFolder);
 }
 
 // Build the list of existing assets
 assets.initialize(uploadsFolder, 'uploads');
 
-var appLoader = new loader(public_https, hostOrigin, config.totalWidth, config.totalHeight,
-						(config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight,
-						imConstraints);
+var appLoader = new loader(public_https, hostOrigin, config, imConstraints);
 var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
@@ -619,18 +617,7 @@ function wsPointerScrollStart(wsio, data) {
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 
-	var elem = findAppUnderPointer(pointerX, pointerY);
-
-	if (elem !== null) {
-		remoteInteraction[uniqueID].selectScrollItem(elem);
-		//Retain the order to items sticking on this element
-		var stickyList = stickyAppHandler.getStickingItems(elem.id);
-		var newOrder = moveAppToFront(elem.id);
-		for (var idx in stickyList){
-			newOrder = moveAppToFront(stickyList[idx].id);
-		}
-		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
-	}
+	pointerScrollStart( uniqueID, pointerX, pointerY );
 }
 
 function wsPointerScroll(wsio, data) {
@@ -1837,7 +1824,7 @@ function loadConfiguration() {
 	}
 	else {
 	// Read config.txt - if exists and specifies a user defined config, then use it
-	if(fs.existsSync("config.txt")){
+	if(sageutils.fileExists("config.txt")){
 		var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
 		for(var i =0; i<lines.length; i++){
 			var text = "";
@@ -1860,7 +1847,7 @@ function loadConfiguration() {
 		var dot = hn.indexOf(".");
 		if(dot >= 0) hn = hn.substring(0, dot);
 		configFile = path.join("config", hn + "-cfg.json");
-		if(fs.existsSync(configFile)){
+		if(sageutils.fileExists(configFile)){
 			console.log("Found configuration file: " + configFile);
 		}
 		else{
@@ -1872,7 +1859,7 @@ function loadConfiguration() {
 		}
 	}
 	
-	if (! fs.existsSync(configFile)) {
+	if (! sageutils.fileExists(configFile)) {
 		console.log("\n----------");
 		console.log("Cannot find configuration file:", configFile);
 		console.log("----------\n\n");
@@ -2024,18 +2011,14 @@ function setupHttpsOptions() {
 	// add the default cert from the hostname specified in the config file
 	try {
 		// first try the filename based on the hostname-server.key
-		if (fs.existsSync(path.join("keys", config.host + "-server.key"))) {
+		if (sageutils.fileExists(path.join("keys", config.host + "-server.key"))) {
 			// Load the certificate files
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
-			if(fs.existsSync(path.join("keys", config.host + "-ca.crt")))
+			if(sageutils.fileExists(path.join("keys", config.host + "-ca.crt")))
 				server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
-			certs[config.host] = crypto.createCredentials({
-					key:  server_key,
-					cert: server_crt,
-					ca:   server_ca
-			}).context;
+			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
 		} else {
 			// remove the hostname from the FQDN and search for wildcard certificate
 			//    syntax: _.rest.com.key or _.rest.bigger.com.key
@@ -2043,10 +2026,9 @@ function setupHttpsOptions() {
 			console.log("Domain:", domain);
 			server_key = fs.readFileSync( path.join("keys", domain + ".key") );
 			server_crt = fs.readFileSync( path.join("keys", domain + ".crt") );
-			certs[config.host] = crypto.createCredentials({
-				key: server_key, cert: server_crt,
+			server_ca  = fs.readFileSync( path.join("keys", domain + "-ca.crt"));
 				// no need for CA
-			}).context;
+			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
 	}
 	}
 	catch (e) {
@@ -2061,12 +2043,12 @@ function setupHttpsOptions() {
 	for(var h in config.alternate_hosts){
 		try {
 			var alth = config.alternate_hosts[h];
-			certs[ alth ] = crypto.createCredentials({
-				key:  fs.readFileSync(path.join("keys", alth + "-server.key")),
-				cert: fs.readFileSync(path.join("keys", alth + "-server.crt")),
+			certs[ alth ] = sageutils.secureContext(
+				fs.readFileSync(path.join("keys", alth + "-server.key")),
+				fs.readFileSync(path.join("keys", alth + "-server.crt")),
 				// CA is only needed for self-signed certs
-				ca:   fs.readFileSync(path.join("keys", alth + "-ca.crt"))
-			}).context;
+				fs.readFileSync(path.join("keys", alth + "-ca.crt"))
+			);
 		}
 		catch (e) {
 			console.log("\n----------");
@@ -2080,25 +2062,48 @@ function setupHttpsOptions() {
 
 	console.log(certs);
 
-	var httpsOptions = {
-		// server default keys
-		key:  server_key,
-		cert: server_crt,
-		ca:   server_ca,
-		requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
-		rejectUnauthorized: false,
-		// callback to handle multi-homed machines
-		SNICallback: function(servername){
-			if(certs.hasOwnProperty(servername)){
-				return certs[servername];
+	var httpsOptions;
+
+	if (sageutils.nodeVersion === 10) {
+		httpsOptions = {
+			// server default keys
+			key:  server_key,
+			cert: server_crt,
+			ca:   server_ca,
+			requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
+			rejectUnauthorized: false,
+			// callback to handle multi-homed machines
+			SNICallback: function(servername){
+				if(certs.hasOwnProperty(servername)){
+					return certs[servername];
+				}
+				else{
+					console.log("SNI> Unknown host, cannot find a certificate for ", servername);
+					return null;
+				}
 			}
-			else{
-				console.log("SNI> Unknown host, cannot find a certificate for ", servername);
-				return null;
+		};
+	} else {
+		httpsOptions = {
+			// server default keys
+			key:  server_key,
+			cert: server_crt,
+			ca:   server_ca,
+			requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
+			rejectUnauthorized: false,
+			// callback to handle multi-homed machines
+			SNICallback: function(servername, cb) {
+				if(certs.hasOwnProperty(servername)){
+					cb(null, certs[servername]);
+				}
+				else{
+					console.log("SNI> Unknown host, cannot find a certificate for ", servername);
+					cb("SNI Unknown host", null);
+				}
 			}
-		}
-	};
-	
+		};
+	}
+
 	return httpsOptions;
 }
 
@@ -3171,20 +3176,20 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if (control!==null)
 		return;
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerScrollStart", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
 		
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
-	if(elem !== null){
-		remoteInteraction[uniqueID].selectScrollItem(elem, pointerX, pointerY);
+	if (elem !== null) {
+		remoteInteraction[uniqueID].selectScrollItem(elem);
 		//Retain the order to items sticking on this element
 		var stickyList = stickyAppHandler.getStickingItems(elem.id);
 		var newOrder = moveAppToFront(elem.id);
 		for (var idx in stickyList){
 			newOrder = moveAppToFront(stickyList[idx].id);
 		}
-		broadcast('updateItemOrder', newOrder, 'receivesWindowModification');
+		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
 	}
 }
 
@@ -3200,7 +3205,7 @@ function pointerScroll( uniqueID, data ) {
 		return;
 
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
 		return; // Radial menu is using the event
 		
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
@@ -3269,7 +3274,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 	}
 		
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
+	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
 		
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3598,12 +3603,36 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	{
 		if( elem === null )
 		{
-			radialMenus[uniqueID+"_menu"] = new radialmenu(uniqueID+"_menu", uniqueID);
-			radialMenus[uniqueID+"_menu"].top = pointerY;
-			radialMenus[uniqueID+"_menu"].left = pointerX;
-	
-			// Open a 'media' radial menu
-			broadcast('createRadialMenu', { id: uniqueID, x: pointerX, y: pointerY }, 'receivesPointerData');
+			var validLocation = true;
+			var newMenuPos = {x: pointerX, y: pointerY};
+			
+			// Make sure there's enough distance from other menus
+			for (var existingMenuID in radialMenus)
+			{
+				var existingRadialMenu = radialMenus[existingMenuID];
+				var prevMenuPos = { x: existingRadialMenu.left, y: existingRadialMenu.top };
+				
+				var distance = Math.sqrt( Math.pow( Math.abs(newMenuPos.x - prevMenuPos.x), 2 ) + Math.pow( Math.abs(newMenuPos.y - prevMenuPos.y), 2 ) );
+				
+				if( existingRadialMenu.visible && distance < existingRadialMenu.radialMenuSize.x )
+				{
+					validLocation = false;
+					console.log("Menu is too close to existing menu");
+				}
+			}
+						
+			if( validLocation && radialMenus[uniqueID+"_menu"] === undefined )
+			{
+				console.log(radialMenus[uniqueID+"_menu"]);
+				
+				var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
+				radialMenus[uniqueID+"_menu"] = newRadialMenu;
+				
+				newRadialMenu.setPosition(newMenuPos);
+		
+				// Open a 'media' radial menu
+				broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
+			}
 		}
 		else
 		{
@@ -3644,28 +3673,51 @@ function updateRadialMenu( uniqueID )
 	broadcast('updateRadialMenu', {id: uniqueID, fileList: list}, 'receivesPointerData');
 }
 
+// Standard case: Checks for event down and up events to determine menu ownership of event
 function radialMenuEvent( data )
 {
-	broadcast('radialMenuEvent', data, 'receivesPointerData');
-	
 	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
-	
-	var radialMenu = radialMenus[data.id+"_menu"];
-	if( radialMenu !== undefined )
+	for (var key in radialMenus)
 	{
-		radialMenu.onEvent( data );
-		
-		if( radialMenu.hasEventID(data.id) )
+		var radialMenu = radialMenus[key];
+		//console.log(data.id+"_menu: " + radialMenu);
+		if( radialMenu !== undefined )
 		{
-			return true;
+			if( radialMenu.onEvent( data ) )
+			{
+				// Broadcast event if event is in radial menu bounding box
+				broadcast('radialMenuEvent', data, 'receivesPointerData');
+			}
+			
+			if( radialMenu.hasEventID(data.id) )
+			{
+				return true;
+			}
 		}
-		else
-			return false;
 	}
+	
+	return false;
+}
+
+// Special case: just check if event is over menu (used for one-time events that don't use a start/end event)
+function isEventOnMenu( data )
+{
+	var overMenu = false;
+	for (var key in radialMenus)
+	{
+		var radialMenu = radialMenus[key];
+		if( radialMenu !== undefined )
+			overMenu =  radialMenu.isEventOnMenu( data );
+			
+		if( overMenu )
+			return true;
+	}
+	return false;
 }
 
 function wsRemoveRadialMenu( wsio, data ) {
 	var radialMenu = radialMenus[data.id];
+	
 	if( radialMenu !== undefined )
 	{
 		radialMenu.visible = false;
@@ -3697,3 +3749,4 @@ function attachAppIfSticky(backgroundItem, appId){
 	if (backgroundItem !== null)
 		stickyAppHandler.attachStickyItem(backgroundItem,app);
 }
+
