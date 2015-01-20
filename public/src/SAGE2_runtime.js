@@ -217,6 +217,18 @@ function format24Hr(date) {
 	return (hh + ":" + mm);
 }
 
+function formatHHMMSS(duration) {
+   	var ss = parseInt((duration/1000)%60, 10);
+    var mm = parseInt((duration/(1000*60))%60, 10);
+    var hh = parseInt((duration/(1000*60*60))%24, 10);
+
+    hh = (hh < 10) ? "0" + hh : hh;
+    mm = (mm < 10) ? "0" + mm : mm;
+    ss = (ss < 10) ? "0" + ss : ss;
+    
+    return (hh + ":" + mm + ":" + ss);
+}
+
 function base64ToString(base64) {
 	//return decodeURIComponent(escape(atob(base64)));
 	return atob(base64);

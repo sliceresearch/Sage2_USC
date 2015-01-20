@@ -102,9 +102,20 @@ var movie_player = SAGE2_App.extend( {
 		}});
 		this.controls.addSeparatorAfterButtons(1, 10); // This neatly forms an X out of the four spokes.
 		
-		this.controls.addSlider({begin: 0, end: this.video.numframes-1, increments: 1, appHandle: this, property: "state.frame", action: function(date) {
-			
-		}});
+		this.controls.addSlider({
+			begin: 0, 
+			end: this.video.numframes-1, 
+			increments: 1, 
+			appHandle: this, 
+			property: "state.frame", 
+			labelFormatFunction: function(value, end) {
+				var duration = parseInt(1000 * (value / _this.video.framerate), 10);
+				return formatHHMMSS(duration);
+			}, 
+			action: function(date) {
+				
+			}
+		});
 		this.controls.finishedAddingControls();
 	},
 	
