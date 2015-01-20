@@ -208,8 +208,8 @@ var stereo_image = SAGE2_App.extend( {
 	resize: function(date) {
 		this.refresh(date);
 	},
-
-	moved: function(date) {
+	
+	moved: function(px, py, wx, wy, date) {
 		this.refresh(date);
 	},
 
