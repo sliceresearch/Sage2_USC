@@ -2027,7 +2027,6 @@ function setupHttpsOptions() {
 			console.log("Domain:", domain);
 			server_key = fs.readFileSync( path.join("keys", domain + ".key") );
 			server_crt = fs.readFileSync( path.join("keys", domain + ".crt") );
-			server_ca  = fs.readFileSync( path.join("keys", domain + "-ca.crt"));
 				// no need for CA
 			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
 	}
