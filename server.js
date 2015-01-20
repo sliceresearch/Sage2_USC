@@ -2011,7 +2011,7 @@ function setupHttpsOptions() {
 
 	var httpsOptions;
 
-	if (sageutils.nodeVersion != 1) {
+	if (sageutils.nodeVersion === 10) {
 		httpsOptions = {
 			// server default keys
 			key:  server_key,
@@ -2031,15 +2031,23 @@ function setupHttpsOptions() {
 			}
 		};
 	} else {
-		console.log('Node v1.x : NO SNI support');
-			// PROBLEM: Bug SNI support in io.js v1.0
 		httpsOptions = {
 			// server default keys
 			key:  server_key,
 			cert: server_crt,
 			ca:   server_ca,
 			requestCert: false, // If true the server will request a certificate from clients that connect and attempt to verify that certificate
-			rejectUnauthorized: false
+			rejectUnauthorized: false,
+			// callback to handle multi-homed machines
+			SNICallback: function(servername, cb) {
+				if(certs.hasOwnProperty(servername)){
+					cb(null, certs[servername]);
+				}
+				else{
+					console.log("SNI> Unknown host, cannot find a certificate for ", servername);
+					cb("SNI Unknown host", null);
+				}
+			}
 		};
 	}
 
