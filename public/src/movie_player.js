@@ -77,45 +77,63 @@ var movie_player = SAGE2_App.extend( {
 	initWidgets: function() {
 		var _this = this;
 		
-		this.controls.addButton({type: "fastforward", sequenceNo: 2, action: function(date) {
-			
-		}});
-		this.controls.addButton({type: "rewind", sequenceNo: 4, action: function(date) {
-			
-		}});
-		this.controls.addButton({type: "play-pause", sequenceNo: 8, action: function(date) {
-			if(isMaster) {
-				if(_this.state.paused === true) {
-					console.log("play: " + _this.div.id);
-					wsio.emit('playVideo', {id: _this.div.id});
-					_this.state.paused = false;
-				}
-				else {
-					console.log("pause: " + _this.div.id);
-					wsio.emit('pauseVideo', {id: _this.div.id});
-					_this.state.paused = true;
-				}
-			}
-		}});
-		this.controls.addButton({type: "next", sequenceNo: 10,action: function(date) {
-			
-		}});
-		this.controls.addSeparatorAfterButtons(1, 10); // This neatly forms an X out of the four spokes.
-		
-		this.controls.addSlider({
-			begin: 0, 
-			end: this.video.numframes-1, 
-			increments: 1, 
-			appHandle: this, 
-			property: "state.frame", 
-			labelFormatFunction: function(value, end) {
-				var duration = parseInt(1000 * (value / _this.video.framerate), 10);
-				return formatHHMMSS(duration);
-			}, 
+		this.controls.addButton({
+			type: "fastforward",
+			sequenceNo: 2,
 			action: function(date) {
 				
 			}
 		});
+		this.controls.addButton({
+			type: "rewind",
+			sequenceNo: 4,
+			action: function(date) {
+				
+			}
+		});
+		this.controls.addButton({
+			type: "play-pause",
+			sequenceNo: 8,
+			action: function(date) {
+				if(isMaster) {
+					if(_this.state.paused === true) {
+						console.log("play: " + _this.div.id);
+						wsio.emit('playVideo', {id: _this.div.id});
+						_this.state.paused = false;
+					}
+					else {
+						console.log("pause: " + _this.div.id);
+						wsio.emit('pauseVideo', {id: _this.div.id});
+						_this.state.paused = true;
+					}
+				}
+			}
+		});
+		this.controls.addButton({
+			type: "next",
+			sequenceNo: 10,
+			action: function(date) {
+				
+			}
+		});
+		
+		this.controls.addSeparatorAfterButtons(1, 10); // This neatly forms an X out of the four spokes.
+		
+		this.controls.addSlider({
+			begin: 0,
+			end: this.video.numframes-1,
+			increments: 1,
+			appHandle: this,
+			property: "state.frame",
+			labelFormatFunction: function(value, end) {
+				var duration = parseInt(1000 * (value / _this.video.framerate), 10);
+				return formatHHMMSS(duration);
+			},
+			action: function(date) {
+				
+			}
+		});
+		
 		this.controls.finishedAddingControls();
 	},
 	
