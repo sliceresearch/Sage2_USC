@@ -784,6 +784,7 @@
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
 				ctrDiv.style.zIndex = "9999".toString();
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
+
 				var spec = controlItems[data.id].handle.controls;
 				if (spec.controlsReady() === true){
 					var handle = spec.createControls(data.id);
@@ -876,14 +877,15 @@
 						var fromPath = animationInfo.fromPath;
 						var toPath = animationInfo.toPath;
 						if (state===null){
-							
+							console.log("state:"+ state);
 							ctrl.animate({"path":toPath},delay,mina.bounce,function(){
 								ctrl.animate({"path":fromPath},delay,mina.bounce);	
 							});
 							
 						}
 						else{
-							var path = state? fromPath: toPath;
+							console.log("state:"+ state);
+							var path = (state===0)? fromPath: toPath;
 							animationInfo.state = 1 - animationInfo.state;
 							ctrl.data("animationInfo", animationInfo);
 							ctrl.animate({"path":path},delay,mina.bounce);
@@ -908,7 +910,12 @@
 			}
 			
 		});
-
+		wsio.on('sliderKnobLockAction', function(data){
+			if (/slider/.test(data.ctrlId)){
+				var ctrl = getWidgetControlById(data);
+				var slider = ctrl.parent();
+			}
+		});
 		wsio.on('moveSliderKnob', function(data){
 			var ctrl = getWidgetControlById(data.ctrl);
 			var ctrHandle = document.getElementById(data.ctrl.appId + "_controls");

@@ -58,6 +58,7 @@ var buttonType = {
 		"fill":"#ffffff",
 		"state": 0,
 		"delay": 400,
+		"textual":false,
 		"animation": true
 	},
 	"play-stop": {
@@ -69,6 +70,7 @@ var buttonType = {
 		"fill":"#ffffff",
 		"state": 0,
 		"delay": 400,
+		"textual":false,
 		"animation": true
 	},
 	"next": {
@@ -168,6 +170,24 @@ var buttonType = {
 		"textual":false,
 		"animation": true
 	},
+	"closeBar": {
+		"textual":true,
+		"label":"Close",
+		"fill":"rgba(250,250,250,1.0)",
+		"animation":false
+	},
+	"closeApp": {
+		"state": null,
+		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4",
+		"to": "m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4",
+		"width":8,
+		"height":10,
+		"fill":"none",
+		"strokeWidth": 1,
+		"delay":600,
+		"textual":false,
+		"animation":false
+	},
 	"default":{
 		"textual":true,
 		"label":"Hello",
@@ -257,7 +277,7 @@ SAGE2WidgetControlBar.prototype.setLayoutOptions = function(layoutOptions){
 *	}
 */
 SAGE2WidgetControlBar.prototype.addButton = function(data) {
-	if (this.itemCount <= 12){
+	if (this.itemCount <= 30){
 		var button = new SAGE2WidgetControls.button();
 		button.appId = this.id;
 		button.id = "button" + this.itemCount;
@@ -338,6 +358,8 @@ SAGE2WidgetControlBar.prototype.addSlider = function(data){
 			slider.increments = (slider.end - slider.begin)/slider.parts;
 		}
 		slider.call = data.action || null;
+		slider.lockCall = data.lockAction || null;
+		slider.updateCall = data.updateAction || null;
 		slider.appProperty = data.property;
 		slider.appHandle = data.appHandle;
 		slider.sliderVal = data.begin;
@@ -365,9 +387,11 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 	var dimensions = {};
 	dimensions.buttonRadius = 0.8 * ui.widgetControlSize;
 	dimensions.radius = dimensions.buttonRadius * 5.027 ; // tan(78.5): angle subtended at the center is 22.5
-	dimensions.secondRadius = dimensions.radius *0.75;
+	dimensions.firstRadius = dimensions.radius *0.75;
+
 	dimensions.innerR = dimensions.radius - dimensions.buttonRadius -3; // for the pie slice
 	dimensions.outerR = ui.widgetControlSize * 6.0;
+	dimensions.secondRadius = (dimensions.firstRadius + dimensions.outerR)*0.5;
 
 	size.height = dimensions.outerR * 2 + 5;
 	size.width = size.height;
@@ -389,12 +413,38 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 /**
 *	Creates default close and radial menu buttons
 */
-/*SAGE2WidgetControlBar.prototype.addDefaultButtons = function(){
-	this.addButton({type:"close",sequenceNo:9,action:function(date){
-		this.displayText = "Pushed watch button"; //Reset value
-		this.draw(date);
-	}.bind(this)});
+/*
+function wsCloseAppFromControl(wsio, data){
+	var app = findAppById(data.appId);
+	if (app)
+		deleteApplication(app);
+}
+
+function wsOpenRadialMenuFromControl(wsio, data){
+	createRadialMenu( data.id, data.x, data.y );
 }*/
+
+SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
+	console.log("Id:", data);
+	this.addButton({type:"closeApp",sequenceNo:data.sequence.closeApp,action:function(date){
+		if (isMaster)
+			wsio.emit('closeAppFromControl',{appId:data.id});
+	}});
+	this.addButton({type:"closeBar",sequenceNo:data.sequence.closeBar,action:function(date){
+		if (isMaster)
+			wsio.emit('hideWidgetFromControl',{appId:data.id});
+	}});
+	var radialButtonType = {
+		"textual":true,
+		"label":"Menu",
+		"fill":"rgba(250,250,250,1.0)",
+		"animation":false
+	};
+	this.addButton({type:"play-pause",sequenceNo:data.sequence.radial,action:function(date){
+		//if (isMaster)
+		//	wsio.emit('openRadialMenuFromControl',{appId:data.id});
+	}});
+};
 
 /**
 *	Creates control bar and elements from the layout options and element specifications
@@ -402,8 +452,9 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var size = this.computeSize();
 	var dimensions = this.controlDimensions;
-	//this.addDefaultButtons();
+	
 	this.controlSVG = new Snap(size.width, size.height);
+	
 	var center = {x:size.height/2.0,y:size.height/2.0}; //change to reflect controlSVG center
 
 	this.controlSVG.attr({
@@ -421,58 +472,62 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var buttonCount = this.itemCount;
 	var startAngle = 0;
 	var endAngle = 360;
-	var sequenceMaximum = 12;
-	var numberOfPads = 0;
-
+	var sequenceMaximum = 30;
+	var innerSequence = 12;
+	var outerSequence = 18;
 	if (this.hasSlider){
 		buttonCount--;
-		sequenceMaximum--;
+		innerSequence --;
+		outerSequence--;
 		startAngle += 15;
 		endAngle -= 15;
-		numberOfPads = 2;
-
 	}
 	if (this.hasTextInput){
 		buttonCount--;
-		sequenceMaximum--;
+		innerSequence --;
+		outerSequence--;
 		startAngle += 15;
 		endAngle -= 15;
-		numberOfPads = 2;
 	}
 	
-	/*Compute Padding */
-
-	for (var i=0;i<this.separatorList.length;i++){
-		if (this.separatorList[i] > -1 && this.separatorList[i] <= sequenceMaximum)
-			numberOfPads++;
-	}
-
-	var padding = 0;
-	if (numberOfPads > 0)
-		padding = 60.0/numberOfPads;
-	var thetaIncrement = (endAngle - startAngle)/sequenceMaximum;
-	var theta = startAngle + padding;
-	/*var start = startAngle;
-	var end = range[1];
-	if (this.layoutOptions.drawGroupBoundaries===true)
-			drawPieSlice(this.controlSVG, start-5,end+5, dimensions.innerR, dimensions.outerR,center);
-	*/
-	for (var idx = 1;idx<= sequenceMaximum;idx++){
-		var key = idx.toString();
+	if (this.hasSlider || this.hasTextInput)
+		outerSequence--;
+	this.addDefaultButtons({
+		id:ctrId.slice(0,ctrId.lastIndexOf("_")),
+		sequence:{closeApp: outerSequence/2 + innerSequence, closeBar: outerSequence/2 + innerSequence +1, radial: outerSequence/2 + innerSequence + 2}
+	});
+	var innerThetaIncrement = (endAngle - startAngle)/innerSequence;
+	var outerThetaIncrement = (endAngle - startAngle)/outerSequence;
+	var theta = startAngle ;
+	var idx;
+	var key;
+	var button;
+	var point;
+	for (idx = 1;idx<= innerSequence;idx++){
+		key = idx.toString();
 		if (key in this.buttonSequence){
-			var button = this.buttonSequence[key];
-			var point = polarToCartesian(dimensions.secondRadius,theta,center);
+			button = this.buttonSequence[key];
+			point = polarToCartesian(dimensions.firstRadius,theta,center);
 			if (this.layoutOptions.drawSpokes === true)
 				drawSpokeForRadialLayout(this.controlSVG,center,point);
 			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
-			for (i=0;i<this.separatorList.length;i++){
-				if (idx === this.separatorList[i])
-					theta = theta + padding;
-			}
 		}
-		theta = theta + thetaIncrement;
+		theta = theta + innerThetaIncrement;
+	}
+	theta = startAngle;
+	for (;idx<= (innerSequence+outerSequence);idx++){
+		key = idx.toString();
+		if (key in this.buttonSequence){
+			button = this.buttonSequence[key];
+			point = polarToCartesian(dimensions.secondRadius,theta,center);
+			//if (this.layoutOptions.drawSpokes === true)
+			//	drawSpokeForRadialLayout(this.controlSVG,center,point);
+			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
+		}
+		theta = theta + outerThetaIncrement;
 	}
 
+	
 	var d, leftMidOfBar;
 	if (this.hasSlider===true && this.hasTextInput === true){
 		d = makeBarPath(0,30, dimensions.innerR, center, this.slider.width);
@@ -646,7 +701,6 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 			position = left;
 		else if (position > right )
 			position = right;
-		slider
 		sliderKnobLabel.attr("text", formatFunction(n+begin,end));
 		sliderKnob.attr({x: position - knobWidth/2.0});//,1,mina.linear);
 		sliderKnobLabel.attr({x: position});//,1,mina.linear);//fontSize:fontSize + "em"
@@ -817,7 +871,6 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	});
 
 	var blink = function() {
-		console.log("blinking!");
 		blinker.animate({"stroke":"rgba(100,100,100,1.0)"},400,mina.easein,function(){
 			blinker.animate({"stroke":"rgba(255,255,255,1.0)"},400,mina.easeout);
 		});

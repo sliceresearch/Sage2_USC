@@ -201,7 +201,7 @@ function addWidgetControlsToPdfViewer (_this){
 		this.refresh(date);
 	}.bind(_this)});
 
-	_this.controls.addButton({type:"rewind",sequenceNo:4, action:function(date){
+	_this.controls.addButton({type:"rewind",sequenceNo:5, action:function(date){
 		this.state.page = 1;
 		this.refresh(date);
 	}.bind(_this)});
@@ -211,7 +211,7 @@ function addWidgetControlsToPdfViewer (_this){
 		this.state.page = this.state.page - 1;
 		this.refresh(date);
 	}.bind(_this)});
-	_this.controls.addButton({type:"next", sequenceNo:10,action:function(date){
+	_this.controls.addButton({type:"next", sequenceNo:11,action:function(date){
 		if (this.state.page >= this.pdfDoc.numPages) return;
 		this.state.page = this.state.page + 1;
 		this.refresh(date);

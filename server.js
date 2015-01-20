@@ -188,7 +188,12 @@ var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
 var radialMenus = {};
+
+// Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
+var newWindowPosition = null;
+var seedWindowPosition = null;
+
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
@@ -427,6 +432,9 @@ function initializeWSClient(wsio) {
 		wsio.on('addNewControl', wsAddNewControl);
 		wsio.on('selectedControlId', wsSelectedControlId);
 		wsio.on('releasedControlId', wsReleasedControlId);
+		wsio.on('closeAppFromControl', wsCloseAppFromControl);
+		wsio.on('hideWidgetFromControl', wsHideWidgetFromControl);
+		wsio.on('openRadialMenuFromControl', wsOpenRadialMenuFromControl);
 	}
 	if(wsio.messages.receivesDisplayConfiguration){
 		wsio.emit('setupDisplayConfiguration', config);
@@ -1724,11 +1732,13 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 	if (lockedControl){
 		//If a text input widget was locked, drop it
 		var appdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-		broadcast('dropTextInputControl', appdata ,'receivesWidgetEvents');
+		broadcast('dropTextInputControl', appdata, 'receivesWidgetEvents');
 		remoteInteraction[data.addr].dropControl();
 	}
 	if (regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
-		remoteInteraction[data.addr].lockControl({ctrlId:data.ctrlId,appId:data.appId});
+		var appData = {ctrlId:data.ctrlId,appId:data.appId};
+		remoteInteraction[data.addr].lockControl(appData);
+		broadcast('sliderKnobLockAction', appData, 'receivesWidgetEvents');
 	}
 }
 
@@ -1740,6 +1750,25 @@ function wsReleasedControlId(wsio, data){
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
 	}
 }
+
+function wsCloseAppFromControl(wsio, data){
+	console.log("close App:", data.appId);
+	var app = findAppById(data.appId);
+	if (app)
+		deleteApplication(app);
+}
+
+function wsHideWidgetFromControl(wsio, data){
+	var ctrl = findControlByAppId(data.appId);
+	hideControl(ctrl);
+}
+
+function wsOpenRadialMenuFromControl(wsio, data){
+	console.log("radial menu");
+	var ctrl = findControlByAppId(data.appId);
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	createRadialMenu( uniqueID, ctrl.left, ctrl.top);
+}
 /******************** Clone Request Methods ****************************/
 
 function wsCreateAppClone(wsio, data){
@@ -1747,8 +1776,9 @@ function wsCreateAppClone(wsio, data){
 	var appData = {application: "custom_app", filename: app.application};
 	appLoader.loadFileFromLocalStorage(appData, function(clone) {
 		clone.id = getUniqueAppId();
-		clone.left = app.left + 5;
-		clone.top = app.top + 5;
+		var pos = getNewWindowPosition({x:app.left,y:app.top});
+		clone.left = pos.x
+		clone.top = pos.y;
 		clone.width = app.width;
 		clone.height = app.height;
 		if(clone.animation){
@@ -1773,6 +1803,29 @@ function wsCreateAppClone(wsio, data){
 	});	
 }
 
+
+function getNewWindowPosition(seedPosition){
+
+	if (!newWindowPosition){
+		newWindowPosition = {x:seedPosition.x+20,y:seedPosition.y+20};
+		seedWindowPosition = {x:seedPosition.x,y:seedPosition.y};
+	}
+	else if (seedWindowPosition.x === seedPosition.x && seedWindowPosition.y === seedPosition.y){
+		newWindowPosition.x += 20;
+		newWindowPosition.y += 20;
+	}
+	else{
+		newWindowPosition = {x:seedPosition.x+20,y:seedPosition.y+20};
+		seedWindowPosition = {x:seedPosition.x,y:seedPosition.y};
+	}
+
+
+	if ((newWindowPosition.x > config.totalWidth - 200) || (newWindowPosition.y > config.totalHeight - 200)){
+		newWindowPosition.x = 20;
+		newWindowPosition.y = 20;
+	}
+	return newWindowPosition;
+}
 /******************** Clone Request Methods ****************************/
 
 
