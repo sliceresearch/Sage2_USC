@@ -32,7 +32,7 @@ var overlayIconScale = 0.5; // image, pdf, etc image
 
 var thumbnailScrollScale = 1;
 var thumbnailDisableSelectionScrollDistance = 5; // Distance in pixels scroll window can move before button select is cancelled
-var thumbnailWindowSize = { x: 1224, y: 860 };
+var thumbnailWindowSize = { x: 1024, y: 768 };
 var thumbnailPreviewWindowSize = { x: 550, y: 800 };
 
 var radialMenuList = {};
@@ -50,14 +50,21 @@ function radialMenu(){
 	this.thumbnailScrollWindowElement2 = null;
 	this.thumbScrollWindowctx2 = null;
 	
-	this.init = function(id, thumbElem, thumbElem2) {
-		radialMenuScale = ui.widgetControlSize * 0.03;
+	this.thumbnailWindowSize = thumbnailWindowSize;
+	this.imageThumbSize = imageThumbSize;
+	
+	// This is the number of thumbnails in the window WITHOUT scrolling
+	this.thumbnailGridSize = { x: 10, y: 10 }; // Overwritten in setThumbnailPosition().
+	
+	this.init = function(data, thumbElem, thumbElem2) {
+		var id = data.id;
+		radialMenuScale = data.radialMenuScale;
 		radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
-		radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
+		this.radialMenuSize = data.radialMenuSize;
 		
-		thumbnailWindowSize.x *= radialMenuScale;
-		thumbnailWindowSize.y *= radialMenuScale;
-		imageThumbSize *= radialMenuScale;
+		this.thumbnailWindowSize.x = data.thumbnailWindowSize.x;
+		this.thumbnailWindowSize.y = data.thumbnailWindowSize.y;
+		this.imageThumbSize = imageThumbSize * radialMenuScale;
 		
 		this.textHeaderHeight = 32  * radialMenuScale;
 		//if( this.textHeaderHeight < thumbnailWindowMinTextHeight )
@@ -85,8 +92,9 @@ function radialMenu(){
 		this.ctx.redraw = true;
 		this.dragPosition = { x: 0, y: 0 };
 		
+		this.notEnoughThumbnailsToScroll = false; // Flag to stop scrolling if there are not enough thumbnails
 		this.dragThumbnailWindow = false;
-		this.thumbnailWindowPosition = { x: (radialMenuCenter.x * 2 + imageThumbSize/2), y: 30 * radialMenuScale };
+		this.thumbnailWindowPosition = { x: (radialMenuCenter.x * 2 + this.imageThumbSize/2), y: 30 * radialMenuScale };
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
@@ -104,8 +112,8 @@ function radialMenu(){
 		this.thumbnailWindowScrollLock = { x: false, y: true };
 		this.scrollOpenContentLock = false; // Stop opening content/app if window is scrolling
 		
-		this.thumbnailScrollWindowElement.width = thumbnailWindowSize.x - this.thumbnailWindowPosition.x;
-		this.thumbnailScrollWindowElement.height = thumbnailWindowSize.y - this.thumbnailWindowPosition.y;
+		this.thumbnailScrollWindowElement.width = this.thumbnailWindowSize.x - this.thumbnailWindowPosition.x;
+		this.thumbnailScrollWindowElement.height = this.thumbnailWindowSize.y - this.thumbnailWindowPosition.y;
 		this.thumbnailScrollWindowElement.style.display = "block";
 		
 		this.hoverOverText = "";
@@ -205,7 +213,7 @@ function radialMenu(){
 		
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
-		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, imageThumbSize, 'centered', 'circle', 0, 0 );
+		this.radialDragButton = this.createRadialButton( this.radialDragIcon, false, 500, this.imageThumbSize, 'centered', 'circle', 0, 0 );
 		
 		this.radialCenterButton = this.createRadialButton( this.radialMenuIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 );
 		
@@ -342,7 +350,7 @@ function radialMenu(){
 	
 	this.animate = function( data )
 	{
-		console.log(data);
+		//console.log(data);
 	};
 	
 	this.draw = function() {
@@ -451,7 +459,7 @@ function radialMenu(){
 			
 			// Preview window
 			previewImageSize = this.element.width * previewWindowWidth;
-			previewImageX = thumbnailWindowSize.x + imageThumbSize/2 - 10;
+			previewImageX = this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10;
 			previewImageY = 60 + this.textHeaderHeight;
 				
 			// Metadata
@@ -463,7 +471,7 @@ function radialMenu(){
 			if( this.currentMenuState !== 'radialMenu' )
 			{
 				this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)";
-				this.ctx.fillRect(previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight, previewImageSize + 20, thumbnailWindowSize.y);
+				this.ctx.fillRect(previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight, previewImageSize + 20, this.thumbnailWindowSize.y);
 			}
 			
 			this.borderLineThickness = 5 * radialMenuScale;
@@ -485,7 +493,7 @@ function radialMenu(){
 			// Thumbnail window - Vert line
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale - this.borderLineThickness/2, this.thumbnailWindowPosition.y + this.textHeaderHeight );
-			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale - this.borderLineThickness/2, thumbnailWindowSize.y);
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale - this.borderLineThickness/2, this.thumbnailWindowSize.y);
 			this.ctx.strokeStyle = '#ffffff';
 			this.ctx.lineWidth = 5 * radialMenuScale;
 			this.ctx.stroke();
@@ -710,6 +718,9 @@ function radialMenu(){
 		if( this.sendsToServer === true )
 			this.wsio.emit('removeRadialMenu', { id: this.menuID } );
 		
+		this.currentMenuState = 'radialMenu';
+		this.resetRadialButtonLitState();
+		
 		console.log("Closing menu" );
 	};
 	
@@ -720,8 +731,8 @@ function radialMenu(){
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 			
 			this.currentMenuState = type;
-			this.element.width = thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
-			this.element.height = thumbnailWindowSize.y;
+			this.element.width = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
+			this.element.height = this.thumbnailWindowSize.y;
 			this.thumbnailScrollWindowElement.style.display = "block";
 			this.thumbScrollWindowctx.redraw = true;
 			this.updateThumbnailPositions();
@@ -735,9 +746,9 @@ function radialMenu(){
 		else
 		{
 			this.currentMenuState = 'radialMenu';
-			this.element.width = radialMenuSize.x;
-			this.element.height = radialMenuSize.y;
-			this.thumbnailScrollWindowElement.style.display = "None";
+			this.element.width = this.radialMenuSize.x;
+			this.element.height = this.radialMenuSize.y;
+			//this.thumbnailScrollWindowElement.style.display = "None";
 			
 			if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: false } );
@@ -760,7 +771,7 @@ function radialMenu(){
 		pointerX = data.x - data.windowX - offset.x;
 		pointerY = data.y - data.windowY - offset.y;
 
-		if( this.windowInteractionMode === false && pointerX > 0 && pointerX < radialMenuSize.x && pointerY > 0 && pointerY < radialMenuSize.y && buttonOverCount === 0 )
+		if( this.windowInteractionMode === false && pointerX > 0 && pointerX < this.radialMenuSize.x && pointerY > 0 && pointerY < this.radialMenuSize.y && buttonOverCount === 0 )
 		{
 			dragOffset = this.dragPosition;
 			
@@ -769,15 +780,15 @@ function radialMenu(){
 			
 			if( this.sendsToServer === true )
 			{
-				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x), y: (data.y - dragOffset.y), radialMenuSize: radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
+				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)+this.radialMenuSize.x/2, y: (data.y - dragOffset.y)+this.radialMenuSize.y/2, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
 			}
 		}
 		
 		this.thumbnailWindowDiv.style.left   = (data.windowX + this.thumbnailWindowPosition.x - 18  * radialMenuScale).toString() + "px";
 		this.thumbnailWindowDiv.style.top    = (data.windowY + this.thumbnailWindowPosition.y + this.textHeaderHeight).toString() + "px";
 		
-		this.thumbnailWindowDiv.style.width   = (thumbnailWindowSize.x + imageThumbSize/2 - 10 - radialMenuSize.x - 25 * radialMenuScale).toString() + "px";
-		this.thumbnailWindowDiv.style.height    = (thumbnailWindowSize.y - this.textHeaderHeight * 2).toString() + "px";
+		this.thumbnailWindowDiv.style.width   = (this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * radialMenuScale).toString() + "px";
+		this.thumbnailWindowDiv.style.height    = (this.thumbnailWindowSize.y - this.textHeaderHeight * 2).toString() + "px";
 	};
 	
 	this.onEvent = function(type, position, user, data) {
@@ -803,8 +814,8 @@ function radialMenu(){
 		// Level 1 -----------------------------------
 		if( this.currentRadialState === 'radialMenu' )
 		{
-			//this.element.width = radialMenuSize.x;
-			//this.element.height = radialMenuSize.y;
+			//this.element.width = this.radialMenuSize.x;
+			//this.element.height = this.radialMenuSize.y;
 			
 			buttonOverCount += this.radialImageButton.onEvent(type, user.id, position, data);
 			buttonOverCount += this.radialPDFButton.onEvent(type, user.id, position, data);
@@ -918,10 +929,12 @@ function radialMenu(){
 				
 				
 				thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x + 18  * radialMenuScale, y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight };
-				
+
 				// Prevent clicking on hidden thumbnails under preview window
-				if( thumbEventPos.x < thumbnailWindowSize.x - thumbnailPreviewWindowSize.x + imageThumbSize*3 + 10 )
+				var thumbnailWindowDivWidth = this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * radialMenuScale; // Should match where 'this.thumbnailWindowDiv.style.width' is assigned
+				if( thumbEventPos.x >= 0 && thumbEventPos.x <= thumbnailWindowDivWidth )
 				{
+					thumbEventPos.x -= this.thumbnailWindowScrollOffset.x;
 					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 				
 					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
@@ -937,8 +950,10 @@ function radialMenu(){
 						this.hoverOverThumbnail = thumbButton.idleImage;
 						this.hoverOverMeta = thumbButton.getData().meta;
 						overButton = true;
-						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
 					}
+					
+					if( thumbButton.isFirstOver()  ) // Only occurs on first pointerMove event over button
+						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
 				}
 			}
 		}
@@ -947,13 +962,13 @@ function radialMenu(){
 		if( type === "pointerPress" && data.button === 'left' )
 		{
 			// Press over radial menu, drag menu
-			if( position.x > 0 && position.x < radialMenuSize.x && position.y > 0 && position.y < radialMenuSize.y && buttonOverCount === 0 )
+			if( position.x > 0 && position.x < this.radialMenuSize.x && position.y > 0 && position.y < this.radialMenuSize.y && buttonOverCount === 0 )
 			{
 				this.windowInteractionMode = false;
 				this.dragPosition = position;
 			}
 			
-			if( position.x > radialMenuSize.x && position.x < thumbnailWindowSize.x && position.y > 0 && position.y < thumbnailWindowSize.y )
+			if( position.x > this.radialMenuSize.x && position.x < this.thumbnailWindowSize.x && position.y > 0 && position.y < this.thumbnailWindowSize.y )
 			{
 				if( this.dragThumbnailWindow === false )
 				{
@@ -970,18 +985,30 @@ function radialMenu(){
 		{
 			if( this.dragThumbnailWindow === true )
 			{
-				//if( this.thumbnailWindowScrollOffset.x <= 0 )
-				//{
+				// Controls the content window scrolling.
+				// Note:Scrolling is +right, -left so offset should always be negative				
+				if( this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false )
+				{
 					var scrollDist = 0;
-		
+					
+					nextScrollPos = this.thumbnailWindowScrollOffset;
+					
+					nextScrollPos.x += (position.x - this.thumbnailWindowDragPosition.x) * thumbnailScrollScale;
+					nextScrollPos.y += (position.y - this.thumbnailWindowDragPosition.y) * thumbnailScrollScale;
+					
+					if( nextScrollPos.x > 0 )
+						nextScrollPos.x = 0;
+					if( nextScrollPos.y > 0 )
+						nextScrollPos.y = 0;
+					
 					if( this.thumbnailWindowScrollLock.x === false )
 					{
-						this.thumbnailWindowScrollOffset.x += (position.x - this.thumbnailWindowDragPosition.x) * thumbnailScrollScale;
+						this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
 						scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
 					}
 					if( this.thumbnailWindowScrollLock.y === false )
 					{
-						this.thumbnailWindowScrollOffset.y += (position.y - this.thumbnailWindowDragPosition.y) * thumbnailScrollScale;
+						this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
 						scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
 					}
 
@@ -992,13 +1019,15 @@ function radialMenu(){
 					{
 						this.scrollOpenContentLock = true;
 					}
-				//}
-
-				this.thumbnailWindowDragPosition = position;
-				
-				if( enableEventRedraw )
-					this.thumbScrollWindowctx.redraw = true;
-				//this.updateThumbnailPositions();
+					
+					this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString()+"px";
+					
+					this.thumbnailWindowDragPosition = position;
+				}
+				else
+				{
+					this.thumbnailWindowScrollOffset.x = 0;
+				}
 			}
 
 		}
@@ -1140,8 +1169,8 @@ function radialMenu(){
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
 				
-				thumbnailButton.setSize( imageThumbSize * 2, imageThumbSize * 2 );
-				thumbnailButton.setHitboxSize( imageThumbSize * 2, imageThumbSize * 2 );
+				thumbnailButton.setSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
+				thumbnailButton.setHitboxSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
 				
 				if ( appList[i].exif.SAGE2thumbnail !== null )
 				{
@@ -1174,6 +1203,29 @@ function radialMenu(){
 		this.updateThumbnailPositions();
 	};
 	
+	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbSize, thumbSpacer, maxRows, neededColumns )
+	{
+		var curRow = 0;
+		var curColumn = 0;
+		
+		this.thumbnailScrollWindowElement.width = (imageThumbSize + thumbSpacer) * neededColumns;
+		for( i = 0; i < thumbnailSourceList.length; i++ )
+		{
+			currentButton = thumbnailSourceList[i];
+			
+			
+			if( curColumn+1 > neededColumns )
+			{
+				curColumn = 0;
+				
+				if( curRow < maxRows - 1 )
+					curRow++;
+			}
+			currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
+			curColumn++;
+		}
+	};
+	
 	this.updateThumbnailPositions = function()
 	{
 		var curRow = 0;
@@ -1181,156 +1233,80 @@ function radialMenu(){
 		
 		//{ x: 1224, y: 860 };
 		
-		var thumbWindowSize = thumbnailWindowSize;
+		var thumbWindowSize = this.thumbnailWindowSize;
 		
 		// maxRows is considered a 'hard' limit based on the thumbnail and window size.
 		// If maxRows and maxCols is exceeded, then maxCols is expanded as needed.
-		var maxRows = Math.floor((thumbWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize + thumbSpacer));
-		var maxCols = Math.floor((thumbWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize + thumbSpacer));
+		var maxRows = Math.floor((thumbWindowSize.y-this.thumbnailWindowPosition.y) / (this.imageThumbSize + thumbSpacer));
+		var maxCols = Math.floor((thumbWindowSize.x-this.thumbnailWindowPosition.x) / (this.imageThumbSize + thumbSpacer));
 		
-		var neededColumns = Math.ceil(this.imageThumbnailButtons.length / ( maxRows * maxCols ));
-		if( this.currentMenuState === 'pdfThumbnailWindow' )
-			neededColumns = Math.ceil(this.pdfThumbnailButtons.length / ( maxRows * maxCols ));
+		var neededColumns = maxRows;
+
+		if( this.currentMenuState === 'imageThumbnailWindow' )
+		{
+			if( this.imageThumbnailButtons.length > (maxRows*maxCols) )
+				neededColumns = Math.ceil(this.imageThumbnailButtons.length / maxRows );
+		}
+		else if( this.currentMenuState === 'pdfThumbnailWindow' )
+		{
+			if( this.pdfThumbnailButtons.length > (maxRows*maxCols) )
+				neededColumns = Math.ceil(this.pdfThumbnailButtons.length / maxRows );
+		}
 		else if( this.currentMenuState === 'videoThumbnailWindow' )
-			neededColumns = Math.ceil(this.videoThumbnailButtons.length / ( maxRows * maxCols ));
+		{
+			if( this.videoThumbnailButtons.length > (maxRows*maxCols) )
+				neededColumns = Math.ceil(this.videoThumbnailButtons.length / maxRows );
+		}
 		else if( this.currentMenuState === 'sessionThumbnailWindow' )
-			neededColumns = Math.ceil(this.sessionThumbnailButtons.length / ( maxRows * maxCols ));
-			
-		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer);
+		{
+			if( this.sessionThumbnailButtons.length > (maxRows*maxCols) )
+				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows );
+		}
+		
+		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize + thumbSpacer);
 		
 		// Special thumbnail size for custom apps
 		if( this.currentMenuState === 'appThumbnailWindow' )
 		{
-			maxRows = Math.floor((thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (imageThumbSize * 2 + thumbSpacer));
-			maxCols = Math.floor((thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (imageThumbSize * 2 + thumbSpacer));
-			neededColumns = Math.ceil(this.appThumbnailButtons.length / ( maxRows * maxCols ));
-			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize * 2 + thumbSpacer);
-		}
-
-		// Limits on scroll distance ----------------------------------------
-		if( this.thumbnailWindowScrollOffset.x > 0 )
-		{
-			this.thumbnailWindowScrollOffset.x = 0;
-			this.scrollOpenContentLock = true;
+			maxRows = Math.floor((this.thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
+			maxCols = Math.floor((this.thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (this.imageThumbSize * 2 + thumbSpacer));
+			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
+			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize * 2 + thumbSpacer);
 		}
 		
-		if( this.thumbnailWindowScrollOffset.x < maxScrollPosX )
-			this.thumbnailWindowScrollOffset.x = maxScrollPosX;
-		// --------------------------------------------------------------------
-				
-		//console.log( this.thumbnailWindowScrollOffset.x, this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (imageThumbSize + thumbSpacer));
-		var nextCol;
-		var currentButton;
+		this.thumbnailGridSize = { x: maxRows, y: maxCols };
+		if( neededColumns > maxRows )
+			this.notEnoughThumbnailsToScroll = false;
+		else
+		{
+			this.notEnoughThumbnailsToScroll = true;
+			this.thumbnailWindowScrollOffset.x = 0;
+			this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString()+"px";
+		}
+		
 		if( this.currentMenuState === 'imageThumbnailWindow' )
-			for( i = 0; i < this.imageThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.imageThumbnailButtons[i];
-				
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
+		{
+			this.setThumbnailPosition( this.imageThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
+		}
 
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				//currentButton.setPosition( 0 + curColumn * (imageThumbSize + thumbSpacer),  this.thumbnailWindowPosition.y + curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
 		if( this.currentMenuState === 'pdfThumbnailWindow' )
-			for( i = 0; i < this.pdfThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.pdfThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
+		{
+			this.setThumbnailPosition( this.pdfThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
+		}
+
 		if( this.currentMenuState === 'videoThumbnailWindow' )
-			for( i = 0; i < this.videoThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.videoThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
+		{
+			this.setThumbnailPosition( this.videoThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
+		}
+		
 		if( this.currentMenuState === 'appThumbnailWindow' )
 		{
-			for( i = 0; i < this.appThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 2) * (imageThumbSize * 2 + thumbSpacer));
-				currentButton = this.appThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize * 2 + thumbSpacer), curRow * (imageThumbSize * 2 + thumbSpacer) );
-				
-				curColumn++;
-			}
+			this.setThumbnailPosition( this.appThumbnailButtons, this.imageThumbSize * 2, thumbSpacer, maxRows, neededColumns );
 		}
-		//curColumn = 0;
-		//curRow += 2;
-		curRow = 0;
-		curColumn = 0;
+
 		if( this.currentMenuState === 'sessionThumbnailWindow' )
-			for( i = 0; i < this.sessionThumbnailButtons.length; i++ )
-			{
-				nextCol = (this.thumbnailWindowPosition.x + (curColumn + 4) * (imageThumbSize + thumbSpacer));
-				currentButton = this.sessionThumbnailButtons[i];
-				
-				if( nextCol > thumbWindowSize.x + (neededColumns+2) * (imageThumbSize + thumbSpacer) )
-				{
-					curColumn = 0;
-					
-					if( curRow < maxRows - 1 )
-						curRow++;
-				}
-				
-				currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
-				
-				curColumn++;
-			}
+			this.setThumbnailPosition( this.sessionThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
+
 	};
 
 }
@@ -1343,11 +1319,11 @@ function buttonWidget() {
 	this.posX = 100;
 	this.posY = 100;
 	this.angle = 0;
-	this.width = imageThumbSize;
-	this.height = imageThumbSize;
+	this.width = imageThumbSize * radialMenuScale;
+	this.height = imageThumbSize * radialMenuScale;
 	
-	this.hitboxWidth = imageThumbSize;
-	this.hitboxheight = imageThumbSize;
+	this.hitboxWidth = imageThumbSize * radialMenuScale;
+	this.hitboxheight = imageThumbSize * radialMenuScale;
 	
 	this.defaultColor =  "rgba(210, 210, 210, 1.0)";
 	this.mouseOverColor = "rgba(210, 210, 10, 1.0 )";
@@ -1378,6 +1354,7 @@ function buttonWidget() {
 	// 2  = Pressed
 	// 3  = Clicked
 	// 4  = Released
+	// 5	= OverEnter (First over event)
 	this.state = 0;
 	
 	this.buttonData = {};
@@ -1451,7 +1428,7 @@ function buttonWidget() {
 		this.ctx.save();
 		this.ctx.translate( translate.x, translate.y );
 			
-		if( this.state === 1 )
+		if( this.state === 5 )
 		{
 			this.ctx.fillStyle = this.mouseOverColor;
 		}
@@ -1551,7 +1528,12 @@ function buttonWidget() {
 	{
 		if( this.isPositionOver( user, position ) )
 		{
-			if( type === "pointerPress" && this.state != 2 )
+			if( this.state === 5 )
+			{
+				this.state = 1;
+			}
+			
+			if( type === "pointerPress" && this.state !== 2 )
 			{
 				this.state = 3; // Click state
 				if( this.useEventOverColor )
@@ -1565,9 +1547,14 @@ function buttonWidget() {
 			}
 			else if( this.state !== 2 )
 			{
-				if( this.state !== 1 && this.useEventOverColor )
-					this.ctx.redraw = true;
-				this.state = 1;
+				if( this.state !== 1 )
+				{
+					this.state = 5;
+					if( this.useEventOverColor )
+						this.ctx.redraw = true;
+				}
+				else
+					this.state = 1;
 			}
 			
 			return 1;
@@ -1609,6 +1596,16 @@ function buttonWidget() {
 			else
 				return false;
 		}
+	};
+	
+	this.isFirstOver = function()
+	{
+		if ( this.state === 5 )
+		{
+			return true;
+		}
+		else
+			return false;
 	};
 	
 	this.isOver = function()

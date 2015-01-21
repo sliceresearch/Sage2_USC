@@ -481,6 +481,33 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
+appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
+    var _this = this;
+
+    // Find the app!!
+    var appName = registry.getDefaultApp(file);
+    console.log("Loader> Loading %s with %s", mime_type, appName);
+
+    var instructionsFile = path.join(this.publicDir, "uploads", "apps", appName, "instructions.json");
+    console.log("Reading: %s", instructionsFile);
+
+    fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+        if(err) throw err;
+
+        //assets.exifAsync([file], function(err){
+        //    if(err) throw err;
+
+	var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
+	var app_external_url = _this.hostOrigin + encodeReservedURL(appPath);
+	var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
+	appInstance.url = appInstance.url.replace("public_HTTPS/", "");
+	appInstance.data = url;
+	callback(appInstance);
+        //});
+    });
+};
+
+
 appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 	var zipFolder = file;
@@ -489,43 +516,7 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 	fs.readFile(instuctionsFile, 'utf8', function(err, json_str) {
 		if(err) throw err;
 
-		var instructions = JSON.parse(json_str);
-		var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
-		var aspectRatio = instructions.width / instructions.height;
-
-		var resizeMode = "proportional";
-		if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
-			resizeMode = instructions.resize;
-
-		var exif = assets.getExifData(zipFolder);
-
-		var appInstance = {
-			id: null,
-			title: exif.metadata.title,
-			application: appName,
-			icon: exif.SAGE2thumbnail,
-			type: mime_type,
-			url: external_url,
-			data: instructions.load,
-			resrc: instructions.dependencies,
-			left: _this.titleBarHeight,
-			top: 1.5*_this.titleBarHeight,
-			width: instructions.width,
-			height: instructions.height,
-			native_width: instructions.width,
-			native_height: instructions.height,
-			previous_left: null,
-			previous_top: null,
-			previous_width: null,
-			previous_height: null,
-			maximized: false,
-			aspect: aspectRatio,
-			animation: instructions.animation,
-			metadata: exif.metadata,
-			resizeMode: resizeMode,
-			sticky:instructions.sticky,
-			date: new Date()
-		};
+        var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 		//_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
 	});
@@ -545,43 +536,7 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 			assets.exifAsync([zipFolder], function(err){
 				if(err) throw err;
 
-				var instructions = JSON.parse(json_str);
-				var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
-				var aspectRatio = instructions.width / instructions.height;
-
-				var resizeMode = "proportional";
-				if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
-					resizeMode = instructions.resize;
-
-				var exif = assets.getExifData(zipFolder);
-
-				var appInstance = {
-					id: null,
-					title: exif.metadata.title,
-					application: appName,
-					icon: exif.SAGE2thumbnail,
-					type: mime_type,
-					url: external_url,
-					data: instructions.load,
-					resrc: instructions.dependencies,
-					left: _this.titleBarHeight,
-					top: 1.5*_this.titleBarHeight,
-					width: instructions.width,
-					height: instructions.height,
-					native_width: instructions.width,
-					native_height: instructions.height,
-					previous_left: null,
-					previous_top: null,
-					previous_width: null,
-					previous_height: null,
-					maximized: false,
-					aspect: aspectRatio,
-					animation: instructions.animation,
-					metadata: exif.metadata,
-					resizeMode: resizeMode,
-					sticky:instructions.sticky,
-					date: new Date()
-				};
+                var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
 				callback(appInstance);
 			});
@@ -783,6 +738,11 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 		}
+        else {
+            this.loadAppFromFileFromRegistry(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
+                callback(appInstance);
+            });
+        }
 	}
 
 	else if(appData.location === "url") {
@@ -843,6 +803,46 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 		this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance, null);
 	}
+};
+
+appLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, external_url) {
+    var instructions = JSON.parse(json_str);
+    var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
+    var aspectRatio = instructions.width / instructions.height;
+
+    var resizeMode = "proportional";
+    if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "")
+        resizeMode = instructions.resize;
+
+    var exif = assets.getExifData(file);
+
+    return {
+        id: null,
+        title: exif.metadata.title,
+        application: appName,
+        icon: exif.SAGE2thumbnail,
+        type: mime_type,
+        url: external_url,
+        data: instructions.load,
+        resrc: instructions.dependencies,
+        left: this.titleBarHeight,
+        top: 1.5*this.titleBarHeight,
+        width: instructions.width,
+        height: instructions.height,
+        native_width: instructions.width,
+        native_height: instructions.height,
+        previous_left: null,
+        previous_top: null,
+        previous_width: null,
+        previous_height: null,
+        maximized: false,
+        aspect: aspectRatio,
+        animation: instructions.animation,
+        metadata: exif.metadata,
+        resizeMode: resizeMode,
+        sticky:instructions.sticky,
+        date: new Date()
+    };
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////

@@ -64,7 +64,9 @@
 	"bundledDependencies": [],
 	"devDependencies": {
         "mocha": "^2.0.1",
-        "mocha-jshint": "^0.0.9"
+        "mocha-jshint": "^0.0.9",
+        "istanbul": "^0.3.5",
+        "coveralls": "^2.11.2"
     },
 	"engines": {
 		"node": ">=0.10.x"
@@ -74,7 +76,7 @@
 		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/src/*.js",
 		"doc": "yuidoc -c doc/yuidoc.json",
-        "test": "./node_modules/mocha/bin/_mocha --slow=5000 --timeout=10000 ./test/*.js"
+        "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=10000 ./test/*.js"
 	},
 	"license": "SAGE2-Software-License"
 }

@@ -36,7 +36,7 @@ var lastWandFlags     = 0;
 
 var wandLabel = "wandTracker";
 var wandColor = "rgba(250, 5, 5, 1.0)";
-var wandScaleDelta = 0.1;
+var wandScaleDelta = 250;
 
 var lastPosX = 0;
 var lastPosY = 0;
@@ -265,6 +265,7 @@ omicronManager.prototype.runTracker = function()
 			var serviceType = e.serviceType;
 			//console.log("Event service type: " + serviceType);
 			
+			//console.log(e.sourceId, e.posx, e.posy, e.posz);
 			// serviceID:
 			// (Note: this depends on the order the services are specified on the server)
 			//		0 = Touch
@@ -284,7 +285,7 @@ omicronManager.prototype.runTracker = function()
 			
 			// Appending sourceID to pointer address ID
 			var address = rinfo.address+":"+sourceID;
-			
+				
 			// ServiceTypePointer //////////////////////////////////////////////////
 			if ( serviceType === 0 )
 			{  
@@ -516,6 +517,21 @@ omicronManager.prototype.runTracker = function()
 				button8 = 32768;
 				button9 = 65536;
 				
+				// Wand SAGE2 command mapping
+				clickDragButton = button3;
+				menuButton = button2;
+				showHideButton = button7;
+				
+				scaleUpButton = buttonUp; 
+				scaleDownButton = buttonDown;
+				
+				maximizeButton = button5;
+				
+				previousButton = buttonLeft;
+				nextButton = buttonRight;
+				
+				playButton = button2;
+				
 				//console.log("Wand Position: ("+e.posx+", "+e.posy+","+e.posz+")" );
 				//console.log("Wand Rotation: ("+e.orx+", "+e.ory+","+e.orz+","+e.orw+")" );
 				var screenPos = coordCalculator.wandToScreenCoordinates( e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw );
@@ -554,26 +570,26 @@ omicronManager.prototype.runTracker = function()
 
 				pointerPosition( address, { pointerX: posX, pointerY: posY } );
 				
-				clickDragButton = button3;
-				showHideButton = button7;
-				
-				scaleUpButton = buttonUp;
-				scaleDownButton = buttonDown;
-				
-				maximizeButton = button5;
-				
-				previousButton = buttonLeft;
-				nextButton = buttonRight;
-				
-				playButton = button2;
-				
 				if( e.flags !== 0 )
 				{
 					//console.log("Wand flags: " + e.flags + " " + (lastWandFlags & playButton) );
 					if( (e.flags & clickDragButton) == clickDragButton )
 					{
-						//console.log("wandPointer press");
-						pointerPress( address, posX, posY, { button: "left" } );
+						if( lastWandFlags === 0 )
+						{
+							// Click
+							pointerPress( address, posX, posY, { button: "left" } );
+						}
+						else
+						{
+							// Drag
+							//console.log("wandPointer press - drag");
+							//pointerMove( address, posX, posY, { button: "left" } );
+						}
+					}
+					else if( lastWandFlags === 0 && (e.flags & menuButton) == menuButton )
+					{
+						pointerPress( address, posX, posY, { button: "right" } );
 					}
 					else if( lastWandFlags === 0 && (e.flags & showHideButton) == showHideButton )
 					{
@@ -592,13 +608,17 @@ omicronManager.prototype.runTracker = function()
 					else if( lastWandFlags === 0 && (e.flags & scaleUpButton) == scaleUpButton )
 					{
 						pointerScrollStart( address, posX, posY );
-						pointerScroll( address, { wheelDelta: wandScaleDelta } );
+						
+						// Casting the parameters to correct type
+						pointerScroll( address, { wheelDelta: parseInt(-wandScaleDelta, 10) } );
 						
 					}
 					else if( lastWandFlags === 0 && (e.flags & scaleDownButton) == scaleDownButton )
 					{
 						pointerScrollStart( address, posX, posY );
-						pointerScroll( address, { wheelDelta: wandScaleDelta } );
+						
+						// Casting the parameters to correct type
+						pointerScroll( address, { wheelDelta: parseInt(wandScaleDelta, 10) } );
 					}
 					else if( lastWandFlags === 0 && (e.flags & maximizeButton) == maximizeButton )
 					{

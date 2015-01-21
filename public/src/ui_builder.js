@@ -477,13 +477,11 @@ function uiBuilder(json_cfg, clientID) {
 
 		if( !menuElem )
 		{
-			var radialMenuScale = ui.widgetControlSize * 0.03;
-
 			radialMenuContentWindowDiv = document.createElement("div");
 			
 			radialMenuContentWindowDiv.id  = data.id+"_menuDiv"; 
-			radialMenuContentWindowDiv.style.width        = (radialMenuSize.x * radialMenuScale).toString() + "px";
-			radialMenuContentWindowDiv.style.height       =  (radialMenuSize.y * radialMenuScale).toString() + "px";
+			radialMenuContentWindowDiv.style.width        = (data.radialMenuSize.x).toString() + "px";
+			radialMenuContentWindowDiv.style.height       =  (data.radialMenuSize.y).toString() + "px";
 			radialMenuContentWindowDiv.style.overflow           = "hidden";
 			radialMenuContentWindowDiv.style.position   = "absolute";
 			radialMenuContentWindowDiv.style.left   = (data.x - this.offsetX).toString() + "px";
@@ -493,16 +491,16 @@ function uiBuilder(json_cfg, clientID) {
 			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9000);
+								data.radialMenuSize.x, data.radialMenuSize.y, 9000);
 
 			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
 								0,
 								0,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9001);
+								data.radialMenuSize.x, data.radialMenuSize.y, 9001);
 			menuElem3 = createDrawingElement(data.id+"_menuWindow2", "pointerItem",
 								data.x  - this.offsetX,
 								data.y - this.offsetY,
-								radialMenuSize.x * radialMenuScale, radialMenuSize.y * radialMenuScale, 9002);
+								data.radialMenuSize.x, data.radialMenuSize.y, 9002);
 			
 			
 			this.main.appendChild(menuElem);
@@ -513,7 +511,7 @@ function uiBuilder(json_cfg, clientID) {
 			
 			var menu = new radialMenu();
 			
-			menu.init(data.id, menuElem2, menuElem3) ;
+			menu.init(data, menuElem2, menuElem3) ;
 			
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
@@ -560,7 +558,8 @@ function uiBuilder(json_cfg, clientID) {
 						menu.draw();
 					}
 				}
-				else
+				// If instead of else in case event triggered close menu
+				if( menu.visible === false )
 				{
 					menuElem.style.display = "none";
 					menu.thumbnailScrollWindowElement.style.display = "none";
