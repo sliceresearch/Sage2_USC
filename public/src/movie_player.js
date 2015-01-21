@@ -49,7 +49,8 @@ var movie_player = SAGE2_App.extend( {
 		this.canvas = document.createElement('canvas');
 		this.canvas.id = data.id + "_canvas";
 		this.canvas.style.position = "absolute";
-		//this.canvas.style.border = "solid 4px #AA1111";
+		this.canvas.width  = ui.json_cfg.resolution.width;
+		this.canvas.height = ui.json_cfg.resolution.height;
 		this.element.appendChild(this.canvas);
 		
 		
@@ -470,6 +471,8 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	resizeCanvas: function() {
+		if(this.shaderProgram === undefined || this.shaderProgram === null) return;
+		
 		var localX = this.sage2_x - ui.offsetX;
 		var localY = this.sage2_y - ui.offsetY;
 		var localRight  = localX + this.sage2_width;
