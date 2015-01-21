@@ -110,21 +110,21 @@ function getFullVersion(callback) {
 	var cmd1 = "git rev-parse --abbrev-ref HEAD";
 	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
 		if(err) { callback(fullVersion); return; }
-		
+
 		var branch = stdout.substring(0, stdout.length-1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
 		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
 			if(err) { callback(fullVersion); return; }
-		
+
 			// parsing the results
 			var result = stdout.replace(/\r?\n|\r/g, "");
 			var parse = result.split("|");
-		
+
 			// filling up the object
 			fullVersion.branch = branch; //branch.substring(1, branch.length-1);
 			fullVersion.commit = parse[0];
 			fullVersion.date   = parse[1].replace(/-/g, "/");
-		
+
 			// return the object in the callback paramter
 			callback(fullVersion);
 		});

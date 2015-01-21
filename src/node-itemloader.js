@@ -466,8 +466,7 @@ appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
 	var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
 	var app_external_url = _this.hostOrigin + encodeReservedURL(appPath);
 	var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
-	if(appInstance.url !== undefined)
-        appInstance.url = appInstance.url.replace("public_HTTPS/", "");
+    appInstance.url = appInstance.url.replace("public_HTTPS/", "");
 	appInstance.data = url;
 	callback(appInstance);
         //});
