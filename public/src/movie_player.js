@@ -81,31 +81,33 @@ var movie_player = SAGE2_App.extend( {
 			type: "fastforward",
 			sequenceNo: 2,
 			action: function(date) {
-				
+				var delta = parseInt(_this.video.numframes / 10, 10);
+				_this.state.frame = Math.min(_this.state.frame + delta, _this.video.numframes);
+				if(isMaster) wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.video.framerate), play: !_this.state.paused});
 			}
 		});
 		this.controls.addButton({
 			type: "rewind",
 			sequenceNo: 4,
 			action: function(date) {
-				
+				var delta = parseInt(_this.video.numframes / 10, 10);
+				_this.state.frame = Math.max(_this.state.frame - delta, 0);
+				if(isMaster) wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.video.framerate), play: !_this.state.paused});
 			}
 		});
 		this.controls.addButton({
 			type: "play-pause",
 			sequenceNo: 8,
 			action: function(date) {
-				if(isMaster) {
-					if(_this.state.paused === true) {
-						console.log("play: " + _this.div.id);
-						wsio.emit('playVideo', {id: _this.div.id});
-						_this.state.paused = false;
-					}
-					else {
-						console.log("pause: " + _this.div.id);
-						wsio.emit('pauseVideo', {id: _this.div.id});
-						_this.state.paused = true;
-					}
+				if(_this.state.paused === true) {
+					console.log("play: " + _this.div.id);
+					if(isMaster) wsio.emit('playVideo', {id: _this.div.id});
+					_this.state.paused = false;
+				}
+				else {
+					console.log("pause: " + _this.div.id);
+					if(isMaster) wsio.emit('pauseVideo', {id: _this.div.id});
+					_this.state.paused = true;
 				}
 			}
 		});
