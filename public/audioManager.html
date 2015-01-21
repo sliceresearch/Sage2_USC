@@ -181,6 +181,10 @@
 			document.getElementById(data.id + "_play").textContent = "Paused";
 		});
 		
+		wsio.on('updateVideoItemTime', function(data) {
+			document.getElementById(data.id).currentTime = data.timestamp;
+		});
+		
 		wsio.on('deleteElement', function(elem_data) {
 			deleteElement(elem_data.elemId);
 			deleteElement(elem_data.elemId + "_row");

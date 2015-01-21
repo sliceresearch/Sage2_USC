@@ -129,8 +129,15 @@ var movie_player = SAGE2_App.extend( {
 				var duration = parseInt(1000 * (value / _this.video.framerate), 10);
 				return formatHHMMSS(duration);
 			},
+			lockAction: function(date) {
+				if(isMaster) {
+					if(_this.state.paused === false) wsio.emit('pauseVideo', {id: _this.div.id});
+				}
+			},
 			action: function(date) {
-				
+				if(isMaster) {
+					wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.video.framerate), play: !_this.state.paused});
+				}
 			}
 		});
 		
