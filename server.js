@@ -1679,6 +1679,7 @@ function calculateValidBlocks(app, blockSize) {
 	var renderBlockSize  = blockSize * app.width / app.native_width;
 	
 	for(key in videoHandles[app.id].clients){
+		videoHandles[app.id].clients[key].blockList = [];
 		for(i=0; i<verticalBlocks; i++){
 			for(var j=0; j<horizontalBlocks; j++){
 				var blockIdx = i*horizontalBlocks+j;
