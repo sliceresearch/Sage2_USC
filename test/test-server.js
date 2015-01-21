@@ -1,6 +1,9 @@
 'use strict';
 
 var assert = require('assert');
+var http = require('http');
 
-var sage2 = require('../server');
+describe('Running server.js', function() {
+    var sage2 = require('../server');
+});
 
