@@ -1914,6 +1914,15 @@ function getUniqueAppId() {
 
 function getApplications() {
 	var uploadedApps = assets.listApps();
+
+	// Remove 'viewer' apps
+	var i = uploadedApps.length;
+	while (i--) {
+		if (uploadedApps[i].exif.metadata.fileTypes && uploadedApps[i].exif.metadata.fileTypes.length > 0) {
+			uploadedApps.splice(i, 1);
+		}
+	}
+	// Sort the list of apps
 	uploadedApps.sort(sageutils.compareTitle);
 
 	return uploadedApps;
