@@ -876,17 +876,21 @@
 						var state = animationInfo.state;
 						var fromPath = animationInfo.fromPath;
 						var toPath = animationInfo.toPath;
+						var fromFill = animationInfo.fill;
+						var toFill = animationInfo.toFill;
+						if (toFill === null || toFill === undefined) toFill = fromFill;
 						if (state===null){
-							ctrl.animate({"path":toPath},delay,mina.bounce,function(){
-								ctrl.animate({"path":fromPath},delay,mina.bounce);	
+							ctrl.animate({"path":toPath, "fill":toFill},delay,mina.bounce,function(){
+								ctrl.animate({"path":fromPath, "fill":fromFill},delay,mina.bounce);	
 							});
 							
 						}
 						else{
 							var path = (state===1)? fromPath: toPath;
+							var fill = (state===1)? fromFill: toFill;
 							animationInfo.state = 1 - animationInfo.state;
 							ctrl.data("animationInfo", animationInfo);
-							ctrl.animate({"path":path},delay,mina.bounce);
+							ctrl.animate({"path":path, "fill":fill},delay,mina.bounce);
 						}
 					}
 					
