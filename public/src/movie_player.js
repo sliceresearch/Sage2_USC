@@ -79,29 +79,21 @@ var movie_player = SAGE2_App.extend( {
 		var _this = this;
 		
 		this.controls.addButton({
-			type: "fastforward",
+			type: "loop",
 			sequenceNo: 2,
 			action: function(date) {
-				var delta = parseInt(_this.video.numframes / 10, 10);
-				_this.state.frame = Math.min(_this.state.frame + delta, _this.video.numframes);
-				if(isMaster) {
-					if(_this.state.paused === false) wsio.emit('pauseVideo', {id: _this.div.id});
-					wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.video.framerate), play: !_this.state.paused});
-				}
+				
 			}
 		});
+		
 		this.controls.addButton({
-			type: "rewind",
-			sequenceNo: 4,
+			type: "mute",
+			sequenceNo: 5,
 			action: function(date) {
-				var delta = parseInt(_this.video.numframes / 10, 10);
-				_this.state.frame = Math.max(_this.state.frame - delta, 0);
-				if(isMaster) {
-					if(_this.state.paused === false) wsio.emit('pauseVideo', {id: _this.div.id});
-					wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.video.framerate), play: !_this.state.paused});
-				}
+				
 			}
 		});
+		
 		this.controls.addButton({
 			type: "play-pause",
 			sequenceNo: 8,
@@ -119,14 +111,12 @@ var movie_player = SAGE2_App.extend( {
 			}
 		});
 		this.controls.addButton({
-			type: "next",
-			sequenceNo: 10,
+			type: "stop",
+			sequenceNo: 11,
 			action: function(date) {
 				
 			}
 		});
-		
-		this.controls.addSeparatorAfterButtons(1, 10); // This neatly forms an X out of the four spokes.
 		
 		this.controls.addSlider({
 			begin: 0,

@@ -1797,12 +1797,9 @@ function wsPauseVideo(wsio, data) {
 function wsUpdateVideoTime(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.seek(data.timestamp);
-	/*
 	videoHandles[data.id].decoder.seek(data.timestamp, function() {
 		if(data.play === true) videoHandles[data.id].decoder.play()
 	});
-	*/
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');
 }
 
