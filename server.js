@@ -428,6 +428,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.sendsVideoSynchonization){
 		wsio.on('playVideo', wsPlayVideo);
 		wsio.on('pauseVideo', wsPauseVideo);
+		wsio.on('stopVideo', wsStopVideo);
 		wsio.on('updateVideoTime', wsUpdateVideoTime);
 	}
 	if(wsio.messages.sharesContentWithRemoteServer){
@@ -1763,15 +1764,20 @@ function wsOpenNewWebpage(wsio, data) {
 function wsPlayVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	//videoHandles[data.id].decoder.startLiveDecoding();
 	videoHandles[data.id].decoder.play();
 }
 
 function wsPauseVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	//videoHandles[data.id].decoder.pauseLiveDecoding();
 	videoHandles[data.id].decoder.pause();
+}
+
+function wsStopVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	
+	videoHandles[data.id].decoder.stop();
+	broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false}, 'requiresFullApps');
 }
 
 function wsUpdateVideoTime(wsio, data) {

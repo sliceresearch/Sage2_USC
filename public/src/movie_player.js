@@ -114,7 +114,10 @@ var movie_player = SAGE2_App.extend( {
 			type: "stop",
 			sequenceNo: 11,
 			action: function(date) {
-				
+				console.log("pause: " + _this.div.id);
+				if(isMaster) wsio.emit('stopVideo', {id: _this.div.id});
+				_this.state.paused = true;
+				_this.state.frame = 0;
 			}
 		});
 		
