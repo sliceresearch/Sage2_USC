@@ -940,7 +940,7 @@ function wsUpdateAppState(wsio, data) {
 	// Using updates only from display client 0
 	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);
-		app.data = data.state;
+		if(app !== null) app.data = data.state;
 	}
 }
 
