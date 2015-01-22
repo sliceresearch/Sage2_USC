@@ -104,15 +104,14 @@ var widget_demo = SAGE2_App.extend( {
 			"fill":"rgba(250,250,250,1.0)",
 			"animation":false
 		};
-		this.controls.addButton({type:helpButton,sequenceNo:9,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
+		this.controls.addButton({type:"loop",sequenceNo:9,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
 			this.displayText = "Pushed Help button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
 
 		
 		
-		//this.controls.addSeparatorAfterButtons(3,5); // Adds a small gap after button positon 3 and 5
-		
+	
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"
 		//Only simple numerical values can be manipulated using the slider.

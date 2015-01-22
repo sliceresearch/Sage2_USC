@@ -61,6 +61,32 @@ var buttonType = {
 		"textual":false,
 		"animation": true
 	},
+	"mute": {
+		"from":"m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 6 0 l 0 4 m 1 -5 l 0 6",
+		"to":"m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 3 -3 l -2 10",
+		"width":8,
+		"height":10,
+		"strokeWidth": 1,
+		"fill":"#ffffff",
+		"toFill":"#6D6D6D",
+		"state": 0,
+		"delay": 400,
+		"textual":false,
+		"animation": true
+	},
+	"loop": {
+		"from":"m 3 -2 a 4 4 0 1 0 0 4 m 0 -6 l 0 2 l -2 0",
+		"to":"m 3 -2 a 4 4 0 1 0 0 4 m 0 -6 l 0 2 l -2 0 m 0 -3 l -2 10",
+		"width":10,
+		"height":10,
+		"strokeWidth": 1,
+		"fill":"#6D6D6D",
+		"toFill":"#6D6D6D",
+		"state": 0,
+		"delay": 400,
+		"textual":false,
+		"animation": true
+	},
 	"play-stop": {
 		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
 		"to":"m -5 -5 l 0 10 l 10 0 l 0 -10 z",
@@ -72,6 +98,18 @@ var buttonType = {
 		"delay": 400,
 		"textual":false,
 		"animation": true
+	},
+	"stop": {
+		"from":"m -4 -4 l 0 8 l 8 0 l 0 -8 z",
+		"to": "m -4 -4 l 0 8 l 8 0 l 0 -8 z",
+		"width":10,
+		"height":10,
+		"strokeWidth": 1,
+		"fill":"#ffffff",
+		"state": null,
+		"delay": 400,
+		"textual":false,
+		"animation": false
 	},
 	"next": {
 		"state": null,
@@ -805,6 +843,8 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 			"toPath":toPath,
 			"delay": type["delay"],
 			"state": type["state"],
+			"fill": type["fill"],
+			"toFill": (type["toFill"] || null),
 			"animation": type["animation"],
 			"textual": type["textual"]
 		};
