@@ -1551,73 +1551,53 @@ function wsLoadFileFromServer(wsio, data) {
 
 			applications.push(appInstance);
 			
-			if(appInstance.application === "movie_player"){
-				var i;
-				var j;
-				var blocksize = 128;
-				var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
-				var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
-				var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
-				var start = null;
-				
-				videohandle.on('start', function() {
-					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
-					start = Date.now();
-				});
-				videohandle.on('end', function() {
-					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
-				});
-				videohandle.on('frame', function(frameIdx, buffer) {
-					videoHandles[appInstance.id].frameIdx = frameIdx;
-					var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.native_width, appInstance.native_height, blocksize);
-	
-					var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
-					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
-					var dateBuffer = intToByteBuffer(Date.now(), 8);
-					for(i=0; i<blockBuffers.length; i++){
-						var blockIdxBuffer = intToByteBuffer(i, 2);
-						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
-					}
-	
-					handleNewVideoFrame(videoHandles[appInstance.id]);
-				});
-				
-				/*
-				videohandle.onstartdecode = function() {
-					broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
-					start = Date.now();
-				};
-				videohandle.onstopdecode = function(err, finish) {
-					broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
-				};
-				videohandle.onnewframe = function(frameIdx, yuvBuffer) {
-					videoHandles[appInstance.id].frameIdx = frameIdx;
-					var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, appInstance.native_width, appInstance.native_height, blocksize);
-	
-					var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
-					var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
-					var dateBuffer = intToByteBuffer(Date.now(), 8);
-					for(i=0; i<blockBuffers.length; i++){
-						var blockIdxBuffer = intToByteBuffer(i, 2);
-						videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
-					}
-	
-					handleNewVideoFrame(videoHandles[appInstance.id]);
-				};
-				*/
-				
-				videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
-				
-				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.receivesMediaStreamFrames){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
-					}
-				}
-				calculateValidBlocks(appInstance, blocksize);
-			}
+			initializeLoadedVideo(appInstance, videohandle);
 		});
 	}
+}
+
+function initializeLoadedVideo(appInstance, videohandle) {
+	if(appInstance.application !== "movie_player") return;
+	
+	var i;
+	var j;
+	var blocksize = 128;
+	var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
+	var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
+	var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
+	var start = null;
+	
+	videohandle.on('start', function() {
+		broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
+		start = Date.now();
+	});
+	videohandle.on('end', function() {
+		broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
+	});
+	videohandle.on('frame', function(frameIdx, buffer) {
+		videoHandles[appInstance.id].frameIdx = frameIdx;
+		var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.native_width, appInstance.native_height, blocksize);
+
+		var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
+		var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
+		var dateBuffer = intToByteBuffer(Date.now(), 8);
+		for(i=0; i<blockBuffers.length; i++){
+			var blockIdxBuffer = intToByteBuffer(i, 2);
+			videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+		}
+
+		handleNewVideoFrame(videoHandles[appInstance.id]);
+	});
+	
+	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
+	
+	for(i=0; i<clients.length; i++){
+		if(clients[i].messages.receivesMediaStreamFrames){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+		}
+	}
+	calculateValidBlocks(appInstance, blocksize);
 }
 
 // move this function elsewhere
@@ -2354,7 +2334,7 @@ function manageUploadedFiles(files, position) {
     var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
-		appLoader.manageAndLoadUploadedFile(file, function(appInstance) {
+		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
 
 			if(appInstance === null){
 				console.log("Form> unrecognized file type: ", file.name, file.type);
@@ -2374,6 +2354,8 @@ function manageUploadedFiles(files, position) {
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 			applications.push(appInstance);
+			
+			initializeLoadedVideo(appInstance, videohandle);
 
 			if(appInstance.animation){
 				var i;
@@ -3514,17 +3496,23 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem);
 				if (updatedItem !== null) {
+					var updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					var updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 				}
 			}
 		}
@@ -3969,7 +3957,8 @@ function wsRadialMenuMoved( wsio, data ) {
 
 function attachAppIfSticky(backgroundItem, appId){
 	var app = findAppById(appId);
-	if (app.sticky !== true) return;
+	
+	if (app === null || app.sticky !== true) return;
 	//console.log("sticky:",app.sticky);
 	stickyAppHandler.detachStickyItem(app);
 	if (backgroundItem !== null)
