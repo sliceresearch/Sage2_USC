@@ -294,6 +294,13 @@
 			}
 		});
 		
+		wsio.on('updateVideoItemTime', function(data) {
+			var app = applications[data.id];
+			if(app !== undefined && app !== null){
+				app.setVideoTime(data.timestamp);
+			}
+		});
+		
 		wsio.on('updateValidStreamBlocks', function(data) {
 			if(applications[data.id] !== undefined && applications[data.id] !== null){
 				applications[data.id].validBlocks = data.blockList;
@@ -722,23 +729,6 @@
 			if(app !== undefined && app.resizeEvents === "onfinish"){
 				var date = new Date(data.date);
 				app.resize(date);
-			}
-		});
-		
-		wsio.on('updateVideoItemTime', function(video_data) {
-			var clientTime = new Date();
-			var serverTime = new Date(clientTime.getTime() - dt);
-			var sentTime   = new Date(video_data.sent);
-			var delay      = (serverTime.getTime() - sentTime.getTime()) / 1000;
-			
-			var selectedElem = document.getElementById(video_data.elemId);
-			
-			var child = selectedElem.getElementsByClassName("sageItem");
-			var diff  = (video_data.time + delay) - child[0].currentTime;
-			
-			var app = applications[video_data.elemId];
-			if(app !== undefined && app !== null){
-				app.event("videoTimeSync", null, null, {videoTime: video_data.time, delay: delay, play: video_data.play}, sentTime);
 			}
 		});
 		

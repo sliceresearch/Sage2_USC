@@ -1573,7 +1573,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		start = Date.now();
 	});
 	videohandle.on('end', function() {
-		broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
+		//broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
 	});
 	videohandle.on('frame', function(frameIdx, buffer) {
 		videoHandles[appInstance.id].frameIdx = frameIdx;
@@ -1770,14 +1770,18 @@ function wsPlayVideo(wsio, data) {
 function wsPauseVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.pause();
+	videoHandles[data.id].decoder.pause(function() {
+		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
+	});
 }
 
 function wsStopVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	videoHandles[data.id].decoder.stop();
-	broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false}, 'requiresFullApps');
+	videoHandles[data.id].decoder.stop(function() {
+		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
+		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false}, 'requiresFullApps');
+	});
 }
 
 function wsUpdateVideoTime(wsio, data) {

@@ -117,7 +117,7 @@ var movie_player = SAGE2_App.extend( {
 				console.log("pause: " + _this.div.id);
 				if(isMaster) wsio.emit('stopVideo', {id: _this.div.id});
 				_this.state.paused = true;
-				_this.state.frame = 0;
+				// must change play-pause button (should show 'play' icon)
 			}
 		});
 		
@@ -150,6 +150,10 @@ var movie_player = SAGE2_App.extend( {
 		this.gl = this.canvas.getContext("webgl");
 		if(!this.gl) this.gl = this.canvas.getContext("experimental-webgl");
 		if(!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
+	},
+	
+	setVideoTime: function(timestamp) {
+		this.state.frame = parseInt(timestamp * this.video.framerate, 10);
 	},
 	
 	updateValidBlocks: function(validBlocks) {
