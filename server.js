@@ -1588,6 +1588,12 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	});
 	videohandle.on('end', function() {
 		broadcast('videoEnded', {id: appInstance.id}, 'requiresFullApps');
+		if(videoHandles[appInstance.id].loop === true) {
+			videoHandles[appInstance.id].decoder.seek(0.0, function() {
+				videoHandles[appInstance.id].decoder.play();
+			});
+			broadcast('updateVideoItemTime', {id: appInstance.id, timestamp: 0.0, play: false}, 'requiresFullApps');
+		}
 	});
 	videohandle.on('frame', function(frameIdx, buffer) {
 		videoHandles[appInstance.id].frameIdx = frameIdx;
@@ -1604,7 +1610,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		handleNewVideoFrame(appInstance.id);
 	});
 	
-	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
+	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
 	
 	for(i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
@@ -1829,7 +1835,7 @@ function wsUnmuteVideo(wsio, data) {
 function wsLoopVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
-	
+	videoHandles[data.id].loop = data.loop;
 }
 
 // **************  Remote Server Content *****************

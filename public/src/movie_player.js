@@ -91,7 +91,7 @@ var movie_player = SAGE2_App.extend( {
 				}
 				else {
 					console.log("loop: " + _this.div.id);
-					if(isMaster) wsio.emit('muteVideo', {id: _this.div.id, loop: true});
+					if(isMaster) wsio.emit('loopVideo', {id: _this.div.id, loop: true});
 					_this.state.looped = true;
 				}
 			}
@@ -183,8 +183,10 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	videoEnded: function() {
-		this.state.paused = true;
-		// must change play-pause button (should show 'play' icon)
+		if(this.state.looped == false) {
+			this.state.paused = true;
+			// must change play-pause button (should show 'play' icon)
+		}
 	},
 	
 	updateValidBlocks: function(validBlocks) {
