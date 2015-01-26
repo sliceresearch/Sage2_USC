@@ -285,7 +285,7 @@
 			var yuvBuffer = data.subarray(appId.length+15, data.length);
 			
 			if(applications[appId] !== undefined && applications[appId] !== null){
-				applications[appId].textureData(frameIdx, blockIdx, yuvBuffer);
+				applications[appId].textureData(blockIdx, yuvBuffer);
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
 					applications[appId].draw(new Date(date));
 					applications[appId].setValidBlocksFalse();
@@ -294,10 +294,10 @@
 			}
 		});
 		
-		wsio.on('updateVideoItemTime', function(data) {
+		wsio.on('updateFrameIndex', function(data) {
 			var app = applications[data.id];
 			if(app !== undefined && app !== null){
-				app.setVideoTime(data.timestamp);
+				app.setVideoFrame(data.frameIdx);
 			}
 		});
 		

@@ -61,7 +61,7 @@ td {
 }
 
 #videos {
-	width: 900px;
+	width: 920px;
 	margin: 20px;
 	border-collapse: collapse;
 }
@@ -75,7 +75,7 @@ td {
 }
 
 .videoVolume {
-	width: 100px;
+	width: 120px;
 }
 
 .videoTime {
@@ -84,6 +84,11 @@ td {
 
 .videoPlay {
 	width: 100px;
+}
+
+.videoVolumeMute {
+	display: inline-block;
+	width: 20px;
 }
 
 .videoVolumeSlider {

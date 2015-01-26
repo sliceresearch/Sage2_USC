@@ -36,6 +36,8 @@ var movie_player = SAGE2_App.extend( {
 		this.receivedBlocks   = [];
 		
 		this.state.paused = true;
+		this.state.muted = false;
+		this.state.looped = false;
 		this.state.frame = 0;
 	
 		this.squareVertexPositionBuffer     = [];
@@ -82,7 +84,16 @@ var movie_player = SAGE2_App.extend( {
 			type: "loop",
 			sequenceNo: 2,
 			action: function(date) {
-				
+				if(_this.state.looped === true) {
+					console.log("no loop: " + _this.div.id);
+					if(isMaster) wsio.emit('loopVideo', {id: _this.div.id, loop: false});
+					_this.state.looped = false;
+				}
+				else {
+					console.log("loop: " + _this.div.id);
+					if(isMaster) wsio.emit('muteVideo', {id: _this.div.id, loop: true});
+					_this.state.looped = true;
+				}
 			}
 		});
 		
@@ -90,7 +101,16 @@ var movie_player = SAGE2_App.extend( {
 			type: "mute",
 			sequenceNo: 5,
 			action: function(date) {
-				
+				if(_this.state.muted === true) {
+					console.log("unmute: " + _this.div.id);
+					if(isMaster) wsio.emit('unmuteVideo', {id: _this.div.id});
+					_this.state.muted = false;
+				}
+				else {
+					console.log("mute: " + _this.div.id);
+					if(isMaster) wsio.emit('muteVideo', {id: _this.div.id});
+					_this.state.muted = true;
+				}
 			}
 		});
 		
@@ -158,13 +178,13 @@ var movie_player = SAGE2_App.extend( {
 		if(!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
 	},
 	
-	setVideoTime: function(timestamp) {
-		this.state.frame = parseInt(timestamp * this.video.framerate, 10);
-		// must change play-pause button (should show 'play' icon)
+	setVideoFrame: function(frameIdx) {
+		this.state.frame = frameIdx;
 	},
 	
 	videoEnded: function() {
 		this.state.paused = true;
+		// must change play-pause button (should show 'play' icon)
 	},
 	
 	updateValidBlocks: function(validBlocks) {
@@ -386,11 +406,7 @@ var movie_player = SAGE2_App.extend( {
 		}
 	},
 	
-	textureData: function(frameIdx, blockIdx, yuvBuffer) {
-		this.state.frame = frameIdx;
-		
-		console.log(frameIdx);
-		
+	textureData: function(blockIdx, yuvBuffer) {
 		this.yuvBuffer[blockIdx] = yuvBuffer;
 		this.receivedBlocks[blockIdx] = true;
 	},

@@ -430,6 +430,9 @@ function initializeWSClient(wsio) {
 		wsio.on('pauseVideo', wsPauseVideo);
 		wsio.on('stopVideo', wsStopVideo);
 		wsio.on('updateVideoTime', wsUpdateVideoTime);
+		wsio.on('muteVideo', wsMuteVideo);
+		wsio.on('unmuteVideo', wsUnmuteVideo);
+		wsio.on('loopVideo', wsLoopVideo);
 	}
 	if(wsio.messages.sharesContentWithRemoteServer){
 		wsio.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
@@ -846,7 +849,7 @@ function wsRequestVideoFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
-	handleNewClientReady(videoHandles[data.id]);
+	handleNewClientReady(data.id);
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
@@ -1598,7 +1601,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 			videoHandles[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
 		}
 
-		handleNewVideoFrame(videoHandles[appInstance.id]);
+		handleNewVideoFrame(appInstance.id);
 	});
 	
 	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
@@ -1613,7 +1616,9 @@ function initializeLoadedVideo(appInstance, videohandle) {
 }
 
 // move this function elsewhere
-function handleNewVideoFrame(video) {
+function handleNewVideoFrame(id) {
+	var video = videoHandles[id];
+	
 	var i;
 	var key;
 	
@@ -1625,6 +1630,7 @@ function handleNewVideoFrame(video) {
 	}
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
+		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
 		for(i=0; i<video.pixelbuffer.length; i++){
 			var hasBlock = false;
 			if(video.clients[key].blockList.indexOf(i) >= 0){
@@ -1638,11 +1644,13 @@ function handleNewVideoFrame(video) {
 }
 
 // move this function elsewhere
-function handleNewClientReady(video) {
+function handleNewClientReady(id) {
+	var video = videoHandles[id];
 	if(video.newFrameGenerated !== true) return;
 	
 	var i;
 	var key;
+	
 	for(key in video.clients) {
 		if(video.clients[key].readyForNextFrame !== true){
 			return false;
@@ -1650,6 +1658,7 @@ function handleNewClientReady(video) {
 	}
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
+		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
 		for(i=0; i<video.pixelbuffer.length; i++){
 			var hasBlock = false;
 			if(video.clients[key].blockList.indexOf(i) >= 0){
@@ -1792,6 +1801,7 @@ function wsStopVideo(wsio, data) {
 	videoHandles[data.id].decoder.stop(function() {
 		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
 		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false}, 'requiresFullApps');
+		broadcast('updateFrameIndex', {id: data.id, frameIdx: 0}, 'requiresFullApps');
 	});
 }
 
@@ -1802,6 +1812,24 @@ function wsUpdateVideoTime(wsio, data) {
 		if(data.play === true) videoHandles[data.id].decoder.play()
 	});
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');
+}
+
+function wsMuteVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	
+	broadcast('videoMuted', {id: data.id}, 'requiresFullApps');
+}
+
+function wsUnmuteVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	
+	broadcast('videoUnmuted', {id: data.id}, 'requiresFullApps');
+}
+
+function wsLoopVideo(wsio, data) {
+	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	
+	
 }
 
 // **************  Remote Server Content *****************
