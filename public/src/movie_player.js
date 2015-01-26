@@ -12,8 +12,8 @@ var movie_player = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 		
-		this.moveEvents     = "continuous";
-		this.resizeEvents   = "continuous";
+		this.moveEvents     = "onfinish";
+		this.resizeEvents   = "onfinish";
 		this.enableControls = true;
 		
 		this.canvas           = null;
@@ -504,13 +504,23 @@ var movie_player = SAGE2_App.extend( {
 		}
 	},
 	
-	resize: function(date) {
+	startMove: function(date) {
+		this.canvas.style.display = "none";
+	},
+	
+	move: function(date) {
+		this.canvas.style.display = "block";
 		this.resizeCanvas();
 		
 		this.refresh(date);
 	},
 	
-	moved: function(date) {
+	startResize: function(date) {
+		this.canvas.style.display = "none";
+	},
+	
+	resize: function(date) {
+		this.canvas.style.display = "block";
 		this.resizeCanvas();
 		
 		this.refresh(date);

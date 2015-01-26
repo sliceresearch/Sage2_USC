@@ -1389,7 +1389,11 @@ function tileApplications() {
 							elemWidth: app.width, elemHeight: app.height,
 							force: true, date: new Date()};
 		// send the order
+		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
     }
 }
 
@@ -1471,8 +1475,12 @@ function tileApplications1() {
 							elemWidth: app.width, elemHeight: app.height,
 							force: true, date: new Date()};
 		// send the order
+		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
-
+		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		
         c += 1;
         if (c === numCols) {
             c  = 0;
@@ -3056,10 +3064,12 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				// bottom right corner - select for drag resize
 				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
 					remoteInteraction[uniqueID].selectResizeItem(elem, pointerX, pointerY);
+					broadcast('startResize', {id: elem.id, date: new Date()}, 'receivesWindowModification');
 				}
 				// otherwise - select for move
 				else{
 					remoteInteraction[uniqueID].selectMoveItem(elem, pointerX, pointerY); //will only go through if window management mode
+					broadcast('startMove', {id: elem.id, date: new Date()}, 'receivesWindowModification');
 				}
 			}
 			else if(data.button === "right"){
@@ -3211,7 +3221,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
 			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
-				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, elemWidth: remoteInteraction[uniqueID].selectedResizeItem.width, elemHeight: remoteInteraction[uniqueID].selectedResizeItem.height, date: new Date()}, 'receivesWindowModification');
+				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'receivesWindowModification');
 				remoteInteraction[uniqueID].releaseItem(true);
 			}
 			if(remoteInteraction[uniqueID].selectedMoveItem !== null){
@@ -3224,13 +3234,17 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					}
 				}
 				if(remoteIdx < 0){
+					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'receivesWindowModification');
 					remoteInteraction[uniqueID].releaseItem(true);
 				}
 				else{
 					var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
 					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
-					if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+					if(updatedItem !== null) {
+						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					}
 				}
 			}
 		}
@@ -3415,6 +3429,8 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 			newOrder = moveAppToFront(stickyList[idx].id);
 		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+		broadcast('startMove', {id: elem.id, date: new Date()}, 'receivesWindowModification');
+		broadcast('startResize', {id: elem.id, date: new Date()}, 'receivesWindowModification');
 	}
 }
 
@@ -3448,7 +3464,8 @@ function pointerScroll( uniqueID, data ) {
 			}
 
 			remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] = setTimeout(function() {
-				broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+				broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+				broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				remoteInteraction[uniqueID].selectedScrollItem = null;
 			}, 500);
 		}
@@ -3517,9 +3534,12 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					var updatedApp = findAppById(updatedItem.elemId);
 					
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 				}
 			} else {
@@ -3528,9 +3548,12 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					var updatedApp = findAppById(updatedItem.elemId);
 					
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 				}
 			}
@@ -3550,17 +3573,23 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			}
 		}
@@ -3579,17 +3608,23 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			}
 		}
@@ -3608,17 +3643,23 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			}
 		}
@@ -3638,17 +3679,23 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			}
 		}
@@ -3667,17 +3714,23 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedResize', {id: updatedItem.elemId, elemWidth: updatedItem.elemWidth, elemHeight: updatedItem.elemHeight, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				}
 			}
 		}

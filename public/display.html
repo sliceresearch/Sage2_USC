@@ -630,8 +630,6 @@
 
 		wsio.on('setItemPosition', function(position_data) {
 			resetIdle();
-
-			var date  = new Date(position_data.date);
 			
 			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
@@ -648,8 +646,10 @@
 			if(app !== undefined) {
 				app.sage2_x      = parseInt(position_data.elemLeft, 10);
 				app.sage2_y      = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+				
+				var date  = new Date(position_data.date);
 				if(position_data.force || app.moveEvents === "continuous") {
-					app.moved && app.moved(date);
+					app.move(date);
 				}
 			}
 
@@ -712,13 +712,44 @@
 				app.sage2_y      = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
 				app.sage2_width  = parseInt(position_data.elemWidth, 10);
 				app.sage2_height = parseInt(position_data.elemHeight, 10);
+				
+				var date = new Date(position_data.date);
 				if(position_data.force || app.resizeEvents === "continuous") {
-					var date = new Date(position_data.date);
-					app.resize(date);
-					if(app.moved !== undefined) {
-						app.moved(date);
-					}
+					app.resize && app.resize(date);
 				}
+				if(position_data.force || app.moveEvents === "continuous") {
+					app.move && app.move(date);
+				}
+			}
+		});
+		
+		wsio.on('startMove', function(data) {
+			resetIdle();
+			
+			var app = applications[data.id];
+			if(app !== undefined && app.moveEvents === "onfinish") {
+				var date = new Date(data.date);
+				app.startMove && app.startMove(date);
+			}
+		});
+		
+		wsio.on('finishedMove', function(data) {
+			resetIdle();
+			
+			var app = applications[data.id];
+			if(app !== undefined && app.moveEvents === "onfinish") {
+				var date = new Date(data.date);
+				app.move && app.move(date);
+			}
+		});
+		
+		wsio.on('startResize', function(data) {
+			resetIdle();
+
+			var app = applications[data.id];
+			if(app !== undefined && app.resizeEvents === "onfinish") {
+				var date = new Date(data.date);
+				app.startResize && app.startResize(date);
 			}
 		});
 		
@@ -726,9 +757,9 @@
 			resetIdle();
 
 			var app = applications[data.id];
-			if(app !== undefined && app.resizeEvents === "onfinish"){
+			if(app !== undefined && app.resizeEvents === "onfinish") {
 				var date = new Date(data.date);
-				app.resize(date);
+				app.resize && app.resize(date);
 			}
 		});
 		
