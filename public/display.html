@@ -301,6 +301,13 @@
 			}
 		});
 		
+		wsio.on('videoEnded', function(data) {
+			var app = applications[data.id];
+			if(app !== undefined && app !== null){
+				app.videoEnded();
+			}
+		});
+		
 		wsio.on('updateValidStreamBlocks', function(data) {
 			if(applications[data.id] !== undefined && applications[data.id] !== null){
 				applications[data.id].validBlocks = data.blockList;

@@ -180,6 +180,10 @@
 			document.getElementById(data.id).pause();
 			document.getElementById(data.id + "_play").textContent = "Paused";
 		});
+		wsio.on('videoEnded', function(data) {
+			document.getElementById(data.id).pause();
+			document.getElementById(data.id + "_play").textContent = "Paused";
+		});
 		
 		wsio.on('updateVideoItemTime', function(data) {
 			document.getElementById(data.id).currentTime = data.timestamp;

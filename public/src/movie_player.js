@@ -132,8 +132,14 @@ var movie_player = SAGE2_App.extend( {
 				return formatHHMMSS(duration);
 			},
 			lockAction: function(date) {
-				if(isMaster) {
-					if(_this.state.paused === false) wsio.emit('pauseVideo', {id: _this.div.id});
+				if(_this.state.paused === false) {
+					console.log("pause: " + _this.div.id);
+					if(isMaster) {
+						wsio.emit('pauseVideo', {id: _this.div.id});
+					}
+				}
+				else {
+					_this.state.playAfterSeek = false;
 				}
 			},
 			action: function(date) {
@@ -154,6 +160,11 @@ var movie_player = SAGE2_App.extend( {
 	
 	setVideoTime: function(timestamp) {
 		this.state.frame = parseInt(timestamp * this.video.framerate, 10);
+		// must change play-pause button (should show 'play' icon)
+	},
+	
+	videoEnded: function() {
+		this.state.paused = true;
 	},
 	
 	updateValidBlocks: function(validBlocks) {
@@ -377,6 +388,9 @@ var movie_player = SAGE2_App.extend( {
 	
 	textureData: function(frameIdx, blockIdx, yuvBuffer) {
 		this.state.frame = frameIdx;
+		
+		console.log(frameIdx);
+		
 		this.yuvBuffer[blockIdx] = yuvBuffer;
 		this.receivedBlocks[blockIdx] = true;
 	},

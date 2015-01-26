@@ -1576,12 +1576,15 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
 	var start = null;
 	
+	videohandle.on('error', function(err) {
+		console.log("VIDEO ERROR: " + err);
+	});
 	videohandle.on('start', function() {
 		broadcast('videoPlaying', {id: appInstance.id}, 'requiresFullApps');
 		start = Date.now();
 	});
 	videohandle.on('end', function() {
-		//broadcast('videoPaused', {id: appInstance.id}, 'requiresFullApps');
+		broadcast('videoEnded', {id: appInstance.id}, 'requiresFullApps');
 	});
 	videohandle.on('frame', function(frameIdx, buffer) {
 		videoHandles[appInstance.id].frameIdx = frameIdx;
