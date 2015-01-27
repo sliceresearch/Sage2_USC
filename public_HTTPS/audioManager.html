@@ -102,15 +102,15 @@
 		
 		
 		wsio.on('createAppWindow', function(data) {
-			if(data.application === "movie_player"){
+			if (data.application === "movie_player") {
 				var main = document.getElementById("main");
-				
-				var vid = document.createElement("video");
-				vid.id = data.id;
-				vid.width = 800;
-				vid.height = vid.width / data.aspect;
+				var vid  = document.createElement("video");
+				vid.id       = data.id;
+				vid.width    = 800;
+				vid.height   = vid.width / data.aspect;
 				vid.controls = false;
-				vid.ready = false;
+				vid.ready    = false;
+				vid.preload  = "auto";
 				
 				vid.addEventListener('canplay', function() {
 					console.log("video can now play"); // Video is loaded and can be played
@@ -154,7 +154,7 @@
 				//vid.style.display = "none";
 				
 				videos[vid.id] = {interval: null};
-				
+
 				main.appendChild(vid);
 			}
 			
