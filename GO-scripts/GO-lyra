@@ -7,7 +7,7 @@ tentakel pkill -HUP chrome
 
 
 server="lyra.evl.optiputer.net"
-global_param="--window-size=1366,1536 --window-position=0,0 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--window-size=1366,1536 --window-position=0,0 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check "
 
 for i in {1..36}
 do
