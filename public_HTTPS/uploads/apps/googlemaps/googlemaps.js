@@ -160,8 +160,6 @@ var googlemaps = SAGE2_App.extend( {
 	reloadTiles: function() {
 		// Get the image tiles in the maps
 		var tiles = this.element.getElementsByTagName('img');
-		this.log("reloading traffic googlemaps");
-		var count = 0;
 		for (var i = 0; i < tiles.length; i++) {
 			// get the URL
 			var src = tiles[i].src;
@@ -169,10 +167,8 @@ var googlemaps = SAGE2_App.extend( {
 				// add a date inthe URL will trigger a reload
 				var new_src = src.split("&ts")[0] + '&ts=' + (new Date()).getTime();
 				tiles[i].src = new_src;
-				count++;
 			}
 		}
-		this.log("            :", count, "tiles");
 	},
 
 	event: function(eventType, position, user_id, data, date) {
