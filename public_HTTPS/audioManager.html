@@ -84,6 +84,10 @@
 		});
 		
 		wsio.on('initialize', function(data) {
+			// play the jinggle
+			var jinggle = document.getElementById('jinggle');
+			jinggle.play();
+
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
 			
@@ -271,9 +275,19 @@
 </head>
 
 <body onload="init()">
+
+	<!-- SAGE2 jinggle at startup -->
+	<audio id="jinggle" preload="auto" hidden>
+		<source src="images/sage2_jinggle.mp3">
+		Your browser does not support the audio element.
+	</audio>
+
+
 	<div id="main">
 		
 	</div>
+
+
 </body>
 </html>
 
