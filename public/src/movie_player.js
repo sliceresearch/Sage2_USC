@@ -29,7 +29,6 @@ var movie_player = SAGE2_App.extend( {
 		this.yTexture         = [];
 		this.uTexture         = [];
 		this.vTexture         = [];
-		this.video            = null;
 		this.changeBlockList  = false;
 		this.newBlockList     = null;
 		this.validBlocks      = [];
@@ -143,12 +142,12 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.controls.addSlider({
 			begin: 0,
-			end: this.video.numframes-1,
+			end: this.state.numframes-1,
 			increments: 1,
 			appHandle: this,
 			property: "state.frame",
 			labelFormatFunction: function(value, end) {
-				var duration = parseInt(1000 * (value / _this.video.framerate), 10);
+				var duration = parseInt(1000 * (value / _this.state.framerate), 10);
 				return formatHHMMSS(duration);
 			},
 			lockAction: function(date) {
@@ -164,7 +163,7 @@ var movie_player = SAGE2_App.extend( {
 			},
 			action: function(date) {
 				if(isMaster) {
-					wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.video.framerate), play: !_this.state.paused});
+					wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.state.framerate), play: !_this.state.paused});
 				}
 			}
 		});
@@ -291,18 +290,18 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	initBuffers: function() {
-		this.log(this.video);
+		this.log(this.state);
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
-				var bWidth  = (j+1)*this.maxSize > this.video.width  ? this.video.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.video.height ? this.video.height-(i*this.maxSize) : this.maxSize;
+				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
+				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
 				var bX = j*this.maxSize;
 				var bY = i*this.maxSize;
 				
-				var left   =  (bX         /this.video.width *2.0) - 1.0;
-				var right  = ((bX+bWidth) /this.video.width *2.0) - 1.0;
-				var bottom = -1 *  ((bY         /this.video.height*2.0) - 1.0);
-				var top    = -1 * (((bY+bHeight)/this.video.height*2.0) - 1.0);
+				var left   =  (bX         /this.state.width *2.0) - 1.0;
+				var right  = ((bX+bWidth) /this.state.width *2.0) - 1.0;
+				var bottom = -1 *  ((bY         /this.state.height*2.0) - 1.0);
+				var top    = -1 * (((bY+bHeight)/this.state.height*2.0) - 1.0);
 				
 				// vertices
 				var squareVertexPositionBuffer = this.gl.createBuffer();
@@ -349,14 +348,16 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	initTextures: function() {
-		this.horizontalBlocks = Math.ceil(this.video.width /this.maxSize);
-		this.verticalBlocks   = Math.ceil(this.video.height/this.maxSize);
+		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
+		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
 		
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
-				var bWidth  = (j+1)*this.maxSize > this.video.width  ? this.video.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.video.height ? this.video.height-(i*this.maxSize) : this.maxSize;
-			
+				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
+				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
+				
+				console.log(bWidth, bHeight);
+				
 				var yTexture = this.gl.createTexture();
 				var uTexture = this.gl.createTexture();
 				var vTexture = this.gl.createTexture();
@@ -418,8 +419,10 @@ var movie_player = SAGE2_App.extend( {
 			for(var j=0; j<this.horizontalBlocks; j++){
 				var blockIdx = i*this.horizontalBlocks+j;
 				
-				var bWidth  = (j+1)*this.maxSize > this.video.width  ? this.video.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.video.height ? this.video.height-(i*this.maxSize) : this.maxSize;
+				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
+				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
+				
+				console.log(bWidth, bHeight);
 				
 				var yEnd = bWidth*bHeight;
 				var uEnd = yEnd + bWidth*bHeight/4;
@@ -446,10 +449,18 @@ var movie_player = SAGE2_App.extend( {
     },
 	
 	load: function(state, date) {
-		this.video = state;
+		this.state.width                = state.width;
+		this.state.height               = state.height;
+		this.state.paused               = state.paused;
+		this.state.frame                = state.frame;
+		this.state.numframes            = state.numframes;
+		this.state.framerate            = state.framerate;
+		this.state.display_aspect_ratio = state.display_aspect_ratio;
+		this.state.muted                = state.muted;
+		this.state.looped               = state.looped;
 		
-		this.horizontalBlocks = Math.ceil(this.video.width /this.maxSize);
-		this.verticalBlocks   = Math.ceil(this.video.height/this.maxSize);
+		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
+		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
 		this.receivedBlocks = initializeArray(this.horizontalBlocks*this.verticalBlocks, false);
 		
 		this.initBuffers();

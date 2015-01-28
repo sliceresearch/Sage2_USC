@@ -1597,7 +1597,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	});
 	videohandle.on('frame', function(frameIdx, buffer) {
 		videoHandles[appInstance.id].frameIdx = frameIdx;
-		var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.native_width, appInstance.native_height, blocksize);
+		var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.data.width, appInstance.data.height, blocksize);
 
 		var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
 		var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
@@ -1681,9 +1681,11 @@ function handleNewClientReady(id) {
 function calculateValidBlocks(app, blockSize) {
 	var i, j, key;
 	
-	var horizontalBlocks = Math.ceil(app.native_width /blockSize);
-	var verticalBlocks   = Math.ceil(app.native_height/blockSize);
-	var renderBlockSize  = blockSize * app.width / app.native_width;
+	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
+	var verticalBlocks   = Math.ceil(app.data.height/blockSize);
+		
+	var renderBlockWidth  = blockSize * app.width / app.data.width;
+	var renderBlockHeight = blockSize * app.height / app.data.height;
 	
 	for(key in videoHandles[app.id].clients){
 		videoHandles[app.id].clients[key].blockList = [];
@@ -1696,13 +1698,13 @@ function calculateValidBlocks(app, blockSize) {
 				}
 				else {
 					var display = config.displays[videoHandles[app.id].clients[key].wsio.clientID];
-					var left = j*renderBlockSize + app.left;
-					var top  = i*renderBlockSize + app.top + config.ui.titleBarHeight;
+					var left = j*renderBlockWidth  + app.left;
+					var top  = i*renderBlockHeight + app.top + config.ui.titleBarHeight;
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
 					
-					if((left+renderBlockSize) >= offsetX && left <= (offsetX+config.resolution.width) &&
-					   (top +renderBlockSize) >= offsetY && top  <= (offsetY+config.resolution.height)) {
+					if((left+renderBlockWidth) >= offsetX && left <= (offsetX+config.resolution.width) &&
+					   (top +renderBlockHeight) >= offsetY && top  <= (offsetY+config.resolution.height)) {
 						videoHandles[app.id].clients[key].blockList.push(blockIdx);
 					}
 				}

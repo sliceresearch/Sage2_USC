@@ -346,48 +346,12 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
 		var exif = assets.getExifData(file);
 		
-		var appInstance = {
-			id: null,
-			title: name,
-			application: "movie_player",
-			icon: exif.SAGE2thumbnail,
-			type: mime_type,
-			url: external_url,
-			data: {
-				width: data.width,
-				height: data.height,
-				play: false,
-				frame: 0,
-				numframes: data.num_frames,
-				framerate: data.frame_rate
-			},
-			resrc: null,
-			left:  _this.titleBarHeight,
-			top:   1.5 * _this.titleBarHeight,
-			width:  data.width,
-			height: data.height,
-			native_width:    data.width,
-			native_height:   data.height,
-			previous_left:   null,
-			previous_top:    null,
-			previous_width:  null,
-			previous_height: null,
-			maximized:       false,
-			aspect:          data.width / data.height,
-			animation:       false,
-			metadata:        metadata,
-			date:            new Date()
-		};
-		_this.scaleAppToFitDisplay(appInstance);
-		callback(appInstance, video);
-	});
-	video.load(file);
-	
-	/*
-	var video = new videodecoder({ffmpegPath: this.ffmpegPath});
-	video.onmetadata = function(err, data) {
-		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
-		var exif = assets.getExifData(file);
+		var stretch = data.display_aspect_ratio / (data.width / data.height);
+		var native_width  = data.width * stretch;
+		var native_height = data.height;
+		
+		console.log(data);
+		console.log(native_width, native_height);
 		
 		var appInstance = {
 			id: null,
@@ -399,34 +363,35 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			data: {
 				width: data.width,
 				height: data.height,
-				play: false,
+				paused: true,
 				frame: 0,
-				numframes: data.numframes,
-				framerate: data.framerate
+				numframes: data.num_frames,
+				framerate: data.frame_rate,
+				display_aspect_ratio: data.display_aspect_ratio,
+				muted: false,
+				looped: false
 			},
 			resrc: null,
 			left:  _this.titleBarHeight,
 			top:   1.5 * _this.titleBarHeight,
 			width:  data.width,
 			height: data.height,
-			native_width:    data.width,
-			native_height:   data.height,
+			native_width:    native_width,
+			native_height:   native_height,
 			previous_left:   null,
 			previous_top:    null,
 			previous_width:  null,
 			previous_height: null,
 			maximized:       false,
-			aspect:          data.width / data.height,
+			aspect:          native_width / native_height,
 			animation:       false,
 			metadata:        metadata,
 			date:            new Date()
 		};
 		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance, video);
-	};
-	
-	video.initializeLiveDecoder(file);
-	*/
+	});
+	video.load(file);
 };
 
 

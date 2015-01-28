@@ -43,7 +43,6 @@ var SAGE2_App = Class.extend( {
 		this.fileRead = null;
 		this.fileWrite = null;
 		this.fileReceived = null;
-
 	},
 	
 	init: function(elem, data) {
