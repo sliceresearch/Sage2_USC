@@ -668,9 +668,9 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 
 	if(appData.location === "file") {
 
-		app = registry.getDefaultApp(appData.type);
+		app = registry.getDefaultAppFromMime(appData.type);
 		var dir = registry.getDirectory(appData.type);
-
+		
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance, null);
