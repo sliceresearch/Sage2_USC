@@ -447,6 +447,8 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 };
 
 appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
+    console.log()
+    
     var _this = this;
 
     // Find the app!!
@@ -459,16 +461,12 @@ appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
     fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
         if(err) throw err;
 
-        //assets.exifAsync([file], function(err){
-        //    if(err) throw err;
-
-	var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
-	var app_external_url = _this.hostOrigin + encodeReservedURL(appPath);
-	var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
-    appInstance.url = appInstance.url.replace("public_HTTPS/", "");
-	appInstance.data = url;
-	callback(appInstance);
-        //});
+		var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
+		var appUrl = path.join("uploads", "apps", appName);
+		var app_external_url = _this.hostOrigin + encodeReservedURL(appUrl);
+		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
+		appInstance.data = url;
+		callback(appInstance);
     });
 };
 

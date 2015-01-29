@@ -12,19 +12,22 @@ var stereo_image = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.ctx          = null;
 		this.resizeEvents = "onfinish";
+		this.moveEvents   = "onfinish";
 
+		this.ctx = null;
 		this.stereoImg = null;
 		this.stereoImgLoaded = false;
+		this.manualOffset = 0;
+		this.interleaveOffset = 0;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 
 		// application specific 'init'
-		this.ctx    = this.element.getContext('2d');
+		this.ctx = this.element.getContext('2d');
 
 		this.state.stereoMode = "interleave";
 		this.state.anaglyphMode = "Optimized+Anaglyph";
@@ -102,7 +105,7 @@ var stereo_image = SAGE2_App.extend( {
 
 		this.ctx.lineWidth = 1;
 		this.ctx.beginPath();
-		for(var i=0; i<this.element.height; i+=2){
+		for(var i=this.interleaveOffset; i<this.element.height; i+=2){
 			this.ctx.moveTo(0, i);
 			this.ctx.lineTo(this.element.width, i);
 			this.ctx.lineTo(this.element.width, i+1);
@@ -204,12 +207,22 @@ var stereo_image = SAGE2_App.extend( {
 				break;
 		}
 	},
-
-	resize: function(date) {
+	
+	startMove: function(date) {
+		
+	},
+	
+	move: function(date) {
+		this.interleaveOffset = (this.sage2_y+this.manualOffset) % 2;
+		
 		this.refresh(date);
 	},
 	
-	moved: function(px, py, wx, wy, date) {
+	startResize: function(date) {
+	
+	},
+	
+	resize: function(date) {
 		this.refresh(date);
 	},
 
@@ -244,6 +257,13 @@ var stereo_image = SAGE2_App.extend( {
 				else if (this.state.anaglyphMode === "OptimizedAnaglyph")  this.state.anaglyphMode = "Optimized+Anaglyph";
 				else if (this.state.anaglyphMode === "Optimized+Anaglyph") this.state.anaglyphMode = "TrueAnaglyph";
 
+				this.refresh(date);
+			}
+			// manually switch interleave offset
+			if(data.character === "o" || data.character === "O"){
+				this.manualOffset = 1 - this.manualOffset;
+				this.interleaveOffset = (this.sage2_y+this.manualOffset) % 2;
+				
 				this.refresh(date);
 			}
 		}
