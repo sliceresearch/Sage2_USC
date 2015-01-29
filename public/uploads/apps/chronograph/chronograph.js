@@ -83,9 +83,9 @@ var chronograph = SAGE2_App.extend( {
 		this.setAxisCover(this.axisCoverRadius);
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "object", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "object", data);
 
 		// application specific 'init'
 		this.element.setAttribute('id',    'myclock');

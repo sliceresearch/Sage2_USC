@@ -31,32 +31,32 @@ var d3_sample = SAGE2_App.extend( {
 	},
 
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
 		// Get width height from the supporting div		
 		var width  = this.element.clientWidth;
 		var height = this.element.clientHeight;
 
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 
 		// Load the CSS file
 		addCSS(this.resrcPath + "scripts/style.css", null);
 
 		// from voronoi example
 		this.vertices = d3.range(100).map(function(d) {
-		  return [Math.random() * width, Math.random() * height];
+		  return [Math.random() * data.width, Math.random() * data.height];
 		});
-		this.voronoi = d3.geom.voronoi().clipExtent([[0, 0], [width, height]]);
+		this.voronoi = d3.geom.voronoi().clipExtent([[0, 0], [data.width, data.height]]);
 
 		// backup of the context
 		var self = this;
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+width+","+height;
+		var box="0,0,"+data.width+","+data.height;
 		this.svg = d3.select(this.element).append("svg")
-		    .attr("width",   width)
-		    .attr("height",  height)
+		    .attr("width",   data.width)
+		    .attr("height",  data.height)
 		    .attr("viewBox", box);
 		  	//.on("mousemove", function() { self.vertices[0] = d3.mouse(this); self.draw_d3(); });
 
@@ -68,7 +68,7 @@ var d3_sample = SAGE2_App.extend( {
 		    .attr("transform", function(d) { return "translate(" + d + ")"; })
 		    .attr("r", 1.5);
 
-		this.draw_d3(date);
+		this.draw_d3(data.date);
 	},
 
 	load: function(state, date) {
