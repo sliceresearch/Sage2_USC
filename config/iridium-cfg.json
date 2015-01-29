@@ -1,4 +1,5 @@
 {
+	name: "Cybercommons",
 	host: "iridium.evl.uic.edu",
 	port: 443,
 	index_port: 80,

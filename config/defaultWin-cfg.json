@@ -2,6 +2,7 @@
 	default configuration of the server - Windows
 */
 {
+	name: "Windows",
 	host: "localhost",
 	port: 9090,
 	index_port: 9292,

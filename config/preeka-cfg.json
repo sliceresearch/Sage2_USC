@@ -2,6 +2,7 @@
 // Display column at EVL
 //
 {
+	name: "Preeka",
 	host: "preeka.evl.uic.edu",
 	port: 443,
 	index_port: 80,
