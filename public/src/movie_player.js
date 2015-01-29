@@ -79,7 +79,7 @@ var movie_player = SAGE2_App.extend( {
 	initWidgets: function() {
 		var _this = this;
 		
-		this.controls.addButton({
+		this.loopBtn = this.controls.addButton({
 			type: "loop",
 			sequenceNo: 2,
 			action: function(date) {
@@ -95,8 +95,9 @@ var movie_player = SAGE2_App.extend( {
 				}
 			}
 		});
+		this.loopBtn.state = 1; // initialize to no-loop
 		
-		this.controls.addButton({
+		this.muteBtn = this.controls.addButton({
 			type: "mute",
 			sequenceNo: 5,
 			action: function(date) {
@@ -113,7 +114,7 @@ var movie_player = SAGE2_App.extend( {
 			}
 		});
 		
-		this.controls.addButton({
+		this.playPauseBtn = this.controls.addButton({
 			type: "play-pause",
 			sequenceNo: 8,
 			action: function(date) {
@@ -129,14 +130,14 @@ var movie_player = SAGE2_App.extend( {
 				}
 			}
 		});
-		this.controls.addButton({
+		this.stopBtn = this.controls.addButton({
 			type: "stop",
 			sequenceNo: 11,
 			action: function(date) {
 				console.log("pause: " + _this.div.id);
 				if(isMaster) wsio.emit('stopVideo', {id: _this.div.id});
 				_this.state.paused = true;
-				// must change play-pause button (should show 'play' icon)
+				_this.playPauseBtn.state = 0;
 			}
 		});
 		
@@ -356,8 +357,6 @@ var movie_player = SAGE2_App.extend( {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
 				
-				console.log(bWidth, bHeight);
-				
 				var yTexture = this.gl.createTexture();
 				var uTexture = this.gl.createTexture();
 				var vTexture = this.gl.createTexture();
@@ -421,8 +420,6 @@ var movie_player = SAGE2_App.extend( {
 				
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
-				
-				console.log(bWidth, bHeight);
 				
 				var yEnd = bWidth*bHeight;
 				var uEnd = yEnd + bWidth*bHeight/4;
