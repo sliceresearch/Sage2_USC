@@ -8,11 +8,7 @@
 	index_port: 80,
 
 	background: {
-		color: "#9a9a9a",
-		image: {
-			url: "images/background/dbgrid.png",
-			style: "tile"
-		}
+               color: "#000000",
 	},
 
 	ui: {
