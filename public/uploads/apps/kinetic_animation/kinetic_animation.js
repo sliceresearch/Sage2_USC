@@ -20,13 +20,13 @@ var kinetic_animation = SAGE2_App.extend( {
 		this.resizeEvents = "continuous";
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
 		this.maxFPS = 30;
 
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
 		this.stage  = new Kinetic.Stage({container: this.element.id, width: this.width, height: this.height});

@@ -24,15 +24,15 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		this.lastZoom = null;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
 		this.maxFPS = 30;
 		
-		this.lastZoom = date;
+		this.lastZoom = data.date;
 
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 		this.element.style.background = '#000';
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
@@ -102,6 +102,10 @@ var kinetic_oscillating = SAGE2_App.extend( {
 		this.stage.draw();
 	},
 
+	startResize: function(date) {
+		
+	},
+	
 	resize: function(date) {
         this.stage.setSize({
 			width : this.element.clientWidth,
