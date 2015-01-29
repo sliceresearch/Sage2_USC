@@ -1,0 +1,19 @@
+{
+	"main_script": "stereo_image.js",
+	"icon": "stereo_glasses.png",
+	"width": 600,
+	"height": 400,
+	"animation": false,
+	"load": {
+	},
+	"dependencies": [
+	],
+	"title": "Stereo image viewer",
+	"version": "1.0.0",
+	"description": "Display stereo images",
+	"keywords": [ "3d", "stereo", "viewer" ],
+	"fileTypes": [ "jps", "pns"],
+	"directory": "stereo",
+	"author": "Thomas Marrinan <thomas.j.marrinan@gmail.com>",
+	"license": "SAGE2-Software-License"
+}
