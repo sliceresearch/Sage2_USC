@@ -36,7 +36,7 @@ function radialmenu(id, ptrID, ui) {
 }
 
 radialmenu.prototype.getInfo = function() {
-	return { id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale };
+	return { id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale, visble: this.visible };
 };
 
 radialmenu.prototype.start = function() {

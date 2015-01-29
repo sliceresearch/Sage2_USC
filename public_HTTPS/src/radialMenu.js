@@ -353,6 +353,12 @@ function radialMenu(){
 		//console.log(data);
 	};
 	
+	this.redraw = function() {
+		this.thumbScrollWindowctx.redraw = true;
+		
+		this.draw();
+	};
+	
 	this.draw = function() {
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);

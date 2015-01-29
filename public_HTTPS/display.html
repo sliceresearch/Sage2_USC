@@ -256,6 +256,9 @@
 			ui.createRadialMenu(menu_data);
         });
 		
+		wsio.on('showRadialMenu', function(menu_data){
+			ui.showRadialMenu(menu_data);
+        });
 		wsio.on('radialMenuEvent', function(menu_data){
 			ui.radialMenuEvent(menu_data);
 			resetIdle();
