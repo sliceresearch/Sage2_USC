@@ -54,7 +54,6 @@ var movie_player = SAGE2_App.extend( {
 		this.canvas.height = ui.json_cfg.resolution.height;
 		this.element.appendChild(this.canvas);
 		
-		
 		// application specific 'init'
 		this.maxSize = 128; // block size
 		
