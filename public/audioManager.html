@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>SAGE2 Audio Manager</title>
+<title>SAGE2: Audio Manager</title>
 
 <script type="text/javascript">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -79,6 +79,10 @@
 		});
 		
 		wsio.on('initialize', function(data) {
+			// play the jinggle
+			var jinggle = document.getElementById('jinggle');
+			jinggle.play();
+
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
 			
@@ -105,12 +109,10 @@
 				vid.id = data.id;
 				vid.volume = 0.8;
 				vid.style.display = "none";
-				
 				vid.addEventListener('canplay', function() {
 					console.log("video can now play"); // Video is loaded and can be played
 					if(autoplay === true) playVideo(data.id);
 				}, false);
-				
 				vid.addEventListener('ended', function() {
 					console.log("video ended");
 					if(autoplay === true) vid.currentTime = 0;
@@ -279,6 +281,14 @@
 </head>
 
 <body onload="init()">
+
+	<!-- SAGE2 jinggle at startup -->
+	<audio id="jinggle" preload="auto" hidden>
+		<source src="images/sage2_jinggle.mp3">
+		Your browser does not support the audio element.
+	</audio>
+
+
 	<div id="main">
 		<table id="videos">
 			<tr>
@@ -289,6 +299,8 @@
 			</tr>
 		</table>
 	</div>
+
+
 </body>
 </html>
 

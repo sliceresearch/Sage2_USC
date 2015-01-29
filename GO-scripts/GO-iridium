@@ -3,13 +3,16 @@
 tentakel pkill -HUP chrome
 
 server="iridium.evl.optiputer.net"
-global_param="--new-window --window-size=4098,768 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content"
+global_param="--new-window --window-size=4098,768 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
 
 for i in {0..5}
 do
 	node=`printf orion-%02d $i`
 	echo "================= $node: client $i ================="
-	UDD="$HOME/.config/chrome-nfs/$node"
+	#UDD="$HOME/.config/chrome-nfs/$node"
+	UDD="/tmp/chrome/$node"
+	/bin/rm -fr $UDD
+	mkdir -p $UDD/Default
 	param="$global_param --user-data-dir=$UDD"
 	
 	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'http://$server/display.html?clientID=$i'" &

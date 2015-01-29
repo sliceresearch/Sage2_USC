@@ -2,6 +2,8 @@
 	configuration for traoumad - luc's machine
 */
 {
+	// nickname for UI elements
+	name: "Luc's office",
 	// hostname of the web server
 	host: "traoumad.evl.uic.edu",
 	// port of the HTTPS server: 443 for default
@@ -23,20 +25,26 @@
 		clock: 24,
 		show_url: true,
 		show_version: true,
-		noDropShadow: true
+		noDropShadow: true,
+		auto_hide_ui: true,
+		auto_hide_delay: 30
 	},
 	resolution: {
-		width: 3840,
+		width: 1920,
 		height: 1080
 	},
 	layout: {
 		rows: 1,
-		columns: 1
+		columns: 2
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
+		},
+		{
+			row: 0,
+			column: 1
 		}
 	],
 	alternate_hosts: [

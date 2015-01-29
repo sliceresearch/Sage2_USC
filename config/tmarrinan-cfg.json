@@ -1,4 +1,5 @@
 {
+	name: "Tommy",
 	host: "marrinan.evl.uic.edu",
 	port: 9090,
 	index_port: 9292,

@@ -2,6 +2,7 @@
 	Configuration for CAVE2
 */
 {
+	name: "CAVE2",
 	"host": "lyra.evl.uic.edu",
 	"port": 443,
 	"index_port": 80,

@@ -475,7 +475,7 @@ function uiBuilder(json_cfg, clientID) {
 
 		var menuElem = document.getElementById(data.id+"_menu");
 
-		if( !menuElem )
+		if( !menuElem && this.radialMenus[data.id+"_menu"] === undefined )
 		{
 			radialMenuContentWindowDiv = document.createElement("div");
 			
@@ -519,15 +519,46 @@ function uiBuilder(json_cfg, clientID) {
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
+			
+			if( this.radialMenus[menuElem.id].visible === false )
+			{
+				menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
+				menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+							
+				this.radialMenus[menuElem.id].visible = true;
+				menuElem.style.display = "block";
+				this.radialMenus[menuElem.id].draw();
+			}
 		}
-		if( this.radialMenus[menuElem.id].visible === false )
+		
+	};
+	
+	this.showRadialMenu = function(data) {
+		var menuElem = document.getElementById(data.id+"_menu");
+		
+		if( menuElem !== null )
 		{
-			menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
-			menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
-						
-			this.radialMenus[menuElem.id].visible = true;
+			var menu = this.radialMenus[menuElem.id];
+			
 			menuElem.style.display = "block";
-			this.radialMenus[menuElem.id].draw();
+			menu.thumbnailScrollWindowElement.style.display = "block";
+			menu.thumbnailWindowDiv.style.display = "block";
+			menu.visible = true;
+			
+			var rect = menuElem.getBoundingClientRect();
+			menuElem.style.display = "block";
+			menu.thumbnailScrollWindowElement.style.display = "block";
+			menu.thumbnailWindowDiv.style.display = "block";
+				
+			menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
+				
+			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+		}
+		else
+		{
+			// Show was called on non-existant menu (display client was likely reset)
+			this.createRadialMenu(data);
 		}
 	};
 	

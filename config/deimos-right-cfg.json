@@ -1,4 +1,5 @@
 {
+	name: "Andy - right",
 	host: "deimos.evl.uic.edu",
 	port: 1443,
 	index_port: 1080,

@@ -28,6 +28,8 @@ var googlemaps = SAGE2_App.extend( {
 		this.dragging     = null;
 		this.position     = null;
 		this.scrollAmount = null;
+		this.trafficTimer = null;
+		this.trafficCB    = null;
 	},
 
 	init: function(id, width, height, resrc, date) {
@@ -47,6 +49,9 @@ var googlemaps = SAGE2_App.extend( {
 		this.state.zoomLevel = null;
 		this.state.center    = null;
 		this.state.layer     = null;
+
+		// Create a callback function for traffic updates
+		this.trafficCB = this.reloadTiles.bind(this);
 
 		// need a global handler for the callback (i.e. scope pollution)
 		googlemaps_self = this;
@@ -111,8 +116,11 @@ var googlemaps = SAGE2_App.extend( {
 		this.weatherLayer = new google.maps.weather.WeatherLayer({
 			temperatureUnits: google.maps.weather.TemperatureUnit.FAHRENHEIT
 		});
-		if (this.state.layer.t)
+		if (this.state.layer.t) {
 			this.trafficLayer.setMap(this.map);
+			// add a timer updating the traffic tiles: 60sec
+			this.trafficTimer = setInterval(this.trafficCB, 60*1000);
+		}
 		else
 			this.trafficLayer.setMap(null);
 		if (this.state.layer.w)
@@ -147,6 +155,20 @@ var googlemaps = SAGE2_App.extend( {
 		// to trigger an 'oberve' event, need to rebuild the layer field
 		this.state.layer = {w: this.weatherLayer.getMap() != null,
 							t: this.trafficLayer.getMap() != null};
+	},
+
+	reloadTiles: function() {
+		// Get the image tiles in the maps
+		var tiles = this.element.getElementsByTagName('img');
+		for (var i = 0; i < tiles.length; i++) {
+			// get the URL
+			var src = tiles[i].src;
+			if (/googleapis.com\/vt\?pb=/.test(src)) {
+				// add a date inthe URL will trigger a reload
+				var new_src = src.split("&ts")[0] + '&ts=' + (new Date()).getTime();
+				tiles[i].src = new_src;
+			}
+		}
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -218,10 +240,16 @@ var googlemaps = SAGE2_App.extend( {
 			}
 			else if (data.character === "t") {
 				// add/remove traffic layer
-				if (this.trafficLayer.getMap() == null)
+				if (this.trafficLayer.getMap() == null) {
 					this.trafficLayer.setMap(this.map);
-				else
+					// add a timer updating the traffic tiles: 60sec
+					this.trafficTimer = setInterval(this.trafficCB, 60*1000);
+				}
+				else {
 					this.trafficLayer.setMap(null);
+					// remove the timer updating the traffic tiles
+					clearInterval(this.trafficTimer);
+				}
 				this.updateLayers();
 			}
 			else if (data.character === "w") {

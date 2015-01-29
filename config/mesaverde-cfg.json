@@ -2,6 +2,7 @@
 	Configuration for Mesaverde
 */
 {
+	name: "Green Table",
 	// hostname of the web server
 	host: "mesaverde.evl.uic.edu",
 	// port of the HTTPS server: 443 for default
