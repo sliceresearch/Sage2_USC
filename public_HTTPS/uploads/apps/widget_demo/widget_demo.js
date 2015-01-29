@@ -92,7 +92,7 @@ var widget_demo = SAGE2_App.extend( {
 			"textual":false,
 			"animation":true
 		};
-		this.controls.addButton({type:plusButton,sequenceNo:8,action:function(date){
+		this.buttonHandle = this.controls.addButton({type:plusButton,sequenceNo:8,action:function(date){
 			this.displayText = "Pushed plus button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
@@ -107,6 +107,7 @@ var widget_demo = SAGE2_App.extend( {
 		this.controls.addButton({type:"loop",sequenceNo:9,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
 			this.displayText = "Pushed Help button"; //Reset value
 			this.draw(date);
+			this.buttonHandle.state = 1 - this.buttonHandle.state;
 		}.bind(this)});
 
 		

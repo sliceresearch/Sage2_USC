@@ -45,192 +45,182 @@ var SAGE2WidgetControls = {
 		this.appId  = null;
 		this.width  = null;
 		this.appProperty = null;
+	},
+	colorPalette: function(){
+		this.id = null;
+		this.appId = null;
+		this.colorList = [];
 	}
 
 };
+
+
 var buttonType = {
-	"play-pause": {
-		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
-		"to":"m -2 -5 l 0 10 m 4 0 l 0 -10",
-		"width":10,
-		"height":12,
-		"strokeWidth": 1,
-		"fill":"#ffffff",
-		"state": 0,
-		"delay": 400,
-		"textual":false,
-		"animation": true
+	"play-pause": function () {
+		this.from = "m -5 -5 l 0 10 l 6 -3 l 4 -2 z";
+		this.to = "m -2 -5 l 0 10 m 4 0 l 0 -10";
+		this.width = 10;
+		this.height = 12;
+		this.strokeWidth = 1;
+		this.fill = "#ffffff";
+		this.state = 0;
+		this.delay = 400;
+		this.textual = false;
+		this.animation = true;
 	},
-	"mute": {
-		"from":"m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 6 0 l 0 4 m 1 -5 l 0 6",
-		"to":"m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 3 -3 l -2 10",
-		"width":8,
-		"height":10,
-		"strokeWidth": 1,
-		"fill":"#ffffff",
-		"toFill":"#6D6D6D",
-		"state": 0,
-		"delay": 400,
-		"textual":false,
-		"animation": true
+	"mute": function () {
+		this.from = "m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 6 0 l 0 4 m 1 -5 l 0 6";
+		this.to = "m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 3 -3 l -2 10";
+		this.width=8;
+		this.height=10;
+		this.strokeWidth= 1;
+		this.fill="#ffffff";
+		this.toFill="#6D6D6D";
+		this.state= 0;
+		this.delay= 400;
+		this.textual=false;
+		this.animation= true;
 	},
-	"loop": {
-		"from":"m 3 -2 a 4 4 0 1 0 0 4 m 0 -6 l 0 2 l -2 0",
-		"to":"m 3 -2 a 4 4 0 1 0 0 4 m 0 -6 l 0 2 l -2 0 m 0 -3 l -2 10",
-		"width":10,
-		"height":10,
-		"strokeWidth": 1,
-		"fill":"#6D6D6D",
-		"toFill":"#6D6D6D",
-		"state": 0,
-		"delay": 400,
-		"textual":false,
-		"animation": true
+	"loop": function (){
+		this.from = "m 3 -2 a 3 3 0 1 0 0 3 l 1 2 a 5 5 0 1 1 0 -7 l 1 -1 l 0 4 l -4 0 l 1 -1";
+		this.to = "m 3 -2 a 3 3 0 1 0 0 3 l 1 2 a 5 5 0 1 1 0 -7 l 1 -1 l 0 4 l -4 0 l 1 -1 m 1 -4 l -4 12";
+		this.width = 10;
+		this.height = 10;
+		this.strokeWidth = 1;
+		this.fill = "#ffffff";
+		this.toFill ="#6D6D6D";
+		this.state = 0;
+		this.delay = 400;
+		this.textual = false;
+		this.animation = true;
 	},
-	"play-stop": {
-		"from":"m -5 -5 l 0 10 l 6 -3 l 4 -2 z",
-		"to":"m -5 -5 l 0 10 l 10 0 l 0 -10 z",
-		"width":10,
-		"height":12,
-		"strokeWidth": 1,
-		"fill":"#ffffff",
-		"state": 0,
-		"delay": 400,
-		"textual":false,
-		"animation": true
+	"play-stop": function (){
+		this.from ="m -5 -5 l 0 10 l 6 -3 l 4 -2 z";
+		this.to ="m -5 -5 l 0 10 l 10 0 l 0 -10 z";
+		this.width =10;
+		this.height =12;
+		this.strokeWidth = 1;
+		this.fill ="#ffffff";
+		this.state = 0;
+		this.delay = 400;
+		this.textual =false;
+		this.animation = true;
 	},
-	"stop": {
-		"from":"m -4 -4 l 0 8 l 8 0 l 0 -8 z",
-		"to": "m -4 -4 l 0 8 l 8 0 l 0 -8 z",
-		"width":10,
-		"height":10,
-		"strokeWidth": 1,
-		"fill":"#ffffff",
-		"state": null,
-		"delay": 400,
-		"textual":false,
-		"animation": false
+	"stop": function () {
+		this.from ="m -4 -4 l 0 8 l 8 0 l 0 -8 z";
+		this.to = "m -4 -4 l 0 8 l 8 0 l 0 -8 z";
+		this.width =10;
+		this.height =10;
+		this.strokeWidth = 1;
+		this.fill ="#ffffff";
+		this.state = null;
+		this.delay = 400;
+		this.textual =false;
+		this.animation = false;
 	},
-	"next": {
-		"state": null,
-		"from":"m 0 -6 l 4 6 l -4 6",
-		"to":"m -6 0 l 10 0 l -10 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
-		"width":10,
-		"height":12,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay": 600,
-		"textual":false,
-		"animation": true
+	"next": function (){
+		this.state = null;
+		this.from = "m 0 -6 l 4 6 l -4 6";
+		this.to = "m -6 0 l 10 0 l -10 0";//"m -3 0 a 6 6 180 1 0 0 1 z";
+		this.width = 10;
+		this.height = 12;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth = 1;
+		this.delay = 600;
+		this.textual = false;
+		this.animation = true;
 	},
-	"prev": {
-		"state": null,
-		"from":"m 0 -6 l -4 6 l 4 6",
-		"to":"m 6 0 l -10 0 l 10 0",
-		"width":10,
-		"height":12,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation": true
+	"prev": function (){
+		this.state= null;
+		this.from="m 0 -6 l -4 6 l 4 6";
+		this.to="m 6 0 l -10 0 l 10 0";
+		this.width=10;
+		this.height=12;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
 
 	},
-	"next-zoom": {
-		"state": null,
-		"from":"m 0 -6 l 4 6 l -4 6",
-		"to":"m -2 -9 l 8 9 l -10 9",
-		"width":10,
-		"height":12,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay": 600,
-		"textual":false,
-		"animation": true
+	
+	"rewind": function () {
+		this.state= null;
+		this.from="m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6";
+		this.to="m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0";
+		this.width=10;
+		this.height=12;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
 	},
-	"prev-zoom": {
-		"state": null,
-		"from":"m 0 -6 l -4 6 l 4 6",
-		"to":"m -2 -9 l -8 9 l 10 9",
-		"width":10,
-		"height":12,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation": true
+	"fastforward": function (){
+		this.state= null;
+		this.from="m 0 -6 l 4 6 l -4 6 m -4 -12 l 4 6 l -4 6";
+		this.to="m 0 -6 l 4 6 l -4 6 m -6 -6 l 10 0 l -10 0 ";
+		this.width=10;
+		this.height=12;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
 	},
-	"rewind": {
-		"state": null,
-		"from":"m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6",
-		"to":"m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0",
-		"width":10,
-		"height":12,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation": true
+	"duplicate": function (){
+		this.state= null;
+		this.from="m -4 -5 l 8 0 l 0 10 l -8 0 z";
+		this.to="m -4 -5 l 8 0 l 0 10 l -8 0 z m 3 0 l 0 -3 l 8 0 l 0 10 l -3 0";
+		this.width=10;
+		this.height=12;
+		this.fill="#999999";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
 	},
-	"fastforward": {
-		"state": null,
-		"from":"m 0 -6 l 4 6 l -4 6 m -4 -12 l 4 6 l -4 6",
-		"to":"m 0 -6 l 4 6 l -4 6 m -6 -6 l 10 0 l -10 0 ",
-		"width":10,
-		"height":12,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation": true
+	"new": function () {
+		this.state= null;
+		this.from="m -4 -5 l 8 0 l 0 10 l -8 0 z";
+		this.to="m -4 -5 l 8 0 l 0 10 l -8 0 z m 6 6 l 0 4 m -2 -2 l 4 0";
+		this.width=8;
+		this.height=10;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
 	},
-	"duplicate": {
-		"state": null,
-		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
-		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 3 0 l 0 -3 l 8 0 l 0 10 l -3 0",
-		"width":10,
-		"height":12,
-		"fill":"#999999",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation": true
+	"closeBar": function () {
+		this.textual=true;
+		this.label="Close";
+		this.fill="rgba(250,250,250,1.0)";
+		this.animation=false;
 	},
-	"new": {
-		"state": null,
-		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 z",
-		"to":"m -4 -5 l 8 0 l 0 10 l -8 0 z m 6 6 l 0 4 m -2 -2 l 4 0",
-		"width":8,
-		"height":10,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation": true
+	"closeApp": function () {
+		this.state= null;
+		this.from="m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4";
+		this.to= "m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4";
+		this.width=8;
+		this.height=10;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation=false;
 	},
-	"closeBar": {
-		"textual":true,
-		"label":"Close",
-		"fill":"rgba(250,250,250,1.0)",
-		"animation":false
-	},
-	"closeApp": {
-		"state": null,
-		"from":"m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4",
-		"to": "m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4",
-		"width":8,
-		"height":10,
-		"fill":"none",
-		"strokeWidth": 1,
-		"delay":600,
-		"textual":false,
-		"animation":false
-	},
-	"default":{
-		"textual":true,
-		"label":"Hello",
-		"fill":"rgba(250,250,250,1.0)",
-		"animation":false
+	"default": function (){
+		this.textual=true;
+		this.label="Hello";
+		this.fill="rgba(250,250,250,1.0)";
+		this.animation=false;
 	}
 
 };
@@ -274,13 +264,27 @@ SAGE2WidgetControlBar.prototype.controlsReady = function(){
 };
 
 
+
+
 /**
 *	Lets the user add a custom cover for buttons
 * 	Added cover is available only to that instance of that app. 
 */
 SAGE2WidgetControlBar.prototype.addButtonType = function(type, buttonData){
 	if (this.buttonType[type] === undefined || this.buttonType[type] === null){
-		this.buttonType[type] = buttonData;
+		this.buttonType[type] = function (){
+			this.state= buttonData.state;
+			this.from= buttonData.from;
+			this.to=  buttonData.to;
+			this.width= buttonData.width;
+			this.height= buttonData.height;
+			this.fill= buttonData.fill;
+			this.label = buttonData.label;
+			this.strokeWidth= buttonData.strokeWidth;
+			this.delay= buttonData.delay;
+			this.textual= buttonData.textual;
+			this.animation= buttonData.animation;
+		};
 	}
 };
 
@@ -319,12 +323,41 @@ SAGE2WidgetControlBar.prototype.addButton = function(data) {
 		var button = new SAGE2WidgetControls.button();
 		button.appId = this.id;
 		button.id = "button" + this.itemCount;
-		button.type = data.type;
+		var type = null;
+		if (typeof data.type === "string" ){
+			var typeVar = this.buttonType[data.type];
+			if (typeof typeVar === "function")
+				type =  new typeVar();
+		}
+		else if (typeof data.type === "function"){
+			type = new data.type();
+		}
+		else if (typeof data.type === "object"){
+			type = new (function (){
+				this.state= data.type.state;
+				this.from= data.type.from;
+				this.to=  data.type.to;
+				this.width= data.type.width;
+				this.height= data.type.height;
+				this.fill= data.type.fill;
+				this.label = data.type.label;
+				this.strokeWidth= data.type.strokeWidth;
+				this.delay= data.type.delay;
+				this.textual= data.type.textual;
+				this.animation= data.type.animation;
+			})();
+		}
+
+		if (type === null || type === undefined){
+			type = new this.buttonType["default"]();
+		}
+		button.type=type;
 		button.call = data.action || null;
 		button.width = 1.5*ui.widgetControlSize;
 		this.buttonSequence[data.sequenceNo.toString()] = button;
 		this.itemCount++;
 	}
+	return type;
 };
 
 SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparator,secondSeparator,thirdSeparator) {
@@ -413,6 +446,28 @@ SAGE2WidgetControlBar.prototype.addSlider = function(data){
 	
 };
 
+/**
+*	Adds a color palette 
+*/
+SAGE2WidgetControlBar.prototype.addColorPalette = function(data){
+	if (this.hasColorPalette === false && this.itemCount <= 12){
+		
+		var colorPalette = new SAGE2WidgetControls.colorPalette();
+		colorPalette.id = "colorPalette" + this.itemCount;
+		colorPalette.appId = this.id;
+		colorPalette.call = data.action || null;
+		
+		if (data.colorList === null || data.colorList === undefined)
+			return;
+		else if (data.colorList.length === 0)
+			return;
+
+		this.hasColorPalette = true;
+		this.colorPalette = colorPalette;
+		this.itemCount++;
+	}
+};
+
 
 /**
 *	Computes the dimensions of the widget control bar
@@ -442,6 +497,10 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 	}
 	else if ( this.hasTextInput === true){
 		size.width = size.width  + this.textInput.width - dimensions.innerR;
+		size.hasSideBar = true;
+	}
+	else if ( this.hasColorPalette === true){
+		size.width = size.width  + this.colorPalette.width - dimensions.innerR;
 		size.hasSideBar = true;
 	}
 	this.controlDimensions = dimensions;
@@ -501,9 +560,9 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var buttonCount = this.itemCount;
 	var startAngle = 0;
 	var endAngle = 360;
-	var sequenceMaximum = 30;
+	var sequenceMaximum = 27;
 	var innerSequence = 12;
-	var outerSequence = 18;
+	var outerSequence = 16;
 	if (this.hasSlider){
 		buttonCount--;
 		innerSequence --;
@@ -518,8 +577,15 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 		startAngle += 15;
 		endAngle -= 15;
 	}
+	if (this.hasColorPalette){
+		buttonCount--;
+		innerSequence --;
+		outerSequence--;
+		startAngle += 15;
+		endAngle -= 15;
+	}
 	
-	if (this.hasSlider || this.hasTextInput)
+	if (this.hasSlider || this.hasTextInput || this.hasColorPalette)
 		outerSequence--;
 	this.addDefaultButtons({
 		id:ctrId.slice(0,ctrId.lastIndexOf("_")),
@@ -558,17 +624,22 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 
 	
 	var d, leftMidOfBar;
-	if (this.hasSlider===true && this.hasTextInput === true){
-		d = makeBarPath(0,30, dimensions.innerR, center, this.slider.width);
-		leftMidOfBar = polarToCartesian(dimensions.innerR,15, center);
+	if (this.hasSlider===true && this.hasTextInput === true && this.hasColorPalette === true){
+		d = makeBarPath(315,345, dimensions.innerR, center, this.slider.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,330, center);
 		if (this.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
-		d = makeBarPath(330,360, dimensions.innerR, center, this.textInput.width);
-		leftMidOfBar = polarToCartesian(dimensions.innerR,345, center);
+		d = makeBarPath(345,375, dimensions.innerR, center, this.textInput.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,360, center);
 		if (this.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
+		/*d = makeBarPath(375,405, dimensions.innerR, center, this.textInput.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,390, center);
+		if (this.layoutOptions.drawSpokes === true)
+			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
+		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);*/
 	}
 	else if (this.hasSlider===true){
 		d = makeBarPath(345,375, dimensions.innerR, center, this.slider.width);
@@ -584,6 +655,13 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
+	/*else if (this.hasColorPalette===true){
+		d = makeBarPath(345,375, dimensions.innerR, center, this.textInput.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,0, center);
+		if (this.layoutOptions.drawSpokes === true)
+			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
+		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);
+	}*/
 	drawControlCenter(this.controlSVG,center, 1.8*dimensions.buttonRadius, "SAGE2");
 	var ctrHandle = document.getElementById(ctrId + "SVG");
 	return ctrHandle;
@@ -788,18 +866,8 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
-	var info;
-	var type;
-	if (typeof buttonSpec.type === "string" ){
-		type = this.buttonType[buttonSpec.type];
-	}
-	else{
-		type = buttonSpec.type;
-	}
-
-	if (type === null || type === undefined){
-		type = this.buttonType["default"];
-	}
+	var type = buttonSpec.type;
+	
 	
 	var buttonCover;
 	
@@ -815,61 +883,67 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 			stroke:"none",
 			fill:type["fill"]
 		});
-		info = {
-			"label": type["label"].slice(0,5),
-			"animation": type["animation"],
-			"textual": type["textual"]
-		};
-		
+		type.label = type.label.slice(0,5);
 	}
 	else{
-		var fromPath = type["from"];
-		var toPath= type["to"];
+		type.from = "M " + cx + " " + cy  + " " + type.from;
+		type.to = "M " + cx + " " + cy  + " " + type.to;
+		type.toFill = type.toFill || null;
 		var coverWidth = type["width"];
 		var coverHeight = type["height"];
-		fromPath = "M " + cx + " " + cy  + " " + fromPath;
-		toPath = "M " + cx + " " + cy  + " " + toPath;
-		buttonCover = this.controlSVG.path(fromPath);
+		
+		buttonCover = this.controlSVG.path(type.from);
 		buttonCover.attr({
 			id: buttonSpec.id + "cover",
 			transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
-			strokeWidth:type["strokeWidth"],
+			strokeWidth:type.strokeWidth,
 			stroke:"rgba(250,250,250,1.0)",
 			style:"stroke-linecap:round; stroke-linejoin:round",
-			fill:type["fill"]
+			fill:type.fill
 		});
-		info = {
-			"fromPath": fromPath,
-			"toPath":toPath,
-			"delay": type["delay"],
-			"state": type["state"],
-			"fill": type["fill"],
-			"toFill": (type["toFill"] || null),
-			"animation": type["animation"],
-			"textual": type["textual"]
-		};
+		
 		
 	}
-	/*	
-	buttonCover.attr({
-		id: buttonSpec.id + "cover",
-		transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
-		strokeWidth:type["strokeWidth"],
-		stroke:"rgba(250,250,250,1.0)",
-		style:"stroke-linecap:round; stroke-linejoin:round",
-		fill:type["fill"]
-	});
-	*/
+
+	if (type.state !== null && type.state !== undefined){
+
+		Object.observe(type,function(changes){
+			for(var i=0;i<changes.length;i++){
+				if (changes[i].name==="state"){
+					var path = (type.state===0)? type.from: type.to;
+					var fill = (type.state===0)? type.fill: type.toFill;
+					buttonCover.animate({"path":path, "fill":fill},type.delay,mina.bounce);
+				}
+			}
+		});
+	}
+	
 	var callabckFunc = buttonSpec.call.bind(applications[ buttonSpec.appId]);
 	var button = this.controlSVG.group(buttonBack,buttonCover);
 	
 	buttonCover.data("call",buttonSpec.call);
-	buttonCover.data("animationInfo", info);
+	buttonCover.data("animationInfo", type);
 	buttonCover.data("appId", buttonSpec.appId);
 	buttonBack.data("appId", buttonSpec.appId);
 	button.data("call",buttonSpec.call);
 	button.data("appId", buttonSpec.appId);
 	return button;
+}
+
+/**
+*	Creates a color palette 
+*/
+/*SAGE2WidgetControlBar.prototype.createColorPalette = function(x, y, outline){
+	var uiElementSize = ui.widgetControlSize;
+	var colorPaletteAreaHeight = 1.3 * uiElementSize;
+	//var fontSize = 0.045 * ui.widgetControlSize;
+
+	var colorPaletteOutline = this.controlSVG.path(outline);
+	colorPaletteOutline.attr("class","widgetBackground");
+	var colorPaletteBarWidth = colorPaletteOutline.getBBox().w;
+	
+	x = x + colorPaletteBarWidth*0.075;
+	//for(var i=0;i<this. )
 }
 
 /**

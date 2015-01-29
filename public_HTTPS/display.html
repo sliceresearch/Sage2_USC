@@ -874,8 +874,8 @@
 					if (animationInfo.textual === false && animationInfo.animation === true){
 						var delay = animationInfo.delay;
 						var state = animationInfo.state;
-						var fromPath = animationInfo.fromPath;
-						var toPath = animationInfo.toPath;
+						var fromPath = animationInfo.from;
+						var toPath = animationInfo.to;
 						var fromFill = animationInfo.fill;
 						var toFill = animationInfo.toFill;
 						if (toFill === null || toFill === undefined) toFill = fromFill;
@@ -886,11 +886,9 @@
 							
 						}
 						else{
-							var path = (state===1)? fromPath: toPath;
-							var fill = (state===1)? fromFill: toFill;
 							animationInfo.state = 1 - animationInfo.state;
 							ctrl.data("animationInfo", animationInfo);
-							ctrl.animate({"path":path, "fill":fill},delay,mina.bounce);
+							//ctrl.animate({"path":path, "fill":fill},delay,mina.bounce);
 						}
 					}
 					
