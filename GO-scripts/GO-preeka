@@ -13,7 +13,7 @@ env DISPLAY=:0.0 google-chrome $audio_param "https://$server/audioManager.html" 
 
 sleep 2
 
-global_param="--disable-webaudio --mute-audio --kiosk --window-size=2560,1600 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --incognito --allow-running-insecure-content"
+global_param="--disable-webaudio --mute-audio --kiosk --window-size=2560,1600 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --incognito --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
 
 UDD="$HOME/.config/chrome-nfs/preeka0"
 mkdir -p $UDD/Default

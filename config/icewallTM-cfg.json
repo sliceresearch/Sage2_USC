@@ -1,4 +1,5 @@
 {
+	name: "Tommy",
 	"host": "thor.evl.uic.edu",
 	"port": 7070,
 	"index_port": 7272,

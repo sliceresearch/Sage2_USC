@@ -2,6 +2,7 @@
 	default configuration of the server - Mac OS X, and Linux
 */
 {
+	name: "mysite",
 	host: "localhost",
 	port: 9090,
 	index_port: 9292,

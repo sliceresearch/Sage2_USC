@@ -1,4 +1,5 @@
 {
+	name: "PhD",
 	host: "dante.evl.uic.edu",
 	port: 443,
 	index_port: 80,

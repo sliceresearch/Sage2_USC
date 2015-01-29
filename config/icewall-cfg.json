@@ -1,4 +1,5 @@
 {
+	name: "Icewall",
 	host: "thor.evl.uic.edu",
 	port: 443,
 	index_port: 80,
