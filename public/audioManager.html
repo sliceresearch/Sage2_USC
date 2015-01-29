@@ -79,10 +79,6 @@
 		});
 		
 		wsio.on('initialize', function(data) {
-			// play the jinggle
-			var jinggle = document.getElementById('jinggle');
-			jinggle.play();
-
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
 			
@@ -91,14 +87,27 @@
 		
 		wsio.on('setupDisplayConfiguration', function(json_cfg) {
 			var i;
-			if(window.location.hostname !== json_cfg.host)
-				hostAlias[json_cfg.host] = window.location.hostname;
-			for(i=0; i<json_cfg.alternate_hosts.length; i++){
-				if(window.location.hostname !== json_cfg.alternate_hosts[i])
-					hostAlias[json_cfg.alternate_hosts[i]] = window.location.hostname;
+			var http_port;
+			var https_port;
+			
+			http_port = json_cfg.index_port === "80" ? "" : ":"+json_cfg.index_port;
+			https_port = json_cfg.port === "443" ? "" : ":"+json_cfg.port;
+			hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
+			hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
+			for(i=0; i<json_cfg.alternate_hosts.length; i++) {
+				hostAlias["http://"  + json_cfg.alternate_hosts[i] + http_port]  = window.location.origin;
+				hostAlias["https://" + json_cfg.alternate_hosts[i] + https_port] = window.location.origin;
 			}
+
+			// play the jinggle
+			var jinggle_elt = document.getElementById('jinggle');
+			if (json_cfg.ui.startup_sound) {
+				var jinggle_src = document.getElementById('jinggle_src');
+		        jinggle_src.src = json_cfg.ui.startup_sound;
+		    }
+			jinggle_elt.load();
+			jinggle_elt.play();
 		});
-		
 		
 		wsio.on('createAppWindow', function(data) {
 			if(data.application === "movie_player"){
@@ -236,8 +245,8 @@
 		a.href = url;
 		var clean = url;
 	
-		if(hostAlias[a.hostname] !== undefined)
-			clean = url.replace(a.hostname, hostAlias[a.hostname]);
+		if(hostAlias[a.origin] !== undefined)
+			clean = url.replace(a.origin, hostAlias[a.origin]);
 	
 		return clean;
 	}
@@ -284,7 +293,7 @@
 
 	<!-- SAGE2 jinggle at startup -->
 	<audio id="jinggle" preload="auto" hidden>
-		<source src="images/sage2_jinggle.mp3">
+		<source id="jinggle_src" src="images/sage2_jinggle.mp3">
 		Your browser does not support the audio element.
 	</audio>
 

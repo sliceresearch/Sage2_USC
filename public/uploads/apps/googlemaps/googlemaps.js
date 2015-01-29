@@ -32,16 +32,16 @@ var googlemaps = SAGE2_App.extend( {
 		this.trafficCB    = null;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
 		// application specific 'init'
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 
-		this.lastZoom     = date;
+		this.lastZoom     = data.date;
 		this.dragging     = false;
-		this.position     = {x:0,y:0};
+		this.position     = {x:0, y:0};
 		this.scrollAmount = 0;
 
 		// building up the state object

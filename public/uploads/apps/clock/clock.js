@@ -18,12 +18,12 @@ var clock = SAGE2_App.extend( {
 		this.enableControls = true;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
-		this.ctx    = this.element.getContext("2d");
+		this.ctx    = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.maxFPS = 1.0;
 		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
@@ -33,8 +33,6 @@ var clock = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-		console.log("clock> drawing");
-
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 	
@@ -149,6 +147,10 @@ var clock = SAGE2_App.extend( {
 		this.ctx.moveTo(x, y);
 		this.ctx.closePath();
 		this.ctx.stroke();
+	},
+	
+	startResize: function(date) {
+	
 	},
 	
 	resize: function(date) {

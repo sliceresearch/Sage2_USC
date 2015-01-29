@@ -19,14 +19,14 @@ var bounce = SAGE2_App.extend( {
 		this.resizeEvents = "continuous";
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 
 		// Set the framerate
 		this.maxFPS = 30;
 
-		this.ctx = this.element.getContext("2d");
+		this.ctx = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
 
 		this.state.vel = null;
@@ -54,8 +54,6 @@ var bounce = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
-		//this.log("BOUNCE");
-
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
@@ -72,7 +70,7 @@ var bounce = SAGE2_App.extend( {
 		if(this.state.pos[1]>1.0*hScale && this.state.dir[1]>0) this.state.dir[1] = -this.state.dir[1];
 		this.state.pos[0] += this.state.dir[0]*this.state.vel*this.dt;
 		this.state.pos[1] += this.state.dir[1]*this.state.vel*this.dt;
-		//var size = 0.2*this.minDim;
+		
 		var x = this.state.pos[0]*this.minDim - (this.sizex/2);
 		var y = this.state.pos[1]*this.minDim - (this.sizey/2);
 		this.ctx.drawImage(this.ballImg, x, y, this.sizex, this.sizey);
@@ -83,15 +81,14 @@ var bounce = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 	
-	moved: function(px, py, wx, wy, date) {
-		// px, py : position in wall coordination
-		// wx, wy : width and height of the wall
-		this.sizex = ((px/wx)*0.5 + 0.5) * (0.4*this.minDim);
-		this.sizey = ((py/wy)*0.5 + 0.5) * (0.4*this.minDim);
+	move: function(date) {
+		this.sizex = ((this.sage2_x/ui.json_cfg.totalWidth) *0.5 + 0.5) * (0.4*this.minDim);
+		this.sizey = ((this.sage2_y/ui.json_cfg.totalHeight)*0.5 + 0.5) * (0.4*this.minDim);
 		this.refresh(date);
 	},
 
 	event: function(eventType, position, user_id, data, date) {
+		
 	},
 
 	quit: function () {
