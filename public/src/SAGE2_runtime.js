@@ -384,8 +384,8 @@ function cleanURL(url) {
 	a.href = url;
 	var clean = url;
 	
-	if(hostAlias[a.hostname] !== undefined)
-		clean = url.replace(a.hostname, hostAlias[a.hostname]);
+	if(hostAlias[a.origin] !== undefined)
+		clean = url.replace(a.origin, hostAlias[a.origin]);
 	
 	return clean;
 }
