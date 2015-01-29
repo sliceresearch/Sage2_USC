@@ -351,6 +351,9 @@ function wsAddClient(wsio, data) {
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+		
+		if( wsio.clientID === 0 ) // Display clients were reset
+			clearRadialMenus();
 	}
 	else {
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
@@ -3632,8 +3635,6 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 
 			if( validLocation && radialMenus[uniqueID+"_menu"] === undefined )
 			{
-				console.log(radialMenus[uniqueID+"_menu"]);
-
 				var newRadialMenu = new radialmenu(uniqueID+"_menu", uniqueID, config.ui);
 				radialMenus[uniqueID+"_menu"] = newRadialMenu;
 
@@ -3641,6 +3642,13 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 
 				// Open a 'media' radial menu
 				broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
+			}
+			else
+			{
+				radialMenus[uniqueID+"_menu"].setPosition(newMenuPos);
+
+				radialMenus[uniqueID+"_menu"].visible = true;
+				broadcast('showRadialMenu', radialMenus[uniqueID+"_menu"].getInfo(), 'receivesPointerData');
 			}
 		}
 		else
@@ -3706,6 +3714,12 @@ function radialMenuEvent( data )
 	}
 
 	return false;
+}
+
+function clearRadialMenus()
+{
+	console.log("Clearing radial menus");
+	radialMenus = [];
 }
 
 // Special case: just check if event is over menu (used for one-time events that don't use a start/end event)
