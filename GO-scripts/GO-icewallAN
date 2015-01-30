@@ -6,7 +6,7 @@ global_param="--new-window --window-size=1536,1360 --kiosk --disable-popup-block
 UDD=$HOME/.config/chrome-nfs/thor_an_audio
 mkdir -p $UDD/Default
 audio_param="--new-window --window-size=768,1360 --allow-file-access-from-files --allow-running-insecure-content --user-data-dir=$UDD"
-env DISPLAY=:0.0 google-chrome $audio_param 'https://localhost:8080/audioManager.html' &
+env DISPLAY=:0.0 google-chrome $audio_param 'http://localhost:8080/audioManager.html' &
 
 sleep 1.5
 
@@ -14,7 +14,7 @@ sleep 1.5
 UDD=$HOME/.config/chrome-nfs/thor_an_0
 mkdir -p $UDD/Default
 param="$global_param --user-data-dir=$UDD"
-env DISPLAY=:0.0 google-chrome $param 'https://localhost:8080?clientID=0' &
+env DISPLAY=:0.0 google-chrome $param 'http://localhost:8080?clientID=0' &
 
 
 sleep 1.5
