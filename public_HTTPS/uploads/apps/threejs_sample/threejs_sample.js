@@ -70,6 +70,7 @@ var threejs_sample = SAGE2_App.extend( {
 
 		// draw!
 		this.renderer.render(this.scene, this.camera);
+		this.controls.finishedAddingControls();
 	},
 	
 	load: function(state, date) {

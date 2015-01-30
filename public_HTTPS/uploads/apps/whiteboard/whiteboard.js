@@ -42,6 +42,7 @@ var whiteboard = SAGE2_App.extend( {
 		this.layer  = new Kinetic.Layer();
 		this.stage.add(this.layer);
 		this.allLayers = [this.layer];
+		this.controls.finishedAddingControls();
 
 	},
 

@@ -87,7 +87,8 @@ var threejs_shader = SAGE2_App.extend( {
 		this.renderer = new THREE.WebGLRenderer();		
 		this.renderer.setSize(this.width, this.height);
 		
-		this.element.appendChild(this.renderer.domElement);		
+		this.element.appendChild(this.renderer.domElement);	
+		this.controls.finishedAddingControls();	
 	},
 	
 	load: function(state, date) {

@@ -35,6 +35,7 @@ var kinetic_animation = SAGE2_App.extend( {
 		this.stage.add(this.layer1);
 
 		this.minDim = Math.min(this.width, this.height);
+		this.controls.finishedAddingControls(); 
 	},
 
 	load: function(state, date) {

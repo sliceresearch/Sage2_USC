@@ -27,6 +27,7 @@ var presentation = SAGE2_App.extend( {
 		this.element.src = 'https://onedrive.live.com/embed?cid=F0E33DA97A9466D0&resid=F0E33DA97A9466D0%21142&authkey=&em=2&wdAr=1.7791519434628975&wdEaa=1';
 		// google doc
 		//this.element.src = "https://docs.google.com/presentation/d/115vZOOr0mB6jxK-eL_HbU9ygMIv6U9JIvrr5wqQm47A/embed?start=true&loop=true&delayms=3000";
+		this.controls.finishedAddingControls();
 	},
 	
 	load: function(state, date) {

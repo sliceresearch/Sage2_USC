@@ -326,6 +326,17 @@ updateWindow: function (){
 
 		this.update();
 		this.draw_d3(date);
+        this.controls.addButton({type:"next",sequenceNo:1,action:function(date){
+            this.timeDiff += 1;
+            if (this.timeDiff > 0)
+                this.timeDiff = 0;
+            this.update();
+        }.bind(this)});
+        this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){
+            this.timeDiff -= 1;
+            this.update();
+        }.bind(this)});
+        this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 
 	load: function(state, date) {

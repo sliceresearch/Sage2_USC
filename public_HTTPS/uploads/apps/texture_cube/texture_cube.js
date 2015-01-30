@@ -80,6 +80,7 @@ var texture_cube = SAGE2_App.extend( {
 				_this.initTexture();
 			});
 		}
+		this.controls.finishedAddingControls();
 	},
 	
 	initGL: function() {

@@ -104,7 +104,7 @@ var widget_demo = SAGE2_App.extend( {
 			"fill":"rgba(250,250,250,1.0)",
 			"animation":false
 		};
-		this.controls.addButton({type:"loop",sequenceNo:9,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
+		this.controls.addButton({type:"loop",sequenceNo:9,initialState:1,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
 			this.displayText = "Pushed Help button"; //Reset value
 			this.draw(date);
 			this.buttonHandle.state = 1 - this.buttonHandle.state;

@@ -140,6 +140,7 @@ var notepad = SAGE2_App.extend( {
 			//this.fileDataBuffer = this.joinText();
 			this.readFromFile();
 		}
+		this.controls.finishedAddingControls();
 		
 	},
 	

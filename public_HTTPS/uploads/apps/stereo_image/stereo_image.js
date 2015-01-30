@@ -28,7 +28,30 @@ var stereo_image = SAGE2_App.extend( {
 
 		this.state.stereoMode = "interleave";
 		this.state.anaglyphMode = "Optimized+Anaglyph";
-
+		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
+			if (this.state.stereoMode === "lefteye")    this.state.stereoMode = "righteye";
+			else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "anaglyph";
+			else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "interleave";
+			else if (this.state.stereoMode === "interleave") this.state.stereoMode = "lefteye";
+			this.refresh(date);			
+		}.bind(this)});
+		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
+			if (this.state.stereoMode === "lefteye")    this.state.stereoMode = "interleave";
+			else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "lefteye";
+			else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "righteye";
+			else if (this.state.stereoMode === "interleave") this.state.stereoMode = "anaglyph";
+			this.refresh(date);
+		}.bind(this)});
+		var modeLabel =  { "textual":true, "label":"Mode", "fill":"rgba(250,250,250,1.0)", "animation":false};
+		this.controls.addButton({type:modeLabel,sequenceNo:4,action:function(date){ 
+			if (this.state.anaglyphMode === "TrueAnaglyph")       this.state.anaglyphMode = "GrayAnaglyph";
+			else if (this.state.anaglyphMode === "GrayAnaglyph")       this.state.anaglyphMode = "ColorAnaglyph";
+			else if (this.state.anaglyphMode === "ColorAnaglyph")      this.state.anaglyphMode = "OptimizedAnaglyph";
+			else if (this.state.anaglyphMode === "OptimizedAnaglyph")  this.state.anaglyphMode = "Optimized+Anaglyph";
+			else if (this.state.anaglyphMode === "Optimized+Anaglyph") this.state.anaglyphMode = "TrueAnaglyph";
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.finishedAddingControls();
 	},
 
 	load: function(file, date) {

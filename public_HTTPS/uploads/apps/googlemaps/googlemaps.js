@@ -57,6 +57,73 @@ var googlemaps = SAGE2_App.extend( {
 		googlemaps_self = this;
 		// load google maps
 		addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
+		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
+			this.map.panBy(-100,0);
+			this.updateCenter();
+		}.bind(this)});
+		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
+			this.map.panBy(100,0);
+			this.updateCenter();
+		}.bind(this)});
+		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
+			this.map.panBy(0,-100);
+			this.updateCenter();
+		}.bind(this)});
+		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
+			this.map.panBy(0,100);
+			this.updateCenter();
+		}.bind(this)});
+				
+		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
+			var z = this.map.getZoom();
+			this.map.setZoom(z+1);
+			this.state.zoomLevel = this.map.getZoom();
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
+			var z = this.map.getZoom();
+			this.map.setZoom(z-1);
+			this.state.zoomLevel = this.map.getZoom();
+		}.bind(this)});
+		var mapLabel =  { "textual":true, "label":"Map", "fill":"rgba(250,250,250,1.0)", "animation":false};
+		this.controls.addButton({type:mapLabel,sequenceNo:2,action:function(date){ 
+			if (this.state.mapType == google.maps.MapTypeId.TERRAIN)
+				this.state.mapType = google.maps.MapTypeId.ROADMAP;
+			else if (this.state.mapType == google.maps.MapTypeId.ROADMAP)
+				this.state.mapType = google.maps.MapTypeId.SATELLITE;
+			else if (this.state.mapType == google.maps.MapTypeId.SATELLITE)
+				this.state.mapType = google.maps.MapTypeId.HYBRID;
+			else if (this.state.mapType == google.maps.MapTypeId.HYBRID)
+				this.state.mapType = google.maps.MapTypeId.TERRAIN;
+			else 
+				this.state.mapType = google.maps.MapTypeId.HYBRID;
+			this.map.setMapTypeId(this.state.mapType);
+		}.bind(this)});
+		var trafficLabel = { "textual":true, "label":"T", "fill":"rgba(250,250,250,1.0)", "animation":false};
+		this.controls.addButton({type:trafficLabel,sequenceNo:8,action:function(date){ 
+			// add/remove traffic layer
+			if (this.trafficLayer.getMap() == null) {
+				this.trafficLayer.setMap(this.map);
+				// add a timer updating the traffic tiles: 60sec
+				this.trafficTimer = setInterval(this.trafficCB, 60*1000);
+			}
+			else {
+				this.trafficLayer.setMap(null);
+				// remove the timer updating the traffic tiles
+				clearInterval(this.trafficTimer);
+			}
+			this.updateLayers();
+		}.bind(this)});
+		var weatherLabel = { "textual":true, "label":"W", "fill":"rgba(250,250,250,1.0)", "animation":false};
+		this.controls.addButton({type:weatherLabel,sequenceNo:9,action:function(date){ 
+			// add/remove weather layer
+			if (this.weatherLayer.getMap() == null)
+				this.weatherLayer.setMap(this.map);
+			else
+				this.weatherLayer.setMap(null);
+			this.updateLayers();
+		}.bind(this)});
+			
+		this.controls.finishedAddingControls();
 	},
 
 

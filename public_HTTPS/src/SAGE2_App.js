@@ -63,8 +63,7 @@ var SAGE2_App = Class.extend( {
 		this.resrcPath = resrc + "/";
 		this.startDate = date;
 
-		if (this.enableControls === true)
-			this.controls = new SAGE2WidgetControlBar(id);
+		this.controls = new SAGE2WidgetControlBar(id);
 		
 		this.prevDate  = date;
 		this.frame     = 0;

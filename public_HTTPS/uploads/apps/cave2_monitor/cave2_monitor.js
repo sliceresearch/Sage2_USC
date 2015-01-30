@@ -807,6 +807,7 @@ updateWindow: function ()
         this.initApp();
         this.updateAll();
         //this.draw_d3(date);
+        this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
     },
 
     load: function(state, date) {

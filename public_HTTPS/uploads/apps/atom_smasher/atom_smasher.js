@@ -212,6 +212,7 @@ this.scene.add( circle );
 
 		// init clock
 		this.time = 0.0;
+		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	}, 
 
 	reInit: function() {

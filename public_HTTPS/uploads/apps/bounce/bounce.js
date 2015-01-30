@@ -39,6 +39,7 @@ var bounce = SAGE2_App.extend( {
 
 		this.sizex = 0.2 * this.minDim;
 		this.sizey = 0.2 * this.minDim;
+		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 
 	load: function(state, date) {

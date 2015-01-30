@@ -50,7 +50,9 @@ var tank = SAGE2_App.extend( {
 		this.tankSpeedTick = 10; // this is a per frame movement
 		this.shotSpeedTick = 40; //
 		this.spawnRefresh  = 3;
+		this.controls.finishedAddingControls();
 		console.log("Completed init");
+
 	},
 	
 	load: function(state, date) {

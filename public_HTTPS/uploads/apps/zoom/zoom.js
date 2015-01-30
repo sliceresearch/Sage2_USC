@@ -41,6 +41,46 @@ var zoom = SAGE2_App.extend( {
 			tileSources: this.resrcPath + "chicago.dzi"
 			//tileSources: this.resrcPath + "halfdome.dzi"
 		});
+
+
+
+
+
+
+		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
+			//left
+			this.viewer.viewport.panBy(new OpenSeadragon.Point(-0.01, 0));
+			this.viewer.viewport.applyConstraints();
+		}.bind(this)});
+		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
+			// right
+			this.viewer.viewport.panBy(new OpenSeadragon.Point(0.01, 0));
+			this.viewer.viewport.applyConstraints();
+		}.bind(this)});
+		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
+			// up
+			this.viewer.viewport.panBy(new OpenSeadragon.Point(0, -0.01));
+			this.viewer.viewport.applyConstraints();
+		}.bind(this)});
+		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
+			// down
+			this.viewer.viewport.panBy(new OpenSeadragon.Point(0, 0.01));
+			this.viewer.viewport.applyConstraints();
+		}.bind(this)});
+				
+		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
+			// zoom in
+			this.viewer.viewport.zoomBy(0.8);
+			this.viewer.viewport.applyConstraints();
+			this.lastZoom = date;
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
+			// zoom out
+			this.viewer.viewport.zoomBy(1.2);
+			this.viewer.viewport.applyConstraints();
+			this.lastZoom = date;
+		}.bind(this)});
+		this.controls.finishedAddingControls();
 	},
 	
 	load: function(state, date) {

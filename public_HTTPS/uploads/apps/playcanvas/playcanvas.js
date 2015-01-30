@@ -62,6 +62,7 @@ var playcanvas = SAGE2_App.extend( {
             self.model = asset.resource;
             self.scene.addModel(self.model);
         });
+        this.controls.finishedAddingControls();
 	},
 	
 	load: function(state, date) {

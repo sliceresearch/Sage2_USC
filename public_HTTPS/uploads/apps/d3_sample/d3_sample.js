@@ -69,6 +69,7 @@ var d3_sample = SAGE2_App.extend( {
 		    .attr("r", 1.5);
 
 		this.draw_d3(date);
+		this.controls.finishedAddingControls(); 
 	},
 
 	load: function(state, date) {

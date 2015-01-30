@@ -61,6 +61,44 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 				});
 			});
 		});
+		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
+			this.orbitControls.pan(this.orbitControls.keyPanSpeed, 0);
+			this.orbitControls.update();
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
+			// right
+			this.orbitControls.pan(  - this.orbitControls.keyPanSpeed, 0);
+			this.orbitControls.update();
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
+			// up
+			this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);
+			this.orbitControls.update();
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
+			// down
+			this.orbitControls.pan(0, - this.orbitControls.keyPanSpeed);
+			this.orbitControls.update();
+			this.refresh(date);
+		}.bind(this)});
+				
+		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
+			this.orbitControls.scale(4);
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
+			this.orbitControls.scale(-4);
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.addButton({type:"loop",sequenceNo:8,action:function(date){ 
+			this.rotating = ! this.rotating;
+			this.orbitControls.autoRotate = this.rotating;
+			this.refresh(date);
+		}.bind(this)});
+		this.controls.finishedAddingControls();
 	},
 
 	initialize: function(date) {
@@ -68,13 +106,13 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		this.camera = new THREE.PerspectiveCamera( 25, this.width / this.width, 1, 10000 );
 		this.camera.position.set( 185, 40, 170 );
 
-		this.controls = new THREE.OrbitControls( this.camera, this.element );
-		this.controls.maxPolarAngle = Math.PI / 2;
-		this.controls.minDistance = 200;
-		this.controls.maxDistance = 500;
-		this.controls.autoRotate  = false; //true;
-		this.controls.zoomSpeed   = 0.1;
-		this.controls.autoRotateSpeed = 2.0; // 30 seconds per round when fps is 60
+		this.orbitControls = new THREE.OrbitControls( this.camera, this.element );
+		this.orbitControls.maxPolarAngle = Math.PI / 2;
+		this.orbitControls.minDistance = 200;
+		this.orbitControls.maxDistance = 500;
+		this.orbitControls.autoRotate  = false; //true;
+		this.orbitControls.zoomSpeed   = 0.1;
+		this.orbitControls.autoRotateSpeed = 2.0; // 30 seconds per round when fps is 60
 
 		// SCENE
 		this.scene = new THREE.Scene();
@@ -195,7 +233,7 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 
 	draw: function(date) {
 		if (this.ready) {
-			this.controls.update();
+			this.orbitControls.update();
 			this.cameraCube.rotation.copy( this.camera.rotation );
 
 			this.renderer.clear();
@@ -222,10 +260,10 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		if (this.ready) {
 			if (eventType === "pointerPress" && (data.button === "left")) {
 				this.dragging = true;
-				this.controls.mouseDown(position.x,position.y,0);
+				this.orbitControls.mouseDown(position.x,position.y,0);
 			}
 			else if (eventType === "pointerMove" && this.dragging) {
-				this.controls.mouseMove(position.x, position.y);
+				this.orbitControls.mouseMove(position.x, position.y);
 				this.refresh(date);
 			}
 			else if (eventType === "pointerRelease" && (data.button === "left")) {
@@ -233,37 +271,37 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 			}
 
 			if (eventType === "pointerScroll") {
-				this.controls.scale( data.wheelDelta );
+				this.orbitControls.scale( data.wheelDelta );
 				this.refresh(date);
 			}
 			
 			if (eventType === "keyboard") {
 				if(data.character === " ") {
 					this.rotating = ! this.rotating;
-					this.controls.autoRotate = this.rotating;
+					this.orbitControls.autoRotate = this.rotating;
 					this.refresh(date);
 				}
 			}
 			
 			if (eventType === "specialKey") {
 				if (data.code === 37 && data.state === "down") { // left
-					this.controls.pan(this.controls.keyPanSpeed, 0);
-					this.controls.update();
+					this.orbitControls.pan(this.orbitControls.keyPanSpeed, 0);
+					this.orbitControls.update();
 					this.refresh(date);
 				}
 				else if (data.code === 38 && data.state === "down") { // up
-					this.controls.pan(0, this.controls.keyPanSpeed);
-					this.controls.update();
+					this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);
+					this.orbitControls.update();
 					this.refresh(date);
 				}
 				else if (data.code === 39 && data.state === "down") { // right
-					this.controls.pan(  - this.controls.keyPanSpeed, 0);
-					this.controls.update();
+					this.orbitControls.pan(  - this.orbitControls.keyPanSpeed, 0);
+					this.orbitControls.update();
 					this.refresh(date);
 				}
 				else if (data.code === 40 && data.state === "down") { // down
-					this.controls.pan(0, - this.controls.keyPanSpeed);
-					this.controls.update();
+					this.orbitControls.pan(0, - this.orbitControls.keyPanSpeed);
+					this.orbitControls.update();
 					this.refresh(date);
 				}				
 			}

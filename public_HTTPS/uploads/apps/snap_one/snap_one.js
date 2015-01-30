@@ -92,6 +92,7 @@ var snap_one = SAGE2_App.extend( {
 				}
 			}, "JSON");
 		}
+		this.controls.finishedAddingControls();
 	},
 
 	// get messages from the server through a broadcast call

@@ -384,9 +384,7 @@
 						app.refresh(date);
 						
 						applications[data.id] = app;
-						if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, handle:app};
-						} 
+						controlItems[data.id + "_controls"] = { show:false, handle:app}; 
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
 					js.type = "text/javascript";
@@ -410,9 +408,8 @@
 					app.refresh(date);
 					
 					applications[data.id] = app;
-					if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, handle:app};
-					} 
+					controlItems[data.id + "_controls"] = { show:false, handle:app};
+					 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
 			};

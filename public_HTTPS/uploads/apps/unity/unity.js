@@ -36,6 +36,7 @@ var unity = SAGE2_App.extend( {
 		this.u = new UnityObject2(config);
 		// Load the project
 		this.u.initPlugin(this.element, this.resrcPath + "web.unity3d");
+		this.controls.finishedAddingControls();
 	},
 	
 	load: function(state, date) {

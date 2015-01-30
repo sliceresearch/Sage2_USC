@@ -42,6 +42,26 @@ var modest = SAGE2_App.extend( {
 		var sf     = new MM.Location(37.7749295, -122.4194155);
 		this.map.setCenterZoom(sf, 14);
 		this.log("Modest map at " + JSON.stringify(sf));
+		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
+			this.map.panLeft();
+		}.bind(this)});
+		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
+			this.map.panRight();
+		}.bind(this)});
+		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
+			this.map.panUp();
+		}.bind(this)});
+		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
+			this.map.panDown();
+		}.bind(this)});
+				
+		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
+			this.map.zoomIn();
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
+			this.map.zoomOut();
+		}.bind(this)});
+		this.controls.finishedAddingControls();
 	},
 
 	load: function(state, date) {
