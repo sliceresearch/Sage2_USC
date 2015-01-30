@@ -9,7 +9,7 @@ UDD=$HOME/.config/chrome-nfs/traoumad_audio
 /bin/rm -fr $UDD
 mkdir -p $UDD/Default
 audio_param="--disable-infobars --no-default-browser-check --ignore-certificate-errors --window-size=768,580 --allow-file-access-from-files --user-data-dir=$UDD"
-env DISPLAY=:0.0 google-chrome $audio_param 'https://traoumad.evl.uic.edu/audioManager.html' &
+env DISPLAY=:0.0 google-chrome $audio_param 'http://traoumad.evl.uic.edu/audioManager.html' &
 
 sleep 1
 
