@@ -127,7 +127,8 @@
 					if(autoplay === true) vid.currentTime = 0;
 				}, false);
 				vid.addEventListener('timeupdate', function() {
-					document.getElementById(data.id + "_time").textContent = timeToHHMMSS(vid.currentTime);
+					var vid_time = document.getElementById(data.id + "_time");
+					if(vid_time) vid_time.textContent = timeToHHMMSS(vid.currentTime);
 				}, false);
 				
 				
@@ -209,14 +210,14 @@
 		
 		wsio.on('videoMuted', function(data) {
 			var vid      = document.getElementById(data.id);
-			var vid_mute = document.getElementById(data.id + "_play");
+			var vid_mute = document.getElementById(data.id + "_mute");
 			if(vid)      vid.muted = true;
 			if(vid_mute) vid_mute.innerHTML = "&#x2717;";
 		});
 		
 		wsio.on('videoUnmuted', function(data) {
 			var vid      = document.getElementById(data.id);
-			var vid_mute = document.getElementById(data.id + "_play");
+			var vid_mute = document.getElementById(data.id + "_mute");
 			if(vid)      vid.muted = false;
 			if(vid_mute) vid_mute.innerHTML = "&#x2713;"
 		});
