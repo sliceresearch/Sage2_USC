@@ -70,7 +70,7 @@ setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
 	imageMagick = gm.subClass(imOptions);
 	if(ffmpegOptions.appPath !== undefined){
-		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg.exe";
+		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg";
 	}
 };
 
@@ -433,7 +433,7 @@ exifAsync = function(cmds, cb) {
 		else {
 			exiftool.file(file, function(err,data) {
 				if (err) {
-					console.log("internal error");
+					console.log("internal error for file", file);
 					cb(err);
 				} else {
 					console.log("EXIF> Adding " + data.FileName);

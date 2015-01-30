@@ -21,7 +21,7 @@ do
 
 	param="$global_param --user-data-dir=$UDD"
 	
-	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param '--app=https://$server/display.html?clientID=$idx'" &
+	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param '--app=http://$server/display.html?clientID=$idx'" &
 done
 
 tentakel /home/evl/evldemo/sage2/Fullscreen

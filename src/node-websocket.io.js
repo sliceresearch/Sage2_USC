@@ -17,8 +17,8 @@ var WebSocket = require('ws');
 var WebSocketServer = WebSocket.Server;
 
 function websocketIOServer(data) {
-	if(data.server !== undefined)    this.wss = new WebSocketServer({server: data.server});
-	else if(data.port !== undefined) this.wss = new WebSocketServer({port: data.port});
+	if(data.server !== undefined)    this.wss = new WebSocketServer({server: data.server, perMessageDeflate: false});
+	else if(data.port !== undefined) this.wss = new WebSocketServer({port: data.port, perMessageDeflate: false});
 }
 
 websocketIOServer.prototype.onconnection = function(callback) {
@@ -55,7 +55,16 @@ function websocketIO(ws, strictSSL, openCallback) {
 			}
 		}
 		else{
-			console.log("Error: message is not a binary string");
+			var i = 0;
+			var func = "";
+			
+			while(message[i] !== 0 && i < message.length) {
+				func += String.fromCharCode(message[i]);
+				i++;
+			}
+	
+			var buf = message.slice(i+1, message.length);
+			_this.messages[func](_this, buf);
 		}
 	});
 }
@@ -72,116 +81,46 @@ websocketIO.prototype.on = function(name, callback) {
 };
 
 websocketIO.prototype.emit = function(name, data) {
+	var message;
+
 	if(name === null || name === ""){
 		console.log("Error: no message name specified");
 		return;
 	}
 	
-	var message = {func: name, data: data};
-	
-	// double error handling
-	try {
-		var msgString = JSON.stringify(message);
-		this.ws.send(msgString, function(err){
-			if(err){
-				console.log("---ERROR (ws.send)---");
-				console.log(err);
-				console.log("---VALUES---");
-				console.log(name);
-				console.log(typeof message);
-			}
-			// else success
-		});
+	// send binary data as array buffer
+	if(Buffer.isBuffer(data)){
+		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
+		message = Buffer.concat([funcName, data]);
+		
+		try {
+			this.ws.send(message, {binary: true, mask: false}, function(err){
+				if(err) console.log("---ERROR (ws.send)---");
+				// else success
+			});
+		}
+		catch(e) {
+			console.log("---ERROR (try-catch)---");
+		}
 	}
-	catch(e) {
-		console.log("---ERROR (try-catch)---");
-		console.log(e);
-		console.log("---VALUES---");
-		console.log(name);
-		console.log(typeof message);
+	// send data as JSON string
+	else {
+		message = {func: name, data: data};
+	
+		// double error handling
+		try {
+			var msgString = JSON.stringify(message);
+			this.ws.send(msgString, {binary: false, mask: false}, function(err){
+				if(err) console.log("---ERROR (ws.send)---");
+				// else success
+			});
+		}
+		catch(e) {
+			console.log("---ERROR (try-catch)---");
+		}
 	}
 };
 
 
 module.exports = websocketIO;
 module.exports.Server = websocketIOServer;
-
-
-/*var WebSocketServer = require('ws').Server;
-
-function websocketIOServer(port) {
-	this.wss = new WebSocketServer({port: port});
-}
-
-websocketIOServer.prototype.onconnection = function(callback) {
-	this.wss.on('connection', function(ws) {
-		ws.binaryType = "arraybuffer";
-		
-		var wsio = new websocketIO(ws);
-		callback(wsio);
-	});
-};
-
-function websocketIO(ws) {
-	this.ws = ws;
-	this.messages = {};
-	this.remoteAddress = {address: ws._socket.remoteAddress, port: ws._socket.remotePort};
-	
-	var _this = this;
-	this.ws.on('message', function(message) {
-		if(typeof message === "string"){
-			var msg = JSON.parse(message);
-			if(msg.func in _this.messages){
-				_this.messages[msg.func](msg.data);
-			}
-		}
-		else{
-			console.log("Error: message is not a binary string");
-		}
-	});
-}
-
-websocketIO.prototype.onclose = function(callback) {
-	this.ws.on('close', function(){
-		callback();
-	});
-};
-
-websocketIO.prototype.on = function(name, callback) {
-	this.messages[name] = callback;
-};
-
-websocketIO.prototype.emit = function(name, data) {
-	if(name == null || name == ""){
-		console.log("Error: no message name specified");
-		return;
-	}
-	
-	var message = {callbackName: name, data: data};
-	
-	// double error handling
-	try {
-		var msgString = JSON.stringify(message);
-		this.ws.send(msgString, function(err){
-			if(err){
-				console.log("---ERROR (ws.send)---");
-				console.log(err);
-				console.log("---VALUES---");
-				console.log(name);
-				console.log(typeof message);
-			}
-			// else success
-		});
-	}
-	catch(e) {
-		console.log("---ERROR (try-catch)---");
-		console.log(e);
-		console.log("---VALUES---");
-		console.log(name);
-		console.log(typeof message);
-	}
-};
-
-
-module.exports = websocketIOServer;
-*/

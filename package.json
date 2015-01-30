@@ -51,7 +51,8 @@
 		"jshint": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"node-json-db": "latest",
+		"node-demux": "latest",
+        "node-json-db": "latest",
 		"qr-image": "latest",
 		"request": "latest",
 		"sprint": "^0.3.1",
@@ -73,7 +74,7 @@
 	"scripts": {
 		"start": "node server.js",
 		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
-		"hint_client": "./node_modules/jshint/bin/jshint --verbose public_HTTPS/src/*.js",
+		"hint_client": "./node_modules/jshint/bin/jshint --verbose public/src/*.js",
 		"doc": "yuidoc -c doc/yuidoc.json",
         "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=10000 ./test/*.js"
 	},

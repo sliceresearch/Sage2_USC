@@ -181,6 +181,32 @@ function compareTitle(a, b) {
 	return 0;
 }
 
+/**
+ * Utility function to test if a string or number represents a true value.
+ * Used for parse JSON values
+ *
+ * @method isTrue
+ * @param value {Object} value to test
+ */
+
+function isTrue(value){
+	if (typeof(value) == 'string'){
+		value = value.toLowerCase();
+	}
+	switch(value){
+		case true:
+		case "true":
+		case 1:
+		case "1":
+		case "on":
+		case "yes":
+			return true;
+		default:
+			return false;
+	}
+}
+
+
 exports.nodeVersion     = _NODE_VERSION;
 exports.getShortVersion = getShortVersion;
 exports.getFullVersion  = getFullVersion;
@@ -190,3 +216,4 @@ exports.fileExists      = fileExists;
 exports.compareString   = compareString;
 exports.compareFilename = compareFilename;
 exports.compareTitle    = compareTitle;
+exports.isTrue          = isTrue;

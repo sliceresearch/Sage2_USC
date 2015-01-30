@@ -25,6 +25,9 @@
             "types": [
                 "video/mp4",
                 "video/x-m4v",
+                "video/x-matroska",
+                "video/x-msvideo",
+                "video/quicktime",
                 "video/webm",
                 "video/youtube"
             ],
