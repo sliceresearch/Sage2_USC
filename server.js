@@ -141,16 +141,17 @@ if(config.apis !== undefined) delete config.apis;
 console.log(config);
 
 // register with EVL's server
-request({
-    "rejectUnauthorized": false,
-    "url": 'https://sage.evl.uic.edu/register',
-    "form": config,
-    "method": "POST"},
-    function(err, response, body){
-	    console.log('Registration with EVL site:', (err===null)?"success":err.code);
-	}
-);
-
+if (config.register_site) {
+	request({
+	    "rejectUnauthorized": false,
+	    "url": 'https://sage.evl.uic.edu/register',
+	    "form": config,
+	    "method": "POST"},
+	    function(err, response, body){
+		    console.log('Registration with EVL site:', (err===null)?"success":err.code);
+		}
+	);
+}
 
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
@@ -2129,6 +2130,17 @@ function loadConfiguration() {
 	if (userConfig.port === undefined) userConfig.port = 443;
 	if (userConfig.index_port === undefined) userConfig.index_port = 80;
 
+	// Registration to EVL's server (sage.evl.uic.edu), true by default
+	if (userConfig.register_site === undefined)
+		userConfig.register_site = true;
+	else {
+		// test for a true value: true, on, yes, 1, ...
+		if (sageutils.isTrue(userConfig.register_site))
+			userConfig.register_site = true;
+		else
+			userConfig.register_site = false;
+	}
+
 	return userConfig;
 }
 
@@ -2587,27 +2599,42 @@ index.on('listening', function (e) {
 	}
 });*/
 
+function SAGE2Quit() {
+	if (config.register_site) {
+		// un-register with EVL's server
+		request({
+		    "rejectUnauthorized": false,
+		    "url": 'https://sage.evl.uic.edu/unregister',
+		    "form": config,
+		    "method": "POST"},
+		    function(err, response, body){
+			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+				saveSession();
+				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+			}
+		);
+	} else {
+		saveSession();
+		assets.saveAssets();
+		if( omicronRunning )
+			omicronManager.disconnect();
+		console.log('');
+		console.log('SAGE2 done');
+		console.log('');
+		process.exit(0);
+	}
+}
+
+// KILL intercept
+process.on('SIGTERM', SAGE2Quit);
 // CTRL-C intercept
-process.on('SIGINT', function() {
-	// un-register with EVL's server
-	request({
-	    "rejectUnauthorized": false,
-	    "url": 'https://sage.evl.uic.edu/unregister',
-	    "form": config,
-	    "method": "POST"},
-	    function(err, response, body){
-		    console.log('Registration with EVL site:', (err===null)?"success":err.code);
-			saveSession();
-			assets.saveAssets();
-			if( omicronRunning )
-				omicronManager.disconnect();
-			console.log('');
-			console.log('SAGE2 done');
-			console.log('');
-			process.exit(0);
-		}
-	);
-});
+process.on('SIGINT',  SAGE2Quit);
 
 
 // Start the HTTP server
@@ -2728,26 +2755,7 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
-				// un-register with EVL's server
-				request({
-				    "rejectUnauthorized": false,
-				    "url": 'https://sage.evl.uic.edu/unregister',
-				    "form": config,
-				    "method": "POST"},
-				    function(err, response, body){
-					    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
-
-						saveSession();
-						assets.saveAssets();
-						if( omicronRunning )
-							omicronManager.disconnect();
-						console.log('');
-						console.log('SAGE2 done');
-						console.log('');
-						process.exit(0);
-
-					}
-				);
+				SAGE2Quit();
 				break;
 			default:
 				console.log('Say what? I might have heard `' + line.trim() + '`');
@@ -2759,22 +2767,7 @@ if (program.interactive)
 		// Close with CTRL-D or CTRL-C
 		// Only synchronous code!
 		// Saving stuff
-		request({
-		    "rejectUnauthorized": false,
-		    "url": 'https://sage.evl.uic.edu/unregister',
-		    "form": config,
-		    "method": "POST"},
-		    function(err, response, body){
-			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
-				saveSession();
-				assets.saveAssets();
-				if( omicronRunning )
-					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
-				process.exit(0);
-		});
+		SAGE2Quit();
 	});
 }
 
