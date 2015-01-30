@@ -468,6 +468,7 @@
 							controlItems[data.id + "_controls"] = { show:false, handle:app};
 					} 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+					if(data.application === "movie_player") setTimeout(function() {wsio.emit('requestVideoFrame', {id: data.id});}, 500);
 				}
 			};
 			

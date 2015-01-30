@@ -188,11 +188,6 @@ var movie_player = SAGE2_App.extend( {
 		}
 	},
 	
-	updateValidBlocks: function(validBlocks) {
-		this.newBlockList = validBlocks;
-		this.changeBlockList = true;
-	},
-	
 	setValidBlocksFalse: function() {
 		for(var i=0; i<this.receivedBlocks.length; i++){
 			if(this.validBlocks.indexOf(i) >= 0) this.receivedBlocks[i] = false;

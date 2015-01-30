@@ -1401,6 +1401,8 @@ function tileApplications() {
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+    	if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
+			handleNewVideoFrame(updateItem.id);
     }
 }
 
@@ -1487,6 +1489,9 @@ function tileApplications1() {
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
+			handleNewVideoFrame(updateItem.id);
+		
 		
         c += 1;
         if (c === numCols) {
@@ -1600,11 +1605,6 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		}
 	});
 	videohandle.on('frame', function(frameIdx, buffer) {
-		var delay = 0;
-		if(frameIdx === 0) delay = 250;
-		
-		setTimeout(function(){
-		console.log("frame: " + frameIdx + " (" + buffer.length + ")")
 		videoHandles[appInstance.id].frameIdx = frameIdx;
 		var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.data.width, appInstance.data.height, blocksize);
 
@@ -1617,7 +1617,6 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		}
 
 		handleNewVideoFrame(appInstance.id);
-		}, delay);
 	});
 	
 	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
@@ -1625,7 +1624,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	for(i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+			videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: false, blockList: []};
 		}
 	}
 	calculateValidBlocks(appInstance, blocksize);
@@ -1644,6 +1643,7 @@ function handleNewVideoFrame(id) {
 			return false;
 		}
 	}
+	
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
 		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
@@ -1672,6 +1672,7 @@ function handleNewClientReady(id) {
 			return false;
 		}
 	}
+	
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
 		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
@@ -3264,6 +3265,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		if(data.button === "left"){
 			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
 				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'receivesWindowModification');
+				if(videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id].newFrameGenerated === false)
+					handleNewVideoFrame(remoteInteraction[uniqueID].selectedResizeItem.id);
 				remoteInteraction[uniqueID].releaseItem(true);
 			}
 			if(remoteInteraction[uniqueID].selectedMoveItem !== null){
@@ -3277,6 +3280,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				}
 				if(remoteIdx < 0){
 					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'receivesWindowModification');
+					if(videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id].newFrameGenerated === false)
+						handleNewVideoFrame(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteInteraction[uniqueID].releaseItem(true);
 				}
 				else{
@@ -3286,6 +3291,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					if(updatedItem !== null) {
 						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+							handleNewVideoFrame(updatedItem.elemId);
 					}
 				}
 			}
@@ -3508,6 +3515,8 @@ function pointerScroll( uniqueID, data ) {
 			remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] = setTimeout(function() {
 				broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 				broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+				if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+					handleNewVideoFrame(updatedItem.elemId);
 				remoteInteraction[uniqueID].selectedScrollItem = null;
 			}, 500);
 		}
@@ -3585,6 +3594,8 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			} else {
 				// already maximized, need to restore the item size
@@ -3599,6 +3610,8 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
 		}
@@ -3613,27 +3626,39 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 	if (elem !== null) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
+			var updatedApp;
+			
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
 		}
@@ -3648,27 +3673,38 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 	if (elem !== null) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
+			var updatedApp;
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
 		}
@@ -3683,27 +3719,38 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 	if (elem !== null) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
+			var updatedApp;
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
 		}
@@ -3719,27 +3766,39 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 	if (elem !== null) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
+			var updatedApp;
+			
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
 		}
@@ -3754,27 +3813,39 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 	if (elem !== null) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
+			var updatedApp;
+			
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
+					updatedApp = findAppById(updatedItem.elemId);
+					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
 		}
