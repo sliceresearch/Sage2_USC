@@ -1123,26 +1123,51 @@ function loadSession (filename) {
 			for (var i=0;i<session.apps.length;i++) {
 				var a = session.apps[i];
 				console.log("Session> App",  a.id);
+				
+				if(a.application == "movie_player"){
+					var vid = {application: a.application, filename: a.title};
+					appLoader.loadFileFromLocalStorage(vid, function(appInstance, videohandle) {
+						appInstance.id              = getUniqueAppId();
+						appInstance.left            = a.left;
+						appInstance.top             = a.top;
+						appInstance.width           = a.width;
+						appInstance.height          = a.height;
+						appInstance.previous_left   = a.previous_left;
+						appInstance.previous_top    = a.previous_top;
+						appInstance.previous_width  = a.previous_width;
+						appInstance.previous_height = a.previous_height;
+						appInstance.maximized       = a.maximized;
+						//appInstance.data            = a.data;
 
-				// Get the application a new ID
-				a.id = getUniqueAppId();
-				// Reset the time
-				a.date = new Date();
-				if (a.animation) {
-					var j;
-					appAnimations[a.id] = {clients: {}, date: new Date()};
-					for(j=0; j<clients.length; j++){
-						if(clients[j].messages.requiresFullApps){
-							var clientAddress = clients[j].remoteAddress.address + ":" + clients[j].remoteAddress.port;
-							appAnimations[a.id].clients[clientAddress] = false;
+						broadcast('createAppWindow', appInstance, 'requiresFullApps');
+						broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+						
+						applications.push(appInstance);
+			
+						initializeLoadedVideo(appInstance, videohandle);
+					});
+				}
+				else {
+					// Get the application a new ID
+					a.id = getUniqueAppId();
+					// Reset the time
+					a.date = new Date();
+					if (a.animation) {
+						var j;
+						appAnimations[a.id] = {clients: {}, date: new Date()};
+						for(j=0; j<clients.length; j++){
+							if(clients[j].messages.requiresFullApps){
+								var clientAddress = clients[j].remoteAddress.address + ":" + clients[j].remoteAddress.port;
+								appAnimations[a.id].clients[clientAddress] = false;
+							}
 						}
 					}
+
+					broadcast('createAppWindow', a, 'requiresFullApps');
+					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
+
+					applications.push(a);
 				}
-
-				broadcast('createAppWindow', a, 'requiresFullApps');
-				broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
-
-				applications.push(a);
 			}
 		}
 	});
