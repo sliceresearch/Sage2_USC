@@ -182,7 +182,7 @@ var movie_player = SAGE2_App.extend( {
 	},
 	
 	videoEnded: function() {
-		if(this.state.looped == false) {
+		if(this.state.looped === false) {
 			this.state.paused = true;
 			// must change play-pause button (should show 'play' icon)
 		}

@@ -48,7 +48,7 @@ function websocketIO(url) {
 		this.ws.onclose = function(evt) {
 			console.log("wsio closed");
 			if('close' in _this.messages)
-				_this.messages['close'](evt);
+				_this.messages.close(evt);
 		};
 	};
 	
@@ -76,8 +76,8 @@ function websocketIO(url) {
 		}
 		// send data as JSON string
 		else {
-			var message = {func: name, data: data};
-			this.ws.send(JSON.stringify(message));
+			var jmessage = {func: name, data: data};
+			this.ws.send(JSON.stringify(jmessage));
 		}
 	};
 
