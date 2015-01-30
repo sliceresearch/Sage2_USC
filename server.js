@@ -1600,6 +1600,11 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		}
 	});
 	videohandle.on('frame', function(frameIdx, buffer) {
+		var delay = 0;
+		if(frameIdx === 0) delay = 250;
+		
+		setTimeout(function(){
+		console.log("frame: " + frameIdx + " (" + buffer.length + ")")
 		videoHandles[appInstance.id].frameIdx = frameIdx;
 		var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.data.width, appInstance.data.height, blocksize);
 
@@ -1612,6 +1617,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		}
 
 		handleNewVideoFrame(appInstance.id);
+		}, delay);
 	});
 	
 	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
