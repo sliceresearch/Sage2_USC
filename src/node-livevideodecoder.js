@@ -86,7 +86,7 @@ liveVideoDecoder.prototype.startLiveDecoding = function() {
 	command.on('error', function(err) {
 		if(_this.onstopdecode instanceof Function) _this.onstopdecode(err.message, false);
 		_this.decode = null;
-	})
+	});
 	command.on('end', function() {
 		if(_this.onstopdecode instanceof Function) _this.onstopdecode(null, true);
 		_this.decode = null;

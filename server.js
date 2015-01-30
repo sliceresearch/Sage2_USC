@@ -1694,7 +1694,7 @@ function calculateValidBlocks(app, blockSize) {
 	for(key in videoHandles[app.id].clients){
 		videoHandles[app.id].clients[key].blockList = [];
 		for(i=0; i<verticalBlocks; i++){
-			for(var j=0; j<horizontalBlocks; j++){
+			for(j=0; j<horizontalBlocks; j++){
 				var blockIdx = i*horizontalBlocks+j;
 				
 				if(videoHandles[app.id].clients[key].wsio.clientID < 0){
@@ -1821,7 +1821,7 @@ function wsUpdateVideoTime(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
 	
 	videoHandles[data.id].decoder.seek(data.timestamp, function() {
-		if(data.play === true) videoHandles[data.id].decoder.play()
+		if(data.play === true) videoHandles[data.id].decoder.play();
 	});
 	broadcast('updateVideoItemTime', data, 'requiresFullApps');
 }
@@ -2599,42 +2599,10 @@ index.on('listening', function (e) {
 	}
 });*/
 
-function SAGE2Quit() {
-	if (config.register_site) {
-		// un-register with EVL's server
-		request({
-		    "rejectUnauthorized": false,
-		    "url": 'https://sage.evl.uic.edu/unregister',
-		    "form": config,
-		    "method": "POST"},
-		    function(err, response, body){
-			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
-				saveSession();
-				assets.saveAssets();
-				if( omicronRunning )
-					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
-				process.exit(0);
-			}
-		);
-	} else {
-		saveSession();
-		assets.saveAssets();
-		if( omicronRunning )
-			omicronManager.disconnect();
-		console.log('');
-		console.log('SAGE2 done');
-		console.log('');
-		process.exit(0);
-	}
-}
-
 // KILL intercept
-process.on('SIGTERM', SAGE2Quit);
+process.on('SIGTERM', quitSAGE2);
 // CTRL-C intercept
-process.on('SIGINT',  SAGE2Quit);
+process.on('SIGINT',  quitSAGE2);
 
 
 // Start the HTTP server
@@ -2755,7 +2723,7 @@ if (program.interactive)
 			case 'exit':
 			case 'quit':
 			case 'bye':
-				SAGE2Quit();
+				quitSAGE2();
 				break;
 			default:
 				console.log('Say what? I might have heard `' + line.trim() + '`');
@@ -2767,12 +2735,45 @@ if (program.interactive)
 		// Close with CTRL-D or CTRL-C
 		// Only synchronous code!
 		// Saving stuff
-		SAGE2Quit();
+		quitSAGE2();
 	});
 }
 
 
 // ***************************************************************************************
+
+function quitSAGE2() {
+	if (config.register_site) {
+		// un-register with EVL's server
+		request({
+		    "rejectUnauthorized": false,
+		    "url": 'https://sage.evl.uic.edu/unregister',
+		    "form": config,
+		    "method": "POST"},
+		    function(err, response, body){
+			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+				saveSession();
+				assets.saveAssets();
+				if( omicronRunning )
+					omicronManager.disconnect();
+				console.log('');
+				console.log('SAGE2 done');
+				console.log('');
+				process.exit(0);
+			}
+		);
+	} else {
+		saveSession();
+		assets.saveAssets();
+		if( omicronRunning )
+			omicronManager.disconnect();
+		console.log('');
+		console.log('SAGE2 done');
+		console.log('');
+		process.exit(0);
+	}
+}
+
 
 function broadcast(func, data, type) {
 	for(var i=0; i<clients.length; i++){
@@ -3352,12 +3353,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 	// move / resize window
 	if(remoteInteraction[uniqueID].windowManagementMode()){
-
+		var updatedApp;
 		var updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
 		var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
 
 		if(updatedMoveItem !== null){
-			var updatedApp = findAppById(updatedMoveItem.elemId);
+			updatedApp = findAppById(updatedMoveItem.elemId);
 			//Attach the app to the background app if it is sticky
 			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
@@ -3370,7 +3371,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		}
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
-			var updatedApp = findAppById(updatedResizeItem.elemId);
+			updatedApp = findAppById(updatedResizeItem.elemId);
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		}
 		// update hover corner (for resize)
@@ -3563,11 +3564,13 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
+			var updatedApp;
+
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem);
 				if (updatedItem !== null) {
-					var updatedApp = findAppById(updatedItem.elemId);
+					updatedApp = findAppById(updatedItem.elemId);
 					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
@@ -3581,7 +3584,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
-					var updatedApp = findAppById(updatedItem.elemId);
+					updatedApp = findAppById(updatedItem.elemId);
 					
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');

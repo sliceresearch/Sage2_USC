@@ -81,6 +81,8 @@ websocketIO.prototype.on = function(name, callback) {
 };
 
 websocketIO.prototype.emit = function(name, data) {
+	var message;
+
 	if(name === null || name === ""){
 		console.log("Error: no message name specified");
 		return;
@@ -89,7 +91,7 @@ websocketIO.prototype.emit = function(name, data) {
 	// send binary data as array buffer
 	if(Buffer.isBuffer(data)){
 		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
-		var message = Buffer.concat([funcName, data]);
+		message = Buffer.concat([funcName, data]);
 		
 		try {
 			this.ws.send(message, {binary: true, mask: false}, function(err){
@@ -103,7 +105,7 @@ websocketIO.prototype.emit = function(name, data) {
 	}
 	// send data as JSON string
 	else {
-		var message = {func: name, data: data};
+		message = {func: name, data: data};
 	
 		// double error handling
 		try {
