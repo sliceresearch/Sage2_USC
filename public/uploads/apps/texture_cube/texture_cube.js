@@ -36,14 +36,14 @@ var texture_cube = SAGE2_App.extend( {
 		this.webglContextRestored = this.webglContextRestoredMethod.bind(this);
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		this.fpsText = document.createElement('p');
 		this.fpsText.textContent = "0.00 fps";
 		this.fpsText.style.fontFamily = "Verdana,sans-serif";
-		this.fpsText.style.fontSize = (0.05*height).toString() + "px";
+		this.fpsText.style.fontSize = (0.05*data.height).toString() + "px";
 		this.fpsText.style.textIndent = "0px";
 		this.fpsText.style.color = "#000000";
 		this.fpsText.style.position = "absolute";

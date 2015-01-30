@@ -128,11 +128,11 @@ var stereo_viewer = SAGE2_App.extend( {
 	  return program;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 
-		this.gl = this.element.getContext("webgl");
+		this.gl = this.element.getContext('webgl');
 		this.ready = false;
 
 		// setup a GLSL program
@@ -206,7 +206,7 @@ var stereo_viewer = SAGE2_App.extend( {
 			self.gl.texImage2D(self.gl.TEXTURE_2D, 0, self.gl.RGBA, self.gl.RGBA, self.gl.UNSIGNED_BYTE, image);
 			self.ready = true;
 			self.sendResize(this.width/2, this.height);
-			self.refresh(date);
+			self.refresh(data.date);
 		});
 	},
 	
@@ -234,6 +234,10 @@ var stereo_viewer = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
+	startResize: function(date) {
+		
+	},
+	
 	resize: function(date) {
 		if (!this.ready) return;
 		var error = this.gl.getError();
