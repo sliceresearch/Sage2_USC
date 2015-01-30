@@ -1395,14 +1395,16 @@ function tileApplications() {
 							elemLeft: app.left, elemTop: app.top,
 							elemWidth: app.width, elemHeight: app.height,
 							force: true, date: new Date()};
+		var updateApp = findAppById(updateItem.elemId);
 		// send the order
 		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
-    	if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
-			handleNewVideoFrame(updateItem.id);
+    	if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128);
+    	if(videoHandles[updateItem.elemId] !== undefined && videoHandles[updateItem.elemId].newFrameGenerated === false)
+			handleNewVideoFrame(updateItem.elemId);
     }
 }
 
@@ -1483,12 +1485,14 @@ function tileApplications1() {
 							elemLeft: app.left, elemTop: app.top,
 							elemWidth: app.width, elemHeight: app.height,
 							force: true, date: new Date()};
+		var updateApp = findAppById(updateItem.elemId);
 		// send the order
 		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128);
 		if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
 			handleNewVideoFrame(updateItem.id);
 		
