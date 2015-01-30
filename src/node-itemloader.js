@@ -391,7 +391,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance, video);
 	});
-	video.load(file);
+	video.load(file, {decodeFirstFrame: true});
 };
 
 
