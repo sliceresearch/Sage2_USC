@@ -46,14 +46,14 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.wsio.emit("removeRadialMenu", { id: this.appID } );
     },
 	
-	init: function(id, width, height, resrc, date)
+	init: function(data)
 	{
-		console.log("resrc "+resrc);
+		console.log("resrc "+data.resrc);
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
-		this.ctx     = this.element.getContext("2d");
+		this.ctx     = this.element.getContext('2d');
 		this.minDim  = Math.min(this.element.width, this.element.height);
 		
 		this.thumbnailButtons = [];
@@ -64,23 +64,24 @@ var thumbnailBrowser = SAGE2_App.extend( {
 		this.sessionThumbnailButtons = [];
 		
 		this.appIconList = null;
-		thumbnailBrowserList[id] = this;
-		this.appID = id;
+		thumbnailBrowserList[data.id] = this;
+		this.appID = data.id;
 		this.currentMenuState = 'radialMenu'; // 'radialMenu', 'imageThumbnailWindow', 'pdfThumbnailWindow', etc.
 		this.currentRadialState = 'radialMenu'; // 'radialMenu', 'radialAppMenu'
 		this.sendsToServer = true;
 		this.thumbnailWindowPos = { x: 0, y: 0 };
 		
-		radialMenuCenter = { x: menuRadius + menuButtonSize/2, y: height - menuRadius - menuButtonSize/2};
+		radialMenuCenter = { x: menuRadius + menuButtonSize/2, y: data.height - menuRadius - menuButtonSize/2};
 		
 		// websocket to server for file library access
 		// Note: using a different socket to prevent locking up other app animations
+		/*
 		hostname = window.location.hostname;
 		port = window.location.port;
 		if(window.location.protocol == "http:" && port == "") port = "80";
 		if(window.location.protocol == "https:" && port == "") port = "443";
-		
-		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		*/
+		this.wsio = new websocketIO();
 		
 		document.title = window.location.hostname.concat(" ", document.title ); 
 		
@@ -324,7 +325,7 @@ var thumbnailBrowser = SAGE2_App.extend( {
 			//console.log("open websocket");
 			var clientDescription = {
 				clientType: "radialMenu",
-				clientID: id,
+				clientID: data.id,
 				sendsPointerData: false,
 				sendsMediaStreamFrames: false,
 				requestsServerFiles: true,
@@ -343,22 +344,22 @@ var thumbnailBrowser = SAGE2_App.extend( {
 				receivesRemoteServerInfo: false,
 				removeMediabrowserID: true
 			};
-			thumbnailBrowserList[id].wsio.emit('addClient', clientDescription);
+			thumbnailBrowserList[data.id].wsio.emit('addClient', clientDescription);
 		});
 		
 		this.wsio.on('storedFileList', function(fileList) {
-			thumbnailBrowserList[id].updateFileList(fileList);
+			thumbnailBrowserList[data.id].updateFileList(fileList);
 		});
 		
 		this.wsio.on('initialize', function(uniqueID, date, startTime) {
-			thumbnailBrowserList[id].wsio.emit('requestStoredFiles');
+			thumbnailBrowserList[data.id].wsio.emit('requestStoredFiles');
 		});
 		
 		this.wsio.on('disableSendToServer', function(ID) {
-			thumbnailBrowserList[id].sendsToServer = false;
+			thumbnailBrowserList[data.id].sendsToServer = false;
 		});
 		
-		thumbnailBrowserIDList.push(id);
+		thumbnailBrowserIDList.push(data.id);
 	},
 	
 	updateFileList: function(serverFileList)

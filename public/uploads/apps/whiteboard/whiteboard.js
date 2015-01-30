@@ -22,11 +22,11 @@ var whiteboard = SAGE2_App.extend( {
 		this.allLayers = null;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 		
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 		this.element.style.backgroundColor    = "rgba(0,0,0,1)";
 		this.element.style.backgroundPosition = "top left";
 		// this.element.style.backgroundColor    = 'rgba(42,42,42,1)';
@@ -42,7 +42,6 @@ var whiteboard = SAGE2_App.extend( {
 		this.layer  = new Kinetic.Layer();
 		this.stage.add(this.layer);
 		this.allLayers = [this.layer];
-
 	},
 
 	load: function(state, date) {
@@ -50,6 +49,10 @@ var whiteboard = SAGE2_App.extend( {
 	
 	draw: function(date) {
 		this.stage.draw();
+	},
+	
+	startResize: function(date) {
+	
 	},
 	
 	resize: function(date) {

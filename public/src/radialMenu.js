@@ -123,12 +123,13 @@ function radialMenu(){
 		
 		// websocket to server for file library access
 		// Note: using a different socket to prevent locking up other app animations
+		/*
 		hostname = window.location.hostname;
 		port = window.location.port;
 		if(window.location.protocol === "http:" && port === "") port = "80";
 		if(window.location.protocol === "https:" && port === "") port = "443";
-		
-		this.wsio = new websocketIO(window.location.protocol, hostname, parseInt(port));
+		*/
+		this.wsio = new websocketIO();
 		this.wsio.open(function() {
 			console.log("open websocket: " + id+"_menu");
 			var clientDescription = {
