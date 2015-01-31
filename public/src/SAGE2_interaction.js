@@ -23,6 +23,21 @@ function SAGE2_interaction(wsio) {
 	this.chunk = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024*1024*1024); // 20GB just as a precaution
 	
+	// Event filtering for mouseMove
+	/////////////////////////////////
+	this.now   = Date.now();
+	this.cnt   = 0;
+	// 1Euro filters, cheap and fast filtering with low-lag and low-jitter when it matters
+	//    http://www.lifl.fr/~casiez/1euro/
+	this.fx    = OneEuroFilter(60.0, 1.0, 0.00700, 1.00);
+	this.fy    = OneEuroFilter(60.0, 1.0, 0.00700, 1.00);
+	// accumultor for delta motion of the mouse
+	this.deltaX = 0;
+	this.deltaY = 0;
+	// Send frequency (frames per second)
+	this.sendFrequency = 20;
+	/////////////////////////////////
+
 	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
 	if(localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
 	
@@ -307,7 +322,33 @@ function SAGE2_interaction(wsio) {
 	this.pointerMoveMethod = function(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-		this.wsio.emit('pointerMove', {deltaX: Math.round(movementX*this.sensitivity), deltaY: Math.round(movementY*this.sensitivity)});	
+
+		// Event filtering
+		var now  = Date.now();
+		// time difference since last event
+		var diff = now - this.now;
+		// count the events
+		this.cnt++;
+		if (diff > (1000.0/this.sendFrequency)) {
+			//console.log('Events:', this.cnt, diff, 1000.0/diff);
+			// Reset the time and count
+			this.now = now;
+			this.cnt = 0;
+			// Calculate the offset
+			var px  = this.deltaX * this.sensitivity;
+			var py  = this.deltaY * this.sensitivity;
+			var fpx = Math.round(this.fx.filter(px, now));
+			var fpy = Math.round(this.fy.filter(py, now));
+			// Send the event
+			this.wsio.emit('pointerMove', {deltaX: fpx, deltaY: fpy});	
+			// Reset the accumulators
+			this.deltaX = 0;
+			this.deltaY = 0;
+		} else {
+			// if it's not time, just accumulate
+			this.deltaX += movementX;
+			this.deltaY += movementY;
+		}
 		if (event.preventDefault) event.preventDefault();
 	};
 	
