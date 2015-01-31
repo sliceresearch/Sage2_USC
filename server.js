@@ -358,7 +358,7 @@ function wsAddClient(wsio, data) {
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-		
+
 		if( wsio.clientID === 0 ) // Display clients were reset
 			clearRadialMenus();
 	}
@@ -543,10 +543,11 @@ function initializeRemoteServerInfo(wsio) {
 
 function initializeMediaStreams(uniqueID) {
 	var key;
-
+    console.log("initializeMediaStreams");
+    console.log(mediaStreams);
 	for(key in mediaStreams){
 		if (mediaStreams.hasOwnProperty(key)) {
-			mediaStreams[key].clients[uniqueID] = false;
+			mediaStreams[key].clients[uniqueID].readyForNextFrame = false;
 		}
 	}
 }
@@ -773,27 +774,36 @@ function wsKeyPress(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log("received new stream: ", data.id);
-	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
-	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages.receivesMediaStreamFrames){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			mediaStreams[data.id].clients[clientAddress] = false;
-		}
-	}
+	console.log("received new stream: ", data);
+    //var n = byteBufferToInt(data.toString('utf8'));
+    //console.log(data.toString('ascii').subarray(0,2));
+    //var appId = byteBufferToString(data);
+    //console.log(appId);
 
-	// Forcing 'int' type for width and height
+    // Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
+
+	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null, width: data.width, height: data.height};
+	for(var i=0; i<clients.length; i++){
+		if(clients[i].messages.receivesMediaStreamFrames){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			mediaStreams[data.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+		}
+	}
+
+        appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 		applications.push(appInstance);
-	});
+
+        var blocksize = 128;
+        calculateValidBlocks(appInstance, blocksize, mediaStreams);
+});
 
 	// Debug media stream freezing
 	mediaStreams[data.id].timeout = setTimeout(function() {
@@ -801,27 +811,57 @@ function wsStartNewMediaStream(wsio, data) {
 		console.log(mediaStreams[data.id].clients);
 		console.log("ready: " + mediaStreams[data.id].ready);
 	}, 5000);
+
 }
 
-function wsUpdateMediaStreamFrame(wsio, data) {
-	mediaStreams[data.id].ready = true;
-	for(var key in mediaStreams[data.id].clients){
-		mediaStreams[data.id].clients[key] = false;
+function wsUpdateMediaStreamFrame(wsio, buffer) {
+    var id = byteBufferToString(buffer);
+    var blocksize = 128;
+    console.log("Received from: ", id);
+
+	mediaStreams[id].ready = true;
+	for(var key in mediaStreams[id].clients){
+		mediaStreams[id].clients[key].readyForNextFrame = false;
 	}
 
-	var stream = findAppById(data.id);
-	if(stream !== null) stream.data = data.state;
+	//var stream = findAppById(id);
+	//if(stream !== null) stream.data = data.state;
 
-	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
+    //videoHandles[appInstance.id].frameIdx = frameIdx;
+	var yuvBuffer = buffer.slice(id.length+1);
+
+    var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, mediaStreams[id].width, mediaStreams[id].height, blocksize);
+
+    var pixelbuffer = [];
+    var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
+    for(var i=0; i<blockBuffers.length; i++){
+        var blockIdxBuffer = intToByteBuffer(i, 2);
+        pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, blockBuffers[i]]);
+    }
+
+    for(key in mediaStreams[id].clients) {
+		for(i=0; i<pixelbuffer.length; i++){
+			var hasBlock = false;
+            console.log("TTT:", mediaStreams[id].clients[key]);
+			if(mediaStreams[id].clients[key].blockList.indexOf(i) >= 0){
+                console.log("Streaming");
+				hasBlock = true;
+				mediaStreams[id].clients[key].wsio.emit('updateMediaStreamBlock', video.pixelbuffer[i]);
+			}
+		}
+	}
+
+    var data = {id: id, src: ""};
+	//broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
 
 	// Debug media stream freezing
-	clearTimeout(mediaStreams[data.id].timeout);
-	mediaStreams[data.id].timeout = setTimeout(function() {
+	clearTimeout(mediaStreams[id].timeout);
+	mediaStreams[id].timeout = setTimeout(function() {
 		console.log("Update: 5 sec with no updates from: " + data.id);
-		console.log(mediaStreams[data.id].clients);
-		console.log("ready: " + mediaStreams[data.id].ready);
-		if(mediaStreams[data.id].chunks.length === 0)
-			console.log("chunks received: " + allNonBlank(mediaStreams[data.id].chunks));
+		console.log(mediaStreams[id].clients);
+		console.log("ready: " + mediaStreams[id].ready);
+		if(mediaStreams[id].chunks.length === 0)
+			console.log("chunks received: " + allNonBlank(mediaStreams[id].chunks));
 	}, 5000);
 }
 
@@ -850,7 +890,7 @@ function wsPrintDebugInfo(wsio, data) {
 
 function wsRequestVideoFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	
+
 	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
 	handleNewClientReady(data.id);
 }
@@ -861,8 +901,15 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 	var broadcastAddress, broadcastID;
 	var serverAddress, clientAddress;
 
-	mediaStreams[data.id].clients[uniqueID] = true;
-	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
+    console.log("ReceivedMediaStreamFrame");
+	mediaStreams[data.id].clients[uniqueID].readyForNextFrame = true;
+    var clientsReady = true;
+
+    for(var key in mediaStreams[data.id].clients) {
+        if(!mediaStreams[data.id].clients[key].readyForNextFrame) clientsReady = false;
+    }
+
+	if(clientsReady && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
 		var broadcastWS = null;
 		var mediaStreamData = data.id.split("|");
@@ -1486,7 +1533,7 @@ function tileApplications1() {
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
-		
+
         c += 1;
         if (c === numCols) {
             c  = 0;
@@ -1565,7 +1612,7 @@ function wsLoadFileFromServer(wsio, data) {
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 			applications.push(appInstance);
-			
+
 			initializeLoadedVideo(appInstance, videohandle);
 		});
 	}
@@ -1573,7 +1620,7 @@ function wsLoadFileFromServer(wsio, data) {
 
 function initializeLoadedVideo(appInstance, videohandle) {
 	if(appInstance.application !== "movie_player") return;
-	
+
 	var i;
 	var j;
 	var blocksize = 128;
@@ -1581,7 +1628,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
 	var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
 	var start = null;
-	
+
 	videohandle.on('error', function(err) {
 		console.log("VIDEO ERROR: " + err);
 	});
@@ -1612,25 +1659,25 @@ function initializeLoadedVideo(appInstance, videohandle) {
 
 		handleNewVideoFrame(appInstance.id);
 	});
-	
+
 	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
-	
+
 	for(i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
 			videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
 		}
 	}
-	calculateValidBlocks(appInstance, blocksize);
+	calculateValidBlocks(appInstance, blocksize, videoHandles);
 }
 
 // move this function elsewhere
 function handleNewVideoFrame(id) {
 	var video = videoHandles[id];
-	
+
 	var i;
 	var key;
-	
+
 	video.newFrameGenerated = true;
 	for(key in video.clients) {
 		if(video.clients[key].readyForNextFrame !== true){
@@ -1656,10 +1703,10 @@ function handleNewVideoFrame(id) {
 function handleNewClientReady(id) {
 	var video = videoHandles[id];
 	if(video.newFrameGenerated !== true) return;
-	
+
 	var i;
 	var key;
-	
+
 	for(key in video.clients) {
 		if(video.clients[key].readyForNextFrame !== true){
 			return false;
@@ -1681,39 +1728,39 @@ function handleNewClientReady(id) {
 }
 
 // move this function elsewhere
-function calculateValidBlocks(app, blockSize) {
+function calculateValidBlocks(app, blockSize, handles) {
 	var i, j, key;
-	
+
 	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
 	var verticalBlocks   = Math.ceil(app.data.height/blockSize);
-		
+
 	var renderBlockWidth  = blockSize * app.width / app.data.width;
 	var renderBlockHeight = blockSize * app.height / app.data.height;
-	
-	for(key in videoHandles[app.id].clients){
-		videoHandles[app.id].clients[key].blockList = [];
+
+	for(key in handles[app.id].clients){
+		handles[app.id].clients[key].blockList = [];
 		for(i=0; i<verticalBlocks; i++){
 			for(var j=0; j<horizontalBlocks; j++){
 				var blockIdx = i*horizontalBlocks+j;
-				
-				if(videoHandles[app.id].clients[key].wsio.clientID < 0){
-					videoHandles[app.id].clients[key].blockList.push(blockIdx);
+
+				if(handles[app.id].clients[key].wsio.clientID < 0){
+					handles[app.id].clients[key].blockList.push(blockIdx);
 				}
 				else {
-					var display = config.displays[videoHandles[app.id].clients[key].wsio.clientID];
+					var display = config.displays[handles[app.id].clients[key].wsio.clientID];
 					var left = j*renderBlockWidth  + app.left;
 					var top  = i*renderBlockHeight + app.top + config.ui.titleBarHeight;
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
-					
+
 					if((left+renderBlockWidth) >= offsetX && left <= (offsetX+config.resolution.width) &&
 					   (top +renderBlockHeight) >= offsetY && top  <= (offsetY+config.resolution.height)) {
-						videoHandles[app.id].clients[key].blockList.push(blockIdx);
+						handles[app.id].clients[key].blockList.push(blockIdx);
 					}
 				}
 			}
 		}
-		videoHandles[app.id].clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: videoHandles[app.id].clients[key].blockList});
+		handles[app.id].clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: handles[app.id].clients[key].blockList});
 	}
 }
 
@@ -1794,13 +1841,13 @@ function wsOpenNewWebpage(wsio, data) {
 
 function wsPlayVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.play();
 }
 
 function wsPauseVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.pause(function() {
 		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
 	});
@@ -1808,7 +1855,7 @@ function wsPauseVideo(wsio, data) {
 
 function wsStopVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.stop(function() {
 		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
 		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false}, 'requiresFullApps');
@@ -1818,7 +1865,7 @@ function wsStopVideo(wsio, data) {
 
 function wsUpdateVideoTime(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.seek(data.timestamp, function() {
 		if(data.play === true) videoHandles[data.id].decoder.play()
 	});
@@ -1827,19 +1874,19 @@ function wsUpdateVideoTime(wsio, data) {
 
 function wsMuteVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	broadcast('videoMuted', {id: data.id}, 'requiresFullApps');
 }
 
 function wsUnmuteVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	broadcast('videoUnmuted', {id: data.id}, 'requiresFullApps');
 }
 
 function wsLoopVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].loop = data.loop;
 }
 
@@ -1857,7 +1904,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			for(i=0; i<clients.length; i++){
 				if(clients[i].messages.receivesMediaStreamFrames){
 					clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					mediaStreams[appInstance.id].clients[clientAddress] = false;
+					mediaStreams[appInstance.id].clients[clientAddress].readyForNextFrame = false;
 				}
 			}
 		}
@@ -1894,7 +1941,7 @@ function wsUpdateRemoteMediaStreamFrame(wsio, data) {
 	var key;
 	mediaStreams[data.id].ready = true;
 	for(key in mediaStreams[data.id].clients){
-		mediaStreams[data.id].clients[key] = false;
+		mediaStreams[data.id].clients[key].readyForNextFrame = false;
 	}
 	var stream = findAppById(data.id);
 	if(stream !== null) stream.data = data.data;
@@ -1906,7 +1953,8 @@ function wsUpdateRemoteMediaStreamFrame(wsio, data) {
 function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
-	mediaStreams[data.id].clients[uniqueID] = true;
+    console.log("ReceivedRemoteMediaStreamFrame");
+	mediaStreams[data.id].clients[uniqueID].readyForNextFrame = true;
 	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
 
@@ -2210,7 +2258,7 @@ function setupDisplayBackground() {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_dir, "images", "background", "tmp_background" + imgExt);
-		
+
 			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
 
@@ -2423,7 +2471,7 @@ function manageUploadedFiles(files, position) {
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 			applications.push(appInstance);
-			
+
 			initializeLoadedVideo(appInstance, videohandle);
 
 			if(appInstance.animation){
@@ -2961,7 +3009,7 @@ function intToByteBuffer(aInt, bytes) {
 		buf[i] = byteVal;
 		num = (num - byteVal) / 256;
 	}
-	
+
 	return buf;
 }
 
@@ -2971,6 +3019,18 @@ function byteBufferToInt(buf) {
 		value = (value * 256) + buf[i];
 	}
 	return value;
+}
+
+function byteBufferToString(buf) {
+	var str = "";
+	var i = 0;
+
+	while(buf[i] !== 0 && i < buf.length) {
+		str += String.fromCharCode(buf[i]);
+		i++;
+	}
+
+	return str;
 }
 
 function getItemPositionSizeType(item) {
@@ -3369,7 +3429,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
-			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 			for (var idx=0;idx<updatedStickyItems.length;idx++){
 				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3378,7 +3438,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
 			var updatedApp = findAppById(updatedResizeItem.elemId);
-			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 		}
 		// update hover corner (for resize)
 		else{
@@ -3441,7 +3501,7 @@ function pointerPosition( uniqueID, data ) {
 		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
 		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
-		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 		for (var idx=0;idx<updatedStickyItems.length;idx++){
 			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3499,7 +3559,7 @@ function pointerScroll( uniqueID, data ) {
 		if(updatedItem !== null){
 			var updatedApp = findAppById(updatedItem.elemId);
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
-			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 
 			if(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] !== undefined){
 				clearTimeout(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId]);
@@ -3575,28 +3635,28 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem);
 				if (updatedItem !== null) {
 					var updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 				}
 			} else {
 				// already maximized, need to restore the item size
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					var updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
+					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 				}
 			}
 		}
@@ -4082,7 +4142,7 @@ function wsRadialMenuMoved( wsio, data ) {
 
 function attachAppIfSticky(backgroundItem, appId){
 	var app = findAppById(appId);
-	
+
 	if (app === null || app.sticky !== true) return;
 	//console.log("sticky:",app.sticky);
 	stickyAppHandler.detachStickyItem(app);

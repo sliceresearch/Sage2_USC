@@ -275,7 +275,7 @@
         });
 		
 		
-		wsio.on('updateMediaStreamFrame', function(data) {
+		wsio.on('updateMediaStreamBlock', function(data) {
 			wsio.emit('receivedMediaStreamFrame', {id: data.id});
 			
 			var app = applications[data.id];
