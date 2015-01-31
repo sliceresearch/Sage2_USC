@@ -17,15 +17,15 @@ var unity = SAGE2_App.extend( {
 		this.u = null;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 		
 		// application specific 'init'
 		console.log("Size ", this.element.clientWidth, this.element.clientHeight);
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 
-		console.log("Viewer: " , id, this.resrcPath, this.resrcPath);
+		console.log("Viewer: " , data.id, this.resrcPath, this.resrcPath);
 
 		var config = {
 			width: "100%", 
@@ -43,6 +43,10 @@ var unity = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+	},
+	
+	startResize: function(date) {
+		
 	},
 	
 	resize: function(date) {

@@ -22,11 +22,11 @@ var threejs_sample = SAGE2_App.extend( {
 		this.scene    = null;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 	
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 		this.frame  = 0;
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;

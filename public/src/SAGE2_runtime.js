@@ -380,13 +380,14 @@ function moveItemToFront(elem) {
 }
 
 function cleanURL(url) {
+	if (url===null) return url;
 	var a = document.createElement('a');
 	a.href = url;
 	var clean = url;
-	
+
 	if(hostAlias[a.origin] !== undefined)
 		clean = url.replace(a.origin, hostAlias[a.origin]);
-	
+
 	return clean;
 }
 

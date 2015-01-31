@@ -19,12 +19,12 @@ var prime = SAGE2_App.extend( {
 		this.errFunc = null;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
-		this.ctx    = this.element.getContext("2d");
+		this.ctx    = this.element.getContext('2d');
 		this.maxFPS = 30.0;
 
 		// Number of prime numbers found
@@ -142,6 +142,10 @@ var prime = SAGE2_App.extend( {
 			this.ctx.fillStyle = "#990000";
 			this.ctx.fillText(mytext, this.element.width/(2*scalex), this.element.height/scalex);
 		this.ctx.restore();
+	},
+	
+	startResize: function(date) {
+		this.refresh(date);
 	},
 	
 	resize: function(date) {

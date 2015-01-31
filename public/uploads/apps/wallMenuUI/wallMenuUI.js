@@ -18,13 +18,13 @@ var wallMenuUI = SAGE2_App.extend( {
 		this.resizeEvents = "continuous";
 	},
 	
-	init: function(id, width, height, resrc, date)
+	init: function(data)
 	{
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
-		this.ctx     = this.element.getContext("2d");
+		this.ctx     = this.element.getContext('2d');
 		this.minDim  = Math.min(this.element.width, this.element.height);
 		
 		this.testButton = new buttonWidget();

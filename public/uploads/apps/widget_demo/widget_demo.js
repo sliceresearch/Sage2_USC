@@ -147,15 +147,12 @@ var widget_demo = SAGE2_App.extend( {
 	},
 
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 	
-		this.ctx = this.element.getContext("2d");
-		this.resrcPath = resrc;
+		this.ctx = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
-		
-		
 	},
 	
 	

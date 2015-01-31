@@ -19,9 +19,9 @@ var playcanvas = SAGE2_App.extend( {
 		this.model    = null;
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 
         // Create the graphics device
         var device = new pc.gfx.Device(this.element);
@@ -74,6 +74,10 @@ var playcanvas = SAGE2_App.extend( {
 		}
 		this.scene.update();
 		this.renderer.render(this.scene, this.camera);
+	},
+	
+	startResize: function(date) {
+		
 	},
 	
 	resize: function(date) {

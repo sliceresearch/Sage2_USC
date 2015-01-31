@@ -16,9 +16,9 @@ var presentation = SAGE2_App.extend( {
 		this.resizeEvents = "continuous";
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "iframe", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "iframe", data);
 		
 		// application specific 'init'
 		this.element.frameborder = 0;

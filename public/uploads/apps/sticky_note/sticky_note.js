@@ -27,13 +27,13 @@ var sticky_note = SAGE2_App.extend( {
 		this.cloneable = true;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
 		// application specific 'init'
 
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 
 		// Set refresh once every 2 sec.
 		//this.maxFPS = 1/2;
@@ -43,14 +43,14 @@ var sticky_note = SAGE2_App.extend( {
 		// Make the SVG element fill the app
 		this.svg = Snap("100%","100%");
 		this.element.appendChild(this.svg.node);
-		this.vh = 1000*width/height;
+		this.vh = 1000*data.width/data.height;
 		this.vw = 1000;
 		this.margin = 0.05*this.vw;
 		this.svg.attr("viewBox", "0,0," + this.vw + "," + this.vh);
 		this.backColor = [175,175,200];
 
 		this.lineColor = this.backColor.diff(60);
-		console.log(this.lineColor);
+		//console.log(this.lineColor);
 		
 		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
 		rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
@@ -75,8 +75,6 @@ var sticky_note = SAGE2_App.extend( {
 			})
 			this.textLines.push(lineText);
 		}
-		
-		
 	},
 
 	// get messages from the server through a broadcast call

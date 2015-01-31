@@ -20,12 +20,12 @@ var snap_one = SAGE2_App.extend( {
 		this.text = null;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
 		// application specific 'init'
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 
 		// Set refresh once every 2 sec.
 		this.maxFPS = 1/2;
@@ -38,7 +38,7 @@ var snap_one = SAGE2_App.extend( {
 		// Adding it to the DOM
 		this.element.appendChild(this.svg.node);
 		// Sets the scale of the SVG scenegraph: 0 to 100 (make sure it matches aspect ratio from pacakge.json)
-		var ratio = 100*width/height;
+		var ratio = 100*data.width/data.height;
 		this.svg.attr("viewBox", "0,0,100,"+ratio);
 
 		// Lets create a background
@@ -84,11 +84,11 @@ var snap_one = SAGE2_App.extend( {
 
 		// Only the 'master' display node is doing the query
 		if (isMaster) {
-			readFile("//"+window.location.host+"/config", function (err, data) {
+			readFile("//"+window.location.host+"/config", function (err, json) {
 				if (err) console.log('Error retrieving JSON data', err);
 				else {
 					// broadcast the data to all display nodes
-					_myself.broadcast("onMessage", data);
+					_myself.broadcast("onMessage", json);
 				}
 			}, "JSON");
 		}

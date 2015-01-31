@@ -31,12 +31,12 @@ var tank = SAGE2_App.extend( {
 		console.log("Completed construction");
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
-		this.ctx = this.element.getContext("2d");
+		this.ctx = this.element.getContext('2d');
 
 		//tank variables
 		this.barrierList = [];
