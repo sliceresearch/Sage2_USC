@@ -35,7 +35,7 @@ function SAGE2_interaction(wsio) {
 	this.deltaX = 0;
 	this.deltaY = 0;
 	// Send frequency (frames per second)
-	this.sendFrequency = 20;
+	this.sendFrequency = 25;
 	/////////////////////////////////
 
 	if(localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
@@ -329,11 +329,8 @@ function SAGE2_interaction(wsio) {
 		var diff = now - this.now;
 		// count the events
 		this.cnt++;
-		if (diff > (1000.0/this.sendFrequency)) {
+		if (diff >= (1000/this.sendFrequency)) {
 			//console.log('Events:', this.cnt, diff, 1000.0/diff);
-			// Reset the time and count
-			this.now = now;
-			this.cnt = 0;
 			// Calculate the offset
 			var px  = this.deltaX * this.sensitivity;
 			var py  = this.deltaY * this.sensitivity;
@@ -344,6 +341,9 @@ function SAGE2_interaction(wsio) {
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;
+			// Reset the time and count
+			this.now = now;
+			this.cnt = 0;
 		} else {
 			// if it's not time, just accumulate
 			this.deltaX += movementX;
