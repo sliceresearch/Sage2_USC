@@ -50,8 +50,8 @@ function websocketIO(ws, strictSSL, openCallback) {
 	this.ws.on('message', function(message) {
 		if(typeof message === "string"){
 			var msg = JSON.parse(message);
-			if(msg.func in _this.messages){
-				_this.messages[msg.func](_this, msg.data);
+			if(msg.f in _this.messages){
+				_this.messages[msg.f](_this, msg.d);
 			}
 		}
 		else{
@@ -105,7 +105,7 @@ websocketIO.prototype.emit = function(name, data) {
 	}
 	// send data as JSON string
 	else {
-		message = {func: name, data: data};
+		message = {f: name, d: data};
 	
 		// double error handling
 		try {

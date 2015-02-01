@@ -386,7 +386,8 @@ function initializeWSClient(wsio) {
 		wsio.on('pointerRelease',            wsPointerRelease);
 		wsio.on('pointerDblClick',           wsPointerDblClick);
 		wsio.on('pointerPosition',           wsPointerPosition);
-		wsio.on('pointerMove',               wsPointerMove);
+		//wsio.on('pointerMove',               wsPointerMove);
+		wsio.on('ptm',                       wsPointerMove);
 		wsio.on('pointerScrollStart',        wsPointerScrollStart);
 		wsio.on('pointerScroll',             wsPointerScroll);
 		wsio.on('pointerDraw',               wsPointerDraw);
@@ -620,8 +621,10 @@ function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
 	// Casting the parameters to correct type
-	data.deltaX = parseInt(data.deltaX, 10);
-	data.deltaY = parseInt(data.deltaY, 10);
+	//data.deltaX = parseInt(data.deltaX, 10);
+	//data.deltaY = parseInt(data.deltaY, 10);
+	data.deltaX = data.dx;
+	data.deltaY = data.dy;
 
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;

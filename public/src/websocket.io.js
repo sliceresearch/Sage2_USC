@@ -25,8 +25,8 @@ function websocketIO(url) {
 		this.ws.onmessage = function(msg) {
 			if(typeof msg.data === "string"){
 				var message = JSON.parse(msg.data);
-				if(message.func in _this.messages){
-					_this.messages[message.func](message.data);
+				if(message.f in _this.messages){
+					_this.messages[message.f](message.d);
 				}
 			}
 			else{
@@ -76,7 +76,7 @@ function websocketIO(url) {
 		}
 		// send data as JSON string
 		else {
-			var jmessage = {func: name, data: data};
+			var jmessage = {f: name, d: data};
 			this.ws.send(JSON.stringify(jmessage));
 		}
 	};
