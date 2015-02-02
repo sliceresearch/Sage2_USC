@@ -294,9 +294,9 @@ updateWindow: function (){
 
 ////////////////////////////////////////
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 
         this.maxFPS = 0.0003; // update once per hour
 
@@ -304,7 +304,7 @@ updateWindow: function (){
 		//var divWidth  = this.element.clientWidth;
 		//var divHeight = this.element.clientHeight;
 
-		this.element.id = "div" + id;
+		this.element.id = "div" + data.id;
 
 		// backup of the context
 		var self = this;
@@ -316,8 +316,8 @@ updateWindow: function (){
 		// attach the SVG into the this.element node provided to us
 		var box="0,0,"+newWidth+","+newHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
-		    .attr("width",   width)
-		    .attr("height",  height+30)
+		    .attr("width",   data.width)
+		    .attr("height",  data.height+30)
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 		this.sampleSVG = this.svg;
@@ -325,7 +325,7 @@ updateWindow: function (){
         this.initApp();
 
 		this.update();
-		this.draw_d3(date);
+		this.draw_d3(data.date);
         this.controls.addButton({type:"next",sequenceNo:1,action:function(date){
             this.timeDiff += 1;
             if (this.timeDiff > 0)

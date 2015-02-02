@@ -68,7 +68,7 @@ var SAGE2_App = Class.extend( {
 		this.sage2_height = data.height;
 
 
-		this.controls = new SAGE2WidgetControlBar(id);
+		this.controls = new SAGE2WidgetControlBar(data.id);
 
 		
 		this.prevDate  = data.date;
