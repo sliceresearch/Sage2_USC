@@ -924,7 +924,7 @@ function wsReadFromFile (wsio, data){
 
 function wsFinishedRenderingAppFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	if (wsio === masterDisplay) appAnimations[data.id].fps = data.fps;
 	appAnimations[data.id].clients[uniqueID] = true;
 	if(allTrueDict(appAnimations[data.id].clients)){
 		var key;
@@ -934,7 +934,9 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 		// animate max 60 fps
 		var now = new Date();
 		var elapsed = now.getTime() - appAnimations[data.id].date.getTime();
-		if(elapsed > 16){
+		var fps = appAnimations[data.id].fps || 30;
+		var ticks = 1000/fps;
+		if(elapsed > ticks){
 			appAnimations[data.id].date = new Date();
 			broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
 		}
@@ -942,7 +944,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			setTimeout(function() {
 				appAnimations[data.id].date = new Date();
 				broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
-			}, 16-elapsed);
+			}, ticks-elapsed);
 		}
 	}
 }

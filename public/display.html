@@ -440,7 +440,7 @@
 						if(app.enableControls==true){// Flag to request controls for App
 							controlItems[data.id + "_controls"] = { show:false, handle:app};
 						} 
-						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
 					}, false);
 					js.type = "text/javascript";
 					js.src = url + "/" + data.application + ".js";
@@ -467,7 +467,7 @@
 					if(app.enableControls==true){// Flag to request controls for App
 							controlItems[data.id + "_controls"] = { show:false, handle:app};
 					} 
-					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
 					if(data.application === "movie_player") setTimeout(function() {wsio.emit('requestVideoFrame', {id: data.id});}, 500);
 				}
 			};
@@ -770,7 +770,6 @@
 		
 		wsio.on('finishedResize', function(data) {
 			resetIdle();
-
 			var app = applications[data.id];
 			if(app !== undefined && app.resizeEvents === "onfinish") {
 				var date = new Date(data.date);
@@ -779,11 +778,11 @@
 		});
 		
 		wsio.on('animateCanvas', function(data) {
-			var date = new Date(data.date);
-			var app  = applications[data.id];
+			var app = applications[data.id];
 			if(app !== undefined && app !== null){
+				var date = new Date(data.date);
 				app.refresh(date);
-				wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
 			}
 		});
 		
