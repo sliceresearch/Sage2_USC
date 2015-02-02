@@ -84,7 +84,6 @@ var pdf_viewer = SAGE2_App.extend( {
 						_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
 					else
 						_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
-					//_this.sendResize(w, h);
 				});
 			});
 		}
@@ -147,12 +146,14 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.element.src = _this.src;
 			}
 			
+			// VIEWPORT undefined here: NOT needed I think
+			//     - Luc
 			// Check for change in the aspect ratio, send a resize if needed
 			//  (done after the render to avoid double rendering issues)
-			if (_this.ratio !== (viewport.width/viewport.height) ) {
-				_this.ratio = viewport.width/viewport.height;
-				_this.sendResize(viewport.width, viewport.height);
-			}
+			// if (_this.ratio !== (viewport.width/viewport.height) ) {
+			// 	_this.ratio = viewport.width/viewport.height;
+			// 	_this.sendResize(viewport.width, viewport.height);
+			// }
 		};
 		
 		this.pdfDoc.getPage(this.state.page).then(gotPdfPage);

@@ -767,7 +767,6 @@
 		
 		wsio.on('finishedResize', function(data) {
 			resetIdle();
-
 			var app = applications[data.id];
 			if(app !== undefined && app.resizeEvents === "onfinish") {
 				var date = new Date(data.date);
@@ -776,11 +775,11 @@
 		});
 		
 		wsio.on('animateCanvas', function(data) {
-			var date = new Date(data.date);
-			var app  = applications[data.id];
+			var app = applications[data.id];
 			if(app !== undefined && app !== null){
+				var date = new Date(data.date);
 				app.refresh(date);
-				wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
 			}
 		});
 		

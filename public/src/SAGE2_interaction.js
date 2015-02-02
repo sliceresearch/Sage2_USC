@@ -27,10 +27,6 @@ function SAGE2_interaction(wsio) {
 	/////////////////////////////////
 	this.now   = Date.now();
 	this.cnt   = 0;
-	// 1Euro filters, cheap and fast filtering with low-lag and low-jitter when it matters
-	//    http://www.lifl.fr/~casiez/1euro/
-	this.fx    = OneEuroFilter(60.0, 1.0, 0.00700, 1.00);
-	this.fy    = OneEuroFilter(60.0, 1.0, 0.00700, 1.00);
 	// accumultor for delta motion of the mouse
 	this.deltaX = 0;
 	this.deltaY = 0;
@@ -334,10 +330,9 @@ function SAGE2_interaction(wsio) {
 			// Calculate the offset
 			var px  = this.deltaX * this.sensitivity;
 			var py  = this.deltaY * this.sensitivity;
-			var fpx = Math.round(this.fx.filter(px, now));
-			var fpy = Math.round(this.fy.filter(py, now));
 			// Send the event
-			this.wsio.emit('pointerMove', {deltaX: fpx, deltaY: fpy});	
+			//this.wsio.emit('pointerMove', {deltaX: px, deltaY: py});
+			this.wsio.emit('ptm', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;
