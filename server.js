@@ -386,7 +386,8 @@ function initializeWSClient(wsio) {
 		wsio.on('pointerRelease',            wsPointerRelease);
 		wsio.on('pointerDblClick',           wsPointerDblClick);
 		wsio.on('pointerPosition',           wsPointerPosition);
-		wsio.on('pointerMove',               wsPointerMove);
+		//wsio.on('pointerMove',               wsPointerMove);
+		wsio.on('ptm',                       wsPointerMove);
 		wsio.on('pointerScrollStart',        wsPointerScrollStart);
 		wsio.on('pointerScroll',             wsPointerScroll);
 		wsio.on('pointerDraw',               wsPointerDraw);
@@ -620,8 +621,10 @@ function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
 	// Casting the parameters to correct type
-	data.deltaX = parseInt(data.deltaX, 10);
-	data.deltaY = parseInt(data.deltaY, 10);
+	//data.deltaX = parseInt(data.deltaX, 10);
+	//data.deltaY = parseInt(data.deltaY, 10);
+	data.deltaX = data.dx;
+	data.deltaY = data.dy;
 
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
@@ -921,7 +924,7 @@ function wsReadFromFile (wsio, data){
 
 function wsFinishedRenderingAppFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	if (wsio === masterDisplay) appAnimations[data.id].fps = data.fps;
 	appAnimations[data.id].clients[uniqueID] = true;
 	if(allTrueDict(appAnimations[data.id].clients)){
 		var key;
@@ -931,7 +934,9 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 		// animate max 60 fps
 		var now = new Date();
 		var elapsed = now.getTime() - appAnimations[data.id].date.getTime();
-		if(elapsed > 16){
+		var fps = appAnimations[data.id].fps || 30;
+		var ticks = 1000/fps;
+		if(elapsed > ticks){
 			appAnimations[data.id].date = new Date();
 			broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
 		}
@@ -939,7 +944,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			setTimeout(function() {
 				appAnimations[data.id].date = new Date();
 				broadcast('animateCanvas', {id: data.id, date: new Date()}, 'requiresFullApps');
-			}, 16-elapsed);
+			}, ticks-elapsed);
 		}
 	}
 }
@@ -1422,11 +1427,11 @@ function tileApplications() {
 							force: true, date: new Date()};
 		var updateApp = findAppById(updateItem.elemId);
 		// send the order
-		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
-		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
+		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
-		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
-		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
+		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
     	if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128);
     	if(videoHandles[updateItem.elemId] !== undefined && videoHandles[updateItem.elemId].newFrameGenerated === false)
 			handleNewVideoFrame(updateItem.elemId);
@@ -1512,11 +1517,11 @@ function tileApplications1() {
 							force: true, date: new Date()};
 		var updateApp = findAppById(updateItem.elemId);
 		// send the order
-		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
-		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
+		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
-		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
-		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'receivesWindowModification');
+		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
+		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128);
 		if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
 			handleNewVideoFrame(updateItem.id);
@@ -3136,12 +3141,12 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				// bottom right corner - select for drag resize
 				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
 					remoteInteraction[uniqueID].selectResizeItem(elem, pointerX, pointerY);
-					broadcast('startResize', {id: elem.id, date: new Date()}, 'receivesWindowModification');
+					broadcast('startResize', {id: elem.id, date: new Date()}, 'requiresFullApps');
 				}
 				// otherwise - select for move
 				else{
 					remoteInteraction[uniqueID].selectMoveItem(elem, pointerX, pointerY); //will only go through if window management mode
-					broadcast('startMove', {id: elem.id, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: elem.id, date: new Date()}, 'requiresFullApps');
 				}
 			}
 			else if(data.button === "right"){
@@ -3293,7 +3298,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
 			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
-				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'receivesWindowModification');
+				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'requiresFullApps');
 				if(videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id].newFrameGenerated === false)
 					handleNewVideoFrame(remoteInteraction[uniqueID].selectedResizeItem.id);
 				remoteInteraction[uniqueID].releaseItem(true);
@@ -3308,7 +3313,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					}
 				}
 				if(remoteIdx < 0){
-					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
 					if(videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id].newFrameGenerated === false)
 						handleNewVideoFrame(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteInteraction[uniqueID].releaseItem(true);
@@ -3319,7 +3324,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 					if(updatedItem !== null) {
 						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
-						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 							handleNewVideoFrame(updatedItem.elemId);
 					}
@@ -3507,8 +3512,8 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 			newOrder = moveAppToFront(stickyList[idx].id);
 		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
-		broadcast('startMove', {id: elem.id, date: new Date()}, 'receivesWindowModification');
-		broadcast('startResize', {id: elem.id, date: new Date()}, 'receivesWindowModification');
+		broadcast('startMove', {id: elem.id, date: new Date()}, 'requiresFullApps');
+		broadcast('startResize', {id: elem.id, date: new Date()}, 'requiresFullApps');
 	}
 }
 
@@ -3542,8 +3547,8 @@ function pointerScroll( uniqueID, data ) {
 			}
 
 			remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] = setTimeout(function() {
-				broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-				broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+				broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+				broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 				if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 					handleNewVideoFrame(updatedItem.elemId);
 				remoteInteraction[uniqueID].selectedScrollItem = null;
@@ -3616,12 +3621,12 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3632,12 +3637,12 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3663,12 +3668,12 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3679,12 +3684,12 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3709,12 +3714,12 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3725,12 +3730,12 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3755,12 +3760,12 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3771,12 +3776,12 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3803,12 +3808,12 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3819,12 +3824,12 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3850,12 +3855,12 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
@@ -3866,12 +3871,12 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
 					
-					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'receivesWindowModification');
+					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);

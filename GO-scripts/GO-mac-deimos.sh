@@ -1,12 +1,19 @@
 #!/bin/sh
+# deimos is a mac mini running two independent single screen HD sage sessions
+# one in landscape more and one in portrait
+
 sleep 1
 
+# try to kill any existing sessions
+pkill Chrome
+pkill node
+
 osascript -e 'tell app "Terminal"
-    do script "cd /Users/aej/PROJECTS/sage2; node server.js -i -f config/deimos-left-cfg.json -s left"
+    do script "cd /Users/aej/PROJECTS/sage2; node server.js -f config/deimos-left-cfg.json -s left; exit"
 end tell'
 
 osascript -e 'tell app "Terminal"
-    do script "cd /Users/aej/PROJECTS/sage2; node server.js -i -f config/deimos-right-cfg.json -s right"
+    do script "cd /Users/aej/PROJECTS/sage2; node server.js -f config/deimos-right-cfg.json -s right; exit"
 end tell'
  
 sleep 5
@@ -20,7 +27,7 @@ sleep 5
 
 UDD=$HOME/.config/chrome-nfs/mac0
 mkdir -p $UDD/Default
-param="$global_param --window-position=0,0 --window-size=1080,1920 --user-data-dir=$UDD --app=https://localhost:1442/display.html?clientID="
+param="$global_param --window-position=0,0 --window-size=1080,1920 --user-data-dir=$UDD --app=https://localhost:1442/display.html?clientID=0"
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $param &
 
 sleep 5

@@ -129,7 +129,8 @@ function sagePointer(wsio) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-		this.wsio.emit('pointerMove', {deltaX: Math.round(movementX*this.sensitivity), deltaY: Math.round(movementY*this.sensitivity)});	
+		//this.wsio.emit('pointerMove', {deltaX: Math.round(movementX*this.sensitivity), deltaY: Math.round(movementY*this.sensitivity)});	
+		this.wsio.emit('ptm', {dx: Math.round(movementX*this.sensitivity), dy: Math.round(movementY*this.sensitivity)});	
 		event.preventDefault();
 	};
 

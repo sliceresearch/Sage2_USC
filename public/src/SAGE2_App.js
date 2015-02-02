@@ -27,7 +27,7 @@ var SAGE2_App = Class.extend( {
 		this.fps   = null;
 
 		this.timer  = null;
-		this.maxfps = null;
+		this.maxFPS = null;
 		this.redraw = null;
 		this.sticky = null;
 		this.controls  = null;
@@ -81,7 +81,7 @@ var SAGE2_App = Class.extend( {
 
 		// Frame rate control
 		this.timer     = 0;
-		this.maxFPS    = 60.0; // Big than 60, since Chrome is Vsync anyway
+		this.maxFPS    = 30.0; // Default to 30fps for performance reasons
 		this.redraw    = true;
 
 		// Top layer
