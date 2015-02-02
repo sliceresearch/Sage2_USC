@@ -778,9 +778,9 @@ updateWindow: function ()
 
 ////////////////////////////////////////
 
-    init: function(id, width, height, resrc, date) {
+    init: function(data) {
         // call super-class 'init'
-        arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+        arguments.callee.superClass.init.call(this, "div", data);
 
         this.maxFPS = 0.1;
 
@@ -788,7 +788,7 @@ updateWindow: function ()
         var divWidth  = this.element.clientWidth;
         var divHeight = this.element.clientHeight;
 
-        this.element.id = "div" + id;
+        this.element.id = "div" + data.id;
 
         // backup of the context
         var self = this;
