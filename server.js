@@ -175,7 +175,8 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 // global variables for various paths
 var public_dir = "public"; // directory where HTTPS content is stored
-var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
+//var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
+var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
@@ -578,12 +579,6 @@ function wsPointerPress(wsio, data) {
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 
-	/*
-	if (data.button === 'left')
-		pointerPress(uniqueID, pointerX, pointerY); // combine right and left - add param for button
-	else
-		pointerPressRight(uniqueID,pointerX, pointerY);
-	*/
 	pointerPress(uniqueID, pointerX, pointerY, data);
 }
 
@@ -619,12 +614,6 @@ function wsPointerPosition(wsio, data) {
 
 function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	// Casting the parameters to correct type
-	//data.deltaX = parseInt(data.deltaX, 10);
-	//data.deltaY = parseInt(data.deltaY, 10);
-	data.deltaX = data.dx;
-	data.deltaY = data.dy;
 
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
@@ -3371,8 +3360,8 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
 
-	sagePointers[uniqueID].left += data.deltaX;
-	sagePointers[uniqueID].top += data.deltaY;
+	sagePointers[uniqueID].left += data.dx;
+	sagePointers[uniqueID].top  += data.dy;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
 	if(sagePointers[uniqueID].left > config.totalWidth) sagePointers[uniqueID].left = config.totalWidth;
 	if(sagePointers[uniqueID].top < 0)                  sagePointers[uniqueID].top = 0;
@@ -3469,11 +3458,11 @@ function pointerPosition( uniqueID, data ) {
 		return;
 
 	sagePointers[uniqueID].left = data.pointerX;
-	sagePointers[uniqueID].top = data.pointerY;
+	sagePointers[uniqueID].top  = data.pointerY;
 	if(sagePointers[uniqueID].left < 0) sagePointers[uniqueID].left = 0;
 	if(sagePointers[uniqueID].left > config.totalWidth) sagePointers[uniqueID].left = config.totalWidth;
-	if(sagePointers[uniqueID].top < 0) sagePointers[uniqueID].top = 0;
-	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
+	if(sagePointers[uniqueID].top  < 0) sagePointers[uniqueID].top = 0;
+	if(sagePointers[uniqueID].top  > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
