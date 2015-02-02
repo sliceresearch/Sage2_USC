@@ -25,6 +25,7 @@ function websocketIO(url) {
 		this.ws.onmessage = function(msg) {
 			if(typeof msg.data === "string"){
 				var message = JSON.parse(msg.data);
+				//console.log('got', message.f, message.f in _this.messages);
 				if(message.f in _this.messages){
 					_this.messages[message.f](message.d);
 				}
