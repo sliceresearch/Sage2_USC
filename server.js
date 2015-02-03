@@ -3696,7 +3696,6 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
 if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
->>>>>>> decklink
 						handleNewVideoFrame(updatedItem.elemId);
 				}
 			}
