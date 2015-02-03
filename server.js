@@ -278,7 +278,7 @@ function closeWebSocketClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
 
-	addEventToUserLog(uniqueID, {type: "disconnect", data: null, time: Date.now()})
+	addEventToUserLog(uniqueID, {type: "disconnect", data: null, time: Date.now()});
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -588,6 +588,8 @@ function wsStartSagePointer(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	showPointer(uniqueID, data);
+	
+	addEventToUserLog(uniqueID, {type: "SAGE2PointerStart", data: null, time: Date.now()});
 }
 
 function wsStopSagePointer(wsio, data) {
@@ -600,6 +602,9 @@ function wsStopSagePointer(wsio, data) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode } , 'receivesPointerData');
 	}
+	
+	addEventToUserLog(uniqueID, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
+	addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 }
 
 function wsPointerPress(wsio, data) {
@@ -774,6 +779,11 @@ function wsKeyPress(wsio, data) {
 	if(data.code == 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible){ // shift + tab
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
+		
+		if(remoteInteraction[uniqueID].interactionMode === 0)
+			addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
+		else
+			addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
 	}
 	else if (lockedControl !== null){
 		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
@@ -795,15 +805,15 @@ function wsKeyPress(wsio, data) {
 function wsUploadedFile(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
-	console.log("UPLOADED FILE");
-	
 	addEventToUserLog(uniqueID, {type: "fileUpload", data: data, time: Date.now()});
 }
 
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("received new stream: ", data.id);
+	
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
@@ -823,6 +833,8 @@ function wsStartNewMediaStream(wsio, data) {
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 		applications.push(appInstance);
+		
+		addEventToUserLog(uniqueID, {type: "mediaStreamStart", data: null, time: Date.now()});
 	});
 
 	// Debug media stream freezing
@@ -865,9 +877,12 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 }
 
 function wsStopMediaStream(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
 	var elem = findAppById(data.id);
-
 	if(elem !== null) deleteApplication( elem );
+	
+	addEventToUserLog(uniqueID, {type: "mediaStreamEnd", data: null, time: Date.now()});
 }
 
 // Print message from remote applications
@@ -3124,6 +3139,11 @@ function togglePointerMode(uniqueID) {
 
 	remoteInteraction[uniqueID].toggleModes();
 	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode } , 'receivesPointerData' );
+	
+	if(remoteInteraction[uniqueID].interactionMode === 0)
+		addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
+	else
+		addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
 }
 
 
