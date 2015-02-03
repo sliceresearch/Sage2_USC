@@ -8,12 +8,12 @@ server=preeka.evl.uic.edu
 # Launch Audio Manager
 UDD=$HOME/.config/chrome-nfs/preeka_audio
 mkdir -p $UDD/Default
-audio_param="--window-size=768,1360 --allow-running-insecure-content --allow-file-access-from-files"
+audio_param="--window-size=768,1360 --allow-running-insecure-content --allow-file-access-from-files --disable-infobars --ignore-certificate-errors --no-default-browser-check"
 env DISPLAY=:0.0 google-chrome $audio_param "http://$server/audioManager.html" &
 
 sleep 2
 
-global_param="--disable-webaudio --mute-audio --kiosk --window-size=2560,1600 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --incognito --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
+global_param="--disable-webaudio --mute-audio --kiosk --window-size=2560,1600 --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
 
 UDD="$HOME/.config/chrome-nfs/preeka0"
 mkdir -p $UDD/Default
