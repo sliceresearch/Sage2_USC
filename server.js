@@ -268,6 +268,7 @@ wsioServerS.onconnection(function(wsio) {
 });
 
 function closeWebSocketClient(wsio) {
+    var i;
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
 
@@ -284,7 +285,7 @@ function closeWebSocketClient(wsio) {
 		delete remoteInteraction[uniqueID];
 	}
 	if(wsio.messages.requiresFullApps){
-		var i, key;
+		var key;
 		for(key in mediaStreams) {
 			for(i=0; i<clients.length; i++){
                 var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
