@@ -88,7 +88,7 @@ function createRemoteConnection(wsURL) {
 		var incy = 1;
 
 		// approximation
-		var sensitivity = data.totalWidth / 1080;
+		var sensitivity = Math.min(data.totalWidth,data.totalHeight) / 1080;
 
 		// create timer
 		setInterval( function () {
