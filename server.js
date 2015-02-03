@@ -196,6 +196,7 @@ if(sageutils.fileExists("tracked_users.json")) users = json5.parse(fs.readFileSy
 else users = {};
 users.session = {};
 users.session.start = Date.now();
+if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 
 // Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
