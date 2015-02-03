@@ -284,9 +284,9 @@ function closeWebSocketClient(wsio) {
 		delete remoteInteraction[uniqueID];
 	}
 	if(wsio.messages.requiresFullApps){
-		var key;
+		var i, key;
 		for(key in mediaStreams) {
-			for(var i=0; i<clients.length; i++){
+			for(i=0; i<clients.length; i++){
                 var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
                     if(uniqueID === clientAddress){
                         delete mediaStreams[key].clients[uniqueID];
@@ -303,7 +303,6 @@ function closeWebSocketClient(wsio) {
 	if(wsio.clientType == "webBrowser") webBrowserClient = null;
 
 	if(wsio === masterDisplay){
-		var i;
 		masterDisplay = null;
 		for(i=0; i<clients.length; i++){
 			if(clients[i].clientType === "display" && clients[i] !== wsio){
@@ -3464,7 +3463,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		}
 		else if(updatedResizeItem !== null){
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
-			var updatedApp = findAppById(updatedResizeItem.elemId);
+			updatedApp = findAppById(updatedResizeItem.elemId);
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
             if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
         }
