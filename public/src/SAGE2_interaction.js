@@ -74,8 +74,15 @@ function SAGE2_interaction(wsio) {
 		};
 		
 		var loadCallback = function(event) {
+			var sn = event.target.response.substring(event.target.response.indexOf("name: ") + 7);
+			var st = event.target.response.substring(event.target.response.indexOf("type: ") + 7);
+			var name = sn.substring(0, sn.indexOf("\n") - 2);
+			var type = st.substring(0, st.indexOf("\n") - 2);
+			
 			filesFinished++;
 			if(_this.fileUploadComplete && filesFinished === files.length) _this.fileUploadComplete();
+			
+			_this.wsio.emit('uploadedFile', {name: name, type: type});
 		};
 
 		for(var i=0; i<files.length; i++){

@@ -278,13 +278,7 @@ function closeWebSocketClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
 
-	var key;
-	for(key in users) {
-		if(users[key].ip === uniqueID) {
-			users[key].actions.push({type: "disconnect", data: null, time: Date.now()});
-		}
-	}
-
+	addEventToUserLog(uniqueID, {type: "disconnect", data: null, time: Date.now()})
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -299,6 +293,7 @@ function closeWebSocketClient(wsio) {
 		delete remoteInteraction[uniqueID];
 	}
 	if(wsio.messages.requiresFullApps){
+		var key;
 		for(key in mediaStreams) {
 			if (mediaStreams.hasOwnProperty(key)) {
 				delete mediaStreams[key].clients[uniqueID];
@@ -351,6 +346,7 @@ function wsAddClient(wsio, data) {
 	// types of data sent/received to server from client through WebSockets
 	wsio.messages.sendsPointerData                  = data.sendsPointerData                 || false;
 	wsio.messages.sendsMediaStreamFrames            = data.sendsMediaStreamFrames           || false;
+	wsio.messages.uploadsContent                    = data.uploadsContent                   || false;
 	wsio.messages.requestsServerFiles               = data.requestsServerFiles              || false;
 	wsio.messages.sendsWebContentToLoad             = data.sendsWebContentToLoad            || false;
 	wsio.messages.launchesWebBrowser                = data.launchesWebBrowser               || false;
@@ -393,6 +389,7 @@ function initializeWSClient(wsio) {
 
 	if(wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
 
+
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
 		wsio.on('registerInteractionClient', wsRegisterInteractionClient);
@@ -410,6 +407,9 @@ function initializeWSClient(wsio) {
 		wsio.on('keyDown',                   wsKeyDown);
 		wsio.on('keyUp',                     wsKeyUp);
 		wsio.on('keyPress',                  wsKeyPress);
+	}
+	if(wsio.messages.uploadsContent){
+		wsio.on('uploadedFile', wsUploadedFile);
 	}
 	if(wsio.messages.sendsMediaStreamFrames){
 		wsio.on('startNewMediaStream',       wsStartNewMediaStream);
@@ -789,6 +789,15 @@ function wsKeyPress(wsio, data) {
 		keyPress(uniqueID, pointerX, pointerY, data);
 	}
 
+}
+
+// **************  File Upload Functions *****************
+function wsUploadedFile(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
+	console.log("UPLOADED FILE");
+	
+	addEventToUserLog(uniqueID, {type: "fileUpload", data: data, time: Date.now()});
 }
 
 // **************  Media Stream Functions *****************
@@ -2464,7 +2473,6 @@ function uploadForm(req, res) {
 		// saves files in appropriate directory and broadcasts the items to the displays
 		manageUploadedFiles(this.openedFiles, position);
 	});
-
 }
 
 function manageUploadedFiles(files, position) {
@@ -3050,6 +3058,15 @@ function byteBufferToInt(buf) {
 		value = (value * 256) + buf[i];
 	}
 	return value;
+}
+
+function addEventToUserLog(id, data) {
+	var key;
+	for(key in users) {
+		if(users[key].ip === id) {
+			users[key].actions.push(data);
+		}
+	}
 }
 
 function getItemPositionSizeType(item) {
