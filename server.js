@@ -767,6 +767,7 @@ function wsKeyPress(wsio, data) {
 
 // **************  Media Stream Functions *****************
 function wsStartNewMediaStream(wsio, data) {
+    console.log("Starting media stream: ", data);
     // Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
