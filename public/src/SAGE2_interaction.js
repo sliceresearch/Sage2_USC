@@ -39,6 +39,8 @@ function SAGE2_interaction(wsio) {
 	
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
+	
+	this.wsio.emit('registerInteractionClient', {name: document.getElementById('sage2PointerLabel').value, color: document.getElementById('sage2PointerColor').value});
 
 	this.setInteractionId = function(id) {
 		this.uniqueID = id;

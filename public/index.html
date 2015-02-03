@@ -125,10 +125,6 @@
 		wsio = new websocketIO();
 		wsio.open(function() {
 			console.log("open websocket");
-			interactor = new SAGE2_interaction(wsio);
-			interactor.setFileUploadProgressCallback(fileUploadProgress);
-			interactor.setFileUploadCompleteCallback(fileUploadComplete);
-			window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 			var clientDescription = {
 				clientType: "sageUI",
@@ -150,6 +146,11 @@
 				receivesRemoteServerInfo: false
 			};
 			wsio.emit('addClient', clientDescription);
+			
+			interactor = new SAGE2_interaction(wsio);
+			interactor.setFileUploadProgressCallback(fileUploadProgress);
+			interactor.setFileUploadCompleteCallback(fileUploadComplete);
+			window.postMessage('SAGE2_desktop_capture_enabled', "*");
 		});
 		
 		// socket close event (i.e. server crashed)		

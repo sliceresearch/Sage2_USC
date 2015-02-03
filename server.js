@@ -191,6 +191,12 @@ var remoteInteraction = {};
 var mediaStreams = {};
 var radialMenus = {};
 
+var users;
+if(sageutils.fileExists("tracked_users.json")) users = json5.parse(fs.readFileSync("tracked_users.json"));
+else users = {};
+users.session = {};
+users.session.start = Date.now();
+
 // Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
 var newWindowPosition = null;
@@ -271,6 +277,14 @@ function closeWebSocketClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
 
+	var key;
+	for(key in users) {
+		if(users[key].ip === uniqueID) {
+			users[key].actions.push({type: "disconnect", data: null, time: Date.now()});
+		}
+	}
+
+
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
 		console.log("Remote site \"" + remote.name + "\" now offline");
@@ -284,7 +298,6 @@ function closeWebSocketClient(wsio) {
 		delete remoteInteraction[uniqueID];
 	}
 	if(wsio.messages.requiresFullApps){
-		var key;
 		for(key in mediaStreams) {
 			if (mediaStreams.hasOwnProperty(key)) {
 				delete mediaStreams[key].clients[uniqueID];
@@ -381,6 +394,7 @@ function initializeWSClient(wsio) {
 
 	// set up listeners based on what the client sends
 	if(wsio.messages.sendsPointerData){
+		wsio.on('registerInteractionClient', wsRegisterInteractionClient);
 		wsio.on('startSagePointer',          wsStartSagePointer);
 		wsio.on('stopSagePointer',           wsStopSagePointer);
 		wsio.on('pointerPress',              wsPointerPress);
@@ -556,9 +570,22 @@ function initializeMediaStreams(uniqueID) {
 
 // **************  Sage Pointer Functions *****************
 
+function wsRegisterInteractionClient(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
+	var key;
+	for(key in users) {
+		if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
+			users[key].ip = uniqueID;
+			if(users[key].actions === undefined) users[key].actions = [];
+			users[key].actions.push({type: "connect", data: null, time: Date.now()});
+		}
+	}
+}
+
 function wsStartSagePointer(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
+	
 	showPointer(uniqueID, data);
 }
 
@@ -2772,7 +2799,34 @@ if (program.interactive)
 
 // ***************************************************************************************
 
+function formatDateToYYYYMMDD_HHMMSS(date) {
+	var year   = date.getFullYear();
+	var month  = date.getMonth() + 1;
+	var day    = date.getDate();
+	var hour   = date.getHours();
+	var minute = date.getMinutes();
+	var second = date.getSeconds();
+	
+	year   = year.toString();
+	month  = month >= 10 ? month.toString() : "0"+month.toString();
+	day    = day >= 10 ? day.toString() : "0"+day.toString();
+	hour   = hour >= 10 ? hour.toString() : "0"+hour.toString();
+	minute = minute >= 10 ? minute.toString() : "0"+minute.toString();
+	second = second >= 10 ? second.toString() : "0"+second.toString();
+	
+	return year + "-" + month + "-" + day + " " + hour + "-" + minute + "-" + second;
+}
+
 function quitSAGE2() {
+	var key;
+	for(key in users) {
+		if(users[key].ip !== undefined) delete users[key].ip;
+	}
+	users.session.end = Date.now();
+	var logname = "logs/user-log ("+formatDateToYYYYMMDD_HHMMSS(new Date())+").json";
+	fs.writeFileSync(logname, json5.stringify(users, null, 4));
+	console.log("Log> saved to " + logname);
+
 	if (config.register_site) {
 		// un-register with EVL's server
 		request({
