@@ -21,31 +21,28 @@ var tweetcloud = SAGE2_App.extend( {
 		this.enableControls = true;
 	},
 
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "div", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "div", data);
 		
 		var _this = this;
 		
-		this.element.id = id + "_div";
+		this.element.id = data.id + "_div";
 		this.element.style.backgroundColor = "#FFFFFF";
 		
-		var width  = parseInt(this.element.style.width,  10);
-		var height = parseInt(this.element.style.height, 10);
-		var box    = "0,0,"+width+","+height;
-		
-		this.svg = d3.select("#" + id + "_div").append("svg")
-		.attr("id",      id + "_svg")
-		.attr("width",   width)
-		.attr("height",  height)
+		var box    = "0,0,"+data.width+","+data.height;
+		this.svg = d3.select("#" + data.id + "_div").append("svg")
+		.attr("id",      data.id + "_svg")
+		.attr("width",   data.width)
+		.attr("height",  data.height)
 		.attr("viewBox", box);
 		
 		this.query = "#UIC";
 		
 		var queryDiv = document.createElement('div');
-		queryDiv.id = id + "_queryDiv";
-		queryDiv.style.width     = (width*0.333).toString() + "px";
-		queryDiv.style.height    = (width*0.065).toString() + "px";
+		queryDiv.id = data.id + "_queryDiv";
+		queryDiv.style.width     = (data.width*0.333).toString() + "px";
+		queryDiv.style.height    = (data.width*0.065).toString() + "px";
 		queryDiv.style.position = "absolute";
 		queryDiv.style.top      = "0px";
 		queryDiv.style.left     = "0px";
@@ -53,24 +50,24 @@ var tweetcloud = SAGE2_App.extend( {
 		queryDiv.style.border = "solid 2px rgba(0, 0, 0, 0.4)";
 		
 		var queryText = document.createElement('p');
-		queryText.id = id + "_queryText";
+		queryText.id = data.id + "_queryText";
 		queryText.textContent = this.query;
 		queryText.style.fontFamily = "Impact,sans-serif";
-		queryText.style.fontSize = (0.05*width).toString() + "px";
+		queryText.style.fontSize = (0.05*data.width).toString() + "px";
 		queryText.style.textIndent = "0px";
 		queryText.style.color = "rgba(120, 120, 120, 0.8)";
 		queryText.style.position = "absolute";
 		queryText.style.top = "50%";
-		queryText.style.left = (width*0.015).toString() + "px";
+		queryText.style.left = (data.width*0.015).toString() + "px";
 		queryText.style.webkitTransform = "translate(0%, -50%)";
 		queryText.style.mozTransform = "translate(0%, -50%)";
 		queryText.style.transform = "translate(0%, -50%)";
 		
 		var error = document.createElement('p');
-		error.id = id + "_error";
+		error.id = data.id + "_error";
 		error.textContent = "";
 		error.style.fontFamily = "Verdana,Arial,sans-serif";
-		error.style.fontSize = (0.025*width).toString() + "px";
+		error.style.fontSize = (0.025*data.width).toString() + "px";
 		error.style.textIndent = "0px";
 		error.style.color = "#000000";
 		error.style.position = "absolute";
@@ -84,7 +81,7 @@ var tweetcloud = SAGE2_App.extend( {
 		this.element.appendChild(queryDiv);
 		this.element.appendChild(error);
 		
-		queryDiv.style.width = (queryText.clientWidth + (width*0.03)).toString() + "px";
+		queryDiv.style.width = (queryText.clientWidth + (data.width*0.03)).toString() + "px";
 		
 		if(isMaster){
 			this.searchTweets("tweetResults", {q: this.query, language: "en", count: 100}, false);
@@ -98,7 +95,7 @@ var tweetcloud = SAGE2_App.extend( {
 		this.controls.addTextInput({action: function(text) {
 			_this.query = text;
 			_this.clear();
-			width = parseInt(_this.element.style.width,  10);
+			var width = parseInt(_this.element.style.width,  10);
 			queryText.textContent = _this.query;
 			queryDiv.style.width = (queryText.clientWidth + (width*0.03)).toString() + "px";
 			if(isMaster){

@@ -57,7 +57,7 @@ var notepad = SAGE2_App.extend( {
 		//console.log(this.element.height);
 		//console.log(this.linesVisible);
 		//console.log(this.columns);
-		console.log(this.space);
+		//console.log(this.space);
 	},
 
 	findRange: function(){
@@ -121,12 +121,12 @@ var notepad = SAGE2_App.extend( {
 		
 	},
 	
-	init: function(id, width, height, resrc, date) {
+	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, id, "canvas", width, height, resrc, date);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 	
-		this.ctx = this.element.getContext("2d");
-		this.resrcPath = resrc;
+		this.ctx = this.element.getContext('2d');
+		this.resrcPath = data.resrc;
 		//this.fs = require('fs');
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.computeMetrics() ;
@@ -138,7 +138,7 @@ var notepad = SAGE2_App.extend( {
 			this.fileRead = true;
 			this.fileName = "Sample.txt";
 			//this.fileDataBuffer = this.joinText();
-			this.readFromFile();
+			//this.readFromFile();
 		}
 		
 	},
@@ -342,7 +342,7 @@ var notepad = SAGE2_App.extend( {
             var theJavascriptCode = data.code;
 			var curL = userId.id && this.blinkerArr[userId.id].blinkerL;
 			var curC = this.blinkerArr[userId.id].blinkerC;
-			console.log(curC);
+			//console.log(curC);
 			if (theJavascriptCode == 8){
 				if (curL in this.textArr ){
 					

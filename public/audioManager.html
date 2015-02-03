@@ -127,7 +127,8 @@
 					if(autoplay === true) vid.currentTime = 0;
 				}, false);
 				vid.addEventListener('timeupdate', function() {
-					document.getElementById(data.id + "_time").textContent = timeToHHMMSS(vid.currentTime);
+					var vid_time = document.getElementById(data.id + "_time");
+					if(vid_time) vid_time.textContent = timeToHHMMSS(vid.currentTime);
 				}, false);
 				
 				
@@ -188,31 +189,42 @@
 		});
 		
 		wsio.on('videoPlaying', function(data) {
-			document.getElementById(data.id).play();
-			document.getElementById(data.id + "_play").textContent = "Playing";
+			var vid      = document.getElementById(data.id);
+			var vid_play = document.getElementById(data.id + "_play");
+			if(vid)      vid.play();
+			if(vid_play) vid_play.textContent = "Playing";
 		});
 		
 		wsio.on('videoPaused', function(data) {
-			document.getElementById(data.id).pause();
-			document.getElementById(data.id + "_play").textContent = "Paused";
+			var vid      = document.getElementById(data.id);
+			var vid_play = document.getElementById(data.id + "_play");
+			if(vid)      vid.pause();
+			if(vid_play) vid_play.textContent = "Paused";
 		});
 		wsio.on('videoEnded', function(data) {
-			document.getElementById(data.id).pause();
-			document.getElementById(data.id + "_play").textContent = "Paused";
+			var vid      = document.getElementById(data.id);
+			var vid_play = document.getElementById(data.id + "_play");
+			if(vid)      vid.pause();
+			if(vid_play) vid_play.textContent = "Paused";
 		});
 		
 		wsio.on('videoMuted', function(data) {
-			document.getElementById(data.id).muted = true;
-			document.getElementById(data.id + "_mute").innerHTML = "&#x2717;";
+			var vid      = document.getElementById(data.id);
+			var vid_mute = document.getElementById(data.id + "_mute");
+			if(vid)      vid.muted = true;
+			if(vid_mute) vid_mute.innerHTML = "&#x2717;";
 		});
 		
 		wsio.on('videoUnmuted', function(data) {
-			document.getElementById(data.id).muted = false;
-			document.getElementById(data.id + "_mute").innerHTML = "&#x2713;"
+			var vid      = document.getElementById(data.id);
+			var vid_mute = document.getElementById(data.id + "_mute");
+			if(vid)      vid.muted = false;
+			if(vid_mute) vid_mute.innerHTML = "&#x2713;"
 		});
 		
 		wsio.on('updateVideoItemTime', function(data) {
-			document.getElementById(data.id).currentTime = data.timestamp;
+			var vid = document.getElementById(data.id);
+			if(vid) vid.currentTime = data.timestamp;
 		});
 		
 		wsio.on('deleteElement', function(elem_data) {

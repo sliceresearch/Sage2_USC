@@ -319,11 +319,11 @@ SAGE2WidgetControlBar.prototype.setLayoutOptions = function(layoutOptions){
 *	}
 */
 SAGE2WidgetControlBar.prototype.addButton = function(data) {
+	var type = null;
 	if (this.itemCount <= 30){
 		var button = new SAGE2WidgetControls.button();
 		button.appId = this.id;
 		button.id = "button" + this.itemCount;
-		var type = null;
 		if (typeof data.type === "string" ){
 			var typeVar = this.buttonType[data.type];
 			if (typeof typeVar === "function")
@@ -728,7 +728,7 @@ function makeBarPath(start,end, innerR, center, width){
 /**
 *	Creates a slider from the slider specification
 */
-SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
+SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline) {
 	var sliderHeight = 1.5 * ui.widgetControlSize;
 	var sliderArea = this.controlSVG.path(outline);
 	var sliderAreaWidth = sliderArea.getBBox().w;
@@ -785,11 +785,10 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 	slider.data('parts', this.slider.parts);
 	slider.data('increments', this.slider.increments);
 	var formatFunction = this.slider.knobLabelFormatFunction;
-	if (!formatFunction){
-		formatFunction = function(val,end){
+	if (!formatFunction) {
+		formatFunction = function (val,end) {
 			return val + " / " + end;
-		}
-
+		};
 	}
 		
 	function moveSlider(sliderVal){
@@ -827,7 +826,7 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline){
 	app.handle[app.property] = begin+1;
 	app.handle[app.property] = begin;
 	return slider;
-}
+};
 
 function mapMoveToSlider(sliderKnob, position){
 	var slider = sliderKnob.parent();
@@ -872,7 +871,7 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 	var buttonCover;
 	
 	if (type.textual === true){
-		buttonCover = this.controlSVG.text(cx,cy,type["label"].slice(0,5));
+		buttonCover = this.controlSVG.text(cx,cy,type.label.slice(0,5));
 		var coverFontSize = buttonRad/8.0;
 		buttonCover.attr({
 			id: buttonSpec.id + "cover",
@@ -881,16 +880,16 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 			fontSize:(0.040 * buttonRad) + "em",
 			dy: (0.16 * ui.widgetControlSize) + "px",
 			stroke:"none",
-			fill:type["fill"]
+			fill:type.fill
 		});
 		type.label = type.label.slice(0,5);
 	}
 	else{
-		type.from = "M " + cx + " " + cy  + " " + type.from;
-		type.to = "M " + cx + " " + cy  + " " + type.to;
-		type.toFill = type.toFill || null;
-		var coverWidth = type["width"];
-		var coverHeight = type["height"];
+		type.from       = "M " + cx + " " + cy  + " " + type.from;
+		type.to         = "M " + cx + " " + cy  + " " + type.to;
+		type.toFill     = type.toFill || null;
+		var coverWidth  = type.width;
+		var coverHeight = type.height;
 		
 		buttonCover = this.controlSVG.path(type.from);
 		buttonCover.attr({
@@ -928,7 +927,7 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 	button.data("call",buttonSpec.call);
 	button.data("appId", buttonSpec.appId);
 	return button;
-}
+};
 
 /**
 *	Creates a color palette 
@@ -1015,7 +1014,7 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 		}
 	}
 	return textInput;
-}
+};
 
 
 insertText = function(textInput, code, printable){
@@ -1094,8 +1093,8 @@ insertText = function(textInput, code, printable){
 	ctrl.attr("text", "l");
 	var extraspace = ctrl.getBBox().width;
 	ctrl.attr("text",prefix + "l");
-	var position= (prefix.length > 0)? ctrl.getBBox().width - extraspace : 0; // Trailing space is not considered to BBbox width, hence extraspace is a work around
-	pth = "M " + (textInput.data("left") + position) + textInput.data("blinkerSuf");
+	var bposition= (prefix.length > 0)? ctrl.getBBox().width - extraspace : 0; // Trailing space is not considered to BBbox width, hence extraspace is a work around
+	pth = "M " + (textInput.data("left") + bposition) + textInput.data("blinkerSuf");
 	textInput.select("path").attr({path:pth});
 	ctrl.attr("text",prefix + suffix);
 	textInput.data("head", head);
@@ -1143,14 +1142,14 @@ getWidgetControlUnderPointer = function(data, offsetX, offsetY){
 };
 
 
-polarToCartesian = function (radius,theta,center){
+polarToCartesian = function (radius,theta,center) {
 	theta = theta * Math.PI / 180.0;
 	if (center === undefined || center === null)
 		center = {x:0,y:0};
 	var x = center.x + radius*Math.cos(theta);
 	var y = center.y - radius*Math.sin(theta);
 	return {x:x,y:y};
-}
+};
 
 /*
 String.prototype.width = function(font) {

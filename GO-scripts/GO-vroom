@@ -14,10 +14,10 @@ do
 	UDD="$HOME/.config/chrome-nfs/$node"
 	mkdir -p $UDD
 	param="$global_param --user-data-dir=$UDD"
-	cmd="env DISPLAY=:0.0 google-chrome $param 'https://$server/display.html?clientID=$i'"
+	cmd="env DISPLAY=:0.0 google-chrome $param 'http://$server/display.html?clientID=$i'"
 	echo $cmd
 	
-	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'https://$server/display.html?clientID=$i'" &
+	ssh -fx $node "env DISPLAY=:0.0 google-chrome $param 'http://$server/display.html?clientID=$i'" &
 	ssh -fx $node 'sleep 5; env DISPLAY=:0.0 xdotool mousemove --sync 10 10; env DISPLAY=:0.0 xdotool mousemove --sync 0 0' &
 
 

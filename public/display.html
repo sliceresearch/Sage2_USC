@@ -25,6 +25,7 @@
 <script type="text/javascript" src="src/websocket.io.js"></script>
 <script type="text/javascript" src="src/Class.js"></script>
 <script type="text/javascript" src="src/SAGE2_App.js"></script>
+<script type="text/javascript" src="src/SAGE2_BlockStreamingApp.js"></script>
 <script type="text/javascript" src="src/SAGE2_runtime.js"></script>
 <script type="text/javascript" src="src/image_viewer.js"></script>
 <script type="text/javascript" src="src/movie_player.js"></script>
@@ -275,12 +276,20 @@
         });
 		
 		
-		wsio.on('updateMediaStreamBlock', function(data) {
-			wsio.emit('receivedMediaStreamFrame', {id: data.id});
+		wsio.on('updateMediaStreamFrame', function(data) {
+            var appId     = byteBufferToString(data);
+			var blockIdx  = byteBufferToInt(data.subarray(appId.length+1, appId.length+ 3));
+			var date      = byteBufferToInt(data.subarray(appId.length+3, appId.length+11));
+            var yuvBuffer = data.subarray(appId.length+11, data.length);
 			
-			var app = applications[data.id];
-			if(app !== undefined && app !== null){
-				app.load(data.state);
+			if(applications[appId] !== undefined && applications[appId] !== null){
+				applications[appId].textureData(blockIdx, yuvBuffer);
+				if(applications[appId].receivedBlocks.every(isTrue) === true){
+					applications[appId].draw(new Date(date));
+					applications[appId].setValidBlocksFalse();
+                    console.log(yuvBuffer);
+                    wsio.emit('receivedMediaStreamFrame', {id: appId});
+				}
 			}
 		});
 		
@@ -468,6 +477,7 @@
 							controlItems[data.id + "_controls"] = { show:false, handle:app};
 					} 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+					if(data.application === "movie_player") setTimeout(function() {wsio.emit('requestVideoFrame', {id: data.id});}, 500);
 				}
 			};
 			

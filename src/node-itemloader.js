@@ -391,7 +391,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance, video);
 	});
-	video.load(file);
+	video.load(file, {decodeFirstFrame: true});
 };
 
 
@@ -446,11 +446,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
-appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
-    console.log()
-    
-    var _this = this;
-
+appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {    
     // Find the app!!
     var appName = registry.getDefaultApp(file);
     console.log("Loader> Loading %s with %s", mime_type, appName);
@@ -458,6 +454,7 @@ appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
     var instructionsFile = path.join(this.publicDir, "uploads", "apps", appName, "instructions.json");
     console.log("Reading: %s", instructionsFile);
 
+    var _this = this;
     fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
         if(err) throw err;
 
