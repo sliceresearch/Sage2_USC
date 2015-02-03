@@ -126,5 +126,5 @@ if (process.argv.length === 3) {
 console.log('Connecting to server', url);
 
 // Create and go !
-var remote = createRemoteConnection(url);
+var ptr = createRemoteConnection(url);
 
