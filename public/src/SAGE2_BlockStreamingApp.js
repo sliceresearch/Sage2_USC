@@ -83,7 +83,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	},
 
     setValidBlocksFalse: function() {
-        console.log("setValidBlocks");
 		for(var i=0; i<this.receivedBlocks.length; i++){
 			if(this.validBlocks.indexOf(i) >= 0) this.receivedBlocks[i] = false;
 			else                                 this.receivedBlocks[i] = true;
@@ -238,7 +237,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	},
 
 	initTextures: function() {
-        console.log("initTextures");
 		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
 
@@ -304,7 +302,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	},
 
 	updateTextures: function() {
-        console.log("updateTextures");
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
 				var blockIdx = i*this.horizontalBlocks+j;
@@ -337,7 +334,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
     },
 
 	load: function(state, date) {
-        console.log("load");
 		this.state.width                = state.width;
 		this.state.height               = state.height;
 		this.state.display_aspect_ratio = state.display_aspect_ratio;

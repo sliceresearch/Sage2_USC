@@ -287,7 +287,6 @@
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
 					applications[appId].draw(new Date(date));
 					applications[appId].setValidBlocksFalse();
-                    console.log(yuvBuffer);
                     wsio.emit('receivedMediaStreamFrame', {id: appId});
 				}
 			}
@@ -390,7 +389,7 @@
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
-			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id, newClient: true});
 			
 			// convert url if hostname is alias for current origin
 			var url = cleanURL(data.url);
