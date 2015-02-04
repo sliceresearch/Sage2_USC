@@ -25,6 +25,7 @@
 <script type="text/javascript" src="src/websocket.io.js"></script>
 <script type="text/javascript" src="src/Class.js"></script>
 <script type="text/javascript" src="src/SAGE2_App.js"></script>
+<script type="text/javascript" src="src/SAGE2_BlockStreamingApp.js"></script>
 <script type="text/javascript" src="src/SAGE2_runtime.js"></script>
 <script type="text/javascript" src="src/image_viewer.js"></script>
 <script type="text/javascript" src="src/movie_player.js"></script>
@@ -277,11 +278,18 @@
 		
 		
 		wsio.on('updateMediaStreamFrame', function(data) {
-			wsio.emit('receivedMediaStreamFrame', {id: data.id});
+            var appId     = byteBufferToString(data);
+			var blockIdx  = byteBufferToInt(data.subarray(appId.length+1, appId.length+ 3));
+			var date      = byteBufferToInt(data.subarray(appId.length+3, appId.length+11));
+            var yuvBuffer = data.subarray(appId.length+11, data.length);
 			
-			var app = applications[data.id];
-			if(app !== undefined && app !== null){
-				app.load(data.state);
+			if(applications[appId] !== undefined && applications[appId] !== null){
+				applications[appId].textureData(blockIdx, yuvBuffer);
+				if(applications[appId].receivedBlocks.every(isTrue) === true){
+					applications[appId].draw(new Date(date));
+					applications[appId].setValidBlocksFalse();
+                    wsio.emit('receivedMediaStreamFrame', {id: appId});
+				}
 			}
 		});
 		
@@ -382,7 +390,7 @@
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
-			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id, newClient: true});
 			
 			// convert url if hostname is alias for current origin
 			var url = cleanURL(data.url);
