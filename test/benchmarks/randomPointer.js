@@ -17,7 +17,7 @@ var path        = require('path');                // file path extraction and cr
 var crypto      = require('crypto');
 
 // custom node modules
-var websocketIO = require('../src/node-websocket.io');   // creates WebSocket server and clients
+var websocketIO = require('../../src/node-websocket.io');   // creates WebSocket server and clients
 
 var updateRate = 20;  // ~ fps
 var timeout    = 1000 / updateRate;
@@ -45,12 +45,13 @@ function createRemoteConnection(wsURL) {
 		console.log("connected to ", wsURL);
 
 		var clientDescription = {
-			clientType: "sageUI",
+			//clientType: "sageUI",
+			clientType: "ptrTest",
 			sendsPointerData: true,
-			sendsMediaStreamFrames: true,
-			requestsServerFiles: true,
-			sendsWebContentToLoad: true,
-			launchesWebBrowser: true,
+			sendsMediaStreamFrames: false,
+			requestsServerFiles: false,
+			sendsWebContentToLoad: false,
+			launchesWebBrowser: false,
 			sendsVideoSynchonization: false,
 			sharesContentWithRemoteServer: false,
 			receivesDisplayConfiguration: true,
@@ -82,10 +83,12 @@ function createRemoteConnection(wsURL) {
 		// send the message to the server with a random color
 		wsio.emit('startSagePointer', {label: random_name, color: randomColor() });
 
-		var px   = 0;
-		var py   = 0;
+		var px   = randomNumber(0,data.totalWidth);
+		var py   = randomNumber(0,data.totalHeight);
 		var incx = 1;
 		var incy = 1;
+
+		wsio.emit('pointerPosition', {pointerX:px, pointerY:py});
 
 		// approximation
 		var sensitivity = Math.min(data.totalWidth,data.totalHeight) / 1080;
@@ -118,10 +121,11 @@ var url = "wss://localhost:443";
 
 // If there's an argument, use it as a url
 //     wss://hostname:portnumber
-if (process.argv.length === 2) {
-	url = process.argv[1];
+if (process.argv.length === 3) {
+	url = process.argv[2];
 }
 console.log('Connecting to server', url);
 
 // Create and go !
-var remote = createRemoteConnection(url);
+var ptr = createRemoteConnection(url);
+
