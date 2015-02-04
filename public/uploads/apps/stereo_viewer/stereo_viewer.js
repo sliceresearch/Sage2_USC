@@ -208,6 +208,7 @@ var stereo_viewer = SAGE2_App.extend( {
 			self.sendResize(this.width/2, this.height);
 			self.refresh(data.date);
 		});
+		this.controls.finishedAddingControls();
 	},
 	
 	load: function(state, date) {

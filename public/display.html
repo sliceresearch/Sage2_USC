@@ -247,7 +247,8 @@
 			ui.hideSagePointer(pointer_data);
         });
         
-        wsio.on('updateSagePointerPosition', function(pointer_data){
+        //wsio.on('updateSagePointerPosition', function(pointer_data){
+        wsio.on('upp', function(pointer_data){
 			ui.updateSagePointerPosition(pointer_data);
 			resetIdle();
         });
@@ -437,10 +438,8 @@
 						app.refresh(date);
 						
 						applications[data.id] = app;
-						if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, handle:app};
-						} 
-						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
+						controlItems[data.id + "_controls"] = { show:false, handle:app}; 
+						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
 					js.type = "text/javascript";
 					js.src = url + "/" + data.application + ".js";
@@ -464,10 +463,9 @@
 					app.refresh(date);
 					
 					applications[data.id] = app;
-					if(app.enableControls==true){// Flag to request controls for App
-							controlItems[data.id + "_controls"] = { show:false, handle:app};
-					} 
-					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
+					controlItems[data.id + "_controls"] = { show:false, handle:app};
+					 
+					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					if(data.application === "movie_player") setTimeout(function() {wsio.emit('requestVideoFrame', {id: data.id});}, 500);
 				}
 			};

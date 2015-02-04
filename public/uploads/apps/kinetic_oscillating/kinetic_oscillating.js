@@ -56,6 +56,23 @@ var kinetic_oscillating = SAGE2_App.extend( {
 			}
 			this.broadcast("initializeBlobs", {blobPoints: blobPoints, blobOpacity: blobOpacity});
 		}
+		this.controls.addButton({type:"zoom-in",sequenceNo:3,action:function(date){ 
+			// zoom in within the stage
+			var scale = this.stage.scale();
+			scale.x *= 1.2;
+			scale.y *= 1.2;
+			this.stage.setScale(scale);
+			this.lastZoom = date;
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out",sequenceNo:5,action:function(date){ 
+			// zoom out within the stage
+			var scale = this.stage.scale();
+			scale.x *= 0.8;
+			scale.y *= 0.8;
+			this.stage.setScale(scale);
+			this.lastZoom = date;
+		}.bind(this)});
+		this.controls.finishedAddingControls();
 	},
 	
 	initializeBlobs: function(data) {

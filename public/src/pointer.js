@@ -139,24 +139,20 @@ function pointer() {
 	};
 	
 	this.updateIconColors = function() {
-		this.colorSVG(this.pointerIcon, "#000000", this.color);
-		this.colorSVG(this.winModeIcon,  "#000000", "#FFFFFF");
-		this.colorSVG(this.appModeIcon,  "#000000", "#FFFFFF");
-	    	
+		if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
+		if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
+		if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
+
 		// window manipulation
-	    if(this.mode === 0) {
-	    	//this.pointerIcon1.attr({display: "none"});
-	    	//this.pointerIcon2.attr({display: ""});
-	    	this.winModeIcon.attr({display: "none"});
-	    	this.appModeIcon.attr({display: "none"});
-	    }
-	    // application interaction
-	    else if(this.mode === 1) {
-	    	//this.pointerIcon1.attr({display: ""});
-	    	//this.pointerIcon2.attr({display: "none"});
-	    	this.winModeIcon.attr({display: "none"});
-	    	this.appModeIcon.attr({display: ""});
-	    }
+		if (this.mode === 0) {
+			if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
+			if (this.appModeIconLoaded) this.appModeIcon.attr({display: "none"});
+		}
+		// application interaction
+		else if(this.mode === 1) {
+			if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
+			if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+		}
 	};
 	
 	this.colorSVG = function(svg, stroke, fill) {

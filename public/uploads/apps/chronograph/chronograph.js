@@ -100,6 +100,18 @@ var chronograph = SAGE2_App.extend( {
 
 		// Draw once per second
 		this.maxFPS = 1.0;
+		var flipButton = {
+			"textual":true,
+			"label":"Flip",
+			"fill":"rgba(250,250,250,1.0)",
+			"animation":false
+		};
+		this.controls.addButton({type:flipButton,sequenceNo:4,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
+			if (this.ready) {
+				this.flip(date);
+			}
+		}.bind(this)});
+		this.controls.finishedAddingControls(); 
 	},
 
 	// set element fill and stroke color

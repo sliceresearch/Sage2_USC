@@ -67,8 +67,9 @@ var SAGE2_App = Class.extend( {
 		this.sage2_width  = data.width;
 		this.sage2_height = data.height;
 
-		if (this.enableControls === true)
-			this.controls = new SAGE2WidgetControlBar(data.id);
+
+		this.controls = new SAGE2WidgetControlBar(data.id);
+
 		
 		this.prevDate  = data.date;
 		this.frame     = 0;

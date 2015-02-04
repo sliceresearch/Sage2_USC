@@ -57,10 +57,10 @@ var SAGE2WidgetControls = {
 
 var buttonType = {
 	"play-pause": function () {
-		this.from = "m -5 -5 l 0 10 l 6 -3 l 4 -2 z";
-		this.to = "m -2 -5 l 0 10 m 4 0 l 0 -10";
+		this.from = "m -3 -5 l 6 5 l -6 5 z";//"m -5 -5 l 0 10 l 6 -3 l 4 -2 z";
+		this.to = "m -2 -5 l 0 10 m 4 -10 l 0 10";//"m -2 -5 l 0 10 m 4 0 l 0 -10";
 		this.width = 10;
-		this.height = 12;
+		this.height = 10;
 		this.strokeWidth = 1;
 		this.fill = "#ffffff";
 		this.state = 0;
@@ -145,7 +145,60 @@ var buttonType = {
 		this.animation= true;
 
 	},
-	
+	"up-arrow": function (){
+		this.state= null;
+		this.from="m -6 0 l 6 -4 l 6 4";
+		this.to="m 0 6 l 0 -10 l 0 10";
+		this.width=10;
+		this.height=12;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
+
+	},
+	"down-arrow": function (){
+		this.state= null;
+		this.from="m -6 0 l 6 4 l 6 -4";
+		this.to="m 0 -6 l 0 10 l 0 -10";
+		this.width=10;
+		this.height=12;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation= true;
+
+	},
+	"zoom-in": function (){
+		this.from = "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0 m -2 -2 l 0 4";
+		this.to =   "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0 m -2 -2 l 0 4";
+		this.width = 10;
+		this.height = 10;
+		this.strokeWidth = 1;
+		this.fill = "#6D6D6D";
+		this.toFill ="#6D6D6D";
+		this.state = null;
+		this.delay = 400;
+		this.textual = false;
+		this.animation = false;
+	},
+	"zoom-out": function (){
+		this.from = "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0";
+		this.to =   "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0";
+		this.width = 10;
+		this.height = 10;
+		this.strokeWidth = 1;
+		this.fill = "#6D6D6D";
+		this.toFill ="#6D6D6D";
+		this.state = null;
+		this.delay = 400;
+		this.textual = false;
+		this.animation = false;
+	},
 	"rewind": function () {
 		this.state= null;
 		this.from="m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6";
@@ -351,6 +404,8 @@ SAGE2WidgetControlBar.prototype.addButton = function(data) {
 		if (type === null || type === undefined){
 			type = new this.buttonType["default"]();
 		}
+		if (data.initialState !== null && data.initialState !== undefined)
+			type.state = data.initialState % 2;  // Making sure initial state is 0 or 1                       
 		button.type=type;
 		button.call = data.action || null;
 		button.width = 1.5*ui.widgetControlSize;
@@ -361,12 +416,7 @@ SAGE2WidgetControlBar.prototype.addButton = function(data) {
 };
 
 SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparator,secondSeparator,thirdSeparator) {
-	if (firstSeparator !== undefined && firstSeparator !== null)
-		this.separatorList.push(firstSeparator);
-	if (secondSeparator !== undefined && secondSeparator !== null)
-		this.separatorList.push(secondSeparator);
-	if (thirdSeparator !== undefined && thirdSeparator !== null)
-		this.separatorList.push(thirdSeparator);
+	
 };
 
 /**
@@ -484,7 +534,7 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 
 	dimensions.innerR = dimensions.radius - dimensions.buttonRadius -3; // for the pie slice
 	dimensions.outerR = ui.widgetControlSize * 6.0;
-	dimensions.secondRadius = (dimensions.firstRadius + dimensions.outerR)*0.5;
+	dimensions.secondRadius = dimensions.firstRadius + dimensions.buttonRadius*2.5;
 
 	size.height = dimensions.outerR * 2 + 5;
 	size.width = size.height;
@@ -562,7 +612,7 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var endAngle = 360;
 	var sequenceMaximum = 27;
 	var innerSequence = 12;
-	var outerSequence = 16;
+	var outerSequence = 18;
 	if (this.hasSlider){
 		buttonCount--;
 		innerSequence --;
@@ -885,20 +935,31 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		type.label = type.label.slice(0,5);
 	}
 	else{
-		type.from       = "M " + cx + " " + cy  + " " + type.from;
-		type.to         = "M " + cx + " " + cy  + " " + type.to;
-		type.toFill     = type.toFill || null;
-		var coverWidth  = type.width;
-		var coverHeight = type.height;
+
+		type.from = "M " + cx + " " + cy  + " " + type.from;
+		type.to = "M " + cx + " " + cy  + " " + type.to;
+		type.toFill = type.toFill || null;
+		var coverWidth = type["width"];
+		var coverHeight = type["height"];
+		var initialPath;
+		var initialFill;
+		if (type.state !== null && type.state !== undefined){
+			var initialPath = (type.state === 0)? type.from: type.to;
+			var initialFill = (type.state === 0)? type.fill: type.toFill;
+			buttonCover = this.controlSVG.path(initialPath);
+			buttonCover.attr("fill",initialFill);
 		
-		buttonCover = this.controlSVG.path(type.from);
+		}
+		else{
+			buttonCover = this.controlSVG.path(type.from);
+			buttonCover.attr("fill",type.fill);
+		}		
 		buttonCover.attr({
 			id: buttonSpec.id + "cover",
 			transform: "s " + (buttonRad/coverWidth) + " " + (buttonRad/coverHeight),
 			strokeWidth:type.strokeWidth,
 			stroke:"rgba(250,250,250,1.0)",
-			style:"stroke-linecap:round; stroke-linejoin:round",
-			fill:type.fill
+			style:"stroke-linecap:round; stroke-linejoin:round"
 		});
 		
 		
