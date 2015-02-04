@@ -2850,9 +2850,19 @@ function quitSAGE2() {
 }
 
 
-function broadcast(func, data, type) {
+// broadcast version with stringify and checks for every client
+function broadcast_full(func, data, type) {
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages[type]) clients[i].emit(func, data);
+	}
+}
+
+// optimized version: one stringify and no checks (ohhh)
+function broadcast(func, data, type) {
+	// Marshall the message only once
+	var message = JSON.stringify({f: func, d: data});
+	for(var i=0; i<clients.length; i++){
+		if(clients[i].messages[type]) clients[i].emitString( message );
 	}
 }
 
@@ -3424,7 +3434,8 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if(sagePointers[uniqueID].top < 0)                  sagePointers[uniqueID].top = 0;
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
-	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	//broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	broadcast('upp', sagePointers[uniqueID], 'receivesPointerData');
 
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
@@ -3523,7 +3534,8 @@ function pointerPosition( uniqueID, data ) {
 	if(sagePointers[uniqueID].top  < 0) sagePointers[uniqueID].top = 0;
 	if(sagePointers[uniqueID].top  > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
-	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	//broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	broadcast('upp', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if(updatedItem !== null){
 		var updatedApp = findAppById(updatedItem.elemId);

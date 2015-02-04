@@ -121,6 +121,11 @@ websocketIO.prototype.emit = function(name, data) {
 	}
 };
 
+// No JSON stringigy and no check version
+websocketIO.prototype.emitString = function(data) {
+	this.ws.send(data, {binary: false, mask: false});
+};
+
 
 module.exports = websocketIO;
 module.exports.Server = websocketIOServer;
