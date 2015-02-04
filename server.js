@@ -768,7 +768,7 @@ function wsKeyPress(wsio, data) {
 
 // **************  Media Stream Functions *****************
 function wsStartNewMediaStream(wsio, data) {
-    console.log("Starting media stream: ", data);
+    //console.log("Starting media stream: ", data);
     // Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
@@ -788,7 +788,7 @@ function wsStartNewMediaStream(wsio, data) {
         appInstance.width = data.width;
         appInstance.height = data.height;
         appInstance.data = data;
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindow', appInstance, 'requiresFullAppsp');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 		applications.push(appInstance);
@@ -2851,14 +2851,14 @@ function quitSAGE2() {
 
 
 // broadcast version with stringify and checks for every client
-function broadcast_full(func, data, type) {
+function broadcast(func, data, type) {
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages[type]) clients[i].emit(func, data);
 	}
 }
 
 // optimized version: one stringify and no checks (ohhh)
-function broadcast(func, data, type) {
+function broadcast_opt(func, data, type) {
 	// Marshall the message only once
 	var message = JSON.stringify({f: func, d: data});
 	for(var i=0; i<clients.length; i++){
@@ -3435,7 +3435,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
 	//broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
-	broadcast('upp', sagePointers[uniqueID], 'receivesPointerData');
+	broadcast_opt('upp', sagePointers[uniqueID], 'receivesPointerData');
 
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
