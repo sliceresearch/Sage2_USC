@@ -8,9 +8,19 @@ count=$2
 
 cd ~/sage2/test/benchmarks/
 
-for i in `seq 1 ${count}`
+for i in `seq 1 36`
 do
-	node randomPointer.js $server &
+	node=`printf lyra-%02d $i`
+
+	for i in `seq 1 ${count}`
+	do
+		ssh -fx $node "cd ~/sage2/test/benchmarks && node randomPointer.js $server"
+		usleep 100000
+		ssh -fx $node "cd ~/sage2/test/benchmarks && node randomPointer.js $server"
+	done
+	#usleep 1000000
+	echo $node
+	read
 done
 
 

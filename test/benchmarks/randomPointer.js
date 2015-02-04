@@ -45,12 +45,13 @@ function createRemoteConnection(wsURL) {
 		console.log("connected to ", wsURL);
 
 		var clientDescription = {
-			clientType: "sageUI",
+			//clientType: "sageUI",
+			clientType: "ptrTest",
 			sendsPointerData: true,
-			sendsMediaStreamFrames: true,
-			requestsServerFiles: true,
-			sendsWebContentToLoad: true,
-			launchesWebBrowser: true,
+			sendsMediaStreamFrames: false,
+			requestsServerFiles: false,
+			sendsWebContentToLoad: false,
+			launchesWebBrowser: false,
 			sendsVideoSynchonization: false,
 			sharesContentWithRemoteServer: false,
 			receivesDisplayConfiguration: true,
