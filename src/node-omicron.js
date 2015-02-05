@@ -34,10 +34,10 @@ var wandScaleDelta = 250;
 var wandXFilter;
 var wandYFilter;
 
+var oinputserverSocket;
+var omicronDataPort     = 9123;
 function omicronManager( sysConfig )
 {
-	var omicronDataPort     = 9123;
-
 	var eventDebug   = false;
 	var gestureDebug = false;
 	
@@ -52,9 +52,6 @@ function omicronManager( sysConfig )
 	var touchZoomScale = 520;
 	var acceleratedDragScale  = 0;
 
-	var oinputserverSocket;
-	
-	
 	var freq = 120;
 	var mincutoff = 1.25;
 	var beta = 2;
@@ -81,11 +78,11 @@ function omicronManager( sysConfig )
 	
 	if( config.dataPort === undefined )	
 	{
-		console.log('Omicron: omicronDataPort undefined. Using default: ', omicronDataPort);
+		console.log('Omicron: dataPort undefined. Using default: ', omicronDataPort);
 	}
 	else
 	{
-		dataPort =  config.dataPort;
+		omicronDataPort =  config.dataPort;
 		console.log('Omicron: Listening for input server on port: ', omicronDataPort);
 	}
 	
@@ -132,7 +129,7 @@ function omicronManager( sysConfig )
 
 	});
 
-	server.listen(dataPort, serverHost);
+	server.listen(omicronDataPort, serverHost);
 	
 	if( config.useOinputserver === true )
 	{
@@ -759,7 +756,7 @@ omicronManager.prototype.runTracker = function()
 		//console.log("UDP> listening " + address.address + ":" + address.port);
 	});
 							
-	udp.bind(dataPort);
+	udp.bind(omicronDataPort);
 };
 
 module.exports = omicronManager;
