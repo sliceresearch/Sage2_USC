@@ -1629,6 +1629,8 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
 	var appData = {application: "custom_app", filename: data.application};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
@@ -1646,15 +1648,21 @@ function wsLoadApplication(wsio, data) {
 
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
+		
+		addEventToUserLog(uniqueID, {type: "openApplication", data: {id: appInstance.id, application: appInstance.application}, time: Date.now()});
+		
 		applications.push(appInstance);
 	});
 }
 
 function wsLoadFileFromServer(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
+		
+		addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, type: "session"}, time: Date.now()});
 	}
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
@@ -1662,7 +1670,9 @@ function wsLoadFileFromServer(wsio, data) {
 
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
+			
+			addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, type: data.application}, time: Date.now()});
+			
 			applications.push(appInstance);
 			
 			initializeLoadedVideo(appInstance, videohandle);
