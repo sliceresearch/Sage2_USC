@@ -284,6 +284,7 @@ var buttonType = {
 */
 function SAGE2WidgetControlBar(id) {
 	this.id = id;
+	this.instanceID = "";
 	this.specReady = false;
 	this.itemCount = 0;
 	this.hasSlider = false;
@@ -386,7 +387,7 @@ SAGE2WidgetControlBar.prototype.addButton = function(data) {
 			type = new data.type();
 		}
 		else if (typeof data.type === "object"){
-			type = new (function (){
+			var typeFunc = function (){
 				this.state= data.type.state;
 				this.from= data.type.from;
 				this.to=  data.type.to;
@@ -398,7 +399,8 @@ SAGE2WidgetControlBar.prototype.addButton = function(data) {
 				this.delay= data.type.delay;
 				this.textual= data.type.textual;
 				this.animation= data.type.animation;
-			})();
+			};
+			type = new typeFunc();
 		}
 
 		if (type === null || type === undefined){
@@ -430,7 +432,7 @@ SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparat
 *	}
 */
 SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
-	if (this.hasTextInput === false && this.itemCount <= 12){
+	if (this.hasTextInput === false && this.itemCount <= 30){
 		this.hasTextInput = true;
 		var textInput = new SAGE2WidgetControls.textInput();
 		textInput.id = "textInput" + this.itemCount;
@@ -463,7 +465,7 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 */
 SAGE2WidgetControlBar.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appHandle
-	if (this.hasSlider === false && this.itemCount <= 12){
+	if (this.hasSlider === false && this.itemCount <= 30){
 		
 		var slider = new SAGE2WidgetControls.slider();
 		slider.id = "slider" + this.itemCount;
@@ -564,13 +566,14 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 
 SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
 	console.log("Id:", data);
+	var _this = this;
 	this.addButton({type:"closeApp",sequenceNo:data.sequence.closeApp,action:function(date){
 		if (isMaster)
 			wsio.emit('closeAppFromControl',{appId:data.id});
 	}});
 	this.addButton({type:"closeBar",sequenceNo:data.sequence.closeBar,action:function(date){
 		if (isMaster)
-			wsio.emit('hideWidgetFromControl',{appId:data.id});
+			wsio.emit('hideWidgetFromControl',{instanceID:_this.instanceID});
 	}});
 	var radialButtonType = {
 		"textual":true,
@@ -589,6 +592,8 @@ SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
 */
 SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	var size = this.computeSize();
+
+	this.instanceID = ctrId;
 	var dimensions = this.controlDimensions;
 	
 	this.controlSVG = new Snap(size.width, size.height);
@@ -637,8 +642,9 @@ SAGE2WidgetControlBar.prototype.createControls = function(ctrId){
 	
 	if (this.hasSlider || this.hasTextInput || this.hasColorPalette)
 		outerSequence--;
+	console.log(ctrId, this.instanceID);
 	this.addDefaultButtons({
-		id:ctrId.slice(0,ctrId.lastIndexOf("_")),
+		id:this.id,
 		sequence:{closeApp: parseInt(outerSequence/2 + innerSequence), closeBar: parseInt(outerSequence/2 + innerSequence +1), radial: parseInt(outerSequence/2 + innerSequence + 2)}
 	});
 	var innerThetaIncrement = (endAngle - startAngle)/innerSequence;
@@ -819,6 +825,7 @@ SAGE2WidgetControlBar.prototype.createSlider = function(x, y, outline) {
 	sliderKnobLabel.data("appId", this.slider.appId);
 	
 	slider.data("appId", this.slider.appId);
+	slider.data("instanceID", this.instanceID);
 
 	slider.data('call', this.slider.call);
 	slider.data('lockCall', this.slider.lockCall);
@@ -939,13 +946,13 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 		type.from = "M " + cx + " " + cy  + " " + type.from;
 		type.to = "M " + cx + " " + cy  + " " + type.to;
 		type.toFill = type.toFill || null;
-		var coverWidth = type["width"];
-		var coverHeight = type["height"];
+		var coverWidth = type.width;
+		var coverHeight = type.height;
 		var initialPath;
 		var initialFill;
 		if (type.state !== null && type.state !== undefined){
-			var initialPath = (type.state === 0)? type.from: type.to;
-			var initialFill = (type.state === 0)? type.fill: type.toFill;
+			initialPath = (type.state === 0)? type.from: type.to;
+			initialFill = (type.state === 0)? type.fill: type.toFill;
 			buttonCover = this.controlSVG.path(initialPath);
 			buttonCover.attr("fill",initialFill);
 		
@@ -987,6 +994,7 @@ SAGE2WidgetControlBar.prototype.createButton = function(buttonSpec, cx, cy, rad)
 	buttonBack.data("appId", buttonSpec.appId);
 	button.data("call",buttonSpec.call);
 	button.data("appId", buttonSpec.appId);
+	button.data("instanceID", this.instanceID);
 	return button;
 };
 
@@ -1057,6 +1065,7 @@ SAGE2WidgetControlBar.prototype.createTextInput = function(x, y, outline){
 	textArea.data("appId", this.textInput.appId);
 	textData.data("appId",this.textInput.appId);
 	blinker.data("appId", this.textInput.appId);
+	textInput.data("instanceID", this.instanceID);
 	textInput.data("appId", this.textInput.appId);
 	textInput.data("buffer","");
 	textInput.data("blinkerPosition",0) ;
@@ -1173,11 +1182,13 @@ getWidgetControlById = function(ctrl){
 	var svgElements = Snap.selectAll('*');
 	var requestedSvgElement = null;
 	for(var l=0; l< svgElements.length; l++){
-		if (svgElements[l].attr("id") === ctrl.ctrlId && svgElements[l].data("appId") === ctrl.appId){
+		var parent = svgElements[l].parent();
+		if (svgElements[l].attr("id") === ctrl.ctrlId && svgElements[l].data("appId") === ctrl.appId && parent.data("instanceID")===ctrl.instanceID){
 			requestedSvgElement = svgElements[l];
 			break;
 		}
 	}
+	//console.log("getWdiget:",requestedSvgElement);
 	return requestedSvgElement;
 };
 
