@@ -762,6 +762,8 @@ function wsKeyUp(wsio, data) {
 		if(remoteInteraction[uniqueID].windowManagementMode()){
 			if(data.code === 8 || data.code === 46){ // backspace or delete
 				deleteApplication(elem);
+				
+				addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
 			}
 		}
 		else if(remoteInteraction[uniqueID].appInteractionMode()) {	//only send special keys
@@ -887,7 +889,11 @@ function wsStopMediaStream(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	var elem = findAppById(data.id);
-	if(elem !== null) deleteApplication( elem );
+	if(elem !== null) {
+		deleteApplication( elem );
+		
+		addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
+	}
 	
 	addEventToUserLog(uniqueID, {type: "mediaStreamEnd", data: null, time: Date.now()});
 }
@@ -1597,6 +1603,11 @@ function clearDisplay() {
 // handlers for messages from UI
 
 function wsClearDisplay(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	
+	// must add:
+	// addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
+	
 	clearDisplay();
 }
 
@@ -3213,6 +3224,8 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					if (localX > (startButtons+buttonsPad+oneButton)) {
 						// last button: close app
 						deleteApplication(elem);
+						
+						addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
 						// need to quit the function and stop processing
 						return;
 					} else if (localX > (startButtons+buttonsPad)) {
