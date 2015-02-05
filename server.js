@@ -3170,8 +3170,6 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		}
 	}
 
-
-
 	// Middle click switches interaction mode too
 	if (data.button === "middle") {
 		togglePointerMode(uniqueID);
@@ -3179,8 +3177,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 
 	// Radial Menu
-	if( radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
+	if( radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true ) {
 		return; // Radial menu is using the event
+	}
 
 	if(data.button === "right")
 	{
@@ -3223,11 +3222,15 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				if(localX >= elem.width-cornerSize && localY >= elem.height-cornerSize){
 					remoteInteraction[uniqueID].selectResizeItem(elem, pointerX, pointerY);
 					broadcast('startResize', {id: elem.id, date: new Date()}, 'requiresFullApps');
+					
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 				}
 				// otherwise - select for move
 				else{
 					remoteInteraction[uniqueID].selectMoveItem(elem, pointerX, pointerY); //will only go through if window management mode
 					broadcast('startMove', {id: elem.id, date: new Date()}, 'requiresFullApps');
+					
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 				}
 			}
 			else if(data.button === "right"){
@@ -3269,6 +3272,8 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				var event = {id: elem.id, type: "pointerPress", position: ePosition, user: eUser, data: data, date: now};
 
 				broadcast('eventInItem', event, 'receivesInputEvents');
+				
+				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerPress", application: {id: elem.id, type: elem.application}}, time: Date.now()});
 			}
 		}
 		var stickyList = stickyAppHandler.getStickingItems(elem.id);
@@ -3380,6 +3385,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		if(data.button === "left"){
 			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
 				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'requiresFullApps');
+				
+				addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+				
 				if(videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id].newFrameGenerated === false)
 					handleNewVideoFrame(remoteInteraction[uniqueID].selectedResizeItem.id);
 				remoteInteraction[uniqueID].releaseItem(true);
@@ -3395,6 +3403,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				}
 				if(remoteIdx < 0){
 					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
+					
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+					
 					if(videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id].newFrameGenerated === false)
 						handleNewVideoFrame(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteInteraction[uniqueID].releaseItem(true);
@@ -3406,6 +3417,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					if(updatedItem !== null) {
 						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+						
+						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+						
 						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 							handleNewVideoFrame(updatedItem.elemId);
 					}
@@ -3442,6 +3456,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				var event = {id: elem.id, type: "pointerRelease", position: ePosition, user: eUser, data: data, date: now};
 
 				broadcast('eventInItem', event, 'receivesInputEvents');
+				
+				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerRelease", application: {id: elem.id, type: elem.application}}, time: Date.now()});
 			}
 		}
 	}
@@ -3582,19 +3598,25 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( isEventOnMenu( { type: "pointerSingleEvent", id: uniqueID, x: pointerX, y: pointerY }  ) === true )
 		return; // Radial menu is using the event
 
-	var elem = findAppUnderPointer(pointerX, pointerY);
+	if( remoteInteraction[uniqueID].windowManagementMode() ) {
+		var elem = findAppUnderPointer(pointerX, pointerY);
 
-	if (elem !== null) {
-		remoteInteraction[uniqueID].selectScrollItem(elem);
-		//Retain the order to items sticking on this element
-		var stickyList = stickyAppHandler.getStickingItems(elem.id);
-		var newOrder = moveAppToFront(elem.id);
-		for (var idx in stickyList){
-			newOrder = moveAppToFront(stickyList[idx].id);
+		if (elem !== null) {
+			remoteInteraction[uniqueID].selectScrollItem(elem);
+			//Retain the order to items sticking on this element
+			var stickyList = stickyAppHandler.getStickingItems(elem.id);
+			var newOrder = moveAppToFront(elem.id);
+			for (var idx in stickyList){
+				newOrder = moveAppToFront(stickyList[idx].id);
+			}
+			broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+		
+			broadcast('startMove', {id: elem.id, date: new Date()}, 'requiresFullApps');
+			broadcast('startResize', {id: elem.id, date: new Date()}, 'requiresFullApps');
+		
+			addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+			addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 		}
-		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
-		broadcast('startMove', {id: elem.id, date: new Date()}, 'requiresFullApps');
-		broadcast('startResize', {id: elem.id, date: new Date()}, 'requiresFullApps');
 	}
 }
 
@@ -3630,6 +3652,10 @@ function pointerScroll( uniqueID, data ) {
 			remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] = setTimeout(function() {
 				broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 				broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+				
+				addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
+				addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
+				
 				if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 					handleNewVideoFrame(updatedItem.elemId);
 				remoteInteraction[uniqueID].selectedScrollItem = null;
@@ -3651,6 +3677,8 @@ function pointerScroll( uniqueID, data ) {
 			var event = {id: elem.id, type: "pointerScroll", position: ePosition, user: eUser, data: data, date: now};
 
 			broadcast('eventInItem', event, 'receivesInputEvents');
+			
+			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerScroll", application: {id: elem.id, type: elem.application, wheelDelta: data.wheelDelta}}, time: Date.now()});
 		}
 	}
 }
