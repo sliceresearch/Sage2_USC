@@ -798,6 +798,8 @@ function wsKeyPress(wsio, data) {
 		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
 		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code === 13){ //Enter key
+			addEventToUserLog(uniqueID, {type: "widgetAction", data: {application: lockedControl.appId, widget: lockedControl.ctrlId}, time: Date.now()});
+			
 			remoteInteraction[uniqueID].dropControl();
 		}
 	}
@@ -1649,7 +1651,7 @@ function wsLoadApplication(wsio, data) {
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 		
-		addEventToUserLog(uniqueID, {type: "openApplication", data: {id: appInstance.id, application: appInstance.application}, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		
 		applications.push(appInstance);
 	});
@@ -2042,7 +2044,11 @@ function wsAddNewControl(wsio, data){
 			return;
 	}
 	broadcast('createControl',data,'requestsWidgetControl');
-	controls.push (data);
+	controls.push(data);
+	
+	// var uniqueID = data.ptrId;
+	var app = findAppById(data.id.substring(0, data.id.lastIndexOf("_")));
+	//addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 }
 
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
@@ -2074,6 +2080,8 @@ function wsReleasedControlId(wsio, data){
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
+	
+		addEventToUserLog(data.addr, {type: "widgetAction", data: {application: data.appId, widget: data.ctrlId}, time: Date.now()});
 	}
 }
 
@@ -3106,7 +3114,7 @@ function byteBufferToInt(buf) {
 function addEventToUserLog(id, data) {
 	var key;
 	for(key in users) {
-		if(users[key].ip === id) {
+		if(users[key].ip && users[key].ip === id) {
 			users[key].actions.push(data);
 		}
 	}
@@ -3186,7 +3194,12 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			broadcast('requestControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		}
 		else if(data.button === "right"){
-			if(ct.show === true) hideControl(ct);
+			if(ct.show === true) {
+				hideControl(ct);
+				var app = findAppById(ct.id.substring(0, ct.id.lastIndexOf("_")));
+				
+				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
+			}
 		}
 		return ;
 	} else {
@@ -3269,10 +3282,13 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
 				else if (elemCtrl.show === false) {
-					showControl(elemCtrl, pointerX, pointerY) ;
+					showControl(elemCtrl, pointerX, pointerY);
+					
+					var app = findAppById(elemCtrl.id.substring(0, elemCtrl.id.lastIndexOf("_")));
+					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}
 				else {
-					moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+					moveControlToPointer(elemCtrl, pointerX, pointerY);
 				}
 			}
 		}
@@ -3285,6 +3301,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					}
 					else if (elemCtrl.show === false) {
 						showControl(elemCtrl, pointerX, pointerY) ;
+						
+						var app = findAppById(elemCtrl.id.substring(0, elemCtrl.id.lastIndexOf("_")));
+						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
 					else {
 						moveControlToPointer(elemCtrl, pointerX, pointerY) ;
@@ -4330,6 +4349,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				broadcast('showRadialMenu', radialMenus[uniqueID+"_menu"].getInfo(), 'receivesPointerData');
 			}
 		}
+		/*
 		else
 		{
 			// Open a 'app' radial menu (or in this case application widget)
@@ -4344,6 +4364,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 			}
 		}
+		*/
 	}
 	updateRadialMenu(uniqueID);
 }
