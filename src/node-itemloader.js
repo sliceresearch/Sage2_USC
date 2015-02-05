@@ -677,7 +677,6 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			});
 		}
 		else if(app === "pdf_viewer"){
-            console.log(appData);
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance, null);
 			});
@@ -692,7 +691,6 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 			else {
-                console.log(appData);
 				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 					callback(appInstance, null);
 				});

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Usage: node randomPointer.js [url] [number of pointers]
+#    node randomPointer.js wss://localhost:443 5
+
+server=$1
+count=$2
+
+for i in `seq 0 ${count}`
+do
+	node randomPointer.js $server &
+done
+
+

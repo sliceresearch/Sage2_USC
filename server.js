@@ -175,7 +175,8 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 // global variables for various paths
 var public_dir = "public"; // directory where HTTPS content is stored
-var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
+//var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
+var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
@@ -267,6 +268,7 @@ wsioServerS.onconnection(function(wsio) {
 });
 
 function closeWebSocketClient(wsio) {
+    var i;
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
 
@@ -299,7 +301,6 @@ function closeWebSocketClient(wsio) {
 	if(wsio.clientType == "webBrowser") webBrowserClient = null;
 
 	if(wsio === masterDisplay){
-		var i;
 		masterDisplay = null;
 		for(i=0; i<clients.length; i++){
 			if(clients[i].clientType === "display" && clients[i] !== wsio){
@@ -359,7 +360,7 @@ function wsAddClient(wsio, data) {
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-		
+
 		if( wsio.clientID === 0 ) // Display clients were reset
 			clearRadialMenus();
 	}
@@ -578,12 +579,6 @@ function wsPointerPress(wsio, data) {
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
 
-	/*
-	if (data.button === 'left')
-		pointerPress(uniqueID, pointerX, pointerY); // combine right and left - add param for button
-	else
-		pointerPressRight(uniqueID,pointerX, pointerY);
-	*/
 	pointerPress(uniqueID, pointerX, pointerY, data);
 }
 
@@ -619,12 +614,6 @@ function wsPointerPosition(wsio, data) {
 
 function wsPointerMove(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	// Casting the parameters to correct type
-	//data.deltaX = parseInt(data.deltaX, 10);
-	//data.deltaY = parseInt(data.deltaY, 10);
-	data.deltaX = data.dx;
-	data.deltaY = data.dy;
 
 	var pointerX = sagePointers[uniqueID].left;
 	var pointerY = sagePointers[uniqueID].top;
@@ -854,7 +843,7 @@ function wsPrintDebugInfo(wsio, data) {
 
 function wsRequestVideoFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	
+
 	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
 	handleNewClientReady(data.id);
 }
@@ -1128,7 +1117,7 @@ function loadSession (filename) {
 			for (var i=0;i<session.apps.length;i++) {
 				var a = session.apps[i];
 				console.log("Session> App",  a.id);
-				
+
 				if(a.application == "movie_player"){
 					var vid = {application: a.application, filename: a.title};
 					appLoader.loadFileFromLocalStorage(vid, function(appInstance, videohandle) {
@@ -1146,9 +1135,9 @@ function loadSession (filename) {
 
 						broadcast('createAppWindow', appInstance, 'requiresFullApps');
 						broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-						
+
 						applications.push(appInstance);
-			
+
 						initializeLoadedVideo(appInstance, videohandle);
 					});
 				}
@@ -1525,8 +1514,8 @@ function tileApplications1() {
 		if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128);
 		if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
 			handleNewVideoFrame(updateItem.id);
-		
-		
+
+
         c += 1;
         if (c === numCols) {
             c  = 0;
@@ -1605,7 +1594,7 @@ function wsLoadFileFromServer(wsio, data) {
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 			applications.push(appInstance);
-			
+
 			initializeLoadedVideo(appInstance, videohandle);
 		});
 	}
@@ -1613,7 +1602,7 @@ function wsLoadFileFromServer(wsio, data) {
 
 function initializeLoadedVideo(appInstance, videohandle) {
 	if(appInstance.application !== "movie_player") return;
-	
+
 	var i;
 	var j;
 	var blocksize = 128;
@@ -1621,7 +1610,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
 	var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
 	var start = null;
-	
+
 	videohandle.on('error', function(err) {
 		console.log("VIDEO ERROR: " + err);
 	});
@@ -1652,9 +1641,9 @@ function initializeLoadedVideo(appInstance, videohandle) {
 
 		handleNewVideoFrame(appInstance.id);
 	});
-	
+
 	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
-	
+
 	for(i=0; i<clients.length; i++){
 		if(clients[i].messages.receivesMediaStreamFrames){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -1667,17 +1656,17 @@ function initializeLoadedVideo(appInstance, videohandle) {
 // move this function elsewhere
 function handleNewVideoFrame(id) {
 	var video = videoHandles[id];
-	
+
 	var i;
 	var key;
-	
+
 	video.newFrameGenerated = true;
 	for(key in video.clients) {
 		if(video.clients[key].readyForNextFrame !== true){
 			return false;
 		}
 	}
-	
+
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
 		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
@@ -1697,16 +1686,16 @@ function handleNewVideoFrame(id) {
 function handleNewClientReady(id) {
 	var video = videoHandles[id];
 	if(video.newFrameGenerated !== true) return;
-	
+
 	var i;
 	var key;
-	
+
 	for(key in video.clients) {
 		if(video.clients[key].readyForNextFrame !== true){
 			return false;
 		}
 	}
-	
+
 	video.newFrameGenerated = false;
 	for(key in video.clients) {
 		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
@@ -1725,19 +1714,19 @@ function handleNewClientReady(id) {
 // move this function elsewhere
 function calculateValidBlocks(app, blockSize) {
 	var i, j, key;
-	
+
 	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
 	var verticalBlocks   = Math.ceil(app.data.height/blockSize);
-		
+
 	var renderBlockWidth  = blockSize * app.width / app.data.width;
 	var renderBlockHeight = blockSize * app.height / app.data.height;
-	
+
 	for(key in videoHandles[app.id].clients){
 		videoHandles[app.id].clients[key].blockList = [];
 		for(i=0; i<verticalBlocks; i++){
 			for(j=0; j<horizontalBlocks; j++){
 				var blockIdx = i*horizontalBlocks+j;
-				
+
 				if(videoHandles[app.id].clients[key].wsio.clientID < 0){
 					videoHandles[app.id].clients[key].blockList.push(blockIdx);
 				}
@@ -1747,7 +1736,7 @@ function calculateValidBlocks(app, blockSize) {
 					var top  = i*renderBlockHeight + app.top + config.ui.titleBarHeight;
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
-					
+
 					if((left+renderBlockWidth) >= offsetX && left <= (offsetX+config.resolution.width) &&
 					   (top +renderBlockHeight) >= offsetY && top  <= (offsetY+config.resolution.height)) {
 						videoHandles[app.id].clients[key].blockList.push(blockIdx);
@@ -1836,13 +1825,13 @@ function wsOpenNewWebpage(wsio, data) {
 
 function wsPlayVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.play();
 }
 
 function wsPauseVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.pause(function() {
 		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
 	});
@@ -1850,7 +1839,7 @@ function wsPauseVideo(wsio, data) {
 
 function wsStopVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.stop(function() {
 		broadcast('videoPaused', {id: data.id}, 'requiresFullApps');
 		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false}, 'requiresFullApps');
@@ -1860,7 +1849,7 @@ function wsStopVideo(wsio, data) {
 
 function wsUpdateVideoTime(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].decoder.seek(data.timestamp, function() {
 		if(data.play === true) videoHandles[data.id].decoder.play();
 	});
@@ -1869,19 +1858,19 @@ function wsUpdateVideoTime(wsio, data) {
 
 function wsMuteVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	broadcast('videoMuted', {id: data.id}, 'requiresFullApps');
 }
 
 function wsUnmuteVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	broadcast('videoUnmuted', {id: data.id}, 'requiresFullApps');
 }
 
 function wsLoopVideo(wsio, data) {
 	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
-	
+
 	videoHandles[data.id].loop = data.loop;
 }
 
@@ -2265,7 +2254,7 @@ function setupDisplayBackground() {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
 			tmpImg = path.join(public_dir, "images", "background", "tmp_background" + imgExt);
-		
+
 			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
 
@@ -2478,7 +2467,7 @@ function manageUploadedFiles(files, position) {
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 			applications.push(appInstance);
-			
+
 			initializeLoadedVideo(appInstance, videohandle);
 
 			if(appInstance.animation){
@@ -2818,9 +2807,19 @@ function quitSAGE2() {
 }
 
 
+// broadcast version with stringify and checks for every client
 function broadcast(func, data, type) {
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].messages[type]) clients[i].emit(func, data);
+	}
+}
+
+// optimized version: one stringify and no checks (ohhh)
+function broadcast_opt(func, data, type) {
+	// Marshall the message only once
+	var message = JSON.stringify({f: func, d: data});
+	for(var i=0; i<clients.length; i++){
+		if(clients[i].messages[type]) clients[i].emitString( message );
 	}
 }
 
@@ -2998,7 +2997,7 @@ function intToByteBuffer(aInt, bytes) {
 		buf[i] = byteVal;
 		num = (num - byteVal) / 256;
 	}
-	
+
 	return buf;
 }
 
@@ -3373,14 +3372,15 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
 
-	sagePointers[uniqueID].left += data.deltaX;
-	sagePointers[uniqueID].top += data.deltaY;
+	sagePointers[uniqueID].left += data.dx;
+	sagePointers[uniqueID].top  += data.dy;
 	if(sagePointers[uniqueID].left < 0)                 sagePointers[uniqueID].left = 0;
 	if(sagePointers[uniqueID].left > config.totalWidth) sagePointers[uniqueID].left = config.totalWidth;
 	if(sagePointers[uniqueID].top < 0)                  sagePointers[uniqueID].top = 0;
 	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
-	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	//broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	broadcast_opt('upp', sagePointers[uniqueID], 'receivesPointerData');
 
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true )
@@ -3472,13 +3472,14 @@ function pointerPosition( uniqueID, data ) {
 		return;
 
 	sagePointers[uniqueID].left = data.pointerX;
-	sagePointers[uniqueID].top = data.pointerY;
+	sagePointers[uniqueID].top  = data.pointerY;
 	if(sagePointers[uniqueID].left < 0) sagePointers[uniqueID].left = 0;
 	if(sagePointers[uniqueID].left > config.totalWidth) sagePointers[uniqueID].left = config.totalWidth;
-	if(sagePointers[uniqueID].top < 0) sagePointers[uniqueID].top = 0;
-	if(sagePointers[uniqueID].top > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
+	if(sagePointers[uniqueID].top  < 0) sagePointers[uniqueID].top = 0;
+	if(sagePointers[uniqueID].top  > config.totalHeight) sagePointers[uniqueID].top = config.totalHeight;
 
-	broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	//broadcast('updateSagePointerPosition', sagePointers[uniqueID], 'receivesPointerData');
+	broadcast('upp', sagePointers[uniqueID], 'receivesPointerData');
 	var updatedItem = remoteInteraction[uniqueID].moveSelectedItem(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if(updatedItem !== null){
 		var updatedApp = findAppById(updatedItem.elemId);
@@ -3623,7 +3624,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3639,7 +3640,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3664,13 +3665,13 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
 			var updatedApp;
-			
+
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3686,7 +3687,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3716,7 +3717,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3732,7 +3733,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3762,7 +3763,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3778,7 +3779,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3804,13 +3805,13 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
 			var updatedApp;
-			
+
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3826,7 +3827,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3851,13 +3852,13 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			var updatedItem;
 			var updatedApp;
-			
+
 			if (elem.maximized !== true) {
 				// need to maximize the item
 				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3873,7 +3874,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -4192,7 +4193,7 @@ function wsRadialMenuMoved( wsio, data ) {
 
 function attachAppIfSticky(backgroundItem, appId){
 	var app = findAppById(appId);
-	
+
 	if (app === null || app.sticky !== true) return;
 	//console.log("sticky:",app.sticky);
 	stickyAppHandler.detachStickyItem(app);
