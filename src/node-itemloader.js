@@ -345,14 +345,14 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	video.on('metadata', function(data) {
 		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
 		var exif = assets.getExifData(file);
-		
+
 		var stretch = data.display_aspect_ratio / (data.width / data.height);
 		var native_width  = data.width * stretch;
 		var native_height = data.height;
-		
+
 		console.log(data);
 		console.log(native_width, native_height);
-		
+
 		var appInstance = {
 			id: null,
 			title: name,
@@ -446,7 +446,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
-appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {    
+appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
     // Find the app!!
     var appName = registry.getDefaultApp(file);
     console.log("Loader> Loading %s with %s", mime_type, appName);
@@ -565,6 +565,52 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 	callback(appInstance);
 };
 
+
+appLoader.prototype.createMediaBlockStream = function(source, type, encoding, name, color, width, height, callback) {
+	var aspectRatio = width/height;
+
+	var metadata         = {};
+	metadata.title       = "Stream Player";
+	metadata.version     = "1.0.0";
+	metadata.description = "Stream player for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["stream", "network", "player"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		color: color,
+		application: "media_block_stream",
+		type: "application/stream",
+		url: null,
+		data: {
+			src: source,
+			type: type,
+			encoding: encoding
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5*this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		sticky:false,
+		metadata: metadata,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
 appLoader.prototype.loadApplicationFromRemoteServer = function(application, callback) {
 	var _this = this;
 	this.loadApplication({location: "remote", application: application}, function(appInstance) {
@@ -586,7 +632,7 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 	// XXX - Will this work with our custom apps?
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
-	
+
 	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
@@ -600,7 +646,7 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	var mime_type = mime.lookup(localPath);
-	
+
 	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
@@ -665,7 +711,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 
 		app = registry.getDefaultAppFromMime(appData.type);
 		var dir = registry.getDirectory(appData.type);
-		
+
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance, null);

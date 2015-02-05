@@ -189,6 +189,7 @@ var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
 var mediaStreams = {};
+var mediaBlockStreams = {};
 var radialMenus = {};
 
 // Sticky items and window position for new clones
@@ -286,15 +287,20 @@ function closeWebSocketClient(wsio) {
 	}
 	if(wsio.messages.requiresFullApps){
 		var key;
-		for(key in mediaStreams) {
+		for(key in mediaBlockStreams) {
 			for(i=0; i<clients.length; i++){
                 var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
                     if(uniqueID === clientAddress){
-                        delete mediaStreams[key].clients[uniqueID];
+                        delete mediaBlockStreams[key].clients[uniqueID];
                     }
 			}
 		}
-		for(key in appAnimations) {
+		for(key in mediaStreams) {
+			if (mediaStreams.hasOwnProperty(key)) {
+				delete mediaStreams[key].clients[uniqueID];
+			}
+		}
+        for(key in appAnimations) {
 			if (appAnimations.hasOwnProperty(key)) {
 				delete appAnimations[key].clients[uniqueID];
 			}
@@ -349,7 +355,7 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesClockTime                 = data.receivesClockTime                || false;
 	wsio.messages.requiresFullApps                  = data.requiresFullApps                 || false;
 	wsio.messages.requiresAppPositionSizeTypeOnly   = data.requiresAppPositionSizeTypeOnly  || false;
-	wsio.messages.receivesMediaStreamFrames         = data.receivesMediaStreamFrames        || false;
+    wsio.messages.receivesMediaStreamFrames         = data.receivesMediaStreamFrames        || false;
 	wsio.messages.receivesWindowModification        = data.receivesWindowModification       || false;
 	wsio.messages.receivesPointerData               = data.receivesPointerData              || false;
 	wsio.messages.receivesInputEvents               = data.receivesInputEvents              || false;
@@ -402,13 +408,20 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.sendsMediaStreamFrames){
 		wsio.on('startNewMediaStream',       wsStartNewMediaStream);
 		wsio.on('updateMediaStreamFrame',    wsUpdateMediaStreamFrame);
+		wsio.on('updateMediaStreamChunk',    wsUpdateMediaStreamChunk);
 		wsio.on('stopMediaStream',           wsStopMediaStream);
-}
+		wsio.on('startNewMediaBlockStream',       wsStartNewMediaBlockStream);
+		wsio.on('updateMediaBlockStreamFrame',    wsUpdateMediaBlockStreamFrame);
+		wsio.on('stopMediaBlockStream',           wsStopMediaBlockStream);
+	}
 	if(wsio.messages.receivesMediaStreamFrames){
 		wsio.on('requestVideoFrame', wsRequestVideoFrame);
 		wsio.on('receivedMediaStreamFrame',  wsReceivedMediaStreamFrame);
 		wsio.on('receivedRemoteMediaStreamFrame',  wsReceivedRemoteMediaStreamFrame);
-	}
+        wsio.on('requestVideoFrame', wsRequestVideoFrame);
+		wsio.on('receivedMediaBlockStreamFrame',  wsReceivedMediaBlockStreamFrame);
+		wsio.on('receivedRemoteMediaBlockStreamFrame',  wsReceivedRemoteMediaBlockStreamFrame);
+    }
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
@@ -447,6 +460,8 @@ function initializeWSClient(wsio) {
 		wsio.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
 		wsio.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
 		wsio.on('stopMediaStream', wsStopMediaStream);
+        wsio.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
+		wsio.on('stopMediaBlockStream', wsStopMediaBlockStream);
 	}
 	if(wsio.messages.requestsWidgetControl){
 		wsio.on('addNewControl', wsAddNewControl);
@@ -475,7 +490,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requiresFullApps)                 initializeExistingApps(wsio);
 	if(wsio.messages.requiresAppPositionSizeTypeOnly)  initializeExistingAppsPositionSizeTypeOnly(wsio);
 	if(wsio.messages.receivesRemoteServerInfo)         initializeRemoteServerInfo(wsio);
-	if(wsio.messages.receivesMediaStreamFrames)        initializeMediaStreams(uniqueID);
+    if(wsio.messages.receivesMediaStreamFrames)        initializeMediaStreams(uniqueID);
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -546,12 +561,22 @@ function initializeRemoteServerInfo(wsio) {
 	}
 }
 
-function initializeMediaStreams(clientID) {
-	for(var key in mediaStreams) {
+function initializeMediaStreams(uniqueID) {
+	var key;
+
+	for(key in mediaStreams){
+		if (mediaStreams.hasOwnProperty(key)) {
+			mediaStreams[key].clients[uniqueID] = false;
+		}
+	}
+}
+
+function initializeMediaBlockStreams(clientID) {
+	for(var key in mediaBlockStreams) {
         for(var i=0; i<clients.length; i++){
             var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
             if(clients[i].messages.receivesMediaStreamFrames && clientID === clientAddress){
-                    mediaStreams[key].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+                    mediaBlockStreams[key].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
             }
         }
 	}
@@ -767,93 +792,67 @@ function wsKeyPress(wsio, data) {
 }
 
 // **************  Media Stream Functions *****************
+
 function wsStartNewMediaStream(wsio, data) {
-    //console.log("Starting media stream: ", data);
-    // Forcing 'int' type for width and height
+	console.log("received new stream: ", data.id);
+	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
+	for(var i=0; i<clients.length; i++){
+		if(clients[i].messages.receivesMediaStreamFrames){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			mediaStreams[data.id].clients[clientAddress] = false;
+		}
+	}
+
+	// Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-
-	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null, width: data.width, height: data.height};
-	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages.receivesMediaStreamFrames){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			mediaStreams[data.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
-		}
-	}
-
-    appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
+	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
-        appInstance.width = data.width;
-        appInstance.height = data.height;
-        appInstance.data = data;
-		broadcast('createAppWindow', appInstance, 'requiresFullAppsp');
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 		applications.push(appInstance);
+	});
 
-        var blocksize = 128;
-    });
-
-    var app = findAppById(data.id);
-
-    calculateValidBlocks(app, 128, mediaStreams);
-
-    // Debug media stream freezing
+	// Debug media stream freezing
 	mediaStreams[data.id].timeout = setTimeout(function() {
 		console.log("Start: 5 sec with no updates from: " + data.id);
 		console.log(mediaStreams[data.id].clients);
 		console.log("ready: " + mediaStreams[data.id].ready);
 	}, 5000);
-
 }
 
-function wsUpdateMediaStreamFrame(wsio, buffer) {
-    var id = byteBufferToString(buffer);
-    var blocksize = 128;
-
-	mediaStreams[id].ready = true;
-	for(var key in mediaStreams[id].clients){
-		mediaStreams[id].clients[key].readyForNextFrame = false;
+function wsUpdateMediaStreamFrame(wsio, data) {
+	mediaStreams[data.id].ready = true;
+	for(var key in mediaStreams[data.id].clients){
+		mediaStreams[data.id].clients[key] = false;
 	}
 
-	var yuvBuffer = buffer.slice(id.length+1);
+	var stream = findAppById(data.id);
+	if(stream !== null) stream.data = data.state;
 
-    var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, mediaStreams[id].width, mediaStreams[id].height, blocksize);
+	broadcast('updateMediaStreamFrame', data, 'receivesMediaStreamFrames');
 
-    var pixelbuffer = [];
-    var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
-    var dateBuffer = intToByteBuffer(Date.now(), 8);
-    for(var i=0; i<blockBuffers.length; i++){
-        var blockIdxBuffer = intToByteBuffer(i, 2);
-        pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, dateBuffer, blockBuffers[i]]);
-    }
-
-    for(key in mediaStreams[id].clients) {
-		for(i=0; i<pixelbuffer.length; i++){
-			var hasBlock = false;
-			if(mediaStreams[id].clients[key].blockList.indexOf(i) >= 0){
-				hasBlock = true;
-				mediaStreams[id].clients[key].wsio.emit('updateMediaStreamFrame', pixelbuffer[i]);
-			} else {
-                // this client has no blocks, so it is ready for next frame!
-                mediaStreams[id].clients[key].readyForNextFrame = true;
-            }
-		}
-	}
-
-    var data = {id: id, src: ""};
 	// Debug media stream freezing
-    // Media stream froze, clear everything and restart
-	clearTimeout(mediaStreams[id].timeout);
-	mediaStreams[id].timeout = setTimeout(function() {
+	clearTimeout(mediaStreams[data.id].timeout);
+	mediaStreams[data.id].timeout = setTimeout(function() {
 		console.log("Update: 5 sec with no updates from: " + data.id);
-		console.log(mediaStreams[id].clients);
-		console.log("ready: " + mediaStreams[id].ready);
-		if(mediaStreams[id].chunks.length === 0)
-			console.log("chunks received: " + allNonBlank(mediaStreams[id].chunks));
+		console.log(mediaStreams[data.id].clients);
+		console.log("ready: " + mediaStreams[data.id].ready);
+		if(mediaStreams[data.id].chunks.length === 0)
+			console.log("chunks received: " + allNonBlank(mediaStreams[data.id].chunks));
 	}, 5000);
+}
+
+function wsUpdateMediaStreamChunk(wsio, data) {
+	if(mediaStreams[data.id].chunks.length === 0) mediaStreams[data.id].chunks = initializeArray(data.total, "");
+	mediaStreams[data.id].chunks[data.piece] = data.state.src;
+	if(allNonBlank(mediaStreams[data.id].chunks)){
+		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {src: mediaStreams[data.id].chunks.join(""), type: data.state.type, encoding: data.state.encoding}});
+		mediaStreams[data.id].chunks = [];
+	}
 }
 
 function wsStopMediaStream(wsio, data) {
@@ -862,42 +861,14 @@ function wsStopMediaStream(wsio, data) {
 	if(elem !== null) deleteApplication( elem );
 }
 
-// Print message from remote applications
-function wsPrintDebugInfo(wsio, data) {
-	// sprint for padding and pretty colors
-	console.log(
-		sprint("Node %2d> ", data.node).blue + sprint("[%s] ",data.app).green,
-		data.message);
-}
-
-function wsRequestVideoFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
-	handleNewClientReady(data.id);
-}
-
 function wsReceivedMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	var i;
 	var broadcastAddress, broadcastID;
 	var serverAddress, clientAddress;
 
-	mediaStreams[data.id].clients[uniqueID].readyForNextFrame = true;
-    var clientsReady = true;
-
-    if(data.newClient !== null || data.newClient !== undefined) {
-        if(data.newClient) {
-            var app = findAppById(data.id);
-            calculateValidBlocks(app, 128, mediaStreams);
-        }
-    }
-
-    for(var key in mediaStreams[data.id].clients) {
-        if(!mediaStreams[data.id].clients[key].readyForNextFrame) clientsReady = false;
-    }
-
-	if(clientsReady && mediaStreams[data.id].ready){
+	mediaStreams[data.id].clients[uniqueID] = true;
+	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
 		var broadcastWS = null;
 		var mediaStreamData = data.id.split("|");
@@ -923,6 +894,165 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 			if(broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress + "|" + broadcastID});
 		}
 	}
+}
+
+// **************  Media Block Stream Functions *****************
+function wsStartNewMediaBlockStream(wsio, data) {
+    console.log("Starting media stream: ", data);
+    // Forcing 'int' type for width and height
+	//     for some reasons, messages from websocket lib from Linux send strings for ints
+	data.width  = parseInt(data.width,  10);
+	data.height = parseInt(data.height, 10);
+
+
+	mediaBlockStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null, width: data.width, height: data.height};
+	for(var i=0; i<clients.length; i++){
+		if(clients[i].messages.receivesMediaStreamFrames){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			mediaBlockStreams[data.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+		}
+	}
+
+    appLoader.createMediaBlockStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
+		appInstance.id = data.id;
+        appInstance.width = data.width;
+        appInstance.height = data.height;
+        appInstance.data = data;
+		broadcast('createAppWindow', appInstance, 'requiresFullApps');
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+		applications.push(appInstance);
+
+        var blocksize = 128;
+    });
+
+    var app = findAppById(data.id);
+
+    calculateValidBlocks(app, 128, mediaBlockStreams);
+
+    // Debug media stream freezing
+	mediaBlockStreams[data.id].timeout = setTimeout(function() {
+		console.log("Start: 5 sec with no updates from: " + data.id);
+		console.log(mediaBlockStreams[data.id].clients);
+		console.log("ready: " + mediaBlockStreams[data.id].ready);
+	}, 5000);
+
+}
+
+function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
+    var id = byteBufferToString(buffer);
+    var blocksize = 128;
+
+	mediaBlockStreams[id].ready = true;
+	for(var key in mediaBlockStreams[id].clients){
+		mediaBlockStreams[id].clients[key].readyForNextFrame = false;
+	}
+
+	var yuvBuffer = buffer.slice(id.length+1);
+
+    var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, mediaBlockStreams[id].width, mediaBlockStreams[id].height, blocksize);
+
+    var pixelbuffer = [];
+    var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
+    var dateBuffer = intToByteBuffer(Date.now(), 8);
+    for(var i=0; i<blockBuffers.length; i++){
+        var blockIdxBuffer = intToByteBuffer(i, 2);
+        pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, dateBuffer, blockBuffers[i]]);
+    }
+
+    for(key in mediaBlockStreams[id].clients) {
+		for(i=0; i<pixelbuffer.length; i++){
+			var hasBlock = false;
+			if(mediaBlockStreams[id].clients[key].blockList.indexOf(i) >= 0){
+				hasBlock = true;
+				mediaBlockStreams[id].clients[key].wsio.emit('updateMediaBlockStreamFrame', pixelbuffer[i]);
+			} else {
+                // this client has no blocks, so it is ready for next frame!
+                mediaBlockStreams[id].clients[key].readyForNextFrame = true;
+            }
+		}
+	}
+
+    var data = {id: id, src: ""};
+	// Debug media stream freezing
+    // Media stream froze, clear everything and restart
+	clearTimeout(mediaBlockStreams[id].timeout);
+	mediaBlockStreams[id].timeout = setTimeout(function() {
+		console.log("Update: 5 sec with no updates from: " + data.id);
+		console.log(mediaBlockStreams[id].clients);
+		console.log("ready: " + mediaBlockStreams[id].ready);
+		if(mediaBlockStreams[id].chunks.length === 0)
+			console.log("chunks received: " + allNonBlank(mediaBlockStreams[id].chunks));
+	}, 5000);
+}
+
+function wsStopMediaBlockStream(wsio, data) {
+	var elem = findAppById(data.id);
+
+	if(elem !== null) deleteApplication( elem );
+}
+
+function wsReceivedMediaBlockStreamFrame(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	var i;
+	var broadcastAddress, broadcastID;
+	var serverAddress, clientAddress;
+
+	mediaBlockStreams[data.id].clients[uniqueID].readyForNextFrame = true;
+    var clientsReady = true;
+
+    if(data.newClient !== null || data.newClient !== undefined) {
+        if(data.newClient) {
+            var app = findAppById(data.id);
+            calculateValidBlocks(app, 128, mediaBlockStreams);
+        }
+    }
+
+    for(var key in mediaBlockStreams[data.id].clients) {
+        if(!mediaBlockStreams[data.id].clients[key].readyForNextFrame) clientsReady = false;
+    }
+
+	if(clientsReady && mediaBlockStreams[data.id].ready){
+		mediaBlockStreams[data.id].ready = false;
+		var broadcastWS = null;
+		var mediaBlockStreamData = data.id.split("|");
+		if(mediaBlockStreamData.length === 2){ // local stream --> client | stream_id
+			broadcastAddress = mediaBlockStreamData[0];
+			broadcastID = parseInt(mediaBlockStreamData[1]);
+			for(i=0; i<clients.length; i++){
+				clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+				if(clientAddress == broadcastAddress) broadcastWS = clients[i];
+			}
+			if(broadcastWS !== null) broadcastWS.emit('requestNextFrame', {streamId: broadcastID});
+		}
+		else if(mediaBlockStreamData.length === 3){ // remote stream --> remote_server | client | stream_id
+			serverAddress = mediaBlockStreamData[0];
+			broadcastAddress = mediaBlockStreamData[1];
+			broadcastID = mediaBlockStreamData[2];
+
+			for(i=0; i<clients.length; i++){
+				clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+				if(clientAddress == serverAddress) { broadcastWS = clients[i]; break; }
+			}
+
+			if(broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress + "|" + broadcastID});
+		}
+	}
+}
+
+// Print message from remote applications
+function wsPrintDebugInfo(wsio, data) {
+	// sprint for padding and pretty colors
+	console.log(
+		sprint("Node %2d> ", data.node).blue + sprint("[%s] ",data.app).green,
+		data.message);
+}
+
+function wsRequestVideoFrame(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+
+	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
+	handleNewClientReady(data.id);
 }
 
 // **************  File Manipulation Functions for Apps ************
@@ -1124,7 +1254,7 @@ function saveSession (filename) {
 	for (var i=0;i<applications.length;i++) {
 		var a = applications[i];
 		// Ignore media streaming applications for now (desktop sharing)
-		if (a.application !== 'media_stream') {
+		if (a.application !== 'media_stream' || a.application !== 'media_block_stream') {
 			states.apps.push(a);
 			states.numapps++;
 		}
@@ -1226,18 +1356,22 @@ function listClients() {
 
 function listMediaStreams() {
 	var i, c, key;
-	console.log("Streams (%d)\n------------", Object.keys(mediaStreams).length);
+	console.log("Streams (%d)\n------------", Object.keys(mediaBlockStreams).length);
 	i = 0;
-	for (key in mediaStreams) {
-		var numclients = Object.keys(mediaStreams[key].clients).length;
-		console.log(sprint("%2d: %s ready:%s clients:%d", i, key, mediaStreams[key].ready, numclients));
+	for (key in mediaBlockStreams) {
+		var numclients = Object.keys(mediaBlockStreams[key].clients).length;
+		console.log(sprint("%2d: %s ready:%s clients:%d", i, key, mediaBlockStreams[key].ready, numclients));
 		var cstr = " ";
-		for (c in mediaStreams[key].clients) {
-			cstr += c + "(" + mediaStreams[key].clients[c] + ") ";
+		for (c in mediaBlockStreams[key].clients) {
+			cstr += c + "(" + mediaBlockStreams[key].clients[c] + ") ";
 		}
 		console.log("\t", cstr);
 		i++;
 	}
+}
+
+function listMediaBlockStreams() {
+    listMediaStreams();
 }
 
 function listApplications() {
@@ -1464,7 +1598,7 @@ function tileApplications() {
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
     	if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128, videoHandles);
-        if(updateApp !== null && updateApp.application === "media_stream") calculateValidBlocks(updateApp, 128, mediaStreams);
+        if(updateApp !== null && updateApp.application === "media_block_stream") calculateValidBlocks(updateApp, 128, mediaBlockStreams);
     	if(videoHandles[updateItem.elemId] !== undefined && videoHandles[updateItem.elemId].newFrameGenerated === false)
 			handleNewVideoFrame(updateItem.elemId);
     }
@@ -1555,7 +1689,7 @@ function tileApplications1() {
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128, videoHandles);
-		if(updateApp !== null && updateApp.application === "media_stream") calculateValidBlocks(updateApp, 128, mediaStreams);
+		if(updateApp !== null && updateApp.application === "media_block_stream") calculateValidBlocks(updateApp, 128, mediaBlockStreams);
         if(videoHandles[updateItem.id] !== undefined && videoHandles[updateItem.id].newFrameGenerated === false)
 			handleNewVideoFrame(updateItem.id);
 
@@ -1932,7 +2066,17 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			for(i=0; i<clients.length; i++){
 				if(clients[i].messages.receivesMediaStreamFrames){
 					clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					mediaStreams[appInstance.id].clients[clientAddress].readyForNextFrame = false;
+					mediaStreams[appInstance.id].clients[clientAddress] = false;
+				}
+			}
+		}
+        else if(appInstance.application === "media_block_stream"){
+			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
+			mediaBlockStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].messages.receivesMediaStreamFrames){
+					clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+					mediaBlockStreams[appInstance.id].clients[clientAddress].readyForNextFrame = false;
 				}
 			}
 		}
@@ -1969,7 +2113,7 @@ function wsUpdateRemoteMediaStreamFrame(wsio, data) {
 	var key;
 	mediaStreams[data.id].ready = true;
 	for(key in mediaStreams[data.id].clients){
-		mediaStreams[data.id].clients[key].readyForNextFrame = false;
+		mediaStreams[data.id].clients[key] = false;
 	}
 	var stream = findAppById(data.id);
 	if(stream !== null) stream.data = data.data;
@@ -1981,10 +2125,52 @@ function wsUpdateRemoteMediaStreamFrame(wsio, data) {
 function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
-    console.log("ReceivedRemoteMediaStreamFrame");
-	mediaStreams[data.id].clients[uniqueID].readyForNextFrame = true;
+	mediaStreams[data.id].clients[uniqueID] = true;
 	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
+
+		var broadcastWS = null;
+		var serverAddress = data.id.substring(6).split("|")[0];
+		var broadcastAddress = data.id.substring(6).split("|")[1];
+
+		for(var i=0; i<clients.length; i++){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			if(clientAddress == serverAddress) { broadcastWS = clients[i]; break; }
+		}
+
+		if(broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress});
+	}
+}
+
+// XXX - Remote block streaming not tested
+function wsRequestNextRemoteBlockFrame(wsio, data) {
+	var stream = findAppById(data.id);
+	var remote_id = config.host + ":" + config.port + "|" + data.id;
+
+	if(stream !== null) wsio.emit('updateRemoteMediaBlockStreamFrame', {id: remote_id, state: stream.data});
+	else wsio.emit('stopMediaBlockStream', {id: remote_id});
+}
+
+function wsUpdateRemoteMediaBlockStreamFrame(wsio, data) {
+	var key;
+	mediaBlockStreams[data.id].ready = true;
+	for(key in mediaBlockStreams[data.id].clients){
+		mediaBlockStreams[data.id].clients[key].readyForNextFrame = false;
+	}
+	var stream = findAppById(data.id);
+	if(stream !== null) stream.data = data.data;
+
+	//broadcast('updateRemoteMediaBlockStreamFrame', data, 'receivesMediaStreamFrames');
+	broadcast('updateMediaBlockStreamFrame', data, 'receivesMediaStreamFrames');
+}
+
+function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+
+    console.log("ReceivedRemoteMediaBlockStreamFrame");
+	mediaBlockStreams[data.id].clients[uniqueID].readyForNextFrame = true;
+	if(allTrueDict(mediaBlockStreams[data.id].clients) && mediaBlockStreams[data.id].ready){
+		mediaBlockStreams[data.id].ready = false;
 
 		var broadcastWS = null;
 		var serverAddress = data.id.substring(6).split("|")[0];
@@ -2599,6 +2785,9 @@ function createRemoteConnection(wsURL, element, index) {
 	remote.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
 	remote.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
 	remote.on('stopMediaStream', wsStopMediaStream);
+    remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
+    remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
+	remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
 
 	return remote;
 }
@@ -2793,6 +2982,9 @@ if (program.interactive)
 				break;
 			case 'streams':
 				listMediaStreams();
+				break;
+            case 'blockStreams':
+				listMediaBlockStreams();
 				break;
 
 			case 'exit':
@@ -3468,7 +3660,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-            if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+            if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
         var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 			for (var idx=0;idx<updatedStickyItems.length;idx++){
 				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3478,7 +3670,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
 			updatedApp = findAppById(updatedResizeItem.elemId);
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-            if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+            if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
         }
 		// update hover corner (for resize)
 		else{
@@ -3543,7 +3735,7 @@ function pointerPosition( uniqueID, data ) {
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
 		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-		if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+		if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
         var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 		for (var idx=0;idx<updatedStickyItems.length;idx++){
 			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
@@ -3602,7 +3794,7 @@ function pointerScroll( uniqueID, data ) {
 			var updatedApp = findAppById(updatedItem.elemId);
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-            if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+            if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
 
 			if(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] !== undefined){
 				clearTimeout(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId]);
@@ -3682,7 +3874,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3690,7 +3882,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-                    if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+                    if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3699,7 +3891,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3707,7 +3899,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
 if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3731,7 +3923,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeLeftSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3739,7 +3931,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3748,7 +3940,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3756,7 +3948,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3779,7 +3971,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeRightSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3787,7 +3979,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3796,7 +3988,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3804,7 +3996,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3827,7 +4019,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeTopSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3835,7 +4027,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3844,7 +4036,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3852,7 +4044,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3877,7 +4069,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3885,7 +4077,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3894,7 +4086,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3902,7 +4094,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3926,7 +4118,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].maximizeBottomSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3934,7 +4126,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -3943,7 +4135,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
 				if (updatedItem !== null) {
 					updatedApp = findAppById(updatedItem.elemId);
-					
+
 					broadcast('startMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('startResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
@@ -3951,7 +4143,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 					if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-					if(updatedApp !== null && updatedApp.application === "media_stream") calculateValidBlocks(updatedApp, 128, mediaStreams);
+					if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
                     if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 						handleNewVideoFrame(updatedItem.elemId);
 				}
@@ -4055,6 +4247,18 @@ function deleteApplication( elem ) {
 		var mediaStreamData = elem.id.split("|");
 		var broadcastAddress = mediaStreamData[0];
 		var broadcastID = parseInt(mediaStreamData[1]);
+		for(var i=0; i<clients.length; i++){
+			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+			if(clientAddress == broadcastAddress) broadcastWS = clients[i];
+		}
+
+		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
+	}
+    else if(elem.application === "media_block_stream"){
+		var broadcastWS = null;
+		var mediaBlockStreamData = elem.id.split("|");
+		var broadcastAddress = mediaBlockStreamData[0];
+		var broadcastID = parseInt(mediaBlockStreamData[1]);
 		for(var i=0; i<clients.length; i++){
 			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
 			if(clientAddress == broadcastAddress) broadcastWS = clients[i];

@@ -31,6 +31,7 @@
 <script type="text/javascript" src="src/movie_player.js"></script>
 <script type="text/javascript" src="src/pdf_viewer.js"></script>
 <script type="text/javascript" src="src/media_stream.js"></script>
+<script type="text/javascript" src="src/media_block_stream.js"></script>
 
 <!-- Load the module building the wal UI -->
 <script type="text/javascript" src="src/ui_builder.js"></script>
@@ -276,8 +277,16 @@
 			resetIdle();
         });
 		
-		
 		wsio.on('updateMediaStreamFrame', function(data) {
+			wsio.emit('receivedMediaStreamFrame', {id: data.id});
+			
+			var app = applications[data.id];
+			if(app !== undefined && app !== null){
+				app.load(data.state);
+			}
+		});
+		
+		wsio.on('updateMediaBlockStreamFrame', function(data) {
             var appId     = byteBufferToString(data);
 			var blockIdx  = byteBufferToInt(data.subarray(appId.length+1, appId.length+ 3));
 			var date      = byteBufferToInt(data.subarray(appId.length+3, appId.length+11));
@@ -288,7 +297,7 @@
 				if(applications[appId].receivedBlocks.every(isTrue) === true){
 					applications[appId].draw(new Date(date));
 					applications[appId].setValidBlocksFalse();
-                    wsio.emit('receivedMediaStreamFrame', {id: appId});
+                    wsio.emit('receivedMediaBlockStreamFrame', {id: appId});
 				}
 			}
 		});
@@ -390,7 +399,8 @@
 			ui.main.appendChild(windowItem);
 			
 			// App launched in window 
-			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id, newClient: true});
+			if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+            if(data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
 			
 			// convert url if hostname is alias for current origin
 			var url = cleanURL(data.url);
