@@ -3601,7 +3601,7 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( remoteInteraction[uniqueID].windowManagementMode() ) {
 		var elem = findAppUnderPointer(pointerX, pointerY);
 
-		if (elem !== null) {
+		if (elem !== null && remoteInteraction[uniqueID].selectTimeId[elem.id] === undefined) {
 			remoteInteraction[uniqueID].selectScrollItem(elem);
 			//Retain the order to items sticking on this element
 			var stickyList = stickyAppHandler.getStickingItems(elem.id);
@@ -3659,6 +3659,7 @@ function pointerScroll( uniqueID, data ) {
 				if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 					handleNewVideoFrame(updatedItem.elemId);
 				remoteInteraction[uniqueID].selectedScrollItem = null;
+				delete remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId];
 			}, 500);
 		}
 	}
