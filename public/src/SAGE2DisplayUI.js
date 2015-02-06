@@ -391,12 +391,12 @@ function SAGE2DisplayUI() {
 	
 	this.resize = function() {
 		var displayUI = document.getElementById('displayUI');
-		var sage2UI = document.getElementById('sage2UI');
-		var ctx = sage2UI.getContext('2d');
-		var menuUI = document.getElementById('menuUI');
+		var menuUI    = document.getElementById('menuUI');
+		var sage2UI   = document.getElementById('sage2UI');
+		var ctx       = sage2UI.getContext('2d');
 		
-		var freeWidth   = window.innerWidth  - menuUI.offsetWidth - 40; // size of menu buttons
-		var freeHeight  = window.innerHeight - 20;                 // size of 10px margin (top, bottom)
+		var freeWidth   = window.innerWidth  - 25; // window width minus padding
+		var freeHeight  = window.innerHeight - 20; // size of 10px margin (top, bottom)
 		
 		var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 		var freeAspect  = freeWidth / freeHeight;
@@ -404,29 +404,34 @@ function SAGE2DisplayUI() {
 		// wide sage2 display (compared to page)
 		if(freeAspect < sage2Aspect) {
 			sage2UI.width  = Math.floor(freeWidth);
-			sage2UI.height = Math.floor(freeWidth / sage2Aspect);
-			displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
-			displayUI.style.marginTop = "10px";
-			menuUI.style.marginTop = ((sage2UI.height/2) - (menuUI.offsetHeight/2) + 10).toString() + "px";
+			sage2UI.height = Math.floor(freeWidth / sage2Aspect) -50;
+			displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+			displayUI.style.marginTop  = "10px";
+			menuUI.style.marginLeft    = "20px";
+
+			// Setting the buttons in a row
+			var myElements = document.querySelectorAll(".uiButton");			 
+			for (var i = 0; i < myElements.length; i++) {
+			    myElements[i].style.display = "inline-block";
+			}
 		}
 		// tall sage2 display (compared to page)
 		else {
-			sage2UI.height = Math.floor(freeHeight);
-			sage2UI.width  = Math.floor(freeHeight * sage2Aspect);
-			displayUI.style.marginLeft  = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
-			displayUI.style.marginTop = "10px";
-			menuUI.style.marginTop = ((sage2UI.height/2) - (menuUI.offsetHeight/2) + 10).toString() + "px";
+			sage2UI.height = Math.floor(freeHeight) - 100 - 150; // 100 sage2 logo, 150: margin for buttons
+			sage2UI.width  = Math.floor(freeHeight * sage2Aspect) -100;
+			displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+			displayUI.style.marginTop  = "10px";
 		}
-		if(sage2UI.height < menuUI.offsetHeight) {
-			var dTop = (menuUI.offsetHeight-sage2UI.height) / 2;
-			var mTop = 0;
-			if(dTop < 10) {
-				mTop = 10-dTop;
-				dTop = 10;
-			}
-			displayUI.style.marginTop = dTop.toString() + "px";
-			menuUI.style.marginTop = mTop.toString() + "px";
-		}
+		// if(sage2UI.height < menuUI.offsetHeight) {
+		// 	var dTop = (menuUI.offsetHeight-sage2UI.height) / 2;
+		// 	var mTop = 0;
+		// 	if(dTop < 10) {
+		// 		mTop = 10-dTop;
+		// 		dTop = 10;
+		// 	}
+		// 	displayUI.style.marginTop = dTop.toString() + "px";
+		// 	menuUI.style.marginTop = mTop.toString() + "px";
+		// }
 		
 		var minDim = Math.min(sage2UI.width, sage2UI.height);
 		this.fileDropFontSize = Math.round(minDim * 0.075);
