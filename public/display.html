@@ -854,7 +854,7 @@
 
 				var spec = controlObjects[data.objID].controls;
 				if (spec.controlsReady() === true){
-					var handle = spec.createControls(data.id);
+					var handle = new SAGE2WidgetControlInstance(data.id, spec);
 					ctrDiv.appendChild (handle);	
 					ui.main.appendChild(ctrDiv);
 					controlItems[data.id] = {show:true,divHandle:ctrDiv};
@@ -986,20 +986,13 @@
 				func(new Date());	
 		});
 		wsio.on('moveSliderKnob', function(data){
-			console.log("Moving knob "+dbugVar, data);
-			dbugVar++;
 			var ctrl = getWidgetControlById(data.ctrl);
 			var slider = ctrl.parent();
-			console.log(slider.data("instanceID"));
 			var ctrHandle = document.getElementById(slider.data("instanceID"));
 			var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
-			var pos = data.x-ui.offsetX-widgetOffset;
-			console.log(data.x,ui.offsetX,widgetOffset);
-			
+			var pos = data.x-ui.offsetX-widgetOffset;			
 			var sliderKnob = slider.select("rect");
 			var val = mapMoveToSlider(sliderKnob, pos);
-			
-
 			var app = getProperty(applications[slider.data("appId")],slider.data("appProperty"));
 			app.handle[app.property] = val;
 			var func = slider.data("updateCall");
@@ -1008,7 +1001,9 @@
 		});
 
 		wsio.on('keyInTextInputWidget', function(data){
+			console.log(data);
 			var ctrl = getWidgetControlById(data);
+			console.log(ctrl);
 			if (ctrl){
 				var textInput = ctrl.parent();
 

@@ -708,7 +708,7 @@ function wsKeyUp(wsio, data) {
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
 	if (lockedControl !== null) {
-		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
 		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code == 13) { //Enter key
 			remoteInteraction[uniqueID].dropControl();
@@ -748,7 +748,7 @@ function wsKeyPress(wsio, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
 	}
 	else if (lockedControl !== null){
-		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
 		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code === 13){ //Enter key
 			remoteInteraction[uniqueID].dropControl();
@@ -3396,7 +3396,6 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		console.log(sagePointers[uniqueID].left);
 		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
 		return;
 	}

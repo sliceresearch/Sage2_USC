@@ -30,6 +30,7 @@ var googlemaps = SAGE2_App.extend( {
 		this.scrollAmount = null;
 		this.trafficTimer = null;
 		this.trafficCB    = null;
+
 	},
 
 	init: function(data) {
@@ -44,6 +45,7 @@ var googlemaps = SAGE2_App.extend( {
 		this.position     = {x:0, y:0};
 		this.scrollAmount = 0;
 
+		this.zoomFactor = null;
 		// building up the state object
 		this.state.mapType   = null;
 		this.state.zoomLevel = null;
@@ -73,7 +75,23 @@ var googlemaps = SAGE2_App.extend( {
 			this.map.panBy(0,100);
 			this.updateCenter();
 		}.bind(this)});
-				
+		this.controls.addSlider({
+			begin:8,
+			end:20,
+			increments:1,
+			appHandle:this, 
+			property:"state.zoomLevel", 
+			labelFormatFunction:function(value,end){
+				return ((value<10)?"0":"") + value + "/" + end;
+			},
+			lockAction:function(date){
+			}, 
+			updateAction:function(date){
+			}, 
+			action:function(date){
+				this.map.setZoom(this.state.zoomLevel);
+			}.bind(this)
+		});	
 		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
 			var z = this.map.getZoom();
 			this.map.setZoom(z+1);
