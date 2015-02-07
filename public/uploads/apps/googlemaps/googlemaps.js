@@ -146,7 +146,6 @@ var googlemaps = SAGE2_App.extend( {
 
 
 	initialize: function() {
-		this.log("initialize googlemaps");
 		if (this.state.mapType == null)
 			this.state.mapType = google.maps.MapTypeId.HYBRID;
 		if (this.state.zoomLevel == null)
@@ -254,6 +253,11 @@ var googlemaps = SAGE2_App.extend( {
 				tiles[i].src = new_src;
 			}
 		}
+	},
+
+	quit: function() {
+		// Make sure to delete the timer when quitting the app
+		if (this.trafficTimer) clearInterval(this.trafficTimer);
 	},
 
 	event: function(eventType, position, user_id, data, date) {

@@ -27,7 +27,9 @@
 		show_version: true,
 		noDropShadow: true,
 		auto_hide_ui: true,
-		auto_hide_delay: 30
+		auto_hide_delay: 30,
+		maxWindowWidth : 8192,
+		maxWindowHeight : 8192
 	},
 	resolution: {
 		width: 1920,
@@ -72,5 +74,16 @@
 			host: "lyra.evl.uic.edu",
 			port: 9090
 		}
-	]
+	],
+	apis: {
+		twitter: {
+			consumerKey:    "fuyVLmYL4QMG8dhg4UDxiGYKK",
+			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
+			accessToken:    "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
+			accessSecret:   "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
+		},
+		forecastio: {
+			apiKey: "92f925ff56c3a45ab18402d3753b3c88"
+		}
+	}
 }
