@@ -549,15 +549,15 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 	size.hasSideBar = false;
 
 	if (this.hasSlider === true){
-		size.width = size.width  + this.slider.width;
+		size.width = size.width  + this.slider.width - dimensions.innerR + 5; 
 		size.hasSideBar = true;
 	}
 	else if ( this.hasTextInput === true){
-		size.width = size.width  + this.textInput.width;
+		size.width = size.width  + this.textInput.width - dimensions.innerR + 5;
 		size.hasSideBar = true;
 	}
 	else if ( this.hasColorPalette === true){
-		size.width = size.width  + this.colorPalette.width;
+		size.width = size.width  + this.colorPalette.width - dimensions.innerR + 5;
 		size.hasSideBar = true;
 	}
 	this.controlDimensions = dimensions;
@@ -570,8 +570,6 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 
 
 SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
-	console.log("Id:", data);
-	var _this = this;
 	this.addButton({type:"closeApp",sequenceNo:data.sequence.closeApp,action:function(date){
 		if (isMaster)
 			wsio.emit('closeAppFromControl',{appId:data.id});
@@ -623,16 +621,16 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	var buttonCount = this.controlSpec.itemCount;
 	var startAngle = 0;
 	var endAngle = 360;
-	var sequenceMaximum = 27;
+	var sequenceMaximum = 30;
 	var innerSequence = 12;
 	var outerSequence = 18;
-	/*if (this.hasSlider){
+	if (this.controlSpec.hasSlider){
 		buttonCount--;
 		innerSequence --;
 		outerSequence--;
 		startAngle += 15;
 		endAngle -= 15;
-	}*/
+	}
 	if (this.controlSpec.hasTextInput){
 		buttonCount--;
 		innerSequence --;
@@ -648,8 +646,8 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		endAngle -= 15;
 	}
 	
-	//if (this.hasSlider || this.hasTextInput || this.hasColorPalette)
-	//	outerSequence--;
+	if (this.controlSpec.hasSlider || this.controlSpec.hasTextInput || this.controlSpec.hasColorPalette)
+		outerSequence--;
 	this.controlSpec.addDefaultButtons({
 		id:this.id,
 		instanceID:this.instanceID,
@@ -689,13 +687,13 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	
 	var d, leftMidOfBar;
 	if (this.controlSpec.hasSlider===true && this.controlSpec.hasTextInput === true && this.controlSpec.hasColorPalette === true){
-		d = makeBarPath(330,350, dimensions.innerR, center, this.controlSpec.slider.width);
-		leftMidOfBar = polarToCartesian(dimensions.innerR,340, center);
+		d = makeBarPath(330,360, dimensions.innerR, center, this.controlSpec.slider.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,345, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
-		d = makeBarPath(350,370, dimensions.innerR, center, this.controlSpec.textInput.width);
-		leftMidOfBar = polarToCartesian(dimensions.innerR,360, center);
+		d = makeBarPath(0,30, dimensions.innerR, center, this.controlSpec.textInput.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,15, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
@@ -706,17 +704,17 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);*/
 	}
 	else if (this.controlSpec.hasSlider===true){
-		d = makeBarPath(352,368, dimensions.outerR, center, this.controlSpec.slider.width);
-		leftMidOfBar = polarToCartesian(dimensions.outerR,0, center);
-		//if (this.layoutOptions.drawSpokes === true)
-		//	drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
+		d = makeBarPath(345,375, dimensions.innerR, center, this.controlSpec.slider.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,0, center);
+		if (this.controlSpec.layoutOptions.drawSpokes === true)
+			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	else if (this.controlSpec.hasTextInput===true){
-		d = makeBarPath(352,368, dimensions.outerR, center, this.controlSpec.textInput.width);
-		leftMidOfBar = polarToCartesian(dimensions.outerR,0, center);
-		//if (this.layoutOptions.drawSpokes === true)
-		//	drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
+		d = makeBarPath(345,375, dimensions.innerR, center, this.controlSpec.textInput.width);
+		leftMidOfBar = polarToCartesian(dimensions.innerR,0, center);
+		if (this.controlSpec.layoutOptions.drawSpokes === true)
+			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	/*else if (this.hasColorPalette===true){
@@ -729,7 +727,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	drawControlCenter(this.controlSVG,center, 1.8*dimensions.buttonRadius, "SAGE2");
 	var ctrHandle = document.getElementById(instanceID + "SVG");
 	return ctrHandle;
-};
+}
 
 function drawSpokeForRadialLayout(paper,center,point){
 	var spoke = paper.line(center.x,center.y,point.x,point.y);
@@ -839,8 +837,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	slider.data('lockCall', this.controlSpec.slider.lockCall);
 	slider.data('updateCall', this.controlSpec.slider.updateCall);
 	slider.data('appProperty', this.controlSpec.slider.appProperty);
-	var _this = this;
-	var app = getProperty(_this.controlSpec.slider.appHandle,_this.controlSpec.slider.appProperty);
+	var app = getProperty(this.controlSpec.slider.appHandle,this.controlSpec.slider.appProperty);
 	var begin = this.controlSpec.slider.begin;
 	var end = this.controlSpec.slider.end;
 	var parts = this.controlSpec.slider.parts;
@@ -886,7 +883,6 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 				moveSlider(app.handle[app.property]);
 		}
 	});
-	console.log("value:"+app.handle[app.property]);
 	//moveSlider(begin);
 	if (app.handle[app.property] === null || app.handle[app.property] === begin){
 		app.handle[app.property] = begin + 1;

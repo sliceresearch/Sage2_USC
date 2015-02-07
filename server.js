@@ -281,6 +281,7 @@ function closeWebSocketClient(wsio) {
 	}
 	if(wsio.messages.sendsPointerData){
 		hidePointer(uniqueID);
+		removeControlsForUser(uniqueID);
 		delete sagePointers[uniqueID];
 		delete remoteInteraction[uniqueID];
 	}
@@ -1999,14 +2000,12 @@ function wsReleasedControlId(wsio, data){
 }
 
 function wsCloseAppFromControl(wsio, data){
-	console.log("close App:", data.appId);
 	var app = findAppById(data.appId);
 	if (app)
 		deleteApplication(app);
 }
 
 function wsHideWidgetFromControl(wsio, data){
-	console.log(data);
 	var ctrl = findControlById(data.instanceID);
 	hideControl(ctrl);
 }
@@ -2886,11 +2885,30 @@ function findControlById(id) {
 	return null;
 }
 
+function findControlsByUserId(uid) {
+	var idxList = [];
+	for (var i=controls.length-1; i>=0; i--) {
+		if (controls[i].id.indexOf(uid) > -1) {
+			idxList.push(i);
+		}
+	}
+	return idxList;
+}
+
 function hideControl(ctrl){
 	if (ctrl.show === true) {
 		ctrl.show = false;
 		broadcast('hideControl',{id:ctrl.id},'receivesWidgetEvents');
 	}
+}
+
+function removeControlsForUser(uniqueID){
+	for (var i=controls.length-1; i>=0; i--) {
+		if (controls[i].id.indexOf(uniqueID) > -1) {
+			controls.splice(i,1);
+		}
+	}
+	broadcast('removeControlsForUser',{user_id:uniqueID},'receivesWidgetEvents');
 }
 
 function showControl(ctrl, pointerX, pointerY){

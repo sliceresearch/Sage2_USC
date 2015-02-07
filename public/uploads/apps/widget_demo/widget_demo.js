@@ -115,7 +115,7 @@ var widget_demo = SAGE2_App.extend( {
 		//Only simple numerical values can be manipulated using the slider.
 		var formatFunction = function(value,end){
 			return value + ":" + end;
-		}
+		};
 		this.controls.addSlider({
 			begin:64,
 			end:255,

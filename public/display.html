@@ -440,7 +440,7 @@
 						
 						applications[data.id] = app;
 						controlObjects[data.id] = app; 
-						//controlItems[data.id + "_controls"] = { show:false, handle:app};
+
 						if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					}, false);
 					js.type = "text/javascript";
@@ -466,7 +466,6 @@
 					
 					applications[data.id] = app;
 					controlObjects[data.id] = app; 
-					//controlItems[data.id + "_controls"] = { show:false, handle:app};
 					 
 					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 					if(data.application === "movie_player") setTimeout(function() {wsio.emit('requestVideoFrame', {id: data.id});}, 500);
@@ -812,7 +811,6 @@
 		});
 
 		wsio.on('requestNewControl', function(data){
-			console.log(data);
 			var dt = new Date(data.date);
 			var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 			if (data.elemId !== undefined && data.elemId !== null){
@@ -862,7 +860,15 @@
 				
 			}
 		});
-
+		wsio.on('removeControlsForUser', function(data){
+			for (var idx in controlItems) {
+				if (idx.indexOf(data.user_id) > -1) {
+					controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
+					delete controlItems[idx];
+				}
+			}
+		});
+		
 		wsio.on('requestControlId', function(data) {
 			var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrId = ctrl? ctrl.attr("id"):"";

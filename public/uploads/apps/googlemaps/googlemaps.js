@@ -75,7 +75,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.map.panBy(0,100);
 			this.updateCenter();
 		}.bind(this)});
-		this.controls.addSlider({
+		/*this.controls.addSlider({
 			begin:8,
 			end:20,
 			increments:1,
@@ -91,7 +91,7 @@ var googlemaps = SAGE2_App.extend( {
 			action:function(date){
 				this.map.setZoom(this.state.zoomLevel);
 			}.bind(this)
-		});	
+		});	*/
 		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
 			var z = this.map.getZoom();
 			this.map.setZoom(z+1);
