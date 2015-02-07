@@ -404,7 +404,7 @@ function SAGE2DisplayUI() {
 		// wide sage2 display (compared to page)
 		if(freeAspect < sage2Aspect) {
 			sage2UI.width  = Math.floor(freeWidth);
-			sage2UI.height = Math.floor(freeWidth / sage2Aspect) -50;
+			sage2UI.height = Math.floor(freeWidth / sage2Aspect);
 			displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 			displayUI.style.marginTop  = "10px";
 			menuUI.style.marginLeft    = "20px";
@@ -418,7 +418,7 @@ function SAGE2DisplayUI() {
 		// tall sage2 display (compared to page)
 		else {
 			sage2UI.height = Math.floor(freeHeight) - 100 - 150; // 100 sage2 logo, 150: margin for buttons
-			sage2UI.width  = Math.floor(freeHeight * sage2Aspect) -100;
+			sage2UI.width  = Math.floor(sage2UI.height * sage2Aspect);
 			displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
 			displayUI.style.marginTop  = "10px";
 		}
