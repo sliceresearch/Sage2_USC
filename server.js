@@ -2067,9 +2067,9 @@ function wsAddNewControl(wsio, data){
 	controls.push(data);
 	broadcast('createControl',data,'requestsWidgetControl');
 	
-	// var uniqueID = data.ptrId;
-	var app = findAppById(data.id.substring(0, data.id.lastIndexOf("_")));
-	//addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
+	var uniqueID = data.id.substring(data.objID.length, data.id.lastIndexOf("_"));
+	var app = findAppById(data.objID);
+	addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 }
 
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
@@ -3262,7 +3262,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		else if(data.button === "right"){
 			if(ct.show === true) {
 				hideControl(ct);
-				var app = findAppById(ct.id.substring(0, ct.id.lastIndexOf("_")));
+				var app = findAppById(ct.objID);
 				
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 			}
@@ -3350,7 +3350,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				else if (elemCtrl.show === false) {
 					showControl(elemCtrl, pointerX, pointerY);
 					
-					var app = findAppById(elemCtrl.id.substring(0, elemCtrl.id.lastIndexOf("_")));
+					var app = findAppById(elemCtrl.objID);
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}
 				else {
@@ -3368,7 +3368,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					else if (elemCtrl.show === false) {
 						showControl(elemCtrl, pointerX, pointerY) ;
 						
-						var app = findAppById(elemCtrl.id.substring(0, elemCtrl.id.lastIndexOf("_")));
+						var app = findAppById(elemCtrl.objID);
 						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
 					else {
