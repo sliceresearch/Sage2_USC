@@ -776,7 +776,7 @@ function wsKeyUp(wsio, data) {
 			if(data.code === 8 || data.code === 46){ // backspace or delete
 				deleteApplication(elem);
 				
-				addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
+				addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 			}
 		}
 		else if(remoteInteraction[uniqueID].appInteractionMode()) {	//only send special keys
@@ -907,7 +907,7 @@ function wsStopMediaStream(wsio, data) {
 	if(elem !== null) {
 		deleteApplication( elem );
 		
-		addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 	}
 	
 	addEventToUserLog(uniqueID, {type: "mediaStreamEnd", data: null, time: Date.now()});
@@ -1621,7 +1621,7 @@ function wsClearDisplay(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	// must add:
-	// addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
+	// addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 	
 	clearDisplay();
 }
@@ -1677,7 +1677,7 @@ function wsLoadFileFromServer(wsio, data) {
 		// if it's a session, then load it
 		loadSession(data.filename);
 		
-		addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, type: "session"}, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, application: {id: null, type: "session"}}, time: Date.now()});
 	}
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
@@ -1686,7 +1686,7 @@ function wsLoadFileFromServer(wsio, data) {
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 			
-			addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, type: data.application}, time: Date.now()});
+			addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 			
 			applications.push(appInstance);
 
@@ -2102,7 +2102,17 @@ function wsReleasedControlId(wsio, data){
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId, instanceID: data.instanceID}, 'receivesWidgetEvents');
 		
-		addEventToUserLog(data.addr, {type: "widgetAction", data: {application: data.appId, widget: data.ctrlId}, time: Date.now()});
+		if(data.ctrlId === "buttonCloseApp") {
+			var app = findAppById(data.appId);
+			addEventToUserLog(data.addr, {type: "delete", data: {application: {id: app.id, type: app.application}}, time: Date.now()});
+		}
+		else if(data.ctrlId === "buttonCloseWidget") {
+			var app = findAppById(data.appId);
+			addEventToUserLog(data.addr, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
+		}
+		else {
+			addEventToUserLog(data.addr, {type: "widgetAction", data: {application: data.appId, widget: data.ctrlId}, time: Date.now()});
+		}
 	}
 }
 
@@ -3314,7 +3324,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 						// last button: close app
 						deleteApplication(elem);
 						
-						addEventToUserLog(uniqueID, {type: "delete", data: {id: elem.id, application: elem.application}, time: Date.now()});
+						addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 						// need to quit the function and stop processing
 						return;
 					} else if (localX > (startButtons+buttonsPad)) {
