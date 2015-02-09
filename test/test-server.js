@@ -2,10 +2,10 @@
 
 var assert = require('assert');
 
-describe('Running server.js', function() {
+describe('Running server.js', function(done) {
     this.timeout(15000);
     it('Running sage2...', function(done) {
-        setTimeout(15000);
+        setTimeout(done, 15000);
         var sage2 = require('../server');
         done();
     });
