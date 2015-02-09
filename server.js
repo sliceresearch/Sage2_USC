@@ -98,7 +98,7 @@ if (program.logfile) {
 		console.log = function(d) {
 			line = util.format(d) + '\n';
 			log_file.write(line);
-			broadcast('console',line,'receivesConsoleMessages');
+			broadcast_opt('console',line,'receivesConsoleMessages');
 			program.interactive = undefined;
 		};
 	} else {
@@ -107,7 +107,7 @@ if (program.logfile) {
 			if ( args.length == 1 && typeof args[0] == 'string') {
 				line = args.toString() + '\n';
 				log_stdout.write( line );
-				broadcast('console',line,'receivesConsoleMessages');
+				broadcast_opt('console',line,'receivesConsoleMessages');
 			}
 			else {
 				var i = 0;
@@ -123,7 +123,7 @@ if (program.logfile) {
 				line = s + '\n';
 				log_stdout.write(line);
 				log_file.write(line);
-				broadcast('console',line,'receivesConsoleMessages');
+				broadcast_opt('console',line,'receivesConsoleMessages');
 			}
 		};
 	}
@@ -365,7 +365,6 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesConsoleMessages			= data.receivesConsoleMessages			|| false;
 	wsio.messages.sendsCommands						= data.sendsCommands					|| false;
 
-
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
 		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
@@ -470,7 +469,8 @@ function initializeWSClient(wsio) {
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
-	if (wsio.messages.sendsCommands){
+	if (wsio.messages.sendsCommands) {
+		wsio.emitString(JSON.stringify({f: 'console', d: JSON.stringify(config,null, " ")+'\n'}));
 		wsio.on('command', wsCommand);
 	}
 
@@ -2702,10 +2702,15 @@ if (program.interactive)
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
 				console.log('regenerate\tregenerates the assets');
-				console.log('hideui\thide/show/delay the user interface');
+				console.log('hideui\t\thide/show/delay the user interface');
 				console.log('sessions\tlist the available sessions');
-				console.log('update\trun a git update');
+				console.log('update\t\trun a git update');
+				console.log('version\t\tprint SAGE2 version');
 				console.log('exit\t\tstop SAGE2');
+				break;
+
+			case 'version':
+				console.log('Version', SAGE2_version.base, ' branch:', SAGE2_version.branch, ' commit:', SAGE2_version.commit, SAGE2_version.date);
 				break;
 
 			case 'update':
@@ -2808,14 +2813,14 @@ function quitSAGE2() {
 		    "form": config,
 		    "method": "POST"},
 		    function(err, response, body){
-			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+			    //console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
 				saveSession();
 				assets.saveAssets();
 				if( omicronRunning )
 					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
+				//console.log('');
+				//console.log('SAGE2 done');
+				//console.log('');
 				process.exit(0);
 			}
 		);
@@ -2824,9 +2829,9 @@ function quitSAGE2() {
 		assets.saveAssets();
 		if( omicronRunning )
 			omicronManager.disconnect();
-		console.log('');
-		console.log('SAGE2 done');
-		console.log('');
+		//console.log('');
+		//console.log('SAGE2 done');
+		//console.log('');
 		process.exit(0);
 	}
 }
@@ -2843,8 +2848,12 @@ function broadcast(func, data, type) {
 function broadcast_opt(func, data, type) {
 	// Marshall the message only once
 	var message = JSON.stringify({f: func, d: data});
-	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages[type]) clients[i].emitString( message );
+	try {
+		for(var i=0; i<clients.length; i++){
+			if(clients[i].messages[type]) clients[i].emitString( message );
+		}
+	} catch (e) {
+		// nothing
 	}
 }
 

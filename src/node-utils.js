@@ -142,8 +142,8 @@ function updateWithGIT(callback) {
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd1 = "git pull origin";
 	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if (err) { console.log('GIT>', stderr); return callback(err); }
-			console.log('GIT>', stdout);
+		if (err) { console.log('GIT>', stderr.trim()); return callback(err); }
+			console.log('GIT>', stdout.trim());
 			// return the object in the callback paramter
 			callback(null);
 	});
