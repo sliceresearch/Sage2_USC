@@ -621,31 +621,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	var sequenceMaximum = 30;
 	var innerSequence = 12;
 	var outerSequence = 18;
-	/*if (this.controlSpec.hasSlider){
-		buttonCount--;
-		innerSequence --;
-		outerSequence--;
-		startAngle += 15;
-		endAngle -= 15;
-	}
-	if (this.controlSpec.hasTextInput){
-		buttonCount--;
-		innerSequence --;
-		outerSequence--;
-		startAngle += 15;
-		endAngle -= 15;
-	}
-	if (this.controlSpec.hasColorPalette){
-		buttonCount--;
-		innerSequence --;
-		outerSequence--;
-		startAngle += 15;
-		endAngle -= 15;
-	}
 	
-	if (this.controlSpec.hasSlider || this.controlSpec.hasTextInput || this.controlSpec.hasColorPalette)
-		outerSequence--;
-	*/
 	this.controlSpec.addDefaultButtons({
 		id:this.id,
 		instanceID:this.instanceID,
