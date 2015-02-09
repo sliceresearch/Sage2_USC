@@ -998,15 +998,17 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 	var broadcastAddress, broadcastID;
 	var serverAddress, clientAddress;
 
-	mediaBlockStreams[data.id].clients[uniqueID].readyForNextFrame = true;
     var clientsReady = true;
 
     if(data.newClient !== null || data.newClient !== undefined) {
         if(data.newClient) {
+            initializeMediaBlockStreams(uniqueID);
             var app = findAppById(data.id);
             calculateValidBlocks(app, 128, mediaBlockStreams);
         }
     }
+
+	mediaBlockStreams[data.id].clients[uniqueID].readyForNextFrame = true;
 
     for(var key in mediaBlockStreams[data.id].clients) {
         if(!mediaBlockStreams[data.id].clients[key].readyForNextFrame) clientsReady = false;
