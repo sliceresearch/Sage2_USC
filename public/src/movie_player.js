@@ -80,7 +80,7 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.loopBtn = this.controls.addButton({
 			type: "loop",
-			sequenceNo: 2,
+			sequenceNo: 3,
 			action: function(date) {
 				if(_this.state.looped === true) {
 					console.log("no loop: " + _this.div.id);
@@ -115,7 +115,7 @@ var movie_player = SAGE2_App.extend( {
 		
 		this.playPauseBtn = this.controls.addButton({
 			type: "play-pause",
-			sequenceNo: 8,
+			sequenceNo: 9,
 			action: function(date) {
 				if(_this.state.paused === true) {
 					console.log("play: " + _this.div.id);

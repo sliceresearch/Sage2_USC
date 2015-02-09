@@ -37,8 +37,77 @@ var widget_demo = SAGE2_App.extend( {
 	},
 	
 	load: function(state, date) {
-		console.log("creating controls");
+		var playPauseHandle = this.controls.addButton({type:"play-pause",sequenceNo:1,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText = (playPauseHandle.state === 0)? "Paused" : "Playing"; //Reset value
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"stop",sequenceNo:2,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			if(playPauseHandle.state === 1){
+				playPauseHandle.state = 0;
+				this.displayText =  "Stopped"; 
+			}
+			else
+				this.displayText =  "Stop button pressed";
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"mute",sequenceNo:3,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Mute button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"loop",sequenceNo:4,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Loop button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"play-stop",sequenceNo:5,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Play - Stop button pressed";
+			this.draw(date); 
+		}.bind(this)});
+		this.controls.addButton({type:"next",sequenceNo:6,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Next button pressed"; 
+			this.colorIdx = (this.colorIdx + 1) % 3;
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Prev button pressed"; 
+			this.colorIdx = (this.colorIdx + 1) % 3;
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"up-arrow",sequenceNo:8,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Up button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"down-arrow",sequenceNo:9,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Down button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-in",sequenceNo:10,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Zoom-in button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out",sequenceNo:11,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Zoom-out button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"rewind",sequenceNo:12,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Rewind button pressed"; 
+			this.brightness = 64;
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"fastforward",sequenceNo:13,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Fastforward button pressed"; 
+			this.brightness = 255;
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"duplicate",sequenceNo:14,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "Duplicate button pressed"; 
+			this.draw(date);
+		}.bind(this)});
+		this.controls.addButton({type:"new",sequenceNo:15,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
+			this.displayText =  "New button pressed"; 
+			this.draw(date);
+		}.bind(this)});
 		
+		/* Specifying custom buttons */
 		var plusButton2 = {
 			"state": 0,
 			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
@@ -60,20 +129,8 @@ var widget_demo = SAGE2_App.extend( {
 		
 		//this.controls.addButtonType("plus", plusButton);
 		this.controls.addButtonType("watch", watchButton);
-		this.controls.addButton({type:"next",sequenceNo:2,action:function(date){ //Seqeunce number gives the absolute position of the button around the widget center, sequence number increases as we go counter clockwise.
-			//This is executed after the button click animation occurs.
-			this.colorIdx = (this.colorIdx + 1) % 3;
-			this.draw(date);
-		}.bind(this)});
-		this.controls.addButton({type:"prev",sequenceNo:3,action:function(date){
-			this.colorIdx = (this.colorIdx + 2) % 3;
-			this.draw(date);
-		}.bind(this)});
-		this.controls.addButton({type:"rewind",sequenceNo:7,action:function(date){
-			this.brightness = 64; //Reset value
-			this.draw(date);
-		}.bind(this)});
-		this.controls.addButton({type:"watch",sequenceNo:5,action:function(date){
+		
+		this.controls.addButton({type:"watch",sequenceNo:16,action:function(date){
 			this.displayText = "Pushed watch button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
@@ -92,23 +149,12 @@ var widget_demo = SAGE2_App.extend( {
 			"textual":false,
 			"animation":true
 		};
-		this.buttonHandle = this.controls.addButton({type:plusButton,sequenceNo:8,action:function(date){
+		this.buttonHandle = this.controls.addButton({type:plusButton,sequenceNo:17,action:function(date){
 			this.displayText = "Pushed plus button"; //Reset value
 			this.draw(date);
 		}.bind(this)});
 
-		this.controls.addButton({type:"loop",sequenceNo:9,initialState:1,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
-			this.displayText = "Pushed loop button"; //Reset value
-			this.draw(date);
-			this.buttonHandle.state = 1 - this.buttonHandle.state;
-		}.bind(this)});
-
-		this.controls.addButton({type:"loop",sequenceNo:10,initialState:1,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
-			this.displayText = "Pushed loop2 button"; //Reset value
-			this.draw(date);
-			this.buttonHandle.state = 1 - this.buttonHandle.state;
-		}.bind(this)});
-		
+	
 	
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"
