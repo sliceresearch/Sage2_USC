@@ -52,13 +52,14 @@
 		"json5": "latest",
 		"mime": "latest",
 		"node-demux": "latest",
-        "node-json-db": "latest",
+		"node-json-db": "latest",
 		"qr-image": "latest",
 		"request": "latest",
 		"sprint": "^0.3.1",
 		"twit": "latest",
 		"ws": "latest",
 		"semver": "latest",
+		"nodemon": "latest",
 		"ytdl-core": "latest"
 	},
 	"bundledDependencies": [],
@@ -72,11 +73,11 @@
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start": "node server.js",
+		"start": "./node_modules/.bin/nodemon server.js -l",
 		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/jshint/bin/jshint --verbose public/src/*.js",
 		"doc": "yuidoc -c doc/yuidoc.json",
-        "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=10000 ./test/*.js"
+        "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js"
 	},
 	"license": "SAGE2-Software-License"
 }

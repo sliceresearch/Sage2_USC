@@ -97,20 +97,17 @@ var widget_demo = SAGE2_App.extend( {
 			this.draw(date);
 		}.bind(this)});
 
-		
-		var helpButton = {
-			"textual":true,
-			"label":"Help",
-			"fill":"rgba(250,250,250,1.0)",
-			"animation":false
-		};
 		this.controls.addButton({type:"loop",sequenceNo:9,initialState:1,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
-			this.displayText = "Pushed Help button"; //Reset value
+			this.displayText = "Pushed loop button"; //Reset value
 			this.draw(date);
 			this.buttonHandle.state = 1 - this.buttonHandle.state;
 		}.bind(this)});
 
-		
+		this.controls.addButton({type:"loop",sequenceNo:10,initialState:1,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
+			this.displayText = "Pushed loop2 button"; //Reset value
+			this.draw(date);
+			this.buttonHandle.state = 1 - this.buttonHandle.state;
+		}.bind(this)});
 		
 	
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
@@ -118,7 +115,7 @@ var widget_demo = SAGE2_App.extend( {
 		//Only simple numerical values can be manipulated using the slider.
 		var formatFunction = function(value,end){
 			return value + ":" + end;
-		}
+		};
 		this.controls.addSlider({
 			begin:64,
 			end:255,
