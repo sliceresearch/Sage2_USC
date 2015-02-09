@@ -63,6 +63,19 @@ var stickyItems = require('./src/node-stickyitems');
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 
+// global variables to manage items
+var itemCount = 0;
+
+// global variables to manage clients
+var clients = [];
+var masterDisplay = null;
+var webBrowserClient = null;
+var sagePointers = {};
+var remoteInteraction = {};
+var mediaStreams = {};
+var radialMenus = {};
+var shell = null;
+
 // Command line arguments
 program
   .version(SAGE2_version)
@@ -73,29 +86,33 @@ program
   .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .parse(process.argv);
 
-
 // Logging mechanism
 if (program.logfile) {
 	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
 	var log_file   = fs.createWriteStream(path.resolve(logname), {flags : 'w+'});
 	var log_stdout = process.stdout;
+	var line, args;
 
 	// Redirect console.log to a file and still produces an output or not
 	if (program.output === false) {
 		console.log = function(d) {
-			log_file.write(util.format(d) + '\n');
+			line = util.format(d) + '\n';
+			log_file.write(line);
+			broadcast('console',line,'receivesConsoleMessages');
 			program.interactive = undefined;
 		};
 	} else {
 		console.log = function() {
-			if ((Array.prototype.slice.call(arguments)).length == 1 &&
-				typeof Array.prototype.slice.call(arguments)[0] == 'string') {
-				log_stdout.write( (Array.prototype.slice.call(arguments)).toString() + '\n' );
+			args = Array.prototype.slice.call(arguments);
+			if ( args.length == 1 && typeof args[0] == 'string') {
+				line = args.toString() + '\n';
+				log_stdout.write( line );
+				broadcast('console',line,'receivesConsoleMessages');
 			}
 			else {
 				var i = 0;
 				var s = "";
-				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
+				args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
 				while (i < args.length) {
 					if (i===0)
 						s = args[i];
@@ -103,16 +120,18 @@ if (program.logfile) {
 						s += " " + args[i];
 					i++;
 				}
-				log_stdout.write(s + '\n');
-				log_file.write(s + '\n');
+				line = s + '\n';
+				log_stdout.write(line);
+				log_file.write(line);
+				broadcast('console',line,'receivesConsoleMessages');
 			}
-
 		};
 	}
 }
 else if (program.output === false) {
-	console.log = function(d) { //
-		program.interactive = undefined;
+	program.interactive = undefined;
+	console.log = function(d) {
+		// disable print
 	};
 }
 
@@ -177,18 +196,6 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 var public_dir = "public"; // directory where HTTPS content is stored
 var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
-
-// global variables to manage items
-var itemCount = 0;
-
-// global variables to manage clients
-var clients = [];
-var masterDisplay = null;
-var webBrowserClient = null;
-var sagePointers = {};
-var remoteInteraction = {};
-var mediaStreams = {};
-var radialMenus = {};
 
 // Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
@@ -355,6 +362,8 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
 	wsio.messages.requestsFileHandling				= data.requestsFileHandling				|| false;
+	wsio.messages.receivesConsoleMessages			= data.receivesConsoleMessages			|| false;
+	wsio.messages.sendsCommands						= data.sendsCommands					|| false;
 
 
 	if (wsio.clientType==="display") {
@@ -403,22 +412,22 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaStream',           wsStopMediaStream);
 	}
 	if(wsio.messages.receivesMediaStreamFrames){
-		wsio.on('requestVideoFrame', wsRequestVideoFrame);
-		wsio.on('receivedMediaStreamFrame',  wsReceivedMediaStreamFrame);
-		wsio.on('receivedRemoteMediaStreamFrame',  wsReceivedRemoteMediaStreamFrame);
+		wsio.on('requestVideoFrame',              wsRequestVideoFrame);
+		wsio.on('receivedMediaStreamFrame',       wsReceivedMediaStreamFrame);
+		wsio.on('receivedRemoteMediaStreamFrame', wsReceivedRemoteMediaStreamFrame);
 	}
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
-		wsio.on('appResize', wsAppResize);
-		wsio.on('broadcast', wsBroadcast);
-		wsio.on('searchTweets', wsSearchTweets);
+		wsio.on('appResize',      wsAppResize);
+		wsio.on('broadcast',      wsBroadcast);
+		wsio.on('searchTweets',   wsSearchTweets);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
 		//wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
-		wsio.on('loadApplication', wsLoadApplication);
+		wsio.on('loadApplication',    wsLoadApplication);
 		wsio.on('loadFileFromServer', wsLoadFileFromServer);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
 		wsio.on('saveSesion',       wsSaveSesion);
@@ -432,13 +441,13 @@ function initializeWSClient(wsio) {
 		wsio.on('openNewWebpage', wsOpenNewWebpage);
 	}
 	if(wsio.messages.sendsVideoSynchonization){
-		wsio.on('playVideo', wsPlayVideo);
-		wsio.on('pauseVideo', wsPauseVideo);
-		wsio.on('stopVideo', wsStopVideo);
+		wsio.on('playVideo',       wsPlayVideo);
+		wsio.on('pauseVideo',      wsPauseVideo);
+		wsio.on('stopVideo',       wsStopVideo);
 		wsio.on('updateVideoTime', wsUpdateVideoTime);
-		wsio.on('muteVideo', wsMuteVideo);
-		wsio.on('unmuteVideo', wsUnmuteVideo);
-		wsio.on('loopVideo', wsLoopVideo);
+		wsio.on('muteVideo',       wsMuteVideo);
+		wsio.on('unmuteVideo',     wsUnmuteVideo);
+		wsio.on('loopVideo',       wsLoopVideo);
 	}
 	if(wsio.messages.sharesContentWithRemoteServer){
 		wsio.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
@@ -461,19 +470,22 @@ function initializeWSClient(wsio) {
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
+	if (wsio.messages.sendsCommands){
+		wsio.on('command', wsCommand);
+	}
 
 	/*if (wsio.messages.requestsFileHandling){
 		wsio.on('writeToFile', wsWriteToFile);
 		wsio.on('readFromFile', wsReadFromFile);
 	}*/
 
-	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
-	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
-	if(wsio.messages.receivesPointerData)              initializeExistingSagePointers(wsio);
-	if(wsio.messages.requiresFullApps)                 initializeExistingApps(wsio);
-	if(wsio.messages.requiresAppPositionSizeTypeOnly)  initializeExistingAppsPositionSizeTypeOnly(wsio);
-	if(wsio.messages.receivesRemoteServerInfo)         initializeRemoteServerInfo(wsio);
-	if(wsio.messages.receivesMediaStreamFrames)        initializeMediaStreams(uniqueID);
+	if(wsio.messages.sendsPointerData)                createSagePointer(uniqueID);
+	if(wsio.messages.receivesClockTime)               wsio.emit('setSystemTime', {date: new Date()});
+	if(wsio.messages.receivesPointerData)             initializeExistingSagePointers(wsio);
+	if(wsio.messages.requiresFullApps)                initializeExistingApps(wsio);
+	if(wsio.messages.requiresAppPositionSizeTypeOnly) initializeExistingAppsPositionSizeTypeOnly(wsio);
+	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
+	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -1019,7 +1031,7 @@ function printListSessions() {
 	console.log("Sessions\n---------");
 	for (var i = 0; i < thelist.length; i++) {
 		console.log(sprint("%2d: Name: %s\tSize: %.0fKB\tDate: %s",
-			i, thelist[i].name, thelist[i].size/1024.0, thelist[i].date
+			i, thelist[i].exif.FileName, thelist[i].exif.FileSize/1024.0, thelist[i].exif.FileDate
 		));
 	}
 }
@@ -1807,6 +1819,13 @@ function wsAddNewWebElement(wsio, data) {
 			}
 		}
 	});
+}
+
+// **************  Command line          *****************
+
+function wsCommand(wsio, data) {
+	// send the command to the REPL interpreter
+	shell.write(data+'\n');
 }
 
 // **************  Launching Web Browser *****************
@@ -2655,7 +2674,7 @@ if (program.session) {
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout
-	var shell = readline.createInterface({
+	shell = readline.createInterface({
 		input:  process.stdin, output: process.stdout
 	});
 
@@ -2685,7 +2704,15 @@ if (program.interactive)
 				console.log('regenerate\tregenerates the assets');
 				console.log('hideui\thide/show/delay the user interface');
 				console.log('sessions\tlist the available sessions');
+				console.log('update\trun a git update');
 				console.log('exit\t\tstop SAGE2');
+				break;
+
+			case 'update':
+				sageutils.updateWithGIT( function(err) {
+					if (err) console.log('GIT> Update error');
+					else console.log('GIT> Update done');
+				});
 				break;
 
 			case 'save':
