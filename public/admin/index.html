@@ -23,9 +23,9 @@
 	
 	function init() {
 		hostname = window.location.hostname;
-		port = window.location.port;
-		if(window.location.protocol == "http:" && port == "") port = "80";
-		if(window.location.protocol == "https:" && port == "") port = "443";
+		port     = window.location.port;
+		if (window.location.protocol == "http:"  && port == "") port = "80";
+		if (window.location.protocol == "https:" && port == "") port = "443";
 	
 		xhr = new XMLHttpRequest();
 		xhr.open("GET", "/config", true);
@@ -86,7 +86,7 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
+			displayClient_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
@@ -97,7 +97,7 @@
 		var displayClient = document.createElement('p');
 		var displayClient_link = document.createElement('a');
 		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
-		displayClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
+		displayClient_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
@@ -140,6 +140,15 @@
 		drawingClient_link.target = "_blank";
 		drawingClient.appendChild(drawingClient_link);
 		experiments.appendChild(drawingClient);
+
+		var consoleClient = document.createElement('p');
+		var consoleClient_link = document.createElement('a');
+		consoleClient_link.textContent = "Server output";
+		consoleClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "admin/console.html";
+		consoleClient_link.target = "_blank";
+		consoleClient.appendChild(consoleClient_link);
+		experiments.appendChild(consoleClient);
+
 	}
 </script>
 
