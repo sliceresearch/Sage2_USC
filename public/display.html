@@ -1007,9 +1007,7 @@
 		});
 
 		wsio.on('keyInTextInputWidget', function(data){
-			console.log(data);
 			var ctrl = getWidgetControlById(data);
-			console.log(ctrl);
 			if (ctrl){
 				var textInput = ctrl.parent();
 
