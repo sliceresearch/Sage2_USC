@@ -63,6 +63,20 @@ var stickyItems = require('./src/node-stickyitems');
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 
+// global variables to manage items
+var itemCount = 0;
+
+// global variables to manage clients
+var clients = [];
+var masterDisplay = null;
+var webBrowserClient = null;
+var sagePointers = {};
+var remoteInteraction = {};
+var mediaStreams = {};
+var mediaBlockStreams = {};
+var radialMenus = {};
+var shell = null;
+
 // Command line arguments
 program
   .version(SAGE2_version)
@@ -73,29 +87,33 @@ program
   .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .parse(process.argv);
 
-
 // Logging mechanism
 if (program.logfile) {
 	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
 	var log_file   = fs.createWriteStream(path.resolve(logname), {flags : 'w+'});
 	var log_stdout = process.stdout;
+	var line, args;
 
 	// Redirect console.log to a file and still produces an output or not
 	if (program.output === false) {
 		console.log = function(d) {
-			log_file.write(util.format(d) + '\n');
+			line = util.format(d) + '\n';
+			log_file.write(line);
+			broadcast_opt('console',line,'receivesConsoleMessages');
 			program.interactive = undefined;
 		};
 	} else {
 		console.log = function() {
-			if ((Array.prototype.slice.call(arguments)).length == 1 &&
-				typeof Array.prototype.slice.call(arguments)[0] == 'string') {
-				log_stdout.write( (Array.prototype.slice.call(arguments)).toString() + '\n' );
+			args = Array.prototype.slice.call(arguments);
+			if ( args.length == 1 && typeof args[0] == 'string') {
+				line = args.toString() + '\n';
+				log_stdout.write( line );
+				broadcast_opt('console',line,'receivesConsoleMessages');
 			}
 			else {
 				var i = 0;
 				var s = "";
-				var args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
+				args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
 				while (i < args.length) {
 					if (i===0)
 						s = args[i];
@@ -103,16 +121,18 @@ if (program.logfile) {
 						s += " " + args[i];
 					i++;
 				}
-				log_stdout.write(s + '\n');
-				log_file.write(s + '\n');
+				line = s + '\n';
+				log_stdout.write(line);
+				log_file.write(line);
+				broadcast_opt('console',line,'receivesConsoleMessages');
 			}
-
 		};
 	}
 }
 else if (program.output === false) {
-	console.log = function(d) { //
-		program.interactive = undefined;
+	program.interactive = undefined;
+	console.log = function(d) {
+		// disable print
 	};
 }
 
@@ -136,7 +156,7 @@ if(config.apis !== undefined && config.apis.twitter !== undefined){
 }
 
 // remove API keys from being investigated further
-if(config.apis !== undefined) delete config.apis;
+//if(config.apis !== undefined) delete config.apis;
 
 console.log(config);
 
@@ -175,22 +195,8 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 // global variables for various paths
 var public_dir = "public"; // directory where HTTPS content is stored
-//var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "https://"+config.host+":"+config.port.toString()+"/"; // base URL for this server
 var hostOrigin = (typeof config.rproxy_port != "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
-
-// global variables to manage items
-var itemCount = 0;
-
-// global variables to manage clients
-var clients = [];
-var masterDisplay = null;
-var webBrowserClient = null;
-var sagePointers = {};
-var remoteInteraction = {};
-var mediaStreams = {};
-var mediaBlockStreams = {};
-var radialMenus = {};
 
 // Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
@@ -282,6 +288,7 @@ function closeWebSocketClient(wsio) {
 	}
 	if(wsio.messages.sendsPointerData){
 		hidePointer(uniqueID);
+		removeControlsForUser(uniqueID);
 		delete sagePointers[uniqueID];
 		delete remoteInteraction[uniqueID];
 	}
@@ -364,7 +371,8 @@ function wsAddClient(wsio, data) {
 	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
 	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
 	wsio.messages.requestsFileHandling				= data.requestsFileHandling				|| false;
-
+	wsio.messages.receivesConsoleMessages			= data.receivesConsoleMessages			|| false;
+	wsio.messages.sendsCommands						= data.sendsCommands					|| false;
 
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
@@ -415,25 +423,25 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaBlockStream',           wsStopMediaBlockStream);
 	}
 	if(wsio.messages.receivesMediaStreamFrames){
-		wsio.on('requestVideoFrame', wsRequestVideoFrame);
-		wsio.on('receivedMediaStreamFrame',  wsReceivedMediaStreamFrame);
-		wsio.on('receivedRemoteMediaStreamFrame',  wsReceivedRemoteMediaStreamFrame);
-        wsio.on('requestVideoFrame', wsRequestVideoFrame);
-		wsio.on('receivedMediaBlockStreamFrame',  wsReceivedMediaBlockStreamFrame);
+		wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
+		wsio.on('receivedMediaStreamFrame',             wsReceivedMediaStreamFrame);
+		wsio.on('receivedRemoteMediaStreamFrame',       wsReceivedRemoteMediaStreamFrame);
+        wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
+		wsio.on('receivedMediaBlockStreamFrame',        wsReceivedMediaBlockStreamFrame);
 		wsio.on('receivedRemoteMediaBlockStreamFrame',  wsReceivedRemoteMediaBlockStreamFrame);
     }
 	if(wsio.messages.requiresFullApps){
 		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
 		wsio.on('updateAppState', wsUpdateAppState);
-		wsio.on('appResize', wsAppResize);
-		wsio.on('broadcast', wsBroadcast);
-		wsio.on('searchTweets', wsSearchTweets);
+		wsio.on('appResize',      wsAppResize);
+		wsio.on('broadcast',      wsBroadcast);
+		wsio.on('searchTweets',   wsSearchTweets);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
 		wsio.on('requestStoredFiles', wsRequestStoredFiles);
 		//wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
-		wsio.on('loadApplication', wsLoadApplication);
+		wsio.on('loadApplication',    wsLoadApplication);
 		wsio.on('loadFileFromServer', wsLoadFileFromServer);
 		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
 		wsio.on('saveSesion',       wsSaveSesion);
@@ -447,13 +455,13 @@ function initializeWSClient(wsio) {
 		wsio.on('openNewWebpage', wsOpenNewWebpage);
 	}
 	if(wsio.messages.sendsVideoSynchonization){
-		wsio.on('playVideo', wsPlayVideo);
-		wsio.on('pauseVideo', wsPauseVideo);
-		wsio.on('stopVideo', wsStopVideo);
+		wsio.on('playVideo',       wsPlayVideo);
+		wsio.on('pauseVideo',      wsPauseVideo);
+		wsio.on('stopVideo',       wsStopVideo);
 		wsio.on('updateVideoTime', wsUpdateVideoTime);
-		wsio.on('muteVideo', wsMuteVideo);
-		wsio.on('unmuteVideo', wsUnmuteVideo);
-		wsio.on('loopVideo', wsLoopVideo);
+		wsio.on('muteVideo',       wsMuteVideo);
+		wsio.on('unmuteVideo',     wsUnmuteVideo);
+		wsio.on('loopVideo',       wsLoopVideo);
 	}
 	if(wsio.messages.sharesContentWithRemoteServer){
 		wsio.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
@@ -478,19 +486,23 @@ function initializeWSClient(wsio) {
 	if (wsio.messages.requestsAppClone){
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
+	if (wsio.messages.sendsCommands) {
+		wsio.emitString(JSON.stringify({f: 'console', d: JSON.stringify(config,null, " ")+'\n'}));
+		wsio.on('command', wsCommand);
+	}
 
 	/*if (wsio.messages.requestsFileHandling){
 		wsio.on('writeToFile', wsWriteToFile);
 		wsio.on('readFromFile', wsReadFromFile);
 	}*/
 
-	if(wsio.messages.sendsPointerData)                 createSagePointer(uniqueID);
-	if(wsio.messages.receivesClockTime)                wsio.emit('setSystemTime', {date: new Date()});
-	if(wsio.messages.receivesPointerData)              initializeExistingSagePointers(wsio);
-	if(wsio.messages.requiresFullApps)                 initializeExistingApps(wsio);
-	if(wsio.messages.requiresAppPositionSizeTypeOnly)  initializeExistingAppsPositionSizeTypeOnly(wsio);
-	if(wsio.messages.receivesRemoteServerInfo)         initializeRemoteServerInfo(wsio);
-    if(wsio.messages.receivesMediaStreamFrames)        initializeMediaStreams(uniqueID);
+	if(wsio.messages.sendsPointerData)                createSagePointer(uniqueID);
+	if(wsio.messages.receivesClockTime)               wsio.emit('setSystemTime', {date: new Date()});
+	if(wsio.messages.receivesPointerData)             initializeExistingSagePointers(wsio);
+	if(wsio.messages.requiresFullApps)                initializeExistingApps(wsio);
+	if(wsio.messages.requiresAppPositionSizeTypeOnly) initializeExistingAppsPositionSizeTypeOnly(wsio);
+	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
+	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -736,7 +748,7 @@ function wsKeyUp(wsio, data) {
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
 	if (lockedControl !== null) {
-		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
 		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code == 13) { //Enter key
 			remoteInteraction[uniqueID].dropControl();
@@ -776,7 +788,7 @@ function wsKeyPress(wsio, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
 	}
 	else if (lockedControl !== null){
-		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
+		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
 		broadcast('keyInTextInputWidget', event ,'receivesWidgetEvents');
 		if (data.code === 13){ //Enter key
 			remoteInteraction[uniqueID].dropControl();
@@ -1193,7 +1205,7 @@ function printListSessions() {
 	console.log("Sessions\n---------");
 	for (var i = 0; i < thelist.length; i++) {
 		console.log(sprint("%2d: Name: %s\tSize: %.0fKB\tDate: %s",
-			i, thelist[i].name, thelist[i].size/1024.0, thelist[i].date
+			i, thelist[i].exif.FileName, thelist[i].exif.FileSize/1024.0, thelist[i].exif.FileDate
 		));
 	}
 }
@@ -1989,6 +2001,13 @@ function wsAddNewWebElement(wsio, data) {
 	});
 }
 
+// **************  Command line          *****************
+
+function wsCommand(wsio, data) {
+	// send the command to the REPL interpreter
+	shell.write(data+'\n');
+}
+
 // **************  Launching Web Browser *****************
 
 function wsOpenNewWebpage(wsio, data) {
@@ -2194,8 +2213,9 @@ function wsAddNewControl(wsio, data){
 		if (controls[i].id === data.id)
 			return;
 	}
-	broadcast('createControl',data,'requestsWidgetControl');
 	controls.push (data);
+	broadcast('createControl',data,'requestsWidgetControl');
+
 }
 
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
@@ -2214,7 +2234,7 @@ function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or c
 		remoteInteraction[data.addr].dropControl();
 	}
 	if (regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
-		var appData = {ctrlId:data.ctrlId,appId:data.appId};
+		var appData = {ctrlId:data.ctrlId,appId:data.appId,instanceID:data.instanceID};
 		remoteInteraction[data.addr].lockControl(appData);
 		if (regSl.test(appData.ctrlId) && /knob/.test(appData.ctrlId))
 			broadcast('sliderKnobLockAction', appData, 'receivesWidgetEvents');
@@ -2226,25 +2246,24 @@ function wsReleasedControlId(wsio, data){
 	var regButton = /button/;
 	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
 		remoteInteraction[data.addr].dropControl();
-		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId}, 'receivesWidgetEvents');
+		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId,instanceID:data.instanceID}, 'receivesWidgetEvents');
 	}
 }
 
 function wsCloseAppFromControl(wsio, data){
-	console.log("close App:", data.appId);
 	var app = findAppById(data.appId);
 	if (app)
 		deleteApplication(app);
 }
 
 function wsHideWidgetFromControl(wsio, data){
-	var ctrl = findControlByAppId(data.appId);
+	var ctrl = findControlById(data.instanceID);
 	hideControl(ctrl);
 }
 
 function wsOpenRadialMenuFromControl(wsio, data){
 	console.log("radial menu");
-	var ctrl = findControlByAppId(data.appId);
+	var ctrl = findControlById(data.id);
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	createRadialMenu( uniqueID, ctrl.left, ctrl.top);
 }
@@ -2891,7 +2910,7 @@ if (program.session) {
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout
-	var shell = readline.createInterface({
+	shell = readline.createInterface({
 		input:  process.stdin, output: process.stdout
 	});
 
@@ -2919,9 +2938,22 @@ if (program.interactive)
 				console.log('load\t\tload a session and restore applications');
 				console.log('assets\t\tlist the assets in the file library');
 				console.log('regenerate\tregenerates the assets');
-				console.log('hideui\thide/show/delay the user interface');
+				console.log('hideui\t\thide/show/delay the user interface');
 				console.log('sessions\tlist the available sessions');
+				console.log('update\t\trun a git update');
+				console.log('version\t\tprint SAGE2 version');
 				console.log('exit\t\tstop SAGE2');
+				break;
+
+			case 'version':
+				console.log('Version', SAGE2_version.base, ' branch:', SAGE2_version.branch, ' commit:', SAGE2_version.commit, SAGE2_version.date);
+				break;
+
+			case 'update':
+				sageutils.updateWithGIT( function(err) {
+					if (err) console.log('GIT> Update error');
+					else console.log('GIT> Update done');
+				});
 				break;
 
 			case 'save':
@@ -3020,14 +3052,14 @@ function quitSAGE2() {
 		    "form": config,
 		    "method": "POST"},
 		    function(err, response, body){
-			    console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
+			    //console.log('Deregistration with EVL site:', (err===null)?"success":err.code);
 				saveSession();
 				assets.saveAssets();
 				if( omicronRunning )
 					omicronManager.disconnect();
-				console.log('');
-				console.log('SAGE2 done');
-				console.log('');
+				//console.log('');
+				//console.log('SAGE2 done');
+				//console.log('');
 				process.exit(0);
 			}
 		);
@@ -3036,9 +3068,9 @@ function quitSAGE2() {
 		assets.saveAssets();
 		if( omicronRunning )
 			omicronManager.disconnect();
-		console.log('');
-		console.log('SAGE2 done');
-		console.log('');
+		//console.log('');
+		//console.log('SAGE2 done');
+		//console.log('');
 		process.exit(0);
 	}
 }
@@ -3055,8 +3087,12 @@ function broadcast(func, data, type) {
 function broadcast_opt(func, data, type) {
 	// Marshall the message only once
 	var message = JSON.stringify({f: func, d: data});
-	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages[type]) clients[i].emitString( message );
+	try {
+		for(var i=0; i<clients.length; i++){
+			if(clients[i].messages[type]) clients[i].emitString( message );
+		}
+	} catch (e) {
+		// nothing
 	}
 }
 
@@ -3114,13 +3150,23 @@ function findControlsUnderPointer(pointerX, pointerY) {
 	return null;
 }
 
-function findControlByAppId(id) {
+function findControlById(id) {
 	for (var i=controls.length-1; i>=0; i--) {
-		if (controls[i].id === id+'_controls') {
+		if (controls[i].id === id) {
 			return controls[i];
 		}
 	}
 	return null;
+}
+
+function findControlsByUserId(uid) {
+	var idxList = [];
+	for (var i=controls.length-1; i>=0; i--) {
+		if (controls[i].id.indexOf(uid) > -1) {
+			idxList.push(i);
+		}
+	}
+	return idxList;
 }
 
 function hideControl(ctrl){
@@ -3128,6 +3174,15 @@ function hideControl(ctrl){
 		ctrl.show = false;
 		broadcast('hideControl',{id:ctrl.id},'receivesWidgetEvents');
 	}
+}
+
+function removeControlsForUser(uniqueID){
+	for (var i=controls.length-1; i>=0; i--) {
+		if (controls[i].id.indexOf(uniqueID) > -1) {
+			controls.splice(i,1);
+		}
+	}
+	broadcast('removeControlsForUser',{user_id:uniqueID},'receivesWidgetEvents');
 }
 
 function showControl(ctrl, pointerX, pointerY){
@@ -3400,9 +3455,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				}
 			}
 			else if(data.button === "right"){
-				elemCtrl = findControlByAppId(elem.id);
+				elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 				if (elemCtrl === null) {
-					broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+					broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
 				else if (elemCtrl.show === false) {
 					showControl(elemCtrl, pointerX, pointerY) ;
@@ -3415,9 +3470,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
 			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
 				if(data.button === "right"){
-					elemCtrl = findControlByAppId(elem.id);
+					elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 					if (elemCtrl === null) {
-						broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[uniqueID].id, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+						broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 					}
 					else if (elemCtrl.show === false) {
 						showControl(elemCtrl, pointerX, pointerY) ;
@@ -3460,7 +3515,7 @@ function pointerPressRight( address, pointerX, pointerY ) {
 		hideControl(ctrl);
 	}
 	else if (elem !== null) {
-		var elemCtrl = findControlByAppId(elem.id);
+		var elemCtrl = findControlById(elem.id);
 		if ( remoteInteraction[address].windowManagementMode() ) {
 			if (elemCtrl === null) {
 				broadcast('requestNewControl',{elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
@@ -4354,10 +4409,10 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				broadcast('showRadialMenu', radialMenus[uniqueID+"_menu"].getInfo(), 'receivesPointerData');
 			}
 		}
-		else
+		/*else
 		{
 			// Open a 'app' radial menu (or in this case application widget)
-			var elemCtrl = findControlByAppId(elem.id);
+			var elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 			if (elemCtrl === null) {
 				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch"+uniqueID, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
@@ -4367,7 +4422,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 			else {
 				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 			}
-		}
+		}*/
 	}
 	updateRadialMenu(uniqueID);
 }

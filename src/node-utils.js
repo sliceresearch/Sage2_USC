@@ -132,6 +132,24 @@ function getFullVersion(callback) {
 }
 
 /**
+ * Upate the source code using git
+ *
+ * @method updateWithGIT
+ * @param callback {Function} function to be run when finished
+ */
+function updateWithGIT(callback) {
+	// get to the root folder of the sources
+	var dirroot = path.resolve(__dirname, '..');
+	var cmd1 = "git pull origin";
+	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
+		if (err) { console.log('GIT>', stderr.trim()); return callback(err); }
+			console.log('GIT>', stdout.trim());
+			// return the object in the callback paramter
+			callback(null);
+	});
+}
+
+/**
  * Utility function to compare two strings independently of case.
  * Used for sorting
  *
@@ -217,3 +235,4 @@ exports.compareString   = compareString;
 exports.compareFilename = compareFilename;
 exports.compareTitle    = compareTitle;
 exports.isTrue          = isTrue;
+exports.updateWithGIT   = updateWithGIT;
