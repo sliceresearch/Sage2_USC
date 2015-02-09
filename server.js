@@ -2102,11 +2102,11 @@ function wsReleasedControlId(wsio, data){
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId, instanceID: data.instanceID}, 'receivesWidgetEvents');
 		
-		if(data.ctrlId === "buttonCloseApp") {
+		if(data.ctrlId.indexOf("buttonCloseApp") >= 0) {
 			var app = findAppById(data.appId);
 			addEventToUserLog(data.addr, {type: "delete", data: {application: {id: app.id, type: app.application}}, time: Date.now()});
 		}
-		else if(data.ctrlId === "buttonCloseWidget") {
+		else if(data.ctrlId.indexOf("buttonCloseWidget") >= 0) {
 			var app = findAppById(data.appId);
 			addEventToUserLog(data.addr, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 		}
