@@ -61,6 +61,8 @@ span {
 
 #menuUI {
 	float: left;
+	white-space: nowrap;
+	position: absolute;
 }
 
 #textWidthTest {
@@ -77,6 +79,7 @@ span {
 	position: relative;
 	width: 165px;
 	height: 64px;
+	display: inline-block;
 }
 
 .uiButton img {
