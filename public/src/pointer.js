@@ -146,7 +146,6 @@ function pointer() {
 	this.updateIconColors = function() {
 		
 		if( this.sourceType === "Touch" ) {
-			console.log("Pointer style set to " + this.sourceType);
 			if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
 			if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
 			if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");

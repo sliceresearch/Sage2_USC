@@ -57,7 +57,7 @@
 			// to connect to the specified Omicron oinputserver
 			// (By default the server listens for an Omicron sageinputserver to connect to it)
 			useOinputserver: true,
-			inputServerIP: "omgtracker.evl.uic.edu",
+			inputServerIP: "131.193.76.121",
 			msgPort: 28000
 		}
 	},

@@ -4070,7 +4070,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				// Open a 'media' radial menu
 				broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
 			}
-			else if( radialMenus[uniqueID+"_menu"] !== undefined )
+			else if( validLocation && radialMenus[uniqueID+"_menu"] !== undefined )
 			{
 				radialMenus[uniqueID+"_menu"].setPosition(newMenuPos);
 

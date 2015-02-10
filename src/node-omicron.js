@@ -32,6 +32,8 @@ var wandColor = "rgba(250, 5, 5, 1.0)";
 var wandScaleDelta = 250;
 var acceleratedDragScale = 0;
 
+var touchZoomScale = 520;
+
 var wandXFilter;
 var wandYFilter;
 
@@ -50,7 +52,6 @@ function omicronManager( sysConfig )
 	var lastPosX = 0;
 	var lastPosY = 0;
 
-	var touchZoomScale = 520;
 
 	var freq = 120;
 	var mincutoff = 1.25;
@@ -110,7 +111,7 @@ function omicronManager( sysConfig )
 	
 	if( config.zoomGestureScale )
 	{
-		this.touchZoomScale = config.zoomGestureScale;
+		touchZoomScale = config.zoomGestureScale;
 	}
 	
 	if( config.acceleratedDragScale )
@@ -422,7 +423,7 @@ omicronManager.prototype.runTracker = function()
 						{
 							if( this.gestureDebug )
 								console.log("Touch zoom");
-							pointerScroll( address, { wheelDelta: -zoomDelta * this.touchZoomScale } );
+							pointerScroll( address, { wheelDelta: -zoomDelta * touchZoomScale } );
 						}
 					}
 
