@@ -30,6 +30,7 @@ var SAGE2_App = Class.extend( {
 		this.maxFPS = null;
 		this.redraw = null;
 		this.sticky = null;
+		this.config = null;
 		this.controls  = null;
 		this.cloneable = null;
 		this.cloneData = null; // If the clone is not a fresh copy, this variable holds data to be loaded into the clone
@@ -67,10 +68,8 @@ var SAGE2_App = Class.extend( {
 		this.sage2_width  = data.width;
 		this.sage2_height = data.height;
 
-
 		this.controls = new SAGE2WidgetControlBar(data.id);
 
-		
 		this.prevDate  = data.date;
 		this.frame     = 0;
 		
@@ -84,16 +83,19 @@ var SAGE2_App = Class.extend( {
 		this.maxFPS    = 30.0; // Default to 30fps for performance reasons
 		this.redraw    = true;
 
+		// keep a copy of the wall configuration
+		this.config    = ui.json_cfg;
+
 		// Top layer
 		this.layer     = null;
 		//App ID
 		this.id = data.id;
 		//File Handling
-		this.fileName = "";
+		this.fileName       = "";
 		this.fileDataBuffer = null;
-		this.fileRead = false;
-		this.fileWrite = false;
-		this.fileReceived = false;
+		this.fileRead       = false;
+		this.fileWrite      = false;
+		this.fileReceived   = false;
 	},
 
 	// Functions to create and manager another layered DVI ontop the app

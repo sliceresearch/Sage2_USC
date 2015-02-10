@@ -338,27 +338,27 @@
 		var sage2Pointer = document.getElementById('sage2pointer');
 		sage2Pointer.width  = Math.floor(48 * menuScale);
 		sage2Pointer.height = Math.floor(48 * menuScale);
-		var sharescreen = document.getElementById('sharescreen');
-		sharescreen.width  = Math.floor(48 * menuScale);
-		sharescreen.height = Math.floor(48 * menuScale);
-		var applauncher = document.getElementById('applauncher');
-		applauncher.width  = Math.floor(48 * menuScale);
-		applauncher.height = Math.floor(48 * menuScale);
+		var sharescreen  = document.getElementById('sharescreen');
+		sharescreen.width   = Math.floor(48 * menuScale);
+		sharescreen.height  = Math.floor(48 * menuScale);
+		var applauncher  = document.getElementById('applauncher');
+		applauncher.width   = Math.floor(48 * menuScale);
+		applauncher.height  = Math.floor(48 * menuScale);
 		var mediabrowser = document.getElementById('mediabrowser');
 		mediabrowser.width  = Math.floor(48 * menuScale);
 		mediabrowser.height = Math.floor(48 * menuScale);
+		var arrangement  = document.getElementById('arrangement');
+		arrangement.width  = Math.floor(48 * menuScale);
+		arrangement.height = Math.floor(48 * menuScale);
+		var settings     = document.getElementById('settings');
+		settings.width     = Math.floor(48 * menuScale);
+		settings.height    = Math.floor(48 * menuScale);
+		var info         = document.getElementById('info');
+		info.width         = Math.floor(48 * menuScale);
+		info.height        = Math.floor(48 * menuScale);
 		//var webbrowser = document.getElementById('browser');
 		//webbrowser.width  = Math.floor(48 * menuScale);
 		//webbrowser.height = Math.floor(48 * menuScale);
-		var arrangement = document.getElementById('arrangement');
-		arrangement.width  = Math.floor(48 * menuScale);
-		arrangement.height = Math.floor(48 * menuScale);
-		var settings = document.getElementById('settings');
-		settings.width  = Math.floor(48 * menuScale);
-		settings.height = Math.floor(48 * menuScale);
-		var info = document.getElementById('info');
-		info.width  = Math.floor(48 * menuScale);
-		info.height = Math.floor(48 * menuScale);
 		
 		var uiButton = getCSSProperty("style_ui.css", ".uiButton");
 		if(uiButton !== null){
@@ -571,45 +571,6 @@
 		}
 	}
 	
-	//////////////////////////////////////////////////////////
-	// Device detection based on UserAgent (bad but hey...)
-	//     based on device.js
-	//////////////////////////////////////////////////////////
-	/*
-	function _find(needle) {
-		return _user_agent.indexOf(needle) !== -1;
-	}
-	function desktop() {
-		return !tablet() && !mobile();
-	};
-	function mobile() {
-		return androidPhone() || iphone();
-	}
-	function tablet() {
-		return ipad() || androidTablet();
-	}
-	function desktop() {
-		return !tablet() && !mobile();
-	}
-	function ios() {
-		return iphone() || ipad();
-	}
-	function iphone() {
-		return _find('iphone');
-	}
-	function ipad() {
-		return _find('ipad');
-	}
-	function android() {
-		return _find('android');
-	}
-	function androidPhone() {
-		return android() && _find('mobile');
-	}
-	function androidTablet() {
-		return android() && !_find('mobile');
-	}
-	*/
 	//////////////////////////////////////////////////////////
 
 	function mouseCheck(event) {
@@ -1210,9 +1171,15 @@
 
 <body onload="init()" onresize="resize()">
 	<div id="mainUI">
+
+		<img src="images/sage2_logo.png" width=300 style="display:block;margin-left:auto;margin-right: auto;"/>
+		<div class="clear"></div>
+
 		<div id="displayUI">
 			<canvas id="sage2UI"></canvas>
 		</div>
+
+
 		<div id="menuUI">
 			<div id="sage2pointerContainer" class="uiButton">
 				<img id="sage2pointer" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48" />
@@ -1230,12 +1197,6 @@
 				<img id="mediabrowser" alt="mediabrowser" src="images/ui/[graycircle]-mediabrowser.svg" width="48" height="48"/>
 				<p id="mediabrowserLabel">Media Browser</p>
 			</div>
-		<!-- browser commented out for now
-			<div id="browserContainer" class="uiButton">
-				<img id="browser" alt="browser" src="images/ui/[graycircle]-browser.svg" width="48" height="48"/>
-				<p id="browserLabel">Web browser</p>
-			</div>
-		-->
 			<div id="arrangementContainer" class="uiButton">
 				<img id="arrangement" alt="arrangement" src="images/ui/[graycircle]-arrangement.svg" width="48" height="48"/>
 				<p id="arrangementLabel">Arrangement</p>
@@ -1248,8 +1209,16 @@
 				<img id="info" alt="info" src="images/ui/[graycircle]-info.svg" width="48" height="48"/>
 				<p id="infoLabel">Information</p>
 			</div>
+			<!-- browser commented out for now
+				<div id="browserContainer" class="uiButton">
+					<img id="browser" alt="browser" src="images/ui/[graycircle]-browser.svg" width="48" height="48"/>
+					<p id="browserLabel">Web browser</p>
+				</div>
+			-->
 		</div>
+
 	</div>
+
 	<div class="clear"></div>
 	
 	<!-- transparent black overlay for all dialogs -->

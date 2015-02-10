@@ -1,0 +1,16 @@
+{
+	"main_script": "forecast.js",
+	"icon": "forecast.webp",
+	"width": 800,
+	"height": 500,
+        "animation": true,
+        "dependencies": [
+        ],
+        "title": "Forecast.io",
+        "version": "1.0.0",
+        "description": "Weather widget using forecast.io API",
+        "keywords": [ "weather", "location", "forecast.io" ],
+        "author": "Luc Renambot <renambot@gmail.com>",
+        "license": "SAGE2-Software-License"
+
+}

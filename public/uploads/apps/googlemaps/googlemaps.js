@@ -30,6 +30,7 @@ var googlemaps = SAGE2_App.extend( {
 		this.scrollAmount = null;
 		this.trafficTimer = null;
 		this.trafficCB    = null;
+
 	},
 
 	init: function(data) {
@@ -44,6 +45,7 @@ var googlemaps = SAGE2_App.extend( {
 		this.position     = {x:0, y:0};
 		this.scrollAmount = 0;
 
+		this.zoomFactor = null;
 		// building up the state object
 		this.state.mapType   = null;
 		this.state.zoomLevel = null;
@@ -57,35 +59,28 @@ var googlemaps = SAGE2_App.extend( {
 		googlemaps_self = this;
 		// load google maps
 		addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
-		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
-			this.map.panBy(-100,0);
-			this.updateCenter();
-		}.bind(this)});
-		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
-			this.map.panBy(100,0);
-			this.updateCenter();
-		}.bind(this)});
-		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
-			this.map.panBy(0,-100);
-			this.updateCenter();
-		}.bind(this)});
-		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
-			this.map.panBy(0,100);
-			this.updateCenter();
-		}.bind(this)});
-				
-		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
-			var z = this.map.getZoom();
-			this.map.setZoom(z+1);
-			this.state.zoomLevel = this.map.getZoom();
-		}.bind(this)});
-		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
-			var z = this.map.getZoom();
-			this.map.setZoom(z-1);
-			this.state.zoomLevel = this.map.getZoom();
-		}.bind(this)});
+		
+		this.controls.addSlider({
+			begin:8,
+			end:20,
+			increments:1,
+			appHandle:this, 
+			property:"state.zoomLevel",
+			caption:"Zoom", 
+			labelFormatFunction:function(value,end){
+				return ((value<10)?"0":"") + value + "/" + end;
+			},
+			lockAction:function(date){
+			}, 
+			updateAction:function(date){
+			}, 
+			action:function(date){
+				this.map.setZoom(this.state.zoomLevel);
+			}.bind(this)
+		});
+		
 		var mapLabel =  { "textual":true, "label":"Map", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:mapLabel,sequenceNo:2,action:function(date){ 
+		this.controls.addButton({type:mapLabel,sequenceNo:1,action:function(date){ 
 			if (this.state.mapType == google.maps.MapTypeId.TERRAIN)
 				this.state.mapType = google.maps.MapTypeId.ROADMAP;
 			else if (this.state.mapType == google.maps.MapTypeId.ROADMAP)
@@ -99,7 +94,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.map.setMapTypeId(this.state.mapType);
 		}.bind(this)});
 		var trafficLabel = { "textual":true, "label":"T", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:trafficLabel,sequenceNo:8,action:function(date){ 
+		this.controls.addButton({type:trafficLabel,sequenceNo:6,action:function(date){ 
 			// add/remove traffic layer
 			if (this.trafficLayer.getMap() == null) {
 				this.trafficLayer.setMap(this.map);
@@ -114,7 +109,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.updateLayers();
 		}.bind(this)});
 		var weatherLabel = { "textual":true, "label":"W", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:weatherLabel,sequenceNo:9,action:function(date){ 
+		this.controls.addButton({type:weatherLabel,sequenceNo:8,action:function(date){ 
 			// add/remove weather layer
 			if (this.weatherLayer.getMap() == null)
 				this.weatherLayer.setMap(this.map);
@@ -122,13 +117,17 @@ var googlemaps = SAGE2_App.extend( {
 				this.weatherLayer.setMap(null);
 			this.updateLayers();
 		}.bind(this)});
-			
+		this.controls.addTextInput({defaultText: "",caption:"Addr",action:function(text){
+			this.codeAddress(text);
+			this.updateCenter();
+			this.map.setZoom(15);
+			this.state.zoomLevel = this.map.getZoom();
+		}.bind(this)});
 		this.controls.finishedAddingControls();
 	},
 
 
 	initialize: function() {
-		this.log("initialize googlemaps");
 		if (this.state.mapType == null)
 			this.state.mapType = google.maps.MapTypeId.HYBRID;
 		if (this.state.zoomLevel == null)
@@ -140,7 +139,7 @@ var googlemaps = SAGE2_App.extend( {
 
 		// Enable the visual refresh
 		google.maps.visualRefresh = true;
-
+		this.geocoder = new google.maps.Geocoder();
 		var city = new google.maps.LatLng(this.state.center.lat,this.state.center.lng);
 		var styles = [
 			{
@@ -236,6 +235,11 @@ var googlemaps = SAGE2_App.extend( {
 				tiles[i].src = new_src;
 			}
 		}
+	},
+
+	quit: function() {
+		// Make sure to delete the timer when quitting the app
+		if (this.trafficTimer) clearInterval(this.trafficTimer);
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -363,6 +367,20 @@ var googlemaps = SAGE2_App.extend( {
 			
 			this.refresh(date);
 		}
+	},
+
+	codeAddress: function(text) {
+	  this.geocoder.geocode( { 'address': text}, function(results, status) {
+	    if (status == google.maps.GeocoderStatus.OK) {
+	      this.map.setCenter(results[0].geometry.location);
+	      /*var marker = new google.maps.Marker({
+	          map: this.map,
+	          position: results[0].geometry.location
+	      });*/
+	    } else {
+	      console.log('Geocode was not successful for the following reason: ' + status);
+	    }
+	  }.bind(this));
 	}
 
 });

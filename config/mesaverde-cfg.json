@@ -13,13 +13,14 @@
 		image: {
 			url: "images/background/osx_hero_2x_cc.jpg",
 			style: "stretch"
-		}
+		},
+		clip: true
 	},
 	ui: {
 		// clock setting: 12-hour or 24-hour
 		clock: 12,
 		show_url: true,
-		show_version: true,
+		show_version: true
 	},
 	resolution: {
 		width: 1920,
