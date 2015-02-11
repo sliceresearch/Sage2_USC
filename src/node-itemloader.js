@@ -782,6 +782,10 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				sticky:appData.application.sticky,
 				date: new Date()
 			};
+			if(appData.application.application === "pdf_viewer") {
+				appInstance.data.src = appInstance.url;
+			}
+			
 			this.scaleAppToFitDisplay(appInstance);
 			callback(appInstance, null);
 		}

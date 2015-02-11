@@ -72,6 +72,7 @@ program
   .option('-l, --logfile [file]',       'Specify a log file')
   .option('-q, --no-output',            'Quiet, no output')
   .option('-s, --session [name]',       'Load a session file (last session if omitted)')
+  .option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
   .parse(process.argv);
 
 // Logging mechanism
@@ -198,11 +199,14 @@ var mediaStreams = {};
 var radialMenus = {};
 var shell = null;
 
-var users;
-if(sageutils.fileExists("tracked_users.json")) users = json5.parse(fs.readFileSync("tracked_users.json"));
-else users = {};
-users.session = {};
-users.session.start = Date.now();
+var users = null;
+if(program.trackUsers) {
+	var trackfile = program.trackUsers === true ? "tracked_users.json" : program.trackUsers;
+	if(sageutils.fileExists(trackfile)) users = json5.parse(fs.readFileSync(trackfile));
+	else users = {};
+	users.session = {};
+	users.session.start = Date.now();
+}
 if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 
 // Sticky items and window position for new clones
@@ -2921,19 +2925,21 @@ function formatDateToYYYYMMDD_HHMMSS(date) {
 	minute = minute >= 10 ? minute.toString() : "0"+minute.toString();
 	second = second >= 10 ? second.toString() : "0"+second.toString();
 	
-	return year + "-" + month + "-" + day + " " + hour + "-" + minute + "-" + second;
+	return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;
 }
 
 function quitSAGE2() {
-	var key;
-	for(key in users) {
-		if(users[key].ip !== undefined) delete users[key].ip;
+	if(users !== null) {
+		var key;
+		for(key in users) {
+			if(users[key].ip !== undefined) delete users[key].ip;
+		}
+		users.session.end = Date.now();
+		var logname = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
+		fs.writeFileSync(logname, json5.stringify(users, null, 4));
+		console.log("Log> saved to " + logname);
 	}
-	users.session.end = Date.now();
-	var logname = "logs/user-log ("+formatDateToYYYYMMDD_HHMMSS(new Date())+").json";
-	fs.writeFileSync(logname, json5.stringify(users, null, 4));
-	console.log("Log> saved to " + logname);
-
+	
 	if (config.register_site) {
 		// un-register with EVL's server
 		request({
@@ -3545,6 +3551,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				else{
 					var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
+					console.log(app);
+					addEventToUserLog(uniqueID, {type: "shareApplication", data: {host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port, application: {id: app.id, type: app.application}}, time: Date.now()});
+					
 					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 					if(updatedItem !== null) {
 						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
