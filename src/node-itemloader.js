@@ -97,25 +97,31 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 
 appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var _this = this;
-	request({url: url, encoding: null, strictSSL: strictSSL}, function(err, response, body) {
-		if(err) throw err;
 
-		var result = exiftool.buffer(body, function(err, info) {
+	request({url: url, encoding: null, strictSSL: strictSSL,
+			agentOptions: {rejectUnauthorized:false,requestCert: false}, headers:{'User-Agent':'node'}},
+		function(err, response, body) {
 			if (err) {
-				console.log("Error processing image:", url, mime_type, name, result.err);
+				console.log("request error", err);
+				throw err;
 			}
-			else
-				if (info.ImageWidth && info.ImageHeight) {
-					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
-						function(appInstance) {
-							_this.scaleAppToFitDisplay(appInstance);
-							callback(appInstance);
-						}
-					);
-				} else {
-					console.log("File not recognized:", file, mime_type, url);
+			var result = exiftool.buffer(body, function(err, info) {
+				if (err) {
+					console.log("Error processing image:", url, mime_type, name, result.err);
 				}
-		});
+				else
+					if (info.ImageWidth && info.ImageHeight) {
+						_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
+							function(appInstance) {
+								_this.scaleAppToFitDisplay(appInstance);
+								callback(appInstance);
+							}
+							);
+					} else {
+						console.log("File not recognized:", file, mime_type, url);
+					}
+				}
+			);
 	});
 };
 
@@ -209,7 +215,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 			callback(appInstance);
 		});
 	});
-	request({url: url, strictSSL: strictSSL}).pipe(tmp);
+	request({url: url, strictSSL: strictSSL,headers:{'User-Agent':'node'}}).pipe(tmp);
 };
 
 
@@ -587,7 +593,7 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
 	
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance, handle) {
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
 };
