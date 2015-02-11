@@ -3551,7 +3551,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				else{
 					var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
-					console.log(app);
+					
 					addEventToUserLog(uniqueID, {type: "shareApplication", data: {host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port, application: {id: app.id, type: app.application}}, time: Date.now()});
 					
 					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
