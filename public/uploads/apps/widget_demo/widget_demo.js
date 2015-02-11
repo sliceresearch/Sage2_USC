@@ -107,19 +107,7 @@ var widget_demo = SAGE2_App.extend( {
 			this.draw(date);
 		}.bind(this)});
 		
-		/* Specifying custom buttons */
-		var plusButton2 = {
-			"state": 0,
-			"from":"m 0 -6 l 0 12 m 6 -6 l -12 0",
-			"to":"m 6 0 l -12 0 m 12 0 l -12 0",//"m -3 0 a 6 6 180 1 0 0 1 z",
-			"width":12,
-			"height":12,
-			"fill":"none",
-			"strokeWidth": 1,
-			"delay": 600,
-			"textual":false,
-			"animation":true
-		};
+
 		var watchButton = {
 			"textual":true,
 			"label":"Watch",
@@ -127,7 +115,6 @@ var widget_demo = SAGE2_App.extend( {
 			"animation":false
 		};
 		
-		//this.controls.addButtonType("plus", plusButton);
 		this.controls.addButtonType("watch", watchButton);
 		
 		this.controls.addButton({type:"watch",sequenceNo:16,action:function(date){
@@ -166,6 +153,7 @@ var widget_demo = SAGE2_App.extend( {
 			begin:64,
 			end:255,
 			increments:1,
+			caption:"Val",
 			appHandle:this, 
 			property:"brightness", 
 			labelFormatFunction:formatFunction,
@@ -182,10 +170,10 @@ var widget_demo = SAGE2_App.extend( {
 				this.draw(date);
 			}.bind(this)
 		});
-		this.controls.addTextInput({defaultText: "Default Text!!",action:function(text){
+		/*this.controls.addTextInput({defaultText: "Default Text!!",action:function(text){
 			this.displayText = text.split(" ")[0];
 			this.draw(date);
-		}.bind(this)});
+		}.bind(this)});*/
 		this.controls.finishedAddingControls(); // Important
 	},
 

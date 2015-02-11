@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# 1536x1360
 global_param="--new-window --window-size=1536,1360 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content  --disable-infobars  --ignore-certificate-errors "
 
 # Launch Audio Manager

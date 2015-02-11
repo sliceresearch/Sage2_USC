@@ -9,6 +9,8 @@ mkdir -p $UDD/Default
 audio_param="--new-window --window-size=768,1360 --allow-file-access-from-files --allow-running-insecure-content --user-data-dir=$UDD"
 env DISPLAY=:0.0 google-chrome $audio_param 'http://localhost/audioManager.html' &
 
+sleep 1.5
+
 # Launch Display (client 0)
 UDD=$HOME/.config/chrome-nfs/thor0
 mkdir -p $UDD/Default
