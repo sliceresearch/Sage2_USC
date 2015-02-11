@@ -1870,7 +1870,7 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 // **************  Adding Web Content (URL) *****************
 
 function wsAddNewWebElement(wsio, data) {
-	appLoader.loadFileFromWebURL(data, function(appInstance) {
+	appLoader.loadFileFromWebURL(data, function(appInstance, videohandle) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0,0];
@@ -1890,6 +1890,8 @@ function wsAddNewWebElement(wsio, data) {
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 		applications.push(appInstance);
+		
+		initializeLoadedVideo(appInstance, videohandle);
 
 		if(appInstance.animation){
 			var i;
@@ -1982,7 +1984,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
 	var clientAddress, i;
 
-	appLoader.loadApplicationFromRemoteServer(data, function(appInstance) {
+	appLoader.loadApplicationFromRemoteServer(data, function(appInstance, videohandle) {
 		console.log("Remote App: " + appInstance.application);
 		if(appInstance.application === "media_stream"){
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
@@ -2002,6 +2004,8 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
 		applications.push(appInstance);
+		
+		initializeLoadedVideo(appInstance, videohandle);
 
 		if(appInstance.animation){
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
