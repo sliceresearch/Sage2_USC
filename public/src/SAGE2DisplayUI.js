@@ -395,33 +395,48 @@ function SAGE2DisplayUI() {
 		var sage2UI   = document.getElementById('sage2UI');
 		var ctx       = sage2UI.getContext('2d');
 		
-		var freeWidth   = window.innerWidth  - 25; // window width minus padding
-		var freeHeight  = window.innerHeight - 20; // size of 10px margin (top, bottom)
+
+		var freeWidth   = window.innerWidth  - 25;      // window width minus padding
+		var freeHeight  = window.innerHeight - 20 - 100 - 65; // size of 10px margin (top, bottom) and bottom buttons
 		
 		var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 		var freeAspect  = freeWidth / freeHeight;
-		
-		// wide sage2 display (compared to page)
-		if(freeAspect < sage2Aspect) {
-			sage2UI.width  = Math.floor(freeWidth);
-			sage2UI.height = Math.floor(freeWidth / sage2Aspect);
-			displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
-			displayUI.style.marginTop  = "10px";
-			menuUI.style.marginLeft    = "20px";
 
-			// Setting the buttons in a row
-			var myElements = document.querySelectorAll(".uiButton");			 
-			for (var i = 0; i < myElements.length; i++) {
-			    myElements[i].style.display = "inline-block";
-			}
-		}
-		// tall sage2 display (compared to page)
-		else {
-			sage2UI.height = Math.floor(freeHeight) - 100 - 150; // 100 sage2 logo, 150: margin for buttons
+		// wide sage2 display (compared to page)
+		//if(freeAspect < sage2Aspect) {
+
+		// Calculate new sizes
+		sage2UI.width  = Math.floor(freeWidth);
+		sage2UI.height = Math.floor(freeWidth / sage2Aspect);
+
+		// Check if it fits
+		if (sage2UI.height>=freeHeight) {
+			sage2UI.height = Math.floor(freeHeight);
 			sage2UI.width  = Math.floor(sage2UI.height * sage2Aspect);
-			displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
-			displayUI.style.marginTop  = "10px";
 		}
+
+		displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+		displayUI.style.marginTop  = "10px";
+		menuUI.style.marginLeft    = "20px";
+
+		// Move the menubar below the drawing area
+		menuUI.style.top    = (sage2UI.height+100) + "px";
+
+		// Setting the buttons in a row
+		// var myElements = document.querySelectorAll(".uiButton");			 
+		// for (var i = 0; i < myElements.length; i++) {
+		//     myElements[i].style.display = "inline-block";
+		// }
+		//}
+
+		// tall sage2 display (compared to page)
+		// else {
+		// 	sage2UI.height = Math.floor(freeHeight) - 100 - 150; // 100 sage2 logo, 150: margin for buttons
+		// 	sage2UI.width  = Math.floor(sage2UI.height * sage2Aspect);
+		// 	displayUI.style.marginLeft = Math.floor((freeWidth-sage2UI.width) / 2 + 10).toString() + "px";
+		// 	displayUI.style.marginTop  = "10px";
+		// }
+
 		// if(sage2UI.height < menuUI.offsetHeight) {
 		// 	var dTop = (menuUI.offsetHeight-sage2UI.height) / 2;
 		// 	var mTop = 0;
