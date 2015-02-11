@@ -20,7 +20,7 @@ function pointer() {
 	this.labelBG            = null;
 	this.labelText          = null;
 	this.color              = null;
-	this.mode               = null;
+	this.sourceType               = null;
 	
 	this.init = function(id, label, color, width, height) {
 		this.div = document.getElementById(id);
@@ -133,26 +133,56 @@ function pointer() {
 	    this.labelBG.attr({width: this.labelText.node.clientWidth + labelBGHeight});
 	};
 	
+	this.setSourceType = function(type) {
+		this.sourceType = type;
+		this.updateIconColors();
+	};
+	
 	this.changeMode = function(mode) {
 		this.mode = mode;
 	    this.updateIconColors();
 	};
 	
 	this.updateIconColors = function() {
-		if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
-		if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
-		if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
-
-		// window manipulation
-		if (this.mode === 0) {
-			if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
-			if (this.appModeIconLoaded) this.appModeIcon.attr({display: "none"});
+		
+		if( this.sourceType === "Touch" ) {
+			if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
+			if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
+			if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
+			
+			// window manipulation
+			if (this.mode === 0) {
+				if (this.pointerIconLoaded) this.pointerIcon.attr({display: "none"});
+				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
+				if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+				
+				this.labelText.attr({display: "none"});
+				this.labelBG.attr({display: "none"});
+			}
+			// application interaction
+			else if(this.mode === 1) {
+				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
+				if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+			}
 		}
-		// application interaction
-		else if(this.mode === 1) {
-			if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
-			if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+		else {
+			if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
+			if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
+			if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
+			
+			// window manipulation
+			if (this.mode === 0) {
+				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
+				if (this.appModeIconLoaded) this.appModeIcon.attr({display: "none"});
+			}
+			// application interaction
+			else if(this.mode === 1) {
+				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
+				if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+			}
 		}
+		
+		
 	};
 	
 	this.colorSVG = function(svg, stroke, fill) {
