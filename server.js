@@ -3230,8 +3230,11 @@ function showPointer( uniqueID, data ) {
 		return;
 	// From startSagePointer
 	console.log("starting pointer: " + uniqueID);
-
-	sagePointers[uniqueID].start(data.label, data.color);
+	
+	if( data.sourceType === undefined )
+		data.sourceType = "Pointer";
+	
+	sagePointers[uniqueID].start(data.label, data.color, data.sourceType);
 	broadcast('showSagePointer', sagePointers[uniqueID], 'receivesPointerData');
 }
 
@@ -4419,7 +4422,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				// Open a 'media' radial menu
 				broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
 			}
-			else
+			else if( validLocation && radialMenus[uniqueID+"_menu"] !== undefined )
 			{
 				radialMenus[uniqueID+"_menu"].setPosition(newMenuPos);
 

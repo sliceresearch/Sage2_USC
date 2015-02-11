@@ -115,6 +115,7 @@ function SAGE2_interaction(wsio) {
 		else if(ext === "jpg")  mimeType = "image/jpeg";
 		else if(ext === "jpeg") mimeType = "image/jpeg";
 		else if(ext === "png")  mimeType = "image/png";
+		else if(ext === "bmp")  mimeType = "image/bmp";
 		else if(ext === "mp4")  mimeType = "video/mp4";
 		else if(ext === "m4v")  mimeType = "video/mp4";
 		else if(ext === "webm") mimeType = "video/webm";

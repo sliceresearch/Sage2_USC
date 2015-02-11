@@ -22,9 +22,10 @@ function sagepointer(id) {
 	this.visible = false;
 }
 
-sagepointer.prototype.start = function(label, color) {
+sagepointer.prototype.start = function(label, color, sourceType) {
 	this.label = label;
 	this.color = color;
+	this.sourceType = sourceType;
 	this.left = 0;
 	this.top = 0;
 	this.visible = true;

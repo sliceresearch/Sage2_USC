@@ -449,6 +449,7 @@ function uiBuilder(json_cfg, clientID) {
 
 	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
+		this.pointerItems[pointerElem.id].setSourceType(pointer_data.sourceType);
 		
 		this.pointerItems[pointerElem.id].isShown = true;
 	};
@@ -522,8 +523,8 @@ function uiBuilder(json_cfg, clientID) {
 			
 			if( this.radialMenus[menuElem.id].visible === false )
 			{
-				menuElem.style.left = (data.x - this.offsetX - this.radialMenus[data.id+"_menu"].radialMenuCenter.x).toString() + "px";
-				menuElem.style.top  = (data.y - this.offsetY - this.radialMenus[data.id+"_menu"].radialMenuCenter.y).toString()  + "px";
+				menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+				menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 							
 				this.radialMenus[menuElem.id].visible = true;
 				menuElem.style.display = "block";
