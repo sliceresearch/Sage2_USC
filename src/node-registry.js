@@ -17,25 +17,32 @@ var json5       = require('json5');
 var path        = require('path');
 var mime        = require('mime');
 var jsonDB      = require('node-json-db');
+var sageutils   = require('../src/node-utils');  // for fileExists function
 
 function registryManager() {
-    this.registryFile = "fileRegistry.json";
-    this.nativeAppsFile = "nativeApps.json";
-    this.mimeFile = "custom.types";
+    this.registryFile   = "fileRegistry.json";
+    this.nativeAppsFile = path.join("config", "nativeApps.json");
+    this.mimeFile       = path.join("config", "custom.types");
 }
 
 registryManager.prototype.initialize = function(assetsFolder) {
     this.assetsFolder = assetsFolder;
-    console.log("Registry> Initializing registry!");
 
-    if (!fs.existsSync(path.join(assetsFolder, this.registryFile))) {
-        fs.writeFileSync(path.join(assetsFolder, this.registryFile), "{}");
+    var fullpath = path.join(assetsFolder, this.registryFile);
+
+    console.log("Registry> Initializing registry", fullpath);
+
+    if (!sageutils.fileExists(fullpath)) {
+        fs.writeFileSync(fullpath, "{}");
     }
 
-    this.db = new jsonDB(path.join(assetsFolder, this.registryFile), true, true);
+    // Create the database
+	// The second argument is used to tell the DB to save after each push
+	// The third argument is to ask JsonDB to save the database in an human readable format
+    this.db = new jsonDB(fullpath, true, true);
 
     // Check if custom.type exists
-    if (!fs.existsSync(this.mimeFile)) {
+    if (!sageutils.fileExists(this.mimeFile)) {
         fs.writeFileSync(this.mimeFile);
     }
     mime.load(path.join(this.mimeFile));
@@ -67,7 +74,7 @@ registryManager.prototype.scanNativeApps = function() {
 
         for(var i=0; i<nativeApps.applications.length; i++) {
             var app = nativeApps.applications[i];
-            if (app.name !== undefined && app.name !== null && app.name !== "" &&
+            if (app.name  !== undefined && app.name  !== null && app.name !== "" &&
                 app.types !== undefined && app.types !== null && Array.isArray(app.types) ) {
                 this.register(app.name, app.types, app.directory, true);
             }
