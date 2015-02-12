@@ -621,7 +621,7 @@ function wsStopSagePointer(wsio, data) {
 	}
 	
 	addEventToUserLog(uniqueID, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
-	addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
+	//addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 }
 
 function wsPointerPress(wsio, data) {
@@ -801,10 +801,12 @@ function wsKeyPress(wsio, data) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode}, 'receivesPointerData');
 		
+		/*
 		if(remoteInteraction[uniqueID].interactionMode === 0)
 			addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 		else
 			addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
+		*/
 		
 		if(remoteInteraction[uniqueID].modeChange !== undefined) clearTimeout(remoteInteraction[uniqueID].modeChange);
 		remoteInteraction[uniqueID].modeChange = setTimeout(function() {
@@ -3265,10 +3267,12 @@ function togglePointerMode(uniqueID) {
 	remoteInteraction[uniqueID].toggleModes();
 	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode } , 'receivesPointerData' );
 	
+	/*
 	if(remoteInteraction[uniqueID].interactionMode === 0)
 		addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 	else
 		addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
+	*/
 }
 
 
