@@ -782,7 +782,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	sliderArea.attr("class", "widgetBackground");
 	var fontSize = 0.045 * ui.widgetControlSize;
 	var sliderCaption = null;
-	if (this.controlSpec.slider.caption !== null){
+	if (this.controlSpec.slider.caption){
 		sliderCaption = this.controlSVG.text(x+ui.widgetControlSize, y, this.controlSpec.slider.caption);
 		sliderCaption.attr({
 			id: this.controlSpec.slider.id+ "caption",
@@ -822,7 +822,10 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	});
 	
 	//var callabckFunc = this.slider.call.bind(applications[this.slider.appId]);
-	var slider = this.controlSVG.group(sliderArea,sliderLine,sliderKnob,sliderKnobLabel, sliderCaption);
+
+	var slider = this.controlSVG.group(sliderArea,sliderLine,sliderKnob,sliderKnobLabel);
+	if (sliderCaption!==null)
+		slider.add(sliderCaption);
 	sliderKnob.data("appId", this.controlSpec.slider.appId);
 	sliderKnobLabel.data("appId", this.controlSpec.slider.appId);
 	
