@@ -1,7 +1,6 @@
 FROM    ubuntu
+RUN     sudo apt-add-repository ppa:jon-severinsson/ffmpeg
 RUN     sudo apt-get -y update
-RUN     sudo apt-get -y install ppa-purge
-RUN     sudo ppa-purge ppa:mc3man/trusty-media
 RUN     sudo apt-get -y install nodejs npm libnss3-tools libavformat53 libavformat-dev libavcodec53 libavcodec-dev ffmpeg libavutil-dev
 
 COPY    . /sage2
