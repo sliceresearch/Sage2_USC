@@ -810,6 +810,7 @@ function radialMenu(){
 		buttonOverCount += this.radialCloseButton.onEvent(type, user.id, position, data);
 		if ( this.radialCloseButton.isClicked() && data.button === "left" )
 		{
+			this.wsio.emit('radialMenuClick', {button: "closeButton", user: user} );
 			this.closeMenu();
 		}
 		
@@ -836,11 +837,13 @@ function radialMenu(){
 			{
 				this.settingMenuOpen = false;
 				this.radialSettingsButton.isLit = false;
+				this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "closed"}} );
 			}
 			else
 			{
 				this.settingMenuOpen = true;
 				this.radialSettingsButton.isLit = true;
+				this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "opened"}} );
 			}
 		}
 		
@@ -853,10 +856,12 @@ function radialMenu(){
 		if( this.radial2CloseAllButton.isClicked() && this.sendsToServer === true )
 		{
 			this.wsio.emit('clearDisplay');
+			this.wsio.emit('radialMenuClick', {button: "clearDisplay", user: user} );
 		}
 		if( this.radial2TileButton.isClicked() && this.sendsToServer === true )
 		{
 			this.wsio.emit('tileApplications');
+			this.wsio.emit('radialMenuClick', {button: "tileApplications", user: user} );
 		}
 		
 		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
@@ -865,7 +870,10 @@ function radialMenu(){
 			if( this.setToggleMenu('imageThumbnailWindow') )
 			{
 				this.radialImageButton.isLit = true;
+				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "opened"}} );
 			}
+			else
+				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "closed"}} );
 		}
 		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
 		{
@@ -873,7 +881,10 @@ function radialMenu(){
 			if( this.setToggleMenu('pdfThumbnailWindow') )
 			{
 				this.radialPDFButton.isLit = true;
+				this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "opened"}} );
 			}
+			else
+				this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "closed"}} );
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
 		{
@@ -881,7 +892,10 @@ function radialMenu(){
 			if( this.setToggleMenu('videoThumbnailWindow') )
 			{
 				this.radialVideoButton.isLit = true;
+				this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "opened"}} );
 			}
+			else
+				this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "closed"}} );
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
 		{
@@ -889,7 +903,10 @@ function radialMenu(){
 			if( this.setToggleMenu('appThumbnailWindow') )
 			{
 				this.radialAppButton.isLit = true;
+				this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "opened"}} );
 			}
+			else
+				this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "closed"}} );
 		}
 		if( this.radialSessionButton.isClicked() )
 		{
@@ -897,12 +914,16 @@ function radialMenu(){
 			if( this.setToggleMenu('sessionThumbnailWindow') )
 			{
 				this.radialSessionButton.isLit = true;
+				this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user,  data: {state: "opened"}} );
 			}
+			else
+				this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user, data: {state: "closed"}} );
 		}
 		if( this.radialSaveSessionButton.isClicked() )
 		{
 			this.wsio.emit('saveSesion');
 			this.wsio.emit('requestStoredFiles');
+			this.wsio.emit('radialMenuClick', {button: "saveSession", user: user} );
 		}
 		
 		// Level 2 -----------------------------------
@@ -947,9 +968,14 @@ function radialMenu(){
 					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
 					{ 
 						if( this.currentMenuState === 'appThumbnailWindow' )
-							this.loadApplication( thumbButton.getData()  );
+						{
+							this.loadApplication( thumbButton.getData(), user  );
+						}
 						else
-							this.loadFileFromServer( thumbButton.getData()  );
+						{
+							this.loadFileFromServer( thumbButton.getData(), user  );
+						}
+						
 					}
 					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  )
 					{
@@ -1055,19 +1081,19 @@ function radialMenu(){
 	};
 	
 	// Displays files
-	this.loadFileFromServer = function( data )
+	this.loadFileFromServer = function( data, user )
 	{
 		if( this.sendsToServer === true )
 		{
-			this.wsio.emit('loadFileFromServer', { application: data.application, filename: data.filename} );
+			this.wsio.emit('loadFileFromServer', { application: data.application, filename: data.filename, user: user} );
 		}
 	};
 	
-	this.loadApplication = function( data )
+	this.loadApplication = function( data, user )
 	{
 		if( this.sendsToServer === true )
 		{
-			this.wsio.emit('loadApplication', { application: data.filename} );
+			this.wsio.emit('loadApplication', { application: data.filename, user: user} );
 		}
 	};
 	

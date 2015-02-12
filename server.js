@@ -432,6 +432,9 @@ function initializeWSClient(wsio) {
 		wsio.on('saveSesion',       wsSaveSesion);
 		wsio.on('clearDisplay',     wsClearDisplay);
 		wsio.on('tileApplications', wsTileApplications);
+		
+		// Radial menu should have its own message section? Just appended here for now.
+		wsio.on('radialMenuClick',                  wsRadialMenuClick);
 	}
 	if(wsio.messages.sendsWebContentToLoad){
 		wsio.on('addNewWebElement', wsAddNewWebElement);
@@ -773,6 +776,11 @@ function wsKeyPress(wsio, data) {
 		keyPress(uniqueID, pointerX, pointerY, data);
 	}
 
+}
+
+
+function wsRadialMenuClick(wsio, data) {
+	//console.log("Radial menu button '", data.button, "' clicked by user '",data.user,"'", data.data);
 }
 
 // **************  Media Stream Functions *****************
