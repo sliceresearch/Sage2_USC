@@ -864,7 +864,7 @@ function wsStartNewMediaStream(wsio, data) {
 
 		applications.push(appInstance);
 		
-		addEventToUserLog(uniqueID, {type: "mediaStreamStart", data: null, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "mediaStreamStart", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
 
 	// Debug media stream freezing
@@ -916,7 +916,7 @@ function wsStopMediaStream(wsio, data) {
 		addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 	}
 	
-	addEventToUserLog(uniqueID, {type: "mediaStreamEnd", data: null, time: Date.now()});
+	addEventToUserLog(uniqueID, {type: "mediaStreamEnd", data: {application: {id: data.id, type: "media_stream"}}, time: Date.now()});
 }
 
 // Print message from remote applications
@@ -3415,7 +3415,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 				broadcast('eventInItem', event, 'receivesInputEvents');
 				
-				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerPress", application: {id: elem.id, type: elem.application}}, time: Date.now()});
+				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerPress", application: {id: elem.id, type: elem.application}, position: {x: parseInt(ePosition.x, 10), y: parseInt(ePosition.y, 10)}}, time: Date.now()});
 			}
 		}
 		var stickyList = stickyAppHandler.getStickingItems(elem.id);
@@ -3602,7 +3602,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 				broadcast('eventInItem', event, 'receivesInputEvents');
 				
-				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerRelease", application: {id: elem.id, type: elem.application}}, time: Date.now()});
+				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerRelease", application: {id: elem.id, type: elem.application}, position: {x: parseInt(ePosition.x, 10), y: parseInt(ePosition.y, 10)}}, time: Date.now()});
 			}
 		}
 	}
