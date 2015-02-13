@@ -1091,7 +1091,7 @@
 		if(selectedAppEntry !== null) {
 			var application = selectedAppEntry.getAttribute("application");
 			
-			wsio.emit('loadApplication', {application: application});
+			wsio.emit('loadApplication', {application: application, user: interactor.uniqueID});
 		}
 	}
 	
@@ -1100,7 +1100,7 @@
 			var application = selectedFileEntry.getAttribute("application");
 			var file = selectedFileEntry.getAttribute("file");
 			
-			wsio.emit('loadFileFromServer', {application: application, filename: file});
+			wsio.emit('loadFileFromServer', {application: application, filename: file, user: interactor.uniqueID});
 		}
 	}
 	

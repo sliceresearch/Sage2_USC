@@ -2,13 +2,13 @@
 
 killall -HUP chrome
 
-global_param="--new-window --window-size=1920,1080  --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
+global_param="--window-size=1920,1080  --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
 
 # Launch Audio Manager
 UDD=$HOME/.config/chrome-nfs/traoumad_audio
 /bin/rm -fr $UDD
 mkdir -p $UDD/Default
-audio_param="--disable-infobars --no-default-browser-check --ignore-certificate-errors --window-size=768,580 --allow-file-access-from-files --user-data-dir=$UDD"
+audio_param="--disable-infobars --no-default-browser-check --ignore-certificate-errors --window-size=768,580 --allow-file-access-from-files --no-first-run --no-default-browser-check --user-data-dir=$UDD"
 env DISPLAY=:0.0 google-chrome $audio_param 'http://traoumad.evl.uic.edu/audioManager.html' &
 
 sleep 1

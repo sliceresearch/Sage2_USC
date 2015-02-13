@@ -452,6 +452,9 @@ function initializeWSClient(wsio) {
 		wsio.on('saveSesion',       wsSaveSesion);
 		wsio.on('clearDisplay',     wsClearDisplay);
 		wsio.on('tileApplications', wsTileApplications);
+		
+		// Radial menu should have its own message section? Just appended here for now.
+		wsio.on('radialMenuClick',                  wsRadialMenuClick);
 	}
 	if(wsio.messages.sendsWebContentToLoad){
 		wsio.on('addNewWebElement', wsAddNewWebElement);
@@ -836,6 +839,19 @@ function wsUploadedFile(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	addEventToUserLog(uniqueID, {type: "fileUpload", data: data, time: Date.now()});
+}
+
+function wsRadialMenuClick(wsio, data) {
+	if(data.button === "closeButton") {
+		addEventToUserLog(data.user, {type: "radialMenu", data: {action: "close"}, time: Date.now()});
+	}
+	else if(data.button === "settingsButton" || data.button.indexOf("Window") >= 0) {
+		var action = data.data.state === "opened" ? "open" : "close";
+		addEventToUserLog(data.user, {type: "radialMenuAction", data: {button: data.button, action: action}, time: Date.now()});
+	}
+	else {
+		addEventToUserLog(data.user, {type: data.button, data: null, time: Date.now()});
+	}
 }
 
 // **************  Media Stream Functions *****************
@@ -1625,15 +1641,16 @@ function clearDisplay() {
 
 function wsClearDisplay(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	
-	// must add:
-	// addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
-	
 	clearDisplay();
+	
+	addEventToUserLog(uniqueID, {type: "clearDisplay", data: null, time: Date.now()});
 }
 
 function wsTileApplications(wsio, data) {
+	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	tileApplications();
+	
+	addEventToUserLog(uniqueID, {type: "tileApplications", data: null, time: Date.now()});
 }
 
 
@@ -1670,7 +1687,8 @@ function wsLoadApplication(wsio, data) {
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 		
-		addEventToUserLog(uniqueID, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		//addEventToUserLog(uniqueID, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		
 		applications.push(appInstance);
 	});
@@ -1692,7 +1710,8 @@ function wsLoadFileFromServer(wsio, data) {
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 			
-			addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+			//addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+			addEventToUserLog(data.user, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 			
 			applications.push(appInstance);
 
@@ -3315,9 +3334,10 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		return; // Radial menu is using the event
 	}
 
-	if(data.button === "right")
-	{
+	if(data.button === "right") {
 		createRadialMenu( uniqueID, pointerX, pointerY );
+		
+		addEventToUserLog(uniqueID, {type: "radialMenu", data: {action: "open"}, time: Date.now()});
 	}
 
 	// apps
