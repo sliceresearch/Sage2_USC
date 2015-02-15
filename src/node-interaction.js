@@ -26,6 +26,7 @@ function interaction(config) {
 	this.selectedResizeItem  = null;
 	this.selectedMoveControl = null;
 	this.controlLock     = null;
+	this.hoverControlItem = null;
 	this.hoverCornerItem = null;
 	this.selectOffsetX   = 0;
 	this.selectOffsetY   = 0;
@@ -138,7 +139,7 @@ interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 	this.selectedMoveItem.left = pointerX + this.selectOffsetX;
 	this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
 	this.selectedMoveItem.maximized = false;
-	return {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left, elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width, elemHeight: this.selectedMoveItem.height, date: new Date()};
+	return {elemId: this.selectedMoveItem.id,  elemLeft: this.selectedMoveItem.left, elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width, elemHeight: this.selectedMoveItem.height, date: new Date()};
 };
 
 /**
@@ -152,7 +153,7 @@ interaction.prototype.moveSelectedControl = function(pointerX, pointerY) {
 	this.selectedMoveControl.left = pointerX + this.selectOffsetX;
 	this.selectedMoveControl.top  = pointerY + this.selectOffsetY;
 
-	return {elemId: this.selectedMoveControl.id, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, date: new Date()};
+	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, date: new Date()};
 };
 
 
@@ -171,6 +172,30 @@ interaction.prototype.lockedControl = function() {
 interaction.prototype.lockControl = function(ctrl) {
 	this.controlLock = ctrl;
 };
+
+/**
+ *@method hoverOverControl
+ */
+
+interaction.prototype.hoverOverControl = function(){
+	return this.hoverControlItem ;
+}
+
+/**
+ *@method leaveControlArea
+ */
+
+interaction.prototype.leaveControlArea = function(){
+	this.hoverControlItem = null;
+}
+
+/**
+ *@method enterControlArea
+ */
+
+interaction.prototype.enterControlArea = function(controlItem){
+	this.hoverControlItem = controlItem;
+}
 
 /**
  *@method dropControl

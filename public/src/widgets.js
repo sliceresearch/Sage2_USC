@@ -1242,6 +1242,70 @@ polarToCartesian = function (radius,theta,center) {
 	return {x:x,y:y};
 };
 
+
+
+createWidgetToAppConnector = function (instanceID) {
+	var connectorDiv = document.createElement("div");
+	connectorDiv.id = instanceID + "connector";
+	connectorDiv.style.display = "none";
+	connectorDiv.style.zIndex = 0;
+	ui.main.appendChild(connectorDiv);
+
+}
+
+hideWidgetToAppConnector = function (instanceID){
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (connectorDiv)
+		connectorDiv.style.display = "none";
+}
+
+showWidgetToAppConnector = function (instanceID){
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (connectorDiv)
+    	connectorDiv.style.display = "inline";
+}
+
+removeWidgetToAppConnector = function (instanceID){
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (connectorDiv)
+		connectorDiv.parentNode.removeChild(connectorDiv);
+}
+
+moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2) {
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (!connectorDiv) return;
+	if(y1 < y2){
+        var pom = y1;
+        y1 = y2;
+        y2 = pom;
+        pom = x1;
+        x1 = x2;
+        x2 = pom;
+    }
+
+    var a = Math.abs(x1-x2);
+    var b = Math.abs(y1-y2);
+    var c;
+    var sx = (x1+x2)/2 ;
+    var sy = (y1+y2)/2 ;
+    var width = Math.sqrt(a*a + b*b ) ;
+    var x = sx - width/2;
+    var y = sy;
+
+    a = width / 2;
+
+    c = Math.abs(sx-x);
+
+    b = Math.sqrt(Math.abs(x1-x)*Math.abs(x1-x)+Math.abs(y1-y)*Math.abs(y1-y) );
+
+    var cosb = (b*b - a*a - c*c) / (2*a*c);
+    var rad = Math.acos(cosb);
+    var deg = (rad*180)/Math.PI;
+    var thickness = (ui.widgetControlSize* 0.01) + "em";
+    connectorDiv.setAttribute('style','border:'+thickness +' solid white;width:'+width+'px;height:0px;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;');   
+    connectorDiv.style.display = "inline";
+}
+
 /*
 String.prototype.width = function(font) {
 	var f = font || '12px arial';

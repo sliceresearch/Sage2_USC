@@ -50,7 +50,7 @@
 	var dbugVar = 0;
 	var hostAlias    = {};
 	
-	var itemCount = 0;
+	var itemCount = 1;
 	var pdfItems = {};
 	var pointerItems = {};
 	var controlItems = {};
@@ -593,6 +593,7 @@
 				for (var item in controlItems){
 					if (item.indexOf(elem_data.elemId) > -1){
 						controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
+						removeWidgetToAppConnector(item);
 						delete controlItems[item];
 					}
 
@@ -610,6 +611,7 @@
 				//hideElemCtrl.style.display = 'none';
 				controlItems[ctrl_data.id].divHandle.style.display = "none";
 				controlItems[ctrl_data.id].show=false;
+				hideWidgetToAppConnector(ctrl_data.id);
 			}
 		});
 
@@ -619,6 +621,7 @@
 				//showElemCtrl.style.display = 'block';
 				controlItems[ctrl_data.id].divHandle.style.display = "block";
 				controlItems[ctrl_data.id].show=true;
+				showWidgetToAppConnector(ctrl_data.id);
 			}
 		});
 		
@@ -626,15 +629,15 @@
 			resetIdle();
 
 			var i;
-			var zval = 0;
+			var zval = 1;
 			for(i=0; i<order.idList.length; i++){
 				var selectedElemTitle = document.getElementById(order.idList[i] + "_title");
 				var selectedElem = document.getElementById(order.idList[i]);
-				//var selectedElemCtrl = document.getElementById(order.idList[i] + "_controls");
+				
 
 				selectedElemTitle.style.zIndex = zval.toString();
 				selectedElem.style.zIndex = (zval+1).toString();
-				//selectedElemCtrl.style.zIndex = (zval+2).toString();
+				
 				
 				zval += 2; // 
 			}
@@ -686,14 +689,27 @@
 			var eLeft = position_data.elemLeft - ui.offsetX;
 			var eTop = position_data.elemTop - ui.offsetY;
 			var selectedControl = document.getElementById(position_data.elemId);
-			
+			var appData = position_data.appData;
 			if(selectedControl !== undefined && selectedControl !== null) {
 				selectedControl.style.left = eLeft.toString() + "px";
 				selectedControl.style.top = eTop.toString() + "px";
+				moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+appData.height/2.0);
 			}
 			else {
 				console.log("cannot find control: " + position_data.elemId);
 			}
+		});
+
+		wsio.on('showWidgetToAppConnector', function(position_data){
+			var eLeft = position_data.left - ui.offsetX;
+			var eTop = position_data.top - ui.offsetY;
+			var appData = position_data.appData;
+			moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+appData.height/2.0);
+		});
+
+
+		wsio.on('hideWidgetToAppConnector', function(control_data){
+			hideWidgetToAppConnector(control_data.id);
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
@@ -821,7 +837,7 @@
 						var size = spec.computeSize();
 						wsio.emit('addNewControl', {
 							id:data.elemId+ data.user_id + "_controls", 
-							objID : data.elemId,
+							appId : data.elemId,
 							left:data.x,
 							top:data.y,
 							width:size.width,
@@ -850,12 +866,13 @@
 				ctrDiv.style.zIndex = "9999".toString();
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 
-				var spec = controlObjects[data.objID].controls;
+				var spec = controlObjects[data.appId].controls;
 				if (spec.controlsReady() === true){
 					var handle = new SAGE2WidgetControlInstance(data.id, spec);
 					ctrDiv.appendChild (handle);	
 					ui.main.appendChild(ctrDiv);
 					controlItems[data.id] = {show:true,divHandle:ctrDiv};
+					createWidgetToAppConnector(data.id);
 				}
 				
 			}
@@ -864,6 +881,7 @@
 			for (var idx in controlItems) {
 				if (idx.indexOf(data.user_id) > -1) {
 					controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
+					removeWidgetToAppConnector(idx);
 					delete controlItems[idx];
 				}
 			}

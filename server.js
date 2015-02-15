@@ -2949,13 +2949,8 @@ function removeControlsForUser(uniqueID){
 function showControl(ctrl, pointerX, pointerY){
 	if (ctrl.show === false) {
 		ctrl.show = true;
-		var dt = new Date();
-		var rightMargin = config.totalWidth - ctrl.width;
-		var bottomMargin = config.totalHeight - ctrl.height;
-		ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
-		ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
-		broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
-		broadcast('showControl',{id:ctrl.id},'receivesWidgetEvents');
+		moveControlToPointer(ctrl, pointerX, pointerY);
+		broadcast('showControl',{id:ctrl.id, appId: ctrl.appId},'receivesWidgetEvents');
 	}
 }
 
@@ -2965,7 +2960,9 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	var bottomMargin = config.totalHeight - ctrl.height;
 	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top},'receivesWidgetEvents');
+	var app = findAppById(ctrl.appId);
+	var appPos = (app===null)? null : getAppPositionSize(app);
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, appData: appPos},'receivesWidgetEvents');
 }
 
 
@@ -3443,12 +3440,38 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		return; // Radial menu is using the event
 
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	var controlUnderPointer = findControlsUnderPointer(pointerX,pointerY);
+	if (controlUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null){
+		remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
+		var app = findAppById(controlUnderPointer.appId);
+		if (app){
+			controlUnderPointer.appData = getAppPositionSize(app);
+			broadcast ('showWidgetToAppConnector', controlUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
+		}
+	}else if (controlUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
+		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+		remoteInteraction[uniqueID].leaveControlArea();
+	}else if (controlUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null && controlUnderPointer !== remoteInteraction[uniqueID].hoverOverControl()){
+		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+		var app = findAppById(controlUnderPointer.appId);
+		if (app){
+			controlUnderPointer.appData = getAppPositionSize(app);
+			broadcast ('showWidgetToAppConnector', controlUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
+		}
+		
+	}
 
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if (updatedControl !== null) {
-		broadcast('setControlPosition', updatedControl, 'receivesPointerData');
-		return;
+		var app = findAppById(updatedControl.appId);
+		if (app){
+			updatedControl.appData = getAppPositionSize(app);
+			broadcast('setControlPosition', updatedControl, 'receivesPointerData');
+			return;
+		}
 	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
