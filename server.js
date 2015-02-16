@@ -188,6 +188,7 @@ var uploadsFolder = path.join(public_dir, "uploads"); // directory where files a
 
 // global variables to manage items
 var itemCount = 0;
+var userCount = 0;
 
 // global variables to manage clients
 var clients = [];
@@ -595,11 +596,33 @@ function wsRegisterInteractionClient(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	var key;
-	for(key in users) {
-		if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
-			users[key].ip = uniqueID;
-			if(users[key].actions === undefined) users[key].actions = [];
-			users[key].actions.push({type: "connect", data: null, time: Date.now()});
+	if(program.trackUsers === "all") {
+		var newUser = true;
+		for(key in users) {
+			if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
+				users[key].ip = uniqueID;
+				if(users[key].actions === undefined) users[key].actions = [];
+				users[key].actions.push({type: "connect", data: null, time: Date.now()});
+				newUser = false;
+			}
+		}
+		if(newUser === true) {
+			var id = getNewUserId();
+			users[id] = {};
+			users[id].name = data.name;
+			users[id].color = data.color;
+			users[id].ip = uniqueID;
+			if(users[id].actions === undefined) users[id].actions = [];
+			users[id].actions.push({type: "connect", data: null, time: Date.now()});
+		}
+	}
+	else {
+		for(key in users) {
+			if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
+				users[key].ip = uniqueID;
+				if(users[key].actions === undefined) users[key].actions = [];
+				users[key].actions.push({type: "connect", data: null, time: Date.now()});
+			}
 		}
 	}
 }
@@ -2324,6 +2347,13 @@ function loadConfiguration() {
 function getUniqueAppId() {
 	var id = "application_"+itemCount.toString();
 	itemCount++;
+
+	return id;
+}
+
+function getNewUserId() {
+	var id = sprint("user_%02d", userCount);
+	userCount++;
 
 	return id;
 }
