@@ -150,7 +150,10 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 			}
 			else if((type === "audio/mp4" || type === "audio/webm")) {
 				var bitrate = info.formats[i].audioBitrate || 0;
-				if((audio.type === type && bitrate > audio.bitrate) || (audio.type !== "audio/webm" && type === "audio/webm")) {
+				if(	(audio.type === type && bitrate > audio.bitrate) ||
+					(audio.type !== "audio/webm" && type === "audio/webm") ||
+					(audio.type === "")
+					) {
 					audio.index = i;
 					audio.bitrate = bitrate;
 					audio.type = type;
