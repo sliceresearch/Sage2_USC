@@ -2128,8 +2128,8 @@ function wsAddNewControl(wsio, data){
 	controls.push(data);
 	broadcast('createControl',data,'requestsWidgetControl');
 	
-	var uniqueID = data.id.substring(data.objID.length, data.id.lastIndexOf("_"));
-	var app = findAppById(data.objID);
+	var uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
+	var app = findAppById(data.appId);
 	addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 }
 
@@ -3311,6 +3311,10 @@ function hidePointer( uniqueID ) {
 
 	// From stopSagePointer
 	sagePointers[uniqueID].stop();
+	if (remoteInteraction[uniqueID].hoverOverControl() !== null){
+		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+		remoteInteraction[uniqueID].leaveControlArea();
+	}
 	broadcast('hideSagePointer', sagePointers[uniqueID], 'receivesPointerData');
 }
 
@@ -3344,7 +3348,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		else if(data.button === "right"){
 			if(ct.show === true) {
 				hideControl(ct);
-				var app = findAppById(ct.objID);
+				var app = findAppById(ct.appId);
 				
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 			}
@@ -3433,7 +3437,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				else if (elemCtrl.show === false) {
 					showControl(elemCtrl, pointerX, pointerY);
 					
-					var app = findAppById(elemCtrl.objID);
+					var app = findAppById(elemCtrl.appId);
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}
 				else {
@@ -3451,7 +3455,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					else if (elemCtrl.show === false) {
 						showControl(elemCtrl, pointerX, pointerY) ;
 						
-						var app = findAppById(elemCtrl.objID);
+						var app = findAppById(elemCtrl.appId);
 						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
 					else {
