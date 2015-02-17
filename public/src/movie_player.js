@@ -346,6 +346,10 @@ var movie_player = SAGE2_App.extend( {
 		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
 		
+		// Global settings for WebGL textures 
+		this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT,    1);
+		this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
@@ -358,8 +362,6 @@ var movie_player = SAGE2_App.extend( {
 				var yBuffer = new Uint8Array(bWidth*bHeight);
 				var uBuffer = new Uint8Array(bWidth*bHeight/4);
 				var vBuffer = new Uint8Array(bWidth*bHeight/4);
-				
-				this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, yTexture);
 				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth, bHeight, 0, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, yBuffer);
