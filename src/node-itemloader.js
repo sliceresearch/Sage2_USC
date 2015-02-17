@@ -136,29 +136,43 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	ytdl.getInfo(url, function(err, info){
 		if(err) throw err;
 
-		var mp4 = {index: -1, resolution: 0};
+		var video = {index: -1, resolution: 0, type: ""};
+		var audio = {index: -1, bitrate: 0, type: ""};
 		for(var i=0; i<info.formats.length; i++){
-			if(info.formats[i].container == "mp4" && info.formats[i].resolution !== null && info.formats[i].profile != "3d"){
+			var type = info.formats[i].type.split(";")[0];
+			if((type === "video/mp4" || type === "video/webm") && info.formats[i].resolution !== null && info.formats[i].profile != "3d") {
 				var res = parseInt(info.formats[i].resolution.substring(0, info.formats[i].resolution.length-1));
-				if(res > mp4.resolution){
-					mp4.index = i;
-					mp4.resolution = res;
+				if(res <= 1200 && res > video.resolution) {
+					video.index = i;
+					video.resolution = res;
+					video.type = type;
+				}
+			}
+			else if((type === "audio/mp4" || type === "audio/webm")) {
+				var bitrate = info.formats[i].audioBitrate || 0;
+				if((audio.type === type && bitrate > audio.bitrate) || (audio.type !== "audio/webm" && type === "audio/webm")) {
+					audio.index = i;
+					audio.bitrate = bitrate;
+					audio.type = type;
 				}
 			}
 		}
-		var name = info.title;
-		var aspectRatio = 16/9;
-		var resolutionY = mp4.resolution;
-		var resolutionX = resolutionY * aspectRatio;
 
-		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, callback);
+		_this.loadVideoFromURL(url, "video/youtube", info.formats[video.index].url, info.title, function(appInstance, videohandle) {
+			appInstance.data.video_url  = info.formats[video.index].url;
+			appInstance.data.video_type = video.type;
+			appInstance.data.audio_url  = info.formats[audio.index].url;
+			appInstance.data.audio_type = audio.type;
+			
+			callback(appInstance, videohandle);
+		});
 	});
 };
 
-appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
-	console.log(url, mime_type, source, name);
+appLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name, callback) {
+	console.log(url, mime_type, source_url, name);
 	
-	this.loadVideoFromFile(source, mime_type, url, url, name, callback);
+	this.loadVideoFromFile(source_url, mime_type, url, url, name, callback);
 	
 	/*
 	var aspectRatio = vw / vh;
@@ -376,6 +390,10 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			data: {
 				width: data.width,
 				height: data.height,
+				video_url: external_url,
+				video_type: mime_type,
+				audio_url: external_url,
+				audio_type: mime_type,
 				paused: true,
 				frame: 0,
 				numframes: data.num_frames,

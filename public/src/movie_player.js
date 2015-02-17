@@ -442,6 +442,10 @@ var movie_player = SAGE2_App.extend( {
 	load: function(state, date) {
 		this.state.width                = state.width;
 		this.state.height               = state.height;
+		this.state.video_url            = state.video_url;
+		this.state.video_type           = state.video_type;
+		this.state.audio_url            = state.audio_url;
+		this.state.audio_type           = state.audio_type;
 		this.state.paused               = state.paused;
 		this.state.frame                = state.frame;
 		this.state.numframes            = state.numframes;
