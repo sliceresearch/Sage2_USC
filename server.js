@@ -2163,12 +2163,13 @@ function wsReleasedControlId(wsio, data){
 		remoteInteraction[data.addr].dropControl();
 		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId, instanceID: data.instanceID}, 'receivesWidgetEvents');
 		
+		var app;
 		if(data.ctrlId.indexOf("buttonCloseApp") >= 0) {
-			var app = findAppById(data.appId);
+			app = findAppById(data.appId);
 			addEventToUserLog(data.addr, {type: "delete", data: {application: {id: app.id, type: app.application}}, time: Date.now()});
 		}
 		else if(data.ctrlId.indexOf("buttonCloseWidget") >= 0) {
-			var app = findAppById(data.appId);
+			app = findAppById(data.appId);
 			addEventToUserLog(data.addr, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 		}
 		else {
@@ -3336,6 +3337,7 @@ function togglePointerMode(uniqueID) {
 
 function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	if ( sagePointers[uniqueID] === undefined ) return;
+	var app;
 
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
@@ -3347,7 +3349,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		else if(data.button === "right"){
 			if(ct.show === true) {
 				hideControl(ct);
-				var app = findAppById(ct.objID);
+				app = findAppById(ct.objID);
 				
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 			}
@@ -3436,7 +3438,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				else if (elemCtrl.show === false) {
 					showControl(elemCtrl, pointerX, pointerY);
 					
-					var app = findAppById(elemCtrl.objID);
+					app = findAppById(elemCtrl.objID);
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}
 				else {
@@ -3454,7 +3456,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					else if (elemCtrl.show === false) {
 						showControl(elemCtrl, pointerX, pointerY) ;
 						
-						var app = findAppById(elemCtrl.objID);
+						app = findAppById(elemCtrl.objID);
 						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
 					else {
