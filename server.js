@@ -1084,24 +1084,22 @@ function wsUpdateAppState(wsio, data) {
 // Got a resize call for an application itself
 //
 function wsAppResize(wsio, data) {
-    if (wsio.clientID === 0) {
-		// Update the object with the new dimensions
-		var app    = findAppById(data.id);
-		if (app) {
-			// Update the width height and aspect ratio
-			app.width  = data.width;
-			app.height = data.height;
-			app.aspect = app.width/app.height;
-			app.native_width  = data.width;
-			app.native_height = data.height;
-			// build the object to be sent
-			var updateItem = {elemId: app.id,
-								elemLeft: app.left, elemTop: app.top,
-								elemWidth: app.width, elemHeight: app.height,
-								force: true, date: new Date()};
-			// send the order
-			broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
-		}
+	// Update the object with the new dimensions
+	var app = findAppById(data.id);
+	if (app) {
+		// Update the width height and aspect ratio
+		app.width  = data.width;
+		app.height = data.height;
+		app.aspect = app.width/app.height;
+		app.native_width  = data.width;
+		app.native_height = data.height;
+		// build the object to be sent
+		var updateItem = {elemId: app.id,
+							elemLeft: app.left, elemTop: app.top,
+							elemWidth: app.width, elemHeight: app.height,
+							force: true, date: new Date()};
+		// send the order
+		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
 	}
 }
 
