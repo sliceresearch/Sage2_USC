@@ -101,13 +101,13 @@ function bufferSync(source) {
 
 
 // Takes a binary buffer
-function buffer(source, done) {
+function buffer(source, callback) {
 	// The dash specifies to read data from stdin
-	var exif = ChildProcess.spawn('exiftool', ['-json', '-']);
+	var exif = ChildProcess.spawn('exiftool', ['-json', '-'], {stdin: 'pipe'});
 
-	//Check for error because of the child process not being found / launched
+	// Check for error because of the child process not being found / launched
 	exif.on('error', function (err) {
-		done('Fatal Error: Unable to load exiftool. ' + err);
+		callback('Fatal Error: Unable to load exiftool. ' + err);
 	});
 
 	// Read the binary data back
@@ -122,20 +122,32 @@ function buffer(source, done) {
 		errorMessage += data.toString();
 	});
 
-	// Handle the response to the callback to hand the metadata back.
 	exif.on("close", function () {
 		if (errorMessage) {
-			done(errorMessage);
+			callback(errorMessage);
 		}
 		else {
 			var metadata = JSON.parse(response);
-			done(null, metadata[0]);
+			callback(null, metadata[0]);
 		}
 	});
 
-	// Give the source binary data to the process
-	exif.stdin.write(source);
-	exif.stdin.end();
+	exif.stdin.on('error', function (err) {
+		console.log('Error in stdin - IGNORED', err);
+	});
+
+	var curr = 0;
+	var done = false;
+	while (! done ) {
+		// Give the source binary data to the process
+		var status = exif.stdin.write(source.slice(curr, Math.min(curr+16*1024, source.length)));
+		curr += 16*1024;
+		done  = status;
+		if (curr >= source.length) done = true;
+	}
+
+	exif.stdin.end(function () { // nothing
+	});
 
 	return exif;
 }

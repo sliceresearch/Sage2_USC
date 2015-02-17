@@ -24,9 +24,8 @@ var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
 var registry  = require('../src/node-registry');
 
-// Global variable to handle iamgeMagick configuration
+// Global variable to handle imageMagick configuration
 var imageMagick = null;
-var ffmpegPath = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -69,8 +68,10 @@ var AllAssets = null;
 setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
 	imageMagick = gm.subClass(imOptions);
-	if(ffmpegOptions.appPath !== undefined){
-		ffmpegPath  = ffmpegOptions.appPath + "ffmpeg";
+	// Set the path to binaries for video processing
+	if (ffmpegOptions.appPath !== undefined) {
+		ffmpeg.setFfmpegPath(ffmpegOptions.appPath  + 'ffmpeg');
+		ffmpeg.setFfprobePath(ffmpegOptions.appPath + 'ffprobe');
 	}
 };
 
@@ -171,7 +172,6 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index,
 	if(aspect < 1.0) size = Math.round(sizes[index]*aspect) + "x" + sizes[index];
 
 	var cmd = ffmpeg(infile);
-	if(ffmpegPath !== null) cmd.setFfmpegPath(ffmpegPath);
 	cmd.on('end', function() {
 		var tmpImg = outfile+'_'+size+'_1.png';
 		imageMagick(tmpImg).command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {

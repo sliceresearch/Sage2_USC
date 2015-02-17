@@ -97,26 +97,37 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 
 appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var _this = this;
-	request({url: url, encoding: null, strictSSL: strictSSL}, function(err, response, body) {
-		if(err) throw err;
 
-		var result = exiftool.buffer(body, function(err, info) {
+	request({
+		url: url,
+		encoding: null, 
+		strictSSL: strictSSL,
+		agentOptions: {rejectUnauthorized:false,requestCert: false}, 
+		headers:{'User-Agent':'node'}},
+		function(err, response, body) {
 			if (err) {
-				console.log("Error processing image:", url, mime_type, name, result.err);
+				console.log("request error", err);
+				throw err;
 			}
-			else
-				if (info.ImageWidth && info.ImageHeight) {
-					_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
-						function(appInstance) {
-							_this.scaleAppToFitDisplay(appInstance);
-							callback(appInstance);
-						}
-					);
-				} else {
-					console.log("File not recognized:", file, mime_type, url);
+			var result = exiftool.buffer(body, function(err, info) {
+				if (err) {
+					console.log("Error processing image:", url, mime_type, name, result.err);
 				}
-		});
-	});
+				else {
+					if (info.ImageWidth && info.ImageHeight) {
+						_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
+							function(appInstance) {
+								_this.scaleAppToFitDisplay(appInstance);
+								callback(appInstance);
+							}
+							);
+					} else {
+						console.log("File not recognized:", file, mime_type, url);
+					}
+				}
+			});
+		}
+	);
 };
 
 appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
@@ -140,15 +151,16 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 		var resolutionY = mp4.resolution;
 		var resolutionX = resolutionY * aspectRatio;
 
-		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, resolutionX, resolutionY,
-			function(appInstance) {
-				_this.scaleAppToFitDisplay(appInstance);
-				callback(appInstance);
-		});
+		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, callback);
 	});
 };
 
-appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw, vh, callback) {
+appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
+	console.log(url, mime_type, source, name);
+	
+	this.loadVideoFromFile(source, mime_type, url, url, name, callback);
+	
+	/*
 	var aspectRatio = vw / vh;
 
 	var metadata         = {};
@@ -191,6 +203,7 @@ appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, vw
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
+	*/
 };
 
 
@@ -209,7 +222,7 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 			callback(appInstance);
 		});
 	});
-	request({url: url, strictSSL: strictSSL}).pipe(tmp);
+	request({url: url, strictSSL: strictSSL,headers:{'User-Agent':'node'}}).pipe(tmp);
 };
 
 
@@ -357,7 +370,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			id: null,
 			title: name,
 			application: "movie_player",
-			icon: exif.SAGE2thumbnail,
+			icon: exif ? exif.SAGE2thumbnail : null,
 			type: mime_type,
 			url: external_url,
 			data: {
@@ -566,20 +579,24 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 };
 
 appLoader.prototype.loadApplicationFromRemoteServer = function(application, callback) {
+	this.loadApplication({location: "remote", application: application}, callback);
+	/*
 	var _this = this;
-	this.loadApplication({location: "remote", application: application}, function(appInstance) {
+	this.loadApplication({location: "remote", application: application}, function(appInstance, videohandle) {
 		// cannot use same video url source for youtube
 		// must dynamically generate new one
 		if(application.type === "video/youtube") {
 			_this.loadYoutubeFromURL(application.url, function(youtubeApp) {
 				appInstance.data.src = youtubeApp.data.src;
-				callback(appInstance);
+				callback(appInstance, videohandle);
 			});
 		}
+		else if(application.type === "video/youtube")
 		else {
-			callback(appInstance);
+			callback(appInstance, videohandle);
 		}
 	});
+	*/
 };
 
 appLoader.prototype.loadFileFromWebURL = function(file, callback) {
@@ -587,9 +604,7 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
 	
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: true}, function(appInstance, handle) {
-		callback(appInstance, handle);
-	});
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false}, callback);
 };
 
 appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
@@ -720,7 +735,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 			else {
 				// Fixed size since cant process exif on URL yet
-				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, 1280, 720, function(appInstance, handle) {
+				this.loadVideoFromURL(appData.url, appData.type, appData.url, appData.name, function(appInstance, handle) {
 					callback(appInstance, handle);
 				});
 			}
@@ -733,33 +748,47 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "remote") {
-		var appInstance = {
-			id: appData.application.id,
-			title: appData.application.title,
-			application: appData.application.application,
-			type: appData.application.type,
-			url: appData.application.url,
-			data: appData.application.data,
-			resrc: appData.application.resrc,
-			left: this.titleBarHeight,
-			top: 1.5*this.titleBarHeight,
-			width: appData.application.native_width,
-			height: appData.application.native_height,
-			native_width: appData.application.native_width,
-			native_height: appData.application.native_height,
-			previous_left: null,
-			previous_top: null,
-			previous_width: null,
-			previous_height: null,
-			maximized: false,
-			aspect: appData.application.aspect,
-			animation: appData.application.animation,
-			metadata: appData.application.metadata,
-			sticky:appData.application.sticky,
-			date: new Date()
-		};
-		this.scaleAppToFitDisplay(appInstance);
-		callback(appInstance, null);
+		if(appData.application.application === "movie_player"){
+			if(appData.application.type === "video/youtube") {
+				this.loadYoutubeFromURL(appData.application.url, callback);
+			}
+			else {
+				this.loadVideoFromURL(appData.application.url, appData.application.type, appData.application.url, appData.application.name, callback);
+			}
+		}
+		else {
+			var appInstance = {
+				id: appData.application.id,
+				title: appData.application.title,
+				application: appData.application.application,
+				type: appData.application.type,
+				url: appData.application.url,
+				data: appData.application.data,
+				resrc: appData.application.resrc,
+				left: this.titleBarHeight,
+				top: 1.5*this.titleBarHeight,
+				width: appData.application.native_width,
+				height: appData.application.native_height,
+				native_width: appData.application.native_width,
+				native_height: appData.application.native_height,
+				previous_left: null,
+				previous_top: null,
+				previous_width: null,
+				previous_height: null,
+				maximized: false,
+				aspect: appData.application.aspect,
+				animation: appData.application.animation,
+				metadata: appData.application.metadata,
+				sticky:appData.application.sticky,
+				date: new Date()
+			};
+			if(appData.application.application === "pdf_viewer") {
+				appInstance.data.src = appInstance.url;
+			}
+			
+			this.scaleAppToFitDisplay(appInstance);
+			callback(appInstance, null);
+		}
 	}
 };
 
