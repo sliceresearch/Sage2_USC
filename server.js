@@ -202,11 +202,20 @@ var shell = null;
 
 var users = null;
 if(program.trackUsers) {
+	if(typeof program.trackUsers === "string" && sageutils.fileExists(program.trackUsers))
+		users = json5.parse(fs.readFileSync(program.trackUsers));
+	else
+		users = {};
+	users.session = {};
+	users.session.start = Date.now();
+	
+	/*
 	var trackfile = program.trackUsers === true ? "tracked_users.json" : program.trackUsers;
 	if(sageutils.fileExists(trackfile)) users = json5.parse(fs.readFileSync(trackfile));
 	else users = {};
 	users.session = {};
 	users.session.start = Date.now();
+	*/
 }
 if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 
@@ -596,7 +605,7 @@ function wsRegisterInteractionClient(wsio, data) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	
 	var key;
-	if(program.trackUsers === "all") {
+	if(program.trackUsers === true) {
 		var newUser = true;
 		for(key in users) {
 			if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
