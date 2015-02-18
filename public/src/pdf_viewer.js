@@ -194,26 +194,31 @@ function addWidgetControlsToPdfViewer (_this){
 	// UI stuff
 	_this.controls.addButton({type:"fastforward",sequenceNo:3, action:function(date){
 		this.state.page = this.pdfDoc.numPages;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"rewind",sequenceNo:5, action:function(date){
 		this.state.page = 1;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"prev",sequenceNo:9, action:function(date){
 		if(this.state.page <= 1) return;
 		this.state.page = this.state.page - 1;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 	_this.controls.addButton({type:"next", sequenceNo:11,action:function(date){
 		if (this.state.page >= this.pdfDoc.numPages) return;
 		this.state.page = this.state.page + 1;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", caption: "Page", action:function(date){
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 	_this.controls.finishedAddingControls();
