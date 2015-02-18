@@ -587,7 +587,7 @@ function initializeMediaBlockStreams(clientID) {
 	for(var key in mediaBlockStreams) {
         for(var i=0; i<clients.length; i++){
             var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-            if(clients[i].messages.receivesMediaStreamFrames && clientID === clientAddress){
+            if(clients[i].messages.receivesMediaStreamFrames && mediaBlockStreams[key].clients[clientAddress] === undefined){
                     mediaBlockStreams[key].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
             }
         }
@@ -1012,7 +1012,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 
     var clientsReady = true;
 
-    if(data.newClient !== null || data.newClient !== undefined) {
+    if(data.newClient !== null && data.newClient !== undefined) {
         if(data.newClient) {
             initializeMediaBlockStreams(uniqueID);
             var app = findAppById(data.id);
