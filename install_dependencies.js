@@ -43,7 +43,7 @@ function install() {
 	});
 	cmd.on('close', function (code) {
 		console.log("INSTALL FINISHED: " + code);
-	});	
+	});
 }
 
 function unzipModule(element, index, array) {
@@ -57,7 +57,7 @@ function unzipModule(element, index, array) {
 					moveModule(element);
 				});
 			});
-			
+
 		}
 		else {
 			exec("tar xzf " + element, {cwd: modules}, function(error, stdout, stderr) {
@@ -71,7 +71,7 @@ function moveModule(mod) {
 	var module_dir = path.basename(mod, ".tar.gz");
 	fs.rename(path.join(modules, module_dir), path.join("node_modules", module_dir), function(error) {
 		if(error) throw error;
-		
+
 		unpacked[mod] = true;
 		if(allTrueDict(unpacked)) install();
 	});
@@ -87,7 +87,7 @@ function allTrueDict(dict) {
 
 function rmdirSync(directory) {
 	if(!fileExistsSync(directory) || !fs.lstatSync(directory).isDirectory()) return false;
-	
+
 	var i;
 	var list = fs.readdirSync(directory);
 	for(i=0; i <list.length; i++) {
@@ -98,7 +98,7 @@ function rmdirSync(directory) {
 		else {
 			fs.unlinkSync(file);
 		}
-	};
+	}
 	fs.rmdirSync(directory);
 }
 
@@ -122,7 +122,7 @@ cmd.stderr.on('data', function (data) {
 });
 cmd.on('close', function (code) {
 	console.log("INSTALL FINISHED: " + code);
-});	
+});
 
 
 */
