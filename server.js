@@ -26,26 +26,34 @@
 // require variables to be declared
 "use strict";
 
-// Importing modules (from node_modules directory)
-
-// npm registry: built-in or defined in package.json
-var colors      = require('colors');              // pretty colors in the terminal
+// node: built-in
 var exec        = require('child_process').exec;  // execute child process
-var formidable  = require('formidable');          // upload processor
 var fs          = require('fs');                  // filesystem access
-var gm          = require('gm');                  // graphicsmagick
 var http        = require('http');                // http server
 var https       = require('https');               // https server
-var json5       = require('json5');               // JSON format that allows comments
 var os          = require('os');                  // operating system access
 var path        = require('path');                // file path extraction and creation
-var program     = require('commander');           // parsing command-line arguments
-var qrimage     = require('qr-image');            // qr-code generation
-var readline    = require('readline');            // to build an evaluation loop (builtin module)
-var request     = require('request');             // external http requests
-var sprint      = require('sprint');              // pretty formating (sprintf)
-var twit        = require('twit');                // twitter api
+var readline    = require('readline');            // to build an evaluation loop
 var util        = require('util');                // node util
+
+// Platform detection
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "MacOSX" : "Linux";
+
+var module_prefix = path.resolve("node_modules", platform, "node_modules");
+global.__reqPath = function (module) {
+	return path.join(module_prefix, module);
+}
+
+// npm registry: defined in package.json
+var colors      = require(__reqPath('colors'));           // pretty colors in the terminal
+var formidable  = require(__reqPath('formidable'));       // upload processor
+var gm          = require(__reqPath('gm'));               // graphicsmagick
+var json5       = require(__reqPath('json5'));            // JSON format that allows comments
+var program     = require(__reqPath('commander'));        // parsing command-line arguments
+var qrimage     = require(__reqPath('qr-image'));         // qr-code generation
+var request     = require(__reqPath('request'));          // external http requests
+var sprint      = require(__reqPath('sprint'));           // pretty formating (sprintf)
+var twit        = require(__reqPath('twit'));             // twitter api
 
 // custom node modules
 var assets      = require('./src/node-assets');         // manages the list of files
@@ -124,8 +132,6 @@ else if (program.output === false) {
 	};
 }
 
-// Platform detection
-var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 console.log("Detected Server OS as:", platform);
 console.log("SAGE2 Short Version:", SAGE2_version);
 

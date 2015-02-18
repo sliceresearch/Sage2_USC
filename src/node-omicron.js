@@ -13,16 +13,17 @@
  */
 
 
+var dgram     = require('dgram');
 var net       = require('net');
 var util      = require('util');
-var dgram     = require('dgram');
-var WebSocket = require('ws');
 
-var websocketIO  = require('./node-websocket.io');  // creates WebSocket server and clients
-var interaction  = require('./node-interaction');   // custom interaction module
-var sagepointer  = require('./node-sagepointer');   // custom sagepointer module
+var WebSocket = require(__reqPath('ws'));
+
+var websocketIO          = require('./node-websocket.io');  // creates WebSocket server and clients
+var interaction          = require('./node-interaction');   // custom interaction module
+var sagepointer          = require('./node-sagepointer');   // custom sagepointer module
 var coordinateCalculator = require('./node-coordinateCalculator'); 
-var oneEuroFilter = require('./node-1euro'); 
+var oneEuroFilter        = require('./node-1euro'); 
 
 var coordCalculator;
 

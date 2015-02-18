@@ -13,10 +13,12 @@
  */
 
 var fs          = require('fs');
-var json5       = require('json5');
 var path        = require('path');
-var mime        = require('mime');
-var jsonDB      = require('node-json-db');
+
+var json5       = require(__reqPath('json5'));
+var jsonDB      = require(__reqPath('node-json-db'));
+var mime        = require(__reqPath('mime'));
+
 var sageutils   = require('../src/node-utils');  // for fileExists function
 
 function registryManager() {
