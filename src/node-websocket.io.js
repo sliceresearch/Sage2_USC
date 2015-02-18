@@ -13,7 +13,7 @@
  */
 
 
-var WebSocket = require(__reqPath('ws'));
+var WebSocket = require('ws');
 var WebSocketServer = WebSocket.Server;
 
 function websocketIOServer(data) {

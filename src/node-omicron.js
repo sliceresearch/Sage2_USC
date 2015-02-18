@@ -17,7 +17,7 @@ var dgram     = require('dgram');
 var net       = require('net');
 var util      = require('util');
 
-var WebSocket = require(__reqPath('ws'));
+var WebSocket = require('ws');
 
 var websocketIO          = require('./node-websocket.io');  // creates WebSocket server and clients
 var interaction          = require('./node-interaction');   // custom interaction module

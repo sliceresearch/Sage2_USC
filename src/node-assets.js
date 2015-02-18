@@ -17,10 +17,10 @@ var fs        = require('fs');
 var path      = require('path');
 var url       = require('url');
 
-var color     = require(__reqPath('color'));
-var ffmpeg    = require(__reqPath('fluent-ffmpeg'));     // ffmpeg
-var gm        = require(__reqPath('gm'));                // imagesmagick
-var json5     = require(__reqPath('json5'));
+var color     = require('color');
+var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
+var gm        = require('gm');                // imagesmagick
+var json5     = require('json5');
 
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions

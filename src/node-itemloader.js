@@ -17,12 +17,12 @@ var fs           = require('fs');
 var path         = require('path');
 var url          = require('url');
 
-var unzip        = require(__reqPath('decompress-zip'));
-var gm           = require(__reqPath('gm'));
-var mime         = require(__reqPath('mime'));
-var request      = require(__reqPath('request'));
-var videodemuxer = require(__reqPath('node-demux'));
-var ytdl         = require(__reqPath('ytdl-core'));
+var unzip        = require('decompress-zip');
+var gm           = require('gm');
+var mime         = require('mime');
+var request      = require('request');
+var videodemuxer = require('node-demux');
+var ytdl         = require('ytdl-core');
 
 var exiftool  = require('../src/node-exiftool');        // gets exif tags for images
 var assets    = require('../src/node-assets');          // asset management

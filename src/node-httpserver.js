@@ -16,7 +16,7 @@ var fs   = require('fs');
 var path = require('path');
 var url  = require('url');
 
-var mime = require(__reqPath('mime'));
+var mime = require('mime');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
 

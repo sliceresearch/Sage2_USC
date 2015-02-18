@@ -14,7 +14,7 @@
  
 var exec   = require('child_process').exec;    // spawn a process and receive output
 
-var ffmpeg = require(__reqPath('fluent-ffmpeg'));      // ffmpeg video manipulator
+var ffmpeg = require('fluent-ffmpeg');      // ffmpeg video manipulator
 
 function liveVideoDecoder(options) {
 	this.options       = options;

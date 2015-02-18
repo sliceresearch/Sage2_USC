@@ -24,7 +24,7 @@ var fs     = require('fs');                  // filesystem access
 var path   = require('path');
 var tls    = require('tls');                 // https encryption
 
-var semver = require(__reqPath('semver'));              // parse version numbers
+var semver = require('semver');              // parse version numbers
 
 
 /**

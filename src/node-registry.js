@@ -15,9 +15,9 @@
 var fs          = require('fs');
 var path        = require('path');
 
-var json5       = require(__reqPath('json5'));
-var jsonDB      = require(__reqPath('node-json-db'));
-var mime        = require(__reqPath('mime'));
+var json5       = require('json5');
+var jsonDB      = require('node-json-db');
+var mime        = require('mime');
 
 var sageutils   = require('../src/node-utils');  // for fileExists function
 
