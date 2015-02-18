@@ -394,18 +394,9 @@ function SAGE2DisplayUI() {
 		var menuUI    = document.getElementById('menuUI');
 		var sage2UI   = document.getElementById('sage2UI');
 		var ctx       = sage2UI.getContext('2d');
-<<<<<<< HEAD
-		
 
 		var freeWidth   = window.innerWidth  - 25;      // window width minus padding
 		var freeHeight  = window.innerHeight - 20 - 100 - 65; // size of 10px margin (top, bottom) and bottom buttons
-		
-=======
-
-		var freeWidth   = window.innerWidth  - 25; // window width minus padding
-		var freeHeight  = window.innerHeight - 20; // size of 10px margin (top, bottom)
-
->>>>>>> decklink
 		var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 		var freeAspect  = freeWidth / freeHeight;
 
