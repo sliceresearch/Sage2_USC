@@ -4681,25 +4681,22 @@ function keyPress( uniqueID, pointerX, pointerY, data ) {
 function deleteApplication( elem ) {
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresFullApps');
 	broadcast('deleteElement', {elemId: elem.id}, 'requiresAppPositionSizeTypeOnly');
-	if(elem.application === "media_stream"){
-		var broadcastWS = null;
-		var mediaStreamData = elem.id.split("|");
-		var broadcastAddress = mediaStreamData[0];
-		var broadcastID = parseInt(mediaStreamData[1]);
-		for(var i=0; i<clients.length; i++){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+	var broadcastWS = null;
+    var mediaStreamData = elem.id.split("|");
+    var broadcastAddress = mediaStreamData[0];
+    var broadcastID = parseInt(mediaStreamData[1]);
+    var i, clientAddress;
+    if(elem.application === "media_stream"){
+		for(i=0; i<clients.length; i++){
+			clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
 			if(clientAddress == broadcastAddress) broadcastWS = clients[i];
 		}
 
 		if(broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
 	}
     else if(elem.application === "media_block_stream"){
-		var broadcastWS = null;
-		var mediaBlockStreamData = elem.id.split("|");
-		var broadcastAddress = mediaBlockStreamData[0];
-		var broadcastID = parseInt(mediaBlockStreamData[1]);
-		for(var i=0; i<clients.length; i++){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
+		for(i=0; i<clients.length; i++){
+			clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
 			if(clientAddress == broadcastAddress) broadcastWS = clients[i];
 		}
 
