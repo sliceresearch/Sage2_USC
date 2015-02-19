@@ -252,10 +252,17 @@ var buttonType = {
 		this.animation= true;
 	},
 	"closeBar": function () {
-		this.textual=true;
-		this.label="Close";
-		this.fill="rgba(250,250,250,1.0)";
-		this.animation=false;
+		this.from ="m -4 -4 l 8 8 m -8 0 l 8 -8";
+		this.to = "m -4 -4 l 8 8 m -8 0 l 8 -8";
+		this.width =10;
+		this.height =10;
+		this.strokeWidth = 3;
+		this.fill = "#6D6D6D";
+		this.toFill ="#6D6D6D";
+		this.state = null;
+		this.delay = 400;
+		this.textual =false;
+		this.animation = false;
 	},
 	"closeApp": function () {
 		this.state= null;
@@ -706,7 +713,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);
 	}*/
-	drawControlCenter(this.controlSVG,center, 1.8*dimensions.buttonRadius, "SAGE2");
+	drawControlCenter(instanceID,this.controlSVG,center, dimensions.buttonRadius, "");
 	var ctrHandle = document.getElementById(instanceID + "SVG");
 	return ctrHandle;
 }
@@ -715,24 +722,30 @@ function drawSpokeForRadialLayout(paper,center,point){
 	var spoke = paper.line(center.x,center.y,point.x,point.y);
 	spoke.attr({
 		stroke: "rgba(250,250,250,1.0)",
-		strokeWidth: 2,
+		strokeWidth: 3,
 		fill: "none"
 	});
 }
 
 function drawBackgroundForRadialLayout(paper, center, radius){
 	var backGround = paper.circle(center.x,center.y,radius);
+	var grad = paper.gradient("r(0.5, 0.5, 0.45)rgba(190,190,190,0.6)-rgba(90,90,90,0.4)");
 	backGround.attr({
-		fill: "rgba(60,60,60,0.5)",
+		fill: grad,//"rgba(60,60,60,0.5)",
 		stroke: "rgba(250,250,250,1.0)",
 		strokeDasharray: "2,1",
 		strokeWidth: 5
 	});
+
 }
 
-function drawControlCenter(paper, center, radius, initialText){
+function drawControlCenter(instanceID,paper, center, radius, initialText){
 	var controlCenter = paper.circle(center.x,center.y,radius);
-	controlCenter.attr("class", "widgetBackground");
+	controlCenter.attr({
+		fill:"rgba(110,110,110,1.0)",
+		stroke: "rgba(250,250,250,1.0)",
+		id: instanceID + "menuCenter"
+	});
 	var controlCenterLabel = paper.text(center.x,center.y,initialText);
 	controlCenterLabel.attr("class", "widgetText");
 	controlCenterLabel.attr({
@@ -1257,9 +1270,12 @@ hideWidgetToAppConnector = function (instanceID){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
 		connectorDiv.style.display = "none";
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	if (selectedControl)
+		selectedControl.attr("fill","rgba(110,110,110,1.0)");
 }
 
-showWidgetToAppConnector = function (instanceID){
+showWidgetToAppConnector = function (instanceID, color){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
     	connectorDiv.style.display = "inline";
@@ -1269,11 +1285,26 @@ removeWidgetToAppConnector = function (instanceID){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
 		connectorDiv.parentNode.removeChild(connectorDiv);
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	if (selectedControl)
+		selectedControl.attr("fill","rgba(110,110,110,1.0)");
 }
 
-moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2) {
+moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
 	var connectorDiv = document.getElementById(instanceID + "connector");
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	if (selectedControl)
+		selectedControl.attr("fill",color);
 	if (!connectorDiv) return;
+	if (!color)
+		color = '#ab6666'
+	var a = Math.abs(x1-x2);
+    var b = Math.abs(y1-y2);
+    var width = Math.sqrt(a*a + b*b ) ;
+    if (parseInt(width)==0)return
+    var alpha = (cutLength-2)/width;
+    x1 = alpha*x2 + (1-alpha)*x1;
+    y1 = alpha*y2 + (1-alpha)*y1;
 	if(y1 < y2){
         var pom = y1;
         y1 = y2;
@@ -1283,12 +1314,12 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2) {
         x2 = pom;
     }
 
-    var a = Math.abs(x1-x2);
-    var b = Math.abs(y1-y2);
+    a = Math.abs(x1-x2);
+    b = Math.abs(y1-y2);
     var c;
     var sx = (x1+x2)/2 ;
     var sy = (y1+y2)/2 ;
-    var width = Math.sqrt(a*a + b*b ) ;
+    width = Math.sqrt(a*a + b*b ) ;
     var x = sx - width/2;
     var y = sy;
 
@@ -1302,7 +1333,7 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2) {
     var rad = Math.acos(cosb);
     var deg = (rad*180)/Math.PI;
     var thickness = (ui.widgetControlSize* 0.01) + "em";
-    connectorDiv.setAttribute('style','border:'+thickness +' solid white;width:'+width+'px;height:0px;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;');   
+    connectorDiv.setAttribute('style','border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;box-shadow: 0px 0px 15px 5px '+color+';');   
     connectorDiv.style.display = "inline";
 }
 

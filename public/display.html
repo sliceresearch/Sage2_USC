@@ -693,7 +693,8 @@
 			if(selectedControl !== undefined && selectedControl !== null) {
 				selectedControl.style.left = eLeft.toString() + "px";
 				selectedControl.style.top = eTop.toString() + "px";
-				moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+appData.height/2.0);
+				var hOffset = (ui.titleBarHeight + appData.height)/2;
+				moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0,position_data.user_color);
 			}
 			else {
 				console.log("cannot find control: " + position_data.elemId);
@@ -704,7 +705,8 @@
 			var eLeft = position_data.left - ui.offsetX;
 			var eTop = position_data.top - ui.offsetY;
 			var appData = position_data.appData;
-			moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+appData.height/2.0);
+			var hOffset = (ui.titleBarHeight + appData.height)/2;
+			moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+hOffset,position_data.height/2.0, position_data.user_color);
 		});
 
 
@@ -863,7 +865,7 @@
 				ctrDiv.style.height = data.height.toString() + "px";
 				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
-				ctrDiv.style.zIndex = "9999".toString();
+				ctrDiv.style.zIndex = "9990".toString();
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 
 				var spec = controlObjects[data.appId].controls;

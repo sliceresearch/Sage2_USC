@@ -3141,11 +3141,11 @@ function removeControlsForUser(uniqueID){
 	broadcast('removeControlsForUser',{user_id:uniqueID},'receivesWidgetEvents');
 }
 
-function showControl(ctrl, pointerX, pointerY){
+function showControl(ctrl,uniqueID, pointerX, pointerY){
 	if (ctrl.show === false) {
 		ctrl.show = true;
 		moveControlToPointer(ctrl, pointerX, pointerY);
-		broadcast('showControl',{id:ctrl.id, appId: ctrl.appId},'receivesWidgetEvents');
+		broadcast('showControl',{id:ctrl.id, appId: ctrl.appId, user_color:sagePointers[uniqueID].color},'receivesWidgetEvents');
 	}
 }
 
@@ -3435,7 +3435,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
 				else if (elemCtrl.show === false) {
-					showControl(elemCtrl, pointerX, pointerY);
+					showControl(elemCtrl,uniqueID, pointerX, pointerY);
 					
 					var app = findAppById(elemCtrl.appId);
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
@@ -3453,7 +3453,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 						broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: sagePointers[uniqueID].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 					}
 					else if (elemCtrl.show === false) {
-						showControl(elemCtrl, pointerX, pointerY) ;
+						showControl(elemCtrl,uniqueID, pointerX, pointerY) ;
 						
 						var app = findAppById(elemCtrl.appId);
 						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
@@ -3581,14 +3581,17 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		return; // Radial menu is using the event
 
 	// From pointerRelease
+	var app;
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
 			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
+				app = findAppById(remoteInteraction[uniqueID].selectedResizeItem.id);
+
 				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'requiresFullApps');
 				
-				addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+				addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
 				
 				if(videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id].newFrameGenerated === false)
 					handleNewVideoFrame(remoteInteraction[uniqueID].selectedResizeItem.id);
@@ -3604,16 +3607,18 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					}
 				}
 				if(remoteIdx < 0){
+					app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
+
 					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
 					
-					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
 					
 					if(videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id].newFrameGenerated === false)
 						handleNewVideoFrame(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteInteraction[uniqueID].releaseItem(true);
 				}
 				else{
-					var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
+					app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
 					
 					addEventToUserLog(uniqueID, {type: "shareApplication", data: {host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port, application: {id: app.id, type: app.application}}, time: Date.now()});
@@ -3623,7 +3628,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
 						
 						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
 							handleNewVideoFrame(updatedItem.elemId);
@@ -3694,6 +3699,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		var app = findAppById(controlUnderPointer.appId);
 		if (app){
 			controlUnderPointer.appData = getAppPositionSize(app);
+			controlUnderPointer.user_color = sagePointers[uniqueID].color;
 			broadcast ('showWidgetToAppConnector', controlUnderPointer,'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
 		}
@@ -3705,6 +3711,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		var app = findAppById(controlUnderPointer.appId);
 		if (app){
 			controlUnderPointer.appData = getAppPositionSize(app);
+			controlUnderPointer.user_color = sagePointers[uniqueID].color;
 			broadcast ('showWidgetToAppConnector', controlUnderPointer,'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
 		}
@@ -3717,6 +3724,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		var app = findAppById(updatedControl.appId);
 		if (app){
 			updatedControl.appData = getAppPositionSize(app);
+			updatedControl.user_color = sagePointers[uniqueID].color;
 			broadcast('setControlPosition', updatedControl, 'receivesPointerData');
 			return;
 		}
