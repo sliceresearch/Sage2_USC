@@ -1,0 +1,15 @@
+{
+	"main_script": "div_note.js",
+	"width": 600,
+	"height": 600,
+	"animation": true,
+	"sticky": true,
+	"dependencies": [
+	],
+	"title": "Div Note",
+	"version": "1.0.0",
+	"description": "It sticks!",
+	"keywords": [ "div", "note" ],
+	"author": "Krishna Bharadwaj <krishnaknbharadwaj@gmail.com",
+	"license": "SAGE2-Software-License"
+}
