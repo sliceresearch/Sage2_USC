@@ -24,25 +24,35 @@ var modules = path.join("build", "node_modules", platform);
 if(!fileExistsSync("node_modules")) fs.mkdirSync("node_modules");
 if(fileExistsSync(modules) && fs.lstatSync(modules).isDirectory()) {
 	files = fs.readdirSync(modules);
-	for(i=0; i<files.length; i++) {
-		if(files[i].indexOf(".tar.gz") >= 0) {
-			unpacked[files[i]] = false;
-			rmdirSync(path.join("node_modules", path.basename(files[i], ".tar.gz")));
-		}
+	if(files.length <= 0) {
+		install();
 	}
-	files.forEach(unzipModule);
+	else {
+		for(i=0; i<files.length; i++) {
+			if(files[i].indexOf(".tar.gz") >= 0) {
+				unpacked[files[i]] = false;
+				rmdirSync(path.join("node_modules", path.basename(files[i], ".tar.gz")));
+			}
+		}
+		files.forEach(unzipModule);
+	}
+}
+else {
+	install();
 }
 
 function install() {
-	var cmd = spawn('npm', ['install', '--skip-installed']);
-	cmd.stdout.on('data', function (data) {
-		console.log("> " + data);
-	});
-	cmd.stderr.on('data', function (data) {
-		console.log("> " + data);
-	});
-	cmd.on('close', function (code) {
-		console.log("INSTALL FINISHED: " + code);
+	process.stdout.write("installing: ");
+	var timer = setInterval(function() {
+		process.stdout.write(".");
+	}, 500);
+	exec('npm install --skip-installed --loglevel info', function(error, stdout, stderr) {
+		if(error) throw error;
+		
+		clearInterval(timer);
+		process.stdout.write("\n");
+		console.log(stdout);
+		console.log("INSTALL FINISHED!");
 	});
 }
 
@@ -51,9 +61,10 @@ function unzipModule(element, index, array) {
 		if(platform === "win") {
 			exec("7z x " + element, {cwd: modules}, function(error, stdout, stderr) {
 				if(error) throw error;
+				
 				exec("7z x " + path.basename(element, ".gz"), {cwd: modules}, function(error, stdout, stderr) {
 					if(error) throw error;
-					fs.unlinkSync(path.basename(element, ".gz"));
+					fs.unlinkSync(path.join(modules, path.basename(element, ".gz")));
 					moveModule(element);
 				});
 			});
