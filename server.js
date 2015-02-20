@@ -3836,7 +3836,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
-			if( elem != null )
+			if( elem !== null )
 			{
 				if(remoteInteraction[uniqueID].selectedResizeItem !== null){
 					broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'requiresFullApps');
@@ -3944,14 +3944,14 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	// widgets
-	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
+	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if (updatedControl !== null) {
 		broadcast('setControlPosition', updatedControl, 'receivesPointerData');
 		return;
 	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		broadcast('moveSliderKnob', {ctrl:lockedControl, x: pointerX}, 'receivesPointerData');
+		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
 		return;
 	}
 
@@ -4796,7 +4796,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 			else if (elemCtrl.show === false) {
 				showControl(elemCtrl, pointerX, pointerY);
 
-				app = findAppById(elemCtrl.objID);
+				var app = findAppById(elemCtrl.objID);
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 			}
 			else {
