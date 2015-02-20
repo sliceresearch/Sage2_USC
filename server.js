@@ -3836,48 +3836,51 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
-			if(remoteInteraction[uniqueID].selectedResizeItem !== null){
-				broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'requiresFullApps');
+			if( elem != null )
+			{
+				if(remoteInteraction[uniqueID].selectedResizeItem !== null){
+					broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: new Date()}, 'requiresFullApps');
 
-				addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 
-				if(videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id].newFrameGenerated === false)
-					handleNewVideoFrame(remoteInteraction[uniqueID].selectedResizeItem.id);
-				remoteInteraction[uniqueID].releaseItem(true);
-			}
-			if(remoteInteraction[uniqueID].selectedMoveItem !== null){
-				var remoteIdx = -1;
-				for(var i=0; i<remoteSites.length; i++){
-					if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
-						sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
-						remoteIdx = i;
-						break;
-					}
-				}
-				if(remoteIdx < 0){
-					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
-
-					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
-
-					if(videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id].newFrameGenerated === false)
-						handleNewVideoFrame(remoteInteraction[uniqueID].selectedMoveItem.id);
+					if(videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedResizeItem.id].newFrameGenerated === false)
+						handleNewVideoFrame(remoteInteraction[uniqueID].selectedResizeItem.id);
 					remoteInteraction[uniqueID].releaseItem(true);
 				}
-				else{
-					var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
-					remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
-
-					addEventToUserLog(uniqueID, {type: "shareApplication", data: {host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port, application: {id: app.id, type: app.application}}, time: Date.now()});
-
-					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
-					if(updatedItem !== null) {
-						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
-						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+				if(remoteInteraction[uniqueID].selectedMoveItem !== null){
+					var remoteIdx = -1;
+					for(var i=0; i<remoteSites.length; i++){
+						if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
+							sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
+							remoteIdx = i;
+							break;
+						}
+					}
+					if(remoteIdx < 0){
+						broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
 
 						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 
-						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
-							handleNewVideoFrame(updatedItem.elemId);
+						if(videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id] !== undefined && videoHandles[remoteInteraction[uniqueID].selectedMoveItem.id].newFrameGenerated === false)
+							handleNewVideoFrame(remoteInteraction[uniqueID].selectedMoveItem.id);
+						remoteInteraction[uniqueID].releaseItem(true);
+					}
+					else{
+						var app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
+						remoteSites[remoteIdx].wsio.emit('addNewElementFromRemoteServer', app);
+
+						addEventToUserLog(uniqueID, {type: "shareApplication", data: {host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port, application: {id: app.id, type: app.application}}, time: Date.now()});
+
+						var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
+						if(updatedItem !== null) {
+							broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+							broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+
+							addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
+
+							if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
+								handleNewVideoFrame(updatedItem.elemId);
+						}
 					}
 				}
 			}
@@ -3941,14 +3944,14 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	// widgets
-	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
+	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
 	if (updatedControl !== null) {
 		broadcast('setControlPosition', updatedControl, 'receivesPointerData');
 		return;
 	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
+		broadcast('moveSliderKnob', {ctrl:lockedControl, x: pointerX}, 'receivesPointerData');
 		return;
 	}
 
@@ -4783,22 +4786,23 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				broadcast('showRadialMenu', radialMenus[uniqueID+"_menu"].getInfo(), 'receivesPointerData');
 			}
 		}
-		/*
 		else
 		{
 			// Open a 'app' radial menu (or in this case application widget)
 			var elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 			if (elemCtrl === null) {
-				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch"+uniqueID, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
+				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch", x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
 			else if (elemCtrl.show === false) {
-				showControl(elemCtrl, pointerX, pointerY) ;
+				showControl(elemCtrl, pointerX, pointerY);
+
+				app = findAppById(elemCtrl.objID);
+				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 			}
 			else {
-				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+				moveControlToPointer(elemCtrl, pointerX, pointerY);
 			}
 		}
-		*/
 	}
 	updateRadialMenu(uniqueID);
 }
