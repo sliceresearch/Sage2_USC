@@ -75,7 +75,7 @@
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		audioManager_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "audioManager.html";
+		audioManager_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
