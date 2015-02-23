@@ -298,6 +298,7 @@ wsioServerS.onconnection(function(wsio) {
 
 function closeWebSocketClient(wsio) {
     var i;
+    var key;
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
 
@@ -317,7 +318,6 @@ function closeWebSocketClient(wsio) {
 		delete remoteInteraction[uniqueID];
 	}
 	if(wsio.messages.requiresFullApps){
-		var key;
 		for(key in mediaBlockStreams) {
 			for(i=0; i<clients.length; i++){
                 var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
@@ -337,7 +337,12 @@ function closeWebSocketClient(wsio) {
 			}
 		}
 	}
-
+	if(wsio.messages.receivesMediaStreamFrames){
+		for(key in videoHandles) {
+			delete videoHandles[key].clients[uniqueID];
+		}
+	}
+	
 	if(wsio.clientType == "webBrowser") webBrowserClient = null;
 
 	if(wsio === masterDisplay){
@@ -536,6 +541,19 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requiresAppPositionSizeTypeOnly) initializeExistingAppsPositionSizeTypeOnly(wsio);
 	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
 	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
+
+
+	if(wsio.messages.receivesMediaStreamFrames){
+		var key;
+		var appInstance;
+		var blocksize = 128;
+		for(key in videoHandles) {
+			videoHandles[key].clients[uniqueID] = {wsio: wsio, readyForNextFrame: false, blockList: []};
+			appInstance = findAppById(key);
+			calculateValidBlocks(appInstance, blocksize, videoHandles);
+		}
+	}
+
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
