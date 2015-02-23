@@ -3144,12 +3144,12 @@ function removeControlsForUser(uniqueID){
 function showControl(ctrl,uniqueID, pointerX, pointerY){
 	if (ctrl.show === false) {
 		ctrl.show = true;
-		moveControlToPointer(ctrl, pointerX, pointerY);
+		moveControlToPointer(ctrl,uniqueID, pointerX, pointerY);
 		broadcast('showControl',{id:ctrl.id, appId: ctrl.appId, user_color:sagePointers[uniqueID].color},'receivesWidgetEvents');
 	}
 }
 
-function moveControlToPointer(ctrl, pointerX, pointerY){
+function moveControlToPointer(ctrl,uniqueID, pointerX, pointerY){
 	var dt = new Date();
 	var rightMargin = config.totalWidth - ctrl.width;
 	var bottomMargin = config.totalHeight - ctrl.height;
@@ -3157,7 +3157,8 @@ function moveControlToPointer(ctrl, pointerX, pointerY){
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2 ;
 	var app = findAppById(ctrl.appId);
 	var appPos = (app===null)? null : getAppPositionSize(app);
-	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, appData: appPos},'receivesWidgetEvents');
+
+	broadcast('setControlPosition',{date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top,elemHeight: ctrl.height,user_color:sagePointers[uniqueID].color, appData: appPos},'receivesWidgetEvents');
 }
 
 
@@ -3441,7 +3442,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}
 				else {
-					moveControlToPointer(elemCtrl, pointerX, pointerY);
+					moveControlToPointer(elemCtrl,uniqueID, pointerX, pointerY);
 				}
 			}
 		}
@@ -3459,7 +3460,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
 					else {
-						moveControlToPointer(elemCtrl, pointerX, pointerY) ;
+						moveControlToPointer(elemCtrl,uniqueID, pointerX, pointerY) ;
 					}
 				}
 			}
@@ -3625,6 +3626,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					
 					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 					if(updatedItem !== null) {
+						updateItem.user_color = sagePointers[uniqueID].color;
 						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						
@@ -3694,34 +3696,54 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 	var elem = findAppUnderPointer(pointerX, pointerY);
 	var controlUnderPointer = findControlsUnderPointer(pointerX,pointerY);
-	if (controlUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null){
-		remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
-		var app = findAppById(controlUnderPointer.appId);
-		if (app){
-			controlUnderPointer.appData = getAppPositionSize(app);
-			controlUnderPointer.user_color = sagePointers[uniqueID].color;
-			broadcast ('showWidgetToAppConnector', controlUnderPointer,'receivesPointerData');
-			remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
+	var itemUnderPointer = controlUnderPointer || elem;
+	var app;
+	//Draw widget connectors
+	if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null){
+		if (itemUnderPointer.appId){
+			app = findAppById(itemUnderPointer.appId);
+			if (app){
+				itemUnderPointer.appData = getAppPositionSize(app);
+				itemUnderPointer.user_color = sagePointers[uniqueID].color;
+				broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+				remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+			}
 		}
-	}else if (controlUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
-		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
-		remoteInteraction[uniqueID].leaveControlArea();
-	}else if (controlUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null && controlUnderPointer !== remoteInteraction[uniqueID].hoverOverControl()){
-		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
-		var app = findAppById(controlUnderPointer.appId);
-		if (app){
-			controlUnderPointer.appData = getAppPositionSize(app);
-			controlUnderPointer.user_color = sagePointers[uniqueID].color;
-			broadcast ('showWidgetToAppConnector', controlUnderPointer,'receivesPointerData');
-			remoteInteraction[uniqueID].enterControlArea(controlUnderPointer);
+		else{
+			itemUnderPointer = getAppPositionSize(itemUnderPointer);
+			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		}
 		
+	}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
+		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+		remoteInteraction[uniqueID].leaveControlArea();
+	}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null && itemUnderPointer.id !== remoteInteraction[uniqueID].hoverOverControl().id){
+		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+		remoteInteraction[uniqueID].leaveControlArea();
+		if (itemUnderPointer.appId){
+			app = findAppById(itemUnderPointer.appId);
+			if (app){
+				itemUnderPointer.appData = getAppPositionSize(app);
+				itemUnderPointer.user_color = sagePointers[uniqueID].color;
+				broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+				remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+			}
+		}
+		else{
+			itemUnderPointer = getAppPositionSize(itemUnderPointer);
+			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+		}
 	}
+	// Widget connector show logic ends
 
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 	if (updatedControl !== null) {
-		var app = findAppById(updatedControl.appId);
+		app = findAppById(updatedControl.appId);
 		if (app){
 			updatedControl.appData = getAppPositionSize(app);
 			updatedControl.user_color = sagePointers[uniqueID].color;
@@ -3746,14 +3768,17 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			//Attach the app to the background app if it is sticky
 			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
+			updatedMoveItem.user_color = sagePointers[uniqueID].color;
 			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 			for (var idx=0;idx<updatedStickyItems.length;idx++){
+				updatedStickyItems[idx].user_color = sagePointers[uniqueID].color;
 				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
 			}
 		}
 		else if(updatedResizeItem !== null){
+			updatedResizeItem.user_color = sagePointers[uniqueID].color;
 			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
 			updatedApp = findAppById(updatedResizeItem.elemId);
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
@@ -3819,10 +3844,12 @@ function pointerPosition( uniqueID, data ) {
 		var updatedApp = findAppById(updatedItem.elemId);
 		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
+		updateItem.user_color = sagePointers[uniqueID].color;
 		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 		for (var idx=0;idx<updatedStickyItems.length;idx++){
+			updatedStickyItems[idx].user_color = sagePointers[uniqueID].color;
 			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
 		}
 	}
@@ -3883,6 +3910,7 @@ function pointerScroll( uniqueID, data ) {
 		var updatedItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
 		if(updatedItem !== null){
 			var updatedApp = findAppById(updatedItem.elemId);
+			updatedItem.user_color = sagePointers[uniqueID].color;
 			broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 
@@ -3991,7 +4019,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4016,6 +4044,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4055,6 +4084,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4079,6 +4109,7 @@ function pointerLeftZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4117,6 +4148,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4141,6 +4173,7 @@ function pointerRightZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4179,6 +4212,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4203,6 +4237,7 @@ function pointerTopZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4243,6 +4278,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4267,6 +4303,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4306,6 +4343,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4330,6 +4368,7 @@ function pointerBottomZone(uniqueID, pointerX, pointerY) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					
+					updatedItem.user_color = sagePointers[uniqueID].color;
 					broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 					// the PDF files need an extra redraw
 					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');

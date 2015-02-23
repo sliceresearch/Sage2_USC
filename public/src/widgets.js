@@ -729,21 +729,20 @@ function drawSpokeForRadialLayout(paper,center,point){
 
 function drawBackgroundForRadialLayout(paper, center, radius){
 	var backGround = paper.circle(center.x,center.y,radius);
-	var grad = paper.gradient("r(0.5, 0.5, 0.45)rgba(190,190,190,0.6)-rgba(90,90,90,0.4)");
+	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(190,190,190,0.7)-rgba(90,90,90,0.4)");
 	backGround.attr({
 		fill: grad,//"rgba(60,60,60,0.5)",
 		stroke: "rgba(250,250,250,1.0)",
 		strokeDasharray: "2,1",
 		strokeWidth: 5
 	});
-
 }
 
 function drawControlCenter(instanceID,paper, center, radius, initialText){
 	var controlCenter = paper.circle(center.x,center.y,radius);
 	controlCenter.attr({
 		fill:"rgba(110,110,110,1.0)",
-		stroke: "rgba(250,250,250,1.0)",
+		stroke: "rgba(200,200,200,0.8)",
 		id: instanceID + "menuCenter"
 	});
 	var controlCenterLabel = paper.text(center.x,center.y,initialText);
@@ -752,6 +751,7 @@ function drawControlCenter(instanceID,paper, center, radius, initialText){
 		fontSize: (0.030 * ui.widgetControlSize) + "em"
 	});
 	controlCenterLabel.attr("dy", "0.4em");
+	controlCenter.data("paper", paper);
 }
 
 function drawPieSlice(paper, start,end, innerR, outerR, center){
@@ -1272,7 +1272,10 @@ hideWidgetToAppConnector = function (instanceID){
 		connectorDiv.style.display = "none";
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	if (selectedControl)
-		selectedControl.attr("fill","rgba(110,110,110,1.0)");
+		selectedControl.attr({
+			fill: "rgba(110,110,110,1.0)",
+			filter:null
+		});
 }
 
 showWidgetToAppConnector = function (instanceID, color){
@@ -1287,17 +1290,27 @@ removeWidgetToAppConnector = function (instanceID){
 		connectorDiv.parentNode.removeChild(connectorDiv);
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	if (selectedControl)
-		selectedControl.attr("fill","rgba(110,110,110,1.0)");
+		selectedControl.attr({
+			fill: "rgba(110,110,110,1.0)",
+			filter:null
+		});
 }
 
 moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
+	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
 	var connectorDiv = document.getElementById(instanceID + "connector");
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl)
-		selectedControl.attr("fill",color);
 	if (!connectorDiv) return;
 	if (!color)
-		color = '#ab6666'
+		color = '#ab6666';
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	var paper = selectedControl.data("paper");
+	var shadow = paper.filter(Snap.filter.shadow(0, 0, cutLength/3.0, color, 5));
+	if (selectedControl)
+		selectedControl.attr({
+			fill: color,
+			filter:shadow
+		});
+	
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b ) ;

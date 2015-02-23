@@ -599,9 +599,6 @@
 
 				}
 				delete controlObjects[elem_data.elemId];
-				//var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-				//if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-				//delete controlItems[elem_data.elemId + "_controls"];
 			}
 		});
 
@@ -680,6 +677,18 @@
 					app.move(date);
 				}
 			}
+			if (position_data.elemId in controlObjects){
+				hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
+				for (var item in controlItems){
+					if (item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
+						var control = controlItems[item].divHandle;
+						var cLeft = parseInt(control.style.left);
+						var cTop = parseInt(control.style.top);
+						var cHeight = parseInt(control.style.height);
+						moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset,cHeight/2.0, position_data.user_color);
+					}
+				}
+			}
 
 		});
 		
@@ -702,16 +711,42 @@
 		});
 
 		wsio.on('showWidgetToAppConnector', function(position_data){
-			var eLeft = position_data.left - ui.offsetX;
-			var eTop = position_data.top - ui.offsetY;
-			var appData = position_data.appData;
-			var hOffset = (ui.titleBarHeight + appData.height)/2;
-			moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+hOffset,position_data.height/2.0, position_data.user_color);
+			var hOffset;
+			if (position_data.appData){
+				var eLeft = position_data.left - ui.offsetX;
+				var eTop = position_data.top - ui.offsetY;
+				var appData = position_data.appData;
+				hOffset = (ui.titleBarHeight + appData.height)/2;
+				moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+hOffset,position_data.height/2.0, position_data.user_color);
+			}
+			else if (position_data.id in controlObjects){
+				hOffset = (ui.titleBarHeight + position_data.height)/2;
+				for (var item in controlItems){
+					if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+						var control = controlItems[item].divHandle;
+						var cLeft = parseInt(control.style.left);
+						var cTop = parseInt(control.style.top);
+						var cHeight = parseInt(control.style.height);
+						moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.left-ui.offsetX + position_data.width/2.0, position_data.top-ui.offsetY+hOffset,cHeight/2.0, position_data.user_color);
+					}
+				}
+			}
+			
 		});
 
 
 		wsio.on('hideWidgetToAppConnector', function(control_data){
-			hideWidgetToAppConnector(control_data.id);
+			if (control_data.appId){
+				hideWidgetToAppConnector(control_data.id);
+			}
+			else if (control_data.id in controlObjects){
+				for (var item in controlItems){
+					if (item.indexOf(control_data.id) > -1){
+						hideWidgetToAppConnector(item);
+					}
+				}
+			}
+			
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {
@@ -762,6 +797,18 @@
 				}
 				if(position_data.force || app.moveEvents === "continuous") {
 					app.move && app.move(date);
+				}
+			}
+			if (position_data.elemId in controlObjects && position_data.user_color){
+				hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
+				for (var item in controlItems){
+					if (item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
+						var control = controlItems[item].divHandle;
+						var cLeft = parseInt(control.style.left);
+						var cTop = parseInt(control.style.top);
+						var cHeight = parseInt(control.style.height);
+						moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset,cHeight/2.0, position_data.user_color);
+					}
 				}
 			}
 		});
