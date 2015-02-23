@@ -100,9 +100,9 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 
 	request({
 		url: url,
-		encoding: null, 
+		encoding: null,
 		strictSSL: strictSSL,
-		agentOptions: {rejectUnauthorized:false,requestCert: false}, 
+		agentOptions: {rejectUnauthorized:false,requestCert: false},
 		headers:{'User-Agent':'node'}},
 		function(err, response, body) {
 			if (err) {
@@ -136,30 +136,47 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	ytdl.getInfo(url, function(err, info){
 		if(err) throw err;
 
-		var mp4 = {index: -1, resolution: 0};
+		var video = {index: -1, resolution: 0, type: ""};
+		var audio = {index: -1, bitrate: 0, type: ""};
 		for(var i=0; i<info.formats.length; i++){
-			if(info.formats[i].container == "mp4" && info.formats[i].resolution !== null && info.formats[i].profile != "3d"){
+			var type = info.formats[i].type.split(";")[0];
+			if((type === "video/mp4" || type === "video/webm") && info.formats[i].resolution !== null && info.formats[i].profile != "3d") {
 				var res = parseInt(info.formats[i].resolution.substring(0, info.formats[i].resolution.length-1));
-				if(res > mp4.resolution){
-					mp4.index = i;
-					mp4.resolution = res;
+				if(res <= 1200 && res > video.resolution) {
+					video.index = i;
+					video.resolution = res;
+					video.type = type;
+				}
+			}
+			else if((type === "audio/mp4" || type === "audio/webm")) {
+				var bitrate = info.formats[i].audioBitrate || 0;
+				if(	(audio.type === type && bitrate > audio.bitrate) ||
+					(audio.type !== "audio/webm" && type === "audio/webm") ||
+					(audio.type === "")
+					) {
+					audio.index = i;
+					audio.bitrate = bitrate;
+					audio.type = type;
 				}
 			}
 		}
-		var name = info.title;
-		var aspectRatio = 16/9;
-		var resolutionY = mp4.resolution;
-		var resolutionX = resolutionY * aspectRatio;
 
-		_this.loadVideoFromURL(url, "video/youtube", info.formats[mp4.index].url, name, callback);
+		_this.loadVideoFromURL(url, "video/youtube", info.formats[video.index].url, info.title, function(appInstance, videohandle) {
+			appInstance.data.video_url  = info.formats[video.index].url;
+			appInstance.data.video_type = video.type;
+			appInstance.data.audio_url  = info.formats[audio.index].url;
+			appInstance.data.audio_type = audio.type;
+
+			callback(appInstance, videohandle);
+		});
 	});
 };
 
-appLoader.prototype.loadVideoFromURL = function(url, mime_type, source, name, callback) {
-	console.log(url, mime_type, source, name);
-	
-	this.loadVideoFromFile(source, mime_type, url, url, name, callback);
-	
+appLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name, callback) {
+	console.log(url, mime_type, source_url, name);
+
+	this.loadVideoFromFile(source_url, mime_type, url, url, name, callback);
+
 	/*
 	var aspectRatio = vw / vh;
 
@@ -358,14 +375,14 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 	video.on('metadata', function(data) {
 		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
 		var exif = assets.getExifData(file);
-		
+
 		var stretch = data.display_aspect_ratio / (data.width / data.height);
 		var native_width  = data.width * stretch;
 		var native_height = data.height;
-		
+
 		console.log(data);
 		console.log(native_width, native_height);
-		
+
 		var appInstance = {
 			id: null,
 			title: name,
@@ -376,6 +393,10 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			data: {
 				width: data.width,
 				height: data.height,
+				video_url: external_url,
+				video_type: mime_type,
+				audio_url: external_url,
+				audio_type: mime_type,
 				paused: true,
 				frame: 0,
 				numframes: data.num_frames,
@@ -459,7 +480,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
-appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {    
+appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
     // Find the app!!
     var appName = registry.getDefaultApp(file);
     console.log("Loader> Loading %s with %s", mime_type, appName);
@@ -578,6 +599,52 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 	callback(appInstance);
 };
 
+
+appLoader.prototype.createMediaBlockStream = function(source, type, encoding, name, color, width, height, callback) {
+	var aspectRatio = width/height;
+
+	var metadata         = {};
+	metadata.title       = "Stream Player";
+	metadata.version     = "1.0.0";
+	metadata.description = "Stream player for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["stream", "network", "player"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		color: color,
+		application: "media_block_stream",
+		type: "application/stream",
+		url: null,
+		data: {
+			src: source,
+			type: type,
+			encoding: encoding
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5*this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		sticky:false,
+		metadata: metadata,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
 appLoader.prototype.loadApplicationFromRemoteServer = function(application, callback) {
 	this.loadApplication({location: "remote", application: application}, callback);
 	/*
@@ -603,8 +670,9 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 	// XXX - Will this work with our custom apps?
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
-	
+
 	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false}, callback);
+
 };
 
 appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
@@ -615,7 +683,7 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
 	var mime_type = mime.lookup(localPath);
-	
+
 	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
@@ -680,7 +748,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 
 		app = registry.getDefaultAppFromMime(appData.type);
 		var dir = registry.getDirectory(appData.type);
-		
+
 		if(app === "image_viewer"){
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance, null);
@@ -785,7 +853,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			if(appData.application.application === "pdf_viewer") {
 				appInstance.data.src = appInstance.url;
 			}
-			
+
 			this.scaleAppToFitDisplay(appInstance);
 			callback(appInstance, null);
 		}

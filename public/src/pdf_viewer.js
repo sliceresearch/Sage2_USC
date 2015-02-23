@@ -28,7 +28,7 @@ var pdf_viewer = SAGE2_App.extend( {
 		this.currCtx = 0;
 		this.numCtx  = 5;
 		this.src     = null;
-
+		this.gotresize      = false;
 		this.enableControls = true;
 	},
 	
@@ -73,18 +73,25 @@ var pdf_viewer = SAGE2_App.extend( {
 				_this.state.numPagesShown = state.numPagesShown;
 
 				 addWidgetControlsToPdfViewer (_this);
-				// Getting the size of the page
-				_this.pdfDoc.getPage(1).then(function(page) {
-					var viewport = page.getViewport(1.0);
-					var w = parseInt(viewport.width, 10);
-					var h = parseInt(viewport.height,10);
-					_this.ratio = w / h;
-					// Depending on the aspect ratio, adjust one dimension
-					if (_this.ratio < 1)
-						_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
-					else
-						_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
-				});
+
+				 // if already got a resize event, just redraw, otherwise send message
+				 if (_this.gotresize) {
+					_this.redraw = true;
+					_this.refresh(date);
+				 } else {
+					// Getting the size of the page
+					_this.pdfDoc.getPage(1).then(function(page) {
+						var viewport = page.getViewport(1.0);
+						var w = parseInt(viewport.width, 10);
+						var h = parseInt(viewport.height,10);
+						_this.ratio = w / h;
+						// Depending on the aspect ratio, adjust one dimension
+						if (_this.ratio < 1)
+							_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
+						else
+							_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
+					});
+				}
 			});
 		}
 		// load new state of same document
@@ -117,21 +124,18 @@ var pdf_viewer = SAGE2_App.extend( {
 					cont(); // nothing special right now
 				}
 			};
-			
 			_this.currCtx = (_this.currCtx+1) % _this.numCtx;
 			
 			pdfPage.render(renderContext).then(renderPdfPage);
 		};
 		
 		var renderPdfPage = function() {
-			//console.log("rendered page " + renderPage);
-			
 			if(renderPage === _this.state.page){
 				var data = _this.canvas[renderCanvas].toDataURL().split(',');
 				var bin  = atob(data[1]);
 				var mime = data[0].split(':')[1].split(';')[0];
 				
-				var buf = new ArrayBuffer(bin.length);
+				var buf  = new ArrayBuffer(bin.length);
 				var view = new Uint8Array(buf);
 				for(var i=0; i<view.length; i++) {
 					view[i] = bin.charCodeAt(i);
@@ -145,15 +149,6 @@ var pdf_viewer = SAGE2_App.extend( {
 			
 				_this.element.src = _this.src;
 			}
-			
-			// VIEWPORT undefined here: NOT needed I think
-			//     - Luc
-			// Check for change in the aspect ratio, send a resize if needed
-			//  (done after the render to avoid double rendering issues)
-			// if (_this.ratio !== (viewport.width/viewport.height) ) {
-			// 	_this.ratio = viewport.width/viewport.height;
-			// 	_this.sendResize(viewport.width, viewport.height);
-			// }
 		};
 		
 		this.pdfDoc.getPage(this.state.page).then(gotPdfPage);
@@ -164,7 +159,9 @@ var pdf_viewer = SAGE2_App.extend( {
 			this.canvas[i].width  = this.element.width;
 			this.canvas[i].height = this.element.height;
 		}
-
+		// Force a redraw after resize
+		this.redraw    = true;
+		this.gotresize = true;
 		this.refresh(date);
 	},
 	
@@ -194,31 +191,34 @@ var pdf_viewer = SAGE2_App.extend( {
 
 
 function addWidgetControlsToPdfViewer (_this){
-// UI stuff
-	
-
+	// UI stuff
 	_this.controls.addButton({type:"fastforward",sequenceNo:3, action:function(date){
 		this.state.page = this.pdfDoc.numPages;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"rewind",sequenceNo:5, action:function(date){
 		this.state.page = 1;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"prev",sequenceNo:9, action:function(date){
 		if(this.state.page <= 1) return;
 		this.state.page = this.state.page - 1;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 	_this.controls.addButton({type:"next", sequenceNo:11,action:function(date){
 		if (this.state.page >= this.pdfDoc.numPages) return;
 		this.state.page = this.state.page + 1;
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addSlider({begin:1,end:_this.pdfDoc.numPages,increments:1,appHandle:_this, property:"state.page", caption: "Page", action:function(date){
+		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 	_this.controls.finishedAddingControls();

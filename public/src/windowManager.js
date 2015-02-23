@@ -46,23 +46,23 @@ function windowManager(id, ws) {
 	this.applicationIcons = {};
 
 	this.draw = function() {
-		// clear canvas		
+		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.weight);
-		
+
 		var i;
-		
+
 		/* draw display background */
 		this.ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
 		this.ctx.fillRect(0,0, this.element.width, this.element.height);
-        
-        
+
+
 		/* draw all items */
 		for(i=0; i<this.applications.length; i++){
 			// item
 			this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
 			this.ctx.lineWidth = 2;
 			this.ctx.strokeStyle = "rgba(90, 90, 90, 1.0)";
-			
+
 			if (this.config.ui.noDropShadow === true) {
 				// no drop shadow
 			} else {
@@ -71,20 +71,20 @@ function windowManager(id, ws) {
 				this.ctx.shadowBlur = 12;
 				this.ctx.shadowColor = "#222222";
 			}
-			
+
 			var eLeft   = this.applications[i].left * this.scale;
 			var eTop    = (this.applications[i].top+this.titleBarHeight) * this.scale;
 			var eWidth  = this.applications[i].width * this.scale;
 			var eHeight = this.applications[i].height * this.scale;
-			
+
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
-			
+
 			this.ctx.shadowOffsetX = 0;
 			this.ctx.shadowOffsetY = 0;
 			this.ctx.shadowBlur = 0;
-			
+
 			this.ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
-			
+
 			// item icon
 			var size = 0.8*Math.min(eWidth, eHeight);
 			var x = eLeft + (eWidth/2) - (size/2);
@@ -94,7 +94,7 @@ function windowManager(id, ws) {
 			if(applicationName === "image_viewer") this.ctx.drawImage(this.imageImg, x, y, size, size);
 			else if(applicationName === "movie_player") this.ctx.drawImage(this.videoImg, x, y, size, size);
 			else if(applicationName === "pdf_viewer") this.ctx.drawImage(this.pdfImg, x, y, size, size);
-			else if(applicationName === "media_stream") this.ctx.drawImage(this.screenImg, x, y, size, size);
+			else if(applicationName === "media_block_stream") this.ctx.drawImage(this.screenImg, x, y, size, size);
 			else {
 				var applicationIcon = null;
 				// test if the application provided an icon
@@ -126,21 +126,21 @@ function windowManager(id, ws) {
 			this.ctx.fillStyle = "rgba(102, 102, 102, 1.0)";
 			this.ctx.lineWidth = 2;
 			this.ctx.strokeStyle = "rgba(90, 90, 90, 1.0)";
-			
+
 			eLeft   = this.applications[i].left * this.scale;
 			eTop    = (this.applications[i].top) * this.scale;
 			eWidth  = this.applications[i].width * this.scale;
 			eHeight = this.titleBarHeight * this.scale;
-			
+
 			this.ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			this.ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 		}
-		
+
 		/* draw tiled display layout */
 		this.ctx.lineWidth = 2;
 		this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.strokeRect(0,0, this.element.width, this.element.height);
-		
+
 		var stepX = this.element.width/this.nCols;
 		var stepY = this.element.height/this.nRows;
 		this.ctx.beginPath();
@@ -155,7 +155,7 @@ function windowManager(id, ws) {
 		this.ctx.closePath();
 		this.ctx.stroke();
 	};
-	
+
 	this.mousePress = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		// ignore right click for now
@@ -163,17 +163,17 @@ function windowManager(id, ws) {
 			this.wsio.emit('pointerPress',{button:btn});
 		event.preventDefault();
 	};
-	
+
 	this.mouseMove = function(event) {
 		var rect = this.element.getBoundingClientRect();
 		this.mouseX = event.clientX - rect.left;
 		this.mouseY = event.clientY - rect.top;
 		var globalX = this.mouseX / this.scale;
 		var globalY = this.mouseY / this.scale;
-		
+
 		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
 	};
-	
+
 	this.mouseRelease = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		// ignore right click for now
@@ -181,46 +181,46 @@ function windowManager(id, ws) {
 			this.wsio.emit('pointerRelease',{button:btn});
 		event.preventDefault();
 	};
-	
+
 
 	this.mouseScroll = function(event) {
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {wheelDelta: event.wheelDelta});
 		event.preventDefault();
 	};
-	
+
 	this.mouseScrollFF = function(event) {
 		var wheelDelta = -120*event.detail;
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {wheelDelta: wheelDelta});
 		event.preventDefault();
 	};
-	
+
 	this.mouseDblClick = function(event) {
 		wsio.emit('pointerDblClick');
 		event.preventDefault();
 	};
-	
+
 	this.keyDown = function(event) {
 		this.wsio.emit('keyDown', {code: event.keyCode});
 		event.preventDefault();
 	};
-	
+
 	this.keyUp = function(event) {
 		this.wsio.emit('keyUp', {code: event.keyCode});
 		event.preventDefault();
 	};
-	
+
     this.keyPress = function(event) {
 		this.wsio.emit('keyPress', {code: event.charCode});
 		event.preventDefault();
 	};
-	
+
 	this.addAppWindow = function(data) {
 		this.applications.push(data);
 		this.draw();
 	};
-	
+
 	this.deleteElement = function(elemId) {
 		var selectedIndex;
 		var selectedItem;
@@ -239,40 +239,40 @@ function windowManager(id, ws) {
 		this.applications.pop();
 		this.draw();
 	};
-	
+
 	this.initDisplayConfig = function(config) {
 		this.config = config;
 		this.nRows  = config.layout.rows;
 		this.nCols  = config.layout.columns;
-		
+
 		this.resolution = [(config.resolution.width*this.nCols), (config.resolution.height*this.nRows)];
 		this.aspectRatio = this.resolution[0] / this.resolution[1];
-		
+
 		var widthPx  = this.element.parentNode.style.width;
 		var heightPx = this.element.parentNode.style.height;
-		
+
 		this.element.width = widthPx.substring(0, widthPx.length-2);
 		this.element.height = heightPx.substring(0, heightPx.length-2);
-		
+
 		this.scale = this.element.width / this.resolution[0];
-		
+
 		this.titleBarHeight = config.ui.titleBarHeight;
-		
+
 		this.draw();
 	};
-	
+
 	this.resize = function() {
 		var widthPx  = this.element.parentNode.style.width;
 		var heightPx = this.element.parentNode.style.height;
-		
+
 		this.element.width = widthPx.substring(0, widthPx.length-2);
 		this.element.height = heightPx.substring(0, heightPx.length-2);
-		
+
 		this.scale = this.element.width / this.resolution[0];
-		
+
 		this.draw();
 	};
-	
+
 	this.updateItemOrder = function(idList) {
 		var i;
 		var j;
@@ -285,10 +285,10 @@ function windowManager(id, ws) {
 				}
 			}
 		}
-		
+
 		this.draw();
 	};
-	
+
 	this.setItemPosition = function(position_data) {
 		var i;
 		for(i=0; i<this.applications.length; i++){
@@ -300,7 +300,7 @@ function windowManager(id, ws) {
 		}
 		this.draw();
 	};
-	
+
 	this.setItemPositionAndSize = function(position_data) {
 		var i;
 		for(i=0; i<this.applications.length; i++){

@@ -190,9 +190,7 @@ var SAGE2_App = Class.extend( {
 				this.frame_sec = 0;
 				this.sec       = 0;
 			}
-
 			this.draw(date);
-
 			this.frame_sec++;
 			this.redraw = false;	
 		}

@@ -13,9 +13,10 @@
  */
 
 var fs   = require('fs');
-var url  = require('url');
-var mime = require('mime');
 var path = require('path');
+var url  = require('url');
+
+var mime = require('mime');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
 
@@ -62,7 +63,9 @@ httpserver.prototype.onreq = function(req, res) {
 				var header = {};
 				var type   = mime.lookup(pathname);
 				header["Content-Type"] = type;
-				
+                                header["Access-Control-Allow-Headers" ] = "Range";
+                                header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+
 				if (req.headers.origin !== undefined) {
 					header['Access-Control-Allow-Origin' ] = req.headers.origin;
 					header['Access-Control-Allow-Methods'] = "GET";
