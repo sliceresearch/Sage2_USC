@@ -3094,10 +3094,12 @@ server.listen(config.port);
 
 // Load session file if specified on the command line (-s)
 if (program.session) {
-	// if -s specified without argument
-	if (program.session === true) loadSession();
-	// if argument specified
-	else loadSession(program.session);
+	setTimeout(function() {
+		// if -s specified without argument
+		if (program.session === true) loadSession();
+		// if argument specified
+		else loadSession(program.session);
+	}, 1000);
 }
 
 // Command loop: reading input commands
