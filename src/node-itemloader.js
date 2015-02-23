@@ -334,7 +334,6 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 		var native_height = data.height;
 
 		console.log(data);
-		console.log(native_width, native_height);
 
 		var appInstance = {
 			id: null,
