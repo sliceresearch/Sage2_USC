@@ -173,54 +173,7 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 };
 
 appLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name, callback) {
-	console.log(url, mime_type, source_url, name);
-
 	this.loadVideoFromFile(source_url, mime_type, url, url, name, callback);
-
-	/*
-	var aspectRatio = vw / vh;
-
-	var metadata         = {};
-	metadata.title       = "Video Player";
-	metadata.version     = "1.0.0";
-	metadata.description = "Video player for SAGE2";
-	metadata.author      = "SAGE2";
-	metadata.license     = "SAGE2-Software-License";
-	metadata.keywords    = ["video", "movie", "player"];
-
-	var appInstance = {
-		id: null,
-		title: name,
-		application: "movie_player",
-		type: mime_type,
-		url: url,
-		data: {
-			src: source,
-			type: 'video/mp4',
-			play: false,
-			time: 0.0
-		},
-		resrc: null,
-		left: this.titleBarHeight,
-		top: 1.5*this.titleBarHeight,
-		width: vw,
-		height: vh,
-		native_width: vw,
-		native_height: vh,
-		previous_left: null,
-		previous_top: null,
-		previous_width: null,
-		previous_height: null,
-		maximized: false,
-		aspect: aspectRatio,
-		animation: false,
-		metadata: metadata,
-		sticky: false,
-		date: new Date()
-	};
-	this.scaleAppToFitDisplay(appInstance);
-	callback(appInstance);
-	*/
 };
 
 
