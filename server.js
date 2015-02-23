@@ -34,6 +34,7 @@ var https       = require('https');               // https server
 var os          = require('os');                  // operating system access
 var path        = require('path');                // file path extraction and creation
 var readline    = require('readline');            // to build an evaluation loop
+var url         = require('url');                 // parses urls
 var util        = require('util');                // node util
 
 // npm registry: defined in package.json
@@ -1443,8 +1444,10 @@ function loadSession (filename) {
 				console.log("Session> App",  a.id);
 
 				if(a.application == "movie_player"){
-					var vid = {application: a.application, filename: a.title};
-					appLoader.loadFileFromLocalStorage(vid, function(appInstance, videohandle) {
+					var vid;
+					var vidURL = url.parse(a.url);
+					
+					var loadVideo = function(appInstance, videohandle) {
 						appInstance.id              = getUniqueAppId();
 						appInstance.left            = a.left;
 						appInstance.top             = a.top;
@@ -1463,7 +1466,16 @@ function loadSession (filename) {
 						applications.push(appInstance);
 
 						initializeLoadedVideo(appInstance, videohandle);
-					});
+					};
+					
+					if(vidURL.hostname === config.host) {
+						vid = {application: a.application, filename: a.title};
+						appLoader.loadFileFromLocalStorage(vid, loadVideo);
+					}
+					else {
+						vid = {url: a.url, type: a.type};
+						appLoader.loadFileFromWebURL(vid, loadVideo);
+					}
 				}
 				else {
 					// Get the application a new ID
@@ -2876,9 +2888,7 @@ function uploadForm(req, res) {
 }
 
 function manageUploadedFiles(files, position) {
-	var url, external_url, localPath, ext;
-
-    var fileKeys = Object.keys(files);
+	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
