@@ -1438,9 +1438,9 @@ function loadSession (filename) {
 
 			var session = JSON.parse(data);
 			console.log("Session> number of applications", session.numapps);
-
-			for (var i=0;i<session.apps.length;i++) {
-				var a = session.apps[i];
+			
+			session.apps.forEach(function(element, index, array) {
+				var a = element;//session.apps[i];
 				console.log("Session> App",  a.id);
 
 				if(a.application == "movie_player"){
@@ -1498,7 +1498,7 @@ function loadSession (filename) {
 
 					applications.push(a);
 				}
-			}
+			});
 		}
 	});
 }
