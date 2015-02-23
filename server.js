@@ -536,6 +536,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.requiresAppPositionSizeTypeOnly) initializeExistingAppsPositionSizeTypeOnly(wsio);
 	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
 	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
+	
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -568,6 +569,16 @@ function initializeWSClient(wsio) {
 	wsio.on('sage2Log', wsPrintDebugInfo);
 }
 
+function initializeExistingControls(wsio){
+	for (var i= controls.length-1;i>=0;i--){
+		var ctrl = controls[i];
+		broadcast('createControl',controls[i],'requestsWidgetControl');
+		var uniqueID = ctrl.id.substring(ctrl.appId.length, ctrl.id.lastIndexOf("_"));
+		var app = findAppById(ctrl.appId);
+		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
+	}
+}
+
 function initializeExistingSagePointers(wsio) {
 	for(var key in sagePointers){
 		if (sagePointers.hasOwnProperty(key)) {
@@ -590,6 +601,7 @@ function initializeExistingApps(wsio) {
 			appAnimations[key].clients[uniqueID] = false;
 		}
 	}
+	//if(wsio.messages.requestsWidgetControl)	initializeExistingControls(wsio);
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {

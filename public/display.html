@@ -622,8 +622,6 @@
 
 		wsio.on ('hideControl', function(ctrl_data){
 			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==true){
-				//var hideElemCtrl = document.getElementById(ctrl_data.id);
-				//hideElemCtrl.style.display = 'none';
 				controlItems[ctrl_data.id].divHandle.style.display = "none";
 				controlItems[ctrl_data.id].show=false;
 				hideWidgetToAppConnector(ctrl_data.id);
@@ -632,8 +630,6 @@
 
 		wsio.on ('showControl', function(ctrl_data){
 			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==false){
-				//var showElemCtrl = document.getElementById(ctrl_data.id);
-				//showElemCtrl.style.display = 'block';
 				controlItems[ctrl_data.id].divHandle.style.display = "block";
 				controlItems[ctrl_data.id].show=true;
 				showWidgetToAppConnector(ctrl_data.id);
@@ -931,6 +927,7 @@
 				ctrDiv.style.left = (data.left-ui.offsetX).toString() + "px";
 				ctrDiv.style.top = (data.top-ui.offsetY).toString() + "px";
 				ctrDiv.style.zIndex = "9990".toString();
+				ctrDiv.style.display = data.show? "block":"none";
 				if (ui.noDropShadow===true) ctrDiv.style.boxShadow = "none";
 
 				var spec = controlObjects[data.appId].controls;
@@ -938,7 +935,7 @@
 					var handle = new SAGE2WidgetControlInstance(data.id, spec);
 					ctrDiv.appendChild (handle);	
 					ui.main.appendChild(ctrDiv);
-					controlItems[data.id] = {show:true,divHandle:ctrDiv};
+					controlItems[data.id] = {show:data.show,divHandle:ctrDiv};
 					createWidgetToAppConnector(data.id);
 				}
 				
