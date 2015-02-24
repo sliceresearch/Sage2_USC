@@ -2295,6 +2295,8 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 		else {
 			appInstance.id = getUniqueAppId();
 		}
+		
+		mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
