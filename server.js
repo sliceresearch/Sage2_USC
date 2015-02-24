@@ -2271,7 +2271,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 	var clientAddress, i;
 
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance, videohandle) {
-		console.log("Remote App: " + appInstance.application);
+		console.log("Remote App: " + appInstance.title + " (" + appInstance.application + ")");
 		if(appInstance.application === "media_stream"){
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
 			mediaStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};

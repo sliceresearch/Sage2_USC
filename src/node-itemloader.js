@@ -773,7 +773,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				this.loadYoutubeFromURL(appData.application.url, callback);
 			}
 			else {
-				this.loadVideoFromURL(appData.application.url, appData.application.type, appData.application.url, appData.application.name, callback);
+				this.loadVideoFromURL(appData.application.url, appData.application.type, appData.application.url, appData.application.title, callback);
 			}
 		}
 		else {
