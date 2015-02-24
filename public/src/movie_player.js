@@ -38,7 +38,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 				}
 			}
 		});
-		this.loopBtn.state = 1; // initialize to no-loop
 
 		this.muteBtn = this.controls.addButton({
 			type: "mute",
@@ -113,6 +112,12 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		});
 
 		this.controls.finishedAddingControls();
+		
+		setTimeout(function() {
+			_this.muteBtn.state      = _this.state.muted  ? 0 : 1;
+			_this.loopBtn.state      = _this.state.looped ? 0 : 1;
+			_this.playPauseBtn.state = _this.state.paused ? 0 : 1;
+		}, 500);
 	},
 
     setVideoFrame: function(frameIdx) {
@@ -123,15 +128,26 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		if(this.state.looped === false) {
 			this.state.paused = true;
 			// must change play-pause button (should show 'play' icon)
+			this.playPauseBtn.state = 1;
 		}
 	},
 
 	load: function(state, date) {
 		arguments.callee.superClass.load.call(this, state, date);
+		
+		this.state.width                = state.width;
+		this.state.height               = state.height;
+		this.state.video_url            = state.video_url;
+		this.state.video_type           = state.video_type;
+		this.state.audio_url            = state.audio_url;
+		this.state.audio_type           = state.audio_type;
 		this.state.paused               = state.paused;
 		this.state.frame                = state.frame;
 		this.state.numframes            = state.numframes;
 		this.state.framerate            = state.framerate;
+		this.state.display_aspect_ratio = state.display_aspect_ratio;
+		this.state.muted                = state.muted;
+		this.state.looped               = state.looped;
 
 		this.initWidgets();
 	},

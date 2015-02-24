@@ -1458,8 +1458,8 @@ function loadSession (filename) {
 						appInstance.previous_width  = a.previous_width;
 						appInstance.previous_height = a.previous_height;
 						appInstance.maximized       = a.maximized;
-						//appInstance.data            = a.data;
-
+						mergeObjects(a.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+						
 						broadcast('createAppWindow', appInstance, 'requiresFullApps');
 						broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
@@ -2011,6 +2011,27 @@ function initializeLoadedVideo(appInstance, videohandle) {
 		}
 	}
 	calculateValidBlocks(appInstance, blocksize, videoHandles);
+	
+	setTimeout(function() {
+		videoHandles[appInstance.id].loop = appInstance.data.looped;
+		if(appInstance.data.frame !== 0) {
+			var ts = appInstance.data.frame / appInstance.data.framerate;
+			videoHandles[appInstance.id].decoder.seek(ts, function() {
+				if(appInstance.data.paused === false) {
+					videoHandles[appInstance.id].decoder.play();
+				}
+			});
+			broadcast('updateVideoItemTime', {id: appInstance.id, timestamp: ts, play: false}, 'requiresFullApps');
+		}
+		else {
+			if(appInstance.data.paused === false) {
+				videoHandles[appInstance.id].decoder.play();
+			}
+		}
+		if(appInstance.data.muted === true) {
+			broadcast('videoMuted', {id: appInstance.id}, 'requiresFullApps');
+		}
+    }, 250);
 }
 
 // move this function elsewhere
@@ -3536,6 +3557,18 @@ function byteBufferToString(buf) {
 	}
 
 	return str;
+}
+
+function mergeObjects(a, b, ignore) {
+	var ig = ignore || [];
+	for(var key in b) {
+		if(a[key] !== undefined && ig.indexOf(key) < 0) {
+			if(typeof b[key] === "object" && typeof a[key] === "object")
+				mergeObjects(a[key], b[key]);
+			else if(typeof b[key] !== "object" && typeof a[key] !== "object")
+				b[key] = a[key];                         
+		}
+	}
 }
 
 function addEventToUserLog(id, data) {
