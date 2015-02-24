@@ -32,7 +32,7 @@ echo "" > /tmp/pass
 echo "" >> /tmp/pass
 certutil -f /tmp/pass -d sql:/sage2/.pki/nssdb -N
 /bin/rm -f /tmp/pass
-cd /sage2
+cd /sage2/keys
 
 # Generate new keys
 servers="$1 127.0.0.1 0.0.0.0 localhost"

@@ -3,7 +3,7 @@
 # clean up
 # /bin/rm -f *.crt *.csr *.key *.org
 
-cd /sage2
+cd /sage2/keys
 
 # phony password
 password=foobar
