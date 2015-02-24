@@ -4187,21 +4187,21 @@ function pointerScroll( uniqueID, data ) {
 				if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 				if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
 
-				if(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] !== undefined){
-					clearTimeout(remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId]);
+				if(remoteInteraction[uniqueID].selectTimeId[updatedApp.id] !== undefined){
+					clearTimeout(remoteInteraction[uniqueID].selectTimeId[updatedApp.id]);
 				}
 
-				remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId] = setTimeout(function() {
-					broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
-					broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
+				remoteInteraction[uniqueID].selectTimeId[updatedApp.id] = setTimeout(function() {
+					broadcast('finishedMove', {id: updatedApp.id, date: new Date()}, 'requiresFullApps');
+					broadcast('finishedResize', {id: updatedApp.id, date: new Date()}, 'requiresFullApps');
 
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 
-					if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
-						handleNewVideoFrame(updatedItem.elemId);
+					if(videoHandles[updatedApp.id] !== undefined && videoHandles[updatedApp.id].newFrameGenerated === false)
+						handleNewVideoFrame(updatedApp.id);
 					remoteInteraction[uniqueID].selectedScrollItem = null;
-					delete remoteInteraction[uniqueID].selectTimeId[updatedItem.elemId];
+					delete remoteInteraction[uniqueID].selectTimeId[updatedApp.id];
 				}, 500);
 			}
 		}
