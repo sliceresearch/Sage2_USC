@@ -22,6 +22,8 @@
 #      _.evl.uic.edu.crt
 #      _.evl.uic.edu.key
 
+sudo apt-get update 
+sudo apt-get -y install libnss3-tools openssl
 
 # Reset the key database
 rm -fr /sage2/.pki/nssdb
@@ -30,9 +32,10 @@ echo "" > /tmp/pass
 echo "" >> /tmp/pass
 certutil -f /tmp/pass -d sql:/sage2/.pki/nssdb -N
 /bin/rm -f /tmp/pass
+cd /sage2
 
 # Generate new keys
-servers="0.0.0.0"
+servers="$1 127.0.0.1 0.0.0.0 localhost"
 
 for f in `echo $servers`
 do

@@ -3,6 +3,8 @@
 # clean up
 # /bin/rm -f *.crt *.csr *.key *.org
 
+cd /sage2
+
 # phony password
 password=foobar
 #server=$HOSTNAME
