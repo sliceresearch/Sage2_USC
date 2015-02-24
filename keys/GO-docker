@@ -39,6 +39,6 @@ servers="$1 127.0.0.1 0.0.0.0 localhost"
 
 for f in `echo $servers`
 do
-	./init_webserver_docker.sh $f
+	/sage2/keys/init_webserver_docker.sh $f
 done
 
