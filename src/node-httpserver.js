@@ -69,7 +69,7 @@ httpserver.prototype.onreq = function(req, res) {
 		
 		
 		// SESSION ID CHECK
-		if(__SESSION_ID !== null && path.extname(pathname) === ".html") {
+		if(global.__SESSION_ID && path.extname(pathname) === ".html") {
 			var params = parseURLQuery(reqURL.query); // note every field will be a string
 				
 			// check params.session
