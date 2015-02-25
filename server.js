@@ -169,14 +169,6 @@ if (config.register_site) {
 	);
 }
 
-// find git commit version and date
-sageutils.getFullVersion(function(version) {
-	// fields: base commit branch date
-	console.log("SAGE2 Full Version:", version);
-	SAGE2_version = version;
-	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
-});
-
 
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
@@ -217,16 +209,20 @@ if(program.trackUsers) {
 		users = {};
 	users.session = {};
 	users.session.start = Date.now();
-
-	/*
-	var trackfile = program.trackUsers === true ? "tracked_users.json" : program.trackUsers;
-	if(sageutils.fileExists(trackfile)) users = json5.parse(fs.readFileSync(trackfile));
-	else users = {};
-	users.session = {};
-	users.session.start = Date.now();
-	*/
 }
 if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
+
+
+// find git commit version and date
+sageutils.getFullVersion(function(version) {
+	// fields: base commit branch date
+	console.log("SAGE2 Full Version:", version);
+	SAGE2_version = version;
+	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
+	
+	if(users !== null) users.session.verison = SAGE2_version;
+});
+
 
 // Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
