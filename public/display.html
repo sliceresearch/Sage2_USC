@@ -244,10 +244,18 @@
         wsio.on('showSagePointer', function(pointer_data){
 			ui.showSagePointer(pointer_data);
 			resetIdle();
+			var uniqueID = pointer_data.id.slice(0,pointer_data.id.lastIndexOf("_"));
+			var re = /\.|\:/g;
+			var stlyeCaption = uniqueID.split(re).join("");
+			addStyleElementForTitleColor(stlyeCaption,pointer_data.color);
         });
         
         wsio.on('hideSagePointer', function(pointer_data){
 			ui.hideSagePointer(pointer_data);
+			var uniqueID = pointer_data.id.slice(0,pointer_data.id.lastIndexOf("_"));
+			var re = /\.|\:/g;
+			var stlyeCaption = uniqueID.split(re).join("");
+			removeStyleElementForTitleColor(stlyeCaption,pointer_data.color);
         });
         
         //wsio.on('updateSagePointerPosition', function(pointer_data){
@@ -734,6 +742,10 @@
 				moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+hOffset,position_data.height/2.0, position_data.user_color);
 			}
 			else if (position_data.id in controlObjects){
+				var selectedAppTitle = document.getElementById(position_data.id + "_title");
+				var re = /\.|\:/g;
+				var stlyeCaption = position_data.user_id.split(re).join("");
+				selectedAppTitle.className = "title" + stlyeCaption;
 				hOffset = (ui.titleBarHeight + position_data.height)/2;
 				for (var item in controlItems){
 					if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
@@ -754,6 +766,8 @@
 				hideWidgetToAppConnector(control_data.id);
 			}
 			else if (control_data.id in controlObjects){
+				var selectedAppTitle = document.getElementById(control_data.id + "_title");
+				selectedAppTitle.className = "windowTitle";
 				for (var item in controlItems){
 					if (item.indexOf(control_data.id) > -1){
 						hideWidgetToAppConnector(item);
@@ -917,6 +931,8 @@
 		});
 
 		wsio.on('createControl', function(data){
+			var user_color = data.user_color;
+			data = data.controlData;
 			if (controlItems[data.id] === null || controlItems[data.id] === undefined) {
 				var ctrDiv =  document.createElement("div");
 				ctrDiv.id = data.id;

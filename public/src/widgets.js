@@ -1263,7 +1263,18 @@ createWidgetToAppConnector = function (instanceID) {
 	connectorDiv.style.display = "none";
 	connectorDiv.style.zIndex = 0;
 	ui.main.appendChild(connectorDiv);
+}
 
+addStyleElementForTitleColor = function (caption, color){
+	var sheet = document.createElement('style');
+	sheet.id = "title"+caption;
+	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: linear-gradient(left,"+color+" 35%, #666666 100%); }";
+	document.body.appendChild(sheet);	
+}
+
+removeStyleElementForTitleColor = function (caption){
+	var sheet = document.getElementById("title"+caption);
+	sheet.parentNode.removeChild(sheet);
 }
 
 hideWidgetToAppConnector = function (instanceID){

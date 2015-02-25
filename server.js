@@ -2369,9 +2369,11 @@ function wsAddNewControl(wsio, data){
 	}
 
 	controls.push(data);
-	broadcast('createControl',data,'requestsWidgetControl');
-	
 	var uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
+	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : "#ab8899";
+	
+	broadcast('createControl',{controlData:data,user_color:color},'requestsWidgetControl');
+	
 	var app = findAppById(data.appId);
 	addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 
@@ -3971,6 +3973,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			if (app){
 				itemUnderPointer.appData = getAppPositionSize(app);
 				itemUnderPointer.user_color = sagePointers[uniqueID].color;
+				itemUnderPointer.user_id = uniqueID;
 				broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
 				remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 			}
@@ -3978,6 +3981,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		else{
 			itemUnderPointer = getAppPositionSize(itemUnderPointer);
 			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			itemUnderPointer.user_id = uniqueID;
 			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		}
@@ -3993,6 +3997,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			if (app){
 				itemUnderPointer.appData = getAppPositionSize(app);
 				itemUnderPointer.user_color = sagePointers[uniqueID].color;
+				itemUnderPointer.user_id = uniqueID;
 				broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
 				remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 			}
@@ -4000,6 +4005,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		else{
 			itemUnderPointer = getAppPositionSize(itemUnderPointer);
 			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			itemUnderPointer.user_id = uniqueID;
 			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		}
@@ -4112,7 +4118,7 @@ function pointerPosition( uniqueID, data ) {
 		var updatedApp = findAppById(updatedItem.elemId);
 		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
-		updateItem.user_color = sagePointers[uniqueID].color;
+		updatedItem.user_color = sagePointers[uniqueID].color;
 		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 		if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
@@ -4886,7 +4892,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 			}
 			else {
-				moveControlToPointer(elemCtrl, pointerX, pointerY);
+				moveControlToPointer(elemCtrl,uniqueID, pointerX, pointerY);
 			}
 		}
 	}
