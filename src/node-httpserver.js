@@ -22,6 +22,17 @@ var sageutils = require('../src/node-utils');    // provides utility functions
 
 mime.default_type = "text/plain";
 
+function parseURLQuery(query) {
+	var p;
+	var paramList = query.split("&");
+	var params = {};
+	for(var i=0; i<paramList.length; i++) {
+		p = paramList[i].split("=");
+		if(p.length === 2) params[p[0]] = p[1];
+	}
+	return params;
+}
+
 function httpserver(publicDirectory) {
 	this.publicDirectory = publicDirectory;
 	this.getFuncs  = {};
@@ -62,14 +73,7 @@ httpserver.prototype.onreq = function(req, res) {
 				// serve page that asks for session id instead
 			}
 			else {
-				var i;
-				var p;
-				var paramList = reqURL.query.split("&");
-				var params = {};
-				for(i=0; i<paramList.length; i++) {
-					p = paramList[i].split("=");
-					if(p.length === 2) params[p[0]] = p[1];
-				}
+				var params = parseURLQuery(reqURL.query); // note every field will be a string
 				
 				// check params.session
 				if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
