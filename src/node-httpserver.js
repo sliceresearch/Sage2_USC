@@ -76,7 +76,9 @@ httpserver.prototype.onreq = function(req, res) {
 			if(params.session !== global.__SESSION_ID) {
 				// failed
 				// serve page that asks for session id instead
+				//
 				// this.redirect(res, "session.html?onload="+getName);
+				// return;
 				//
 				// in session.html, when user enters a session id in a popup dialog
 				// the page should use 'window.location.replace(<onload?session=<value>>)'
