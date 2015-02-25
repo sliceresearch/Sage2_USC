@@ -73,7 +73,7 @@ httpserver.prototype.onreq = function(req, res) {
 			var params = parseURLQuery(reqURL.query); // note every field will be a string
 				
 			// check params.session
-			if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
+			if(params.session !== global.__SESSION_ID) {
 				// failed
 				// serve page that asks for session id instead
 				// this.redirect(res, "session.html?onload="+getName);
