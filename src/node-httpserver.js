@@ -39,7 +39,8 @@ httpserver.prototype.onreq = function(req, res) {
 	var stream;
 	
 	if (req.method == "GET") {
-		var getName = decodeURIComponent(url.parse(req.url).pathname);
+		var reqURL = url.parse(req.url);
+		var getName = decodeURIComponent(reqURL.pathname);
 		if(getName in this.getFuncs){
 			this.getFuncs[getName](req, res);
 			return;
@@ -52,7 +53,33 @@ httpserver.prototype.onreq = function(req, res) {
         }
 
 		var pathname = this.publicDirectory + getName;
-
+		
+		
+		// SESSION ID CHECK
+		if(path.extname(pathname) === ".html") {
+			if(reqURL.query === null) {
+				// failed
+				// serve page that asks for session id instead
+			}
+			else {
+				var i;
+				var p;
+				var paramList = reqURL.query.split("&");
+				var params = {};
+				for(i=0; i<paramList.length; i++) {
+					p = paramList[i].split("=");
+					if(p.length === 2) params[p[0]] = p[1];
+				}
+				
+				// check params.session
+				if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
+					// failed
+					// serve page that asks for session id instead
+				}
+			}
+		}
+		
+		
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);

@@ -61,6 +61,13 @@ var sagepointer = require('./src/node-sagepointer');    // handles sage pointers
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
 var stickyItems = require('./src/node-stickyitems');
+
+
+// GLOBALS
+global.__SESSION_ID = "123456"; // edit this
+
+
+
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 
