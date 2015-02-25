@@ -71,6 +71,10 @@ httpserver.prototype.onreq = function(req, res) {
 			if(reqURL.query === null) {
 				// failed
 				// serve page that asks for session id instead
+				// this.redirect(res, "session.html?onload="+getName);
+				//
+				// in session.html, when user enters a session id in a popup dialog
+				// the page should use 'window.location.replace(<onload?session=<value>>)'
 			}
 			else {
 				var params = parseURLQuery(reqURL.query); // note every field will be a string
@@ -79,6 +83,10 @@ httpserver.prototype.onreq = function(req, res) {
 				if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
 					// failed
 					// serve page that asks for session id instead
+					// this.redirect(res, "session.html?onload="+getName);
+					//
+					// in session.html, when user enters a session id in a popup dialog
+					// the page should use 'window.location.replace(<onload?session=<value>>)'
 				}
 			}
 		}
@@ -88,7 +96,7 @@ httpserver.prototype.onreq = function(req, res) {
 		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);
 			if (stats.isDirectory()) {
-				this.redirect(res, path.join(getName, "index.html"));
+				this.redirect(res, getName+"/index.html");
 				return;
 			} else {
 				var header = {};
