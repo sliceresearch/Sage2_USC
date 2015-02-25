@@ -64,7 +64,7 @@ var stickyItems = require('./src/node-stickyitems');
 
 
 // GLOBALS
-global.__SESSION_ID = "123456"; // edit this
+global.__SESSION_ID = null; // changed via command line, config param, etc.
 
 
 

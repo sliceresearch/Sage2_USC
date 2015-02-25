@@ -67,7 +67,7 @@ httpserver.prototype.onreq = function(req, res) {
 		
 		
 		// SESSION ID CHECK
-		if(path.extname(pathname) === ".html") {
+		if(__SESSION_ID !== null && path.extname(pathname) === ".html") {
 			if(reqURL.query === null) {
 				// failed
 				// serve page that asks for session id instead
