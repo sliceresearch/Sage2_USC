@@ -777,8 +777,9 @@ function radialMenu(){
 	{
 		pointerX = data.x - data.windowX - offset.x;
 		pointerY = data.y - data.windowY - offset.y;
-
-		if( this.windowInteractionMode === false && pointerX > 0 && pointerX < this.radialMenuSize.x && pointerY > 0 && pointerY < this.radialMenuSize.y && buttonOverCount === 0 )
+		
+		// Note: We don't check if the pointer is over the menu because the server/node-radialMenu does this for us
+		if( this.windowInteractionMode === false && buttonOverCount === 0 )
 		{
 			dragOffset = this.dragPosition;
 			

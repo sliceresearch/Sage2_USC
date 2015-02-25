@@ -91,7 +91,7 @@ radialmenu.prototype.onEvent = function(data) {
 	var idIndex = this.activeEventIDs.indexOf(data.id);
 	if( idIndex !== -1 && data.type === "pointerRelease" )
 		this.activeEventIDs.splice( idIndex );
-				
+	
 	if( this.visible === true)
 	{
 		// Press over radial menu, drag menu
@@ -111,20 +111,19 @@ radialmenu.prototype.onEvent = function(data) {
 			return true;
 		}
 		// Else if over thumbnail window bounding box
-		else if( (data.x > this.left + this.radialMenuSize.x/2) && (data.x < this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x) &&
+		else if( this.thumbnailWindowOpen === true && (data.x > this.left + this.radialMenuSize.x/2) && (data.x < this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x) &&
 				 (data.y > this.top - this.radialMenuSize.y/2)  && (data.y < this.top - this.radialMenuSize.y/2  + this.thumbnailWindowSize.y) )
 		{
 			//this.windowInteractionMode = false;
 
-			if( this.thumbnailWindowOpen === true )
-			{
-				if( this.visible === true && data.type === "pointerPress" )
-					this.activeEventIDs.push( data.id );
-
-				return true;
-			}
+			if( this.visible === true && data.type === "pointerPress" )
+				this.activeEventIDs.push( data.id );
+			return true;
 		}
-
+		else if( this.activeEventIDs.indexOf(data.id) != -1 )
+		{
+			return true;
+		}
 	}
 	return false;
 };
