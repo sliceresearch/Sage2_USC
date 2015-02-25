@@ -23,6 +23,8 @@ var sageutils = require('../src/node-utils');    // provides utility functions
 mime.default_type = "text/plain";
 
 function parseURLQuery(query) {
+	if(!query) return {};
+	
 	var p;
 	var paramList = query.split("&");
 	var params = {};
@@ -68,26 +70,16 @@ httpserver.prototype.onreq = function(req, res) {
 		
 		// SESSION ID CHECK
 		if(__SESSION_ID !== null && path.extname(pathname) === ".html") {
-			if(reqURL.query === null) {
+			var params = parseURLQuery(reqURL.query); // note every field will be a string
+				
+			// check params.session
+			if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
 				// failed
 				// serve page that asks for session id instead
 				// this.redirect(res, "session.html?onload="+getName);
 				//
 				// in session.html, when user enters a session id in a popup dialog
 				// the page should use 'window.location.replace(<onload?session=<value>>)'
-			}
-			else {
-				var params = parseURLQuery(reqURL.query); // note every field will be a string
-				
-				// check params.session
-				if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
-					// failed
-					// serve page that asks for session id instead
-					// this.redirect(res, "session.html?onload="+getName);
-					//
-					// in session.html, when user enters a session id in a popup dialog
-					// the page should use 'window.location.replace(<onload?session=<value>>)'
-				}
 			}
 		}
 		
