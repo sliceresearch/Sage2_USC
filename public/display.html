@@ -734,18 +734,24 @@
 
 		wsio.on('showWidgetToAppConnector', function(position_data){
 			var hOffset;
+			var selectedAppTitle,re,styleCaption;
 			if (position_data.appData){
+				var appData = position_data.appData;
+				selectedAppTitle = document.getElementById(appData.id + "_title");
+				re = /\.|\:/g;
+				styleCaption = position_data.user_id.split(re).join("");
+				selectedAppTitle.className = "title" + styleCaption;
 				var eLeft = position_data.left - ui.offsetX;
 				var eTop = position_data.top - ui.offsetY;
-				var appData = position_data.appData;
+				
 				hOffset = (ui.titleBarHeight + appData.height)/2;
 				moveWidgetToAppConnector(position_data.id, eLeft+position_data.height/2.0, eTop+position_data.height/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY+hOffset,position_data.height/2.0, position_data.user_color);
 			}
 			else if (position_data.id in controlObjects){
-				var selectedAppTitle = document.getElementById(position_data.id + "_title");
-				var re = /\.|\:/g;
-				var stlyeCaption = position_data.user_id.split(re).join("");
-				selectedAppTitle.className = "title" + stlyeCaption;
+				selectedAppTitle = document.getElementById(position_data.id + "_title");
+				re = /\.|\:/g;
+				styleCaption = position_data.user_id.split(re).join("");
+				selectedAppTitle.className = "title" + styleCaption;
 				hOffset = (ui.titleBarHeight + position_data.height)/2;
 				for (var item in controlItems){
 					if (item.indexOf(position_data.id) > -1 && controlItems[item].show){

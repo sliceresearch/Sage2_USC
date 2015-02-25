@@ -22,6 +22,17 @@ var sageutils = require('../src/node-utils');    // provides utility functions
 
 mime.default_type = "text/plain";
 
+function parseURLQuery(query) {
+	var p;
+	var paramList = query.split("&");
+	var params = {};
+	for(var i=0; i<paramList.length; i++) {
+		p = paramList[i].split("=");
+		if(p.length === 2) params[p[0]] = p[1];
+	}
+	return params;
+}
+
 function httpserver(publicDirectory) {
 	this.publicDirectory = publicDirectory;
 	this.getFuncs  = {};
@@ -39,7 +50,8 @@ httpserver.prototype.onreq = function(req, res) {
 	var stream;
 	
 	if (req.method == "GET") {
-		var getName = decodeURIComponent(url.parse(req.url).pathname);
+		var reqURL = url.parse(req.url);
+		var getName = decodeURIComponent(reqURL.pathname);
 		if(getName in this.getFuncs){
 			this.getFuncs[getName](req, res);
 			return;
@@ -52,12 +64,39 @@ httpserver.prototype.onreq = function(req, res) {
         }
 
 		var pathname = this.publicDirectory + getName;
-
+		
+		
+		// SESSION ID CHECK
+		if(__SESSION_ID !== null && path.extname(pathname) === ".html") {
+			if(reqURL.query === null) {
+				// failed
+				// serve page that asks for session id instead
+				// this.redirect(res, "session.html?onload="+getName);
+				//
+				// in session.html, when user enters a session id in a popup dialog
+				// the page should use 'window.location.replace(<onload?session=<value>>)'
+			}
+			else {
+				var params = parseURLQuery(reqURL.query); // note every field will be a string
+				
+				// check params.session
+				if(params.session !== __SESSION_ID) { // __SESSION_ID ==> global declared in server.js
+					// failed
+					// serve page that asks for session id instead
+					// this.redirect(res, "session.html?onload="+getName);
+					//
+					// in session.html, when user enters a session id in a popup dialog
+					// the page should use 'window.location.replace(<onload?session=<value>>)'
+				}
+			}
+		}
+		
+		
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);
 			if (stats.isDirectory()) {
-				this.redirect(res, path.join(getName, "index.html"));
+				this.redirect(res, getName+"/index.html");
 				return;
 			} else {
 				var header = {};

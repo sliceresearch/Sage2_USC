@@ -72,7 +72,7 @@ function SAGE2DisplayUI() {
 			ctx.fillRect(eLeft, eTop, eWidth, eHeight);
 			ctx.strokeRect(eLeft, eTop, eWidth, eHeight);
 
-			if(this.applications[i].application === "media_block_stream") {
+			if(this.applications[i].application === "media_block_stream" || this.applications[i].application === "media_stream") {
 				size = 0.85*Math.min(eWidth, eHeight);
 
 				x = eLeft + (eWidth/2) - (size*0.1);
