@@ -18,8 +18,8 @@ var hostAlias = {};
 function SAGE2_init() {
 	hostname = window.location.hostname;
 	port = window.location.port;
-	if(window.location.protocol == "http:" && port == "") port = "80";
-	if(window.location.protocol == "https:" && port == "") port = "443";
+	if(window.location.protocol === "http:"  && port === "") port = "80";
+	if(window.location.protocol === "https:" && port === "") port = "443";
 	
 	autoplay = false;
 	
@@ -209,7 +209,7 @@ function SAGE2_init() {
 		var vid      = document.getElementById(data.id);
 		var vid_mute = document.getElementById(data.id + "_mute");
 		if(vid)      vid.muted = false;
-		if(vid_mute) vid_mute.innerHTML = "&#x2713;"
+		if(vid_mute) vid_mute.innerHTML = "&#x2713;";
 	});
 	
 	wsio.on('updateVideoItemTime', function(data) {
