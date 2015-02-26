@@ -1,4 +1,3 @@
-
 // SAGE2 is available for use under the SAGE2 Software License
 //
 // University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
@@ -7,13 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2015
-
-
-// <script type="text/javascript" src="src/websocket.io.js"></script>
-// <script type="text/javascript" src="src/SAGE2_interaction.js"></script>
-// <script type="text/javascript" src="src/SAGE2DisplayUI.js"></script>
-
+// Copyright (c) 2014-15
 
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 navigator.getUserMedia   = (navigator.getUserMedia  || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
