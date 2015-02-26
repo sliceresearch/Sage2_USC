@@ -48,7 +48,6 @@
 		"formidable": "latest",
 		"gm": "latest",
 		"imageinfo": "latest",
-		"jshint": "latest",
 		"json5": "latest",
 		"mime": "latest",
 		"node-demux": "latest",
@@ -64,11 +63,13 @@
 	},
 	"bundledDependencies": [],
 	"devDependencies": {
-        "mocha": "^2.0.1",
-        "mocha-jshint": "^0.0.9",
-        "istanbul": "^0.3.5",
-        "coveralls": "^2.11.2"
-    },
+		"jshint": "latest",
+		"plato": "latest",
+		"mocha": "^2.0.1",
+		"mocha-jshint": "^0.0.9",
+		"istanbul": "^0.3.5",
+		"coveralls": "^2.11.2"
+	},
 	"engines": {
 		"node": ">=0.10.x"
 	},
