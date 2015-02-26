@@ -32,9 +32,7 @@ if (!Function.prototype.bind) {
         fToBind = this,
         fNOP    = function() {},
         fBound  = function() {
-          return fToBind.apply(this instanceof fNOP && oThis
-                 ? this
-                 : oThis,
+          return fToBind.apply(this instanceof fNOP && oThis ? this : oThis,
                  aArgs.concat(Array.prototype.slice.call(arguments)));
         };
     fNOP.prototype = this.prototype;
@@ -68,13 +66,18 @@ var browser;
 var pointerDown;
 var pointerX, pointerY;
 
+var hostname;
+var port;
+
 function SAGE2_init() {
+	// Get host and port information
+	hostname = window.location.hostname;
+	port = window.location.port;
+	if(window.location.protocol === "http:"  && port === "") port = "80";
+	if(window.location.protocol === "https:" && port === "") port = "443";
+
 	// Redirecto to HTTPS
 	if(window.location.protocol === "http:") {
-		var hostname = window.location.hostname;
-		var port = window.location.port;
-		if(port == "") port = "80";
-
 		var xhr = new XMLHttpRequest();
 		xhr.open("GET", "config", true);
 		xhr.onreadystatechange = function() {
@@ -92,11 +95,10 @@ function SAGE2_init() {
 			}
 		};
 		xhr.send();
-		
 		return;
 	}
-
 	
+	// Detect which browser is being used
 	browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
 	console.log('agent', userAgent);
@@ -113,12 +115,8 @@ function SAGE2_init() {
 	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 	browser.isLinux    = userAgent.indexOf("linux") >= 0;
-	
-	hostname = window.location.hostname;
-	port = window.location.port;
-	if(window.location.protocol == "http:" && port == "") port = "80";
-	if(window.location.protocol == "https:" && port == "") port = "443";
-	
+
+	// Create a connection to the SAGE2 server
 	wsio = new websocketIO();
 	wsio.open(function() {
 		console.log("open websocket");
@@ -270,7 +268,7 @@ function SAGE2_init() {
 	});
 	
 	wsio.on('stopMediaCapture', function() {
-		if(interactor.mediaStream != null) interactor.mediaStream.stop();
+		if(interactor.mediaStream !== null) interactor.mediaStream.stop();
 	});
 	
 	var sage2UI = document.getElementById('sage2UI');
@@ -606,8 +604,8 @@ function mouseCheck(event) {
 	var uiButtonImg = getCSSProperty("style_ui.css", ".uiButton:hover img");
 	if(uiButtonImg !== null){
 		uiButtonImg.style['-webkit-transform'] = "scale(1.2)";
-		uiButtonImg.style['-moz-transform'] = "scale(1.2)";
-		uiButtonImg.style['transform'] = "scale(1.2)";
+		uiButtonImg.style['-moz-transform']    = "scale(1.2)";
+		uiButtonImg.style.transform            = "scale(1.2)";
 	}
 	var uiButtonP = getCSSProperty("style_ui.css", ".uiButton p");
 	if(uiButtonP !== null){
@@ -648,7 +646,7 @@ function handleClick(element) {
 	
 	// App Launcher Dialog
 	else if (element.id === "appOpenBtn") {
-		loadSelectedApplication()
+		loadSelectedApplication();
 		hideDialog('appLauncherDialog');
 	}
 	else if (element.id === "appCloseBtn") {
@@ -747,8 +745,8 @@ function handleClick(element) {
 	}
 	else if (element.id === "infocontent") {
 		hideDialog('infoDialog');
-		var awin2 = window.open("help/info.html", '_blank');
-		awin2.focus();
+		var awin3 = window.open("help/info.html", '_blank');
+		awin3.focus();
 	}
 
 	// Settings Dialog
@@ -768,10 +766,10 @@ function handleClick(element) {
 	
 	// Application Selected
 	else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
-		var application = element.getAttribute("application");
+		var application_selected = element.getAttribute("application");
 		
 		if(selectedAppEntry !== null) selectedAppEntry.style.backgroundColor = "transparent";
-		selectedAppEntry = document.getElementById('app_row_' + application);
+		selectedAppEntry = document.getElementById('app_row_' + application_selected);
 		selectedAppEntry.style.backgroundColor = "#6C6C6C";
 	}
 	
@@ -856,13 +854,16 @@ function pointerScroll(event) {
 }
 
 function touchStart(event) {
+	var rect, touchX, touchY;
+	var touch0X, touch0Y, touch1X, touch1Y;
+
 	if(event.touches.length === 1){
 		touchTime = Date.now();
 	}
 
 	if(event.target.id === "sage2UI") {
 		if(event.touches.length === 1){
-			var rect = event.target.getBoundingClientRect();
+			rect        = event.target.getBoundingClientRect();
 			touchStartX = event.touches[0].clientX - rect.left;
 			touchStartY = event.touches[0].clientY - rect.top;
 			displayUI.pointerMove(touchStartX, touchStartY);
@@ -874,13 +875,13 @@ function touchStart(event) {
 			touchMode = "translate";
 		}
 		else if(event.touches.length === 2) {
-			var rect = event.target.getBoundingClientRect();
-			var touch0X = event.touches[0].clientX - rect.left;
-			var touch0Y = event.touches[0].clientY - rect.top;
-			var touch1X = event.touches[1].clientX - rect.left;
-			var touch1Y = event.touches[1].clientY - rect.top;
-			var touchX = parseInt((touch0X+touch1X)/2, 10);
-			var touchY = parseInt((touch0Y+touch1Y)/2, 10);
+			rect    = event.target.getBoundingClientRect();
+			touch0X = event.touches[0].clientX - rect.left;
+			touch0Y = event.touches[0].clientY - rect.top;
+			touch1X = event.touches[1].clientX - rect.left;
+			touch1Y = event.touches[1].clientY - rect.top;
+			touchX  = parseInt((touch0X+touch1X)/2, 10);
+			touchY  = parseInt((touch0Y+touch1Y)/2, 10);
 			displayUI.pointerRelease("left");
 			displayUI.pointerMove(touchX, touchY);
 			touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
@@ -911,10 +912,10 @@ function touchStart(event) {
 			touchStartY = trackpadTouches[0].clientY;
 		}
 		else if(trackpadTouches.length === 2) {
-			var touch0X = trackpadTouches[0].clientX;
-			var touch0Y = trackpadTouches[0].clientY;
-			var touch1X = trackpadTouches[1].clientX;
-			var touch1Y = trackpadTouches[1].clientY;
+			touch0X = trackpadTouches[0].clientX;
+			touch0Y = trackpadTouches[0].clientY;
+			touch1X = trackpadTouches[1].clientX;
+			touch1Y = trackpadTouches[1].clientY;
 			touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
 			
 			interactor.pointerReleaseMethod({button: 0});
@@ -995,11 +996,14 @@ function touchEnd(event) {
 }
 
 function touchMove(event) {
+	var rect, touchX, touchY, newDist, wheelDelta;
+	var touch0X, touch0Y, touch1X, touch1Y;
+
 	if(event.target.id === "sage2UI"){
 		if(touchMode === "translate") {
-			var rect = event.target.getBoundingClientRect();
-			var touchX = event.touches[0].clientX - rect.left;
-			var touchY = event.touches[0].clientY - rect.top;
+			rect   = event.target.getBoundingClientRect();
+			touchX = event.touches[0].clientX - rect.left;
+			touchY = event.touches[0].clientY - rect.top;
 			displayUI.pointerMove(touchX, touchY);
 			
 			var dist = (touchX-touchStartX)*(touchX-touchStartX) + (touchY-touchStartY)*(touchY-touchStartY);
@@ -1009,14 +1013,14 @@ function touchMove(event) {
 			}
 		}
 		else if(touchMode === "scale") {
-			var rect = event.target.getBoundingClientRect();
-			var touch0X = event.touches[0].clientX - rect.left;
-			var touch0Y = event.touches[0].clientY - rect.top;
-			var touch1X = event.touches[1].clientX - rect.left;
-			var touch1Y = event.touches[1].clientY - rect.top;
-			var newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+			rect    = event.target.getBoundingClientRect();
+			touch0X = event.touches[0].clientX - rect.left;
+			touch0Y = event.touches[0].clientY - rect.top;
+			touch1X = event.touches[1].clientX - rect.left;
+			touch1Y = event.touches[1].clientY - rect.top;
+			newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
 			if(Math.abs(newDist - touchDist) > 25){
-				var wheelDelta = parseInt((touchDist-newDist)/256, 10);
+				wheelDelta = parseInt((touchDist-newDist)/256, 10);
 				displayUI.pointerScroll(wheelDelta);
 				touchDist = newDist;
 			}
@@ -1030,8 +1034,8 @@ function touchMove(event) {
 				trackpadTouches.push(event.touches[i]);
 		}
 		if(touchMode === "translate" || touchMode === "") {
-			var touchX = trackpadTouches[0].clientX;
-			var touchY = trackpadTouches[0].clientY;
+			touchX = trackpadTouches[0].clientX;
+			touchY = trackpadTouches[0].clientY;
 			
 			interactor.pointerMoveMethod({movementX: touchX-touchStartX, movementY: touchY-touchStartY});
 			
@@ -1044,13 +1048,13 @@ function touchMove(event) {
 			}
 		}
 		else if(touchMode === "scale") {
-			var touch0X = trackpadTouches[0].clientX;
-			var touch0Y = trackpadTouches[0].clientY;
-			var touch1X = trackpadTouches[1].clientX;
-			var touch1Y = trackpadTouches[1].clientY;
-			var newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+			touch0X = trackpadTouches[0].clientX;
+			touch0Y = trackpadTouches[0].clientY;
+			touch1X = trackpadTouches[1].clientX;
+			touch1Y = trackpadTouches[1].clientY;
+			newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
 			if(Math.abs(newDist - touchDist) > 25){
-				var wheelDelta = parseInt((touchDist-newDist)/256, 10);
+				wheelDelta = parseInt((touchDist-newDist)/256, 10);
 				interactor.pointerScrollMethod({deltaY: wheelDelta});
 				touchDist = newDist;
 			}
