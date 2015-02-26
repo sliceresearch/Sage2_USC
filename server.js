@@ -2404,13 +2404,11 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 }
 
 function wsRequestDataSharingSession(wsio, data) {
-	console.log("Request: " + data.name);
-	
 	var known_site = findRemoteSiteByConnection(wsio);
 	if(known_site !== null) data.name = known_site.name;
-	if(data.name === undefined || data.name === null) data.name = data.host + ":" + data.port;
+	if(data.name === undefined || data.name === null) data.name = "Unknown";
 	
-	console.log(data);
+	console.log("Data-sharing request from " + data.name + " (" + data.host + ":" + data.port + ")");
 }
 
 // **************  Widget Control Messages *****************
@@ -3732,7 +3730,6 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
 				
 				// TOOD: broadcast new shared session message to displays (connection: waiting)
-				console.log("Requesting from: " + config.name);
 				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {host: config.host, port: config.index_port, name: config.name, secure: false});
 			}
 			else {
