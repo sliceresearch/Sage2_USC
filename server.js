@@ -512,6 +512,7 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaStream', wsStopMediaStream);
         wsio.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 		wsio.on('stopMediaBlockStream', wsStopMediaBlockStream);
+		wsio.on('requestDataSharingSession', wsRequestDataSharingSession);
 	}
 	if(wsio.messages.requestsWidgetControl){
 		wsio.on('addNewControl', wsAddNewControl);
@@ -2402,6 +2403,14 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 	}
 }
 
+function wsRequestDataSharingSession(wsio, data) {
+	var known_site = findRemoteSiteByConnection(wsio);
+	if(known_site !== null) data.name = known_site.name;
+	if(data.name === undefined || data.name === null) data.name = data.host + ":" + data.port;
+	
+	console.log(data);
+}
+
 // **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
@@ -3032,6 +3041,7 @@ function createRemoteConnection(wsURL, element, index) {
     remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
     remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 	remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
+	remote.on('requestDataSharingSession', wsRequestDataSharingSession);
 
 	return remote;
 }
@@ -3716,11 +3726,14 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			}
 		}
 		if(remoteIdx >= 0) {
-			if(remoteSites[i].connected) {
-				console.log("Requesting data-sharing session with " + remoteSites[i].name);
+			if(remoteSites[remoteIdx].connected) {
+				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
+				
+				// TOOD: broadcast new shared session message to displays (connection: waiting)
+				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {host: config.host, port: config.index_port, name: config.name, secure: false});
 			}
 			else {
-				console.log("Remote site " + remoteSites[i].name + " is not currently connected");
+				console.log("Remote site " + remoteSites[remoteIdx].name + " is not currently connected");
 			}
 		}
 	}
