@@ -768,14 +768,19 @@
 
 
 		wsio.on('hideWidgetToAppConnector', function(control_data){
+			var selectedAppTitle;
 			if (control_data.appId){
 				hideWidgetToAppConnector(control_data.id);
+				selectedAppTitle = document.getElementById(control_data.appId + "_title");
+				selectedAppTitle.className = "windowTitle";
 			}
 			else if (control_data.id in controlObjects){
-				var selectedAppTitle = document.getElementById(control_data.id + "_title");
+				selectedAppTitle = document.getElementById(control_data.id + "_title");
 				selectedAppTitle.className = "windowTitle";
 				for (var item in controlItems){
+					console.log(item);
 					if (item.indexOf(control_data.id) > -1){
+						console.log(item);
 						hideWidgetToAppConnector(item);
 					}
 				}

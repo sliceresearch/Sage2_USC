@@ -4094,7 +4094,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	// Widget connector show logic ends
 
 	// widgets
-	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
+	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
 	if (updatedControl !== null) {
 		app = findAppById(updatedControl.appId);
 		if (app){

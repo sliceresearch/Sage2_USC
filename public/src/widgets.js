@@ -1268,17 +1268,21 @@ createWidgetToAppConnector = function (instanceID) {
 addStyleElementForTitleColor = function (caption, color){
 	var sheet = document.createElement('style');
 	sheet.id = "title"+caption;
-	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" 35%, #666666 100%); background-image: linear-gradient(left,"+color+" 35%, #666666 100%); }";
+	var percent = 10;
+	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: linear-gradient(left,"+color+" " +percent+"%, #666666 100%); }";
 	document.body.appendChild(sheet);	
 }
 
 removeStyleElementForTitleColor = function (caption){
 	var sheet = document.getElementById("title"+caption);
-	sheet.parentNode.removeChild(sheet);
+	if (sheet)
+		sheet.parentNode.removeChild(sheet);
 }
 
 hideWidgetToAppConnector = function (instanceID){
+	console.log(instanceID);
 	var connectorDiv = document.getElementById(instanceID + "connector");
+	console.log(connectorDiv);
 	if (connectorDiv)
 		connectorDiv.style.display = "none";
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
@@ -1293,6 +1297,16 @@ showWidgetToAppConnector = function (instanceID, color){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
     	connectorDiv.style.display = "inline";
+	if (!color)
+		color = '#ab6666';
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	var paper = selectedControl.data("paper");
+	var shadow = paper.filter(Snap.filter.shadow(0, 0, cutLength/3.0, color, 5));
+	if (selectedControl)
+		selectedControl.attr({
+			fill: color,
+			filter:shadow
+		});
 }
 
 removeWidgetToAppConnector = function (instanceID){
