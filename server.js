@@ -3706,7 +3706,25 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
-	if(elem !== null){
+	if(elem === null) {
+		var remoteIdx = -1;
+		for(var i=0; i<remoteSites.length; i++){
+			if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
+				sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
+				remoteIdx = i;
+				break;
+			}
+		}
+		if(remoteIdx >= 0) {
+			if(remoteSites[i].connected) {
+				console.log("Requesting data-sharing session with " + remoteSites[i].name);
+			}
+			else {
+				console.log("Remote site " + remoteSites[i].name + " is not currently connected");
+			}
+		}
+	}
+	else {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			if (data.button === "left") {
 				var localX = pointerX - elem.left;
@@ -3928,6 +3946,17 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			if(remoteInteraction[uniqueID].selectedMoveItem !== null){
 				app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 				if(app !== null) {
+					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
+
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
+
+					if(videoHandles[app.id] !== undefined && videoHandles[app.id].newFrameGenerated === false)
+						handleNewVideoFrame(app.id);
+					remoteInteraction[uniqueID].releaseItem(true);
+					
+					
+					// Disabled for data-duplication only
+					/*
 					var remoteIdx = -1;
 					for(var i=0; i<remoteSites.length; i++){
 						if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
@@ -3961,6 +3990,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 								handleNewVideoFrame(app.id);
 						}
 					}
+					*/
 				}
 			}
 		}
