@@ -52,9 +52,9 @@ function resetIdle() {
 
 function SAGE2_init() {
 	hostname = window.location.hostname;
-	port = window.location.port;
-	if(window.location.protocol == "http:"  && port == "") port = "80";
-	if(window.location.protocol == "https:" && port == "") port = "443";
+	port     = window.location.port;
+	if(window.location.protocol === "http:"  && port === "") port = "80";
+	if(window.location.protocol === "https:" && port === "") port = "443";
 	
 	clientID = parseInt(getParameterByName("clientID")) || 0;
 	console.log("clientID: " + clientID);
@@ -401,7 +401,7 @@ function SAGE2_init() {
 				height: data.height, 
 				resrc:  url,
 				date:   date
-			}
+			};
 			
 			// load new app
 			if(window[data.application] === undefined) {
@@ -410,7 +410,7 @@ function SAGE2_init() {
 					console.log("Error loading script: " + data.application + ".js");
 				}, false);
 				js.addEventListener('load', function(event) {
-					var app = new window[data.application];
+					var app = new window[data.application]();
 					app.init(init);
 
 					if(app.state !== undefined && clientID===0){
@@ -436,7 +436,7 @@ function SAGE2_init() {
 		
 			// load existing app
 			else {
-				var app = new window[data.application];
+				var app = new window[data.application]();
 				app.init(init);
 
 				if(app.state !== undefined && clientID===0){
@@ -455,7 +455,7 @@ function SAGE2_init() {
 				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				if(data.application === "movie_player") setTimeout(function() {wsio.emit('requestVideoFrame', {id: data.id});}, 500);
 			}
-		};
+		}
 		
 		// load all dependencies
 		if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
@@ -590,7 +590,7 @@ function SAGE2_init() {
 	});
 
 	wsio.on ('hideControl', function(ctrl_data){
-		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==true){
+		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show === true) {
 			//var hideElemCtrl = document.getElementById(ctrl_data.id);
 			//hideElemCtrl.style.display = 'none';
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
@@ -599,7 +599,7 @@ function SAGE2_init() {
 	});
 
 	wsio.on ('showControl', function(ctrl_data){
-		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==false){
+		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show === false) {
 			//var showElemCtrl = document.getElementById(ctrl_data.id);
 			//showElemCtrl.style.display = 'block';
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
@@ -630,11 +630,11 @@ function SAGE2_init() {
 		var dragCorner   = selectedElem.getElementsByClassName("dragCorner");
 		if(elem_data.flag){
 			dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.7)";
-        	dragCorner[0].style.border = "2px solid #333333"
+        	dragCorner[0].style.border = "2px solid #333333";
         }
         else{
         	dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.0)";
-        	dragCorner[0].style.border = "none"
+        	dragCorner[0].style.border = "none";
         }
 	});
 
@@ -725,10 +725,10 @@ function SAGE2_init() {
 			
 			var date = new Date(position_data.date);
 			if(position_data.force || app.resizeEvents === "continuous") {
-				app.resize && app.resize(date);
+				if (app.resize) app.resize(date);
 			}
 			if(position_data.force || app.moveEvents === "continuous") {
-				app.move && app.move(date);
+				if (app.move) app.move(date);
 			}
 		}
 	});
@@ -739,7 +739,7 @@ function SAGE2_init() {
 		var app = applications[data.id];
 		if(app !== undefined && app.moveEvents === "onfinish") {
 			var date = new Date(data.date);
-			app.startMove && app.startMove(date);
+			if (app.startMove) app.startMove(date);
 		}
 	});
 	
@@ -749,7 +749,7 @@ function SAGE2_init() {
 		var app = applications[data.id];
 		if(app !== undefined && app.moveEvents === "onfinish") {
 			var date = new Date(data.date);
-			app.move && app.move(date);
+			if (app.move) app.move(date);
 		}
 	});
 	
@@ -759,7 +759,7 @@ function SAGE2_init() {
 		var app = applications[data.id];
 		if(app !== undefined && app.resizeEvents === "onfinish") {
 			var date = new Date(data.date);
-			app.startResize && app.startResize(date);
+			if (app.startResize) app.startResize(date);
 		}
 	});
 	
@@ -768,7 +768,7 @@ function SAGE2_init() {
 		var app = applications[data.id];
 		if(app !== undefined && app.resizeEvents === "onfinish") {
 			var date = new Date(data.date);
-			app.resize && app.resize(date);
+			if (app.resize) app.resize(date);
 		}
 	});
 	
@@ -865,9 +865,9 @@ function SAGE2_init() {
 			var lckedCtrl = lockedControlElements[data.ptrId];
 			var lckedCtrlId = lckedCtrl.attr("id");
 			if (regTI.test(lckedCtrlId)){
-				var textInput = lckedCtrl.parent();
-				var blinkControlHandle = textInput.data("blinkControlHandle");
-				clearInterval(blinkControlHandle);	
+				var textInput1 = lckedCtrl.parent();
+				var blinkControlHandle1 = textInput1.data("blinkControlHandle");
+				clearInterval(blinkControlHandle1);	
 			}
 			
 		}
@@ -877,9 +877,9 @@ function SAGE2_init() {
 			
 			var aId = ctrl.data("appId");
 			if(regTI.test(ctrId)===true){
-				var textInput = ctrl.parent();
-				var blinkControlHandle = setInterval(textInput.data("blinkCallback"),1000);
-				textInput.data("blinkControlHandle",blinkControlHandle);
+				var textInput2 = ctrl.parent();
+				var blinkControlHandle2 = setInterval(textInput2.data("blinkCallback"),1000);
+				textInput.data("blinkControlHandle",blinkControlHandle2);
 			}
 			/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
 				if(/line/.test(ctrId) || /knob/.test(ctrId))
