@@ -617,7 +617,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	
 
 	if (controlSpec.layoutOptions.drawBackground === true)
-		drawBackgroundForRadialLayout (this.controlSVG,center, dimensions.outerR);
+		drawBackgroundForRadialLayout (instanceID,this.controlSVG,center, dimensions.outerR);
 
 
 	
@@ -647,7 +647,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 			button = this.controlSpec.buttonSequence[key];
 			point = polarToCartesian(dimensions.firstRadius,theta,center);
 			if (this.controlSpec.layoutOptions.drawSpokes === true)
-				drawSpokeForRadialLayout(this.controlSVG,center,point);
+				drawSpokeForRadialLayout(instanceID,this.controlSVG,center,point);
 			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
 		}
 		theta = theta + innerThetaIncrement;
@@ -673,14 +673,14 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 352, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
 		d = makeBarPath(0,16, dimensions.outerR, center, this.controlSpec.textInput.width,dimensions.buttonRadius);
 		leftMidOfBar = polarToCartesian(dimensions.outerR,8, center);
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 8, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 		/*d = makeBarPath(375,405, dimensions.innerR, center, this.textInput.width);
 		leftMidOfBar = polarToCartesian(dimensions.innerR,390, center);
@@ -694,7 +694,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR,0, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	else if (this.controlSpec.hasTextInput===true){
@@ -703,7 +703,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR,0, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	/*else if (this.hasColorPalette===true){
@@ -718,16 +718,17 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	return ctrHandle;
 }
 
-function drawSpokeForRadialLayout(paper,center,point){
+function drawSpokeForRadialLayout(instanceID,paper,center,point){
 	var spoke = paper.line(center.x,center.y,point.x,point.y);
 	spoke.attr({
 		stroke: "rgba(250,250,250,1.0)",
 		strokeWidth: 3,
 		fill: "none"
 	});
+	spoke.data("instanceID", instanceID);
 }
 
-function drawBackgroundForRadialLayout(paper, center, radius){
+function drawBackgroundForRadialLayout(instanceID, paper, center, radius){
 	var backGround = paper.circle(center.x,center.y,radius);
 	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(190,190,190,0.7)-rgba(90,90,90,0.4)");
 	backGround.attr({
@@ -736,6 +737,7 @@ function drawBackgroundForRadialLayout(paper, center, radius){
 		strokeDasharray: "2,1",
 		strokeWidth: 5
 	});
+	backGround.data("instanceID", instanceID);
 }
 
 function drawControlCenter(instanceID,paper, center, radius, initialText){
@@ -752,6 +754,7 @@ function drawControlCenter(instanceID,paper, center, radius, initialText){
 	});
 	controlCenterLabel.attr("dy", "0.4em");
 	controlCenter.data("paper", paper);
+	controlCenter.data("instanceID", instanceID);
 }
 
 function drawPieSlice(paper, start,end, innerR, outerR, center){
@@ -1239,10 +1242,10 @@ getWidgetControlUnderPointer = function(data, offsetX, offsetY){
 	pointerElement.style.left = (parseInt(pointerElement.style.left) + 10000) + "px"; 
 	var widgetControlUnderPointer = Snap.getElementByPoint(data.x-offsetX,data.y-offsetY);
 	pointerElement.style.left = (parseInt(pointerElement.style.left) - 10000) + "px";
-	var widgetControlId = widgetControlUnderPointer? widgetControlUnderPointer.attr("id"):"";
-	if (/control/.test(widgetControlId) || /button/.test(widgetControlId) || /slider/.test(widgetControlId) || /textInput/.test(widgetControlId))
-		return widgetControlUnderPointer;
-	return null;
+	//var widgetControlId = widgetControlUnderPointer? widgetControlUnderPointer.attr("id"):"";
+	//if (/control/.test(widgetControlId) || /button/.test(widgetControlId) || /slider/.test(widgetControlId) || /textInput/.test(widgetControlId))
+	return widgetControlUnderPointer;
+	//return null;
 };
 
 
@@ -1280,9 +1283,7 @@ removeStyleElementForTitleColor = function (caption){
 }
 
 hideWidgetToAppConnector = function (instanceID){
-	console.log(instanceID);
 	var connectorDiv = document.getElementById(instanceID + "connector");
-	console.log(connectorDiv);
 	if (connectorDiv)
 		connectorDiv.style.display = "none";
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");

@@ -3407,7 +3407,10 @@ function findControlsUnderPointer(pointerX, pointerY) {
 			var barMaxY = controls[i].top + controls[i].height/2 + controls[i].barHeight/2;
 			if (dist<=controls[i].height/2.0 || (controls[i].hasSideBar && (pointerX >= barMinX && pointerX <= barMaxX) && (pointerY >= barMinY && pointerY <= barMaxY))) {
 				if (controls[i].show === true){
-					return controls[i];
+					var temp = controls[i];
+					controls[i] = controls[controls.length-1];
+					controls[controls.length-1] = temp;
+					return controls[controls.length-1];
 				}
 				else
 					return null;
@@ -4981,9 +4984,9 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				broadcast('requestNewControl',{elemId: elem.id, user_id: uniqueID, user_label: "Touch", x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
 			else if (elemCtrl.show === false) {
-				showControl(elemCtrl, pointerX, pointerY);
+				showControl(elemCtrl,uniqueID, pointerX, pointerY);
 
-				var app = findAppById(elemCtrl.objID);
+				var app = findAppById(elemCtrl.appId);
 				if(app !== null) {
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}

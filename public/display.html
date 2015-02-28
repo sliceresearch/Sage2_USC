@@ -996,7 +996,17 @@
 				
 			}
 
+			if(ctrl){
+
+				var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
+				if (instanceID)
+					controlItems[instanceID].divHandle.style.zIndex = "9991";
+				console.log(instanceID,ctrl);
+			}
+			
+
 			if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
+				console.log(controlItems[ctrl.parent().data("instanceID")].divHandle);
 				var temp = regC.test(ctrId)? null:ctrId;
 				
 				var aId = ctrl.data("appId");
@@ -1017,15 +1027,23 @@
 					appId: aId
 				});
 				lockedControlElements[data.ptrId] = ctrl; 
+				
 			}
 		});
 
 		wsio.on('releaseControlId', function(data){
+			var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var regexSlider = /slider/;
 			var regexButton = /button/;
 			var regexTextInput = /textInput/;
 			var lockedControl = lockedControlElements[data.ptrId];
+			if (ctrl){
+				var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
+				if (instanceID)
+					controlItems[instanceID].divHandle.style.zIndex = "9990";
+			}
 			
+
 			if (lockedControl){
 				if (regexTextInput.test(lockedControl.attr("id"))===false)
 					lockedControlElements[data.ptrId] = null;
