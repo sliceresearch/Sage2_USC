@@ -13,7 +13,7 @@
  *
  * @class node-utils
  * @module node-utils
- * @requires package.json, child_process, path
+ * @requires package.json, crypto, child_process, fs, path, tls, semver
  */
 
 // require variables to be declared

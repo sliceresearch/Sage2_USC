@@ -9,11 +9,16 @@
 // Copyright (c) 2014
 
 /**
- * Widget Controls and helper functionality for custom application user interface
+ * Provides widget controls and helper functionality for custom application user interface
  *
- * @class SAGE2WidgetControls, SAGE2WidgetControlBar
+ * @module widgets
  */
-//"use strict";
+
+/**
+ * Widget Controls class for custom application user interface
+ *
+ * @class SAGE2WidgetControls
+ */
 
 var SAGE2WidgetControls = {
 	button: function () {
@@ -279,10 +284,13 @@ var buttonType = {
 
 };
 
+
 /**
-*	Represents the widget bar
-* 	Has functions to create elements of the widget bar 
-*/
+ * Widget Bar: has functions to create elements of the widget 
+ *
+ * @class SAGE2WidgetControlBar
+ */
+
 function SAGE2WidgetControlBar(id) {
 	this.id = id;
 	this.instanceID = "";
