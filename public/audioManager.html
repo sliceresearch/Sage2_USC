@@ -131,13 +131,12 @@
 					if(vid_time) vid_time.textContent = timeToHHMMSS(vid.currentTime);
 				}, false);
 				
-				
-				var url = cleanURL(data.url);
+				var url = cleanURL(data.data.audio_url);
 				var source = document.createElement('source');
 				var param = url.indexOf('?');
 				if(param >= 0) source.src = url + "&clientID=audio";
 				else source.src = url + "?clientID=audio";
-				source.type = data.type;
+				source.type = data.data.audio_type;
 				vid.appendChild(source);
 				
 				var videoRow = document.createElement('tr');

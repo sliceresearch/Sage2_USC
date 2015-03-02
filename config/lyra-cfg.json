@@ -3,12 +3,12 @@
 */
 {
 	name: "CAVE2",
-	"host": "lyra.evl.uic.edu",
-	"port": 443,
-	"index_port": 80,
-	"background": {
-		"color": "#333333",
-		"image": {
+	host: "lyra.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		color: "#333333",
+		image: {
 			url: "images/background/chicago-pano-october-CAVE2.jpg",
 			style: "tile"
 		},
@@ -16,216 +16,227 @@
                         svg: "images/EVL-logo.svg",
                         color: "rgba(25, 25, 255, 0.25)"
                 },
-		"clip": true
+		clip: true
 	},
-	"ui": {
-		"clock": 24,
-		"show_url": true,
-		"show_version":  true,
+	ui: {
+		clock: 24,
+		show_url: true,
+		show_version:  true,
                 noDropShadow:    true,
 		minWindowWidth:  500,
 		minWindowHeight: 500,
 	},
-	"resolution": {
-		"width": 1366,
-		"height":  1536
+	resolution: {
+		width: 1366,
+		height:  1536
 	},
 	// for experimental features: true/false
-	"experimental": {
-		"omicron": // enable omicron input module
+	experimental: {
+		omicron: // enable omicron input module
 		{
 			// Standard 'SAGE' connection
 			// SAGE listens for a sageinputserver to stream events
-			"enable": true,
-			"dataPort": 20015,
+			enable: true,
+			dataPort: 20015,
 			
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events
-			"useOinputserver": true,
-			"inputServerIP": "cave2tracker.evl.uic.edu",
-			"msgPort": 28000
+			useOinputserver: true,
+			inputServerIP: "cave2tracker.evl.uic.edu",
+			msgPort: 28000
 		}
 	},
-	"layout": {
-		"rows": 2,
-		"columns": 18
+	layout: {
+		rows: 2,
+		columns: 18
 	},
-	"displays": [
+	displays: [
 		{
-			"row": 0,
-			"column": 0
+			row: 0,
+			column: 0
 		},
 		{
-			"row": 1,
-			"column": 0
+			row: 1,
+			column: 0
 		},
 		{
-			"row": 0,
-			"column": 1
+			row: 0,
+			column: 1
 		},
 		{
-			"row": 1,
-			"column": 1
+			row: 1,
+			column: 1
 		},
 		{
-			"row": 0,
-			"column": 2
+			row: 0,
+			column: 2
 		},
 		{
-			"row": 1,
-			"column": 2
+			row: 1,
+			column: 2
 		},
 		{
-			"row": 0,
-			"column": 3
+			row: 0,
+			column: 3
 		},
 		{
-			"row": 1,
-			"column": 3
+			row: 1,
+			column: 3
 		},
 		{
-			"row": 0,
-			"column": 4
+			row: 0,
+			column: 4
 		},
 		{
-			"row": 1,
-			"column": 4
+			row: 1,
+			column: 4
 		},
 		{
-			"row": 0,
-			"column": 5
+			row: 0,
+			column: 5
 		},
 		{
-			"row": 1,
-			"column": 5
+			row: 1,
+			column: 5
 		},
 		{
-			"row": 0,
-			"column": 6
+			row: 0,
+			column: 6
 		},
 		{
-			"row": 1,
-			"column": 6
+			row: 1,
+			column: 6
 		},
 		{
-			"row": 0,
-			"column": 7
+			row: 0,
+			column: 7
 		},
 		{
-			"row": 1,
-			"column": 7
+			row: 1,
+			column: 7
 		},
 		{
-			"row": 0,
-			"column": 8
+			row: 0,
+			column: 8
 		},
 		{
-			"row": 1,
-			"column": 8
+			row: 1,
+			column: 8
 		},
 		{
-			"row": 0,
-			"column": 9
+			row: 0,
+			column: 9
 		},
 		{
-			"row": 1,
-			"column": 9
+			row: 1,
+			column: 9
 		},
 		{
-			"row": 0,
-			"column": 10
+			row: 0,
+			column: 10
 		},
 		{
-			"row": 1,
-			"column": 10
+			row: 1,
+			column: 10
 		},
 		{
-			"row": 0,
-			"column": 11
+			row: 0,
+			column: 11
 		},
 		{
-			"row": 1,
-			"column": 11
+			row: 1,
+			column: 11
 		},
 		{
-			"row": 0,
-			"column": 12
+			row: 0,
+			column: 12
 		},
 		{
-			"row": 1,
-			"column": 12
+			row: 1,
+			column: 12
 		},
 		{
-			"row": 0,
-			"column": 13
+			row: 0,
+			column: 13
 		},
 		{
-			"row": 1,
-			"column": 13
+			row: 1,
+			column: 13
 		},
 		{
-			"row": 0,
-			"column": 14
+			row: 0,
+			column: 14
 		},
 		{
-			"row": 1,
-			"column": 14
+			row: 1,
+			column: 14
 		},
 		{
-			"row": 0,
-			"column": 15
+			row: 0,
+			column: 15
 		},
 		{
-			"row": 1,
-			"column": 15
+			row: 1,
+			column: 15
 		},
 		{
-			"row": 0,
-			"column": 16
+			row: 0,
+			column: 16
 		},
 		{
-			"row": 1,
-			"column": 16
+			row: 1,
+			column: 16
 		},
 		{
-			"row": 0,
-			"column": 17
+			row: 0,
+			column: 17
 		},
 		{
-			"row": 1,
-			"column": 17
+			row: 1,
+			column: 17
 		}
 	],
-	"alternate_hosts": [
+	alternate_hosts: [
 		"localhost",
 		"127.0.0.1",
 		"lyra.evl.optiputer.net"
 	],
-	"remote_sites": [
+	remote_sites: [
 		{
-			"name": "Cyber-Commons",
-			"host": "iridium.evl.uic.edu",
-			"port": 443
+			name: "Cyber-Commons",
+			host: "iridium.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "CAVE2 Column",
-			"host": "preeka.evl.uic.edu",
-			"port": 443
+			name: "CAVE2 Column",
+			host: "preeka.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "IceWall",
-			"host": "thor.evl.uic.edu",
-			"port": 443
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "PhD Room",
-			"host": "dante.evl.uic.edu",
-			"port": 443
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443
 		},
 		{
-			"name": "Green Room",
-			"host": "mesaverde.evl.uic.edu",
-			"port": 443
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
 		}
-	]
+	],
+        apis: {
+                twitter: {
+                        consumerKey:    "fuyVLmYL4QMG8dhg4UDxiGYKK",
+                        consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
+                        accessToken:    "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
+                        accessSecret:   "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
+                },
+                forecastio: {
+                        apiKey: "92f925ff56c3a45ab18402d3753b3c88"
+                }
+        }
 }

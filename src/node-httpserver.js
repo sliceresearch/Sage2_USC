@@ -13,13 +13,27 @@
  */
 
 var fs   = require('fs');
-var url  = require('url');
-var mime = require('mime');
 var path = require('path');
+var url  = require('url');
+
+var mime = require('mime');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
 
 mime.default_type = "text/plain";
+
+function parseURLQuery(query) {
+	if(!query) return {};
+	
+	var p;
+	var paramList = query.split("&");
+	var params = {};
+	for(var i=0; i<paramList.length; i++) {
+		p = paramList[i].split("=");
+		if(p.length === 2) params[p[0]] = p[1];
+	}
+	return params;
+}
 
 function httpserver(publicDirectory) {
 	this.publicDirectory = publicDirectory;
@@ -38,7 +52,8 @@ httpserver.prototype.onreq = function(req, res) {
 	var stream;
 	
 	if (req.method == "GET") {
-		var getName = decodeURIComponent(url.parse(req.url).pathname);
+		var reqURL = url.parse(req.url);
+		var getName = decodeURIComponent(reqURL.pathname);
 		if(getName in this.getFuncs){
 			this.getFuncs[getName](req, res);
 			return;
@@ -51,18 +66,39 @@ httpserver.prototype.onreq = function(req, res) {
         }
 
 		var pathname = this.publicDirectory + getName;
-
+		
+		
+		// SESSION ID CHECK
+		if(global.__SESSION_ID && path.extname(pathname) === ".html") {
+			var params = parseURLQuery(reqURL.query); // note every field will be a string
+				
+			// check params.session
+			if(params.session !== global.__SESSION_ID) {
+				// failed
+				// serve page that asks for session id instead
+				//
+				// this.redirect(res, "session.html?onload="+getName);
+				// return;
+				//
+				// in session.html, when user enters a session id in a popup dialog
+				// the page should use 'window.location.replace(<onload?session=<value>>)'
+			}
+		}
+		
+		
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);
 			if (stats.isDirectory()) {
-				this.redirect(res, path.join(getName, "index.html"));
+				this.redirect(res, getName+"/index.html");
 				return;
 			} else {
 				var header = {};
 				var type   = mime.lookup(pathname);
 				header["Content-Type"] = type;
-				
+                                header["Access-Control-Allow-Headers" ] = "Range";
+                                header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+
 				if (req.headers.origin !== undefined) {
 					header['Access-Control-Allow-Origin' ] = req.headers.origin;
 					header['Access-Control-Allow-Methods'] = "GET";

@@ -17,11 +17,13 @@
  */
 
 var SAGE2_version = require('../package.json').version;
-var exec   = require('child_process').exec;
-var path   = require('path');
-var fs     = require('fs');                  // filesystem access
+
 var crypto = require('crypto');              // https encryption
+var exec   = require('child_process').exec;
+var fs     = require('fs');                  // filesystem access
+var path   = require('path');
 var tls    = require('tls');                 // https encryption
+
 var semver = require('semver');              // parse version numbers
 
 

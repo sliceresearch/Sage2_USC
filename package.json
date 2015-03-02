@@ -77,7 +77,8 @@
 		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/jshint/bin/jshint --verbose public/src/*.js",
 		"doc": "yuidoc -c doc/yuidoc.json",
-        "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js"
+        "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
+		"in": "node ./install_dependencies.js"
 	},
 	"license": "SAGE2-Software-License"
 }
