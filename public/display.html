@@ -38,6 +38,8 @@
 <script type="text/javascript" src="src/widgets.js"></script>
 <script type="text/javascript" src="src/radialMenu.js"></script>
 
+<script type="text/javascript" src="src/annotations.js"></script>
+
 <script type="text/javascript">
 	window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
@@ -63,6 +65,7 @@
 	var applications = {};
 	var dependencies = {};
 
+	var annotationItems = {};
 	// UI object to build the element on the wall
 	var ui;
 	var uiTimer = null;
@@ -680,9 +683,15 @@
 					app.move(date);
 				}
 			}
+			
 
 		});
 		
+		wsio.on('setAnnotationWindowPosition', function(position_data) {
+			if (position_data.appId in annotationItems)
+				annotationItems[position_data.appId].setPosition(position_data);
+		});
+
 		wsio.on('setControlPosition', function(position_data) {
 			var date = new Date(position_data.date);
 			
@@ -1052,6 +1061,21 @@
 			}
 		});
 
+		wsio.on('createAnnotationWindow',function(data){
+			var appAnnotation = new SAGE2Annotations();
+			appAnnotation.makeWindow(data);
+			annotationItems[data.appId] = appAnnotation;
+		});
+
+		wsio.on('showAnnotationWindow', function(data){
+			annotationItems[data.appId].showWindow(data);
+		});
+		wsio.on('hideAnnotationWindow', function(data){
+			annotationItems[data.appId].hideWindow(data);
+		});
+		wsio.on('addNewNoteToAnnotationWindow', function(data){
+			annotationItems[data.appId].addNote(data);
+		});
 		/*wsio.on('receiveFileData', function(data){
 			var app = applications[data.id];
 			app.fileDataBuffer = data.buffer;

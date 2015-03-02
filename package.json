@@ -73,7 +73,7 @@
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start": "./node_modules/.bin/nodemon server.js -l",
+		"start": "./node_modules/.bin/node server.js -l",
 		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/jshint/bin/jshint --verbose public/src/*.js",
 		"doc": "yuidoc -c doc/yuidoc.json",

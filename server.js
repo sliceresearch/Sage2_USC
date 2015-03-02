@@ -60,6 +60,7 @@ var sagepointer = require('./src/node-sagepointer');    // handles sage pointers
 var sageutils   = require('./src/node-utils');          // provides the current version number
 var websocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
 var stickyItems = require('./src/node-stickyitems');
+var annotationManager = require('./src/node-annotations');
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 
@@ -218,6 +219,8 @@ if(program.trackUsers) {
 	*/
 }
 if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
+//Annotation management
+var annotations = new annotationManager();
 
 // Sticky items and window position for new clones
 var stickyAppHandler = new stickyItems();
@@ -1746,6 +1749,8 @@ function wsLoadFileFromServer(wsio, data) {
 			addEventToUserLog(data.user, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 			
 			applications.push(appInstance);
+
+			broadcast('createAnnotationWindow',annotations.loadAnnotations(appInstance,config),'requiresFullApps');
 
 			initializeLoadedVideo(appInstance, videohandle);
 		});
@@ -3484,6 +3489,23 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			newOrder = moveAppToFront(stickyList[idx].id);
 		}
 		broadcast('updateItemOrder', {idList: newOrder}, 'receivesWindowModification');
+		return;
+	}
+	var selectedAnnotationWindow = annotations.findAnnotationsUnderPointer(pointerX,pointerY);
+	//console.log(selectedAnnotationWindow);
+	if(selectedAnnotationWindow.annotation!==null){
+		if (selectedAnnotationWindow.onButton === true){
+			toggleAnnotationWindow(selectedAnnotationWindow.annotation);
+		}
+		else if(selectedAnnotationWindow.onAddButton === true){
+			var noteData = {
+				appId:selectedAnnotationWindow.annotation.appId,
+				user: sagePointers[uniqueID]? sagePointers[uniqueID].label : "",
+				createOn: new Date(),
+			};
+			var noteItem = annotation.addNote(noteData);
+			broadcast('addNewNoteToAnnotationWindow', noteItem, 'requiresFullApps');
+		}
 	}
 
 }
@@ -3625,7 +3647,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					
 					var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 					if(updatedItem !== null) {
-						broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+						setItemPosition(updatedItem);
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						
 						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
@@ -3746,11 +3768,11 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			//Attach the app to the background app if it is sticky
 			var backgroundItem = findAppUnderPointer(updatedMoveItem.elemLeft-1,updatedMoveItem.elemTop-1);
 			attachAppIfSticky(backgroundItem,updatedMoveItem.elemId);
-			broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
+			setItemPosition(updatedMoveItem);
 			if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 			for (var idx=0;idx<updatedStickyItems.length;idx++){
-				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
+				setItemPosition(updatedStickyItems[idx]);
 			}
 		}
 		else if(updatedResizeItem !== null){
@@ -3819,14 +3841,13 @@ function pointerPosition( uniqueID, data ) {
 		var updatedApp = findAppById(updatedItem.elemId);
 		var backgroundItem = findAppUnderPointer(updatedItem.elemLeft-1,updatedItem.elemTop-1);
 		attachAppIfSticky(backgroundItem,updatedItem.elemId);
-		broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+		setItemPosition(updatedItem);
 		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128);
 		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
 		for (var idx=0;idx<updatedStickyItems.length;idx++){
-			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
+			setItemPosition(updatedStickyItems[idx]);
 		}
 	}
-	//if(updatedItem !== null) broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 }
 
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
@@ -4664,4 +4685,24 @@ function attachAppIfSticky(backgroundItem, appId){
 	stickyAppHandler.detachStickyItem(app);
 	if (backgroundItem !== null)
 		stickyAppHandler.attachStickyItem(backgroundItem,app);
+}
+
+function setItemPosition(updatedMoveItem){
+	broadcast('setItemPosition', updatedMoveItem, 'receivesWindowModification');
+	var updatedAnnotationWindow = annotations.updateAnnotationWindowPosition(updatedMoveItem);
+	if (updatedAnnotationWindow)
+		broadcast('setAnnotationWindowPosition', updatedAnnotationWindow, 'receivesWindowModification');
+}
+
+function toggleAnnotationWindow(annotationWindow){
+	var data;
+	if (annotationWindow.show){
+		data = annotations.hideAnnotationWindow(annotationWindow.appId);
+		broadcast('hideAnnotationWindow',data,'receivesWindowModification')
+	}
+	else{
+		data = annotations.showAnnotationWindow(annotationWindow.appId);
+		broadcast('showAnnotationWindow',data,'receivesWindowModification');
+	}
+
 }

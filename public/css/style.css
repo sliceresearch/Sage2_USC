@@ -125,3 +125,30 @@ body {
 	font-weight:lighter; 
 	font-style:normal;
 }
+
+.annotationWindow{
+	position:absolute;
+	background-color: #888888;
+	border: solid 1px #000000;
+	overflow: hidden;
+	box-shadow: 8px 0px 15px #222222;
+}
+
+.annotationButton{
+	position:absolute;
+	background-color: #666666;
+	border: solid 1px #000000;
+	overflow: hidden;
+}
+.annotationButton-text{
+	position: absolute;
+	float:left;
+	white-space: nowrap;
+	-webkit-transform:rotate(90deg);
+	-moz-transform:rotate(90deg);
+	transform:rotate(90deg);
+	-webkit-transform-origin: left bottom 0;
+	-moz-transform-origin: left bottom 0;
+	transform-origin: left bottom 0;
+	color: white;
+}

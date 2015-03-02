@@ -267,6 +267,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		animation: false,
 		metadata: metadata,
 		sticky: false,
+		annotation:true,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -453,6 +454,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		animation: false,
 		metadata: metadata,
 		sticky: false,
+		annotation:true,
 		date:      new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
