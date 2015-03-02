@@ -8,10 +8,11 @@
 //
 // Copyright (c) 2014
 
-
 // Inspired by: https://github.com/nathanpeck/exiftool
 
-var fs           = require('fs');
+// require variables to be declared
+"use strict";
+
 var ChildProcess = require('child_process');
 // try to use spawnSync (node >= v12 ) or emulation
 var spawnSync    = ChildProcess.spawnSync; // || require('spawn-sync');
@@ -70,14 +71,14 @@ function file(filename, done) {
 //    node v12 is good
 //
 function fileSync(filename) {
-	result = spawnSync('exiftool', ['-json', filename]);
+	var result = spawnSync('exiftool', ['-json', filename]);
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err:'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata:null};
 	} else {
 		if (result.stdout.length!==0) {
 			var metadata = JSON.parse(result.stdout);
-			return {err:null, metadata:metadata[0]};			
+			return {err:null, metadata:metadata[0]};
 		} else {
 			return {err:result.stderr.toString(), metadata:null};
 		}
@@ -138,7 +139,7 @@ function buffer(source, callback) {
 
 	var curr = 0;
 	var done = false;
-	while (! done ) {
+	while (!done) {
 		// Give the source binary data to the process
 		var status = exif.stdin.write(source.slice(curr, Math.min(curr+16*1024, source.length)));
 		curr += 16*1024;

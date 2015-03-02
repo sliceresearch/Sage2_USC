@@ -1,9 +1,9 @@
 // SAGE2 is available for use under the SAGE2 Software License
-// 
+//
 // University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
 // and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
 // Applications (LAVA)
-// 
+//
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
@@ -12,10 +12,12 @@
  @module httpserver
  */
 
+// require variables to be declared
+"use strict";
+
 var fs   = require('fs');
 var path = require('path');
 var url  = require('url');
-
 var mime = require('mime');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
@@ -24,7 +26,7 @@ mime.default_type = "text/plain";
 
 function parseURLQuery(query) {
 	if(!query) return {};
-	
+
 	var p;
 	var paramList = query.split("&");
 	var params = {};
@@ -35,23 +37,23 @@ function parseURLQuery(query) {
 	return params;
 }
 
-function httpserver(publicDirectory) {
+function HttpServer(publicDirectory) {
 	this.publicDirectory = publicDirectory;
 	this.getFuncs  = {};
 	this.postFuncs = {};
 	this.onrequest = this.onreq.bind(this);
 }
 
-httpserver.prototype.redirect = function(res, url) {
+HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
-	res.writeHead(302, {'Location': url});
+	res.writeHead(302, {'Location': aurl});
 	res.end();
 };
 
-httpserver.prototype.onreq = function(req, res) {
+HttpServer.prototype.onreq = function(req, res) {
 	var stream;
-	
-	if (req.method == "GET") {
+
+	if (req.method === "GET") {
 		var reqURL = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
 		if(getName in this.getFuncs){
@@ -60,32 +62,30 @@ httpserver.prototype.onreq = function(req, res) {
 		}
 
 		// redirect root path to index.html
-		if (getName == "/") {
+		if (getName === "/") {
 			this.redirect(res, "index.html");
 			return;
         }
 
 		var pathname = this.publicDirectory + getName;
-		
-		
+
 		// SESSION ID CHECK
 		if(global.__SESSION_ID && path.extname(pathname) === ".html") {
 			var params = parseURLQuery(reqURL.query); // note every field will be a string
-				
+
 			// check params.session
 			if(params.session !== global.__SESSION_ID) {
 				// failed
 				// serve page that asks for session id instead
 				//
 				// this.redirect(res, "session.html?onload="+getName);
-				// return;
+				return;
 				//
 				// in session.html, when user enters a session id in a popup dialog
 				// the page should use 'window.location.replace(<onload?session=<value>>)'
 			}
 		}
-		
-		
+
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);
@@ -144,20 +144,20 @@ httpserver.prototype.onreq = function(req, res) {
 			return;
 		}
 	}
-	else if(req.method == "POST"){
-		var postName = decodeURIComponent(url.parse(req.url).pathname);		
-		if(postName in this.postFuncs){
+	else if(req.method === "POST") {
+		var postName = decodeURIComponent(url.parse(req.url).pathname);
+		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
 		}
 	}
 };
 
-httpserver.prototype.httpGET = function(name, callback) {
+HttpServer.prototype.httpGET = function(name, callback) {
 	this.getFuncs[name] = callback;
 };
 
-httpserver.prototype.httpPOST = function(name, callback) {
+HttpServer.prototype.httpPOST = function(name, callback) {
 	this.postFuncs[name] = callback;
 };
 
-module.exports = httpserver;
+module.exports = HttpServer;

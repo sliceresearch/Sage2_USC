@@ -12,17 +12,19 @@
  * @module itemLoader
  */
 
+// require variables to be declared
+"use strict";
+
 
 var fs           = require('fs');
 var path         = require('path');
-var url          = require('url');
 
-var unzip        = require('decompress-zip');
+var Unzip        = require('decompress-zip');
 var gm           = require('gm');
 var mime         = require('mime');
 var request      = require('request');
-var videodemuxer = require('node-demux');
 var ytdl         = require('ytdl-core');
+var Videodemuxer = require('node-demux');
 
 var exiftool  = require('../src/node-exiftool');        // gets exif tags for images
 var assets    = require('../src/node-assets');          // asset management
@@ -40,7 +42,7 @@ function encodeReservedURL(url) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-function appLoader(publicDir, hostOrigin, config, imOptions, ffmpegOptions) {
+function AppLoader(publicDir, hostOrigin, config, imOptions, ffmpegOptions) {
 	this.publicDir      = publicDir;
 	this.hostOrigin     = hostOrigin;
 	this.configuration  = config;
@@ -55,7 +57,7 @@ function appLoader(publicDir, hostOrigin, config, imOptions, ffmpegOptions) {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
-appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
+AppLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 	var wallRatio   = this.displayWidth / (this.displayHeight-this.titleBarHeight);
 	var iWidth      = appInstance.native_width;
 	var iHeight     = appInstance.native_height;
@@ -95,22 +97,22 @@ appLoader.prototype.scaleAppToFitDisplay = function(appInstance) {
 	appInstance.height = iHeight;
 };
 
-appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL, callback) {
+AppLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var _this = this;
 
 	request({
 		url: url,
 		encoding: null,
 		strictSSL: strictSSL,
-		agentOptions: {rejectUnauthorized:false,requestCert: false},
+		agentOptions: {rejectUnauthorized:false, requestCert: false},
 		headers:{'User-Agent':'node'}},
-		function(err, response, body) {
-			if (err) {
-				console.log("request error", err);
-				throw err;
+		function(err1, response, body) {
+			if (err1) {
+				console.log("request error", err1);
+				throw err1;
 			}
-			var result = exiftool.buffer(body, function(err, info) {
-				if (err) {
+			var result = exiftool.buffer(body, function(err2, info) {
+				if (err2) {
 					console.log("Error processing image:", url, mime_type, name, result.err);
 				}
 				else {
@@ -122,7 +124,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 							}
 							);
 					} else {
-						console.log("File not recognized:", file, mime_type, url);
+						console.log("File not recognized:", mime_type, url);
 					}
 				}
 			});
@@ -130,7 +132,7 @@ appLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 	);
 };
 
-appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
+AppLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	var _this = this;
 
 	ytdl.getInfo(url, function(err, info){
@@ -140,17 +142,17 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 		var audio = {index: -1, bitrate: 0, type: ""};
 		for(var i=0; i<info.formats.length; i++){
 			var type = info.formats[i].type.split(";")[0];
-			if((type === "video/mp4" || type === "video/webm") && info.formats[i].resolution !== null && info.formats[i].profile != "3d") {
+			if ((type === "video/mp4" || type === "video/webm") && info.formats[i].resolution !== null && info.formats[i].profile !== "3d") {
 				var res = parseInt(info.formats[i].resolution.substring(0, info.formats[i].resolution.length-1));
-				if(res <= 1200 && res > video.resolution) {
+				if (res <= 1200 && res > video.resolution) {
 					video.index = i;
 					video.resolution = res;
 					video.type = type;
 				}
 			}
-			else if((type === "audio/mp4" || type === "audio/webm")) {
+			else if ((type === "audio/mp4" || type === "audio/webm")) {
 				var bitrate = info.formats[i].audioBitrate || 0;
-				if(	(audio.type === type && bitrate > audio.bitrate) ||
+				if ((audio.type === type && bitrate > audio.bitrate) ||
 					(audio.type !== "audio/webm" && type === "audio/webm") ||
 					(audio.type === "")
 					) {
@@ -172,12 +174,12 @@ appLoader.prototype.loadYoutubeFromURL = function(url, callback) {
 	});
 };
 
-appLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name, callback) {
+AppLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name, callback) {
 	this.loadVideoFromFile(source_url, mime_type, url, url, name, callback);
 };
 
 
-appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
+AppLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
 	var local_url = path.join("uploads", "pdfs", name);
 	var localPath = path.join(this.publicDir, local_url);
 	var _this = this;
@@ -192,11 +194,11 @@ appLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, c
 			callback(appInstance);
 		});
 	});
-	request({url: url, strictSSL: strictSSL,headers:{'User-Agent':'node'}}).pipe(tmp);
+	request({url: url, strictSSL: strictSSL, headers:{'User-Agent':'node'}}).pipe(tmp);
 };
 
 
-appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, exif_data, callback) {
+AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, url, external_url, name, exif_data, callback) {
 
 	var source = buffer.toString("base64");
 	var aspectRatio = width / height;
@@ -243,7 +245,7 @@ appLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 	callback(appInstance);
 };
 
-appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_url, name, callback) {
+AppLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 
 	if(mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp"){
@@ -322,9 +324,9 @@ appLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 };
 
 
-appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_url, name, callback) {
+AppLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
-	var video = new videodemuxer();
+	var video = new Videodemuxer();
 	video.on('metadata', function(data) {
 		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2", author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
 		var exif = assets.getExifData(file);
@@ -381,7 +383,7 @@ appLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 };
 
 
-appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_url, name, callback) {
+AppLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_url, name, callback) {
 	// Assume default to Letter size
 	var page_width  = 612;
 	var page_height = 792;
@@ -432,7 +434,7 @@ appLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 	callback(appInstance);
 };
 
-appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
+AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
     // Find the app!!
     var appName = registry.getDefaultApp(file);
     console.log("Loader> Loading %s with %s", mime_type, appName);
@@ -454,7 +456,7 @@ appLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
 };
 
 
-appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_url, name, callback) {
+AppLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 	var zipFolder = file;
 
@@ -468,19 +470,19 @@ appLoader.prototype.loadAppFromFile = function(file, mime_type, url, external_ur
 	});
 };
 
-appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external_url, name, callback) {
+AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 	var zipFolder = path.join(path.dirname(file), name);
 
-	var unzipper = new unzip(file);
+	var unzipper = new Unzip(file);
 	unzipper.on('extract', function(log) {
 		// read instructions for how to handle
 		var instuctionsFile = path.join(zipFolder, "instructions.json");
-		fs.readFile(instuctionsFile, 'utf8', function(err, json_str) {
-			if(err) throw err;
+		fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
+			if (err1) throw err1;
 
-			assets.exifAsync([zipFolder], function(err){
-				if(err) throw err;
+			assets.exifAsync([zipFolder], function(err2){
+				if (err2) throw err2;
 
                 var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
@@ -496,17 +498,17 @@ appLoader.prototype.loadZipAppFromFile = function(file, mime_type, url, external
 	unzipper.extract({
 		path: path.dirname(file),
 		filter: function(extractedFile) {
-			if(extractedFile.type === "SymbolicLink") return false;
-			if(extractedFile.filename === "__MACOSX") return false;
-			if(extractedFile.filename.substring(0,1) === ".") return false;
-			if(extractedFile.parent.length >= 8 && extractedFile.parent.substring(0,8) === "__MACOSX") return false;
+			if (extractedFile.type === "SymbolicLink") return false;
+			if (extractedFile.filename === "__MACOSX") return false;
+			if (extractedFile.filename.substring(0, 1) === ".") return false;
+			if (extractedFile.parent.length >= 8 && extractedFile.parent.substring(0, 8) === "__MACOSX") return false;
 
 			return true;
 		}
 	});
 };
 
-appLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, callback) {
+AppLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, callback) {
 	var aspectRatio = width/height;
 
 	var metadata         = {};
@@ -552,7 +554,7 @@ appLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 };
 
 
-appLoader.prototype.createMediaBlockStream = function(source, type, encoding, name, color, width, height, callback) {
+AppLoader.prototype.createMediaBlockStream = function(source, type, encoding, name, color, width, height, callback) {
 	var aspectRatio = width/height;
 
 	var metadata         = {};
@@ -597,7 +599,7 @@ appLoader.prototype.createMediaBlockStream = function(source, type, encoding, na
 	callback(appInstance);
 };
 
-appLoader.prototype.loadApplicationFromRemoteServer = function(application, callback) {
+AppLoader.prototype.loadApplicationFromRemoteServer = function(application, callback) {
 	this.loadApplication({location: "remote", application: application}, callback);
 	/*
 	var _this = this;
@@ -618,7 +620,7 @@ appLoader.prototype.loadApplicationFromRemoteServer = function(application, call
 	*/
 };
 
-appLoader.prototype.loadFileFromWebURL = function(file, callback) {
+AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 	// XXX - Will this work with our custom apps?
     var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/")+1));
@@ -627,10 +629,8 @@ appLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 };
 
-appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
-	var app = file.application;
+AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var dir = registry.getDirectory(file.filename);
-
 	var url = path.join("uploads", dir, file.filename);
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, url);
@@ -641,7 +641,7 @@ appLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	});
 };
 
-appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
+AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
     var mime_type = mime.lookup(file.name);
 	var app = registry.getDefaultApp(file.name);
 	if (app === undefined || app === "") { callback(null); return; }
@@ -669,13 +669,13 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		localPath    = path.join(this.publicDir, url);
 	}
 
-	fs.rename(file.path, localPath, function(err) {
-		if(err) throw err;
+	fs.rename(file.path, localPath, function(err1) {
+		if (err1) throw err1;
 
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
-			exiftool.file(localPath, function(err,data) {
-				if (err) {
-					console.log("internal error");
+			exiftool.file(localPath, function(err2, data) {
+				if (err2) {
+					console.log("internal error", err2);
 				} else {
 					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data, function() {
@@ -694,30 +694,29 @@ appLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	});
 };
 
-appLoader.prototype.loadApplication = function(appData, callback) {
-
-	if(appData.location === "file") {
-
+AppLoader.prototype.loadApplication = function(appData, callback) {
+	var app, dir;
+	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
-		var dir = registry.getDirectory(appData.type);
+		dir = registry.getDirectory(appData.type);
 
-		if(app === "image_viewer"){
+		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance, null);
 			});
 		}
-		else if(app === "movie_player"){
+		else if (app === "movie_player") {
 			this.loadVideoFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance, handle) {
 				callback(appInstance, handle);
 			});
 		}
-		else if(app === "pdf_viewer"){
+		else if (app === "pdf_viewer") {
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
 				callback(appInstance, null);
 			});
 		}
-		else if(app === "custom_app"){
-			if(appData.compressed === true) {
+		else if (app === "custom_app") {
+			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
 				var url = path.join("uploads", dir, name);
 				var external_url = this.hostOrigin + encodeReservedURL(url);
@@ -739,16 +738,15 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 	}
 
 	else if(appData.location === "url") {
-
 		app = registry.getDefaultAppFromMime(appData.type);
 
-		if(app === "image_viewer"){
+		if (app === "image_viewer") {
 			this.loadImageFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance, null);
 			});
 		}
-		else if(app === "movie_player"){
-			if(appData.type === "video/youtube"){
+		else if (app === "movie_player") {
+			if (appData.type === "video/youtube") {
 				this.loadYoutubeFromURL(appData.url, function(appInstance, handle) {
 					callback(appInstance, handle);
 				});
@@ -760,16 +758,16 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				});
 			}
 		}
-		else if(app === "pdf_viewer"){
+		else if (app === "pdf_viewer") {
 			this.loadPdfFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance, null);
 			});
 		}
 	}
 
-	else if(appData.location === "remote") {
-		if(appData.application.application === "movie_player"){
-			if(appData.application.type === "video/youtube") {
+	else if (appData.location === "remote") {
+		if (appData.application.application === "movie_player") {
+			if (appData.application.type === "video/youtube") {
 				this.loadYoutubeFromURL(appData.application.url, callback);
 			}
 			else {
@@ -777,7 +775,7 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 			}
 		}
 		else {
-			var appInstance = {
+			var anInstance = {
 				id: appData.application.id,
 				title: appData.application.title,
 				application: appData.application.application,
@@ -803,16 +801,16 @@ appLoader.prototype.loadApplication = function(appData, callback) {
 				date: new Date()
 			};
 			if(appData.application.application === "pdf_viewer") {
-				appInstance.data.src = appInstance.url;
+				anInstance.data.src = anInstance.url;
 			}
 
-			this.scaleAppToFitDisplay(appInstance);
-			callback(appInstance, null);
+			this.scaleAppToFitDisplay(anInstance);
+			callback(anInstance, null);
 		}
 	}
 };
 
-appLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, external_url) {
+AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, external_url) {
     var instructions = JSON.parse(json_str);
     var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
     var aspectRatio = instructions.width / instructions.height;
@@ -854,4 +852,4 @@ appLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-module.exports = appLoader;
+module.exports = AppLoader;

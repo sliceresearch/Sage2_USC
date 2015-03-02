@@ -12,22 +12,25 @@
  * @module registry
  */
 
+// require variables to be declared
+"use strict";
+
 var fs          = require('fs');
 var path        = require('path');
 
 var json5       = require('json5');
-var jsonDB      = require('node-json-db');
+var JsonDB      = require('node-json-db');
 var mime        = require('mime');
 
 var sageutils   = require('../src/node-utils');  // for fileExists function
 
-function registryManager() {
+function RegistryManager() {
     this.registryFile   = "fileRegistry.json";
     this.nativeAppsFile = path.join("config", "nativeApps.json");
     this.mimeFile       = path.join("config", "custom.types");
 }
 
-registryManager.prototype.initialize = function(assetsFolder) {
+RegistryManager.prototype.initialize = function(assetsFolder) {
     this.assetsFolder = assetsFolder;
 
     var fullpath = path.join(assetsFolder, this.registryFile);
@@ -41,7 +44,7 @@ registryManager.prototype.initialize = function(assetsFolder) {
     // Create the database
 	// The second argument is used to tell the DB to save after each push
 	// The third argument is to ask JsonDB to save the database in an human readable format
-    this.db = new jsonDB(fullpath, true, true);
+    this.db = new JsonDB(fullpath, true, true);
 
     // Check if custom.type exists
     if (!sageutils.fileExists(this.mimeFile)) {
@@ -52,7 +55,7 @@ registryManager.prototype.initialize = function(assetsFolder) {
     this.scanNativeApps();
 };
 
-registryManager.prototype.mimeRegister = function(fileType) {
+RegistryManager.prototype.mimeRegister = function(fileType) {
     var type = mime.lookup(fileType);
 
     if (type === undefined || type === null || type === 'application/custom') {
@@ -66,7 +69,7 @@ registryManager.prototype.mimeRegister = function(fileType) {
     return type;
 };
 
-registryManager.prototype.scanNativeApps = function() {
+RegistryManager.prototype.scanNativeApps = function() {
     var jsonString = fs.readFileSync(this.nativeAppsFile, 'utf8');
     var nativeApps = json5.parse(jsonString);
 
@@ -84,11 +87,10 @@ registryManager.prototype.scanNativeApps = function() {
     }
 };
 
-registryManager.prototype.register = function(name, types, directory, mime) {
+RegistryManager.prototype.register = function(name, types, directory, mimeType) {
     var type;
-    for(var i=0; i<types.length; i++) {
-        
-        if(mime) type = '/' + types[i];
+    for (var i=0; i<types.length; i++) {
+        if (mimeType) type = '/' + types[i];
         else type = '/' + this.mimeRegister(types[i]);
 
         var newApp = {};
@@ -115,7 +117,7 @@ registryManager.prototype.register = function(name, types, directory, mime) {
     }
 };
 
-registryManager.prototype.push = function(key, value, overwrite) {
+RegistryManager.prototype.push = function(key, value, overwrite) {
     try {
         this.db.push(key, value, overwrite);
     } catch(error) {
@@ -124,7 +126,7 @@ registryManager.prototype.push = function(key, value, overwrite) {
 
 };
 
-registryManager.prototype.getDefaultApp = function(file) {
+RegistryManager.prototype.getDefaultApp = function(file) {
     var defaultApp = "";
     var type = '/' + mime.lookup(file);
     try {
@@ -135,7 +137,7 @@ registryManager.prototype.getDefaultApp = function(file) {
     return defaultApp;
 };
 
-registryManager.prototype.getDefaultAppFromMime = function(type) {
+RegistryManager.prototype.getDefaultAppFromMime = function(type) {
     var defaultApp = "";
     try {
         defaultApp = this.db.getData('/' + type + '/default');
@@ -145,7 +147,7 @@ registryManager.prototype.getDefaultAppFromMime = function(type) {
     return defaultApp;
 };
 
-registryManager.prototype.getDirectory = function(file) {
+RegistryManager.prototype.getDirectory = function(file) {
     var dir = "";
     var type = '/' + mime.lookup(file);
     try {
@@ -157,7 +159,7 @@ registryManager.prototype.getDirectory = function(file) {
 
 };
 
-registryManager.prototype.setDefaultApplication = function(app, type) {
+RegistryManager.prototype.setDefaultApplication = function(app, type) {
 };
 
-module.exports = new registryManager();
+module.exports = new RegistryManager();

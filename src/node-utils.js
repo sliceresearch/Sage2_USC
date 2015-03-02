@@ -16,6 +16,9 @@
  * @requires package.json, child_process, path
  */
 
+// require variables to be declared
+"use strict";
+
 var SAGE2_version = require('../package.json').version;
 
 var crypto = require('crypto');              // https encryption
@@ -39,10 +42,9 @@ if ( semver.gte(process.versions.node, '0.10.0') ) {
 	if ( semver.gt(process.versions.node, '0.11.14') )
 		_NODE_VERSION = 1;
 } else {
-	console.error("Old version of Node.js. Please update");
-	process.exit(1);
+	throw new Error("Old version of Node.js. Please update");
 }
-console.log("Node version:", _NODE_VERSION.toString().red, '(', process.versions.node, ')');
+console.log("Node version:", _NODE_VERSION.toString(), '(', process.versions.node, ')');
 
 /**
  * Test if file is exists and readable
@@ -110,17 +112,17 @@ function getFullVersion(callback) {
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd1 = "git rev-parse --abbrev-ref HEAD";
-	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if(err) { callback(fullVersion); return; }
+	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err1, stdout1, stderr1) {
+		if (err1) { callback(fullVersion); return; }
 
-		var branch = stdout.substring(0, stdout.length-1);
+		var branch = stdout1.substring(0, stdout1.length-1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
-		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-			if(err) { callback(fullVersion); return; }
+		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err2, stdout2, stderr2) {
+			if (err2) { callback(fullVersion); return; }
 
 			// parsing the results
-			var result = stdout.replace(/\r?\n|\r/g, "");
-			var parse = result.split("|");
+			var result = stdout2.replace(/\r?\n|\r/g, "");
+			var parse  = result.split("|");
 
 			// filling up the object
 			fullVersion.branch = branch; //branch.substring(1, branch.length-1);
@@ -209,11 +211,11 @@ function compareTitle(a, b) {
  * @param value {Object} value to test
  */
 
-function isTrue(value){
-	if (typeof(value) == 'string'){
+function isTrue(value) {
+	if (typeof value === 'string') {
 		value = value.toLowerCase();
 	}
-	switch(value){
+	switch (value) {
 		case true:
 		case "true":
 		case 1:
