@@ -62,6 +62,7 @@
 	},
 	"devDependencies": {
 		"jshint": "latest",
+		"yuidocjs": "latest",
 		"eslint": "latest",
 		"plato": "latest",
 		"mocha": "^2.0.1",
@@ -77,8 +78,8 @@
 		"hint": "./node_modules/.bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/.bin/jshint --verbose public/src/*.js",
 		"eslint": "./node_modules/.bin/eslint -f compact server.js src/*.js",
-		"report": "./node_modules/.bin/plato -r -d doc/report server.js src/*.js public/src/*.js",
-		"doc": "yuidoc -c doc/yuidoc.json",
+		"report": "./node_modules/.bin/plato -r -l .jshintrc -d doc/report server.js src/*.js public/src/*.js",
+		"doc": "./node_modules/.bin/yuidoc -c doc/yuidoc.json",
 		"test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
 		"in": "node ./install_dependencies.js"
 	},
