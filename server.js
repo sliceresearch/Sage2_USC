@@ -4055,20 +4055,16 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		if (itemUnderPointer.appId){
 			app = findAppById(itemUnderPointer.appId);
 			if (app){
-				itemUnderPointer.appData = getAppPositionSize(app);
-				itemUnderPointer.user_color = sagePointers[uniqueID].color;
-				itemUnderPointer.user_id = uniqueID;
-				broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
-				remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+				itemUnderPointer = getAppPositionSize(app);
 			}
 		}
 		else{
 			itemUnderPointer = getAppPositionSize(itemUnderPointer);
-			itemUnderPointer.user_color = sagePointers[uniqueID].color;
-			itemUnderPointer.user_id = uniqueID;
-			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
-			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		}
+		itemUnderPointer.user_color = sagePointers[uniqueID].color;
+		itemUnderPointer.user_id = uniqueID;
+		broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+		remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		
 	}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
 		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
@@ -4079,20 +4075,16 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		if (itemUnderPointer.appId){
 			app = findAppById(itemUnderPointer.appId);
 			if (app){
-				itemUnderPointer.appData = getAppPositionSize(app);
-				itemUnderPointer.user_color = sagePointers[uniqueID].color;
-				itemUnderPointer.user_id = uniqueID;
-				broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
-				remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+				itemUnderPointer = getAppPositionSize(app);
 			}
 		}
 		else{
 			itemUnderPointer = getAppPositionSize(itemUnderPointer);
-			itemUnderPointer.user_color = sagePointers[uniqueID].color;
-			itemUnderPointer.user_id = uniqueID;
-			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
-			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		}
+		itemUnderPointer.user_color = sagePointers[uniqueID].color;
+		itemUnderPointer.user_id = uniqueID;
+		broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+		remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 	}
 	// Widget connector show logic ends
 

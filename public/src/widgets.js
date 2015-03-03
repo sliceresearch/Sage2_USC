@@ -1282,16 +1282,32 @@ removeStyleElementForTitleColor = function (caption){
 		sheet.parentNode.removeChild(sheet);
 }
 
-hideWidgetToAppConnector = function (instanceID){
+hideAllWidgetToAppConnector = function (control_data){
+	var selectedAppTitle;
+	if (control_data.id in controlObjects){
+		selectedAppTitle = document.getElementById(control_data.id + "_title");
+		selectedAppTitle.className = "windowTitle";
+		for (var item in controlItems){
+			if (item.indexOf(control_data.id) > -1){
+				hideWidgetToAppConnector(item);
+			}
+		}
+	}
+	
+}
+
+hideWidgetToAppConnector = function(instanceID){
 	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (connectorDiv)
+	if (connectorDiv){
 		connectorDiv.style.display = "none";
+	}
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl)
+	if (selectedControl){
 		selectedControl.attr({
 			fill: "rgba(110,110,110,1.0)",
 			filter:null
 		});
+	}
 }
 
 showWidgetToAppConnector = function (instanceID, color){
@@ -1310,6 +1326,26 @@ showWidgetToAppConnector = function (instanceID, color){
 		});
 }
 
+moveAndShowWidgetToAppConnector = function(position_data){
+	var hOffset;
+	var selectedAppTitle,re,styleCaption;
+	hOffset = (ui.titleBarHeight + position_data.height)/2;
+	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	re = /\.|\:/g;
+	styleCaption = position_data.user_id.split(re).join("");
+	selectedAppTitle.className = "title" + styleCaption;
+	for (var item in controlItems){
+		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+			var control = controlItems[item].divHandle;
+			var cLeft = parseInt(control.style.left);
+			var cTop = parseInt(control.style.top);
+			var cHeight = parseInt(control.style.height);
+			moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.left-ui.offsetX + position_data.width/2.0, position_data.top-ui.offsetY+hOffset,cHeight/2.0, position_data.user_color);
+		}
+	}
+}
+
+
 removeWidgetToAppConnector = function (instanceID){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
@@ -1322,6 +1358,39 @@ removeWidgetToAppConnector = function (instanceID){
 		});
 }
 
+setConnectorColor = function (instanceID, color){
+	
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (!connectorDiv) return;
+	if (!color)
+		color = '#ab6666';
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+
+	var paper = selectedControl.data("paper");
+	var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
+	if (selectedControl)
+		selectedControl.attr({
+			fill: color,
+			filter:shadow
+		}); 
+	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;  
+}
+
+setAllConnectorColor = function(position_data){
+
+	var selectedAppTitle,re,styleCaption;
+	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	if (!selectedAppTitle)return;
+	re = /\.|\:/g;
+	styleCaption = position_data.user_id.split(re).join("");
+	selectedAppTitle.className = "title" + styleCaption;
+	for (var item in controlItems){
+		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+			setConnectorColor(item,position_data.user_color);
+		}
+	}
+}
+
 moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
 	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
 	var connectorDiv = document.getElementById(instanceID + "connector");
@@ -1330,7 +1399,8 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 		color = '#ab6666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	var paper = selectedControl.data("paper");
-	var shadow = paper.filter(Snap.filter.shadow(0, 0, cutLength/3.0, color, 5));
+	var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
+
 	if (selectedControl)
 		selectedControl.attr({
 			fill: color,
@@ -1372,8 +1442,9 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
     var rad = Math.acos(cosb);
     var deg = (rad*180)/Math.PI;
     var thickness = (ui.widgetControlSize* 0.01) + "em";
-    connectorDiv.setAttribute('style','border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;box-shadow: 0px 0px 15px 5px '+color+';');   
-    connectorDiv.style.display = "inline";
+    connectorDiv.setAttribute('style','border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;');
+    connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;   
+    //connectorDiv.style.display = "inline";
 }
 
 /*
