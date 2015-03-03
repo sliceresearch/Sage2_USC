@@ -1,16 +1,18 @@
 /**
+ * Provides 1euro filtering technique
+ *
  * Author: Florian Renaut (florian.renaut@gmail.com)
+ *
  * Details: http://www.lifl.fr/~casiez/1euro
- */
-
- /**
- @module oneEuroFilter
+ *
+ * @class oneEuroFilter
+ * @module oneEuroFilter
  */
 
  // require variables to be declared
 "use strict";
 
-function lowPassFilter(alpha, initval){
+function lowPassFilter(alpha, initval) {
 	var that = {};
 	var y = initval || 0;
 	var s = y;
@@ -44,6 +46,17 @@ function lowPassFilter(alpha, initval){
 	return that;
 }
 
+/**
+ * Class describing a filter
+ *
+ * @class oneEuroFilter
+ * @constructor
+ * @param freq {Number} Data update rate
+ * @param mincutoff {Number} Minimum cutoff frequency
+ * @param beta {Number} Cutoff slope
+ * @param dcutoff {Number} Cutoff frequency for derivate
+ * @return {Object} an object representing a filter
+ */
 function oneEuroFilter(freq, mincutoff, beta, dcutoff){
 
 	function alpha(cutoff){

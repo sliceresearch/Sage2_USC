@@ -7,6 +7,6 @@
         "linkNatives": "true",
         "outdir": "./doc/api",
         "paths": [ "." ],
-        "exclude": "public/lib,build"
+        "exclude": "public/lib,public/uploads,doc,build"
     }
 }

@@ -316,7 +316,7 @@ function SAGE2_init() {
 	});
 
 
-	/******************************/
+	////////////////////////////////////////////////
 	wsio.on('createAppWindow', function(data) {
 		resetIdle();
 
@@ -555,7 +555,7 @@ function SAGE2_init() {
 		itemCount += 2;
 		
 	});
-	/******************************/
+	////////////////////////////////////////////////
 	
 	wsio.on('deleteElement', function(elem_data) {
 		resetIdle();

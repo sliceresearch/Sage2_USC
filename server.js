@@ -2363,7 +2363,8 @@ function wsOpenRadialMenuFromControl(wsio, data){
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	createRadialMenu( uniqueID, ctrl.left, ctrl.top);
 }
-/******************** Clone Request Methods ****************************/
+
+/* ****************** Clone Request Methods ************************** */
 
 function wsCreateAppClone(wsio, data){
 	var app = findAppById(data.id);
@@ -2420,7 +2421,8 @@ function getNewWindowPosition(seedPosition){
 	}
 	return newWindowPosition;
 }
-/******************** Clone Request Methods ****************************/
+
+/* ****************** Clone Request Methods ************************** */
 
 
 function loadConfiguration() {
@@ -4432,7 +4434,8 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 	omicronRunning = true;
 }
 
-/******** Radial Menu section ****************************************************************/
+/* ****** Radial Menu section ************************************************************** */
+
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
 

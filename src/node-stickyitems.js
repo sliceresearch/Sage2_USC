@@ -8,17 +8,22 @@
 //
 // Copyright (c) 2014
 
-
-/***************** Sticky Apps Section *****************/
-
 /**
+ * Implements sticky notes for SAGE2
+ *
  * @module stickyitems
  */
 
 // require variables to be declared
 "use strict";
 
-
+/**
+ * Implements sticky notes for SAGE2
+ *
+ * @class StickyItems
+ * @constructor
+ * @return {Object} an object representing....
+ */
 function StickyItems() {
 	this.stickyItemParent = {};
 }

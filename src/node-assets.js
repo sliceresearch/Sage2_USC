@@ -9,8 +9,12 @@
 // Copyright (c) 2014
 
 /**
- * @module asset
+ * Asset management functions for SAGE2 server
+ *
+ * @module node-assets
+ * @requires color, fluent-ffmpeg, gm, json5, node-exiftool, node-utils, node-registry
  */
+
 
 // require variables to be declared
 "use strict";
@@ -33,6 +37,13 @@ var imageMagick = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Class describing one asset (file or url)
+ *
+ * @class Asset
+ * @constructor
+ * @return {Object} an object representing an empty asset
+ */
 function Asset() {
 	this.filename = null;
 	this.url      = null;
@@ -40,24 +51,54 @@ function Asset() {
 	this.exif     = null;
 }
 
-
+/**
+ * Set an URL for an asset
+ *
+ * @method setURL
+ * @param aUrl {String} url string
+ */
 Asset.prototype.setURL = function(aUrl) {
     this.url = aUrl;
     this.id  = aUrl;
 };
 
+/**
+ * Set an filename for an asset
+ *
+ * @method setFilename
+ * @param aFilename {String} name of the file
+ */
 Asset.prototype.setFilename = function(aFilename) {
     this.filename = path.resolve(aFilename);
     this.id       = this.filename;
 };
 
+/**
+ * Set the metadata for an asset
+ *
+ * @method setEXIF
+ * @param exifdata {Object} an object containing EXIF data
+ */
 Asset.prototype.setEXIF = function(exifdata) {
     this.exif = exifdata;
 };
 
+/**
+ * Get the width of an asset, from  the EXIF data
+ *
+ * @method width
+ * @return {Number} width in pixel
+ */
 Asset.prototype.width = function() {
     return this.exif.ImageWidth;
 };
+
+/**
+ * Get the height of an asset, from  the EXIF data
+ *
+ * @method height
+ * @return {Number} height in pixel
+ */
 Asset.prototype.height = function() {
     return this.exif.ImageHeight;
 };
@@ -67,8 +108,19 @@ var AllAssets = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Asset management
+ *
+ * @class node-assets
+ */
 
-// Configuration of ImageMagick and FFMpeg
+/**
+ * Configuration of ImageMagick and FFMpeg
+ *
+ * @method setupBinaries
+ * @param imOptions {Object} object containing path to binaries
+ * @param ffmpegOptions {Object} object containing path to binaries
+ */
 var setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
 	imageMagick = gm.subClass(imOptions);

@@ -13,7 +13,7 @@
  *
  * @class node-utils
  * @module node-utils
- * @requires package.json, crypto, child_process, fs, path, tls, semver
+ * @requires package.json, semver
  */
 
 // require variables to be declared
@@ -22,18 +22,19 @@
 var SAGE2_version = require('../package.json').version;
 
 var crypto = require('crypto');              // https encryption
-var exec   = require('child_process').exec;
 var fs     = require('fs');                  // filesystem access
-var path   = require('path');
 var tls    = require('tls');                 // https encryption
+var path   = require('path');
+var exec   = require('child_process').exec;
 
 var semver = require('semver');              // parse version numbers
 
-
 /**
- * Parse nodejs version number
+ * Parse and store NodeJS version number
+ *
+ * @property _NODE_VERSION
+ * @type {Number}
  */
-
 var _NODE_VERSION = 0;
 if ( semver.gte(process.versions.node, '0.10.0') ) {
 	_NODE_VERSION = 10;
@@ -170,9 +171,8 @@ function compareString(a, b) {
 }
 
 /**
- * Utility function to compare two objects based on filename independently of case.
+ * Utility function, used while sorting, to compare two objects based on filename independently of case.
  * Needs a .exif.FileName field
- * Used for sorting
  *
  * @method compareFilename
  * @param a {Object} first object
@@ -205,12 +205,11 @@ function compareTitle(a, b) {
 
 /**
  * Utility function to test if a string or number represents a true value.
- * Used for parse JSON values
+ * Used for parsing JSON values
  *
  * @method isTrue
  * @param value {Object} value to test
  */
-
 function isTrue(value) {
 	if (typeof value === 'string') {
 		value = value.toLowerCase();
