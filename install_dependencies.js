@@ -46,7 +46,8 @@ function install() {
 	var timer = setInterval(function() {
 		process.stdout.write(".");
 	}, 500);
-	exec('npm install --skip-installed --loglevel info', function(error, stdout, stderr) {
+	exec('npm install --skip-installed --loglevel info', {encoding: 'utf8', timeout: 0, maxBuffer: 500*1024 },
+  	function(error, stdout, stderr) {
 		if(error) throw error;
 		
 		clearInterval(timer);
