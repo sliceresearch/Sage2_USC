@@ -24,10 +24,14 @@ var mime        = require('mime');
 
 var sageutils   = require('../src/node-utils');  // for fileExists function
 
+
 function RegistryManager() {
     this.registryFile   = "fileRegistry.json";
     this.nativeAppsFile = path.join("config", "nativeApps.json");
     this.mimeFile       = path.join("config", "custom.types");
+
+    // Set the default mime type for SAGE to be a custom app
+    mime.default_type   = "application/custom";
 }
 
 RegistryManager.prototype.initialize = function(assetsFolder) {
@@ -48,7 +52,7 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 
     // Check if custom.type exists
     if (!sageutils.fileExists(this.mimeFile)) {
-        fs.writeFileSync(this.mimeFile);
+        fs.writeFileSync(this.mimeFile, "");
     }
     mime.load(path.join(this.mimeFile));
 
