@@ -26,13 +26,12 @@ var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = require('node-demux');
 
-var exiftool  = require('../src/node-exiftool');        // gets exif tags for images
-var assets    = require('../src/node-assets');          // asset management
-var sageutils = require('../src/node-utils');           // provides utility functions
-var registry  = require('../src/node-registry');        // Registry Manager
+var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
+var assets       = require('../src/node-assets');          // asset management
+var sageutils    = require('../src/node-utils');           // provides utility functions
+var registry     = require('../src/node-registry');        // Registry Manager
 
 var imageMagick;
-mime.default_type = "application/custom";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +49,7 @@ function AppLoader(publicDir, hostOrigin, config, imOptions, ffmpegOptions) {
 	this.displayHeight  = config.totalHeight;
 	this.titleBarHeight = (config.ui.auto_hide_ui===true) ? 0 : config.ui.titleBarHeight;
 
-	imageMagick = gm.subClass(imOptions);
+	imageMagick     = gm.subClass(imOptions);
 	this.ffmpegPath = ffmpegOptions.appPath;
 }
 
