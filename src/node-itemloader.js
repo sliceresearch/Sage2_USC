@@ -436,10 +436,7 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url, external_url, name, callback) {
     // Find the app!!
     var appName = registry.getDefaultApp(file);
-    console.log("Loader> Loading %s with %s", mime_type, appName);
-
     var instructionsFile = path.join(this.publicDir, "uploads", "apps", appName, "instructions.json");
-    console.log("Reading: %s", instructionsFile);
 
     var _this = this;
     fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
