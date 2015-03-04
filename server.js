@@ -4069,7 +4069,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
 		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
 		remoteInteraction[uniqueID].leaveControlArea();
-	}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null && itemUnderPointer.id !== remoteInteraction[uniqueID].hoverOverControl().id){
+	}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null){
 		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
 		remoteInteraction[uniqueID].leaveControlArea();
 		if (itemUnderPointer.appId){

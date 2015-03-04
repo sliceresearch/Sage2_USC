@@ -58,7 +58,7 @@
 	var controlItems = {};
 	var controlObjects = {};
 	var lockedControlElements = {} ;
-	var widgetConnectorRequestList = [];
+	var widgetConnectorRequestList = {};
 
 	var canvasItems  = {};
 
@@ -735,25 +735,32 @@
 
 		wsio.on('showWidgetToAppConnector', function(position_data){
 			moveAndShowWidgetToAppConnector(position_data);
-			widgetConnectorRequestList.push(position_data);
+			if (!(position_data.id in widgetConnectorRequestList)){
+				widgetConnectorRequestList[position_data.id] = [];
+			}
+			widgetConnectorRequestList[position_data.id].push(position_data);
 		});
 
 
 		wsio.on('hideWidgetToAppConnector', function(control_data){
-			if (widgetConnectorRequestList.length > 1){
-				var len = widgetConnectorRequestList.length;
-				for(var i=len-1;i>=0;i--){
-					if (control_data.user_id === widgetConnectorRequestList[i].user_id){
-						widgetConnectorRequestList.splice(i,1);
-						setAllConnectorColor(widgetConnectorRequestList[len-2]);
-						break;
+			if (control_data.id in widgetConnectorRequestList){
+				var lst = widgetConnectorRequestList[control_data.id];
+				if (lst.length > 1){
+					var len = lst.length;
+					for(var i=len-1;i>=0;i--){
+						if (control_data.user_id === lst[i].user_id){
+							lst.splice(i,1);
+							setAllConnectorColor(lst[len-2]);
+							break;
+						}
 					}
 				}
+				else if (lst.length === 1){
+					delete widgetConnectorRequestList[control_data.id];
+					hideAllWidgetToAppConnector(control_data);
+				}
 			}
-			else if (widgetConnectorRequestList.length === 1){
-				widgetConnectorRequestList.splice(0,1);
-				hideAllWidgetToAppConnector(control_data);
-			}
+			
 		});
 
 		wsio.on('setItemPositionAndSize', function(position_data) {

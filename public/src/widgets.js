@@ -1317,13 +1317,16 @@ showWidgetToAppConnector = function (instanceID, color){
 	if (!color)
 		color = '#ab6666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	var paper = selectedControl.data("paper");
-	var shadow = paper.filter(Snap.filter.shadow(0, 0, cutLength/3.0, color, 5));
-	if (selectedControl)
+	
+	if (selectedControl){
+		var paper = selectedControl.data("paper");
+		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
 		selectedControl.attr({
 			fill: color,
 			filter:shadow
 		});
+	}
+		
 }
 
 moveAndShowWidgetToAppConnector = function(position_data){
@@ -1331,6 +1334,7 @@ moveAndShowWidgetToAppConnector = function(position_data){
 	var selectedAppTitle,re,styleCaption;
 	hOffset = (ui.titleBarHeight + position_data.height)/2;
 	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	if (!selectedAppTitle)return;
 	re = /\.|\:/g;
 	styleCaption = position_data.user_id.split(re).join("");
 	selectedAppTitle.className = "title" + styleCaption;
@@ -1351,11 +1355,13 @@ removeWidgetToAppConnector = function (instanceID){
 	if (connectorDiv)
 		connectorDiv.parentNode.removeChild(connectorDiv);
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl)
+	if (selectedControl){
 		selectedControl.attr({
 			fill: "rgba(110,110,110,1.0)",
 			filter:null
 		});
+	}
+		
 }
 
 setConnectorColor = function (instanceID, color){
@@ -1365,14 +1371,15 @@ setConnectorColor = function (instanceID, color){
 	if (!color)
 		color = '#ab6666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-
-	var paper = selectedControl.data("paper");
-	var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
-	if (selectedControl)
+	if (selectedControl){
+		var paper = selectedControl.data("paper");
+		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
 		selectedControl.attr({
 			fill: color,
 			filter:shadow
 		}); 
+	}
+		
 	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;  
 }
 
