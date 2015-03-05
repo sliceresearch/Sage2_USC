@@ -1,0 +1,29 @@
+{
+  env: { browser: true },
+  globals: {
+	Class: true,
+	SAGE2_App: true,
+	clientID: true,
+	wsio: true,
+	SAGE2WidgetControlBar: true,
+	broadcast: true,
+	searchTweets: true,
+	sage2Log: true,
+	ui: true
+  },
+  rules: {
+	strict: 0,
+	no-process-exit: 0,
+	no-loop-func: 0,
+	no-multi-spaces: 0,
+	quotes: 0,
+	no-underscore-dangle: 0,
+	camelcase: 0,
+	curly: 0,
+	no-use-before-define: 0,
+	key-spacing: 0,
+	space-infix-ops: 0,
+	no-unused-vars: [2, {vars: "all", args: "none"}]
+  }
+}
+
