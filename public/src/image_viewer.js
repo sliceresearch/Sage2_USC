@@ -35,7 +35,6 @@ var image_viewer = SAGE2_App.extend( {
 	* Init method, creates an 'img' tag in the DOM
 	*
 	* @method init
-	* @param elem {String} type of DOM element to be created (div, canvas, ...)
 	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
 	init: function(data) {
