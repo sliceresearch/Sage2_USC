@@ -1,8 +1,10 @@
 "use strict";
 
-var fs     = require('fs');
-var os     = require('os');
-var path   = require('path');
+var fs      = require('fs');
+var https   = require('https');
+var os      = require('os');
+var path    = require('path');
+var url     = require('url');
 
 var child_process = require('child_process');
 var exec          = child_process.exec;
@@ -22,30 +24,47 @@ var unpacked = {};
 var modules = path.join("build", "node_modules", platform);
 
 if(!fileExistsSync("node_modules")) fs.mkdirSync("node_modules");
-if(fileExistsSync(modules) && fs.lstatSync(modules).isDirectory()) {
-	files = fs.readdirSync(modules);
-	if(files.length <= 0) {
-		install();
-	}
-	else {
-		for(i=0; i<files.length; i++) {
-			if(files[i].indexOf(".tar.gz") >= 0) {
-				unpacked[files[i]] = false;
-				rmdirSync(path.join("node_modules", path.basename(files[i], ".tar.gz")));
-			}
+
+
+var suffix = "_"+platform+"_"+process.versions.node+".tar.gz";
+var packages = [
+	"node-demux",
+	"ws"
+];
+
+var downloaded = {};
+for(i=0; i<packages.length; i++){
+	downloaded[packages[i]] = false;
+}
+
+
+packages.forEach(function(element, index, array) {
+	request({host: "bitbucket.org", path: "/sage2/sage2/downloads/"+element+suffix}, function(res) {
+		if(res.statusCode === 200) {
+			var writestream = fs.createWriteStream(path.join("node_modules", element+suffix));
+			writestream.on('error', function(err) { 
+				console.log(err);
+			});
+	
+			res.on('end', function () {
+				downloaded[element] = true;
+				if(allTrueDict(downloaded)) unzipModules();
+			});
+			res.pipe(writestream);
 		}
-		files.forEach(unzipModule);
-	}
-}
-else {
-	install();
-}
+		else {
+			console.log("could not find binary package " + element+suffix + ". compiling instead.");
+			delete downloaded[element];
+			if(allTrueDict(downloaded)) unzipModules();
+		}
+	});
+});
 
 function install() {
 	process.stdout.write("installing: ");
 	var timer = setInterval(function() {
 		process.stdout.write(".");
-	}, 500);
+	}, 667);
 	exec('npm install --skip-installed --loglevel info', {encoding: 'utf8', timeout: 0, maxBuffer: 500*1024 },
   	function(error, stdout, stderr) {
 		if(error) throw error;
@@ -57,35 +76,60 @@ function install() {
 	});
 }
 
-function unzipModule(element, index, array) {
-	if(element.indexOf(".tar.gz") >= 0) {
+function unzipModules() {
+	var key;
+	for(key in downloaded) {
+		unpacked[key+suffix] = false;
+	}
+	for(key in unpacked) {
+		unzipModule(key);
+	}
+}
+
+function unzipModule(mod) {
+	if(mod.indexOf(".tar.gz") >= 0) {
 		if(platform === "win") {
-			exec("7z x " + element, {cwd: modules}, function(error, stdout, stderr) {
+			exec("7z x " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
 				if(error) throw error;
 				
-				exec("7z x " + path.basename(element, ".gz"), {cwd: modules}, function(error, stdout, stderr) {
+				exec("7z x " + path.basename(mod, ".gz"), {cwd: "node_modules"}, function(error, stdout, stderr) {
 					if(error) throw error;
-					fs.unlinkSync(path.join(modules, path.basename(element, ".gz")));
-					moveModule(element);
+					fs.unlinkSync(path.join("node_modules", path.basename(mod, ".gz")));
+					fs.unlinkSync(path.join("node_modules", mod));
+					unpacked[mod] = true;
+					if(allTrueDict(unpacked)) install();
 				});
 			});
 
 		}
 		else {
-			exec("tar xzf " + element, {cwd: modules}, function(error, stdout, stderr) {
+			exec("tar xzf " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
 				if(error) throw error;
-				moveModule(element);
+				fs.unlinkSync(path.join("node_modules", mod));
+				unpacked[mod] = true;
+				if(allTrueDict(unpacked)) install();
 			});
 		}
 	}
 }
-function moveModule(mod) {
-	var module_dir = path.basename(mod, ".tar.gz");
-	fs.rename(path.join(modules, module_dir), path.join("node_modules", module_dir), function(error) {
-		if(error) throw error;
 
-		unpacked[mod] = true;
-		if(allTrueDict(unpacked)) install();
+function request(options, callback) {
+	var req = https.get(options, function(res) {
+		if (res.statusCode > 300 && res.statusCode < 400 && res.headers.location) {
+			var location = url.parse(res.headers.location);
+			if(location.hostname) {
+				request(res.headers.location, callback);
+			}
+			else {
+				request(options.host + res.headers.location, callback);
+			}
+		}
+        else {
+        	callback(res);
+        }
+    });
+    req.on('error', function(e) {
+		console.log('problem with request: ' + e.message);
 	});
 }
 
@@ -97,6 +141,7 @@ function allTrueDict(dict) {
 	return true;
 }
 
+/*
 function rmdirSync(directory) {
 	if(!fileExistsSync(directory) || !fs.lstatSync(directory).isDirectory()) return false;
 
@@ -113,6 +158,7 @@ function rmdirSync(directory) {
 	}
 	fs.rmdirSync(directory);
 }
+*/
 
 function fileExistsSync(filename) {
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
