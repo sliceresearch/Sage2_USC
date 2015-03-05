@@ -198,6 +198,25 @@ interaction.prototype.enterControlArea = function(controlItem){
 }
 
 /**
+ *@method pressOnItem
+ */
+
+interaction.prototype.pressOnItem = function(item){
+	this.pressedItem = item;
+}
+
+/**
+ *@method releaseOnItem
+ */
+
+interaction.prototype.releaseOnItem = function(){
+	var item = this.pressedItem;
+	this.pressedItem = null;
+	return item;
+}
+
+
+/**
  *@method dropControl
  */
 

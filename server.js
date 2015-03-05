@@ -3727,6 +3727,10 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// apps
 	var elemCtrl;
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	var itemUnderPointer = ct || elem;
+	var app;
+	//Draw widget connectors
+	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
 	if(elem !== null){
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			if (data.button === "left") {
@@ -3935,6 +3939,11 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	var app;
 	var elem = findAppUnderPointer(pointerX, pointerY);
+	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
+	var itemUnderPointer = controlUnderPointer || elem;
+	var app;
+	//Draw widget connectors
+	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
 	
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
@@ -4051,41 +4060,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	var itemUnderPointer = controlUnderPointer || elem;
 	var app;
 	//Draw widget connectors
-	if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null){
-		if (itemUnderPointer.appId){
-			app = findAppById(itemUnderPointer.appId);
-			if (app){
-				itemUnderPointer = getAppPositionSize(app);
-			}
-		}
-		else{
-			itemUnderPointer = getAppPositionSize(itemUnderPointer);
-		}
-		itemUnderPointer.user_color = sagePointers[uniqueID].color;
-		itemUnderPointer.user_id = uniqueID;
-		broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
-		remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
-		
-	}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
-		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
-		remoteInteraction[uniqueID].leaveControlArea();
-	}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null){
-		broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
-		remoteInteraction[uniqueID].leaveControlArea();
-		if (itemUnderPointer.appId){
-			app = findAppById(itemUnderPointer.appId);
-			if (app){
-				itemUnderPointer = getAppPositionSize(app);
-			}
-		}
-		else{
-			itemUnderPointer = getAppPositionSize(itemUnderPointer);
-		}
-		itemUnderPointer.user_color = sagePointers[uniqueID].color;
-		itemUnderPointer.user_id = uniqueID;
-		broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
-		remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
-	}
+	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
 	// Widget connector show logic ends
 
 	// widgets
@@ -5094,4 +5069,74 @@ function attachAppIfSticky(backgroundItem, appId){
 	stickyAppHandler.detachStickyItem(app);
 	if (backgroundItem !== null)
 		stickyAppHandler.attachStickyItem(backgroundItem,app);
+}
+
+function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease){
+	var app;
+	if (pressMoveRelease == "press"){
+		if (itemUnderPointer !== null){
+			if (itemUnderPointer.appId){
+				app = findAppById(itemUnderPointer.appId);
+				if (app){
+					itemUnderPointer = getAppPositionSize(app);
+				}
+			}
+			else{
+				itemUnderPointer = getAppPositionSize(itemUnderPointer);
+			}
+			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			itemUnderPointer.user_id = uniqueID;
+			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].pressOnItem(itemUnderPointer);
+		}
+	}
+	else if (pressMoveRelease === "release"){
+		var item = remoteInteraction[uniqueID].releaseOnItem();
+		if (item){
+			broadcast ('hideWidgetToAppConnector', item ,'receivesPointerData');	
+		}
+	}
+	else {
+		var item = remoteInteraction[uniqueID].releaseOnItem();
+		if (item){
+			broadcast ('hideWidgetToAppConnector', item ,'receivesPointerData');	
+		}
+
+		if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null){
+			if (itemUnderPointer.appId){
+				app = findAppById(itemUnderPointer.appId);
+				if (app){
+					itemUnderPointer = getAppPositionSize(app);
+				}
+			}
+			else{
+				itemUnderPointer = getAppPositionSize(itemUnderPointer);
+			}
+			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			itemUnderPointer.user_id = uniqueID;
+			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+			
+		}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
+			broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+			remoteInteraction[uniqueID].leaveControlArea();
+		}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null){
+			broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+			remoteInteraction[uniqueID].leaveControlArea();
+			if (itemUnderPointer.appId){
+				app = findAppById(itemUnderPointer.appId);
+				if (app){
+					itemUnderPointer = getAppPositionSize(app);
+				}
+			}
+			else{
+				itemUnderPointer = getAppPositionSize(itemUnderPointer);
+			}
+			itemUnderPointer.user_color = sagePointers[uniqueID].color;
+			itemUnderPointer.user_id = uniqueID;
+			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
+			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
+		}
+	}
+	
 }
