@@ -11,6 +11,10 @@
 "use strict";
 
 /**
+ * @module Class
+ */
+
+/**
  * Base class for Javascript
  *
  * @class Class
