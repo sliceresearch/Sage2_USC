@@ -25,6 +25,7 @@ function annotationSystem() {
 	this.filename = "annotationsDB.json";
     this.annotationWindows = {};
     this.config = null;
+    this.newNoteRequests = {};
 }
 
 annotationSystem.prototype.initializeDB = function(folder) {
@@ -91,7 +92,7 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         appId:appInstance.id,
         left: appInstance.left  + appInstance.width,
         top:appInstance.top + config.ui.titleBarHeight,
-        width:appInstance.width,
+        width:appInstance.width*0.65,
         height:appInstance.height,
         show:false,
         button: {
@@ -104,12 +105,13 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         },
         addButton: {
             id:appInstance.id + "_addNote",
-            left:appInstance.width*0.80,
-            top:appInstance.height - config.ui.titleBarHeight,
+            left:6,
+            top:appInstance.height - config.ui.titleBarHeight - 3,
             width:appInstance.width*0.20,
             height:config.ui.titleBarHeight,
             caption:"Add Note"
         },
+        expectsClickFrom: {},
         notes:[],
         annotationData: null
     };
@@ -162,12 +164,56 @@ annotationSystem.prototype.updateAnnotationWindowPosition = function(data){
 }
 
 annotationSystem.prototype.addNote = function(noteData){
-    /*var note = {
-        id:
-        user:
-        createdOn:
+    if (!this.annotationWindows[noteData.appId]) return null;
+    
+    this.annotationWindows[noteData.appId].expectsClickFrom[noteData.uniqueID] = true;
+    if (noteData.appId in this.newNoteRequests)
+        this.newNoteRequests[noteData.appId].push(noteData);
+    else
+        this.newNoteRequests[noteData.appId] = [noteData];
+    return noteData;
+}
 
-    }*/
+annotationSystem.prototype.expectsClick = function(appId,userId){
+    console.log(appId,userId);
+    if (!this.annotationWindows[appId]) return false;
+    if (userId in this.annotationWindows[appId].expectsClickFrom)
+        return this.annotationWindows[appId].expectsClickFrom[userId];
+    return false;
+}
+
+annotationSystem.prototype.createOrSetMarker = function(appId,click){
+    if (!this.annotationWindows[appId]) return null;
+    if (!this.newNoteRequests[appId]) return null;
+    var found = false;
+    var newNote = null;
+    var notes = this.newNoteRequests[appId];
+    for(var i=notes.length-1;i>=0;i--){
+        if (notes[i].uniqueID === click.uniqueID){
+            newNote = {
+                id: notes[i].user + notes[i].createdOn.toString(),
+                user:notes[i].user,
+                createdOn:notes[i].createdOn,
+                appId:notes[i].appId,
+                position: {pointerX:click.pointerX, pointerY:click.pointerY}
+            }
+            found = true;
+            break;
+        }
+    }
+        
+    if (found){
+        notes = this.annotationWindows[appId].notes;
+        for(var i=notes.length-1;i>=0;i--){
+            if (notes[i].id === newNote.id){
+                notes[i].position = newNote.position;
+                return notes[i];
+            }
+        }
+        this.annotationWindows[appId].notes.push(newNote);
+        return newNote;
+    }
+    return null;
 }
 annotationSystem.prototype.findAnnotationsUnderPointer = function(pointerX, pointerY){
     var data = {

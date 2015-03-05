@@ -3342,7 +3342,7 @@ function togglePointerMode(uniqueID) {
 
 function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	if ( sagePointers[uniqueID] === undefined ) return;
-
+	remoteInteraction[uniqueID].initiatePointerClick();
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	if (ct !== null) {
@@ -3500,14 +3500,15 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		else if(selectedAnnotationWindow.onAddButton === true){
 			var noteData = {
 				appId:selectedAnnotationWindow.annotation.appId,
-				user: sagePointers[uniqueID]? sagePointers[uniqueID].label : "",
-				createOn: new Date(),
+				user: sagePointers[uniqueID]? sagePointers[uniqueID].label : "Sage User",
+				uniqueID: uniqueID,
+				createdOn: "mar05"
 			};
-			var noteItem = annotation.addNote(noteData);
+			var noteItem = annotations.addNote(noteData);
 			broadcast('addNewNoteToAnnotationWindow', noteItem, 'requiresFullApps');
 		}
 	}
-
+	
 }
 /*
 function pointerPressRight( address, pointerX, pointerY ) {
@@ -3693,6 +3694,13 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 	}
+	var click = remoteInteraction[uniqueID].completePointerClick(uniqueID, pointerX,pointerY);
+	console.log(click);
+	if (click !==null && elem!== null && annotations.expectsClick(elem.id,uniqueID) == true){ 
+		// A click was made on app window and it was expected by its annotation window
+		var noteMarker = annotations.createOrSetMarker(elem.id,click);
+		broadcast('addAnnotationMarker', noteMarker, 'requiresFullApps');
+	}
 
 }
 
@@ -3821,6 +3829,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			broadcast('eventInItem', event, 'receivesInputEvents');
 		}
 	}
+	remoteInteraction[uniqueID].cancelPointerClick();
 }
 
 function pointerPosition( uniqueID, data ) {

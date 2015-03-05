@@ -665,6 +665,20 @@ interaction.prototype.appInteractionMode = function(){
 };
 
 
+interaction.prototype.initiatePointerClick = function(){
+	this.clickInProgress = true;
+}
 
+interaction.prototype.cancelPointerClick = function(){
+	this.clickInProgress = false;
+}
+
+interaction.prototype.completePointerClick = function(uniqueID,pointerX, pointerY){
+	if (this.clickInProgress===true){
+		this.clickInProgress = false;
+		return {uniqueID:uniqueID, pointerX:pointerX, pointerY:pointerY};
+	}
+	return null;
+}
 
 module.exports = interaction;

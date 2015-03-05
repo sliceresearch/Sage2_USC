@@ -21,6 +21,7 @@ var SAGE2Annotations = function (){
 	this.windowDiv = null;
 	this.show = null;
 	this.buttonDiv = null;
+	this.textAreas = [];
 }
 
 SAGE2Annotations.prototype.makeWindow = function(data){
@@ -44,6 +45,8 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	this.windowDiv.style.display		 = "block";
 	this.windowDiv.className = "annotationWindow";
 	
+
+
 	this.buttonDiv 							= document.createElement("div");
 	this.buttonDiv.style.left 				= data.button.left.toString()+ "px";
 	this.buttonDiv.style.top 				= data.button.top.toString()+ "px";
@@ -65,11 +68,14 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	buttonText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
 	buttonText.display			= "block";
 	buttonText.innerText      = data.button.caption;
-	
 	this.buttonDiv.appendChild(buttonText);
-	this.makeButtonsForAnnotationWindow(data);
 	ui.main.appendChild(this.buttonDiv);
+
+	this.makeButtonsForAnnotationWindow(data);
+	
+	
 	console.log("created button");
+	this.prepareWindow();
 	this.populateWindow();
 }
 
@@ -86,6 +92,7 @@ SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
 	this.addNoteButton.id 						= data.addButton.id;
 	this.addNoteButton.style.zIndex				= "20";
 	this.addNoteButton.display 					= "block";
+	this.addNoteButton.style.borderRadius		= "2px";
 	this.addNoteButton.className 				= "annotationButton";
 
 	var buttonText 				= document.createElement("p");
@@ -102,7 +109,68 @@ SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
 
 SAGE2Annotations.prototype.addNote = function(){
 	// Create a new text area and set its properties
+
+	var t = new textArea();
+	t.init(this.innerDiv, {id: "text"+(this.textAreas.length+1), left: 10, top: 0, width: parseInt(this.innerDiv.style.width)-20, height:140});
+	this.textAreas.push(t);
+	for (var i = this.textAreas.length-1; i>=0; i--){
+		this.textAreas[i].setTop(10 + (this.textAreas.length-1-i)*150);
+	}
+
+	var computeKnobHeight = function(){
+		var val = parseInt(this.scrollBar.style.height) * parseInt(this.innerDiv.style.height) / parseInt(this.innerDiv.scrollHeight) ;
+		return val-4;
+
+	};
+
+	computeKnobHeight = computeKnobHeight.bind(this);
+	this.scrollKnob.style.height = computeKnobHeight().toString() + "px";
+	
 }
+
+SAGE2Annotations.prototype.prepareWindow = function(){
+	this.innerDiv = document.createElement("div");
+	this.innerDiv.id = "innerWindowID";
+	this.innerDiv.className = "innerWindow";
+	this.innerDiv.style.left = "6px";
+	this.innerDiv.style.top = "6px";
+	this.innerDiv.style.width = (parseInt(this.windowDiv.style.width) - ui.titleBarHeight - 15).toString() + "px";
+	this.innerDiv.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
+	this.innerDiv.style.display = "block";
+	this.innerDiv.style.position = "relative";
+	this.innerDiv.style.borderRadius = "3px 3px 3px 3px";
+	this.innerDiv.style.backgroundColor = "#89a455";
+	this.innerDiv.style.overflow = "hidden";
+	this.windowDiv.appendChild(this.innerDiv);
+
+	
+
+	this.scrollBar = document.createElement("div");
+	this.scrollBar.id = "scrollBar";
+	this.scrollBar.style.left = (parseInt(this.windowDiv.style.width) - ui.titleBarHeight - 6).toString() + "px";
+	this.scrollBar.style.top = "6px";
+	this.scrollBar.style.width = ui.titleBarHeight.toString() + "px";
+	this.scrollBar.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
+	this.scrollBar.style.display = "block";
+	this.scrollBar.style.position = "absolute";
+	this.scrollBar.style.borderRadius = "3px 3px 3px 3px";
+	this.scrollBar.style.backgroundColor = "#aaaaaa";
+
+	this.windowDiv.appendChild(this.scrollBar);
+
+	this.scrollKnob = document.createElement("div");
+	this.scrollKnob.id = "scrollKnob";
+	this.scrollKnob.style.left = "1px";
+	this.scrollKnob.style.top = "2px";
+	this.scrollKnob.style.width = (ui.titleBarHeight-4).toString() + "px";
+	this.scrollKnob.style.height = (parseInt(this.scrollBar.style.height)-4).toString() + "px";
+	this.scrollKnob.style.display = "block";
+	this.scrollKnob.style.position = "absolute";
+	this.scrollKnob.style.borderRadius = "3px 3px 3px 3px";
+	this.scrollKnob.style.border = "solid 1px #000000";
+	this.scrollKnob.style.backgroundColor = "#999999";
+	this.scrollBar.appendChild(this.scrollKnob);
+}	
 
 SAGE2Annotations.prototype.showWindow = function(data){
 	console.log("show");
@@ -128,6 +196,38 @@ SAGE2Annotations.prototype.hideWindow = function(data){
 	}
 }
 
+SAGE2Annotations.prototype.createOrSetMarker = function(data){
+	var appWindow = document.getElementById(data.appId);
+	var marker = document.getElementById(data.id);
+	if (!marker){
+		marker 							= document.createElement("div");
+		marker.style.width 					= "20px";
+		marker.style.height					= "20px";
+		marker.id 							= data.id;
+		marker.style.zIndex					= "20";
+		marker.display 						= "block";
+		marker.className 					= "annotationButton";
+		appWindow.appendChild(marker);
+	}
+	marker.style.left 					= (data.position.pointerX -ui.offsetX - parseInt(appWindow.style.left)).toString()+ "px";
+	marker.style.top 					= (data.position.pointerY -ui.offsetY +ui.titleBarHeight - parseInt(appWindow.style.top)).toString()+ "px";
+	
+	
+
+	/*var buttonText 				= document.createElement("p");
+	buttonText.className 		= "annotationButton-text";
+	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
+	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
+	buttonText.style.color      = "#FFFFFF";
+	buttonText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
+	buttonText.display			= "block";
+	buttonText.innerText      = data.button.caption;
+	this.buttonDiv.appendChild(buttonText);
+	ui.main.appendChild(this.buttonDiv);*/
+	
+}
+
+
 SAGE2Annotations.prototype.setPosition = function(data){
 	//var buttonOffsetLeft = parseInt(this.buttonDiv.style.left) - parseInt(this.windowDiv.style.left);
 	//var buttonOffsetTop = parseInt(this.buttonDiv.style.top) - parseInt(this.windowDiv.style.top);
@@ -139,6 +239,10 @@ SAGE2Annotations.prototype.setPosition = function(data){
 
 
 function textArea(){
+}
+
+textArea.prototype.setTop = function(val){
+	this.element.style.top = parseInt(val) + "px";
 }
 
 textArea.prototype.init = function(div, data){

@@ -1074,7 +1074,12 @@
 			annotationItems[data.appId].hideWindow(data);
 		});
 		wsio.on('addNewNoteToAnnotationWindow', function(data){
+			console.log(data);
 			annotationItems[data.appId].addNote(data);
+		});
+		wsio.on('addAnnotationMarker', function(data){
+			annotationItems[data.appId].createOrSetMarker(data);
+			console.log(data);
 		});
 		/*wsio.on('receiveFileData', function(data){
 			var app = applications[data.id];
