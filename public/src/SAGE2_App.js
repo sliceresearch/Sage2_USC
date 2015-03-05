@@ -26,7 +26,6 @@ var SAGE2_App = Class.extend( {
 	* @constructor
 	*/
 	construct: function() {
-		console.log('SAGE2_App', typeof this, typeof arguments, typeof arguments.callee);
 		arguments.callee.superClass.construct.call(this);
 		this.div          = null;
 		this.element      = null;
@@ -142,7 +141,7 @@ var SAGE2_App = Class.extend( {
 		this.layer.style.display  = "none";
 		this.layer.style.overflow = "visible";
 		this.layer.style.zIndex   = parseInt(this.div.zIndex)+1;
-		this.layer.style.fontSize = Math.round(ui.titleTextSize) + "px";
+		this.layer.style.fontSize = Math.round(this.config.ui.titleTextSize) + "px";
 
 		this.div.appendChild(this.layer);
 
