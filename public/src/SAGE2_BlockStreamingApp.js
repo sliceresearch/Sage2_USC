@@ -8,13 +8,29 @@
 //
 // Copyright (c) 2014
 
+
+/**
+ * @module SAGE2_BlockStreamingApp
+ */
+
+/**
+ * Base class for block streaming applications
+ *
+ * @class SAGE2_BlockStreamingApp
+ */
 var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
+	/**
+	* Constructor
+	*
+	* @class SAGE2_BlockStreamingApp
+	* @constructor
+	*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
-		this.moveEvents     = "onfinish";
-		this.resizeEvents   = "onfinish";
-		this.enableControls = true;
+		this.moveEvents       = "onfinish";
+		this.resizeEvents     = "onfinish";
+		this.enableControls   = true;
 
 		this.canvas           = null;
 		this.gl               = null;
@@ -44,6 +60,12 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		this.squareVertexIndexBuffer        = [];
 	},
 
+	/**
+	* Init method, creates an 'canvas' tag in the DOM and setups up WebGL
+	*
+	* @method init
+	* @param data {Object} contains initialization values (id, width, height, ...)
+	*/
 	init: function(elem, data) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, elem, data);
@@ -58,7 +80,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		this.maxSize = 128; // block size
 
 		this.initGL();
-		if(this.gl){
+		if (this.gl) {
 			var _this = this;
 			this.div.style.backgroundColor = "#000000";
 
@@ -74,21 +96,37 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			});
 		}
         this.setValidBlocksFalse();
-},
-
-	initGL: function() {
-		this.gl = this.canvas.getContext("webgl");
-		if(!this.gl) this.gl = this.canvas.getContext("experimental-webgl");
-		if(!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
 	},
 
+	/**
+	* Gets a WebGL context from the canvas
+	*
+	* @method initGL
+	*/
+	initGL: function() {
+		this.gl = this.canvas.getContext("webgl");
+		if (!this.gl) this.gl = this.canvas.getContext("experimental-webgl");
+		if (!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
+	},
+
+	/**
+	* Reset valid blocks to false
+	*
+	* @method setValidBlocksFalse
+	*/
     setValidBlocksFalse: function() {
-		for(var i=0; i<this.receivedBlocks.length; i++){
-			if(this.validBlocks.indexOf(i) >= 0) this.receivedBlocks[i] = false;
-			else                                 this.receivedBlocks[i] = true;
+		for (var i=0; i<this.receivedBlocks.length; i++) {
+			if (this.validBlocks.indexOf(i) >= 0) this.receivedBlocks[i] = false;
+			else                                  this.receivedBlocks[i] = true;
 		}
 	},
 
+	/**
+	* Loads the yuv2rgb shaders
+	*
+	* @method initShaders
+	* @param callback {Function} to be executed when shaders are loaded
+	*/
 	initShaders: function(callback) {
 		var _this = this;
 		var vertFile = "shaders/yuv2rgb.vert";
@@ -102,8 +140,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			_this.gl.linkProgram(_this.shaderProgram);
 
 			// If creating the shader program failed, alert
-			if(!_this.gl.getProgramParameter(_this.shaderProgram, _this.gl.LINK_STATUS)){
-				alert("Unable to initialize the shader program.");
+			if (!_this.gl.getProgramParameter(_this.shaderProgram, _this.gl.LINK_STATUS)) {
+				//alert("Unable to initialize the shader program.");
+				throw new Error('Unable to initialize the shader program');
 			}
 
 			_this.gl.useProgram(_this.shaderProgram);
@@ -127,6 +166,14 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		});
 	},
 
+	/**
+	* Loads the shaders files from the server and creates the shaders
+	*
+	* @method getShaders
+	* @param vertFile {String} filename of the vertex shader
+	* @param fragFile {String} filename of the fragment shader
+	* @param callback {Function} to be executed when shaders are loaded
+	*/
 	getShaders: function(vertFile, fragFile, callback) {
 		var _this = this;
 
@@ -137,7 +184,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		var fragReadComplete = false;
 
 		readFile(vertFile, function(err, text) {
-			if(err) this.log(err);
+			if (err) this.log(err);
 
 			vertShader = _this.gl.createShader(_this.gl.VERTEX_SHADER);
 
@@ -148,7 +195,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			_this.gl.compileShader(vertShader);
 
 			// See if it compiled successfully
-			if(!_this.gl.getShaderParameter(vertShader, _this.gl.COMPILE_STATUS)){
+			if (!_this.gl.getShaderParameter(vertShader, _this.gl.COMPILE_STATUS)) {
 				this.log("An error occurred compiling the vertex shader: " + _this.gl.getShaderInfoLog(vertShader));
 			}
 
@@ -157,7 +204,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			vertReadComplete = true;
 		});
 		readFile(fragFile, function(err, text) {
-			if(err) this.log(err);
+			if (err) this.log(err);
 
 			fragShader = _this.gl.createShader(_this.gl.FRAGMENT_SHADER);
 
@@ -168,20 +215,25 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			_this.gl.compileShader(fragShader);
 
 			// See if it compiled successfully
-			if(!_this.gl.getShaderParameter(fragShader, _this.gl.COMPILE_STATUS)){
+			if (!_this.gl.getShaderParameter(fragShader, _this.gl.COMPILE_STATUS)) {
 				this.log("An error occurred compiling the fragment shader: " + _this.gl.getShaderInfoLog(fragShader));
 			}
 
-			if(vertReadComplete) callback(vertShader, fragShader);
+			if (vertReadComplete) callback(vertShader, fragShader);
 
 			fragReadComplete = true;
 		});
 	},
 
+	/**
+	* Initializes the GL buffers for the blocks of pixel
+	*
+	* @method initBuffers
+	*/
 	initBuffers: function() {
 		this.log(this.state);
-		for(var i=0; i<this.verticalBlocks; i++){
-			for(var j=0; j<this.horizontalBlocks; j++){
+		for (var i=0; i<this.verticalBlocks; i++) {
+			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
 				var bX = j*this.maxSize;
@@ -221,9 +273,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				// faces of triangles
 				var squareVertexIndexBuffer = this.gl.createBuffer();
 				this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, squareVertexIndexBuffer);
-				var vertexIndices = [
-					 0, 1, 2,   2, 1, 3
-				];
+				var vertexIndices = [0, 1, 2,   2, 1, 3];
 				this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), this.gl.STATIC_DRAW);
 				squareVertexIndexBuffer.itemSize = 1;
 				squareVertexIndexBuffer.numItems = 6;
@@ -236,6 +286,11 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		}
 	},
 
+	/**
+	* Initializes the GL textures for the blocks of pixel
+	*
+	* @method initTextures
+	*/
 	initTextures: function() {
 		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
@@ -244,8 +299,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
         this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT,    1);
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
-		for(var i=0; i<this.verticalBlocks; i++){
-			for(var j=0; j<this.horizontalBlocks; j++){
+		for (var i=0; i<this.verticalBlocks; i++) {
+			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
 
@@ -298,14 +353,26 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		}
 	},
 
+	/**
+	* Sets a block of pixels into a buffer
+	*
+	* @method textureData
+	* @param blockIdx {Number} index to the block
+	* @param yuvBuffer {Object} pixel data
+	*/
 	textureData: function(blockIdx, yuvBuffer) {
 		this.yuvBuffer[blockIdx] = yuvBuffer;
 		this.receivedBlocks[blockIdx] = true;
 	},
 
+	/**
+	* Update the textures with the new pixel data
+	*
+	* @method updateTextures
+	*/
 	updateTextures: function() {
-		for(var i=0; i<this.verticalBlocks; i++){
-			for(var j=0; j<this.horizontalBlocks; j++){
+		for (var i=0; i<this.verticalBlocks; i++) {
+			for (var j=0; j<this.horizontalBlocks; j++) {
 				var blockIdx = i*this.horizontalBlocks+j;
 
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
@@ -329,12 +396,18 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth/2, bHeight/2, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, vBuffer);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-        	}
+			}
         }
-
         //this.setValidBlocksFalse();
     },
 
+	/**
+	* Loads the app from a previous state and initializes the buffers and textures
+	*
+	* @method load
+	* @param state {Object} object to initialize or restore the app
+	* @param date {Date} time from the server
+	*/
 	load: function(state, date) {
 		this.state.width                = state.width;
 		this.state.height               = state.height;
@@ -343,12 +416,18 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
-		this.receivedBlocks = initializeArray(this.horizontalBlocks*this.verticalBlocks, false);
+		this.receivedBlocks   = initializeArray(this.horizontalBlocks*this.verticalBlocks, false);
 
 		this.initBuffers();
 		this.initTextures();
 	},
 
+	/**
+	* Draw function, draws each blocks
+	*
+	* @method draw
+	* @param date {Date} current time from the server
+	*/
 	draw: function(date) {
 		if(this.shaderProgram === undefined || this.shaderProgram === null){
 			this.log("waiting for shaders to load");
@@ -391,6 +470,11 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		}
 	},
 
+	/**
+	* Resize the canvas in local (client) coordinates, never bigger than the local screen
+	*
+	* @method resizeCanvas
+	*/
 	resizeCanvas: function() {
 		if(this.shaderProgram === undefined || this.shaderProgram === null) return;
 
@@ -428,29 +512,61 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		}
 	},
 
+	/**
+	* When a move starts, hide the canvas
+	*
+	* @method startMove
+	* @param date {Date} current time from the server
+	*/
 	startMove: function(date) {
 		this.canvas.style.display = "none";
 	},
 
+	/**
+	* After move, show the canvas and update the coordinate system (resizeCanvas)
+	*
+	* @method move
+	* @param date {Date} current time from the server
+	*/
 	move: function(date) {
 		this.canvas.style.display = "block";
 		this.resizeCanvas();
-
 		this.refresh(date);
 	},
 
+	/**
+	* When a resize starts, hide the canvas
+	*
+	* @method startResize
+	* @param date {Date} current time from the server
+	*/
 	startResize: function(date) {
 		this.canvas.style.display = "none";
 	},
 
+	/**
+	* After resize, show the canvas and update the coordinate system (resizeCanvas)
+	*
+	* @method resize
+	* @param date {Date} current time from the server
+	*/
 	resize: function(date) {
 		this.canvas.style.display = "block";
 		this.resizeCanvas();
-
 		this.refresh(date);
 	},
 
+	/**
+	* Handles event processing for the app
+	*
+	* @method event
+	* @param eventType {String} the type of event
+	* @param position {Object} contains the x and y positions of the event
+	* @param user_id {Object} data about the user who triggered the event
+	* @param data {Object} object containing extra data about the event,
+	* @param date {Date} current time from the server
+	*/
 	event: function(type, position, user, data, date) {
-
 	}
+
 });
