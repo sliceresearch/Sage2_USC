@@ -195,23 +195,6 @@ var SAGE2_App = Class.extend( {
 		else return false;
 	},
 
-	/////////////////////////////////////////////////////////////////////
-	//Funtions for file read and write
-	/////////////////////////////////////////////////////////////////////
-	/*readFromFile: function(){
-		if (this.fileRead === true){
-			wsio.emit('readFromFile',{id:this.id,fileName:this.fileName});
-			this.fileRead = false;
-		}
-	},
-	writeToFile: function(){
-		if (this.fileWrite === true){
-			wsio.emit('writeToFile', {fileName:this.fileName,buffer:this.fileDataBuffer});
-			this.fileWrite = false;
-		}
-	},*/
-	/////////////////////////////////////////////////////////////////////
-
 	/**
 	* Method called before the draw function, calculates timing and frame rate
 	*
