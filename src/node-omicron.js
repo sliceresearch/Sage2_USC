@@ -8,38 +8,56 @@
 //
 // Copyright (c) 2014
 
-/**
- @module omicron
+ /**
+ * Omicron connection module for SAGE2
+ * Provides external input device support
+ * https://github.com/uic-evl/omicron
+ *
+ * @module omicron
+ * @class OmicronManager
+ *
  */
-
+ 
 // require variables to be declared
 "use strict";
 
 var dgram     = require('dgram');
 var net       = require('net');
 var util      = require('util');
-
+	
 var CoordinateCalculator = require('./node-coordinateCalculator');
 var OneEuroFilter        = require('./node-1euro');
 
-var coordCalculator;
+var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of this)
 
-var wandLabel = "wandTracker";
-var wandColor = "rgba(250, 5, 5, 1.0)";
-
-var wandScaleDelta = 250;
-var acceleratedDragScale = 0;
-
-var touchZoomScale = 520;
-
-var wandXFilter;
-var wandYFilter;
-
-var oinputserverSocket;
-var omicronDataPort = 9123;
-
+ /**
+ * Omicron setup and opens a listener socket for an Omicron input server to connect to
+ *
+ * @method OmicronManager
+ * @param sysConfig - SAGE2 system configuration file. Primararly used to grab display dimensions and Omicron settings
+ */
 function OmicronManager(sysConfig)
 {
+	omicronManager = this;
+	
+
+
+	this.coordCalculator = null;
+
+	this.wandLabel = "wandTracker";
+	this.wandColor = "rgba(250, 5, 5, 1.0)";
+
+	this.wandScaleDelta = 250;
+	this.acceleratedDragScale = 0;
+
+	this.touchZoomScale = 520;
+
+	this.wandXFilter = null;
+	this.wandYFilter = null;
+
+	this.oinputserverSocket = null;
+	this.omicronDataPort = 9123;
+
 	this.eventDebug   = false;
 	this.gestureDebug = false;
 
@@ -59,13 +77,13 @@ function OmicronManager(sysConfig)
 	var beta = 2;
 	var dcutoff = 10;
 
-	wandXFilter = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
-	wandYFilter = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
+	this.wandXFilter = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
+	this.wandYFilter = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
 	/////////
 
 	this.config = sysConfig.experimental.omicron;
 
-	coordCalculator = new CoordinateCalculator( this.config );
+	this.coordCalculator = new CoordinateCalculator( this.config );
 
 	var serverHost = sysConfig.host;
 
@@ -81,12 +99,12 @@ function OmicronManager(sysConfig)
 
 	if (this.config.dataPort === undefined)
 	{
-		console.log('Omicron: dataPort undefined. Using default: ', omicronDataPort);
+		console.log('Omicron: dataPort undefined. Using default: ', this.omicronDataPort);
 	}
 	else
 	{
-		omicronDataPort =  this.config.dataPort;
-		console.log('Omicron: Listening for input server on port: ', omicronDataPort);
+		this.omicronDataPort =  this.config.dataPort;
+		console.log('Omicron: Listening for input server on port: ', this.omicronDataPort);
 	}
 
 	if( sysConfig.resolution )
@@ -113,12 +131,12 @@ function OmicronManager(sysConfig)
 
 	if( this.config.zoomGestureScale )
 	{
-		touchZoomScale = this.config.zoomGestureScale;
+		this.touchZoomScale = this.config.zoomGestureScale;
 	}
 
 	if( this.config.acceleratedDragScale )
 	{
-		acceleratedDragScale = this.config.acceleratedDragScale;
+		this.acceleratedDragScale = this.config.acceleratedDragScale;
 	}
 
 	// For accepting input server connection
@@ -132,7 +150,7 @@ function OmicronManager(sysConfig)
 
 	});
 
-	server.listen(omicronDataPort, serverHost);
+	server.listen(this.omicronDataPort, serverHost);
 
 	if( this.config.useOinputserver === true )
 	{
@@ -141,31 +159,41 @@ function OmicronManager(sysConfig)
 		if( this.config.msgPort )
 			msgPort = this.config.msgPort;
 
-		oinputserverSocket = net.connect(msgPort, this.config.inputServerIP,  function() {
+		this.oinputserverSocket = net.connect(msgPort, this.config.inputServerIP,  function() {
 			//'connect' listener
-			console.log('Connected to Omicron oinputserver at "'+this.config.inputServerIP+'" on msgPort: '+msgPort+'. Requesting data on port ', omicronDataPort);
+			console.log('Connected to Omicron oinputserver at "'+this.config.inputServerIP+'" on msgPort: '+this.msgPort+'. Requesting data on port ', this.omicronDataPort);
 
-			var sendbuf = util.format("omicron_data_on,%d\n", omicronDataPort);
-			oinputserverSocket.write(sendbuf);
+			var sendbuf = util.format("omicron_data_on,%d\n", this.omicronDataPort);
+			this.oinputserverSocket.write(sendbuf);
 		});
 
-		oinputserverSocket.on('end', function(e) {
+		this.oinputserverSocket.on('end', function(e) {
 			console.log('Omicron: oinputserver disconnected');
 		});
-		oinputserverSocket.on('error', function(e) {
+		this.oinputserverSocket.on('error', function(e) {
 			console.log('Omicron: oinputserver connection error - code:', e.code);
 		});
 	}
 }
 
+ /**
+ * Sends disconnect signal to input server
+ *
+ * @method disconnect
+ */
 OmicronManager.prototype.disconnect = function() {
-	if (oinputserverSocket) {
+	if (this.oinputserverSocket) {
 		var sendbuf = util.format("data_off");
 		console.log("Omicron> Sending disconnect signal");
-		oinputserverSocket.write(sendbuf);
+		this.oinputserverSocket.write(sendbuf);
 	}
 };
 
+ /**
+ * Receives server pointer functions
+ *
+ * @method setCallbacks
+ */
 OmicronManager.prototype.setCallbacks = function(
 	sagePointerList,
 	createSagePointerCB,
@@ -204,6 +232,11 @@ OmicronManager.prototype.setCallbacks = function(
 	this.createSagePointer(this.config.inputServerIP);
 };
 
+ /**
+ * Manages incoming input server data
+ *
+ * @method runTracker
+ */
 OmicronManager.prototype.runTracker = function()
 {
 	var udp = dgram.createSocket("udp4");
@@ -259,8 +292,8 @@ OmicronManager.prototype.runTracker = function()
 			//var r_yaw   = Math.atan2(2.0*e.ory*e.orw-2.0*e.orx*e.orz , 1.0 - 2.0*e.ory*e.ory - 2.0*e.orz*e.orz);
 			//var r_pitch = Math.atan2(2.0*e.orx*e.orw-2.0*e.ory*e.orz , 1.0 - 2.0*e.orx*e.orx - 2.0*e.orz*e.orz);
 
-			var posX = e.posx * this.totalWidth;
-			var posY = e.posy * this.totalHeight;
+			var posX = e.posx * omicronManager.totalWidth;
+			var posY = e.posy * omicronManager.totalHeight;
 			var sourceID = e.sourceId;
 
 			// serviceType:
@@ -289,7 +322,6 @@ OmicronManager.prototype.runTracker = function()
 			{
 				touchWidth  = msg.readFloatLE(offset); offset += 4;
 				touchHeight = msg.readFloatLE(offset); offset += 4;
-				console.log("Touch size:", touchWidth, touchHeight);
 			}
 
 			// Appending sourceID to pointer address ID
@@ -298,7 +330,7 @@ OmicronManager.prototype.runTracker = function()
 			// ServiceTypePointer //////////////////////////////////////////////////
 			if (serviceType === 0)
 			{
-				if (this.eventDebug)
+				if (omicronManager.eventDebug)
 				{
 					console.log("pointer ID "+ sourceID +" event! type: " + e.type  );
 					console.log("pointer event! type: " + e.type  );
@@ -327,13 +359,14 @@ OmicronManager.prototype.runTracker = function()
 
 				var initX = 0;
 				var initY = 0;
+
 				if( serviceID === 0  && e.extraDataItems >= 4 && e.type !== 15  ) // Type 15 = Zoom
 				{
 					initX = msg.readFloatLE(offset); offset += 4;
 					initY = msg.readFloatLE(offset); offset += 4;
 
-					initX *= this.totalWidth;
-					initY *= this.totalHeight;
+					initX *= omicronManager.totalWidth;
+					initY *= omicronManager.totalHeight;
 				}
 
 				// if (e.type === 3)
@@ -360,7 +393,7 @@ OmicronManager.prototype.runTracker = function()
 					// move
 					if( e.flags === FLAG_SINGLE_TOUCH )
 					{
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							console.log("Touch move at - ("+posX+","+posY+") initPos: ("+initX+","+initY+")" );
 						}
@@ -368,24 +401,24 @@ OmicronManager.prototype.runTracker = function()
 						var distance = Math.sqrt( Math.pow( Math.abs(posX - initX), 2 ) + Math.pow( Math.abs(posY - initY), 2 ) );
 						var angle = Math.atan2( posY -  initY, posX - initX );
 
-						var accelDistance = distance * acceleratedDragScale;
+						var accelDistance = distance * omicronManager.acceleratedDragScale;
 						var accelX = posX + accelDistance * Math.cos(angle);
 						var accelY = posY + accelDistance * Math.sin(angle);
 
-						this.pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
-						this.pointerMove(address, accelX, accelY, { deltaX: 0, deltaY: 0, button: "left" } );
+						omicronManager.pointerPosition( address, { pointerX: accelX, pointerY: accelY } );
+						omicronManager.pointerMove(address, accelX, accelY, { deltaX: 0, deltaY: 0, button: "left" } );
 					}
 					else if (e.flags === FLAG_FIVE_FINGER_HOLD)
 					{
-						if (this.gestureDebug)
+						if (omicronManager.gestureDebug)
 						{
 							console.log("Touch move gesture: Five finger hold - " + Date.now());
 						}
-						this.pointerCloseGesture( address, posX, posY, Date.now(), 1 );
+						omicronManager.pointerCloseGesture( address, posX, posY, Date.now(), 1 );
 					}
 					else if( e.flags === FLAG_MULTI_TOUCH )
 					{
-						this.pointerPosition( address, { pointerX: posX, pointerY: posY } );
+						omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
 					}
 				}
 				else if (e.type === 15)
@@ -409,19 +442,19 @@ OmicronManager.prototype.runTracker = function()
 						if( eventType === 1 ) // Zoom start/down
 						{
 							//console.log("Touch zoom start");
-							this.pointerScrollStart( address, posX, posY );
+							omicronManager.pointerScrollStart( address, posX, posY );
 						}
 						else // Zoom move
 						{
-							if( this.gestureDebug )
+							if( omicronManager.gestureDebug )
 								console.log("Touch zoom");
-							this.pointerScroll( address, { wheelDelta: -zoomDelta * touchZoomScale } );
+							omicronManager.pointerScroll( address, { wheelDelta: -zoomDelta * omicronManager.touchZoomScale } );
 						}
 					}
 
 				}
 				else if (e.type === 5) { // button down
-					if( this.gestureDebug )
+					if( omicronManager.gestureDebug )
 					{
 						console.log("Touch down at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
 					}
@@ -429,33 +462,33 @@ OmicronManager.prototype.runTracker = function()
 					if( e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH )
 					{
 						// Create pointer
-						if (address in this.sagePointers) {
-							this.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)", sourceType: "Touch" } );
+						if (address in omicronManager.sagePointers) {
+							omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)", sourceType: "Touch" } );
 						} else {
-							this.createSagePointer(address);
-							this.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)", sourceType: "Touch" } );
-							this.pointerPress(address, posX, posY, { button: "left" } );
+							omicronManager.createSagePointer(address);
+							omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)", sourceType: "Touch" } );
+							omicronManager.pointerPress(address, posX, posY, { button: "left" } );
 						}
 					}
 					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							console.log("Touch down gesture: Five finger hold - " + Date.now());
 						}
-						this.pointerCloseGesture( address, posX, posY, Date.now(), 0 );
+						omicronManager.pointerCloseGesture( address, posX, posY, Date.now(), 0 );
 					}
 					else if( e.flags === FLAG_THREE_FINGER_HOLD )
 					{
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							console.log("Touch gesture: Three finger hold");
 						}
-						this.createRadialMenu( sourceID, posX, posY );
+						omicronManager.createRadialMenu( sourceID, posX, posY );
 					}
 					else if( e.flags === FLAG_SINGLE_CLICK )
 					{
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							console.log("Touch gesture: Click");
 						}
@@ -463,11 +496,11 @@ OmicronManager.prototype.runTracker = function()
 					}
 					else if( e.flags === FLAG_DOUBLE_CLICK )
 					{
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							console.log("Touch gesture: Double Click");
 						}
-						this.pointerDblClick( address, posX, posY );
+						omicronManager.pointerDblClick( address, posX, posY );
 					}
 				}
 				else if (e.type === 6)
@@ -475,12 +508,12 @@ OmicronManager.prototype.runTracker = function()
 					if( e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH )
 					{
 						// Hide pointer
-						this.hidePointer(address);
+						omicronManager.hidePointer(address);
 
 						// Release event
-						this.pointerRelease(address, posX, posY, { button: "left" } );
+						omicronManager.pointerRelease(address, posX, posY, { button: "left" } );
 
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							//console.log("Touch release");
 							console.log("Touch up at - ("+posX+","+posY+") initPos: ("+initX+","+initY+") flags:" + e.flags);
@@ -488,11 +521,11 @@ OmicronManager.prototype.runTracker = function()
 					}
 					else if( e.flags === FLAG_FIVE_FINGER_HOLD )
 					{
-						if( this.gestureDebug )
+						if( omicronManager.gestureDebug )
 						{
 							console.log("Touch up gesture: Five finger hold - " + Date.now());
 						}
-						this.pointerCloseGesture( address, posX, posY, Date.now(), 2 );
+						omicronManager.pointerCloseGesture( address, posX, posY, Date.now(), 2 );
 					}
 				}
 				else
@@ -538,15 +571,15 @@ OmicronManager.prototype.runTracker = function()
 
 				//console.log("Wand Position: ("+e.posx+", "+e.posy+","+e.posz+")" );
 				//console.log("Wand Rotation: ("+e.orx+", "+e.ory+","+e.orz+","+e.orw+")" );
-				var screenPos = coordCalculator.wandToScreenCoordinates( e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw );
+				var screenPos = this.coordCalculator.wandToScreenCoordinates( e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw );
 				//console.log("Screen pos: ("+screenPos.x+", "+screenPos.y+")" );
 
-				address = this.config.inputServerIP;
+				address = omicronManager.config.inputServerIP;
 
-				//if( this.showPointerToggle === false )
+				//if( omicronManager.showPointerToggle === false )
 				//	return;
 
-				if (this.showPointerToggle && screenPos.x !== -1 && screenPos.y !== -1 )
+				if (omicronManager.showPointerToggle && screenPos.x !== -1 && screenPos.y !== -1 )
 				{
 					var timestamp = e.timestamp/1000;
 
@@ -554,35 +587,35 @@ OmicronManager.prototype.runTracker = function()
 					posY = screenPos.y;
 
 					// 1euro filter
-					posX = wandXFilter.filter(screenPos.x, timestamp);
-					posY = wandYFilter.filter(screenPos.y, timestamp);
+					posX = omicronManager.wandXFilter.filter(screenPos.x, timestamp);
+					posY = omicronManager.wandYFilter.filter(screenPos.y, timestamp);
 
-					posX *= this.totalWidth;
-					posY *= this.totalHeight;
+					posX *= omicronManager.totalWidth;
+					posY *= omicronManager.totalHeight;
 
-					this.lastPosX = posX;
-					this.lastPosY = posY;
+					omicronManager.lastPosX = posX;
+					omicronManager.lastPosY = posY;
 
-					if( this.pointerOffscreen && this.showPointerToggle )
+					if( omicronManager.pointerOffscreen && omicronManager.showPointerToggle )
 					{
-						this.showPointer( this.config.inputServerIP, { label: wandLabel+" "+sourceID, color: wandColor } );
-						this.pointerPosition( address, { pointerX: posX, pointerY: posY } );
-						this.pointerOffscreen = false;
+						omicronManager.showPointer( omicronManager.config.inputServerIP, { label: omicronManager.wandLabel+" "+sourceID, color: omicronManager.wandColor } );
+						omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
+						omicronManager.pointerOffscreen = false;
 					}
 				}
 				else
 				{
-					posX = this.lastPosX;
-					posY = this.lastPosY;
+					posX = omicronManager.lastPosX;
+					posY = omicronManager.lastPosY;
 
-					if( !this.pointerOffscreen && this.showPointerToggle )
+					if( !omicronManager.pointerOffscreen && omicronManager.showPointerToggle )
 					{
-						this.hidePointer( this.config.inputServerIP );
-						this.pointerOffscreen = true;
+						omicronManager.hidePointer( omicronManager.config.inputServerIP );
+						omicronManager.pointerOffscreen = true;
 					}
 				}
 
-				this.pointerPosition( address, { pointerX: posX, pointerY: posY } );
+				omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
 
 				/*
 				if( wandObjectList[sourceID] === undefined )
@@ -626,124 +659,124 @@ OmicronManager.prototype.runTracker = function()
 				*/
 				if (e.flags !== 0)
 				{
-					//console.log("Wand flags: " + e.flags + " " + (this.lastWandFlags & playButton) );
+					//console.log("Wand flags: " + e.flags + " " + (omicronManager.lastWandFlags & playButton) );
 					if ( (e.flags & clickDragButton) === clickDragButton )
 					{
-						if (this.lastWandFlags === 0)
+						if (omicronManager.lastWandFlags === 0)
 						{
 							// Click
-							this.pointerPress( address, posX, posY, { button: "left" } );
+							omicronManager.pointerPress( address, posX, posY, { button: "left" } );
 						}
 						else
 						{
 							// Drag
 							console.log("wandPointer press - drag");
-							//this.pointerMove( address, posX, posY, { button: "left" } );
+							//omicronManager.pointerMove( address, posX, posY, { button: "left" } );
 						}
 					}
-					else if (this.lastWandFlags === 0 && (e.flags & menuButton) === menuButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton)
 					{
-						this.pointerPress( address, posX, posY, { button: "right" } );
+						omicronManager.pointerPress( address, posX, posY, { button: "right" } );
 					}
-					else if (this.lastWandFlags === 0 && (e.flags & showHideButton) === showHideButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & showHideButton) === showHideButton)
 					{
-						if (!this.showPointerToggle)
+						if (!omicronManager.showPointerToggle)
 						{
-							this.showPointerToggle = true;
-							this.showPointer( this.config.inputServerIP, { label:  wandLabel+" "+sourceID, color: wandColor } );
-							this.pointerPosition( address, { pointerX: posX, pointerY: posY } );
+							omicronManager.showPointerToggle = true;
+							omicronManager.showPointer( omicronManager.config.inputServerIP, { label:  omicronManager.wandLabel+" "+sourceID, color: omicronManager.wandColor } );
+							omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
 						}
 						else
 						{
-							this.showPointerToggle = false;
-							//hidePointer( this.config.inputServerIP );
+							omicronManager.showPointerToggle = false;
+							//hidePointer( omicronManager.config.inputServerIP );
 						}
 					}
-					else if (this.lastWandFlags === 0 && (e.flags & scaleUpButton) === scaleUpButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleUpButton) === scaleUpButton)
 					{
-						this.pointerScrollStart( address, posX, posY );
+						omicronManager.pointerScrollStart( address, posX, posY );
 
 						// Casting the parameters to correct type
-						this.pointerScroll( address, { wheelDelta: parseInt(-wandScaleDelta, 10) } );
+						omicronManager.pointerScroll( address, { wheelDelta: parseInt(-omicronManager.wandScaleDelta, 10) } );
 					}
-					else if (this.lastWandFlags === 0 && (e.flags & scaleDownButton) === scaleDownButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleDownButton) === scaleDownButton)
 					{
-						this.pointerScrollStart( address, posX, posY );
+						omicronManager.pointerScrollStart( address, posX, posY );
 
 						// Casting the parameters to correct type
-						this.pointerScroll( address, { wheelDelta: parseInt(wandScaleDelta, 10) } );
+						omicronManager.pointerScroll( address, { wheelDelta: parseInt(omicronManager.wandScaleDelta, 10) } );
 					}
-					else if (this.lastWandFlags === 0 && (e.flags & maximizeButton) === maximizeButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & maximizeButton) === maximizeButton)
 					{
-						this.pointerDblClick( address, posX, posY );
+						omicronManager.pointerDblClick( address, posX, posY );
 					}
-					else if ((this.lastWandFlags & previousButton) === 0 && (e.flags & previousButton) === previousButton)
+					else if ((omicronManager.lastWandFlags & previousButton) === 0 && (e.flags & previousButton) === previousButton)
 					{
-						this.keyDown( address, posX, posY, { code: 37 } );
+						omicronManager.keyDown( address, posX, posY, { code: 37 } );
 					}
-					else if ((this.lastWandFlags & nextButton) === 0 && (e.flags & nextButton) === nextButton)
+					else if ((omicronManager.lastWandFlags & nextButton) === 0 && (e.flags & nextButton) === nextButton)
 					{
-						this.keyDown( address, posX, posY, { code: 39 } );
+						omicronManager.keyDown( address, posX, posY, { code: 39 } );
 					}
-					else if ((this.lastWandFlags & playButton) === 0  && (e.flags & playButton) === playButton)
+					else if ((omicronManager.lastWandFlags & playButton) === 0  && (e.flags & playButton) === playButton)
 					{
-						this.keyPress( address, posX, posY, { code: 32 } );
+						omicronManager.keyPress( address, posX, posY, { code: 32 } );
 					}
 
-					this.lastWandFlags = e.flags;
+					omicronManager.lastWandFlags = e.flags;
 				}
-				else if (this.lastWandFlags !== 0)
+				else if (omicronManager.lastWandFlags !== 0)
 				{
 					// TODO: Add a smarter way of detecting press, drag, release from button flags
-					if ((this.lastWandFlags & clickDragButton) === clickDragButton )
+					if ((omicronManager.lastWandFlags & clickDragButton) === clickDragButton )
 					{
 						//console.log("wandPointer release");
-						this.pointerRelease( address, posX, posY, { button: "left" } );
+						omicronManager.pointerRelease( address, posX, posY, { button: "left" } );
 
-						this.lastWandFlags = 0;
+						omicronManager.lastWandFlags = 0;
 					}
-					else if( (this.lastWandFlags & showHideButton) === showHideButton )
+					else if( (omicronManager.lastWandFlags & showHideButton) === showHideButton )
 					{
-						this.lastWandFlags = 0;
+						omicronManager.lastWandFlags = 0;
 					}
-					else if( (this.lastWandFlags & scaleUpButton) === scaleUpButton )
+					else if( (omicronManager.lastWandFlags & scaleUpButton) === scaleUpButton )
 					{
-						this.lastWandFlags = 0;
+						omicronManager.lastWandFlags = 0;
 					}
-					else if( (this.lastWandFlags & scaleDownButton) === scaleDownButton )
+					else if( (omicronManager.lastWandFlags & scaleDownButton) === scaleDownButton )
 					{
-						this.lastWandFlags = 0;
+						omicronManager.lastWandFlags = 0;
 					}
-					else if( (this.lastWandFlags & maximizeButton) === maximizeButton )
+					else if( (omicronManager.lastWandFlags & maximizeButton) === maximizeButton )
 					{
-						this.lastWandFlags = 0;
+						omicronManager.lastWandFlags = 0;
 					}
-					else if( (this.lastWandFlags & previousButton) === previousButton )
+					else if( (omicronManager.lastWandFlags & previousButton) === previousButton )
 					{
-						this.lastWandFlags = 0;
-						this.keyUp( address, posX, posY, { code: 37 } );
+						omicronManager.lastWandFlags = 0;
+						omicronManager.keyUp( address, posX, posY, { code: 37 } );
 					}
-					else if( (this.lastWandFlags & nextButton) === nextButton )
+					else if( (omicronManager.lastWandFlags & nextButton) === nextButton )
 					{
-						this.lastWandFlags = 0;
-						this.keyUp( address, posX, posY, { code: 39 } );
+						omicronManager.lastWandFlags = 0;
+						omicronManager.keyUp( address, posX, posY, { code: 39 } );
 					}
-					else if( (this.lastWandFlags & playButton) === playButton )
+					else if( (omicronManager.lastWandFlags & playButton) === playButton )
 					{
-						this.lastWandFlags = 0;
-						this.keyUp( address, posX, posY, { code: 32 } );
+						omicronManager.lastWandFlags = 0;
+						omicronManager.keyUp( address, posX, posY, { code: 32 } );
 					}
 				}
 			} // ServiceTypeWand ends ///////////////////////////////////////////
 		}
-	});
+	});// end udp.on 'message'
 
 	udp.on("listening", function () {
 		var address = udp.address();
 		console.log("UDP> listening " + address.address + ":" + address.port);
 	});
 
-	udp.bind(omicronDataPort);
+	udp.bind(this.omicronDataPort);
 };
 
 module.exports = OmicronManager;
