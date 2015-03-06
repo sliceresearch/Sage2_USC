@@ -12,11 +12,14 @@
  @module radialmenu
  */
 
-var radialMenuCenter = { x: 210, y: 210 }; // scale applied in ctor
+// require variables to be declared
+"use strict";
+
+// unused: var radialMenuCenter = { x: 210, y: 210 }; // scale applied in ctor
 var radialMenuDefaultSize = { x: 425, y: 425 }; // scale applied in ctor
 var thumbnailWindowDefaultSize = { x: 1224, y: 860 };
 
-function radialmenu(id, ptrID, ui) {
+function RadialMenu(id, ptrID, ui) {
 	this.id = id;
 	this.pointerid = ptrID;
 	this.label = "";
@@ -26,44 +29,44 @@ function radialmenu(id, ptrID, ui) {
 	this.visible = true;
 	this.thumbnailWindowOpen = false;
 	this.wsio = undefined;
-	
+
 	// Default
 	this.radialMenuScale = ui.widgetControlSize * 0.03;
 	this.radialMenuSize = { x: radialMenuDefaultSize.x * this.radialMenuScale, y: radialMenuDefaultSize.y * this.radialMenuScale };
 	this.thumbnailWindowSize = { x: thumbnailWindowDefaultSize.x * this.radialMenuScale, y: thumbnailWindowDefaultSize.y * this.radialMenuScale };
-	
+
 	this.activeEventIDs = [];
 }
 
-radialmenu.prototype.getInfo = function() {
+RadialMenu.prototype.getInfo = function() {
 	return { id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale, visble: this.visible };
 };
 
-radialmenu.prototype.start = function() {
+RadialMenu.prototype.start = function() {
 	this.visible = true;
 };
 
-radialmenu.prototype.stop = function() {
+RadialMenu.prototype.stop = function() {
 	this.visible = false;
 };
 
-radialmenu.prototype.openThumbnailWindow = function(data) {
+RadialMenu.prototype.openThumbnailWindow = function(data) {
 	this.thumbnailWindowOpen = data.thumbnailWindowOpen;
 };
 
-radialmenu.prototype.setPosition = function(data) {
+RadialMenu.prototype.setPosition = function(data) {
 	this.left = data.x;
 	this.top = data.y;
 };
 
-radialmenu.prototype.hasEventID = function(id) {
+RadialMenu.prototype.hasEventID = function(id) {
 	if( this.activeEventIDs.indexOf(id) === -1 )
 		return false;
 	else
 		return true;
 };
 
-radialmenu.prototype.isEventOnMenu = function(data) {
+RadialMenu.prototype.isEventOnMenu = function(data) {
 	if( this.visible === true)
 	{
 		// If over radial menu bounding box
@@ -73,8 +76,8 @@ radialmenu.prototype.isEventOnMenu = function(data) {
 			return true;
 		}
 		// Else if over thumbnail window bounding box
-		else if( (data.x > this.left + this.radialMenuSize.x/2) && (data.x < this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x) &&
-				 (data.y > this.top - this.radialMenuSize.y/2)  && (data.y < this.top - this.radialMenuSize.y/2  + this.thumbnailWindowSize.y) )
+		else if((data.x > this.left + this.radialMenuSize.x/2) && (data.x < this.left + this.radialMenuSize.x/2 + this.thumbnailWindowSize.x) &&
+				(data.y > this.top - this.radialMenuSize.y/2)  && (data.y < this.top - this.radialMenuSize.y/2  + this.thumbnailWindowSize.y) )
 		{
 			if( this.thumbnailWindowOpen === true )
 			{
@@ -86,19 +89,17 @@ radialmenu.prototype.isEventOnMenu = function(data) {
 	return false;
 };
 
-radialmenu.prototype.onEvent = function(data) {
-	
+RadialMenu.prototype.onEvent = function(data) {
 	var idIndex = this.activeEventIDs.indexOf(data.id);
 	if( idIndex !== -1 && data.type === "pointerRelease" )
 		this.activeEventIDs.splice( idIndex );
-	
+
 	if( this.visible === true)
 	{
 		// Press over radial menu, drag menu
 		//console.log((this.left - this.radialMenuSize.x/2), " < ", position.x, " < ", (this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x) );
 		//console.log((this.top - this.radialMenuSize.y/2), " < ", position.y, " < ", (this.top - this.radialMenuSize.y/2 + this.radialMenuSize.y) );
-		
-		
+
 		// If over radial menu bounding box
 		if( (data.x > this.left - this.radialMenuSize.x/2) && (data.x < this.left - this.radialMenuSize.x/2 + this.radialMenuSize.x) &&
 			(data.y > this.top  - this.radialMenuSize.y/2) && (data.y < this.top - this.radialMenuSize.y/2  + this.radialMenuSize.y) )
@@ -128,4 +129,4 @@ radialmenu.prototype.onEvent = function(data) {
 	return false;
 };
 
-module.exports = radialmenu;
+module.exports = RadialMenu;

@@ -424,7 +424,7 @@ function uiBuilder(json_cfg, clientID) {
 		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem); 
 		
-		var ptr = new pointer(); 
+		var ptr = new Pointer(); 
 		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
 
 		if (pointer_data.visible) {
