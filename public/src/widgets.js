@@ -1282,13 +1282,13 @@ removeStyleElementForTitleColor = function (caption){
 		sheet.parentNode.removeChild(sheet);
 }
 
-hideAllWidgetToAppConnector = function (control_data){
+hideAllWidgetToAppConnector = function (appId){
 	var selectedAppTitle;
-	if (control_data.id in controlObjects){
-		selectedAppTitle = document.getElementById(control_data.id + "_title");
+	if (appId in controlObjects){
+		selectedAppTitle = document.getElementById(appId + "_title");
 		selectedAppTitle.className = "windowTitle";
 		for (var item in controlItems){
-			if (item.indexOf(control_data.id) > -1){
+			if (item.indexOf(appId) > -1){
 				hideWidgetToAppConnector(item);
 			}
 		}
@@ -1296,7 +1296,7 @@ hideAllWidgetToAppConnector = function (control_data){
 	
 }
 
-hideWidgetToAppConnector = function(instanceID){
+hideWidgetToAppConnector = function(instanceID, appId){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv){
 		connectorDiv.style.display = "none";
@@ -1307,6 +1307,11 @@ hideWidgetToAppConnector = function(instanceID){
 			fill: "rgba(110,110,110,1.0)",
 			filter:null
 		});
+	}
+	if (appId in controlObjects){
+
+		var selectedAppTitle = document.getElementById(appId + "_title");
+		selectedAppTitle.className = "windowTitle";
 	}
 }
 

@@ -633,7 +633,7 @@
 			if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==true){
 				controlItems[ctrl_data.id].divHandle.style.display = "none";
 				controlItems[ctrl_data.id].show=false;
-				hideWidgetToAppConnector(ctrl_data.id);
+				hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
 			}
 		});
 
@@ -757,7 +757,7 @@
 				}
 				else if (lst.length === 1){
 					delete widgetConnectorRequestList[control_data.id];
-					hideAllWidgetToAppConnector(control_data);
+					hideAllWidgetToAppConnector(control_data.id);
 				}
 			}
 			
@@ -917,8 +917,6 @@
 		});
 
 		wsio.on('createControl', function(data){
-			var user_color = data.user_color;
-			data = data.controlData;
 			if (controlItems[data.id] === null || controlItems[data.id] === undefined) {
 				var ctrDiv =  document.createElement("div");
 				ctrDiv.id = data.id;

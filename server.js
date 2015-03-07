@@ -256,6 +256,7 @@ assets.initialize(uploadsFolder, 'uploads');
 var appLoader = new loader(public_dir, hostOrigin, config, imConstraints, ffmpegOptions);
 var applications = [];
 var controls = []; // Each element represents a control widget bar
+var connectorFlags = {}; //Has the status of all app connectors
 var appAnimations = {};
 var videoHandles = {};
 
@@ -546,7 +547,11 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
 	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
 	
-
+	if(wsio.messages.requestsWidgetControl){
+		setTimeout(function (){
+			initializeExistingControls(wsio);
+		}, 6000);
+	}	
 
 	if(wsio.messages.receivesMediaStreamFrames){
 		var key;
@@ -594,7 +599,7 @@ function initializeWSClient(wsio) {
 function initializeExistingControls(wsio){
 	for (var i= controls.length-1;i>=0;i--){
 		var ctrl = controls[i];
-		broadcast('createControl',controls[i],'requestsWidgetControl');
+		wsio.emit('createControl',controls[i]);
 		var uniqueID = ctrl.id.substring(ctrl.appId.length, ctrl.id.lastIndexOf("_"));
 		var app = findAppById(ctrl.appId);
 		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
@@ -623,7 +628,6 @@ function initializeExistingApps(wsio) {
 			appAnimations[key].clients[uniqueID] = false;
 		}
 	}
-	//if(wsio.messages.requestsWidgetControl)	initializeExistingControls(wsio);
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
@@ -2425,9 +2429,8 @@ function wsAddNewControl(wsio, data){
 	controls.push(data);
 
 	var uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
-	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : "#ab8899";
 	
-	broadcast('createControl',{controlData:data,user_color:color},'requestsWidgetControl');
+	broadcast('createControl',data,'requestsWidgetControl');
 	
 	var app = findAppById(data.appId);
 	if(app !== null) {
@@ -3444,7 +3447,7 @@ function findControlsByUserId(uid) {
 function hideControl(ctrl){
 	if (ctrl.show === true) {
 		ctrl.show = false;
-		broadcast('hideControl',{id:ctrl.id},'receivesWidgetEvents');
+		broadcast('hideControl',{id:ctrl.id, appId:ctrl.appId},'receivesWidgetEvents');
 	}
 }
 
@@ -4059,12 +4062,11 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	var controlUnderPointer = findControlsUnderPointer(pointerX,pointerY);
 	var itemUnderPointer = controlUnderPointer || elem;
 	var app;
-	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
-	// Widget connector show logic ends
+	
 
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
+
 	if (updatedControl !== null) {
 		app = findAppById(updatedControl.appId);
 		if (app){
@@ -4079,6 +4081,10 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
 		return;
 	}
+
+	//Draw widget connectors
+	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
+	// Widget connector show logic ends
 
 	// move / resize window
 	if(remoteInteraction[uniqueID].windowManagementMode()){
@@ -5073,6 +5079,7 @@ function attachAppIfSticky(backgroundItem, appId){
 
 function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease){
 	var app;
+	var item;
 	if (pressMoveRelease == "press"){
 		if (itemUnderPointer !== null){
 			if (itemUnderPointer.appId){
@@ -5091,13 +5098,13 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 		}
 	}
 	else if (pressMoveRelease === "release"){
-		var item = remoteInteraction[uniqueID].releaseOnItem();
-		if (item){
+		item = remoteInteraction[uniqueID].releaseOnItem();
+		if (item ){
 			broadcast ('hideWidgetToAppConnector', item ,'receivesPointerData');	
 		}
 	}
 	else {
-		var item = remoteInteraction[uniqueID].releaseOnItem();
+		item = remoteInteraction[uniqueID].releaseOnItem();
 		if (item){
 			broadcast ('hideWidgetToAppConnector', item ,'receivesPointerData');	
 		}
@@ -5114,15 +5121,17 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 			}
 			itemUnderPointer.user_color = sagePointers[uniqueID].color;
 			itemUnderPointer.user_id = uniqueID;
+			
 			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 			
+			
 		}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
-			broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
+			item = remoteInteraction[uniqueID].hoverOverControl();
+			broadcast ('hideWidgetToAppConnector', item ,'receivesPointerData');
 			remoteInteraction[uniqueID].leaveControlArea();
+			
 		}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null){
-			broadcast ('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl() ,'receivesPointerData');
-			remoteInteraction[uniqueID].leaveControlArea();
 			if (itemUnderPointer.appId){
 				app = findAppById(itemUnderPointer.appId);
 				if (app){
@@ -5134,6 +5143,11 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 			}
 			itemUnderPointer.user_color = sagePointers[uniqueID].color;
 			itemUnderPointer.user_id = uniqueID;
+			item = remoteInteraction[uniqueID].hoverOverControl();
+			
+			broadcast ('hideWidgetToAppConnector', item ,'receivesPointerData');
+			remoteInteraction[uniqueID].leaveControlArea();
+	
 			broadcast ('showWidgetToAppConnector', itemUnderPointer,'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
 		}
