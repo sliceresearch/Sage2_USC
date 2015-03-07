@@ -3891,14 +3891,14 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	// widgets
-	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(sagePointers[uniqueID].left, sagePointers[uniqueID].top);
+	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
 	if (updatedControl !== null) {
 		broadcast('setControlPosition', updatedControl, 'receivesPointerData');
 		return;
 	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		broadcast('moveSliderKnob', {ctrl:lockedControl, x:sagePointers[uniqueID].left}, 'receivesPointerData');
+		broadcast('moveSliderKnob', {ctrl:lockedControl, x:pointerX}, 'receivesPointerData');
 		return;
 	}
 
