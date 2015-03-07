@@ -12,8 +12,10 @@
  @module sagepointer
  */
 
+// require variables to be declared
+"use strict";
 
-function sagepointer(id) {
+function SagePointer(id) {
 	this.id = id;
 	this.label = "";
 	this.color = [255, 255, 255];
@@ -22,7 +24,7 @@ function sagepointer(id) {
 	this.visible = false;
 }
 
-sagepointer.prototype.start = function(label, color, sourceType) {
+SagePointer.prototype.start = function(label, color, sourceType) {
 	this.label = label;
 	this.color = color;
 	this.sourceType = sourceType;
@@ -31,9 +33,9 @@ sagepointer.prototype.start = function(label, color, sourceType) {
 	this.visible = true;
 };
 
-sagepointer.prototype.stop = function() {
+SagePointer.prototype.stop = function() {
 	this.visible = false;
 };
 
 
-module.exports = sagepointer;
+module.exports = SagePointer;

@@ -1,12 +1,10 @@
 {
 	"main_script": "unity.js",
 	"icon": "unity.webp",
-	"width": 800,
-	"height": 600,
+	"width": 1280,
+	"height": 720,
 	"animation": true,
 	"dependencies": [
-		  "jquery.min.js",
-		  "UnityObject2.js"
 	],
 	"title": "Unity3D viewer",
 	"version": "1.0.0",

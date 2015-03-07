@@ -9,12 +9,18 @@
 // Copyright (c) 2014
 
 /**
- * Widget Controls and helper functionality for custom application user interface
+ * Provides widget controls and helper functionality for custom application user interface
  *
- * @class SAGE2WidgetControls, SAGE2WidgetControlBar
+ * @module widgets
  */
-//"use strict";
 
+/**
+ * Widget Controls class for custom application user interface
+ *
+ * @class SAGE2WidgetControls
+ * @constructor
+ * @return {Object} an object representing a widget control
+ */
 var SAGE2WidgetControls = {
 	button: function () {
 		this.appId = null;
@@ -286,9 +292,14 @@ var buttonType = {
 
 };
 
+
 /**
-*	Represents the widget bar
-* 	Has functions to create elements of the widget bar 
+ * Widget Bar: has functions to create elements of the widget 
+ *
+ * @class SAGE2WidgetControlBar
+ * @constructor
+ * @param id {String} identifier for the object
+ * @return {Object} an object representing a widget control bar
 */
 function SAGE2WidgetControlBar(id) {
 	this.id = id;
@@ -307,7 +318,6 @@ function SAGE2WidgetControlBar(id) {
 		"drawSpokes": true,
 		"drawSquareButtons":false
 	};
-
 	//this.controlSVG = [];
 }
 
@@ -316,14 +326,14 @@ SAGE2WidgetControlBar.prototype.getLatestControlSVG = function(){
 	return (idx > -1)? this.controlSVG[idx]:null;
 };
 
-/**
+/*
 *	Ensures everything got added to the controls specification properly
 */
 SAGE2WidgetControlBar.prototype.finishedAddingControls = function(){
 	this.specReady = true;
 };
 
-/**
+/*
 *	Check whether control specification is ready (used before creating widget elements from specification)
 */
 SAGE2WidgetControlBar.prototype.controlsReady = function(){
@@ -333,7 +343,7 @@ SAGE2WidgetControlBar.prototype.controlsReady = function(){
 
 
 
-/**
+/*
 *	Lets the user add a custom cover for buttons
 * 	Added cover is available only to that instance of that app. 
 */
@@ -355,7 +365,7 @@ SAGE2WidgetControlBar.prototype.addButtonType = function(type, buttonData){
 	}
 };
 
-/**
+/*
 *	
 * 	Allows the user to modify the look of the widget control bar
 *	layoutOptions
@@ -375,7 +385,7 @@ SAGE2WidgetControlBar.prototype.setLayoutOptions = function(layoutOptions){
 	if (layoutOptions.drawSquareButtons) this.layoutOptions.drawSquareButtons = layoutOptions.drawSquareButtons;
 };
 
-/**
+/*
 *	Adds a button specification 
 *	data
 *		.type - one of the several predefined button(cover) types [ex: "next", "prev", and so on]
@@ -437,7 +447,7 @@ SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparat
 	
 };
 
-/**
+/*
 *	Adds a text-input bar specification 
 *	data
 *		.action - callback function to specify action after the text has been input and enter key pressed
@@ -463,7 +473,7 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 	
 };
 
-/**
+/*
 *	Adds a slider specification 
 *	data
 *		.appHandle 
@@ -516,7 +526,7 @@ SAGE2WidgetControlBar.prototype.addSlider = function(data){
 	
 };
 
-/**
+/*
 *	Adds a color palette 
 */
 SAGE2WidgetControlBar.prototype.addColorPalette = function(data){
@@ -539,7 +549,7 @@ SAGE2WidgetControlBar.prototype.addColorPalette = function(data){
 };
 
 
-/**
+/*
 *	Computes the dimensions of the widget control bar
 */
 SAGE2WidgetControlBar.prototype.computeSize = function(){
@@ -577,7 +587,7 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 	return size;
 };
 
-/**
+/*
 *	Creates default close and radial menu buttons
 */
 
@@ -594,7 +604,7 @@ SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
 	
 };
 
-/**
+/*
 *	Creates control bar and elements from the layout options and element specifications
 */
 function SAGE2WidgetControlInstance (instanceID, controlSpec){
@@ -788,7 +798,7 @@ function makeBarPath(start,end, innerR, center, width, offset){
 	return d;
 }
 
-/**
+/*
 *	Creates a slider from the slider specification
 */
 SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
@@ -936,7 +946,7 @@ function mapMoveToSlider(sliderKnob, position){
 	return sliderValue;
 }
 
-/**
+/*
 *	Creates a button from the button specification
 */
 SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy, rad){
@@ -1024,7 +1034,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	return button;
 };
 
-/**
+/*
 *	Creates a color palette 
 */
 /*SAGE2WidgetControlBar.prototype.createColorPalette = function(x, y, outline){
@@ -1040,7 +1050,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	//for(var i=0;i<this. )
 }
 
-/**
+/*
 *	Creates a text-input from the text-input specification
 */
 SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline){

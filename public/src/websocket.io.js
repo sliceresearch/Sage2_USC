@@ -8,71 +8,117 @@
 //
 // Copyright (c) 2014
 
+/**
+ * @module websocketIO
+ */
+
+/**
+ * Lightweight object around websocket, handles string and binary communication
+ *
+ * @class websocketIO
+ * @constructor
+ */
 function websocketIO(url) {
-	this.ws = null;
-	if(url !== undefined && url !== null) this.url = url;
+	if (url !== undefined && url !== null) this.url = url;
 	else this.url = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host + "/" + window.location.pathname.split("/")[1];
+
+	/**
+	 * websocket object handling the communication with the server
+	 *
+	 * @property ws
+	 * @type WebSocket
+	 */
+	this.ws = null;
+	/**
+	 * list of messages to be handled (name + callback)
+	 *
+	 * @property messages
+	 * @type Object
+	 */
 	this.messages = {};
-	
+
+	/**
+	* Open a websocket
+	*
+	* @method open
+	* @param callback {Function} function to be called when the socket is ready
+	*/
 	this.open = function(callback) {
 		var _this = this;
-		
+
 		console.log(this.url);
 		this.ws = new WebSocket(this.url);
 		this.ws.binaryType = "arraybuffer";
 		this.ws.onopen = callback;
-		
+
+		// Handler when a message arrives
 		this.ws.onmessage = function(msg) {
-			if(typeof msg.data === "string"){
+			// text message
+			if (typeof msg.data === "string") {
 				var message = JSON.parse(msg.data);
-				//console.log('got', message.f, message.f in _this.messages);
-				if(message.f in _this.messages){
+				if (message.f in _this.messages) {
 					_this.messages[message.f](message.d);
+				} else {
+					console.log('websocketIO> No handler for', message.f);
 				}
 			}
-			else{
+			else {
 				var uInt8 = new Uint8Array(msg.data);
-				
-				var i = 0;
-				var func = "";
-			
-				while(uInt8[i] !== 0 && i < uInt8.length) {
+				var i     = 0;
+				var func  = "";
+				while (uInt8[i] !== 0 && i < uInt8.length) {
 					func += String.fromCharCode(uInt8[i]);
 					i++;
 				}
-				
 				var buffer = uInt8.subarray(i+1, uInt8.length);
 				_this.messages[func](buffer);
 			}
 		};
 		// triggered by unexpected close event
 		this.ws.onclose = function(evt) {
-			console.log("wsio closed");
-			if('close' in _this.messages)
+			console.log("websocketIO> socket closed");
+			if ('close' in _this.messages)
 				_this.messages.close(evt);
 		};
 	};
-	
+
+	/**
+	* Set a message handler for a given name
+	*
+	* @method on
+	* @param name {String} name for the handler
+	* @param callback {Function} handler to be called for a given name
+	*/
 	this.on = function(name, callback) {
 		this.messages[name] = callback;
 	};
-	
+
+	/**
+	* Send a message with a given name and payload (format> f:name d:payload)
+	*
+	* @method emit
+	* @param name {String} name of the message (i.e. RPC)
+	* @param data {Object} data to be sent with the message
+	*/
 	this.emit = function(name, data) {
-		if(name === null || name === ""){
+		if (name === null || name === "") {
 			console.log("Error: no message name specified");
 			return;
 		}
-	
+
 		// send binary data as array buffer
-		if(data instanceof Uint8Array){
+		if (data instanceof Uint8Array) {
+			// build an array with the name of the function
 			var funcName = new Uint8Array(name.length+1);
-			for(var i=0; i<name.length; i++){
+			for (var i=0; i<name.length; i++) {
 				funcName[i] = name.charCodeAt(i);
 			}
 			var message = new Uint8Array(funcName.length + data.length);
+			// copy the name of the function first
 			message.set(funcName, 0);
+			// then copy the payload
 			message.set(data, funcName.length);
-			
+			// send the message using websocket
 			this.ws.send(message.buffer);
 		}
 		// send data as JSON string
@@ -82,10 +128,16 @@ function websocketIO(url) {
 		}
 	};
 
-	// deliberate close function
+	/**
+	* Deliberate close function
+	*
+	* @method emit
+	*/
 	this.close = function() {
-	    this.ws.onclose = function () {}; // disable onclose handler first
-    	this.ws.close();
+		// disable onclose handler first
+		this.ws.onclose = function () {};
+		// then close
+		this.ws.close();
     };
 
 }

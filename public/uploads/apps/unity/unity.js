@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+var Module;
+
 var unity = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
@@ -19,24 +21,48 @@ var unity = SAGE2_App.extend( {
 	
 	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
+		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
-		console.log("Size ", this.element.clientWidth, this.element.clientHeight);
-		this.element.id = "div" + data.id;
 
-		console.log("Viewer: " , data.id, this.resrcPath, this.resrcPath);
+		// From Unity page
+		this.element.classList.add("emscripten");
 
-		var config = {
-			width: "100%", 
-			height: "100%",
-			params: { enableDebugging:"0" }
+		Module = {
+			filePackagePrefixURL: this.resrcPath + "Release/",
+			memoryInitializerPrefixURL: this.resrcPath + "Release/",
+			preRun: [],
+			postRun: [],
+			print: (function() {
+					return function(text) {
+					};
+				})(),
+			printErr: function(text) {
+			},
+			canvas: this.element,
+			progress: null,
+			setStatus: function(text) {
+			},
+			totalDependencies: 0,
+			monitorRunDependencies: function(left) {
+				this.totalDependencies = Math.max(this.totalDependencies, left);
+				Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+			}
 		};
-		// Create unity object
-		this.u = new UnityObject2(config);
-		// Load the project
-		this.u.initPlugin(this.element, this.resrcPath + "web.unity3d");
-		this.controls.finishedAddingControls();
+		Module.setStatus('Downloading (0.0/1)');
+
+		var script0 = document.createElement('script');
+		script0.src = this.resrcPath + "Release/UnityConfig.js";
+		document.body.appendChild(script0);
+
+		var script1 = document.createElement('script');
+		script1.src = this.resrcPath + "Release/fileloader.js";
+		document.body.appendChild(script1);
+
+		var script2 = document.createElement('script');
+		script2.src = this.resrcPath + "Release/webgl.js";
+		document.body.appendChild(script2);
+
 	},
 	
 	load: function(state, date) {
