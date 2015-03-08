@@ -21,6 +21,10 @@
  * @constructor
  * @return {Object} an object representing a widget control
  */
+
+
+var dynamicStyleSheets = {};
+
 var SAGE2WidgetControls = {
 	button: function () {
 		this.appId = null;
@@ -1279,17 +1283,22 @@ createWidgetToAppConnector = function (instanceID) {
 }
 
 addStyleElementForTitleColor = function (caption, color){
+	dynamicStyleSheets[caption] = caption;
 	var sheet = document.createElement('style');
 	sheet.id = "title"+caption;
 	var percent = 10;
+	if (!color)
+		color = '#666666';
 	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: linear-gradient(left,"+color+" " +percent+"%, #666666 100%); }";
 	document.body.appendChild(sheet);	
 }
 
 removeStyleElementForTitleColor = function (caption){
 	var sheet = document.getElementById("title"+caption);
-	if (sheet)
+	if (sheet){
 		sheet.parentNode.removeChild(sheet);
+		delete dynamicStyleSheets[caption];
+	}
 }
 
 hideAllWidgetToAppConnector = function (appId){
@@ -1330,7 +1339,7 @@ showWidgetToAppConnector = function (instanceID, color){
 	if (connectorDiv)
     	connectorDiv.style.display = "inline";
 	if (!color)
-		color = '#ab6666';
+		color = '#666666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	
 	if (selectedControl){
@@ -1352,7 +1361,7 @@ moveAndShowWidgetToAppConnector = function(position_data){
 	if (!selectedAppTitle)return;
 	re = /\.|\:/g;
 	styleCaption = position_data.user_id.split(re).join("");
-	selectedAppTitle.className = "title" + styleCaption;
+	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle" ;
 	for (var item in controlItems){
 		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
 			var control = controlItems[item].divHandle;
@@ -1384,7 +1393,7 @@ setConnectorColor = function (instanceID, color){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (!connectorDiv) return;
 	if (!color)
-		color = '#ab6666';
+		color = '#666666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	if (selectedControl){
 		var paper = selectedControl.data("paper");
@@ -1405,7 +1414,7 @@ setAllConnectorColor = function(position_data){
 	if (!selectedAppTitle)return;
 	re = /\.|\:/g;
 	styleCaption = position_data.user_id.split(re).join("");
-	selectedAppTitle.className = "title" + styleCaption;
+	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle" ;
 	for (var item in controlItems){
 		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
 			setConnectorColor(item,position_data.user_color);
@@ -1418,7 +1427,7 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (!connectorDiv) return;
 	if (!color)
-		color = '#ab6666';
+		color = '#666666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	var paper = selectedControl.data("paper");
 	var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));

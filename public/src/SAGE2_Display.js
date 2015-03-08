@@ -26,6 +26,7 @@ var pointerItems   = {};
 var controlItems   = {};
 var controlObjects = {};
 var lockedControlElements = {} ;
+var widgetConnectorRequestList = {};
 
 var canvasItems  = {};
 
