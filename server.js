@@ -3816,7 +3816,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
 	var itemUnderPointer = controlUnderPointer || elem;
-	var app;
 	//Draw widget connectors
 	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
 	
@@ -3861,7 +3860,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 						var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 						if(updatedItem !== null) {
-							updateItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
+							updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 							broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
 							broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 

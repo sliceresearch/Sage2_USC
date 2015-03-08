@@ -180,7 +180,7 @@ Interaction.prototype.lockControl = function(ctrl) {
 
 Interaction.prototype.hoverOverControl = function(){
 	return this.hoverControlItem ;
-}
+};
 
 /**
  *@method leaveControlArea
@@ -188,7 +188,7 @@ Interaction.prototype.hoverOverControl = function(){
 
 Interaction.prototype.leaveControlArea = function(){
 	this.hoverControlItem = null;
-}
+};
 
 /**
  *@method enterControlArea
@@ -196,7 +196,7 @@ Interaction.prototype.leaveControlArea = function(){
 
 Interaction.prototype.enterControlArea = function(controlItem){
 	this.hoverControlItem = controlItem;
-}
+};
 
 /**
  *@method pressOnItem
@@ -204,7 +204,7 @@ Interaction.prototype.enterControlArea = function(controlItem){
 
 Interaction.prototype.pressOnItem = function(item){
 	this.pressedItem = item;
-}
+};
 
 /**
  *@method releaseOnItem
@@ -214,7 +214,7 @@ Interaction.prototype.releaseOnItem = function(){
 	var item = this.pressedItem;
 	this.pressedItem = null;
 	return item;
-}
+};
 
 
 /**

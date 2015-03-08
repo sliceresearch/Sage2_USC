@@ -600,7 +600,7 @@ function SAGE2_init() {
 	});
 
 	wsio.on ('hideControl', function(ctrl_data){
-		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==true){
+		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
 			hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
@@ -608,7 +608,7 @@ function SAGE2_init() {
 	});
 
 	wsio.on ('showControl', function(ctrl_data){
-		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show==false){
+		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===false){
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
 			controlItems[ctrl_data.id].show=true;
 			showWidgetToAppConnector(ctrl_data.id);
@@ -928,12 +928,14 @@ function SAGE2_init() {
 		var regB  = /button/;
 		var regS  = /slider/;
 		var regTI = /textInput/;
+		var textInput;
+		var blinkControlHandle;
 		if (lockedControlElements[data.ptrId]){
 			var lckedCtrl = lockedControlElements[data.ptrId];
 			var lckedCtrlId = lckedCtrl.attr("id");
 			if (regTI.test(lckedCtrlId)){
-				var textInput = lckedCtrl.parent();
-				var blinkControlHandle = textInput.data("blinkControlHandle");
+				textInput = lckedCtrl.parent();
+				blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);	
 			}
 			
@@ -951,8 +953,8 @@ function SAGE2_init() {
 			
 			var aId = ctrl.data("appId");
 			if(regTI.test(ctrId)===true){
-				var textInput = ctrl.parent();
-				var blinkControlHandle = setInterval(textInput.data("blinkCallback"),1000);
+				textInput = ctrl.parent();
+				blinkControlHandle = setInterval(textInput.data("blinkCallback"),1000);
 				textInput.data("blinkControlHandle",blinkControlHandle);
 			}
 			/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
@@ -979,15 +981,17 @@ function SAGE2_init() {
 		var lockedControl = lockedControlElements[data.ptrId];
 		if (ctrl){
 			var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
-			if (instanceID)
+			if (instanceID){
 				controlItems[instanceID].divHandle.style.zIndex = "9990";
+			}
 		}
 		
 
 		if (lockedControl){
-			if (regexTextInput.test(lockedControl.attr("id"))===false)
+			if (regexTextInput.test(lockedControl.attr("id"))===false){
 				lockedControlElements[data.ptrId] = null;
-			var ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+			}
+			ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrlId = ctrl? ctrl.attr("id"): "";
 			if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
 				wsio.emit('releasedControlId', { 

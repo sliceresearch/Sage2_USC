@@ -1280,7 +1280,7 @@ createWidgetToAppConnector = function (instanceID) {
 	connectorDiv.style.display = "none";
 	connectorDiv.style.zIndex = 0;
 	ui.main.appendChild(connectorDiv);
-}
+};
 
 addStyleElementForTitleColor = function (caption, color){
 	dynamicStyleSheets[caption] = caption;
@@ -1291,7 +1291,7 @@ addStyleElementForTitleColor = function (caption, color){
 		color = '#666666';
 	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: linear-gradient(left,"+color+" " +percent+"%, #666666 100%); }";
 	document.body.appendChild(sheet);	
-}
+};
 
 removeStyleElementForTitleColor = function (caption){
 	var sheet = document.getElementById("title"+caption);
@@ -1299,7 +1299,7 @@ removeStyleElementForTitleColor = function (caption){
 		sheet.parentNode.removeChild(sheet);
 		delete dynamicStyleSheets[caption];
 	}
-}
+};
 
 hideAllWidgetToAppConnector = function (appId){
 	var selectedAppTitle;
@@ -1313,7 +1313,7 @@ hideAllWidgetToAppConnector = function (appId){
 		}
 	}
 	
-}
+};
 
 hideWidgetToAppConnector = function(instanceID, appId){
 	var connectorDiv = document.getElementById(instanceID + "connector");
@@ -1332,7 +1332,7 @@ hideWidgetToAppConnector = function(instanceID, appId){
 		var selectedAppTitle = document.getElementById(appId + "_title");
 		selectedAppTitle.className = "windowTitle";
 	}
-}
+};
 
 showWidgetToAppConnector = function (instanceID, color){
 	var connectorDiv = document.getElementById(instanceID + "connector");
@@ -1351,7 +1351,7 @@ showWidgetToAppConnector = function (instanceID, color){
 		});
 	}
 		
-}
+};
 
 moveAndShowWidgetToAppConnector = function(position_data){
 	var hOffset;
@@ -1371,7 +1371,7 @@ moveAndShowWidgetToAppConnector = function(position_data){
 			moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.left-ui.offsetX + position_data.width/2.0, position_data.top-ui.offsetY+hOffset,cHeight/2.0, position_data.user_color);
 		}
 	}
-}
+};
 
 
 removeWidgetToAppConnector = function (instanceID){
@@ -1386,7 +1386,7 @@ removeWidgetToAppConnector = function (instanceID){
 		});
 	}
 		
-}
+};
 
 setConnectorColor = function (instanceID, color){
 	
@@ -1405,7 +1405,7 @@ setConnectorColor = function (instanceID, color){
 	}
 		
 	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;  
-}
+};
 
 setAllConnectorColor = function(position_data){
 
@@ -1420,7 +1420,7 @@ setAllConnectorColor = function(position_data){
 			setConnectorColor(item,position_data.user_color);
 		}
 	}
-}
+};
 
 moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
 	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
@@ -1441,7 +1441,7 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b ) ;
-    if (parseInt(width)==0)return
+    if (parseInt(width)===0)return;
     var alpha = (cutLength-2)/width;
     x1 = alpha*x2 + (1-alpha)*x1;
     y1 = alpha*y2 + (1-alpha)*y1;
@@ -1476,7 +1476,7 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
     connectorDiv.setAttribute('style','border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;');
     connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;   
     //connectorDiv.style.display = "inline";
-}
+};
 
 /*
 String.prototype.width = function(font) {
