@@ -129,7 +129,7 @@ function radialMenu(){
 		if(window.location.protocol === "http:" && port === "") port = "80";
 		if(window.location.protocol === "https:" && port === "") port = "443";
 		*/
-		this.wsio = new websocketIO();
+		this.wsio = new WebsocketIO();
 		this.wsio.open(function() {
 			console.log("open websocket: " + id+"_menu");
 			var clientDescription = {

@@ -60,7 +60,7 @@ function SAGE2_init() {
 	clientID = parseInt(getParameterByName("clientID")) || 0;
 	console.log("clientID: " + clientID);
 	
-	wsio = new websocketIO();
+	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 	
 	isMaster = false;
