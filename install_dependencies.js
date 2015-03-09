@@ -20,7 +20,7 @@ console.log("Detected OS as:", platform);
 
 var i;
 var files;
-var unpacked = {};
+var unpacked = [];
 var modules = path.join("build", "node_modules", platform);
 
 if(!fileExistsSync("node_modules")) fs.mkdirSync("node_modules");
@@ -37,10 +37,10 @@ for(i=0; i<packages.length; i++){
 	downloaded[packages[i]] = false;
 }
 
-
 packages.forEach(function(element, index, array) {
 	request({host: "bitbucket.org", path: "/sage2/sage2/downloads/"+element+suffix}, function(res) {
 		if(res.statusCode === 200) {
+            console.log("found binary package: " + element+suffix);
 			var writestream = fs.createWriteStream(path.join("node_modules", element+suffix));
 			writestream.on('error', function(err) { 
 				console.log(err);
@@ -65,7 +65,8 @@ function install() {
 	var timer = setInterval(function() {
 		process.stdout.write(".");
 	}, 667);
-	exec('npm install --skip-installed --loglevel info', {encoding: 'utf8', timeout: 0, maxBuffer: 500*1024 },
+    
+	exec("npm install --skip-installed --loglevel info", {encoding: "utf8", timeout: 0, maxBuffer: 500*1024 },
   	function(error, stdout, stderr) {
 		if(error) throw error;
 		
@@ -83,29 +84,114 @@ function unzipModules() {
 	else {
 		var key;
 		for(key in downloaded) {
-			unpacked[key+suffix] = false;
+            unpacked.push(key+suffix);
 		}
-		for(key in unpacked) {
-			unzipModule(key);
-		}
+        
+        unzipModule(unpacked, 0);
 	}
 }
 
-function unzipModule(mod) {
+function unzipModule(keys, idx) {
+    if(idx >= keys.length) { install(); return; }
+    
+    var mod = keys[idx];
 	if(mod.indexOf(".tar.gz") >= 0) {
+        var modDir = path.join("node_modules", mod.substring(0, mod.indexOf(suffix)));
+       if(fileExistsSync(modDir)) {
+            rmdirSync(modDir);
+        }
+        
+        var child1, child2;
 		if(platform === "win") {
-			exec("7z x " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
+            exec("7z x " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
 				if(error) throw error;
 				
 				exec("7z x " + path.basename(mod, ".gz"), {cwd: "node_modules"}, function(error, stdout, stderr) {
 					if(error) throw error;
+                    
 					fs.unlinkSync(path.join("node_modules", path.basename(mod, ".gz")));
 					fs.unlinkSync(path.join("node_modules", mod));
 					unpacked[mod] = true;
+                    
+                    unzipModule(keys, idx+1);
+				});
+			});
+		}
+		else {
+			exec("tar xzf " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
+				if(error) throw error;
+				fs.unlinkSync(path.join("node_modules", mod));
+				unpacked[mod] = true;
+				
+                unzipModule(keys, idx+1);
+			});
+		}
+	}
+}
+
+/*
+function unzipModule(mod) {
+	if(mod.indexOf(".tar.gz") >= 0) {
+        var modDir = path.join("node_modules", mod.substring(0, mod.indexOf(suffix)));
+        console.log(modDir);
+       if(fileExistsSync(modDir)) {
+            console.log("removing previous version of module " + modDir);
+            rmdirSync(modDir);
+        }
+        
+        var child1, child2;
+		if(platform === "win") {
+            console.log("about to unzip " + mod);
+			console.log("7z x " + mod);
+            child1 = exec("7z x " + mod, {cwd: "node_modules"});
+            child1.stdout.on('data', function(data) {
+                console.log('stdout: ' + data);
+            });
+            child1.stderr.on('data', function(data) {
+                console.log('stderr: ' + data);
+            });
+            child1.on('close', function(code) {
+                console.log('close code: ' + code);
+                
+                child2 = exec("7z x " + path.basename(mod, ".gz"), {cwd: "node_modules"});
+                child2.stdout.on('data', function(data) {
+                    console.log('stdout: ' + data);
+                });
+                child2.stderr.on('data', function(data) {
+                    console.log('stderr: ' + data);
+                });
+                child2.on('close', function(code) {
+                    console.log('close code: ' + code);
+                    
+                    fs.unlinkSync(path.join("node_modules", path.basename(mod, ".gz")));
+					fs.unlinkSync(path.join("node_modules", mod));
+					unpacked[mod] = true;
+                    
+                    console.log(unpacked);
+                    
+					//if(allTrueDict(unpacked)) install();
+                });
+            });
+            
+            //exec("7z x " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
+				//if(error) throw error;
+                if(error) console.log("ERROR:", error.code, stderr);
+                
+                console.log("un gz-ed file " + mod);
+				
+				exec("7z x " + path.basename(mod, ".gz"), {cwd: "node_modules"}, function(error, stdout, stderr) {
+					//if(error) throw error;
+                    if(error) console.log("ERROR:", error);
+					fs.unlinkSync(path.join("node_modules", path.basename(mod, ".gz")));
+					fs.unlinkSync(path.join("node_modules", mod));
+					unpacked[mod] = true;
+                    
+                    console.log(unpacked);
+                    
 					if(allTrueDict(unpacked)) install();
 				});
 			});
-
+            //
 		}
 		else {
 			exec("tar xzf " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
@@ -116,7 +202,7 @@ function unzipModule(mod) {
 			});
 		}
 	}
-}
+}*/
 
 function request(options, callback) {
 	var req = https.get(options, function(res) {
@@ -165,7 +251,6 @@ function isEmpty(obj) {
     return true;
 }
 
-/*
 function rmdirSync(directory) {
 	if(!fileExistsSync(directory) || !fs.lstatSync(directory).isDirectory()) return false;
 
@@ -182,7 +267,6 @@ function rmdirSync(directory) {
 	}
 	fs.rmdirSync(directory);
 }
-*/
 
 function fileExistsSync(filename) {
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
