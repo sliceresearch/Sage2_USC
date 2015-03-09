@@ -26,7 +26,7 @@ var previewWindowOffset = 0.74;
 var radialMenuScale = 1.0;
 var thumbnailWindowMinTextHeight = 24;
 
-var radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
+var radialMenuCenter = { x: 215 * radialMenuScale, y: 215 * radialMenuScale }; // overwritten in init - based on window size
 var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
 var angleSeparation = 35;
 var initAngle = 55;
@@ -51,8 +51,6 @@ var radialButtonIcon = new Image();
 radialButtonIcon.src = "images/radialMenu/icon_radial_button_circle.svg";
 var radialMenuLevel2Icon = new Image();
 radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
-var radialCloseIcon = new Image();
-radialCloseIcon.src = "images/radialMenu/icon_close_128.png";
 var idleExitIcon = new Image();
 idleExitIcon.src = "images/ui/close.svg";
 
@@ -146,9 +144,11 @@ function radialMenu(){
 	};
 	
 	this.init = function(data, thumbElem, thumbElem2) {
+		this.divCtxDebug = false;
+		
 		var id = data.id;
 		radialMenuScale = data.radialMenuScale;
-		radialMenuCenter = { x: 210 * radialMenuScale, y: 210 * radialMenuScale }; // overwritten in init - based on window size
+		radialMenuCenter = { x: 215 * radialMenuScale, y: 215 * radialMenuScale }; // overwritten in init - based on window size
 		this.radialMenuSize = data.radialMenuSize;
 
 		this.thumbnailWindowSize.x = data.thumbnailWindowSize.x;
@@ -156,8 +156,6 @@ function radialMenu(){
 		this.imageThumbSize = imageThumbSize * radialMenuScale;
 
 		this.textHeaderHeight = 32  * radialMenuScale;
-		//if( this.textHeaderHeight < thumbnailWindowMinTextHeight )
-		//	this.textHeaderHeight = thumbnailWindowMinTextHeight;
 
 		this.element = document.getElementById(id+"_menu"); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
@@ -193,8 +191,11 @@ function radialMenu(){
 		this.thumbnailWindowDiv.style.top    = (this.element.style.top+this.thumbnailWindowPosition.y).toString() + "px";
 
 		// Debug: Show scrolling window background
-		//this.thumbnailWindowDiv.style.backgroundColor = "rgba(10,50,200,0.8)";
-
+		if( this.divCtxDebug )
+		{
+			this.thumbnailWindowDiv.style.backgroundColor = "rgba(10,50,200,0.2)";
+		}
+		
 		this.thumbnailScrollWindowElement = thumbElem;
 		this.thumbScrollWindowctx = this.thumbnailScrollWindowElement.getContext("2d");
 
@@ -206,8 +207,6 @@ function radialMenu(){
 		this.thumbnailScrollWindowElement.style.display = "block";
 
 		this.hoverOverText = "";
-
-		this.sendsToServer = true;
 		radialMenuList[id+"_menu"] = this;
 
 		// websocket to server for file library access
@@ -218,38 +217,28 @@ function radialMenu(){
 		if(window.location.protocol === "http:" && port === "") port = "80";
 		if(window.location.protocol === "https:" && port === "") port = "443";
 		*/
+		if( isMaster )
+		{
+			this.wsio = wsio;
+			this.sendsToServer = true;
+		}
+		else
+		{
+			this.sendsToServer = false;
+		}
+		/*
 		this.wsio = new websocketIO();
 		this.wsio.open(function() {
 			console.log("open websocket: " + id+"_menu");
-			var clientDescription = {
-				clientType: "radialMenu",
-				clientID: id+"_menu",
-				sendsPointerData: false,
-				sendsMediaStreamFrames: false,
-				requestsServerFiles: true,
-				sendsWebContentToLoad: false,
-				launchesWebBrowser: false,
-				sendsVideoSynchonization: false,
-				sharesContentWithRemoteServer: false,
-				receivesDisplayConfiguration: true,
-				receivesClockTime: false,
-				requiresFullApps: false,
-				requiresAppPositionSizeTypeOnly: false,
-				receivesMediaStreamFrames: false,
-				receivesWindowModification: false,
-				receivesPointerData: false,
-				receivesInputEvents: false,
-				receivesRemoteServerInfo: false,
-				removeMediabrowserID: true
-			};
+			
 			radialMenuList[id+"_menu"].wsio.emit('addClient', clientDescription);
 		});
-
+		
 		this.wsio.on('disableSendToServer', function(ID) {
 			radialMenuList[id+"_menu"].sendsToServer = false;
 			radialMenuList[id+"_menu"].wsio.close();
 		});
-
+		*/
 
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
@@ -419,9 +408,12 @@ function radialMenu(){
 		}
 
 		// TEMP: Just to clearly see context edge
-		//this.ctx.fillStyle = "rgba(5, 255, 5, 0.7)";
-		//this.ctx.fillRect(0,0, this.element.width, this.element.height)
-
+		if( this.divCtxDebug )
+		{
+			this.ctx.fillStyle = "rgba(5, 255, 5, 0.3)";
+			this.ctx.fillRect(0,0, this.element.width, this.element.height)
+		}
+		
 		if( this.menuState == 'opening' )
 		{
 			if( this.stateTransition < 1 )
@@ -448,7 +440,6 @@ function radialMenu(){
 		}
 		
 		// draw lines to each button
-		//this.drawImage( this.ctx, this.glowLine, this.radialMenuCenter, {x: 510 * this.stateTransition * radialMenuScale, y: 510 * this.stateTransition * radialMenuScale}, "rgba(255, 255, 255, 0.9)", 0, true );
 		for(i=0; i<this.level1Buttons.length; i++) {
 			this.ctx.beginPath();
 			this.ctx.moveTo(radialMenuCenter.x, radialMenuCenter.y);
@@ -858,7 +849,10 @@ function radialMenu(){
 		buttonOverCount += this.radialCloseButton.onEvent(type, user.id, position, data);
 		if ( this.radialCloseButton.isClicked() && data.button === "left" )
 		{
-			this.wsio.emit('radialMenuClick', {button: "closeButton", user: user} );
+			if( this.sendsToServer === true )
+			{
+				this.wsio.emit('radialMenuClick', {button: "closeButton", user: user} );
+			}
 			this.closeMenu();
 		}
 
@@ -884,13 +878,19 @@ function radialMenu(){
 			{
 				this.settingMenuOpen = false;
 				this.radialSettingsButton.isLit = false;
-				this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "closed"}} );
+				if( this.sendsToServer === true )
+				{
+					this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "closed"}} );
+				}
 			}
 			else
 			{
 				this.settingMenuOpen = true;
 				this.radialSettingsButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "opened"}} );
+				if( this.sendsToServer === true )
+				{
+					this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "opened"}} );
+				}
 			}
 		}
 
@@ -912,18 +912,9 @@ function radialMenu(){
 		}
 
 
-		if( this.radialRemoteSitesButton.isClicked() ) // || this.radial2ImageButton.isClicked() )
+		if( this.radialRemoteSitesButton.isClicked() )
 		{
 			this.resetRadialButtonLitState();
-			/*
-			if( this.setToggleMenu('imageThumbnailWindow') )
-			{
-				this.radialImageButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "opened"}} );
-			}
-			else
-				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "closed"}} );
-			*/
 		}
 		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
 		{
@@ -931,10 +922,15 @@ function radialMenu(){
 			if( this.setToggleMenu('imageThumbnailWindow') )
 			{
 				this.radialImageButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "opened"}} );
+				if( this.sendsToServer === true )
+				{
+					this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "opened"}} );
+				}
 			}
-			else
+			else if( this.sendsToServer === true )
+			{
 				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "closed"}} );
+			}
 		}
 		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
 		{
@@ -942,10 +938,15 @@ function radialMenu(){
 			if( this.setToggleMenu('pdfThumbnailWindow') )
 			{
 				this.radialPDFButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "opened"}} );
+				if( this.sendsToServer === true )
+				{
+					this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "opened"}} );
+				}
 			}
-			else
+			else if( this.sendsToServer === true )
+			{
 				this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "closed"}} );
+			}
 		}
 		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
 		{
@@ -953,9 +954,10 @@ function radialMenu(){
 			if( this.setToggleMenu('videoThumbnailWindow') )
 			{
 				this.radialVideoButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "opened"}} );
+				if( this.sendsToServer === true )
+					this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "opened"}} );
 			}
-			else
+			else if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "closed"}} );
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
@@ -964,9 +966,10 @@ function radialMenu(){
 			if( this.setToggleMenu('appThumbnailWindow') )
 			{
 				this.radialAppButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "opened"}} );
+				if( this.sendsToServer === true )
+					this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "opened"}} );
 			}
-			else
+			else if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "closed"}} );
 		}
 		if( this.radialSessionButton.isClicked() )
@@ -975,12 +978,13 @@ function radialMenu(){
 			if( this.setToggleMenu('sessionThumbnailWindow') )
 			{
 				this.radialSessionButton.isLit = true;
-				this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user,  data: {state: "opened"}} );
+				if( this.sendsToServer === true )
+					this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user,  data: {state: "opened"}} );
 			}
-			else
+			else if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user, data: {state: "closed"}} );
 		}
-		if( this.radialSaveSessionButton.isClicked() )
+		if( this.radialSaveSessionButton.isClicked() && this.sendsToServer === true )
 		{
 			this.wsio.emit('saveSesion');
 			this.wsio.emit('requestStoredFiles');
@@ -1265,8 +1269,7 @@ function radialMenu(){
 
 				thumbnailButton.setSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
 				thumbnailButton.setHitboxSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
-				
-				console.log(appList[i].exif.SAGE2thumbnail);
+
 				if ( appList[i].exif.SAGE2thumbnail !== null )
 				{
 					customIcon = new Image();
