@@ -9,11 +9,21 @@
 // Copyright (c) 2014
 
 /**
- * Widget Controls and helper functionality for custom application user interface
+ * Provides widget controls and helper functionality for custom application user interface
  *
- * @class SAGE2WidgetControls, SAGE2WidgetControlBar
+ * @module widgets
  */
-//"use strict";
+
+/**
+ * Widget Controls class for custom application user interface
+ *
+ * @class SAGE2WidgetControls
+ * @constructor
+ * @return {Object} an object representing a widget control
+ */
+
+
+var dynamicStyleSheets = {};
 
 var SAGE2WidgetControls = {
 	button: function () {
@@ -286,9 +296,14 @@ var buttonType = {
 
 };
 
+
 /**
-*	Represents the widget bar
-* 	Has functions to create elements of the widget bar 
+ * Widget Bar: has functions to create elements of the widget 
+ *
+ * @class SAGE2WidgetControlBar
+ * @constructor
+ * @param id {String} identifier for the object
+ * @return {Object} an object representing a widget control bar
 */
 function SAGE2WidgetControlBar(id) {
 	this.id = id;
@@ -307,7 +322,6 @@ function SAGE2WidgetControlBar(id) {
 		"drawSpokes": true,
 		"drawSquareButtons":false
 	};
-
 	//this.controlSVG = [];
 }
 
@@ -316,14 +330,14 @@ SAGE2WidgetControlBar.prototype.getLatestControlSVG = function(){
 	return (idx > -1)? this.controlSVG[idx]:null;
 };
 
-/**
+/*
 *	Ensures everything got added to the controls specification properly
 */
 SAGE2WidgetControlBar.prototype.finishedAddingControls = function(){
 	this.specReady = true;
 };
 
-/**
+/*
 *	Check whether control specification is ready (used before creating widget elements from specification)
 */
 SAGE2WidgetControlBar.prototype.controlsReady = function(){
@@ -333,7 +347,7 @@ SAGE2WidgetControlBar.prototype.controlsReady = function(){
 
 
 
-/**
+/*
 *	Lets the user add a custom cover for buttons
 * 	Added cover is available only to that instance of that app. 
 */
@@ -355,7 +369,7 @@ SAGE2WidgetControlBar.prototype.addButtonType = function(type, buttonData){
 	}
 };
 
-/**
+/*
 *	
 * 	Allows the user to modify the look of the widget control bar
 *	layoutOptions
@@ -375,7 +389,7 @@ SAGE2WidgetControlBar.prototype.setLayoutOptions = function(layoutOptions){
 	if (layoutOptions.drawSquareButtons) this.layoutOptions.drawSquareButtons = layoutOptions.drawSquareButtons;
 };
 
-/**
+/*
 *	Adds a button specification 
 *	data
 *		.type - one of the several predefined button(cover) types [ex: "next", "prev", and so on]
@@ -437,7 +451,7 @@ SAGE2WidgetControlBar.prototype.addSeparatorAfterButtons = function(firstSeparat
 	
 };
 
-/**
+/*
 *	Adds a text-input bar specification 
 *	data
 *		.action - callback function to specify action after the text has been input and enter key pressed
@@ -463,7 +477,7 @@ SAGE2WidgetControlBar.prototype.addTextInput = function (data) {
 	
 };
 
-/**
+/*
 *	Adds a slider specification 
 *	data
 *		.appHandle 
@@ -516,7 +530,7 @@ SAGE2WidgetControlBar.prototype.addSlider = function(data){
 	
 };
 
-/**
+/*
 *	Adds a color palette 
 */
 SAGE2WidgetControlBar.prototype.addColorPalette = function(data){
@@ -539,7 +553,7 @@ SAGE2WidgetControlBar.prototype.addColorPalette = function(data){
 };
 
 
-/**
+/*
 *	Computes the dimensions of the widget control bar
 */
 SAGE2WidgetControlBar.prototype.computeSize = function(){
@@ -577,7 +591,7 @@ SAGE2WidgetControlBar.prototype.computeSize = function(){
 	return size;
 };
 
-/**
+/*
 *	Creates default close and radial menu buttons
 */
 
@@ -594,7 +608,7 @@ SAGE2WidgetControlBar.prototype.addDefaultButtons = function(data){
 	
 };
 
-/**
+/*
 *	Creates control bar and elements from the layout options and element specifications
 */
 function SAGE2WidgetControlInstance (instanceID, controlSpec){
@@ -617,7 +631,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	
 
 	if (controlSpec.layoutOptions.drawBackground === true)
-		drawBackgroundForRadialLayout (this.controlSVG,center, dimensions.outerR);
+		drawBackgroundForRadialLayout (instanceID,this.controlSVG,center, dimensions.outerR);
 
 
 	
@@ -647,7 +661,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 			button = this.controlSpec.buttonSequence[key];
 			point = polarToCartesian(dimensions.firstRadius,theta,center);
 			if (this.controlSpec.layoutOptions.drawSpokes === true)
-				drawSpokeForRadialLayout(this.controlSVG,center,point);
+				drawSpokeForRadialLayout(instanceID,this.controlSVG,center,point);
 			this.createButton(button,point.x,point.y,dimensions.buttonRadius-2);
 		}
 		theta = theta + innerThetaIncrement;
@@ -673,14 +687,14 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 352, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
 		d = makeBarPath(0,16, dimensions.outerR, center, this.controlSpec.textInput.width,dimensions.buttonRadius);
 		leftMidOfBar = polarToCartesian(dimensions.outerR,8, center);
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 8, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 		/*d = makeBarPath(375,405, dimensions.innerR, center, this.textInput.width);
 		leftMidOfBar = polarToCartesian(dimensions.innerR,390, center);
@@ -694,7 +708,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR,0, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createSlider(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	else if (this.controlSpec.hasTextInput===true){
@@ -703,7 +717,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR,0, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
-			drawSpokeForRadialLayout(this.controlSVG,rightEndOfCircle,leftMidOfBar);
+			drawSpokeForRadialLayout(instanceID,this.controlSVG,rightEndOfCircle,leftMidOfBar);
 		this.createTextInput(leftMidOfBar.x,leftMidOfBar.y, d);
 	}
 	/*else if (this.hasColorPalette===true){
@@ -718,32 +732,33 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 	return ctrHandle;
 }
 
-function drawSpokeForRadialLayout(paper,center,point){
+function drawSpokeForRadialLayout(instanceID,paper,center,point){
 	var spoke = paper.line(center.x,center.y,point.x,point.y);
 	spoke.attr({
 		stroke: "rgba(250,250,250,1.0)",
 		strokeWidth: 3,
 		fill: "none"
 	});
+	spoke.data("instanceID", instanceID);
 }
 
-function drawBackgroundForRadialLayout(paper, center, radius){
+function drawBackgroundForRadialLayout(instanceID, paper, center, radius){
 	var backGround = paper.circle(center.x,center.y,radius);
-	var grad = paper.gradient("r(0.5, 0.5, 0.45)rgba(190,190,190,0.6)-rgba(90,90,90,0.4)");
+	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(190,190,190,0.7)-rgba(90,90,90,0.4)");
 	backGround.attr({
 		fill: grad,//"rgba(60,60,60,0.5)",
 		stroke: "rgba(250,250,250,1.0)",
 		strokeDasharray: "2,1",
 		strokeWidth: 5
 	});
-
+	backGround.data("instanceID", instanceID);
 }
 
 function drawControlCenter(instanceID,paper, center, radius, initialText){
 	var controlCenter = paper.circle(center.x,center.y,radius);
 	controlCenter.attr({
 		fill:"rgba(110,110,110,1.0)",
-		stroke: "rgba(250,250,250,1.0)",
+		stroke: "rgba(200,200,200,0.8)",
 		id: instanceID + "menuCenter"
 	});
 	var controlCenterLabel = paper.text(center.x,center.y,initialText);
@@ -752,6 +767,8 @@ function drawControlCenter(instanceID,paper, center, radius, initialText){
 		fontSize: (0.030 * ui.widgetControlSize) + "em"
 	});
 	controlCenterLabel.attr("dy", "0.4em");
+	controlCenter.data("paper", paper);
+	controlCenter.data("instanceID", instanceID);
 }
 
 function drawPieSlice(paper, start,end, innerR, outerR, center){
@@ -785,7 +802,7 @@ function makeBarPath(start,end, innerR, center, width, offset){
 	return d;
 }
 
-/**
+/*
 *	Creates a slider from the slider specification
 */
 SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
@@ -933,7 +950,7 @@ function mapMoveToSlider(sliderKnob, position){
 	return sliderValue;
 }
 
-/**
+/*
 *	Creates a button from the button specification
 */
 SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy, rad){
@@ -1021,7 +1038,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	return button;
 };
 
-/**
+/*
 *	Creates a color palette 
 */
 /*SAGE2WidgetControlBar.prototype.createColorPalette = function(x, y, outline){
@@ -1037,7 +1054,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	//for(var i=0;i<this. )
 }
 
-/**
+/*
 *	Creates a text-input from the text-input specification
 */
 SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline){
@@ -1239,10 +1256,10 @@ getWidgetControlUnderPointer = function(data, offsetX, offsetY){
 	pointerElement.style.left = (parseInt(pointerElement.style.left) + 10000) + "px"; 
 	var widgetControlUnderPointer = Snap.getElementByPoint(data.x-offsetX,data.y-offsetY);
 	pointerElement.style.left = (parseInt(pointerElement.style.left) - 10000) + "px";
-	var widgetControlId = widgetControlUnderPointer? widgetControlUnderPointer.attr("id"):"";
-	if (/control/.test(widgetControlId) || /button/.test(widgetControlId) || /slider/.test(widgetControlId) || /textInput/.test(widgetControlId))
-		return widgetControlUnderPointer;
-	return null;
+	//var widgetControlId = widgetControlUnderPointer? widgetControlUnderPointer.attr("id"):"";
+	//if (/control/.test(widgetControlId) || /button/.test(widgetControlId) || /slider/.test(widgetControlId) || /textInput/.test(widgetControlId))
+	return widgetControlUnderPointer;
+	//return null;
 };
 
 
@@ -1263,45 +1280,168 @@ createWidgetToAppConnector = function (instanceID) {
 	connectorDiv.style.display = "none";
 	connectorDiv.style.zIndex = 0;
 	ui.main.appendChild(connectorDiv);
+};
 
-}
+addStyleElementForTitleColor = function (caption, color){
+	dynamicStyleSheets[caption] = caption;
+	var sheet = document.createElement('style');
+	sheet.id = "title"+caption;
+	var percent = 10;
+	if (!color)
+		color = '#666666';
+	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: linear-gradient(left,"+color+" " +percent+"%, #666666 100%); }";
+	document.body.appendChild(sheet);	
+};
 
-hideWidgetToAppConnector = function (instanceID){
+removeStyleElementForTitleColor = function (caption){
+	var sheet = document.getElementById("title"+caption);
+	if (sheet){
+		sheet.parentNode.removeChild(sheet);
+		delete dynamicStyleSheets[caption];
+	}
+};
+
+hideAllWidgetToAppConnector = function (appId){
+	var selectedAppTitle;
+	if (appId in controlObjects){
+		selectedAppTitle = document.getElementById(appId + "_title");
+		selectedAppTitle.className = "windowTitle";
+		for (var item in controlItems){
+			if (item.indexOf(appId) > -1){
+				hideWidgetToAppConnector(item);
+			}
+		}
+	}
+	
+};
+
+hideWidgetToAppConnector = function(instanceID, appId){
 	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (connectorDiv)
+	if (connectorDiv){
 		connectorDiv.style.display = "none";
+	}
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl)
-		selectedControl.attr("fill","rgba(110,110,110,1.0)");
-}
+	if (selectedControl){
+		selectedControl.attr({
+			fill: "rgba(110,110,110,1.0)",
+			filter:null
+		});
+	}
+	if (appId in controlObjects){
+
+		var selectedAppTitle = document.getElementById(appId + "_title");
+		selectedAppTitle.className = "windowTitle";
+	}
+};
 
 showWidgetToAppConnector = function (instanceID, color){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
     	connectorDiv.style.display = "inline";
-}
+	if (!color)
+		color = '#666666';
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	
+	if (selectedControl){
+		var paper = selectedControl.data("paper");
+		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
+		selectedControl.attr({
+			fill: color,
+			filter:shadow
+		});
+	}
+		
+};
+
+moveAndShowWidgetToAppConnector = function(position_data){
+	var hOffset;
+	var selectedAppTitle,re,styleCaption;
+	hOffset = (ui.titleBarHeight + position_data.height)/2;
+	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	if (!selectedAppTitle)return;
+	re = /\.|\:/g;
+	styleCaption = position_data.user_id.split(re).join("");
+	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle" ;
+	for (var item in controlItems){
+		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+			var control = controlItems[item].divHandle;
+			var cLeft = parseInt(control.style.left);
+			var cTop = parseInt(control.style.top);
+			var cHeight = parseInt(control.style.height);
+			moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.left-ui.offsetX + position_data.width/2.0, position_data.top-ui.offsetY+hOffset,cHeight/2.0, position_data.user_color);
+		}
+	}
+};
+
 
 removeWidgetToAppConnector = function (instanceID){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv)
 		connectorDiv.parentNode.removeChild(connectorDiv);
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl)
-		selectedControl.attr("fill","rgba(110,110,110,1.0)");
-}
+	if (selectedControl){
+		selectedControl.attr({
+			fill: "rgba(110,110,110,1.0)",
+			filter:null
+		});
+	}
+		
+};
 
-moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
+setConnectorColor = function (instanceID, color){
+	
 	var connectorDiv = document.getElementById(instanceID + "connector");
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl)
-		selectedControl.attr("fill",color);
 	if (!connectorDiv) return;
 	if (!color)
-		color = '#ab6666'
+		color = '#666666';
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	if (selectedControl){
+		var paper = selectedControl.data("paper");
+		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
+		selectedControl.attr({
+			fill: color,
+			filter:shadow
+		}); 
+	}
+		
+	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;  
+};
+
+setAllConnectorColor = function(position_data){
+
+	var selectedAppTitle,re,styleCaption;
+	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	if (!selectedAppTitle)return;
+	re = /\.|\:/g;
+	styleCaption = position_data.user_id.split(re).join("");
+	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle" ;
+	for (var item in controlItems){
+		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+			setConnectorColor(item,position_data.user_color);
+		}
+	}
+};
+
+moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
+	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (!connectorDiv) return;
+	if (!color)
+		color = '#666666';
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	var paper = selectedControl.data("paper");
+	var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
+
+	if (selectedControl)
+		selectedControl.attr({
+			fill: color,
+			filter:shadow
+		});
+	
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b ) ;
-    if (parseInt(width)==0)return
+    if (parseInt(width)===0)return;
     var alpha = (cutLength-2)/width;
     x1 = alpha*x2 + (1-alpha)*x1;
     y1 = alpha*y2 + (1-alpha)*y1;
@@ -1333,9 +1473,10 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
     var rad = Math.acos(cosb);
     var deg = (rad*180)/Math.PI;
     var thickness = (ui.widgetControlSize* 0.01) + "em";
-    connectorDiv.setAttribute('style','border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;box-shadow: 0px 0px 15px 5px '+color+';');   
-    connectorDiv.style.display = "inline";
-}
+    connectorDiv.setAttribute('style','border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;');
+    connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color ;   
+    //connectorDiv.style.display = "inline";
+};
 
 /*
 String.prototype.width = function(font) {

@@ -12,35 +12,23 @@
  @module WebSocket
  */
 
+// require variables to be declared
+"use strict";
+
 
 var WebSocket = require('ws');
 var WebSocketServer = WebSocket.Server;
 
-function websocketIOServer(data) {
-	if(data.server !== undefined)    this.wss = new WebSocketServer({server: data.server, perMessageDeflate: false});
-	else if(data.port !== undefined) this.wss = new WebSocketServer({port: data.port, perMessageDeflate: false});
-}
-
-websocketIOServer.prototype.onconnection = function(callback) {
-	this.wss.on('connection', function(ws) {
-		ws.binaryType = "arraybuffer";
-		
-		var wsio = new websocketIO(ws);
-		callback(wsio);
-	});
-};
-
-
-function websocketIO(ws, strictSSL, openCallback) {
+function WebsocketIO(ws, strictSSL, openCallback) {
 	if(typeof ws === "string") this.ws = new WebSocket(ws, null, {rejectUnauthorized: strictSSL});
 	else this.ws = ws;
-	
+
 	var _this = this;
 	this.messages = {};
-	if(this.ws.readyState == 1) this.remoteAddress = {address: this.ws._socket.remoteAddress, port: this.ws._socket.remotePort};
-	
+	if (this.ws.readyState === 1) this.remoteAddress = {address: this.ws._socket.remoteAddress, port: this.ws._socket.remotePort};
+
 	this.ws.on('error', function(err) {
-		if(err.errno == "ECONNREFUSED") /*do nothing*/;
+		if (err.errno === "ECONNREFUSED") return; // do nothing
 	});
 	this.ws.on('open', function() {
 		_this.ws.binaryType = "arraybuffer";
@@ -57,42 +45,42 @@ function websocketIO(ws, strictSSL, openCallback) {
 		else{
 			var i = 0;
 			var func = "";
-			
+
 			while(message[i] !== 0 && i < message.length) {
 				func += String.fromCharCode(message[i]);
 				i++;
 			}
-	
+
 			var buf = message.slice(i+1, message.length);
 			_this.messages[func](_this, buf);
 		}
 	});
 }
 
-websocketIO.prototype.onclose = function(callback) {
+WebsocketIO.prototype.onclose = function(callback) {
 	var _this = this;
 	this.ws.on('close', function(){
 		callback(_this);
 	});
 };
 
-websocketIO.prototype.on = function(name, callback) {
+WebsocketIO.prototype.on = function(name, callback) {
 	this.messages[name] = callback;
 };
 
-websocketIO.prototype.emit = function(name, data) {
+WebsocketIO.prototype.emit = function(name, data) {
 	var message;
 
 	if(name === null || name === ""){
 		console.log("Error: no message name specified");
 		return;
 	}
-	
+
 	// send binary data as array buffer
 	if(Buffer.isBuffer(data)){
 		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
 		message = Buffer.concat([funcName, data]);
-		
+
 		try {
 			this.ws.send(message, {binary: true, mask: false}, function(err){
 				if(err) console.log("---ERROR (ws.send)---");
@@ -106,7 +94,7 @@ websocketIO.prototype.emit = function(name, data) {
 	// send data as JSON string
 	else {
 		message = {f: name, d: data};
-	
+
 		// double error handling
 		try {
 			var msgString = JSON.stringify(message);
@@ -122,10 +110,26 @@ websocketIO.prototype.emit = function(name, data) {
 };
 
 // No JSON stringigy and no check version
-websocketIO.prototype.emitString = function(data) {
+WebsocketIO.prototype.emitString = function(data) {
 	this.ws.send(data, {binary: false, mask: false});
 };
 
 
-module.exports = websocketIO;
-module.exports.Server = websocketIOServer;
+function WebsocketIOServer(data) {
+	if(data.server !== undefined)    this.wss = new WebSocketServer({server: data.server, perMessageDeflate: false});
+	else if(data.port !== undefined) this.wss = new WebSocketServer({port: data.port, perMessageDeflate: false});
+}
+
+WebsocketIOServer.prototype.onconnection = function(callback) {
+	this.wss.on('connection', function(ws) {
+		ws.binaryType = "arraybuffer";
+
+		var wsio = new WebsocketIO(ws);
+		callback(wsio);
+	});
+};
+
+
+
+module.exports = WebsocketIO;
+module.exports.Server = WebsocketIOServer;

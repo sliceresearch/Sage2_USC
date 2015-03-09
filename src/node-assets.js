@@ -9,17 +9,25 @@
 // Copyright (c) 2014
 
 /**
- * @module asset
+ * Asset management functions for SAGE2 server
+ *
+ * @module node-assets
+ * @requires color, fluent-ffmpeg, gm, json5, node-exiftool, node-utils, node-registry
  */
 
 
+// require variables to be declared
+"use strict";
+
+
 var fs        = require('fs');
-var json5     = require('json5');
 var path      = require('path');
-var url       = require('url');
+
 var color     = require('color');
-var gm        = require('gm');                   // imagesmagick
-var ffmpeg    = require('fluent-ffmpeg');        // ffmpeg
+var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
+var gm        = require('gm');                // imagesmagick
+var json5     = require('json5');
+
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
 var registry  = require('../src/node-registry');
@@ -29,6 +37,13 @@ var imageMagick = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Class describing one asset (file or url)
+ *
+ * @class Asset
+ * @constructor
+ * @return {Object} an object representing an empty asset
+ */
 function Asset() {
 	this.filename = null;
 	this.url      = null;
@@ -36,24 +51,54 @@ function Asset() {
 	this.exif     = null;
 }
 
-
+/**
+ * Set an URL for an asset
+ *
+ * @method setURL
+ * @param aUrl {String} url string
+ */
 Asset.prototype.setURL = function(aUrl) {
     this.url = aUrl;
     this.id  = aUrl;
 };
 
+/**
+ * Set an filename for an asset
+ *
+ * @method setFilename
+ * @param aFilename {String} name of the file
+ */
 Asset.prototype.setFilename = function(aFilename) {
     this.filename = path.resolve(aFilename);
     this.id       = this.filename;
 };
 
+/**
+ * Set the metadata for an asset
+ *
+ * @method setEXIF
+ * @param exifdata {Object} an object containing EXIF data
+ */
 Asset.prototype.setEXIF = function(exifdata) {
     this.exif = exifdata;
 };
 
+/**
+ * Get the width of an asset, from  the EXIF data
+ *
+ * @method width
+ * @return {Number} width in pixel
+ */
 Asset.prototype.width = function() {
     return this.exif.ImageWidth;
 };
+
+/**
+ * Get the height of an asset, from  the EXIF data
+ *
+ * @method height
+ * @return {Number} height in pixel
+ */
 Asset.prototype.height = function() {
     return this.exif.ImageHeight;
 };
@@ -63,9 +108,20 @@ var AllAssets = null;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Asset management
+ *
+ * @class node-assets
+ */
 
-// Configuration of ImageMagick and FFMpeg
-setupBinaries = function(imOptions, ffmpegOptions) {
+/**
+ * Configuration of ImageMagick and FFMpeg
+ *
+ * @method setupBinaries
+ * @param imOptions {Object} object containing path to binaries
+ * @param ffmpegOptions {Object} object containing path to binaries
+ */
+var setupBinaries = function(imOptions, ffmpegOptions) {
 	// Load the settings from the server
 	imageMagick = gm.subClass(imOptions);
 	// Set the path to binaries for video processing
@@ -76,7 +132,7 @@ setupBinaries = function(imOptions, ffmpegOptions) {
 };
 
 
-listAssets = function() {
+var listAssets = function() {
 	var idx = 0;
 	// Sort by name
 	var keys = Object.keys(AllAssets.list).sort();
@@ -88,7 +144,7 @@ listAssets = function() {
 	}
 };
 
-saveAssets = function(filename) {
+var saveAssets = function(filename) {
 	// if parameter null, defaults
 	filename = filename || 'assets';
 
@@ -107,7 +163,7 @@ saveAssets = function(filename) {
 	console.log("Assets> saved to " + fullpath);
 };
 
-generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
+var generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
@@ -128,18 +184,7 @@ generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
 	});
 };
 
-generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
-	imageMagick(width, height, "#ffffff").append(infile+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
-		if (err) {
-			console.log("Assets> cannot generate thumbnails for:", infile);
-			return;
-		}
-		
-		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index, callback);
-	});
-};
-
-generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, callback) {
+var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
@@ -147,7 +192,7 @@ generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, ca
 		callback();
 		return;
 	}
-	
+
 	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function (err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
@@ -158,7 +203,18 @@ generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, ca
 	});
 };
 
-generateVideoThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
+var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
+	imageMagick(width, height, "#ffffff").append(infile+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
+		if (err) {
+			console.log("Assets> cannot generate thumbnails for:", infile);
+			return;
+		}
+
+		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index, callback);
+	});
+};
+
+var generateVideoThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
@@ -179,8 +235,8 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index,
 				console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 				return;
 			}
-			fs.unlink(tmpImg, function (err) {
-				if (err) throw err;
+			fs.unlink(tmpImg, function (err2) {
+				if (err2) throw err2;
 			});
 			// recursive call to generate the next size
 			generateVideoThumbnails(infile, outfile, width, height, sizes, index+1, callback);
@@ -193,7 +249,7 @@ generateVideoThumbnails = function(infile, outfile, width, height, sizes, index,
 	});
 };
 
-generateAppThumbnails = function(infile, outfile, color, sizes, index, callback) {
+var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
@@ -209,17 +265,17 @@ generateAppThumbnails = function(infile, outfile, color, sizes, index, callback)
 	var circle = radius + " " + radius + " " + edge + " " + radius;
 	var img = corner + " " + corner + " " + width + " " + width;
 
-	imageMagick(sizes[index], sizes[index], "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+color.r+","+color.g+","+color.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+sizes[index]+'.png', function(err) {
+	imageMagick(sizes[index], sizes[index], "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+acolor.r+","+acolor.g+","+acolor.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+sizes[index]+'.png', function(err) {
 		if (err) {
 			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
 		}
 		// recursive call to generate the next size
-		generateAppThumbnails(infile, outfile, color, sizes, index+1, callback);
+		generateAppThumbnails(infile, outfile, acolor, sizes, index+1, callback);
 	});
 };
 
-addFile = function(filename, exif, callback) {
+var addFile = function(filename, exif, callback) {
 	if (exif.MIMEType === 'application/vnd.adobe.photoshop')
 		exif.MIMEType = 'image/vnd.adobe.photoshop';
 
@@ -251,7 +307,7 @@ addFile = function(filename, exif, callback) {
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/custom') {
-		if (exif.icon === null || ! sageutils.fileExists(exif.icon) ) {
+		if (exif.icon === null || !sageutils.fileExists(exif.icon) ) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 			callback();
 		}
@@ -313,7 +369,7 @@ addFile = function(filename, exif, callback) {
 	}
 };
 
-deletePDF = function(filename) {
+var deletePDF = function(filename) {
 	var filepath = path.resolve(AllAssets.root, 'pdfs', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
@@ -323,7 +379,8 @@ deletePDF = function(filename) {
 		delete AllAssets.list[filepath];
 	});
 };
-deleteImage = function(filename) {
+
+var deleteImage = function(filename) {
 	var filepath = path.resolve(AllAssets.root, 'images', filename);
 	fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
@@ -333,7 +390,8 @@ deleteImage = function(filename) {
 		}
 	);
 };
-deleteVideo = function(filename) {
+
+var deleteVideo = function(filename) {
 	var filepath = path.resolve(AllAssets.root, 'videos', filename);
 		fs.unlink(filepath, function (err) {
 		if (err) console.log("Server> error removing file:", filename, err);
@@ -344,7 +402,7 @@ deleteVideo = function(filename) {
 	);
 };
 
-addURL = function(url,exif) {
+var addURL = function(url, exif) {
 	// Add the asset in the array
 	var anAsset = new Asset();
 	anAsset.setURL(url);
@@ -352,7 +410,7 @@ addURL = function(url,exif) {
 	AllAssets.list[anAsset.id] = anAsset;
 };
 
-getDimensions = function (id) {
+var getDimensions = function (id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return {width:  AllAssets.list[id].exif.ImageWidth,
@@ -361,7 +419,7 @@ getDimensions = function (id) {
 		return null;
 };
 
-getTag = function (id, tag) {
+var getTag = function (id, tag) {
 	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return AllAssets.list[id].exif[tag];
@@ -369,7 +427,7 @@ getTag = function (id, tag) {
 		return null;
 };
 
-getMimeType = function (id) {
+var getMimeType = function (id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return AllAssets.list[id].exif.MIMEType;
@@ -377,7 +435,7 @@ getMimeType = function (id) {
 		return null;
 };
 
-getExifData = function (id) {
+var getExifData = function (id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return AllAssets.list[id].exif;
@@ -385,8 +443,7 @@ getExifData = function (id) {
 		return null;
 };
 
-
-exifAsync = function(cmds, cb) {
+var exifAsync = function(cmds, cb) {
 	var execNext = function() {
 		var file = cmds.shift();
 		if(fs.lstatSync(file).isDirectory()){
@@ -431,7 +488,7 @@ exifAsync = function(cmds, cb) {
 			});
 		}
 		else {
-			exiftool.file(file, function(err,data) {
+			exiftool.file(file, function(err, data) {
 				if (err) {
 					console.log("internal error for file", file);
 					cb(err);
@@ -464,7 +521,7 @@ exifAsync = function(cmds, cb) {
 // 	if (cmds.length>0) execNext();
 // };
 
-listPDFs = function() {
+var listPDFs = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
@@ -476,7 +533,7 @@ listPDFs = function() {
 	return result;
 };
 
-listImages = function() {
+var listImages = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
@@ -488,7 +545,7 @@ listImages = function() {
 	return result;
 };
 
-listVideos = function() {
+var listVideos = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
@@ -500,7 +557,7 @@ listVideos = function() {
 	return result;
 };
 
-listApps = function() {
+var listApps = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
@@ -512,25 +569,7 @@ listApps = function() {
 	return result;
 };
 
-// regenrate all the assets thumbnails and EXIF data
-//    (needed with version upgrades)
-regenerateAssets = function() {
-	// Make sure the asset folder exists
-	var assetFolder = path.join(AllAssets.root, 'assets');
-	if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
-	var assetFile = path.join(assetFolder, 'assets.json');
-	if (sageutils.fileExists(assetFile)) {
-		fs.unlinkSync(assetFile);
-		console.log('Assets> successfully deleted', assetFile);
-	}
-	var rootdir = AllAssets.root;
-	var relativ = AllAssets.rel;
-	AllAssets = null;
-	initialize(rootdir, relativ);
-};
-
-
-initialize = function (root, relativePath) {
+var initialize = function (root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
@@ -646,6 +685,24 @@ initialize = function (root, relativePath) {
 		});
 	}
 };
+
+// regenrate all the assets thumbnails and EXIF data
+//    (needed with version upgrades)
+var regenerateAssets = function() {
+	// Make sure the asset folder exists
+	var assetFolder = path.join(AllAssets.root, 'assets');
+	if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
+	var assetFile = path.join(assetFolder, 'assets.json');
+	if (sageutils.fileExists(assetFile)) {
+		fs.unlinkSync(assetFile);
+		console.log('Assets> successfully deleted', assetFile);
+	}
+	var rootdir = AllAssets.root;
+	var relativ = AllAssets.rel;
+	AllAssets = null;
+	initialize(rootdir, relativ);
+};
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

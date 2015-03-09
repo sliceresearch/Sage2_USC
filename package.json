@@ -37,18 +37,16 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/uic-evl/SAGE2"
+		"url": "https://bitbucket.org/sage2/sage2/"
 	},
 	"dependencies": {
 		"color": "latest",
-		"colors": "latest",
 		"commander": "latest",
 		"decompress-zip": "latest",
 		"fluent-ffmpeg": "latest",
 		"formidable": "latest",
 		"gm": "latest",
 		"imageinfo": "latest",
-		"jshint": "latest",
 		"json5": "latest",
 		"mime": "latest",
 		"node-demux": "latest",
@@ -62,22 +60,29 @@
 		"nodemon": "latest",
 		"ytdl-core": "latest"
 	},
-	"bundledDependencies": [],
 	"devDependencies": {
-        "mocha": "^2.0.1",
-        "mocha-jshint": "^0.0.9",
-        "istanbul": "^0.3.5",
-        "coveralls": "^2.11.2"
-    },
+		"jshint": "latest",
+		"yuidocjs": "latest",
+		"eslint": "latest",
+		"plato": "latest",
+		"mocha": "^2.0.1",
+		"mocha-jshint": "^0.0.9",
+		"istanbul": "^0.3.5",
+		"coveralls": "^2.11.2"
+	},
 	"engines": {
 		"node": ">=0.10.x"
 	},
 	"scripts": {
 		"start": "./node_modules/.bin/node server.js -l",
-		"hint": "./node_modules/jshint/bin/jshint --verbose server.js src/*.js",
-		"hint_client": "./node_modules/jshint/bin/jshint --verbose public/src/*.js",
-		"doc": "yuidoc -c doc/yuidoc.json",
-        "test": "node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js"
+		"hint": "./node_modules/.bin/jshint --verbose server.js src/*.js",
+		"hint_client": "./node_modules/.bin/jshint --verbose public/src/*.js",
+		"eslint": "./node_modules/.bin/eslint -f compact server.js src/*.js",
+		"eslint_client": "./node_modules/.bin/eslint -c .eslint_client_rc -f compact public/src/*.js",
+		"report": "./node_modules/.bin/plato -r -l .jshintrc -d doc/report server.js src/*.js public/src/*.js",
+		"doc": "./node_modules/.bin/yuidoc -c doc/yuidoc.json",
+		"test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
+		"in": "node ./install_dependencies.js"
 	},
 	"license": "SAGE2-Software-License"
 }
