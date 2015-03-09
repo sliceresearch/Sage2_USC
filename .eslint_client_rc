@@ -12,7 +12,7 @@
 	allTrueDict: true, getParameterByName: true, playPauseVideo: true, moveItemToFront: true,
 	cleanURL: true, isTrue: true, isEmpty: true, initializeArray: true, byteBufferToInt: true,
 	byteBufferToString: true,
-	Kinetic: true, WebsocketIO: true, simplify: true
+	Kinetic: true, WebsocketIO: true, simplify: true, deleteElement: true
   },
   rules: {
 	strict: 0,

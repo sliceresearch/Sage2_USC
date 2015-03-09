@@ -107,13 +107,13 @@ function SAGE2_init() {
 			var main = document.getElementById('main');
 			var videosTable = document.getElementById('videos');
 
-			var vid = document.createElement('audio');
-			vid.id = data.id;
+			var vid    = document.createElement('audio');
+			vid.id     = data.id;
 			vid.volume = 0.8;
 			vid.style.display = "none";
 			vid.addEventListener('canplay', function() {
 				console.log("video can now play"); // Video is loaded and can be played
-				if(autoplay === true) playVideo(data.id);
+				if (autoplay === true) playVideo(data.id);
 			}, false);
 			vid.addEventListener('ended', function() {
 				console.log("video ended");
@@ -121,51 +121,51 @@ function SAGE2_init() {
 			}, false);
 			vid.addEventListener('timeupdate', function() {
 				var vid_time = document.getElementById(data.id + "_time");
-				if(vid_time) vid_time.textContent = timeToHHMMSS(vid.currentTime);
+				if (vid_time) vid_time.textContent = formatHHMMSS(vid.currentTime);
 			}, false);
 
-			var url = cleanURL(data.data.audio_url);
+			var url    = cleanURL(data.data.audio_url);
 			var source = document.createElement('source');
-			var param = url.indexOf('?');
+			var param  = url.indexOf('?');
 			if(param >= 0) source.src = url + "&clientID=audio";
 			else source.src = url + "?clientID=audio";
 			source.type = data.data.audio_type;
 			vid.appendChild(source);
 
 			var videoRow = document.createElement('tr');
-			videoRow.id = data.id + "_row";
-			var title = document.createElement('td');
-			title.id = data.id + "_title";
-			title.className = "videoTitle";
+			videoRow.id  = data.id + "_row";
+			var title    = document.createElement('td');
+			title.id     = data.id + "_title";
+			title.className   = "videoTitle";
 			title.textContent = data.title;
 
 			var volume = document.createElement('td');
-			volume.id = data.id + "_volume";
+			volume.id  = data.id + "_volume";
 			volume.className = "videoVolume";
-			var volumeMute = document.createElement('span');
-			volumeMute.id = data.id + "_mute";
+			var volumeMute   = document.createElement('span');
+			volumeMute.id    = data.id + "_mute";
 			volumeMute.className = "videoVolumeMute";
 			volumeMute.innerHTML = "&#x2713;";
 			var volumeSlider = document.createElement('input');
-			volumeSlider.id = data.id + "_volumeSlider";
+			volumeSlider.id  = data.id + "_volumeSlider";
 			volumeSlider.className = "videoVolumeSlider";
-			volumeSlider.type = "range";
-			volumeSlider.min = 0;
-			volumeSlider.max = 10;
-			volumeSlider.step = 1;
+			volumeSlider.type  = "range";
+			volumeSlider.min   = 0;
+			volumeSlider.max   = 10;
+			volumeSlider.step  = 1;
 			volumeSlider.value = 8;
 			volumeSlider.addEventListener('input', changeVolume, false);
 			volume.appendChild(volumeMute);
 			volume.appendChild(volumeSlider);
 
 			var time = document.createElement('td');
-			time.id = data.id + "_time";
-			time.className = "videoTime";
+			time.id  = data.id + "_time";
+			time.className   = "videoTime";
 			time.textContent = "00:00:00";
 
 			var play = document.createElement('td');
-			play.id = data.id + "_play";
-			play.className = "videoPlay";
+			play.id  = data.id + "_play";
+			play.className   = "videoPlay";
 			play.textContent = "Paused";
 
 			videoRow.appendChild(title);
@@ -230,42 +230,35 @@ function SAGE2_init() {
 	});
 }
 
-function cleanURL(url) {
-	var a = document.createElement('a');
-	a.href = url;
-	var clean = url;
-
-	if(hostAlias[a.origin] !== undefined)
-		clean = url.replace(a.origin, hostAlias[a.origin]);
-
-	return clean;
-}
-
-function deleteElement(id) {
-	var elem = document.getElementById(id);
-	if(elem !== undefined && elem !== null)
-		elem.parentNode.removeChild(elem);
-}
-
-function timeToHHMMSS(sec) {
-	var totalSec = Math.floor(sec);
-	var hh = Math.floor(totalSec / 3600) % 24;
-	var mm = Math.floor(totalSec /   60) % 60;
-	var ss = totalSec % 60;
-
-	return (hh < 10 ? "0" + hh : hh) + ":" + (mm < 10 ? "0" + mm : mm) + ":" + (ss  < 10 ? "0" + ss : ss);
-}
-
+/**
+ * Handler for the volume slider
+ *
+ * @method changeVolume
+ * @param event {Event} event data
+ */
 function changeVolume(event) {
-	var vol = document.getElementById(event.target.id).value / 10;
+	var vol     = document.getElementById(event.target.id).value / 10;
 	var videoId = event.target.id.substring(0, event.target.id.length-13);
 	changeVideoVolume(videoId, vol);
 }
 
+/**
+ * Change the volume of a video
+ *
+ * @method changeVideoVolume
+ * @param videoId {String} id of the video
+ * @param volume {Number} new volume value
+ */
 function changeVideoVolume(videoId, volume) {
 	document.getElementById(videoId).volume = volume;
 }
 
-function playVideo(id) {
-	wsio.emit('playVideo', {id: id});
+/**
+ * Play a video
+ *
+ * @method playVideo
+ * @param videoId {String} id of the video
+ */
+function playVideo(videoId) {
+	wsio.emit('playVideo', {id: videoId});
 }
