@@ -9,16 +9,16 @@
 // Copyright (c) 2014
 
 /**
- * @module websocketIO
+ * @module WebsocketIO
  */
 
 /**
  * Lightweight object around websocket, handles string and binary communication
  *
- * @class websocketIO
+ * @class WebsocketIO
  * @constructor
  */
-function websocketIO(url) {
+function WebsocketIO(url) {
 	if (url !== undefined && url !== null) this.url = url;
 	else this.url = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host + "/" + window.location.pathname.split("/")[1];
 
@@ -59,7 +59,7 @@ function websocketIO(url) {
 				if (message.f in _this.messages) {
 					_this.messages[message.f](message.d);
 				} else {
-					console.log('websocketIO> No handler for', message.f);
+					console.log('WebsocketIO> No handler for', message.f);
 				}
 			}
 			else {
@@ -76,7 +76,7 @@ function websocketIO(url) {
 		};
 		// triggered by unexpected close event
 		this.ws.onclose = function(evt) {
-			console.log("websocketIO> socket closed");
+			console.log("WebsocketIO> socket closed");
 			if ('close' in _this.messages)
 				_this.messages.close(evt);
 		};

@@ -525,6 +525,19 @@ function moveItemToFront(elem) {
 }
 
 /**
+ * Delete an element in the DOM
+ *
+ * @method deleteElement
+ * @param id {Element} DOM element to delete
+ */
+function deleteElement(id) {
+	var elem = document.getElementById(id);
+	if (elem !== undefined && elem !== null)
+		elem.parentNode.removeChild(elem);
+}
+
+
+/**
  * Cleanup a URL and replace the origin to match the client (to mitigate CORS problems, cross-origin resource sharing)
  *
  * @method cleanURL

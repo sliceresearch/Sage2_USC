@@ -161,10 +161,10 @@ function OmicronManager(sysConfig)
 
 		this.oinputserverSocket = net.connect(msgPort, this.config.inputServerIP,  function() {
 			//'connect' listener
-			console.log('Connected to Omicron oinputserver at "'+this.config.inputServerIP+'" on msgPort: '+this.msgPort+'. Requesting data on port ', this.omicronDataPort);
+			console.log('Connected to Omicron oinputserver at "'+omicronManager.config.inputServerIP+'" on msgPort: '+msgPort+'. Requesting data on port ', omicronManager.omicronDataPort);
 
-			var sendbuf = util.format("omicron_data_on,%d\n", this.omicronDataPort);
-			this.oinputserverSocket.write(sendbuf);
+			var sendbuf = util.format("omicron_data_on,%d\n", omicronManager.omicronDataPort);
+			omicronManager.oinputserverSocket.write(sendbuf);
 		});
 
 		this.oinputserverSocket.on('end', function(e) {

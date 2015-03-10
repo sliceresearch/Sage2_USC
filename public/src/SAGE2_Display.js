@@ -60,7 +60,7 @@ function SAGE2_init() {
 	clientID = parseInt(getParameterByName("clientID")) || 0;
 	console.log("clientID: " + clientID);
 	
-	wsio = new websocketIO();
+	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 	
 	isMaster = false;
@@ -162,7 +162,7 @@ function SAGE2_init() {
 		}
 
 		// Build the elements visible on the wall
-		ui = new uiBuilder(json_cfg, clientID);
+		ui = new UIBuilder(json_cfg, clientID);
 		ui.build();
 		ui.background();
 		if (json_cfg.ui.auto_hide_ui) {
