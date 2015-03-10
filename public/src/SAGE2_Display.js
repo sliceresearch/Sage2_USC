@@ -272,7 +272,7 @@ function SAGE2_init() {
 		if(applications[appId] !== undefined && applications[appId] !== null){
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if(applications[appId].receivedBlocks.every(isTrue) === true){
-				applications[appId].draw(new Date(date));
+				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
                 wsio.emit('receivedMediaBlockStreamFrame', {id: appId});
 			}
@@ -289,7 +289,7 @@ function SAGE2_init() {
 		if(applications[appId] !== undefined && applications[appId] !== null){
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if(applications[appId].receivedBlocks.every(isTrue) === true){
-				applications[appId].draw(new Date(date));
+				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
 				wsio.emit('requestVideoFrame', {id: appId});
 			}
