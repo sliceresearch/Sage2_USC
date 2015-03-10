@@ -110,7 +110,7 @@ function SAGE2_init() {
 	browser.isLinux    = userAgent.indexOf("linux") >= 0;
 
 	// Create a connection to the SAGE2 server
-	wsio = new websocketIO();
+	wsio = new WebsocketIO();
 	wsio.open(function() {
 		console.log("open websocket");
 		

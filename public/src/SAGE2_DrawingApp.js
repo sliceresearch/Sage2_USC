@@ -8,10 +8,15 @@
 //
 // Copyright (c) 2014-15
 
+/**
+ * Client-side application for drawing, leverages Wacom plugin if present
+ *
+ * @module SAGE2_DrawingApp
+ * @class SAGE2_DrawingApp
+ */
+
 
 var wsio;
-var hostname;
-var port;
 
 var plugin;
 var canvas;
@@ -55,18 +60,18 @@ function inCanvasBounds(posX, posY ) {
 	var right  = canvasSize.width;
 	var bottom = canvasSize.height;
 
-	return ( posX >= left && posX <= right && 
-			 posY >= top && posY <= bottom);
+	return (posX >= left && posX <= right &&
+			posY >= top && posY <= bottom);
 }
 
+/**
+ * Entry point of the application. Uses Kinetic.js for drawing
+ *
+ * @method SAGE2_init
+ */
 function SAGE2_init() {
 	// SAGE2 stuff
-	hostname = window.location.hostname;
-	port     = window.location.port;
-	if(window.location.protocol === "http:"  && port === "") port = "80";
-	if(window.location.protocol === "https:" && port === "") port = "443";
-	
-	wsio = new websocketIO();
+	wsio = new WebsocketIO();
 
 	wsio.open(function() {
 		console.log("open websocket");
@@ -79,15 +84,15 @@ function SAGE2_init() {
 		};
 		wsio.emit('addClient', clientDescription);
 	});
-	
-	// Socket close event (ie server crashed)		
+
+	// Socket close event (ie server crashed)
 	wsio.on('close', function (evt) {
 		var refresh = setInterval(function () {
 			// make a dummy request to test the server every 2 sec
-			xhr = new XMLHttpRequest();
+			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
 			xhr.onreadystatechange = function() {
-				if(xhr.readyState == 4 && xhr.status == 200){
+				if (xhr.readyState === 4 && xhr.status === 200) {
 					console.log("server ready");
 					// when server ready, clear the interval callback
 					clearInterval(refresh);
@@ -111,7 +116,7 @@ function SAGE2_init() {
 	plugin = document.getElementById('wtPlugin');
 
 	// Show plugin version
-	pluginVersion = document.getElementById('pluginVersion');
+	var pluginVersion = document.getElementById('pluginVersion');
 	if (plugin.version)
 		pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
 	else
@@ -135,7 +140,6 @@ function SAGE2_init() {
 		info  = "Plugin information n/a";
 		pluginInformation.innerHTML = info;
 	}
-
 
 	// Toolbar
 	var uiStage = new Kinetic.Stage({
@@ -209,7 +213,7 @@ function SAGE2_init() {
 		width:  1280,
 		height: 720
 	});
-	layerbg = new Kinetic.Layer();
+	var layerbg = new Kinetic.Layer();
 	drawingStage.add(layerbg);
 
 	var rectbg = new Kinetic.Rect({
@@ -233,9 +237,14 @@ function SAGE2_init() {
 	eraseMode = false;
 
 	canvas.addEventListener("mouseup",   mouseup,   true);
-	canvas.addEventListener("mousedown", mousedown, true); 
+	canvas.addEventListener("mousedown", mousedown, true);
 }
 
+/**
+ * Create a new drawing layer
+ *
+ * @method newLayer
+ */
 function newLayer() {
 	// create a new layer
 	var nlayer = new Kinetic.Layer();
@@ -259,6 +268,11 @@ function newLayer() {
 	wsio.emit('pointerDraw', {command: 'newlayer'});
 }
 
+/**
+ * Navigate to the next layer
+ *
+ * @method nextLayer
+ */
 function nextLayer() {
 	var newidx = currentLayer + 1;
 	if (newidx >= numLayers) newidx = numLayers-1;
@@ -282,6 +296,11 @@ function nextLayer() {
 	}
 }
 
+/**
+ * Navigate to the previous layer
+ *
+ * @method previousLayer
+ */
 function previousLayer() {
 	var newidx = (currentLayer-1) % numLayers;
 	if (newidx >=0 && newidx !== currentLayer) {
@@ -304,6 +323,12 @@ function previousLayer() {
 	}
 }
 
+/**
+ * Mouse down handler
+ *
+ * @method mousedown
+ * @param ev {Event} mouse event
+ */
 function mousedown(ev) {
 	if (plugin.penAPI) {
 		// plugin.penAPI.pointerType: 0:out 1:pen 2:mouse/puck 3:eraser
@@ -328,7 +353,7 @@ function mousedown(ev) {
 	if (eraseMode) {
 		pencolor = 'black';
 		aSpline = new Kinetic.Line({
-			points: [pX,pY],
+			points: [pX, pY],
 			stroke: pencolor,
 			strokeWidth: 40,
 			lineCap: 'round',
@@ -337,7 +362,7 @@ function mousedown(ev) {
 		aSpline.eraseMode = true;
 	} else {
 		aSpline = new Kinetic.Line({
-			points: [pX,pY],
+			points: [pX, pY],
 			stroke: pencolor,
 			strokeWidth: 3,
 			lineCap: 'round',
@@ -351,6 +376,12 @@ function mousedown(ev) {
 	mousemove(ev);
 }
 
+/**
+ * Mouse up handler
+ *
+ * @method mouseup
+ * @param ev {Event} mouse event
+ */
 function mouseup(ev) {
 	capturing = false;
 	canvas.style.cursor = 'initial';
@@ -363,8 +394,8 @@ function mouseup(ev) {
 			toprocess.push({x:arr[2*i], y:arr[2*i+1]});
 		}
 		// Adding the mouseup position
-		curX = ev.pageX - canvasPos.x;
-		curY = ev.pageY - canvasPos.y;
+		var curX = ev.pageX - canvasPos.x;
+		var curY = ev.pageY - canvasPos.y;
 		toprocess.push({x:curX, y:curY});
 		// starting process
 		var processed;
@@ -374,7 +405,7 @@ function mouseup(ev) {
 			processed = simplify(toprocess, 2.0, true); // array, pixel size, high-quality: true
 		var newpoints = [];
 		for (i=0; i<processed.length;i++) {
-			newpoints.push(processed[i].x,processed[i].y);
+			newpoints.push(processed[i].x, processed[i].y);
 		}
 		//console.log('Gain:', toprocess.length/newpoints.length);
 		aSpline.points(newpoints);
@@ -396,6 +427,12 @@ function mouseup(ev) {
 	}
 }
 
+/**
+ * Mouse move handler
+ *
+ * @method mousemove
+ * @param ev {Event} mouse event
+ */
 function mousemove(ev) {
 	var penAPI   = plugin.penAPI;
 	var pressure = 0.0;
@@ -432,8 +469,8 @@ function mousemove(ev) {
 	}
 
 
-	curX = ev.pageX - canvasPos.x;
-	curY = ev.pageY - canvasPos.y;
+	var curX = ev.pageX - canvasPos.x;
+	var curY = ev.pageY - canvasPos.y;
 
 	capturing = inCanvasBounds(curX, curY);
 
