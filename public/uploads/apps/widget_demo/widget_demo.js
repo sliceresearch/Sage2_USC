@@ -159,11 +159,9 @@ var widget_demo = SAGE2_App.extend( {
 			labelFormatFunction:formatFunction,
 			lockAction:function(date){
 				//Occurs the first time the slider knob is pressed on
-				console.log("lock action");
 			}, 
 			updateAction:function(date){
 				//Occurs everytime the knob moves
-				console.log("update action");
 			}, 
 			action:function(date){
 				//This is the action that happens after releasing the slider
