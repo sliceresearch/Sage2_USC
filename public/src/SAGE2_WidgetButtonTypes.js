@@ -18,7 +18,8 @@
 /**
  * Enum for button types
  * @readonly
- * @enum {function}
+ * @property SAGE2WidgetButtonTypes
+ * @type {Object}
  */
 var SAGE2WidgetButtonTypes = {
 	"play-pause": function () {
