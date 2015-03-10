@@ -223,6 +223,7 @@ function radialMenu(){
 		this.radialCenterButton = this.createRadialButton( radialButtonIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 );
 		
 		this.radialRemoteSitesButton = this.addRadialMenuButton("radialRemoteSitesButton", idleRemoteSitesIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 0, 1)
+		this.radialRemoteSitesButton.setHidden(true);
 		
 		this.radialPDFButton = this.addRadialMenuButton("radialPDFButton", idlePDFIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 1, 1)
 		
@@ -436,12 +437,15 @@ function radialMenu(){
 		
 		// draw lines to each button
 		for(i=0; i<this.level1Buttons.length; i++) {
-			this.ctx.beginPath();
-			this.ctx.moveTo(radialMenuCenter.x, radialMenuCenter.y);
-			this.ctx.lineTo(this.level1Buttons[i].posX, this.level1Buttons[i].posY);
-			this.ctx.strokeStyle = '#ffffff';
-			this.ctx.lineWidth = 5 * radialMenuScale;
-			this.ctx.stroke();
+			
+			if( this.level1Buttons[i].isHidden() === false ) {
+				this.ctx.beginPath();
+				this.ctx.moveTo(radialMenuCenter.x, radialMenuCenter.y);
+				this.ctx.lineTo(this.level1Buttons[i].posX, this.level1Buttons[i].posY);
+				this.ctx.strokeStyle = '#ffffff';
+				this.ctx.lineWidth = 5 * radialMenuScale;
+				this.ctx.stroke();
+			}
 		}
 		
 		
@@ -1275,7 +1279,8 @@ function buttonWidget() {
 	this.isLit = false;
 
 	// Button states:
-	// -1 = Disabled
+	// -2 = Hidden (and Disabled)
+	// -1 = Disabled (Visible, but ignores events - eventually will be dimmed?)
 	// 0  = Idle
 	// 1  = Over
 	// 2  = Pressed
@@ -1331,6 +1336,9 @@ function buttonWidget() {
 	};
 
 	this.draw = function() {
+		if( this.state == -2 ) // Button is hidden
+			return;
+		
 		// Default - align 'left'
 		var translate = { x: this.posX, y: this.posY };
 		var offsetHitbox = { x: 0, y: 0 };
@@ -1429,6 +1437,11 @@ function buttonWidget() {
 	};
 
 	this.onEvent = function( type, user, position, data ) {
+		if( this.state < 0 ) // Button is disabled or hidden
+		{
+			return;
+		}
+		
 		if( this.isPositionOver( user, position ) ) {
 			if( this.state === 5 ) {
 				this.state = 1;
@@ -1515,5 +1528,37 @@ function buttonWidget() {
 			return true;
 		} else
 			return false;
+	};
+	
+	this.isHidden = function() {
+		if ( this.state === -2 ) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+	
+	this.isDisabled = function() {
+		if ( this.state === -1 ) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+	
+	this.setDisabled = function(val) {
+		if ( val ) {
+			this.state = -2;
+		} else {
+			this.state = 0;
+		}
+	};
+	
+	this.setDisabled = function(val) {
+		if ( val ) {
+			this.state = -1;
+		} else {
+			this.state = 0;
+		}
 	};
 }
