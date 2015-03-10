@@ -582,8 +582,7 @@ function radialMenu(){
 				metadataTags[24] = { tag: metadata.AudioSampleRate, longLabel: "Audio Sample Rate: " };
 				
 				// Apps
-				if( metadata.metadata !== undefined )
-				{
+				if( metadata.metadata !== undefined ) {
 					metadataTags[25] = { tag: metadata.metadata.title, longLabel: "Title: " };
 					metadataTags[26] = { tag: metadata.metadata.version, longLabel: "Version: " };
 					metadataTags[27] = { tag: metadata.metadata.author, longLabel: "Author: " };
@@ -649,8 +648,7 @@ function radialMenu(){
 		}
 	};
 
-	this.resetRadialButtonLitState = function()
-	{
+	this.resetRadialButtonLitState = function() {
 		this.radialRemoteSitesButton.isLit = false;
 		this.radialImageButton.isLit = false;
 		this.radialPDFButton.isLit = false;
@@ -659,8 +657,7 @@ function radialMenu(){
 		this.radialSessionButton.isLit = false;
 	};
 
-	this.moveMenu = function( data, offset )
-	{
+	this.moveMenu = function( data, offset ) {
 		pointerX = data.x - data.windowX - offset.x;
 		pointerY = data.y - data.windowY - offset.y;
 		
@@ -817,8 +814,7 @@ function radialMenu(){
 		}
 
 		// Thumbnail window ----------------------------
-		if( this.currentMenuState !== 'radialMenu' )
-		{
+		if( this.currentMenuState !== 'radialMenu' ) {
 			var currentThumbnailButtons = this.imageThumbnailButtons;
 
 			if( this.currentMenuState === 'imageThumbnailWindow' )
@@ -832,8 +828,7 @@ function radialMenu(){
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
 
-			for( i = 0; i < currentThumbnailButtons.length; i++ )
-			{
+			for( i = 0; i < currentThumbnailButtons.length; i++ ) {
 				thumbButton = currentThumbnailButtons[i];
 
 
@@ -841,25 +836,19 @@ function radialMenu(){
 
 				// Prevent clicking on hidden thumbnails under preview window
 				var thumbnailWindowDivWidth = this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * radialMenuScale; // Should match where 'this.thumbnailWindowDiv.style.width' is assigned
-				if( thumbEventPos.x >= 0 && thumbEventPos.x <= thumbnailWindowDivWidth )
-				{
+				if( thumbEventPos.x >= 0 && thumbEventPos.x <= thumbnailWindowDivWidth ) {
 					thumbEventPos.x -= this.thumbnailWindowScrollOffset.x;
 					buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 
-					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false )
-					{
-						if( this.currentMenuState === 'appThumbnailWindow' )
-						{
+					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false ) {
+						if( this.currentMenuState === 'appThumbnailWindow' ) {
 							this.loadApplication( thumbButton.getData(), user  );
-						}
-						else
-						{
+						} else {
 							this.loadFileFromServer( thumbButton.getData(), user  );
 						}
 
 					}
-					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  )
-					{
+					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  ) {
 						this.hoverOverText = thumbButton.getData().filename;
 						this.hoverOverThumbnail = thumbButton.idleImage;
 						this.hoverOverMeta = thumbButton.getData().meta;
@@ -873,19 +862,15 @@ function radialMenu(){
 		}
 
 		// windowInteractionMode = true if any active button has an event over its
-		if( type === "pointerPress" && data.button === 'left' )
-		{
+		if( type === "pointerPress" && data.button === 'left' ) {
 			// Press over radial menu, drag menu
-			if( position.x > 0 && position.x < this.radialMenuSize.x && position.y > 0 && position.y < this.radialMenuSize.y && buttonOverCount === 0 )
-			{
+			if( position.x > 0 && position.x < this.radialMenuSize.x && position.y > 0 && position.y < this.radialMenuSize.y && buttonOverCount === 0 ) {
 				this.windowInteractionMode = false;
 				this.dragPosition = position;
 			}
 
-			if( position.x > this.radialMenuSize.x && position.x < this.thumbnailWindowSize.x && position.y > 0 && position.y < this.thumbnailWindowSize.y )
-			{
-				if( this.dragThumbnailWindow === false )
-				{
+			if( position.x > this.radialMenuSize.x && position.x < this.thumbnailWindowSize.x && position.y > 0 && position.y < this.thumbnailWindowSize.y ) {
+				if( this.dragThumbnailWindow === false ) {
 					this.dragThumbnailWindow = true;
 					this.thumbnailWindowDragPosition = position;
 
@@ -894,15 +879,11 @@ function radialMenu(){
 				}
 			}
 			this.ctx.redraw = true;
-		}
-		else if( type === "pointerMove" )
-		{
-			if( this.dragThumbnailWindow === true )
-			{
+		} else if( type === "pointerMove" ) {
+			if( this.dragThumbnailWindow === true ) {
 				// Controls the content window scrolling.
 				// Note:Scrolling is +right, -left so offset should always be negative
-				if( this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false )
-				{
+				if( this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false ) {
 					var scrollDist = 0;
 
 					nextScrollPos = this.thumbnailWindowScrollOffset;
@@ -915,13 +896,11 @@ function radialMenu(){
 					if( nextScrollPos.y > 0 )
 						nextScrollPos.y = 0;
 
-					if( this.thumbnailWindowScrollLock.x === false )
-					{
+					if( this.thumbnailWindowScrollLock.x === false ) {
 						this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
 						scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
 					}
-					if( this.thumbnailWindowScrollLock.y === false )
-					{
+					if( this.thumbnailWindowScrollLock.y === false ) {
 						this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
 						scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
 					}
@@ -929,31 +908,25 @@ function radialMenu(){
 					if( scrollDist < 0 )
 						scrollDist *= -1;
 
-					if( scrollDist >= thumbnailDisableSelectionScrollDistance )
-					{
+					if( scrollDist >= thumbnailDisableSelectionScrollDistance ) {
 						this.scrollOpenContentLock = true;
 					}
 
 					this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString()+"px";
 
 					this.thumbnailWindowDragPosition = position;
-				}
-				else
-				{
+				} else {
 					this.thumbnailWindowScrollOffset.x = 0;
 				}
 			}
 
 		}
-		else if( type === "pointerRelease" )
-		{
-			if(  this.windowInteractionMode === false )
-			{
+		else if( type === "pointerRelease" ) {
+			if(  this.windowInteractionMode === false )	{
 				this.windowInteractionMode = true;
 				this.dragPosition = { x: 0, y: 0 };
 			}
-			else if( this.dragThumbnailWindow === true )
-			{
+			else if( this.dragThumbnailWindow === true ) {
 				this.dragThumbnailWindow = false;
 				this.scrollOpenContentLock = false;
 			}
@@ -962,18 +935,14 @@ function radialMenu(){
 	};
 
 	// Displays files
-	this.loadFileFromServer = function( data, user )
-	{
-		if( this.sendsToServer === true )
-		{
+	this.loadFileFromServer = function( data, user ) {
+		if( this.sendsToServer === true ) {
 			this.wsio.emit('loadFileFromServer', { application: data.application, filename: data.filename, user: user} );
 		}
 	};
 
-	this.loadApplication = function( data, user )
-	{
-		if( this.sendsToServer === true )
-		{
+	this.loadApplication = function( data, user ) {
+		if( this.sendsToServer === true ) {
 			this.wsio.emit('loadApplication', { application: data.filename, user: user} );
 		}
 	};
@@ -997,26 +966,21 @@ function radialMenu(){
 
 		sessionList =  serverFileList.sessions;
 
-		if( imageList !== null )
-		{
+		if( imageList !== null ) {
 			validImages = 0;
-			for( i = 0; i < imageList.length; i++ )
-			{
-				if( imageList[i].filename.search("Thumbs.db") == -1 )
-				{
+			for( i = 0; i < imageList.length; i++ ) {
+				if( imageList[i].filename.search("Thumbs.db") == -1 ) {
 					thumbnailButton = new buttonWidget();
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					thumbnailButton.simpleTint = false;
 
 					// Thumbnail image
-					if ( imageList[i].exif.SAGE2thumbnail !== null )
-					{
+					if ( imageList[i].exif.SAGE2thumbnail !== null ) {
 						customIcon = new Image();
 						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_256.png";
 						thumbnailButton.setButtonImage( customIcon );
-					}
-					else
+					} else
 						thumbnailButton.setButtonImage( this.idleImageIcon );
 
 					this.thumbnailButtons.push(thumbnailButton);
@@ -1025,23 +989,19 @@ function radialMenu(){
 				}
 			}
 		}
-		if( pdfList !== null )
-		{
-			for( i = 0; i < pdfList.length; i++ )
-			{
+		if( pdfList !== null ) {
+			for( i = 0; i < pdfList.length; i++ ) {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				thumbnailButton.simpleTint = false;
 
 				// Thumbnail image
-				if ( pdfList[i].exif.SAGE2thumbnail !== null )
-				{
+				if ( pdfList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
 					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setButtonImage( customIcon );
-				}
-				else
+				} else
 					thumbnailButton.setButtonImage( this.idlePDFIcon );
 
 
@@ -1049,34 +1009,28 @@ function radialMenu(){
 				this.pdfThumbnailButtons.push(thumbnailButton);
 			}
 		}
-		if( videoList !== null )
-		{
-			for( i = 0; i < videoList.length; i++ )
-			{
+		if( videoList !== null ) {
+			for( i = 0; i < videoList.length; i++ ) {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				thumbnailButton.simpleTint = false;
 
 				// Thumbnail image
-				if ( videoList[i].exif.SAGE2thumbnail !== null )
-				{
+				if ( videoList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
 					customIcon.src = videoList[i].exif.SAGE2thumbnail+"_256.png";
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setButtonImage( customIcon );
-				}
-				else
+				} else
 					thumbnailButton.setButtonImage( this.idleVideoIcon );
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.videoThumbnailButtons.push(thumbnailButton);
 			}
 		}
-		if( appList !== null )
-		{
-			for( i = 0; i < appList.length; i++ )
-			{
+		if( appList !== null ) {
+			for( i = 0; i < appList.length; i++ ) {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
@@ -1086,23 +1040,19 @@ function radialMenu(){
 				thumbnailButton.setSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
 				thumbnailButton.setHitboxSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
 
-				if ( appList[i].exif.SAGE2thumbnail !== null )
-				{
+				if ( appList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
 					customIcon.src = appList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setButtonImage( customIcon );
-				}
-				else
+				} else
 					thumbnailButton.setButtonImage( this.idleAppIcon );
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.appThumbnailButtons.push(thumbnailButton);
 			}
 		}
-		if( sessionList !== null )
-		{
-			for( i = 0; i < sessionList.length; i++ )
-			{
+		if( sessionList !== null ) {
+			for( i = 0; i < sessionList.length; i++ ) {
 				thumbnailButton = new buttonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
@@ -1117,19 +1067,16 @@ function radialMenu(){
 		this.updateThumbnailPositions();
 	};
 
-	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbSize, thumbSpacer, maxRows, neededColumns )
-	{
+	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbSize, thumbSpacer, maxRows, neededColumns ) {
 		var curRow = 0;
 		var curColumn = 0;
 
 		this.thumbnailScrollWindowElement.width = (imageThumbSize + thumbSpacer) * neededColumns;
-		for( i = 0; i < thumbnailSourceList.length; i++ )
-		{
+		for( i = 0; i < thumbnailSourceList.length; i++ ) {
 			currentButton = thumbnailSourceList[i];
 
 
-			if( curColumn+1 > neededColumns )
-			{
+			if( curColumn+1 > neededColumns ) {
 				curColumn = 0;
 
 				if( curRow < maxRows - 1 )
@@ -1140,8 +1087,7 @@ function radialMenu(){
 		}
 	};
 
-	this.updateThumbnailPositions = function()
-	{
+	this.updateThumbnailPositions = function() {
 		var curRow = 0;
 		var curColumn = 0;
 
@@ -1156,23 +1102,16 @@ function radialMenu(){
 
 		var neededColumns = maxRows;
 
-		if( this.currentMenuState === 'imageThumbnailWindow' )
-		{
+		if( this.currentMenuState === 'imageThumbnailWindow' ) {
 			if( this.imageThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.imageThumbnailButtons.length / maxRows );
-		}
-		else if( this.currentMenuState === 'pdfThumbnailWindow' )
-		{
+		} else if( this.currentMenuState === 'pdfThumbnailWindow' ) {
 			if( this.pdfThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.pdfThumbnailButtons.length / maxRows );
-		}
-		else if( this.currentMenuState === 'videoThumbnailWindow' )
-		{
+		} else if( this.currentMenuState === 'videoThumbnailWindow' ) {
 			if( this.videoThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.videoThumbnailButtons.length / maxRows );
-		}
-		else if( this.currentMenuState === 'sessionThumbnailWindow' )
-		{
+		} else if( this.currentMenuState === 'sessionThumbnailWindow' ) {
 			if( this.sessionThumbnailButtons.length > (maxRows*maxCols) )
 				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows );
 		}
@@ -1180,8 +1119,7 @@ function radialMenu(){
 		var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize + thumbSpacer);
 
 		// Special thumbnail size for custom apps
-		if( this.currentMenuState === 'appThumbnailWindow' )
-		{
+		if( this.currentMenuState === 'appThumbnailWindow' ) {
 			maxRows = Math.floor((this.thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
 			maxCols = Math.floor((this.thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (this.imageThumbSize * 2 + thumbSpacer));
 			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
@@ -1191,30 +1129,25 @@ function radialMenu(){
 		this.thumbnailGridSize = { x: maxRows, y: maxCols };
 		if( neededColumns > maxRows )
 			this.notEnoughThumbnailsToScroll = false;
-		else
-		{
+		else {
 			this.notEnoughThumbnailsToScroll = true;
 			this.thumbnailWindowScrollOffset.x = 0;
 			this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString()+"px";
 		}
 
-		if( this.currentMenuState === 'imageThumbnailWindow' )
-		{
+		if( this.currentMenuState === 'imageThumbnailWindow' ) {
 			this.setThumbnailPosition( this.imageThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
 		}
 
-		if( this.currentMenuState === 'pdfThumbnailWindow' )
-		{
+		if( this.currentMenuState === 'pdfThumbnailWindow' ) {
 			this.setThumbnailPosition( this.pdfThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
 		}
 
-		if( this.currentMenuState === 'videoThumbnailWindow' )
-		{
+		if( this.currentMenuState === 'videoThumbnailWindow' ) {
 			this.setThumbnailPosition( this.videoThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
 		}
 
-		if( this.currentMenuState === 'appThumbnailWindow' )
-		{
+		if( this.currentMenuState === 'appThumbnailWindow' ) {
 			this.setThumbnailPosition( this.appThumbnailButtons, this.imageThumbSize * 2, thumbSpacer, maxRows, neededColumns );
 		}
 
@@ -1273,8 +1206,7 @@ function buttonWidget() {
 
 	this.buttonData = {};
 
-	this.init = function(id, ctx, resrc)
-	{
+	this.init = function(id, ctx, resrc) {
 		//this.element = document.getElementById(id);
 		this.ctx = ctx;
 		this.resrcPath = resrc;
@@ -1282,59 +1214,49 @@ function buttonWidget() {
 		//console.log("buttonWidget init()");
 	};
 
-	this.setPosition = function( x, y )
-	{
+	this.setPosition = function( x, y ) {
 		this.posX = x;
 		this.posY = y;
 	};
 
-	this.setRotation = function( a )
-	{
+	this.setRotation = function( a ) {
 		this.angle = a;
 	};
 
-	this.setData = function( data )
-	{
+	this.setData = function( data ) {
 		this.buttonData = data;
 	};
 
-	this.setButtonImage = function( image )
-	{
+	this.setButtonImage = function( image ) {
 		this.buttonImage = image;
 	};
 
-	this.setOverlayImage = function( overlayImage, scale )
-	{
+	this.setOverlayImage = function( overlayImage, scale ) {
 		this.overlayImage = overlayImage;
 		this.overlayScale = scale;
 	};
 
-	this.setSize = function( w, h )
-	{
+	this.setSize = function( w, h ) {
 		this.width = w;
 		this.height = h;
 	};
 
-	this.setHitboxSize = function( w, h )
-	{
+	this.setHitboxSize = function( w, h ) {
 		this.hitboxWidth = w;
 		this.hitboxheight = h;
 	};
 
-	this.getData = function()
-	{
+	this.getData = function() {
 		return this.buttonData;
 	};
 
-	this.draw = function()
-	{
+	this.draw = function() {
 		// Default - align 'left'
 		var translate = { x: this.posX, y: this.posY };
 		var offsetHitbox = { x: 0, y: 0 };
 		var offset = { x: 0, y: 0 };
 
-		if( this.alignment === 'centered' )
-		{
+		if( this.alignment === 'centered' ) {
 			offset = { x: -this.width/2, y: -this.height/2 };
 			offsetHitbox = { x: -this.hitboxWidth/2, y: -this.hitboxWidth/2 };
 		}
@@ -1342,26 +1264,21 @@ function buttonWidget() {
 		this.ctx.save();
 		this.ctx.translate( translate.x, translate.y );
 
-		if( this.state === 5 )
-		{
+		if( this.state === 5 ) {
 			this.ctx.fillStyle = this.mouseOverColor;
 		}
-		else if( this.state === 3 )
-		{
+		else if( this.state === 3 ) {
 			this.ctx.fillStyle = this.clickedColor;
 			this.state = 2; // Pressed state
 		}
-		else if( this.state === 2 )
-		{
+		else if( this.state === 2 ) {
 			this.ctx.fillStyle = this.pressedColor;
 		}
-		else if( this.state === 4 )
-		{
+		else if( this.state === 4 ) {
 			this.ctx.fillStyle = this.releasedColor;
 			this.state = 1;
 		}
-		if( this.useBackgroundColor )
-		{
+		if( this.useBackgroundColor ) {
 			if( this.isLit )
 				this.ctx.fillStyle = this.litColor;
 			else
@@ -1369,8 +1286,7 @@ function buttonWidget() {
 
 			if( this.hitboxShape === 'box' )
 				this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight);
-			else if( this.hitboxShape === 'circle' )
-			{
+			else if( this.hitboxShape === 'circle' ) {
 				//this.ctx.arc(0, 0, this.hitboxWidth/2,0,2*Math.PI);
 				//this.ctx.fillStyle = this.defaultColor;
 				//this.ctx.fill();
@@ -1378,8 +1294,7 @@ function buttonWidget() {
 		}
 
 		// Draw icon aligned centered
-		if( this.buttonImage !== null )
-		{
+		if( this.buttonImage !== null ) {
 			//this.ctx.rotate( this.angle );
 
 			// draw the original image
@@ -1389,14 +1304,11 @@ function buttonWidget() {
 				this.drawTintImage( this.buttonImage, offset, this.width, this.height, this.litColor, 0.5 );
 
 			// Tint the image
-			if( this.state !== 0 )
-			{
-				if( this.simpleTint )
-				{
+			if( this.state !== 0 ) {
+				if( this.simpleTint ) {
 					this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight);
 				}
-				else
-				{
+				else {
 					if( this.isLit === false && this.useEventOverColor)
 						this.drawTintImage( this.buttonImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
 				}
@@ -1405,8 +1317,7 @@ function buttonWidget() {
 		}
 		this.ctx.restore();
 
-		if( this.overlayImage !== null )
-		{
+		if( this.overlayImage !== null ) {
 			this.ctx.save();
 			this.ctx.translate( translate.x, translate.y );
 			this.ctx.drawImage( this.overlayImage, -this.width* this.overlayScale/2, -this.height* this.overlayScale/2, this.width * this.overlayScale, this.height * this.overlayScale);
@@ -1414,8 +1325,7 @@ function buttonWidget() {
 		}
 	};
 
-	this.drawTintImage = function( image, offset, width, height, color, alpha )
-	{
+	this.drawTintImage = function( image, offset, width, height, color, alpha ) {
 		// Tint the image (Part 1)
 		// create offscreen buffer,
 		buffer = document.createElement('canvas');
@@ -1438,31 +1348,22 @@ function buttonWidget() {
 		this.ctx.drawImage( buffer, offset.x, offset.y, width, height );
 	};
 
-	this.onEvent = function( type, user, position, data )
-	{
-		if( this.isPositionOver( user, position ) )
-		{
-			if( this.state === 5 )
-			{
+	this.onEvent = function( type, user, position, data ) {
+		if( this.isPositionOver( user, position ) ) {
+			if( this.state === 5 ) {
 				this.state = 1;
 			}
 
-			if( type === "pointerPress" && this.state !== 2 )
-			{
+			if( type === "pointerPress" && this.state !== 2 ) {
 				this.state = 3; // Click state
 				if( this.useEventOverColor )
 					this.ctx.redraw = true;
-			}
-			else if( type === "pointerRelease" )
-			{
+			} else if( type === "pointerRelease" ) {
 				this.state = 4;
 				if( this.useEventOverColor )
 					this.ctx.redraw = true;
-			}
-			else if( this.state !== 2 )
-			{
-				if( this.state !== 1 )
-				{
+			} else if( this.state !== 2 ) {
+				if( this.state !== 1 ) {
 					this.state = 5;
 					if( this.useEventOverColor )
 						this.ctx.redraw = true;
@@ -1472,9 +1373,7 @@ function buttonWidget() {
 			}
 
 			return 1;
-		}
-		else
-		{
+		} else {
 			if( this.state !== 0 && this.useEventOverColor )
 				this.ctx.redraw = true;
 			this.state = 0;
@@ -1487,22 +1386,18 @@ function buttonWidget() {
 		x = position.x;
 		y = position.y;
 
-		if( this.alignment === 'centered' && this.hitboxShape === 'box' )
-		{
+		if( this.alignment === 'centered' && this.hitboxShape === 'box' ) {
 			x += this.hitboxWidth/2;
 			y += this.hitboxheight/2;
 		}
 
-		if( this.hitboxShape === 'box' )
-		{
+		if( this.hitboxShape === 'box' ) {
 			if( x >= this.posX && x <= this.posX + this.hitboxWidth && y >= this.posY && y <= this.posY + this.hitboxheight )
 				return true;
 			else
 				return false;
 
-		}
-		else if( this.hitboxShape === 'circle' )
-		{
+		} else if( this.hitboxShape === 'circle' ) {
 			var distance = Math.sqrt( Math.pow(Math.abs( x - this.posX ), 2) + Math.pow(Math.abs( y - this.posY ), 2) );
 
 			if( distance <= this.hitboxWidth/2 )
@@ -1512,45 +1407,33 @@ function buttonWidget() {
 		}
 	};
 
-	this.isFirstOver = function()
-	{
-		if ( this.state === 5 )
-		{
+	this.isFirstOver = function() {
+		if ( this.state === 5 ) {
 			return true;
-		}
-		else
+		} else
 			return false;
 	};
 
-	this.isOver = function()
-	{
-		if ( this.state === 1 )
-		{
+	this.isOver = function() {
+		if ( this.state === 1 ) {
 			return true;
-		}
-		else
+		} else
 			return false;
 	};
 
-	this.isClicked = function()
-	{
-		if ( this.state === 3 )
-		{
+	this.isClicked = function() {
+		if ( this.state === 3 ) {
 			this.state = 2;
 			return true;
-		}
-		else
+		} else
 			return false;
 	};
 
-	this.isReleased = function()
-	{
-		if ( this.state === 4 )
-		{
+	this.isReleased = function() {
+		if ( this.state === 4 ) {
 			this.state = 0;
 			return true;
-		}
-		else
+		} else
 			return false;
 	};
 }
