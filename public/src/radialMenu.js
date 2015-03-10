@@ -191,8 +191,7 @@ function radialMenu(){
 		this.thumbnailWindowDiv.style.top    = (this.element.style.top+this.thumbnailWindowPosition.y).toString() + "px";
 
 		// Debug: Show scrolling window background
-		if( this.divCtxDebug )
-		{
+		if (this.divCtxDebug) {
 			this.thumbnailWindowDiv.style.backgroundColor = "rgba(10,50,200,0.2)";
 		}
 		
@@ -217,13 +216,10 @@ function radialMenu(){
 		if(window.location.protocol === "http:" && port === "") port = "80";
 		if(window.location.protocol === "https:" && port === "") port = "443";
 		*/
-		if( isMaster )
-		{
+		if (isMaster) {
 			this.wsio = wsio;
 			this.sendsToServer = true;
-		}
-		else
-		{
+		} else {
 			this.sendsToServer = false;
 		}
 		/*
@@ -336,8 +332,7 @@ function radialMenu(){
 
 	};
 
-	this.createRadialButton = function( idleIcon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxShape, radialPos, buttonRadius )
-	{
+	this.createRadialButton = function( idleIcon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxShape, radialPos, buttonRadius )	{
 		button = new buttonWidget();
 		button.init(0, this.ctx, null);
 		button.setButtonImage( idleIcon );
@@ -357,8 +352,7 @@ function radialMenu(){
 		return button;
 	};
 
-	this.drawImage = function( ctx, image, position, size, color, angle, centered )
-	{
+	this.drawImage = function( ctx, image, position, size, color, angle, centered ) {
 		//this.ctx.save();
 		ctx.fillStyle = color;
 		//this.ctx.translate( position.x , position.y );
@@ -371,8 +365,7 @@ function radialMenu(){
 		//this.ctx.restore();
 	};
 
-	this.animate = function( data )
-	{
+	this.animate = function( data )	{
 		//console.log(data);
 	};
 
@@ -388,48 +381,38 @@ function radialMenu(){
 
 		var i;
 
-		if( this.thumbScrollWindowctx.redraw || this.currentMenuState === 'radialMenu')
+		if( this.thumbScrollWindowctx.redraw || this.currentMenuState === 'radialMenu') {
 			this.thumbScrollWindowctx.clearRect(0,0, this.thumbnailScrollWindowElement.width, this.thumbnailScrollWindowElement.height);
-
-		if( this.windowInteractionMode === false )
-		{
+		}
+		if( this.windowInteractionMode === false ) {
 			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)";
 			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
-		}
-		else if( this.dragThumbnailWindow === true )
-		{
+		} else if( this.dragThumbnailWindow === true ) {
 			this.ctx.fillStyle = "rgba(55, 55, 5, 0.5)";
 			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
-		}
-		else
-		{
+		} else {
 			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)";
 			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
 		}
 
 		// TEMP: Just to clearly see context edge
-		if( this.divCtxDebug )
-		{
+		if( this.divCtxDebug ) {
 			this.ctx.fillStyle = "rgba(5, 255, 5, 0.3)";
 			this.ctx.fillRect(0,0, this.element.width, this.element.height)
 		}
 		
-		if( this.menuState == 'opening' )
-		{
+		if( this.menuState == 'opening' ) {
 			if( this.stateTransition < 1 )
 				this.stateTransition += this.stateTransitionTime / 1000;
 			else
 				this.stateTransition = 0;
-		}
-		else if( this.menuState == 'open' )
-		{
+		} else if( this.menuState == 'open' ) {
 			this.stateTransition = 1;
 		}
 
 		this.radialDragButton.draw();
 
-		if( this.currentMenuState !== 'radialMenu' )
-		{
+		if( this.currentMenuState !== 'radialMenu' ) {
 			// line from radial menu to thumbnail window
 			this.ctx.beginPath();
 			this.ctx.moveTo( radialMenuCenter.x + menuButtonSize/4 * radialMenuScale, radialMenuCenter.y );
@@ -454,14 +437,12 @@ function radialMenu(){
 		this.radialCloseButton.draw();
 		this.radialSettingsButton.draw();
 
-		if( this.settingMenuOpen )
-		{
+		if( this.settingMenuOpen ) {
 			this.radial2CloseAllButton.draw();
 			this.radial2TileButton.draw();
 		}
 
-		if( this.currentRadialState === 'radialMenu' )
-		{
+		if( this.currentRadialState === 'radialMenu' ) {
 			this.radialMenuButtons["radialRemoteSitesButton"].draw();
 			this.radialMenuButtons["radialImageButton"].draw();
 			this.radialMenuButtons["radialPDFButton"].draw();
@@ -474,8 +455,7 @@ function radialMenu(){
 		}
 
 		// Thumbnail window
-		if( this.currentMenuState !== 'radialMenu' )
-		{
+		if( this.currentMenuState !== 'radialMenu' ) {
 			this.thumbnailWindowDiv.style.backgroundColor = "rgba(5,5,5,0.5)";
 
 			var currentThumbnailButtons = this.imageThumbnailButtons;
@@ -491,10 +471,8 @@ function radialMenu(){
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
 
-			if( this.thumbScrollWindowctx.redraw )
-			{
-				for( i = 0; i < currentThumbnailButtons.length; i++ )
-				{
+			if( this.thumbScrollWindowctx.redraw ) {
+				for( i = 0; i < currentThumbnailButtons.length; i++ ) {
 					thumbButton = currentThumbnailButtons[i];
 					thumbButton.draw();
 				}
@@ -512,8 +490,7 @@ function radialMenu(){
 			metadataTextPosY = previewImageY + previewImageSize + 20  + this.textHeaderHeight;
 
 			// Preview Window Background
-			if( this.currentMenuState !== 'radialMenu' )
-			{
+			if( this.currentMenuState !== 'radialMenu' ) {
 				this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)";
 				this.ctx.fillRect(previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight, previewImageSize + 20, this.thumbnailWindowSize.y);
 			}
@@ -560,194 +537,69 @@ function radialMenu(){
 			if( this.hoverOverThumbnail )
 				this.ctx.drawImage( this.hoverOverThumbnail, previewImageX, previewImageY, previewImageSize, previewImageSize );
 
-			if( this.hoverOverMeta )
-			{
+			if( this.hoverOverMeta ) {
 				this.ctx.font="16px sans-serif";
 				this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)";
 				metadata = this.hoverOverMeta;
 				//console.log( metadata);
-
+				
+				metadataTags = [];
+				
 				// Generic
-				if( metadata.metadata === undefined && metadata.FileName )
-				{
-					this.ctx.fillText( "File Name: " + metadata.FileName, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.FileSize )
-				{
-					this.ctx.fillText( "File Size: " + metadata.FileSize, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-
-				if( metadata.FileDate )
-				{
-					this.ctx.fillText( "File Date: " + metadata.FileDate, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-
-				// Images
-				if( metadata.ImageSize )
-				{
-					this.ctx.fillText( "Resolution: " + metadata.ImageSize, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.DateCreated )
-				{
-					this.ctx.fillText( "Date Created: " + metadata.DateCreated, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.Copyright )
-				{
-					this.ctx.fillText( "Copyright: " + metadata.Copyright, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-
+				metadataTags[0] = { tag: metadata.FileName, longLabel: "File Name: " };
+				metadataTags[1] = { tag: metadata.FileSize, longLabel: "File Size: " };
+				metadataTags[2] = { tag: metadata.FileDate, longLabel: "File Date: " };
+				
+				// Image
+				metadataTags[2] = { tag: metadata.ImageSize, longLabel: "Resolution: " };
+				metadataTags[3] = { tag: metadata.DateCreated, longLabel: "Date Created: " };
+				metadataTags[4] = { tag: metadata.Copyright, longLabel: "Copyright: " };
+				
 				// Photo
-				if( metadata.Artist )
-				{
-					this.ctx.fillText( "Artist: " + metadata.Artist, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.Aperture )
-				{
-					this.ctx.fillText( "Aperture: " + metadata.Aperture, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.Exposure )
-				{
-					this.ctx.fillText( "Exposure: " + metadata.Exposure, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.Flash )
-				{
-					this.ctx.fillText( "Flash: " + metadata.Flash, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.ExposureTime )
-				{
-					this.ctx.fillText( "Exposure Time: " + metadata.ExposureTime, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.FOV )
-				{
-					this.ctx.fillText( "FOV: " + metadata.FOV, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.FocalLength )
-				{
-					this.ctx.fillText( "Focal Length: " + metadata.FocalLength, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.Model )
-				{
-					this.ctx.fillText( "Model: " + metadata.Model, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.LensModel )
-				{
-					this.ctx.fillText( "Lens Model: " + metadata.LensModel, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.ISO )
-				{
-					this.ctx.fillText( "ISO: " + metadata.ISO, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.ShutterSpeed )
-				{
-					this.ctx.fillText( "Shutter Speed: " + metadata.ShutterSpeed, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-
+				metadataTags[5] = { tag: metadata.Artist, longLabel: "Artist: " };
+				metadataTags[6] = { tag: metadata.Aperture, longLabel: "Aperture: " };
+				metadataTags[7] = { tag: metadata.Exposure, longLabel: "Exposure: " };
+				metadataTags[8] = { tag: metadata.Flash, longLabel: "Flash: " };
+				metadataTags[9] = { tag: metadata.ExposureTime, longLabel: "Exposure Time: " };
+				metadataTags[10] = { tag: metadata.FOV, longLabel: "FOV: " };
+				metadataTags[11] = { tag: metadata.FocalLength, longLabel: "Focal Length: " };
+				metadataTags[12] = { tag: metadata.Model, longLabel: "Model: " };
+				metadataTags[13] = { tag: metadata.LensModel, longLabel: "Lens Model: " };
+				metadataTags[14] = { tag: metadata.ISO, longLabel: "ISO: " };
+				metadataTags[15] = { tag: metadata.ShutterSpeed, longLabel: "Shutter Speed: " };
+				
 				// GPS
-				if( metadata.GPSAltitude )
-				{
-					this.ctx.fillText( "GPS Altitude: " + metadata.GPSAltitude, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.GPSLatitude )
-				{
-					this.ctx.fillText( "GPS Latitude: " + metadata.GPSLatitude, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.GPSTimeStamp )
-				{
-					this.ctx.fillText( "GPS TimeStamp: " + metadata.GPSTimeStamp, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-
+				metadataTags[16] = { tag: metadata.GPSAltitude, longLabel: "GPS Altitude: " };
+				metadataTags[17] = { tag: metadata.GPSLatitude, longLabel: "GPS Latitude: " };
+				metadataTags[18] = { tag: metadata.GPSTimeStamp, longLabel: "GPS TimeStamp: " };
+				
 				// Video
-				if( metadata.Duration )
-				{
-					this.ctx.fillText( "Duration: " + metadata.Duration, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.CompressorID )
-				{
-					this.ctx.fillText( "Compressor: " + metadata.CompressorID, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.AvgBitrate )
-				{
-					this.ctx.fillText( "Avg. Bitrate: " + metadata.AvgBitrate, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.AudioFormat )
-				{
-					this.ctx.fillText( "Audio Format: " + metadata.AudioFormat, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.AudioChannels )
-				{
-					this.ctx.fillText( "Audio Channels: " + metadata.AudioChannels, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-				if( metadata.AudioSampleRate )
-				{
-					this.ctx.fillText( "Audio Sample Rate: " + metadata.AudioSampleRate, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-					metadataLine++;
-				}
-
+				metadataTags[19] = { tag: metadata.Duration, longLabel: "Duration: " };
+				metadataTags[20] = { tag: metadata.CompressorID, longLabel: "Compressor: " };
+				metadataTags[21] = { tag: metadata.AvgBitrate, longLabel: "Avg. Bitrate: " };
+				metadataTags[22] = { tag: metadata.AudioFormat, longLabel: "Audio Format: " };
+				metadataTags[23] = { tag: metadata.AudioChannels, longLabel: "Audio Channels: " };
+				metadataTags[24] = { tag: metadata.AudioSampleRate, longLabel: "Audio Sample Rate: " };
+				
 				// Apps
-				if( metadata.metadata )
+				if( metadata.metadata !== undefined )
 				{
-					if( metadata.metadata.title )
-					{
-						this.ctx.fillText( "Title: " + metadata.metadata.title, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-						metadataLine++;
-					}
-					if( metadata.metadata.version )
-					{
-						this.ctx.fillText( "Version: " + metadata.metadata.version, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-						metadataLine++;
-					}
-					if( metadata.metadata.author )
-					{
-						this.ctx.fillText( "Author: " + metadata.metadata.author, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-						metadataLine++;
-					}
-					if( metadata.metadata.description )
-					{
-						this.ctx.fillText( "Description: " + metadata.metadata.description, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-						metadataLine++;
-					}
-					if( metadata.metadata.license )
-					{
-						this.ctx.fillText( "License: " + metadata.metadata.license, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-						metadataLine++;
-					}
-					if( metadata.metadata.keywords )
-					{
-						this.ctx.fillText( "Keywords: " + metadata.metadata.keywords, metadataTextPosX, metadataTextPosY + metadataLine * 20);
-						metadataLine++;
-					}
+					metadataTags[25] = { tag: metadata.metadata.title, longLabel: "Title: " };
+					metadataTags[26] = { tag: metadata.metadata.version, longLabel: "Version: " };
+					metadataTags[27] = { tag: metadata.metadata.author, longLabel: "Author: " };
+					metadataTags[28] = { tag: metadata.metadata.license, longLabel: "License: " };
+					metadataTags[29] = { tag: metadata.metadata.keywords, longLabel: "Keywords: " };
+					metadataTags[30] = { tag: metadata.metadata.description, longLabel: "Description: " };
 				}
-
+				
 				// Sessions
-				if( metadata.numapps )
-				{
-					this.ctx.fillText( "Applications: " + metadata.numapps);
-					metadataLine++;
+				metadataTags[31] = { tag: metadata.numapps, longLabel: "Applications: " };
+				
+				for( i = 0; i < metadataTags.length; i++ ) {
+					if( metadataTags[i] !== undefined && metadataTags[i].tag ) {
+						this.ctx.fillText( metadataTags[i].longLabel + metadataTags[i].tag, metadataTextPosX, metadataTextPosY + metadataLine * 20);
+						metadataLine++;
+					}
 				}
 			}
 		}
@@ -768,10 +620,8 @@ function radialMenu(){
 		console.log("Closing menu" );
 	};
 
-	this.setToggleMenu = function(type)
-	{
-		if( this.currentMenuState !== type )
-		{
+	this.setToggleMenu = function(type) {
+		if( this.currentMenuState !== type ) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
 			this.currentMenuState = type;
@@ -786,9 +636,7 @@ function radialMenu(){
 				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: true } );
 
 			return true;
-		}
-		else
-		{
+		} else {
 			this.currentMenuState = 'radialMenu';
 			this.element.width = this.radialMenuSize.x;
 			this.element.height = this.radialMenuSize.y;
@@ -817,15 +665,13 @@ function radialMenu(){
 		pointerY = data.y - data.windowY - offset.y;
 		
 		// Note: We don't check if the pointer is over the menu because the server/node-radialMenu does this for us
-		if( this.windowInteractionMode === false && buttonOverCount === 0 )
-		{
+		if( this.windowInteractionMode === false && buttonOverCount === 0 ) {
 			dragOffset = this.dragPosition;
 
 			this.element.style.left    = (data.x - offset.x - dragOffset.x).toString() + "px";
 			this.element.style.top     = (data.y - offset.y - dragOffset.y).toString()  + "px";
 
-			if( this.sendsToServer === true )
-			{
+			if( this.sendsToServer === true ) {
 				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)+this.radialMenuSize.x/2, y: (data.y - dragOffset.y)+this.radialMenuSize.y/2, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
 			}
 		}
@@ -847,10 +693,8 @@ function radialMenu(){
 
 		// Level 0 - Always visible -----------------------------------
 		buttonOverCount += this.radialCloseButton.onEvent(type, user.id, position, data);
-		if ( this.radialCloseButton.isClicked() && data.button === "left" )
-		{
-			if( this.sendsToServer === true )
-			{
+		if ( this.radialCloseButton.isClicked() && data.button === "left" ) {
+			if( this.sendsToServer === true ) {
 				this.wsio.emit('radialMenuClick', {button: "closeButton", user: user} );
 			}
 			this.closeMenu();
@@ -862,97 +706,74 @@ function radialMenu(){
 		buttonOverCount += this.radialSaveSessionButton.onEvent(type, user.id, position, data);
 
 		// Level 1 -----------------------------------
-		if( this.currentRadialState === 'radialMenu' )
-		{
+		if( this.currentRadialState === 'radialMenu' ) {
 			//this.element.width = this.radialMenuSize.x;
 			//this.element.height = this.radialMenuSize.y;
-			for ( i = 0; i < this.level1Buttons.length; i++ )
-			{
+			for ( i = 0; i < this.level1Buttons.length; i++ ) {
 				buttonOverCount += this.level1Buttons[i].onEvent(type, user.id, position, data);
 			}
 		}
 
-		if( this.radialSettingsButton.isClicked() )
-		{
-			if( this.settingMenuOpen )
-			{
+		if( this.radialSettingsButton.isClicked() ) {
+			if( this.settingMenuOpen ) {
 				this.settingMenuOpen = false;
 				this.radialSettingsButton.isLit = false;
-				if( this.sendsToServer === true )
-				{
+				if( this.sendsToServer === true ) {
 					this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "closed"}} );
 				}
-			}
-			else
-			{
+			} else {
 				this.settingMenuOpen = true;
 				this.radialSettingsButton.isLit = true;
-				if( this.sendsToServer === true )
-				{
+				if( this.sendsToServer === true ) {
 					this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "opened"}} );
 				}
 			}
 		}
 
-		if( this.settingMenuOpen )
-		{
+		if( this.settingMenuOpen ) {
 			buttonOverCount += this.radial2CloseAllButton.onEvent(type, user.id, position, data);
 			buttonOverCount += this.radial2TileButton.onEvent(type, user.id, position, data);
 		}
 
-		if( this.radial2CloseAllButton.isClicked() && this.sendsToServer === true )
-		{
+		if( this.radial2CloseAllButton.isClicked() && this.sendsToServer === true ) {
 			this.wsio.emit('clearDisplay');
 			this.wsio.emit('radialMenuClick', {button: "clearDisplay", user: user} );
 		}
-		if( this.radial2TileButton.isClicked() && this.sendsToServer === true )
-		{
+		if( this.radial2TileButton.isClicked() && this.sendsToServer === true ) {
 			this.wsio.emit('tileApplications');
 			this.wsio.emit('radialMenuClick', {button: "tileApplications", user: user} );
 		}
 
 
-		if( this.radialRemoteSitesButton.isClicked() )
-		{
+		if( this.radialRemoteSitesButton.isClicked() ) {
 			this.resetRadialButtonLitState();
 		}
-		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() )
-		{
+		
+		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() ) {
 			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('imageThumbnailWindow') )
-			{
+			if( this.setToggleMenu('imageThumbnailWindow') ) {
 				this.radialImageButton.isLit = true;
-				if( this.sendsToServer === true )
-				{
+				if( this.sendsToServer === true ) {
 					this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "opened"}} );
 				}
-			}
-			else if( this.sendsToServer === true )
-			{
+			} else if( this.sendsToServer === true ) {
 				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "closed"}} );
 			}
 		}
-		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() )
-		{
+		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() ) {
 			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('pdfThumbnailWindow') )
-			{
+			if( this.setToggleMenu('pdfThumbnailWindow') ) {
 				this.radialPDFButton.isLit = true;
-				if( this.sendsToServer === true )
-				{
+				if( this.sendsToServer === true ) {
 					this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "opened"}} );
 				}
-			}
-			else if( this.sendsToServer === true )
-			{
+			} else if( this.sendsToServer === true )	{
 				this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "closed"}} );
 			}
 		}
-		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() )
-		{
+		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() ) {
 			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('videoThumbnailWindow') )
-			{
+			if( this.setToggleMenu('videoThumbnailWindow') ) {
 				this.radialVideoButton.isLit = true;
 				if( this.sendsToServer === true )
 					this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "opened"}} );
@@ -960,8 +781,7 @@ function radialMenu(){
 			else if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "closed"}} );
 		}
-		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() )
-		{
+		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() ) {
 			this.resetRadialButtonLitState();
 			if( this.setToggleMenu('appThumbnailWindow') )
 			{
@@ -972,11 +792,9 @@ function radialMenu(){
 			else if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "closed"}} );
 		}
-		if( this.radialSessionButton.isClicked() )
-		{
+		if( this.radialSessionButton.isClicked() ) {
 			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('sessionThumbnailWindow') )
-			{
+			if( this.setToggleMenu('sessionThumbnailWindow') ) {
 				this.radialSessionButton.isLit = true;
 				if( this.sendsToServer === true )
 					this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user,  data: {state: "opened"}} );
@@ -984,16 +802,14 @@ function radialMenu(){
 			else if( this.sendsToServer === true )
 				this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user, data: {state: "closed"}} );
 		}
-		if( this.radialSaveSessionButton.isClicked() && this.sendsToServer === true )
-		{
+		if( this.radialSaveSessionButton.isClicked() && this.sendsToServer === true ) {
 			this.wsio.emit('saveSesion');
 			this.wsio.emit('requestStoredFiles');
 			this.wsio.emit('radialMenuClick', {button: "saveSession", user: user} );
 		}
 
 		// Level 2 -----------------------------------
-		if( this.currentRadialState === 'radialAppMenu2' )
-		{
+		if( this.currentRadialState === 'radialAppMenu2' ) {
 			this.radial2ImageButton.onEvent(type, user.id, position, data);
 			this.radial2PDFButton.onEvent(type, user.id, position, data);
 			this.radial2VideoButton.onEvent(type, user.id, position, data);
