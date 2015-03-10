@@ -162,7 +162,7 @@ function SAGE2_init() {
 		}
 
 		// Build the elements visible on the wall
-		ui = new uiBuilder(json_cfg, clientID);
+		ui = new UIBuilder(json_cfg, clientID);
 		ui.build();
 		ui.background();
 		if (json_cfg.ui.auto_hide_ui) {
@@ -922,7 +922,7 @@ function SAGE2_init() {
 	});
 	
 	wsio.on('requestControlId', function(data) {
-		var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var ctrId = ctrl? ctrl.attr("id"):"";
 		var regC  = /_controls/;
 		var regB  = /button/;
@@ -974,7 +974,7 @@ function SAGE2_init() {
 	});
 
 	wsio.on('releaseControlId', function(data){
-		var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var regexSlider = /slider/;
 		var regexButton = /button/;
 		var regexTextInput = /textInput/;
@@ -991,7 +991,7 @@ function SAGE2_init() {
 			if (regexTextInput.test(lockedControl.attr("id"))===false){
 				lockedControlElements[data.ptrId] = null;
 			}
-			ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+			ctrl = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrlId = ctrl? ctrl.attr("id"): "";
 			if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
 				wsio.emit('releasedControlId', { 
@@ -1010,7 +1010,7 @@ function SAGE2_init() {
 		
 	});
 	wsio.on('executeControlFunction', function(data){
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		if(ctrl){
 			var ctrId = ctrl.attr('id');
 			if (/button/.test(ctrId)){
@@ -1056,14 +1056,14 @@ function SAGE2_init() {
 	});
 	
 	wsio.on('sliderKnobLockAction', function(data){
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		var slider = ctrl.parent();
 		var func = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());	
 	});
 	wsio.on('moveSliderKnob', function(data){
-		var ctrl = getWidgetControlById(data.ctrl);
+		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
@@ -1078,24 +1078,24 @@ function SAGE2_init() {
 	});
 
 	wsio.on('keyInTextInputWidget', function(data){
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
 
 			if (data.code != 13){
-				insertText(textInput, data.code, data.printable);
+				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
 			else{
 				var func = textInput.data("call");
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				if (func !== undefined && func !== null)
-					func(getText(textInput));
+					func(getTextFromTextInputWidget(textInput));
 			}		
 		}
 	});
 	wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
 			var blinkControlHandle = textInput.data("blinkControlHandle");
