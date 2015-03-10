@@ -126,13 +126,6 @@ function radialMenu(){
 	 * @return {buttonWidget} the buttonWidget object created
 	 */
 	this.addRadialMenuButton = function(name, icon, iconScale, dim, alignment, radialAnglePos, radialLevel ){
-		// name: string name for button
-		// icon: overlay icon
-		// dimensions: {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}
-		// alignment: 'centered' or 'left' (default)
-		// radialAnglePos: 
-		// radialLevel:
-		
 		var button = this.createRadialButton( radialButtonIcon, false, dim.buttonSize, dim.hitboxSize, alignment, dim.shape, radialAnglePos, menuRadius );
 		button.setOverlayImage( icon, iconScale );
 		
@@ -143,6 +136,14 @@ function radialMenu(){
 		return button;
 	};
 	
+	/**
+	 * Initialization
+	 *
+	 * @method init
+	 * @param data { id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale, visble: this.visible } Radial menu info from node-radialMenu
+	 * @param thumbElem {DrawingElement} DOM element for the thumbnail content window
+	 * @param thumbElem2 {DrawingElement} DOM element for the metadata window (not currently implemented)
+	 */
 	this.init = function(data, thumbElem, thumbElem2) {
 		this.divCtxDebug = false;
 		
@@ -208,33 +209,12 @@ function radialMenu(){
 		this.hoverOverText = "";
 		radialMenuList[id+"_menu"] = this;
 
-		// websocket to server for file library access
-		// Note: using a different socket to prevent locking up other app animations
-		/*
-		hostname = window.location.hostname;
-		port = window.location.port;
-		if(window.location.protocol === "http:" && port === "") port = "80";
-		if(window.location.protocol === "https:" && port === "") port = "443";
-		*/
 		if (isMaster) {
 			this.wsio = wsio;
 			this.sendsToServer = true;
 		} else {
 			this.sendsToServer = false;
 		}
-		/*
-		this.wsio = new websocketIO();
-		this.wsio.open(function() {
-			console.log("open websocket: " + id+"_menu");
-			
-			radialMenuList[id+"_menu"].wsio.emit('addClient', clientDescription);
-		});
-		
-		this.wsio.on('disableSendToServer', function(ID) {
-			radialMenuList[id+"_menu"].sendsToServer = false;
-			radialMenuList[id+"_menu"].wsio.close();
-		});
-		*/
 
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
@@ -332,6 +312,20 @@ function radialMenu(){
 
 	};
 
+	/**
+	 * Helper function for creating a radial button (more generic than addRadialMenuButton)
+	 *
+	 * @method createRadialButton
+	 * @param icon {Image} icon image for the button
+	 * @param useBackgroundColor {Boolean}
+	 * @param buttonSize {Float} size of the button in pixels
+	 * @param hitboxSize {Float} size of the button hitbox in pixels
+	 * @param alignment {String} where the center of the button is defined 'left' (default) or 'centered'
+	 * @param hitboxShape {String} shape of the hitbox 'box' or 'circle'
+	 * @param radialPos {Float} position of the button along the radius. based on angleSeparation and initAngle
+	 * @param buttonRadius {Float} distance from the center of the menu
+	 * @return {buttonWidget} the buttonWidget object created
+	 */
 	this.createRadialButton = function( idleIcon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxShape, radialPos, buttonRadius )	{
 		button = new buttonWidget();
 		button.init(0, this.ctx, null);
@@ -352,6 +346,18 @@ function radialMenu(){
 		return button;
 	};
 
+	/**
+	 * Helper function for drawing an image
+	 *
+	 * @method drawImage
+	 * @param ctx {Context} context to draw on
+	 * @param image {Image} image to draw
+	 * @param position {x: Float, y: Float} position to draw
+	 * @param size {x: Float, y: Float} width, height of image
+	 * @param color {Color} fill color to use
+	 * @param angle {Float} rotation of the image (not currently used)
+	 * @param centered {Boolean} is the center of the image the origin for positioning
+	 */
 	this.drawImage = function( ctx, image, position, size, color, angle, centered ) {
 		//this.ctx.save();
 		ctx.fillStyle = color;
@@ -365,16 +371,22 @@ function radialMenu(){
 		//this.ctx.restore();
 	};
 
-	this.animate = function( data )	{
-		//console.log(data);
-	};
-
+	/**
+	 * Forces a redraw of the menu
+	 *
+	 * @method redraw
+	 */
 	this.redraw = function() {
 		this.thumbScrollWindowctx.redraw = true;
 
 		this.draw();
 	};
-
+	
+	/**
+	 * Draws the menu
+	 *
+	 * @method draw
+	 */
 	this.draw = function() {
 		// clear canvas
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
@@ -606,7 +618,12 @@ function radialMenu(){
 
 		this.ctx.redraw = false;
 	};
-
+	
+	/**
+	 * Closes the menu, sends close signal to server
+	 *
+	 * @method closeMenu
+	 */
 	this.closeMenu = function() {
 		this.visible = false;
 
@@ -618,7 +635,12 @@ function radialMenu(){
 
 		console.log("Closing menu" );
 	};
-
+	
+	/**
+	 * Toggles the content window open/close
+	 *
+	 * @method setToggleMenu
+	 */
 	this.setToggleMenu = function(type) {
 		if( this.currentMenuState !== type ) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
@@ -648,6 +670,11 @@ function radialMenu(){
 		}
 	};
 
+	/**
+	 * Helper function to quickly reset the radial menu button lit state
+	 *
+	 * @method resetRadialButtonLitState
+	 */
 	this.resetRadialButtonLitState = function() {
 		this.radialRemoteSitesButton.isLit = false;
 		this.radialImageButton.isLit = false;
@@ -656,7 +683,14 @@ function radialMenu(){
 		this.radialAppButton.isLit = false;
 		this.radialSessionButton.isLit = false;
 	};
-
+	
+	/**
+	 * Moves the radial menu based on master and server events
+	 *
+	 * @method moveMenu
+	 * @param data {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top} Contains the event position and the bounding rectangle
+	 * @param offset {x: this.offsetX, y: this.offsetY} Contains the display client offset
+	 */
 	this.moveMenu = function( data, offset ) {
 		pointerX = data.x - data.windowX - offset.x;
 		pointerY = data.y - data.windowY - offset.y;
@@ -679,7 +713,16 @@ function radialMenu(){
 		this.thumbnailWindowDiv.style.width   = (this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * radialMenuScale).toString() + "px";
 		this.thumbnailWindowDiv.style.height    = (this.thumbnailWindowSize.y - this.textHeaderHeight * 2).toString() + "px";
 	};
-
+	
+	/**
+	 * Processes events
+	 *
+	 * @method onEvent
+	 * @param type {String} i.e. "pointerPress", "pointerMove", "pointerRelease"
+	 * @param position {x: Float, y: Float} event position
+	 * @param user {Integer} userID
+	 * @param data {} Other event parameters like button: "left"
+	 */
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
 
@@ -934,19 +977,38 @@ function radialMenu(){
 
 	};
 
-	// Displays files
+	/**
+	 * Tells the server to load a file
+	 *
+	 * @method loadFileFromServer
+	 * @param data {} Content information like type and filename
+	 * @param user {Integer} userID
+	 */
 	this.loadFileFromServer = function( data, user ) {
 		if( this.sendsToServer === true ) {
 			this.wsio.emit('loadFileFromServer', { application: data.application, filename: data.filename, user: user} );
 		}
 	};
-
+	
+	/**
+	 * Tells the server to start an application
+	 *
+	 * @method loadApplication
+	 * @param data {} Application information like filename
+	 * @param user {Integer} userID
+	 */
 	this.loadApplication = function( data, user ) {
 		if( this.sendsToServer === true ) {
 			this.wsio.emit('loadApplication', { application: data.filename, user: user} );
 		}
 	};
-
+	
+	/**
+	 * Receives the current asset list from server
+	 *
+	 * @method updateFileList
+	 * @param serverFileList {} Server file list
+	 */
 	this.updateFileList = function(serverFileList) {
 		//console.log("updateFileList: ");
 		//console.log(serverFileList);
@@ -1067,6 +1129,16 @@ function radialMenu(){
 		this.updateThumbnailPositions();
 	};
 
+	/**
+	 * Helper function for arranging thumbnails
+	 *
+	 * @method setThumbnailPosition
+	 * @param thumbnailSourceList {} List of thumbnails
+	 * @param imageThumbSize {Float} width of thumbnail in pixels
+	 * @param thumbSpacer {Float} space between thumbnails in pixels
+	 * @param maxRows {Integer} maximum thumbnails per row
+	 * @param neededColumns {Integer} calculated number of columns needed
+	 */
 	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbSize, thumbSpacer, maxRows, neededColumns ) {
 		var curRow = 0;
 		var curColumn = 0;
@@ -1086,7 +1158,12 @@ function radialMenu(){
 			curColumn++;
 		}
 	};
-
+	
+	/**
+	 * Recalculates the thumbnail positions
+	 *
+	 * @method updateThumbnailPositions
+	 */
 	this.updateThumbnailPositions = function() {
 		var curRow = 0;
 		var curColumn = 0;
@@ -1158,6 +1235,9 @@ function radialMenu(){
 
 }
 
+/**
+ * buttonWidget used for menu and thumbnail buttons
+ */
 function buttonWidget() {
 	//this.element = null;
 	this.ctx = null;
