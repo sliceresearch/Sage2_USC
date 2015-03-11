@@ -9,30 +9,52 @@
 // Copyright (c) 2014
 
 /**
- @module sagepointer
+ * SAGE pointer object
+ *
+ * @module sagepointer
  */
 
 // require variables to be declared
 "use strict";
 
+/**
+ * SagePointer class
+ *
+ * @class SagePointer
+ * @constructor
+ * @param id {String} identifier of the new pointer
+ */
 function SagePointer(id) {
-	this.id = id;
-	this.label = "";
-	this.color = [255, 255, 255];
-	this.left = 0;
-	this.top = 0;
+	this.id      = id;
+	this.label   = "";
+	this.color   = [255, 255, 255];
+	this.left    = 0;
+	this.top     = 0;
 	this.visible = false;
 }
 
+/**
+* Activate the pointer
+*
+* @method start
+* @param label {String} name of the user
+* @param color {Array} RGB array 
+* @param sourceType {String} type of pointer
+*/
 SagePointer.prototype.start = function(label, color, sourceType) {
 	this.label = label;
 	this.color = color;
 	this.sourceType = sourceType;
-	this.left = 0;
-	this.top = 0;
+	this.left    = 0;
+	this.top     = 0;
 	this.visible = true;
 };
 
+/**
+* Make the pointer invisible
+*
+* @method stop
+*/
 SagePointer.prototype.stop = function() {
 	this.visible = false;
 };
