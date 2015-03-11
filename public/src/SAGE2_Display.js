@@ -71,7 +71,7 @@ function SAGE2_init() {
 			clientID: clientID,
 			sendsPointerData: false,
 			sendsMediaStreamFrames: false,
-			requestsServerFiles: false,
+			requestsServerFiles: true,
 			sendsWebContentToLoad: false,
 			sendsVideoSynchonization: true,
 			sharesContentWithRemoteServer: false,
