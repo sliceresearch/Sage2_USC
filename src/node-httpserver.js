@@ -103,12 +103,24 @@ HttpServer.prototype.onreq = function(req, res) {
 		if (global.__SESSION_ID && path.extname(pathname) === ".html") {
 			var params = parseURLQuery(reqURL.query); // note every field will be a string
 
+			//dkedit
+			console.log("pathname:" + pathname);
+			console.log("getName:" + getName);
+
+			//if serving the session.html page, then load it normally.
+			if (getName.indexOf("/session.html") == 0 ) {
+
+			}
 			// check params.session
-			if(params.session !== global.__SESSION_ID) {
+			else if (params.session !== global.__SESSION_ID) {
 				// failed
 				// serve page that asks for session id instead
 				//
 				// this.redirect(res, "session.html?onload="+getName);
+
+				console.log("Preventing access to the webpage, redirecting to session.html");
+				console.log("getName is:" + getName);
+				this.redirect(res, "session.html");
 				return;
 				//
 				// in session.html, when user enters a session id in a popup dialog
