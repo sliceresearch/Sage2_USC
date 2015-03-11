@@ -107,12 +107,8 @@ HttpServer.prototype.onreq = function(req, res) {
 			console.log("pathname:" + pathname);
 			console.log("getName:" + getName);
 
-			//if serving the session.html page, then load it normally.
-			if (getName.indexOf("/session.html") == 0 ) {
-
-			}
-			// check params.session
-			else if (params.session !== global.__SESSION_ID) {
+			//if not servering the session.html page and the url session doesn't match
+			if (   (getName.indexOf("/session.html") !== 0 )   && (params.session !== global.__SESSION_ID)  ) {
 				// failed
 				// serve page that asks for session id instead
 				//

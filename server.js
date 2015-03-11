@@ -83,11 +83,11 @@ program
   .parse(process.argv);
 
 //dkedit start
-if(  typeof program.password  == "string" && program.password.length > 0) {
+if (typeof program.password  === "string" && program.password.length > 0) {
 	global.__SESSION_ID = program.password;
 	console.log("Using " + global.__SESSION_ID + " as the password for this run.");
 }
-else if ( program.password ) {
+else if (program.password) {
 	console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
 }
 else {
