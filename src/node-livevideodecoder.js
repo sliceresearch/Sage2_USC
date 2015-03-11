@@ -22,11 +22,11 @@ var exec   = require('child_process').exec;  // spawn a process and receive outp
 var ffmpeg = require('fluent-ffmpeg');       // ffmpeg video manipulator
 
 /**
-* LiveVideoDecoder class 
-*
-* @class LiveVideoDecoder
-* @constructor
-*/
+ * LiveVideoDecoder class
+ *
+ * @class LiveVideoDecoder
+ * @constructor
+ */
 function LiveVideoDecoder(options) {
 	this.options       = options;
 
@@ -51,10 +51,10 @@ function LiveVideoDecoder(options) {
 }
 
 /**
-*
-*
-* @method initializeLiveDecoder
-*/
+ *
+ *
+ * @method initializeLiveDecoder
+ */
 LiveVideoDecoder.prototype.initializeLiveDecoder = function(url) {
 	var _this = this;
 
@@ -89,10 +89,10 @@ LiveVideoDecoder.prototype.initializeLiveDecoder = function(url) {
 };
 
 /**
-*
-*
-* @method startLiveDecoding
-*/
+ *
+ *
+ * @method startLiveDecoding
+ */
 LiveVideoDecoder.prototype.startLiveDecoding = function() {
 	var _this = this;
 
@@ -149,29 +149,29 @@ LiveVideoDecoder.prototype.startLiveDecoding = function() {
 };
 
 /**
-*
-*
-* @method pauseLiveDecoding
-*/
+ *
+ *
+ * @method pauseLiveDecoding
+ */
 LiveVideoDecoder.prototype.pauseLiveDecoding = function() {
 	if(this.decode !== null) this.decode.kill();
 };
 
 /**
-*
-*
-* @method stopLiveDecoding
-*/
+ *
+ *
+ * @method stopLiveDecoding
+ */
 LiveVideoDecoder.prototype.stopLiveDecoding = function() {
 	if(this.decode !== null) this.decode.kill();
 	this.frameIdx = 0;
 };
 
 /**
-*
-*
-* @method startSeekLiveDecoding
-*/
+ *
+ *
+ * @method startSeekLiveDecoding
+ */
 LiveVideoDecoder.prototype.startSeekLiveDecoding = function() {
 	if(this.decode !== null){
 		this.decode.kill();
@@ -183,19 +183,19 @@ LiveVideoDecoder.prototype.startSeekLiveDecoding = function() {
 };
 
 /**
-*
-*
-* @method updateSeekLiveDecoding
-*/
+ *
+ *
+ * @method updateSeekLiveDecoding
+ */
 LiveVideoDecoder.prototype.updateSeekLiveDecoding = function(frameIdx) {
 	this.frameIdx = frameIdx;
 };
 
 /**
-*
-*
-* @method finishSeekLiveDecoding
-*/
+ *
+ *
+ * @method finishSeekLiveDecoding
+ */
 LiveVideoDecoder.prototype.finishSeekLiveDecoding = function() {
 	if(this.playAfterSeek === true) this.startLiveDecoding();
 };
