@@ -12,7 +12,7 @@
  * Live decoding of video using the fluent-ffmpeg package (not used anymore)
  *
  * @module livevideodecoder
- * @requires child_process, fluent-ffmpeg
+ * @requires fluent-ffmpeg
  */
 
 // require variables to be declared

@@ -14,6 +14,7 @@
  * https://github.com/uic-evl/omicron
  *
  * @module omicron
+ * @requires node-coordinateCalculator, node-1euro
  */
 
 // require variables to be declared
