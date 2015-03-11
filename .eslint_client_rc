@@ -16,7 +16,8 @@
 	RadialMenu: true, Pointer: true,
 	hasMouse: true, showSAGE2PointerOverlayNoMouse: true, hideSAGE2PointerOverlayNoMouse: true,
 	sagePointerDisabled: true, sagePointerEnabled: true,
-	pointerClick: true, browser: true, showDialog: true
+	pointerClick: true, browser: true, showDialog: true,
+	SAGE2_interaction: true, SAGE2DisplayUI: true
   },
   rules: {
 	no-alert: 0,
