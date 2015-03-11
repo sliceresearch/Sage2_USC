@@ -12,7 +12,8 @@
  * Metadata processing using ExifTool
  *   ExifTool by Phil Harvey: http://www.sno.phy.queensu.ca/~phil/exiftool/
  *
- * @module exiftool
+ * @module server
+ * @submodule exiftool
  * @class exiftool
  */
 

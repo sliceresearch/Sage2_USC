@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module sagePointer
+ * @module client
+ * @submodule sagePointer
  */
 
 /**

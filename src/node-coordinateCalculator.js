@@ -11,7 +11,8 @@
 /**
  * Calculate intersection of ray and cylinder for CAVE2
  *
- * @module coordinateCalculator
+ * @module server
+ * @submodule coordinateCalculator
  */
 
 // require variables to be declared

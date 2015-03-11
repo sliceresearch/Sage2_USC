@@ -11,7 +11,8 @@
 /**
  * Web user interface
  *
- * @module SAGE2_UI
+ * @module client
+ * @submodule SAGE2_UI
  * @class SAGE2_UI
  */
 

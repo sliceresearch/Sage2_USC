@@ -11,7 +11,8 @@
 /**
  * Implements sticky notes for SAGE2
  *
- * @module stickyitems
+ * @module server
+ * @submodule stickyitems
  */
 
 // require variables to be declared

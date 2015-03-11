@@ -11,7 +11,8 @@
 /**
  * Menu System for SAGE2 Display Clients
  *
- * @module RadialMenu
+ * @module client
+ * @submodule RadialMenu
  * @class RadialMenu
  */
 

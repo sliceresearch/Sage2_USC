@@ -11,7 +11,8 @@
 /**
  * User interaction for SAGE2
  *
- * @module SAGE2_interaction
+ * @module client
+ * @submodule SAGE2_interaction
  */
 
 /**

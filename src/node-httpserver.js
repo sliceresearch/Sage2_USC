@@ -11,7 +11,8 @@
 /**
  * SAGE2 HTTP handlers
  *
- * @module httpserver
+ * @module server
+ * @submodule httpserver
  * @requires node-utils
  */
 

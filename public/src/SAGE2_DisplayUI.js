@@ -11,7 +11,8 @@
 /**
  * Web user interface for SAGE2
  *
- * @module SAGE2DisplayUI
+ * @module client
+ * @submodule SAGE2DisplayUI
  */
 
 /**

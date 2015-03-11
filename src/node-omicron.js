@@ -13,7 +13,8 @@
  * Provides external input device support
  * https://github.com/uic-evl/omicron
  *
- * @module omicron
+ * @module server
+ * @submodule omicron
  * @requires node-coordinateCalculator, node-1euro
  */
 

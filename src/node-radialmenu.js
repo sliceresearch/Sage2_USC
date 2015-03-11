@@ -11,7 +11,8 @@
 /**
  * Radial menu for a given pointer
  *
- * @module radialmenu
+ * @module server
+ * @submodule radialmenu
  */
 
 // require variables to be declared

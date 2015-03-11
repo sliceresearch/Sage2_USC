@@ -11,7 +11,8 @@
 /**
  * Main module loading content and creating applications
  *
- * @module itemLoader
+ * @module server
+ * @submodule itemLoader
  * @requires decompress-zip, gm, mime, request, ytdl-core, node-demux, node-exiftool, node-assets, node-utils, node-registry
  */
 

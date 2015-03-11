@@ -11,7 +11,8 @@
 /**
  * Pixel block processing functions
  *
- * @module pixelblock
+ * @module server
+ * @submodule pixelblock
  * @class pixelblock
  */
 

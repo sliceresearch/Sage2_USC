@@ -11,7 +11,8 @@
 /**
  * Client-side application for drawing, leverages Wacom plugin if present
  *
- * @module SAGE2_DrawingApp
+ * @module client
+ * @submodule SAGE2_DrawingApp
  * @class SAGE2_DrawingApp
  */
 

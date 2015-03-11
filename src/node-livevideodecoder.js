@@ -11,7 +11,8 @@
 /**
  * Live decoding of video using the fluent-ffmpeg package (not used anymore)
  *
- * @module livevideodecoder
+ * @module server
+ * @submodule livevideodecoder
  * @requires fluent-ffmpeg
  */
 

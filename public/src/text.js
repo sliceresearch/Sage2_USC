@@ -11,7 +11,8 @@
 /**
  * Text input widget for application UI
  *
- * @module text
+ * @module client
+ * @submodule text
  */
 
 /**

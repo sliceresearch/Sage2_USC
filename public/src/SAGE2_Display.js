@@ -11,7 +11,8 @@
 /**
  * SAGE2 Display, client side rendering
  *
- * @module SAGE2_Display
+ * @module client
+ * @submodule SAGE2_Display
  * @class SAGE2_Display
  */
 

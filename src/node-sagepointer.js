@@ -11,7 +11,8 @@
 /**
  * SAGE pointer object
  *
- * @module sagepointer
+ * @module server
+ * @submodule sagepointer
  */
 
 // require variables to be declared
