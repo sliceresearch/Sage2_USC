@@ -9,11 +9,7 @@
 // Copyright (c) 2014
 
 /**
- * SAGE2 HTTP handlers
- *
- * @module server
- * @submodule httpserver
- * @requires node-utils
+ @module httpserver
  */
 
 // require variables to be declared
@@ -26,13 +22,21 @@ var mime = require('mime');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
 
-/**
- * SAGE HTTP request handlers for GET and POST
- *
- * @class HttpServer
- * @constructor
- * @param publicDirectory {String} folder to expose to the server
- */
+mime.default_type = "text/plain";
+
+function parseURLQuery(query) {
+	if(!query) return {};
+
+	var p;
+	var paramList = query.split("&");
+	var params = {};
+	for(var i=0; i<paramList.length; i++) {
+		p = paramList[i].split("=");
+		if(p.length === 2) params[p[0]] = p[1];
+	}
+	return params;
+}
+
 function HttpServer(publicDirectory) {
 	this.publicDirectory = publicDirectory;
 	this.getFuncs  = {};
@@ -40,53 +44,19 @@ function HttpServer(publicDirectory) {
 	this.onrequest = this.onreq.bind(this);
 }
 
-/**
- * Splits parameters off a URL
- *
- * @method parseURLQuery
- * @param query {String} the URL to parse
- * @return {Object} parsed elements (key, value)
- */
-function parseURLQuery(query) {
-	if (!query) return {};
-
-	var p;
-	var paramList = query.split("&");
-	var params = {};
-	for(var i=0; i<paramList.length; i++) {
-		p = paramList[i].split("=");
-		if (p.length === 2) params[p[0]] = p[1];
-	}
-	return params;
-}
-
-/**
- * Handle a HTTP redirect
- *
- * @method redirect
- * @param res {Object} response
- * @param aurl {String} destination URL
- */
 HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
 	res.writeHead(302, {'Location': aurl});
 	res.end();
 };
 
-/**
- * Main router and trigger the GET and POST handlers
- *
- * @method onreq
- * @param req {Object} request
- * @param res {Object} response
- */
 HttpServer.prototype.onreq = function(req, res) {
 	var stream;
 
 	if (req.method === "GET") {
 		var reqURL = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
-		if (getName in this.getFuncs) {
+		if(getName in this.getFuncs){
 			this.getFuncs[getName](req, res);
 			return;
 		}
@@ -100,21 +70,38 @@ HttpServer.prototype.onreq = function(req, res) {
 		var pathname = this.publicDirectory + getName;
 
 		// SESSION ID CHECK
-		if (global.__SESSION_ID && path.extname(pathname) === ".html") {
+		if(global.__SESSION_ID && path.extname(pathname) === ".html") {
 			var params = parseURLQuery(reqURL.query); // note every field will be a string
 
+
+			//dkedit
+			console.log("pathname:" + pathname);
+			console.log("getName:" + getName);
+
+			//if serving the session.html page, then load it normally.
+			if(getName.indexOf("/session.html") == 0 ) {
+
+			}
 			// check params.session
-			if(params.session !== global.__SESSION_ID) {
+			else if(params.session !== global.__SESSION_ID) {
 				// failed
 				// serve page that asks for session id instead
 				//
 				// this.redirect(res, "session.html?onload="+getName);
+
+				console.log("Preventing access to the webpage, redirecting to session.html");
+				console.log("getName is:" + getName);
+				this.redirect(res, "session.html");
+
+
 				return;
 				//
 				// in session.html, when user enters a session id in a popup dialog
 				// the page should use 'window.location.replace(<onload?session=<value>>)'
 			}
 		}
+
+
 
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
@@ -126,8 +113,8 @@ HttpServer.prototype.onreq = function(req, res) {
 				var header = {};
 				var type   = mime.lookup(pathname);
 				header["Content-Type"] = type;
-				header["Access-Control-Allow-Headers" ] = "Range";
-				header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+                                header["Access-Control-Allow-Headers" ] = "Range";
+                                header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
 
 				if (req.headers.origin !== undefined) {
 					header['Access-Control-Allow-Origin' ] = req.headers.origin;
@@ -137,7 +124,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 
 				var total = stats.size;
-				if (typeof req.headers.range !== 'undefined') {
+				if(typeof req.headers.range !== 'undefined'){
 					var range = req.headers.range;
 					var parts = range.replace(/bytes=/, "").split("-");
 					var partialstart = parts[0];
@@ -156,7 +143,7 @@ HttpServer.prototype.onreq = function(req, res) {
 					stream = fs.createReadStream(pathname, {start: start, end: end});
 					stream.pipe(res);
 				}
-				else {
+				else{
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
 					stream = fs.createReadStream(pathname);
@@ -174,7 +161,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 	}
-	else if (req.method === "POST") {
+	else if(req.method === "POST") {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
@@ -182,24 +169,10 @@ HttpServer.prototype.onreq = function(req, res) {
 	}
 };
 
-/**
- * Add a HTTP GET handler (i.e. route)
- *
- * @method httpGET
- * @param name {String} matching URL name (i.e. /config)
- * @param callback {Function} processing function
- */
 HttpServer.prototype.httpGET = function(name, callback) {
 	this.getFuncs[name] = callback;
 };
 
-/**
- * Add a HTTP POST handler (i.e. route)
- *
- * @method httpPOST
- * @param name {String} matching URL name (i.e. /upload)
- * @param callback {Function} processing function
- */
 HttpServer.prototype.httpPOST = function(name, callback) {
 	this.postFuncs[name] = callback;
 };

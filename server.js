@@ -79,6 +79,7 @@ program
   .option('-q, --no-output',            'Quiet, no output')
   .option('-s, --session [name]',       'Load a session file (last session if omitted)')
   .option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
+  .option('-p, --password <password>',	'enables a one time password as sessionID passed through url') //DKedit
   .parse(process.argv);
 
 //dkedit start
