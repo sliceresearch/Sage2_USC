@@ -38,7 +38,7 @@ function SagePointer(id) {
 *
 * @method start
 * @param label {String} name of the user
-* @param color {Array} RGB array 
+* @param color {Array} RGB array
 * @param sourceType {String} type of pointer
 */
 SagePointer.prototype.start = function(label, color, sourceType) {
