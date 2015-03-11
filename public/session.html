@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
+
+<title>SAGE2 UI - Mobile</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2014
+</script>
+
+<script type="text/javascript">
+
+	function setupListener() {
+		document.getElementById('sessionValue').addEventListener('keydown', keyDownDKHandler,    false);
+		document.getElementById('sessionValue').focus();
+	}
+
+	function keyDownDKHandler(event) {
+
+		console.log("caught a keydown event");
+		if(event.target == document.getElementById('sessionValue') && ( event.keyCode == 13 || event.which == 13 )) {
+			window.location.href = "index.html?session="+document.getElementById('sessionValue').value;
+		}
+	}
+
+</script>
+
+</head>
+
+<body onload="setupListener()">
+
+	<h1>This SAGE2 wall has a session lock on it.
+	</h1>
+	
+	<h3>
+		Enter the sessionID:<br>
+		<input type="text" id="sessionValue" size="40" style="font-size: 1em;" tabindex="1">
+	</h3>
+
+</body>
+</html>
+
