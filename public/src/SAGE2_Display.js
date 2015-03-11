@@ -8,6 +8,12 @@
 //
 // Copyright (c) 2014-15
 
+/**
+ * SAGE2 Display, client side rendering
+ *
+ * @module SAGE2_Display
+ * @class SAGE2_Display
+ */
 
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
@@ -43,6 +49,11 @@ window.onbeforeunload = function() {
 	if(wsio !== undefined) wsio.close();
 };
 
+/**
+ * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
+ *
+ * @method resetIdle
+ */
 function resetIdle() {
 	if (uiTimer) {
 		clearTimeout(uiTimer);
@@ -51,6 +62,11 @@ function resetIdle() {
 	}
 }
 
+/**
+ * Entry point of the application
+ *
+ * @method SAGE2_init
+ */
 function SAGE2_init() {
 	hostname = window.location.hostname;
 	port     = window.location.port;
@@ -506,46 +522,8 @@ function SAGE2_init() {
 				js.src = url + "/" + data.resrc[idx];
 				document.head.appendChild(js);
 			};
-			
+			// Start loading the first resource
 			loadResource(0);
-			
-			/*
-			var i;
-			var resources = {};
-			for(i=0; i<data.resrc.length; i++){
-				// check dependency cache first
-				if (dependencies[data.resrc[i]] !== true) {
-					dependencies[data.resrc[i]] = false;
-					resources[data.resrc[i]] = false;
-				}
-			}
-			
-			if(isEmpty(resources)){
-				console.log("all resources loaded");
-				loadApplication();
-			}
-			
-			Object.keys(resources).forEach(function(key) {
-				if(resources.hasOwnProperty(key)) {
-					var js = document.createElement("script");
-					js.addEventListener('error', function(event) {
-						console.log("Error loading script: " + key);
-					}, false);
-	
-					js.addEventListener('load', function(event) {
-						dependencies[key] = true;
-						resources[key] = true;
-						if(allTrueDict(resources)){
-							console.log("all resources loaded");
-							loadApplication();
-						}
-					}, false);
-					js.type = "text/javascript";
-					js.src = url + "/" + key;
-					document.head.appendChild(js);
-				}
-			});
-			*/
 		}
 		
 		var cornerSize = Math.min(data.width, data.height) / 5;
@@ -1102,11 +1080,4 @@ function SAGE2_init() {
 			clearInterval(blinkControlHandle);		
 		}
 	});
-
-	/*wsio.on('receiveFileData', function(data){
-		var app = applications[data.id];
-		app.fileDataBuffer = data.buffer;
-		app.fileReceived = true;
-		console.log("file Data:",app.fileDataBuffer);
-	});*/
 }
