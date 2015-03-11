@@ -81,6 +81,9 @@ program
   .option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
   .parse(process.argv);
 
+//Edit to the server.js file from the master branch.
+
+
 // Logging mechanism
 if (program.logfile) {
 	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
