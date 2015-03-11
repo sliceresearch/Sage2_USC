@@ -81,8 +81,18 @@ program
   .option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
   .parse(process.argv);
 
-//Edit to the server.js file from the master branch.
-
+//dkedit start
+if(  typeof program.password  == "string" && program.password.length > 0) {
+	global.__SESSION_ID = program.password;
+	console.log("Using " + global.__SESSION_ID + " as the password for this run.");
+}
+else if ( program.password ) {
+	console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
+}
+else {
+	console.log("Single use password has not been specified.");
+}
+//dkedit end
 
 // Logging mechanism
 if (program.logfile) {
