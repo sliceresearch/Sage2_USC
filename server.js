@@ -511,6 +511,7 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaStream', wsStopMediaStream);
         wsio.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 		wsio.on('stopMediaBlockStream', wsStopMediaBlockStream);
+		wsio.on('requestDataSharingSession', wsRequestDataSharingSession);
 	}
 	if(wsio.messages.requestsWidgetControl){
 		wsio.on('addNewControl', wsAddNewControl);
@@ -573,21 +574,21 @@ function initializeWSClient(wsio) {
 
 	if (wsio.clientType === "webBrowser") webBrowserClient = wsio;
 
-	if ( wsio.clientType === "radialMenu" )
+	if ( wsio.clientType === "display" )
 	{
 		wsio.on('radialMenuMoved', wsRadialMenuMoved);
 		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		wsio.on('radialMenuWindowToggle', wsRadialMenuThumbnailWindow);
 
 		// Allows only one instance of each radial menu to send 'open file' command
-		if ( radialMenus[wsio.clientID].wsio === undefined )
-		{
-			console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-			radialMenus[wsio.clientID].wsio = wsio;
-		} else {
-			//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
-			wsio.emit("disableSendToServer", uniqueID);
-		}
+		//if ( radialMenus[wsio.clientID].wsio === undefined )
+		//{
+		//	console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+		//	radialMenus[wsio.clientID].wsio = wsio;
+		//} else {
+		//	//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
+		//	wsio.emit("disableSendToServer", uniqueID);
+		//}
 	}
 
 	// Debug messages from applications
@@ -2294,6 +2295,14 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 	}
 }
 
+function wsRequestDataSharingSession(wsio, data) {
+	var known_site = findRemoteSiteByConnection(wsio);
+	if(known_site !== null) data.name = known_site.name;
+	if(data.name === undefined || data.name === null) data.name = "Unknown";
+	
+	console.log("Data-sharing request from " + data.name + " (" + data.host + ":" + data.port + ")");
+}
+
 // **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
@@ -2928,6 +2937,7 @@ function createRemoteConnection(wsURL, element, index) {
     remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
     remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 	remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
+	remote.on('requestDataSharingSession', wsRequestDataSharingSession);
 
 	return remote;
 }
@@ -3601,7 +3611,28 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// apps
 	var elemCtrl;
 	
-	if(elem !== null){
+	if(elem === null) {
+		var remoteIdx = -1;
+		for(var i=0; i<remoteSites.length; i++){
+			if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
+				sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
+				remoteIdx = i;
+				break;
+			}
+		}
+		if(remoteIdx >= 0) {
+			if(remoteSites[remoteIdx].connected) {
+				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
+				
+				// TOOD: broadcast new shared session message to displays (connection: waiting)
+				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {host: config.host, port: config.index_port, name: config.name, secure: false});
+			}
+			else {
+				console.log("Remote site " + remoteSites[remoteIdx].name + " is not currently connected");
+			}
+		}
+	}
+	else {
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			if (data.button === "left") {
 				var localX = pointerX - elem.left;
@@ -3836,6 +3867,17 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			if(remoteInteraction[uniqueID].selectedMoveItem !== null){
 				app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 				if(app !== null) {
+					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
+
+					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
+
+					if(videoHandles[app.id] !== undefined && videoHandles[app.id].newFrameGenerated === false)
+						handleNewVideoFrame(app.id);
+					remoteInteraction[uniqueID].releaseItem(true);
+					
+					
+					// Disabled for data-duplication only
+					/*
 					var remoteIdx = -1;
 					for(var i=0; i<remoteSites.length; i++){
 						if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
@@ -3870,6 +3912,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 								handleNewVideoFrame(app.id);
 						}
 					}
+					*/
 				}
 			}
 		}
