@@ -28,30 +28,45 @@ function StickyItems() {
 	this.stickyItemParent = {};
 }
 
+/**
+*
+*
+* @method attachStickyItem
+*/
 StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
-	if (this.stickyItemParent[backgroundItem.id] ){
-		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0){
+	if (this.stickyItemParent[backgroundItem.id]) {
+		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);
 		}
 	}
-	else{
+	else {
 		this.stickyItemParent[backgroundItem.id] = [];
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
 	stickyItem.offsetInfo = {offsetX:stickyItem.left - backgroundItem.left, offsetY:stickyItem.top - backgroundItem.top };
 };
 
+/**
+*
+*
+* @method detachStickyItem
+*/
 StickyItems.prototype.detachStickyItem = function(stickyItem) {
-	for (var key in this.stickyItemParent){
+	for (var key in this.stickyItemParent) {
 		if (!this.stickyItemParent[key]) continue;
 		var idx = this.stickyItemParent[key].indexOf(stickyItem);
-		if (idx>-1){
+		if (idx>-1) {
 			this.stickyItemParent[key].splice(idx, 1);
 			return;
 		}
 	}
 };
 
+/**
+*
+*
+* @method removeElement
+*/
 StickyItems.prototype.removeElement = function(elem) {
 	for (var key in this.stickyItemParent){
 		if (!this.stickyItemParent[key]) continue;
@@ -65,11 +80,16 @@ StickyItems.prototype.removeElement = function(elem) {
 		delete this.stickyItemParent[elem.id];
 };
 
+/**
+*
+*
+* @method moveItemsStickingToUpdatedItem
+*/
 StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem, pointerX, pointerY) {
 	var moveItems = [];
 	if (this.stickyItemParent[updatedItem.elemId]){
 		var list = this.stickyItemParent[updatedItem.elemId];
-		for (var l in list){
+		for (var l in list) {
 			list[l].left = updatedItem.elemLeft + list[l].offsetInfo.offsetX;
 			list[l].top  = updatedItem.elemTop + list[l].offsetInfo.offsetY;
 			var item     = {elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top, elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()};
@@ -79,6 +99,11 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem, poi
 	return moveItems;
 };
 
+/**
+*
+*
+* @method getStickingItems
+*/
 StickyItems.prototype.getStickingItems = function(elemId) {
 	if (this.stickyItemParent[elemId])
 		return this.stickyItemParent[elemId];
