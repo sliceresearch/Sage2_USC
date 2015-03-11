@@ -14,8 +14,6 @@
  * https://github.com/uic-evl/omicron
  *
  * @module omicron
- * @class OmicronManager
- *
  */
 
 // require variables to be declared
@@ -33,14 +31,12 @@ var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of
  /**
  * Omicron setup and opens a listener socket for an Omicron input server to connect to
  *
- * @method OmicronManager
- * @param sysConfig - SAGE2 system configuration file. Primararly used to grab display dimensions and Omicron settings
+ * @class OmicronManager
+ * @constructor
+ * @param sysConfig {Object} SAGE2 system configuration file. Primararly used to grab display dimensions and Omicron settings
  */
-function OmicronManager(sysConfig)
-{
+function OmicronManager(sysConfig) {
 	omicronManager = this;
-
-
 
 	this.coordCalculator = null;
 
@@ -797,4 +793,5 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 
 	if (emit>2) { dstart = Date.now(); emit = 0; }
 };
+
 module.exports = OmicronManager;
