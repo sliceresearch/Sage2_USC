@@ -9,13 +9,15 @@
 // Copyright (c) 2014
 
 /**
- @module coordinateCalculator
+ * Calculate intersection of ray and cylinder for CAVE2
+ *
+ * @module coordinateCalculator
  */
 
 // require variables to be declared
 "use strict";
 
-var max_y_error = 0.5; // meters
+var max_y_error = 0.5;   // meters
 var max_x_error = 0.005; // fractional
 
 var radius = 6.477 / 2;
@@ -23,19 +25,18 @@ var radiansForDoor = 36 * Math.PI / 180;
 
 var minY = 0.305;
 var maxY = 2.625;
-//var maxZ = radius * ( 2 + Math.cos(radiansForDoor / 2) );
-//var x = 0;
-//var y = 1;
-//var z = 2;
-
-//var BAD_SCREEN_POS = (-1,-1);
 
 var position    = {};
 var eulerAngles = {};
 var screenPos   = {};
 
-function coordinateCalculator()
-{
+/**
+ * CoordinateCalculator class
+ *
+ * @class SAGE2_App
+ * @constructor
+ */
+function CoordinateCalculator() {
 	position.x = 0;
 	position.y = 0;
 	position.z = 1;
@@ -48,7 +49,20 @@ function coordinateCalculator()
 	screenPos.y = 0.5;
 }
 
-coordinateCalculator.prototype.wandToScreenCoordinates = function( x, y, z, rx, ry, rz, rw )
+/**
+ * Calculate wand to screen intersection
+ *
+ * @method wandToScreenCoordinates
+ * @param x {Number} wand x
+ * @param y {Number} wand x
+ * @param z {Number} wand x
+ * @param rx {Number} ray x
+ * @param ry {Number} ray y
+ * @param rz {Number} ray z
+ * @param rw {Number} ray w
+ * @return {Object} screen coordinates .x and .y
+ */
+CoordinateCalculator.prototype.wandToScreenCoordinates = function(x, y, z, rx, ry, rz, rw)
 {
 	// Quaternion to Euler ////////////////////////
 	// Rotation matrix Q multiplied by reference vector (0,0,-1)
@@ -122,7 +136,15 @@ coordinateCalculator.prototype.wandToScreenCoordinates = function( x, y, z, rx, 
 	return screenPos;
 };
 
-coordinateCalculator.prototype.calculateScreenPos = function(x, y, z)
+/**
+ * Calculate screen coordinates
+ *
+ * @method calculateScreenPos
+ * @param x {Number} wand x
+ * @param y {Number} wand x
+ * @param z {Number} wand x
+ */
+CoordinateCalculator.prototype.calculateScreenPos = function(x, y, z)
 {
 	if (y > maxY)
 	{
@@ -184,4 +206,4 @@ coordinateCalculator.prototype.calculateScreenPos = function(x, y, z)
 	screenPos.y = 1 - y;
 };
 
-module.exports = coordinateCalculator;
+module.exports = CoordinateCalculator;
