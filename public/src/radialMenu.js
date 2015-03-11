@@ -896,9 +896,8 @@ function RadialMenu(){
 					}
 					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  ) {
 						this.hoverOverText = thumbButton.getData().filename;
-						this.hoverOverThumbnail = thumbButton.idleImage;
+						this.hoverOverThumbnail = thumbButton.buttonImage;
 						this.hoverOverMeta = thumbButton.getData().meta;
-						overButton = true;
 					}
 
 					if( thumbButton.isFirstOver()  ) // Only occurs on first pointerMove event over button
