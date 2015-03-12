@@ -28,7 +28,8 @@
 		image: {
 			url: "images/background/moonvalley3.jpg",
 			style: "fit"
-		}
+		},
+	clip: true
 	},
 	resolution: {
 		width: 1080,
