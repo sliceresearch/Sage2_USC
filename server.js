@@ -2524,8 +2524,14 @@ function loadConfiguration() {
 	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * maxDim); // 120%
 
 	// Set default values if missing
-	if (userConfig.port === undefined) userConfig.port = 443;
-	if (userConfig.index_port === undefined) userConfig.index_port = 80;
+	if (userConfig.port === undefined)
+		userConfig.port = 443;
+	else
+		userConfig.port = parseInt(userConfig.port, 10); // to make sure it's a number
+	if (userConfig.index_port === undefined)
+		userConfig.index_port = 80;
+	else
+		userConfig.index_port = parseInt(userConfig.index_port, 10);
 
 	// Registration to EVL's server (sage.evl.uic.edu), true by default
 	if (userConfig.register_site === undefined)
