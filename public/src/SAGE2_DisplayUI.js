@@ -1,18 +1,47 @@
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2014-15
+
+/**
+ * Web user interface for SAGE2
+ *
+ * @module SAGE2DisplayUI
+ */
+
+/**
+ * User interface drawn using Canvas2D
+ *
+ * @class SAGE2DisplayUI
+ * @constructor
+ */
 function SAGE2DisplayUI() {
+	/**
+	* Initialize the object
+	*
+	* @method init
+	* @param config {Object} display configuration object
+	* @param wsio {Object} WebsocktIO object
+	*/
 	this.init = function(config, wsio) {
-		var _this = this;
+		var _this   = this;
 		this.config = config;
-		this.wsio = wsio;
-		this.scale = 1.0;
-		this.logo = new Image();
+		this.wsio   = wsio;
+		this.scale  = 1.0;
+		this.logo   = new Image();
 		this.logo.onload = function(event) {
 			_this.resize();
 		};
-		this.logo.src = "images/EVL-LAVA_UI.svg";
+		this.logo.src   = "images/EVL-LAVA_UI.svg";
 		this.logoAspect = 3.47828052509;
-		this.fileDrop = false;
+		this.fileDrop   = false;
 		this.fileUpload = false;
-		this.uploadPercent = 0;
+		this.uploadPercent    = 0;
 		this.fileDropFontSize = 12;
 
 		this.applications = [];
@@ -20,8 +49,13 @@ function SAGE2DisplayUI() {
 		this.pointerY = 0;
 	};
 
+	/**
+	* Draw the UI
+	*
+	* @method draw
+	*/
 	this.draw = function() {
-		var i, size, x, y, width, height;
+		var i, size, x, y, w, h;
 		var sage2UI = document.getElementById('sage2UI');
 		var ctx = sage2UI.getContext('2d');
 
@@ -148,13 +182,12 @@ function SAGE2DisplayUI() {
 		ctx.stroke();
 
 		// file drop overlay
-		if(this.fileDrop === true){
+		if (this.fileDrop === true) {
 			ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
 			ctx.fillRect(0, 0, sage2UI.width, sage2UI.height);
 
 			var txt = "Drop multimedia files here";
 			ctx.font = this.fileDropFontSize + "px Verdana";
-			var txtWidth = ctx.measureText(txt).width;
 
 			var textBoxWidth = Math.round(sage2UI.width*0.75);
 			var lines = this.textLineCount(ctx, txt, textBoxWidth);
@@ -197,10 +230,22 @@ function SAGE2DisplayUI() {
 		}
 	};
 
+	/**
+	* Update the upload progress bar
+	*
+	* @method setUploadPercent
+	* @param percent {Number} progress [0.0 - 1.0]
+	*/
 	this.setUploadPercent = function(percent) {
 		this.uploadPercent = percent; // [0.0 - 1.0]   (not 0 - 100)
 	};
 
+	/**
+	* Add an application with its icon and draw
+	*
+	* @method addAppWindow
+	* @param data {Object} contains .icon image of the application
+	*/
 	this.addAppWindow = function(data) {
 		var icon = data.icon;
 		data.icon = new Image();
@@ -215,23 +260,29 @@ function SAGE2DisplayUI() {
 			}, 1000);
 		};
 		data.iconLoaded = false;
-		if(icon) data.icon.src = icon+"_512.png";
+		if (icon) data.icon.src = icon+"_512.png";
 		else data.icon.src = "images/blank.png";
 		this.applications.push(data);
 	};
 
+	/**
+	* Delete an application and draw
+	*
+	* @method deleteApp
+	* @param id {String} application id
+	*/
 	this.deleteApp = function(id) {
 		var selectedIndex;
 		var selectedItem;
 		var i;
-		for(i=0; i<this.applications.length; i++){
-			if(this.applications[i].id === id){
+		for (i=0; i<this.applications.length; i++) {
+			if (this.applications[i].id === id) {
 				selectedIndex = i;
 				selectedItem = this.applications[i];
 				break;
 			}
 		}
-		for(i=selectedIndex; i<this.applications.length-1; i++){
+		for (i=selectedIndex; i<this.applications.length-1; i++) {
 			this.applications[i] = this.applications[i+1];
 		}
 		this.applications[this.applications.length-1] = selectedItem;
@@ -239,12 +290,18 @@ function SAGE2DisplayUI() {
 		this.draw();
 	};
 
+	/**
+	* Reorder the application list and draw
+	*
+	* @method updateItemOrder
+	* @param order {Array} contains the application ids in order
+	*/
 	this.updateItemOrder = function(order) {
 		var i;
 		var j;
-		for(i=0; i<order.length; i++){
-			for(j=0; j<this.applications.length; j++){
-				if(this.applications[j].id === order[i]){
+		for( i=0; i<order.length; i++) {
+			for (j=0; j<this.applications.length; j++) {
+				if (this.applications[j].id === order[i]) {
 					var tmp = this.applications[i];
 					this.applications[i] = this.applications[j];
 					this.applications[j] = tmp;
@@ -254,25 +311,37 @@ function SAGE2DisplayUI() {
 		this.draw();
 	};
 
+	/**
+	* Move an application and redraw
+	*
+	* @method setItemPosition
+	* @param position_data {Object}  oject with .elemId .elemLeft .elemTop .elemWidth .elemHeight fields
+	*/
 	this.setItemPosition = function(position_data) {
 		var i;
-		for(i=0; i<this.applications.length; i++){
-			if(this.applications[i].id === position_data.elemId){
+		for (i=0; i<this.applications.length; i++) {
+			if (this.applications[i].id === position_data.elemId){
 				this.applications[i].left = position_data.elemLeft;
-				this.applications[i].top = position_data.elemTop;
+				this.applications[i].top  = position_data.elemTop;
 				break;
 			}
 		}
 		this.draw();
 	};
 
+	/**
+	* Move and scale an application and redraw
+	*
+	* @method setItemPositionAndSize
+	* @param position_data {Object}  oject with .elemId .elemLeft .elemTop .elemWidth .elemHeight fields
+	*/
 	this.setItemPositionAndSize = function(position_data) {
 		var i;
-		for(i=0; i<this.applications.length; i++){
-			if(this.applications[i].id === position_data.elemId){
-				this.applications[i].left = position_data.elemLeft;
-				this.applications[i].top = position_data.elemTop;
-				this.applications[i].width = position_data.elemWidth;
+		for (i=0; i<this.applications.length; i++){
+			if (this.applications[i].id === position_data.elemId) {
+				this.applications[i].left   = position_data.elemLeft;
+				this.applications[i].top    = position_data.elemTop;
+				this.applications[i].width  = position_data.elemWidth;
 				this.applications[i].height = position_data.elemHeight;
 				break;
 			}
@@ -280,6 +349,19 @@ function SAGE2DisplayUI() {
 		this.draw();
 	};
 
+	/**
+	* Draw a rounded rectangle
+	*
+	* @method drawRoundedRect
+	* @param ctx {Object} canvas context
+	* @param x {Number} position x
+	* @param y {Number} position y
+	* @param width {Number}  width
+	* @param height {Number} height
+	* @param radius {Number} radius of corner
+	* @param fillFlag {Bool} whether to fill or not
+	* @param strokeFlag {Bool} whether to stroke or not
+	*/
 	this.drawRoundedRect = function(ctx, x, y, width, height, radius, fillFlag, strokeFlag) {
 		ctx.beginPath();
 		ctx.moveTo(x + radius, y);
@@ -292,19 +374,27 @@ function SAGE2DisplayUI() {
 		ctx.lineTo(x, y + radius);
 		ctx.quadraticCurveTo(x, y, x + radius, y);
 		ctx.closePath();
-		if(fillFlag === true) ctx.fill();
-		if(strokeFlag === true) ctx.stroke();
+		if (fillFlag === true)   ctx.fill();
+		if (strokeFlag === true) ctx.stroke();
 	};
 
+	/**
+	* Count the number of lines for a given maximum width
+	*
+	* @method textLineCount
+	* @param ctx {Object} canvas context
+	* @param text {String} text to be drawn
+	* @param maxWidth {Number} maximum width
+	*/
 	this.textLineCount = function(ctx, text, maxWidth) {
 		var words = text.split(" ");
-		var line = "";
+		var line  = "";
 		var count = 1;
 
-		for(var n=0; n<words.length; n++) {
+		for (var n=0; n<words.length; n++) {
 			var testLine = line + words[n] + " ";
 			var testWidth = ctx.measureText(testLine).width;
-			if(testWidth > maxWidth && n > 0) {
+			if (testWidth > maxWidth && n > 0) {
 				line = words[n] + ' ';
 				count++;
 			}
@@ -315,14 +405,25 @@ function SAGE2DisplayUI() {
 		return count;
 	};
 
+	/**
+	* Draw some text, and wrap it over multiple lines if necessary
+	*
+	* @method wrapText
+	* @param ctx {Object} canvas context
+	* @param text {String} text to be drawn
+	* @param x {Number} position x
+	* @param y {Number} position y
+	* @param maxWidth {Number} maximum width
+	* @param lineHeight {Number} line height
+	*/
 	this.wrapText = function(ctx, text, x, y, maxWidth, lineHeight) {
 		var words = text.split(" ");
-		var line = "";
+		var line  = "";
 
-		for(var n=0; n<words.length; n++) {
-			var testLine = line + words[n] + " ";
+		for (var n=0; n<words.length; n++) {
+			var testLine  = line + words[n] + " ";
 			var testWidth = ctx.measureText(testLine).width;
-			if(testWidth > maxWidth && n > 0) {
+			if (testWidth > maxWidth && n > 0) {
 				ctx.fillText(line, x, y);
 				line = words[n] + ' ';
 				y += lineHeight;
@@ -334,18 +435,37 @@ function SAGE2DisplayUI() {
 		ctx.fillText(line, x, y);
 	};
 
+	/**
+	* Handler for mouse up
+	*
+	* @method pointerPress
+	* @param btn {String} mouse button name (left, right, middle)
+	*/
 	this.pointerPress = function(btn) {
-		if(btn !== "right"){
+		if (btn !== "right") {
 			this.wsio.emit('pointerPress', {button: btn});
 		}
 	};
 
+	/**
+	* Handler for mouse up
+	*
+	* @method pointerRelease
+	* @param btn {String} mouse button name (left, right, middle)
+	*/
 	this.pointerRelease = function(btn) {
-		if(btn !== "right"){
+		if (btn !== "right") {
 			this.wsio.emit('pointerRelease', {button: btn});
 		}
 	};
 
+	/**
+	* Handler for mouse move
+	*
+	* @method pointerMove
+	* @param x {Number} x value
+	* @param y {Number} y value
+	*/
 	this.pointerMove = function(x, y) {
 		this.pointerX = x;
 		this.pointerY = y;
@@ -354,51 +474,84 @@ function SAGE2DisplayUI() {
 		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
 	};
 
+	/**
+	* Handler for scrolling
+	*
+	* @method pointerScroll
+	* @param value {Number} scroll amount
+	*/
 	this.pointerScroll = function(value) {
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {wheelDelta: value});
 	};
 
+	/**
+	* Handler for double click
+	*
+	* @method pointerDblClick
+	*/
 	this.pointerDblClick = function() {
 		this.wsio.emit('pointerDblClick');
 	};
 
+	/**
+	* Handler for key down
+	*
+	* @method keyDown
+	* @param keyCode {Number} character code
+	*/
 	this.keyDown = function(keyCode) {
-		if(keyCode !== 27) {
+		if (keyCode !== 27) {
 			this.wsio.emit('keyDown', {code: keyCode});
-			if(keyCode === 9) { // tab is a special case - must emulate keyPress event
+			if (keyCode === 9) { // tab is a special case - must emulate keyPress event
 				this.wsio.emit('keyPress', {code: keyCode, character: String.fromCharCode(keyCode)});
 			}
 			// if a special key - prevent default (otherwise let continue to keyPress)
-			if(keyCode <= 7 || (keyCode >= 10 && keyCode <= 15) || keyCode === 32 || (keyCode >= 47 && keyCode <= 90) || (keyCode >= 94 && keyCode <= 111) || keyCode >= 146) {
+			if (keyCode <= 7 || (keyCode >= 10 && keyCode <= 15) || keyCode === 32 || (keyCode >= 47 && keyCode <= 90) || (keyCode >= 94 && keyCode <= 111) || keyCode >= 146) {
 				return false;
 			}
 		}
 		return true;
 	};
 
+	/**
+	* Handler for key up
+	*
+	* @method keyUp
+	* @param keyCode {Number} character code
+	*/
 	this.keyUp = function(keyCode) {
-		if(keyCode !== 27) {
+		if (keyCode !== 27) {
 			this.wsio.emit('keyUp', {code: keyCode});
 		}
 		return true;
 	};
 
+	/**
+	* Handler for key press
+	*
+	* @method keyPress
+	* @param charCode {Number} character code
+	*/
 	this.keyPress = function(charCode) {
 		this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 		return true;
 	};
 
+	/**
+	* Callback when the browser is resize, adjust the position of UI elements
+	*
+	* @method resize
+	*/
 	this.resize = function() {
 		var displayUI = document.getElementById('displayUI');
 		var menuUI    = document.getElementById('menuUI');
 		var sage2UI   = document.getElementById('sage2UI');
-		var ctx       = sage2UI.getContext('2d');
 
 		var freeWidth   = window.innerWidth  - 25;      // window width minus padding
 		var freeHeight  = window.innerHeight - 20 - 100 - 65; // size of 10px margin (top, bottom) and bottom buttons
 		var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
-		var freeAspect  = freeWidth / freeHeight;
+		//var freeAspect  = freeWidth / freeHeight;
 
 		// wide sage2 display (compared to page)
 		//if(freeAspect < sage2Aspect) {
@@ -421,9 +574,9 @@ function SAGE2DisplayUI() {
 		menuUI.style.top    = (sage2UI.height+100) + "px";
 
 		// Setting the buttons in a row
-		// var myElements = document.querySelectorAll(".uiButton");			 
+		// var myElements = document.querySelectorAll(".uiButton");
 		// for (var i = 0; i < myElements.length; i++) {
-		//     myElements[i].style.display = "inline-block";
+		//     myElements[i].style.display = "inline-block";
 		// }
 		//}
 

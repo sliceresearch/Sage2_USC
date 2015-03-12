@@ -8,17 +8,42 @@
 //
 // Copyright (c) 2014
 
-var movie_player = SAGE2_BlockStreamingApp.extend( {
+/**
+ * @module image_viewer
+ */
 
+/**
+ * Movie player application, inherits from SAGE2_BlockStreamingApp
+ *
+ * @class movie_player
+ */
+var movie_player = SAGE2_BlockStreamingApp.extend( {
+	/**
+	* Constructor
+	*
+	* @class image_viewer
+	* @constructor
+	*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 	},
 
+	/**
+	* Init method, creates an 'div' tag in the DOM
+	*
+	* @method init
+	* @param data {Object} contains initialization values (id, width, height, ...)
+	*/
 	init: function(data) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, "div", data);
 	},
 
+	/**
+	* Builds the widgets to control the movie player
+	*
+	* @method initWidgets
+	*/
 	initWidgets: function() {
 		var _this = this;
 
@@ -112,7 +137,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		});
 
 		this.controls.finishedAddingControls();
-		
+
 		setTimeout(function() {
 			_this.muteBtn.state      = _this.state.muted  ? 0 : 1;
 			_this.loopBtn.state      = _this.state.looped ? 0 : 1;
@@ -120,21 +145,39 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		}, 500);
 	},
 
+	/**
+	* Set to movie player to a given frame
+	*
+	* @method setVideoFrame
+	* @param frameIdx {Number} change the current frame number
+	*/
     setVideoFrame: function(frameIdx) {
 		this.state.frame = frameIdx;
 	},
 
+	/**
+	* Pause the movie if not in loop mode
+	*
+	* @method videoEnded
+	*/
 	videoEnded: function() {
-		if(this.state.looped === false) {
+		if (this.state.looped === false) {
 			this.state.paused = true;
 			// must change play-pause button (should show 'play' icon)
 			this.playPauseBtn.state = 1;
 		}
 	},
 
+	/**
+	* Load the app from a previous state and builds the widgets
+	*
+	* @method load
+	* @param state {Object} object to initialize or restore the app
+	* @param date {Date} time from the server
+	*/
 	load: function(state, date) {
 		arguments.callee.superClass.load.call(this, state, date);
-		
+
 		this.state.width                = state.width;
 		this.state.height               = state.height;
 		this.state.video_url            = state.video_url;
@@ -150,5 +193,5 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		this.state.looped               = state.looped;
 
 		this.initWidgets();
-	},
+	}
 });

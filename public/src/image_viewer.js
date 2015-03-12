@@ -8,32 +8,59 @@
 //
 // Copyright (c) 2014
 
+/**
+ * @module image_viewer
+ */
 
+/**
+ * Image viewing application
+ *
+ * @class image_viewer
+ */
 var image_viewer = SAGE2_App.extend( {
+	/**
+	* Constructor
+	*
+	* @class image_viewer
+	* @constructor
+	*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
-		
+
 		this.src = null;
 		this.top = null;
 	},
-	
+
+	/**
+	* Init method, creates an 'img' tag in the DOM
+	*
+	* @method init
+	* @param data {Object} contains initialization values (id, width, height, ...)
+	*/
 	init: function(data) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, "img", data);
-		
+
 		// application specific 'init'
 		this.state.src  = null;
 		this.state.type = null;
 		this.state.exif = null;
 		this.state.crct = null;
-		
+
 		this.createLayer("rgba(0,0,0,0.85)");
 		this.pre = document.createElement('pre');
 		this.layer.appendChild(this.pre);
 		this.top = 0;
 		this.state.crct = false;
 	},
-	
+
+	/**
+	* Load the app from a previous state
+	*
+	* @method load
+	* @param state {Object} object to initialize or restore the app
+	* @param date {Date} time from the server
+	*/
 	load: function(state, date) {
 		if (state.src !== undefined && state.src !== null) {
 			this.element.src  = "data:" + state.type + ";base64," + state.src;
@@ -45,7 +72,6 @@ var image_viewer = SAGE2_App.extend( {
 			this.pre.innerHTML = this.syntaxHighlight(state.exif);
 
 			// Fix iPhone picture: various orientations
-			var ratio_elmt = this.element.height / this.element.width;
 			var ratio_exif = this.state.exif.ImageHeight / this.state.exif.ImageWidth;
 			var ratio      = ratio_exif;
 			var inv   = 1.0 / ratio;
@@ -69,16 +95,33 @@ var image_viewer = SAGE2_App.extend( {
 			}
 		}
 	},
-	
+
+	/**
+	* Draw function, empty since the img tag is in the DOM
+	*
+	* @method draw
+	* @param date {Date} current time from the server
+	*/
 	draw: function(date) {
 	},
-	
+
+	/**
+	* Resize function, nothing to resize since handled by the parent
+	*
+	* @method resize
+	* @param date {Date} current time from the server
+	*/
 	resize: function(date) {
 	},
 
-	// Parse JSON object and add colors
+	/**
+	* Parse JSON object and add colors
+	*
+	* @method syntaxHighlight
+	* @param json {Object} object containing metadata
+	*/
 	syntaxHighlight: function(json) {
-		if (typeof json != 'string') {
+		if (typeof json !== 'string') {
 			json = JSON.stringify(json, undefined, 4);
 		}
 		json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -98,7 +141,17 @@ var image_viewer = SAGE2_App.extend( {
 			return '<span style="' + cls + '">' + match + '</span>';
 		});
 	},
-	
+
+	/**
+	* Handles event processing for the app
+	*
+	* @method event
+	* @param eventType {String} the type of event
+	* @param position {Object} contains the x and y positions of the event
+	* @param user_id {Object} data about the user who triggered the event
+	* @param data {Object} object containing extra data about the event,
+	* @param date {Date} current time from the server
+	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
 		if (eventType === "keyboard" && data.character==="i") {
@@ -113,7 +166,7 @@ var image_viewer = SAGE2_App.extend( {
 		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta / 64;
-			
+
 			this.top += ui.titleTextSize * amount;
 			if (this.top > 0) this.top = 0;
 			if (this.top < (-(this.layer.clientHeight-this.element.height))) this.top = -(this.layer.clientHeight-this.element.height);

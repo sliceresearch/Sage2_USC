@@ -40,7 +40,7 @@
 	],
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
-		FFMpeg: "C:/Workspace/EVL/SAGE2/local/bin/"
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
     },
 	// for experimental features: true/false
 	experimental: {
