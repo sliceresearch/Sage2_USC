@@ -168,8 +168,8 @@ function SAGE2_init() {
 		var http_port;
 		var https_port;
 		
-		http_port = json_cfg.index_port === "80" ? "" : ":"+json_cfg.index_port;
-		https_port = json_cfg.port === "443" ? "" : ":"+json_cfg.port;
+		http_port = json_cfg.index_port === 80 ? "" : ":"+json_cfg.index_port;
+		https_port = json_cfg.port === 443 ? "" : ":"+json_cfg.port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
 		hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
 		for(i=0; i<json_cfg.alternate_hosts.length; i++) {
@@ -397,6 +397,7 @@ function SAGE2_init() {
 		
 		// convert url if hostname is alias for current origin
 		var url = cleanURL(data.url);
+		console.log(url);
 		
 		// Not used yet: missing scope....
 		function observer(changes) {

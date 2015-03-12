@@ -30,7 +30,7 @@ var exec   = require('child_process').exec;
 var semver = require('semver');              // parse version numbers
 
 /**
- * Parse and store NodeJS version number
+ * Parse and store NodeJS version number: detect version 0.10.x or newer
  *
  * @property _NODE_VERSION
  * @type {Number}
@@ -40,7 +40,9 @@ if ( semver.gte(process.versions.node, '0.10.0') ) {
 	_NODE_VERSION = 10;
 	if ( semver.gte(process.versions.node, '0.11.0') )
 		_NODE_VERSION = 11;
-	if ( semver.gt(process.versions.node, '0.11.14') )
+	if ( semver.gte(process.versions.node, '0.12.0') )
+		_NODE_VERSION = 12;
+	if ( semver.gte(process.versions.node, '1.0.0') )
 		_NODE_VERSION = 1;
 } else {
 	throw new Error("Old version of Node.js. Please update");
