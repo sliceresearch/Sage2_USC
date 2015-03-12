@@ -28,7 +28,8 @@
 		image: {
 			url: "images/background/easterisland.jpg",
 			style: "fit"
-		}
+		},
+	clip: true
 	},
 	resolution: {
 		width: 1920,

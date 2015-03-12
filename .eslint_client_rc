@@ -5,15 +5,36 @@
 	broadcast: true, searchTweets: true, sage2Log: true, ui: true,
 	SAGE2_BlockStreamingApp: true, movie_player: true, isMaster: true, formatHHMMSS: true,
 	initializeArray: true, readFile: true, mat4: true, PDFJS: true, cleanURL: true,
-	Snap: true, hostAlias: true,
+	Snap: true, hostAlias: true, UIBuilder: true,
 	SAGE2_initialize: true, log: true, createDrawingElement: true, broadcast: true, searchTweets: true,
 	formatAMPM: true, format24Hr: true, formatHHMMSS: true, base64ToString: true, stringToBase64: true,
 	stringToUint8Array: true, base64ToUint8Array: true, readFile: true, Expected: true, average: true,
 	allTrueDict: true, getParameterByName: true, playPauseVideo: true, moveItemToFront: true,
 	cleanURL: true, isTrue: true, isEmpty: true, initializeArray: true, byteBufferToInt: true,
 	byteBufferToString: true,
+	Kinetic: true, WebsocketIO: true, simplify: true, deleteElement: true,
+	RadialMenu: true, Pointer: true,
+	hasMouse: true, showSAGE2PointerOverlayNoMouse: true, hideSAGE2PointerOverlayNoMouse: true,
+	sagePointerDisabled: true, sagePointerEnabled: true,
+	pointerClick: true, browser: true, showDialog: true,
+	SAGE2_interaction: true, SAGE2DisplayUI: true,
+	addStyleElementForTitleColor: true, removeStyleElementForTitleColor: true,
+	removeWidgetToAppConnector: true, insertTextIntoTextInputWidget: true,
+	getTextFromTextInputWidget: true, getWidgetControlInstanceById: true,
+	getProperty: true, getWidgetControlInstanceUnderPointer: true,
+	polarToCartesian: true, createWidgetToAppConnector: true,
+	addStyleElementForTitleColor: true, removeStyleElementForTitleColor: true,
+	hideAllWidgetToAppConnector: true, hideWidgetToAppConnector: true,
+	showWidgetToAppConnector: true, moveAndShowWidgetToAppConnector: true,
+	removeWidgetToAppConnector: true, setConnectorColor: true,
+	setAllConnectorColor: true, moveWidgetToAppConnector: true,
+	drawSpokeForRadialLayout: true, drawBackgroundForWidgetRadialDial: true,
+	drawWidgetControlCenter: true, drawPieSlice: true,
+	makeWidgetBarOutlinePath: true, mapMoveToSlider: true,
+	SAGE2WidgetControlInstance: true, SAGE2WidgetControl: true
   },
   rules: {
+	no-alert: 0,
 	strict: 0,
 	no-caller: 0,
 	no-process-exit: 0,
@@ -26,7 +47,9 @@
 	no-use-before-define: 0,
 	key-spacing: 0,
 	space-infix-ops: 0,
-	no-unused-vars: [2, {vars: "all", args: "none"}]
+        no-unused-vars: 0,
+	no-cond-assign: 0,
+	new-cap: 0
   }
 }
 

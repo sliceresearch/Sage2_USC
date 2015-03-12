@@ -9,7 +9,7 @@
 			svg: "images/EVL-LAVA.svg",
 			color: "rgba(255, 255, 255, 0.5)"
 		},
-		clip: false
+		clip: true
 	},
     ui: {
 		clock: 12,           // clock setting: 12-hour or 24-hour
@@ -65,7 +65,7 @@
 		}
 	],
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
-        FFMpeg: "C:/FFMpeg/bin/"
+		ImageMagick: "C:/Program Files/ImageMagick-6.9.0-Q16/",
+        FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
 	}
 }

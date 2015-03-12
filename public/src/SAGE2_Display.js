@@ -8,6 +8,12 @@
 //
 // Copyright (c) 2014-15
 
+/**
+ * SAGE2 Display, client side rendering
+ *
+ * @module SAGE2_Display
+ * @class SAGE2_Display
+ */
 
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
@@ -45,6 +51,11 @@ window.onbeforeunload = function() {
 	if(wsio !== undefined) wsio.close();
 };
 
+/**
+ * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
+ *
+ * @method resetIdle
+ */
 function resetIdle() {
 	if (uiTimer) {
 		clearTimeout(uiTimer);
@@ -53,6 +64,11 @@ function resetIdle() {
 	}
 }
 
+/**
+ * Entry point of the application
+ *
+ * @method SAGE2_init
+ */
 function SAGE2_init() {
 	hostname = window.location.hostname;
 	port     = window.location.port;
@@ -62,7 +78,7 @@ function SAGE2_init() {
 	clientID = parseInt(getParameterByName("clientID")) || 0;
 	console.log("clientID: " + clientID);
 	
-	wsio = new websocketIO();
+	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 	
 	isMaster = false;
@@ -73,7 +89,7 @@ function SAGE2_init() {
 			clientID: clientID,
 			sendsPointerData: false,
 			sendsMediaStreamFrames: false,
-			requestsServerFiles: false,
+			requestsServerFiles: true,
 			sendsWebContentToLoad: false,
 			sendsVideoSynchonization: true,
 			sharesContentWithRemoteServer: false,
@@ -154,8 +170,8 @@ function SAGE2_init() {
 		var http_port;
 		var https_port;
 		
-		http_port = json_cfg.index_port === "80" ? "" : ":"+json_cfg.index_port;
-		https_port = json_cfg.port === "443" ? "" : ":"+json_cfg.port;
+		http_port = json_cfg.index_port === 80 ? "" : ":"+json_cfg.index_port;
+		https_port = json_cfg.port === 443 ? "" : ":"+json_cfg.port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
 		hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
 		for(i=0; i<json_cfg.alternate_hosts.length; i++) {
@@ -164,7 +180,7 @@ function SAGE2_init() {
 		}
 
 		// Build the elements visible on the wall
-		ui = new uiBuilder(json_cfg, clientID);
+		ui = new UIBuilder(json_cfg, clientID);
 		ui.build();
 		ui.background();
 		if (json_cfg.ui.auto_hide_ui) {
@@ -274,7 +290,7 @@ function SAGE2_init() {
 		if(applications[appId] !== undefined && applications[appId] !== null){
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if(applications[appId].receivedBlocks.every(isTrue) === true){
-				applications[appId].draw(new Date(date));
+				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
                 wsio.emit('receivedMediaBlockStreamFrame', {id: appId});
 			}
@@ -291,7 +307,7 @@ function SAGE2_init() {
 		if(applications[appId] !== undefined && applications[appId] !== null){
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if(applications[appId].receivedBlocks.every(isTrue) === true){
-				applications[appId].draw(new Date(date));
+				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
 				wsio.emit('requestVideoFrame', {id: appId});
 			}
@@ -383,6 +399,7 @@ function SAGE2_init() {
 		
 		// convert url if hostname is alias for current origin
 		var url = cleanURL(data.url);
+		console.log(url);
 		
 		// Not used yet: missing scope....
 		function observer(changes) {
@@ -508,46 +525,8 @@ function SAGE2_init() {
 				js.src = url + "/" + data.resrc[idx];
 				document.head.appendChild(js);
 			};
-			
+			// Start loading the first resource
 			loadResource(0);
-			
-			/*
-			var i;
-			var resources = {};
-			for(i=0; i<data.resrc.length; i++){
-				// check dependency cache first
-				if (dependencies[data.resrc[i]] !== true) {
-					dependencies[data.resrc[i]] = false;
-					resources[data.resrc[i]] = false;
-				}
-			}
-			
-			if(isEmpty(resources)){
-				console.log("all resources loaded");
-				loadApplication();
-			}
-			
-			Object.keys(resources).forEach(function(key) {
-				if(resources.hasOwnProperty(key)) {
-					var js = document.createElement("script");
-					js.addEventListener('error', function(event) {
-						console.log("Error loading script: " + key);
-					}, false);
-	
-					js.addEventListener('load', function(event) {
-						dependencies[key] = true;
-						resources[key] = true;
-						if(allTrueDict(resources)){
-							console.log("all resources loaded");
-							loadApplication();
-						}
-					}, false);
-					js.type = "text/javascript";
-					js.src = url + "/" + key;
-					document.head.appendChild(js);
-				}
-			});
-			*/
 		}
 		
 		var cornerSize = Math.min(data.width, data.height) / 5;
@@ -924,7 +903,7 @@ function SAGE2_init() {
 	});
 	
 	wsio.on('requestControlId', function(data) {
-		var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var ctrId = ctrl? ctrl.attr("id"):"";
 		var regC  = /_controls/;
 		var regB  = /button/;
@@ -976,7 +955,7 @@ function SAGE2_init() {
 	});
 
 	wsio.on('releaseControlId', function(data){
-		var ctrl  = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var regexSlider = /slider/;
 		var regexButton = /button/;
 		var regexTextInput = /textInput/;
@@ -993,7 +972,7 @@ function SAGE2_init() {
 			if (regexTextInput.test(lockedControl.attr("id"))===false){
 				lockedControlElements[data.ptrId] = null;
 			}
-			ctrl = getWidgetControlUnderPointer(data, ui.offsetX, ui.offsetY);
+			ctrl = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 			var ctrlId = ctrl? ctrl.attr("id"): "";
 			if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
 				wsio.emit('releasedControlId', { 
@@ -1012,7 +991,7 @@ function SAGE2_init() {
 		
 	});
 	wsio.on('executeControlFunction', function(data){
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		if(ctrl){
 			var ctrId = ctrl.attr('id');
 			if (/button/.test(ctrId)){
@@ -1058,14 +1037,14 @@ function SAGE2_init() {
 	});
 	
 	wsio.on('sliderKnobLockAction', function(data){
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		var slider = ctrl.parent();
 		var func = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());	
 	});
 	wsio.on('moveSliderKnob', function(data){
-		var ctrl = getWidgetControlById(data.ctrl);
+		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
@@ -1080,24 +1059,24 @@ function SAGE2_init() {
 	});
 
 	wsio.on('keyInTextInputWidget', function(data){
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
 
 			if (data.code != 13){
-				insertText(textInput, data.code, data.printable);
+				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
 			else{
 				var func = textInput.data("call");
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				if (func !== undefined && func !== null)
-					func(getText(textInput));
+					func(getTextFromTextInputWidget(textInput));
 			}		
 		}
 	});
 	wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
-		var ctrl = getWidgetControlById(data);
+		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
 			var blinkControlHandle = textInput.data("blinkControlHandle");

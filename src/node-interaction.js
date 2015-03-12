@@ -179,7 +179,7 @@ Interaction.prototype.lockControl = function(ctrl) {
  */
 
 Interaction.prototype.hoverOverControl = function(){
-	return this.hoverControlItem ;
+	return this.hoverControlItem;
 };
 
 /**

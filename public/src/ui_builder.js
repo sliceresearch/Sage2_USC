@@ -8,12 +8,21 @@
 //
 // Copyright (c) 2014
 
-//
-// Generic functions used by all SAGE2 applications
-//
+/**
+ * Building the display background and elememnts
+ *
+ * @module UIBuilder
+ */
 
-
-function uiBuilder(json_cfg, clientID) {
+/**
+* Constructor for UIBuilder object
+*
+* @class UIBuilder
+* @constructor
+* @param json_cfg {Object} configuration structure
+* @param clientID {Number} ID of the display client (-1, 0, ...N)
+*/
+function UIBuilder(json_cfg, clientID) {
 
 	// Save the wall configuration object
 	this.json_cfg = json_cfg;
@@ -31,24 +40,28 @@ function uiBuilder(json_cfg, clientID) {
 	this.titleTextSize  = null;
 	this.pointerWidth   = null;
 	this.pointerHeight  = null;
-	this.pointerOffsetX = null; 
+	this.pointerOffsetX = null;
 	this.pointerOffsetY = null;
 	this.noDropShadow   = null;
 	this.uiHidden       = null;
 
-	// Aspect ratio of the wall and the browser	
+	// Aspect ratio of the wall and the browser
 	this.wallRatio      = null;
 	this.browserRatio   = null;
 	this.ratio          = "fit";
 
 	this.pointerItems   = {};
 	this.radialMenus    = {};
-	
+
 	// Get handle on the main div
 	this.bg   = document.getElementById("background");
 	this.main = document.getElementById("main");
 
-	// Build the background image/color
+	/**
+	* Build the background image/color
+	*
+	* @method background
+	*/
 	this.background = function () {
 		var _this = this;
 
@@ -59,16 +72,16 @@ function uiBuilder(json_cfg, clientID) {
 		else {
 			this.bg.style.backgroundColor = "#000000";
 		}
-		
+
 		// Setup the clipping size
 		if (this.clientID===-1) {
 			// set the resolution to be the whole display wall
 			var wallWidth  = this.json_cfg.resolution.width  * this.json_cfg.layout.columns;
 			var wallHeight = this.json_cfg.resolution.height * this.json_cfg.layout.rows;
 			this.wallRatio = wallWidth / wallHeight;
-			
+
 			document.body.style.overflow = "scroll";
-			
+
 			this.bg.style.width    = wallWidth  + "px";
 			this.bg.style.height   = wallHeight + "px";
 			this.bg.style.overflow = "hidden";
@@ -86,21 +99,21 @@ function uiBuilder(json_cfg, clientID) {
 			else
 				newratio = document.documentElement.clientHeight / wallHeight;
 			this.bg.style.webkitTransform = "scale("+(newratio)+")";
-			this.bg.style.mozTransform = "scale("+(newratio)+")";
-			this.bg.style.transform = "scale("+(newratio)+")";
+			this.bg.style.mozTransform    = "scale("+(newratio)+")";
+			this.bg.style.transform       = "scale("+(newratio)+")";
 
 			window.onresize = function(event) {
 				// recalculate after every window resize
 				_this.browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
 				if (_this.ratio === "fit") {
-					var newratio;
+					var newr;
 					if (_this.wallRatio >= _this.browserRatio)
-						newratio = document.documentElement.clientWidth / wallWidth;
+						newr = document.documentElement.clientWidth / wallWidth;
 					else
-						newratio = document.documentElement.clientHeight / wallHeight;
-					_this.bg.style.webkitTransform = "scale("+(newratio)+")";
-					_this.bg.style.mozTransform = "scale("+(newratio)+")";
-					_this.bg.style.transform = "scale("+(newratio)+")";
+						newr = document.documentElement.clientHeight / wallHeight;
+					_this.bg.style.webkitTransform = "scale("+(newr)+")";
+					_this.bg.style.mozTransform    = "scale("+(newr)+")";
+					_this.bg.style.transform       = "scale("+(newr)+")";
 				}
 			};
 			window.onkeydown = function (event) {
@@ -112,14 +125,14 @@ function uiBuilder(json_cfg, clientID) {
 						_this.bg.style.transform = "scale(1)";
 						_this.ratio = "full";
 					} else if (_this.ratio === "full") {
-						var newratio;
+						var newr;
 						if (_this.wallRatio >= _this.browserRatio)
-							newratio = document.documentElement.clientWidth / wallWidth;
+							newr = document.documentElement.clientWidth / wallWidth;
 						else
-							newratio = document.documentElement.clientHeight / wallHeight;
-						_this.bg.style.webkitTransform = "scale("+(newratio)+")";
-						_this.bg.style.mozTransform = "scale("+(newratio)+")";
-						_this.bg.style.transform = "scale("+(newratio)+")";
+							newr = document.documentElement.clientHeight / wallHeight;
+						_this.bg.style.webkitTransform = "scale("+(newr)+")";
+						_this.bg.style.mozTransform    = "scale("+(newr)+")";
+						_this.bg.style.transform       = "scale("+(newr)+")";
 						_this.ratio = "fit";
 					}
 					// This somehow forces a reflow of the div and show the scrollbars as needed
@@ -137,27 +150,27 @@ function uiBuilder(json_cfg, clientID) {
 			this.bg.style.left   = "0px";
 			this.bg.style.width  = this.json_cfg.resolution.width + "px";
 			this.bg.style.height = this.json_cfg.resolution.height + "px";
-			
+
 			this.main.style.width  = this.json_cfg.resolution.width  + "px";
 			this.main.style.height = this.json_cfg.resolution.height + "px";
-			
+
 			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
 				var bgImg = new Image();
-				bgImg.addEventListener('load', function() {				
-					if(_this.json_cfg.background.image.style == "tile"){
+				bgImg.addEventListener('load', function() {
+					if (_this.json_cfg.background.image.style === "tile") {
 						var top = -1 * (_this.offsetY % bgImg.naturalHeight);
 						var left = -1 * (_this.offsetX % bgImg.naturalWidth);
-						
+
 						_this.bg.style.top    = top.toString() + "px";
 						_this.bg.style.left   = left.toString() + "px";
 						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
 						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
-						
+
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
 						_this.bg.style.backgroundSize     = bgImg.naturalWidth +"px " + bgImg.naturalHeight + "px";
-						
+
 						_this.main.style.top    = (-1*top).toString()  + "px";
 						_this.main.style.left   = (-1*left).toString() + "px";
 						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
@@ -170,17 +183,17 @@ function uiBuilder(json_cfg, clientID) {
 							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + ".png";
 						else
 							bgImgFinal = _this.json_cfg.background.image.url.substring(0, ext) + "_" + _this.clientID + _this.json_cfg.background.image.url.substring(ext);
-						
+
 						_this.bg.style.top    = "0px";
 						_this.bg.style.left   = "0px";
 						_this.bg.style.width  = _this.json_cfg.resolution.width + "px";
 						_this.bg.style.height = _this.json_cfg.resolution.height + "px";
-						
+
 						_this.bg.style.backgroundImage    = "url(" + bgImgFinal + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "no-repeat";
 						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width +"px " + _this.json_cfg.resolution.height + "px";
-						
+
 						_this.main.style.top    = "0px";
 						_this.main.style.left   = "0px";
 						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
@@ -189,7 +202,7 @@ function uiBuilder(json_cfg, clientID) {
 				}, false);
 				bgImg.src = this.json_cfg.background.image.url;
 			}
-			
+
 			if (this.json_cfg.background.clip !== undefined && this.json_cfg.background.clip === true) {
 				this.bg.style.overflow = "hidden";
 				this.main.style.overflow = "hidden";
@@ -197,20 +210,17 @@ function uiBuilder(json_cfg, clientID) {
 		}
 	};
 
-	this.setTime = function (val) {
-		// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
-		var now;
-		if (this.json_cfg.ui.clock == 12) now = formatAMPM(val);
-		else now = format24Hr(val);
-		this.clock.textContent = now;
-	};
-
+	/**
+	* Buidling the UI for the display
+	*
+	* @method build
+	*/
 	this.build = function () {
 		console.log("Buidling the UI for the display");
-		
+
 		this.logoLoadedFunc = this.logoLoaded.bind(this);
 		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
-		
+
 		var head = document.getElementsByTagName("head")[0];
 
 		// Load CSS style sheet
@@ -219,7 +229,7 @@ function uiBuilder(json_cfg, clientID) {
 		fileref.setAttribute("type",  "text/css");
 		fileref.setAttribute("media", "screen");
 		fileref.setAttribute("href",  this.csssheet);
-		
+
 		if (this.clientID===-1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
@@ -248,11 +258,11 @@ function uiBuilder(json_cfg, clientID) {
 		this.upperBar    = document.createElement('div');
 		//this.upperBar.webkitTransformStyle = "preserve-3d"; // to make the transforms below "better" - necessary?
 		this.upperBar.id = "upperBar";
-		
+
 		var textColor = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
 			textColor = this.json_cfg.ui.menubar.textColor;
-			
+
 		// time clock
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
@@ -268,24 +278,24 @@ function uiBuilder(json_cfg, clientID) {
 		// background watermark
 		var watermark = document.createElement('object');
 		watermark.id = "watermark";
-		
+
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
 		this.upperBar.appendChild(logo);
 		this.main.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
-		
+
 		var backgroundColor = "rgba(0, 0, 0, 0.5)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.backgroundColor !== undefined)
 			backgroundColor = this.json_cfg.ui.menubar.backgroundColor;
-			
+
 		this.upperBar.style.height = this.titleBarHeight.toString() + "px";
 		this.upperBar.style.left   = "0px";
 		this.upperBar.style.top    = -this.offsetY.toString() + "px";
 		this.upperBar.style.zIndex = "9999";
 		this.upperBar.style.backgroundColor = backgroundColor;
-		
+
 		this.clock.style.position   = "absolute";
 		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
@@ -296,7 +306,7 @@ function uiBuilder(json_cfg, clientID) {
 		this.clock.style.webkitTransform  = "translateY(-50%)";
 		this.clock.style.mozTransform  = "translateY(-50%)";
 		this.clock.style.transform  = "translateY(-50%)";
-		
+
 		machine.style.position   = "absolute";
 		machine.style.whiteSpace = "nowrap";
 		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
@@ -306,28 +316,31 @@ function uiBuilder(json_cfg, clientID) {
 		machine.style.webkitTransform  = "translateY(-50%)";
 		machine.style.mozTransform  = "translateY(-50%)";
 		machine.style.transform  = "translateY(-50%)";
-		
+
 		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		version.style.color      = textColor;
-		version.style.right      = ((6*this.titleBarHeight) + rightOffset).toString() + "px";
+		if (this.clientID===-1)
+			version.style.right  = (6*this.titleBarHeight) + "px";
+		else
+			version.style.right  = ((6*this.titleBarHeight) + rightOffset).toString() + "px";
 		version.style.top        = "50%";
 		version.style.webkitTransform  = "translateY(-50%)";
 		version.style.mozTransform  = "translateY(-50%)";
 		version.style.transform  = "translateY(-50%)";
-		
+
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		logo.data = "images/EVL-LAVA.svg";
 		logo.type = "image/svg+xml";
-		
+
 		if(this.json_cfg.background.watermark !== undefined){
 			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
 			watermark.data = this.json_cfg.background.watermark.svg;
 			watermark.type = "image/svg+xml";
 		}
-		
+
 		if (this.json_cfg.ui.show_url) {
 			var url   = this.json_cfg.host;
 			var iport = this.json_cfg.index_port;
@@ -344,9 +357,29 @@ function uiBuilder(json_cfg, clientID) {
 		this.uiHidden = false;
 		this.showInterface();
 	};
-	
+
+	/**
+	* Update the clock in the title bar
+	*
+	* @method setTime
+	* @param val {Date} new time from server
+	*/
+	this.setTime = function (val) {
+		// must update date to construct based on (year, month, day, hours, minutes, seconds, milliseconds)
+		var now;
+		if (this.json_cfg.ui.clock === 12) now = formatAMPM(val);
+		else now = format24Hr(val);
+		this.clock.textContent = now;
+	};
+
+	/**
+	* Update the version number in the title bar
+	*
+	* @method updateVersionText
+	* @param data {Object} new time from server
+	*/
 	this.updateVersionText = function(data) {
-		if(this.json_cfg.ui.show_version) {
+		if (this.json_cfg.ui.show_version) {
 			var version = document.getElementById('version');
 			if (data.branch && data.commit && data.date)
 				version.innerHTML = "<b>v" + data.base+"-"+data.branch+"-"+data.commit+"</b> " + data.date;
@@ -354,42 +387,55 @@ function uiBuilder(json_cfg, clientID) {
 				version.innerHTML = "<b>v" + data.base + "</b>";
 		}
 	};
-	
+
+	/**
+	* Called when SVG logo file is finished loading
+	*
+	* @method logoLoaded
+	* @param event {Event} event
+	*/
 	this.logoLoaded = function(event) {
-		var logo = document.getElementById('logo');
+		var logo    = document.getElementById('logo');
 		var logoSVG = logo.getSVGDocument().querySelector('svg');
-		
-		var bbox = logoSVG.getBBox();
-		
-		var height = 0.95 * this.titleBarHeight;
-		var width  = height * (bbox.width/bbox.height);
-		
+		var bbox    = logoSVG.getBBox();
+		var height  = 0.95 * this.titleBarHeight;
+		var width   = height * (bbox.width/bbox.height);
+
 		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
-	
+
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
-		logo.style.right      = (this.titleBarHeight + rightOffset).toString() + "px";
+		if (this.clientID===-1)
+			logo.style.right  = this.titleBarHeight.toString() + "px";
+		else
+			logo.style.right  = (this.titleBarHeight + rightOffset).toString() + "px";
 		logo.style.top        = "50%";
 		logo.style.webkitTransform  = "translateY(-50%)";
-		logo.style.mozTransform  = "translateY(-50%)";
-		logo.style.transform  = "translateY(-50%)";
-		
+		logo.style.mozTransform     = "translateY(-50%)";
+		logo.style.transform        = "translateY(-50%)";
+
 		var textColor = "rgba(255, 255, 255, 1.0)";
 		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
 			textColor = this.json_cfg.ui.menubar.textColor;
 		this.changeSVGColor(logoSVG, "path", null, textColor);
 	};
-	
+
+	/**
+	* Called when SVG watermark file is finished loading
+	*
+	* @method watermarkLoaded
+	* @param event {Event} event
+	*/
 	this.watermarkLoaded = function(event) {
-		var watermark = document.getElementById('watermark');
+		var watermark    = document.getElementById('watermark');
 		var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
-		
+
 		var bbox = watermarkSVG.getBBox();
 		var width;
 		var height;
-		
-		if(bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+
+		if (bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
 			width  = this.json_cfg.totalWidth / 2;
 			height = width * bbox.height/bbox.width;
 		}
@@ -397,35 +443,50 @@ function uiBuilder(json_cfg, clientID) {
 			height = this.json_cfg.totalHeight / 2;
 			width  = height * bbox.width/bbox.height;
 		}
-	
+
 		watermark.width  = width;
 		watermark.height = height;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
-		
+
 		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
-	
+
+	/**
+	* Change stroke and fill color of SVG elements
+	*
+	* @method changeSVGColor
+	* @param svgItem {Element} base node
+	* @param elementType {String} type of SVG element to update
+	* @param strokeColor {String} stroke color
+	* @param fillColor {String} fill color
+	*/
 	this.changeSVGColor = function(svgItem, elementType, strokeColor, fillColor) {
 		var elements = svgItem.querySelectorAll(elementType);
-		for(var i=0; i<elements.length; i++){
-			if(strokeColor) elements[i].style.stroke = strokeColor;
-			if(fillColor)   elements[i].style.fill   = fillColor;
+		for (var i=0; i<elements.length; i++){
+			if (strokeColor) elements[i].style.stroke = strokeColor;
+			if (fillColor)   elements[i].style.fill   = fillColor;
 		}
 	};
 
+	/**
+	* Create a pointer
+	*
+	* @method createSagePointer
+	* @param pointer_data {Object} pointer information
+	*/
 	this.createSagePointer = function(pointer_data) {
 		var pointerElem = document.createElement('div');
-		pointerElem.id = pointer_data.id;
-		pointerElem.className = "pointerItem";
+		pointerElem.id  = pointer_data.id;
+		pointerElem.className  = "pointerItem";
 		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
-		pointerElem.style.top = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.top  = pointer_data.top  - this.pointerOffsetY - this.offsetY;
 		pointerElem.style.zIndex = 10000;
-		this.main.appendChild(pointerElem); 
-		
-		var ptr = new Pointer(); 
-		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight) ;
+		this.main.appendChild(pointerElem);
+
+		var ptr = new Pointer();
+		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight);
 
 		if (pointer_data.visible) {
 			pointerElem.style.display = "block";
@@ -440,6 +501,12 @@ function uiBuilder(json_cfg, clientID) {
         this.pointerItems[pointerElem.id] = ptr;
 	};
 
+	/**
+	* Show the pointer: change CSS values, update position, label and color
+	*
+	* @method showSagePointer
+	* @param pointer_data {Object} pointer information
+	*/
 	this.showSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 
@@ -447,152 +514,169 @@ function uiBuilder(json_cfg, clientID) {
 		pointerElem.style.left    = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
 		pointerElem.style.top     = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
 
-	    this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
-	    this.pointerItems[pointerElem.id].setColor(pointer_data.color);
+		this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
+		this.pointerItems[pointerElem.id].setColor(pointer_data.color);
 		this.pointerItems[pointerElem.id].setSourceType(pointer_data.sourceType);
-		
+
 		this.pointerItems[pointerElem.id].isShown = true;
 	};
 
+	/**
+	* Hide a pointer
+	*
+	* @method hideSagePointer
+	* @param pointer_data {Object} pointer information
+	*/
 	this.hideSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 		pointerElem.style.display = "none";
 		this.pointerItems[pointerElem.id].isShown = false;
 	};
 
+	/**
+	* Move a pointer using CSS
+	*
+	* @method updateSagePointerPosition
+	* @param pointer_data {Object} pointer information
+	*/
 	this.updateSagePointerPosition = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
-		var translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+		var translate   = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
 		pointerElem.style.webkitTransform = translate;
 		pointerElem.style.mozTransform    = translate;
 		pointerElem.style.transform       = translate;
 	};
-	
+
+	/**
+	* Switch between window and application interaction mode
+	*
+	* @method changeSagePointerMode
+	* @param pointer_data {Object} pointer information
+	*/
 	this.changeSagePointerMode = function(pointer_data) {
 		this.pointerItems[pointer_data.id].changeMode(pointer_data.mode);
 	};
-	
+
+	/**
+	* Create a radial menu
+	*
+	* @method createRadialMenu
+	* @param data {Object} menu data
+	*/
 	this.createRadialMenu = function(data) {
-
 		var menuElem = document.getElementById(data.id+"_menu");
+		if (!menuElem && this.radialMenus[data.id+"_menu"] === undefined) {
+			var radialMenuContentWindowDiv = document.createElement("div");
 
-		if( !menuElem && this.radialMenus[data.id+"_menu"] === undefined )
-		{
-			radialMenuContentWindowDiv = document.createElement("div");
-			
-			radialMenuContentWindowDiv.id  = data.id+"_menuDiv"; 
-			radialMenuContentWindowDiv.style.width        = (data.radialMenuSize.x).toString() + "px";
-			radialMenuContentWindowDiv.style.height       =  (data.radialMenuSize.y).toString() + "px";
-			radialMenuContentWindowDiv.style.overflow           = "hidden";
-			radialMenuContentWindowDiv.style.position   = "absolute";
-			radialMenuContentWindowDiv.style.left   = (data.x - this.offsetX).toString() + "px";
-			radialMenuContentWindowDiv.style.top    = (data.y - this.offsetY).toString() + "px";
-			radialMenuContentWindowDiv.style.zIndex = 9000;
-			
-			menuElem = createDrawingElement(data.id+"_menu", "pointerItem",
-								data.x  - this.offsetX,
-								data.y - this.offsetY,
+			radialMenuContentWindowDiv.id = data.id+"_menuDiv";
+			radialMenuContentWindowDiv.style.width    = (data.radialMenuSize.x).toString() + "px";
+			radialMenuContentWindowDiv.style.height   =  (data.radialMenuSize.y).toString() + "px";
+			radialMenuContentWindowDiv.style.overflow = "hidden";
+			radialMenuContentWindowDiv.style.position = "absolute";
+			radialMenuContentWindowDiv.style.left     = (data.x - this.offsetX).toString() + "px";
+			radialMenuContentWindowDiv.style.top      = (data.y - this.offsetY).toString() + "px";
+			radialMenuContentWindowDiv.style.zIndex   = 9000;
+
+			var menuElem1 = createDrawingElement(data.id+"_menu", "pointerItem",
+								data.x  - this.offsetX, data.y - this.offsetY,
 								data.radialMenuSize.x, data.radialMenuSize.y, 9000);
-
-			menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
-								0,
-								0,
+			var menuElem2 = createDrawingElement(data.id+"_menuWindow", "pointerItem",
+								0, 0,
 								data.radialMenuSize.x, data.radialMenuSize.y, 9001);
-			menuElem3 = createDrawingElement(data.id+"_menuWindow2", "pointerItem",
-								data.x  - this.offsetX,
-								data.y - this.offsetY,
+			var menuElem3 = createDrawingElement(data.id+"_menuWindow2", "pointerItem",
+								data.x  - this.offsetX, data.y - this.offsetY,
 								data.radialMenuSize.x, data.radialMenuSize.y, 9002);
-			
-			
-			this.main.appendChild(menuElem);
+
+			this.main.appendChild(menuElem1);
 			this.main.appendChild(radialMenuContentWindowDiv);
-			this.main.appendChild(menuElem3); 
-			
-			radialMenuContentWindowDiv.appendChild(menuElem2); 
-			
-			var menu = new radialMenu();
-			
-			menu.init(data, menuElem2, menuElem3) ;
-			
-			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
-			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-			
+			this.main.appendChild(menuElem3);
+
+			radialMenuContentWindowDiv.appendChild(menuElem2);
+
+			var menu = new RadialMenu();
+
+			menu.init(data, menuElem2, menuElem3);
+
+			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
+
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
-			
-			if( this.radialMenus[menuElem.id].visible === false )
-			{
-				menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
-				menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-							
-				this.radialMenus[menuElem.id].visible = true;
-				menuElem.style.display = "block";
-				this.radialMenus[menuElem.id].draw();
+
+			if (this.radialMenus[menuElem1.id].visible === false) {
+				menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+				menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
+				this.radialMenus[menuElem1.id].visible = true;
+				menuElem1.style.display = "block";
+				this.radialMenus[menuElem1.id].draw();
 			}
 		}
-		
 	};
-	
+
+	/**
+	* Show the radial menu
+	*
+	* @method showRadialMenu
+	* @param data {Object} menu data
+	*/
 	this.showRadialMenu = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
-		
-		if( menuElem !== null )
-		{
+
+		if (menuElem !== null) {
 			var menu = this.radialMenus[menuElem.id];
-			
+
 			menuElem.style.display = "block";
 			menu.thumbnailScrollWindowElement.style.display = "block";
 			menu.thumbnailWindowDiv.style.display = "block";
 			menu.visible = true;
-			
+
 			var rect = menuElem.getBoundingClientRect();
 			menuElem.style.display = "block";
 			menu.thumbnailScrollWindowElement.style.display = "block";
 			menu.thumbnailWindowDiv.style.display = "block";
-				
+
 			menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
-				
+
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-		}
-		else
-		{
+		} else {
 			// Show was called on non-existant menu (display client was likely reset)
 			this.createRadialMenu(data);
 		}
 	};
-	
+
+	/**
+	* Deal with event in radial menu
+	*
+	* @method radialMenuEvent
+	* @param data {Event} event
+	*/
 	this.radialMenuEvent = function(data) {
-		
 		for (var menuID in this.radialMenus) {
 			var menuElem = document.getElementById(menuID);
-			var menu = this.radialMenus[menuID];
+			var menu     = this.radialMenus[menuID];
 
-			if( menuElem !== null )
-			{
+			if (menuElem !== null) {
 				var rect = menuElem.getBoundingClientRect();
-				
-				pointerX = data.x - rect.left - this.offsetX;
-				pointerY = data.y - rect.top - this.offsetY;
-					
-				if( menu.visible )
-				{
+
+				var pointerX = data.x - rect.left - this.offsetX;
+				var pointerY = data.y - rect.top - this.offsetY;
+
+				if (menu.visible) {
 					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
 					menuElem.style.display = "block";
 					menu.thumbnailScrollWindowElement.style.display = "block";
 					menu.thumbnailWindowDiv.style.display = "block";
-					
+
 					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
-					
-					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true )
-					{
+
+					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true ) {
 						menu.draw();
 					}
 				}
 				// If instead of else in case event triggered close menu
-				if( menu.visible === false )
-				{
+				if (menu.visible === false) {
 					menuElem.style.display = "none";
 					menu.thumbnailScrollWindowElement.style.display = "none";
 					menu.thumbnailWindowDiv.style.display = "none";
@@ -600,17 +684,27 @@ function uiBuilder(json_cfg, clientID) {
 			}
 		}
 	};
-	
+
+	/**
+	* Update the list of file in the menu
+	*
+	* @method updateRadialMenu
+	* @param data {Object} data
+	*/
 	this.updateRadialMenu = function(data) {
-		
 		var menuElem = document.getElementById(data.id+"_menu");
-		if( menuElem !== null )
-		{
+		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
 			this.radialMenus[menuElem.id].draw();
 		}
 	};
-	
+
+	/**
+	* Update the list of app in the menu
+	*
+	* @method updateRadialMenuApps
+	* @param data {Object} data
+	*/
 	this.updateRadialMenuApps = function(data) {
 		console.log("updateRadialMenuApps");
 		var menuElem = document.getElementById(data.id+"_menu");
@@ -620,18 +714,24 @@ function uiBuilder(json_cfg, clientID) {
 			this.radialMenus[menuElem.id].draw();
 		}
 	};
-	
+
+	/**
+	* Add a remote side in the top sharing bar
+	*
+	* @method addRemoteSite
+	* @param data {Object} remote site information
+	*/
 	this.addRemoteSite = function(data) {
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
 			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
 		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
-		
+
 		var remote = document.createElement('div');
 		remote.id  = data.name;
-		remote.style.position = "absolute";
+		remote.style.position  = "absolute";
 		remote.style.textAlign = "center";
 		remote.style.width  = data.width.toString() + "px";
 		remote.style.height = data.height.toString() + "px";
@@ -641,32 +741,43 @@ function uiBuilder(json_cfg, clientID) {
 		else remote.style.backgroundColor = disconnectedColor;
 
 		var color = "rgba(255, 255, 255, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
 			color = this.json_cfg.ui.menubar.textColor;
-		
+
 		var name = document.createElement('p');
 		name.style.whiteSpace = "nowrap";
-		name.style.fontSize = Math.round(this.titleTextSize) + "px";
+		name.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		name.style.color = color;
 		name.textContent = data.name;
 		remote.appendChild(name);
-		
+
 		this.upperBar.appendChild(remote);
 	};
 
+	/**
+	* Update remote side status and color
+	*
+	* @method connectedToRemoteSite
+	* @param data {Object} remote site information
+	*/
 	this.connectedToRemoteSite = function(data) {
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
 			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
 		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined)
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
-			
+
 		var remote = document.getElementById(data.name);
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
 	};
 
+	/**
+	* Called when auto-hide kicks, using CSS features
+	*
+	* @method hideInterface
+	*/
 	this.hideInterface = function() {
 		var i;
 		if (!this.uiHidden) {
@@ -691,6 +802,11 @@ function uiBuilder(json_cfg, clientID) {
 		}
 	};
 
+	/**
+	* Show the ui elements again
+	*
+	* @method showInterface
+	*/
 	this.showInterface = function() {
 		var i;
 		if (this.uiHidden) {
