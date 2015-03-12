@@ -1049,7 +1049,7 @@ function RadialMenu(){
 						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_256.png";
 						thumbnailButton.setButtonImage( customIcon );
 					} else
-						thumbnailButton.setButtonImage( this.idleImageIcon );
+						thumbnailButton.setButtonImage( idleImageIcon );
 
 					this.thumbnailButtons.push(thumbnailButton);
 					this.imageThumbnailButtons.push(thumbnailButton);
@@ -1070,7 +1070,7 @@ function RadialMenu(){
 					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
-					thumbnailButton.setButtonImage( this.idlePDFIcon );
+					thumbnailButton.setButtonImage( idlePDFIcon );
 
 
 				this.thumbnailButtons.push(thumbnailButton);
@@ -1091,7 +1091,7 @@ function RadialMenu(){
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setButtonImage( customIcon );
 				} else
-					thumbnailButton.setButtonImage( this.idleVideoIcon );
+					thumbnailButton.setButtonImage( idleVideoIcon );
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.videoThumbnailButtons.push(thumbnailButton);
@@ -1113,7 +1113,7 @@ function RadialMenu(){
 					customIcon.src = appList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
-					thumbnailButton.setButtonImage( this.idleAppIcon );
+					thumbnailButton.setButtonImage( idleAppIcon );
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.appThumbnailButtons.push(thumbnailButton);
@@ -1124,7 +1124,7 @@ function RadialMenu(){
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
-				thumbnailButton.setButtonImage( this.idleSessionIcon );
+				thumbnailButton.setButtonImage( idleSessionIcon );
 				thumbnailButton.simpleTint = false;
 
 				this.thumbnailButtons.push(thumbnailButton);
