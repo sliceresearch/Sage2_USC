@@ -11,23 +11,23 @@
 /**
  * Menu System for SAGE2 Display Clients
  *
- * @class RadialMenu
+ * @module RadialMenu
  */
 
 // layout parameters (Defaults based on Cyber-Commons touch interaction)
 var imageThumbSize = 75;
 var thumbSpacer = 5;
 
-var thumbnailWindowWidth = 0.8;
+//var thumbnailWindowWidth = 0.8;
 var previewWindowWidth = 0.2;
-var previewWindowOffset = 0.74;
+//var previewWindowOffset = 0.74;
 
 // radial menu buttons
 var radialMenuScale = 1.0;
-var thumbnailWindowMinTextHeight = 24;
+//var thumbnailWindowMinTextHeight = 24;
 
 var radialMenuCenter = { x: 215 * radialMenuScale, y: 215 * radialMenuScale }; // overwritten in init - based on window size
-var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
+//var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
 var angleSeparation = 35;
 var initAngle = 55;
 var angle = 0;
@@ -44,7 +44,7 @@ var thumbnailPreviewWindowSize = { x: 550, y: 800 };
 var radialMenuList = {};
 
 // Mostly for debugging, toggles buttons/thumbnails redrawing on a events (like move)
-var enableEventRedraw = false;
+//var enableEventRedraw = false;
 
 // common radial menu icons
 var radialButtonIcon = new Image();
@@ -104,7 +104,7 @@ function RadialMenu(){
 
 	this.thumbnailWindowSize = thumbnailWindowSize;
 	this.imageThumbSize = imageThumbSize;
-	
+
 	// This is the number of thumbnails in the window WITHOUT scrolling
 	this.thumbnailGridSize = { x: 10, y: 10 }; // Overwritten in setThumbnailPosition().
 
@@ -358,10 +358,10 @@ function RadialMenu(){
 	 * @param position {x: Float, y: Float} position to draw
 	 * @param size {x: Float, y: Float} width, height of image
 	 * @param color {Color} fill color to use
-	 * @param angle {Float} rotation of the image (not currently used)
+	 * @param rotation {Float} rotation of the image (not currently used)
 	 * @param centered {Boolean} is the center of the image the origin for positioning
 	 */
-	this.drawImage = function( ctx, image, position, size, color, angle, centered ) {
+	this.drawImage = function( ctx, image, position, size, color, rotation, centered ) {
 		//this.ctx.save();
 		ctx.fillStyle = color;
 		//this.ctx.translate( position.x , position.y );
@@ -429,14 +429,14 @@ function RadialMenu(){
 			// line from radial menu to thumbnail window
 			this.ctx.beginPath();
 			this.ctx.moveTo( radialMenuCenter.x + menuButtonSize/4 * radialMenuScale, radialMenuCenter.y );
-			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale , radialMenuCenter.y );
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale, radialMenuCenter.y );
 			this.ctx.strokeStyle = '#ffffff';
 			this.ctx.lineWidth = 5 * radialMenuScale;
 			this.ctx.stroke();
 		}
 
 		// draw lines to each button
-		for(var i=0; i<this.level1Buttons.length; i++) {
+		for( var i=0; i<this.level1Buttons.length; i++) {
 
 			if( this.level1Buttons[i].isHidden() === false ) {
 				this.ctx.beginPath();
@@ -749,10 +749,11 @@ function RadialMenu(){
 		this.buttonOverCount += this.radialSaveSessionButton.onEvent(type, user.id, position, data);
 
 		// Level 1 -----------------------------------
+		var i = 0;
 		if( this.currentRadialState === 'radialMenu' ) {
 			//this.element.width = this.radialMenuSize.x;
 			//this.element.height = this.radialMenuSize.y;
-			for ( var i = 0; i < this.level1Buttons.length; i++ ) {
+			for ( i = 0; i < this.level1Buttons.length; i++ ) {
 				this.buttonOverCount += this.level1Buttons[i].onEvent(type, user.id, position, data);
 			}
 		}
@@ -1029,19 +1030,22 @@ function RadialMenu(){
 		var appList =  serverFileList.apps;
 
 		var sessionList =  serverFileList.sessions;
+		var i = 0;
+		var thumbnailButton;
+		var customIcon;
 
 		if( imageList !== null ) {
 			var validImages = 0;
-			for( var i = 0; i < imageList.length; i++ ) {
+			for( i = 0; i < imageList.length; i++ ) {
 				if( imageList[i].filename.search("Thumbs.db") === -1 ) {
-					var thumbnailButton = new ButtonWidget();
+					thumbnailButton = new ButtonWidget();
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					thumbnailButton.simpleTint = false;
 
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail !== null ) {
-						var customIcon = new Image();
+						customIcon = new Image();
 						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_256.png";
 						thumbnailButton.setButtonImage( customIcon );
 					} else
@@ -1054,7 +1058,7 @@ function RadialMenu(){
 			}
 		}
 		if( pdfList !== null ) {
-			for( var i = 0; i < pdfList.length; i++ ) {
+			for( i = 0; i < pdfList.length; i++ ) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
@@ -1062,7 +1066,7 @@ function RadialMenu(){
 
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail !== null ) {
-					var customIcon = new Image();
+					customIcon = new Image();
 					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
@@ -1074,7 +1078,7 @@ function RadialMenu(){
 			}
 		}
 		if( videoList !== null ) {
-			for( var i = 0; i < videoList.length; i++ ) {
+			for( i = 0; i < videoList.length; i++ ) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
@@ -1082,7 +1086,7 @@ function RadialMenu(){
 
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail !== null ) {
-					var customIcon = new Image();
+					customIcon = new Image();
 					customIcon.src = videoList[i].exif.SAGE2thumbnail+"_256.png";
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setButtonImage( customIcon );
@@ -1094,8 +1098,8 @@ function RadialMenu(){
 			}
 		}
 		if( appList !== null ) {
-			for( var i = 0; i < appList.length; i++ ) {
-				var thumbnailButton = new ButtonWidget();
+			for( i = 0; i < appList.length; i++ ) {
+				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif} );
 				thumbnailButton.simpleTint = false;
@@ -1105,7 +1109,7 @@ function RadialMenu(){
 				thumbnailButton.setHitboxSize( this.imageThumbSize * 2, this.imageThumbSize * 2 );
 
 				if ( appList[i].exif.SAGE2thumbnail !== null ) {
-					var customIcon = new Image();
+					customIcon = new Image();
 					customIcon.src = appList[i].exif.SAGE2thumbnail+"_256.png";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
@@ -1116,8 +1120,8 @@ function RadialMenu(){
 			}
 		}
 		if( sessionList !== null ) {
-			for( var i = 0; i < sessionList.length; i++ ) {
-				var thumbnailButton = new ButtonWidget();
+			for( i = 0; i < sessionList.length; i++ ) {
+				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setButtonImage( this.idleSessionIcon );
@@ -1136,16 +1140,16 @@ function RadialMenu(){
 	 *
 	 * @method setThumbnailPosition
 	 * @param thumbnailSourceList {} List of thumbnails
-	 * @param imageThumbSize {Float} width of thumbnail in pixels
+	 * @param imageThumbnailSize {Float} width of thumbnail in pixels
 	 * @param thumbSpacer {Float} space between thumbnails in pixels
 	 * @param maxRows {Integer} maximum thumbnails per row
 	 * @param neededColumns {Integer} calculated number of columns needed
 	 */
-	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbSize, thumbSpacer, maxRows, neededColumns ) {
+	this.setThumbnailPosition = function( thumbnailSourceList, imageThumbnailSize, thumbnailSpacer, maxRows, neededColumns ) {
 		var curRow = 0;
 		var curColumn = 0;
 
-		this.thumbnailScrollWindowElement.width = (imageThumbSize + thumbSpacer) * neededColumns;
+		this.thumbnailScrollWindowElement.width = (imageThumbnailSize + thumbSpacer) * neededColumns;
 		for( var i = 0; i < thumbnailSourceList.length; i++ ) {
 			var currentButton = thumbnailSourceList[i];
 
@@ -1156,7 +1160,7 @@ function RadialMenu(){
 				if( curRow < maxRows - 1 )
 					curRow++;
 			}
-			currentButton.setPosition( curColumn * (imageThumbSize + thumbSpacer),  curRow * (imageThumbSize + thumbSpacer) );
+			currentButton.setPosition( curColumn * (imageThumbnailSize + thumbnailSpacer),  curRow * (imageThumbnailSize + thumbnailSpacer) );
 			curColumn++;
 		}
 	};
@@ -1199,7 +1203,6 @@ function RadialMenu(){
 			maxRows = Math.floor((this.thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
 			maxCols = Math.floor((this.thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (this.imageThumbSize * 2 + thumbSpacer));
 			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
-			maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize * 2 + thumbSpacer);
 		}
 
 		this.thumbnailGridSize = { x: maxRows, y: maxCols };
