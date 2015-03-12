@@ -322,7 +322,10 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		version.style.color      = textColor;
-		version.style.right      = ((6*this.titleBarHeight) + rightOffset).toString() + "px";
+		if (this.clientID===-1)
+			version.style.right  = (6*this.titleBarHeight) + "px";
+		else
+			version.style.right  = ((6*this.titleBarHeight) + rightOffset).toString() + "px";
 		version.style.top        = "50%";
 		version.style.webkitTransform  = "translateY(-50%)";
 		version.style.mozTransform  = "translateY(-50%)";
@@ -403,7 +406,10 @@ function UIBuilder(json_cfg, clientID) {
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
-		logo.style.right      = (this.titleBarHeight + rightOffset).toString() + "px";
+		if (this.clientID===-1)
+			logo.style.right  = this.titleBarHeight.toString() + "px";
+		else
+			logo.style.right  = (this.titleBarHeight + rightOffset).toString() + "px";
 		logo.style.top        = "50%";
 		logo.style.webkitTransform  = "translateY(-50%)";
 		logo.style.mozTransform     = "translateY(-50%)";
