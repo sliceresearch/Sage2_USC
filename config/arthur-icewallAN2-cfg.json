@@ -1,0 +1,47 @@
+{
+	"host": "nishimoto.evl.uic.edu",
+	"port": 9090,
+	"index_port": 9292,
+	"background": {
+		"color": "#333333",
+	},
+	"ui": {
+		"clock": 12,
+		"show_url": true,
+		"show_version": true
+	},
+	"resolution": {
+		"width": 768,
+		"height": 1360
+	},
+	"layout": {
+		"rows": 1,
+		"columns": 2
+	},
+	"displays": [
+		{
+			row: 0,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 1
+		}
+	],
+	"alternate_hosts": [
+		"localhost",
+		"127.0.0.1"
+	],
+	"remote_sites": [
+		{
+			"name": "Cyber-Commons",
+			"host": "iridium.evl.uic.edu",
+			"port": 9090
+		},
+		{
+			"name": "CAVE2",
+			"host": "lyra.evl.uic.edu",
+			"port": 9090
+		}
+	]
+}
