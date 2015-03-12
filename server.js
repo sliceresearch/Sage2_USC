@@ -2523,6 +2523,13 @@ function loadConfiguration() {
 	else
 		userConfig.index_port = parseInt(userConfig.index_port, 10);
 
+	// Set the display clip value if missing (true by default)
+	if (userConfig.background.clip !== undefined)
+		userConfig.background.clip = sageutils.isTrue(userConfig.background.clip);
+	else
+		userConfig.background.clip = true;
+
+
 	// Registration to EVL's server (sage.evl.uic.edu), true by default
 	if (userConfig.register_site === undefined)
 		userConfig.register_site = true;
