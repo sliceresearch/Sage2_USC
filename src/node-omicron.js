@@ -13,9 +13,9 @@
  * Provides external input device support
  * https://github.com/uic-evl/omicron
  *
- * @module omicron
- * @class OmicronManager
- *
+ * @module server
+ * @submodule omicron
+ * @requires node-coordinateCalculator, node-1euro
  */
 
 // require variables to be declared
@@ -33,14 +33,12 @@ var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of
  /**
  * Omicron setup and opens a listener socket for an Omicron input server to connect to
  *
- * @method OmicronManager
- * @param sysConfig - SAGE2 system configuration file. Primararly used to grab display dimensions and Omicron settings
+ * @class OmicronManager
+ * @constructor
+ * @param sysConfig {Object} SAGE2 system configuration file. Primararly used to grab display dimensions and Omicron settings
  */
-function OmicronManager(sysConfig)
-{
+function OmicronManager(sysConfig) {
 	omicronManager = this;
-
-
 
 	this.coordCalculator = null;
 
@@ -360,7 +358,7 @@ OmicronManager.prototype.runTracker = function()
 
 				//console.log("Wand Position: ("+e.posx+", "+e.posy+","+e.posz+")" );
 				//console.log("Wand Rotation: ("+e.orx+", "+e.ory+","+e.orz+","+e.orw+")" );
-				var screenPos = omicronManager.coordCalculator.wandToScreenCoordinates( e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw );
+				var screenPos = omicronManager.coordCalculator.wandToScreenCoordinates(e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw);
 				//console.log("Screen pos: ("+screenPos.x+", "+screenPos.y+")" );
 
 				address = omicronManager.config.inputServerIP;

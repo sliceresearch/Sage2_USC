@@ -9,7 +9,11 @@
 // Copyright (c) 2014
 
 /**
- * @module livevideodecoder
+ * Live decoding of video using the fluent-ffmpeg package (not used anymore)
+ *
+ * @module server
+ * @submodule livevideodecoder
+ * @requires fluent-ffmpeg
  */
 
 // require variables to be declared
@@ -18,6 +22,12 @@
 var exec   = require('child_process').exec;  // spawn a process and receive output
 var ffmpeg = require('fluent-ffmpeg');       // ffmpeg video manipulator
 
+/**
+ * LiveVideoDecoder class
+ *
+ * @class LiveVideoDecoder
+ * @constructor
+ */
 function LiveVideoDecoder(options) {
 	this.options       = options;
 
@@ -41,7 +51,11 @@ function LiveVideoDecoder(options) {
 	this.onnewframe    = null;
 }
 
-
+/**
+ *
+ *
+ * @method initializeLiveDecoder
+ */
 LiveVideoDecoder.prototype.initializeLiveDecoder = function(url) {
 	var _this = this;
 
@@ -75,6 +89,11 @@ LiveVideoDecoder.prototype.initializeLiveDecoder = function(url) {
 	});
 };
 
+/**
+ *
+ *
+ * @method startLiveDecoding
+ */
 LiveVideoDecoder.prototype.startLiveDecoding = function() {
 	var _this = this;
 
@@ -130,15 +149,30 @@ LiveVideoDecoder.prototype.startLiveDecoding = function() {
 	});
 };
 
+/**
+ *
+ *
+ * @method pauseLiveDecoding
+ */
 LiveVideoDecoder.prototype.pauseLiveDecoding = function() {
 	if(this.decode !== null) this.decode.kill();
 };
 
+/**
+ *
+ *
+ * @method stopLiveDecoding
+ */
 LiveVideoDecoder.prototype.stopLiveDecoding = function() {
 	if(this.decode !== null) this.decode.kill();
 	this.frameIdx = 0;
 };
 
+/**
+ *
+ *
+ * @method startSeekLiveDecoding
+ */
 LiveVideoDecoder.prototype.startSeekLiveDecoding = function() {
 	if(this.decode !== null){
 		this.decode.kill();
@@ -149,13 +183,22 @@ LiveVideoDecoder.prototype.startSeekLiveDecoding = function() {
 	}
 };
 
+/**
+ *
+ *
+ * @method updateSeekLiveDecoding
+ */
 LiveVideoDecoder.prototype.updateSeekLiveDecoding = function(frameIdx) {
 	this.frameIdx = frameIdx;
 };
 
+/**
+ *
+ *
+ * @method finishSeekLiveDecoding
+ */
 LiveVideoDecoder.prototype.finishSeekLiveDecoding = function() {
 	if(this.playAfterSeek === true) this.startLiveDecoding();
 };
-
 
 module.exports = LiveVideoDecoder;

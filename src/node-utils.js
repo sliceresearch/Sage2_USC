@@ -12,7 +12,8 @@
  * Provides utility functions for the SAGE2 server
  *
  * @class node-utils
- * @module node-utils
+ * @module server
+ * @submodule node-utils
  * @requires package.json, semver
  */
 

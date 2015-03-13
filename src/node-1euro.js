@@ -6,7 +6,8 @@
  * Details: http://www.lifl.fr/~casiez/1euro
  *
  * @class oneEuroFilter
- * @module oneEuroFilter
+ * @module server
+ * @submodule oneEuroFilter
  */
 
  // require variables to be declared

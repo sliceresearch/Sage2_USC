@@ -9,23 +9,54 @@
 // Copyright (c) 2014
 
 /**
- * @module pixelblock
+ * Pixel block processing functions
+ *
+ * @module server
+ * @submodule pixelblock
+ * @class pixelblock
  */
 
 // require variables to be declared
 "use strict";
 
-// chop RGB pixel buffer into square blocks
+/**
+ * Chop RGB pixel buffer into square blocks (NYI)
+ *
+ * @method rgbToPixelBlocks
+ * @param rgbBuffer {Buffer} pixel buffer
+ * @param width {Number} buffer width
+ * @param height {Number} buffer height
+ * @param maxSize {Number} block size (at most)
+ * @return {Array} array of buffer, one for each block of pixel
+ */
 module.exports.rgbToPixelBlocks = function(rgbBuffer, width, height, maxSize) {
 
 };
 
-// chop RGBA pixel buffer into square blocks
+/**
+ * Chop RGBA pixel buffer into square blocks (NYI)
+ *
+ * @method rgbaToPixelBlocks
+ * @param rgbBuffer {Buffer} pixel buffer
+ * @param width {Number} buffer width
+ * @param height {Number} buffer height
+ * @param maxSize {Number} block size (at most)
+ * @return {Array} array of buffer, one for each block of pixel
+ */
 module.exports.rgbaToPixelBlocks = function(rgbaBuffer, width, height, maxSize) {
 
 };
 
-// chop YUV420 pixel buffer into square blocks
+/**
+ * Chop YUV420 pixel buffer into square blocks
+ *
+ * @method yuv420ToPixelBlocks
+ * @param yuvBuffer {Buffer} pixel buffer
+ * @param width {Number} buffer width
+ * @param height {Number} buffer height
+ * @param maxSize {Number} block size (at most)
+ * @return {Array} array of buffer, one for each block of pixel
+ */
 module.exports.yuv420ToPixelBlocks = function(yuvBuffer, width, height, maxSize) {
 	var uStart = width*height;
 	var vStart = uStart + (width*height/4);
@@ -64,12 +95,30 @@ module.exports.yuv420ToPixelBlocks = function(yuvBuffer, width, height, maxSize)
 	return blockBuffers;
 };
 
-// chop YUV422 pixel buffer into square blocks
+/**
+ * Chop YUV422 pixel buffer into square blocks (NYI)
+ *
+ * @method yuv422ToPixelBlocks
+ * @param yuvBuffer {Buffer} pixel buffer
+ * @param width {Number} buffer width
+ * @param height {Number} buffer height
+ * @param maxSize {Number} block size (at most)
+ * @return {Array} array of buffer, one for each block of pixel
+ */
 module.exports.yuv422ToPixelBlocks = function(yuvBuffer, width, height, maxSize) {
 
 };
 
-// chop DXT1 pixel buffer into square blocks
+/**
+ * Chop DXT1 pixel buffer into square blocks
+ *
+ * @method dxt1ToPixelBlocks
+ * @param dxt1Buffer {Buffer} pixel buffer
+ * @param width {Number} buffer width
+ * @param height {Number} buffer height
+ * @param maxSize {Number} block size (at most)
+ * @return {Array} array of buffer, one for each block of pixel
+ */
 module.exports.dxt1ToPixelBlocks = function(dxt1Buffer, width, height, maxSize) {
 
 };
