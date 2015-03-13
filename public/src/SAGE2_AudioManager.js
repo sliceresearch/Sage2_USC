@@ -11,7 +11,8 @@
 /**
  * SAGE2 Audio Manager, renders the audio streams for a given site
  *
- * @module SAGE2_AudioManager
+ * @module client
+ * @submodule SAGE2_AudioManager
  * @class SAGE2_AudioManager
  */
 

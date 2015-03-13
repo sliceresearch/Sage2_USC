@@ -5,7 +5,7 @@
 	broadcast: true, searchTweets: true, sage2Log: true, ui: true,
 	SAGE2_BlockStreamingApp: true, movie_player: true, isMaster: true, formatHHMMSS: true,
 	initializeArray: true, readFile: true, mat4: true, PDFJS: true, cleanURL: true,
-	Snap: true, hostAlias: true, UIBuilder: true,
+	Snap: true, mina: true, hostAlias: true, UIBuilder: true,
 	SAGE2_initialize: true, log: true, createDrawingElement: true, broadcast: true, searchTweets: true,
 	formatAMPM: true, format24Hr: true, formatHHMMSS: true, base64ToString: true, stringToBase64: true,
 	stringToUint8Array: true, base64ToUint8Array: true, readFile: true, Expected: true, average: true,

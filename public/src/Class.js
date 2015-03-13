@@ -11,7 +11,8 @@
 "use strict";
 
 /**
- * @module Class
+ * @module client
+ * @submodule Class
  */
 
 /**

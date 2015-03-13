@@ -11,7 +11,8 @@
 /**
  * Web user interface
  *
- * @module SAGE2_UI
+ * @module client
+ * @submodule SAGE2_UI
  * @class SAGE2_UI
  */
 
@@ -792,7 +793,7 @@ function handleClick(element) {
 		hideDialog('uploadDialog');
 		// open the file library
 		//    delay to remove bounce evennt on Chrome/iOS
-		setTimeout(function() {showDialog('localfileDialog');}, 200);
+		setTimeout(function() { showDialog('localfileDialog'); }, 200);
 	}
 	// upload from Dropbox
 	else if (element.id === "dropboxFilesBtn") {

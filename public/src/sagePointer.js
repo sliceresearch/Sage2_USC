@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module sagePointer
+ * @module client
+ * @submodule sagePointer
  */
 
 /**
@@ -351,11 +352,13 @@ function sagePointer(wsio) {
 			if(raw.length > this.chunk){
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
+				/*eslint-disable */
 				function updateMediaStreamChunk(index, msg_chunk) { // jshint ignore:line
 					setTimeout(function() {
 						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
 					}, 4);
 				}
+				/*eslint-enable */
 				for(var i=0; i<nchunks; i++){
 					var start = i*this.chunk;
 					var end = (i+1)*this.chunk < raw.length ? (i+1)*this.chunk : raw.length;

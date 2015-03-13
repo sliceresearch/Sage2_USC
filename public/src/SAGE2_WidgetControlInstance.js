@@ -11,7 +11,8 @@
 /**
  * Provides widget controls and helper functionality for custom application user interface
  *
- * @module widgets
+ * @module client
+ * @submodule widgets
  */
 
 /*

@@ -11,7 +11,8 @@
 /**
  * Menu System for SAGE2 Display Clients
  *
- * @module RadialMenu
+ * @module client
+ * @submodule RadialMenu
  */
 
 // layout parameters (Defaults based on Cyber-Commons touch interaction)
@@ -1239,6 +1240,9 @@ function RadialMenu(){
 
 /**
  * ButtonWidget used for menu and thumbnail buttons
+ *
+ * @class ButtonWidget
+ * @constructor
  */
 function ButtonWidget() {
 	//this.element = null;

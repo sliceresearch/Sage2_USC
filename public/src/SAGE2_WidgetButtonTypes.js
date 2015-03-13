@@ -11,7 +11,8 @@
 /**
  * Provides widget controls and helper functionality for custom application user interface
  *
- * @module widgets
+ * @module client
+ * @submodule widgets
  */
 
 
@@ -70,8 +71,8 @@ var SAGE2WidgetButtonTypes = {
 		this.toFill ="#6D6D6D";
 		this.state = 0;
 		this.delay = 400;
-		this.textual =false;
-		this.animation = true;		
+		this.textual = false;
+		this.animation = true;
 	},
 	"stop": function () {
 		this.from ="m -4 -4 l 0 8 l 8 0 l 0 -8 z";

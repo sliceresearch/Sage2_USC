@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module Pointer
+ * @module client
+ * @submodule Pointer
  */
 
 /**
