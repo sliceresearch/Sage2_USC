@@ -101,7 +101,6 @@ function SAGE2_init() {
 	// Detect which browser is being used
 	browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
-	console.log('agent', userAgent);
 	browser.isOpera    = userAgent.indexOf("opera") >= 0;
 	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
 	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
@@ -163,7 +162,6 @@ function SAGE2_init() {
 		pointerDown = false;
 		pointerX    = 0;
 		pointerY    = 0;
-		console.log('Pointer', pointerX, pointerY);
 	});
 
 	wsio.on('setupDisplayConfiguration', function(config) {
@@ -519,7 +517,6 @@ function fileDrop(event) {
 	displayUI.draw();
 
 	// trigger file upload
-	console.log("drop location: " + event.layerX + ", " + event.layerY);
 	var x = event.layerX / event.target.clientWidth;
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
@@ -594,7 +591,6 @@ function pointerPress(event) {
 		pointerDown = true;
 		pointerX    = mouseX;
 		pointerY    = mouseY;
-		console.log('Pointer', pointerX, pointerY);
 		displayUI.pointerMove(mouseX, mouseY);
 
 		// then send the click
@@ -620,7 +616,6 @@ function pointerRelease(event) {
 		pointerDown = false;
 		pointerX    = mouseX;
 		pointerY    = mouseY;
-		console.log('Pointer', pointerX, pointerY);
 		displayUI.pointerMove(mouseX, mouseY);
 
 		// then send the pointer release
@@ -657,7 +652,6 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		console.log('Pointer', pointerX, pointerY);
 		// Send pointer event only during drag events
 		if (pointerDown) {
 			displayUI.pointerMove(mouseX, mouseY);
@@ -1257,7 +1251,6 @@ function keyPress(event) {
 	// space bar activates the pointer
 	if (event.keyCode === 32) {
 		interactor.startSAGE2Pointer("sage2pointer");
-		console.log('Sending Pointer', pointerX, pointerY);
 		displayUI.pointerMove(pointerX, pointerY);
 	}
 
