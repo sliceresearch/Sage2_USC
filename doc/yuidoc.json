@@ -6,6 +6,7 @@
     "options": {
         "linkNatives": "true",
         "outdir": "./doc/api",
+        "themedir": "./doc/theme",
         "paths": [ "." ],
         "exclude": "public/lib,public/uploads,doc,build"
     }
