@@ -3624,12 +3624,14 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				console.log("Accepting Data-Sharing Request");
 				remoteSharingRequestDialog = false;
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+				// TODO: send message back to remote server - Accept
 			}
 			// reject button
 			else if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Rejecting Data-Sharing Request");
 				remoteSharingRequestDialog = false;
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+				// TODO: send message back to remote server - Reject
 			}
 			return;
 		}
