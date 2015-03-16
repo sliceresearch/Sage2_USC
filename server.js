@@ -3611,10 +3611,18 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 		addEventToUserLog(uniqueID, {type: "radialMenu", data: {action: "open"}, time: Date.now()});
 	}
+	
+	// Remote Sharing Request Dialog
+	if(remoteSharingRequestDialog === true) {
+		var dialogX = pointerX - (config.totalWidth/2 - 13*config.titleBarHeight);
+		var dialogY = pointerY - (2*config.titleBarHeight);
+		if(dialogX >= 0 && dialogX <= 26*config.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.titleBarHeight) {
+			
+		}
+	}
 
 	// apps
 	var elemCtrl;
-	var elem = findAppUnderPointer(pointerX, pointerY);
 	if(elem === null) {
 		var remoteIdx = -1;
 		for(var i=0; i<remoteSites.length; i++){
