@@ -859,7 +859,7 @@ function UIBuilder(json_cfg, clientID) {
 	* @method hideDataSharingRequestDialog
 	*/
 	this.hideDataSharingRequestDialog = function() {
-		document.getElementById("dataSharingRequestDialog").display = "none";
+		document.getElementById("dataSharingRequestDialog").style.display = "none";
 	};
 
 	/**
