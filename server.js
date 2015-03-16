@@ -3616,18 +3616,17 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	
 	// Remote Sharing Request Dialog
 	if(remoteSharingRequestDialog === true) {
-		var dialogX = pointerX - (config.totalWidth/2 - 13*config.titleBarHeight);
-		var dialogY = pointerY - (2*config.titleBarHeight);
-		console.log("DIALOG POINTER PRESS:", dialogX, dialogY)
-		if(dialogX >= 0 && dialogX <= 26*config.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.titleBarHeight) {
+		var dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
+		var dialogY = pointerY - (2*config.ui.titleBarHeight);
+		if(dialogX >= 0 && dialogX <= 26*config.ui.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.ui.titleBarHeight) {
 			// accept button
-			if(dialogX >= 0.25*config.titleBarHeight && dialogX <= 9.25*config.titleBarHeight && dialogY >= 4.75*config.titleBarHeight && dialogY <= 7.75*config.titleBarHeight) {
+			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Accepting Data-Sharing Request");
 				remoteSharingRequestDialog = false;
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
 			}
 			// reject button
-			else if(dialogX >= 16.75*config.titleBarHeight && dialogX <= 25.75*config.titleBarHeight && dialogY >= 4.75*config.titleBarHeight && dialogY <= 7.75*config.titleBarHeight) {
+			else if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Rejecting Data-Sharing Request");
 				remoteSharingRequestDialog = false;
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
