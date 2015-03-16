@@ -371,8 +371,10 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingText.textContent = "";
 		dataSharingText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
 		dataSharingText.style.color = "#FFFFFF";
+		dataSharingText.style.marginBottom = (this.titleBarHeight/4).toString() + "px";
 		var dataSharingAccept = document.createElement("div");
 		dataSharingAccept.id = "dataSharingRequestDialog_accept";
+		dataSharingAccept.style.float = "left";
 		dataSharingAccept.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingAccept.style.height = (3*this.titleBarHeight).toString() + "px";
 		dataSharingAccept.style.backgroundColor =  "rgba(55, 153, 130, 1.0)";
@@ -387,6 +389,7 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingAccept.appendChild(dataSharingAcceptText);
 		var dataSharingReject = document.createElement("div");
 		dataSharingReject.id = "dataSharingRequestDialog_reject";
+		dataSharingReject.style.float = "right";
 		dataSharingReject.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingReject.style.height = (3*this.titleBarHeight).toString() + "px";
 		dataSharingReject.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
