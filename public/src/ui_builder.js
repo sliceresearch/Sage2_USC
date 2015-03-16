@@ -357,21 +357,58 @@ function UIBuilder(json_cfg, clientID) {
 		
 		var dataSharingRequestDialog = document.createElement("div");
 		dataSharingRequestDialog.id = "dataSharingRequestDialog";
+		dataSharingRequestDialog.style.position = "absolute";
+		dataSharingRequestDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
+		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 10*this.titleBarHeight)).toString() + "px";
+		dataSharingRequestDialog.style.width = (26*this.titleBarHeight).toString() + "px";
+		//dataSharingRequestDialog.style.height = (8*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.backgroundColor =  "#666666";
+		dataSharingRequestDialog.style.border =  "2px solid #000000";
+		dataSharingRequestDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
+		dataSharingRequestDialog.style.display = "none";
 		var dataSharingText = document.createElement("p");
 		dataSharingText.id = "dataSharingRequestDialog_text";
 		dataSharingText.textContent = "";
 		dataSharingText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
 		dataSharingText.style.color = "#FFFFFF";
-		dataSharingRequestDialog.style.position = "absolute";
-		dataSharingRequestDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
-		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 10*this.titleBarHeight)).toString() + "px";
-		dataSharingRequestDialog.style.width = (20*this.titleBarHeight).toString() + "px";
-		dataSharingRequestDialog.style.height = (6*this.titleBarHeight).toString() + "px";
-		dataSharingRequestDialog.style.backgroundColor =  "#666666";
-		dataSharingRequestDialog.style.border =  "2px solid #000000";
-		dataSharingRequestDialog.style.display = "none";
+		var dataSharingAccept = document.createElement("div");
+		dataSharingAccept.id = "dataSharingRequestDialog_accept";
+		dataSharingAccept.style.width = (9*this.titleBarHeight).toString() + "px";
+		dataSharingAccept.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingAccept.style.backgroundColor =  "rgba(55, 153, 130, 1.0)";
+		dataSharingAccept.style.border =  "2px solid #000000";
+		dataSharingAccept.style.textAlign = "center";
+		dataSharingAccept.style.lineHeight = (3*this.titleBarHeight).toString() + "px";
+		var dataSharingAcceptText = document.createElement("p");
+		dataSharingAcceptText.id = "dataSharingRequestDialog_acceptText";
+		dataSharingAcceptText.textContent = "Accept";
+		dataSharingAcceptText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingAcceptText.style.color = "#FFFFFF";
+		dataSharingAccept.appendChild(dataSharingAcceptText);
+		var dataSharingReject = document.createElement("div");
+		dataSharingReject.id = "dataSharingRequestDialog_reject";
+		dataSharingReject.style.width = (9*this.titleBarHeight).toString() + "px";
+		dataSharingReject.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingReject.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		dataSharingReject.style.border =  "2px solid #000000";
+		dataSharingReject.style.textAlign = "center";
+		dataSharingReject.style.lineHeight = (3*this.titleBarHeight).toString() + "px";
+		var dataSharingRejectText = document.createElement("p");
+		dataSharingRejectText.id = "dataSharingRequestDialog_rejectText";
+		dataSharingRejectText.textContent = "Reject";
+		dataSharingRejectText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingRejectText.style.color = "#FFFFFF";
+		dataSharingReject.appendChild(dataSharingRejectText);
 		dataSharingRequestDialog.appendChild(dataSharingText);
+		dataSharingRequestDialog.appendChild(dataSharingAccept);
+		dataSharingRequestDialog.appendChild(dataSharingReject);
 		this.main.appendChild(dataSharingRequestDialog);
+		
+		var connectedColor = "rgba(55, 153, 130, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
+		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
+		
 		
 		head.appendChild(fileref);
 		this.uiHidden = false;
