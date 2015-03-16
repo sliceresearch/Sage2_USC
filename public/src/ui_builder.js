@@ -361,7 +361,6 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingRequestDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
 		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 13*this.titleBarHeight)).toString() + "px";
 		dataSharingRequestDialog.style.width = (26*this.titleBarHeight).toString() + "px";
-		//dataSharingRequestDialog.style.height = (8*this.titleBarHeight).toString() + "px";
 		dataSharingRequestDialog.style.backgroundColor =  "#666666";
 		dataSharingRequestDialog.style.border =  "2px solid #000000";
 		dataSharingRequestDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
@@ -840,9 +839,11 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Object} remote site information
 	*/
 	this.showDataSharingRequestDialog = function(data) {
+		var port = (data.port === 80 || data.port === 443) ? "" : ":" + data.port;
+		var host = data.host + port;
 		var dataSharingRequestDialog = document.getElementById("dataSharingRequestDialog");
 		var dataSharingText = document.getElementById("dataSharingRequestDialog_text");
-		dataSharingText.textContent = "Data-sharing request from " + data.name + " (" + data.host + ":" + data.port + ")";
+		dataSharingText.textContent = "Data-sharing request from " + data.name + " (" + host + ")";
 		dataSharingRequestDialog.style.display = "block";
 	};
 
