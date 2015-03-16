@@ -364,6 +364,7 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingRequestDialog.style.backgroundColor =  "#666666";
 		dataSharingRequestDialog.style.border =  "2px solid #000000";
 		dataSharingRequestDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
+		dataSharingRequestDialog.style.zIndex = 8999;
 		dataSharingRequestDialog.style.display = "none";
 		var dataSharingText = document.createElement("p");
 		dataSharingText.id = "dataSharingRequestDialog_text";
