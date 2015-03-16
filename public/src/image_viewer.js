@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module image_viewer
+ * @module client
+ * @submodule image_viewer
  */
 
 /**

@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module registry
+ * @module server
+ * @submodule registry
  */
 
 // require variables to be declared

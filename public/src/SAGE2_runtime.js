@@ -11,8 +11,9 @@
 /**
  * Generic functions used by all SAGE2 applications
  *
+ * @module client
+ * @submodule SAGE2_runtime
  * @class SAGE2_runtime
- * @module SAGE2_runtime
  */
 
 

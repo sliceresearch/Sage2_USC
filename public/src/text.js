@@ -11,7 +11,8 @@
 /**
  * Text input widget for application UI
  *
- * @module text
+ * @module client
+ * @submodule text
  */
 
 /**
@@ -163,10 +164,10 @@ function text() {
 	*/
 	this.displayText = function() {
 		var count = 1;
-		for (var parts = 0;parts < this.range.length;parts++) {
+		for (var parts = 0; parts < this.range.length; parts++) {
 			var start = this.range[parts][0];
 			var end   = this.range[parts][1];
-			for (var i=start;i<=end;i++) {
+			for (var i=start; i<=end; i++) {
 
 				this.ctx.font= "16px " + this.font;
 				this.ctx.fillText(('000' + i).slice(-3), 5, count*this.fontHeight);
@@ -177,7 +178,7 @@ function text() {
 						var cut = Math.floor(wrSpc/this.ctx.measureText(this.textArr[i]).width * this.textArr[i].length);
 						var re  = new RegExp(".{1," + cut + "}", "g");
 						var mLines = this.textArr[i].match(re);
-						for (var ml=0;ml<mLines.length;ml++) {
+						for (var ml=0; ml<mLines.length; ml++) {
 							this.ctx.fillText(mLines[ml], this.space + this.lMargin, count*this.fontHeight);
 							count++;
 						}
@@ -286,7 +287,7 @@ function text() {
 					}
 					else {
 						var c;
-						for (c=0;c<this.textArr[tArIdx].length;c++) {
+						for (c=0; c<this.textArr[tArIdx].length; c++) {
 							if (this.ctx.measureText(this.textArr[tArIdx].substring(0, c)).width > x)
 								break;
 						}

@@ -11,7 +11,8 @@
 /**
  * Lightweight object around websocket, handles string and binary communication
  *
- * @module WebSocket
+ * @module server
+ * @submodule WebsocketIO
  * @requires ws
  */
 

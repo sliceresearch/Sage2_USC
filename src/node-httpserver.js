@@ -9,7 +9,11 @@
 // Copyright (c) 2014
 
 /**
- @module httpserver
+ * SAGE2 HTTP handlers
+ *
+ * @module server
+ * @submodule httpserver
+ * @requires node-utils
  */
 
 // require variables to be declared
@@ -22,19 +26,13 @@ var mime = require('mime');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
 
-function parseURLQuery(query) {
-	if(!query) return {};
-
-	var p;
-	var paramList = query.split("&");
-	var params = {};
-	for(var i=0; i<paramList.length; i++) {
-		p = paramList[i].split("=");
-		if(p.length === 2) params[p[0]] = p[1];
-	}
-	return params;
-}
-
+/**
+ * SAGE HTTP request handlers for GET and POST
+ *
+ * @class HttpServer
+ * @constructor
+ * @param publicDirectory {String} folder to expose to the server
+ */
 function HttpServer(publicDirectory) {
 	this.publicDirectory = publicDirectory;
 	this.getFuncs  = {};
@@ -42,19 +40,53 @@ function HttpServer(publicDirectory) {
 	this.onrequest = this.onreq.bind(this);
 }
 
+/**
+ * Splits parameters off a URL
+ *
+ * @method parseURLQuery
+ * @param query {String} the URL to parse
+ * @return {Object} parsed elements (key, value)
+ */
+function parseURLQuery(query) {
+	if (!query) return {};
+
+	var p;
+	var paramList = query.split("&");
+	var params = {};
+	for(var i=0; i<paramList.length; i++) {
+		p = paramList[i].split("=");
+		if (p.length === 2) params[p[0]] = p[1];
+	}
+	return params;
+}
+
+/**
+ * Handle a HTTP redirect
+ *
+ * @method redirect
+ * @param res {Object} response
+ * @param aurl {String} destination URL
+ */
 HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
 	res.writeHead(302, {'Location': aurl});
 	res.end();
 };
 
+/**
+ * Main router and trigger the GET and POST handlers
+ *
+ * @method onreq
+ * @param req {Object} request
+ * @param res {Object} response
+ */
 HttpServer.prototype.onreq = function(req, res) {
 	var stream;
 
 	if (req.method === "GET") {
 		var reqURL = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
-		if(getName in this.getFuncs){
+		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
 			return;
 		}
@@ -63,16 +95,16 @@ HttpServer.prototype.onreq = function(req, res) {
 		if (getName === "/") {
 			this.redirect(res, "index.html");
 			return;
-        }
+		}
 
 		var pathname = this.publicDirectory + getName;
 
 		// SESSION ID CHECK
-		if(global.__SESSION_ID && path.extname(pathname) === ".html") {
+		if (global.__SESSION_ID && path.extname(pathname) === ".html") {
 			var params = parseURLQuery(reqURL.query); // note every field will be a string
 
 			// check params.session
-			if(params.session !== global.__SESSION_ID) {
+			if (params.session !== global.__SESSION_ID) {
 				// failed
 				// serve page that asks for session id instead
 				//
@@ -105,7 +137,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 
 				var total = stats.size;
-				if(typeof req.headers.range !== 'undefined'){
+				if (typeof req.headers.range !== 'undefined') {
 					var range = req.headers.range;
 					var parts = range.replace(/bytes=/, "").split("-");
 					var partialstart = parts[0];
@@ -124,7 +156,7 @@ HttpServer.prototype.onreq = function(req, res) {
 					stream = fs.createReadStream(pathname, {start: start, end: end});
 					stream.pipe(res);
 				}
-				else{
+				else {
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
 					stream = fs.createReadStream(pathname);
@@ -142,7 +174,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 	}
-	else if(req.method === "POST") {
+	else if (req.method === "POST") {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
@@ -150,10 +182,24 @@ HttpServer.prototype.onreq = function(req, res) {
 	}
 };
 
+/**
+ * Add a HTTP GET handler (i.e. route)
+ *
+ * @method httpGET
+ * @param name {String} matching URL name (i.e. /config)
+ * @param callback {Function} processing function
+ */
 HttpServer.prototype.httpGET = function(name, callback) {
 	this.getFuncs[name] = callback;
 };
 
+/**
+ * Add a HTTP POST handler (i.e. route)
+ *
+ * @method httpPOST
+ * @param name {String} matching URL name (i.e. /upload)
+ * @param callback {Function} processing function
+ */
 HttpServer.prototype.httpPOST = function(name, callback) {
 	this.postFuncs[name] = callback;
 };

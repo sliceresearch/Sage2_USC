@@ -9,7 +9,11 @@
 // Copyright (c) 2014
 
 /**
- * @module itemLoader
+ * Main module loading content and creating applications
+ *
+ * @module server
+ * @submodule itemLoader
+ * @requires decompress-zip, gm, mime, request, ytdl-core, node-demux, node-exiftool, node-assets, node-utils, node-registry
  */
 
 // require variables to be declared

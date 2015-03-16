@@ -11,15 +11,12 @@
 /**
  * Provides widget controls and helper functionality for custom application user interface
  *
- * @module widgets
+ * @module client
+ * @submodule widgets
  */
 
-
-var dynamicStyleSheets = {};
-
-
 /**
- * Widget Control: has functions exposed to SAGE2 apps for adding elements onto the widget bar 
+ * Widget Control: has functions exposed to SAGE2 apps for adding elements onto the widget bar
  *
  * @class SAGE2WidgetControl
  * @constructor
@@ -100,7 +97,7 @@ SAGE2WidgetControl.prototype.controlsReady = function(){
 
 /*
 *	Lets the user add a custom cover for buttons
-* 	Added cover is available only to that instance of that app. 
+* 	Added cover is available only to that instance of that app.
 */
 SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData){
 	if (this.buttonType[type] === undefined || this.buttonType[type] === null){
@@ -121,7 +118,7 @@ SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData){
 };
 
 /*
-*	
+*
 * 	Allows the user to modify the look of the widget control bar
 *	layoutOptions
 *		.shape - "radial" (only one option for now, will add more soon)
@@ -141,13 +138,13 @@ SAGE2WidgetControl.prototype.setLayoutOptions = function(layoutOptions){
 };
 
 /*
-*	Adds a button specification 
+*	Adds a button specification
 *	data
 *		.type - one of the several predefined button(cover) types [ex: "next", "prev", and so on]
 *		.action - callback function to specify action after the button has been pressed
 *	action callback looks like this:
 *	function (appHandle, date){
-*		//use the appHandle to perform button click related action here	
+*		//use the appHandle to perform button click related action here
 *	}
 */
 SAGE2WidgetControl.prototype.addButton = function(data) {
@@ -185,10 +182,10 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 		}
 
 		if (type === null || type === undefined){
-			type = new this.buttonType["default"]();
+			type = new this.buttonType.default();
 		}
 		if (data.initialState !== null && data.initialState !== undefined)
-			type.state = data.initialState % 2;  // Making sure initial state is 0 or 1                       
+			type.state = data.initialState % 2;  // Making sure initial state is 0 or 1
 		button.type=type;
 		button.call = data.action || null;
 		button.width = 1.5*ui.widgetControlSize;
@@ -198,18 +195,18 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 	return type;
 };
 
-SAGE2WidgetControl.prototype.addSeparatorAfterButtons = function(firstSeparator,secondSeparator,thirdSeparator) {
-	
+SAGE2WidgetControl.prototype.addSeparatorAfterButtons = function(firstSeparator, secondSeparator, thirdSeparator) {
+
 };
 
 /*
-*	Adds a text-input bar specification 
+*	Adds a text-input bar specification
 *	data
 *		.action - callback function to specify action after the text has been input and enter key pressed
 *	action callback looks like this:
 *	function (appHandle, text){
 *		// text contains the string from the text-input widget
-*		// use the appHandle to send text to the app	
+*		// use the appHandle to send text to the app
 *	}
 */
 SAGE2WidgetControl.prototype.addTextInput = function (data) {
@@ -225,13 +222,12 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 		this.textInput = textInput;
 		this.itemCount++;
 	}
-	
 };
 
 /*
-*	Adds a slider specification 
+*	Adds a slider specification
 *	data
-*		.appHandle 
+*		.appHandle
 *		.property - appHandle and preperty are used to bind a property of the app to the slider
 *		for example, if you want to bind this.state.currentPage to the slider, then send appHandle:this, property:"state.currentPage"
 *		.begin - the minimum value that the proerty will take
@@ -242,13 +238,13 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 *	action callback looks like this:
 *	function (appHandle, date){
 *		// The bound property will already have been updated by the slider
-*		// use this cal back to perform additional functions like refreshing the app 	
+*		// use this cal back to perform additional functions like refreshing the app
 *	}
 */
 SAGE2WidgetControl.prototype.addSlider = function(data){
 	//begin,parts,end,action, property, appHandle
 	if (this.hasSlider === false && this.itemCount <= 30){
-		
+
 		var slider = new this.SliderClass();
 		slider.id = "slider" + this.itemCount;
 		slider.appId = this.id;
@@ -278,20 +274,19 @@ SAGE2WidgetControl.prototype.addSlider = function(data){
 		this.slider = slider;
 		this.itemCount++;
 	}
-	
 };
 
 /*
-*	Adds a color palette 
+*	Adds a color palette
 */
 SAGE2WidgetControl.prototype.addColorPalette = function(data){
 	if (this.hasColorPalette === false && this.itemCount <= 12){
-		
+
 		var colorPalette = new this.ColorPaletteClass();
 		colorPalette.id = "colorPalette" + this.itemCount;
 		colorPalette.appId = this.id;
 		colorPalette.call = data.action || null;
-		
+
 		if (data.colorList === null || data.colorList === undefined)
 			return;
 		else if (data.colorList.length === 0)
@@ -314,7 +309,7 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 	};
 	var dimensions = {};
 	dimensions.buttonRadius = 0.8 * ui.widgetControlSize;
-	dimensions.radius = dimensions.buttonRadius * 5.027 ; // tan(78.5): angle subtended at the center is 22.5
+	dimensions.radius = dimensions.buttonRadius * 5.027; // tan(78.5): angle subtended at the center is 22.5
 	dimensions.firstRadius = dimensions.radius *0.75;
 
 	dimensions.innerR = dimensions.radius - dimensions.buttonRadius -3; // for the pie slice
@@ -327,15 +322,15 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 	size.hasSideBar = false;
 
 	if (this.hasSlider === true){
-		size.width = size.width  + this.slider.width + dimensions.buttonRadius; 
+		size.width = size.width  + this.slider.width + dimensions.buttonRadius;
 		size.hasSideBar = true;
 	}
 	else if ( this.hasTextInput === true){
-		size.width = size.width  + this.textInput.width + dimensions.buttonRadius; 
+		size.width = size.width  + this.textInput.width + dimensions.buttonRadius;
 		size.hasSideBar = true;
 	}
 	else if ( this.hasColorPalette === true){
-		size.width = size.width  + this.colorPalette.width + dimensions.buttonRadius; 
+		size.width = size.width  + this.colorPalette.width + dimensions.buttonRadius;
 		size.hasSideBar = true;
 	}
 	this.controlDimensions = dimensions;
@@ -348,20 +343,19 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 
 
 SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
-	this.addButton({type:"closeApp",staticID:"CloseApp",sequenceNo:data.sequence.closeApp,action:function(date){
+	this.addButton({type:"closeApp", staticID:"CloseApp", sequenceNo:data.sequence.closeApp, action:function(date){
 		if (isMaster)
-			wsio.emit('closeAppFromControl',{appId:data.id});
+			wsio.emit('closeAppFromControl', {appId:data.id});
 	}});
-	this.addButton({type:"closeBar",staticID:"CloseWidget",sequenceNo:data.sequence.closeBar,action:function(date){
+	this.addButton({type:"closeBar", staticID:"CloseWidget", sequenceNo:data.sequence.closeBar, action:function(date){
 		if (isMaster)
-			wsio.emit('hideWidgetFromControl',{instanceID:data.instanceID});
+			wsio.emit('hideWidgetFromControl', {instanceID:data.instanceID});
 	}});
-	
 };
 
 
 /*
-*	Creates a color palette 
+*	Creates a color palette
 */
 /*SAGE2WidgetControl.prototype.createColorPalette = function(x, y, outline){
 	var uiElementSize = ui.widgetControlSize;
@@ -371,7 +365,6 @@ SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
 	var colorPaletteOutline = this.controlSVG.path(outline);
 	colorPaletteOutline.attr("class","widgetBackground");
 	var colorPaletteBarWidth = colorPaletteOutline.getBBox().w;
-	
 	x = x + colorPaletteBarWidth*0.075;
 	//for(var i=0;i<this. )
 }

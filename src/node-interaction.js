@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module interaction
+ * @module server
+ * @submodule interaction
  */
 
 // require variables to be declared

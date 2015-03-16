@@ -11,7 +11,8 @@
 /**
  * Asset management functions for SAGE2 server
  *
- * @module node-assets
+ * @module server
+ * @submodule node-assets
  * @requires color, fluent-ffmpeg, gm, json5, node-exiftool, node-utils, node-registry
  */
 
