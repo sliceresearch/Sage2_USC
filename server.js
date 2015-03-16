@@ -2287,10 +2287,11 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 
 function wsRequestDataSharingSession(wsio, data) {
 	var known_site = findRemoteSiteByConnection(wsio);
-	if(known_site !== null) data.name = known_site.name;
-	if(data.name === undefined || data.name === null) data.name = "Unknown";
+	if(known_site !== null) data.config.name = known_site.name;
+	if(data.config.name === undefined || data.config.name === null) data.config.name = "Unknown";
 	
-	console.log("Data-sharing request from " + data.name + " (" + data.host + ":" + data.port + ")");
+	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
+	broadcast('requestDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port}, 'requiresFullApps');
 }
 
 // **************  Widget Control Messages *****************
@@ -3628,7 +3629,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
 				
 				// TOOD: broadcast new shared session message to displays (connection: waiting)
-				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {host: config.host, port: config.index_port, name: config.name, secure: false});
+				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {config: config, secure: false});
 			}
 			else {
 				console.log("Remote site " + remoteSites[remoteIdx].name + " is not currently connected");

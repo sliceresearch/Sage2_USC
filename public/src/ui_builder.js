@@ -354,6 +354,25 @@ function UIBuilder(json_cfg, clientID) {
 			}
 			machine.textContent = url;
 		}
+		
+		var dataSharingRequestDialog = document.createElement("div");
+		dataSharingRequestDialog.id = "dataSharingRequestDialog";
+		var dataSharingText = document.createElement("p");
+		dataSharingText.id = "dataSharingRequestDialog_text";
+		dataSharingText.textContent = "";
+		dataSharingText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingText.style.color = "#FFFFFF";
+		dataSharingRequestDialog.style.position = "abosolute";
+		dataSharingRequestDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
+		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 10*this.titleBarHeight)).toString() + "px";
+		dataSharingRequestDialog.style.width = (10*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.height = (6*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.backgroundColor =  "#666666";
+		dataSharingRequestDialog.style.border =  "2px solid #000000";
+		dataSharingRequestDialog.style.display = "none";
+		dataSharingRequestDialog.appendChild(dataSharingText);
+		this.main.appendChild(dataSharingRequestDialog);
+		
 		head.appendChild(fileref);
 		this.uiHidden = false;
 		this.showInterface();
@@ -772,6 +791,19 @@ function UIBuilder(json_cfg, clientID) {
 		var remote = document.getElementById(data.name);
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
+	};
+	
+	/**
+	* Dialog to accept/reject requests for a new data sharing session from a remote site
+	*
+	* @method showDataSharingRequestDialog
+	* @param data {Object} remote site information
+	*/
+	this.showDataSharingRequestDialog = function(data) {
+		var dataSharingRequestDialog = document.getElementById("dataSharingRequestDialog");
+		var dataSharingText = document.getElementById("dataSharingRequestDialog_text");
+		dataSharingText.textContent = "Data-sharing request from " + data.name + " (" + data.host + ":" + data.port + ")";
+		dataSharingRequestDialog.style.display = "block";
 	};
 
 	/**

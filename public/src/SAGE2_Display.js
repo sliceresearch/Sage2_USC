@@ -788,7 +788,7 @@ function SAGE2_init() {
 		}
 	});
 
-	wsio.on('eventInItem', function(event_data){
+	wsio.on('eventInItem', function(event_data) {
 		var date = new Date(event_data.date);
 		var app  = applications[event_data.id];
 
@@ -802,7 +802,7 @@ function SAGE2_init() {
 		*/
 	});
 
-	wsio.on('requestNewControl', function(data){
+	wsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);
 		//var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 		if (data.elemId !== undefined && data.elemId !== null){
@@ -829,7 +829,7 @@ function SAGE2_init() {
 		}
 	});
 
-	wsio.on('createControl', function(data){
+	wsio.on('createControl', function(data) {
 		if (controlItems[data.id] === null || controlItems[data.id] === undefined) {
 			var ctrDiv =  document.createElement("div");
 			ctrDiv.id = data.id;
@@ -854,7 +854,7 @@ function SAGE2_init() {
 
 		}
 	});
-	wsio.on('removeControlsForUser', function(data){
+	wsio.on('removeControlsForUser', function(data) {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
@@ -916,7 +916,7 @@ function SAGE2_init() {
 		}
 	});
 
-	wsio.on('releaseControlId', function(data){
+	wsio.on('releaseControlId', function(data) {
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var regexSlider = /slider/;
 		var regexButton = /button/;
@@ -952,7 +952,7 @@ function SAGE2_init() {
 
 
 	});
-	wsio.on('executeControlFunction', function(data){
+	wsio.on('executeControlFunction', function(data) {
 		var ctrl = getWidgetControlInstanceById(data);
 		if(ctrl){
 			var ctrId = ctrl.attr('id');
@@ -998,14 +998,15 @@ function SAGE2_init() {
 
 	});
 
-	wsio.on('sliderKnobLockAction', function(data){
+	wsio.on('sliderKnobLockAction', function(data) {
 		var ctrl = getWidgetControlInstanceById(data);
 		var slider = ctrl.parent();
 		var func = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());
 	});
-	wsio.on('moveSliderKnob', function(data){
+	
+	wsio.on('moveSliderKnob', function(data) {
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
@@ -1020,7 +1021,7 @@ function SAGE2_init() {
 				func(new Date());
 	});
 
-	wsio.on('keyInTextInputWidget', function(data){
+	wsio.on('keyInTextInputWidget', function(data) {
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
@@ -1037,12 +1038,17 @@ function SAGE2_init() {
 			}
 		}
 	});
-	wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+	
+	wsio.on('dropTextInputControl', function(data) { //Called when the user clicks outside the widget control while a lock exists on text input
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
 			var blinkControlHandle = textInput.data("blinkControlHandle");
 			clearInterval(blinkControlHandle);
 		}
+	});
+	
+	wsio.on('requestDataSharingSession', function(data) {
+		ui.showDataSharingRequestDialog(data);
 	});
 }

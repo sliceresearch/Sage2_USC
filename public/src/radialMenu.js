@@ -127,21 +127,9 @@ var radialMenuIcon = new Image();
 radialMenuIcon.src = "images/radialMenu/icon_radial_button_circle.svg";
 var radialMenuLevel2Icon = new Image();
 radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
-var radialCloseIcon = new Image();
-radialCloseIcon.src = "images/radialMenu/icon_close_128.png";
 
 var radialDragIcon = new Image();
 radialDragIcon.src = "images/radialMenu/drag-ring.svg";
-
-var glowLine = new Image();
-glowLine.src = "images/radialMenu/glow_lines2A_menu_1024.png";
-
-var glowLineOpen = new Image();
-glowLineOpen.src = "images/radialMenu/glow_lines2A_menu_1024.png";
-
-var thumbnailWindowFrame = new Image();
-thumbnailWindowFrame.src = "images/radialMenu/thumbnail_window_frame2.png";
-
 
 
 
