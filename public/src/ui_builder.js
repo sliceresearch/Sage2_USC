@@ -362,10 +362,10 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingText.textContent = "";
 		dataSharingText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
 		dataSharingText.style.color = "#FFFFFF";
-		dataSharingRequestDialog.style.position = "abosolute";
+		dataSharingRequestDialog.style.position = "absolute";
 		dataSharingRequestDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
 		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 10*this.titleBarHeight)).toString() + "px";
-		dataSharingRequestDialog.style.width = (10*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.width = (20*this.titleBarHeight).toString() + "px";
 		dataSharingRequestDialog.style.height = (6*this.titleBarHeight).toString() + "px";
 		dataSharingRequestDialog.style.backgroundColor =  "#666666";
 		dataSharingRequestDialog.style.border =  "2px solid #000000";
