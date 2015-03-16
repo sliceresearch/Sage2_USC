@@ -199,6 +199,7 @@ var mediaStreams = {};
 var mediaBlockStreams = {};
 var radialMenus = {};
 var shell = null;
+var remoteSharingRequestDialog = false;
 
 var users = null;
 if(program.trackUsers) {
@@ -2292,6 +2293,7 @@ function wsRequestDataSharingSession(wsio, data) {
 	
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
 	broadcast('requestDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port}, 'requiresFullApps');
+	remoteSharingRequestDialog = true;
 }
 
 // **************  Widget Control Messages *****************

@@ -376,8 +376,8 @@ function UIBuilder(json_cfg, clientID) {
 		var dataSharingAccept = document.createElement("div");
 		dataSharingAccept.id = "dataSharingRequestDialog_accept";
 		dataSharingAccept.style.position = "absolute";
-		dataSharingAccept.style.left = "0px";
-		dataSharingAccept.style.bottom = "0px";
+		dataSharingAccept.style.left = (this.titleBarHeight/4).toString() + "px";
+		dataSharingAccept.style.bottom = (this.titleBarHeight/4).toString() + "px";
 		dataSharingAccept.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingAccept.style.height = (3*this.titleBarHeight).toString() + "px";
 		dataSharingAccept.style.backgroundColor =  "rgba(55, 153, 130, 1.0)";
@@ -393,8 +393,8 @@ function UIBuilder(json_cfg, clientID) {
 		var dataSharingReject = document.createElement("div");
 		dataSharingReject.id = "dataSharingRequestDialog_reject";
 		dataSharingReject.style.position = "absolute";
-		dataSharingReject.style.right = "0px";
-		dataSharingReject.style.bottom = "0px";
+		dataSharingReject.style.right = (this.titleBarHeight/4).toString() + "px";
+		dataSharingReject.style.bottom = (this.titleBarHeight/4).toString() + "px";
 		dataSharingReject.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingReject.style.height = (3*this.titleBarHeight).toString() + "px";
 		dataSharingReject.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
