@@ -1053,6 +1053,7 @@ function SAGE2_init() {
 	});
 	
 	wsio.on('closeRequestDataSharingDialog', function(data) {
+		console.log("closing data-sharing request dialog");
 		ui.hideDataSharingRequestDialog();
 	});
 }
