@@ -23,12 +23,8 @@ var thumbSpacer = 5;
 var previewWindowWidth = 0.2;
 //var previewWindowOffset = 0.74;
 
-// radial menu buttons
-var radialMenuScale = 1.0;
-//var thumbnailWindowMinTextHeight = 24;
+var radialMenuCenter = { x: 215, y: 215 }; // scaled in init - based on window size
 
-var radialMenuCenter = { x: 215 * radialMenuScale, y: 215 * radialMenuScale }; // overwritten in init - based on window size
-//var radialMenuSize = { x: 425 * radialMenuScale, y: 425 * radialMenuScale };
 var angleSeparation = 35;
 var initAngle = 55;
 var angle = 0;
@@ -151,15 +147,15 @@ function RadialMenu(){
 		this.divCtxDebug = false;
 
 		var id = data.id;
-		radialMenuScale = data.radialMenuScale;
-		radialMenuCenter = { x: 215 * radialMenuScale, y: 215 * radialMenuScale }; // overwritten in init - based on window size
+		this.radialMenuScale = data.radialMenuScale;
+		this.radialMenuCenter = { x: radialMenuCenter.x * this.radialMenuScale, y: radialMenuCenter.y * this.radialMenuScale }; // overwritten in init - based on window size
 		this.radialMenuSize = data.radialMenuSize;
 
 		this.thumbnailWindowSize.x = data.thumbnailWindowSize.x;
 		this.thumbnailWindowSize.y = data.thumbnailWindowSize.y;
-		this.imageThumbSize = imageThumbSize * radialMenuScale;
+		this.imageThumbSize = imageThumbSize * this.radialMenuScale;
 
-		this.textHeaderHeight = 32  * radialMenuScale;
+		this.textHeaderHeight = 32  * this.radialMenuScale;
 
 		this.element = document.getElementById(id+"_menu"); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
@@ -169,7 +165,6 @@ function RadialMenu(){
 		this.menuID = id+"_menu";
 		this.currentMenuState = 'radialMenu';
 		this.currentRadialState = 'radialMenu';
-		this.radialMenuCenter = radialMenuCenter;
 
 		this.settingMenuOpen = false;
 
@@ -185,7 +180,7 @@ function RadialMenu(){
 
 		this.notEnoughThumbnailsToScroll = false; // Flag to stop scrolling if there are not enough thumbnails
 		this.dragThumbnailWindow = false;
-		this.thumbnailWindowPosition = { x: (radialMenuCenter.x * 2 + this.imageThumbSize/2), y: 30 * radialMenuScale };
+		this.thumbnailWindowPosition = { x: (this.radialMenuCenter.x * 2 + this.imageThumbSize/2), y: 30 * this.radialMenuScale };
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
@@ -298,19 +293,19 @@ function RadialMenu(){
 		this.radial2TileButton.alignment = 'centered';
 
 		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
-		this.radial2ImageButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2ImageButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2ImageButton.setRotation( angle - Math.PI/2 );
 
 		angle = (initAngle + angleSeparation * 0) * (Math.PI/180);
-		this.radial2PDFButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2PDFButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2PDFButton.setRotation( angle - Math.PI/2 );
 
 		angle = (initAngle + angleSeparation * 2) * (Math.PI/180);
-		this.radial2VideoButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2VideoButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2VideoButton.setRotation( angle - Math.PI/2 );
 
 		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
-		this.radial2AppButton.setPosition( radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
+		this.radial2AppButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2AppButton.setRotation( angle - Math.PI/2 );
 
 
@@ -337,14 +332,14 @@ function RadialMenu(){
 		button.useBackgroundColor = useBackgroundColor;
 		button.useEventOverColor = true;
 
-		button.setSize( buttonSize * radialMenuScale, buttonSize * radialMenuScale );
-		button.setHitboxSize( hitboxSize * radialMenuScale, hitboxSize * radialMenuScale );
+		button.setSize( buttonSize * this.radialMenuScale, buttonSize * this.radialMenuScale );
+		button.setHitboxSize( hitboxSize * this.radialMenuScale, hitboxSize * this.radialMenuScale );
 
 		button.alignment = alignment;
 		button.hitboxShape = hitboxShape;
 
 		angle = (initAngle + angleSeparation * radialPos) * (Math.PI/180);
-		button.setPosition( radialMenuCenter.x - buttonRadius * radialMenuScale  * Math.cos(angle), radialMenuCenter.y - buttonRadius * radialMenuScale * Math.sin(angle) );
+		button.setPosition( this.radialMenuCenter.x - buttonRadius * this.radialMenuScale  * Math.cos(angle), this.radialMenuCenter.y - buttonRadius * this.radialMenuScale * Math.sin(angle) );
 		button.setRotation( angle - Math.PI/2 );
 
 		return button;
@@ -429,10 +424,10 @@ function RadialMenu(){
 		if( this.currentMenuState !== 'radialMenu' ) {
 			// line from radial menu to thumbnail window
 			this.ctx.beginPath();
-			this.ctx.moveTo( radialMenuCenter.x + menuButtonSize/4 * radialMenuScale, radialMenuCenter.y );
-			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale, radialMenuCenter.y );
+			this.ctx.moveTo( this.radialMenuCenter.x + menuButtonSize/4 * this.radialMenuScale, this.radialMenuCenter.y );
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * this.radialMenuScale, this.radialMenuCenter.y );
 			this.ctx.strokeStyle = '#ffffff';
-			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.lineWidth = 5 * this.radialMenuScale;
 			this.ctx.stroke();
 		}
 
@@ -442,16 +437,16 @@ function RadialMenu(){
 			if( this.level1Buttons[i].isHidden() === false ) {
 				this.ctx.beginPath();
 
-				//this.ctx.moveTo(radialMenuCenter.x, radialMenuCenter.y);
+				//this.ctx.moveTo(this.radialMenuCenter.x, this.radialMenuCenter.y);
 				//this.ctx.lineTo(this.level1Buttons[i].posX, this.level1Buttons[i].posY);
 
 				// We're adding -Math.PI/2 since angle also accounts for the initial orientation of the button image
-				this.ctx.moveTo(radialMenuCenter.x + (menuButtonSize/4 * radialMenuScale) * Math.cos(this.level1Buttons[i].angle-Math.PI/2), radialMenuCenter.y + (menuButtonSize/4 * radialMenuScale) * Math.sin(this.level1Buttons[i].angle-Math.PI/2));
+				this.ctx.moveTo(this.radialMenuCenter.x + (menuButtonSize/4 * this.radialMenuScale) * Math.cos(this.level1Buttons[i].angle-Math.PI/2), this.radialMenuCenter.y + (menuButtonSize/4 * this.radialMenuScale) * Math.sin(this.level1Buttons[i].angle-Math.PI/2));
 
-				this.ctx.lineTo(this.level1Buttons[i].posX + (menuButtonSize/4 * radialMenuScale) * Math.cos(this.level1Buttons[i].angle+Math.PI/2), this.level1Buttons[i].posY + (menuButtonSize/4 * radialMenuScale) * Math.sin(this.level1Buttons[i].angle+Math.PI/2));
+				this.ctx.lineTo(this.level1Buttons[i].posX + (menuButtonSize/4 * this.radialMenuScale) * Math.cos(this.level1Buttons[i].angle+Math.PI/2), this.level1Buttons[i].posY + (menuButtonSize/4 * this.radialMenuScale) * Math.sin(this.level1Buttons[i].angle+Math.PI/2));
 
 				this.ctx.strokeStyle = '#ffffff';
-				this.ctx.lineWidth = 5 * radialMenuScale;
+				this.ctx.lineWidth = 5 * this.radialMenuScale;
 				this.ctx.stroke();
 			}
 		}
@@ -519,39 +514,39 @@ function RadialMenu(){
 				this.ctx.fillRect(previewImageX - 10, this.thumbnailWindowPosition.y + this.textHeaderHeight, previewImageSize + 20, this.thumbnailWindowSize.y);
 			}
 
-			this.borderLineThickness = 5 * radialMenuScale;
+			this.borderLineThickness = 5 * this.radialMenuScale;
 
 			// Thumbnail window - Title bar
 			this.ctx.beginPath();
-			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale - this.borderLineThickness/2, this.borderLineThickness/2 );
-			this.ctx.lineTo( previewImageX - 10 - 40 * radialMenuScale + 2.5 * radialMenuScale -  this.borderLineThickness/2, this.borderLineThickness/2 ); // Top vertical line
+			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * this.radialMenuScale - this.borderLineThickness/2, this.borderLineThickness/2 );
+			this.ctx.lineTo( previewImageX - 10 - 40 * this.radialMenuScale + 2.5 * this.radialMenuScale -  this.borderLineThickness/2, this.borderLineThickness/2 ); // Top vertical line
 			this.ctx.lineTo( previewImageX - 10 - this.borderLineThickness, this.thumbnailWindowPosition.y + this.textHeaderHeight - this.borderLineThickness/2 ); // Angled line
-			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale -this.borderLineThickness/2, this.thumbnailWindowPosition.y + this.textHeaderHeight -this.borderLineThickness/2 ); // Bottom horizontal line
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * this.radialMenuScale -this.borderLineThickness/2, this.thumbnailWindowPosition.y + this.textHeaderHeight -this.borderLineThickness/2 ); // Bottom horizontal line
 			this.ctx.closePath();
 
 			this.ctx.fillStyle = '#50505080';
 			this.ctx.fill();
 			this.ctx.strokeStyle = '#ffffff';
-			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.lineWidth = 5 * this.radialMenuScale;
 			this.ctx.stroke();
 
 			// Thumbnail window - Vert line
 			this.ctx.beginPath();
-			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * radialMenuScale - this.borderLineThickness/2, this.thumbnailWindowPosition.y + this.textHeaderHeight );
-			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * radialMenuScale - this.borderLineThickness/2, this.thumbnailWindowSize.y);
+			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18  * this.radialMenuScale - this.borderLineThickness/2, this.thumbnailWindowPosition.y + this.textHeaderHeight );
+			this.ctx.lineTo( this.thumbnailWindowPosition.x - 18  * this.radialMenuScale - this.borderLineThickness/2, this.thumbnailWindowSize.y);
 			this.ctx.strokeStyle = '#ffffff';
-			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.lineWidth = 5 * this.radialMenuScale;
 			this.ctx.stroke();
 
 			// Thumbnail window - Horz line across preview window
 			this.ctx.beginPath();
-			this.ctx.moveTo( previewImageX - 10 - 5 * radialMenuScale, this.thumbnailWindowPosition.y + this.textHeaderHeight - this.borderLineThickness/2 );
+			this.ctx.moveTo( previewImageX - 10 - 5 * this.radialMenuScale, this.thumbnailWindowPosition.y + this.textHeaderHeight - this.borderLineThickness/2 );
 			this.ctx.lineTo( previewImageX - 10 + previewImageSize + 20, this.thumbnailWindowPosition.y + this.textHeaderHeight - this.borderLineThickness/2 );
 			this.ctx.strokeStyle = '#ffffff';
-			this.ctx.lineWidth = 5 * radialMenuScale;
+			this.ctx.lineWidth = 5 * this.radialMenuScale;
 			this.ctx.stroke();
 
-			//this.drawImage( this.ctx, this.thumbnailWindowFrame, {x: (this.thumbnailWindowPosition.x - 38 * radialMenuScale), y: 0}, {x: 1984 * radialMenuScale, y: 1004}, "rgba(255, 255, 255, 0.9)", 0, false );
+			//this.drawImage( this.ctx, this.thumbnailWindowFrame, {x: (this.thumbnailWindowPosition.x - 38 * this.radialMenuScale), y: 0}, {x: 1984 * this.radialMenuScale, y: 1004}, "rgba(255, 255, 255, 0.9)", 0, false );
 
 			// Filename text
 			this.ctx.font= parseInt(this.textHeaderHeight)+"px sans-serif";
@@ -715,10 +710,10 @@ function RadialMenu(){
 			}
 		}
 
-		this.thumbnailWindowDiv.style.left   = (data.windowX + this.thumbnailWindowPosition.x - 18  * radialMenuScale).toString() + "px";
+		this.thumbnailWindowDiv.style.left   = (data.windowX + this.thumbnailWindowPosition.x - 18  * this.radialMenuScale).toString() + "px";
 		this.thumbnailWindowDiv.style.top    = (data.windowY + this.thumbnailWindowPosition.y + this.textHeaderHeight).toString() + "px";
 
-		this.thumbnailWindowDiv.style.width   = (this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * radialMenuScale).toString() + "px";
+		this.thumbnailWindowDiv.style.width   = (this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * this.radialMenuScale).toString() + "px";
 		this.thumbnailWindowDiv.style.height    = (this.thumbnailWindowSize.y - this.textHeaderHeight * 2).toString() + "px";
 	};
 
@@ -880,10 +875,10 @@ function RadialMenu(){
 				var thumbButton = currentThumbnailButtons[i];
 
 
-				var thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x + 18  * radialMenuScale, y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight };
+				var thumbEventPos = { x: position.x - this.thumbnailWindowPosition.x + 18  * this.radialMenuScale, y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight };
 
 				// Prevent clicking on hidden thumbnails under preview window
-				var thumbnailWindowDivWidth = this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * radialMenuScale; // Should match where 'this.thumbnailWindowDiv.style.width' is assigned
+				var thumbnailWindowDivWidth = this.thumbnailWindowSize.x + this.imageThumbSize/2 - 10 - this.radialMenuSize.x - 25 * this.radialMenuScale; // Should match where 'this.thumbnailWindowDiv.style.width' is assigned
 				if( thumbEventPos.x >= 0 && thumbEventPos.x <= thumbnailWindowDivWidth ) {
 					thumbEventPos.x -= this.thumbnailWindowScrollOffset.x;
 					this.buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
@@ -1043,7 +1038,10 @@ function RadialMenu(){
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					thumbnailButton.simpleTint = false;
-
+					
+					thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
+					thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
+				
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail !== null ) {
 						customIcon = new Image();
@@ -1051,7 +1049,7 @@ function RadialMenu(){
 						thumbnailButton.setButtonImage( customIcon );
 					} else
 						thumbnailButton.setButtonImage( idleImageIcon );
-
+					
 					this.thumbnailButtons.push(thumbnailButton);
 					this.imageThumbnailButtons.push(thumbnailButton);
 					validImages++;
@@ -1064,7 +1062,10 @@ function RadialMenu(){
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				thumbnailButton.simpleTint = false;
-
+				
+				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
+				thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
+				
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
@@ -1084,7 +1085,10 @@ function RadialMenu(){
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				thumbnailButton.simpleTint = false;
-
+				
+				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
+				thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
+				
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
@@ -1127,7 +1131,10 @@ function RadialMenu(){
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setButtonImage( idleSessionIcon );
 				thumbnailButton.simpleTint = false;
-
+				
+				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
+				thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
+				
 				this.thumbnailButtons.push(thumbnailButton);
 				this.sessionThumbnailButtons.push(thumbnailButton);
 			}
@@ -1252,11 +1259,11 @@ function ButtonWidget() {
 	this.posX = 100;
 	this.posY = 100;
 	this.angle = 0;
-	this.width = imageThumbSize * radialMenuScale;
-	this.height = imageThumbSize * radialMenuScale;
+	this.width = imageThumbSize;
+	this.height = imageThumbSize;
 
-	this.hitboxWidth = imageThumbSize * radialMenuScale;
-	this.hitboxheight = imageThumbSize * radialMenuScale;
+	this.hitboxWidth = imageThumbSize;
+	this.hitboxheight = imageThumbSize;
 
 	this.defaultColor =  "rgba(210, 210, 210, 1.0)";
 	this.mouseOverColor = "rgba(210, 210, 10, 1.0 )";

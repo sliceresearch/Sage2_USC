@@ -58,6 +58,17 @@ RadialMenu.prototype.getInfo = function() {
 /**
 *
 *
+* @method setScale
+*/
+RadialMenu.prototype.setScale = function(value) {
+	this.radialMenuScale     = value / 100;
+	this.radialMenuSize      = { x: radialMenuDefaultSize.x * this.radialMenuScale, y: radialMenuDefaultSize.y * this.radialMenuScale };
+	this.thumbnailWindowSize = { x: thumbnailWindowDefaultSize.x * this.radialMenuScale, y: thumbnailWindowDefaultSize.y * this.radialMenuScale };
+};
+
+/**
+*
+*
 * @method start
 */
 RadialMenu.prototype.start = function() {

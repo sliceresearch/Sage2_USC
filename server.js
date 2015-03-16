@@ -4532,7 +4532,21 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 			{
 				var newRadialMenu = new Radialmenu(uniqueID+"_menu", uniqueID, config.ui);
 				radialMenus[uniqueID+"_menu"] = newRadialMenu;
+					
+				// TouchUI branch ONLY - comment out before pushing to Master!
+				if( sagePointers[uniqueID] ) {
+					var colorHex = sagePointers[uniqueID].color;
+					colorHex = colorHex.replace(/[^0-9A-F]/gi, '');
+					var bigint = parseInt(colorHex, 16);
+					var r = (bigint >> 16) & 255;
+					var g = (bigint >> 8) & 255;
+					var b = bigint & 255;
 
+					//console.log( r + "," + g + "," + b);
+					
+					newRadialMenu.setScale(r);
+				}
+	
 				newRadialMenu.setPosition(newMenuPos);
 
 				// Open a 'media' radial menu
@@ -4543,6 +4557,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				radialMenus[uniqueID+"_menu"].setPosition(newMenuPos);
 
 				radialMenus[uniqueID+"_menu"].visible = true;
+				
 				broadcast('showRadialMenu', radialMenus[uniqueID+"_menu"].getInfo(), 'receivesPointerData');
 			}
 		}
@@ -4593,7 +4608,6 @@ function updateRadialMenu( uniqueID )
 // Standard case: Checks for event down and up events to determine menu ownership of event
 function radialMenuEvent( data )
 {
-	//{ type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }
 	for (var key in radialMenus)
 	{
 		var radialMenu = radialMenus[key];
