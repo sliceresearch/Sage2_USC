@@ -1051,4 +1051,8 @@ function SAGE2_init() {
 	wsio.on('requestDataSharingSession', function(data) {
 		ui.showDataSharingRequestDialog(data);
 	});
+	
+	wsio.on('closeRequestDataSharingDialog', function(data) {
+		ui.hideDataSharingRequestDialog();
+	});
 }

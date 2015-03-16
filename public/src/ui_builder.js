@@ -852,6 +852,15 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingText.textContent = "Data-sharing request from " + data.name + " (" + host + ")";
 		dataSharingRequestDialog.style.display = "block";
 	};
+	
+	/**
+	* Close dialog to accept/reject requests for a new data sharing session from a remote site
+	*
+	* @method hideDataSharingRequestDialog
+	*/
+	this.hideDataSharingRequestDialog = function() {
+		document.getElementById("dataSharingRequestDialog").display = "none";
+	};
 
 	/**
 	* Called when auto-hide kicks, using CSS features

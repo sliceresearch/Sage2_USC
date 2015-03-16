@@ -3619,7 +3619,19 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		var dialogX = pointerX - (config.totalWidth/2 - 13*config.titleBarHeight);
 		var dialogY = pointerY - (2*config.titleBarHeight);
 		if(dialogX >= 0 && dialogX <= 26*config.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.titleBarHeight) {
-			
+			// accept button
+			if(dialogX >= 0.25*config.titleBarHeight && dialogX <= 9.25*config.titleBarHeight && dialogY >= 4.75*config.titleBarHeight && dialogY <= 7.75*config.titleBarHeight) {
+				console.log("Accepting Data-Sharing Request");
+				remoteSharingRequestDialog = false;
+				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+			}
+			// reject button
+			else if(dialogX >= 16.75*config.titleBarHeight && dialogX <= 25.75*config.titleBarHeight && dialogY >= 4.75*config.titleBarHeight && dialogY <= 7.75*config.titleBarHeight) {
+				console.log("Rejecting Data-Sharing Request");
+				remoteSharingRequestDialog = false;
+				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+			}
+			return;
 		}
 	}
 
