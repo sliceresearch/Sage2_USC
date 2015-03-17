@@ -27,7 +27,7 @@
 "use strict";
 
 // node: built-in
-var child_process = require('child_process');       // spawns external processes 
+var child_process = require('child_process');       // spawns external processes
 var fs            = require('fs');                  // filesystem access
 var http          = require('http');                // http server
 var https         = require('https');               // https server
@@ -170,9 +170,9 @@ if (config.register_site) {
 }
 
 var packages = {missing: [], outdated: []};
-child_process.exec("npm outdated --depth 1 --json", {cwd: __dirname}, function (error, stdout, stderr) {
+child_process.exec("npm outdated --depth 0 --json", {cwd: __dirname}, function (error, stdout, stderr) {
 	if(error) return;
-	
+
 	var key;
 	var output = json5.parse(stdout);
 	for(key in output) {
@@ -183,16 +183,16 @@ child_process.exec("npm outdated --depth 1 --json", {cwd: __dirname}, function (
 			packages.outdated.push(key);
 		}
 	}
-	
+
 	if(packages.missing.length > 0 || packages.outdated.length > 0) {
 		console.log("");
-		console.log("PACKAGES NOT UP TO DATE");
+		console.log("WARNING - PACKAGES NOT UP TO DATE");
 		console.log("MISSING:");
 		console.log(packages.missing);
 		console.log("OUTDATED:");
 		console.log(packages.outdated);
 		console.log("");
-		console.log("TO UPDATE, EXECUTE:")
+		console.log("TO UPDATE, EXECUTE:");
 		console.log("  npm run in");
 		console.log("");
 	}

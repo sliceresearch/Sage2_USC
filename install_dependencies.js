@@ -31,23 +31,28 @@ var _NODE_VERSION = parseInt(process.versions.node.split(".")[1], 10);
 
 // Platform detection or force mode
 var platform;
-if (process.argv.indexOf('--win')>0)
-	platform = "win";
-else if (process.argv.indexOf('--mac')>0)
-	platform = "mac";
-else if (process.argv.indexOf('--lnx')>0)
-	platform = "lnx";
-else
-	platform = os.platform() === "win32" ? "win" : os.platform() === "darwin" ? "mac" : "lnx";
-console.log("Detected OS as:", platform);
+var platformFull;
+if      (process.argv.indexOf('--win') > 0) platform = "win";
+else if (process.argv.indexOf('--mac') > 0) platform = "mac";
+else if (process.argv.indexOf('--lnx') > 0) platform = "lnx";
+else platform = os.platform() === "win32" ? "win" : os.platform() === "darwin" ? "mac" : "lnx";
+platformFull = platform === "win" ? "Windows" : platform === "mac" ? "Mac OS X" : "Linux";
+
+// Target detection or force mode
+var target;
+var target_arg = process.argv.indexOf('--target');
+if (target_arg > 0 && process.argv.length > target_arg+1) target = process.argv[target_arg+1];
+else target = process.versions.node;
+
+console.log("Installing for " + platformFull + ", Node v" + target);
 
 var unpacked = [];
-//var modules = path.join("build", "node_modules", platform);
 
-if(!fileExistsSync("node_modules")) fs.mkdirSync("node_modules");
+if(fileExistsSync("node_modules")) rmdirSync("node_modules");
+fs.mkdirSync("node_modules");
 
 
-var suffix = "_"+platform+"_"+process.versions.node+".tar.gz";
+var suffix = "_"+platform+"_"+target+".tar.gz";
 var packages = [
 	"node-demux",
 	"ws"
@@ -89,17 +94,12 @@ function install() {
 
 	// Test if an argument requests production installation (no dev dependencies installed)
 	var installCommand;
-	
-	if (process.argv.indexOf('--prod')>0)
-		installCommand = "npm install --production --skip-installed --loglevel info";
+
+	if (process.argv.indexOf('--prod') > 0)
+		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn --production";
 	else
-		installCommand = "npm install --skip-installed --loglevel info";
-	
-	/*if (process.argv.indexOf('--prod')>0)
-		installCommand = "npm update --loglevel info";
-	else
-		installCommand = "npm update --dev --loglevel info";
-	*/
+		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn";
+
 	// Run the command
 	exec(installCommand, {encoding: "utf8", timeout: 0, maxBuffer: 750*1024 },
 		function(error, stdout, stderr) {
@@ -139,11 +139,11 @@ function unzipModule(keys, idx) {
 		}
 
 		if(platform === "win") {
-			exec("7z x " + mod, {cwd: "node_modules"}, function(error, stdout, stderr) {
-				if(error) throw error;
+			exec("7z x " + mod, {cwd: "node_modules"}, function(error1, stdout1, stderr1) {
+				if(error1) throw error1;
 
-				exec("7z x " + path.basename(mod, ".gz"), {cwd: "node_modules"}, function(error, stdout, stderr) {
-					if(error) throw error;
+				exec("7z x " + path.basename(mod, ".gz"), {cwd: "node_modules"}, function(error2, stdout2, stderr2) {
+					if(error2) throw error2;
 
 					fs.unlinkSync(path.join("node_modules", path.basename(mod, ".gz")));
 					fs.unlinkSync(path.join("node_modules", mod));
