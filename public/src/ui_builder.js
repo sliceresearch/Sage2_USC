@@ -362,6 +362,9 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 13*this.titleBarHeight)).toString() + "px";
 		dataSharingRequestDialog.style.width = (26*this.titleBarHeight).toString() + "px";
 		dataSharingRequestDialog.style.height = (8*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.webkitBoxSizing = "border-box";
+		dataSharingRequestDialog.style.mozBoxSizing = "border-box";
+		dataSharingRequestDialog.style.boxSizing = "border-box";
 		dataSharingRequestDialog.style.backgroundColor =  "#666666";
 		dataSharingRequestDialog.style.border =  "2px solid #000000";
 		dataSharingRequestDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
@@ -380,6 +383,9 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingAccept.style.bottom = (this.titleBarHeight/4).toString() + "px";
 		dataSharingAccept.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingAccept.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingAccept.style.webkitBoxSizing = "border-box";
+		dataSharingAccept.style.mozBoxSizing = "border-box";
+		dataSharingAccept.style.boxSizing = "border-box";
 		dataSharingAccept.style.backgroundColor =  "rgba(55, 153, 130, 1.0)";
 		dataSharingAccept.style.border =  "2px solid #000000";
 		dataSharingAccept.style.textAlign = "center";
@@ -397,6 +403,9 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingReject.style.bottom = (this.titleBarHeight/4).toString() + "px";
 		dataSharingReject.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingReject.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingReject.style.webkitBoxSizing = "border-box";
+		dataSharingReject.style.mozBoxSizing = "border-box";
+		dataSharingReject.style.boxSizing = "border-box";
 		dataSharingReject.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
 		dataSharingReject.style.border =  "2px solid #000000";
 		dataSharingReject.style.textAlign = "center";
@@ -419,6 +428,9 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 13*this.titleBarHeight)).toString() + "px";
 		dataSharingWaitDialog.style.width = (26*this.titleBarHeight).toString() + "px";
 		dataSharingWaitDialog.style.height = (8*this.titleBarHeight).toString() + "px";
+		dataSharingWaitDialog.style.webkitBoxSizing = "border-box";
+		dataSharingWaitDialog.style.mozBoxSizing = "border-box";
+		dataSharingWaitDialog.style.boxSizing = "border-box";
 		dataSharingWaitDialog.style.backgroundColor =  "#666666";
 		dataSharingWaitDialog.style.border =  "2px solid #000000";
 		dataSharingWaitDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
@@ -437,6 +449,9 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingCancel.style.bottom = (this.titleBarHeight/4).toString() + "px";
 		dataSharingCancel.style.width = (9*this.titleBarHeight).toString() + "px";
 		dataSharingCancel.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingCancel.style.webkitBoxSizing = "border-box";
+		dataSharingCancel.style.mozBoxSizing = "border-box";
+		dataSharingCancel.style.boxSizing = "border-box";
 		dataSharingCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
 		dataSharingCancel.style.border =  "2px solid #000000";
 		dataSharingCancel.style.textAlign = "center";

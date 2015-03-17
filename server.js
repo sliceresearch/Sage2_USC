@@ -3615,10 +3615,12 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 		addEventToUserLog(uniqueID, {type: "radialMenu", data: {action: "open"}, time: Date.now()});
 	}
 	
+	var dialogX;
+	var dialogY;
 	// Remote Sharing Request Dialog
 	if(remoteSharingRequestDialog === true) {
-		var dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
-		var dialogY = pointerY - (2*config.ui.titleBarHeight);
+		dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
+		dialogY = pointerY - (2*config.ui.titleBarHeight);
 		if(dialogX >= 0 && dialogX <= 26*config.ui.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.ui.titleBarHeight) {
 			// accept button
 			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
@@ -3640,8 +3642,8 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	
 	// Remote Sharing Wait Dialog
 	if(remoteSharingWaitDialog === true) {
-		var dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
-		var dialogY = pointerY - (2*config.ui.titleBarHeight);
+		dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
+		dialogY = pointerY - (2*config.ui.titleBarHeight);
 		if(dialogX >= 0 && dialogX <= 26*config.ui.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.ui.titleBarHeight) {
 			// cancel button
 			if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
@@ -3670,7 +3672,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
 				
 				remoteSharingWaitDialog = true;
-				broadcast('dataSharingConnectionWait', {name: remoteSites[remoteIdx].name, host: remoteSites[remoteIdx].host, port: remoteSites[remoteIdx].port}, 'requiresFullApps');
+				broadcast('dataSharingConnectionWait', {name: remoteSites[remoteIdx].name, host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port}, 'requiresFullApps');
 				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {config: config, secure: false});
 			}
 			else {
