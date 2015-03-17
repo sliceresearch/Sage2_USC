@@ -27,39 +27,40 @@
 "use strict";
 
 // node: built-in
-var fs          = require('fs');                  // filesystem access
-var http        = require('http');                // http server
-var https       = require('https');               // https server
-var os          = require('os');                  // operating system access
-var path        = require('path');                // file path extraction and creation
-var readline    = require('readline');            // to build an evaluation loop
-var url         = require('url');                 // parses urls
-var util        = require('util');                // node util
+var child_process = require('child_process');       // spawns external processes 
+var fs            = require('fs');                  // filesystem access
+var http          = require('http');                // http server
+var https         = require('https');               // https server
+var os            = require('os');                  // operating system access
+var path          = require('path');                // file path extraction and creation
+var readline      = require('readline');            // to build an evaluation loop
+var url           = require('url');                 // parses urls
+var util          = require('util');                // node util
 
 // npm registry: defined in package.json
-var formidable  = require('formidable');       // upload processor
-var gm          = require('gm');               // graphicsmagick
-var json5       = require('json5');            // JSON format that allows comments
-var program     = require('commander');        // parsing command-line arguments
-var qrimage     = require('qr-image');         // qr-code generation
-var request     = require('request');          // external http requests
-var sprint      = require('sprint');           // pretty formating (sprintf)
-var Twit        = require('twit');             // twitter api
+var formidable    = require('formidable');       // upload processor
+var gm            = require('gm');               // graphicsmagick
+var json5         = require('json5');            // JSON format that allows comments
+var program       = require('commander');        // parsing command-line arguments
+var qrimage       = require('qr-image');         // qr-code generation
+var request       = require('request');          // external http requests
+var sprint        = require('sprint');           // pretty formating (sprintf)
+var Twit          = require('twit');             // twitter api
 
 // custom node modules
-var assets      = require('./src/node-assets');         // manages the list of files
-var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
-var pixelblock  = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
-var sageutils   = require('./src/node-utils');          // provides the current version number
+var assets        = require('./src/node-assets');         // manages the list of files
+var exiftool      = require('./src/node-exiftool');       // gets exif tags for images
+var pixelblock    = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
+var sageutils     = require('./src/node-utils');          // provides the current version number
 
-var Interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
-var Omicron     = require('./src/node-omicron');        // handles Omicron input events
-var Radialmenu  = require('./src/node-radialmenu');     // radial menu
-var Sagepointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var WebsocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
-var Loader      = require('./src/node-itemloader');     // handles sage item creation
-var HttpServer  = require('./src/node-httpserver');     // creates web server
-var StickyItems = require('./src/node-stickyitems');
+var Interaction   = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var Omicron       = require('./src/node-omicron');        // handles Omicron input events
+var Radialmenu    = require('./src/node-radialmenu');     // radial menu
+var Sagepointer   = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var WebsocketIO   = require('./src/node-websocket.io');   // creates WebSocket server and clients
+var Loader        = require('./src/node-itemloader');     // handles sage item creation
+var HttpServer    = require('./src/node-httpserver');     // creates web server
+var StickyItems   = require('./src/node-stickyitems');
 
 
 // GLOBALS
@@ -167,6 +168,40 @@ if (config.register_site) {
 		}
 	);
 }
+
+var packages = {missing: [], outdated: []};
+child_process.exec("npm outdated --depth 1 --json", {cwd: __dirname}, function (error, stdout, stderr) {
+	if(error) return;
+	
+	var key;
+	var output = json5.parse(stdout);
+	for(key in output) {
+		if(output[key].current === undefined) {
+			packages.missing.push(key);
+		}
+		else if(output[key].current !== output[key].wanted) {
+			packages.outdated.push(key);
+		}
+	}
+	
+	if(packages.missing.length > 0 || packages.outdated.length > 0) {
+		console.log("");
+		console.log("PACKAGES NOT UP TO DATE");
+		console.log("MISSING:");
+		console.log(packages.missing);
+		console.log("OUTDATED:");
+		console.log(packages.outdated);
+		console.log("");
+		console.log("TO UPDATE, EXECUTE:")
+		console.log("  npm run in");
+		console.log("");
+	}
+	else {
+		console.log("");
+		console.log("ALL PACKAGES UP TO DATE!");
+		console.log("");
+	}
+});
 
 
 // Setup up ImageMagick (load path from configuration file)

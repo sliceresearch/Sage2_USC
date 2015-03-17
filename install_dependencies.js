@@ -89,11 +89,17 @@ function install() {
 
 	// Test if an argument requests production installation (no dev dependencies installed)
 	var installCommand;
+	
 	if (process.argv.indexOf('--prod')>0)
 		installCommand = "npm install --production --skip-installed --loglevel info";
 	else
 		installCommand = "npm install --skip-installed --loglevel info";
-
+	
+	/*if (process.argv.indexOf('--prod')>0)
+		installCommand = "npm update --loglevel info";
+	else
+		installCommand = "npm update --dev --loglevel info";
+	*/
 	// Run the command
 	exec(installCommand, {encoding: "utf8", timeout: 0, maxBuffer: 750*1024 },
 		function(error, stdout, stderr) {
@@ -104,7 +110,8 @@ function install() {
 			process.stdout.write("\n");
 			console.log(stdout);
 			console.log("INSTALL FINISHED!");
-		});
+		}
+	);
 }
 
 function unzipModules() {
