@@ -412,6 +412,45 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingRequestDialog.appendChild(dataSharingReject);
 		this.main.appendChild(dataSharingRequestDialog);
 		
+		var dataSharingWaitDialog = document.createElement("div");
+		dataSharingWaitDialog.id = "dataSharingWaitDialog";
+		dataSharingWaitDialog.style.position = "absolute";
+		dataSharingWaitDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
+		dataSharingWaitDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 13*this.titleBarHeight)).toString() + "px";
+		dataSharingWaitDialog.style.width = (26*this.titleBarHeight).toString() + "px";
+		dataSharingWaitDialog.style.height = (8*this.titleBarHeight).toString() + "px";
+		dataSharingWaitDialog.style.backgroundColor =  "#666666";
+		dataSharingWaitDialog.style.border =  "2px solid #000000";
+		dataSharingWaitDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
+		dataSharingWaitDialog.style.zIndex = 8999;
+		dataSharingWaitDialog.style.display = "none";
+		var dataSharingWaitText = document.createElement("p");
+		dataSharingWaitText.id = "dataSharingWaitDialog_text";
+		dataSharingWaitText.textContent = "";
+		dataSharingWaitText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingWaitText.style.color = "#FFFFFF";
+		dataSharingWaitText.style.marginBottom = (this.titleBarHeight/4).toString() + "px";
+		var dataSharingCancel = document.createElement("div");
+		dataSharingCancel.id = "dataSharingWaitDialog_cancel";
+		dataSharingCancel.style.position = "absolute";
+		dataSharingCancel.style.right = (this.titleBarHeight/4).toString() + "px";
+		dataSharingCancel.style.bottom = (this.titleBarHeight/4).toString() + "px";
+		dataSharingCancel.style.width = (9*this.titleBarHeight).toString() + "px";
+		dataSharingCancel.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		dataSharingCancel.style.border =  "2px solid #000000";
+		dataSharingCancel.style.textAlign = "center";
+		dataSharingCancel.style.lineHeight = (3*this.titleBarHeight).toString() + "px";
+		var dataSharingCancelText = document.createElement("p");
+		dataSharingCancelText.id = "dataSharingWaitDialog_cancelText";
+		dataSharingCancelText.textContent = "Cancel";
+		dataSharingCancelText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingCancelText.style.color = "#FFFFFF";
+		dataSharingCancel.appendChild(dataSharingCancelText);
+		dataSharingWaitDialog.appendChild(dataSharingWaitText);
+		dataSharingWaitDialog.appendChild(dataSharingCancel);
+		this.main.appendChild(dataSharingWaitDialog);
+		
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
 			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
@@ -860,6 +899,30 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.hideDataSharingRequestDialog = function() {
 		document.getElementById("dataSharingRequestDialog").style.display = "none";
+	};
+	
+	/**
+	* Dialog that displays wait message for data sharing session from a remote site
+	*
+	* @method showDataSharingWaitingDialog
+	* @param data {Object} remote site information
+	*/
+	this.showDataSharingWaitingDialog = function(data) {
+		var port = (data.port === 80 || data.port === 443) ? "" : ":" + data.port;
+		var host = data.host + port;
+		var dataSharingWaitDialog = document.getElementById("dataSharingWaitDialog");
+		var dataSharingText = document.getElementById("dataSharingWaitDialog_text");
+		dataSharingText.textContent = "Requested data-sharing session with " + data.name + " (" + host + ")";
+		dataSharingWaitDialog.style.display = "block";
+	};
+	
+	/**
+	* Close dialog that displays wait message for data sharing session from a remote site
+	*
+	* @method hideDataSharingWaitingDialog
+	*/
+	this.hideDataSharingWaitingDialog = function() {
+		document.getElementById("dataSharingWaitDialog").style.display = "none";
 	};
 
 	/**
