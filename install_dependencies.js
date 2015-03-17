@@ -9,10 +9,11 @@
 // Copyright (c) 2015
 
 // Options:
-// --win  : force Windows installation
-// --mac  : force Mac installation
-// --lnx  : force Linux installation
-// --prod : production mode, no devel packages
+// --win              : force Windows installation
+// --mac              : force Mac OS X installation
+// --lnx              : force Linux installation
+// --target <version> : force installation for specified version of Node.js
+// --prod             : production mode, no devel packages
 
 "use strict";
 
