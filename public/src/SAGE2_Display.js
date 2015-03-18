@@ -385,6 +385,7 @@ function SAGE2_init() {
 
 		// convert url if hostname is alias for current origin
 		var url = cleanURL(data.url);
+		console.log("App URL: " + url);
 
 		function loadApplication() {
 			var init = {
