@@ -217,7 +217,10 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 // global variables for various paths
 var public_dir = "public"; // directory where HTTPS content is stored
-var hostOrigin = (typeof config.rproxy_port !== "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
+var hostOrigin = ""; // base URL for this server
+if (config.rproxy_port === undefined) {
+	hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
+}
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
