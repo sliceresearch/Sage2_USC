@@ -102,7 +102,7 @@ function install() {
 		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn";
 
 	// Run the command
-	exec(installCommand, {encoding: "utf8", timeout: 0, maxBuffer: 750*1024 },
+	exec(installCommand, {encoding: "utf8", timeout: 0, maxBuffer: 1024*1024},
 		function(error, stdout, stderr) {
 			// fail or not
 			if (error) throw error;
