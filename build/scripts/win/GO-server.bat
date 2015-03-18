@@ -1,2 +1,2 @@
 cd c:\SAGE2
-sage2.exe
+node server.js -l
