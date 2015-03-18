@@ -19,14 +19,14 @@ install:
 	cd SAGE2/sage2 && node_modules/.bin/kthxbai
 
 binary:
-	cp scripts/win/GO* .bat SAGE2/sage2/
+	cp scripts/win/GO*.bat SAGE2/sage2/
 	cp scripts/win/INSTALL.bat SAGE2/
 	unzip -q -u -d SAGE2 win-bin.zip 
 	cd SAGE2/sage2 && rm -fr Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
 	mv SAGE2 SAGE2-win
 
 clean:
-	/bin/rm -fr SAGE2 sage2.zip
+	/bin/rm -fr SAGE2-win sage2.zip
 
 #
 # files to keep in SAGE2:
