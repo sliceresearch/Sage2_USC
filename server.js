@@ -27,7 +27,6 @@
 "use strict";
 
 // node: built-in
-var child_process = require('child_process');       // spawns external processes
 var fs            = require('fs');                  // filesystem access
 var http          = require('http');                // http server
 var https         = require('https');               // https server
@@ -164,45 +163,13 @@ if (config.register_site) {
 		"form": config,
 		"method": "POST"},
 		function(err, response, body) {
-			console.log('Registration with EVL site:', (err === null) ? "success" : err.code);
+			console.log('SAGE2> Registration with EVL site:', (err === null) ? "success" : err.code);
 		}
 	);
 }
 
-var packages = {missing: [], outdated: []};
-child_process.exec("npm outdated --depth 0 --json", {cwd: __dirname}, function (error, stdout, stderr) {
-	if(error) return;
-
-	var key;
-	var output = json5.parse(stdout);
-	for(key in output) {
-		if(output[key].current === undefined) {
-			packages.missing.push(key);
-		}
-		else if(output[key].current !== output[key].wanted) {
-			packages.outdated.push(key);
-		}
-	}
-
-	if(packages.missing.length > 0 || packages.outdated.length > 0) {
-		console.log("");
-		console.log("WARNING - PACKAGES NOT UP TO DATE");
-		console.log("MISSING:");
-		console.log(packages.missing);
-		console.log("OUTDATED:");
-		console.log(packages.outdated);
-		console.log("");
-		console.log("TO UPDATE, EXECUTE:");
-		console.log("  npm run in");
-		console.log("");
-	}
-	else {
-		console.log("");
-		console.log("ALL PACKAGES UP TO DATE!");
-		console.log("");
-	}
-});
-
+// Check for missing packages (pass parameter true for devel packages also)
+sageutils.checkPackages();
 
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
@@ -250,7 +217,7 @@ if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
 	// fields: base commit branch date
-	console.log("SAGE2 Full Version:", version);
+	console.log("SAGE2> Full Version:", json5.stringify(version));
 	SAGE2_version = version;
 	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 
@@ -266,14 +233,13 @@ var seedWindowPosition = null;
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-// qr_png.on('readable', function() { process.stdout.write('.'); });
-qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
+qr_png.on('end', function() { console.log('QR> image generated', qr_out); });
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
-console.log("Temp folder: ", process.env.TMPDIR);
+console.log("SAGE2> Temp folder: ", process.env.TMPDIR);
 if(!sageutils.fileExists(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
@@ -1420,10 +1386,10 @@ function deleteSession (filename) {
 		}
 		fs.unlink(fullpath, function (err) {
 			if (err) {
-				console.log("Sessions> coudlnt delete session ", filename, err);
+				console.log("Sessions> Could not delete session ", filename, err);
 				return;
 			}
-			console.log("Sessions> successfully deleted session", filename);
+			console.log("Sessions> Successfully deleted session", filename);
 		});
 	}
 }
@@ -2750,8 +2716,6 @@ function setupHttpsOptions() {
 		}
 	}
 
-	console.log(certs);
-
 	var httpsOptions;
 
 	if (sageutils.nodeVersion === 10) {
@@ -2987,7 +2951,7 @@ setTimeout(function() {
 
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
+	console.log('SAGE2> Now serving clients at https://' + config.host + ':' + config.port + '/sageUI.html');
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -3014,7 +2978,7 @@ sage2Index.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Index.on('listening', function (e) {
 	// Success
-	console.log('Now serving SAGE2 index at http://' + config.host + ':' + config.index_port);
+	console.log('SAGE2> Now serving clients at http://' + config.host + ':' + config.index_port);
 });
 
 
@@ -3229,7 +3193,7 @@ function quitSAGE2() {
 		users.session.end = Date.now();
 		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
 		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
-		console.log("Log> saved to " + userLogName);
+		console.log("LOG> saved to " + userLogName);
 	}
 
 	if (config.register_site) {
@@ -3240,7 +3204,7 @@ function quitSAGE2() {
 			"form": config,
 			"method": "POST"},
 			function (err, response, body) {
-				console.log('Deregistration with EVL site:', (err === null) ? "success" : err.code);
+				console.log('SAGE2> Deregistration with EVL site:', (err === null) ? "success" : err.code);
 				saveSession();
 				assets.saveAssets();
 				if( omicronRunning )
