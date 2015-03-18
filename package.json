@@ -57,10 +57,10 @@
 		"twit": "latest",
 		"ws": "latest",
 		"semver": "latest",
-		"nodemon": "latest",
 		"ytdl-core": "latest"
 	},
 	"devDependencies": {
+		"nodemon": "latest",
 		"jshint": "latest",
 		"yuidocjs": "latest",
 		"eslint": "latest",
@@ -75,7 +75,8 @@
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start": "./node_modules/.bin/nodemon server.js -l",
+		"start": "node server.js -l",
+		"monitor": "./node_modules/.bin/nodemon server.js -l",
 		"hint": "./node_modules/.bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/.bin/jshint --verbose public/src/*.js",
 		"eslint": "./node_modules/.bin/eslint -f compact server.js src/*.js",
