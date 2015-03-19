@@ -383,7 +383,6 @@ setConnectorColor = function (instanceID, color){
 			filter:shadow
 		});
 	}
-	
 };
 
 setAllConnectorColor = function(position_data){
@@ -402,7 +401,6 @@ setAllConnectorColor = function(position_data){
 
 moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
 	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
-	
 	if (!color)
 		color = '#666666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
@@ -416,7 +414,6 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 		});
 	}
 
-	
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (!connectorDiv) return;
 	var a = Math.abs(x1-x2);
@@ -460,6 +457,5 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 	connectorDiv.style.transform       = transform;
     connectorDiv.style.boxShadow = '0px 0px 15px 5px ' + color;
     connectorDiv.style.display = "inline";
-    
 };
 
