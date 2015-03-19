@@ -1,0 +1,29 @@
+.PHONY: package
+
+default: all
+
+all: download stage install binary package
+
+package:
+	zip -r -9 SAGE2-win.zip SAGE2-win
+
+download:
+	git archive --format=zip --remote=ssh://git@bitbucket.org/sage2/sage2.git --prefix=sage2/ --output="sage2.zip" master
+
+stage:
+	unzip -q -u -d SAGE2 sage2.zip
+
+install:
+	cd SAGE2/sage2 && node install_dependencies.js --prod --win --target=0.12.0
+	cd SAGE2/sage2 && npm install kthxbai
+	cd SAGE2/sage2 && node_modules/.bin/kthxbai
+
+binary:
+	cp scripts/win/GO*.bat SAGE2/sage2/
+	cp scripts/win/INSTALL.bat SAGE2/
+	unzip -q -u -d SAGE2 win-bin.zip 
+	cd SAGE2/sage2 && rm -fr Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
+	mv SAGE2 SAGE2-win
+
+clean:
+	/bin/rm -fr SAGE2-win sage2.zip

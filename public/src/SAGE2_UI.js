@@ -281,11 +281,12 @@ function SAGE2_init() {
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
 
-	document.addEventListener('mousemove',  mouseCheck,      false);
-	document.addEventListener('touchstart', touchStart,      false);
-	document.addEventListener('touchend',   touchEnd,        false);
-	document.addEventListener('touchmove',  touchMove,       false);
-	document.addEventListener('keyup',      escapeDialog,    false);
+	document.addEventListener('mousemove',  mouseCheck,   false);
+	document.addEventListener('touchstart', touchStart,   false);
+	document.addEventListener('touchend',   touchEnd,     false);
+	document.addEventListener('touchmove',  touchMove,    false);
+	document.addEventListener('keyup',      escapeDialog, false);
+	document.addEventListener('keydown',    noBackspace,  false);
 
 	keyEvents = false;
 	openDialog = null;
@@ -1214,6 +1215,21 @@ function escapeDialog(event) {
 	if (parseInt(event.keyCode, 10) === 27 && openDialog !== null) {
 		hideDialog(openDialog);
 		event.preventDefault();
+	}
+}
+
+/**
+ * Handler for detecting backspace outside the drawing area
+ *
+ * @method noBackspace
+ * @param event {Event} event data
+ */
+function noBackspace(event) {
+	// backspace keyCode is 8
+	if (parseInt(event.keyCode, 10) === 8) {
+		event.preventDefault();
+	} else {
+		return true;
 	}
 }
 
