@@ -675,7 +675,7 @@ var initialize = function (root, relativePath) {
 			}
 		}
 
-		if (thelist.lenght > 0) console.log("EXIF> Starting processing:", thelist);
+		if (thelist.length > 0) console.log("EXIF> Starting processing:", thelist);
 		exifAsync(thelist, function(err) {
 			if (err) {
 				console.log("EXIF> Error:", err);
