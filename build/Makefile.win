@@ -27,8 +27,3 @@ binary:
 
 clean:
 	/bin/rm -fr SAGE2-win sage2.zip
-
-#
-# files to keep in SAGE2:
-# config local  public_HTTPS tmp keys  public_HTTP sessions server.js
-
