@@ -618,7 +618,7 @@ function SAGE2_init() {
 		if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
-				if (item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
+				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
 					var control = controlItems[item].divHandle;
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
@@ -729,7 +729,7 @@ function SAGE2_init() {
 		if (position_data.elemId in controlObjects && position_data.user_color){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
-				if (item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
+				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
 					var control = controlItems[item].divHandle;
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
