@@ -6,8 +6,8 @@
 	background: {
 		color: "#AA3311",
 		image: {
-			url: "images/background/minneapolis_skyline_tm.jpg",
-			style: "stretch"
+			url: "images/background/marble_tiles.jpg",
+			style: "tile"
 		},
 		watermark: {
 			svg: "images/EVL-logo.svg",
@@ -27,17 +27,21 @@
 		}
 	},
 	resolution: {
-		width: 1440,
-		height: 720
+		width: 840,
+		height: 840
 	},
 	layout: {
 		rows: 1,
-		columns: 1
+		columns: 2
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
+		},
+		{
+			row: 0,
+			column: 1
 		}
 	],
 	alternate_hosts: [
