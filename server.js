@@ -206,6 +206,7 @@ var radialMenus = {};
 var shell = null;
 var remoteSharingRequestDialog = null;
 var remoteSharingWaitDialog = null;
+var remoteSharingSessions = [];
 
 var users = null;
 if(program.trackUsers) {
@@ -2311,9 +2312,21 @@ function wsCancelDataSharingSession(wsio, data) {
 }
 
 function wsAcceptDataSharingSession(wsio, data) {
-	console.log("Data-sharing request accepted: " + data.width + " " + data.height);
+	var myMin = Math.min(config.totalWidth, config.totalHeight-config.ui.titleBarHeight);
+	var sharingScale = (0.9*myMin) / Math.min(data.width, data.height);
+	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
-	remoteSharingRequestDialog = null;
+	var dataSession = {
+		session: remoteSharingWaitDialog,
+		left: config.ui.titleBarHeight,
+		top: 1.5*config.ui.titleBarHeight,
+		width: data.width,
+		height: data.height,
+		scale: sharingScale
+	};
+	broadcast('initializeDataSharingSession', {name: dataSession.session.config.name, host: dataSession.session.config.host, port: dataSession.session.config.port, left: config.ui.titleBarHeight, top: 1.5*config.ui.titleBarHeight, width: sharingSize, height: sharingSize, scale: sharingScale}, 'requiresFullApps');
+	remoteSharingSessions.push(dataSession);
+	remoteSharingWaitDialog = null;
 }
 
 function wsRejectDataSharingSession(wsio, data) {
@@ -3652,12 +3665,23 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Accepting Data-Sharing Request");
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight);
-				var myMin = Math.min(config.totalWidth, config.totalHeight);
-				var sharingSize = parseInt(0.45 * (sharingMin + myMin - Math.max(config.ui.titleBarHeight, remoteSharingRequestDialog.config.ui.titleBarHeight)), 10);
-				//TODO: create data-sharing session window on local display
+				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight-emoteSharingRequestDialog.config.ui.titleBarHeight);
+				var myMin = Math.min(config.totalWidth, config.totalHeight-config.ui.titleBarHeight);
+				var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
+				var sharingScale = (0.9*myMin) / sharingSize;
 				remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
+				var dataSession = {
+					session: remoteSharingRequestDialog,
+					left: config.ui.titleBarHeight,
+					top: 1.5*config.ui.titleBarHeight,
+					width: sharingSize,
+					height: sharingSize,
+					scale: sharingScale
+				};
+				broadcast('initializeDataSharingSession', {name: dataSession.session.config.name, host: dataSession.session.config.host, port: dataSession.session.config.port, left: config.ui.titleBarHeight, top: 1.5*config.ui.titleBarHeight, width: sharingSize, height: sharingSize, scale: sharingScale}, 'requiresFullApps');
+				remoteSharingSessions.push(dataSession);
 				remoteSharingRequestDialog = null;
+				console.log("Session", dataSession.session);
 			}
 			// reject button
 			else if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {

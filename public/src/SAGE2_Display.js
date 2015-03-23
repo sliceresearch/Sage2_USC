@@ -1063,4 +1063,8 @@ function SAGE2_init() {
 	wsio.on('closeDataSharingWaitDialog', function(data) {
 		ui.hideDataSharingWaitingDialog();
 	});
+
+	wsio.on('initializeDataSharingSession', function(data) {
+		console.log(data);
+	});
 }
