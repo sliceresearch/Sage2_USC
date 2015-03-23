@@ -1066,5 +1066,6 @@ function SAGE2_init() {
 
 	wsio.on('initializeDataSharingSession', function(data) {
 		console.log(data);
+		var dataSharingWindow = new DataSharing(data);
 	});
 }
