@@ -204,8 +204,8 @@ var mediaStreams = {};
 var mediaBlockStreams = {};
 var radialMenus = {};
 var shell = null;
-var remoteSharingRequestDialog = false;
-var remoteSharingWaitDialog = false;
+var remoteSharingRequestDialog = null;
+var remoteSharingWaitDialog = null;
 
 var users = null;
 if(program.trackUsers) {
@@ -518,6 +518,7 @@ function initializeWSClient(wsio) {
         wsio.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 		wsio.on('stopMediaBlockStream', wsStopMediaBlockStream);
 		wsio.on('requestDataSharingSession', wsRequestDataSharingSession);
+		wsio.on('cancelDataSharingSession', wsCancelDataSharingSession);
 	}
 	if(wsio.messages.requestsWidgetControl){
 		wsio.on('addNewControl', wsAddNewControl);
@@ -2298,7 +2299,12 @@ function wsRequestDataSharingSession(wsio, data) {
 	
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
 	broadcast('requestDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port}, 'requiresFullApps');
-	remoteSharingRequestDialog = true;
+	remoteSharingRequestDialog = wsio;
+}
+
+function wsCancelDataSharingSession(wsio, data) {
+	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+	remoteSharingRequestDialog = null;
 }
 
 // **************  Widget Control Messages *****************
@@ -2947,6 +2953,7 @@ function createRemoteConnection(wsURL, element, index) {
     remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 	remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
 	remote.on('requestDataSharingSession', wsRequestDataSharingSession);
+	remote.on('cancelDataSharingSession', wsCancelDataSharingSession);
 
 	return remote;
 }
@@ -3620,21 +3627,21 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	var dialogX;
 	var dialogY;
 	// Remote Sharing Request Dialog
-	if(remoteSharingRequestDialog === true) {
+	if(remoteSharingRequestDialog !== null) {
 		dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
 		dialogY = pointerY - (2*config.ui.titleBarHeight);
 		if(dialogX >= 0 && dialogX <= 26*config.ui.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.ui.titleBarHeight) {
 			// accept button
 			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Accepting Data-Sharing Request");
-				remoteSharingRequestDialog = false;
+				remoteSharingRequestDialog = null;
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
 				// TODO: send message back to remote server - Accept
 			}
 			// reject button
 			else if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Rejecting Data-Sharing Request");
-				remoteSharingRequestDialog = false;
+				remoteSharingRequestDialog = null;
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
 				// TODO: send message back to remote server - Reject
 			}
@@ -3643,16 +3650,16 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 	
 	// Remote Sharing Wait Dialog
-	if(remoteSharingWaitDialog === true) {
+	if(remoteSharingWaitDialog !== null) {
 		dialogX = pointerX - (config.totalWidth/2 - 13*config.ui.titleBarHeight);
 		dialogY = pointerY - (2*config.ui.titleBarHeight);
 		if(dialogX >= 0 && dialogX <= 26*config.ui.titleBarHeight && dialogY >= 0 && dialogY <= 8*config.ui.titleBarHeight) {
 			// cancel button
 			if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Canceling Data-Sharing Request");
-				remoteSharingWaitDialog = false;
 				broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
-				// TODO: send message to remote server - Canceled Request
+				remoteSharingWaitDialog.emit('cancelDataSharingSession', null);
+				remoteSharingWaitDialog = null;
 			}
 			return;
 		}
@@ -3673,7 +3680,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(remoteSites[remoteIdx].connected) {
 				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
 				
-				remoteSharingWaitDialog = true;
+				remoteSharingWaitDialog = remoteSites[remoteIdx].wsio;
 				broadcast('dataSharingConnectionWait', {name: remoteSites[remoteIdx].name, host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port}, 'requiresFullApps');
 				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {config: config, secure: false});
 			}
