@@ -45,6 +45,7 @@
 		var information = document.getElementById('information');
 		var experiments = document.getElementById('experiments');
 		var remotesites = document.getElementById('remotesites');
+		var help        = document.getElementById('help');
 
 		var https_port;
 		if (typeof json_cfg.rproxy_port != "undefined")
@@ -149,6 +150,13 @@
 		consoleClient.appendChild(consoleClient_link);
 		experiments.appendChild(consoleClient);
 
+		var apiHelp = document.createElement('p');
+		var apiHelp_link = document.createElement('a');
+		apiHelp_link.textContent = "API for programmers";
+		apiHelp_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "api/index.html";
+		apiHelp_link.target = "_blank";
+		apiHelp.appendChild(apiHelp_link);
+		help.appendChild(apiHelp);
 	}
 </script>
 

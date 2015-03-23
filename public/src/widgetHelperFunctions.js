@@ -252,8 +252,12 @@ polarToCartesian = function (radius, theta, center) {
 createWidgetToAppConnector = function (instanceID) {
 	var connectorDiv = document.createElement("div");
 	connectorDiv.id = instanceID + "connector";
-	connectorDiv.style.display = "none";
 	connectorDiv.style.zIndex = 0;
+	connectorDiv.style.border = "none";
+	connectorDiv.style.background = "white";
+	connectorDiv.style.position = "absolute";
+	connectorDiv.style.display = "none";
+	connectorDiv.style.height = (ui.widgetControlSize* 0.01) + "em";
 	ui.main.appendChild(connectorDiv);
 };
 
@@ -283,7 +287,7 @@ hideAllWidgetToAppConnector = function (appId){
 		selectedAppTitle.className = "windowTitle";
 		for (var item in controlItems){
 			if (item.indexOf(appId) > -1){
-				hideWidgetToAppConnector(item);
+				hideWidgetToAppConnector(item, appId);
 			}
 		}
 	}
@@ -366,6 +370,7 @@ removeWidgetToAppConnector = function (instanceID){
 setConnectorColor = function (instanceID, color){
 	var connectorDiv = document.getElementById(instanceID + "connector");
 	if (!connectorDiv) return;
+	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color;
 	if (!color){
 		color = '#666666';
 	}
@@ -378,7 +383,6 @@ setConnectorColor = function (instanceID, color){
 			filter:shadow
 		});
 	}
-	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color;
 };
 
 setAllConnectorColor = function(position_data){
@@ -397,8 +401,6 @@ setAllConnectorColor = function(position_data){
 
 moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
 	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
-	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (!connectorDiv) return;
 	if (!color)
 		color = '#666666';
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
@@ -412,6 +414,8 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 		});
 	}
 
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (!connectorDiv) return;
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b );
@@ -446,9 +450,12 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
     var cosb = (b*b - a*a - c*c) / (2*a*c);
     var rad = Math.acos(cosb);
     var deg = (rad*180)/Math.PI;
-    var thickness = (ui.widgetControlSize* 0.01) + "em";
-    connectorDiv.setAttribute('style', 'border:none;width:'+width+'px;height:'+thickness+';background:white;-moz-transform:rotate('+deg+'deg);-webkit-transform:rotate('+deg+'deg);-transform:rotate('+deg+'deg);position:absolute;top:'+y+'px;left:'+x+'px;');
+    var transform = 'translate('+x+'px,'+y+'px) rotate('+deg+'deg)';
+    connectorDiv.style.width = width + "px";
+    connectorDiv.style.webkitTransform = transform;
+	connectorDiv.style.mozTransform    = transform;
+	connectorDiv.style.transform       = transform;
     connectorDiv.style.boxShadow = '0px 0px 15px 5px ' + color;
-    //connectorDiv.style.display = "inline";
+    connectorDiv.style.display = "inline";
 };
 
