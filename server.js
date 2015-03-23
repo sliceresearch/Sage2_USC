@@ -3685,7 +3685,6 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
 				remoteSharingSessions.push(dataSession);
 				remoteSharingRequestDialog = null;
-				console.log("Session", dataSession.session);
 			}
 			// reject button
 			else if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
