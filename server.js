@@ -3665,7 +3665,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Accepting Data-Sharing Request");
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight-emoteSharingRequestDialog.config.ui.titleBarHeight);
+				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight-remoteSharingRequestDialog.config.ui.titleBarHeight);
 				var myMin = Math.min(config.totalWidth, config.totalHeight-config.ui.titleBarHeight);
 				var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
 				var sharingScale = (0.9*myMin) / sharingSize;
