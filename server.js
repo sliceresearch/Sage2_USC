@@ -2318,8 +2318,8 @@ function wsAcceptDataSharingSession(wsio, data) {
 	broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
 	var dataSession = {
 		name: remoteSharingWaitDialog.name,
-		host: dataSession.session.wsio.remoteAddress.address,
-		port: dataSession.session.wsio.remoteAddress.port,
+		host: remoteSharingWaitDialog.wsio.remoteAddress.address,
+		port: remoteSharingWaitDialog.wsio.remoteAddress.port,
 		left: config.ui.titleBarHeight,
 		top: 1.5*config.ui.titleBarHeight,
 		width: data.width,
