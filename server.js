@@ -2317,14 +2317,16 @@ function wsAcceptDataSharingSession(wsio, data) {
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
 	var dataSession = {
-		session: remoteSharingWaitDialog,
+		name: remoteSharingWaitDialog.name,
+		host: dataSession.session.wsio.remoteAddress.address,
+		port, dataSession.session.wsio.remoteAddress.port,
 		left: config.ui.titleBarHeight,
 		top: 1.5*config.ui.titleBarHeight,
 		width: data.width,
 		height: data.height,
 		scale: sharingScale
 	};
-	broadcast('initializeDataSharingSession', {name: dataSession.session.config.name, host: dataSession.session.config.host, port: dataSession.session.config.port, left: config.ui.titleBarHeight, top: 1.5*config.ui.titleBarHeight, width: sharingSize, height: sharingSize, scale: sharingScale}, 'requiresFullApps');
+	broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
 	remoteSharingSessions.push(dataSession);
 	remoteSharingWaitDialog = null;
 }
@@ -3671,14 +3673,16 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				var sharingScale = (0.9*myMin) / sharingSize;
 				remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
 				var dataSession = {
-					session: remoteSharingRequestDialog,
+					name: remoteSharingRequestDialog.config.name,
+					host: remoteSharingRequestDialog.config.host,
+					port: remoteSharingRequestDialog.config.port,
 					left: config.ui.titleBarHeight,
 					top: 1.5*config.ui.titleBarHeight,
 					width: sharingSize,
 					height: sharingSize,
 					scale: sharingScale
 				};
-				broadcast('initializeDataSharingSession', {name: dataSession.session.config.name, host: dataSession.session.config.host, port: dataSession.session.config.port, left: config.ui.titleBarHeight, top: 1.5*config.ui.titleBarHeight, width: sharingSize, height: sharingSize, scale: sharingScale}, 'requiresFullApps');
+				broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
 				remoteSharingSessions.push(dataSession);
 				remoteSharingRequestDialog = null;
 				console.log("Session", dataSession.session);
