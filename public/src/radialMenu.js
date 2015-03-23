@@ -1038,10 +1038,10 @@ function RadialMenu(){
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 					thumbnailButton.setData( {application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif} );
 					thumbnailButton.simpleTint = false;
-					
+
 					thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
 					thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
-				
+
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail !== null ) {
 						customIcon = new Image();
@@ -1049,7 +1049,12 @@ function RadialMenu(){
 						thumbnailButton.setButtonImage( customIcon );
 					} else
 						thumbnailButton.setButtonImage( idleImageIcon );
-					
+
+					// File has a bad filename for thumbnails, set default icon
+					if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
+						thumbnailButton.setButtonImage( idleImageIcon );
+					}
+
 					this.thumbnailButtons.push(thumbnailButton);
 					this.imageThumbnailButtons.push(thumbnailButton);
 					validImages++;
@@ -1062,10 +1067,10 @@ function RadialMenu(){
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif} );
 				thumbnailButton.simpleTint = false;
-				
+
 				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
 				thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
-				
+
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
@@ -1074,6 +1079,10 @@ function RadialMenu(){
 				} else
 					thumbnailButton.setButtonImage( idlePDFIcon );
 
+				// File has a bad filename for thumbnails, set default icon
+				if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
+					thumbnailButton.setButtonImage( idleImageIcon );
+				}
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.pdfThumbnailButtons.push(thumbnailButton);
@@ -1085,10 +1094,10 @@ function RadialMenu(){
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif} );
 				thumbnailButton.simpleTint = false;
-				
+
 				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
 				thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
-				
+
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
@@ -1097,6 +1106,11 @@ function RadialMenu(){
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idleVideoIcon );
+
+				// File has a bad filename for thumbnails, set default icon
+				if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
+					thumbnailButton.setButtonImage( idleImageIcon );
+				}
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.videoThumbnailButtons.push(thumbnailButton);
@@ -1120,6 +1134,11 @@ function RadialMenu(){
 				} else
 					thumbnailButton.setButtonImage( idleAppIcon );
 
+				// File has a bad filename for thumbnails, set default icon
+				if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
+					thumbnailButton.setButtonImage( idleImageIcon );
+				}
+
 				this.thumbnailButtons.push(thumbnailButton);
 				this.appThumbnailButtons.push(thumbnailButton);
 			}
@@ -1131,10 +1150,10 @@ function RadialMenu(){
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
 				thumbnailButton.setButtonImage( idleSessionIcon );
 				thumbnailButton.simpleTint = false;
-				
+
 				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
 				thumbnailButton.setHitboxSize( this.imageThumbSize, this.imageThumbSize );
-				
+
 				this.thumbnailButtons.push(thumbnailButton);
 				this.sessionThumbnailButtons.push(thumbnailButton);
 			}
