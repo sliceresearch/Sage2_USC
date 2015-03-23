@@ -2312,7 +2312,7 @@ function wsCancelDataSharingSession(wsio, data) {
 
 function wsAcceptDataSharingSession(wsio, data) {
 	console.log("Data-sharing request accepted: " + data.width + " " + data.height);
-	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+	broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
 	remoteSharingRequestDialog = null;
 }
 
@@ -3654,7 +3654,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
 				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight);
 				var myMin = Math.min(config.totalWidth, config.totalHeight);
-				var sharingSize = 0.45 * (sharingMin + myMin - Math.max(config.ui.titleBarHeight, remoteSharingRequestDialog.config.ui.titleBarHeight));
+				var sharingSize = parseInt(0.45 * (sharingMin + myMin - Math.max(config.ui.titleBarHeight, remoteSharingRequestDialog.config.ui.titleBarHeight)), 10);
 				//TODO: create data-sharing session window on local display
 				remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
 				remoteSharingRequestDialog = null;
