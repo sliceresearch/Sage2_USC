@@ -2310,7 +2310,7 @@ function wsCancelDataSharingSession(wsio, data) {
 	remoteSharingRequestDialog = null;
 }
 
-function wsAcceptDataSharingSesssion(wsio, data) {
+function wsAcceptDataSharingSession(wsio, data) {
 
 }
 
