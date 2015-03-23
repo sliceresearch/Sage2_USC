@@ -2301,7 +2301,7 @@ function wsRequestDataSharingSession(wsio, data) {
 	
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
 	broadcast('requestDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port}, 'requiresFullApps');
-	remoteSharingRequestDialog = wsio;
+	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
 }
 
 function wsCancelDataSharingSession(wsio, data) {
@@ -2311,7 +2311,9 @@ function wsCancelDataSharingSession(wsio, data) {
 }
 
 function wsAcceptDataSharingSession(wsio, data) {
-
+	console.log("Data-sharing request accepted: " + data.width + " " + data.height);
+	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
+	remoteSharingRequestDialog = null;
 }
 
 function wsRejectDataSharingSession(wsio, data) {
@@ -3650,7 +3652,11 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Accepting Data-Sharing Request");
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-				// TODO: send message back to remote server - Accept
+				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight);
+				var myMin = Math.min(config.totalWidth, config.totalHeight);
+				var sharingSize = 0.45 * (sharingMin + myMin - Math.max(config.ui.titleBarHeight, remoteSharingRequestDialog.config.ui.titleBarHeight));
+				//TODO: create data-sharing session window on local display
+				remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
 				remoteSharingRequestDialog = null;
 			}
 			// reject button
@@ -3658,7 +3664,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				console.log("Rejecting Data-Sharing Request");
 				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
 				// TODO: send message back to remote server - Reject
-				remoteSharingRequestDialog.emit('rejectDataSharingSession', null);
+				remoteSharingRequestDialog.wsio.emit('rejectDataSharingSession', null);
 				remoteSharingRequestDialog = null;
 			}
 			return;
@@ -3674,7 +3680,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(dialogX >= 16.75*config.ui.titleBarHeight && dialogX <= 25.75*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
 				console.log("Canceling Data-Sharing Request");
 				broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
-				remoteSharingWaitDialog.emit('cancelDataSharingSession', null);
+				remoteSharingWaitDialog.wsio.emit('cancelDataSharingSession', null);
 				remoteSharingWaitDialog = null;
 			}
 			return;
@@ -3696,7 +3702,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			if(remoteSites[remoteIdx].connected) {
 				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
 				
-				remoteSharingWaitDialog = remoteSites[remoteIdx].wsio;
+				remoteSharingWaitDialog = remoteSites[remoteIdx];
 				broadcast('dataSharingConnectionWait', {name: remoteSites[remoteIdx].name, host: remoteSites[remoteIdx].wsio.remoteAddress.address, port: remoteSites[remoteIdx].wsio.remoteAddress.port}, 'requiresFullApps');
 				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {config: config, secure: false});
 			}
