@@ -415,7 +415,7 @@ OmicronManager.prototype.runTracker = function()
 				if (e.flags !== 0)
 				{
 					//console.log("Wand flags: " + e.flags + " " + (omicronManager.lastWandFlags & playButton) );
-					if ( (e.flags & clickDragButton) === clickDragButton )
+					if ( (e.flags & clickDragButton) === clickDragButton && omicronManager.showPointerToggle )
 					{
 						if (omicronManager.lastWandFlags === 0)
 						{
@@ -428,14 +428,13 @@ OmicronManager.prototype.runTracker = function()
 							if( timeSinceLastNonCritEvent >= nonCriticalEventDelay ) {
 								omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
 								omicronManager.pointerMove( address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" } );
-								//omicronManager.pointerMove( address, posX, posY, { button: "left" } );
 
 								//console.log((Date.now() - dstart)+"] Wand drag");
 								omicronManager.lastNonCritEventTime = Date.now();
 							}
 						}
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerPress( address, posX, posY, { button: "right" } );
 					}
@@ -453,21 +452,21 @@ OmicronManager.prototype.runTracker = function()
 							//hidePointer( omicronManager.config.inputServerIP );
 						}
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleUpButton) === scaleUpButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleUpButton) === scaleUpButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerScrollStart( address, posX, posY );
 
 						// Casting the parameters to correct type
 						omicronManager.pointerScroll( address, { wheelDelta: parseInt(-omicronManager.wandScaleDelta, 10) } );
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleDownButton) === scaleDownButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleDownButton) === scaleDownButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerScrollStart( address, posX, posY );
 
 						// Casting the parameters to correct type
 						omicronManager.pointerScroll( address, { wheelDelta: parseInt(omicronManager.wandScaleDelta, 10) } );
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & maximizeButton) === maximizeButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & maximizeButton) === maximizeButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerDblClick( address, posX, posY );
 					}
