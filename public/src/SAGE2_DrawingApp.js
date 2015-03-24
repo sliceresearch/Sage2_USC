@@ -160,7 +160,7 @@ function SAGE2_init() {
 	uigrp = new Kinetic.Group();
 	var xoffset = 15;
 	var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
-	for (var i = 0; i<14;i++) {
+	for (var i=0; i<14; i++) {
 		var bgrp = new Kinetic.Group( {x: xoffset, y: 5});
 		var button = new Kinetic.Rect({
 			width: 80,
@@ -173,9 +173,9 @@ function SAGE2_init() {
 		bgrp.add(button);
 
 		var buttonLabel = new Kinetic.Label({
-			x: 0, y: 0,	opacity: 1, listening:false
+			x: 0, y: 0, opacity: 1, listening: false
 		});
-		buttonLabel.add(new Kinetic.Tag({listening:false}));
+		buttonLabel.add(new Kinetic.Tag({listening: false}));
 		buttonLabel.add(new Kinetic.Text({
 			text: labels[i],
 			fontFamily: 'Arial',
@@ -250,7 +250,7 @@ function newLayer() {
 	// create a new layer
 	var nlayer = new Kinetic.Layer();
 	// hide all the other layers
-	for (var i=0;i<numLayers;i++)
+	for (var i=0; i<numLayers; i++)
 		allLayers[i].hide();
 	// put the new layer on display
 	drawingStage.add(nlayer);
@@ -281,7 +281,7 @@ function nextLayer() {
 		// set the new index
 		currentLayer = newidx;
 		// show/hide the layers
-		for (var i=0;i<numLayers;i++) {
+		for (var i=0; i<numLayers; i++) {
 			if (i === currentLayer)
 				allLayers[i].show();
 			else
@@ -308,7 +308,7 @@ function previousLayer() {
 		// set the new index
 		currentLayer = newidx;
 		// show/hide the layers
-		for (var i=0;i<numLayers;i++) {
+		for (var i=0; i<numLayers; i++) {
 			if (i === currentLayer)
 				allLayers[i].show();
 			else
@@ -391,7 +391,7 @@ function mouseup(ev) {
 		var i;
 		var arr = aSpline.points();
 		var toprocess = [];
-		for (i=0; i<arr.length;i+=2) {
+		for (i=0; i<arr.length; i+=2) {
 			toprocess.push({x:arr[2*i], y:arr[2*i+1]});
 		}
 		// Adding the mouseup position
@@ -405,7 +405,7 @@ function mouseup(ev) {
 		else
 			processed = simplify(toprocess, 2.0, true); // array, pixel size, high-quality: true
 		var newpoints = [];
-		for (i=0; i<processed.length;i++) {
+		for (i=0; i<processed.length; i++) {
 			newpoints.push(processed[i].x, processed[i].y);
 		}
 		//console.log('Gain:', toprocess.length/newpoints.length);
@@ -414,7 +414,7 @@ function mouseup(ev) {
 		if (aSpline.eraseMode===false)
 			aSpline.tension(0.5);  // more tension in the spline (smoother)
 		var avg = 0.0;
-		for (i=0;i<pressures.length;i++)
+		for (i=0; i<pressures.length; i++)
 			avg += pressures[i];
 		avg = avg / pressures.length;
 		//console.log('Avg>', avg, pressures.length);

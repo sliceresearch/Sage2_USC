@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-killall -9 sage2
+killall -9 node
 
-xterm -e "./sage2 -- -sl" &
+xterm -e "node server.js -l" &
 

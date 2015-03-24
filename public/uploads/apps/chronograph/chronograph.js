@@ -23,7 +23,7 @@ var chronograph = SAGE2_App.extend( {
 		arguments.callee.superClass.construct.call(this);
 		this.ready = null;
 	},
-	
+
 	// Adds a parameter to the clock
 	addParameter: function(name, value) {
 		this[name] = value;
@@ -33,38 +33,38 @@ var chronograph = SAGE2_App.extend( {
 		// settings: see http://www.3quarks.com/en/SVGClock/
 		if (this.state.mode === 0) {
 			this.element.style.backgroundColor = "rgba(255,255,255,0)";
-			this.addParameter("dial"               , "din 41091.4");
-			this.addParameter("hourHand"           , "din 41092.3");
-			this.addParameter("minuteHand"         , "din 41092.3");
-			this.addParameter("secondHand"         , "din 41071.2");
-			this.addParameter("minuteHandBehavior" , "stepping");
-			this.addParameter("secondHandBehavior" , "stepping");
-			this.addParameter("secondHandStopToGo" , "yes");
-			this.addParameter("secondHandStopTime" , "1.5");
-			this.addParameter("backgroundColor"    , "rgba(255,255,255,255)");
-			this.addParameter("dialColor"          , "rgb(40,40,40)");
-			this.addParameter("hourHandColor"      , "rgb(20,20,20)");
-			this.addParameter("minuteHandColor"    , "rgb(20,20,20)");
-			this.addParameter("secondHandColor"    , "rgb(160,50,40)");
-			this.addParameter("axisCoverColor"     , "rgb(20,20,20)");
-			this.addParameter("axisCoverRadius"    , "9.5");
+			this.addParameter("dial",                "din 41091.4");
+			this.addParameter("hourHand",            "din 41092.3");
+			this.addParameter("minuteHand",          "din 41092.3");
+			this.addParameter("secondHand",          "din 41071.2");
+			this.addParameter("minuteHandBehavior",  "stepping");
+			this.addParameter("secondHandBehavior",  "stepping");
+			this.addParameter("secondHandStopToGo",  "yes");
+			this.addParameter("secondHandStopTime",  "1.5");
+			this.addParameter("backgroundColor",     "rgba(255,255,255,255)");
+			this.addParameter("dialColor",           "rgb(40,40,40)");
+			this.addParameter("hourHandColor",       "rgb(20,20,20)");
+			this.addParameter("minuteHandColor",     "rgb(20,20,20)");
+			this.addParameter("secondHandColor",     "rgb(160,50,40)");
+			this.addParameter("axisCoverColor",      "rgb(20,20,20)");
+			this.addParameter("axisCoverRadius",     "9.5");
 		} else {
 			this.element.style.backgroundColor = "rgba(255,255,255,0)";
-			this.addParameter("dial"               , "din 41091.1");
-			this.addParameter("hourHand"           , "siemens");
-			this.addParameter("minuteHand"         , "siemens");
-			this.addParameter("secondHand"         , "din 41071.2");
-			this.addParameter("minuteHandBehavior" , "stepping");
-			this.addParameter("secondHandBehavior" , "sweeping");
-			this.addParameter("secondHandStopToGo" , "yes");
-			this.addParameter("secondHandStopTime" , "1.5");
-			this.addParameter("backgroundColor"    , "rgba(198,186,156,255)");
-			this.addParameter("dialColor"          , "rgb(40,40,40)");
-			this.addParameter("hourHandColor"      , "rgb(20,20,20)");
-			this.addParameter("minuteHandColor"    , "rgb(20,20,20)");
-			this.addParameter("secondHandColor"    , "rgb(160, 50, 40)");
-			this.addParameter("axisCoverColor"     , "rgb(20,20,20)");
-			this.addParameter("axisCoverRadius"    , "7");
+			this.addParameter("dial",                "din 41091.1");
+			this.addParameter("hourHand",            "siemens");
+			this.addParameter("minuteHand",          "siemens");
+			this.addParameter("secondHand",          "din 41071.2");
+			this.addParameter("minuteHandBehavior",  "stepping");
+			this.addParameter("secondHandBehavior",  "sweeping");
+			this.addParameter("secondHandStopToGo",  "yes");
+			this.addParameter("secondHandStopTime",  "1.5");
+			this.addParameter("backgroundColor",     "rgba(198,186,156,255)");
+			this.addParameter("dialColor",           "rgb(40,40,40)");
+			this.addParameter("hourHandColor",       "rgb(20,20,20)");
+			this.addParameter("minuteHandColor",     "rgb(20,20,20)");
+			this.addParameter("secondHandColor",     "rgb(160, 50, 40)");
+			this.addParameter("axisCoverColor",      "rgb(20,20,20)");
+			this.addParameter("axisCoverRadius",     "7");
 		}
 	},
 	updateClock: function() {
@@ -106,12 +106,13 @@ var chronograph = SAGE2_App.extend( {
 			"fill":"rgba(250,250,250,1.0)",
 			"animation":false
 		};
-		this.controls.addButton({type:flipButton,sequenceNo:4,action:function(date){ // Instead of a string, the type field can be used to specify the button type data itself. 
+		// Instead of a string, the type field can be used to specify the button type data itself
+		this.controls.addButton({type:flipButton, sequenceNo:4, action:function(date) {
 			if (this.ready) {
 				this.flip(date);
 			}
 		}.bind(this)});
-		this.controls.finishedAddingControls(); 
+		this.controls.finishedAddingControls();
 	},
 
 	// set element fill and stroke color
@@ -185,16 +186,16 @@ var chronograph = SAGE2_App.extend( {
 		}
 		var _this  = this;
 		// Callback when the SVG file is loaded
-    	this.element.onload = function() {
+		this.element.onload = function() {
 			// Get the SVG document inside the Object tag
 			var svgDoc = _this.element.contentDocument;
-	    	// initialize clock
-	        if (svgDoc.getElementById('background') && 
-	            svgDoc.getElementById('dial') &&
-	            svgDoc.getElementById('hourHand') &&
-	            svgDoc.getElementById('minuteHand') &&
-	            svgDoc.getElementById('secondHand') && 
-	            svgDoc.getElementById('axisCover')) {
+			// initialize clock
+			if (svgDoc.getElementById('background') &&
+				svgDoc.getElementById('dial') &&
+				svgDoc.getElementById('hourHand') &&
+				svgDoc.getElementById('minuteHand') &&
+				svgDoc.getElementById('secondHand') &&
+				svgDoc.getElementById('axisCover')) {
 
 				// Update the clock
 				_this.updateClock();
@@ -208,10 +209,10 @@ var chronograph = SAGE2_App.extend( {
 			}
 		};
 	},
-	
+
 	draw: function(date) {
 		if (this.ready) {
-	        var now     = date;
+			var now     = date;
 			var hours   = now.getHours();
 			var minutes = now.getMinutes();
 			var seconds = now.getSeconds();
@@ -240,9 +241,9 @@ var chronograph = SAGE2_App.extend( {
 				secondAngle += 3 * (1 + Math.cos(Math.PI + Math.PI * (0.001 * millis)));
 			}
 			this.rotateElement('secondHand', secondAngle);
-	    }
+		}
 	},
-	
+
 	resize: function(date) {
 		//console.log("chronograph> resize", this.element.width, this.element.height);
 		this.refresh(date);

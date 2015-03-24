@@ -20,6 +20,7 @@
 		// clock setting: 12-hour or 24-hour
 		clock: 12,
 		show_url: true,
+                noDropShadow: true,
 		show_version: true
 	},
 	resolution: {
@@ -53,6 +54,11 @@
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
 			port: 443
 		},
 		{

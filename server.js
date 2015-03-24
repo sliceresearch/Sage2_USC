@@ -27,39 +27,39 @@
 "use strict";
 
 // node: built-in
-var fs          = require('fs');                  // filesystem access
-var http        = require('http');                // http server
-var https       = require('https');               // https server
-var os          = require('os');                  // operating system access
-var path        = require('path');                // file path extraction and creation
-var readline    = require('readline');            // to build an evaluation loop
-var url         = require('url');                 // parses urls
-var util        = require('util');                // node util
+var fs            = require('fs');                  // filesystem access
+var http          = require('http');                // http server
+var https         = require('https');               // https server
+var os            = require('os');                  // operating system access
+var path          = require('path');                // file path extraction and creation
+var readline      = require('readline');            // to build an evaluation loop
+var url           = require('url');                 // parses urls
+var util          = require('util');                // node util
 
 // npm registry: defined in package.json
-var formidable  = require('formidable');       // upload processor
-var gm          = require('gm');               // graphicsmagick
-var json5       = require('json5');            // JSON format that allows comments
-var program     = require('commander');        // parsing command-line arguments
-var qrimage     = require('qr-image');         // qr-code generation
-var request     = require('request');          // external http requests
-var sprint      = require('sprint');           // pretty formating (sprintf)
-var Twit        = require('twit');             // twitter api
+var formidable    = require('formidable');       // upload processor
+var gm            = require('gm');               // graphicsmagick
+var json5         = require('json5');            // JSON format that allows comments
+var program       = require('commander');        // parsing command-line arguments
+var qrimage       = require('qr-image');         // qr-code generation
+var request       = require('request');          // external http requests
+var sprint        = require('sprint');           // pretty formating (sprintf)
+var Twit          = require('twit');             // twitter api
 
 // custom node modules
-var assets      = require('./src/node-assets');         // manages the list of files
-var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
-var pixelblock  = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
-var sageutils   = require('./src/node-utils');          // provides the current version number
+var assets        = require('./src/node-assets');         // manages the list of files
+var exiftool      = require('./src/node-exiftool');       // gets exif tags for images
+var pixelblock    = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
+var sageutils     = require('./src/node-utils');          // provides the current version number
 
-var Interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
-var Omicron     = require('./src/node-omicron');        // handles Omicron input events
-var Radialmenu  = require('./src/node-radialmenu');     // radial menu
-var SagePointer = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var WebsocketIO = require('./src/node-websocket.io');   // creates WebSocket server and clients
-var Loader      = require('./src/node-itemloader');     // handles sage item creation
-var HttpServer  = require('./src/node-httpserver');     // creates web server
-var StickyItems = require('./src/node-stickyitems');
+var Interaction   = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var Omicron       = require('./src/node-omicron');        // handles Omicron input events
+var Radialmenu    = require('./src/node-radialmenu');     // radial menu
+var Sagepointer   = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var WebsocketIO   = require('./src/node-websocket.io');   // creates WebSocket server and clients
+var Loader        = require('./src/node-itemloader');     // handles sage item creation
+var HttpServer    = require('./src/node-httpserver');     // creates web server
+var StickyItems   = require('./src/node-stickyitems');
 
 
 // GLOBALS
@@ -177,11 +177,13 @@ if (config.register_site) {
 		"form": config,
 		"method": "POST"},
 		function(err, response, body) {
-			console.log('Registration with EVL site:', (err === null) ? "success" : err.code);
+			console.log('SAGE2> Registration with EVL site:', (err === null) ? "success" : err.code);
 		}
 	);
 }
 
+// Check for missing packages (pass parameter true for devel packages also)
+sageutils.checkPackages();
 
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
@@ -196,7 +198,10 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 // global variables for various paths
 var public_dir = "public"; // directory where HTTPS content is stored
-var hostOrigin = (typeof config.rproxy_port !== "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
+var hostOrigin = ""; // base URL for this server
+if (config.rproxy_port === undefined) {
+	hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
+}
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
@@ -229,7 +234,7 @@ if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
 	// fields: base commit branch date
-	console.log("SAGE2 Full Version:", version);
+	console.log("SAGE2> Full Version:", json5.stringify(version));
 	SAGE2_version = version;
 	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 
@@ -251,7 +256,7 @@ qr_png.pipe(fs.createWriteStream(qr_out));
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
-console.log("Temp folder: ", process.env.TMPDIR);
+console.log("SAGE2> Temp folder: ", process.env.TMPDIR);
 if(!sageutils.fileExists(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
@@ -524,7 +529,6 @@ function initializeWSClient(wsio) {
 		wsio.on('stopMediaStream', wsStopMediaStream);
         wsio.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 		wsio.on('stopMediaBlockStream', wsStopMediaBlockStream);
-		wsio.on('requestDataSharingSession', wsRequestDataSharingSession);
 	}
 	if(wsio.messages.requestsWidgetControl){
 		wsio.on('addNewControl', wsAddNewControl);
@@ -559,7 +563,7 @@ function initializeWSClient(wsio) {
 	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
 	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
 
-	if (wsio.messages.requestsWidgetControl) {
+	if(wsio.messages.requestsWidgetControl){
 		setTimeout(function (){
 			initializeExistingControls(wsio);
 		}, 6000);
@@ -592,16 +596,6 @@ function initializeWSClient(wsio) {
 		wsio.on('radialMenuMoved', wsRadialMenuMoved);
 		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
 		wsio.on('radialMenuWindowToggle', wsRadialMenuThumbnailWindow);
-
-		// Allows only one instance of each radial menu to send 'open file' command
-		//if ( radialMenus[wsio.clientID].wsio === undefined )
-		//{
-		//	console.log("New Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-		//	radialMenus[wsio.clientID].wsio = wsio;
-		//} else {
-		//	//console.log("Existing Radial Menu Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID + ")");
-		//	wsio.emit("disableSendToServer", uniqueID);
-		//}
 	}
 
 	// Debug messages from applications
@@ -609,7 +603,7 @@ function initializeWSClient(wsio) {
 }
 
 function initializeExistingControls(wsio){
-	for (var i= controls.length-1;i>=0;i--){
+	for (var i=controls.length-1; i>=0; i--){
 		var ctrl = controls[i];
 		wsio.emit('createControl', controls[i]);
 		var uniqueID = ctrl.id.substring(ctrl.appId.length, ctrl.id.lastIndexOf("_"));
@@ -1409,10 +1403,10 @@ function deleteSession (filename) {
 		}
 		fs.unlink(fullpath, function (err) {
 			if (err) {
-				console.log("Sessions> coudlnt delete session ", filename, err);
+				console.log("Sessions> Could not delete session ", filename, err);
 				return;
 			}
-			console.log("Sessions> successfully deleted session", filename);
+			console.log("Sessions> Successfully deleted session", filename);
 		});
 	}
 }
@@ -1430,7 +1424,7 @@ function saveSession (filename) {
 	states.apps    = [];
 	states.numapps = 0;
 	states.date    = Date.now();
-	for (var i=0;i<applications.length;i++) {
+	for (var i=0; i<applications.length; i++) {
 		var a = applications[i];
 		// Ignore media streaming applications for now (desktop sharing)
 		if (a.application !== 'media_stream' || a.application !== 'media_block_stream') {
@@ -1637,7 +1631,7 @@ function fitWithin(app, x, y, width, height, margin) {
 // Create a 2D array
 function Create2DArray(rows) {
   var arr = [];
-  for (var i=0;i<rows;i++) {
+  for (var i=0; i<rows; i++) {
      arr[i] = [];
   }
   return arr;
@@ -1651,7 +1645,7 @@ function distance2D(p1, p2) {
 function findMinimum(arr) {
 	var val = Number.MAX_VALUE;
 	var idx = 0;
-	for (var i=0;i<arr.length;i++) {
+	for (var i=0; i<arr.length; i++) {
 		if (arr[i]<val) {
 			val = arr[i];
 			idx = i;
@@ -2308,18 +2302,10 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 	}
 }
 
-function wsRequestDataSharingSession(wsio, data) {
-	var known_site = findRemoteSiteByConnection(wsio);
-	if(known_site !== null) data.name = known_site.name;
-	if(data.name === undefined || data.name === null) data.name = "Unknown";
-
-	console.log("Data-sharing request from " + data.name + " (" + data.host + ":" + data.port + ")");
-}
-
 // **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
-	for (var i= controls.length-1;i>=0;i--){
+	for (var i=controls.length-1; i>=0; i--){
 		if (controls[i].id === data.id)
 			return;
 	}
@@ -2546,8 +2532,21 @@ function loadConfiguration() {
 	else userConfig.ui.maxWindowHeight = Math.round( 1.2 * maxDim); // 120%
 
 	// Set default values if missing
-	if (userConfig.port === undefined) userConfig.port = 443;
-	if (userConfig.index_port === undefined) userConfig.index_port = 80;
+	if (userConfig.port === undefined)
+		userConfig.port = 443;
+	else
+		userConfig.port = parseInt(userConfig.port, 10); // to make sure it's a number
+	if (userConfig.index_port === undefined)
+		userConfig.index_port = 80;
+	else
+		userConfig.index_port = parseInt(userConfig.index_port, 10);
+
+	// Set the display clip value if missing (true by default)
+	if (userConfig.background.clip !== undefined)
+		userConfig.background.clip = sageutils.isTrue(userConfig.background.clip);
+	else
+		userConfig.background.clip = true;
+
 
 	// Registration to EVL's server (sage.evl.uic.edu), true by default
 	if (userConfig.register_site === undefined)
@@ -2733,8 +2732,6 @@ function setupHttpsOptions() {
 			console.log("----------\n");
 		}
 	}
-
-	console.log(certs);
 
 	var httpsOptions;
 
@@ -2950,7 +2947,6 @@ function createRemoteConnection(wsURL, element, index) {
     remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
     remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 	remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
-	remote.on('requestDataSharingSession', wsRequestDataSharingSession);
 
 	return remote;
 }
@@ -2972,7 +2968,7 @@ setTimeout(function() {
 
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
+	console.log('SAGE2> Now serving clients at https://' + config.host + ':' + config.port + '/sageUI.html');
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -2999,20 +2995,20 @@ sage2Index.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Index.on('listening', function (e) {
 	// Success
-	console.log('Now serving SAGE2 index at http://' + config.host + ':' + config.index_port);
+	console.log('SAGE2> Now serving clients at http://' + config.host + ':' + config.index_port);
 });
 
 
 // Odly the HTTPS modules doesnt throw the same exceptions than HTTP
 //  catching errors at the process level
 /*process.on('uncaughtException', function (e) {
-	if (e.code === 'EACCES') {
+	if (e.code == 'EACCES') {
 		console.log("HTTPS_server> You are not allowed to use the port: ", config.port);
 		console.log("HTTPS_server>   use a different port or get authorization (sudo, setcap, ...)");
 		console.log(" ")
 		process.exit(1);
 	}
-	else if (e.code === 'EADDRINUSE') {
+	else if (e.code == 'EADDRINUSE') {
 		console.log('HTTPS_server> The port is already in use by another process:', config.port);
 		console.log("HTTPS_server>   use a different port or stop the offending process");
 		console.log(" ")
@@ -3214,7 +3210,7 @@ function quitSAGE2() {
 		users.session.end = Date.now();
 		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
 		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
-		console.log("Log> saved to " + userLogName);
+		console.log("LOG> saved to " + userLogName);
 	}
 
 	if (config.register_site) {
@@ -3225,7 +3221,7 @@ function quitSAGE2() {
 			"form": config,
 			"method": "POST"},
 			function (err, response, body) {
-				console.log('Deregistration with EVL site:', (err === null) ? "success" : err.code);
+				console.log('SAGE2> Deregistration with EVL site:', (err === null) ? "success" : err.code);
 				saveSession();
 				assets.saveAssets();
 				if( omicronRunning )
@@ -3339,7 +3335,7 @@ function findControlById(id) {
 // 	return idxList;
 // }
 
-function hideControl(ctrl) {
+function hideControl(ctrl){
 	if (ctrl.show === true) {
 		ctrl.show = false;
 		broadcast('hideControl', {id:ctrl.id, appId:ctrl.appId}, 'receivesWidgetEvents');
@@ -3355,15 +3351,15 @@ function removeControlsForUser(uniqueID){
 	broadcast('removeControlsForUser', {user_id:uniqueID}, 'receivesWidgetEvents');
 }
 
-function showControl(ctrl, uniqueID, pointerX, pointerY) {
+function showControl(ctrl, uniqueID, pointerX, pointerY){
 	if (ctrl.show === false) {
 		ctrl.show = true;
 		moveControlToPointer(ctrl, uniqueID, pointerX, pointerY);
-		broadcast('showControl', {id:ctrl.id, appId: ctrl.appId, user_color:sagePointers[uniqueID] ? sagePointers[uniqueID].color : null}, 'receivesWidgetEvents');
+		broadcast('showControl', {id: ctrl.id, appId: ctrl.appId, user_color: sagePointers[uniqueID]? sagePointers[uniqueID].color: null}, 'receivesWidgetEvents');
 	}
 }
 
-function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY) {
+function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 	var dt = new Date();
 	var rightMargin = config.totalWidth - ctrl.width;
 	var bottomMargin = config.totalHeight - ctrl.height;
@@ -3371,7 +3367,7 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY) {
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2;
 	var app = findAppById(ctrl.appId);
 	var appPos = (app===null)? null : getAppPositionSize(app);
-	broadcast('setControlPosition', {date:dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, elemHeight: ctrl.height, user_color:sagePointers[uniqueID] ? sagePointers[uniqueID].color : null, appData: appPos}, 'receivesWidgetEvents');
+	broadcast('setControlPosition', {date: dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, elemHeight: ctrl.height, user_color: sagePointers[uniqueID] ? sagePointers[uniqueID].color : null, appData: appPos}, 'receivesWidgetEvents');
 }
 
 
@@ -3517,8 +3513,8 @@ function getAppPositionSize(appInstance) {
 // **************  Pointer Functions *****************
 
 function createSagePointer ( uniqueID ) {
-	// From addClient type is sageUI
-	sagePointers[uniqueID]      = new SagePointer(uniqueID + "_pointer");
+	// From addClient type == sageUI
+	sagePointers[uniqueID]      = new Sagepointer(uniqueID+"_pointer");
 	remoteInteraction[uniqueID] = new Interaction(config);
 
 	broadcast('createSagePointer', sagePointers[uniqueID], 'receivesPointerData');
@@ -3583,20 +3579,20 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
 			broadcast('requestControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY}, 'receivesWidgetEvents');
 		}
-		else if (data.button === "right") {
-			if (ct.show === true) {
+		else if(data.button === "right"){
+			if(ct.show === true) {
 				hideControl(ct);
 				app = findAppById(ct.appId);
 
-				if (app !== null) {
+				if(app !== null) {
+
 					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 				}
 			}
 		}
 		return;
 	} else {
-		// If a text input widget was locked, drop it
-		var lockedControl = remoteInteraction[uniqueID].lockedControl();
+		var lockedControl = remoteInteraction[uniqueID].lockedControl(); //If a text input widget was locked, drop it
 		if (lockedControl !== null) {
 			var msgdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
 			broadcast('dropTextInputControl', msgdata, 'receivesWidgetEvents');
@@ -3612,8 +3608,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 	// Radial Menu
 	if( radialMenuEvent( { type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data }  ) === true ) {
-		// Radial menu is using the event
-		return;
+		return; // Radial menu is using the event
 	}
 
 	if(data.button === "right") {
@@ -3625,27 +3620,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// apps
 	var elemCtrl;
 
-	if(elem === null) {
-		var remoteIdx = -1;
-		for(var i=0; i<remoteSites.length; i++){
-			if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
-				sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
-				remoteIdx = i;
-				break;
-			}
-		}
-		if(remoteIdx >= 0) {
-			if(remoteSites[remoteIdx].connected) {
-				console.log("Requesting data-sharing session with " + remoteSites[remoteIdx].name);
-				// TOOD: broadcast new shared session message to displays (connection: waiting)
-				remoteSites[remoteIdx].wsio.emit('requestDataSharingSession', {host: config.host, port: config.index_port, name: config.name, secure: false});
-			}
-			else {
-				console.log("Remote site " + remoteSites[remoteIdx].name + " is not currently connected");
-			}
-		}
-	}
-	else {
+	if(elem !== null){
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
 			if (data.button === "left") {
 				var localX = pointerX - elem.left;
@@ -3685,23 +3660,25 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 				}
 				// otherwise - select for move
-				else {
-					// will only go through if window management mode
-					remoteInteraction[uniqueID].selectMoveItem(elem, pointerX, pointerY);
+				else{
+					remoteInteraction[uniqueID].selectMoveItem(elem, pointerX, pointerY); //will only go through if window management mode
 					broadcast('startMove', {id: elem.id, date: new Date()}, 'requiresFullApps');
 
 					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
 				}
 			}
-			else if (data.button === "right") {
+			else if(data.button === "right"){
 				elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 				if (elemCtrl === null) {
 					broadcast('requestNewControl', {elemId: elem.id, user_id: uniqueID, user_label: sagePointers[uniqueID]? sagePointers[uniqueID].label : "", x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
 				else if (elemCtrl.show === false) {
+
 					showControl(elemCtrl, uniqueID, pointerX, pointerY);
+
 					app = findAppById(elemCtrl.appId);
-					if (app !== null) {
+
+					if(app !== null) {
 						addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
 
@@ -3720,7 +3697,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 					}
 					else if (elemCtrl.show === false) {
 						showControl(elemCtrl, uniqueID, pointerX, pointerY);
+
 						app = findAppById(elemCtrl.appId);
+
 						if(app !== null) {
 							addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 						}
@@ -3771,10 +3750,10 @@ function pointerPressRight( address, pointerX, pointerY ) {
 				broadcast('requestNewControl', {elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 			}
 			else if (elemCtrl.show === false) {
-				showControl(elemCtrl, pointerX, pointerY);
+				showControl(elemCtrl, pointerX, pointerY) ;
 			}
 			else {
-				moveControlToPointer(elemCtrl, pointerX, pointerY);
+				moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 			}
 		}
 		else if ( remoteInteraction[address].appInteractionMode() ) {
@@ -3784,10 +3763,10 @@ function pointerPressRight( address, pointerX, pointerY ) {
 					broadcast('requestNewControl', {elemId: elem.id, user_id: sagePointers[address].id, user_label: sagePointers[address].label, x: pointerX, y: pointerY, date: now }, 'receivesPointerData');
 				}
 				else if (elemCtrl.show === false) {
-					showControl(elemCtrl, pointerX, pointerY);
+					showControl(elemCtrl, pointerX, pointerY) ;
 				}
 				else {
-					moveControlToPointer(elemCtrl, pointerX, pointerY);
+					moveControlToPointer(elemCtrl, pointerX, pointerY) ;
 				}
 			}
 			else{
@@ -3872,16 +3851,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			if(remoteInteraction[uniqueID].selectedMoveItem !== null){
 				app = findAppById(remoteInteraction[uniqueID].selectedMoveItem.id);
 				if(app !== null) {
-					broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: new Date()}, 'requiresFullApps');
-
-					addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: app.id, type: app.application}, location: {x: parseInt(app.left, 10), y: parseInt(app.top, 10), width: parseInt(app.width, 10), height: parseInt(app.height, 10)}}, time: Date.now()});
-
-					if(videoHandles[app.id] !== undefined && videoHandles[app.id].newFrameGenerated === false)
-						handleNewVideoFrame(app.id);
-					remoteInteraction[uniqueID].releaseItem(true);
-
-					// Disabled for data-duplication only
-					/*
 					var remoteIdx = -1;
 					for(var i=0; i<remoteSites.length; i++){
 						if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
@@ -3916,7 +3885,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 								handleNewVideoFrame(app.id);
 						}
 					}
-					*/
 				}
 			}
 		}
@@ -3931,7 +3899,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	}
 	if ( remoteInteraction[uniqueID].appInteractionMode() || (elem !== null && elem.application === 'thumbnailBrowser') ) {
 		if( elem !== null ){
-
 			var elemX = pointerX - elem.left;
 			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
 
@@ -3969,7 +3936,6 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 
 	var app;
-
 
 	// widgets
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
@@ -4020,7 +3986,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 			var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedMoveItem, pointerX, pointerY);
 
-			for (var idx=0;idx<updatedStickyItems.length;idx++){
+			for (var idx=0; idx<updatedStickyItems.length; idx++) {
 				updatedStickyItems[idx].user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 				broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
 			}
@@ -4100,7 +4066,7 @@ function pointerPosition( uniqueID, data ) {
 		if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 		if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
         var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(updatedItem, sagePointers[uniqueID].left, sagePointers[uniqueID].top);
-		for (var idx=0;idx<updatedStickyItems.length;idx++){
+		for (var idx=0; idx<updatedStickyItems.length; idx++) {
 			updatedStickyItems[idx].user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 			broadcast('setItemPosition', updatedStickyItems[idx], 'receivesWindowModification');
 		}
@@ -4230,7 +4196,7 @@ function pointerDraw(uniqueID, data) {
 	var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220, 10, 10]};
 	var now   = new Date();
 
-	for (var i=0;i<applications.length;i++) {
+	for (var i=0; i<applications.length; i++) {
 		var a = applications[i];
 		// Send the drawing events only to whiteboard apps
 		if (a.application === 'whiteboard') {
@@ -4726,15 +4692,15 @@ function attachAppIfSticky(backgroundItem, appId){
 function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease){
 	var app;
 	var item;
-	if (pressMoveRelease === "press"){
-		if (itemUnderPointer !== null){
-			if (itemUnderPointer.appId){
+	if (pressMoveRelease === "press") {
+		if (itemUnderPointer !== null) {
+			if (itemUnderPointer.appId) {
 				app = findAppById(itemUnderPointer.appId);
-				if (app){
+				if (app) {
 					itemUnderPointer = getAppPositionSize(app);
 				}
 			}
-			else{
+			else {
 				itemUnderPointer = getAppPositionSize(itemUnderPointer);
 			}
 			itemUnderPointer.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
@@ -4745,24 +4711,24 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 	}
 	else if (pressMoveRelease === "release"){
 		item = remoteInteraction[uniqueID].releaseOnItem();
-		if (item ){
+		if (item) {
 			broadcast('hideWidgetToAppConnector', item, 'receivesPointerData');
 		}
 	}
 	else {
 		item = remoteInteraction[uniqueID].releaseOnItem();
-		if (item){
+		if (item) {
 			broadcast('hideWidgetToAppConnector', item, 'receivesPointerData');
 		}
 
-		if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null){
-			if (itemUnderPointer.appId){
+		if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() === null) {
+			if (itemUnderPointer.appId) {
 				app = findAppById(itemUnderPointer.appId);
-				if (app){
+				if (app) {
 					itemUnderPointer = getAppPositionSize(app);
 				}
 			}
-			else{
+			else {
 				itemUnderPointer = getAppPositionSize(itemUnderPointer);
 			}
 			itemUnderPointer.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
@@ -4770,25 +4736,24 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 
 			broadcast('showWidgetToAppConnector', itemUnderPointer, 'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
-
-
-		}else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null){
+		}
+		else if (itemUnderPointer === null && remoteInteraction[uniqueID].hoverOverControl() !== null) {
 			item = remoteInteraction[uniqueID].hoverOverControl();
 			broadcast('hideWidgetToAppConnector', item, 'receivesPointerData');
 			remoteInteraction[uniqueID].leaveControlArea();
-
-		}else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null){
+		}
+		else if (itemUnderPointer !== null && remoteInteraction[uniqueID].hoverOverControl() !== null) {
 			var appId = itemUnderPointer.appId || itemUnderPointer.id;
 			item = remoteInteraction[uniqueID].hoverOverControl();
 			if (appId === item.id) return;
 
-			if (itemUnderPointer.appId){
+			if (itemUnderPointer.appId) {
 				app = findAppById(itemUnderPointer.appId);
-				if (app){
+				if (app) {
 					itemUnderPointer = getAppPositionSize(app);
 				}
 			}
-			else{
+			else {
 				itemUnderPointer = getAppPositionSize(itemUnderPointer);
 			}
 			itemUnderPointer.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
@@ -4799,8 +4764,6 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 
 			broadcast('showWidgetToAppConnector', itemUnderPointer, 'receivesPointerData');
 			remoteInteraction[uniqueID].enterControlArea(itemUnderPointer);
-
 		}
 	}
-
 }

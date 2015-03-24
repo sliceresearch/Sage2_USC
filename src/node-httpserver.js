@@ -95,7 +95,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		if (getName === "/") {
 			this.redirect(res, "index.html");
 			return;
-        }
+		}
 
 		var pathname = this.publicDirectory + getName;
 

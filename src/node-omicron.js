@@ -358,7 +358,7 @@ OmicronManager.prototype.runTracker = function()
 
 				//console.log("Wand Position: ("+e.posx+", "+e.posy+","+e.posz+")" );
 				//console.log("Wand Rotation: ("+e.orx+", "+e.ory+","+e.orz+","+e.orw+")" );
-				var screenPos = this.coordCalculator.wandToScreenCoordinates( e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw );
+				var screenPos = omicronManager.coordCalculator.wandToScreenCoordinates(e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw);
 				//console.log("Screen pos: ("+screenPos.x+", "+screenPos.y+")" );
 
 				address = omicronManager.config.inputServerIP;

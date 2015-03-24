@@ -101,7 +101,6 @@ function SAGE2_init() {
 	// Detect which browser is being used
 	browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
-	console.log('agent', userAgent);
 	browser.isOpera    = userAgent.indexOf("opera") >= 0;
 	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
 	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
@@ -163,7 +162,6 @@ function SAGE2_init() {
 		pointerDown = false;
 		pointerX    = 0;
 		pointerY    = 0;
-		console.log('Pointer', pointerX, pointerY);
 	});
 
 	wsio.on('setupDisplayConfiguration', function(config) {
@@ -283,11 +281,12 @@ function SAGE2_init() {
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
 
-	document.addEventListener('mousemove',  mouseCheck,      false);
-	document.addEventListener('touchstart', touchStart,      false);
-	document.addEventListener('touchend',   touchEnd,        false);
-	document.addEventListener('touchmove',  touchMove,       false);
-	document.addEventListener('keyup',      escapeDialog,    false);
+	document.addEventListener('mousemove',  mouseCheck,   false);
+	document.addEventListener('touchstart', touchStart,   false);
+	document.addEventListener('touchend',   touchEnd,     false);
+	document.addEventListener('touchmove',  touchMove,    false);
+	document.addEventListener('keyup',      escapeDialog, false);
+	document.addEventListener('keydown',    noBackspace,  false);
 
 	keyEvents = false;
 	openDialog = null;
@@ -519,7 +518,6 @@ function fileDrop(event) {
 	displayUI.draw();
 
 	// trigger file upload
-	console.log("drop location: " + event.layerX + ", " + event.layerY);
 	var x = event.layerX / event.target.clientWidth;
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
@@ -594,7 +592,6 @@ function pointerPress(event) {
 		pointerDown = true;
 		pointerX    = mouseX;
 		pointerY    = mouseY;
-		console.log('Pointer', pointerX, pointerY);
 		displayUI.pointerMove(mouseX, mouseY);
 
 		// then send the click
@@ -620,7 +617,6 @@ function pointerRelease(event) {
 		pointerDown = false;
 		pointerX    = mouseX;
 		pointerY    = mouseY;
-		console.log('Pointer', pointerX, pointerY);
 		displayUI.pointerMove(mouseX, mouseY);
 
 		// then send the pointer release
@@ -657,7 +653,6 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		console.log('Pointer', pointerX, pointerY);
 		// Send pointer event only during drag events
 		if (pointerDown) {
 			displayUI.pointerMove(mouseX, mouseY);
@@ -793,7 +788,7 @@ function handleClick(element) {
 		hideDialog('uploadDialog');
 		// open the file library
 		//    delay to remove bounce evennt on Chrome/iOS
-		setTimeout(function() {showDialog('localfileDialog');}, 200);
+		setTimeout(function() { showDialog('localfileDialog'); }, 200);
 	}
 	// upload from Dropbox
 	else if (element.id === "dropboxFilesBtn") {
@@ -1224,6 +1219,21 @@ function escapeDialog(event) {
 }
 
 /**
+ * Handler for detecting backspace outside the drawing area
+ *
+ * @method noBackspace
+ * @param event {Event} event data
+ */
+function noBackspace(event) {
+	// backspace keyCode is 8
+	if (parseInt(event.keyCode, 10) === 8) {
+		event.preventDefault();
+	} else {
+		return true;
+	}
+}
+
+/**
  * Handler for key down
  *
  * @method keyDown
@@ -1257,7 +1267,6 @@ function keyPress(event) {
 	// space bar activates the pointer
 	if (event.keyCode === 32) {
 		interactor.startSAGE2Pointer("sage2pointer");
-		console.log('Sending Pointer', pointerX, pointerY);
 		displayUI.pointerMove(pointerX, pointerY);
 	}
 
