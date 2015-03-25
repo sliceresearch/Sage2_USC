@@ -30,11 +30,12 @@
 		console.log("caught a keydown event");
 		if(event.target == document.getElementById('sessionValue') && ( event.keyCode == 13 || event.which == 13 )) {
 			document.cookie = "session=" +document.getElementById('sessionValue').value ;
-			document.cookie = "bugus=junk" ;
-			document.cookie = "number=" + 2 ;
+			//document.cookie = "bugus=junk" ;
+			//document.cookie = "number=" + 2 ;
 			//console.log(document.cookie);
 			window.location.href = "index.html";
 		}
+
 	}
 
 </script>
