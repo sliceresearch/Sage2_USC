@@ -2883,9 +2883,9 @@ if (config.remote_sites) {
 		//var rHeight = config.ui.titleBarHeight - 4;
 		//var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
 
-		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - (0.05*config.ui.titleBarHeight);
-		var rHeight = 0.9*config.ui.titleBarHeight;
-		var rPos = (0.5*config.totalWidth) + ((rWidth+(0.05*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.025*config.ui.titleBarHeight);
+		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - (0.08*config.ui.titleBarHeight);
+		var rHeight = 0.84*config.ui.titleBarHeight;
+		var rPos = (0.5*config.totalWidth) + ((rWidth+(0.08*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.04*config.ui.titleBarHeight);
 
 		remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
 
