@@ -84,7 +84,7 @@ SAGE2ItemList.prototype.sortList = function(property) {
 * @param id {String} id of item to retrieve
 * @return item {Object} item with given id
 */
-SAGE2ItemList.prototype.sortList = function(id) {
+SAGE2ItemList.prototype.getItemById = function(id) {
 	return this.list[id];
 };
 
