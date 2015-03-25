@@ -29,7 +29,11 @@
 
 		console.log("caught a keydown event");
 		if(event.target == document.getElementById('sessionValue') && ( event.keyCode == 13 || event.which == 13 )) {
-			window.location.href = "index.html?session="+document.getElementById('sessionValue').value;
+			document.cookie = "session=" +document.getElementById('sessionValue').value ;
+			document.cookie = "bugus=junk" ;
+			document.cookie = "number=" + 2 ;
+			//console.log(document.cookie);
+			window.location.href = "index.html";
 		}
 	}
 
@@ -39,10 +43,13 @@
 
 <body onload="setupListener()">
 
-	<h1>This SAGE2 wall has a session lock on it.
+
+	<h1 style="font-family:arial;text-align:center">This SAGE2 wall has a session lock on it.
 	</h1>
+
+	<br>
 	
-	<h3>
+	<h3 style="font-family:arial;text-align:center">
 		Enter the sessionID:<br>
 		<input type="text" id="sessionValue" size="40" style="font-size: 1em;" tabindex="1">
 	</h3>
