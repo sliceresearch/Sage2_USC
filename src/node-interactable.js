@@ -136,6 +136,19 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 };
 
 /**
+* Edit zIndex of geometric object
+*
+* @method editZIndex
+* @param id {String} unique identifier for the geometric object
+* @param zIndex {Integer} determines ordering of the geometries within a given layers
+*/
+InteractableManager.prototype.editZIndex = function(id, zIndex) {
+	var pkg = this.interactableObjects[id];
+	pkg.zIndex = zIndex;
+};
+
+
+/**
 * Search for topmost geometric object (optionally within a given layer)
 *
 * @method searchGeometry
