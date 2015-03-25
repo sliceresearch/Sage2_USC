@@ -4,33 +4,41 @@ default: all
 
 all: download stage install binary package
 
+local: stage install binary package
+
 package:
 	/bin/rm -f dmg/SAGE2.dmg
+	npm install
 	./node_modules/.bin/appdmg dmg/app.json dmg/SAGE2.dmg
 
 download:
-	wget http://s3.amazonaws.com/nodejx/jx_osx64.zip
-	git archive --format=zip --remote=ssh://git@bitbucket.org/sage2/sage2.git --prefix=sage2/ --output="sage2.zip" release-v0.3.0
+	git archive --format=zip --remote=ssh://git@bitbucket.org/sage2/sage2.git --prefix=sage2/ --output="sage2.zip" master
 
 stage:
-	unzip -ju -d jx_osx64 jx_osx64.zip
-	unzip sage2.zip
+	unzip -q -u sage2.zip
 
 install:
-	cd sage2 && ../jx_osx64/jx install
+	cd sage2 && node install_dependencies.js --prod --mac --target=0.12.0
+	cd sage2 && npm install kthxbai
+	cd sage2 && npm install yuidocjs
+	cd sage2 && npm run doc
+	cd sage2 && npm uninstall yuidocjs
+	cd sage2 && node_modules/.bin/kthxbai
 
 binary:
-	cp scripts/osx64/* sage2/
-	unzip -u -d sage2 mac-bin.zip 
-	cd sage2 && ../jx_osx64/jx package server.js sage2 -native -slim GO-scripts,extras,public_HTTP,public_HTTPS,keys,config,build,local
-	rm -fr sage2/doc sage2/extras sage2/GO-scripts sage2/node_modules sage2/package.json sage2/server.js sage2/src sage2/build
+	cp scripts/osx64/GO* sage2/
+	cp scripts/osx64/RUN-FIRST sage2/
+	unzip -q -u -d sage2 mac-bin.zip 
+	cd sage2 && mv doc/api public
+	cd sage2 && rm -fr Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
 	mv sage2 SAGE2
 
+deps:
+	zip -r -9 --symlinks mac-bin.zip local -x "*.DS_Store"
+
 clean:
-	/bin/rm -f jx_osx64.zip
+	/bin/rm -fr SAGE2 dmg/SAGE2.dmg
+veryclean:
 	/bin/rm -fr SAGE2 sage2.zip dmg/SAGE2.dmg
 
-#
-# files to keep in SAGE2:
-# config local  public_HTTPS tmp keys  public_HTTP sessions server.js
 
