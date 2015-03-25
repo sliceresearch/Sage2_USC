@@ -60,15 +60,17 @@ InteractableManager.prototype.addLayer = function(id, zIndex) {
 * @param layerId {String} unique identifier for the layer
 * @param type {String} "rectangle" or "circle"
 * @param geometry {Obejct} defines object (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
+* @param visible {Boolean} whether or not the geometric object is currently visible
 * @param zIndex {Integer} determines ordering of the geometries within a given layers
 * @param data {Object} data to store along with given geometry
 */
-InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry, zIndex, data) {
+InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry, visible, zIndex, data) {
 	var pkg = {
 		id:       id,
 		layerId:  layerId,
 		type:     type,
 		geometry: geometry,
+		visible:  visible,
 		zIndex:   zIndex,
 		data:     data
 	};
@@ -136,6 +138,18 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 };
 
 /**
+* Edit visibility of geometric object
+*
+* @method editVisibility
+* @param id {String} unique identifier for the geometric object
+* @param visible {Boolean} whether or not the geometric object is currently visible
+*/
+InteractableManager.prototype.editVisibility = function(id, visible) {
+	var pkg = this.interactableObjects[id];
+	pkg.visible = visible;
+};
+
+/**
 * Edit zIndex of geometric object
 *
 * @method editZIndex
@@ -191,12 +205,12 @@ function findTopmostGeometry(point, geometryList) {
 				var x = point.x - geometryList[i][j].geometry.x;
 				var y = point.y - geometryList[i][j].geometry.y;
 				var r = geometryList[i][j].geometry.r;
-				if((x*x + y*y) < (r*r) && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+				if((x*x + y*y) < (r*r) && geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
 			}
 			else {
-				if(topmost === null || geometryList[i][j].zIndex > topmost.zIndex) {
+				if(geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
 			}

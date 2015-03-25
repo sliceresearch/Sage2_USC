@@ -976,7 +976,7 @@ function wsStartNewMediaStream(wsio, data) {
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 		applications.push(appInstance);
 
 		addEventToUserLog(uniqueID, {type: "mediaStreamStart", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -1094,7 +1094,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 		applications.push(appInstance);
     });
 
@@ -1480,7 +1480,7 @@ function loadSession (filename) {
 						broadcast('createAppWindow', appInstance, 'requiresFullApps');
 						broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
-						interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+						interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 						applications.push(appInstance);
 
 						initializeLoadedVideo(appInstance, videohandle);
@@ -1514,7 +1514,7 @@ function loadSession (filename) {
 					broadcast('createAppWindow', a, 'requiresFullApps');
 					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
 
-					interactMgr.addGeometry(a.id, "applications", "rectangle", {x: a.left, y: a.top, w: a.width, h: a.height}, applications.length, a);
+					interactMgr.addGeometry(a.id, "applications", "rectangle", {x: a.left, y: a.top, w: a.width, h: a.height}, true, applications.length, a);
 					applications.push(a);
 				}
 			});
@@ -1832,7 +1832,7 @@ function wsLoadApplication(wsio, data) {
 
 		addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 		applications.push(appInstance);
 	});
 }
@@ -1855,7 +1855,7 @@ function wsLoadFileFromServer(wsio, data) {
 
 			addEventToUserLog(data.user, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 
-			interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+			interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 			applications.push(appInstance);
 
 			initializeLoadedVideo(appInstance, videohandle);
@@ -2077,7 +2077,7 @@ function wsAddNewWebElement(wsio, data) {
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 		applications.push(appInstance);
 
 		initializeLoadedVideo(appInstance, videohandle);
@@ -2204,7 +2204,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 		broadcast('createAppWindow', appInstance, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 		applications.push(appInstance);
 
 		initializeLoadedVideo(appInstance, videohandle);
@@ -2313,9 +2313,9 @@ function wsAddNewControl(wsio, data){
 			return;
 	}
 
-	interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, controls.length, data);
+	interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, true, controls.length, data);
 	if(data.hasSideBar === true) {
-		interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, controls.length, data);
+		interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, true, controls.length, data);
 	}
 	controls.push(data);
 
@@ -2426,7 +2426,7 @@ function wsCreateAppClone(wsio, data){
 		broadcast('createAppWindow', clone, 'requiresFullApps');
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
 
-		interactMgr.addGeometry(clone.id, "applications", "rectangle", {x: clone.left, y: clone.top, w: clone.width, h: clone.height}, applications.length, clone);
+		interactMgr.addGeometry(clone.id, "applications", "rectangle", {x: clone.left, y: clone.top, w: clone.width, h: clone.height}, true, applications.length, clone);
 		applications.push(clone);
 	});
 }
@@ -2862,7 +2862,7 @@ function manageUploadedFiles(files, position) {
 			broadcast('createAppWindow', appInstance, 'requiresFullApps');
 			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
 
-			interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, applications.length, appInstance);
+			interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
 			applications.push(appInstance);
 
 			initializeLoadedVideo(appInstance, videohandle);
@@ -2900,7 +2900,7 @@ if (config.remote_sites) {
 		rGeom.y = 0.08*config.ui.titleBarHeight;
 		
 		remoteSites[index] = {name: element.name, wsio: remote, connected: false, geometry: rGeom};
-		interactMgr.addGeometry("remote_"+index, "staticUI", "rectangle", rGeom,  index, remoteSites[index]);
+		interactMgr.addGeometry("remote_"+index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 		
 		// attempt to connect every 15 seconds, if connection failed
 		setInterval(function() {
@@ -4568,11 +4568,10 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 			if( validLocation && radialMenus[uniqueID+"_menu"] === undefined )
 			{
 				var newRadialMenu = new Radialmenu(uniqueID+"_menu", uniqueID, config.ui);
-				interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, Object.keys(radialMenus).length, newRadialMenu);
-				interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left+(newRadialMenu.radialMenuSize.x/2), y: newRadialMenu.top-(newRadialMenu.radialMenuSize.y/2), w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, Object.keys(radialMenus).length, newRadialMenu);
-				radialMenus[uniqueID+"_menu"] = newRadialMenu;
-
 				newRadialMenu.setPosition(newMenuPos);
+				interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(radialMenus).length, newRadialMenu);
+				interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left+(newRadialMenu.radialMenuSize.x/2), y: newRadialMenu.top-(newRadialMenu.radialMenuSize.y/2), w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, true, Object.keys(radialMenus).length, newRadialMenu);
+				radialMenus[uniqueID+"_menu"] = newRadialMenu;
 
 				// Open a 'media' radial menu
 				broadcast('createRadialMenu', newRadialMenu.getInfo(), 'receivesPointerData');
