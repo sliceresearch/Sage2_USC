@@ -2582,7 +2582,8 @@ function getApplications() {
 	// Remove 'viewer' apps
 	var i = uploadedApps.length;
 	while (i--) {
-		if (uploadedApps[i].exif.metadata.fileTypes && uploadedApps[i].exif.metadata.fileTypes.length > 0) {
+		if (uploadedApps[i].exif.metadata.fileTypes &&
+			uploadedApps[i].exif.metadata.fileTypes.length > 0) {
 			uploadedApps.splice(i, 1);
 		}
 	}
@@ -4585,20 +4586,18 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	updateRadialMenu(uniqueID);
 }
 
-function updateRadialMenu( uniqueID )
-{
+function updateRadialMenu(uniqueID) {
 	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps = assets.listApps();
+	var uploadedApps   = getApplications();
 	var savedSessions  = listSessions();
 
 	// Sort independently of case
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
-	uploadedApps.sort(   sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
 
 	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions, apps: uploadedApps};

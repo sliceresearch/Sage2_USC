@@ -240,6 +240,7 @@ OmicronManager.prototype.runTracker = function()
 	var udp = dgram.createSocket("udp4");
 	var dstart = Date.now();
 	var emit   = 0;
+	var nonCriticalEventDelay = 20;
 
 	// array to hold all the button values (1 - down, 0 = up)
 	//var buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -250,6 +251,8 @@ OmicronManager.prototype.runTracker = function()
 
 	//var wandObjectList = []; // Mocap object list
 
+	this.lastNonCritEventTime = dstart;
+
 	udp.on("message", function (msg, rinfo)
 	{
 		//console.log("UDP> got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
@@ -258,6 +261,8 @@ OmicronManager.prototype.runTracker = function()
 
 		if ((Date.now() - dstart) > 100)
 		{
+			var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
+
 			var offset = 0;
 			var e = {};
 			if (offset < msg.length) e.timestamp = msg.readUInt32LE(offset); offset += 4;
@@ -402,66 +407,34 @@ OmicronManager.prototype.runTracker = function()
 					}
 				}
 
-				omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
-
-				/*
-				if( wandObjectList[sourceID] === undefined )
-				{
-					wandObjectList[sourceID] = { id: sourceID, address: address, posX: posX, posY: posY, lastPosIndex: 0, prevPosX: [posX,-1,-1,-1,-1], prevPosY: [posY,-1,-1,-1,-1] };
+				if( timeSinceLastNonCritEvent >= nonCriticalEventDelay ) {
+					omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
+					omicronManager.lastNonCritEventTime = Date.now();
 				}
-				else
-				{
-					var smoothingRange = 0;
 
-					var wandData = wandObjectList[sourceID];
-					var lastIndex = wandData.lastPosIndex+1;
-					if( lastIndex === smoothingRange )
-						lastIndex = smoothingRange;
-
-					var prevPosX = wandData.prevPosX;
-					var prevPosY = wandData.prevPosY;
-
-					prevPosX[lastIndex] = posX;
-					prevPosY[lastIndex] = posY;
-
-					var avgX = posX;
-					var avgY = posY;
-					var validPos = 1;
-					for( var i = 0; i < smoothingRange; i++ )
-					{
-						if( prevPosX[i] !== -1 && prevPosY[i] != -1 )
-						{
-							avgX += prevPosX[i];
-							avgY += prevPosY[i];
-							validPos++;
-						}
-					}
-
-					avgX /= validPos;
-					avgY /= validPos;
-
-					wandObjectList[sourceID] = { id: sourceID, address: address, posX: avgX, posY: avgY, lastPosIndex: lastIndex, prevPosX: prevPosX, prevPosY: prevPosY };
-					//console.log(wandObjectList[sourceID]);
-				}
-				*/
 				if (e.flags !== 0)
 				{
 					//console.log("Wand flags: " + e.flags + " " + (omicronManager.lastWandFlags & playButton) );
-					if ( (e.flags & clickDragButton) === clickDragButton )
+					if ( (e.flags & clickDragButton) === clickDragButton && omicronManager.showPointerToggle )
 					{
 						if (omicronManager.lastWandFlags === 0)
 						{
-							// Click
+							// Wand Click
 							omicronManager.pointerPress( address, posX, posY, { button: "left" } );
 						}
 						else
 						{
-							// Drag
-							console.log("wandPointer press - drag");
-							//omicronManager.pointerMove( address, posX, posY, { button: "left" } );
+							// Wand Drag
+							if( timeSinceLastNonCritEvent >= nonCriticalEventDelay ) {
+								omicronManager.pointerPosition( address, { pointerX: posX, pointerY: posY } );
+								omicronManager.pointerMove( address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" } );
+
+								//console.log((Date.now() - dstart)+"] Wand drag");
+								omicronManager.lastNonCritEventTime = Date.now();
+							}
 						}
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerPress( address, posX, posY, { button: "right" } );
 					}
@@ -479,21 +452,21 @@ OmicronManager.prototype.runTracker = function()
 							//hidePointer( omicronManager.config.inputServerIP );
 						}
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleUpButton) === scaleUpButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleUpButton) === scaleUpButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerScrollStart( address, posX, posY );
 
 						// Casting the parameters to correct type
 						omicronManager.pointerScroll( address, { wheelDelta: parseInt(-omicronManager.wandScaleDelta, 10) } );
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleDownButton) === scaleDownButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & scaleDownButton) === scaleDownButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerScrollStart( address, posX, posY );
 
 						// Casting the parameters to correct type
 						omicronManager.pointerScroll( address, { wheelDelta: parseInt(omicronManager.wandScaleDelta, 10) } );
 					}
-					else if (omicronManager.lastWandFlags === 0 && (e.flags & maximizeButton) === maximizeButton)
+					else if (omicronManager.lastWandFlags === 0 && (e.flags & maximizeButton) === maximizeButton && omicronManager.showPointerToggle )
 					{
 						omicronManager.pointerDblClick( address, posX, posY );
 					}
