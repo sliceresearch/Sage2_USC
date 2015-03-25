@@ -734,10 +734,10 @@ function UIBuilder(json_cfg, clientID) {
 		remote.id  = data.name;
 		remote.style.position  = "absolute";
 		remote.style.textAlign = "center";
-		remote.style.width  = data.width.toString() + "px";
-		remote.style.height = data.height.toString() + "px";
-		remote.style.left   = (-this.offsetX + data.pos).toString() + "px";
-		remote.style.top    = (-this.offsetY+2).toString() + "px";
+		remote.style.width  = data.geometry.w.toString() + "px";
+		remote.style.height = data.geometry.h.toString() + "px";
+		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
+		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
 

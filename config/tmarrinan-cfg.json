@@ -52,27 +52,32 @@
 		{
 			name: "Desk",
 			host: "thor.evl.uic.edu",
-			port: 7070
+			port: 7070,
+			secure: true
 		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
-			port: 443
+			port: 80,
+			secure: false
 		},
 		{
 			name: "Cyber-Commons",
 			host: "iridium.evl.uic.edu",
-			port: 443
+			port: 80,
+			secure: false
 		},
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
-			port: 443
+			port: 80,
+			secure: false
 		},
 		{
 			name: "Green Room",
 			host: "mesaverde.evl.uic.edu",
-			port: 443
+			port: 80,
+			secure: false
 		}
 	],
 	apis: {

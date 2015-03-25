@@ -640,7 +640,7 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 
 function initializeRemoteServerInfo(wsio) {
 	for(var i=0; i<remoteSites.length; i++){
-		var site = {name: remoteSites[i].name, connected: remoteSites[i].connected, width: remoteSites[i].width, height: remoteSites[i].height, pos: remoteSites[i].pos};
+		var site = {name: remoteSites[i].name, connected: remoteSites[i].connected, geometry: remoteSites[i].geometry};
 		wsio.emit('addRemoteSite', site);
 	}
 }
@@ -2879,16 +2879,15 @@ if (config.remote_sites) {
 
 		var remote = createRemoteConnection(wsURL, element, index);
 
-		//var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - 2;
-		//var rHeight = config.ui.titleBarHeight - 4;
-		//var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
-
-		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - (0.08*config.ui.titleBarHeight);
-		var rHeight = 0.84*config.ui.titleBarHeight;
-		var rPos = (0.5*config.totalWidth) + ((rWidth+(0.08*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.04*config.ui.titleBarHeight);
-
-		remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
-
+		var rGeom = {};
+		rGeom.w = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - (0.08*config.ui.titleBarHeight);
+		rGeom.h = 0.84*config.ui.titleBarHeight;
+		rGeom.x = (0.5*config.totalWidth) + ((rGeom.w+(0.08*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.04*config.ui.titleBarHeight)
+		rGeom.y = 0.08*config.ui.titleBarHeight;
+		
+		remoteSites[index] = {name: element.name, wsio: remote, connected: false, geometry: rGeom};
+		interactMgr.addGeometry("remote_"+index, "staticUI", "rectangle", rGeom,  index, remoteSites[index]);
+		
 		// attempt to connect every 15 seconds, if connection failed
 		setInterval(function() {
 			if (!remoteSites[index].connected) {
@@ -3854,8 +3853,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				if(app !== null) {
 					var remoteIdx = -1;
 					for(var i=0; i<remoteSites.length; i++){
-						if(sagePointers[uniqueID].left >= remoteSites[i].pos && sagePointers[uniqueID].left <= remoteSites[i].pos+remoteSites[i].width &&
-							sagePointers[uniqueID].top >= 2 && sagePointers[uniqueID].top <= remoteSites[i].height) {
+						if(sagePointers[uniqueID].left >= remoteSites[i].geometry.x && sagePointers[uniqueID].left <= remoteSites[i].geometry.x+remoteSites[i].geometry.w &&
+							sagePointers[uniqueID].top >= remoteSites[i].geometry.y && sagePointers[uniqueID].top  <= remoteSites[i].geometry.y+remoteSites[i].geometry.h) {
 							remoteIdx = i;
 							break;
 						}
