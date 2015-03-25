@@ -67,7 +67,7 @@ SAGE2ItemList.prototype.editItem = function(id, newProperties) {
 *
 * @method sortList
 * @param property {String} property to sort items by
-* @return orderedList {Array} list of keys sorted by propery
+* @return order {Array} list of keys sorted by propery
 */
 SAGE2ItemList.prototype.sortList = function(property) {
 	var tmpList = this.list;
@@ -75,6 +75,17 @@ SAGE2ItemList.prototype.sortList = function(property) {
 		return tmpList[a][property] - tmpList[b][property];
 	});
 	return order;
+};
+
+/**
+* Get an item from the list with a given id
+*
+* @method getItemById
+* @param id {String} id of item to retrieve
+* @return item {Object} item with given id
+*/
+SAGE2ItemList.prototype.sortList = function(id) {
+	return this.list[id];
 };
 
 // TODO: Given local coordinate inside the item bounding box, determine if inside an interactable area
