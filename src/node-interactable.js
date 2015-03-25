@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2015
 
 /**
  * object to check for intersections on interactable geometry
@@ -141,6 +141,7 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 * @method searchGeometry
 * @param point {Object} {x: , y: }
 * @param layerId {String} unique identifier for the layer
+* @return {Object} geometric object
 */
 InteractableManager.prototype.searchGeometry = function(point, layerId) {
 	var results = [];
@@ -166,6 +167,7 @@ InteractableManager.prototype.searchGeometry = function(point, layerId) {
 * @method findTopmostGeometry
 * @param point {Object} {x: , y: }
 * @param geometryList {Array} list of geometric objects
+* @return {Object} geometric object
 */
 function findTopmostGeometry(point, geometryList) {
 	var i, j;

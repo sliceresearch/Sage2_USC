@@ -44,22 +44,24 @@ var program       = require('commander');        // parsing command-line argumen
 var qrimage       = require('qr-image');         // qr-code generation
 var request       = require('request');          // external http requests
 var sprint        = require('sprint');           // pretty formating (sprintf)
+
 var Twit          = require('twit');             // twitter api
 
 // custom node modules
-var assets        = require('./src/node-assets');         // manages the list of files
-var exiftool      = require('./src/node-exiftool');       // gets exif tags for images
-var pixelblock    = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
-var sageutils     = require('./src/node-utils');          // provides the current version number
+var assets              = require('./src/node-assets');         // manages the list of files
+var exiftool            = require('./src/node-exiftool');       // gets exif tags for images
+var pixelblock          = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
+var sageutils           = require('./src/node-utils');          // provides the current version number
 
-var Interaction   = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
-var Omicron       = require('./src/node-omicron');        // handles Omicron input events
-var Radialmenu    = require('./src/node-radialmenu');     // radial menu
-var Sagepointer   = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
-var WebsocketIO   = require('./src/node-websocket.io');   // creates WebSocket server and clients
-var Loader        = require('./src/node-itemloader');     // handles sage item creation
-var HttpServer    = require('./src/node-httpserver');     // creates web server
-var StickyItems   = require('./src/node-stickyitems');
+var HttpServer          = require('./src/node-httpserver');     // creates web server
+var InteractableManager = require('./src/node-interactable');   // handles geometry and determining which object a point is over
+var Interaction         = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
+var Loader              = require('./src/node-itemloader');     // handles sage item creation
+var Omicron             = require('./src/node-omicron');        // handles Omicron input events
+var Radialmenu          = require('./src/node-radialmenu');     // radial menu
+var Sagepointer         = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var StickyItems         = require('./src/node-stickyitems');
+var WebsocketIO         = require('./src/node-websocket.io');   // creates WebSocket server and clients
 
 
 // GLOBALS
@@ -261,6 +263,13 @@ var applications = [];
 var controls = []; // Each element represents a control widget bar
 var appAnimations = {};
 var videoHandles = {};
+
+// Initialize InteractableManager
+var interactMgr = new InteractableManager();
+interactMgr.addLayer("staticUI",     3);
+interactMgr.addLayer("radialMenus",  2);
+interactMgr.addLayer("widgets",      1);
+interactMgr.addLayer("applications", 0);
 
 
 // sets up the background for the display clients (image or color)
@@ -2865,13 +2874,19 @@ var remoteSites = [];
 if (config.remote_sites) {
 	remoteSites = new Array(config.remote_sites.length);
 	config.remote_sites.forEach(function(element, index, array) {
-		var wsURL = "wss://" + element.host + ":" + element.port.toString();
+		var protocol = (element.secure === true) ? "wss" : "ws";
+		var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
 		var remote = createRemoteConnection(wsURL, element, index);
 
-		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - 2;
-		var rHeight = config.ui.titleBarHeight - 4;
-		var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
+		//var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - 2;
+		//var rHeight = config.ui.titleBarHeight - 4;
+		//var rPos = (0.5*config.totalWidth) + ((rWidth+2)*(index-(remoteSites.length/2))) + 1;
+
+		var rWidth = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - (0.05*config.ui.titleBarHeight);
+		var rHeight = 0.9*config.ui.titleBarHeight;
+		var rPos = (0.5*config.totalWidth) + ((rWidth+(0.05*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.025*config.ui.titleBarHeight);
+
 		remoteSites[index] = {name: element.name, wsio: remote, connected: false, width: rWidth, height: rHeight, pos: rPos};
 
 		// attempt to connect every 15 seconds, if connection failed

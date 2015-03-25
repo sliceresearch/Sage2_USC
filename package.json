@@ -52,6 +52,7 @@
 		"node-demux": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
+		"rbush": "latest",
 		"request": "latest",
 		"sprint": "^0.3.1",
 		"twit": "latest",
