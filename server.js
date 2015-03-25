@@ -4570,7 +4570,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 				var newRadialMenu = new Radialmenu(uniqueID+"_menu", uniqueID, config.ui);
 				newRadialMenu.setPosition(newMenuPos);
 				interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(radialMenus).length, newRadialMenu);
-				interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left+(newRadialMenu.radialMenuSize.x/2), y: newRadialMenu.top-(newRadialMenu.radialMenuSize.y/2), w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, true, Object.keys(radialMenus).length, newRadialMenu);
+				interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left+(newRadialMenu.radialMenuSize.x/2), y: newRadialMenu.top-(newRadialMenu.radialMenuSize.y/2), w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(radialMenus).length, newRadialMenu);
 				radialMenus[uniqueID+"_menu"] = newRadialMenu;
 
 				// Open a 'media' radial menu
