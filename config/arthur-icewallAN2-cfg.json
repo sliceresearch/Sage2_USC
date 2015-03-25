@@ -32,6 +32,10 @@
 		"localhost",
 		"127.0.0.1"
 	],
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+    },
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",

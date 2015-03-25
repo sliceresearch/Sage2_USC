@@ -688,6 +688,9 @@ function RadialMenu(){
 		this.radialVideoButton.isLit = false;
 		this.radialAppButton.isLit = false;
 		this.radialSessionButton.isLit = false;
+		this.radialSaveSessionButton.isLit = false;
+		this.radialCloseButton.isLit = false;
+		this.radialSessionButton.isLit = false;
 	};
 
 	/**
@@ -740,7 +743,6 @@ function RadialMenu(){
 		}
 
 		this.buttonOverCount += this.radialSettingsButton.onEvent(type, user.id, position, data);
-
 		this.buttonOverCount += this.radialSessionButton.onEvent(type, user.id, position, data);
 		this.buttonOverCount += this.radialSaveSessionButton.onEvent(type, user.id, position, data);
 
@@ -1029,7 +1031,9 @@ function RadialMenu(){
 		var i = 0;
 		var thumbnailButton;
 		var customIcon;
-
+		
+		var invalidFilenameRegex = "[:#$%^&@]";
+		
 		if( imageList !== null ) {
 			var validImages = 0;
 			for( i = 0; i < imageList.length; i++ ) {
@@ -1051,7 +1055,7 @@ function RadialMenu(){
 						thumbnailButton.setButtonImage( idleImageIcon );
 
 					// File has a bad filename for thumbnails, set default icon
-					if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
+					if( imageList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
 						thumbnailButton.setButtonImage( idleImageIcon );
 					}
 
@@ -1080,8 +1084,8 @@ function RadialMenu(){
 					thumbnailButton.setButtonImage( idlePDFIcon );
 
 				// File has a bad filename for thumbnails, set default icon
-				if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
-					thumbnailButton.setButtonImage( idleImageIcon );
+				if( pdfList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+					thumbnailButton.setButtonImage( idlePDFIcon );
 				}
 
 				this.thumbnailButtons.push(thumbnailButton);
@@ -1108,8 +1112,8 @@ function RadialMenu(){
 					thumbnailButton.setButtonImage( idleVideoIcon );
 
 				// File has a bad filename for thumbnails, set default icon
-				if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
-					thumbnailButton.setButtonImage( idleImageIcon );
+				if( videoList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+					thumbnailButton.setButtonImage( idleVideoIcon );
 				}
 
 				this.thumbnailButtons.push(thumbnailButton);
@@ -1135,8 +1139,8 @@ function RadialMenu(){
 					thumbnailButton.setButtonImage( idleAppIcon );
 
 				// File has a bad filename for thumbnails, set default icon
-				if( imageList[i].exif.SAGE2thumbnail.match("[:#$%^&@]") !== null ) {
-					thumbnailButton.setButtonImage( idleImageIcon );
+				if( appList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+					thumbnailButton.setButtonImage( idleAppIcon );
 				}
 
 				this.thumbnailButtons.push(thumbnailButton);
