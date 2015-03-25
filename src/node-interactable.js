@@ -157,7 +157,7 @@ InteractableManager.prototype.searchGeometry = function(point, layerId) {
 		}
 	}
 
-	return this.findTopmostGeometry(point, results);
+	return findTopmostGeometry(point, results);
 };
 
 /**
@@ -167,7 +167,7 @@ InteractableManager.prototype.searchGeometry = function(point, layerId) {
 * @param point {Object} {x: , y: }
 * @param geometryList {Array} list of geometric objects
 */
-InteractableManager.prototype.findTopmostGeometry = function(point, geometryList) {
+function findTopmostGeometry(point, geometryList) {
 	var i, j;
 	var topmost = null;
 	for(i=0; i<geometryList.length; i++) {
@@ -189,7 +189,7 @@ InteractableManager.prototype.findTopmostGeometry = function(point, geometryList
 		if(topmost !== null) return topmost;
 	}
 	return null;
-};
+}
 
 
 module.exports = InteractableManager;
