@@ -39,6 +39,7 @@ var util          = require('util');                // node util
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
 var gm            = require('gm');               // graphicsmagick
+var imageMagick;                                 // derived from graphicsmagick
 var json5         = require('json5');            // JSON format that allows comments
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
@@ -65,62 +66,63 @@ var WebsocketIO         = require('./src/node-websocket.io');     // creates Web
 
 
 // GLOBALS
-global.__SESSION_ID = null; // changed via command line, config param, etc.
+global.__SESSION_ID       = null;
+global.SAGE2_version      = sageutils.getShortVersion();
+global.platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+global.program            = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
+global.apis               = {};
+global.config             = loadConfiguration();
+global.imageMagickOptions = {imageMagick: true};
+global.ffmpegOptions      = {};
+global.publicDirectory    = "public";
+global.hostOrigin         = "";
+global.uploadsDirectory   = path.join(publicDirectory, "uploads");
+global.SAGE2Items         = {};
 
-
-
-// Version calculation
-var SAGE2_version = sageutils.getShortVersion();
-// Platform detection
-var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-
-// Command Line parameter parsing
-var program = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
 
 console.log("Node Version: " + sageutils.getNodeVersion(), "\n");
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
 console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
 
 
-// load config file - looks for user defined file, then file that matches hostname, then uses default
-var apis = {};
-var config = loadConfiguration();
-// remove API keys from being investigated further
-//if(config.apis !== undefined) delete config.apis;
-//console.log(config);
+// Initialize Server
+initializeSAGE2Server();
 
-// register with EVL's server
-if (config.register_site) sageutils.registerSAGE2(config);
 
-// Check for missing packages (pass parameter true for devel packages also)
-sageutils.checkPackages();
 
-// Setup up ImageMagick (load path from configuration file)
-var imConstraints = {imageMagick: true};
-var ffmpegOptions = {};
-if(config.dependencies !== undefined){
-	if(config.dependencies.ImageMagick !== undefined) imConstraints.appPath = config.dependencies.ImageMagick;
-	if(config.dependencies.FFMpeg !== undefined)      ffmpegOptions.appPath = config.dependencies.FFMpeg;
+function initializeSAGE2Server() {
+	// INITIALIZE CONFIGURATION
+	// remove API keys from being investigated further
+	//if(config.apis !== undefined) delete config.apis;
+
+	// REGISTER WITH EVL'S SERVER
+	if (config.register_site) sageutils.registerSAGE2(config);
+
+	// CHECK FOR MISSING PACKAGES
+	// pass parameter `true` for devel packages also
+	sageutils.checkPackages();
+
+	// SETUP BINARIES PATH
+	if(config.dependencies !== undefined) {
+		if(config.dependencies.ImageMagick !== undefined) imageMagickOptions.appPath = config.dependencies.ImageMagick;
+		if(config.dependencies.FFMpeg !== undefined) ffmpegOptions.appPath = config.dependencies.FFMpeg;
+	}
+	imageMagick = gm.subClass(imageMagickOptions);
+	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
+
+	// SET DEFAULT HOST ORIGIN FOR THIS SERVER
+	if(config.rproxy_port === undefined) {
+		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
+	}
+	
+	// INITIALIZE SAGE2 ITEM LISTS
+	SAGE2Items.applications = new Sage2ItemList();
+	SAGE2Items.pointers = new Sage2ItemList();
+	SAGE2Items.radialMenus = new Sage2ItemList();
+	SAGE2Items.widgets = new Sage2ItemList();
 }
-var imageMagick = gm.subClass(imConstraints);
-assets.setupBinaries(imConstraints, ffmpegOptions);
 
 
-// global variables for various paths
-var public_dir = "public"; // directory where HTTPS content is stored
-var hostOrigin = ""; // base URL for this server
-if (config.rproxy_port === undefined) {
-	hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
-}
-var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
-
-
-var SAGE2Items = {
-	applications: new Sage2ItemList(),
-	pointers:     new Sage2ItemList(),
-	radialMenus:  new Sage2ItemList(),
-	widgets:      new Sage2ItemList()
-};
 
 
 // global variables to manage items
@@ -171,7 +173,7 @@ var seedWindowPosition = null;
 
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
-var qr_out = path.join(uploadsFolder, "images", "QR.png");
+var qr_out = path.join(uploadsDirectory, "images", "QR.png");
 qr_png.on('end', function() {
 	console.log(sageutils.header("QR") + "image generated", qr_out);
 });
@@ -192,9 +194,9 @@ if (!sageutils.fileExists(sessionFolder)) {
 }
 
 // Build the list of existing assets
-assets.initialize(uploadsFolder, 'uploads');
+assets.initialize(uploadsDirectory, 'uploads');
 
-var appLoader = new Loader(public_dir, hostOrigin, config, imConstraints, ffmpegOptions);
+var appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 var appAnimations = {};
 var videoHandles = {};
 
@@ -211,12 +213,12 @@ setupDisplayBackground();
 
 
 // create HTTP server for insecure content
-var httpServerIndex = new HttpServer(public_dir);
+var httpServerIndex = new HttpServer(publicDirectory);
 httpServerIndex.httpGET('/config', sendConfig); // send config object to client using http request
 
 
 // create HTTPS server for secure content
-var httpsServerApp = new HttpServer(public_dir);
+var httpsServerApp = new HttpServer(publicDirectory);
 httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
 httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
 
@@ -1156,7 +1158,7 @@ function wsRequestVideoFrame(wsio, data) {
 // **************  File Manipulation Functions for Apps ************
 /*
 function wsWriteToFile (wsio, data){
-	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
+	var fullPath = path.join(uploadsDirectory, "textfiles", data.fileName);
 	fs.writeFile(fullPath, data.buffer, function(err){
 		if (err) {
 			console.log("Error: Could not write to file - " + fullpath);
@@ -1165,7 +1167,7 @@ function wsWriteToFile (wsio, data){
 }
 
 function wsReadFromFile (wsio, data){
-	var fullPath = path.join(uploadsFolder, "textfiles", data.fileName);
+	var fullPath = path.join(uploadsDirectory, "textfiles", data.fileName);
 	fs.readFile(fullPath, {encoding:'utf8'}, function(err, fileContent){
 		if (err) {
 			console.log("Error: Could not read from file - " + fullpath);
@@ -2522,7 +2524,7 @@ function setupDisplayBackground() {
 
 	// background image
 	if (config.background.image !== undefined && config.background.image.url !== undefined) {
-		var bg_file = path.join(public_dir, config.background.image.url);
+		var bg_file = path.join(publicDirectory, config.background.image.url);
 
 		if (config.background.image.style === "tile") {
 			// do nothing
@@ -2541,7 +2543,7 @@ function setupDisplayBackground() {
 					sliceBackgroundImage(bg_file, bg_file);
 				}
 				else {
-					tmpImg = path.join(public_dir, "images", "background", "tmp_background.png");
+					tmpImg = path.join(publicDirectory, "images", "background", "tmp_background.png");
 					var out_res  = config.totalWidth.toString() + "x" + config.totalHeight.toString();
 
 					imageMagick(bg_file).noProfile().command("convert").in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", out_res).write(tmpImg, function(err2) {
@@ -2554,7 +2556,7 @@ function setupDisplayBackground() {
 		else {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
-			tmpImg = path.join(public_dir, "images", "background", "tmp_background" + imgExt);
+			tmpImg = path.join(publicDirectory, "images", "background", "tmp_background" + imgExt);
 
 			imageMagick(bg_file).resize(config.totalWidth, config.totalHeight, "!").write(tmpImg, function(err) {
 				if(err) throw err;
