@@ -47,7 +47,7 @@ if ( semver.gte(process.versions.node, '0.10.0') ) {
 	if ( semver.gte(process.versions.node, '1.0.0') )
 		_NODE_VERSION = 1;
 } else {
-	throw new Error("Old version of Node.js. Please update");
+	throw new Error(" SAGE2>\tOld version of Node.js. Please update");
 }
 
 /**
@@ -161,12 +161,28 @@ function updateWithGIT(callback) {
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd1 = "git pull origin";
 	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if (err) { console.log('GIT>', stderr.trim()); return callback(err); }
-			console.log('GIT>', stdout.trim());
-			// return the object in the callback paramter
-			callback(null);
+		if (err) {
+			console.log(" GIT>\t" + stderr.trim());
+			return callback(err);
+		}
+		console.log(" GIT>\t" + stdout.trim());
+		// return the object in the callback paramter
+		callback(null);
 	});
 }
+
+
+/**
+ * Utility function to create a header for console messages
+ * @method header
+ * @param h {String} header text
+ * @return header {String} formatted text
+ */
+function header(h) {
+	if(h.length <= 5) return " " + h + ">\t\t";
+	else              return " " + h + ">\t";
+}
+
 
 /**
  * Utility function to compare two strings independently of case.
@@ -274,14 +290,14 @@ function checkPackages(inDevelopement) {
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
 				console.log("");
-				console.log("Packages> Warning - Packages not up to date");
-				if (packages.missing.length  > 0) console.log("Packages>	Missing:",  packages.missing);
-				if (packages.outdated.length > 0) console.log("Packages>	Outdated:", packages.outdated);
-				console.log("Packages> To update, execute: npm run in");
+				console.log(header("Packages") + "Warning - Packages not up to date");
+				if (packages.missing.length  > 0) console.log(header("Packages") + "  Missing:",  packages.missing);
+				if (packages.outdated.length > 0) console.log(header("Packages") + "  Outdated:", packages.outdated);
+				console.log(header("Packages") + "To update, execute: npm run in");
 				console.log("");
 			}
 			else {
-				console.log("Packages> All packages up to date");
+				console.log(header("Packages") + "All packages up to date");
 			}
 		}
 	);
@@ -301,7 +317,20 @@ function registerSAGE2(config) {
 		"form": config,
 		"method": "POST"},
 		function(err, response, body) {
-			console.log('SAGE2> Registration with EVL site:', (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
+		}
+	);
+}
+
+function deregisterSAGE2(config, callback) {
+	request({
+		"rejectUnauthorized": false,
+		"url": 'https://sage.evl.uic.edu/unregister',
+		"form": config,
+		"method": "POST"},
+		function (err, response, body) {
+			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
+			callback && callback();
 		}
 	);
 }
@@ -314,6 +343,7 @@ module.exports.getFullVersion  = getFullVersion;
 
 module.exports.secureContext   = secureContext;
 module.exports.fileExists      = fileExists;
+module.exports.header          = header;
 module.exports.compareString   = compareString;
 module.exports.compareFilename = compareFilename;
 module.exports.compareTitle    = compareTitle;
@@ -321,3 +351,4 @@ module.exports.isTrue          = isTrue;
 module.exports.updateWithGIT   = updateWithGIT;
 module.exports.checkPackages   = checkPackages;
 module.exports.registerSAGE2   = registerSAGE2;
+module.exports.deregisterSAGE2 = deregisterSAGE2;

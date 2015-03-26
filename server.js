@@ -36,7 +36,7 @@ var readline      = require('readline');            // to build an evaluation lo
 var url           = require('url');                 // parses urls
 var util          = require('util');                // node util
 
-// npm registry: defined in package.json
+// npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
 var gm            = require('gm');               // graphicsmagick
 var json5         = require('json5');            // JSON format that allows comments
@@ -73,22 +73,14 @@ global.__SESSION_ID = null; // changed via command line, config param, etc.
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
 // Platform detection
-var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "MacOSX" : "Linux";
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 
 // Command Line parameter parsing
 var program = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
 
-console.log("Node Version: " + sageutils.getNodeVersion());
-console.log("Detected Server OS as: " + platform);
-console.log("SAGE2 Short Version: " + SAGE2_version);
-
-
-var SAGE2Items = {
-	applications: new Sage2ItemList(),
-	pointers:     new Sage2ItemList(),
-	radialMenus:  new Sage2ItemList(),
-	widgets:      new Sage2ItemList()
-};
+console.log("Node Version: " + sageutils.getNodeVersion(), "\n");
+console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
+console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
 
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
@@ -123,6 +115,15 @@ if (config.rproxy_port === undefined) {
 }
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
+
+var SAGE2Items = {
+	applications: new Sage2ItemList(),
+	pointers:     new Sage2ItemList(),
+	radialMenus:  new Sage2ItemList(),
+	widgets:      new Sage2ItemList()
+};
+
+
 // global variables to manage items
 var itemCount = 0;
 var userCount = 0;
@@ -155,8 +156,9 @@ if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
 	// fields: base commit branch date
-	console.log("SAGE2> Full Version:", json5.stringify(version));
 	SAGE2_version = version;
+	console.log(sageutils.header("SAGE2") + "Full Version:");
+	console.log(json5.stringify(SAGE2_version, null, 4));
 	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 
 	if(users !== null) users.session.verison = SAGE2_version;
@@ -171,13 +173,15 @@ var seedWindowPosition = null;
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-qr_png.on('end', function() { console.log('QR> image generated', qr_out); });
+qr_png.on('end', function() {
+	console.log(sageutils.header("QR") + "image generated", qr_out);
+});
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
-console.log("SAGE2> Temp folder: ", process.env.TMPDIR);
+console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
 if(!sageutils.fileExists(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
@@ -1355,10 +1359,10 @@ function saveSession (filename) {
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
-		console.log("Session> saved to " + fullpath);
+		console.log(sageutils.header("Session") + "saved session file to " + fullpath);
 	}
 	catch (err) {
-		console.log("Session> error saving", err);
+		console.log(sageutils.header("Session") + "error saving", err);
 	}
 }
 
@@ -1372,16 +1376,16 @@ function loadSession (filename) {
 	}
 	fs.readFile(fullpath, function(err, data) {
 		if (err) {
-			console.log("Server> reading error", err);
+			console.log(sageutils.header("SAGE2") + "error reading session", err);
 		} else {
-			console.log("Server> read sessions from " + fullpath);
+			console.log(sageutils.header("SAGE2") + "reading sessions from " + fullpath);
 
 			var session = JSON.parse(data);
-			console.log("Session> number of applications", session.numapps);
+			console.log(sageutils.header("Session") + "number of applications", session.numapps);
 
 			session.apps.forEach(function(element, index, array) {
 				var a = element;//session.apps[i];
-				console.log("Session> App",  a.id);
+				console.log(sageutils.header("Session") + "App", a.id);
 
 				if (a.application === "movie_player") {
 					var vid;
@@ -2362,7 +2366,7 @@ function loadConfiguration() {
 
 				if(text !== ""){
 					configFile = text;
-					console.log("Found configuration file: " + configFile);
+					console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
 					break;
 				}
 			}
@@ -2376,20 +2380,20 @@ function loadConfiguration() {
 		if(dot >= 0) hn = hn.substring(0, dot);
 		configFile = path.join("config", hn + "-cfg.json");
 		if(sageutils.fileExists(configFile)){
-			console.log("Found configuration file: " + configFile);
+			console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
 		}
 		else{
 			if(platform === "Windows")
 				configFile = path.join("config", "defaultWin-cfg.json");
 			else
 				configFile = path.join("config", "default-cfg.json");
-			console.log("Using default configuration file: " + configFile);
+			console.log(sageutils.header("SAGE2") + "Using default configuration file: " + configFile);
 		}
 	}
 
 	if (!sageutils.fileExists(configFile)) {
 		console.log("\n----------");
-		console.log("Cannot find configuration file:", configFile);
+		console.log(sageutils.header("SAGE2") + "Cannot find configuration file: " + configFile);
 		console.log("----------\n\n");
 		process.exit(1);
 	}
@@ -2871,25 +2875,25 @@ setTimeout(function() {
 
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log('SAGE2> Now serving clients at https://' + config.host + ':' + config.port + '/sageUI.html');
+	console.log(sageutils.header("SAGE2") + "Now serving clients at https://" + config.host + ":" + config.port);
 });
 
 // Place callback for errors in the 'listen' call for HTTP
 sage2Index.on('error', function (e) {
 	if (e.code === 'EACCES') {
-		console.log("HTTP_server> You are not allowed to use the port: ", config.index_port);
-		console.log("HTTP_server>   use a different port or get authorization (sudo, setcap, ...)");
+		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.index_port);
+		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
 		console.log(" ");
 		process.exit(1);
 	}
 	else if (e.code === 'EADDRINUSE') {
-		console.log('HTTP_server> The port is already in use by another process:', config.index_port);
-		console.log("HTTP_server>   use a different port or stop the offending process");
+		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.index_port);
+		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
 		console.log(" ");
 		process.exit(1);
 	}
 	else {
-		console.log("HTTP_server> Error in the listen call: ", e.code);
+		console.log(sageutils.header("HTTP_Server") + "Error in the listen call: ", e.code);
 		console.log(" ");
 		process.exit(1);
 	}
@@ -2898,7 +2902,7 @@ sage2Index.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Index.on('listening', function (e) {
 	// Success
-	console.log('SAGE2> Now serving clients at http://' + config.host + ':' + config.index_port);
+	console.log(sageutils.header("SAGE2") + "Now serving clients at http://" + config.host + ":" + config.index_port);
 });
 
 
@@ -2949,7 +2953,7 @@ if (program.session) {
 	}, 1000);
 }
 
-// Command loop: reading input commands
+// Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout
@@ -2958,7 +2962,8 @@ if (program.interactive)
 	});
 
 	// Set the prompt
-	shell.setPrompt('> ');
+	//shell.setPrompt("> ");
+	shell.setPrompt("");
 
 	// Start the loop
 	shell.prompt();
@@ -3113,26 +3118,20 @@ function quitSAGE2() {
 		users.session.end = Date.now();
 		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
 		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
-		console.log("LOG> saved to " + userLogName);
+		console.log(" LOG> saved log file to " + userLogName);
 	}
 
 	if (config.register_site) {
-		// un-register with EVL's server
-		request({
-			"rejectUnauthorized": false,
-			"url": 'https://sage.evl.uic.edu/unregister',
-			"form": config,
-			"method": "POST"},
-			function (err, response, body) {
-				console.log('SAGE2> Deregistration with EVL site:', (err === null) ? "success" : err.code);
-				saveSession();
-				assets.saveAssets();
-				if( omicronRunning )
-					omicronManager.disconnect();
-				process.exit(0);
-			}
-		);
-	} else {
+		// de-register with EVL's server
+		sageutils.deregisterSAGE2(config, function() {
+			saveSession();
+			assets.saveAssets();
+			if( omicronRunning )
+				omicronManager.disconnect();
+			process.exit(0);
+		});
+	} 
+	else {
 		saveSession();
 		assets.saveAssets();
 		if( omicronRunning )
