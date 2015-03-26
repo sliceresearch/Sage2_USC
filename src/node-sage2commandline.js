@@ -2,12 +2,12 @@
 
 var fs        = require('fs');             // file system
 var path      = require('path');           // resolves directory paths
-var program   = require('commander');      // parsing command-line arguments
+var commander = require('commander');      // parsing command-line arguments
 var util      = require('util');           // node util
 
 
 function initializeCommandLineParameters(version, printFunction) {
-	program
+	commander
 		.version(version)
 		.option('-i, --no-interactive',       'Non interactive prompt')
 		.option('-f, --configuration <file>', 'Specify a configuration file')
@@ -18,19 +18,19 @@ function initializeCommandLineParameters(version, printFunction) {
 		.parse(process.argv);
 
 	// Logging mechanism
-	if (program.logfile) {
-		var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
+	if (commander.logfile) {
+		var logname    = (commander.logfile === true) ? 'sage2.log' : commander.logfile;
 		var log_file   = fs.createWriteStream(path.resolve(logname), {flags: 'w+'});
 		var log_stdout = process.stdout;
 		var aLine, args;
 
 		// Redirect console.log to a file and still produces an output or not
-		if (program.output === false) {
+		if (commander.output === false) {
 			console.log = function(d) {
 				aLine = util.format(d) + '\n';
 				log_file.write(aLine);
 				printFunction('console', aLine, 'receivesConsoleMessages');
-				program.interactive = undefined;
+				commander.interactive = undefined;
 			};
 		} else {
 			console.log = function() {
@@ -59,14 +59,14 @@ function initializeCommandLineParameters(version, printFunction) {
 			};
 		}
 	}
-	else if (program.output === false) {
-		program.interactive = undefined;
+	else if (commander.output === false) {
+		commander.interactive = undefined;
 		console.log = function() {
 			// disable print
 		};
 	}
 
-	return program;
+	return commander;
 }
 
 module.exports.initializeCommandLineParameters = initializeCommandLineParameters;
