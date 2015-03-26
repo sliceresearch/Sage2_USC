@@ -172,7 +172,7 @@ InteractableManager.prototype.editZIndex = function(id, zIndex) {
 */
 InteractableManager.prototype.searchGeometry = function(point, layerId) {
 	var results = [];
-	if(layerId !== undefined && layerId != null) {
+	if (layerId !== undefined && layerId !== null) {
 		results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
 	}
 	else {

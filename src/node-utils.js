@@ -330,7 +330,7 @@ function deregisterSAGE2(config, callback) {
 		"method": "POST"},
 		function (err, response, body) {
 			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
-			callback && callback();
+			if (callback) callback();
 		}
 	);
 }

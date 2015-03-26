@@ -2789,7 +2789,7 @@ if (config.remote_sites) {
 		var rGeom = {};
 		rGeom.w = Math.min((0.5*config.totalWidth)/remoteSites.length, config.ui.titleBarHeight*6) - (0.16*config.ui.titleBarHeight);
 		rGeom.h = 0.84*config.ui.titleBarHeight;
-		rGeom.x = (0.5*config.totalWidth) + ((rGeom.w+(0.16*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.08*config.ui.titleBarHeight)
+		rGeom.x = (0.5*config.totalWidth) + ((rGeom.w+(0.16*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.08*config.ui.titleBarHeight);
 		rGeom.y = 0.08*config.ui.titleBarHeight;
 		
 		remoteSites[index] = {name: element.name, wsio: remote, connected: false, geometry: rGeom};
