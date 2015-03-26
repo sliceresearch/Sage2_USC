@@ -92,7 +92,7 @@ SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry)
 */
 SAGE2ItemList.prototype.findButtonByPoint = function(id, point) {
 	return this.interactMgr.searchGeometry(point, id);
-}
+};
 
 /**
 * Sort the list by a given property
