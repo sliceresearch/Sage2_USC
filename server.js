@@ -973,11 +973,7 @@ function wsStartNewMediaStream(wsio, data) {
 
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-		applications.push(appInstance);
+		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(uniqueID, {type: "mediaStreamStart", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
@@ -1091,11 +1087,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
         appInstance.width  = data.width;
         appInstance.height = data.height;
         appInstance.data   = data;
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-		applications.push(appInstance);
+        handleNewApplication(appInstance, null);
     });
 
     var app = findAppById(data.id);
@@ -1477,13 +1469,7 @@ function loadSession (filename) {
 						appInstance.maximized       = a.maximized;
 						mergeObjects(a.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
-						broadcast('createAppWindow', appInstance, 'requiresFullApps');
-						broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-						interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-						applications.push(appInstance);
-
-						initializeLoadedVideo(appInstance, videohandle);
+						handleNewApplication(appInstance, videohandle);
 					};
 
 					if(vidURL.hostname === config.host) {
@@ -1511,11 +1497,7 @@ function loadSession (filename) {
 						}
 					}
 
-					broadcast('createAppWindow', a, 'requiresFullApps');
-					broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(a), 'requiresAppPositionSizeTypeOnly');
-
-					interactMgr.addGeometry(a.id, "applications", "rectangle", {x: a.left, y: a.top, w: a.width, h: a.height}, true, applications.length, a);
-					applications.push(a);
+					handleNewApplication(a, null);
 				}
 			});
 		}
@@ -1827,13 +1809,9 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
-
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-		applications.push(appInstance);
 	});
 }
 
@@ -1849,22 +1827,15 @@ function wsLoadFileFromServer(wsio, data) {
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			appInstance.id = getUniqueAppId();
-
-			broadcast('createAppWindow', appInstance, 'requiresFullApps');
-			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+			handleNewApplication(appInstance, videohandle);
 
 			addEventToUserLog(data.user, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
-
-			interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-			applications.push(appInstance);
-
-			initializeLoadedVideo(appInstance, videohandle);
 		});
 	}
 }
 
 function initializeLoadedVideo(appInstance, videohandle) {
-	if(appInstance.application !== "movie_player") return;
+	if(appInstance.application !== "movie_player" || videohandle === null) return;
 
 	var i;
 	var blocksize = 128;
@@ -2074,13 +2045,7 @@ function wsAddNewWebElement(wsio, data) {
 		}
 
 		appInstance.id = getUniqueAppId();
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-		applications.push(appInstance);
-
-		initializeLoadedVideo(appInstance, videohandle);
+		handleNewApplication(appInstance, videohandle);
 
 		if(appInstance.animation){
 			var i;
@@ -2201,13 +2166,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 
 		mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
-		broadcast('createAppWindow', appInstance, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-		applications.push(appInstance);
-
-		initializeLoadedVideo(appInstance, videohandle);
+		handleNewApplication(appInstance, videohandle);
 
 		if(appInstance.animation){
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
@@ -2401,9 +2360,9 @@ function wsOpenRadialMenuFromControl(wsio, data){
 function wsCreateAppClone(wsio, data){
 	var app = findAppById(data.id);
 	var appData = {application: "custom_app", filename: app.application};
-	appLoader.loadFileFromLocalStorage(appData, function(clone) {
+	appLoader.loadFileFromLocalStorage(appData, function(clone, videohandle) {
 		clone.id = getUniqueAppId();
-		var pos = getNewWindowPosition({x:app.left, y:app.top});
+		var pos = getNewWindowPosition({x: app.left, y: app.top});
 		clone.left = pos.x;
 		clone.top = pos.y;
 		clone.width = app.width;
@@ -2421,13 +2380,9 @@ function wsCreateAppClone(wsio, data){
 		if (clone.data)
 			clone.data.loadData = data.cloneData;
 		else
-			clone.data = {loadData:data.cloneData};
+			clone.data = {loadData: data.cloneData};
 
-		broadcast('createAppWindow', clone, 'requiresFullApps');
-		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(clone), 'requiresAppPositionSizeTypeOnly');
-
-		interactMgr.addGeometry(clone.id, "applications", "rectangle", {x: clone.left, y: clone.top, w: clone.width, h: clone.height}, true, applications.length, clone);
-		applications.push(clone);
+		handleNewApplication(clone, videohandle);
 	});
 }
 
@@ -2859,14 +2814,6 @@ function manageUploadedFiles(files, position) {
 			}
 
 			appInstance.id = getUniqueAppId();
-			broadcast('createAppWindow', appInstance, 'requiresFullApps');
-			broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
-
-			interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
-			applications.push(appInstance);
-
-			initializeLoadedVideo(appInstance, videohandle);
-
 			if(appInstance.animation){
 				var i;
 				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
@@ -2877,6 +2824,7 @@ function manageUploadedFiles(files, position) {
 					}
 				}
 			}
+			handleNewApplication(appInstance, videohandle);
 		});
 	});
 }
@@ -4470,6 +4418,16 @@ function keyPress( uniqueID, pointerX, pointerY, data ) {
 			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "keyboard", application: {id: elem.id, type: elem.application}, code: data.code, character: data.character}, time: Date.now()});
 		}
 	}
+}
+
+function handleNewApplication(appInstance, videohandle) {
+	broadcast('createAppWindow', appInstance, 'requiresFullApps');
+	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance), 'requiresAppPositionSizeTypeOnly');
+
+	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height}, true, applications.length, appInstance);
+	applications.push(appInstance);
+
+	initializeLoadedVideo(appInstance, videohandle);
 }
 
 function deleteApplication( elem ) {
