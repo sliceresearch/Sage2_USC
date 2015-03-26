@@ -13,10 +13,14 @@
  *
  * @module server
  * @submodule SAGE2ItemList
+ * @requires node-interactable
  */
 
 // require variables to be declared
 "use strict";
+
+var InteractableManager = require('./node-interactable');
+
 
 /**
  * SAGE2ItemList object
@@ -26,6 +30,8 @@
  */
 function SAGE2ItemList() {
 	this.list = {};
+
+	this.interactMgr = new InteractableManager();
 }
 
 /**
@@ -36,6 +42,7 @@ function SAGE2ItemList() {
 */
 SAGE2ItemList.prototype.addItem = function(item) {
 	this.list[item.id] = item;
+	this.interactMgr.addLayer(item.id, 0);
 };
 
 /**
@@ -61,6 +68,31 @@ SAGE2ItemList.prototype.editItem = function(id, newProperties) {
 		this.list[id][key] = newProperties[key];
 	}
 };
+
+/**
+* Add an interactable button to an item in the list
+*
+* @method addButtonToItem
+* @param id {String} id of item
+* @param buttonId {String} id of button
+* @param type {String} "rectangle" or "circle"
+* @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
+*/
+SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry) {
+	this.interactMgr.addGeometry(buttonId, id, type, geometry, true, 0, null);
+};
+
+/**
+* Test to see which button is under a given point
+*
+* @method findButtonByPoint
+* @param id {String} id of item
+* @param point {Object} {x: , y: }
+* @return button {Object} button under the point
+*/
+SAGE2ItemList.prototype.findButtonByPoint = function(id, point) {
+	return this.interactMgr.searchGeometry(point, id);
+}
 
 /**
 * Sort the list by a given property

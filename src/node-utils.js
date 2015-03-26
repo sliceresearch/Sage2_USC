@@ -22,13 +22,14 @@
 
 var SAGE2_version = require('../package.json').version;
 
-var crypto = require('crypto');              // https encryption
-var fs     = require('fs');                  // filesystem access
-var tls    = require('tls');                 // https encryption
-var path   = require('path');
-var exec   = require('child_process').exec;
+var crypto  = require('crypto');              // https encryption
+var exec    = require('child_process').exec;  // execute external application
+var fs      = require('fs');                  // filesystem access
+var path    = require('path');                // resolve directory paths
+var tls     = require('tls');                 // https encryption
 
-var semver = require('semver');              // parse version numbers
+var request = require('request');             // http requests
+var semver  = require('semver');              // parse version numbers
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -48,7 +49,6 @@ if ( semver.gte(process.versions.node, '0.10.0') ) {
 } else {
 	throw new Error("Old version of Node.js. Please update");
 }
-console.log("Node version:", _NODE_VERSION.toString(), '(', process.versions.node, ')');
 
 /**
  * Test if file is exists and readable
@@ -100,6 +100,17 @@ function secureContext(key, crt, ca) {
  */
 function getShortVersion() {
 	return SAGE2_version;
+}
+
+
+/**
+ * Node.js version
+ *
+ * @method getNodeVersion
+ * @return {String} version number
+ */
+function getNodeVersion() {
+	return _NODE_VERSION.toString() +  " (v" +  process.versions.node + ")";
 }
 
 /**
@@ -276,15 +287,37 @@ function checkPackages(inDevelopement) {
 	);
 }
 
-exports.nodeVersion     = _NODE_VERSION;
-exports.getShortVersion = getShortVersion;
-exports.getFullVersion  = getFullVersion;
 
-exports.secureContext   = secureContext;
-exports.fileExists      = fileExists;
-exports.compareString   = compareString;
-exports.compareFilename = compareFilename;
-exports.compareTitle    = compareTitle;
-exports.isTrue          = isTrue;
-exports.updateWithGIT   = updateWithGIT;
-exports.checkPackages   = checkPackages;
+/**
+ * Register SAGE2 with EVL server
+ *
+ * @method registerSAGE2
+ * @param config {Object} local SAGE2 configuration
+ */
+function registerSAGE2(config) {
+	request({
+		"rejectUnauthorized": false,
+		"url": 'https://sage.evl.uic.edu/register',
+		"form": config,
+		"method": "POST"},
+		function(err, response, body) {
+			console.log('SAGE2> Registration with EVL site:', (err === null) ? "success" : err.code);
+		}
+	);
+}
+
+
+module.exports.nodeVersion     = _NODE_VERSION;
+module.exports.getNodeVersion  = getNodeVersion;
+module.exports.getShortVersion = getShortVersion;
+module.exports.getFullVersion  = getFullVersion;
+
+module.exports.secureContext   = secureContext;
+module.exports.fileExists      = fileExists;
+module.exports.compareString   = compareString;
+module.exports.compareFilename = compareFilename;
+module.exports.compareTitle    = compareTitle;
+module.exports.isTrue          = isTrue;
+module.exports.updateWithGIT   = updateWithGIT;
+module.exports.checkPackages   = checkPackages;
+module.exports.registerSAGE2   = registerSAGE2;

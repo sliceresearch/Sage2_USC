@@ -40,7 +40,6 @@ var util          = require('util');                // node util
 var formidable    = require('formidable');       // upload processor
 var gm            = require('gm');               // graphicsmagick
 var json5         = require('json5');            // JSON format that allows comments
-var program       = require('commander');        // parsing command-line arguments
 var qrimage       = require('qr-image');         // qr-code generation
 var request       = require('request');          // external http requests
 var sprint        = require('sprint');           // pretty formating (sprintf)
@@ -48,20 +47,22 @@ var sprint        = require('sprint');           // pretty formating (sprintf)
 var Twit          = require('twit');             // twitter api
 
 // custom node modules
-var assets              = require('./src/node-assets');         // manages the list of files
-var exiftool            = require('./src/node-exiftool');       // gets exif tags for images
-var pixelblock          = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
-var sageutils           = require('./src/node-utils');          // provides the current version number
+var assets              = require('./src/node-assets');           // manages the list of files
+var commandline         = require('./src/node-sage2commandline'); // handles command line parameters for SAGE2
+var exiftool            = require('./src/node-exiftool');         // gets exif tags for images
+var pixelblock          = require('./src/node-pixelblock');       // chops pixels buffers into square chunks
+var sageutils           = require('./src/node-utils');            // provides the current version number
 
-var HttpServer          = require('./src/node-httpserver');     // creates web server
-var InteractableManager = require('./src/node-interactable');   // handles geometry and determining which object a point is over
-var Interaction         = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
-var Loader              = require('./src/node-itemloader');     // handles sage item creation
-var Omicron             = require('./src/node-omicron');        // handles Omicron input events
-var Radialmenu          = require('./src/node-radialmenu');     // radial menu
-var Sagepointer         = require('./src/node-sagepointer');    // handles sage pointers (creation, location, etc.)
+var HttpServer          = require('./src/node-httpserver');       // creates web server
+var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
+var Interaction         = require('./src/node-interaction');      // handles sage interaction (move, resize, etc.)
+var Loader              = require('./src/node-itemloader');       // handles sage item creation
+var Omicron             = require('./src/node-omicron');          // handles Omicron input events
+var Radialmenu          = require('./src/node-radialmenu');       // radial menu
+var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
+var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var WebsocketIO         = require('./src/node-websocket.io');   // creates WebSocket server and clients
+var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
 
 
 // GLOBALS
@@ -71,104 +72,34 @@ global.__SESSION_ID = null; // changed via command line, config param, etc.
 
 // Version calculation
 var SAGE2_version = sageutils.getShortVersion();
-
-// Command line arguments
-program
-  .version(SAGE2_version)
-  .option('-i, --no-interactive',       'Non interactive prompt')
-  .option('-f, --configuration <file>', 'Specify a configuration file')
-  .option('-l, --logfile [file]',       'Specify a log file')
-  .option('-q, --no-output',            'Quiet, no output')
-  .option('-s, --session [name]',       'Load a session file (last session if omitted)')
-  .option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
-  .parse(process.argv);
-
-// Logging mechanism
-if (program.logfile) {
-	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
-	var log_file   = fs.createWriteStream(path.resolve(logname), {flags: 'w+'});
-	var log_stdout = process.stdout;
-	var aLine, args;
-
-	// Redirect console.log to a file and still produces an output or not
-	if (program.output === false) {
-		console.log = function(d) {
-			aLine = util.format(d) + '\n';
-			log_file.write(aLine);
-			broadcast_opt('console', aLine, 'receivesConsoleMessages');
-			program.interactive = undefined;
-		};
-	} else {
-		console.log = function() {
-			args = Array.prototype.slice.call(arguments);
-			if ( args.length === 1 && typeof args[0] === 'string') {
-				aLine = args.toString() + '\n';
-				log_stdout.write(aLine);
-				broadcast_opt('console', aLine, 'receivesConsoleMessages');
-			}
-			else {
-				var i = 0;
-				var s = "";
-				args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
-				while (i < args.length) {
-					if (i === 0)
-						s = args[i];
-					else
-						s += " " + args[i];
-					i++;
-				}
-				aLine = s + '\n';
-				log_stdout.write(aLine);
-				log_file.write(aLine);
-				broadcast_opt('console', aLine, 'receivesConsoleMessages');
-			}
-		};
-	}
-}
-else if (program.output === false) {
-	program.interactive = undefined;
-	console.log = function() {
-		// disable print
-	};
-}
-
 // Platform detection
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "MacOSX" : "Linux";
 
-console.log("Detected Server OS as:", platform);
-console.log("SAGE2 Short Version:", SAGE2_version);
+// Command Line parameter parsing
+var program = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
+
+console.log("Node Version: " + sageutils.getNodeVersion());
+console.log("Detected Server OS as: " + platform);
+console.log("SAGE2 Short Version: " + SAGE2_version);
+
+
+var SAGE2Items = {
+	applications: new Sage2ItemList(),
+	pointers:     new Sage2ItemList(),
+	radialMenus:  new Sage2ItemList(),
+	widgets:      new Sage2ItemList()
+};
 
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
+var apis = {};
 var config = loadConfiguration();
-
-var twitter = null;
-if(config.apis !== undefined && config.apis.twitter !== undefined){
-	twitter = new Twit({
-		consumer_key:         config.apis.twitter.consumerKey,
-		consumer_secret:      config.apis.twitter.consumerSecret,
-		access_token:         config.apis.twitter.accessToken,
-		access_token_secret:  config.apis.twitter.accessSecret
-	});
-}
-
 // remove API keys from being investigated further
 //if(config.apis !== undefined) delete config.apis;
-
-console.log(config);
+//console.log(config);
 
 // register with EVL's server
-if (config.register_site) {
-	request({
-		"rejectUnauthorized": false,
-		"url": 'https://sage.evl.uic.edu/register',
-		"form": config,
-		"method": "POST"},
-		function(err, response, body) {
-			console.log('SAGE2> Registration with EVL site:', (err === null) ? "success" : err.code);
-		}
-	);
-}
+if (config.register_site) sageutils.registerSAGE2(config);
 
 // Check for missing packages (pass parameter true for devel packages also)
 sageutils.checkPackages();
@@ -1316,7 +1247,7 @@ function wsBroadcast(wsio, data) {
 // Search tweets using Twitter API
 //
 function wsSearchTweets(wsio, data) {
-	if(twitter === null) {
+	if(apis.twitter === null) {
 		if(data.broadcast === true)
 			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null, err: {message: "Twitter API not enabled in SAGE2 configuration"}}}, 'requiresFullApps');
 		else
@@ -1324,7 +1255,7 @@ function wsSearchTweets(wsio, data) {
 		return;
 	}
 
-	twitter.get('search/tweets', data.query, function(err, info, response) {
+	apis.twitter.get('search/tweets', data.query, function(err, info, response) {
 		if(data.broadcast === true)
 			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}}, 'requiresFullApps');
 		else
@@ -2420,22 +2351,22 @@ function loadConfiguration() {
 		configFile = program.configuration;
 	}
 	else {
-	// Read config.txt - if exists and specifies a user defined config, then use it
-	if(sageutils.fileExists("config.txt")){
-		var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
-		for(var i =0; i<lines.length; i++){
-			var text = "";
-			var comment = lines[i].indexOf("//");
-			if(comment >= 0) text = lines[i].substring(0, comment).trim();
-			else text = lines[i].trim();
+		// Read config.txt - if exists and specifies a user defined config, then use it
+		if(sageutils.fileExists("config.txt")){
+			var lines = fs.readFileSync("config.txt", 'utf8').split("\n");
+			for(var i =0; i<lines.length; i++){
+				var text = "";
+				var comment = lines[i].indexOf("//");
+				if(comment >= 0) text = lines[i].substring(0, comment).trim();
+				else text = lines[i].trim();
 
-			if(text !== ""){
-				configFile = text;
-				console.log("Found configuration file: " + configFile);
-				break;
+				if(text !== ""){
+					configFile = text;
+					console.log("Found configuration file: " + configFile);
+					break;
+				}
 			}
 		}
-	}
 	}
 
 	// If config.txt does not exist or does not specify any files, look for a config with the hostname
@@ -2520,6 +2451,16 @@ function loadConfiguration() {
 			userConfig.register_site = true;
 		else
 			userConfig.register_site = false;
+	}
+
+
+	if(userConfig.apis !== undefined && userConfig.apis.twitter !== undefined){
+		apis.twitter = new Twit({
+			consumer_key:         userConfig.apis.twitter.consumerKey,
+			consumer_secret:      userConfig.apis.twitter.consumerSecret,
+			access_token:         userConfig.apis.twitter.accessToken,
+			access_token_secret:  userConfig.apis.twitter.accessSecret
+		});
 	}
 
 	return userConfig;
