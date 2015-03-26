@@ -8,14 +8,14 @@ var util      = require('util');           // node util
 
 function initializeCommandLineParameters(version, printFunction) {
 	program
-	  .version(version)
-	  .option('-i, --no-interactive',       'Non interactive prompt')
-	  .option('-f, --configuration <file>', 'Specify a configuration file')
-	  .option('-l, --logfile [file]',       'Specify a log file')
-	  .option('-q, --no-output',            'Quiet, no output')
-	  .option('-s, --session [name]',       'Load a session file (last session if omitted)')
-	  .option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
-	  .parse(process.argv);
+		.version(version)
+		.option('-i, --no-interactive',       'Non interactive prompt')
+		.option('-f, --configuration <file>', 'Specify a configuration file')
+		.option('-l, --logfile [file]',       'Specify a log file')
+		.option('-q, --no-output',            'Quiet, no output')
+		.option('-s, --session [name]',       'Load a session file (last session if omitted)')
+		.option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
+		.parse(process.argv);
 
 	// Logging mechanism
 	if (program.logfile) {

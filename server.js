@@ -41,7 +41,6 @@ var formidable    = require('formidable');       // upload processor
 var gm            = require('gm');               // graphicsmagick
 var json5         = require('json5');            // JSON format that allows comments
 var qrimage       = require('qr-image');         // qr-code generation
-var request       = require('request');          // external http requests
 var sprint        = require('sprint');           // pretty formating (sprintf)
 
 var Twit          = require('twit');             // twitter api
@@ -2791,10 +2790,10 @@ if (config.remote_sites) {
 		rGeom.h = 0.84*config.ui.titleBarHeight;
 		rGeom.x = (0.5*config.totalWidth) + ((rGeom.w+(0.16*config.ui.titleBarHeight))*(index-(remoteSites.length/2))) + (0.08*config.ui.titleBarHeight);
 		rGeom.y = 0.08*config.ui.titleBarHeight;
-		
+
 		remoteSites[index] = {name: element.name, wsio: remote, connected: false, geometry: rGeom};
 		interactMgr.addGeometry("remote_"+index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
-		
+
 		// attempt to connect every 15 seconds, if connection failed
 		setInterval(function() {
 			if (!remoteSites[index].connected) {
@@ -3130,7 +3129,7 @@ function quitSAGE2() {
 				omicronManager.disconnect();
 			process.exit(0);
 		});
-	} 
+	}
 	else {
 		saveSession();
 		assets.saveAssets();
