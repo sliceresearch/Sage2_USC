@@ -58,7 +58,7 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 			if (msg.f in _this.messages) {
 				_this.messages[msg.f](_this, msg.d);
 			} else {
-				console.log('WebsocketIO> no handler for', msg.f);
+				console.log(" WebsocketIO>\tno handler for '" + msg.f + "'");
 			}
 		}
 		else {
@@ -111,7 +111,7 @@ WebsocketIO.prototype.emit = function(name, data) {
 	var message;
 
 	if (name === null || name === "") {
-		console.log("WebsocketIO> Error, no message name specified");
+		console.log(" WebsocketIO>\tError, no message name specified");
 		return;
 	}
 
@@ -122,12 +122,12 @@ WebsocketIO.prototype.emit = function(name, data) {
 
 		try {
 			this.ws.send(message, {binary: true, mask: false}, function(err){
-				if(err) console.log("WebsocketIO> ---ERROR (ws.send)---");
+				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---");
 				// else success
 			});
 		}
 		catch(e) {
-			console.log("WebsocketIO> ---ERROR (try-catch)---");
+			console.log(" WebsocketIO>\t---ERROR (try-catch)---");
 		}
 	}
 	// send data as JSON string
@@ -138,12 +138,12 @@ WebsocketIO.prototype.emit = function(name, data) {
 		try {
 			var msgString = JSON.stringify(message);
 			this.ws.send(msgString, {binary: false, mask: false}, function(err){
-				if(err) console.log("WebsocketIO> ---ERROR (ws.send)---");
+				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---");
 				// else success
 			});
 		}
 		catch(e) {
-			console.log("WebsocketIO> ---ERROR (try-catch)---");
+			console.log(" WebsocketIO>\t---ERROR (try-catch)---");
 		}
 	}
 };
