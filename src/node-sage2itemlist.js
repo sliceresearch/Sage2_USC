@@ -51,7 +51,7 @@ SAGE2ItemList.prototype.addItem = function(item) {
 * @method removeItem
 * @param id {String} id of item to be removed from list
 */
-SAGE2ItemList.prototype.removeItem = function(item) {
+SAGE2ItemList.prototype.removeItem = function(id) {
 	delete this.list[id];
 };
 
