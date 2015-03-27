@@ -2834,8 +2834,8 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.onclose(function() {
 			console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
 			remoteSites[index].connected = false;
-			var site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-			broadcast('connectedToRemoteSite', site);
+			var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+			broadcast('connectedToRemoteSite', delete_site);
 			removeElement(clients, remote);
 		});
 
@@ -2844,14 +2844,14 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
 		remote.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
 		remote.on('stopMediaStream', wsStopMediaStream);
-	    remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
-	    remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
+		remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
+		remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
 		remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
 
 		remote.emit('addClient', clientDescription);
 		remoteSites[index].connected = true;
-		var site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-		broadcast('connectedToRemoteSite', site);
+		var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+		broadcast('connectedToRemoteSite', new_site);
 		clients.push(remote);
 	});
 

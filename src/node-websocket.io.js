@@ -234,18 +234,18 @@ WebsocketIOServer.prototype.broadcast = function(name, data) {
 	if (Buffer.isBuffer(data)) {
 		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
 		pkg = Buffer.concat([funcName, data]);
-		for(var key in this.clients) {
-			if(this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitBinary(pkg);
+		for (key in this.clients) {
+			if (this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitBinary(pkg);
 		}
 	}
 	// send data as JSON string
 	else {
 		pkg = JSON.stringify({f: name, d: data});
-		for(var key in this.clients) {
-			if(this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitString(pkg);
+		for (key in this.clients) {
+			if (this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitString(pkg);
 		}
 	}
-}
+};
 
 
 
