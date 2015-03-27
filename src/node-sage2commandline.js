@@ -29,7 +29,7 @@ function initializeCommandLineParameters(version, printFunction) {
 			console.log = function(d) {
 				aLine = util.format(d) + '\n';
 				log_file.write(aLine);
-				printFunction('console', aLine, 'receivesConsoleMessages');
+				printFunction(aLine);
 				commander.interactive = undefined;
 			};
 		} else {
@@ -38,7 +38,7 @@ function initializeCommandLineParameters(version, printFunction) {
 				if ( args.length === 1 && typeof args[0] === 'string') {
 					aLine = args.toString() + '\n';
 					log_stdout.write(aLine);
-					printFunction('console', aLine, 'receivesConsoleMessages');
+					printFunction(aLine);
 				}
 				else {
 					var i = 0;
@@ -54,7 +54,7 @@ function initializeCommandLineParameters(version, printFunction) {
 					aLine = s + '\n';
 					log_stdout.write(aLine);
 					log_file.write(aLine);
-					printFunction('console', aLine, 'receivesConsoleMessages');
+					printFunction(aLine);
 				}
 			};
 		}
