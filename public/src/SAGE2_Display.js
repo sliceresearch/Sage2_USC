@@ -71,6 +71,10 @@ function SAGE2_init() {
 	isMaster = false;
 
 	wsio.open(function() {
+		log("open websocket");
+
+		setupListeners();
+
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -96,7 +100,6 @@ function SAGE2_init() {
 
 		};
 		wsio.emit('addClient', clientDescription);
-		log("open websocket");
 	});
 
 	// Socket close event (ie server crashed)
@@ -117,7 +120,9 @@ function SAGE2_init() {
 			xhr.send();
 		}, 2000);
 	});
+}
 
+function setupListeners() {
 	wsio.on('initialize', function(data) {
 		var startTime  = new Date(data.start);
 		// var serverTime = new Date(data.time);

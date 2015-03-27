@@ -33,6 +33,9 @@ function SAGE2_init() {
 
 	wsio.open(function() {
 		console.log("open websocket");
+
+		setupListeners();
+
 		var clientDescription = {
 			clientType: "audioManager",
 			sendsPointerData: false,
@@ -72,7 +75,9 @@ function SAGE2_init() {
 			xhr.send();
 		}, 2000);
 	});
+}
 
+function setupListeners() {
 	wsio.on('initialize', function(data) {
 		// var serverTime = new Date(data.time);
 		// var clientTime = new Date();

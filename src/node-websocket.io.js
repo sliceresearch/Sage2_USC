@@ -39,8 +39,13 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 
 	var _this = this;
 	this.messages = {};
-	if (this.ws.readyState === 1)
+	if (this.ws.readyState === 1) {
 		this.remoteAddress = {address: this.ws._socket.remoteAddress, port: this.ws._socket.remotePort};
+		this.id = this.remoteAddress.address + ":" + this.remoteAddress.port;
+	}
+
+	this.closeCallbacks = [];
+	this.listeners = ["#WSIO#addListener"];
 
 	this.ws.on('error', function(err) {
 		if (err.errno === "ECONNREFUSED") return; // do nothing
@@ -49,12 +54,21 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 	this.ws.on('open', function() {
 		_this.ws.binaryType = "arraybuffer";
 		_this.remoteAddress = {address: _this.ws._socket.remoteAddress, port: _this.ws._socket.remotePort};
+		_this.id = _this.remoteAddress.address + ":" + _this.remoteAddress.port;
 		if(openCallback !== null) openCallback();
 	});
 
 	this.ws.on('message', function(message) {
 		if (typeof message === "string") {
 			var msg = JSON.parse(message);
+
+			// add lister to client
+			if(msg.f === "#WSIO#addListener") {
+				_this.listeners.push(msg.d.listener);
+				return;
+			}
+
+			// handle message
 			if (msg.f in _this.messages) {
 				_this.messages[msg.f](_this, msg.d);
 			} else {
@@ -74,6 +88,12 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 			_this.messages[func](_this, buf);
 		}
 	});
+
+	this.ws.on('close', function() {
+		for(var i=0; i<_this.closeCallbacks.length; i++) {
+			_this.closeCallbacks[i](_this);
+		}
+	});
 }
 
 /**
@@ -83,10 +103,7 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 * @param callback {Function} function to execute after closing
 */
 WebsocketIO.prototype.onclose = function(callback) {
-	var _this = this;
-	this.ws.on('close', function(){
-		callback(_this);
-	});
+	this.closeCallbacks.push(callback);
 };
 
 /**
@@ -98,6 +115,7 @@ WebsocketIO.prototype.onclose = function(callback) {
 */
 WebsocketIO.prototype.on = function(name, callback) {
 	this.messages[name] = callback;
+	this.emit('#WSIO#addListener', {listener: name});
 };
 
 /**
@@ -114,6 +132,10 @@ WebsocketIO.prototype.emit = function(name, data) {
 		console.log(" WebsocketIO>\tError, no message name specified");
 		return;
 	}
+	/*else if(this.listeners.indexOf(name) < 0) {
+		console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+		return;
+	}*/
 
 	// send binary data as array buffer
 	if (Buffer.isBuffer(data)) {
@@ -122,12 +144,12 @@ WebsocketIO.prototype.emit = function(name, data) {
 
 		try {
 			this.ws.send(message, {binary: true, mask: false}, function(err){
-				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---");
+				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---", name);
 				// else success
 			});
 		}
 		catch(e) {
-			console.log(" WebsocketIO>\t---ERROR (try-catch)---");
+			console.log(" WebsocketIO>\t---ERROR (try-catch)---", name);
 		}
 	}
 	// send data as JSON string
@@ -138,12 +160,12 @@ WebsocketIO.prototype.emit = function(name, data) {
 		try {
 			var msgString = JSON.stringify(message);
 			this.ws.send(msgString, {binary: false, mask: false}, function(err){
-				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---");
+				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---", name);
 				// else success
 			});
 		}
 		catch(e) {
-			console.log(" WebsocketIO>\t---ERROR (try-catch)---");
+			console.log(" WebsocketIO>\t---ERROR (try-catch)---", name);
 		}
 	}
 };
@@ -152,10 +174,20 @@ WebsocketIO.prototype.emit = function(name, data) {
 * Faster version for emit: No JSON stringigy and no check version
 *
 * @method emitString
-* @param data {Object} data to be sent as the message
+* @param data {String} data to be sent as the message
 */
 WebsocketIO.prototype.emitString = function(data) {
 	this.ws.send(data, {binary: false, mask: false});
+};
+
+/**
+* Faster version for emit: No packing data into single buffer
+*
+* @method emitBinary
+* @param data {Buffer} data to be sent as the message
+*/
+WebsocketIO.prototype.emitBinary = function(data) {
+	this.ws.send(data, {binary: true, mask: false});
 };
 
 
@@ -171,6 +203,8 @@ function WebsocketIOServer(data) {
 		this.wss = new WebSocketServer({server: data.server, perMessageDeflate: false});
 	else if(data.port !== undefined)
 		this.wss = new WebSocketServer({port: data.port, perMessageDeflate: false});
+
+	this.clients = {};
 }
 
 /**
@@ -180,13 +214,38 @@ function WebsocketIOServer(data) {
 * @param callback {Function} function taking the new client (WebsocketIO) as parameter
 */
 WebsocketIOServer.prototype.onconnection = function(callback) {
+	var _this = this;
 	this.wss.on('connection', function(ws) {
 		ws.binaryType = "arraybuffer";
 
 		var wsio = new WebsocketIO(ws);
+		wsio.onclose(function(closed) {
+			delete _this.clients[closed.id];
+		});
+		_this.clients[wsio.id] = wsio;
 		callback(wsio);
 	});
 };
+
+WebsocketIOServer.prototype.broadcast = function(name, data) {
+	var key;
+	var pkg = null;
+	// send as binary buffer
+	if (Buffer.isBuffer(data)) {
+		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
+		pkg = Buffer.concat([funcName, data]);
+		for(var key in this.clients) {
+			if(this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitBinary(pkg);
+		}
+	}
+	// send data as JSON string
+	else {
+		pkg = JSON.stringify({f: name, d: data});
+		for(var key in this.clients) {
+			if(this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitString(pkg);
+		}
+	}
+}
 
 
 

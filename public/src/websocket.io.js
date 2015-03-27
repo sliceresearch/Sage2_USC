@@ -37,6 +37,13 @@ function WebsocketIO(url) {
 	 * @type Object
 	 */
 	this.messages = {};
+	/**
+	 * list of listeners on other side of connection
+	 *
+	 * @property messages
+	 * @type Object
+	 */
+	this.listeners = ["#WSIO#addListener"];
 
 	/**
 	* Open a websocket
@@ -57,6 +64,12 @@ function WebsocketIO(url) {
 			// text message
 			if (typeof msg.data === "string") {
 				var message = JSON.parse(msg.data);
+
+				if(message.f === "#WSIO#addListener") {
+					_this.listeners.push(message.d.listener);
+					return;
+				}
+
 				if (message.f in _this.messages) {
 					_this.messages[message.f](message.d);
 				} else {
@@ -92,6 +105,8 @@ function WebsocketIO(url) {
 	*/
 	this.on = function(name, callback) {
 		this.messages[name] = callback;
+		if(name === "close") return;
+		this.emit('#WSIO#addListener', {listener: name});
 	};
 
 	/**
@@ -106,6 +121,10 @@ function WebsocketIO(url) {
 			console.log("Error: no message name specified");
 			return;
 		}
+		/*else if(this.listeners.indexOf(name) < 0) {
+			console.log("Warning: not sending message, recipient has no listener (" + name + ")");
+			return;
+		}*/
 
 		// send binary data as array buffer
 		if (data instanceof Uint8Array) {

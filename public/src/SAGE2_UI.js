@@ -120,6 +120,8 @@ function SAGE2_init() {
 	wsio.open(function() {
 		console.log("open websocket");
 
+		setupListeners();
+
 		var clientDescription = {
 			clientType: "sageUI",
 			sendsPointerData: true,
@@ -157,6 +159,61 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
+	var sage2UI = document.getElementById('sage2UI');
+
+	window.addEventListener('dragover', preventDefault, false);
+	window.addEventListener('dragend',  preventDefault, false);
+	window.addEventListener('drop',     preventDefault, false);
+
+	sage2UI.addEventListener('dragover',  preventDefault, false);
+	sage2UI.addEventListener('dragend',   preventDefault, false);
+	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
+	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
+	sage2UI.addEventListener('drop',      fileDrop,       false);
+
+	document.addEventListener('mousemove',  mouseCheck,   false);
+	document.addEventListener('touchstart', touchStart,   false);
+	document.addEventListener('touchend',   touchEnd,     false);
+	document.addEventListener('touchmove',  touchMove,    false);
+	document.addEventListener('keyup',      escapeDialog, false);
+	document.addEventListener('keydown',    noBackspace,  false);
+
+	keyEvents = false;
+	openDialog = null;
+	selectedAppEntry = null;
+	selectedFileEntry = null;
+	touchTime = 0;
+	touchTapTime = 0;
+	touchHold = null;
+	touchMode = "";
+
+	type2App = {
+		images: "image_viewer",
+		videos: "movie_player",
+		pdfs: "pdf_viewer",
+		sessions: "load_session"
+	};
+
+	hasMouse = false;
+	console.log("Assuming mobile device");
+
+	window.addEventListener('message', function (event) {
+		if (event.origin !== window.location.origin) return;
+
+		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
+			if (interactor !== undefined && interactor !== null)
+				interactor.chromeDesktopCaptureEnabled = true;
+		}
+		if (event.data.cmd === "window_selected") {
+			interactor.captureDesktop(event.data.mediaSourceId);
+		}
+	});
+
+	resizeMenuUI();
+	resizeDialogs();
+}
+
+function setupListeners() {
 	wsio.on('initialize', function(data) {
 		interactor.setInteractionId(data.UID);
 		pointerDown = false;
@@ -268,60 +325,8 @@ function SAGE2_init() {
 	wsio.on('stopMediaCapture', function() {
 		if (interactor.mediaStream !== null) interactor.mediaStream.stop();
 	});
-
-	var sage2UI = document.getElementById('sage2UI');
-
-	window.addEventListener('dragover', preventDefault, false);
-	window.addEventListener('dragend',  preventDefault, false);
-	window.addEventListener('drop',     preventDefault, false);
-
-	sage2UI.addEventListener('dragover',  preventDefault, false);
-	sage2UI.addEventListener('dragend',   preventDefault, false);
-	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
-	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
-	sage2UI.addEventListener('drop',      fileDrop,       false);
-
-	document.addEventListener('mousemove',  mouseCheck,   false);
-	document.addEventListener('touchstart', touchStart,   false);
-	document.addEventListener('touchend',   touchEnd,     false);
-	document.addEventListener('touchmove',  touchMove,    false);
-	document.addEventListener('keyup',      escapeDialog, false);
-	document.addEventListener('keydown',    noBackspace,  false);
-
-	keyEvents = false;
-	openDialog = null;
-	selectedAppEntry = null;
-	selectedFileEntry = null;
-	touchTime = 0;
-	touchTapTime = 0;
-	touchHold = null;
-	touchMode = "";
-
-	type2App = {
-		images: "image_viewer",
-		videos: "movie_player",
-		pdfs: "pdf_viewer",
-		sessions: "load_session"
-	};
-
-	hasMouse = false;
-	console.log("Assuming mobile device");
-
-	window.addEventListener('message', function (event) {
-		if (event.origin !== window.location.origin) return;
-
-		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
-			if (interactor !== undefined && interactor !== null)
-				interactor.chromeDesktopCaptureEnabled = true;
-		}
-		if (event.data.cmd === "window_selected") {
-			interactor.captureDesktop(event.data.mediaSourceId);
-		}
-	});
-
-	resizeMenuUI();
-	resizeDialogs();
 }
+
 
 /**
  * Handler resizes

@@ -65,7 +65,7 @@ var StickyItems         = require('./src/node-stickyitems');
 var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
 
 
-// GLOBALS
+// Globals
 global.__SESSION_ID    = null;
 
 var SAGE2_version      = sageutils.getShortVersion();
@@ -241,7 +241,7 @@ wsioServerS.onconnection(function(wsio) {
 });
 
 function closeWebSocketClient(wsio) {
-    var i;
+	var i;
     var key;
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
@@ -2823,30 +2823,31 @@ function createRemoteConnection(wsURL, element, index) {
 			receivesInputEvents: false,
 			receivesRemoteServerInfo: false
 		};
+		remote.clientType = "remoteServer";
+
+		remote.onclose(function() {
+			console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
+			remoteSites[index].connected = false;
+			var site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+			broadcast('connectedToRemoteSite', site, 'receivesRemoteServerInfo');
+			removeElement(clients, remote);
+		});
+
+		remote.on('addClient', wsAddClient);
+		remote.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
+		remote.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
+		remote.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
+		remote.on('stopMediaStream', wsStopMediaStream);
+	    remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
+	    remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
+		remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
+
 		remote.emit('addClient', clientDescription);
 		remoteSites[index].connected = true;
 		var site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
 		broadcast('connectedToRemoteSite', site, 'receivesRemoteServerInfo');
 		clients.push(remote);
 	});
-
-	remote.clientType = "remoteServer";
-
-	remote.onclose(function() {
-		console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
-		remoteSites[index].connected = false;
-		var site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-		broadcast('connectedToRemoteSite', site, 'receivesRemoteServerInfo');
-		removeElement(clients, remote);
-	});
-
-	remote.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
-	remote.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
-	remote.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
-	remote.on('stopMediaStream', wsStopMediaStream);
-    remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
-    remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
-	remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
 
 	return remote;
 }
