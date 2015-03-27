@@ -96,11 +96,11 @@ console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version
 
 
 // Initialize Server
-initializesage2ServerS();
+initializeSage2Server();
 
 
 
-function initializesage2ServerS() {
+function initializeSage2Server() {
 	// INITIALIZE CONFIGURATION
 	// remove API keys from being investigated further
 	//if(config.apis !== undefined) delete config.apis;
