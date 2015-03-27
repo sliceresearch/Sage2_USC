@@ -269,7 +269,7 @@ WebsocketIOServer.prototype.broadcast = function(name, data) {
 			}
 		}
 	}
-}
+};
 
 
 
