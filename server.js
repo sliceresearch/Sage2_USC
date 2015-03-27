@@ -68,6 +68,10 @@ var WebsocketIO         = require('./src/node-websocket.io');     // creates Web
 // Globals
 global.__SESSION_ID    = null;
 
+var sage2Server        = null;
+var sage2ServerS       = null;
+var wsioServer         = null;
+var wsioServerS        = null;
 var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
@@ -85,10 +89,6 @@ var sessionDirectory   = path.join(__dirname, "sessions");
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var startTime          = Date.now();
-var sage2Server        = null;
-var sage2ServerS       = null;
-var wsioServer         = null;
-var wsioServerS        = null;
 
 
 console.log("Node Version: " + sageutils.getNodeVersion(), "\n");
@@ -206,6 +206,7 @@ function broadcast(name, data) {
 }
 
 function emitLog(data) {
+	if(wsioServer === null || wsioServerS === null) return;
 	broadcast('console', data);
 }
 

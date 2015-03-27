@@ -40,6 +40,9 @@
 		
 		wsio.open(function() {
 			console.log("open websocket");
+
+			setupListeners();
+
 			var clientDescription = {
 				clientType: "consoleManager",
 				receivesDisplayConfiguration: true,
@@ -67,7 +70,9 @@
 				xhr.send();
 			}, 2000);
 		});
+	}
 
+	function setupListeners() {
 		wsio.on('initialize', function(data) {
 			var serverTime = new Date(data.time);
 			var clientTime = new Date();
@@ -110,6 +115,7 @@
 	}
 	
 	function createConsole() {
+
 	}
 
 </script>
