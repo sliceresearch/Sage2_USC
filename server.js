@@ -205,6 +205,7 @@ function broadcast(name, data) {
 
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) return;
+	console.log(data);
 	broadcast('console', data);
 }
 
@@ -475,8 +476,8 @@ function initializeWSClient(wsio) {
 		wsio.on('createAppClone', wsCreateAppClone);
 	}
 	if (wsio.messages.sendsCommands) {
-		wsio.emitString(JSON.stringify({f: 'console', d: JSON.stringify(config, null, " ")+'\n'}));
 		wsio.on('command', wsCommand);
+		wsio.emit('console', json5.stringify(config, null, 4));
 	}
 
 	/*if (wsio.messages.requestsFileHandling){

@@ -203,7 +203,9 @@ WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
 			});
 		}
 		else {
-			console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+			//console.log("NAME: " + name);
+			//console.log("DATASTRING: " + dataString);
+			console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener");// (" + name + ")");
 		}
 		return;
 	}
