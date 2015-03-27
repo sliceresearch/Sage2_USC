@@ -71,7 +71,6 @@ global.__SESSION_ID    = null;
 var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 var program            = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
-var shell              = null;
 var apis               = {};
 var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
@@ -91,7 +90,7 @@ var wsioServer         = null;
 var wsioServerS        = null;
 
 
-console.log("Node Version: " + sageutils.getNodeVersion(), "\n");
+console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
 console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
 
@@ -102,16 +101,16 @@ initializeSage2Server();
 
 
 function initializeSage2Server() {
-	// INITIALIZE CONFIGURATION
-	//if(config.apis !== undefined) delete config.apis; // remove API keys from being investigated further
+	// Remove API keys from being investigated further
+	//if (config.apis) delete config.apis;
 
-	// REGISTER WITH EVL'S SERVER
+	// Register with evl's server
 	if (config.register_site) sageutils.registerSAGE2(config);
 
-	// CHECK FOR MISSING PACKAGES
+	// Check for missing packages
 	sageutils.checkPackages(); // pass parameter `true` for devel packages also
 
-	// SETUP BINARIES PATH
+	// Setup binaries path
 	if(config.dependencies !== undefined) {
 		if(config.dependencies.ImageMagick !== undefined) imageMagickOptions.appPath = config.dependencies.ImageMagick;
 		if(config.dependencies.FFMpeg !== undefined) ffmpegOptions.appPath = config.dependencies.FFMpeg;
@@ -119,40 +118,39 @@ function initializeSage2Server() {
 	imageMagick = gm.subClass(imageMagickOptions);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
 
-	// SET DEFAULT HOST ORIGIN FOR THIS SERVER
+	// Set default host origin for this server
 	if(config.rproxy_port === undefined) {
 		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
 	}
 
-	// INITIALIZE SAGE2 ITEM LISTS
+	// Initialize sage2 item lists
 	SAGE2Items.applications = new Sage2ItemList();
-	SAGE2Items.pointers = new Sage2ItemList();
-	SAGE2Items.radialMenus = new Sage2ItemList();
-	SAGE2Items.widgets = new Sage2ItemList();
+	SAGE2Items.pointers     = new Sage2ItemList();
+	SAGE2Items.radialMenus  = new Sage2ItemList();
+	SAGE2Items.widgets      = new Sage2ItemList();
 
-	// INITIALIZE USER INTERACTION TRACKING
-	if(program.trackUsers) {
-		if(typeof program.trackUsers === "string" && sageutils.fileExists(program.trackUsers))
+	// Initialize user interaction tracking
+	if (program.trackUsers) {
+		if (typeof program.trackUsers === "string" && sageutils.fileExists(program.trackUsers))
 			users = json5.parse(fs.readFileSync(program.trackUsers));
 		else
 			users = {};
 		users.session = {};
 		users.session.start = Date.now();
 	}
-	if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
+	if (!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 
-	// GET FULL VERSION OF SAGE2 - GIT BRANCH, COMMIT, DATE
+	// Get full version of SAGE2 - git branch, commit, date
 	sageutils.getFullVersion(function(version) {
 		// fields: base commit branch date
 		SAGE2_version = version;
-		console.log(sageutils.header("SAGE2") + "Full Version:");
-		console.log(json5.stringify(SAGE2_version, null, 4));
+		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
 		broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 
-		if(users !== null) users.session.verison = SAGE2_version;
+		if (users !== null) users.session.verison = SAGE2_version;
 	});
 
-	// GENERATE A QR IMAGE THAT POINTS TO SAGE2 SERVER
+	// Generate a qr image that points to sage2 server
 	var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
 	qr_png.on('end', function() {
@@ -160,42 +158,42 @@ function initializeSage2Server() {
 	});
 	qr_png.pipe(fs.createWriteStream(qr_out));
 
-	// SETUP TMP DIRECTORY FOR SAGE2 SERVER
+	// Setup tmp directory for SAGE2 server
 	process.env.TMPDIR = path.join(__dirname, "tmp");
 	console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
-	if(!sageutils.fileExists(process.env.TMPDIR)){
+	if (!sageutils.fileExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
 
-	// MAKE SURE SESSIONS DIRECTORY EXISTS
+	// Make sure sessions directory exists
 	if (!sageutils.fileExists(sessionDirectory)) {
 		fs.mkdirSync(sessionDirectory);
 	}
 
-	// INITIALIZE ASSETS
+	// Initialize assets
 	assets.initialize(uploadsDirectory, 'uploads');
 
-	// INITIALIZE APP LOADER
+	// Initialize app loader
 	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 
-	// INITIALIZE INTERACTABLE MANAGER AND LAYERS
+	// Initialize interactable manager and layers
 	interactMgr.addLayer("staticUI",     3);
 	interactMgr.addLayer("radialMenus",  2);
 	interactMgr.addLayer("widgets",      1);
 	interactMgr.addLayer("applications", 0);
 
-	// INITIALIZE THE BACKGROUND FOR THE DISPLAY CLIENTS (IAMGE OR COLOR)
+	// Initialize the background for the display clients (iamge or color)
 	setupDisplayBackground();
 
-	// SET UP HTTP AND HTTPS SERVERS
+	// Set up http and https servers
 	var httpServerApp = new HttpServer(publicDirectory);
 	httpServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
 	httpServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
-	var options = setupHttpsOptions();             // create HTTPS options - sets up security keys
+	var options  = setupHttpsOptions();            // create HTTPS options - sets up security keys
 	sage2Server  = http.createServer(httpServerApp.onrequest);
 	sage2ServerS = https.createServer(options, httpServerApp.onrequest);
 
-	// SET UP WEBSOCKET SERVERS - 2 WAY COMMUNICATION BETWEEN SERVER AND ALL BROWSER CLIENTS
+	// Set up websocket servers - 2 way communication between server and all browser clients
 	wsioServer  = new WebsocketIO.Server({server: sage2Server});
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 }
@@ -350,13 +348,12 @@ function wsAddClient(wsio, data) {
 
 	if (wsio.clientType==="display") {
 		if(masterDisplay === null) masterDisplay = wsio;
-		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-
+		console.log(sageutils.header("Connection") + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 		if( wsio.clientID === 0 ) // Display clients were reset
 			clearRadialMenus();
 	}
 	else {
-		console.log("New Connection: " + uniqueID + " (" + wsio.clientType + ")");
+		console.log(sageutils.header("Connection") + uniqueID + " (" + wsio.clientType + ")");
 	}
 
 	clients.push(wsio);
@@ -1992,7 +1989,7 @@ function wsAddNewWebElement(wsio, data) {
 
 function wsCommand(wsio, data) {
 	// send the command to the REPL interpreter
-	shell.write(data+'\n');
+	processInputCommand(data);
 }
 
 // **************  Launching Web Browser *****************
@@ -2650,7 +2647,7 @@ function setupHttpsOptions() {
 					return certs[servername];
 				}
 				else{
-					console.log("SNI> Unknown host, cannot find a certificate for ", servername);
+					console.log(sageutils.header("SNI") + "Unknown host, cannot find a certificate for ", servername);
 					return null;
 				}
 			}
@@ -2669,7 +2666,7 @@ function setupHttpsOptions() {
 					cb(null, certs[servername]);
 				}
 				else{
-					console.log("SNI> Unknown host, cannot find a certificate for ", servername);
+					console.log(sageutils.header("SNI") + "Unknown host, cannot find a certificate for ", servername);
 					cb("SNI Unknown host", null);
 				}
 			}
@@ -2947,136 +2944,136 @@ if (program.session) {
 	}, 1000);
 }
 
+function processInputCommand(line) {
+	var command = line.trim().split(' ');
+	switch(command[0]) {
+		case '': // ignore
+			break;
+		case 'help':
+			console.log('help\t\tlist commands');
+			console.log('kill\t\tclose application: arg0: index - kill 0');
+			console.log('apps\t\tlist running applications');
+			console.log('clients\t\tlist connected clients');
+			console.log('streams\t\tlist media streams');
+			console.log('clear\t\tclose all running applications');
+			console.log('tile\t\tlayout all running applications');
+			console.log('save\t\tsave state of running applications into a session');
+			console.log('load\t\tload a session and restore applications');
+			console.log('assets\t\tlist the assets in the file library');
+			console.log('regenerate\tregenerates the assets');
+			console.log('hideui\t\thide/show/delay the user interface');
+			console.log('sessions\tlist the available sessions');
+			console.log('update\t\trun a git update');
+			console.log('version\t\tprint SAGE2 version');
+			console.log('exit\t\tstop SAGE2');
+			break;
+
+		case 'version':
+			console.log('Version', SAGE2_version.base, ' branch:', SAGE2_version.branch, ' commit:', SAGE2_version.commit, SAGE2_version.date);
+			break;
+
+		case 'update':
+			sageutils.updateWithGIT( function(err) {
+				if (err) console.log('GIT> Update error');
+				else console.log('GIT> Update done');
+			});
+			break;
+
+		case 'save':
+			if (command[1] !== undefined)
+				saveSession(command[1]);
+			else
+				saveSession();
+			break;
+		case 'load':
+			if (command[1] !== undefined)
+				loadSession(command[1]);
+			else
+				loadSession();
+			break;
+		case 'sessions':
+			printListSessions();
+			break;
+		case 'hideui':
+			// if argument provided, used as auto_hide delay in second
+			//   otherwise, it flips a switch
+			if (command[1] !== undefined)
+				broadcast('hideui', {delay:parseInt(command[1], 10)}, 'requiresFullApps');
+			else
+				broadcast('hideui', null, 'requiresFullApps');
+			break;
+
+		case 'close':
+		case 'delete':
+		case 'kill':
+			if (command[1] !== undefined) {
+				var kid = parseInt(command[1], 10); // convert arg1 to base 10
+				if (!isNaN(kid) && (kid >= 0) && (kid < applications.length) ) {
+					console.log('deleting application', kid);
+					deleteApplication( applications[kid] );
+				}
+			}
+			break;
+
+		case 'clear':
+			clearDisplay();
+			break;
+
+		case 'assets':
+			assets.listAssets();
+			break;
+
+		case 'regenerate':
+			assets.regenerateAssets();
+			break;
+
+		case 'tile':
+			tileApplications();
+			break;
+
+		case 'clients':
+			listClients();
+			break;
+		case 'apps':
+			listApplications();
+			break;
+		case 'streams':
+			listMediaStreams();
+			break;
+        case 'blockStreams':
+			listMediaBlockStreams();
+			break;
+
+		case 'exit':
+		case 'quit':
+		case 'bye':
+			quitSAGE2();
+			break;
+		default:
+			console.log('Say what? I might have heard `' + line.trim() + '`');
+			break;
+	}
+}
+
 // Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
 if (program.interactive)
 {
 	// Create line reader for stdin and stdout
-	shell = readline.createInterface({
+	var shell = readline.createInterface({
 		input:  process.stdin, output: process.stdout
 	});
 
 	// Set the prompt
-	//shell.setPrompt("> ");
-	shell.setPrompt("");
+	shell.setPrompt("> ");
 
 	// Start the loop
-	shell.prompt();
+	//shell.prompt();
 
 	// Callback for each line
 	shell.on('line', function(line) {
-		var command = line.trim().split(' ');
-		switch(command[0]) {
-			case '': // ignore
-				break;
-			case 'help':
-				console.log('help\t\tlist commands');
-				console.log('kill\t\tclose application: arg0: index - kill 0');
-				console.log('apps\t\tlist running applications');
-				console.log('clients\t\tlist connected clients');
-				console.log('streams\t\tlist media streams');
-				console.log('clear\t\tclose all running applications');
-				console.log('tile\t\tlayout all running applications');
-				console.log('save\t\tsave state of running applications into a session');
-				console.log('load\t\tload a session and restore applications');
-				console.log('assets\t\tlist the assets in the file library');
-				console.log('regenerate\tregenerates the assets');
-				console.log('hideui\t\thide/show/delay the user interface');
-				console.log('sessions\tlist the available sessions');
-				console.log('update\t\trun a git update');
-				console.log('version\t\tprint SAGE2 version');
-				console.log('exit\t\tstop SAGE2');
-				break;
-
-			case 'version':
-				console.log('Version', SAGE2_version.base, ' branch:', SAGE2_version.branch, ' commit:', SAGE2_version.commit, SAGE2_version.date);
-				break;
-
-			case 'update':
-				sageutils.updateWithGIT( function(err) {
-					if (err) console.log('GIT> Update error');
-					else console.log('GIT> Update done');
-				});
-				break;
-
-			case 'save':
-				if (command[1] !== undefined)
-					saveSession(command[1]);
-				else
-					saveSession();
-				break;
-			case 'load':
-				if (command[1] !== undefined)
-					loadSession(command[1]);
-				else
-					loadSession();
-				break;
-			case 'sessions':
-				printListSessions();
-				break;
-			case 'hideui':
-				// if argument provided, used as auto_hide delay in second
-				//   otherwise, it flips a switch
-				if (command[1] !== undefined)
-					broadcast('hideui', {delay:parseInt(command[1], 10)}, 'requiresFullApps');
-				else
-					broadcast('hideui', null, 'requiresFullApps');
-				break;
-
-			case 'close':
-			case 'delete':
-			case 'kill':
-				if (command[1] !== undefined) {
-					var kid = parseInt(command[1], 10); // convert arg1 to base 10
-					if (!isNaN(kid) && (kid >= 0) && (kid < applications.length) ) {
-						console.log('deleting application', kid);
-						deleteApplication( applications[kid] );
-					}
-				}
-				break;
-
-			case 'clear':
-				clearDisplay();
-				break;
-
-			case 'assets':
-				assets.listAssets();
-				break;
-
-			case 'regenerate':
-				assets.regenerateAssets();
-				break;
-
-			case 'tile':
-				tileApplications();
-				break;
-
-			case 'clients':
-				listClients();
-				break;
-			case 'apps':
-				listApplications();
-				break;
-			case 'streams':
-				listMediaStreams();
-				break;
-            case 'blockStreams':
-				listMediaBlockStreams();
-				break;
-
-			case 'exit':
-			case 'quit':
-			case 'bye':
-				quitSAGE2();
-				break;
-			default:
-				console.log('Say what? I might have heard `' + line.trim() + '`');
-				break;
-		}
-		// loop through
+		processInputCommand(line);
 		shell.prompt();
 	}).on('close', function() {
-		// Close with CTRL-D or CTRL-C
-		// Only synchronous code!
 		// Saving stuff
 		quitSAGE2();
 	});
@@ -3147,8 +3144,8 @@ function broadcast_opt(func, data, type) {
 	// Marshall the message only once
 	var message = JSON.stringify({f: func, d: data});
 	try {
-		for(var i=0; i<clients.length; i++){
-			if(clients[i].messages[type]) clients[i].emitString( message );
+		for(var i=0; i<clients.length; i++) {
+			if (clients[i].messages[type]) clients[i].emitString(message);
 		}
 	} catch (e) {
 		// nothing
