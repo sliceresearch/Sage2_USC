@@ -38,12 +38,26 @@ function WebsocketIO(url) {
 	 */
 	this.messages = {};
 	/**
+	 * number of aliases created for listeners
+	 *
+	 * @property aliasCount
+	 * @type Integer
+	 */
+	this.aliasCount = 1;
+	/**
 	 * list of listeners on other side of connection
 	 *
-	 * @property messages
+	 * @property remoteListeners
 	 * @type Object
 	 */
-	this.listeners = ["#WSIO#addListener"];
+	this.remoteListeners = {"#WSIO#addListener": "0000"};
+	/**
+	 * list of local listeners on this side of connection
+	 *
+	 * @property localListeners
+	 * @type Object
+	 */
+	this.localListeners = {"0000": "#WSIO#addListener"};
 
 	/**
 	* Open a websocket
@@ -60,32 +74,34 @@ function WebsocketIO(url) {
 		this.ws.onopen = callback;
 
 		// Handler when a message arrives
-		this.ws.onmessage = function(msg) {
+		this.ws.onmessage = function(message) {
 			// text message
-			if (typeof msg.data === "string") {
-				var message = JSON.parse(msg.data);
+			if (typeof message.data === "string") {
+				var msg = JSON.parse(message.data);
+				var fName = _this.localListeners[msg.f];
+				console.log("received " + msg.f + "(" + fName + ")");
+				if(fName === undefined) {
+					console.log('WebsocketIO> No handler for message');
+				}
 
-				if(message.f === "#WSIO#addListener") {
-					_this.listeners.push(message.d.listener);
+				if(fName === "#WSIO#addListener") {
+					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
 				}
 
-				if (message.f in _this.messages) {
-					_this.messages[message.f](message.d);
-				} else {
-					console.log('WebsocketIO> No handler for', message.f);
+				else {
+					_this.messages[fName](msg.d);
 				}
 			}
 			else {
-				var uInt8 = new Uint8Array(msg.data);
-				var i     = 0;
-				var func  = "";
-				while (uInt8[i] !== 0 && i < uInt8.length) {
-					func += String.fromCharCode(uInt8[i]);
-					i++;
-				}
-				var buffer = uInt8.subarray(i+1, uInt8.length);
-				_this.messages[func](buffer);
+				var uInt8 = new Uint8Array(message.data);
+				var func  = String.fromCharCode(uInt8[0]) + 
+							String.fromCharCode(uInt8[1]) +
+							String.fromCharCode(uInt8[2]) +
+							String.fromCharCode(uInt8[3]);
+				var fName = _this.localListeners[func];
+				var buffer = uInt8.subarray(4, uInt8.length);
+				_this.messages[fName](buffer);
 			}
 		};
 		// triggered by unexpected close event
@@ -104,9 +120,12 @@ function WebsocketIO(url) {
 	* @param callback {Function} handler to be called for a given name
 	*/
 	this.on = function(name, callback) {
+		var alias = ("0000" + this.aliasCount.toString(16)).substr(-4);
+		this.localListeners[alias] = name;
 		this.messages[name] = callback;
+		this.aliasCount++;
 		if(name === "close") return;
-		this.emit('#WSIO#addListener', {listener: name});
+		this.emit('#WSIO#addListener', {listener: name, alias: alias});
 	};
 
 	/**
@@ -116,35 +135,48 @@ function WebsocketIO(url) {
 	* @param name {String} name of the message (i.e. RPC)
 	* @param data {Object} data to be sent with the message
 	*/
-	this.emit = function(name, data) {
+	this.emit = function(name, data, attempts) {
 		if (name === null || name === "") {
 			console.log("Error: no message name specified");
 			return;
 		}
-		/*else if(this.listeners.indexOf(name) < 0) {
-			console.log("Warning: not sending message, recipient has no listener (" + name + ")");
+		
+		var _this = this;
+		var message;
+		var alias = this.remoteListeners[name];
+		if(alias === undefined) {
+			if(attempts === undefined) attempts = 16;
+			if(attempts >= 0) {
+				setTimeout(function() {
+					_this.emit(name, data, attempts-1);
+				}, 4);
+			}
+			else {
+				console.log("Warning: not sending message, recipient has no listener (" + name + ")");
+			}
 			return;
-		}*/
+		}
 
 		// send binary data as array buffer
 		if (data instanceof Uint8Array) {
 			// build an array with the name of the function
-			var funcName = new Uint8Array(name.length+1);
-			for (var i=0; i<name.length; i++) {
-				funcName[i] = name.charCodeAt(i);
-			}
-			var message = new Uint8Array(funcName.length + data.length);
+			var funcName = new Uint8Array(4);
+			funcName[0] = alias.charCodeAt(0);
+			funcName[1] = alias.charCodeAt(1);
+			funcName[2] = alias.charCodeAt(2);
+			funcName[3] = alias.charCodeAt(3);
+			var message = new Uint8Array(4 + data.length);
 			// copy the name of the function first
 			message.set(funcName, 0);
 			// then copy the payload
-			message.set(data, funcName.length);
+			message.set(data, 4);
 			// send the message using websocket
 			this.ws.send(message.buffer);
 		}
 		// send data as JSON string
 		else {
-			var jmessage = {f: name, d: data};
-			this.ws.send(JSON.stringify(jmessage));
+			var message = {f: alias, d: data};
+			this.ws.send(JSON.stringify(message));
 		}
 	};
 

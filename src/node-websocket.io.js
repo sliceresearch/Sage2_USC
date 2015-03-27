@@ -45,7 +45,9 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 	}
 
 	this.closeCallbacks = [];
-	this.listeners = ["#WSIO#addListener"];
+	this.aliasCount = 1;
+	this.remoteListeners = {"#WSIO#addListener": "0000"};
+	this.localListeners = {"0000": "#WSIO#addListener"};
 
 	this.ws.on('error', function(err) {
 		if (err.errno === "ECONNREFUSED") return; // do nothing
@@ -61,31 +63,31 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 	this.ws.on('message', function(message) {
 		if (typeof message === "string") {
 			var msg = JSON.parse(message);
+			var fName = _this.localListeners[msg.f];
+			if(fName === undefined) {
+				console.log(" WebsocketIO>\tno handler for message");
+			}
 
 			// add lister to client
-			if(msg.f === "#WSIO#addListener") {
-				_this.listeners.push(msg.d.listener);
+			else if(fName === "#WSIO#addListener") {
+				_this.remoteListeners[msg.d.listener] = msg.d.alias;
 				return;
 			}
 
 			// handle message
-			if (msg.f in _this.messages) {
-				_this.messages[msg.f](_this, msg.d);
-			} else {
-				console.log(" WebsocketIO>\tno handler for '" + msg.f + "'");
+			else {
+				_this.messages[fName](_this, msg.d);
 			}
 		}
 		else {
-			var i = 0;
-			var func = "";
+			var func = String.fromCharCode(message[0]) + 
+					   String.fromCharCode(message[1]) +
+					   String.fromCharCode(message[2]) +
+					   String.fromCharCode(message[3]);
+			var fName = _this.localListeners[func];
 
-			while (message[i] !== 0 && i < message.length) {
-				func += String.fromCharCode(message[i]);
-				i++;
-			}
-
-			var buf = message.slice(i+1, message.length);
-			_this.messages[func](_this, buf);
+			var buf = message.slice(4, message.length);
+			_this.messages[fName](_this, buf);
 		}
 	});
 
@@ -114,8 +116,11 @@ WebsocketIO.prototype.onclose = function(callback) {
 * @param callback {Function} handler to be called for a given name
 */
 WebsocketIO.prototype.on = function(name, callback) {
+	var alias = ("0000" + this.aliasCount.toString(16)).substr(-4);
+	this.localListeners[alias] = name;
 	this.messages[name] = callback;
-	this.emit('#WSIO#addListener', {listener: name});
+	this.aliasCount++;
+	this.emit('#WSIO#addListener', {listener: name, alias: alias});
 };
 
 /**
@@ -125,21 +130,31 @@ WebsocketIO.prototype.on = function(name, callback) {
 * @param name {String} name of the message (i.e. RPC)
 * @param data {Object} data to be sent with the message
 */
-WebsocketIO.prototype.emit = function(name, data) {
-	var message;
-
+WebsocketIO.prototype.emit = function(name, data, attempts) {
 	if (name === null || name === "") {
 		console.log(" WebsocketIO>\tError, no message name specified");
 		return;
 	}
-	/*else if(this.listeners.indexOf(name) < 0) {
-		console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+	
+	var _this = this;
+	var message;
+	var alias = this.remoteListeners[name];
+	if(alias === undefined) {
+		if(attempts === undefined) attempts = 16;
+		if(attempts >= 0) {
+			setImmediate(function() {
+				_this.emit(name, data, attempts-1);
+			});
+		}
+		else {
+			console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+		}
 		return;
-	}*/
+	}
 
 	// send binary data as array buffer
 	if (Buffer.isBuffer(data)) {
-		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
+		var funcName = new Buffer(alias);
 		message      = Buffer.concat([funcName, data]);
 
 		try {
@@ -154,7 +169,7 @@ WebsocketIO.prototype.emit = function(name, data) {
 	}
 	// send data as JSON string
 	else {
-		message = {f: name, d: data};
+		message = {f: alias, d: data};
 
 		// double error handling
 		try {
@@ -176,18 +191,24 @@ WebsocketIO.prototype.emit = function(name, data) {
 * @method emitString
 * @param data {String} data to be sent as the message
 */
-WebsocketIO.prototype.emitString = function(data) {
-	this.ws.send(data, {binary: false, mask: false});
-};
+WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
+	var alias = this.remoteListeners[name];
+	if(alias === undefined) {
+		if(attempts === undefined) attempts = 16;
+		if(attempts >= 0) {
+			setImmediate(function() {
+				_this.emitString(name, dataString, attempts-1);
+			});
+		}
+		else {
+			console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+		}
+		return;
+	}
 
-/**
-* Faster version for emit: No packing data into single buffer
-*
-* @method emitBinary
-* @param data {Buffer} data to be sent as the message
-*/
-WebsocketIO.prototype.emitBinary = function(data) {
-	this.ws.send(data, {binary: true, mask: false});
+	var message = "{\"f\":\""+alias+"\",\"d\":"+dataString+"}";
+
+	this.ws.send(message, {binary: false, mask: false});
 };
 
 
@@ -229,20 +250,23 @@ WebsocketIOServer.prototype.onconnection = function(callback) {
 
 WebsocketIOServer.prototype.broadcast = function(name, data) {
 	var key;
-	var pkg = null;
 	// send as binary buffer
 	if (Buffer.isBuffer(data)) {
-		var funcName = Buffer.concat([new Buffer(name), new Buffer([0])]);
-		pkg = Buffer.concat([funcName, data]);
 		for(var key in this.clients) {
-			if(this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitBinary(pkg);
+			var alias = this.clients[key].remoteListeners[name];
+			if(alias !== undefined) {
+				this.clients[key].emit(name, data);
+			}
 		}
 	}
 	// send data as JSON string
 	else {
-		pkg = JSON.stringify({f: name, d: data});
+		var dataString = JSON.stringify(data);
 		for(var key in this.clients) {
-			if(this.clients[key].listeners.indexOf(name) >= 0) this.clients[key].emitString(pkg);
+			var alias = this.clients[key].remoteListeners[name];
+			if(alias !== undefined) {
+				this.clients[key].emitString(name, dataString);
+			}
 		}
 	}
 }

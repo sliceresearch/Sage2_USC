@@ -219,6 +219,7 @@ function setupListeners() {
     });
 
     wsio.on('showSagePointer', function(pointer_data){
+		console.log(pointer_data);
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
