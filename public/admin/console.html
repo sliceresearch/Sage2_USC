@@ -47,65 +47,64 @@
 				sendsCommands: true
 			};
 			wsio.emit('addClient', clientDescription);
-		});
 
-		// Socket close event (ie server crashed)		
-		wsio.on('close', function (evt) {
-			var refresh = setInterval(function () {
-				// make a dummy request to test the server every 2 sec
-				xhr = new XMLHttpRequest();
-				xhr.open("GET", "/", true);
-				xhr.onreadystatechange = function() {
-					if(xhr.readyState == 4 && xhr.status == 200){
-						console.log("server ready");
-						// when server ready, clear the interval callback
-						clearInterval(refresh);
-						// and reload the page
-						window.location.reload();
+			// Reveive messages from server to diplay
+			wsio.on('console', function(data) {
+				// Added content
+				terminal.textContent += data;
+				// automatic scrolling to bottom
+				terminal.scrollTop    = terminal.scrollHeight;
+			});
+
+			// Socket close event (ie server crashed)		
+			wsio.on('close', function (evt) {
+				var refresh = setInterval(function () {
+					// make a dummy request to test the server every 2 sec
+					xhr = new XMLHttpRequest();
+					xhr.open("GET", "/", true);
+					xhr.onreadystatechange = function() {
+						if(xhr.readyState == 4 && xhr.status == 200){
+							console.log("server ready");
+							// when server ready, clear the interval callback
+							clearInterval(refresh);
+							// and reload the page
+							window.location.reload();
+						}
+					};
+					xhr.send();
+				}, 2000);
+			});
+
+			wsio.on('initialize', function(data) {
+				var serverTime = new Date(data.time);
+				var clientTime = new Date();
+				var dt         = clientTime - serverTime;
+				console.log('initialize');			
+
+				commandline.addEventListener('keyup', function(evt) {
+					if (evt && evt.keyCode===13) {
+						wsio.emit('command', commandline.value);
+						commandline.value = '';
 					}
-				};
-				xhr.send();
-			}, 2000);
-		});
+				}, false);
 
-		wsio.on('initialize', function(data) {
-			var serverTime = new Date(data.time);
-			var clientTime = new Date();
-			var dt         = clientTime - serverTime;
-			console.log('initialize');			
+			});
 
-			commandline.addEventListener('keyup', function(evt) {
-				if (evt && evt.keyCode===13) {
-					wsio.emit('command', commandline.value);
-					commandline.value = '';
-				}
-			}, false);
+			wsio.on('setupSAGE2Version', function(data) {
+				console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
+			});
 
-		});
+			wsio.on('setupDisplayConfiguration', function(json_cfg) {
+				var http_port;
+				var https_port;
 
-		wsio.on('setupSAGE2Version', function(data) {
-			console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
-		});
-
-		wsio.on('setupDisplayConfiguration', function(json_cfg) {
-			var http_port;
-			var https_port;
+				http_port  = json_cfg.index_port === "80" ? "" : ":"+json_cfg.index_port;
+				https_port = json_cfg.port === "443" ? "" : ":"+json_cfg.port;
+			});
 			
-			console.log('wall configuration');
-
-			http_port  = json_cfg.index_port === "80" ? "" : ":"+json_cfg.index_port;
-			https_port = json_cfg.port === "443" ? "" : ":"+json_cfg.port;
-		});
-		
-		wsio.on('animateCanvas', function(data) {
-			console.log('animateCanvas');
-		});
-
-		wsio.on('console', function(data) {
-			// Added content
-			terminal.textContent += data;
-			// automatic scrolling to bottom
-			terminal.scrollTop    = terminal.scrollHeight;
+			wsio.on('animateCanvas', function(data) {
+				console.log('animateCanvas');
+			});
 		});
 	}
 	
