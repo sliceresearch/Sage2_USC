@@ -61,9 +61,10 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 	});
 
 	this.ws.on('message', function(message) {
+		var fName;
 		if (typeof message === "string") {
 			var msg = JSON.parse(message);
-			var fName = _this.localListeners[msg.f];
+			fName = _this.localListeners[msg.f];
 			if(fName === undefined) {
 				console.log(" WebsocketIO>\tno handler for message");
 			}
@@ -80,11 +81,11 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 			}
 		}
 		else {
-			var func = String.fromCharCode(message[0]) + 
-					   String.fromCharCode(message[1]) +
-					   String.fromCharCode(message[2]) +
-					   String.fromCharCode(message[3]);
-			var fName = _this.localListeners[func];
+			var func  = String.fromCharCode(message[0]) +
+						String.fromCharCode(message[1]) +
+						String.fromCharCode(message[2]) +
+						String.fromCharCode(message[3]);
+			fName = _this.localListeners[func];
 
 			var buf = message.slice(4, message.length);
 			_this.messages[fName](_this, buf);
@@ -135,7 +136,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 		console.log(" WebsocketIO>\tError, no message name specified");
 		return;
 	}
-	
+
 	var _this = this;
 	var message;
 	var alias = this.remoteListeners[name];
@@ -192,6 +193,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 * @param data {String} data to be sent as the message
 */
 WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
+	var _this = this;
 	var alias = this.remoteListeners[name];
 	if(alias === undefined) {
 		if(attempts === undefined) attempts = 16;
@@ -250,10 +252,11 @@ WebsocketIOServer.prototype.onconnection = function(callback) {
 
 WebsocketIOServer.prototype.broadcast = function(name, data) {
 	var key;
+	var alias;
 	// send as binary buffer
 	if (Buffer.isBuffer(data)) {
-		for(var key in this.clients) {
-			var alias = this.clients[key].remoteListeners[name];
+		for(key in this.clients) {
+			alias = this.clients[key].remoteListeners[name];
 			if(alias !== undefined) {
 				this.clients[key].emit(name, data);
 			}
@@ -262,8 +265,8 @@ WebsocketIOServer.prototype.broadcast = function(name, data) {
 	// send data as JSON string
 	else {
 		var dataString = JSON.stringify(data);
-		for(var key in this.clients) {
-			var alias = this.clients[key].remoteListeners[name];
+		for(key in this.clients) {
+			alias = this.clients[key].remoteListeners[name];
 			if(alias !== undefined) {
 				this.clients[key].emitString(name, dataString);
 			}

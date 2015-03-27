@@ -75,10 +75,11 @@ function WebsocketIO(url) {
 
 		// Handler when a message arrives
 		this.ws.onmessage = function(message) {
+			var fName;
 			// text message
 			if (typeof message.data === "string") {
 				var msg = JSON.parse(message.data);
-				var fName = _this.localListeners[msg.f];
+				fName = _this.localListeners[msg.f];
 				console.log("received " + msg.f + "(" + fName + ")");
 				if(fName === undefined) {
 					console.log('WebsocketIO> No handler for message');
@@ -95,11 +96,11 @@ function WebsocketIO(url) {
 			}
 			else {
 				var uInt8 = new Uint8Array(message.data);
-				var func  = String.fromCharCode(uInt8[0]) + 
+				var func  = String.fromCharCode(uInt8[0]) +
 							String.fromCharCode(uInt8[1]) +
 							String.fromCharCode(uInt8[2]) +
 							String.fromCharCode(uInt8[3]);
-				var fName = _this.localListeners[func];
+				fName = _this.localListeners[func];
 				var buffer = uInt8.subarray(4, uInt8.length);
 				_this.messages[fName](buffer);
 			}
@@ -140,7 +141,7 @@ function WebsocketIO(url) {
 			console.log("Error: no message name specified");
 			return;
 		}
-		
+
 		var _this = this;
 		var message;
 		var alias = this.remoteListeners[name];
@@ -165,7 +166,7 @@ function WebsocketIO(url) {
 			funcName[1] = alias.charCodeAt(1);
 			funcName[2] = alias.charCodeAt(2);
 			funcName[3] = alias.charCodeAt(3);
-			var message = new Uint8Array(4 + data.length);
+			message = new Uint8Array(4 + data.length);
 			// copy the name of the function first
 			message.set(funcName, 0);
 			// then copy the payload
@@ -175,7 +176,7 @@ function WebsocketIO(url) {
 		}
 		// send data as JSON string
 		else {
-			var message = {f: alias, d: data};
+			message = {f: alias, d: data};
 			this.ws.send(JSON.stringify(message));
 		}
 	};
