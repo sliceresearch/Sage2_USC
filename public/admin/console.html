@@ -13,114 +13,18 @@
 	//
 	// See full text, terms and conditions in the LICENSE.txt included file
 	//
-	// Copyright (c) 2014
+	// Copyright (c) 2014-15
 </script>
 
 <script type="text/javascript" src="../src/websocket.io.js"></script>
+<script type="text/javascript" src="SAGE2_console.js"></script>
 
-<script type="text/javascript">
-	var json_cfg;
-	var hostname;
-	var port;
-	var terminal;
-	var commandline;
-
-	function init() {
-		hostname = window.location.hostname;
-		port = window.location.port;
-		if(window.location.protocol == "http:" && port == "") port = "80";
-		if(window.location.protocol == "https:" && port == "") port = "443";
-	
-		terminal    = document.getElementById('terminal');
-		commandline = document.getElementById('command');
-
-		wsio = new WebsocketIO();
-		
-		console.log("Connected to server: ", window.location.origin);
-		
-		wsio.open(function() {
-			console.log("open websocket");
-
-			setupListeners();
-
-			var clientDescription = {
-				clientType: "consoleManager",
-				receivesDisplayConfiguration: true,
-				receivesConsoleMessages: true,
-				sendsCommands: true
-			};
-			wsio.emit('addClient', clientDescription);
-		});
-
-		// Socket close event (ie server crashed)		
-		wsio.on('close', function (evt) {
-			var refresh = setInterval(function () {
-				// make a dummy request to test the server every 2 sec
-				xhr = new XMLHttpRequest();
-				xhr.open("GET", "/", true);
-				xhr.onreadystatechange = function() {
-					if(xhr.readyState == 4 && xhr.status == 200){
-						console.log("server ready");
-						// when server ready, clear the interval callback
-						clearInterval(refresh);
-						// and reload the page
-						window.location.reload();
-					}
-				};
-				xhr.send();
-			}, 2000);
-		});
-	}
-
-	function setupListeners() {
-		wsio.on('initialize', function(data) {
-			var serverTime = new Date(data.time);
-			var clientTime = new Date();
-			var dt         = clientTime - serverTime;
-			console.log('initialize');			
-
-			commandline.addEventListener('keyup', function(evt) {
-				if (evt && evt.keyCode===13) {
-					wsio.emit('command', commandline.value);
-					commandline.value = '';
-				}
-			}, false);
-
-		});
-
-		wsio.on('setupSAGE2Version', function(data) {
-			console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
-		});
-
-		wsio.on('setupDisplayConfiguration', function(json_cfg) {
-			var http_port;
-			var https_port;
-			
-			console.log('wall configuration');
-
-			http_port  = json_cfg.index_port === "80" ? "" : ":"+json_cfg.index_port;
-			https_port = json_cfg.port === "443" ? "" : ":"+json_cfg.port;
-		});
-		
-		wsio.on('animateCanvas', function(data) {
-			console.log('animateCanvas');
-		});
-
-		wsio.on('console', function(data) {
-			// Added content
-			terminal.textContent += data;
-			// automatic scrolling to bottom
-			terminal.scrollTop    = terminal.scrollHeight;
-		});
-	}
-	
-</script>
 
 <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 
 </head>
 
-<body onload="init()">
+<body onload="SAGE2_init()">
 
 	<header>
 		<h1>SAGE2 console</h1>
