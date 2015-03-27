@@ -70,6 +70,7 @@ global.__SESSION_ID       = null;
 global.SAGE2_version      = sageutils.getShortVersion();
 global.platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 global.program            = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
+global.shell              = null;
 global.apis               = {};
 global.config             = loadConfiguration();
 global.imageMagickOptions = {imageMagick: true};
@@ -78,6 +79,15 @@ global.publicDirectory    = "public";
 global.hostOrigin         = "";
 global.uploadsDirectory   = path.join(publicDirectory, "uploads");
 global.SAGE2Items         = {};
+global.users              = null;
+global.sessionDirectory   = path.join(__dirname, "sessions");
+global.appLoader          = null;
+global.interactMgr        = new InteractableManager();
+global.startTime          = Date.now();
+global.sage2Server        = null;
+global.sage2ServerS       = null;
+global.wsioServer         = null;
+global.wsioServerS        = null;
 
 
 console.log("Node Version: " + sageutils.getNodeVersion(), "\n");
@@ -86,11 +96,11 @@ console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version
 
 
 // Initialize Server
-initializeSAGE2Server();
+initializesage2ServerS();
 
 
 
-function initializeSAGE2Server() {
+function initializesage2ServerS() {
 	// INITIALIZE CONFIGURATION
 	// remove API keys from being investigated further
 	//if(config.apis !== undefined) delete config.apis;
@@ -120,6 +130,75 @@ function initializeSAGE2Server() {
 	SAGE2Items.pointers = new Sage2ItemList();
 	SAGE2Items.radialMenus = new Sage2ItemList();
 	SAGE2Items.widgets = new Sage2ItemList();
+
+	// INITIALIZE USER INTERACTION TRACKING
+	if(program.trackUsers) {
+		if(typeof program.trackUsers === "string" && sageutils.fileExists(program.trackUsers))
+			users = json5.parse(fs.readFileSync(program.trackUsers));
+		else
+			users = {};
+		users.session = {};
+		users.session.start = Date.now();
+	}
+	if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
+
+	// GET FULL VERSION OF SAGE2 - GIT BRANCH, COMMIT, DATE
+	sageutils.getFullVersion(function(version) {
+		// fields: base commit branch date
+		SAGE2_version = version;
+		console.log(sageutils.header("SAGE2") + "Full Version:");
+		console.log(json5.stringify(SAGE2_version, null, 4));
+		broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
+
+		if(users !== null) users.session.verison = SAGE2_version;
+	});
+
+	// GENERATE A QR IMAGE THAT POINTS TO SAGE2 SERVER
+	var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
+	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
+	qr_png.on('end', function() {
+		console.log(sageutils.header("QR") + "image generated", qr_out);
+	});
+	qr_png.pipe(fs.createWriteStream(qr_out));
+
+	// SETUP TMP DIRECTORY FOR SAGE2 SERVER
+	process.env.TMPDIR = path.join(__dirname, "tmp");
+	console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
+	if(!sageutils.fileExists(process.env.TMPDIR)){
+	     fs.mkdirSync(process.env.TMPDIR);
+	}
+
+	// MAKE SURE SESSIONS DIRECTORY EXISTS
+	if (!sageutils.fileExists(sessionDirectory)) {
+	     fs.mkdirSync(sessionDirectory);
+	}
+
+	// INITIALIZE ASSETS
+	assets.initialize(uploadsDirectory, 'uploads');
+
+	// INITIALIZE APP LOADER
+	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
+
+	// INITIALIZE INTERACTABLE MANAGER AND LAYERS
+	interactMgr.addLayer("staticUI",     3);
+	interactMgr.addLayer("radialMenus",  2);
+	interactMgr.addLayer("widgets",      1);
+	interactMgr.addLayer("applications", 0);
+
+	// INITIALIZE THE BACKGROUND FOR THE DISPLAY CLIENTS (IAMGE OR COLOR)
+	setupDisplayBackground();
+
+	// SET UP HTTP AND HTTPS SERVERS
+	var httpServerApp = new HttpServer(publicDirectory);
+	httpServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
+	httpServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
+	var options = setupHttpsOptions();             // create HTTPS options - sets up security keys
+	sage2Server  = http.createServer(httpServerApp.onrequest);
+	sage2ServerS = https.createServer(options, httpServerApp.onrequest);
+
+	// SET UP WEBSOCKET SERVERS - 2 WAY COMMUNICATION BETWEEN SERVER AND ALL BROWSER CLIENTS
+	wsioServer  = new WebsocketIO.Server({server: sage2Server});
+	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 }
 
 
@@ -140,30 +219,7 @@ var mediaBlockStreams = {};
 var applications = []; // app windows
 var controls = [];     // app widget bars
 var radialMenus = {};  // radial menus
-var shell = null;
 
-var users = null;
-if(program.trackUsers) {
-	if(typeof program.trackUsers === "string" && sageutils.fileExists(program.trackUsers))
-		users = json5.parse(fs.readFileSync(program.trackUsers));
-	else
-		users = {};
-	users.session = {};
-	users.session.start = Date.now();
-}
-if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
-
-
-// find git commit version and date
-sageutils.getFullVersion(function(version) {
-	// fields: base commit branch date
-	SAGE2_version = version;
-	console.log(sageutils.header("SAGE2") + "Full Version:");
-	console.log(json5.stringify(SAGE2_version, null, 4));
-	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
-
-	if(users !== null) users.session.verison = SAGE2_version;
-});
 
 
 // Sticky items and window position for new clones
@@ -171,72 +227,9 @@ var stickyAppHandler   = new StickyItems();
 var newWindowPosition  = null;
 var seedWindowPosition = null;
 
-// Generating QR-code of URL for UI page
-var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
-var qr_out = path.join(uploadsDirectory, "images", "QR.png");
-qr_png.on('end', function() {
-	console.log(sageutils.header("QR") + "image generated", qr_out);
-});
-qr_png.pipe(fs.createWriteStream(qr_out));
 
-
-// Make sure tmp directory is local
-process.env.TMPDIR = path.join(__dirname, "tmp");
-console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
-if(!sageutils.fileExists(process.env.TMPDIR)){
-     fs.mkdirSync(process.env.TMPDIR);
-}
-
-// Make sure session folder exists
-var sessionFolder = path.join(__dirname, "sessions");
-if (!sageutils.fileExists(sessionFolder)) {
-     fs.mkdirSync(sessionFolder);
-}
-
-// Build the list of existing assets
-assets.initialize(uploadsDirectory, 'uploads');
-
-var appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 var appAnimations = {};
 var videoHandles = {};
-
-// Initialize InteractableManager
-var interactMgr = new InteractableManager();
-interactMgr.addLayer("staticUI",     3);
-interactMgr.addLayer("radialMenus",  2);
-interactMgr.addLayer("widgets",      1);
-interactMgr.addLayer("applications", 0);
-
-
-// sets up the background for the display clients (image or color)
-setupDisplayBackground();
-
-
-// create HTTP server for insecure content
-var httpServerIndex = new HttpServer(publicDirectory);
-httpServerIndex.httpGET('/config', sendConfig); // send config object to client using http request
-
-
-// create HTTPS server for secure content
-var httpsServerApp = new HttpServer(publicDirectory);
-httpsServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
-httpsServerApp.httpGET('/config',  sendConfig); // send config object to client using http request
-
-
-// create HTTPS options - sets up security keys
-var options = setupHttpsOptions();
-
-
-// initializes HTTP and HTTPS servers
-var sage2Index  = http.createServer(httpServerIndex.onrequest);
-var sage2Server = https.createServer(options, httpsServerApp.onrequest);
-
-var startTime = new Date();
-
-
-// creates a WebSocket server - 2 way communication between server and all browser clients
-var wsioServer  = new WebsocketIO.Server({server: sage2Index});
-var wsioServerS = new WebsocketIO.Server({server: sage2Server});
 
 wsioServer.onconnection(function(wsio) {
 	wsio.onclose(closeWebSocketClient);
@@ -374,7 +367,7 @@ function wsAddClient(wsio, data) {
 function initializeWSClient(wsio) {
 	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 
-	wsio.emit('initialize', {UID: uniqueID, time: new Date(), start: startTime});
+	wsio.emit('initialize', {UID: uniqueID, time: Date.now(), start: startTime});
 
 	if(wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
 
@@ -1297,10 +1290,10 @@ function printListSessions() {
 function listSessions() {
 	var thelist = [];
 	// Walk through the session files: sync I/Os to build the array
-	var files = fs.readdirSync(sessionFolder);
+	var files = fs.readdirSync(sessionDirectory);
 	for (var i = 0; i < files.length; i++) {
 		var file = files[i];
-		var filename = path.join(sessionFolder, file);
+		var filename = path.join(sessionDirectory, file);
 		var stat = fs.statSync(filename);
 		// is it a file
 		if (stat.isFile()) {
@@ -1321,7 +1314,7 @@ function listSessions() {
 
 function deleteSession (filename) {
 	if (filename) {
-		var fullpath = path.join(sessionFolder, filename);
+		var fullpath = path.join(sessionDirectory, filename);
 		// if it doesn't end in .json, add it
 		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
 			fullpath += '.json';
@@ -1339,7 +1332,7 @@ function deleteSession (filename) {
 function saveSession (filename) {
 	filename = filename || 'default.json';
 
-	var fullpath = path.join(sessionFolder, filename);
+	var fullpath = path.join(sessionDirectory, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
 		fullpath += '.json';
@@ -1370,7 +1363,7 @@ function saveSession (filename) {
 function loadSession (filename) {
 	filename = filename || 'default.json';
 
-	var fullpath = path.join(sessionFolder, filename);
+	var fullpath = path.join(sessionDirectory, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
 		fullpath += '.json';
@@ -2874,13 +2867,13 @@ setTimeout(function() {
 
 // Place callback for success in the 'listen' call for HTTPS
 
-sage2Server.on('listening', function (e) {
+sage2ServerS.on('listening', function (e) {
 	// Success
 	console.log(sageutils.header("SAGE2") + "Now serving clients at https://" + config.host + ":" + config.port);
 });
 
 // Place callback for errors in the 'listen' call for HTTP
-sage2Index.on('error', function (e) {
+sage2Server.on('error', function (e) {
 	if (e.code === 'EACCES') {
 		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.index_port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
@@ -2901,7 +2894,7 @@ sage2Index.on('error', function (e) {
 });
 
 // Place callback for success in the 'listen' call for HTTP
-sage2Index.on('listening', function (e) {
+sage2Server.on('listening', function (e) {
 	// Success
 	console.log(sageutils.header("SAGE2") + "Now serving clients at http://" + config.host + ":" + config.index_port);
 });
@@ -2937,9 +2930,9 @@ process.on('SIGINT',  quitSAGE2);
 
 
 // Start the HTTP server
-sage2Index.listen(config.index_port);
+sage2Server.listen(config.index_port);
 // Start the HTTPS server
-sage2Server.listen(config.port);
+sage2ServerS.listen(config.port);
 
 
 // ***************************************************************************************

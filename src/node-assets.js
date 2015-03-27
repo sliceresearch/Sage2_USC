@@ -455,7 +455,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log("EXIF> Adding " + app + " (App)");
+			console.log(sageutils.header("EXIF") + "Adding " + app + " (App)");
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
@@ -494,7 +494,7 @@ var exifAsync = function(cmds, cb) {
 					console.log("internal error for file", file);
 					cb(err);
 				} else {
-					console.log("EXIF> Adding " + data.FileName);
+					console.log(sageutils.header("EXIF") + "Adding " + data.FileName);
 					addFile(data.SourceFile, data, function() {
 						if (cmds.length > 0) execNext();
 						else cb(null);
@@ -513,7 +513,7 @@ var exifAsync = function(cmds, cb) {
 // 			console.log("internal error");
 // 			cb(result.err);
 // 		} else {
-// 			console.log("EXIF> Adding", result.metadata.FileName);
+// 			console.log(sageutils.header("EXIF") + "Adding", result.metadata.FileName);
 // 			addFile(result.metadata.SourceFile, result.metadata);
 // 			if (cmds.length) execNext();
 // 			else cb(null);
@@ -675,12 +675,15 @@ var initialize = function (root, relativePath) {
 			}
 		}
 
-		if (thelist.length > 0) console.log("EXIF> Starting processing:", thelist);
+		if (thelist.length > 0) {
+			console.log(sageutils.header("EXIF") + "Starting processing:");
+			console.log(thelist);
+		}
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log("EXIF> Error:", err);
+				console.log(sageutils.header("EXIF") + "Error:", err);
 			} else {
-				console.log("EXIF> Done");
+				console.log(sageutils.header("EXIF") + "Done");
 			}
 		});
 	}
