@@ -66,28 +66,29 @@ var WebsocketIO         = require('./src/node-websocket.io');     // creates Web
 
 
 // GLOBALS
-global.__SESSION_ID       = null;
-global.SAGE2_version      = sageutils.getShortVersion();
-global.platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-global.program            = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
-global.shell              = null;
-global.apis               = {};
-global.config             = loadConfiguration();
-global.imageMagickOptions = {imageMagick: true};
-global.ffmpegOptions      = {};
-global.publicDirectory    = "public";
-global.hostOrigin         = "";
-global.uploadsDirectory   = path.join(publicDirectory, "uploads");
-global.SAGE2Items         = {};
-global.users              = null;
-global.sessionDirectory   = path.join(__dirname, "sessions");
-global.appLoader          = null;
-global.interactMgr        = new InteractableManager();
-global.startTime          = Date.now();
-global.sage2Server        = null;
-global.sage2ServerS       = null;
-global.wsioServer         = null;
-global.wsioServerS        = null;
+global.__SESSION_ID    = null;
+
+var SAGE2_version      = sageutils.getShortVersion();
+var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+var program            = commandline.initializeCommandLineParameters(SAGE2_version, broadcast_opt);
+var shell              = null;
+var apis               = {};
+var config             = loadConfiguration();
+var imageMagickOptions = {imageMagick: true};
+var ffmpegOptions      = {};
+var publicDirectory    = "public";
+var hostOrigin         = "";
+var uploadsDirectory   = path.join(publicDirectory, "uploads");
+var SAGE2Items         = {};
+var users              = null;
+var sessionDirectory   = path.join(__dirname, "sessions");
+var appLoader          = null;
+var interactMgr        = new InteractableManager();
+var startTime          = Date.now();
+var sage2Server        = null;
+var sage2ServerS       = null;
+var wsioServer         = null;
+var wsioServerS        = null;
 
 
 console.log("Node Version: " + sageutils.getNodeVersion(), "\n");
@@ -102,15 +103,13 @@ initializeSage2Server();
 
 function initializeSage2Server() {
 	// INITIALIZE CONFIGURATION
-	// remove API keys from being investigated further
-	//if(config.apis !== undefined) delete config.apis;
+	//if(config.apis !== undefined) delete config.apis; // remove API keys from being investigated further
 
 	// REGISTER WITH EVL'S SERVER
 	if (config.register_site) sageutils.registerSAGE2(config);
 
 	// CHECK FOR MISSING PACKAGES
-	// pass parameter `true` for devel packages also
-	sageutils.checkPackages();
+	sageutils.checkPackages(); // pass parameter `true` for devel packages also
 
 	// SETUP BINARIES PATH
 	if(config.dependencies !== undefined) {
@@ -124,7 +123,7 @@ function initializeSage2Server() {
 	if(config.rproxy_port === undefined) {
 		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
 	}
-	
+
 	// INITIALIZE SAGE2 ITEM LISTS
 	SAGE2Items.applications = new Sage2ItemList();
 	SAGE2Items.pointers = new Sage2ItemList();
@@ -165,12 +164,12 @@ function initializeSage2Server() {
 	process.env.TMPDIR = path.join(__dirname, "tmp");
 	console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
 	if(!sageutils.fileExists(process.env.TMPDIR)){
-	     fs.mkdirSync(process.env.TMPDIR);
+		fs.mkdirSync(process.env.TMPDIR);
 	}
 
 	// MAKE SURE SESSIONS DIRECTORY EXISTS
 	if (!sageutils.fileExists(sessionDirectory)) {
-	     fs.mkdirSync(sessionDirectory);
+		fs.mkdirSync(sessionDirectory);
 	}
 
 	// INITIALIZE ASSETS
