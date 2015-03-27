@@ -11,6 +11,7 @@
 "use strict";
 
 var fs        = require('fs');             // file system
+var json5     = require('json5');         // JSON5 parser
 var path      = require('path');           // resolves directory paths
 var commander = require('commander');      // parsing command-line arguments
 var util      = require('util');           // node util

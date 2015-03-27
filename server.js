@@ -205,7 +205,6 @@ function broadcast(name, data) {
 
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) return;
-	console.log(data);
 	broadcast('console', data);
 }
 
