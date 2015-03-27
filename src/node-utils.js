@@ -174,13 +174,14 @@ function updateWithGIT(callback) {
 
 /**
  * Utility function to create a header for console messages
+ *
  * @method header
  * @param h {String} header text
  * @return header {String} formatted text
  */
 function header(h) {
-	if(h.length <= 5) return " " + h + ">\t\t";
-	else              return " " + h + ">\t";
+	if (h.length <= 5) return h + ">\t\t";
+	else               return h + ">\t";
 }
 
 
