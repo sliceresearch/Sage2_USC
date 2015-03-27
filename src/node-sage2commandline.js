@@ -1,3 +1,13 @@
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2015
+
 "use strict";
 
 var fs        = require('fs');             // file system
@@ -26,11 +36,11 @@ function initializeCommandLineParameters(version, printFunction) {
 
 		// Redirect console.log to a file and still produces an output or not
 		if (commander.output === false) {
+			commander.interactive = undefined;
 			console.log = function(d) {
 				aLine = util.format(d) + '\n';
 				log_file.write(aLine);
 				printFunction('console', aLine, 'receivesConsoleMessages');
-				commander.interactive = undefined;
 			};
 		} else {
 			console.log = function() {
