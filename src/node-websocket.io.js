@@ -213,6 +213,19 @@ WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
 	this.ws.send(message, {binary: false, mask: false});
 };
 
+/**
+* Update the remote address of the client
+*
+* @method updateRemoteAddress
+* @param host {String} hostname / ip address
+* @param port {Integer} port number
+*/
+WebsocketIO.prototype.updateRemoteAddress = function(host, port) {
+	if(typeof host === "string") this.remoteAddress.address = host;
+	if(typeof port === "number") this.remoteAddress.port = port;
+	this.id = this.remoteAddress.address + ":" + this.remoteAddress.port;
+};
+
 
 /**
  * Server socket object

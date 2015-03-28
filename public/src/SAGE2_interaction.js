@@ -472,8 +472,7 @@ function SAGE2_interaction(wsio) {
 			var px  = this.deltaX * this.sensitivity;
 			var py  = this.deltaY * this.sensitivity;
 			// Send the event
-			//this.wsio.emit('pointerMove', {deltaX: px, deltaY: py});
-			this.wsio.emit('ptm', {dx: Math.round(px), dy: Math.round(py)});
+			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;

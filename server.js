@@ -195,6 +195,8 @@ function initializeSage2Server() {
 	// Set up websocket servers - 2 way communication between server and all browser clients
 	wsioServer  = new WebsocketIO.Server({server: sage2Server});
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
+	wsioServer.onconnection(openWebSocketClient);
+	wsioServerS.onconnection(openWebSocketClient);
 }
 
 function broadcast(name, data) {
@@ -231,24 +233,24 @@ var seedWindowPosition = null;
 var appAnimations = {};
 var videoHandles = {};
 
-wsioServer.onconnection(function(wsio) {
+function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
-});
-
-wsioServerS.onconnection(function(wsio) {
-	wsio.onclose(closeWebSocketClient);
-	wsio.on('addClient', wsAddClient);
-});
+}
 
 function closeWebSocketClient(wsio) {
 	var i;
     var key;
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	console.log("Closed Connection: " + uniqueID + " (" + wsio.clientType + ")");
+    if (wsio.clientType === "display") {
+    	console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+    }
+    else {
+		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+	}
 
-	addEventToUserLog(uniqueID, {type: "disconnect", data: null, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
 
+	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
 		console.log("Remote site \"" + remote.name + "\" now offline");
@@ -256,35 +258,33 @@ function closeWebSocketClient(wsio) {
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
 	}
-	if (wsio.messages.sendsPointerData) {
-		hidePointer(uniqueID);
-		removeControlsForUser(uniqueID);
-		delete sagePointers[uniqueID];
-		delete remoteInteraction[uniqueID];
+
+	if (wsio.clientType === "sageUI") {
+		hidePointer(wsio.id);
+		removeControlsForUser(wsio.id);
+		delete sagePointers[wsio.id];
+		delete remoteInteraction[wsio.id];
 	}
-	if (wsio.messages.requiresFullApps) {
+	else if (wsio.clientType === "display") {
 		for (key in mediaBlockStreams) {
-			for (i=0; i<clients.length; i++) {
-                var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-                    if(uniqueID === clientAddress) {
-                        delete mediaBlockStreams[key].clients[uniqueID];
-                    }
+			if (mediaBlockStreams.hasOwnProperty(key)) {
+				delete mediaBlockStreams[key].clients[wsio.id];
 			}
 		}
 		for (key in mediaStreams) {
 			if (mediaStreams.hasOwnProperty(key)) {
-				delete mediaStreams[key].clients[uniqueID];
+				delete mediaStreams[key].clients[wsio.id];
+			}
+		}
+		for (key in videoHandles) {
+			if (videoHandles.hasOwnProperty(key)) {
+				delete videoHandles[key].clients[wsio.id];
 			}
 		}
         for (key in appAnimations) {
 			if (appAnimations.hasOwnProperty(key)) {
 				delete appAnimations[key].clients[uniqueID];
 			}
-		}
-	}
-	if (wsio.messages.receivesMediaStreamFrames) {
-		for (key in videoHandles) {
-			delete videoHandles[key].clients[uniqueID];
 		}
 	}
 
@@ -306,57 +306,19 @@ function closeWebSocketClient(wsio) {
 
 function wsAddClient(wsio, data) {
 	// overwrite host and port if defined
-	if(data.host !== undefined) {
-		wsio.remoteAddress.address = data.host;
-	}
-	if(data.port !== undefined) {
-		wsio.remoteAddress.port = data.port;
-	}
-
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	wsio.updateRemoteAddress(data.host, data.port);
 	wsio.clientType = data.clientType;
-	wsio.messages = {};
-
-	// Remember the display ID
-	if (wsio.clientType === "display" || wsio.clientType === 'radialMenu' ) {
+	
+	if (wsio.clientType === "display") {
 		wsio.clientID = data.clientID;
-	} else {
-		wsio.clientID = -1;
-	}
-
-	// types of data sent/received to server from client through WebSockets
-	wsio.messages.sendsPointerData                  = data.sendsPointerData                 || false;
-	wsio.messages.sendsMediaStreamFrames            = data.sendsMediaStreamFrames           || false;
-	wsio.messages.uploadsContent                    = data.uploadsContent                   || false;
-	wsio.messages.requestsServerFiles               = data.requestsServerFiles              || false;
-	wsio.messages.sendsWebContentToLoad             = data.sendsWebContentToLoad            || false;
-	wsio.messages.launchesWebBrowser                = data.launchesWebBrowser               || false;
-	wsio.messages.sendsVideoSynchonization          = data.sendsVideoSynchonization         || false;
-	wsio.messages.sharesContentWithRemoteServer     = data.sharesContentWithRemoteServer    || false;
-	wsio.messages.receivesDisplayConfiguration      = data.receivesDisplayConfiguration     || false;
-	wsio.messages.receivesClockTime                 = data.receivesClockTime                || false;
-	wsio.messages.requiresFullApps                  = data.requiresFullApps                 || false;
-	wsio.messages.requiresAppPositionSizeTypeOnly   = data.requiresAppPositionSizeTypeOnly  || false;
-    wsio.messages.receivesMediaStreamFrames         = data.receivesMediaStreamFrames        || false;
-	wsio.messages.receivesWindowModification        = data.receivesWindowModification       || false;
-	wsio.messages.receivesPointerData               = data.receivesPointerData              || false;
-	wsio.messages.receivesInputEvents               = data.receivesInputEvents              || false;
-	wsio.messages.receivesRemoteServerInfo          = data.receivesRemoteServerInfo         || false;
-	wsio.messages.requestsWidgetControl             = data.requestsWidgetControl            || false;
-	wsio.messages.receivesWidgetEvents              = data.receivesWidgetEvents             || false;
-	wsio.messages.requestsAppClone					= data.requestsAppClone					|| false;
-	wsio.messages.requestsFileHandling				= data.requestsFileHandling				|| false;
-	wsio.messages.receivesConsoleMessages			= data.receivesConsoleMessages			|| false;
-	wsio.messages.sendsCommands						= data.sendsCommands					|| false;
-
-	if (wsio.clientType==="display") {
-		if(masterDisplay === null) masterDisplay = wsio;
-		console.log(sageutils.header("Connection") + uniqueID + " (" + wsio.clientType + " " + wsio.clientID+ ")");
-		if( wsio.clientID === 0 ) // Display clients were reset
-			clearRadialMenus();
+		if (masterDisplay === null) {
+			masterDisplay = wsio;
+		}
+		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID+ ")");
 	}
 	else {
-		console.log(sageutils.header("Connection") + uniqueID + " (" + wsio.clientType + ")");
+		wsio.clientID = -1;
+		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
 	}
 
 	clients.push(wsio);
@@ -364,140 +326,119 @@ function wsAddClient(wsio, data) {
 }
 
 function initializeWSClient(wsio) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	wsio.emit('initialize', {UID: wsio.id, time: Date.now(), start: startTime});
+	if (wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
 
-	wsio.emit('initialize', {UID: uniqueID, time: Date.now(), start: startTime});
+	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
+	
+	wsio.on('startSagePointer',                     wsStartSagePointer);
+	wsio.on('stopSagePointer',                      wsStopSagePointer);
+	
+	wsio.on('pointerPress',                         wsPointerPress);
+	wsio.on('pointerRelease',                       wsPointerRelease);
+	wsio.on('pointerDblClick',                      wsPointerDblClick);
+	wsio.on('pointerPosition',                      wsPointerPosition);
+	wsio.on('pointerMove',                          wsPointerMove);
+	wsio.on('pointerScrollStart',                   wsPointerScrollStart);
+	wsio.on('pointerScroll',                        wsPointerScroll);
+	wsio.on('pointerDraw',                          wsPointerDraw);
+	wsio.on('keyDown',                              wsKeyDown);
+	wsio.on('keyUp',                                wsKeyUp);
+	wsio.on('keyPress',                             wsKeyPress);
 
-	if(wsio === masterDisplay) wsio.emit('setAsMasterDisplay');
+	wsio.on('uploadedFile',                         wsUploadedFile);
+
+	wsio.on('startNewMediaStream',                  wsStartNewMediaStream);
+	wsio.on('updateMediaStreamFrame',               wsUpdateMediaStreamFrame);
+	wsio.on('updateMediaStreamChunk',               wsUpdateMediaStreamChunk);
+	wsio.on('stopMediaStream',                      wsStopMediaStream);
+	wsio.on('startNewMediaBlockStream',             wsStartNewMediaBlockStream);
+	wsio.on('updateMediaBlockStreamFrame',          wsUpdateMediaBlockStreamFrame);
+	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
+
+	wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
+	wsio.on('receivedMediaStreamFrame',             wsReceivedMediaStreamFrame);
+	wsio.on('receivedRemoteMediaStreamFrame',       wsReceivedRemoteMediaStreamFrame);
+	wsio.on('receivedMediaBlockStreamFrame',        wsReceivedMediaBlockStreamFrame);
+	wsio.on('receivedRemoteMediaBlockStreamFrame',  wsReceivedRemoteMediaBlockStreamFrame);
+
+	wsio.on('finishedRenderingAppFrame',            wsFinishedRenderingAppFrame);
+	wsio.on('updateAppState',                       wsUpdateAppState);
+	wsio.on('appResize',                            wsAppResize);
+	wsio.on('broadcast',                            wsBroadcast);
+	wsio.on('searchTweets',                         wsSearchTweets);
+
+	wsio.on('requestAvailableApplications',         wsRequestAvailableApplications);
+	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
+	//wsio.on('addNewElementFromStoredFiles',         wsAddNewElementFromStoredFiles);
+	wsio.on('loadApplication',                      wsLoadApplication);
+	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
+	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
+	wsio.on('saveSesion',                           wsSaveSesion);
+	wsio.on('clearDisplay',                         wsClearDisplay);
+	wsio.on('tileApplications',                     wsTileApplications);
+
+	// Radial menu should have its own message section? Just appended here for now.
+	wsio.on('radialMenuClick',                      wsRadialMenuClick);
+	wsio.on('radialMenuMoved',                      wsRadialMenuMoved);
+	wsio.on('removeRadialMenu',                     wsRemoveRadialMenu);
+	wsio.on('radialMenuWindowToggle',               wsRadialMenuThumbnailWindow);
+
+	wsio.on('addNewWebElement',                     wsAddNewWebElement);
+
+	wsio.on('openNewWebpage',                       wsOpenNewWebpage);
+
+	wsio.on('playVideo',                            wsPlayVideo);
+	wsio.on('pauseVideo',                           wsPauseVideo);
+	wsio.on('stopVideo',                            wsStopVideo);
+	wsio.on('updateVideoTime',                      wsUpdateVideoTime);
+	wsio.on('muteVideo',                            wsMuteVideo);
+	wsio.on('unmuteVideo',                          wsUnmuteVideo);
+	wsio.on('loopVideo',                            wsLoopVideo);
+
+	wsio.on('addNewElementFromRemoteServer',        wsAddNewElementFromRemoteServer);
+	wsio.on('requestNextRemoteFrame',               wsRequestNextRemoteFrame);
+	wsio.on('updateRemoteMediaStreamFrame',         wsUpdateRemoteMediaStreamFrame);
+	wsio.on('stopMediaStream',                      wsStopMediaStream);
+    wsio.on('updateRemoteMediaBlockStreamFrame',    wsUpdateRemoteMediaBlockStreamFrame);
+	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
+
+	wsio.on('addNewControl',                        wsAddNewControl);
+	wsio.on('selectedControlId',                    wsSelectedControlId);
+	wsio.on('releasedControlId',                    wsReleasedControlId);
+	wsio.on('closeAppFromControl',                  wsCloseAppFromControl);
+	wsio.on('hideWidgetFromControl',                wsHideWidgetFromControl);
+	wsio.on('openRadialMenuFromControl',            wsOpenRadialMenuFromControl);
+
+	wsio.on('createAppClone',                       wsCreateAppClone);
+
+	wsio.on('sage2Log',                             wsPrintDebugInfo);
+	wsio.on('command',                              wsCommand);
 
 
-	// set up listeners based on what the client sends
-	if(wsio.messages.sendsPointerData){
-		wsio.on('registerInteractionClient', wsRegisterInteractionClient);
-		wsio.on('startSagePointer',          wsStartSagePointer);
-		wsio.on('stopSagePointer',           wsStopSagePointer);
-		wsio.on('pointerPress',              wsPointerPress);
-		wsio.on('pointerRelease',            wsPointerRelease);
-		wsio.on('pointerDblClick',           wsPointerDblClick);
-		wsio.on('pointerPosition',           wsPointerPosition);
-		//wsio.on('pointerMove',               wsPointerMove);
-		wsio.on('ptm',                       wsPointerMove);
-		wsio.on('pointerScrollStart',        wsPointerScrollStart);
-		wsio.on('pointerScroll',             wsPointerScroll);
-		wsio.on('pointerDraw',               wsPointerDraw);
-		wsio.on('keyDown',                   wsKeyDown);
-		wsio.on('keyUp',                     wsKeyUp);
-		wsio.on('keyPress',                  wsKeyPress);
+	if (wsio.clientType === "sageUI") {
+		createSagePointer(wsio.id);
 	}
-	if(wsio.messages.uploadsContent){
-		wsio.on('uploadedFile', wsUploadedFile);
-	}
-	if(wsio.messages.sendsMediaStreamFrames){
-		wsio.on('startNewMediaStream',       wsStartNewMediaStream);
-		wsio.on('updateMediaStreamFrame',    wsUpdateMediaStreamFrame);
-		wsio.on('updateMediaStreamChunk',    wsUpdateMediaStreamChunk);
-		wsio.on('stopMediaStream',           wsStopMediaStream);
-		wsio.on('startNewMediaBlockStream',       wsStartNewMediaBlockStream);
-		wsio.on('updateMediaBlockStreamFrame',    wsUpdateMediaBlockStreamFrame);
-		wsio.on('stopMediaBlockStream',           wsStopMediaBlockStream);
-	}
-	if(wsio.messages.receivesMediaStreamFrames){
-		wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
-		wsio.on('receivedMediaStreamFrame',             wsReceivedMediaStreamFrame);
-		wsio.on('receivedRemoteMediaStreamFrame',       wsReceivedRemoteMediaStreamFrame);
-        wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
-		wsio.on('receivedMediaBlockStreamFrame',        wsReceivedMediaBlockStreamFrame);
-		wsio.on('receivedRemoteMediaBlockStreamFrame',  wsReceivedRemoteMediaBlockStreamFrame);
-    }
-	if(wsio.messages.requiresFullApps){
-		wsio.on('finishedRenderingAppFrame', wsFinishedRenderingAppFrame);
-		wsio.on('updateAppState', wsUpdateAppState);
-		wsio.on('appResize',      wsAppResize);
-		wsio.on('broadcast',      wsBroadcast);
-		wsio.on('searchTweets',   wsSearchTweets);
-	}
-	if(wsio.messages.requestsServerFiles){
-		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
-		wsio.on('requestStoredFiles', wsRequestStoredFiles);
-		//wsio.on('addNewElementFromStoredFiles', wsAddNewElementFromStoredFiles);
-		wsio.on('loadApplication',    wsLoadApplication);
-		wsio.on('loadFileFromServer', wsLoadFileFromServer);
-		wsio.on('deleteElementFromStoredFiles', wsDeleteElementFromStoredFiles);
-		wsio.on('saveSesion',       wsSaveSesion);
-		wsio.on('clearDisplay',     wsClearDisplay);
-		wsio.on('tileApplications', wsTileApplications);
+	
+	wsio.emit('setupDisplayConfiguration', config);
+	wsio.emit('setupSAGE2Version',         SAGE2_version);
+	wsio.emit('setSystemTime',             {date: Date.now()});
+	wsio.emit('console',                   json5.stringify(config, null, 4));
+	
+	initializeExistingSagePointers(wsio);
+	initializeExistingApps(wsio);
+	initializeExistingAppsPositionSizeTypeOnly(wsio);
+	initializeRemoteServerInfo(wsio);
+	initializeMediaStreams(wsio.id);
 
-		// Radial menu should have its own message section? Just appended here for now.
-		wsio.on('radialMenuClick',                  wsRadialMenuClick);
-	}
-	if(wsio.messages.sendsWebContentToLoad){
-		wsio.on('addNewWebElement', wsAddNewWebElement);
-	}
-	if(wsio.messages.launchesWebBrowser){
-		wsio.on('openNewWebpage', wsOpenNewWebpage);
-	}
-	if(wsio.messages.sendsVideoSynchonization){
-		wsio.on('playVideo',       wsPlayVideo);
-		wsio.on('pauseVideo',      wsPauseVideo);
-		wsio.on('stopVideo',       wsStopVideo);
-		wsio.on('updateVideoTime', wsUpdateVideoTime);
-		wsio.on('muteVideo',       wsMuteVideo);
-		wsio.on('unmuteVideo',     wsUnmuteVideo);
-		wsio.on('loopVideo',       wsLoopVideo);
-	}
-	if(wsio.messages.sharesContentWithRemoteServer){
-		wsio.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
-		wsio.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
-		wsio.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
-		wsio.on('stopMediaStream', wsStopMediaStream);
-        wsio.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
-		wsio.on('stopMediaBlockStream', wsStopMediaBlockStream);
-	}
-	if(wsio.messages.requestsWidgetControl){
-		wsio.on('addNewControl', wsAddNewControl);
-		wsio.on('selectedControlId', wsSelectedControlId);
-		wsio.on('releasedControlId', wsReleasedControlId);
-		wsio.on('closeAppFromControl', wsCloseAppFromControl);
-		wsio.on('hideWidgetFromControl', wsHideWidgetFromControl);
-		wsio.on('openRadialMenuFromControl', wsOpenRadialMenuFromControl);
-	}
-	if(wsio.messages.receivesDisplayConfiguration){
-		wsio.emit('setupDisplayConfiguration', config);
-		wsio.emit('setupSAGE2Version', SAGE2_version);
-	}
-	if (wsio.messages.requestsAppClone){
-		wsio.on('createAppClone', wsCreateAppClone);
-	}
-	if (wsio.messages.sendsCommands) {
-		wsio.on('command', wsCommand);
-		wsio.emit('console', json5.stringify(config, null, 4));
-	}
+	setTimeout(initializeExistingControls, 6000, wsio);
 
-	/*if (wsio.messages.requestsFileHandling){
-		wsio.on('writeToFile', wsWriteToFile);
-		wsio.on('readFromFile', wsReadFromFile);
-	}*/
-
-	if(wsio.messages.sendsPointerData)                createSagePointer(uniqueID);
-	if(wsio.messages.receivesClockTime)               wsio.emit('setSystemTime', {date: new Date()});
-	if(wsio.messages.receivesPointerData)             initializeExistingSagePointers(wsio);
-	if(wsio.messages.requiresFullApps)                initializeExistingApps(wsio);
-	if(wsio.messages.requiresAppPositionSizeTypeOnly) initializeExistingAppsPositionSizeTypeOnly(wsio);
-	if(wsio.messages.receivesRemoteServerInfo)        initializeRemoteServerInfo(wsio);
-	if(wsio.messages.receivesMediaStreamFrames)       initializeMediaStreams(uniqueID);
-
-	if(wsio.messages.requestsWidgetControl){
-		setTimeout(function (){
-			initializeExistingControls(wsio);
-		}, 6000);
-	}
-
-	if(wsio.messages.receivesMediaStreamFrames){
+	if (wsio.clientType === "display") {
 		var key;
 		var appInstance;
 		var blocksize = 128;
 		for(key in videoHandles) {
-			videoHandles[key].clients[uniqueID] = {wsio: wsio, readyForNextFrame: false, blockList: []};
+			videoHandles[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blockList: []};
 			appInstance = findAppById(key);
 			calculateValidBlocks(appInstance, blocksize, videoHandles);
 		}
@@ -513,16 +454,6 @@ function initializeWSClient(wsio) {
 	}
 
 	if (wsio.clientType === "webBrowser") webBrowserClient = wsio;
-
-	if ( wsio.clientType === "display" )
-	{
-		wsio.on('radialMenuMoved', wsRadialMenuMoved);
-		wsio.on('removeRadialMenu', wsRemoveRadialMenu);
-		wsio.on('radialMenuWindowToggle', wsRadialMenuThumbnailWindow);
-	}
-
-	// Debug messages from applications
-	wsio.on('sage2Log', wsPrintDebugInfo);
 }
 
 function initializeExistingControls(wsio){
@@ -585,10 +516,9 @@ function initializeMediaStreams(uniqueID) {
 
 function initializeMediaBlockStreams(clientID) {
 	for(var key in mediaBlockStreams) {
-        for(var i=0; i<clients.length; i++){
-            var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-            if(clients[i].messages.receivesMediaStreamFrames && mediaBlockStreams[key].clients[clientAddress] === undefined){
-                    mediaBlockStreams[key].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+        for(var i=0; i<clients.length; i++) {
+            if(clients[i].clientType === "display" && mediaBlockStreams[key].clients[clients[i].id] === undefined){
+                    mediaBlockStreams[key].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
             }
         }
 	}
@@ -888,9 +818,8 @@ function wsStartNewMediaStream(wsio, data) {
 
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages.receivesMediaStreamFrames){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			mediaStreams[data.id].clients[clientAddress] = false;
+		if(clients[i].clientType === "display") {
+			mediaStreams[data.id].clients[clients[i].id] = false;
 		}
 	}
 
@@ -1004,9 +933,8 @@ function wsStartNewMediaBlockStream(wsio, data) {
 
 	mediaBlockStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null, width: data.width, height: data.height};
 	for(var i=0; i<clients.length; i++){
-		if(clients[i].messages.receivesMediaStreamFrames){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			mediaBlockStreams[data.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+		if(clients[i].clientType === "display") {
+			mediaBlockStreams[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
 		}
 	}
 
@@ -1418,9 +1346,8 @@ function loadSession (filename) {
 						var j;
 						appAnimations[a.id] = {clients: {}, date: new Date()};
 						for(j=0; j<clients.length; j++){
-							if(clients[j].messages.requiresFullApps){
-								var clientAddress = clients[j].remoteAddress.address + ":" + clients[j].remoteAddress.port;
-								appAnimations[a.id].clients[clientAddress] = false;
+							if(clients[j].clientType === "display") {
+								appAnimations[a.id].clients[clients[j].id] = false;
 							}
 						}
 					}
@@ -1730,9 +1657,8 @@ function wsLoadApplication(wsio, data) {
 			var i;
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[appInstance.id].clients[clientAddress] = false;
+				if(clients[i].clientType === "display") {
+					appAnimations[appInstance.id].clients[client[i].id] = false;
 				}
 			}
 		}
@@ -1804,9 +1730,8 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	videoHandles[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
 
 	for(i=0; i<clients.length; i++){
-		if(clients[i].messages.receivesMediaStreamFrames){
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			videoHandles[appInstance.id].clients[clientAddress] = {wsio: clients[i], readyForNextFrame: false, blockList: []};
+		if(clients[i].clientType === "display") {
+			videoHandles[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blockList: []};
 		}
 	}
 	calculateValidBlocks(appInstance, blocksize, videoHandles);
@@ -1979,9 +1904,8 @@ function wsAddNewWebElement(wsio, data) {
 			var i;
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[appInstance.id].clients[clientAddress] = false;
+				if(clients[i].clientType === "display") {
+					appAnimations[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
 		}
@@ -2072,9 +1996,8 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
 			mediaStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
 			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.receivesMediaStreamFrames){
-					clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					mediaStreams[appInstance.id].clients[clientAddress] = false;
+				if(clients[i].clientType === "dislpay") {
+					mediaStreams[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
 		}
@@ -2082,9 +2005,8 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
 			mediaBlockStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
 			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.receivesMediaStreamFrames){
-					clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					mediaBlockStreams[appInstance.id].clients[clientAddress].readyForNextFrame = false;
+				if(clients[i].clientType === "display") {
+					mediaBlockStreams[appInstance.id].clients[clients[i].id].readyForNextFrame = false;
 				}
 			}
 		}
@@ -2099,9 +2021,8 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 		if(appInstance.animation){
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[appInstance.id].clients[clientAddress] = false;
+				if(clients[i].clientType === "display") {
+					appAnimations[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
 		}
@@ -2299,9 +2220,8 @@ function wsCreateAppClone(wsio, data){
 			var i;
 			appAnimations[clone.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
-				if(clients[i].messages.requiresFullApps){
-					var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-					appAnimations[clone.id].clients[clientAddress] = false;
+				if(clients[i].clientType === "display") {
+					appAnimations[clone.id].clients[clients[i].id] = false;
 				}
 			}
 		}
@@ -2761,9 +2681,8 @@ function manageUploadedFiles(files, position) {
 				var i;
 				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 				for(i=0; i<clients.length; i++){
-					if(clients[i].messages.requiresFullApps){
-						var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-						appAnimations[appInstance.id].clients[clientAddress] = false;
+					if(clients[i].clientType === "display") {
+						appAnimations[appInstance.id].clients[clients[i].id] = false;
 					}
 				}
 			}
