@@ -179,7 +179,7 @@ function updateWithGIT(branch, callback) {
  * @return header {String} formatted text
  */
 function header(h) {
-	if (h.length <= 5) return h + ">\t\t";
+	if (h.length <= 6) return h + ">\t\t";
 	else               return h + ">\t";
 }
 

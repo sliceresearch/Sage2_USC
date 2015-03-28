@@ -94,7 +94,6 @@ console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVers
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
 console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
 
-
 // Initialize Server
 initializeSage2Server();
 
@@ -208,11 +207,6 @@ function emitLog(data) {
 	broadcast('console', data);
 }
 
-
-
-// global variables to manage items
-var itemCount = 0;
-var userCount = 0;
 
 // global variables to manage clients
 var clients = [];
@@ -2469,19 +2463,24 @@ function loadConfiguration() {
 	return userConfig;
 }
 
-function getUniqueAppId() {
-	var id = "application_"+itemCount.toString();
-	itemCount++;
 
-	return id;
-}
+var getUniqueAppId = (function() {
+	var count = 0;
+	return function() { 
+		var id = "app_" + count.toString();
+		count++;
+		return id;
+	};
+})();
 
-function getNewUserId() {
-	var id = sprint("user_%02d", userCount);
-	userCount++;
-
-	return id;
-}
+var getNewUserId = (function() {
+	var count = 0;
+	return function() { 
+		var id = "usr_" + count.toString();
+		count++;
+		return id;
+	};
+})();
 
 function getApplications() {
 	var uploadedApps = assets.listApps();
@@ -3120,7 +3119,7 @@ function quitSAGE2() {
 		users.session.end = Date.now();
 		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
 		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
-		console.log(" LOG> saved log file to " + userLogName);
+		console.log(sageutils.header("LOG") + "saved log file to " + userLogName);
 	}
 
 	if (config.register_site) {

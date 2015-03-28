@@ -66,7 +66,7 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 			var msg = JSON.parse(message);
 			fName = _this.localListeners[msg.f];
 			if(fName === undefined) {
-				console.log(" WebsocketIO>\tno handler for message");
+				console.log("WebsocketIO>\tno handler for message");
 			}
 
 			// add lister to client
@@ -133,7 +133,7 @@ WebsocketIO.prototype.on = function(name, callback) {
 */
 WebsocketIO.prototype.emit = function(name, data, attempts) {
 	if (name === null || name === "") {
-		console.log(" WebsocketIO>\tError, no message name specified");
+		console.log("WebsocketIO>\tError, no message name specified");
 		return;
 	}
 
@@ -148,7 +148,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 			});
 		}
 		else {
-			console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+			console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
 		}
 		return;
 	}
@@ -160,12 +160,12 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 
 		try {
 			this.ws.send(message, {binary: true, mask: false}, function(err){
-				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---", name);
+				if(err) console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
 				// else success
 			});
 		}
 		catch(e) {
-			console.log(" WebsocketIO>\t---ERROR (try-catch)---", name);
+			console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
 		}
 	}
 	// send data as JSON string
@@ -176,12 +176,12 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 		try {
 			var msgString = JSON.stringify(message);
 			this.ws.send(msgString, {binary: false, mask: false}, function(err){
-				if(err) console.log(" WebsocketIO>\t---ERROR (ws.send)---", name);
+				if(err) console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
 				// else success
 			});
 		}
 		catch(e) {
-			console.log(" WebsocketIO>\t---ERROR (try-catch)---", name);
+			console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
 		}
 	}
 };
@@ -203,7 +203,7 @@ WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
 			});
 		}
 		else {
-			console.log(" WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+			console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
 		}
 		return;
 	}
