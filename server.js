@@ -2466,7 +2466,7 @@ function loadConfiguration() {
 
 var getUniqueAppId = (function() {
 	var count = 0;
-	return function() { 
+	return function() {
 		var id = "app_" + count.toString();
 		count++;
 		return id;
@@ -2475,7 +2475,7 @@ var getUniqueAppId = (function() {
 
 var getNewUserId = (function() {
 	var count = 0;
-	return function() { 
+	return function() {
 		var id = "usr_" + count.toString();
 		count++;
 		return id;
