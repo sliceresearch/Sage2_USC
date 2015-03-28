@@ -68,7 +68,7 @@ function WebsocketIO(url) {
 	this.open = function(callback) {
 		var _this = this;
 
-		console.log(this.url);
+		console.log('WebsocketIO> open', this.url);
 		this.ws = new WebSocket(this.url);
 		this.ws.binaryType = "arraybuffer";
 		this.ws.onopen = callback;
@@ -80,12 +80,12 @@ function WebsocketIO(url) {
 			if (typeof message.data === "string") {
 				var msg = JSON.parse(message.data);
 				fName = _this.localListeners[msg.f];
-				console.log("received " + msg.f + "(" + fName + ")");
-				if(fName === undefined) {
+				//console.log("WebsocketIO> received " + msg.f + "(" + fName + ")");
+				if (fName === undefined) {
 					console.log('WebsocketIO> No handler for message');
 				}
 
-				if(fName === "#WSIO#addListener") {
+				if (fName === "#WSIO#addListener") {
 					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
 				}
