@@ -320,6 +320,27 @@ function stringToBase64(string) {
 }
 
 /**
+ * Smallest transparent image, put in a image tag source
+ *
+ * @method smallTansparentGIF
+ * @return {String} small GIF image in base64 content
+ */
+function smallTansparentGIF() {
+	return "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+}
+
+/**
+ * Smallest white image, put in a image tag source
+ *
+ * @method smallWhiteGIF
+ * @return {String} small GIF image in base64 content
+ */
+function smallWhiteGIF() {
+	return "data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=";
+}
+
+
+/**
  * Convert a string to Uint8Array typed array
  *
  * @method stringToUint8Array
