@@ -84,6 +84,9 @@ function setupListeners(wsio) {
 			if (evt && evt.keyCode===13) {
 				// Send the command to the server after a 'return/enter' key
 				wsio.emit('command', commandline.value);
+				// Add the command to terminal
+				terminal.textContent += commandline.value + '\n';
+				terminal.scrollTop    = terminal.scrollHeight;
 				// Reset the command
 				commandline.value = '';
 			}
