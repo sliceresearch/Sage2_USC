@@ -154,20 +154,19 @@ function getFullVersion(callback) {
  * Upate the source code using git
  *
  * @method updateWithGIT
+ * @param branch {String} name of the remote branch
  * @param callback {Function} function to be run when finished
  */
-function updateWithGIT(callback) {
+function updateWithGIT(branch, callback) {
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
-	var cmd1 = "git pull origin";
-	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if (err) {
-			console.log(" GIT>\t" + stderr.trim());
-			return callback(err);
-		}
-		console.log(" GIT>\t" + stdout.trim());
-		// return the object in the callback paramter
-		callback(null);
+	var cmd1 = "git pull origin " + branch;
+	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
+		// return the messages in the callback paramter
+		if (err)
+			callback(stderr, null);
+		else
+			callback(null, stdout);
 	});
 }
 

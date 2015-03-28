@@ -2978,14 +2978,20 @@ function processInputCommand(line) {
 			break;
 
 		case 'version':
-			console.log('Version', SAGE2_version.base, ' branch:', SAGE2_version.branch, ' commit:', SAGE2_version.commit, SAGE2_version.date);
+			console.log(sageutils.header("Version") + 'base:', SAGE2_version.base, ' branch:', SAGE2_version.branch, ' commit:', SAGE2_version.commit, SAGE2_version.date);
 			break;
 
 		case 'update':
-			sageutils.updateWithGIT( function(err) {
-				if (err) console.log('GIT> Update error');
-				else console.log('GIT> Update done');
-			});
+			if (SAGE2_version.branch.length>0) {
+				sageutils.updateWithGIT(SAGE2_version.branch, function(error, success) {
+					if (error)
+						console.log(sageutils.header('GIT') + 'Update: error', error);
+					else
+						console.log(sageutils.header('GIT') + 'Update: success', success);
+				});
+			} else {
+				console.log(sageutils.header("Update") + "failed: not linked to any repository");
+			}
 			break;
 
 		case 'save':
@@ -3065,8 +3071,7 @@ function processInputCommand(line) {
 }
 
 // Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
-if (program.interactive)
-{
+if (program.interactive) {
 	// Create line reader for stdin and stdout
 	var shell = readline.createInterface({
 		input:  process.stdin, output: process.stdout
@@ -3074,9 +3079,6 @@ if (program.interactive)
 
 	// Set the prompt
 	shell.setPrompt("> ");
-
-	// Start the loop
-	//shell.prompt();
 
 	// Callback for each line
 	shell.on('line', function(line) {
@@ -3724,8 +3726,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		return;
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-	if(obj !== null) console.log(obj.layerId + " " + obj.id);
-	else             console.log("NULL");
+	// if(obj !== null) console.log(obj.layerId + " " + obj.id);
+	// else             console.log("NULL");
 
 
 	// Attempting to complete a click action on a button or a drag on a slider
@@ -4372,8 +4374,9 @@ function handleNewApplication(appInstance, videohandle) {
 }
 
 function deleteApplication( elem ) {
+	// Tell the clients to remove the element
 	broadcast('deleteElement', {elemId: elem.id});
-	broadcast('deleteElement', {elemId: elem.id});
+
 	var broadcastWS = null;
     var mediaStreamData = elem.id.split("|");
     var broadcastAddress = mediaStreamData[0];
