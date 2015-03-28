@@ -3726,9 +3726,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		return;
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-	// if(obj !== null) console.log(obj.layerId + " " + obj.id);
-	// else             console.log("NULL");
-
+	if (obj !== null) console.log("found " + obj.layerId + " " + obj.id);
 
 	// Attempting to complete a click action on a button or a drag on a slider
 	broadcast('releaseControlId', {addr:uniqueID, ptrId:sagePointers[uniqueID].id, x:pointerX, y:pointerY});
