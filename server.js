@@ -1658,7 +1658,7 @@ function wsLoadApplication(wsio, data) {
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].clientType === "display") {
-					appAnimations[appInstance.id].clients[client[i].id] = false;
+					appAnimations[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
 		}
