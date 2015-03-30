@@ -75,6 +75,7 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		/*
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -98,6 +99,17 @@ function SAGE2_init() {
 			requestsAppClone: true,
 			requestsFileHandling: true
 
+		};
+		*/
+		var clientDescription = {
+			clientType: "display",
+			clientID: clientID,
+			requests: {
+				config: true,
+				version: true,
+				time: true,
+				console: false
+			}
 		};
 		wsio.emit('addClient', clientDescription);
 	});

@@ -122,6 +122,7 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		/*
 		var clientDescription = {
 			clientType: "sageUI",
 			sendsPointerData: true,
@@ -141,6 +142,16 @@ function SAGE2_init() {
 			receivesPointerData: false,
 			receivesInputEvents: false,
 			receivesRemoteServerInfo: false
+		};
+		*/
+		var clientDescription = {
+			clientType: "sageUI",
+			requests: {
+				config: true,
+				version: false,
+				time: false,
+				console: false
+			}
 		};
 		wsio.emit('addClient', clientDescription);
 

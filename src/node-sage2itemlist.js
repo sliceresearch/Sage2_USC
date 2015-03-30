@@ -78,8 +78,21 @@ SAGE2ItemList.prototype.editItem = function(id, newProperties) {
 * @param type {String} "rectangle" or "circle"
 * @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
 */
-SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry) {
-	this.interactMgr.addGeometry(buttonId, id, type, geometry, true, 0, null);
+SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry, zIndex) {
+	this.interactMgr.addGeometry(buttonId, id, type, geometry, true, zIndex, null);
+};
+
+/**
+* Edit an interactable button for an item in the list
+*
+* @method editButtonOnItem
+* @param id {String} id of item
+* @param buttonId {String} id of button
+* @param type {String} "rectangle" or "circle"
+* @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
+*/
+SAGE2ItemList.prototype.editButtonOnItem = function(id, buttonId, type, geometry) {
+	this.interactMgr.editGeometry(buttonId, id, type, geometry);
 };
 
 /**

@@ -36,6 +36,7 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		/*
 		var clientDescription = {
 			clientType: "audioManager",
 			sendsPointerData: false,
@@ -53,6 +54,16 @@ function SAGE2_init() {
 			receivesPointerData: false,
 			receivesInputEvents: true,
 			receivesRemoteServerInfo: false
+		};
+		*/
+		var clientDescription = {
+			clientType: "audioManager",
+			requests: {
+				config: true,
+				version: false,
+				time: false,
+				console: false
+			}
 		};
 		wsio.emit('addClient', clientDescription);
 	});
