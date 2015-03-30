@@ -163,6 +163,12 @@ function initializeSage2Server() {
 	if (!sageutils.fileExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
+	// Setup tmp directory in uploads
+	var uploadTemp = path.join(__dirname, "public", "uploads", "tmp");
+	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + uploadTemp);
+	if (!sageutils.fileExists(uploadTemp)) {
+		fs.mkdirSync(uploadTemp);
+	}
 
 	// Make sure sessions directory exists
 	if (!sageutils.fileExists(sessionDirectory)) {
@@ -242,7 +248,7 @@ function closeWebSocketClient(wsio) {
 	var i;
     var key;
     if (wsio.clientType === "display") {
-    	console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID+ ")");
+		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID+ ")");
     }
     else {
 		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
@@ -307,7 +313,7 @@ function closeWebSocketClient(wsio) {
 function wsAddClient(wsio, data) {
 	wsio.updateRemoteAddress(data.host, data.port); // overwrite host and port if defined
 	wsio.clientType = data.clientType;
-	
+
 	if (wsio.clientType === "display") {
 		wsio.clientID = data.clientID;
 		if (masterDisplay === null) {
@@ -374,10 +380,10 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
-	
+
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
-	
+
 	wsio.on('pointerPress',                         wsPointerPress);
 	wsio.on('pointerRelease',                       wsPointerRelease);
 	wsio.on('pointerDblClick',                      wsPointerDblClick);
@@ -985,7 +991,7 @@ function wsStopMediaBlockStream(wsio, data) {
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
 	var i;
 	var broadcastAddress, broadcastID;
-	var serverAddress, clientAddress;
+	var serverAddress;
 
     var clientsReady = true;
 
@@ -1950,7 +1956,7 @@ function wsLoopVideo(wsio, data) {
 
 function wsAddNewElementFromRemoteServer(wsio, data) {
 	console.log("add element from remote server");
-	var clientAddress, i;
+	var i;
 
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance, videohandle) {
 		console.log("Remote App: " + appInstance.title + " (" + appInstance.application + ")");
@@ -2022,7 +2028,7 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 		var broadcastAddress = data.id.substring(6).split("|")[1];
 
 		for (var i=0; i<clients.length; i++) {
-			if (clients[i].id === serverAddress) { 
+			if (clients[i].id === serverAddress) {
 				broadcastWS = clients[i];
 				break;
 			}
@@ -4709,11 +4715,10 @@ function radialMenuEvent( data )
 	return false;
 }
 
-function clearRadialMenus()
-{
-	console.log("Clearing radial menus");
-	radialMenus = [];
-}
+// function clearRadialMenus() {
+// 	console.log("Clearing radial menus");
+// 	radialMenus = [];
+// }
 
 // Special case: just check if event is over menu (used for one-time events that don't use a start/end event)
 function isEventOnMenu( data )

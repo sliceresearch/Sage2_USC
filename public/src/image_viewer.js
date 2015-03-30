@@ -30,6 +30,7 @@ var image_viewer = SAGE2_App.extend( {
 
 		this.src = null;
 		this.top = null;
+		this.vis = null;
 	},
 
 	/**
@@ -53,6 +54,13 @@ var image_viewer = SAGE2_App.extend( {
 		this.layer.appendChild(this.pre);
 		this.top = 0;
 		this.state.crct = false;
+
+		// To get position and size updates
+		this.resizeEvents = "continuous";
+		this.moveEvents   = "continuous";
+
+		// visible
+		this.vis = true;
 	},
 
 	/**
@@ -64,7 +72,8 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	load: function(state, date) {
 		if (state.src !== undefined && state.src !== null) {
-			this.element.src  = "data:" + state.type + ";base64," + state.src;
+			//this.element.src  = "data:" + state.type + ";base64," + state.src;
+			this.element.src  = state.src;
 			this.state.src  = state.src;
 			this.state.type = state.type;
 			this.state.exif = state.exif;
@@ -94,6 +103,8 @@ var image_viewer = SAGE2_App.extend( {
 			} else {
 				this.state.crct = true;
 			}
+			// Force a redraw to test visibility
+			this.draw(date);
 		}
 	},
 
@@ -104,15 +115,61 @@ var image_viewer = SAGE2_App.extend( {
 	* @param date {Date} current time from the server
 	*/
 	draw: function(date) {
+		// Check for visibility
+		var visible = this.isVisible();
+		if (!visible && this.vis) {
+			this.element.src = smallWhiteGIF();
+			this.vis = false;
+		}
+		if (visible && !this.vis) {
+			this.element.src = this.state.src;
+			this.vis = true;
+		}
 	},
 
 	/**
-	* Resize function, nothing to resize since handled by the parent
+	* Resize callback
 	*
 	* @method resize
 	* @param date {Date} current time from the server
 	*/
 	resize: function(date) {
+		// Force a redraw to test visibility
+		this.draw(date);
+	},
+
+	/**
+	* Move callback
+	*
+	* @method move
+	* @param date {Date} current time from the server
+	*/
+	move: function(date) {
+		// Force a redraw to test visibility
+		this.draw(date);
+	},
+
+	/**
+	* Calculate if the application is hidden in this display
+	*
+	* @method isHidden
+	* @return {Boolean} Returns true if out of screen
+	*/
+	isHidden: function() {
+		return (this.sage2_x > (ui.offsetX + this.config.resolution.width)  ||
+				(this.sage2_x + this.sage2_width) < ui.offsetX ||
+				this.sage2_y > (ui.offsetY + this.config.resolution.height) ||
+				(this.sage2_y + this.sage2_height) < ui.offsetY);
+	},
+
+	/**
+	* Calculate if the application is visible in this display
+	*
+	* @method isVisible
+	* @return {Boolean} Returns true if visible
+	*/
+	isVisible: function() {
+		return !this.isHidden();
 	},
 
 	/**
