@@ -283,7 +283,7 @@ function closeWebSocketClient(wsio) {
 		}
         for (key in appAnimations) {
 			if (appAnimations.hasOwnProperty(key)) {
-				delete appAnimations[key].clients[uniqueID];
+				delete appAnimations[key].clients[wsio.id];
 			}
 		}
 	}
@@ -305,8 +305,7 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
-	// overwrite host and port if defined
-	wsio.updateRemoteAddress(data.host, data.port);
+	wsio.updateRemoteAddress(data.host, data.port); // overwrite host and port if defined
 	wsio.clientType = data.clientType;
 	
 	if (wsio.clientType === "display") {
@@ -478,14 +477,12 @@ function initializeExistingApps(wsio) {
 	var i;
 	var key;
 
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindow', applications[i]);
 	}
 	for(key in appAnimations){
 		if (appAnimations.hasOwnProperty(key)) {
-			appAnimations[key].clients[uniqueID] = false;
+			appAnimations[key].clients[wsio.id] = false;
 		}
 	}
 }
@@ -527,14 +524,12 @@ function initializeMediaBlockStreams(clientID) {
 // **************  Sage Pointer Functions *****************
 
 function wsRegisterInteractionClient(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	var key;
 	if(program.trackUsers === true) {
 		var newUser = true;
 		for(key in users) {
 			if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
-				users[key].ip = uniqueID;
+				users[key].ip = wsio.id;
 				if(users[key].actions === undefined) users[key].actions = [];
 				users[key].actions.push({type: "connect", data: null, time: Date.now()});
 				newUser = false;
@@ -545,7 +540,7 @@ function wsRegisterInteractionClient(wsio, data) {
 			users[id] = {};
 			users[id].name = data.name;
 			users[id].color = data.color;
-			users[id].ip = uniqueID;
+			users[id].ip = wsio.id;
 			if(users[id].actions === undefined) users[id].actions = [];
 			users[id].actions.push({type: "connect", data: null, time: Date.now()});
 		}
@@ -553,7 +548,7 @@ function wsRegisterInteractionClient(wsio, data) {
 	else {
 		for(key in users) {
 			if(users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
-				users[key].ip = uniqueID;
+				users[key].ip = wsio.id;
 				if(users[key].actions === undefined) users[key].actions = [];
 				users[key].actions.push({type: "connect", data: null, time: Date.now()});
 			}
@@ -562,121 +557,101 @@ function wsRegisterInteractionClient(wsio, data) {
 }
 
 function wsStartSagePointer(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	showPointer(wsio.id, data);
 
-	showPointer(uniqueID, data);
-
-	addEventToUserLog(uniqueID, {type: "SAGE2PointerStart", data: null, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "SAGE2PointerStart", data: null, time: Date.now()});
 }
 
 function wsStopSagePointer(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	hidePointer(uniqueID);
+	hidePointer(wsio.id);
 
 	//return to window interaction mode after stopping pointer
-	if(remoteInteraction[uniqueID].appInteractionMode()){
-		remoteInteraction[uniqueID].toggleModes();
-		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode });
+	if(remoteInteraction[wsio.id].appInteractionMode()){
+		remoteInteraction[wsio.id].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode });
 	}
 
-	addEventToUserLog(uniqueID, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
 	//addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 }
 
 function wsPointerPress(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
-	pointerPress(uniqueID, pointerX, pointerY, data);
+	pointerPress(wsio.id, pointerX, pointerY, data);
 }
 
 function wsPointerRelease(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
 	/*
 	if (data.button === 'left')
-		pointerRelease(uniqueID, pointerX, pointerY);
+		pointerRelease(wsio.id, pointerX, pointerY);
 	else
-		pointerReleaseRight(uniqueID, pointerX, pointerY);
+		pointerReleaseRight(wsio.id, pointerX, pointerY);
 	*/
-	pointerRelease(uniqueID, pointerX, pointerY, data);
+	pointerRelease(wsio.id, pointerX, pointerY, data);
 }
 
 function wsPointerDblClick(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
-
-	pointerDblClick(uniqueID, pointerX, pointerY);
+	pointerDblClick(wsio.id, pointerX, pointerY);
 }
 
 function wsPointerPosition(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	pointerPosition(uniqueID, data);
+	pointerPosition(wsio.id, data);
 }
 
 function wsPointerMove(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
-
-	pointerMove(uniqueID, pointerX, pointerY, data);
+	pointerMove(wsio.id, pointerX, pointerY, data);
 }
 
 function wsPointerScrollStart(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
-
-	pointerScrollStart( uniqueID, pointerX, pointerY );
+	pointerScrollStart(wsio.id, pointerX, pointerY);
 }
 
 function wsPointerScroll(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	// Casting the parameters to correct type
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
 
-	pointerScroll(uniqueID, data);
+	pointerScroll(wsio.id, data);
 }
 
 function wsPointerDraw(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	pointerDraw(uniqueID, data);
+	pointerDraw(wsio.id, data);
 }
 
 function wsKeyDown(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	if (data.code === 16) { // shift
-		remoteInteraction[uniqueID].SHIFT = true;
+		remoteInteraction[wsio.id].SHIFT = true;
 	}
 	else if (data.code === 17) { // ctrl
-		remoteInteraction[uniqueID].CTRL = true;
+		remoteInteraction[wsio.id].CTRL = true;
 	}
 	else if (data.code === 18) { // alt
-		remoteInteraction[uniqueID].ALT = true;
+		remoteInteraction[wsio.id].ALT = true;
 	}
 	else if (data.code === 20) { // caps lock
-		remoteInteraction[uniqueID].CAPS = true;
+		remoteInteraction[wsio.id].CAPS = true;
 	}
 	else if (data.code === 91 || data.code === 92 || data.code === 93){
 		// command
-		remoteInteraction[uniqueID].CMD = true;
+		remoteInteraction[wsio.id].CMD = true;
 	}
 
 	//SEND SPECIAL KEY EVENT only will come here
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
 	var control = findControlsUnderPointer(pointerX, pointerY);
 	if (control!==null){
@@ -684,44 +659,42 @@ function wsKeyDown(wsio, data) {
 	}
 
 
-	if(remoteInteraction[uniqueID].appInteractionMode()){
-		keyDown(uniqueID, pointerX, pointerY, data);
+	if(remoteInteraction[wsio.id].appInteractionMode()){
+		keyDown(wsio.id, pointerX, pointerY, data);
 	}
 }
 
 function wsKeyUp(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	if (data.code === 16) { // shift
-		remoteInteraction[uniqueID].SHIFT = false;
+		remoteInteraction[wsio.id].SHIFT = false;
 	}
 	else if (data.code === 17) { // ctrl
-		remoteInteraction[uniqueID].CTRL = false;
+		remoteInteraction[wsio.id].CTRL = false;
 	}
 	else if (data.code === 18) { // alt
-		remoteInteraction[uniqueID].ALT = false;
+		remoteInteraction[wsio.id].ALT = false;
 	}
 	else if (data.code === 20) { // caps lock
-		remoteInteraction[uniqueID].CAPS = false;
+		remoteInteraction[wsio.id].CAPS = false;
 	}
 	else if (data.code === 91 || data.code === 92 || data.code === 93) { // command
-		remoteInteraction[uniqueID].CMD = false;
+		remoteInteraction[wsio.id].CMD = false;
 	}
 
 	if (remoteInteraction[uniqueID].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
 
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 
 	var control = findControlsUnderPointer(pointerX, pointerY);
 
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+	var lockedControl = remoteInteraction[wsio.id].lockedControl();
 
 	if (lockedControl !== null) {
 		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) { //Enter key
-			remoteInteraction[uniqueID].dropControl();
+			remoteInteraction[wsio.id].dropControl();
 		}
 		return;
 	}
@@ -734,67 +707,65 @@ function wsKeyUp(wsio, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	if(elem !== null){
-		if(remoteInteraction[uniqueID].windowManagementMode()){
+		if(remoteInteraction[wsio.id].windowManagementMode()){
 			if(data.code === 8 || data.code === 46){ // backspace or delete
 				deleteApplication(elem);
 
-				addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
+				addEventToUserLog(wsio.id, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 			}
 		}
-		else if(remoteInteraction[uniqueID].appInteractionMode()) {	//only send special keys
-			keyUp(uniqueID, pointerX, pointerY, data);
+		else if(remoteInteraction[wsio.id].appInteractionMode()) {	//only send special keys
+			keyUp(wsio.id, pointerX, pointerY, data);
 		}
 	}
 }
 
 function wsKeyPress(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
-	var pointerX = sagePointers[uniqueID].left;
-	var pointerY = sagePointers[uniqueID].top;
+	var lockedControl = remoteInteraction[wsio.id].lockedControl();
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
 	var control = findControlsUnderPointer(pointerX, pointerY);
 
-	if (data.code === 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible) {
+	if (data.code === 9 && remoteInteraction[wsio.id].SHIFT && sagePointers[wsio.id].visible) {
 		// shift + tab
-		remoteInteraction[uniqueID].toggleModes();
+		remoteInteraction[wsio.id].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 
 		/*
-		if(remoteInteraction[uniqueID].interactionMode === 0)
-			addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
+		if(remoteInteraction[wsio.id].interactionMode === 0)
+			addEventToUserLog(wsio.id, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 		else
-			addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
+			addEventToUserLog(wsio.id, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
 		*/
 
-		if (remoteInteraction[uniqueID].modeChange !== undefined) clearTimeout(remoteInteraction[uniqueID].modeChange);
-		remoteInteraction[uniqueID].modeChange = setTimeout(function() {
-			delete remoteInteraction[uniqueID].modeChange;
+		if (remoteInteraction[wsio.id].modeChange !== undefined) {
+			clearTimeout(remoteInteraction[wsio.id].modeChange);
+		}
+		remoteInteraction[wsio.id].modeChange = setTimeout(function() {
+			delete remoteInteraction[wsio.id].modeChange;
 		}, 500);
 	}
 	else if (lockedControl !== null){
 		var event = {code: data.code, printable:true, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13){ //Enter key
-			addEventToUserLog(uniqueID, {type: "widgetAction", data: {application: lockedControl.appId, widget: lockedControl.ctrlId}, time: Date.now()});
+			addEventToUserLog(wsio.id, {type: "widgetAction", data: {application: lockedControl.appId, widget: lockedControl.ctrlId}, time: Date.now()});
 
-			remoteInteraction[uniqueID].dropControl();
+			remoteInteraction[wsio.id].dropControl();
 		}
 	}
 	else if(control!==null){
 		return;
 	}
-	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
-		keyPress(uniqueID, pointerX, pointerY, data);
+	else if ( remoteInteraction[wsio.id].appInteractionMode() ) {
+		keyPress(wsio.id, pointerX, pointerY, data);
 	}
 
 }
 
 // **************  File Upload Functions *****************
 function wsUploadedFile(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	addEventToUserLog(uniqueID, {type: "fileUpload", data: data, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "fileUpload", data: data, time: Date.now()});
 }
 
 function wsRadialMenuClick(wsio, data) {
@@ -813,7 +784,6 @@ function wsRadialMenuClick(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	console.log("received new stream: ", data.id);
 
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
@@ -832,7 +802,7 @@ function wsStartNewMediaStream(wsio, data) {
 		appInstance.id = data.id;
 		handleNewApplication(appInstance, null);
 
-		addEventToUserLog(uniqueID, {type: "mediaStreamStart", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
 
 	// Debug media stream freezing
@@ -875,25 +845,22 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 }
 
 function wsStopMediaStream(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	var elem = findAppById(data.id);
 	if(elem !== null) {
 		deleteApplication( elem );
 
-		addEventToUserLog(uniqueID, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
+		addEventToUserLog(wsio.id, {type: "delete", data: {application: {id: elem.id, type: elem.application}}, time: Date.now()});
 	}
 
-	addEventToUserLog(uniqueID, {type: "mediaStreamEnd", data: {application: {id: data.id, type: "media_stream"}}, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "mediaStreamEnd", data: {application: {id: data.id, type: "media_stream"}}, time: Date.now()});
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	var i;
 	var broadcastAddress, broadcastID;
 	var serverAddress, clientAddress;
 
-	mediaStreams[data.id].clients[uniqueID] = true;
+	mediaStreams[data.id].clients[wsio.id] = true;
 	if (allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
 		var broadcastWS = null;
@@ -1011,7 +978,6 @@ function wsStopMediaBlockStream(wsio, data) {
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	var i;
 	var broadcastAddress, broadcastID;
 	var serverAddress, clientAddress;
@@ -1020,13 +986,13 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 
     if(data.newClient !== null && data.newClient !== undefined) {
         if(data.newClient) {
-            initializeMediaBlockStreams(uniqueID);
+            initializeMediaBlockStreams(wsio.id);
             var app = findAppById(data.id);
             calculateValidBlocks(app, 128, mediaBlockStreams);
         }
     }
 
-	mediaBlockStreams[data.id].clients[uniqueID].readyForNextFrame = true;
+	mediaBlockStreams[data.id].clients[wsio.id].readyForNextFrame = true;
 
     for (var key in mediaBlockStreams[data.id].clients) {
         if(!mediaBlockStreams[data.id].clients[key].readyForNextFrame) clientsReady = false;
@@ -1040,8 +1006,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 			broadcastAddress = mediaBlockStreamData[0];
 			broadcastID = parseInt(mediaBlockStreamData[1]);
 			for (i=0; i<clients.length; i++) {
-				clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-				if (clientAddress === broadcastAddress) broadcastWS = clients[i];
+				if (clients[i].id === broadcastAddress) broadcastWS = clients[i];
 			}
 			if (broadcastWS !== null) broadcastWS.emit('requestNextFrame', {streamId: broadcastID});
 		}
@@ -1051,8 +1016,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 			broadcastID      = mediaBlockStreamData[2];
 
 			for (i=0; i<clients.length; i++) {
-				clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-				if (clientAddress === serverAddress) { broadcastWS = clients[i]; break; }
+				if (clients[i].id === serverAddress) { broadcastWS = clients[i]; break; }
 			}
 
 			if(broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress + "|" + broadcastID});
@@ -1069,9 +1033,7 @@ function wsPrintDebugInfo(wsio, data) {
 }
 
 function wsRequestVideoFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	videoHandles[data.id].clients[uniqueID].readyForNextFrame = true;
+	videoHandles[data.id].clients[wsio.id].readyForNextFrame = true;
 	handleNewClientReady(data.id);
 }
 
@@ -1104,9 +1066,8 @@ function wsReadFromFile (wsio, data){
 // **************  Application Animation Functions *****************
 
 function wsFinishedRenderingAppFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	if (wsio === masterDisplay) appAnimations[data.id].fps = data.fps;
-	appAnimations[data.id].clients[uniqueID] = true;
+	appAnimations[data.id].clients[wsio.id] = true;
 	if(allTrueDict(appAnimations[data.id].clients)){
 		var key;
 		for(key in appAnimations[data.id].clients){
@@ -1131,8 +1092,8 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
-	// Using updates only from display client 0
-	if (wsio.clientID === 0) {
+	// Using updates only from master
+	if (wsio === masterDisplay) {
 		var app = findAppById(data.id);
 		if(app !== null) app.data = data.state;
 	}
@@ -1365,12 +1326,12 @@ function listClients() {
 	var i;
 	console.log("Clients (%d)\n------------", clients.length);
 	for(i=0; i<clients.length; i++){
-		var ws = clients[i];
-		var uniqueID = ws.remoteAddress.address + ":" + ws.remoteAddress.port;
-		if (ws.clientType === "display")
-			console.log(sprint("%2d: %s (%s %s)", i, uniqueID, ws.clientType, ws.clientID));
-		else
-			console.log(sprint("%2d: %s (%s)", i, uniqueID, ws.clientType));
+		if (clients[i].clientType === "display") {
+			console.log(sprint("%2d: %s (%s %s)", i, clients[i].id, clients[i].clientType, clients[i].clientID));
+		}
+		else {
+			console.log(sprint("%2d: %s (%s)", i, clients[i].id, clients[i].clientType));
+		}
 	}
 }
 
@@ -1622,17 +1583,15 @@ function clearDisplay() {
 // handlers for messages from UI
 
 function wsClearDisplay(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	clearDisplay();
 
-	addEventToUserLog(uniqueID, {type: "clearDisplay", data: null, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "clearDisplay", data: null, time: Date.now()});
 }
 
 function wsTileApplications(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
 	tileApplications();
 
-	addEventToUserLog(uniqueID, {type: "tileApplications", data: null, time: Date.now()});
+	addEventToUserLog(wsio.id, {type: "tileApplications", data: null, time: Date.now()});
 }
 
 
@@ -1670,13 +1629,11 @@ function wsLoadApplication(wsio, data) {
 }
 
 function wsLoadFileFromServer(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
 
-		addEventToUserLog(uniqueID, {type: "openFile", data: {name: data.filename, application: {id: null, type: "session"}}, time: Date.now()});
+		addEventToUserLog(wsio.id, {type: "openFile", data: {name: data.filename, application: {id: null, type: "session"}}, time: Date.now()});
 	}
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
@@ -2051,9 +2008,7 @@ function wsUpdateRemoteMediaStreamFrame(wsio, data) {
 }
 
 function wsReceivedRemoteMediaStreamFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-	mediaStreams[data.id].clients[uniqueID] = true;
+	mediaStreams[data.id].clients[wsio.id] = true;
 	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
 		mediaStreams[data.id].ready = false;
 
@@ -2062,8 +2017,10 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 		var broadcastAddress = data.id.substring(6).split("|")[1];
 
 		for (var i=0; i<clients.length; i++) {
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			if (clientAddress === serverAddress) { broadcastWS = clients[i]; break; }
+			if (clients[i].id === serverAddress) { 
+				broadcastWS = clients[i];
+				break;
+			}
 		}
 
 		if (broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress});
@@ -2093,10 +2050,8 @@ function wsUpdateRemoteMediaBlockStreamFrame(wsio, data) {
 }
 
 function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-
-    console.log("ReceivedRemoteMediaBlockStreamFrame");
-	mediaBlockStreams[data.id].clients[uniqueID].readyForNextFrame = true;
+	console.log("ReceivedRemoteMediaBlockStreamFrame");
+	mediaBlockStreams[data.id].clients[wsio.id].readyForNextFrame = true;
 	if (allTrueDict(mediaBlockStreams[data.id].clients) && mediaBlockStreams[data.id].ready) {
 		mediaBlockStreams[data.id].ready = false;
 
@@ -2105,8 +2060,10 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 		var broadcastAddress = data.id.substring(6).split("|")[1];
 
 		for (var i=0; i<clients.length; i++) {
-			var clientAddress = clients[i].remoteAddress.address + ":" + clients[i].remoteAddress.port;
-			if (clientAddress === serverAddress) { broadcastWS = clients[i]; break; }
+			if (clients[i].id === serverAddress) {
+				broadcastWS = clients[i];
+				break;
+			}
 		}
 
 		if (broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress});
@@ -2200,8 +2157,7 @@ function wsHideWidgetFromControl(wsio, data){
 function wsOpenRadialMenuFromControl(wsio, data){
 	console.log("radial menu");
 	var ctrl = findControlById(data.id);
-	var uniqueID = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port;
-	createRadialMenu( uniqueID, ctrl.left, ctrl.top);
+	createRadialMenu(wsio.id, ctrl.left, ctrl.top);
 }
 
 /* ****************** Clone Request Methods ************************** */
