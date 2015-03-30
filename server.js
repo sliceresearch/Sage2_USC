@@ -3398,6 +3398,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	console.log("pointer press on open space");
+
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -3446,7 +3447,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectMoveItem(app, pointerX, pointerY); //will only go through if window management mode
-	broadcast('startMove', {id: app.id, date: new Date()});
+	broadcast('startMove', {id: app.id, date: Date.now()});
 
 	var eLogData = {
 		type: "move",
