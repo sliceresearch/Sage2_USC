@@ -337,12 +337,12 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	if (wsio === masterDisplay) {
 		wsio.emit('setAsMasterDisplay');
 	}
-	
+
 	if (reqConfig)  wsio.emit('setupDisplayConfiguration', config);
 	if (reqVersion) wsio.emit('setupSAGE2Version',         SAGE2_version);
 	if (reqTime)    wsio.emit('setSystemTime',             {date: Date.now()});
 	if (reqConsole) wsio.emit('console',                   json5.stringify(config, null, 4));
-	
+
 	if(wsio.clientType === "display") {
 		initializeExistingSagePointers(wsio);
 		initializeExistingApps(wsio);
@@ -365,7 +365,6 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 			calculateValidBlocks(appInstance, blocksize, videoHandles);
 		}
 	}
-
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if(remote !== null){
@@ -3340,8 +3339,7 @@ function hidePointer( uniqueID ) {
 
 // Copied from pointerPress. Eventually a touch gesture will use this to toggle modes
 function togglePointerMode(uniqueID) {
-	if( sagePointers[uniqueID] === undefined )
-		return;
+	if (sagePointers[uniqueID] === undefined) return;
 
 	remoteInteraction[uniqueID].toggleModes();
 	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode });
@@ -3373,12 +3371,12 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-	
+
 	if (obj === null) {
 		pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
 		return;
 	}
-	
+
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
 		case "staticUI":
@@ -3415,9 +3413,9 @@ function pointerPressOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt) 
 
 function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
-	
+
 	// pointer press on app window
-	if(btn === null) {
+	if (btn === null) {
 		if (remoteInteraction[uniqueID].windowManagementMode()) {
 			if (data.button === "left") {
 				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
@@ -3521,12 +3519,12 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
     if (obj === null) return;
 
-    switch (obj.layerId) {
-    	case "applications":
-    		if (remoteInteraction[uniqueID].appInteractionMode()) {
+	switch (obj.layerId) {
+		case "applications":
+			if (remoteInteraction[uniqueID].appInteractionMode()) {
 				sendPointerMoveToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 			}
-    		break;
+		break;
 	}
 }
 
@@ -3552,7 +3550,7 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 		data: data,
 		date: Date.now()
 	};
-	
+
 	broadcast('eventInItem', event);
 }
 
