@@ -216,18 +216,18 @@ function SAGE2_init() {
     wsio.on('showSagePointer', function(pointer_data){
 		ui.showSagePointer(pointer_data);
 		resetIdle();
-		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
-		var stlyeCaption = uniqueID.split(re).join("");
-		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		//var re = /\.|\:/g;
+		//var stlyeCaption = uniqueID.split(re).join("");
+		//addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('hideSagePointer', function(pointer_data){
 		ui.hideSagePointer(pointer_data);
-		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
-		var stlyeCaption = uniqueID.split(re).join("");
-		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		//var re = /\.|\:/g;
+		//var stlyeCaption = uniqueID.split(re).join("");
+		//removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     //wsio.on('updateSagePointerPosition', function(pointer_data){
