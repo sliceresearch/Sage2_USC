@@ -3556,10 +3556,10 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
-	var itemUnderPointer = ct || elem;
+	//var itemUnderPointer = ct || elem;
 
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
 	if (ct !== null) {
 		if (data.button === "left") {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
@@ -3675,7 +3675,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			}
 		}
 		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
+			console.log("Should not get past this!!");
 			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
+				console.log("comming here!!!!");
 				if(data.button === "right"){
 					elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 					if (elemCtrl === null) {
@@ -3816,9 +3818,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
-	var itemUnderPointer = controlUnderPointer || elem;
+	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
 
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
@@ -3942,14 +3944,14 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var elem = null;
-	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
-	if (controlUnderPointer===null){
-		elem = findAppUnderPointer(pointerX, pointerY);
-	}
+	//var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
+	//if (controlUnderPointer===null){
+	elem = findAppUnderPointer(pointerX, pointerY);
+	//}
 
-	var itemUnderPointer = controlUnderPointer || elem;
+	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
 	// Widget connector show logic ends
 
 	// move / resize window

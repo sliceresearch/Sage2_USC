@@ -64,7 +64,7 @@ var googlemaps = SAGE2_App.extend( {
 		addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
 
 		this.controls.addSlider({
-			begin: 8,
+			begin: 0,
 			end: 20,
 			increments: 1,
 			appHandle: this,
@@ -83,7 +83,7 @@ var googlemaps = SAGE2_App.extend( {
 		});
 
 		var mapLabel =  { "textual":true, "label":"Map", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:mapLabel, sequenceNo:1, action:function(date) {
+		this.controls.addButton({type:mapLabel, sequenceNo:7, action:function(date) {
 			if (this.state.mapType === google.maps.MapTypeId.TERRAIN)
 				this.state.mapType = google.maps.MapTypeId.ROADMAP;
 			else if (this.state.mapType === google.maps.MapTypeId.ROADMAP)
@@ -97,7 +97,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.map.setMapTypeId(this.state.mapType);
 		}.bind(this)});
 		var trafficLabel = { "textual":true, "label":"T", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:trafficLabel, sequenceNo:6, action:function(date){
+		this.controls.addButton({type:trafficLabel, sequenceNo:9, action:function(date){
 			// add/remove traffic layer
 			if (this.trafficLayer.getMap() == null) {
 				this.trafficLayer.setMap(this.map);
@@ -112,13 +112,21 @@ var googlemaps = SAGE2_App.extend( {
 			this.updateLayers();
 		}.bind(this)});
 		var weatherLabel = { "textual":true, "label":"W", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:weatherLabel, sequenceNo:8, action:function(date) {
+		this.controls.addButton({type:weatherLabel, sequenceNo:11, action:function(date) {
 			// add/remove weather layer
 			if (this.weatherLayer.getMap() == null)
 				this.weatherLayer.setMap(this.map);
 			else
 				this.weatherLayer.setMap(null);
 			this.updateLayers();
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-in", sequenceNo:3, action:function(date) {
+			this.map.setZoom(this.state.zoomLevel + 1);
+			this.state.zoomLevel = this.map.getZoom();
+		}.bind(this)});
+		this.controls.addButton({type:"zoom-out", sequenceNo:5, action:function(date) {
+			this.map.setZoom(this.state.zoomLevel - 1);
+			this.state.zoomLevel = this.map.getZoom();
 		}.bind(this)});
 		this.controls.addTextInput({defaultText: "", caption:"Addr", action:function(text) {
 			this.codeAddress(text);
