@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Usage: node notes.js [url] [image] [#uploads]
+#
+
+node notes.js wss://localhost:443 note.jpg 800
+
