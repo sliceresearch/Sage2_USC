@@ -250,7 +250,8 @@ function setupListeners() {
 	});
 
 	wsio.on('updateItemOrder', function(data) {
-		displayUI.updateItemOrder(data.idList);
+		//displayUI.updateItemOrder(data.idList);
+		displayUI.updateItemOrder(data);
 	});
 
 	wsio.on('setItemPosition', function(data) {

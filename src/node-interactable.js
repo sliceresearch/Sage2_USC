@@ -45,6 +45,7 @@ function InteractableManager() {
 InteractableManager.prototype.addLayer = function(id, zIndex) {
 	zIndex = (zIndex === undefined || zIndex === null) ? this.layerOrder.length : zIndex;
 	this.layers[id] = {objects: new RBush(6, ['.x1', '.y1', '.x2', '.y2']), zIndex: zIndex};
+	this.interactableObjects[id] = {};
 
 	var _this = this;
 	this.layerOrder = Object.keys(this.layers).sort(function(a, b) {
@@ -88,7 +89,7 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 	}
 
 	this.layers[layerId].objects.insert(pkg);
-	this.interactableObjects[id] = pkg;
+	this.interactableObjects[layerId][id] = pkg;
 };
 
 /**
@@ -99,10 +100,10 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 * @param layerId {String} unique identifier for the layer
 */
 InteractableManager.prototype.removeGeometry = function(id, layerId) {
-	var pkg = this.interactableObjects[id];
+	var pkg = this.interactableObjects[layerId][id];
 	this.layers[layerId].objects.remove(pkg);
 
-	delete this.interactableObjects[id];
+	delete this.interactableObjects[layerId][id];
 };
 
 /**
@@ -115,7 +116,7 @@ InteractableManager.prototype.removeGeometry = function(id, layerId) {
 * @param geometry {Obejct} defines object (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
 */
 InteractableManager.prototype.editGeometry = function(id, layerId, type, geometry) {
-	var pkg = this.interactableObjects[id];
+	var pkg = this.interactableObjects[layerId][id];
 
 	this.layers[layerId].objects.remove(pkg);
 
@@ -142,10 +143,11 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 *
 * @method editVisibility
 * @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
 * @param visible {Boolean} whether or not the geometric object is currently visible
 */
-InteractableManager.prototype.editVisibility = function(id, visible) {
-	var pkg = this.interactableObjects[id];
+InteractableManager.prototype.editVisibility = function(id, layerId, visible) {
+	var pkg = this.interactableObjects[layerId][id];
 	pkg.visible = visible;
 };
 
@@ -154,13 +156,49 @@ InteractableManager.prototype.editVisibility = function(id, visible) {
 *
 * @method editZIndex
 * @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
 * @param zIndex {Integer} determines ordering of the geometries within a given layers
 */
-InteractableManager.prototype.editZIndex = function(id, zIndex) {
-	var pkg = this.interactableObjects[id];
+InteractableManager.prototype.editZIndex = function(id, layerId, zIndex) {
+	var pkg = this.interactableObjects[layerId][id];
 	pkg.zIndex = zIndex;
 };
 
+/**
+* Move geometric object to front (edit zIndex)
+*
+* @method moveObjectToFront
+* @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
+*/
+InteractableManager.prototype.moveObjectToFront = function(id, layerId) {
+	var key;
+	var currZIndex = this.interactableObjects[layerId][id].zIndex;
+	var maxZIndex = currZIndex;
+	for (key in this.interactableObjects[layerId]) {
+		if (this.interactableObjects[layerId][key].zIndex > currZIndex) {
+			if (this.interactableObjects[layerId][key].zIndex > maxZIndex) maxZIndex = this.interactableObjects[layerId][key].zIndex;
+			this.interactableObjects[layerId][key].zIndex--;
+		}
+	}
+	this.interactableObjects[layerId][id].zIndex = maxZIndex;
+};
+
+/**
+* Move geometric object to front (edit zIndex)
+*
+* @method getObjectZIndexList
+* @param layerId {String} unique identifier for the layer
+* @return zIndexList {Obejct} list of geometric object ids and there zIndex values
+*/
+InteractableManager.prototype.getObjectZIndexList = function(layerId) {
+	var key;
+	var zIndexList = {};
+	for (key in this.interactableObjects[layerId]) {
+		zIndexList[this.interactableObjects[layerId][key].id] = this.interactableObjects[layerId][key].zIndex;
+	}
+	return zIndexList;
+};
 
 /**
 * Search for topmost geometric object (optionally within a given layer)

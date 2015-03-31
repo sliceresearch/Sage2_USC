@@ -3159,7 +3159,6 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 	broadcast('setControlPosition', {date: dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, elemHeight: ctrl.height, user_color: sagePointers[uniqueID] ? sagePointers[uniqueID].color : null, appData: appPos});
 }
 
-
 function moveAppToFront(id) {
 	var selectedIndex;
 	var selectedApp;
@@ -3176,11 +3175,11 @@ function moveAppToFront(id) {
 	}
 	for(i=selectedIndex; i<applications.length-1; i++){
 		applications[i] = applications[i+1];
-		interactMgr.editZIndex(applications[i].id, appIds.length);
+		//interactMgr.editZIndex(applications[i].id, appIds.length);
 		appIds.push(applications[i].id);
 	}
 	applications[applications.length-1] = selectedApp;
-	interactMgr.editZIndex(id, appIds.length);
+	//interactMgr.editZIndex(id, appIds.length);
 	appIds.push(id);
 
 	return appIds;
@@ -3413,6 +3412,10 @@ function pointerPressOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt) 
 
 function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
+
+	interactMgr.moveObjectToFront(obj.id, obj.layerId);
+	var newOrder = interactMgr.getObjectZIndexList(obj.layerId);
+	broadcast('updateItemOrder', newOrder);
 
 	// pointer press on app window
 	if (btn === null) {
@@ -4707,7 +4710,8 @@ function handleNewApplication(appInstance, videohandle) {
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
-	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, applications.length, appInstance);
+	var zIndex = SAGE2Items.applications.numItems;
+	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, zIndex, appInstance);
 	//applications.push(appInstance);
 
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);

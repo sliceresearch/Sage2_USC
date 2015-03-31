@@ -581,6 +581,15 @@ function setupListeners() {
 	wsio.on('updateItemOrder', function(order) {
 		resetIdle();
 
+		var key;
+		for (key in order) {
+			var selectedElemTitle = document.getElementById(key + "_title");
+			var selectedElem = document.getElementById(key);
+
+			selectedElemTitle.style.zIndex = order[key].toString();
+			selectedElem.style.zIndex = order[key].toString();
+		}
+		/*
 		var i;
 		var zval = 0;
 		for(i=0; i<order.idList.length; i++){
@@ -594,6 +603,7 @@ function setupListeners() {
 
 			zval += 2;
 		}
+		*/
 	});
 
 	wsio.on('hoverOverItemCorner', function(elem_data) {
