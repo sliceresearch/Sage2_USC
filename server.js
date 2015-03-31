@@ -3568,6 +3568,17 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		dropResizeApp(uniqueID, app, data);
 		return;
     }
+
+    var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+    if (obj === null) return;
+
+	switch (obj.layerId) {
+		case "applications":
+			if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			}
+		break;
+	}
 }
 
 function dropMoveApp(uniqueID, app, data) {
@@ -3612,6 +3623,22 @@ function dropResizeApp(uniqueID, app, data) {
 	addEventToUserLog(uniqueID, {type: "windowManagement", data: eLogData, time: Date.now()});
 
 	remoteInteraction[uniqueID].releaseItem(true);
+}
+
+function sendPointerReleaseToApplication(uniqueID, app, pointerX, pointerY, data) {
+	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+
+	var event = {
+		id: app.id,
+		type: "pointerRelease",
+		position: ePosition,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
 }
 
 /*
