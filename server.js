@@ -691,7 +691,7 @@ function wsKeyUp(wsio, data) {
 		remoteInteraction[wsio.id].CMD = false;
 	}
 
-	if (remoteInteraction[uniqueID].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
+	if (remoteInteraction[wsio.id].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
 
 	var pointerX = sagePointers[wsio.id].left;
 	var pointerY = sagePointers[wsio.id].top;
@@ -739,7 +739,7 @@ function wsKeyPress(wsio, data) {
 	if (data.code === 9 && remoteInteraction[wsio.id].SHIFT && sagePointers[wsio.id].visible) {
 		// shift + tab
 		remoteInteraction[wsio.id].toggleModes();
-		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode});
 
 		/*
 		if(remoteInteraction[wsio.id].interactionMode === 0)

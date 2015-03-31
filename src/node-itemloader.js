@@ -366,18 +366,18 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_
 		// 	}
 		// });
 
-			// Query the exif data
-			var box  = assets.getTag(file, "ViewBox").split(' ');
-			var svgDims = {width:parseInt(box[2]), height:parseInt(box[3])};
-			var svgExif = assets.getExifData(file);
+		// Query the exif data
+		var box  = assets.getTag(file, "ViewBox").split(' ');
+		var svgDims = {width:parseInt(box[2]), height:parseInt(box[3])};
+		var svgExif = assets.getExifData(file);
 
-			if (dims) {
-				this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, url, external_url, name, svgExif, function(appInstance) {
-					callback(appInstance);
-				});
-			} else {
-				console.log("File not recognized:", file, mime_type, url);
-			}
+		if (svgDims) {
+			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, url, external_url, name, svgExif, function(appInstance) {
+				callback(appInstance);
+			});
+		} else {
+			console.log("File not recognized:", file, mime_type, url);
+		}
 	}
 	else {
 		// imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").toBuffer(function (err, buffer) {
