@@ -3437,6 +3437,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 		case "dragCorner":
 			break;
 		case "fullscreenButton":
+			toggleApplicationFullscreen(uniqueID, obj.data)
 			break;
 		case "closeButton":
 			break;
@@ -3535,6 +3536,7 @@ function moveApplicationWindow(moveApp) {
 
 function moveAndResizeApplicationWindow(resizeApp) {
 	interactMgr.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+config.ui.titleBarHeight});
+	handleApplicationResize(resizeApp.elemId);
 	broadcast('setItemPositionAndSize', resizeApp);
 }
 
@@ -3639,6 +3641,82 @@ function sendPointerReleaseToApplication(uniqueID, app, pointerX, pointerY, data
 	};
 
 	broadcast('eventInItem', event);
+}
+
+function pointerDblClick(uniqueID, pointerX, pointerY) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+    if (obj === null) return;
+
+    var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+	switch (obj.layerId) {
+		case "applications":
+			pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt);
+		break;
+	}
+}
+
+function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt) {
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
+
+	// pointer press on app window
+	if (btn === null) {
+		if (remoteInteraction[uniqueID].windowManagementMode()) {
+			toggleApplicationFullscreen(uniqueID, obj.data);
+		}
+		return;
+	}
+
+	switch (btn.id) {
+		case "titleBar":
+			toggleApplicationFullscreen(uniqueID, obj.data);
+			break;
+		case "dragCorner":
+			break;
+		case "fullscreenButton":
+			break;
+		case "closeButton":
+			break;
+	}
+}
+
+function toggleApplicationFullscreen(uniqueID, app) {
+	var resizeApp;
+	if (app.maximized !== true) { // maximize
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
+	}
+	else { // restore to previous
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
+	}
+	if (resizeApp !== null) {
+		broadcast('startMove', {id: resizeApp.elemId, date: Date.now()});
+		broadcast('startResize', {id: resizeApp.elemId, date: Date.now()});
+
+		var a = {
+			id: app.id,
+			type: app.application
+		};
+		var l = {
+			x: parseInt(app.left, 10),
+			y: parseInt(app.top, 10),
+			width: parseInt(app.width, 10),
+			height: parseInt(app.height, 10)
+		};
+
+		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: a, location: l}, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: a, location: l}, time: Date.now()});
+
+		interactMgr.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+config.ui.titleBarHeight});
+		handleApplicationResize(resizeApp.elemId);
+		broadcast('setItemPositionAndSize', resizeApp);
+
+		broadcast('finishedMove', {id: resizeApp.elemId, date: Date.now()});
+		broadcast('finishedResize', {id: resizeApp.elemId, date: Date.now()});
+
+		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: a, location: l}, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: a, location: l}, time: Date.now()});
+	}
 }
 
 /*
@@ -4292,6 +4370,7 @@ function pointerDraw(uniqueID, data) {
 	}
 }
 
+/*
 function pointerDblClick(uniqueID, pointerX, pointerY) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
@@ -4372,6 +4451,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 		}
 	}
 }
+*/
 
 // Fullscreen to wall ratio
 function pointerFullZone(uniqueID, pointerX, pointerY) {
@@ -4556,6 +4636,18 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 
 	initializeLoadedVideo(appInstance, videohandle);
+}
+
+function handleApplicationResize(appId) {
+	var appWidth = SAGE2Items.applications.list[appId].width;
+	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
+	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
+	var oneButton    = buttonsWidth / 2; // two buttons
+	var startButtons = appWidth - buttonsWidth;
+
+	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: appWidth, h: config.ui.titleBarHeight}, 0);
+	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 }
 
 function deleteApplication( elem ) {
