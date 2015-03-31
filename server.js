@@ -3435,6 +3435,12 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
+			if (remoteInteraction[uniqueID].windowManagementMode()) {
+				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY);
+			}
+			else if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			}
 			break;
 		case "fullscreenButton":
 			toggleApplicationFullscreen(uniqueID, obj.data)
@@ -3445,11 +3451,32 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 }
 
 function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
-	remoteInteraction[uniqueID].selectMoveItem(app, pointerX, pointerY); //will only go through if window management mode
+	remoteInteraction[uniqueID].selectMoveItem(app, pointerX, pointerY);
 	broadcast('startMove', {id: app.id, date: Date.now()});
 
 	var eLogData = {
 		type: "move",
+		action: "start",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		location: {
+			x: parseInt(app.left, 10),
+			y: parseInt(app.top, 10),
+			width: parseInt(app.width, 10),
+			height: parseInt(app.height, 10)
+		}
+	};
+	addEventToUserLog(uniqueID, {type: "windowManagement", data: eLogData, time: Date.now()});
+}
+
+function selectApplicationForResize(uniqueID, app, pointerX, pointerY) {
+	remoteInteraction[uniqueID].selectResizeItem(app, pointerX, pointerY);
+	broadcast('startResize', {id: app.id, date: Date.now()});
+
+	var eLogData = {
+		type: "resize",
 		action: "start",
 		application: {
 			id: app.id,
@@ -3518,14 +3545,73 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
     }
 
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-    if (obj === null) return;
-
+    if (obj === null) {
+    	removeExistingHoverCorner(uniqueID);
+    	return;
+    }
+    var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
+		case "staticUI":
+			removeExistingHoverCorner(uniqueID);
+			break;
+		case "radialMenus":
+			removeExistingHoverCorner(uniqueID);
+			break;
+		case "widgets":
+			removeExistingHoverCorner(uniqueID);
+			break;
 		case "applications":
-			if (remoteInteraction[uniqueID].appInteractionMode()) {
+			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt)
+			break;
+	}
+}
+
+function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
+
+	// pointer move on app window
+	if (btn === null) {
+		removeExistingHoverCorner(uniqueID);
+		if (remoteInteraction[uniqueID].appInteractionMode()) {
+			sendPointerMoveToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+		}
+		return;
+	}
+
+	switch (btn.id) {
+		case "titleBar":
+			removeExistingHoverCorner(uniqueID);
+			break;
+		case "dragCorner":
+			if (remoteInteraction[uniqueID].windowManagementMode()) {
+				if(remoteInteraction[uniqueID].hoverCornerItem === null) {
+					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+				}
+				else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+				}
+			}
+			else if (remoteInteraction[uniqueID].appInteractionMode()) {
 				sendPointerMoveToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 			}
-		break;
+			break;
+		case "fullscreenButton":
+			removeExistingHoverCorner(uniqueID);
+			break;
+		case "closeButton":
+			removeExistingHoverCorner(uniqueID);
+			break;
+	}
+}
+
+function removeExistingHoverCorner(uniqueID) {
+	// remove hover corner if exists
+	if(remoteInteraction[uniqueID].hoverCornerItem !== null){
+		broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+		remoteInteraction[uniqueID].setHoverCornerItem(null);
 	}
 }
 
@@ -4624,7 +4710,7 @@ function handleNewApplication(appInstance, videohandle) {
 	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, applications.length, appInstance);
 	//applications.push(appInstance);
 
-
+	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
@@ -4634,20 +4720,25 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle", {x: 0, y: 0, w: appInstance.width, h: config.ui.titleBarHeight}, 0);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
 	initializeLoadedVideo(appInstance, videohandle);
 }
 
 function handleApplicationResize(appId) {
 	var appWidth = SAGE2Items.applications.list[appId].width;
+	var appHeight = SAGE2Items.applications.list[appId].height;
+
+	var cornerSize = 0.2 * Math.min(appWidth, appHeight);
 	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appWidth - buttonsWidth;
 
-	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: appWidth, h: config.ui.titleBarHeight}, 0);
-	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
-	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: appWidth, h: config.ui.titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: appWidth-cornerSize, y: appHeight+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
 }
 
 function deleteApplication( elem ) {
