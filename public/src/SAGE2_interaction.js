@@ -45,6 +45,8 @@ function SAGE2_interaction(wsio) {
 	this.deltaY = 0;
 	// Send frequency (frames per second)
 	this.sendFrequency = 25;
+	// Timeout for when scrolling ends
+	this.scrollTimeId = null;
 	/////////////////////////////////
 
 	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
@@ -517,8 +519,19 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} scroll event
 	*/
 	this.pointerScrollMethod = function(event) {
-		this.wsio.emit('pointerScrollStart');
+		if (this.scrollTimeId === null) {
+			this.wsio.emit('pointerScrollStart');
+		}
+		else {
+			clearTimeout(this.scrollTimeId);
+		}
 		this.wsio.emit('pointerScroll', {wheelDelta: event.deltaY});
+
+		var _this = this;
+		this.scrollTimeId = setTimeout(function() {
+			_this.wsio.emit('pointerScrollEnd');
+			_this.scrollTimeId = null;
+		}, 500);
 		if (event.preventDefault) event.preventDefault();
 	};
 

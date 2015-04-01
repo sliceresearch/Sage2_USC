@@ -511,7 +511,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.showSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
 		var translate  = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
-		
+
 		pointerElem.style.display = "block";
 		pointerElem.style.webkitTransform = translate;
 		pointerElem.style.mozTransform    = translate;

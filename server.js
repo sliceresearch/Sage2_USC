@@ -390,6 +390,7 @@ function setupListeners(wsio) {
 	wsio.on('pointerMove',                          wsPointerMove);
 	wsio.on('pointerScrollStart',                   wsPointerScrollStart);
 	wsio.on('pointerScroll',                        wsPointerScroll);
+	wsio.on('pointerScrollEnd',                     wsPointerScrollEnd);
 	wsio.on('pointerDraw',                          wsPointerDraw);
 	wsio.on('keyDown',                              wsKeyDown);
 	wsio.on('keyUp',                                wsKeyUp);
@@ -635,6 +636,10 @@ function wsPointerScroll(wsio, data) {
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
 
 	pointerScroll(wsio.id, data);
+}
+
+function wsPointerScrollEnd(wsio, data) {
+	pointerScrollEnd(wsio.id);
 }
 
 function wsPointerDraw(wsio, data) {
@@ -3312,7 +3317,7 @@ function createSagePointer (uniqueID) {
 
 function showPointer(uniqueID, data) {
 	if(sagePointers[uniqueID] === undefined) return;
-	
+
 	// From startSagePointer
 	console.log(sageutils.header("Pointer") + "starting: " + uniqueID);
 
@@ -3342,7 +3347,7 @@ function togglePointerMode(uniqueID) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 	remoteInteraction[uniqueID].toggleModes();
-	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode });
+	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 
 	/*
 	if(remoteInteraction[uniqueID].interactionMode === 0)
@@ -3424,9 +3429,6 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			if (data.button === "left") {
 				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			}
-			else if (data.button === "right") {
-
-			}
 		}
 		else if (remoteInteraction[uniqueID].appInteractionMode()) {
 			sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
@@ -3447,7 +3449,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			}
 			break;
 		case "fullscreenButton":
-			toggleApplicationFullscreen(uniqueID, obj.data)
+			toggleApplicationFullscreen(uniqueID, obj.data);
 			break;
 		case "closeButton":
 			deleteApplication(obj.data.id);
@@ -3563,10 +3565,10 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
     if (obj === null) {
-    	removeExistingHoverCorner(uniqueID);
-    	return;
+		removeExistingHoverCorner(uniqueID);
+		return;
     }
-    var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
 		case "staticUI":
 			removeExistingHoverCorner(uniqueID);
@@ -3578,7 +3580,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			removeExistingHoverCorner(uniqueID);
 			break;
 		case "applications":
-			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt)
+			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 	}
 }
@@ -3783,6 +3785,128 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 			break;
 	}
 }
+
+function pointerScrollStart(uniqueID, pointerX, pointerY) {
+	if(sagePointers[uniqueID] === undefined) return;
+
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+
+	if (obj === null) {
+		return;
+	}
+
+	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+	switch (obj.layerId) {
+		case "staticUI":
+			break;
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt);
+			break;
+	}
+}
+
+function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt) {
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
+
+	interactMgr.moveObjectToFront(obj.id, obj.layerId);
+	var newOrder = interactMgr.getObjectZIndexList(obj.layerId);
+	broadcast('updateItemOrder', newOrder);
+
+	// pointer scroll on app window
+	if (btn === null) {
+		if (remoteInteraction[uniqueID].windowManagementMode()) {
+			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+		}
+		return;
+	}
+
+	switch (btn.id) {
+		case "titleBar":
+			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			break;
+		case "dragCorner":
+			if (remoteInteraction[uniqueID].windowManagementMode()) {
+				selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			}
+			break;
+		case "fullscreenButton":
+			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			break;
+		case "closeButton":
+			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			break;
+	}
+}
+
+function selectApplicationForScrollResize(uniqueID, app, pointerX, pointerY) {
+	remoteInteraction[uniqueID].selectScrollItem(app);
+
+	broadcast('startMove', {id: app.id, date: Date.now()});
+	broadcast('startResize', {id: app.id, date: Date.now()});
+
+	var a = {
+		id: app.id,
+		type: app.application
+	};
+	var l = {
+		x: parseInt(app.left, 10),
+		y: parseInt(app.top, 10),
+		width: parseInt(app.width, 10),
+		height: parseInt(app.height, 10)
+	};
+
+	addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: a, location: l}, time: Date.now()});
+	addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: a, location: l}, time: Date.now()});
+}
+
+function pointerScroll(uniqueID, data) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+
+	var scale = 1.0 + Math.abs(data.wheelDelta)/512;
+	if (data.wheelDelta > 0) {
+		scale = 1.0 / scale;
+	}
+
+	var updatedResizeItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
+	if (updatedResizeItem !== null) {
+		moveAndResizeApplicationWindow(updatedResizeItem);
+		broadcast('setItemPositionAndSize', updatedResizeItem);
+	}
+}
+
+function pointerScrollEnd(uniqueID) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	var updatedResizeItem = remoteInteraction[uniqueID].selectedScrollItem;
+	if (updatedResizeItem !== null) {
+		broadcast('finishedMove', {id: updatedResizeItem.id, date: Date()});
+		broadcast('finishedResize', {id: updatedResizeItem.id, date: Date.now()});
+
+		var a = {
+			id: updatedResizeItem.id,
+			type: updatedResizeItem.application
+		};
+		var l = {
+			x: parseInt(updatedResizeItem.left, 10),
+			y: parseInt(updatedResizeItem.top, 10),
+			width: parseInt(updatedResizeItem.width, 10),
+			height: parseInt(updatedResizeItem.height, 10)
+		};
+
+		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: a, location: l}, time: Date.now()});
+		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: a, location: l}, time: Date.now()});
+
+		remoteInteraction[uniqueID].selectedScrollItem = null;
+	}
+}
+
 
 function toggleApplicationFullscreen(uniqueID, app) {
 	var resizeApp;
@@ -4348,6 +4472,7 @@ function pointerPosition( uniqueID, data ) {
 }
 */
 
+/*
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
