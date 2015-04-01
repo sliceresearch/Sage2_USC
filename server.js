@@ -82,18 +82,6 @@ program
   .option('-p, --password <password>',	'enables a one time password as sessionID passed through url') //DKedit
   .parse(process.argv);
 
-//dkedit start
-if (typeof program.password  === "string" && program.password.length > 0) {
-	global.__SESSION_ID = program.password;
-	console.log("Using " + global.__SESSION_ID + " as the password for this run.");
-}
-else if (program.password) {
-	console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
-}
-else {
-	console.log("Single use password has not been specified.");
-}
-//dkedit end
 
 // Logging mechanism
 if (program.logfile) {
@@ -153,6 +141,22 @@ console.log("SAGE2 Short Version:", SAGE2_version);
 
 // load config file - looks for user defined file, then file that matches hostname, then uses default
 var config = loadConfiguration();
+
+
+//dkedit start
+if (typeof program.password  === "string" && program.password.length > 0) {
+	global.__SESSION_ID = program.password;
+	console.log("Using " + global.__SESSION_ID + " as the password for this run.");
+}
+else if (program.password) {
+	console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
+}
+else if ( config.sessionID !== undefined ) {
+	console.log("A sessionID was specified in the configuration file:" + config.sessionID);
+	global.__SESSION_ID = config.sessionID;
+}
+//dkedit end
+
 
 var twitter = null;
 if(config.apis !== undefined && config.apis.twitter !== undefined){

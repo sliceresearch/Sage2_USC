@@ -23,6 +23,18 @@
 	function setupListener() {
 		document.getElementById('sessionValue').addEventListener('keydown', keyDownDKHandler,    false);
 		document.getElementById('sessionValue').focus();
+
+		var allParams = window.location.search.substring(1);
+		var paramArray = allParams.split("&");
+		var nameAndValue;
+		for(var i = 0; i < paramArray.length; i++) {
+			nameAndValue = paramArray[i].split("=");
+			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "sid" ) {
+				document.getElementById('sessionValue').value = nameAndValue[1];
+				document.cookie = "session=" +document.getElementById('sessionValue').value ;
+				window.location.href = "index.html";
+			}
+		}
 	}
 
 	function keyDownDKHandler(event) {
