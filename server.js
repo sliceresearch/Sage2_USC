@@ -3449,6 +3449,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			toggleApplicationFullscreen(uniqueID, obj.data)
 			break;
 		case "closeButton":
+			deleteApplication(obj.data.id);
 			break;
 	}
 }
@@ -3545,8 +3546,7 @@ function pointerPosition(uniqueID, data) {
 }
 
 function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
-	//broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
-	broadcast('upp', sagePointers[uniqueID]);
+	broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
 
 	// update app position and size if currently modifying a window
 	var updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
@@ -3819,6 +3819,11 @@ function toggleApplicationFullscreen(uniqueID, app) {
 		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: a, location: l}, time: Date.now()});
 		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: a, location: l}, time: Date.now()});
 	}
+}
+
+function deleteApplication(appId) {
+	SAGE2Items.applications.removeItem(appId);
+	broadcast('deleteElement', {elemId: appId});
 }
 
 /*
@@ -4760,6 +4765,7 @@ function handleApplicationResize(appId) {
 	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: appWidth-cornerSize, y: appHeight+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
 }
 
+/*
 function deleteApplication( elem ) {
 	// Tell the clients to remove the element
 	broadcast('deleteElement', {elemId: elem.id});
@@ -4788,6 +4794,7 @@ function deleteApplication( elem ) {
 	stickyAppHandler.removeElement(elem);
 	removeElement(applications, elem);
 }
+*/
 
 // **************  Omicron section *****************
 var omicronRunning = false;

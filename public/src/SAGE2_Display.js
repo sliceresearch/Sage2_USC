@@ -248,8 +248,7 @@ function setupListeners() {
 		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
-    //wsio.on('updateSagePointerPosition', function(pointer_data){
-    wsio.on('upp', function(pointer_data){
+    wsio.on('updateSagePointerPosition', function(pointer_data){
 		ui.updateSagePointerPosition(pointer_data);
 		resetIdle();
     });
