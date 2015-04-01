@@ -355,7 +355,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeExistingSagePointers(wsio);
 		initializeExistingApps(wsio);
 		initializeRemoteServerInfo(wsio);
-		initializeMediaStreams(wsio.id);
+		//initializeMediaStreams(wsio.id);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
 	}
 	else if (wsio.clientType === "sageUI") {
@@ -850,7 +850,33 @@ function wsRadialMenuClick(wsio, data) {
 
 function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: ", data.id);
+	
+	var i;
+	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
+	for (i=0; i<clients.length; i++) {
+		if(clients[i].clientType === "display") {
+			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+		}
+	}
 
+	// forcing 'int' type for width and height
+	data.width  = parseInt(data.width,  10);
+	data.height = parseInt(data.height, 10);
+
+	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
+		appInstance.id = data.id;
+		handleNewApplication(appInstance, null);
+
+		var eLogData = {
+			application: {
+				id: appInstance.id,
+				type: appInstance.application
+			}
+		};
+		addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
+	});
+
+	/*
 	mediaStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null};
 	for(var i=0; i<clients.length; i++){
 		if(clients[i].clientType === "display") {
@@ -876,9 +902,23 @@ function wsStartNewMediaStream(wsio, data) {
 		console.log(mediaStreams[data.id].clients);
 		console.log("ready: " + mediaStreams[data.id].ready);
 	}, 5000);
+	*/
 }
 
 function wsUpdateMediaStreamFrame(wsio, data) {
+	var key;
+	for (key in SAGE2Items.renderSync[data.id].clients) {
+		SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
+	}
+
+	var stream = SAGE2Items.applications.list[data.id];
+	if (stream !== null) {
+		stream.data = data.state;
+	}
+
+	broadcast('updateMediaStreamFrame', data);
+
+	/*
 	mediaStreams[data.id].ready = true;
 	for(var key in mediaStreams[data.id].clients){
 		mediaStreams[data.id].clients[key] = false;
@@ -898,18 +938,42 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		if(mediaStreams[data.id].chunks.length === 0)
 			console.log("chunks received: " + allNonBlank(mediaStreams[data.id].chunks));
 	}, 5000);
+	*/
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
+	if (SAGE2Items.renderSync[data.id].chunks.length === 0) SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
+	SAGE2Items.renderSync[data.id].chunks[data.piece] = data.state.src;
+	if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
+		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {src: SAGE2Items.renderSync[data.id].chunks.join(""), type: data.state.type, encoding: data.state.encoding}});
+		SAGE2Items.renderSync[data.id].chunks = [];
+	}
+
+	/*
 	if(mediaStreams[data.id].chunks.length === 0) mediaStreams[data.id].chunks = initializeArray(data.total, "");
 	mediaStreams[data.id].chunks[data.piece] = data.state.src;
 	if(allNonBlank(mediaStreams[data.id].chunks)){
 		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {src: mediaStreams[data.id].chunks.join(""), type: data.state.type, encoding: data.state.encoding}});
 		mediaStreams[data.id].chunks = [];
 	}
+	*/
 }
 
 function wsStopMediaStream(wsio, data) {
+	var stream = SAGE2Items.applications.list[data.id];
+	if (stream !== null) {
+		deleteApplication(stream.id);
+
+		var eLogData = {
+			application: {
+				id: stream.id,
+				type: stream.application
+			}
+		};
+		addEventToUserLog(wsio.id, {type: "delete", data: eLogData, time: Date.now()});
+	}
+
+	/*
 	var elem = findAppById(data.id);
 	if(elem !== null) {
 		deleteApplication( elem );
@@ -918,9 +982,41 @@ function wsStopMediaStream(wsio, data) {
 	}
 
 	addEventToUserLog(wsio.id, {type: "mediaStreamEnd", data: {application: {id: data.id, type: "media_stream"}}, time: Date.now()});
+	*/
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
+	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		var i;
+		var sender = {wsio: null, serverId: null, clientId: null, streamId: null};
+		var mediaStreamData = data.id.split("|");
+		if (mediaStreamData.length === 2) { // local stream --> client | stream_id
+			sender.clientId = mediaStreamData[0];
+			sender.streamId = parseInt(mediaStreamData[1]);
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].id === sender.clientId) {
+					sender.wsio = clients[i];
+					break;
+				}
+			}
+			if (sender.wsio !== null) sender.wsio.emit('requestNextFrame', {streamId: sender.streamId});
+		}
+		else if (mediaStreamData.length === 3) { // remote stream --> remote_server | client | stream_id
+			sender.serverId = mediaStreamData[0];
+			sender.clientId = mediaStreamData[1];
+			sender.streamId = mediaStreamData[2];
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].id === sender.serverId) {
+					sender.wsio = clients[i];
+					break;
+				}
+			}
+			if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId + "|" + sender.streamId});
+		}
+	}
+
+	/*
 	var i;
 	var broadcastAddress, broadcastID;
 	var serverAddress, clientAddress;
@@ -952,6 +1048,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 			if (broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress + "|" + broadcastID});
 		}
 	}
+	*/
 }
 
 // **************  Media Block Stream Functions *****************
@@ -3255,10 +3352,11 @@ function allNonBlank(arr) {
 	return true;
 }
 
-function allTrueDict(dict) {
+function allTrueDict(dict, property) {
 	var key;
-	for(key in dict){
-		if(dict[key] !== true) return false;
+	for (key in dict) {
+		if (property === undefined && dict[key] !== true) return false;
+		else if (property !== undefined && dict[key][property] !== true) return false;
 	}
 	return true;
 }
