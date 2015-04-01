@@ -60,9 +60,12 @@ SagePointer.prototype.stop = function() {
 	this.visible = false;
 };
 
-SagePointer.prototype.updatePointerPosition = function(delta, maxW, maxH) {
-	this.left += delta.dx;
-	this.top  += delta.dy;
+SagePointer.prototype.updatePointerPosition = function(data, maxW, maxH) {
+	if (data.pointerX !== undefined) this.left = data.pointerX;
+	if (data.pointerY !== undefined) this.top = data.pointerY;
+	if (data.dx !== undefined) this.left += data.dx;
+	if (data.dy !== undefined) this.top  += data.dy;
+
 	if (this.left < 0)    this.left = 0;
 	if (this.left > maxW) this.left = this.configuration.totalWidth;
 	if (this.top < 0)     this.top = 0;

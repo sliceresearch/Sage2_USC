@@ -3527,11 +3527,24 @@ function sendPointerPressToApplication(uniqueID, app, pointerX, pointerY, data) 
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
-	// move inside the node-interaction module as a function
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
 	pointerX = sagePointers[uniqueID].left;
 	pointerY = sagePointers[uniqueID].top;
 
+	updatePointerPosition(uniqueID, pointerX, pointerY, data);
+}
+
+function pointerPosition(uniqueID, data) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
+	var pointerX = sagePointers[uniqueID].left;
+	var pointerY = sagePointers[uniqueID].top;
+
+	updatePointerPosition(uniqueID, pointerX, pointerY, data);
+}
+
+function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	//broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
 	broadcast('upp', sagePointers[uniqueID]);
 
@@ -4294,6 +4307,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 }
 */
 
+/*
 function pointerPosition( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
@@ -4326,6 +4340,7 @@ function pointerPosition( uniqueID, data ) {
 	}
 	//if(updatedItem !== null) broadcast('setItemPosition', updatedItem);
 }
+*/
 
 function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 	if( sagePointers[uniqueID] === undefined )
