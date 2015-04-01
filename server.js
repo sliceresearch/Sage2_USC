@@ -3302,7 +3302,7 @@ function getAppPositionSize(appInstance) {
 
 // **************  Pointer Functions *****************
 
-function createSagePointer ( uniqueID ) {
+function createSagePointer (uniqueID) {
 	// From addClient type == sageUI
 	sagePointers[uniqueID]      = new Sagepointer(uniqueID+"_pointer");
 	remoteInteraction[uniqueID] = new Interaction(config);
@@ -3310,11 +3310,11 @@ function createSagePointer ( uniqueID ) {
 	broadcast('createSagePointer', sagePointers[uniqueID]);
 }
 
-function showPointer( uniqueID, data ) {
+function showPointer(uniqueID, data) {
 	if(sagePointers[uniqueID] === undefined) return;
 	
 	// From startSagePointer
-	console.log("starting pointer: " + uniqueID);
+	console.log(sageutils.header("Pointer") + "starting: " + uniqueID);
 
 	if( data.sourceType === undefined )
 		data.sourceType = "Pointer";
@@ -3323,10 +3323,12 @@ function showPointer( uniqueID, data ) {
 	broadcast('showSagePointer', sagePointers[uniqueID]);
 }
 
-function hidePointer( uniqueID ) {
+function hidePointer(uniqueID) {
 	if(sagePointers[uniqueID] === undefined) return;
 
 	// From stopSagePointer
+	console.log(sageutils.header("Pointer") + "stopping: " + uniqueID);
+
 	sagePointers[uniqueID].stop();
 	if (remoteInteraction[uniqueID].hoverOverControl() !== null){
 		broadcast('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl());
