@@ -647,6 +647,12 @@ function wsPointerDraw(wsio, data) {
 }
 
 function wsKeyDown(wsio, data) {
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
+
+	keyDown(wsio.id, pointerX, pointerY, data);
+
+	/*
 	if (data.code === 16) { // shift
 		remoteInteraction[wsio.id].SHIFT = true;
 	}
@@ -677,9 +683,16 @@ function wsKeyDown(wsio, data) {
 	if(remoteInteraction[wsio.id].appInteractionMode()){
 		keyDown(wsio.id, pointerX, pointerY, data);
 	}
+	*/
 }
 
 function wsKeyUp(wsio, data) {
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
+
+	keyUp(wsio.id, pointerX, pointerY, data);
+
+	/*
 	if (data.code === 16) { // shift
 		remoteInteraction[wsio.id].SHIFT = false;
 	}
@@ -733,9 +746,15 @@ function wsKeyUp(wsio, data) {
 			keyUp(wsio.id, pointerX, pointerY, data);
 		}
 	}
+	*/
 }
 
 function wsKeyPress(wsio, data) {
+	var pointerX = sagePointers[wsio.id].left;
+	var pointerY = sagePointers[wsio.id].top;
+
+	keyPress(wsio.id, pointerX, pointerY, data);
+	/*
 	var lockedControl = remoteInteraction[wsio.id].lockedControl();
 	var pointerX = sagePointers[wsio.id].left;
 	var pointerY = sagePointers[wsio.id].top;
@@ -746,12 +765,10 @@ function wsKeyPress(wsio, data) {
 		remoteInteraction[wsio.id].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode});
 
-		/*
-		if(remoteInteraction[wsio.id].interactionMode === 0)
-			addEventToUserLog(wsio.id, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
-		else
-			addEventToUserLog(wsio.id, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
-		*/
+		//if(remoteInteraction[wsio.id].interactionMode === 0)
+		//	addEventToUserLog(wsio.id, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
+		//else
+		//	addEventToUserLog(wsio.id, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
 
 		if (remoteInteraction[wsio.id].modeChange !== undefined) {
 			clearTimeout(remoteInteraction[wsio.id].modeChange);
@@ -775,7 +792,7 @@ function wsKeyPress(wsio, data) {
 	else if ( remoteInteraction[wsio.id].appInteractionMode() ) {
 		keyPress(wsio.id, pointerX, pointerY, data);
 	}
-
+`	*/
 }
 
 // **************  File Upload Functions *****************
@@ -3895,7 +3912,7 @@ function pointerScroll(uniqueID, data) {
 				return;
 			}
 
-			var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+			//var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			switch (obj.layerId) {
 				case "staticUI":
 					break;
@@ -3960,6 +3977,213 @@ function pointerScrollEnd(uniqueID) {
 			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 		}
 	}
+}
+
+function keyDown( uniqueID, pointerX, pointerY, data) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	switch (data.code) {
+		case 16:
+			remoteInteraction[uniqueID].SHIFT = true;
+			break;
+		case 17:
+			remoteInteraction[uniqueID].CTRL = true;
+			break;
+		case 18:
+			remoteInteraction[uniqueID].ALT = true;
+			break;
+		case 20:
+			remoteInteraction[uniqueID].CAPS = true;
+			break;
+		case 91:
+		case 92:
+		case 93:
+			remoteInteraction[uniqueID].CMD = true;
+			break;
+	}
+
+	if (remoteInteraction[uniqueID].appInteractionMode()) {
+		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+
+		if (obj === null) {
+			return;
+		}
+
+		switch (obj.layerId) {
+			case "staticUI":
+				break;
+			case "radialMenus":
+				break;
+			case "widgets":
+				break;
+			case "applications":
+				sendKeyDownToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				break;
+		}
+	}
+}
+
+function sendKeyDownToApplication(uniqueID, app, pointerX, pointerY, data) {
+	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+	var eData =  {code: data.code, state: "down"};
+
+	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
+	broadcast('eventInItem', event);
+
+	var eLogData = {
+		type: "specialKey",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		code: eData.code,
+		state: eData.state
+	};
+	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+}
+
+function keyUp( uniqueID, pointerX, pointerY, data) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	switch (data.code) {
+		case 16:
+			remoteInteraction[uniqueID].SHIFT = false;
+			break;
+		case 17:
+			remoteInteraction[uniqueID].CTRL = false;
+			break;
+		case 18:
+			remoteInteraction[uniqueID].ALT = false;
+			break;
+		case 20:
+			remoteInteraction[uniqueID].CAPS = false;
+			break;
+		case 91:
+		case 92:
+		case 93:
+			remoteInteraction[uniqueID].CMD = false;
+			break;
+	}
+
+	if (remoteInteraction[uniqueID].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
+
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+
+	if (obj === null) {
+		return;
+	}
+
+	switch (obj.layerId) {
+		case "staticUI":
+			break;
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			if (remoteInteraction[uniqueID].windowManagementMode()) {
+				if (data.code === 8 || data.code === 46) { // backspace or delete
+					deleteApplication(obj.data.id);
+
+					var eLogData = {
+						application: {
+							id: obj.data.id,
+							type: obj.data.application
+						}
+					};
+					addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
+				}
+			}
+			else if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendKeyUpToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			}
+			break;
+	}
+}
+
+function sendKeyUpToApplication(uniqueID, app, pointerX, pointerY, data) {
+	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+	var eData =  {code: data.code, state: "up"};
+
+	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
+	broadcast('eventInItem', event);
+
+	var eLogData = {
+		type: "specialKey",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		code: eData.code,
+		state: eData.state
+	};
+	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+}
+
+function keyPress(uniqueID, pointerX, pointerY, data) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+
+	if (data.code === 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible) {
+		// shift + tab
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+
+		//if (remoteInteraction[uniqueID].interactionMode === 0)
+		//	addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
+		//else
+		//	addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
+
+		if (remoteInteraction[uniqueID].modeChange !== undefined) {
+			clearTimeout(remoteInteraction[uniqueID].modeChange);
+		}
+		remoteInteraction[uniqueID].modeChange = setTimeout(function() {
+			delete remoteInteraction[uniqueID].modeChange;
+		}, 500);
+
+		return;
+	}
+
+	if (remoteInteraction[uniqueID].appInteractionMode()) {
+		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+
+		if (obj === null) {
+			return;
+		}
+
+		switch (obj.layerId) {
+			case "staticUI":
+				break;
+			case "radialMenus":
+				break;
+			case "widgets":
+				break;
+			case "applications":
+				sendKeyPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				break;
+		}
+	}
+}
+
+function sendKeyPressToApplication(uniqueID, app, pointerX, pointerY, data) {
+	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+
+	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
+	broadcast('eventInItem', event);
+
+	var eLogData = {
+		type: "keyboard",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		code: data.code,
+		character: data.character
+	};
+	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 }
 
 
@@ -4559,7 +4783,8 @@ function pointerScrollStart( uniqueID, pointerX, pointerY ) {
 		}
 	}
 }
-
+*/
+/*
 function pointerScroll( uniqueID, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
@@ -4641,6 +4866,7 @@ function pointerScroll( uniqueID, data ) {
 		}
 	}
 }
+*/
 
 function pointerDraw(uniqueID, data) {
 	if( sagePointers[uniqueID] === undefined )
@@ -4836,9 +5062,9 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	}
 }
 
+/*
 function keyDown( uniqueID, pointerX, pointerY, data) {
-	if( sagePointers[uniqueID] === undefined )
-		return;
+	if(sagePointers[uniqueID] === undefined) return;
 
 	if ( remoteInteraction[uniqueID].appInteractionMode() ) {
 		var elem = findAppUnderPointer(pointerX, pointerY);
@@ -4859,7 +5085,8 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 		}
 	}
 }
-
+*/
+/*
 function keyUp( uniqueID, pointerX, pointerY, data) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
@@ -4883,7 +5110,8 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 		}
 	}
 }
-
+*/
+/*
 function keyPress( uniqueID, pointerX, pointerY, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
@@ -4906,6 +5134,7 @@ function keyPress( uniqueID, pointerX, pointerY, data ) {
 		}
 	}
 }
+*/
 
 function handleNewApplication(appInstance, videohandle) {
 	broadcast('createAppWindow', appInstance);
