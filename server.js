@@ -127,6 +127,7 @@ function initializeSage2Server() {
 	SAGE2Items.pointers     = new Sage2ItemList();
 	SAGE2Items.radialMenus  = new Sage2ItemList();
 	SAGE2Items.widgets      = new Sage2ItemList();
+	SAGE2Items.renderSync   = {};
 
 	// Initialize user interaction tracking
 	if (program.trackUsers) {
@@ -272,6 +273,12 @@ function closeWebSocketClient(wsio) {
 		delete remoteInteraction[wsio.id];
 	}
 	else if (wsio.clientType === "display") {
+		for (key in SAGE2Items.renderSync) {
+			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+				delete SAGE2Items.renderSync[key].clients[wsio.id];
+			}
+		}
+		/*
 		for (key in mediaBlockStreams) {
 			if (mediaBlockStreams.hasOwnProperty(key)) {
 				delete mediaBlockStreams[key].clients[wsio.id];
@@ -292,6 +299,7 @@ function closeWebSocketClient(wsio) {
 				delete appAnimations[key].clients[wsio.id];
 			}
 		}
+		*/
 	}
 
 	if (wsio.clientType === "webBrowser") webBrowserClient = null;
@@ -346,13 +354,13 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	if(wsio.clientType === "display") {
 		initializeExistingSagePointers(wsio);
 		initializeExistingApps(wsio);
-		initializeExistingAppsPositionSizeTypeOnly(wsio);
 		initializeRemoteServerInfo(wsio);
 		initializeMediaStreams(wsio.id);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
 	}
 	else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
+		initializeExistingAppsPositionSizeTypeOnly(wsio);
 	}
 
 	if (wsio.clientType === "display") {
@@ -488,6 +496,20 @@ function initializeExistingApps(wsio) {
 	var i;
 	var key;
 
+	for (key in SAGE2Items.renderSync) {
+		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+			SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
+		}
+	}
+
+	for (key in SAGE2Items.applications.list) {
+		wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
+	}
+
+	var newOrder = interactMgr.getObjectZIndexList("applications");
+	wsio.emit('updateItemOrder', newOrder);
+
+	/*
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindow', applications[i]);
 	}
@@ -496,13 +518,24 @@ function initializeExistingApps(wsio) {
 			appAnimations[key].clients[wsio.id] = false;
 		}
 	}
+	*/
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
+	var key;
+	for (key in SAGE2Items.applications.list) {
+		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(SAGE2Items.applications.list[key]));
+	}
+
+	var newOrder = interactMgr.getObjectZIndexList("applications");
+	wsio.emit('updateItemOrder', newOrder);
+
+	/*
 	var i;
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(applications[i]));
 	}
+	*/
 }
 
 function initializeRemoteServerInfo(wsio) {
