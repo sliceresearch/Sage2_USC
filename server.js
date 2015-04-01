@@ -3311,8 +3311,8 @@ function createSagePointer ( uniqueID ) {
 }
 
 function showPointer( uniqueID, data ) {
-	if( sagePointers[uniqueID] === undefined )
-		return;
+	if(sagePointers[uniqueID] === undefined) return;
+	
 	// From startSagePointer
 	console.log("starting pointer: " + uniqueID);
 
@@ -3324,8 +3324,7 @@ function showPointer( uniqueID, data ) {
 }
 
 function hidePointer( uniqueID ) {
-	if( sagePointers[uniqueID] === undefined )
-		return;
+	if(sagePointers[uniqueID] === undefined) return;
 
 	// From stopSagePointer
 	sagePointers[uniqueID].stop();
