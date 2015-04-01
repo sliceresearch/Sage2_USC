@@ -912,7 +912,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	}
 
 	var stream = SAGE2Items.applications.list[data.id];
-	if (stream !== null) {
+	if (stream !== undefined && stream !== null) {
 		stream.data = data.state;
 	}
 
@@ -961,7 +961,7 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 
 function wsStopMediaStream(wsio, data) {
 	var stream = SAGE2Items.applications.list[data.id];
-	if (stream !== null) {
+	if (stream !== undefined && stream !== null) {
 		deleteApplication(stream.id);
 
 		var eLogData = {
@@ -4357,6 +4357,17 @@ function toggleApplicationFullscreen(uniqueID, app) {
 }
 
 function deleteApplication(appId) {
+	var application = SAGE2Items.applications.list[appId].application;
+	if (application === "media_stream" || application === "media_block_stream") {
+		var i;
+		var mediaStreamData = appId.split("|");
+		var sender = {wsio: null, clientId: mediaStreamData[0], streamId: parseInt(mediaStreamData[1], 10)};
+		for (i=0; i<clients.length; i++) {
+			if (clients[i].id === sender.clientId) sender.wsio = clients[i];
+		}
+		if (sender.wsio !== null) sender.wsio.emit('stopMediaCapture', {streamId: sender.streamId});
+	}
+
 	SAGE2Items.applications.removeItem(appId);
 	broadcast('deleteElement', {elemId: appId});
 }
