@@ -1987,8 +1987,8 @@ function updateVideoFrame(id) {
 function calculateValidBlocks(app, blockSize, renderhandle) {
 	if(app.application !== "movie_player" && app.application !== "media_block_stream") return;
 
-	var i
-	var j
+	var i;
+	var j;
 	var key;
 
 	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
