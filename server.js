@@ -3027,21 +3027,12 @@ function createRemoteConnection(wsURL, element, index) {
 			clientType: "remoteServer",
 			host: config.host,
 			port: config.port,
-			sendsPointerData: false,
-			sendsMediaStreamFrames: false,
-			requestsServerFiles: false,
-			sendsWebContentToLoad: false,
-			sendsVideoSynchonization: false,
-			sharesContentWithRemoteServer: true,
-			receivesDisplayConfiguration: false,
-			receivesClockTime: false,
-			requiresFullApps: false,
-			requiresAppPositionSizeTypeOnly: false,
-			receivesMediaStreamFrames: false,
-			receivesWindowModification: false,
-			receivesPointerData: false,
-			receivesInputEvents: false,
-			receivesRemoteServerInfo: false
+			requests: {
+				config: false,
+				version: false,
+				time: false,
+				console: false
+			}
 		};
 		remote.clientType = "remoteServer";
 
