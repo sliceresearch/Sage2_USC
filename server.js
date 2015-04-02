@@ -3767,30 +3767,6 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	// accept button
-			if(dialogX >= 0.25*config.ui.titleBarHeight && dialogX <= 9.25*config.ui.titleBarHeight && dialogY >= 4.75*config.ui.titleBarHeight && dialogY <= 7.75*config.ui.titleBarHeight) {
-				console.log("Accepting Data-Sharing Request");
-				broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-				var sharingMin = Math.min(remoteSharingRequestDialog.config.totalWidth, remoteSharingRequestDialog.config.totalHeight-remoteSharingRequestDialog.config.ui.titleBarHeight);
-				var myMin = Math.min(config.totalWidth, config.totalHeight-config.ui.titleBarHeight);
-				var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
-				var sharingScale = (0.9*myMin) / sharingSize;
-				remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
-				var dataSession = {
-					name: remoteSharingRequestDialog.config.name,
-					host: remoteSharingRequestDialog.config.host,
-					port: remoteSharingRequestDialog.config.port,
-					left: config.ui.titleBarHeight,
-					top: 1.5*config.ui.titleBarHeight,
-					width: sharingSize,
-					height: sharingSize,
-					scale: sharingScale
-				};
-				broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
-				remoteSharingSessions.push(dataSession);
-				remoteSharingRequestDialog = null;
-			}
-
 	switch (obj.id) {
 		case "dataSharingRequestDialog":
 			break;
