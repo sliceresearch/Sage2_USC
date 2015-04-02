@@ -293,7 +293,6 @@ function setupListeners() {
 		if(applications[appId] !== undefined && applications[appId] !== null){
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if(applications[appId].receivedBlocks.every(isTrue) === true){
-				applications[appId].redraw = true;
 				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
                 wsio.emit('receivedMediaBlockStreamFrame', {id: appId});
@@ -311,7 +310,6 @@ function setupListeners() {
 		if(applications[appId] !== undefined && applications[appId] !== null){
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if(applications[appId].receivedBlocks.every(isTrue) === true){
-				applications[appId].redraw = true;
 				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
 				wsio.emit('requestVideoFrame', {id: appId});
@@ -785,7 +783,6 @@ function setupListeners() {
 		var app = applications[data.id];
 		if(app !== undefined && app.moveEvents === "onfinish") {
 			var date = new Date(data.date);
-			app.redraw = true;
 			if (app.move) app.move(date);
 		}
 	});
@@ -805,7 +802,6 @@ function setupListeners() {
 		var app = applications[data.id];
 		if(app !== undefined && app.resizeEvents === "onfinish") {
 			var date = new Date(data.date);
-			app.redraw = true;
 			if (app.resize) app.resize(date);
 		}
 	});
@@ -815,7 +811,7 @@ function setupListeners() {
 		if(app !== undefined && app !== null){
 			var date = new Date(data.date);
 			app.refresh(date);
-			wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
+			wsio.emit('finishedRenderingAppFrame', {id: data.id, fps: app.maxFPS});
 		}
 	});
 

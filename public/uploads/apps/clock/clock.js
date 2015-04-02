@@ -14,7 +14,7 @@ var clock = SAGE2_App.extend( {
 
 		this.ctx          = null;
 		this.minDim       = null;
-		this.resizeEvents = "onfinish";
+		this.resizeEvents = "continuous";
 		this.enableControls = true;
 	},
 	
@@ -156,7 +156,6 @@ var clock = SAGE2_App.extend( {
 	resize: function(date) {
 		console.log("clock> resize");
 		this.minDim = Math.min(this.element.width, this.element.height);
-		//this.redraw = true;
 		this.refresh(date);
 	},
 	

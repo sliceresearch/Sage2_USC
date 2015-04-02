@@ -45,7 +45,6 @@ var SAGE2_App = Class.extend( {
 
 		this.timer  = null;
 		this.maxFPS = null;
-		this.redraw = null;
 		this.sticky = null;
 		this.config = null;
 		this.controls  = null;
@@ -106,7 +105,6 @@ var SAGE2_App = Class.extend( {
 		// Frame rate control
 		this.timer     = 0;
 		this.maxFPS    = 30.0; // Default to 30fps for performance reasons
-		this.redraw    = true;
 
 		// keep a copy of the wall configuration
 		this.config    = ui.json_cfg;
@@ -209,13 +207,10 @@ var SAGE2_App = Class.extend( {
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000;
 
 		// Frame rate control
-		this.timer = this.timer + this.dt;
+		this.timer += this.dt;
 		if (this.timer > (1.0/this.maxFPS)) {
 			this.timer  = 0.0;
-			this.redraw = true;
 		}
-		// If we ask for more, just let it run
-		if (this.maxFPS>=60.0) this.redraw = true;
 
 		this.sec += this.dt;
 	},
@@ -241,18 +236,15 @@ var SAGE2_App = Class.extend( {
 	refresh: function (date) {
 		// update time
 		this.preDraw(date);
-		// actual application draw
-		if (this.redraw) {
-			// If drawing, measure actual frame rate
-			if( this.sec >= 1.0){
-				this.fps       = this.frame_sec / this.sec;
-				this.frame_sec = 0;
-				this.sec       = 0;
-			}
-			this.draw(date);
-			this.frame_sec++;
-			this.redraw = false;
+		// measure actual frame rate
+		if( this.sec >= 1.0){
+			this.fps       = this.frame_sec / this.sec;
+			this.frame_sec = 0;
+			this.sec       = 0;
 		}
+		// actual application draw
+		this.draw(date);
+		this.frame_sec++;
 		// update time and misc
 		this.postDraw(date);
 	},

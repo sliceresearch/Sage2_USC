@@ -193,8 +193,6 @@ function setupListeners() {
 			main.appendChild(vid);
 			videosTable.appendChild(videoRow);
 		}
-
-		if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 	});
 
 	wsio.on('videoPlaying', function(data) {
@@ -240,10 +238,6 @@ function setupListeners() {
 	wsio.on('deleteElement', function(elem_data) {
 		deleteElement(elem_data.elemId);
 		deleteElement(elem_data.elemId + "_row");
-	});
-
-	wsio.on('animateCanvas', function(data) {
-		wsio.emit('finishedRenderingAppFrame', {id: data.id});
 	});
 }
 

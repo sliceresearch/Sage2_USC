@@ -2212,21 +2212,12 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 
 	appLoader.loadApplicationFromRemoteServer(data, function(appInstance, videohandle) {
 		console.log("Remote App: " + appInstance.title + " (" + appInstance.application + ")");
-		if(appInstance.application === "media_stream"){
+		if(appInstance.application === "media_stream" || appInstance.application === "media_block_stream"){
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
-			mediaStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
+			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].clientType === "dislpay") {
-					mediaStreams[appInstance.id].clients[clients[i].id] = false;
-				}
-			}
-		}
-        else if(appInstance.application === "media_block_stream"){
-			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
-			mediaBlockStreams[appInstance.id] = {ready: true, chunks: [], clients: {}};
-			for(i=0; i<clients.length; i++){
-				if(clients[i].clientType === "display") {
-					mediaBlockStreams[appInstance.id].clients[clients[i].id].readyForNextFrame = false;
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
 		}
@@ -2245,14 +2236,6 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
-			/*
-			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
-			for(i=0; i<clients.length; i++){
-				if(clients[i].clientType === "display") {
-					appAnimations[appInstance.id].clients[clients[i].id] = false;
-				}
-			}
-			*/
 		}
 	});
 }
