@@ -3837,12 +3837,26 @@ function removeExistingHoverCorner(uniqueID) {
 function moveApplicationWindow(moveApp) {
 	interactMgr.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+config.ui.titleBarHeight});
 	broadcast('setItemPosition', moveApp);
+	if (moveApp.elemId in SAGE2Items.renderSync) {
+		var app = SAGE2Items.applications.list[moveApp.elemId];
+		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
+		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
+			handleNewVideoFrame(app.id);
+		}
+	}
 }
 
 function moveAndResizeApplicationWindow(resizeApp) {
 	interactMgr.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+config.ui.titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
 	broadcast('setItemPositionAndSize', resizeApp);
+	if (resizeApp.elemId in SAGE2Items.renderSync) {
+		var app = SAGE2Items.applications.list[resizeApp.elemId];
+		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
+		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
+			handleNewVideoFrame(app.id);
+		}
+	}
 }
 
 function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
@@ -4085,7 +4099,6 @@ function pointerScroll(uniqueID, data) {
 	var updatedResizeItem = remoteInteraction[uniqueID].scrollSelectedItem(scale);
 	if (updatedResizeItem !== null) {
 		moveAndResizeApplicationWindow(updatedResizeItem);
-		broadcast('setItemPositionAndSize', updatedResizeItem);
 	}
 	else {
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -4396,9 +4409,19 @@ function toggleApplicationFullscreen(uniqueID, app) {
 		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: a, location: l}, time: Date.now()});
 		addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: a, location: l}, time: Date.now()});
 
+		moveAndResizeApplicationWindow(resizeApp);
+		/*
 		interactMgr.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+config.ui.titleBarHeight});
 		handleApplicationResize(resizeApp.elemId);
 		broadcast('setItemPositionAndSize', resizeApp);
+		if (resizeApp.elemId in SAGE2Items.renderSync) {
+			var app = SAGE2Items.applications.list[resizeApp.elemId];
+			calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
+			if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
+				handleNewVideoFrame(app.id);
+			}
+		}
+		*/
 
 		broadcast('finishedMove', {id: resizeApp.elemId, date: Date.now()});
 		broadcast('finishedResize', {id: resizeApp.elemId, date: Date.now()});
@@ -4421,6 +4444,7 @@ function deleteApplication(appId) {
 	}
 
 	SAGE2Items.applications.removeItem(appId);
+	interactMgr.removeGeometry(appId, "applications");
 	broadcast('deleteElement', {elemId: appId});
 }
 
@@ -5354,6 +5378,8 @@ function handleNewApplication(appInstance, videohandle) {
 }
 
 function handleApplicationResize(appId) {
+	if (SAGE2Items.applications.list[appId] === undefined) return;
+
 	var appWidth = SAGE2Items.applications.list[appId].width;
 	var appHeight = SAGE2Items.applications.list[appId].height;
 

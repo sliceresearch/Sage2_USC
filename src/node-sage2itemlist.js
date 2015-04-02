@@ -57,6 +57,7 @@ SAGE2ItemList.prototype.removeItem = function(id) {
 	if(this.list.hasOwnProperty(id)) {
 		this.numItems--;
 		delete this.list[id];
+		this.interactMgr.removeLayer(id);
 	}
 };
 

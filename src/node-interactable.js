@@ -54,6 +54,24 @@ InteractableManager.prototype.addLayer = function(id, zIndex) {
 };
 
 /**
+* Remove layer of interactable objects
+*
+* @method removeLayer
+* @param id {String} unique identifier for the layer
+*/
+InteractableManager.prototype.removeLayer = function(id) {
+	if(this.layers.hasOwnProperty(id)) {
+		delete this.layers[id];
+		delete this.interactableObjects[id];
+
+		var _this = this;
+		this.layerOrder = Object.keys(this.layers).sort(function(a, b) {
+			return _this.layers[a].zIndex - _this.layers[b].zIndex;
+		});
+	}
+};
+
+/**
 * Add new object (with geomtry - rectangle or circle) to a layer
 *
 * @method addGeometry
