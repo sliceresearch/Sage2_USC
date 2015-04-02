@@ -493,7 +493,6 @@ function initializeExistingSagePointers(wsio) {
 }
 
 function initializeExistingApps(wsio) {
-	var i;
 	var key;
 
 	for (key in SAGE2Items.renderSync) {
@@ -510,6 +509,7 @@ function initializeExistingApps(wsio) {
 	wsio.emit('updateItemOrder', newOrder);
 
 	/*
+	var i;
 	for(i=0; i<applications.length; i++){
 		wsio.emit('createAppWindow', applications[i]);
 	}
@@ -850,7 +850,7 @@ function wsRadialMenuClick(wsio, data) {
 
 function wsStartNewMediaStream(wsio, data) {
 	console.log("received new stream: ", data.id);
-	
+
 	var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
 	for (i=0; i<clients.length; i++) {
@@ -2911,7 +2911,8 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function (e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Now serving clients at https://" + config.host + ":" + config.port);
+	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" + config.host + ":" + config.port);
+	console.log(sageutils.header("SAGE2") + "        web console at https://" + config.host + ":" + config.port + "/admin/console.html");
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -2938,7 +2939,9 @@ sage2Server.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Now serving clients at http://" + config.host + ":" + config.index_port);
+	console.log(sageutils.header("SAGE2") + "Serving web UI at http://" + config.host + ":" + config.index_port);
+	console.log(sageutils.header("SAGE2") + "        display 0 at http://" + config.host + ":" + config.index_port + "/display.html?clientID=0");
+	console.log(sageutils.header("SAGE2") + "        audio manager at http://" + config.host + ":" + config.index_port + "/audioManager.html");
 });
 
 
