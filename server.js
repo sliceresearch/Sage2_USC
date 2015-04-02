@@ -2352,7 +2352,6 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 }
 
 function wsRequestDataSharingSession(wsio, data) {
-	console.log(data);
 	var known_site = findRemoteSiteByConnection(wsio);
 	if(known_site !== null) data.config.name = known_site.name;
 	if(data.config.name === undefined || data.config.name === null) data.config.name = "Unknown";
