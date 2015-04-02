@@ -1576,20 +1576,18 @@ function fitWithin(app, x, y, width, height, margin) {
 	return [newAppX, newAppY, newAppWidth, newAppHeight];
 }
 
-// Create a 2D array
-function Create2DArray(rows) {
-  var arr = new Array(rows);
-  for (var i=0; i<rows; i++) {
-     arr[i] = [];
-  }
-  return arr;
-}
-
 // Calculate the euclidian distance between two objects with .x and .y fields
 function distance2D(p1, p2) {
-	var d = 0.0;
-	d = Math.sqrt( Math.pow((p1.x-p2.x), 2) + Math.pow((p1.y-p2.y), 2) );
-	return d;
+	var dx = p2.x-p1.x;
+	var dy = p2.y-p1.y;
+	return Math.sqrt(dx*dx + dy*dy);
+}
+
+// Calculate the square of euclidian distance between two objects with .x and .y fields
+function distanceSquared2D(p1, p2) {
+	var dx = p2.x-p1.x;
+	var dy = p2.y-p1.y;
+	return (dx*dx + dy*dy);
 }
 
 function findMinimum(arr) {
@@ -1606,7 +1604,7 @@ function findMinimum(arr) {
 
 function tileApplications() {
 	var app;
-	var i, j, c, r, key;
+	var i, c, r, key;
 	var numCols, numRows, numCells;
 
 	var displayAr  = config.totalWidth / config.totalHeight;
@@ -1666,8 +1664,8 @@ function tileApplications() {
 
     // Caculate apps centers
     for (key in SAGE2Items.applications.list) {
-    	app = SAGE2Items.applications.list[key];
-    	centroidsApps[key] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
+		app = SAGE2Items.applications.list[key];
+		centroidsApps[key] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
     }
     // Caculate tiles centers
 	for (i=0; i<numCells; i++) {
@@ -1683,7 +1681,7 @@ function tileApplications() {
 	for (key in centroidsApps) {
 		distances[key] = [];
 		for (i=0; i<numCells; i++) {
-			var d = distance2D(centroidsApps[key], centroidsTiles[i]);
+			var d = distanceSquared2D(centroidsApps[key], centroidsTiles[i]);
 			distances[key].push(d);
 		}
 	}
@@ -1709,7 +1707,7 @@ function tileApplications() {
         app.width = newdims[2];
         app.height = newdims[3];
         var updateItem = {
-        	elemId: app.id,
+			elemId: app.id,
 			elemLeft: app.left,
 			elemTop: app.top,
 			elemWidth: app.width,
