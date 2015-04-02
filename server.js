@@ -1272,9 +1272,9 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 
 function wsUpdateAppState(wsio, data) {
 	// Using updates only from master
-	if (wsio === masterDisplay) {
-		var app = findAppById(data.id);
-		if(app !== null) app.data = data.state;
+	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var app = SAGE2Items.applications.list[data.id];
+		app.data = data.state;
 	}
 }
 
@@ -1282,9 +1282,8 @@ function wsUpdateAppState(wsio, data) {
 // Got a resize call for an application itself
 //
 function wsAppResize(wsio, data) {
-	// Update the object with the new dimensions
-	var app = findAppById(data.id);
-	if (app) {
+	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var app = SAGE2Items.applications.list[data.id];
 		// Update the width height and aspect ratio
 		app.width  = data.width;
 		app.height = data.height;
@@ -1292,12 +1291,16 @@ function wsAppResize(wsio, data) {
 		app.native_width  = data.width;
 		app.native_height = data.height;
 		// build the object to be sent
-		var updateItem = {elemId: app.id,
-							elemLeft: app.left, elemTop: app.top,
-							elemWidth: app.width, elemHeight: app.height,
-							force: true, date: new Date()};
-		// send the order
-		broadcast('setItemPositionAndSize', updateItem);
+		var updateItem = {
+			elemId: app.id,
+			elemLeft: app.left,
+			elemTop: app.top,
+			elemWidth: app.width,
+			elemHeight: app.height,
+			force: true,
+			date: Date.now()
+		};
+		moveAndResizeApplicationWindow(updateItem);
 	}
 }
 
