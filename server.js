@@ -234,7 +234,7 @@ function setUpDialogsAsInteractableObjects() {
 
 	interactMgr.addGeometry("dataSharingWaitDialog", "staticUI", "rectangle", dialogGeometry, false, 1, null);
 	interactMgr.addGeometry("dataSharingRequestDialog", "staticUI", "rectangle", dialogGeometry, false, 1, null);
-	interactMgr.addGeometry("acceptDataSharingRequest", "staticUI", "rectangle", acceptCancelGeometry, false, 2, null);
+	interactMgr.addGeometry("acceptDataSharingRequest", "staticUI", "rectangle", acceptGeometry, false, 2, null);
 	interactMgr.addGeometry("cancelDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
 	interactMgr.addGeometry("rejectDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
 }
