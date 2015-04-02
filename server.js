@@ -192,6 +192,9 @@ function initializeSage2Server() {
 	// Initialize the background for the display clients (image or color)
 	setupDisplayBackground();
 
+	// initialize dialog boxes
+	setUpDialogsAsInteractableObjects();
+
 	// Set up http and https servers
 	var httpServerApp = new HttpServer(publicDirectory);
 	httpServerApp.httpPOST('/upload', uploadForm); // receive newly uploaded files from SAGE Pointer / SAGE UI
@@ -205,6 +208,35 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+}
+
+function setUpDialogsAsInteractableObjects() {
+	var dialogGeometry = {
+		x: config.totalWidth/2 - 13*config.ui.titleBarHeight,
+		y: 2*config.ui.titleBarHeight,
+		w: 26*config.ui.titleBarHeight,
+		h: 8*config.ui.titleBarHeight
+	};
+
+	var acceptGeometry = {
+		x: dialogGeometry.x + 0.25*config.ui.titleBarHeight,
+		y: dialogGeometry.y + 4.75*config.ui.titleBarHeight,
+		w: 9*config.ui.titleBarHeight,
+		h: 3*config.ui.titleBarHeight
+	};
+
+	var rejectCancelGeometry = {
+		x: dialogGeometry.x + 16.75*config.ui.titleBarHeight,
+		y: dialogGeometry.y + 4.75*config.ui.titleBarHeight,
+		w: 9*config.ui.titleBarHeight,
+		h: 3*config.ui.titleBarHeight
+	};
+
+	interactMgr.addGeometry("dataSharingWaitDialog", "staticUI", "rectangle", dialogGeometry, false, 1, null);
+	interactMgr.addGeometry("dataSharingRequestDialog", "staticUI", "rectangle", dialogGeometry, false, 1, null);
+	interactMgr.addGeometry("acceptDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
+	interactMgr.addGeometry("cancelDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
+	interactMgr.addGeometry("rejectDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
 }
 
 function broadcast(name, data) {
@@ -2359,6 +2391,7 @@ function wsRequestDataSharingSession(wsio, data) {
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
 	broadcast('requestedDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port});
 	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
+	showRequestDialog(true);
 }
 
 function wsCancelDataSharingSession(wsio, data) {
@@ -3734,17 +3767,50 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	var remote = obj.data;
+	switch (obj.id) {
+		case "dataSharingRequestDialog":
+			break;
+		case "dataSharingWaitDialog":
+			break;
+		case "acceptDataSharingRequest":
+			console.log("accept request");
+			break;
+		case "rejectDataSharingRequest":
+			console.log("reject request");
+			break;
+		case "cancelDataSharingRequest":
+			console.log("cancel request");
+			break;
+		default:
+			// remote site icon
+			requestNewDataSharingSession(obj.data);
+	}
+}
+
+function requestNewDataSharingSession(remote) {
 	if (remote.connected) {
 		console.log("Requesting data-sharing session with " + remote.name);
 
 		remoteSharingWaitDialog = remote;
 		broadcast('dataSharingConnectionWait', {name: remote.name, host: remote.wsio.remoteAddress.address, port: remote.wsio.remoteAddress.port});
 		remote.wsio.emit('requestDataSharingSession', {config: config, secure: false});
+	
+		showWaitDialog(true);
 	}
 	else {
 		console.log("Remote site " + remote.name + " is not currently connected");
 	}
+}
+
+function showWaitDialog(flag) {
+	interactMgr.editVisibility("dataSharingWaitDialog", "staticUI", flag);
+	interactMgr.editVisibility("cancelDataSharingRequest", "staticUI", flag);
+}
+
+function showRequestDialog(flag) {
+	interactMgr.editVisibility("dataSharingRequestDialog", "staticUI", flag);
+	interactMgr.editVisibility("acceptDataSharingRequest", "staticUI", flag);
+	interactMgr.editVisibility("rejectDataSharingRequest", "staticUI", flag);
 }
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
