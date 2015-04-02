@@ -1675,8 +1675,6 @@ function tileApplications() {
 	}
 
 	// Calculate distances
-	//var distances = Create2DArray(numWindows);
-	//for (i=0; i<numWindows; i++) {
 	var distances = {};
 	for (key in centroidsApps) {
 		distances[key] = [];
@@ -1737,7 +1735,6 @@ function clearDisplay() {
 
 
 // handlers for messages from UI
-
 function wsClearDisplay(wsio, data) {
 	clearDisplay();
 
