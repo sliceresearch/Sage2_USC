@@ -238,8 +238,6 @@ var newWindowPosition  = null;
 var seedWindowPosition = null;
 
 
-var appAnimations = {};
-
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
@@ -1218,6 +1216,34 @@ function wsReadFromFile (wsio, data){
 // **************  Application Animation Functions *****************
 
 function wsFinishedRenderingAppFrame(wsio, data) {
+	if (wsio === masterDisplay) {
+		SAGE2Items.renderSync[data.id].fps = data.fps;
+	}
+
+	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		var key;
+		for (key in SAGE2Items.renderSync[data.id].clients) {
+			SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
+		}
+		var now = Date.now();
+		var elapsed = now - SAGE2Items.renderSync[data.id].date;
+		var fps = SAGE2Items.renderSync[data.id].fps || 30;
+		var ticks = 1000 / fps;
+		if (elapsed > ticks) {
+			SAGE2Items.renderSync[data.id].date = now;
+			broadcast('animateCanvas', {id: data.id, date: now});
+		}
+		else {
+			setTimeout(function() {
+				now = Date.now();
+				SAGE2Items.renderSync[data.id].date = now;
+				broadcast('animateCanvas', {id: data.id, date: now});
+			}, ticks - elapsed);
+		}
+	}
+
+	/*
 	if (wsio === masterDisplay) appAnimations[data.id].fps = data.fps;
 	appAnimations[data.id].clients[wsio.id] = true;
 	if(allTrueDict(appAnimations[data.id].clients)){
@@ -1241,6 +1267,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			}, ticks-elapsed);
 		}
 	}
+	*/
 }
 
 function wsUpdateAppState(wsio, data) {
@@ -1457,12 +1484,20 @@ function loadSession (filename) {
 					a.date = new Date();
 					if (a.animation) {
 						var j;
+						SAGE2Items.renderSync[a.id] = {clients: {}, date: Date.now()};
+						for (j=0; j<clients.length; j++) {
+							if (clients[j].clientType === "display") {
+								SAGE2Items.renderSync[a.id].clients[clients[j].id] = {wsio: clients[j], readyForNextFrame: false, blocklist: []};
+							}
+						}
+						/*
 						appAnimations[a.id] = {clients: {}, date: new Date()};
 						for(j=0; j<clients.length; j++){
 							if(clients[j].clientType === "display") {
 								appAnimations[a.id].clients[clients[j].id] = false;
 							}
 						}
+						*/
 					}
 
 					handleNewApplication(a, null);
@@ -1765,14 +1800,23 @@ function wsLoadApplication(wsio, data) {
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 
-		if(appInstance.animation){
+		if (appInstance.animation) {
 			var i;
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+
+			/*
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].clientType === "display") {
 					appAnimations[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
+			*/
 		}
 
 		handleNewApplication(appInstance, null);
@@ -2070,12 +2114,20 @@ function wsAddNewWebElement(wsio, data) {
 
 		if(appInstance.animation){
 			var i;
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+			/*
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].clientType === "display") {
 					appAnimations[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
+			*/
 		}
 	});
 }
@@ -2187,12 +2239,20 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 		handleNewApplication(appInstance, videohandle);
 
 		if(appInstance.animation){
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+			/*
 			appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].clientType === "display") {
 					appAnimations[appInstance.id].clients[clients[i].id] = false;
 				}
 			}
+			*/
 		}
 	});
 }
@@ -2385,12 +2445,20 @@ function wsCreateAppClone(wsio, data){
 		clone.height = app.height;
 		if(clone.animation){
 			var i;
+			SAGE2Items.renderSync[clone.id] = {clients: {}, date: Date.now()};
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[clone.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+			/*
 			appAnimations[clone.id] = {clients: {}, date: new Date()};
 			for(i=0; i<clients.length; i++){
 				if(clients[i].clientType === "display") {
 					appAnimations[clone.id].clients[clients[i].id] = false;
 				}
 			}
+			*/
 		}
 		if (clone.data)
 			clone.data.loadData = data.cloneData;
@@ -2846,12 +2914,20 @@ function manageUploadedFiles(files, position) {
 			appInstance.id = getUniqueAppId();
 			if(appInstance.animation){
 				var i;
+				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+				for (i=0; i<clients.length; i++) {
+					if (clients[i].clientType === "display") {
+						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+					}
+				}
+				/*
 				appAnimations[appInstance.id] = {clients: {}, date: new Date()};
 				for(i=0; i<clients.length; i++){
 					if(clients[i].clientType === "display") {
 						appAnimations[appInstance.id].clients[clients[i].id] = false;
 					}
 				}
+				*/
 			}
 			handleNewApplication(appInstance, videohandle);
 		});
