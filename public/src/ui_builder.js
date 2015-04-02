@@ -599,8 +599,8 @@ function UIBuilder(json_cfg, clientID) {
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
-		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
-		pointerElem.style.top  = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
+		pointerElem.style.top = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
 		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem);
 
@@ -628,10 +628,12 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.showSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
+		var translate  = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
 
 		pointerElem.style.display = "block";
-		pointerElem.style.left    = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top     = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		pointerElem.style.webkitTransform = translate;
+		pointerElem.style.mozTransform    = translate;
+		pointerElem.style.transform       = translate;
 
 		this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 		this.pointerItems[pointerElem.id].setColor(pointer_data.color);
@@ -852,10 +854,10 @@ function UIBuilder(json_cfg, clientID) {
 		remote.id  = data.name;
 		remote.style.position  = "absolute";
 		remote.style.textAlign = "center";
-		remote.style.width  = data.width.toString() + "px";
-		remote.style.height = data.height.toString() + "px";
-		remote.style.left   = (-this.offsetX + data.pos).toString() + "px";
-		remote.style.top    = (-this.offsetY+2).toString() + "px";
+		remote.style.width  = data.geometry.w.toString() + "px";
+		remote.style.height = data.geometry.h.toString() + "px";
+		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
+		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
 

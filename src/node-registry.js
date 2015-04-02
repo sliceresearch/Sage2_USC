@@ -40,7 +40,7 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 
     var fullpath = path.join(assetsFolder, this.registryFile);
 
-    console.log("Registry> Initializing registry", fullpath);
+    console.log(sageutils.header("Registry") + "Initializing registry", fullpath);
 
     if (!sageutils.fileExists(fullpath)) {
         fs.writeFileSync(fullpath, "{}");

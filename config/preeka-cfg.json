@@ -63,22 +63,26 @@
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "PhD Room",
 			host: "dante.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "Green Room",
 			host: "mesaverde.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		}
 	],
         "advanced": {

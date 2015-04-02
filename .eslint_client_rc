@@ -32,7 +32,8 @@
 	drawWidgetControlCenter: true, drawPieSlice: true,
 	makeWidgetBarOutlinePath: true, mapMoveToSlider: true,
 	SAGE2WidgetControlInstance: true, SAGE2WidgetControl: true,
-	SAGE2WidgetButtonTypes: true, controlObjects: true, controlItems: true
+	SAGE2WidgetButtonTypes: true, controlObjects: true, controlItems: true,
+	smallWhiteGIF: true
   },
   rules: {
 	no-alert: 0,

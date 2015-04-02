@@ -71,6 +71,11 @@ function SAGE2_init() {
 	isMaster = false;
 
 	wsio.open(function() {
+		log("open websocket");
+
+		setupListeners();
+
+		/*
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -95,8 +100,18 @@ function SAGE2_init() {
 			requestsFileHandling: true
 
 		};
+		*/
+		var clientDescription = {
+			clientType: "display",
+			clientID: clientID,
+			requests: {
+				config: true,
+				version: true,
+				time: true,
+				console: false
+			}
+		};
 		wsio.emit('addClient', clientDescription);
-		log("open websocket");
 	});
 
 	// Socket close event (ie server crashed)
@@ -117,7 +132,9 @@ function SAGE2_init() {
 			xhr.send();
 		}, 2000);
 	});
+}
 
+function setupListeners() {
 	wsio.on('initialize', function(data) {
 		var startTime  = new Date(data.start);
 		// var serverTime = new Date(data.time);
@@ -214,24 +231,24 @@ function SAGE2_init() {
     });
 
     wsio.on('showSagePointer', function(pointer_data){
+		console.log(pointer_data);
 		ui.showSagePointer(pointer_data);
 		resetIdle();
-		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
-		var stlyeCaption = uniqueID.split(re).join("");
-		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		//var re = /\.|\:/g;
+		//var stlyeCaption = uniqueID.split(re).join("");
+		//addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('hideSagePointer', function(pointer_data){
 		ui.hideSagePointer(pointer_data);
-		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
-		var stlyeCaption = uniqueID.split(re).join("");
-		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		//var re = /\.|\:/g;
+		//var stlyeCaption = uniqueID.split(re).join("");
+		//removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
-    //wsio.on('updateSagePointerPosition', function(pointer_data){
-    wsio.on('upp', function(pointer_data){
+    wsio.on('updateSagePointerPosition', function(pointer_data){
 		ui.updateSagePointerPosition(pointer_data);
 		resetIdle();
     });
@@ -407,9 +424,9 @@ function SAGE2_init() {
 					var newapp = new window[data.application]();
 					newapp.init(init);
 
-					if (newapp.state !== undefined && clientID===0) {
+					if (newapp.state !== undefined) {
 						Object.observe(newapp.state, function (changes) {
-							wsio.emit('updateAppState', {id: data.id, state: newapp.state});
+							if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
 						}, ['update', 'add']);
 					}
 
@@ -432,9 +449,9 @@ function SAGE2_init() {
 				var app = new window[data.application]();
 				app.init(init);
 
-				if(app.state !== undefined && clientID===0){
+				if(app.state !== undefined){
 					Object.observe(app.state, function(changes) {
-						wsio.emit('updateAppState', {id: data.id, state: app.state});
+						if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
 					}, ['update', 'add']);
 				}
 
@@ -563,6 +580,15 @@ function SAGE2_init() {
 	wsio.on('updateItemOrder', function(order) {
 		resetIdle();
 
+		var key;
+		for (key in order) {
+			var selectedElemTitle = document.getElementById(key + "_title");
+			var selectedElem = document.getElementById(key);
+
+			selectedElemTitle.style.zIndex = order[key].toString();
+			selectedElem.style.zIndex = order[key].toString();
+		}
+		/*
 		var i;
 		var zval = 0;
 		for(i=0; i<order.idList.length; i++){
@@ -576,6 +602,7 @@ function SAGE2_init() {
 
 			zval += 2;
 		}
+		*/
 	});
 
 	wsio.on('hoverOverItemCorner', function(elem_data) {
@@ -615,7 +642,7 @@ function SAGE2_init() {
 				app.move(date);
 			}
 		}
-		if (position_data.elemId in controlObjects){
+		/*if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -626,7 +653,7 @@ function SAGE2_init() {
 					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
 				}
 			}
-		}
+		}*/
 
 	});
 
@@ -638,8 +665,8 @@ function SAGE2_init() {
 		if(selectedControl !== undefined && selectedControl !== null) {
 			selectedControl.style.left = eLeft.toString() + "px";
 			selectedControl.style.top = eTop.toString() + "px";
-			var hOffset = (ui.titleBarHeight + appData.height)/2;
-			moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0, position_data.user_color);
+			//var hOffset = (ui.titleBarHeight + appData.height)/2;
+			//moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0, position_data.user_color);
 		}
 		else {
 			console.log("cannot find control: " + position_data.elemId);
@@ -726,7 +753,7 @@ function SAGE2_init() {
 				if (app.move) app.move(date);
 			}
 		}
-		if (position_data.elemId in controlObjects && position_data.user_color){
+		/*if (position_data.elemId in controlObjects && position_data.user_color){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -737,7 +764,7 @@ function SAGE2_init() {
 					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
 				}
 			}
-		}
+		}*/
 	});
 
 	wsio.on('startMove', function(data) {
@@ -784,7 +811,7 @@ function SAGE2_init() {
 		if(app !== undefined && app !== null){
 			var date = new Date(data.date);
 			app.refresh(date);
-			wsio.emit('finishedRenderingAppFrame', {id: data.id, fps:app.maxFPS});
+			wsio.emit('finishedRenderingAppFrame', {id: data.id, fps: app.maxFPS});
 		}
 	});
 
@@ -804,7 +831,6 @@ function SAGE2_init() {
 
 	wsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);
-		//var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 		if (data.elemId !== undefined && data.elemId !== null){
 			if(controlObjects[data.elemId] !== undefined){
 
@@ -849,7 +875,7 @@ function SAGE2_init() {
 				ctrDiv.appendChild(handle);
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id] = {show:data.show, divHandle:ctrDiv};
-				createWidgetToAppConnector(data.id);
+				//createWidgetToAppConnector(data.id);
 			}
 
 		}
@@ -858,7 +884,7 @@ function SAGE2_init() {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
-				removeWidgetToAppConnector(idx);
+				//removeWidgetToAppConnector(idx);
 				delete controlItems[idx];
 			}
 		}

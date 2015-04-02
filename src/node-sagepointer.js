@@ -26,12 +26,14 @@
  * @param id {String} identifier of the new pointer
  */
 function SagePointer(id) {
-	this.id      = id;
-	this.label   = "";
-	this.color   = [255, 255, 255];
-	this.left    = 0;
-	this.top     = 0;
-	this.visible = false;
+	this.id          = id;
+	this.label       = "";
+	this.color       = [255, 255, 255];
+	this.left        = 0;
+	this.top         = 0;
+	this.visibleLeft = 0;
+	this.visibleTop  = 0;
+	this.visible     = false;
 }
 
 /**
@@ -46,8 +48,8 @@ SagePointer.prototype.start = function(label, color, sourceType) {
 	this.label = label;
 	this.color = color;
 	this.sourceType = sourceType;
-	this.left    = 0;
-	this.top     = 0;
+	this.left    = this.visibleLeft;
+	this.top     = this.visibleTop;
 	this.visible = true;
 };
 
@@ -57,7 +59,21 @@ SagePointer.prototype.start = function(label, color, sourceType) {
 * @method stop
 */
 SagePointer.prototype.stop = function() {
+	this.visibleLeft = this.left;
+	this.visibleTop = this.top;
 	this.visible = false;
+};
+
+SagePointer.prototype.updatePointerPosition = function(data, maxW, maxH) {
+	if (data.pointerX !== undefined) this.left = data.pointerX;
+	if (data.pointerY !== undefined) this.top = data.pointerY;
+	if (data.dx !== undefined) this.left += data.dx;
+	if (data.dy !== undefined) this.top  += data.dy;
+
+	if (this.left < 0)    this.left = 0;
+	if (this.left > maxW) this.left = maxW;
+	if (this.top < 0)     this.top = 0;
+	if (this.top > maxH)  this.top = maxH;
 };
 
 

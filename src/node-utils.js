@@ -22,13 +22,14 @@
 
 var SAGE2_version = require('../package.json').version;
 
-var crypto = require('crypto');              // https encryption
-var fs     = require('fs');                  // filesystem access
-var tls    = require('tls');                 // https encryption
-var path   = require('path');
-var exec   = require('child_process').exec;
+var crypto  = require('crypto');              // https encryption
+var exec    = require('child_process').exec;  // execute external application
+var fs      = require('fs');                  // filesystem access
+var path    = require('path');                // resolve directory paths
+var tls     = require('tls');                 // https encryption
 
-var semver = require('semver');              // parse version numbers
+var request = require('request');             // http requests
+var semver  = require('semver');              // parse version numbers
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -46,9 +47,8 @@ if ( semver.gte(process.versions.node, '0.10.0') ) {
 	if ( semver.gte(process.versions.node, '1.0.0') )
 		_NODE_VERSION = 1;
 } else {
-	throw new Error("Old version of Node.js. Please update");
+	throw new Error(" SAGE2>\tOld version of Node.js. Please update");
 }
-console.log("Node version:", _NODE_VERSION.toString(), '(', process.versions.node, ')');
 
 /**
  * Test if file is exists and readable
@@ -102,6 +102,17 @@ function getShortVersion() {
 	return SAGE2_version;
 }
 
+
+/**
+ * Node.js version
+ *
+ * @method getNodeVersion
+ * @return {String} version number
+ */
+function getNodeVersion() {
+	return _NODE_VERSION.toString() +  " (v" +  process.versions.node + ")";
+}
+
 /**
  * Full version is processed from git information
  *
@@ -143,19 +154,35 @@ function getFullVersion(callback) {
  * Upate the source code using git
  *
  * @method updateWithGIT
+ * @param branch {String} name of the remote branch
  * @param callback {Function} function to be run when finished
  */
-function updateWithGIT(callback) {
+function updateWithGIT(branch, callback) {
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
-	var cmd1 = "git pull origin";
-	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err, stdout, stderr) {
-		if (err) { console.log('GIT>', stderr.trim()); return callback(err); }
-			console.log('GIT>', stdout.trim());
-			// return the object in the callback paramter
-			callback(null);
+	var cmd1 = "git pull origin " + branch;
+	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
+		// return the messages in the callback paramter
+		if (err)
+			callback(stderr, null);
+		else
+			callback(null, stdout);
 	});
 }
+
+
+/**
+ * Utility function to create a header for console messages
+ *
+ * @method header
+ * @param h {String} header text
+ * @return header {String} formatted text
+ */
+function header(h) {
+	if (h.length <= 6) return h + ">\t\t";
+	else               return h + ">\t";
+}
+
 
 /**
  * Utility function to compare two strings independently of case.
@@ -263,28 +290,65 @@ function checkPackages(inDevelopement) {
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
 				console.log("");
-				console.log("Packages> Warning - Packages not up to date");
-				if (packages.missing.length  > 0) console.log("Packages>	Missing:",  packages.missing);
-				if (packages.outdated.length > 0) console.log("Packages>	Outdated:", packages.outdated);
-				console.log("Packages> To update, execute: npm run in");
+				console.log(header("Packages") + "Warning - Packages not up to date");
+				if (packages.missing.length  > 0) console.log(header("Packages") + "  Missing:",  packages.missing);
+				if (packages.outdated.length > 0) console.log(header("Packages") + "  Outdated:", packages.outdated);
+				console.log(header("Packages") + "To update, execute: npm run in");
 				console.log("");
 			}
 			else {
-				console.log("Packages> All packages up to date");
+				console.log(header("Packages") + "All packages up to date");
 			}
 		}
 	);
 }
 
-exports.nodeVersion     = _NODE_VERSION;
-exports.getShortVersion = getShortVersion;
-exports.getFullVersion  = getFullVersion;
 
-exports.secureContext   = secureContext;
-exports.fileExists      = fileExists;
-exports.compareString   = compareString;
-exports.compareFilename = compareFilename;
-exports.compareTitle    = compareTitle;
-exports.isTrue          = isTrue;
-exports.updateWithGIT   = updateWithGIT;
-exports.checkPackages   = checkPackages;
+/**
+ * Register SAGE2 with EVL server
+ *
+ * @method registerSAGE2
+ * @param config {Object} local SAGE2 configuration
+ */
+function registerSAGE2(config) {
+	request({
+		"rejectUnauthorized": false,
+		"url": 'https://sage.evl.uic.edu/register',
+		"form": config,
+		"method": "POST"},
+		function(err, response, body) {
+			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
+		}
+	);
+}
+
+function deregisterSAGE2(config, callback) {
+	request({
+		"rejectUnauthorized": false,
+		"url": 'https://sage.evl.uic.edu/unregister',
+		"form": config,
+		"method": "POST"},
+		function (err, response, body) {
+			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
+			if (callback) callback();
+		}
+	);
+}
+
+
+module.exports.nodeVersion     = _NODE_VERSION;
+module.exports.getNodeVersion  = getNodeVersion;
+module.exports.getShortVersion = getShortVersion;
+module.exports.getFullVersion  = getFullVersion;
+
+module.exports.secureContext   = secureContext;
+module.exports.fileExists      = fileExists;
+module.exports.header          = header;
+module.exports.compareString   = compareString;
+module.exports.compareFilename = compareFilename;
+module.exports.compareTitle    = compareTitle;
+module.exports.isTrue          = isTrue;
+module.exports.updateWithGIT   = updateWithGIT;
+module.exports.checkPackages   = checkPackages;
+module.exports.registerSAGE2   = registerSAGE2;
+module.exports.deregisterSAGE2 = deregisterSAGE2;

@@ -20,14 +20,21 @@ stage:
 install:
 	cd sage2 && node install_dependencies.js --prod --mac --target=0.12.0
 	cd sage2 && npm install kthxbai
+	cd sage2 && npm install yuidocjs
+	cd sage2 && npm run doc
+	cd sage2 && npm uninstall yuidocjs
 	cd sage2 && node_modules/.bin/kthxbai
 
 binary:
 	cp scripts/osx64/GO* sage2/
 	cp scripts/osx64/RUN-FIRST sage2/
 	unzip -q -u -d sage2 mac-bin.zip 
+	cd sage2 && mv doc/api public
 	cd sage2 && rm -fr Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
 	mv sage2 SAGE2
+
+deps:
+	zip -r -9 --symlinks mac-bin.zip local -x "*.DS_Store"
 
 clean:
 	/bin/rm -fr SAGE2 dmg/SAGE2.dmg
