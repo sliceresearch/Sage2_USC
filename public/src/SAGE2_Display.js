@@ -334,6 +334,7 @@ function setupListeners() {
 	});
 
 	wsio.on('updateValidStreamBlocks', function(data) {
+		console.log(data.blockList);
 		if(applications[data.id] !== undefined && applications[data.id] !== null){
 			applications[data.id].validBlocks = data.blockList;
 			applications[data.id].setValidBlocksFalse();

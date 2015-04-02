@@ -1530,15 +1530,14 @@ function listApplications() {
 //   and center of gravity
 
 function averageWindowAspectRatio() {
-	var num = applications.length;
+	var num = SAGE2Items.applications.numItems;
 
 	if (num === 0) return 1.0;
 
 	var totAr = 0.0;
-	var i;
-	for (i=0; i<num; i++) {
-		var app =  applications[i];
-		totAr += (app.width / app.height);
+	var key;
+	for (key in SAGE2Items.applications.list) {
+		totAr += (SAGE2Items.applications.list[key].width / SAGE2Items.applications.list[key].height);
 	}
 	return (totAr / num);
 }
@@ -1579,23 +1578,25 @@ function fitWithin(app, x, y, width, height, margin) {
 
 // Create a 2D array
 function Create2DArray(rows) {
-  var arr = [];
+  var arr = new Array(rows);
   for (var i=0; i<rows; i++) {
      arr[i] = [];
   }
   return arr;
 }
+
 // Calculate the euclidian distance between two objects with .x and .y fields
 function distance2D(p1, p2) {
 	var d = 0.0;
 	d = Math.sqrt( Math.pow((p1.x-p2.x), 2) + Math.pow((p1.y-p2.y), 2) );
 	return d;
 }
+
 function findMinimum(arr) {
 	var val = Number.MAX_VALUE;
 	var idx = 0;
 	for (var i=0; i<arr.length; i++) {
-		if (arr[i]<val) {
+		if (arr[i] < val) {
 			val = arr[i];
 			idx = i;
 		}
@@ -1605,20 +1606,20 @@ function findMinimum(arr) {
 
 function tileApplications() {
 	var app;
-	var i, j, c, r;
+	var i, j, c, r, key;
 	var numCols, numRows, numCells;
 
 	var displayAr  = config.totalWidth / config.totalHeight;
 	var arDiff     = displayAr / averageWindowAspectRatio();
-	var numWindows = applications.length;
+	var numWindows = SAGE2Items.applications.numItems;
 
 	// 3 scenarios... windows are on average the same aspect ratio as the display
 	if (arDiff >= 0.7 && arDiff <= 1.3) {
 		numCols = Math.ceil(Math.sqrt( numWindows ));
 		numRows = Math.ceil(numWindows / numCols);
 	}
+	// windows are much wider than display
     else if (arDiff < 0.7) {
-		// windows are much wider than display
 		c = Math.round(1 / (arDiff/2.0));
 		if (numWindows <= c) {
 			numRows = numWindows;
@@ -1629,8 +1630,8 @@ function tileApplications() {
 			numRows = Math.round(Math.ceil(numWindows / numCols));
 		}
 	}
+	// windows are much taller than display
 	else {
-		// windows are much taller than display
 		c = Math.round(arDiff*2);
 		if (numWindows <= c) {
 			numCols = numWindows;
@@ -1658,39 +1659,44 @@ function tileApplications() {
 
 	var padding = 4;
 	// if only one application, no padding, i.e maximize
-	if (applications.length===1) padding = 0;
+	if (numWindows === 1) padding = 0;
 
-    var centroidsApps  = [];
+    var centroidsApps  = {};
     var centroidsTiles = [];
 
     // Caculate apps centers
-    for (i=0; i<applications.length; i++) {
-		app =  applications[i];
-		centroidsApps[i] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
-	}
+    for (key in SAGE2Items.applications.list) {
+    	app = SAGE2Items.applications.list[key];
+    	centroidsApps[key] = {x: app.left+app.width/2.0, y: app.top+app.height/2.0};
+    }
     // Caculate tiles centers
 	for (i=0; i<numCells; i++) {
 		c = i % numCols;
 		r = Math.floor(i / numCols);
-		centroidsTiles[i] = {x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0};
+		centroidsTiles.push({x: (c*tileW+areaX)+tileW/2.0, y: (r*tileH+areaY)+tileH/2.0});
 	}
 
 	// Calculate distances
-	var distances = new Create2DArray(applications.length);
-	for (i=0; i<applications.length; i++) {
-		for (j=0; j<numCells; j++) {
-			var d = distance2D(centroidsApps[i], centroidsTiles[j]);
-			distances[i][j] = d;
+	//var distances = Create2DArray(numWindows);
+	//for (i=0; i<numWindows; i++) {
+	var distances = {};
+	for (key in centroidsApps) {
+		distances[key] = [];
+		for (i=0; i<numCells; i++) {
+			var d = distance2D(centroidsApps[key], centroidsTiles[i]);
+			distances[key].push(d);
 		}
 	}
 
-	for (i=0; i<applications.length; i++) {
+	for (key in SAGE2Items.applications.list) {
 		// get the application
-		app =  applications[i];
+		app = SAGE2Items.applications.list[key];
 		// pick a cell
-		var cellid = findMinimum(distances[i]);
+		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell
-		for (j=0; j<applications.length; j++) distances[j][cellid] = Number.MAX_VALUE;
+		for (i in SAGE2Items.applications.list) {
+			distances[i][cellid] = Number.MAX_VALUE;
+		}
 
 		// calculate new dimensions
 		c = cellid % numCols;
@@ -1698,36 +1704,36 @@ function tileApplications() {
         var newdims = fitWithin(app, c*tileW+areaX, r*tileH+areaY, tileW, tileH, padding);
 
         // update the data structure
-        app.left   = newdims[0];
-        app.top    = newdims[1] - titleBar;
-		app.width  = newdims[2];
-		app.height = newdims[3];
-		// build the object to be sent
-		var updateItem = {elemId: app.id,
-							elemLeft: app.left, elemTop: app.top,
-							elemWidth: app.width, elemHeight: app.height,
-							force: true, date: new Date()};
-		var updateApp = findAppById(updateItem.elemId);
-		// send the order
-		broadcast('startMove', {id: updateItem.id, date: updateItem.date});
-		broadcast('startResize', {id: updateItem.id, date: updateItem.date});
-		broadcast('setItemPositionAndSize', updateItem);
-		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date});
-		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date});
-		if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128, videoHandles);
-        if(updateApp !== null && updateApp.application === "media_block_stream") calculateValidBlocks(updateApp, 128, mediaBlockStreams);
-		if(videoHandles[updateItem.elemId] !== undefined && videoHandles[updateItem.elemId].newFrameGenerated === false)
-			handleNewVideoFrame(updateItem.elemId);
-    }
+        app.left = newdims[0];
+        app.top = newdims[1] - titleBar;
+        app.width = newdims[2];
+        app.height = newdims[3];
+        var updateItem = {
+        	elemId: app.id,
+			elemLeft: app.left,
+			elemTop: app.top,
+			elemWidth: app.width,
+			elemHeight: app.height,
+			force: true,
+			date: Date.now()
+		};
+
+		broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
+		broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
+
+		moveAndResizeApplicationWindow(updateItem);
+
+		broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
+		broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
+	}
 }
 
 // Remove all applications
 function clearDisplay() {
-	var all = applications.length;
-	while (all) {
-		deleteApplication( applications[0] );
-		// deleteApplication changes the array, so check again
-		all = applications.length;
+	var i;
+	var all = Object.keys(SAGE2Items.applications.list);
+	for (i=0; i<all.length; i++) {
+		deleteApplication(all[i]);
 	}
 }
 
@@ -1934,8 +1940,6 @@ function initializeLoadedVideo(appInstance, videohandle) {
 
 // move this function elsewhere
 function handleNewVideoFrame(id) {
-	var i;
-	var key;
 	var videohandle = SAGE2Items.renderSync[id];
 
 	videohandle.newFrameGenerated = true;
@@ -1949,8 +1953,6 @@ function handleNewVideoFrame(id) {
 
 // move this function elsewhere
 function handleNewClientReady(id) {
-	var i;
-	var key;
 	var videohandle = SAGE2Items.renderSync[id];
 
 	// if no new frame is generate or not all display clients have finished rendering previous frame - return
