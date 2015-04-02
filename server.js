@@ -87,6 +87,7 @@ var users              = null;
 var sessionDirectory   = path.join(__dirname, "sessions");
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
+var mediaBlockSize     = 128;
 var startTime          = Date.now();
 
 
@@ -238,7 +239,6 @@ var seedWindowPosition = null;
 
 
 var appAnimations = {};
-var videoHandles = {};
 
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
@@ -361,17 +361,6 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
 		initializeExistingAppsPositionSizeTypeOnly(wsio);
-	}
-
-	if (wsio.clientType === "display") {
-		var key;
-		var appInstance;
-		var blocksize = 128;
-		for(key in videoHandles) {
-			videoHandles[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blockList: []};
-			appInstance = findAppById(key);
-			calculateValidBlocks(appInstance, blocksize, videoHandles);
-		}
 	}
 
 	var remote = findRemoteSiteByConnection(wsio);
@@ -498,6 +487,7 @@ function initializeExistingApps(wsio) {
 	for (key in SAGE2Items.renderSync) {
 		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
 			SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
+			calculateValidBlocks(SAGE2Items.applications.list[key], mediaBlockSize, SAGE2Items.renderSync[key]);
 		}
 	}
 
@@ -1195,7 +1185,7 @@ function wsPrintDebugInfo(wsio, data) {
 }
 
 function wsRequestVideoFrame(wsio, data) {
-	videoHandles[data.id].clients[wsio.id].readyForNextFrame = true;
+	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	handleNewClientReady(data.id);
 }
 
@@ -1811,6 +1801,70 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	if(appInstance.application !== "movie_player" || videohandle === null) return;
 
 	var i;
+	var horizontalBlocks = Math.ceil(appInstance.native_width / mediaBlockSize);
+	var verticalBlocks = Math.ceil(appInstance.native_height / mediaBlockSize);
+	var videoBuffer = new Array(horizontalBlocks*verticalBlocks);
+
+	videohandle.on('error', function(err) {
+		console.log("VIDEO ERROR: " + err);
+	});
+	videohandle.on('start', function() {
+		broadcast('videoPlaying', {id: appInstance.id});
+	});
+	videohandle.on('end', function() {
+		broadcast('videoEnded', {id: appInstance.id});
+		if(SAGE2Items.renderSync[appInstance.id].loop === true) {
+			SAGE2Items.renderSync[appInstance.id].decoder.seek(0.0, function() {
+				SAGE2Items.renderSync[appInstance.id].decoder.play();
+			});
+			broadcast('updateVideoItemTime', {id: appInstance.id, timestamp: 0.0, play: false});
+		}
+	});
+	videohandle.on('frame', function(frameIdx, buffer) {
+		SAGE2Items.renderSync[appInstance.id].frameIdx = frameIdx;
+		var blockBuffers = pixelblock.yuv420ToPixelBlocks(buffer, appInstance.data.width, appInstance.data.height, mediaBlockSize);
+
+		var idBuffer = Buffer.concat([new Buffer(appInstance.id), new Buffer([0])]);
+		var frameIdxBuffer = intToByteBuffer(frameIdx,   4);
+		var dateBuffer = intToByteBuffer(Date.now(), 8);
+		for(i=0; i<blockBuffers.length; i++){
+			var blockIdxBuffer = intToByteBuffer(i, 2);
+			SAGE2Items.renderSync[appInstance.id].pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, frameIdxBuffer, dateBuffer, blockBuffers[i]]);
+		}
+
+		handleNewVideoFrame(appInstance.id);
+	});
+
+	SAGE2Items.renderSync[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
+	for(i=0; i<clients.length; i++){
+		if(clients[i].clientType === "display") {
+			SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blockList: []};
+		}
+	}
+
+	calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
+
+	// initialize based on state
+	SAGE2Items.renderSync[appInstance.id].loop = appInstance.data.looped;
+	if(appInstance.data.frame !== 0) {
+		var ts = appInstance.data.frame / appInstance.data.framerate;
+		SAGE2Items.renderSync[appInstance.id].decoder.seek(ts, function() {
+			if(appInstance.data.paused === false) {
+				SAGE2Items.renderSync[appInstance.id].decoder.play();
+			}
+		});
+		broadcast('updateVideoItemTime', {id: appInstance.id, timestamp: ts, play: false});
+	}
+	else {
+		if(appInstance.data.paused === false) {
+			SAGE2Items.renderSync[appInstance.id].decoder.play();
+		}
+	}
+	if(appInstance.data.muted === true) {
+		broadcast('videoMuted', {id: appInstance.id});
+	}
+	/*
+	var i;
 	var blocksize = 128;
 	var horizontalBlocks = Math.ceil(appInstance.native_width /blocksize);
 	var verticalBlocks   = Math.ceil(appInstance.native_height/blocksize);
@@ -1875,69 +1929,67 @@ function initializeLoadedVideo(appInstance, videohandle) {
 			broadcast('videoMuted', {id: appInstance.id});
 		}
     }, 250);
+	*/
 }
 
 // move this function elsewhere
 function handleNewVideoFrame(id) {
-	var video = videoHandles[id];
-
 	var i;
 	var key;
+	var videohandle = SAGE2Items.renderSync[id];
 
-	video.newFrameGenerated = true;
-	for(key in video.clients) {
-		if(video.clients[key].readyForNextFrame !== true){
-			return false;
-		}
+	videohandle.newFrameGenerated = true;
+	if (!allTrueDict(videohandle.clients, "readyForNextFrame")) {
+		return false;
 	}
 
-	video.newFrameGenerated = false;
-	for(key in video.clients) {
-		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
-		for(i=0; i<video.pixelbuffer.length; i++){
-			var hasBlock = false;
-			if(video.clients[key].blockList.indexOf(i) >= 0){
-				hasBlock = true;
-				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
-			}
-			if(hasBlock === true) video.clients[key].readyForNextFrame = false;
-		}
-	}
+	updateVideoFrame(id);
 	return true;
 }
 
 // move this function elsewhere
 function handleNewClientReady(id) {
-	var video = videoHandles[id];
-	if (video.newFrameGenerated !== true) return false;
-
 	var i;
 	var key;
+	var videohandle = SAGE2Items.renderSync[id];
 
-	for (key in video.clients) {
-		if (video.clients[key].readyForNextFrame !== true) {
-			return false;
-		}
+	// if no new frame is generate or not all display clients have finished rendering previous frame - return
+	if (videohandle.newFrameGenerated !== true || !allTrueDict(videohandle.clients, "readyForNextFrame")) {
+		return false;
 	}
 
-	video.newFrameGenerated = false;
-	for (key in video.clients) {
-		video.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: video.frameIdx});
-		for(i=0; i<video.pixelbuffer.length; i++){
-			var hasBlock = false;
-			if(video.clients[key].blockList.indexOf(i) >= 0){
-				hasBlock = true;
-				video.clients[key].wsio.emit('updateVideoFrame', video.pixelbuffer[i]);
-			}
-			if (hasBlock === true) video.clients[key].readyForNextFrame = false;
-		}
-	}
+	updateVideoFrame(id);
 	return true;
 }
 
+function updateVideoFrame(id) {
+	var i;
+	var key;
+	var videohandle = SAGE2Items.renderSync[id];
+
+	videohandle.newFrameGenerated = false;
+	for (key in videohandle.clients) {
+		videohandle.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: videohandle.frameIdx});
+		var hasBlock = false;
+		for (i=0; i<videohandle.pixelbuffer.length; i++) {
+			if (videohandle.clients[key].blockList.indexOf(i) >= 0) {
+				hasBlock = true;
+				videohandle.clients[key].wsio.emit('updateVideoFrame', videohandle.pixelbuffer[i]);
+			}
+		}
+		if(hasBlock === true) {
+			videohandle.clients[key].readyForNextFrame = false;
+		}
+	}
+}
+
 // move this function elsewhere
-function calculateValidBlocks(app, blockSize, handles) {
-	var i, j, key;
+function calculateValidBlocks(app, blockSize, renderhandle) {
+	if(app.application !== "movie_player" && app.application !== "media_block_stream") return;
+
+	var i
+	var j
+	var key;
 
 	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
 	var verticalBlocks   = Math.ceil(app.data.height/blockSize);
@@ -1945,17 +1997,17 @@ function calculateValidBlocks(app, blockSize, handles) {
 	var renderBlockWidth  = blockSize * app.width / app.data.width;
 	var renderBlockHeight = blockSize * app.height / app.data.height;
 
-	for(key in handles[app.id].clients){
-		handles[app.id].clients[key].blockList = [];
-		for(i=0; i<verticalBlocks; i++){
-			for(j=0; j<horizontalBlocks; j++){
+	for (key in renderhandle.clients){
+		renderhandle.clients[key].blockList = [];
+		for (i=0; i<verticalBlocks; i++) {
+			for (j=0; j<horizontalBlocks; j++) {
 				var blockIdx = i*horizontalBlocks+j;
 
-				if(handles[app.id].clients[key].wsio.clientID < 0){
-					handles[app.id].clients[key].blockList.push(blockIdx);
+				if (renderhandle.clients[key].wsio.clientID < 0) {
+					renderhandle.clients[key].blockList.push(blockIdx);
 				}
 				else {
-					var display = config.displays[handles[app.id].clients[key].wsio.clientID];
+					var display = config.displays[renderhandle.clients[key].wsio.clientID];
 					var left = j*renderBlockWidth  + app.left;
 					var top  = i*renderBlockHeight + app.top + config.ui.titleBarHeight;
 					var offsetX = config.resolution.width  * display.column;
@@ -1963,12 +2015,12 @@ function calculateValidBlocks(app, blockSize, handles) {
 
 					if ((left+renderBlockWidth) >= offsetX && left <= (offsetX+config.resolution.width) &&
 						(top +renderBlockHeight) >= offsetY && top  <= (offsetY+config.resolution.height)) {
-						handles[app.id].clients[key].blockList.push(blockIdx);
+						renderhandle.clients[key].blockList.push(blockIdx);
 					}
 				}
 			}
 		}
-		handles[app.id].clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: handles[app.id].clients[key].blockList});
+		renderhandle.clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: renderhandle.clients[key].blockList});
 	}
 }
 
@@ -2053,23 +2105,23 @@ function wsOpenNewWebpage(wsio, data) {
 // **************  Video / Audio Synchonization *****************
 
 function wsPlayVideo(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
-	videoHandles[data.id].decoder.play();
+	SAGE2Items.renderSync[data.id].decoder.play();
 }
 
 function wsPauseVideo(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
-	videoHandles[data.id].decoder.pause(function() {
+	SAGE2Items.renderSync[data.id].decoder.pause(function() {
 		broadcast('videoPaused', {id: data.id});
 	});
 }
 
 function wsStopVideo(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
-	videoHandles[data.id].decoder.stop(function() {
+	SAGE2Items.renderSync[data.id].decoder.stop(function() {
 		broadcast('videoPaused', {id: data.id});
 		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false});
 		broadcast('updateFrameIndex', {id: data.id, frameIdx: 0});
@@ -2077,30 +2129,30 @@ function wsStopVideo(wsio, data) {
 }
 
 function wsUpdateVideoTime(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
-	videoHandles[data.id].decoder.seek(data.timestamp, function() {
-		if(data.play === true) videoHandles[data.id].decoder.play();
+	SAGE2Items.renderSync[data.id].decoder.seek(data.timestamp, function() {
+		if(data.play === true) SAGE2Items.renderSync[data.id].decoder.play();
 	});
 	broadcast('updateVideoItemTime', data);
 }
 
 function wsMuteVideo(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
 	broadcast('videoMuted', {id: data.id});
 }
 
 function wsUnmuteVideo(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
 	broadcast('videoUnmuted', {id: data.id});
 }
 
 function wsLoopVideo(wsio, data) {
-	if(videoHandles[data.id] === undefined || videoHandles[data.id] === null) return;
+	if(SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) return;
 
-	videoHandles[data.id].loop = data.loop;
+	SAGE2Items.renderSync[data.id].loop = data.loop;
 }
 
 // **************  Remote Server Content *****************
