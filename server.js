@@ -2645,7 +2645,8 @@ function getApplications() {
 	// Remove 'viewer' apps
 	var i = uploadedApps.length;
 	while (i--) {
-		if (uploadedApps[i].exif.metadata.fileTypes && uploadedApps[i].exif.metadata.fileTypes.length > 0) {
+		if (uploadedApps[i].exif.metadata.fileTypes &&
+			uploadedApps[i].exif.metadata.fileTypes.length > 0) {
 			uploadedApps.splice(i, 1);
 		}
 	}
@@ -4539,10 +4540,10 @@ function deleteApplication(appId) {
 
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
-	var itemUnderPointer = ct || elem;
+	//var itemUnderPointer = ct || elem;
 
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
 	if (ct !== null) {
 		if (data.button === "left") {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
@@ -4658,7 +4659,9 @@ function deleteApplication(appId) {
 			}
 		}
 		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
+			console.log("Should not get past this!!");
 			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
+				console.log("comming here!!!!");
 				if(data.button === "right"){
 					elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 					if (elemCtrl === null) {
@@ -4804,9 +4807,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
-	var itemUnderPointer = controlUnderPointer || elem;
+	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
 
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
@@ -4933,14 +4936,14 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var elem = null;
-	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
-	if (controlUnderPointer===null){
-		elem = findAppUnderPointer(pointerX, pointerY);
-	}
+	//var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
+	//if (controlUnderPointer===null){
+	elem = findAppUnderPointer(pointerX, pointerY);
+	//}
 
-	var itemUnderPointer = controlUnderPointer || elem;
+	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
 	// Widget connector show logic ends
 
 	// move / resize window
@@ -5550,20 +5553,18 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	updateRadialMenu(uniqueID);
 }
 
-function updateRadialMenu( uniqueID )
-{
+function updateRadialMenu(uniqueID) {
 	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps = assets.listApps();
+	var uploadedApps   = getApplications();
 	var savedSessions  = listSessions();
 
 	// Sort independently of case
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
-	uploadedApps.sort(   sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
 
 	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions, apps: uploadedApps};

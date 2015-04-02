@@ -234,18 +234,18 @@ function setupListeners() {
 		console.log(pointer_data);
 		ui.showSagePointer(pointer_data);
 		resetIdle();
-		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
-		var stlyeCaption = uniqueID.split(re).join("");
-		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		//var re = /\.|\:/g;
+		//var stlyeCaption = uniqueID.split(re).join("");
+		//addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('hideSagePointer', function(pointer_data){
 		ui.hideSagePointer(pointer_data);
-		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
-		var stlyeCaption = uniqueID.split(re).join("");
-		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		//var re = /\.|\:/g;
+		//var stlyeCaption = uniqueID.split(re).join("");
+		//removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('updateSagePointerPosition', function(pointer_data){
@@ -642,7 +642,7 @@ function setupListeners() {
 				app.move(date);
 			}
 		}
-		if (position_data.elemId in controlObjects){
+		/*if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -653,7 +653,7 @@ function setupListeners() {
 					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
 				}
 			}
-		}
+		}*/
 
 	});
 
@@ -665,8 +665,8 @@ function setupListeners() {
 		if(selectedControl !== undefined && selectedControl !== null) {
 			selectedControl.style.left = eLeft.toString() + "px";
 			selectedControl.style.top = eTop.toString() + "px";
-			var hOffset = (ui.titleBarHeight + appData.height)/2;
-			moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0, position_data.user_color);
+			//var hOffset = (ui.titleBarHeight + appData.height)/2;
+			//moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0, position_data.user_color);
 		}
 		else {
 			console.log("cannot find control: " + position_data.elemId);
@@ -753,7 +753,7 @@ function setupListeners() {
 				if (app.move) app.move(date);
 			}
 		}
-		if (position_data.elemId in controlObjects && position_data.user_color){
+		/*if (position_data.elemId in controlObjects && position_data.user_color){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -764,7 +764,7 @@ function setupListeners() {
 					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
 				}
 			}
-		}
+		}*/
 	});
 
 	wsio.on('startMove', function(data) {
@@ -831,7 +831,6 @@ function setupListeners() {
 
 	wsio.on('requestNewControl', function(data){
 		var dt = new Date(data.date);
-		//var selectedElem = data.elemId ? document.getElementById(data.elemId) : null;
 		if (data.elemId !== undefined && data.elemId !== null){
 			if(controlObjects[data.elemId] !== undefined){
 
@@ -876,7 +875,7 @@ function setupListeners() {
 				ctrDiv.appendChild(handle);
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id] = {show:data.show, divHandle:ctrDiv};
-				createWidgetToAppConnector(data.id);
+				//createWidgetToAppConnector(data.id);
 			}
 
 		}
@@ -885,7 +884,7 @@ function setupListeners() {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
-				removeWidgetToAppConnector(idx);
+				//removeWidgetToAppConnector(idx);
 				delete controlItems[idx];
 			}
 		}
