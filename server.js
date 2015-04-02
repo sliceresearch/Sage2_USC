@@ -451,10 +451,10 @@ function setupListeners(wsio) {
 	wsio.on('stopMediaStream',                      wsStopMediaStream);
     wsio.on('updateRemoteMediaBlockStreamFrame',    wsUpdateRemoteMediaBlockStreamFrame);
 	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
-	wsio.on('requestDataSharingSession', wsRequestDataSharingSession);
-	wsio.on('cancelDataSharingSession', wsCancelDataSharingSession);
-	wsio.on('acceptDataSharingSession', wsAcceptDataSharingSession);
-	wsio.on('rejectDataSharingSession', wsRejectDataSharingSession);
+	wsio.on('requestDataSharingSession',            wsRequestDataSharingSession);
+	wsio.on('cancelDataSharingSession',             wsCancelDataSharingSession);
+	wsio.on('acceptDataSharingSession',             wsAcceptDataSharingSession);
+	wsio.on('rejectDataSharingSession',             wsRejectDataSharingSession);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
 	wsio.on('selectedControlId',                    wsSelectedControlId);
@@ -2352,12 +2352,13 @@ function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
 }
 
 function wsRequestDataSharingSession(wsio, data) {
+	console.log(data);
 	var known_site = findRemoteSiteByConnection(wsio);
 	if(known_site !== null) data.config.name = known_site.name;
 	if(data.config.name === undefined || data.config.name === null) data.config.name = "Unknown";
 	
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
-	broadcast('requestDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port}, 'requiresFullApps');
+	broadcast('requestedDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port});
 	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
 }
 

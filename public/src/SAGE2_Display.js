@@ -1074,7 +1074,7 @@ function setupListeners() {
 		}
 	});
 	
-	wsio.on('requestDataSharingSession', function(data) {
+	wsio.on('requestedDataSharingSession', function(data) {
 		ui.showDataSharingRequestDialog(data);
 	});
 	
