@@ -462,12 +462,16 @@ function setupListeners(wsio) {
 }
 
 function initializeExistingControls(wsio){
-	for (var i=controls.length-1; i>=0; i--){
-		var ctrl = controls[i];
-		wsio.emit('createControl', controls[i]);
-		var uniqueID = ctrl.id.substring(ctrl.appId.length, ctrl.id.lastIndexOf("_"));
-		var app = findAppById(ctrl.appId);
-		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
+	var i;
+	var uniqueID;
+	var app;
+	for (i=controls.length-1; i>=0; i--) {
+		if (SAGE2Items.applications.list.hasOwnProperty(controls[i].appId)) {
+			wsio.emit('createControl', controls[i]);
+			uniqueID = controls[i].id.substring(controls[i].appId.length, controls[i].id.lastIndexOf("_"));
+			app = SAGE2Items.applications.list[controls[i].appId];
+			addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
+		}
 	}
 }
 
@@ -533,6 +537,7 @@ function initializeRemoteServerInfo(wsio) {
 	}
 }
 
+/*
 function initializeMediaStreams(uniqueID) {
 	var key;
 
@@ -552,6 +557,7 @@ function initializeMediaBlockStreams(clientID) {
         }
 	}
 }
+*/
 
 // **************  Sage Pointer Functions *****************
 
@@ -1048,10 +1054,10 @@ function wsStartNewMediaBlockStream(wsio, data) {
 	data.height = parseInt(data.height, 10);
 
 
-	mediaBlockStreams[data.id] = {chunks: [], clients: {}, ready: true, timeout: null, width: data.width, height: data.height};
-	for(var i=0; i<clients.length; i++){
+	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height};
+	for (var i=0; i<clients.length; i++) {
 		if(clients[i].clientType === "display") {
-			mediaBlockStreams[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blockList: []};
+			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
 		}
 	}
 
@@ -1061,73 +1067,81 @@ function wsStartNewMediaBlockStream(wsio, data) {
         appInstance.height = data.height;
         appInstance.data   = data;
         handleNewApplication(appInstance, null);
+        calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
     });
-
-    var app = findAppById(data.id);
-
-    calculateValidBlocks(app, 128, mediaBlockStreams);
-
-    // Debug media stream freezing
-	mediaBlockStreams[data.id].timeout = setTimeout(function() {
-		console.log("Start: 5 sec with no updates from: " + data.id);
-		console.log(mediaBlockStreams[data.id].clients);
-		console.log("ready: " + mediaBlockStreams[data.id].ready);
-	}, 5000);
-
 }
 
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
+	var i;
+	var key;
     var id = byteBufferToString(buffer);
-    var blocksize = 128;
 
-	mediaBlockStreams[id].ready = true;
-	for(var key in mediaBlockStreams[id].clients){
-		mediaBlockStreams[id].clients[key].readyForNextFrame = false;
+	for (key in SAGE2Items.renderSync[id].clients) {
+		SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
 	}
 
 	var yuvBuffer = buffer.slice(id.length+1);
 
-    var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, mediaBlockStreams[id].width, mediaBlockStreams[id].height, blocksize);
+    var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
     var dateBuffer = intToByteBuffer(Date.now(), 8);
-    for(var i=0; i<blockBuffers.length; i++){
-        var blockIdxBuffer = intToByteBuffer(i, 2);
+    var blockIdxBuffer;
+    for (i=0; i<blockBuffers.length; i++) {
+        blockIdxBuffer = intToByteBuffer(i, 2);
         pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, dateBuffer, blockBuffers[i]]);
     }
 
-    for(key in mediaBlockStreams[id].clients) {
-		for(i=0; i<pixelbuffer.length; i++){
-			if (mediaBlockStreams[id].clients[key].blockList.indexOf(i) >= 0) {
-				mediaBlockStreams[id].clients[key].wsio.emit('updateMediaBlockStreamFrame', pixelbuffer[i]);
+    for (key in SAGE2Items.renderSync[id].clients) {
+		for (i=0; i<pixelbuffer.length; i++){
+			if (SAGE2Items.renderSync[id].clients[key].blocklist.indexOf(i) >= 0) {
+				SAGE2Items.renderSync[id].clients[key].wsio.emit('updateMediaBlockStreamFrame', pixelbuffer[i]);
 			} else {
                 // this client has no blocks, so it is ready for next frame!
-                mediaBlockStreams[id].clients[key].readyForNextFrame = true;
+                SAGE2Items.renderSync[id].clients[key].readyForNextFrame = true;
             }
 		}
 	}
-
-    var data = {id: id, src: ""};
-	// Debug media stream freezing
-    // Media stream froze, clear everything and restart
-	clearTimeout(mediaBlockStreams[id].timeout);
-	mediaBlockStreams[id].timeout = setTimeout(function() {
-		console.log("Update: 5 sec with no updates from: " + data.id);
-		console.log(mediaBlockStreams[id].clients);
-		console.log("ready: " + mediaBlockStreams[id].ready);
-		if(mediaBlockStreams[id].chunks.length === 0)
-			console.log("chunks received: " + allNonBlank(mediaBlockStreams[id].chunks));
-	}, 5000);
 }
 
 function wsStopMediaBlockStream(wsio, data) {
-	var elem = findAppById(data.id);
-
-	if(elem !== null) deleteApplication( elem );
+	deleteApplication(data.id);
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
+	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+
+	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		var i;
+		var sender = {wsio: null, serverId: null, clientId: null, streamId: null};
+		var mediaBlockStreamData = data.id.split("|");
+		if (mediaBlockStreamData.length === 2) { // local stream --> client | stream_id
+			sender.clientId = mediaBlockStreamData[0];
+			sender.streamId = parseInt(mediaBlockStreamData[1]);
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].id === sender.clientId) {
+					sender.wsio = clients[i];
+					break;
+				}
+			}
+			if (sender.wsio !== null) sender.wsio.emit('requestNextFrame', {streamId: sender.streamId});
+		}
+		else if (mediaBlockStreamData.length === 3) { // remote stream --> remote_server | client | stream_id
+			sender.serverId = mediaBlockStreamData[0];
+			sender.clientId = mediaBlockStreamData[1];
+			sender.streamId = mediaBlockStreamData[2];
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].id === sender.serverId) {
+					sender.wsio = clients[i];
+					break;
+				}
+			}
+			if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId + "|" + sender.streamId});
+		}
+	}
+
+	/*
 	var i;
 	var broadcastAddress, broadcastID;
 	var serverAddress;
@@ -1172,6 +1186,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 			if(broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress + "|" + broadcastID});
 		}
 	}
+	*/
 }
 
 // Print message from remote applications
@@ -1273,7 +1288,6 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 function wsUpdateAppState(wsio, data) {
 	// Using updates only from master
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
-		console.log("updating state from master:", data.id);
 		var app = SAGE2Items.applications.list[data.id];
 		app.data = data.state;
 	}
@@ -1891,7 +1905,7 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	SAGE2Items.renderSync[appInstance.id] = {decoder: videohandle, frameIdx: null, loop: false, pixelbuffer: videoBuffer, newFrameGenerated: false, clients: {}};
 	for(i=0; i<clients.length; i++){
 		if(clients[i].clientType === "display") {
-			SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blockList: []};
+			SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 		}
 	}
 
@@ -2021,7 +2035,7 @@ function updateVideoFrame(id) {
 		videohandle.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: videohandle.frameIdx});
 		var hasBlock = false;
 		for (i=0; i<videohandle.pixelbuffer.length; i++) {
-			if (videohandle.clients[key].blockList.indexOf(i) >= 0) {
+			if (videohandle.clients[key].blocklist.indexOf(i) >= 0) {
 				hasBlock = true;
 				videohandle.clients[key].wsio.emit('updateVideoFrame', videohandle.pixelbuffer[i]);
 			}
@@ -2047,13 +2061,13 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 	var renderBlockHeight = blockSize * app.height / app.data.height;
 
 	for (key in renderhandle.clients){
-		renderhandle.clients[key].blockList = [];
+		renderhandle.clients[key].blocklist = [];
 		for (i=0; i<verticalBlocks; i++) {
 			for (j=0; j<horizontalBlocks; j++) {
 				var blockIdx = i*horizontalBlocks+j;
 
 				if (renderhandle.clients[key].wsio.clientID < 0) {
-					renderhandle.clients[key].blockList.push(blockIdx);
+					renderhandle.clients[key].blocklist.push(blockIdx);
 				}
 				else {
 					var display = config.displays[renderhandle.clients[key].wsio.clientID];
@@ -2064,12 +2078,12 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 
 					if ((left+renderBlockWidth) >= offsetX && left <= (offsetX+config.resolution.width) &&
 						(top +renderBlockHeight) >= offsetY && top  <= (offsetY+config.resolution.height)) {
-						renderhandle.clients[key].blockList.push(blockIdx);
+						renderhandle.clients[key].blocklist.push(blockIdx);
 					}
 				}
 			}
 		}
-		renderhandle.clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: renderhandle.clients[key].blockList});
+		renderhandle.clients[key].wsio.emit('updateValidStreamBlocks', {id: app.id, blockList: renderhandle.clients[key].blocklist});
 	}
 }
 
@@ -2249,92 +2263,91 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 }
 
 function wsRequestNextRemoteFrame(wsio, data) {
-	var stream = findAppById(data.id);
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
-
-	if(stream !== null) wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, state: stream.data});
-	else wsio.emit('stopMediaStream', {id: remote_id});
+	if(SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var stream = SAGE2Items.applications.list[data.id];
+		wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, state: stream.data});
+	}
+	else {
+		wsio.emit('stopMediaStream', {id: remote_id});
+	}
 }
 
 function wsUpdateRemoteMediaStreamFrame(wsio, data) {
-	var key;
-	mediaStreams[data.id].ready = true;
-	for(key in mediaStreams[data.id].clients){
-		mediaStreams[data.id].clients[key] = false;
-	}
-	var stream = findAppById(data.id);
-	if(stream !== null) stream.data = data.data;
+	if (!SAGE2Items.applications.list.hasOwnProperty(data.id)) return;
 
-	//broadcast('updateRemoteMediaStreamFrame', data);
+	var key;
+	for (key in SAGE2Items.renderSync[data.id].clients) {
+		SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
+	}
+	var stream = SAGE2Items.applications.list[data.id];
+	stream.data = data.data;
+
 	broadcast('updateMediaStreamFrame', data);
 }
 
 function wsReceivedRemoteMediaStreamFrame(wsio, data) {
-	mediaStreams[data.id].clients[wsio.id] = true;
-	if(allTrueDict(mediaStreams[data.id].clients) && mediaStreams[data.id].ready){
-		mediaStreams[data.id].ready = false;
-
-		var broadcastWS = null;
-		var serverAddress = data.id.substring(6).split("|")[0];
-		var broadcastAddress = data.id.substring(6).split("|")[1];
-
-		for (var i=0; i<clients.length; i++) {
-			if (clients[i].id === serverAddress) {
-				broadcastWS = clients[i];
+	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	if(allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		var i;
+		var mediaStreamData = data.id.substring(6).split("|");
+		var sender = {wsio: null, serverId: mediaStreamData[0], clientId: mediaStreamData[1], streamId: null};
+		for (i=0; i<clients.length; i++) {
+			if (clients[i].id === sender.serverId) {
+				sender.wsio = clients[i];
 				break;
 			}
 		}
-
-		if (broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress});
+		if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId});
 	}
 }
 
 // XXX - Remote block streaming not tested
 function wsRequestNextRemoteBlockFrame(wsio, data) {
-	var stream = findAppById(data.id);
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
-
-	if(stream !== null) wsio.emit('updateRemoteMediaBlockStreamFrame', {id: remote_id, state: stream.data});
-	else wsio.emit('stopMediaBlockStream', {id: remote_id});
+	if(SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var stream = SAGE2Items.applications.list[data.id];
+		wsio.emit('updateRemoteMediaBlockStreamFrame', {id: remote_id, state: stream.data});
+	}
+	else {
+		wsio.emit('stopMediaBlockStream', {id: remote_id});
+	}
 }
 
 function wsUpdateRemoteMediaBlockStreamFrame(wsio, data) {
-	var key;
-	mediaBlockStreams[data.id].ready = true;
-	for(key in mediaBlockStreams[data.id].clients){
-		mediaBlockStreams[data.id].clients[key].readyForNextFrame = false;
-	}
-	var stream = findAppById(data.id);
-	if(stream !== null) stream.data = data.data;
+	if (!SAGE2Items.applications.list.hasOwnProperty(data.id)) return;
 
-	//broadcast('updateRemoteMediaBlockStreamFrame', data);
+	var key;
+	for (key in SAGE2Items.renderSync[data.id].clients) {
+		SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
+	}
+	var stream = SAGE2Items.applications.list[data.id];
+	stream.data = data.data;
+
 	broadcast('updateMediaBlockStreamFrame', data);
 }
 
 function wsReceivedRemoteMediaBlockStreamFrame(wsio, data) {
-	console.log("ReceivedRemoteMediaBlockStreamFrame");
-	mediaBlockStreams[data.id].clients[wsio.id].readyForNextFrame = true;
-	if (allTrueDict(mediaBlockStreams[data.id].clients) && mediaBlockStreams[data.id].ready) {
-		mediaBlockStreams[data.id].ready = false;
-
-		var broadcastWS = null;
-		var serverAddress = data.id.substring(6).split("|")[0];
-		var broadcastAddress = data.id.substring(6).split("|")[1];
-
-		for (var i=0; i<clients.length; i++) {
-			if (clients[i].id === serverAddress) {
-				broadcastWS = clients[i];
+	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	if(allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		var i;
+		var mediaBlockStreamData = data.id.substring(6).split("|");
+		var sender = {wsio: null, serverId: mediaBlockStreamData[0], clientId: mediaBlockStreamData[1], streamId: null};
+		for (i=0; i<clients.length; i++) {
+			if (clients[i].id === sender.serverId) {
+				sender.wsio = clients[i];
 				break;
 			}
 		}
-
-		if (broadcastWS !== null) broadcastWS.emit('requestNextRemoteFrame', {id: broadcastAddress});
+		if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId});
 	}
 }
 
 // **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
+	if (!SAGE2Items.applications.list.hasOwnProperty(data.appId)) return;
+
 	for (var i=controls.length-1; i>=0; i--){
 		if (controls[i].id === data.id)
 			return;
@@ -2350,10 +2363,8 @@ function wsAddNewControl(wsio, data){
 
 	broadcast('createControl', data);
 
-	var app = findAppById(data.appId);
-	if(app !== null) {
-		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
-	}
+	var app = SAGE2Items.applications.list[data.appId];
+	addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 }
 
 function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
@@ -3333,6 +3344,7 @@ function findRemoteSiteByConnection(wsio) {
 	else                return null;
 }
 
+/*
 function findAppUnderPointer(pointerX, pointerY) {
 	var i;
 	for(i=applications.length-1; i>=0; i--) {
@@ -3350,6 +3362,7 @@ function findAppById(id) {
 	}
 	return null;
 }
+*/
 
 
 function findControlsUnderPointer(pointerX, pointerY) {
@@ -5260,76 +5273,6 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 	}
 }
 */
-
-// Fullscreen to wall ratio
-function pointerFullZone(uniqueID, pointerX, pointerY) {
-	if( sagePointers[uniqueID] === undefined )
-		return;
-
-	var elem = findAppUnderPointer(pointerX, pointerY);
-	if (elem !== null) {
-		if( remoteInteraction[uniqueID].windowManagementMode() ){
-			var updatedItem;
-			var updatedApp;
-
-			if (elem.maximized !== true) {
-				// need to maximize the item
-				updatedItem = remoteInteraction[uniqueID].maximizeFullSelectedItem(elem);
-				if (updatedItem !== null) {
-					updatedApp = findAppById(updatedItem.elemId);
-					if(updatedApp !== null) {
-						broadcast('startMove', {id: updatedItem.elemId, date: new Date()});
-						broadcast('startResize', {id: updatedItem.elemId, date: new Date()});
-
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-
-						updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-						broadcast('setItemPositionAndSize', updatedItem);
-						// the PDF files need an extra redraw
-						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()});
-						broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()});
-
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-
-						if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-						if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
-						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
-							handleNewVideoFrame(updatedItem.elemId);
-					}
-				}
-			} else {
-				// already maximized, need to restore the item size
-				updatedItem = remoteInteraction[uniqueID].restoreSelectedItem(elem);
-				if (updatedItem !== null) {
-					updatedApp = findAppById(updatedItem.elemId);
-					if(updatedApp !== null) {
-						broadcast('startMove', {id: updatedItem.elemId, date: new Date()});
-						broadcast('startResize', {id: updatedItem.elemId, date: new Date()});
-
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-
-						updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-						broadcast('setItemPositionAndSize', updatedItem);
-						// the PDF files need an extra redraw
-						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()});
-						broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()});
-
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "end", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
-
-						if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
-						if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
-						if(videoHandles[updatedItem.elemId] !== undefined && videoHandles[updatedItem.elemId].newFrameGenerated === false)
-							handleNewVideoFrame(updatedItem.elemId);
-					}
-				}
-			}
-		}
-	}
-}
 
 
 function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
