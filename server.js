@@ -224,9 +224,9 @@ var masterDisplay = null;
 var webBrowserClient = null;
 var sagePointers = {};
 var remoteInteraction = {};
-var mediaStreams = {};
+//var mediaStreams = {};
 var mediaBlockStreams = {};
-var applications = []; // app windows
+//var applications = []; // app windows
 var controls = [];     // app widget bars
 var radialMenus = {};  // radial menus
 
@@ -1273,6 +1273,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 function wsUpdateAppState(wsio, data) {
 	// Using updates only from master
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		console.log("updating state from master:", data.id);
 		var app = SAGE2Items.applications.list[data.id];
 		app.data = data.state;
 	}
@@ -1402,6 +1403,7 @@ function deleteSession (filename) {
 function saveSession (filename) {
 	filename = filename || 'default.json';
 
+	var key;
 	var fullpath = path.join(sessionDirectory, filename);
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
@@ -1412,10 +1414,10 @@ function saveSession (filename) {
 	states.apps    = [];
 	states.numapps = 0;
 	states.date    = Date.now();
-	for (var i=0; i<applications.length; i++) {
-		var a = applications[i];
+	for (key in SAGE2Items.applications.list) {
+		var a = SAGE2Items.applications.list[key];
 		// Ignore media streaming applications for now (desktop sharing)
-		if (a.application !== 'media_stream' || a.application !== 'media_block_stream') {
+		if (a.application !== 'media_stream' && a.application !== 'media_block_stream') {
 			states.apps.push(a);
 			states.numapps++;
 		}
@@ -1546,15 +1548,18 @@ function listMediaBlockStreams() {
 }
 
 function listApplications() {
-	var i;
+	var i = 0;
+	var key;
 	console.log("Applications\n------------");
-	for(i=0; i<applications.length; i++){
+	for(key in SAGE2Items.applications.list) {
+		var app = SAGE2Items.applications.list[key];
 		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s",
-			i, applications[i].id,  applications[i].application,
-			applications[i].width, applications[i].height,
-			applications[i].left,  applications[i].top,
-			applications[i].title, applications[i].metadata.version,
-			applications[i].metadata.author));
+			i, app.id, app.application,
+			app.width, app.height,
+			app.left,  app.top,
+			app.title, app.metadata.version,
+			app.metadata.author));
+		i++;
 	}
 }
 
@@ -3110,7 +3115,7 @@ function processInputCommand(line) {
 			break;
 		case 'help':
 			console.log('help\t\tlist commands');
-			console.log('kill\t\tclose application: arg0: index - kill 0');
+			console.log('kill\t\tclose application: arg0: id - kill app_0');
 			console.log('apps\t\tlist running applications');
 			console.log('clients\t\tlist connected clients');
 			console.log('streams\t\tlist media streams');
@@ -3171,12 +3176,15 @@ function processInputCommand(line) {
 		case 'close':
 		case 'delete':
 		case 'kill':
-			if (command[1] !== undefined) {
+			if (command.length > 1 && typeof command[1] === "string") {
+				deleteApplication(command[1]);
+				/*
 				var kid = parseInt(command[1], 10); // convert arg1 to base 10
 				if (!isNaN(kid) && (kid >= 0) && (kid < applications.length) ) {
 					console.log('deleting application', kid);
 					deleteApplication( applications[kid] );
 				}
+				*/
 			}
 			break;
 
@@ -4494,6 +4502,8 @@ function toggleApplicationFullscreen(uniqueID, app) {
 }
 
 function deleteApplication(appId) {
+	if (!SAGE2Items.applications.list.hasOwnProperty(appId)) return;
+
 	var application = SAGE2Items.applications.list[appId].application;
 	if (application === "media_stream" || application === "media_block_stream") {
 		var i;
@@ -5149,18 +5159,20 @@ function pointerScroll( uniqueID, data ) {
 */
 
 function pointerDraw(uniqueID, data) {
-	if( sagePointers[uniqueID] === undefined )
-		return;
+	if(sagePointers[uniqueID] === undefined) return;
 
 	var ePos  = {x: 0, y: 0};
 	var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220, 10, 10]};
-	var now   = new Date();
+	var now   = Date.now();
 
-	for (var i=0; i<applications.length; i++) {
-		var a = applications[i];
+	var key;
+	var app;
+	var event;
+	for (key in SAGE2Items.applications.list) {
+		app = SAGE2Items.applications.list[key];
 		// Send the drawing events only to whiteboard apps
-		if (a.application === 'whiteboard') {
-			var event = {id: a.id, type: "pointerDraw", position: ePos, user: eUser, data: data, date: now};
+		if (app.application === 'whiteboard') {
+			event = {id: app.id, type: "pointerDraw", position: ePos, user: eUser, data: data, date: now};
 			broadcast('eventInItem', event);
 		}
 	}

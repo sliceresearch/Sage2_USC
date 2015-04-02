@@ -105,7 +105,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				if (_this.gotresize) {
 					_this.refresh(date);
 					_this.gotresize = false;
-				} 
+				}
 				else {
 					// Getting the size of the page
 					_this.pdfDoc.getPage(1).then(function(page) {

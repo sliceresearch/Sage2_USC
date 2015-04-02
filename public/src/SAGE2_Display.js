@@ -424,9 +424,9 @@ function setupListeners() {
 					var newapp = new window[data.application]();
 					newapp.init(init);
 
-					if (newapp.state !== undefined && clientID===0) {
+					if (newapp.state !== undefined) {
 						Object.observe(newapp.state, function (changes) {
-							wsio.emit('updateAppState', {id: data.id, state: newapp.state});
+							if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
 						}, ['update', 'add']);
 					}
 
@@ -449,9 +449,9 @@ function setupListeners() {
 				var app = new window[data.application]();
 				app.init(init);
 
-				if(app.state !== undefined && clientID===0){
+				if(app.state !== undefined){
 					Object.observe(app.state, function(changes) {
-						wsio.emit('updateAppState', {id: data.id, state: app.state});
+						if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
 					}, ['update', 'add']);
 				}
 
