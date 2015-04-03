@@ -4132,6 +4132,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
+	// don't allow data-pushing
+	dropSelectedApp(uniqueID, true);
+	/*
 	var app = dropSelectedApp(uniqueID, false);
 	if (app !== null) {
 		remote.wsio.emit('addNewElementFromRemoteServer', app);
@@ -4146,6 +4149,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		};
 		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 	}
+	*/
 }
 
 function dropSelectedApp(uniqueID, valid) {
