@@ -531,7 +531,7 @@ function initializeExistingApps(wsio) {
 		if (type === "portal") {
 			broadcast('initializeDataSharingSession', SAGE2Items.applications.list[key]);
 		}
-		else {
+		else if (type === "app") {
 			wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
 			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
 				SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
@@ -560,8 +560,9 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var key;
 	for (key in SAGE2Items.applications.list) {
 		var type = key.split("_")[0];
-		if (type === "portal") continue;
-		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(SAGE2Items.applications.list[key]));
+		if (type === "app") {
+			wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(SAGE2Items.applications.list[key]));
+		}
 	}
 
 	var newOrder = interactMgr.getObjectZIndexList("applications");
@@ -4209,7 +4210,14 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
-    var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+	var obj;
+	var ignoreSelf = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedReizeItem;
+    if (ignoreSelf !== undefined && ignoreSelf !== null) {
+    	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}, null, [ignoreSelf.id]);
+    }
+    else {
+    	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+    }
     if (obj === null) {
     	dropSelectedApp(uniqueID, true);
     	return;
@@ -4220,9 +4228,15 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
 			break;
 		case "applications":
-			if (dropSelectedApp(uniqueID, true) === null) {
-				if (remoteInteraction[uniqueID].appInteractionMode()) {
-					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			var type = obj.id.split("_")[0];
+			if (type === "portal") {
+				pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj);
+			}
+			else if (type === "app") {
+				if (dropSelectedApp(uniqueID, true) === null) {
+					if (remoteInteraction[uniqueID].appInteractionMode()) {
+						sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+					}
 				}
 			}
 			break;
@@ -4251,6 +4265,14 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 	}
 	*/
+}
+
+function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj) {
+	var app = dropSelectedApp(uniqueID, false);
+	if (app !== null) {
+		var remote = remoteSharingSessions[obj.id];
+		console.log(remote);
+	}
 }
 
 function dropSelectedApp(uniqueID, valid) {
