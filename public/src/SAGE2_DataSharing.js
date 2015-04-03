@@ -1,11 +1,11 @@
 function DataSharing(data) {
+	this.id = data.id;
 	this.name = data.name;
 	this.host = data.host;
 	this.port = data.port;
 	this.left = data.left;
 	this.top = data.top;
 	this.scale = data.scale;
-	this.id = "DataSharing_" + this.host + ":" + this.port;
 
 
 	var sharingTitle = document.createElement('div');
@@ -16,7 +16,7 @@ function DataSharing(data) {
 	sharingTitle.style.webkitTransform = "translate(" + (this.left+ui.offsetX) + "px," + (this.top+ui.offsetY) + "px)";
 	sharingTitle.style.mozTransform    = "translate(" + (this.left+ui.offsetX) + "px," + (this.top+ui.offsetY) + "px)";
 	sharingTitle.style.transform       = "translate(" + (this.left+ui.offsetX) + "px," + (this.top+ui.offsetY) + "px)";
-	//sharingArea.style.zIndex = ;
+	sharingTitle.style.zIndex = data.zIndex;
 
 	var sharingArea = document.createElement('div');
 	sharingArea.id = this.id;
@@ -27,7 +27,7 @@ function DataSharing(data) {
 	sharingArea.style.webkitTransform = "translate(" + (this.left+ui.offsetX) + "px," + (this.top+ui.titleBarHeight+ui.offsetY) + "px) scale(" + this.scale + "," + this.scale + ")";
 	sharingArea.style.mozTransform    = "translate(" + (this.left+ui.offsetX) + "px," + (this.top+ui.titleBarHeight+ui.offsetY) + "px) scale(" + this.scale + "," + this.scale + ")";
 	sharingArea.style.transform       = "translate(" + (this.left+ui.offsetX) + "px," + (this.top+ui.titleBarHeight+ui.offsetY) + "px) scale(" + this.scale + "," + this.scale + ")";
-	//sharingArea.style.zIndex = ;
+	sharingArea.style.zIndex = data.zIndex;
 
 	var connectedColor = "rgba(55, 153, 130, 1.0)";
 	if (ui.json_cfg.ui.menubar !== undefined && ui.json_cfg.ui.menubar.remoteConnectedColor !== undefined)

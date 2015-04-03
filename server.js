@@ -264,7 +264,7 @@ var radialMenus = {};  // radial menus
 
 var remoteSharingRequestDialog = null;
 var remoteSharingWaitDialog = null;
-var remoteSharingSessions = [];
+var remoteSharingSessions = {};
 
 
 
@@ -2407,20 +2407,6 @@ function wsAcceptDataSharingSession(wsio, data) {
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null);
 	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, data.width, data.height, sharingScale);
-	/*
-	var dataSession = {
-		name: remoteSharingWaitDialog.name,
-		host: remoteSharingWaitDialog.wsio.remoteAddress.address,
-		port: remoteSharingWaitDialog.wsio.remoteAddress.port,
-		left: config.ui.titleBarHeight,
-		top: 1.5*config.ui.titleBarHeight,
-		width: data.width,
-		height: data.height,
-		scale: sharingScale
-	};
-	broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
-	remoteSharingSessions.push(dataSession);
-	*/
 	remoteSharingWaitDialog = null;
 	showWaitDialog(false);
 }
@@ -2714,6 +2700,15 @@ var getUniqueAppId = (function() {
 	var count = 0;
 	return function() {
 		var id = "app_" + count.toString();
+		count++;
+		return id;
+	};
+})();
+
+var getUniqueDataSharingId = (function() {
+	var count = 0;
+	return function() {
+		var id = "portal_" + count.toString();
 		count++;
 		return id;
 	};
@@ -3787,20 +3782,6 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			var sharingScale = (0.9*myMin) / sharingSize;
 			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
 			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, sharingSize, sharingSize, sharingScale);
-			/*
-			var dataSession = {
-				name: remoteSharingRequestDialog.config.name,
-				host: remoteSharingRequestDialog.config.host,
-				port: remoteSharingRequestDialog.config.port,
-				left: config.ui.titleBarHeight,
-				top: 1.5*config.ui.titleBarHeight,
-				width: sharingSize,
-				height: sharingSize,
-				scale: sharingScale
-			};
-			broadcast('initializeDataSharingSession', dataSession);
-			remoteSharingSessions.push(dataSession);
-			*/
 			remoteSharingRequestDialog = null;
 			showRequestDialog(false);
 			break;
@@ -3825,7 +3806,9 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 }
 
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, sharingWidth, sharingHeight, sharingScale) {
+	var zIndex = SAGE2Items.applications.numItems;
 	var dataSession = {
+		id: getUniqueDataSharingId(),
 		name: remoteName,
 		host: remoteHost,
 		port: remotePort,
@@ -3833,10 +3816,16 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, sharing
 		top: 1.5*config.ui.titleBarHeight,
 		width: sharingWidth,
 		height: sharingHeight,
-		scale: sharingScale
+		scale: sharingScale,
+		zIndex: zIndex
 	};
+
+	console.log("Portal: " + (dataSession.width*dataSession.scale) + "x" + (dataSession.height*dataSession.scale+config.ui.titleBarHeight));
+	SAGE2Items.applications.addItem(dataSession);
+	interactMgr.addGeometry(dataSession.id, "applications", "rectangle", {x: dataSession.left, y: dataSession.top, w: dataSession.width*dataSession.scale, h: dataSession.height*dataSession.scale+config.ui.titleBarHeight}, true, zIndex, dataSession);
+
 	broadcast('initializeDataSharingSession', dataSession);
-	remoteSharingSessions.push(dataSession);
+	remoteSharingSessions[dataSession.id] = dataSession;
 }
 
 function requestNewDataSharingSession(remote) {
@@ -3874,11 +3863,17 @@ function pointerPressOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt) 
 }
 
 function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
-
 	interactMgr.moveObjectToFront(obj.id, obj.layerId);
 	var newOrder = interactMgr.getObjectZIndexList(obj.layerId);
 	broadcast('updateItemOrder', newOrder);
+
+	var type = obj.id.split("_")[0];
+	if (type === "portal") {
+		pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt);
+		return;
+	}
+
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
 
 	// pointer press on app window
 	if (btn === null) {
@@ -3912,6 +3907,10 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			deleteApplication(obj.data.id);
 			break;
 	}
+}
+
+function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
+
 }
 
 function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {

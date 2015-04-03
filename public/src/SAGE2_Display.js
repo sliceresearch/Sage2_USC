@@ -582,6 +582,7 @@ function setupListeners() {
 
 		var key;
 		for (key in order) {
+			console.log(key + ": " + order[key]);
 			var selectedElemTitle = document.getElementById(key + "_title");
 			var selectedElem = document.getElementById(key);
 
