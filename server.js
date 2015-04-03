@@ -4067,7 +4067,7 @@ function removeExistingHoverCorner(uniqueID) {
 function moveApplicationWindow(moveApp) {
 	interactMgr.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+config.ui.titleBarHeight});
 	broadcast('setItemPosition', moveApp);
-	if (moveApp.elemId in SAGE2Items.renderSync) {
+	if (SAGE2Items.renderSync.hasOwnProperty(moveApp.elemId)) {
 		var app = SAGE2Items.applications.list[moveApp.elemId];
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
@@ -4080,7 +4080,7 @@ function moveAndResizeApplicationWindow(resizeApp) {
 	interactMgr.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+config.ui.titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
 	broadcast('setItemPositionAndSize', resizeApp);
-	if (resizeApp.elemId in SAGE2Items.renderSync) {
+	if (SAGE2Items.renderSync.hasOwnProperty(resizeApp.elemId)) {
 		var app = SAGE2Items.applications.list[resizeApp.elemId];
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
@@ -4108,32 +4108,67 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
-	var app;
-	if (remoteInteraction[uniqueID].selectedMoveItem !== null) {
-		app = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedMoveItem.id];
-		dropMoveApp(uniqueID, app, data);
-		return;
-	}
-	else if(remoteInteraction[uniqueID].selectedResizeItem !== null) {
-		app = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedResizeItem.id];
-		dropResizeApp(uniqueID, app, data);
-		return;
+    var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+    if (obj === null) {
+    	dropSelectedApp(uniqueID, true);
+    	return;
     }
 
-    var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-    if (obj === null) return;
-
 	switch (obj.layerId) {
+		case "staticUI":
+			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
+			break;
 		case "applications":
-			if (remoteInteraction[uniqueID].appInteractionMode()) {
-				sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			if (dropSelectedApp(uniqueID, true) === null) {
+				if (remoteInteraction[uniqueID].appInteractionMode()) {
+					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				}
 			}
-		break;
+			break;
+		default:
+			dropSelectedApp(uniqueID, true);
 	}
 }
 
-function dropMoveApp(uniqueID, app, data) {
-	broadcast('finishedMove', {id: remoteInteraction[uniqueID].selectedMoveItem.id, date: Date.now()});
+function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
+	var remote = obj.data;
+	var app = dropSelectedApp(uniqueID, false);
+	if (app !== null) {
+		remote.wsio.emit('addNewElementFromRemoteServer', app);
+
+		var eLogData = {
+			host: remote.wsio.remoteAddress.address,
+			port: remote.wsio.remoteAddress.port,
+			application: {
+				id: app.id,
+				type: app.application
+			}
+		};
+		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+	}
+}
+
+function dropSelectedApp(uniqueID, valid) {
+	var app;
+	if (remoteInteraction[uniqueID].selectedMoveItem !== null) {
+		app = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedMoveItem.id];
+		dropMoveApp(uniqueID, app, valid);
+		return app;
+	}
+	else if(remoteInteraction[uniqueID].selectedResizeItem !== null) {
+		app = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedResizeItem.id];
+		dropResizeApp(uniqueID, app);
+		return app;
+    }
+    return null;
+}
+
+function dropMoveApp(uniqueID, app, valid) {
+	if (valid !== false) valid = true;
+	var updatedItem = remoteInteraction[uniqueID].releaseItem(valid);
+	if (updatedItem !== null) moveApplicationWindow(updatedItem);
+
+	broadcast('finishedMove', {id: app.id, date: Date.now()});
 
 	var eLogData = {
 		type: "move",
@@ -4150,12 +4185,10 @@ function dropMoveApp(uniqueID, app, data) {
 		}
 	};
 	addEventToUserLog(uniqueID, {type: "windowManagement", data: eLogData, time: Date.now()});
-
-	remoteInteraction[uniqueID].releaseItem(true);
 }
 
-function dropResizeApp(uniqueID, app, data) {
-	broadcast('finishedResize', {id: remoteInteraction[uniqueID].selectedResizeItem.id, date: Date.now()});
+function dropResizeApp(uniqueID, app) {
+	broadcast('finishedResize', {id: app.id, date: Date.now()});
 
 	var eLogData = {
 		type: "resize",
