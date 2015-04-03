@@ -2405,7 +2405,9 @@ function wsAcceptDataSharingSession(wsio, data) {
 	var myMin = Math.min(config.totalWidth, config.totalHeight-config.ui.titleBarHeight);
 	var sharingScale = (0.9*myMin) / Math.min(data.width, data.height);
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
-	broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
+	broadcast('closeDataSharingWaitDialog', null);
+	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, data.width, data.height, sharingScale);
+	/*
 	var dataSession = {
 		name: remoteSharingWaitDialog.name,
 		host: remoteSharingWaitDialog.wsio.remoteAddress.address,
@@ -2418,6 +2420,7 @@ function wsAcceptDataSharingSession(wsio, data) {
 	};
 	broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
 	remoteSharingSessions.push(dataSession);
+	*/
 	remoteSharingWaitDialog = null;
 	showWaitDialog(false);
 }
@@ -3783,6 +3786,8 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
 			var sharingScale = (0.9*myMin) / sharingSize;
 			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
+			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, sharingSize, sharingSize, sharingScale);
+			/*
 			var dataSession = {
 				name: remoteSharingRequestDialog.config.name,
 				host: remoteSharingRequestDialog.config.host,
@@ -3795,6 +3800,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			};
 			broadcast('initializeDataSharingSession', dataSession);
 			remoteSharingSessions.push(dataSession);
+			*/
 			remoteSharingRequestDialog = null;
 			showRequestDialog(false);
 			break;
@@ -3816,6 +3822,21 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			// remote site icon
 			requestNewDataSharingSession(obj.data);
 	}
+}
+
+function createNewDataSharingSession(remoteName, remoteHost, remotePort, sharingWidth, sharingHeight, sharingScale) {
+	var dataSession = {
+		name: remoteName,
+		host: remoteHost,
+		port: remotePort,
+		left: config.ui.titleBarHeight,
+		top: 1.5*config.ui.titleBarHeight,
+		width: sharingWidth,
+		height: sharingHeight,
+		scale: sharingScale
+	};
+	broadcast('initializeDataSharingSession', dataSession);
+	remoteSharingSessions.push(dataSession);
 }
 
 function requestNewDataSharingSession(remote) {
