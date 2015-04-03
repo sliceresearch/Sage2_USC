@@ -2398,6 +2398,7 @@ function wsCancelDataSharingSession(wsio, data) {
 	console.log("Data-sharing request cancelled");
 	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
 	remoteSharingRequestDialog = null;
+	showRequestDialog(false);
 }
 
 function wsAcceptDataSharingSession(wsio, data) {
@@ -2418,12 +2419,14 @@ function wsAcceptDataSharingSession(wsio, data) {
 	broadcast('initializeDataSharingSession', dataSession, 'requiresFullApps');
 	remoteSharingSessions.push(dataSession);
 	remoteSharingWaitDialog = null;
+	showWaitDialog(false);
 }
 
 function wsRejectDataSharingSession(wsio, data) {
 	console.log("Data-sharing request rejected");
 	broadcast('closeDataSharingWaitDialog', null, 'requiresFullApps');
 	remoteSharingWaitDialog = null;
+	showWaitDialog(false);
 }
 
 // **************  Widget Control Messages *****************
@@ -3793,18 +3796,21 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			broadcast('initializeDataSharingSession', dataSession);
 			remoteSharingSessions.push(dataSession);
 			remoteSharingRequestDialog = null;
+			showRequestDialog(false);
 			break;
 		case "rejectDataSharingRequest":
 			console.log("Rejecting Data-Sharing Request");
 			broadcast('closeRequestDataSharingDialog', null);
 			remoteSharingRequestDialog.wsio.emit('rejectDataSharingSession', null);
 			remoteSharingRequestDialog = null;
+			showRequestDialog(false);
 			break;
 		case "cancelDataSharingRequest":
 			console.log("Canceling Data-Sharing Request");
 			broadcast('closeDataSharingWaitDialog', null);
 			remoteSharingWaitDialog.wsio.emit('cancelDataSharingSession', null);
 			remoteSharingWaitDialog = null;
+			showWaitDialog(false);
 			break;
 		default:
 			// remote site icon
