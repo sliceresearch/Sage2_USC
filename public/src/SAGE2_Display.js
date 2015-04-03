@@ -32,6 +32,7 @@ var widgetConnectorRequestList = {};
 
 var applications = {};
 var dependencies = {};
+var dataSharingPortals = {};
 
 // UI object to build the element on the wall
 var ui;
@@ -582,28 +583,12 @@ function setupListeners() {
 
 		var key;
 		for (key in order) {
-			console.log(key + ": " + order[key]);
 			var selectedElemTitle = document.getElementById(key + "_title");
 			var selectedElem = document.getElementById(key);
 
 			selectedElemTitle.style.zIndex = order[key].toString();
 			selectedElem.style.zIndex = order[key].toString();
 		}
-		/*
-		var i;
-		var zval = 0;
-		for(i=0; i<order.idList.length; i++){
-			var selectedElemTitle = document.getElementById(order.idList[i] + "_title");
-			var selectedElem = document.getElementById(order.idList[i]);
-			//var selectedElemCtrl = document.getElementById(order.idList[i] + "_controls");
-
-			selectedElemTitle.style.zIndex = zval.toString();
-			selectedElem.style.zIndex = (zval+1).toString();
-			//selectedElemCtrl.style.zIndex = (zval+2).toString();
-
-			zval += 2;
-		}
-		*/
 	});
 
 	wsio.on('hoverOverItemCorner', function(elem_data) {
@@ -621,6 +606,11 @@ function setupListeners() {
 
 	wsio.on('setItemPosition', function(position_data) {
 		resetIdle();
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
@@ -706,6 +696,11 @@ function setupListeners() {
 
 	wsio.on('setItemPositionAndSize', function(position_data) {
 		resetIdle();
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPositionAndSize(position_data.elemLeft, position_data.elemTop, position_data.elemWidth, position_data.elemHeight);
+			return;
+		}
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
@@ -1093,6 +1088,6 @@ function setupListeners() {
 
 	wsio.on('initializeDataSharingSession', function(data) {
 		console.log(data);
-		var dataSharingWindow = new DataSharing(data);
+		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 }

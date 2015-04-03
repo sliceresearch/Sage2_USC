@@ -85,7 +85,10 @@ function SAGE2DisplayUI() {
 		}
 
 		// applications
+		console.log("Num Apps: " + this.applications.length);
 		for(i=0; i<this.applications.length; i++){
+			console.log(this.applications[i]);
+
 			// item
 			ctx.fillStyle = "rgba(230, 230, 230, 1.0)";
 			ctx.lineWidth = 2;
@@ -300,15 +303,22 @@ function SAGE2DisplayUI() {
 	* @param order {Object} contains the application ids and zIndex
 	*/
 	this.updateItemOrder = function(order) {
+		var originalKeys = Object.keys(order);
+		for (i=0; i<originalKeys.length; i++) {
+			if (originalKeys[i].split("_")[0] !== "app") {
+				delete order[originalKeys[i]];
+			}
+		}
 		var orderArray = Object.keys(order).sort(function(a, b) {
 			return order[a]- order[b];
 		});
 
 		var i;
 		var j;
-		for( i=0; i<orderArray.length; i++) {
+		for (i=0; i<orderArray.length; i++) {
 			for (j=0; j<this.applications.length; j++) {
 				if (this.applications[j].id === orderArray[i]) {
+					console.log("swap: " + this.applications[i].id + " " + this.applications[j].id)
 					var tmp = this.applications[i];
 					this.applications[i] = this.applications[j];
 					this.applications[j] = tmp;
