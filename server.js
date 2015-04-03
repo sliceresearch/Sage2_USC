@@ -3818,6 +3818,7 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 		previous_height: sharingHeight*sharingScale,
 		natural_width: sharingWidth,
 		natural_height: sharingHeight,
+		aspect: sharingWidth / sharingHeight,
 		scale: sharingScale,
 		zIndex: zIndex
 	};
@@ -3941,9 +3942,9 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 			selectPortalForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
-			//if (remoteInteraction[uniqueID].windowManagementMode()) {
-			//	selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY);
-			//}
+			if (remoteInteraction[uniqueID].windowManagementMode()) {
+				selectPortalForResize(uniqueID, obj.data, pointerX, pointerY);
+			}
 			//else if (remoteInteraction[uniqueID].appInteractionMode()) {
 			//	sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 			//}
@@ -4030,6 +4031,30 @@ function sendPointerPressToApplication(uniqueID, app, pointerX, pointerY, data) 
 
 function selectPortalForMove(uniqueID, portal, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectMoveItem(portal, pointerX, pointerY);
+
+	var eLogData = {
+		type: "resize",
+		action: "start",
+		portal: {
+			id: portal.id,
+			name: portal.name,
+			host: portal.host,
+			port: portal.port,
+		},
+		location: {
+			x: parseInt(portal.left, 10),
+			y: parseInt(portal.top, 10),
+			width: parseInt(portal.width, 10),
+			height: parseInt(portal.height, 10)
+		}
+	};
+	addEventToUserLog(uniqueID, {type: "windowManagement", data: eLogData, time: Date.now()});
+}
+
+function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
+	remoteInteraction[uniqueID].selectResizeItem(portal, pointerX, pointerY);
+
+	console.log("portal resize");
 
 	var eLogData = {
 		type: "move",
@@ -4201,7 +4226,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 	var obj;
-	var ignoreSelf = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedReizeItem;
+	var ignoreSelf = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem;
     if (ignoreSelf !== undefined && ignoreSelf !== null) {
     	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}, null, [ignoreSelf.id]);
     }

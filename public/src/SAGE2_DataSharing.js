@@ -3,6 +3,8 @@ function DataSharing(data) {
 	this.name = data.name;
 	this.host = data.host;
 	this.port = data.port;
+	this.naturalWidth = data.natural_width;
+	this.naturalHeight = data.natural_height;
 	this.scaleX = data.width / data.natural_width;
 	this.scaleY = data.height / data.natural_height;
 
@@ -21,7 +23,7 @@ function DataSharing(data) {
 	sharingArea.className = "dataSharingArea";
 	sharingArea.style.width = data.natural_width + "px";
 	sharingArea.style.height = data.natural_height + "px";
-	sharingArea.style.borderWidth = (4 / this.scale) + "px";
+	sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
 	sharingArea.style.webkitTransform = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.mozTransform    = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.transform       = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
@@ -62,8 +64,21 @@ function DataSharing(data) {
 	var dispPort = (this.port === 80 || this.port === 443) ? "" : ":" + this.port;
 	sharingTitleText.textContent = this.name + " (" + this.host + dispPort + ")";
 
+	var cornerSize = 0.2 * Math.min(data.natural_width, data.natural_height);
+    var dragCorner = document.createElement('div');
+    dragCorner.className      = "dragCorner";
+    dragCorner.style.position = "absolute";
+    dragCorner.style.width    = cornerSize.toString() + "px";
+    dragCorner.style.height   = cornerSize.toString() + "px";
+    dragCorner.style.top      = (data.natural_height-cornerSize).toString() + "px";
+    dragCorner.style.left     = (data.natural_width-cornerSize).toString() + "px";
+	dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
+    dragCorner.style.border   = "none";
+    dragCorner.style.zIndex   = "1000";
+
 	sharingTitle.appendChild(sharingTitleIcons);
 	sharingTitle.appendChild(sharingTitleText);
+	sharingArea.appendChild(dragCorner);
 
 	ui.main.appendChild(sharingTitle);
 	ui.main.appendChild(sharingArea);
@@ -81,15 +96,17 @@ function DataSharing(data) {
 	};
 
 	this.setPositionAndSize = function(left, top, width, height) {
-		this.scaleX = data.width / data.natural_width;
-		this.scaleY = data.height / data.natural_height;
+		this.scaleX = width / this.naturalWidth;
+		this.scaleY = height / this.naturalHeight;
 
 		var sharingTitle = document.getElementById(this.id + "_title");
+		sharingTitle.style.width = width + "px";
 		sharingTitle.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
 		sharingTitle.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
 		sharingTitle.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
 
 		var sharingArea = document.getElementById(this.id);
+		sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
 		sharingArea.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
