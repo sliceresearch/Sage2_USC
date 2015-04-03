@@ -1492,6 +1492,40 @@ function saveSession (filename) {
 	}
 }
 
+function createAppFromDescription(app, callback) {
+	console.log(sageutils.header("Session") + "App", app.id);
+
+	var cloneApp = function(appInstance, videohandle) {
+		appInstance.id              = getUniqueAppId();
+		appInstance.left            = app.left;
+		appInstance.top             = app.top;
+		appInstance.width           = app.width;
+		appInstance.height          = app.height;
+		appInstance.previous_left   = app.previous_left;
+		appInstance.previous_top    = app.previous_top;
+		appInstance.previous_width  = app.previous_width;
+		appInstance.previous_height = app.previous_height;
+		appInstance.maximized       = app.maximized;
+		mergeObjects(app.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+
+		callback(appInstance, videohandle);
+	};
+
+	var appData = {};
+	var appURL = url.parse(app.url);
+	if (appURL.hostname === config.host) {
+		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
+			appLoader.loadFileFromLocalStorage({application: app.application, filename: app.title}, cloneApp);
+		}
+		else {
+			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: app.application}, cloneApp);
+		}
+	}
+	else {
+		appLoader.loadFileFromWebURL({url: app.url, type: app.type}, cloneApp);
+	}
+}
+
 function loadSession (filename) {
 	filename = filename || 'default.json';
 
@@ -1510,63 +1544,19 @@ function loadSession (filename) {
 			console.log(sageutils.header("Session") + "number of applications", session.numapps);
 
 			session.apps.forEach(function(element, index, array) {
-				var a = element;//session.apps[i];
-				console.log(sageutils.header("Session") + "App", a.id);
-
-				if (a.application === "movie_player") {
-					var vid;
-					var vidURL = url.parse(a.url);
-
-					var loadVideo = function(appInstance, videohandle) {
-						appInstance.id              = getUniqueAppId();
-						appInstance.left            = a.left;
-						appInstance.top             = a.top;
-						appInstance.width           = a.width;
-						appInstance.height          = a.height;
-						appInstance.previous_left   = a.previous_left;
-						appInstance.previous_top    = a.previous_top;
-						appInstance.previous_width  = a.previous_width;
-						appInstance.previous_height = a.previous_height;
-						appInstance.maximized       = a.maximized;
-						mergeObjects(a.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
-
-						handleNewApplication(appInstance, videohandle);
-					};
-
-					if(vidURL.hostname === config.host) {
-						vid = {application: a.application, filename: a.title};
-						appLoader.loadFileFromLocalStorage(vid, loadVideo);
-					}
-					else {
-						vid = {url: a.url, type: a.type};
-						appLoader.loadFileFromWebURL(vid, loadVideo);
-					}
-				}
-				else {
-					// Get the application a new ID
-					a.id = getUniqueAppId();
-					// Reset the time
-					a.date = new Date();
-					if (a.animation) {
-						var j;
-						SAGE2Items.renderSync[a.id] = {clients: {}, date: Date.now()};
-						for (j=0; j<clients.length; j++) {
-							if (clients[j].clientType === "display") {
-								SAGE2Items.renderSync[a.id].clients[clients[j].id] = {wsio: clients[j], readyForNextFrame: false, blocklist: []};
+				createAppFromDescription(element, function(appInstance, videohandle) {
+					if (appInstance.animation) {
+						var i;
+						SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+						for (i=0; i<clients.length; i++) {
+							if (clients[i].clientType === "display") {
+								SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 							}
 						}
-						/*
-						appAnimations[a.id] = {clients: {}, date: new Date()};
-						for(j=0; j<clients.length; j++){
-							if(clients[j].clientType === "display") {
-								appAnimations[a.id].clients[clients[j].id] = false;
-							}
-						}
-						*/
 					}
 
-					handleNewApplication(a, null);
-				}
+					handleNewApplication(appInstance, videohandle);
+				});
 			});
 		}
 	});
@@ -2412,7 +2402,7 @@ function wsAcceptDataSharingSession(wsio, data) {
 	var sharingScale = (0.9*myMin) / Math.min(data.width, data.height);
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null);
-	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, data.width, data.height, sharingScale);
+	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, data.width, data.height, sharingScale);
 	remoteSharingWaitDialog = null;
 	showWaitDialog(false);
 }
@@ -3787,7 +3777,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
 			var sharingScale = (0.9*myMin) / sharingSize;
 			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
-			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, sharingSize, sharingSize, sharingScale);
+			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, sharingSize, sharingSize, sharingScale);
 			remoteSharingRequestDialog = null;
 			showRequestDialog(false);
 			break;
@@ -3811,7 +3801,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 	}
 }
 
-function createNewDataSharingSession(remoteName, remoteHost, remotePort, sharingWidth, sharingHeight, sharingScale) {
+function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, sharingWidth, sharingHeight, sharingScale) {
 	var zIndex = SAGE2Items.applications.numItems;
 	var dataSession = {
 		id: getUniqueDataSharingId(),
@@ -3854,7 +3844,7 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, sharing
 	SAGE2Items.applications.addButtonToItem(dataSession.id, "dragCorner", "rectangle", {x: geometry.w-cornerSize, y: geometry.h+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
 	broadcast('initializeDataSharingSession', dataSession);
-	remoteSharingSessions[dataSession.id] = dataSession;
+	remoteSharingSessions[dataSession.id] = {portal: dataSession, wsio: remoteWSIO};
 }
 
 function requestNewDataSharingSession(remote) {
@@ -4270,8 +4260,19 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj) {
 	var app = dropSelectedApp(uniqueID, false);
 	if (app !== null) {
+		var localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
-		console.log(remote);
+		createAppFromDescription(app.application, function(appInstance, videohandle) {
+			appInstance.left = localPt.x;
+			appInstance.top = localPt.y;
+			appInstance.width = app.previousPosition.width;
+			appInstance.height = app.previousPosition.height;
+			
+			// TODO:
+			//   - add app geometry as button inside portal
+			//   - send app to display clients to render inside portal
+			//   - send message to remote site to add new shared app   
+		});
 	}
 }
 
@@ -4279,13 +4280,15 @@ function dropSelectedApp(uniqueID, valid) {
 	var app;
 	if (remoteInteraction[uniqueID].selectedMoveItem !== null) {
 		app = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedMoveItem.id];
+		var position = {left: app.left, top: app.top, width: app.width, height: app.height};
 		dropMoveApp(uniqueID, app, valid);
-		return app;
+		return {application: app, previousPosition: position};
 	}
 	else if(remoteInteraction[uniqueID].selectedResizeItem !== null) {
 		app = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedResizeItem.id];
+		var position = {left: app.left, top: app.top, width: app.width, height: app.height};
 		dropResizeApp(uniqueID, app);
-		return app;
+		return {application: app, previousPosition: position};
     }
     return null;
 }
