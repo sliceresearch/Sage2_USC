@@ -8,6 +8,8 @@ function DataSharing(data) {
 	this.scaleX = data.width / data.natural_width;
 	this.scaleY = data.height / data.natural_height;
 
+	console.log(data.width, data.height, data.natural_width, data.natural_height);
+
 	var sharingTitle = document.createElement('div');
 	sharingTitle.id = this.id + "_title";
 	sharingTitle.className = "dataSharingTitle";
@@ -28,6 +30,16 @@ function DataSharing(data) {
 	sharingArea.style.mozTransform    = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.transform       = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.zIndex = data.zIndex;
+
+	var sharingOverlay = document.createElement('div');
+	sharingOverlay.id = this.id + "_overlay";
+	sharingOverlay.className = "dataSharingOverlay";
+	sharingOverlay.style.width = data.width + "px";
+	sharingOverlay.style.height = data.height + "px";
+	sharingOverlay.style.webkitTransform = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px)";
+	sharingOverlay.style.mozTransform    = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px)";
+	sharingOverlay.style.transform       = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px)";
+	sharingOverlay.style.zIndex = data.zIndex;
 
 	var connectedColor = "rgba(55, 153, 130, 1.0)";
 	if (ui.json_cfg.ui.menubar !== undefined && ui.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
@@ -82,6 +94,7 @@ function DataSharing(data) {
 
 	ui.main.appendChild(sharingTitle);
 	ui.main.appendChild(sharingArea);
+	ui.main.appendChild(sharingOverlay);
 
 	this.setPosition = function(left, top) {
 		var sharingTitle = document.getElementById(this.id + "_title");
@@ -93,6 +106,11 @@ function DataSharing(data) {
 		sharingArea.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+	
+		var sharingOverlay = document.getElementById(this.id + "_overlay");
+		sharingOverlay.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
+		sharingOverlay.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
+		sharingOverlay.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
 	};
 
 	this.setPositionAndSize = function(left, top, width, height) {
@@ -110,5 +128,12 @@ function DataSharing(data) {
 		sharingArea.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+	
+		var sharingOverlay = document.getElementById(this.id + "_overlay");
+		sharingOverlay.style.width = width + "px";
+		sharingOverlay.style.height = height + "px";
+		sharingOverlay.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
+		sharingOverlay.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
+		sharingOverlay.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
 	};
 }

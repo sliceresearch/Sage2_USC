@@ -413,9 +413,11 @@ function setupListeners() {
 		for (key in order) {
 			var selectedElemTitle = document.getElementById(key + "_title");
 			var selectedElem = document.getElementById(key);
+			var selectedElemOverlay = document.getElementById(key + "_overlay");
 
-			selectedElemTitle.style.zIndex = order[key].toString();
-			selectedElem.style.zIndex = order[key].toString();
+			if (selectedElemTitle) selectedElemTitle.style.zIndex = order[key].toString();
+			if (selectedElem) selectedElem.style.zIndex = order[key].toString();
+			if (selectedElemOverlay) selectedElemOverlay.style.zIndex = order[key].toString();
 		}
 	});
 
