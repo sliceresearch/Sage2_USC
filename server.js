@@ -309,6 +309,9 @@ function closeWebSocketClient(wsio) {
 		removeControlsForUser(wsio.id);
 		delete sagePointers[wsio.id];
 		delete remoteInteraction[wsio.id];
+		for (key in remoteSharingSessions) {
+			remoteSharingSessions[key].wsio.emit('stopRemoteSagePointer', {id: wsio.id});
+		}
 	}
 	else if (wsio.clientType === "display") {
 		for (key in SAGE2Items.renderSync) {
@@ -641,6 +644,11 @@ function wsStopSagePointer(wsio, data) {
 	if(remoteInteraction[wsio.id].appInteractionMode()){
 		remoteInteraction[wsio.id].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode });
+	}
+
+	var key;
+	for (key in remoteSharingSessions) {
+		remoteSharingSessions[key].wsio.emit('stopRemoteSagePointer', {id: wsio.id});
 	}
 
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
