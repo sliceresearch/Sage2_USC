@@ -233,7 +233,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data.SAGE2thumbnail,
+		icon: exif_data ? exif_data.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -279,7 +279,7 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data.SAGE2thumbnail,
+		icon: exif_data ? exif_data.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -502,7 +502,7 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		id: null,
 		title: name,
 		application: "pdf_viewer",
-		icon: exif.SAGE2thumbnail,
+		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -920,7 +920,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
         id: null,
         title: exif.metadata.title,
         application: appName,
-        icon: exif.SAGE2thumbnail,
+        icon: exif ? exif.SAGE2thumbnail : null,
         type: mime_type,
         url: external_url,
         data: instructions.load,
