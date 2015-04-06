@@ -157,6 +157,22 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 };
 
 /**
+* Edit geometric object position / size / type
+*
+* @method editGeometry
+* @param id {String} unique identifier for the geometric object
+* @return hasObject {Boolean} whether or not an object with the given id exists
+*/
+InteractableManager.prototype.hasObjectWithId = function(id) {
+	var key;
+	for (key in this.interactableObjects) {
+		if (this.interactableObjects[key].hasOwnProperty(id))
+			return true;
+	}
+	return false;
+}
+
+/**
 * Edit visibility of geometric object
 *
 * @method editVisibility
