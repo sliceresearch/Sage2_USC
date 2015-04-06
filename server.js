@@ -502,6 +502,7 @@ function setupListeners(wsio) {
 	wsio.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
 	wsio.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
 	wsio.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
+	wsio.on('remoteSagePointerPress',                 wsRemoteSagePointerPress);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
@@ -2438,8 +2439,6 @@ function wsStopRemoteSagePointer(wsio, data) {
 }
 
 function wsRemoteSagePointerPosition(wsio, data) {
-	console.log("remote pointer position:", data);
-
 	if (sagePointers[data.id] === undefined) return;
 
 	sagePointers[data.id].left = data.left;
@@ -2448,6 +2447,17 @@ function wsRemoteSagePointerPosition(wsio, data) {
 	var pointerY = sagePointers[data.id].top;
 
 	updatePointerPosition(data.id, pointerX, pointerY, data);
+}
+
+function wsRemoteSagePointerPress(wsio, data) {
+	if (sagePointers[data.id] === undefined) return;
+
+	sagePointers[data.id].left = data.left;
+	sagePointers[data.id].top = data.top;
+	var pointerX = sagePointers[data.id].left;
+	var pointerY = sagePointers[data.id].top;
+
+	pointerPressInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data);
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -3161,6 +3171,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('startRemoteSagePointer', wsStartRemoteSagePointer);
 		remote.on('stopRemoteSagePointer', wsStopRemoteSagePointer);
 		remote.on('remoteSagePointerPosition', wsRemoteSagePointerPosition);
+		remote.on('remoteSagePointerPress', wsRemoteSagePointerPress);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 		remote.emit('addClient', clientDescription);
@@ -4017,6 +4028,11 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 }
 
 function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
+	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
+		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPress', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+	}
+
 	interactMgr.moveObjectToFront(obj.id, "portals", ["applications"]);
 	var newOrder = interactMgr.getObjectZIndexList("portals", ["applications"]);
 	broadcast('updateItemOrder', newOrder);
@@ -4025,25 +4041,7 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 
 	// pointer press inside portal window
 	if (btn === null) {
-		var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
-		var pObj = SAGE2Items.portals.interactMgr[obj.data.id].searchGeometry(scaledPt);
-		if (pObj === null) {
-			//pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
-			return;
-		}
-
-		var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
-		switch (pObj.layerId) {
-			case "radialMenus":
-				//pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
-				break;
-			case "widgets":
-				//pointerPressOnWidget(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
-				break;
-			case "applications":
-				pointerPressOnApplication(uniqueID, scaledPt.x, scaledPt.y, data, pObj, pLocalPt);
-				break;
-		}
+		pointerPressInDataSharingArea(uniqueID, obj.data.id, scaledPt, data);
 		return;
 	}
 
@@ -4066,6 +4064,28 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 			//deleteApplication(obj.data.id);
 			break;
 	}
+}
+
+function pointerPressInDataSharingArea(uniqueID, portalId, scaledPt, data) {
+	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
+	if (pObj === null) {
+		//pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
+		return;
+	}
+
+	var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+	switch (pObj.layerId) {
+		case "radialMenus":
+			//pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
+			break;
+		case "widgets":
+			//pointerPressOnWidget(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
+			break;
+		case "applications":
+			pointerPressOnApplication(uniqueID, scaledPt.x, scaledPt.y, data, pObj, pLocalPt);
+			break;
+	}
+	return;
 }
 
 function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
