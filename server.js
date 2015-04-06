@@ -498,6 +498,7 @@ function setupListeners(wsio) {
 	wsio.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
 	wsio.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
 	wsio.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
+	wsio.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
@@ -2408,8 +2409,6 @@ function wsCreateRemoteSagePointer(wsio, data) {
 		if (remoteSharingSessions[key].portal.host === data.portal.host && remoteSharingSessions[key].portal.port === data.portal.port)
 			portalId = key;
 	}
-	console.log(remoteSharingSessions);
-	console.log(portalId);
 	createSagePointer(data.id, portalId);
 }
 
@@ -2428,6 +2427,19 @@ function wsStopRemoteSagePointer(wsio, data) {
 		remoteInteraction[data.id].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[data.id].id, mode: remoteInteraction[data.id].interactionMode });
 	}
+}
+
+function wsRemoteSagePointerPosition(wsio, data) {
+	console.log("remote pointer position:", data);
+
+	if (sagePointers[data.id] === undefined) return;
+
+	sagePointers[data.id].left = data.left;
+	sagePointers[data.id].top = data.top;
+	var pointerX = sagePointers[data.id].left;
+	var pointerY = sagePointers[data.id].top;
+
+	updatePointerPosition(data.id, pointerX, pointerY, data);
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -3140,6 +3152,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('createRemoteSagePointer', wsCreateRemoteSagePointer);
 		remote.on('startRemoteSagePointer', wsStartRemoteSagePointer);
 		remote.on('stopRemoteSagePointer', wsStopRemoteSagePointer);
+		remote.on('remoteSagePointerPosition', wsRemoteSagePointerPosition);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 		remote.emit('addClient', clientDescription);
@@ -3727,6 +3740,7 @@ function createSagePointer (uniqueID, portal) {
 	sagePointers[uniqueID] = new Sagepointer(uniqueID+"_pointer");
 	sagePointers[uniqueID].portal = portal;
 	remoteInteraction[uniqueID] = new Interaction(config);
+	remoteInteraction[uniqueID].local = portal ? false : true;
 
 	broadcast('createSagePointer', sagePointers[uniqueID]);
 }
@@ -4193,7 +4207,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if(moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / moveAppPortal.data.scale};
-		//remoteSharingSessions[moveAppPortal.id].wsio.emit()
+		remoteSharingSessions[moveAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
 		updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(scaledPt.x, scaledPt.y);
 		moveApplicationWindow(updatedMoveItem);
 		return;
@@ -4201,6 +4215,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	else if(resizeAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, resizeAppPortal.type, resizeAppPortal.geometry);
 		scaledPt = {x: localPt.x / resizeAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / resizeAppPortal.data.scale};
+		remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
 		updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(scaledPt.x, scaledPt.y);
 		moveAndResizeApplicationWindow(updatedResizeItem);
 		return;
@@ -4313,18 +4328,20 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
-	if (remoteInteraction[uniqueID].portal === null || remoteInteraction[uniqueID].portal.id != obj.data.id) {
-		remoteInteraction[uniqueID].portal = obj.data;
-		var rPointer = {
-			id: uniqueID,
-			left: scaledPt.x,
-			top: scaledPt.y,
-			label: sagePointers[uniqueID].label,
-			color: sagePointers[uniqueID].color
-		};
-		remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('startRemoteSagePointer', rPointer);
+	if (remoteInteraction[uniqueID].local) {
+		if (remoteInteraction[uniqueID].portal === null || remoteInteraction[uniqueID].portal.id != obj.data.id) {
+			remoteInteraction[uniqueID].portal = obj.data;
+			var rPointer = {
+				id: uniqueID,
+				left: scaledPt.x,
+				top: scaledPt.y,
+				label: sagePointers[uniqueID].label,
+				color: sagePointers[uniqueID].color
+			};
+			remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('startRemoteSagePointer', rPointer);
+		}
+		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
 	}
-
 	var btn = SAGE2Items.portals.findButtonByPoint(obj.id, localPt);
 
 	// pointer move on portal window
