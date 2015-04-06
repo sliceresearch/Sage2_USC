@@ -349,11 +349,11 @@ function setupListeners() {
 
 	////////////////////////////////////////////////
 	wsio.on('createAppWindow', function(data) {
-		createAppWindow(data, ui.main.id);
+		createAppWindow(data, ui.main.id, ui.offsetX, ui.offsetY);
 	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
-		createAppWindow(data.application, data.portal);
+		createAppWindow(data.application, data.portal, 0, 0);
 	});
 	////////////////////////////////////////////////
 
@@ -922,7 +922,7 @@ function setupListeners() {
 	});
 }
 
-function createAppWindow(data, parentId) {
+function createAppWindow(data, parentId, offsetX, offsetY) {
 	resetIdle();
 
 	var parent = document.getElementById(parentId);
@@ -935,8 +935,8 @@ function createAppWindow(data, parentId) {
 	windowTitle.className    = "windowTitle";
 	windowTitle.style.width  = data.width.toString() + "px";
 	windowTitle.style.height = ui.titleBarHeight.toString() + "px";
-	windowTitle.style.left   = (-ui.offsetX).toString() + "px";
-	windowTitle.style.top    = (-ui.offsetY).toString() + "px";
+	windowTitle.style.left   = (-offsetX).toString() + "px";
+	windowTitle.style.top    = (-offsetY).toString() + "px";
 	windowTitle.style.webkitTransform = translate;
 	windowTitle.style.mozTransform    = translate;
 	windowTitle.style.transform       = translate;
@@ -961,8 +961,8 @@ function createAppWindow(data, parentId) {
 	var windowItem = document.createElement("div");
 	windowItem.id  = data.id;
 	windowItem.className      = "windowItem";
-	windowItem.style.left     = (-ui.offsetX).toString() + "px";
-	windowItem.style.top      = (ui.titleBarHeight-ui.offsetY).toString() + "px";
+	windowItem.style.left     = (-offsetX).toString() + "px";
+	windowItem.style.top      = (ui.titleBarHeight-offsetY).toString() + "px";
 	windowItem.style.webkitTransform = translate;
 	windowItem.style.mozTransform    = translate;
 	windowItem.style.transform       = translate;
