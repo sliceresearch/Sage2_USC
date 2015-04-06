@@ -87,10 +87,19 @@ var SAGE2_App = Class.extend( {
 		this.resrcPath = data.resrc + "/";
 		this.startDate = data.date;
 
-		this.sage2_x      = data.x;
-		this.sage2_y      = data.y;
-		this.sage2_width  = data.width;
-		this.sage2_height = data.height;
+		var parentTransform = getParentTransform(this.div);
+		if (parentTransform !== null) {
+			this.sage2_x      = data.x*parentTransform.scale.x + parentTransform.translate.x + ui.offsetX;
+			this.sage2_y      = data.y*parentTransform.scale.y + parentTransform.translate.y + ui.offsetY;
+			this.sage2_width  = data.width*parentTransform.scale.x;
+			this.sage2_height = data.height*parentTransform.scale.y;
+		}
+		else {
+			this.sage2_x      = data.x;
+			this.sage2_y      = data.y;
+			this.sage2_width  = data.width;
+			this.sage2_height = data.height;
+		}
 
 		this.controls = new SAGE2WidgetControl(data.id);
 
