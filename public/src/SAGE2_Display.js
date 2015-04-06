@@ -1088,6 +1088,14 @@ function SAGE2_init() {
 		if (position_data.appId in annotationItems)
 			annotationItems[position_data.appId].setPosition(position_data);
 	});
+
+	wsio.on('setAnnotationWindowPositionAndSize', function(data) {
+		if (data.appId in annotationItems){
+			annotationItems[data.appId].setPositionAndSize(data);
+			annotationItems[data.appId].setAllMarkerPositionsAfterResize();
+		}
+
+	});
 	
 	wsio.on('createAnnotationWindow',function(data){
 		var appAnnotation = new SAGE2Annotations();
@@ -1095,19 +1103,108 @@ function SAGE2_init() {
 		annotationItems[data.appId] = appAnnotation;
 	});
 
+	wsio.on('deleteAnnotationWindow',function(data){
+		annotationItems[data.appId].deleteWindow();
+		delete annotationItems[data.appId];
+	});
+
 	wsio.on('showAnnotationWindow', function(data){
 		annotationItems[data.appId].showWindow(data);
+		var app = applications[data.appId];
+		if (app){
+			var page = app.state? app.state.page : 1;
+			annotationItems[data.appId].showMarkersForPage({appId:data.appId, page: page});	
+		}
+		
 	});
 	wsio.on('hideAnnotationWindow', function(data){
 		annotationItems[data.appId].hideWindow(data);
+		var app = applications[data.appId];
+		if (app){
+			var page = app.state? app.state.page : 1;
+			annotationItems[data.appId].hideMarkersForPage({appId:data.appId, page: page});	
+		}
 	});
 	wsio.on('addNewNoteToAnnotationWindow', function(data){
-		console.log(data);
-		annotationItems[data.appId].addNote(data);
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationItems[data.appId].addNote(data);	
+			if (data.marker !== null){
+				annotationWindow.createMarker(data);
+			}
+			annotationWindow.makeNoteEditable(data);
+		}
 	});
-	wsio.on('addAnnotationMarker', function(data){
-		annotationItems[data.appId].createOrSetMarker(data);
-		console.log(data);
+
+	wsio.on('addMarkerToNote', function(data){
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationWindow.createMarker(data);
+		}
+	});
+
+	wsio.on('removeMarkerFromNote', function(data){
+		var app = applications[data.appId];
+		if (app){
+			data.page = app.state? (app.state.page || 1) : 1;
+			annotationItems[data.appId].addNote(data);
+			annotationItems[data.appId].createMarker(data);	
+		}
+	});
+
+	wsio.on('setAnnotationMarker', function(data){
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationWindow.setMarkerPosition(data);
+		}
+	});
+
+	wsio.on('eventInAnnotationWindow', function(event_data){
+		var date = new Date(event_data.date);
+		var annotationWindow = annotationItems[event_data.appId];
+		if (annotationWindow){
+			annotationWindow.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		}
+	});
+
+	wsio.on('showAnnotationMarkersForPage', function(data){
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationWindow.showMarkersForPage({appId:data.appId, page: data.page});	
+		}
+	});
+
+	wsio.on('makeNoteEditable', function(data){
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			console.log("in makeNoteEditable");
+			annotationWindow.makeNoteEditable(data);	
+			if (data.marker){
+				var app = applications[data.appId];
+				if (app.hasOwnProperty("state")){
+					if (app.state.hasOwnProperty("page")){
+						app.state.page = data.marker.page;
+						app.redraw = true;
+						app.refresh(new Date());
+					}
+				}
+			}
+			
+		}
+	});
+
+	wsio.on('makeAllNotesNonEditable', function(data){
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationWindow.makeAllNotesNonEditable();	
+		}
+	});
+
+	wsio.on('deleteNote',function(data){
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationWindow.deleteNote(data);	
+		}
 	});
 	/*wsio.on('receiveFileData', function(data){
 		var app = applications[data.id];

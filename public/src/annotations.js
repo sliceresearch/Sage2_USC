@@ -22,6 +22,10 @@ var SAGE2Annotations = function (){
 	this.show = null;
 	this.buttonDiv = null;
 	this.textAreas = [];
+	this.textAreaHeight = 140;
+	this.newTextAreaOffset = 10;
+	this.markers = {};
+	this.editables = {};
 }
 
 SAGE2Annotations.prototype.makeWindow = function(data){
@@ -65,68 +69,152 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
 	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
 	buttonText.style.color      = "#FFFFFF";
-	buttonText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
 	buttonText.display			= "block";
 	buttonText.innerText      = data.button.caption;
+	this.buttonDivText = buttonText;
 	this.buttonDiv.appendChild(buttonText);
 	ui.main.appendChild(this.buttonDiv);
 
 	this.makeButtonsForAnnotationWindow(data);
-	
-	
-	console.log("created button");
 	this.prepareWindow();
-	this.populateWindow();
+	this.populateWindow(data.annotationData);
+};
+
+SAGE2Annotations.prototype.deleteWindow = function(){
+	if (this.show === true){
+		ui.main.removeChild(this.windowDiv);
+	}
+	ui.main.removeChild(this.buttonDiv);
 }
 
-SAGE2Annotations.prototype.populateWindow = function(){
+SAGE2Annotations.prototype.populateWindow = function(data){
 	//A for loop to add individual comments
-}
+	//var arr = [];
+	for (var key in data){
+		this.addNote(data[key]);
+	}
+	setTimeout(function(){
+		for (var key in data){
+			console.log(data[key].marker);
+			if (data[key].marker){
+				this.createMarker(data[key]);
+			}
+		}
+	}.bind(this), 2000);
+};
 
 SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
 	this.addNoteButton						= document.createElement("div");
-	this.addNoteButton.style.left 				= data.addButton.left.toString() + "px";
-	this.addNoteButton.style.top 				= data.addButton.top.toString() + "px";
-	this.addNoteButton.style.width 				= data.addButton.width.toString() + "px";
-	this.addNoteButton.style.height 			= data.addButton.height.toString() + "px";
-	this.addNoteButton.id 						= data.addButton.id;
-	this.addNoteButton.style.zIndex				= "20";
+	this.addNoteButton.style.left 				= data.addNoteButton.left.toString() + "px";
+	this.addNoteButton.style.top 				= data.addNoteButton.top.toString() + "px";
+	this.addNoteButton.style.width 				= data.addNoteButton.width.toString() + "px";
+	this.addNoteButton.style.height 			= data.addNoteButton.height.toString() + "px";
+	this.addNoteButton.id 						= data.addNoteButton.id;
 	this.addNoteButton.display 					= "block";
 	this.addNoteButton.style.borderRadius		= "2px";
 	this.addNoteButton.className 				= "annotationButton";
+
+	this.addSummaryNoteButton							= document.createElement("div");
+	this.addSummaryNoteButton.style.left 				= data.addSummaryNoteButton.left.toString() + "px";
+	this.addSummaryNoteButton.style.top 				= data.addSummaryNoteButton.top.toString() + "px";
+	this.addSummaryNoteButton.style.width 				= data.addSummaryNoteButton.width.toString() + "px";
+	this.addSummaryNoteButton.style.height 				= data.addSummaryNoteButton.height.toString() + "px";
+	this.addSummaryNoteButton.id 						= data.addSummaryNoteButton.id;
+	this.addSummaryNoteButton.display 					= "block";
+	this.addSummaryNoteButton.style.borderRadius		= "2px";
+	this.addSummaryNoteButton.className 				= "annotationButton";
 
 	var buttonText 				= document.createElement("p");
 	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
 	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
 	buttonText.style.color      = "#FFFFFF";
-	buttonText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
+	buttonText.style.textAlign = "center";
 	buttonText.display			= "block";
-	buttonText.innerText      = data.addButton.caption;
-	
+	buttonText.innerText      = data.addNoteButton.caption;
 	this.addNoteButton.appendChild(buttonText);
+
+	buttonText 				= document.createElement("p");
+	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
+	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
+	buttonText.style.color      = "#FFFFFF";
+	buttonText.style.textAlign = "center";
+	buttonText.display			= "block";
+	buttonText.innerText      = data.addSummaryNoteButton.caption;
+	this.addSummaryNoteButton.appendChild(buttonText);
 	this.windowDiv.appendChild(this.addNoteButton);
+	this.windowDiv.appendChild(this.addSummaryNoteButton);
 }
 
-SAGE2Annotations.prototype.addNote = function(){
+SAGE2Annotations.prototype.addNote = function(data){
 	// Create a new text area and set its properties
 
-	var t = new textArea();
-	t.init(this.innerDiv, {id: "text"+(this.textAreas.length+1), left: 10, top: 0, width: parseInt(this.innerDiv.style.width)-20, height:140});
-	this.textAreas.push(t);
+	var textArea = new TextArea();
+	textArea.init(this.innerDiv, {id: data.id, appId:this.appId, createdOn:data.createdOn||null,marker: data.marker|| null, userLabel:data.userLabel||null, text:data.text||null, left: 10, top: 0, width: parseInt(this.innerDiv.style.width)-20, height:this.textAreaHeight});
+	//textArea.showCredentials();
+	this.textAreas.push(textArea);
+	Object.observe(textArea.credentials,function(changes){
+		for (var i=0; i<changes.length; i++){
+			if (changes[i].name === "changeFlag" && changes[i].oldValue === false){
+				sendNoteToServer(changes[i].object, textArea.getText());
+				changes[i].object.changeFlag = false;
+			}
+		}
+	});
 	for (var i = this.textAreas.length-1; i>=0; i--){
-		this.textAreas[i].setTop(10 + (this.textAreas.length-1-i)*150);
+		this.textAreas[i].setTop(10 + (this.textAreas.length-1-i)*(this.textAreaHeight+this.newTextAreaOffset));
 	}
-
-	var computeKnobHeight = function(){
-		var val = parseInt(this.scrollBar.style.height) * parseInt(this.innerDiv.style.height) / parseInt(this.innerDiv.scrollHeight) ;
-		return val-4;
-
-	};
-
-	computeKnobHeight = computeKnobHeight.bind(this);
-	this.scrollKnob.style.height = computeKnobHeight().toString() + "px";
+	this.scrollKnob.style.height = this.computeKnobHeight();
+	this.moveScrollKnob({x:0,y:0});
+	this.updateShowButtonCaption();
 	
-}
+};
+
+SAGE2Annotations.prototype.updateShowButtonCaption = function(){
+	if (this.show===true){
+		this.buttonDivText.innerText = "Hide notes (" + this.textAreas.length + ")"; 
+	}else{
+		this.buttonDivText.innerText = "Show notes (" + this.textAreas.length + ")"; 
+	}
+};
+
+SAGE2Annotations.prototype.computeKnobHeight = function(){
+		var val = parseInt(this.scrollBar.style.height) * parseInt(this.innerDiv.style.height) / parseInt(this.innerDiv.scrollHeight) ;
+		return (val-4).toString() + "px";
+};
+
+
+
+sendNoteToServer = function(credentials, text){
+	var note = {
+		credentials:credentials,
+		text: text
+	};
+	if (isMaster){
+		wsio.emit('annotationUpdate',note);
+	}
+	credentials.initialEdit = false;
+};
+
+SAGE2Annotations.prototype.deleteNote = function(credentials){
+	this.deleteMarker(credentials.id);
+	var markedForDeletion = null;
+	for(var i=0;i<this.textAreas.length;i++){
+		if (this.textAreas[i].credentials.id === credentials.id){
+			markedForDeletion = i;
+			break;
+		}
+	}
+	if (markedForDeletion){
+		this.textAreas[markedForDeletion].kill();
+		this.textAreas.splice(markedForDeletion,1);
+		for (var i = this.textAreas.length-1; i>=0; i--){
+			this.textAreas[i].setTop(10 + (this.textAreas.length-1-i)*(this.textAreaHeight+this.newTextAreaOffset));
+		}
+		this.scrollKnob.style.height = this.computeKnobHeight();
+		this.updateShowButtonCaption();
+	}
+};
+
 
 SAGE2Annotations.prototype.prepareWindow = function(){
 	this.innerDiv = document.createElement("div");
@@ -139,7 +227,7 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.innerDiv.style.display = "block";
 	this.innerDiv.style.position = "relative";
 	this.innerDiv.style.borderRadius = "3px 3px 3px 3px";
-	this.innerDiv.style.backgroundColor = "#89a455";
+	this.innerDiv.style.backgroundColor = "#afbdd4";//"#89a455";
 	this.innerDiv.style.overflow = "hidden";
 	this.windowDiv.appendChild(this.innerDiv);
 
@@ -154,7 +242,7 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.scrollBar.style.display = "block";
 	this.scrollBar.style.position = "absolute";
 	this.scrollBar.style.borderRadius = "3px 3px 3px 3px";
-	this.scrollBar.style.backgroundColor = "#aaaaaa";
+	this.scrollBar.style.backgroundColor = "#afbdd4";
 
 	this.windowDiv.appendChild(this.scrollBar);
 
@@ -173,59 +261,198 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 }	
 
 SAGE2Annotations.prototype.showWindow = function(data){
-	console.log("show");
 	if (this.show===false){
-		console.log("show2");
 		this.windowDiv.style.left = data.left.toString() + "px";;
 		this.windowDiv.style.top = data.top.toString() + "px";;
 		this.buttonDiv.style.top = data.button.top.toString() + "px";;
 		this.buttonDiv.style.left = data.button.left.toString() + "px";;
 		ui.main.appendChild(this.windowDiv);
+		this.scrollKnob.style.height = this.computeKnobHeight();
 		this.show = true;
+		this.setWindowScroll();
+		this.buttonDivText.innerText = "Hide notes (" + this.textAreas.length + ")"; 
 	}
 }
 
 SAGE2Annotations.prototype.hideWindow = function(data){
-	console.log("hide");
 	if (this.show===true){
-		console.log("hide2");
 		this.buttonDiv.style.top = data.button.top.toString() + "px";;
 		this.buttonDiv.style.left = data.button.left.toString() + "px";;
 		ui.main.removeChild(this.windowDiv);
 		this.show = false;
+		this.buttonDivText.innerText = "Show notes (" + this.textAreas.length + ")"; 
 	}
 }
 
-SAGE2Annotations.prototype.createOrSetMarker = function(data){
+SAGE2Annotations.prototype.hideMarkersForPage = function(data){
 	var appWindow = document.getElementById(data.appId);
-	var marker = document.getElementById(data.id);
-	if (!marker){
-		marker 							= document.createElement("div");
-		marker.style.width 					= "20px";
-		marker.style.height					= "20px";
-		marker.id 							= data.id;
-		marker.style.zIndex					= "20";
-		marker.display 						= "block";
-		marker.className 					= "annotationButton";
-		appWindow.appendChild(marker);
+	var showPage = data.page || 1;
+	if (appWindow){
+		var markerPage = this.markers[showPage];
+		for (var id in markerPage){
+			if (markerPage.hasOwnProperty(id) && markerPage[id].parentNode === appWindow){
+				appWindow.removeChild(markerPage[id]);
+			}
+		}
 	}
-	marker.style.left 					= (data.position.pointerX -ui.offsetX - parseInt(appWindow.style.left)).toString()+ "px";
-	marker.style.top 					= (data.position.pointerY -ui.offsetY +ui.titleBarHeight - parseInt(appWindow.style.top)).toString()+ "px";
-	
-	
+};
 
-	/*var buttonText 				= document.createElement("p");
-	buttonText.className 		= "annotationButton-text";
-	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-	buttonText.style.color      = "#FFFFFF";
-	buttonText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
-	buttonText.display			= "block";
-	buttonText.innerText      = data.button.caption;
-	this.buttonDiv.appendChild(buttonText);
-	ui.main.appendChild(this.buttonDiv);*/
+SAGE2Annotations.prototype.hideAllMarkers = function(appId){
+	var appWindow = document.getElementById(appId);
+	if (appWindow){
+		for (var page in this.markers){
+			if (this.markers.hasOwnProperty(page)){
+				var markerPage = this.markers[page];
+				for (var id in markerPage){
+					if (markerPage.hasOwnProperty(id) &&  markerPage[id].parentNode === appWindow){
+						appWindow.removeChild(markerPage[id]);
+					}
+				}
+			}
+		}
+	}
+};
+
+SAGE2Annotations.prototype.showMarkersForPage = function(data){
+	if (this.show===false) return;
+	var appWindow = document.getElementById(data.appId);
+	var id, markerPage, showPage = data.page || 1;
+	if (appWindow){
+		for (var page in this.markers){
+			if (this.markers.hasOwnProperty(page)){
+				markerPage = this.markers[page];
+				if (page.toString() === showPage.toString()){
+					for (id in markerPage){
+						if (markerPage.hasOwnProperty(id) && markerPage[id].parentNode !== appWindow){
+							appWindow.appendChild(markerPage[id]);
+						}
+					}
+				}
+				else{
+					for (id in markerPage){
+						if (markerPage.hasOwnProperty(id) &&  markerPage[id].parentNode === appWindow){
+							appWindow.removeChild(markerPage[id]);
+						}
+					}
+				}
+			}
+		}
+	}
+};
+
+SAGE2Annotations.prototype.deleteMarker = function(id){
+	var marker = null;
+	for (var page in this.markers){
+		if (this.markers.hasOwnProperty(page) && this.markers[page].hasOwnProperty(id)){
+			marker = this.markers[page][id];
+			var appWindow = document.getElementById(this.appId);
+			if (appWindow === marker.parentNode){
+				marker.parentNode.removeChild(marker);
+			}
+			delete this.markers[page][id];
+		}
+	}
+};
+
+SAGE2Annotations.prototype.setMarkerPosition = function(data){
+	var appWindow = document.getElementById(this.appId);
+	if (!appWindow) return;
+	var markerInfo = this.getMarkerDiv(data.id);
+	if (markerInfo === null){
+		return;
+	}	
+	delete this.markers[markerInfo.page][markerInfo.id];
+	var marker = markerInfo.markerDiv;
+	if (!this.markers[data.marker.page]){
+		this.markers[data.marker.page] = {};
+	}
+	this.markers[data.marker.page][data.id]= marker;
+	var itemWidth, itemHeight;
+	var child = appWindow.getElementsByClassName("sageItem");
+	if(child[0].tagName.toLowerCase() == "div") {
+		itemWidth = parseInt(child[0].style.width);
+		itemHeight = (child[0].style.height);
+	}
+	else{
+		// if it's a canvas, just use width and height
+	 	itemWidth =	parseInt(child[0].width);
+		itemHeight = parseInt(child[0].height);
+	}
+	marker.style.left 					= parseInt(data.marker.position.x*itemWidth/100.0 - parseInt(marker.style.width)/2.0) + "px";
+	marker.style.top 					= parseInt(data.marker.position.y*itemHeight/100.0 - parseInt(marker.style.height)/2.0) + "px";
+	if (marker.parentNode !== appWindow){
+		appWindow.appendChild(marker);	
+	}
 	
-}
+};
+
+SAGE2Annotations.prototype.createMarker = function(data){
+	var appWindow = document.getElementById(this.appId);
+	if (!appWindow) return;
+	var child = appWindow.getElementsByClassName("sageItem");
+	var markerInfo = this.getMarkerDiv(data.id);
+	if (!markerInfo){
+		var marker 							= document.createElement("div");
+		marker.style.height					= parseInt(ui.titleBarHeight) + "px";
+		marker.style.width 					= parseInt(parseInt(marker.style.height) * 1.2)+ "px";
+		marker.id 							= "marker_" + data.id;
+		//marker.style.zIndex					= "20";
+		marker.display 						= "block";
+		marker.className 					= "annotationMarker";
+		marker.innerText					= data.id;
+		if (this.show){
+			appWindow.appendChild(marker);
+		}
+		if (!this.markers[data.marker.page]){
+			this.markers[data.marker.page] = {};
+		}
+		this.markers[data.marker.page][data.id]= marker;
+		console.log(this.markers[data.marker.page]);
+		var itemWidth, itemHeight;
+		if(child[0].tagName.toLowerCase() == "div") {
+			itemWidth = parseInt(child[0].style.width);
+			itemHeight = (child[0].style.height);
+		}
+		else{
+			// if it's a canvas, just use width and height
+		 	itemWidth =	parseInt(child[0].width);
+			itemHeight = parseInt(child[0].height);
+		}
+		marker.style.left 					= parseInt(data.marker.position.x*itemWidth/100.0 - parseInt(marker.style.width)/2.0) + "px";
+		marker.style.top 					= parseInt(data.marker.position.y*itemHeight/100.0 - parseInt(marker.style.height)/2.0) + "px";
+	}
+};
+
+
+SAGE2Annotations.prototype.setAllMarkerPositionsAfterResize = function(){
+	var appWindow = document.getElementById(this.appId);
+	if (!appWindow) return;
+	var child = appWindow.getElementsByClassName("sageItem");
+	var itemWidth, itemHeight;
+	if(child[0].tagName.toLowerCase() == "div") {
+		itemWidth = parseInt(child[0].style.width);
+		itemHeight = (child[0].style.height);
+	}
+	else{
+		// if it's a canvas, just use width and height
+	 	itemWidth =	parseInt(child[0].width);
+		itemHeight = parseInt(child[0].height);
+	}
+	var credentials;
+	var marker;
+	var markerDiv;
+	var page;
+	for (var i=0; i<this.textAreas.length; i++){
+		credentials = this.textAreas[i].credentials;
+		marker = credentials? credentials.marker : null;
+		page = marker ? this.markers[marker.page] : null;
+		markerDiv = page ? page[credentials.id] : null;
+		if (markerDiv){
+			markerDiv.style.left 					= parseInt(marker.position.x*itemWidth/100.0 - parseInt(markerDiv.style.width)/2.0) + "px";
+			markerDiv.style.top 					= parseInt(marker.position.y*itemHeight/100.0 - parseInt(markerDiv.style.height)/2.0) + "px";
+		}
+	}
+};
 
 
 SAGE2Annotations.prototype.setPosition = function(data){
@@ -235,17 +462,272 @@ SAGE2Annotations.prototype.setPosition = function(data){
 	this.windowDiv.style.top  = data.top.toString() + "px";
 	this.buttonDiv.style.left = (data.button.left).toString() + "px";
 	this.buttonDiv.style.top = (data.button.top).toString() + "px";
+};
+
+SAGE2Annotations.prototype.setPositionAndSize = function(data){
+	//var buttonOffsetLeft = parseInt(this.buttonDiv.style.left) - parseInt(this.windowDiv.style.left);
+	//var buttonOffsetTop = parseInt(this.buttonDiv.style.top) - parseInt(this.windowDiv.style.top);
+	this.windowDiv.style.left = data.left.toString() + "px";
+	this.windowDiv.style.top  = data.top.toString() + "px";
+	this.windowDiv.style.height = data.height.toString() + "px";
+	this.buttonDiv.style.left = (data.button.left).toString() + "px";
+	this.buttonDiv.style.top = (data.button.top).toString() + "px";
+	this.innerDiv.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
+	this.scrollBar.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
+	this.scrollKnob.style.height = this.computeKnobHeight();
+	this.scrollKnob.style.top = parseInt(this.innerDiv.scrollTop / this.innerDiv.scrollHeight * parseInt(this.scrollBar.style.height)) + "px";
+	this.addNoteButton.style.top = data.addNoteButton.top.toString() + "px";
+};
+
+SAGE2Annotations.prototype.moveScrollKnob = function(position){
+	var top = (position.y - parseInt(this.scrollBar.style.top)) -  parseInt(this.scrollKnob.style.height)/2;
+	top = Math.min(Math.max(top,0),parseInt(this.scrollBar.style.height) - parseInt(this.scrollKnob.style.height));
+	this.scrollKnob.style.top = top + "px";
+	this.setWindowScroll();	
+}; 	
+
+SAGE2Annotations.prototype.setWindowScroll = function(){
+	this.innerDiv.scrollTop = parseInt(this.scrollKnob.style.top)/parseInt(this.scrollBar.style.height) * this.innerDiv.scrollHeight;		
+};
+
+SAGE2Annotations.prototype.requestForNewNote = function(data){
+	console.log("adding new note");
+	if (isMaster){
+		wsio.emit('requestForNewNote', {appId: this.appId, uniqueID: data.user.uniqueID, requestMarker: data.requestMarker });
+	}
+};
+
+SAGE2Annotations.prototype.getMarkerDiv = function(id){
+	var marker = null;
+	console.log(this.markers);
+	for (var page in this.markers){
+		console.log(this.markers[page],id,this.markers[page].hasOwnProperty(id));
+		if (this.markers.hasOwnProperty(page) && this.markers[page].hasOwnProperty(id)){
+			return {page: page, id:id, markerDiv: this.markers[page][id]};
+		}
+	}
+	return null;
 }
 
-
-function textArea(){
+SAGE2Annotations.prototype.makeNoteNonEditable = function(credentials){
+	var appWindow = document.getElementById(this.appId);
+	if (!appWindow) return;
+	if (this.editables.hasOwnProperty(credentials.userLabel)){
+		var textArea = this.editables[credentials.userLabel];
+		textArea.changeToNonEditable();
+		var markerInfo = this.getMarkerDiv(credentials.id);
+		if (markerInfo){
+			var marker = markerInfo.markerDiv;
+			marker.className = "annotationMarker";
+		}
+		delete this.editables[credentials.userLabel];
+	}
 }
 
-textArea.prototype.setTop = function(val){
+SAGE2Annotations.prototype.makeNoteEditable = function(credentials){
+	var appWindow = document.getElementById(this.appId);
+	if (!appWindow) return;
+	var textArea;
+	if (this.editables.hasOwnProperty(credentials.userLabel)){
+		textArea = this.editables[credentials.userLabel];
+		if (textArea.credentials.id === credentials.id) return;
+		this.makeNoteNonEditable(textArea.credentials);
+	}
+	console.log(credentials);
+	for (var i=0; i<this.textAreas.length; i++){
+		if (credentials.id === this.textAreas[i].credentials.id){
+			this.textAreas[i].changeToEditable();
+			this.editables[credentials.userLabel] = this.textAreas[i];
+			break;
+		}
+	}
+	var markerInfo = this.getMarkerDiv(credentials.id);
+	if (markerInfo){
+		console.log("found marker",markerInfo);
+		var marker = markerInfo.markerDiv;
+		marker.className = "annotationMarkerEditable";
+	}
+	
+};
+
+SAGE2Annotations.prototype.makeAllNotesNonEditable = function(){
+	for (var key in this.editables){
+		if (this.editables.hasOwnProperty(key)){
+			var textArea = this.editables[key];
+			textArea.changeToNonEditable();
+			var markerInfo = this.getMarkerDiv(textArea.credentials.id);
+			if (markerInfo){
+				var marker = markerInfo.markerDiv;
+				marker.className = "annotationMarker";
+			}
+			delete this.editables[key];
+		}
+	}
+};
+
+SAGE2Annotations.prototype.event = function(eventType, position, user, data, date) {
+	if (eventType === "pointerPress" && (data.button === "left")){
+		if (position.x > parseInt(this.addNoteButton.style.left) && position.x < parseInt(this.addNoteButton.style.left) + parseInt(this.addNoteButton.style.width) && position.y > parseInt(this.addNoteButton.style.top) && position.y < parseInt(this.addNoteButton.style.top) + parseInt(this.addNoteButton.style.height)){
+			this.requestForNewNote({user:user, requestMarker:true});
+		}
+		else if (position.x > parseInt(this.addSummaryNoteButton.style.left) && position.x < parseInt(this.addSummaryNoteButton.style.left) + parseInt(this.addSummaryNoteButton.style.width) && position.y > parseInt(this.addSummaryNoteButton.style.top) && position.y < parseInt(this.addSummaryNoteButton.style.top) + parseInt(this.addSummaryNoteButton.style.height)){
+			this.requestForNewNote({user:user, requestMarker:false});
+		}
+		else if (position.x >parseInt(this.scrollBar.style.left) && position.x < parseInt(this.scrollBar.style.left) + parseInt(this.scrollBar.style.width) && position.y > parseInt(this.scrollBar.style.top) && position.y < parseInt(this.scrollBar.style.top) + parseInt(this.scrollBar.style.height)){
+			this.moveScrollKnob(position);
+		}
+		else{
+			position.y = position.y + (this.innerDiv.scrollTop - parseInt(this.innerDiv.style.top));
+			position.x = position.x - parseInt(this.innerDiv.style.left);
+			var i;
+			var onDelete = false;
+			var onDeleteOK = false;
+			var markedForDeletion = -1;
+			for (i=this.textAreas.length-1;i>=0;i--){
+				onDelete = this.textAreas[i].onDeleteButton(position);
+				if (onDelete){
+					this.textAreas[i].setDeletionConfirm(user);
+				}
+				else if(this.textAreas[i].deleteConfirm=== true){
+					onDeleteOK = this.textAreas[i].onDeleteOKButton(position);
+					if (onDeleteOK){
+						markedForDeletion = i;
+					}
+					else {
+						this.textAreas[i].clearDeletionConfirm(user);
+					}
+				}
+					
+			}
+			if (markedForDeletion>-1){
+				wsio.emit('requestForNoteDeletion', this.textAreas[markedForDeletion].credentials);
+			}
+			else{
+				var clickedIn = false;
+				for (i=this.textAreas.length-1;i>=0;i--){
+					clickedIn = this.textAreas[i].event(eventType,position,user,data,date);
+					if (clickedIn && isMaster){
+						wsio.emit("setNoteAsEditable", this.textAreas[i].credentials);
+					}
+				}
+			}
+			
+		}
+	}
+	else{
+		position.y = position.y + (this.innerDiv.scrollTop - parseInt(this.innerDiv.style.top));
+		position.x = position.x - parseInt(this.innerDiv.style.left);
+		if (this.editables.hasOwnProperty(user.label)){
+			var textArea = this.editables[user.label];
+			console.log("trying to type!");
+			textArea.event(eventType,position,user,data,date);
+		}
+	}
+};
+
+
+
+
+function TextArea(){
+	this.newText = true;
+	this.positionEditable = true;
+	this.deleteConfirm = false;
+	this.credentials = {
+		id: null,
+		appId: null,
+		userLabel: null,
+		createdOn: null,
+		modifiedOn: null,
+		changeFlag:false,
+		marker:null,
+		initialEdit: true
+	};
+	this.div = null;
+}
+
+TextArea.prototype.changeToEditable = function(){
+	console.log("Changing text:" + this.credentials.id + " to editable");
+	this.element.style.boxShadow = "inset 0px 0px 2px 2px #222222";
+	this.showCaret();
+};
+
+TextArea.prototype.changeToNonEditable = function(){
+	console.log("Changing text:" + this.credentials.id + " to non-editable");
+	this.element.style.boxShadow = "none";
+	this.hideCaret();
+};
+
+TextArea.prototype.kill = function(){
+	var parentNode;
+	parentNode = this.element.parentNode;
+	if (parentNode){
+		parentNode.removeChild(this.element);
+	}
+	parentNode = this.credentialBar.parentNode;
+	if (parentNode){
+		parentNode.removeChild(this.credentialBar);
+	}
+	parentNode = this.deletionConfirmationAlertWindow.parentNode;
+	if (parentNode){
+		parentNode.removeChild(this.deletionConfirmationAlertWindow);
+	}
+};
+
+
+TextArea.prototype.setTop = function(val){
 	this.element.style.top = parseInt(val) + "px";
-}
+	this.deletionConfirmationAlertWindow.style.top = parseInt(val) + "px";
+	this.credentialBar.style.top = parseInt(this.element.style.top) + parseInt(this.element.style.height) + "px";
+};
 
-textArea.prototype.init = function(div, data){
+TextArea.prototype.getTop = function(val){
+	return parseInt(this.element.style.top);
+};
+
+TextArea.prototype.isChanged = function(){
+	return this.credentials.changeFlag;
+};
+
+TextArea.prototype.setChanged = function(date){
+	this.credentials.changeFlag = true;
+	this.credentials.modifiedOn = date;
+};
+
+TextArea.prototype.getText = function(){
+	return this.prefixText.innerHTML.replace(/<br>/gi, "\n\r") + this.suffixText.innerHTML.replace(/<br>/gi, "\n\r");
+};
+
+TextArea.prototype.setText = function(text){
+	this.prefixText.innerHTML = text.replace("\n\r", "<br>");
+	this.suffixText.innerHTML = "";
+};
+
+TextArea.prototype.setCredentials = function(data){
+	this.credentials.id = data.id;
+	this.credentials.createdOn = data.createdOn;
+	this.credentials.userLabel = data.userLabel;
+	this.credentials.marker = data.marker;
+	if (data.text){
+		this.setText(data.text);
+		this.newText = false;
+		this.initialEdit = false;
+	}
+	this.idBox.innerHTML = this.credentials.id;
+	var dt = new Date(data.createdOn);
+	this.dateBox.innerHTML = (dt.getMonth()+1) + "-" + dt.getDate() + "-" + dt.getFullYear();
+	this.userNameBox.innerHTML = data.userLabel;
+};
+
+TextArea.prototype.setFirstEditCallBack = function (callback){
+	this.firstEditCallBack = callback;
+};
+
+TextArea.prototype.init = function(div, data){
+
+	this.makeCredentialBar(div,data);
+
+	this.credentials.appId = data.appId;
+	data.height = 0.9 * data.height;
 	this.element = document.createElement("span");
 	this.element.id = data.id;
 	this.element.style.background = "#FCF0AD";
@@ -254,6 +736,7 @@ textArea.prototype.init = function(div, data){
 	this.element.style.top = parseInt(data.top) + "px";
 	this.element.style.width = parseInt(data.width) +"px";
 	this.element.style.height = parseInt(data.height) + "px";
+	this.element.style.border = "solid 1px black";
 	this.element.style.display = "block";
 	this.element.style.overflow = "hidden";
 	div.appendChild(this.element);
@@ -275,7 +758,7 @@ textArea.prototype.init = function(div, data){
 
 	this.prefixText = document.createElement("p");
 	this.prefixText.id = "prefix";
-	this.prefixText.style.lineHeight = 1.5;
+	this.prefixText.style.lineHeight = 1.2;
 	this.prefixText.style.fontSize = 16 + "px";
 	this.prefixText.style.fontFamily = 'arial';
 	this.prefixText.style.wordWrap = "break-word";
@@ -286,14 +769,14 @@ textArea.prototype.init = function(div, data){
 
 	this.caret = document.createElement("span");
 	this.caret.style.width = "0px";
-	this.caret.style.border = "1px solid black";
+	this.caret.style.border = "none";
 	this.caret.style.height = parseInt(this.prefixText.style.fontSize) * this.prefixText.style.lineHeight + "px";
 	this.insetElement.appendChild(this.caret);
 
 
 	this.suffixText = document.createElement("p");
 	this.suffixText.id = "prefix";
-	this.suffixText.style.lineHeight = 1.5;
+	this.suffixText.style.lineHeight = 1.2;
 	this.suffixText.style.fontSize = 16 + "px";
 	this.suffixText.style.fontFamily = 'arial';
 	this.suffixText.style.textAlign = "justify";
@@ -304,17 +787,184 @@ textArea.prototype.init = function(div, data){
 	
 	this.endMarker = document.createElement("span");
 	this.insetElement.appendChild(this.endMarker);
+	if (data.createdOn){
+		this.setCredentials(data);
+	}
 
+	this.deletionConfirmationAlertWindow = document.createElement("span");
+	this.deletionConfirmationAlertWindow.id = data.id+"deleteConfirm";
+	this.deletionConfirmationAlertWindow.style.background = "#EE8888";
+	this.deletionConfirmationAlertWindow.style.position = "absolute";
+	this.deletionConfirmationAlertWindow.style.left = parseInt(data.left) + "px";
+	this.deletionConfirmationAlertWindow.style.top = parseInt(data.top) + "px";
+	this.deletionConfirmationAlertWindow.style.width = parseInt(data.width) +"px";
+	this.deletionConfirmationAlertWindow.style.height = parseInt(data.height) + "px";
+	this.deletionConfirmationAlertWindow.style.border = "solid 1px black";
+	this.deletionConfirmationAlertWindow.style.display = "block";
+	
+	alertText = document.createElement("p");
+	alertText.style.textAlign = "center";
+	alertText.style.lineHeight = 1.2;
+	alertText.style.fontSize = parseInt(ui.titleBarHeight - 3) + "px";
+	alertText.style.fontFamily = 'arial';
+	alertText.style.color = 'white';
+	alertText.style.wordWrap = "break-word";
+	alertText.style.overflow = "hidden";
+	alertText.style.display = "block";
+	alertText.style.margin = parseInt(ui.titleBarHeight) + "px";
+	alertText.innerText = "Click OK to confirm note deletion!";
+	this.deletionConfirmationAlertWindow.appendChild(alertText);
+	this.deletionConfirmationButton =  document.createElement("span");
+	this.deletionConfirmationButton.style.background = "#EE6666";
+	this.deletionConfirmationButton.style.position = "absolute";
+	this.deletionConfirmationButton.style.left = (parseInt(data.width)/2 - ui.titleBarHeight) + "px";
+	this.deletionConfirmationButton.style.bottom = parseInt(ui.titleBarHeight) + "px";
+	this.deletionConfirmationButton.style.width = parseInt(2*ui.titleBarHeight) +"px";
+	this.deletionConfirmationButton.style.height = parseInt(ui.titleBarHeight) + "px";
+	this.deletionConfirmationButton.style.border = "solid 1px black";
+	this.deletionConfirmationButton.style.display = "block";
+	this.deletionConfirmationButton.style.textAlign = "center";
+	this.deletionConfirmationButton.style.lineHeight = 1.0;
+	this.deletionConfirmationButton.style.fontSize = parseInt(ui.titleBarHeight - 3) + "px";
+	this.deletionConfirmationButton.style.fontFamily = 'arial';
+	this.deletionConfirmationButton.style.color = 'white';
+	this.deletionConfirmationButton.innerText = "OK";
+	this.deletionConfirmationAlertWindow.appendChild(this.deletionConfirmationButton);
+	this.div = div;
+};
+
+TextArea.prototype.makeCredentialBar = function(div, data){
+	var credBarHeight = data.height * 0.1;
+	var credBarTop = data.top + data.height*0.9;
+	this.credentialBar = document.createElement("span");
+
+	this.credentialBar.style.background = "#777777";
+	this.credentialBar.style.position = "absolute";
+	this.credentialBar.style.left = parseInt(data.left) + "px";
+	this.credentialBar.style.top = parseInt(credBarTop) + "px";
+	this.credentialBar.style.width = parseInt(data.width) +"px";
+	this.credentialBar.style.height = parseInt(credBarHeight) + "px";
+	this.credentialBar.style.border = "solid 1px black";
+	this.credentialBar.style.display = "block";
+	this.credentialBar.style.overflow = "hidden";
+	div.appendChild(this.credentialBar);
+
+	this.idBox = document.createElement("span");
+	this.idBox.style.position = "absolute";
+	this.idBox.style.left = "0px";
+	this.idBox.style.bottom = "0px";
+	this.idBox.style.width = parseInt(0.15*data.width) +"px";
+	this.idBox.style.display = "block";
+	//this.idBox.style.height =  parseInt(credBarHeight) +"px";
+	this.idBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
+	this.idBox.style.fontFamily = 'arial';
+	this.idBox.style.color = "white";
+	this.idBox.style.display = "inline-block";
+	this.idBox.style.paddingLeft = "4px";
+	this.idBox.style.verticalAlign = "middle";
+	this.credentialBar.appendChild(this.idBox);
+	
+	this.userNameBox = document.createElement("span");
+	this.userNameBox.style.position = "absolute";
+	this.userNameBox.style.left = parseInt(0.15*data.width) +"px";
+	this.userNameBox.style.bottom = "0px";
+	this.userNameBox.style.width = parseInt(0.3*data.width) +"px";
+	this.userNameBox.style.display = "block";
+	//this.userNameBox.style.height =  parseInt(credBarHeight) +"px";
+	this.userNameBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
+	this.userNameBox.style.fontFamily = 'arial';
+	this.userNameBox.style.color = "white";
+	this.userNameBox.style.display = "inline-block";
+	this.userNameBox.style.verticalAlign = "middle";
+	this.credentialBar.appendChild(this.userNameBox);
+
+	this.dateBox = document.createElement("span");
+	this.dateBox.style.position = "absolute";
+	this.dateBox.style.right = parseInt(credBarHeight*1.4) + "px";
+	this.dateBox.style.marginRight = "3px";
+	this.dateBox.style.bottom = "0px";
+	this.dateBox.style.width = parseInt(0.3*data.width) +"px";
+	this.dateBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
+	this.dateBox.style.fontFamily = 'arial';
+	this.dateBox.style.color = "white";
+	this.dateBox.style.display = "block";
+	this.dateBox.style.textAlign = "right";
+	this.dateBox.style.verticalAlign = "middle";
+	this.credentialBar.appendChild(this.dateBox);
+
+	this.deleteNoteBox = document.createElement("img");
+	this.deleteNoteBox.style.position = "absolute";
+	this.deleteNoteBox.style.right = "0px";
+	this.deleteNoteBox.style.top = "1px";
+	this.deleteNoteBox.style.height = parseInt(credBarHeight -2) +"px";
+	this.deleteNoteBox.style.display = "inline-block";
+	this.deleteNoteBox.src = "images/close.svg";
+	this.credentialBar.appendChild(this.deleteNoteBox);
+};
+
+TextArea.prototype.hideCaret = function(){
+	this.caret.style.border = "none";
+};
+
+TextArea.prototype.showCaret = function(){
+	this.caret.style.border = "solid 1px black";
+};
+
+TextArea.prototype.setDeletionConfirm = function(){
+	if (this.element.parentNode === this.div){
+		this.div.removeChild(this.element);
+	}
+	
+	this.div.appendChild(this.deletionConfirmationAlertWindow);
+	this.deleteConfirm = true;
+};
+
+TextArea.prototype.clearDeletionConfirm = function(){
+	this.div.appendChild(this.element);
+	if (this.deletionConfirmationAlertWindow.parentNode === this.div){
+		this.div.removeChild(this.deletionConfirmationAlertWindow);
+	}
+	this.deleteConfirm = false;
+};
+
+
+TextArea.prototype.onDeleteOKButton = function(position){
+	if (this.deletionConfirmationAlertWindow.parentNode === this.div){
+		var height = parseInt(this.deletionConfirmationButton.style.height);
+		var width = parseInt(this.deletionConfirmationButton.style.width);
+		var x = parseInt(position.x - parseInt(this.deletionConfirmationAlertWindow.style.left) - parseInt(this.deletionConfirmationButton.style.left));
+		var top = parseInt(this.element.style.top) + (parseInt(this.element.style.height) - parseInt(this.deletionConfirmationButton.style.bottom) - height);
+		var y = parseInt(position.y - top);
+		console.log(x,y, width,height);
+		if (y > 0 && y < height && x > 0 && x < width){
+			return true;
+		}		
+	}
+	return false;
 }
 
-textArea.prototype.event = function(eventType, position, user_id, data, date) {
-	if (position.x < parseInt(this.element.style.left) || position.x > (parseInt(this.element.style.left) + parseInt(this.element.style.width)) || position.y < parseInt(this.element.style.top) || position.y > (parseInt(this.element.style.top)+parseInt(this.element.style.height)))
-		return;
+TextArea.prototype.onDeleteButton = function(position){
+	var y = parseInt(position.y - parseInt(this.credentialBar.style.top));
+	var height = parseInt(this.deleteNoteBox.style.height);
+	var width = parseInt(this.deleteNoteBox.width);
+	var x = parseInt(position.x - parseInt(this.credentialBar.style.left) - (parseInt(this.credentialBar.style.width) - width));
+	if (y > 0 && y < height && x > 0 && x < width){
+		return true;
+	}
+	return false;
+};
+
+TextArea.prototype.event = function(eventType, position, user, data, date) {
+	
+	
 	if (eventType === "pointerPress" && (data.button === "left")) {
+		if (position.x < parseInt(this.element.style.left) || position.x > (parseInt(this.element.style.left) + parseInt(this.element.style.width)) || position.y < parseInt(this.element.style.top) || position.y > (parseInt(this.element.style.top)+parseInt(this.element.style.height)))
+			return false;
 		//console.log(position.x,position.y);
 		this.updateCaretPos(position.x,position.y);
 		if (this.caret.style.display === "none")
 			this.caret.style.display = "inline";
+		return true;
 
 	}
 	else if (eventType === "pointerRelease" && (data.button === "left")) {
@@ -325,6 +975,7 @@ textArea.prototype.event = function(eventType, position, user_id, data, date) {
 			this.prefixText.innerHTML = this.prefixText.innerHTML + "<br>";
 		else
 			this.prefixText.innerHTML = this.prefixText.innerHTML + data.character;
+		this.setChanged(date);
 	}
 
 	else if (eventType === "specialKey") {
@@ -332,7 +983,6 @@ textArea.prototype.event = function(eventType, position, user_id, data, date) {
 		if (data.code === 37 && data.state === "down") { // left arrow
 			if (this.prefixText.innerHTML.length>0){
 				split = this.splitLastChar(this.prefixText.innerHTML);
-				console.log(split);
 				this.suffixText.innerHTML = split.last + this.suffixText.innerHTML;
 				this.prefixText.innerHTML = split.first;
 			}
@@ -353,17 +1003,20 @@ textArea.prototype.event = function(eventType, position, user_id, data, date) {
 		else if (data.code === 46 && data.state === "down"){ // delete
 			if (this.suffixText.innerHTML.length>0){
 				this.suffixText.innerHTML = this.splitFirstChar(this.suffixText.innerHTML).last;
+				this.setChanged(date);
 			}
 		}	
 		else if (data.code === 8 && data.state === "down"){ // backspace
 			if (this.prefixText.innerHTML.length>0){
 				this.prefixText.innerHTML = this.splitLastChar(this.prefixText.innerHTML).first;
+				this.setChanged(date);
 			}
 		}		
 	}
+	return true;
 }
 
-textArea.prototype.updateCaretPos = function(x,y){
+TextArea.prototype.updateCaretPos = function(x,y){
 	var paddingLeft = this.insetElement.offsetLeft;
 	var paddingTop = this.insetElement.offsetTop;
 	x = x - paddingLeft;
@@ -431,12 +1084,12 @@ textArea.prototype.updateCaretPos = function(x,y){
 	*/
 }
 
-textArea.prototype.splitLastChar = function(htmlText){
+TextArea.prototype.splitLastChar = function(htmlText){
 	var numberOfChars = 1;
 	if (htmlText.lastIndexOf("<br>") >= htmlText.length-4) numberOfChars =htmlText.length-htmlText.lastIndexOf("<br>");
 	return {first:htmlText.slice(0,-numberOfChars),last:htmlText.slice(-numberOfChars)};
 },
-textArea.prototype.splitFirstChar = function(htmlText){
+TextArea.prototype.splitFirstChar = function(htmlText){
 	var numberOfChars = 1;
 	if (htmlText.indexOf("<br>") === 0) numberOfChars = 4;
 	return {first:htmlText.slice(0,numberOfChars),last:htmlText.slice(numberOfChars)};

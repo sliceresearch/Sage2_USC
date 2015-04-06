@@ -212,8 +212,10 @@ if(program.trackUsers) {
 	users.session.start = Date.now();
 }
 if(!sageutils.fileExists("logs")) fs.mkdirSync("logs");
+
 //Annotation management
 var annotations = new AnnotationManager();
+annotations.initializeDB(path.join(uploadsFolder, "annotations"));
 
 
 // find git commit version and date
@@ -478,6 +480,10 @@ function initializeWSClient(wsio) {
 		wsio.on('appResize',      wsAppResize);
 		wsio.on('broadcast',      wsBroadcast);
 		wsio.on('searchTweets',   wsSearchTweets);
+		wsio.on('annotationUpdate', wsAnnotationUpdate);
+		wsio.on('requestForNewNote', wsRequestForNewNote);
+		wsio.on('requestForNoteDeletion',wsRequestForNoteDeletion);
+		wsio.on('setNoteAsEditable', wsSetNoteAsEditable);
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
@@ -917,7 +923,7 @@ function wsKeyPress(wsio, data) {
 	else if(control!==null){
 		return;
 	}
-	else if ( remoteInteraction[uniqueID].appInteractionMode() ) {
+	else {
 		keyPress(uniqueID, pointerX, pointerY, data);
 	}
 
@@ -1275,7 +1281,14 @@ function wsUpdateAppState(wsio, data) {
 	// Using updates only from display client 0
 	if (wsio.clientID === 0) {
 		var app = findAppById(data.id);
-		if(app !== null) app.data = data.state;
+		if(app !== null){
+			var oldState = app.data;
+			app.data = data.state;
+			if (app.annotation === true && data.state.hasOwnProperty("page") && oldState.page.toString() !== data.state.page.toString()){
+				broadcast('showAnnotationMarkersForPage', {appId:data.id, page: data.state.page}, 'requiresFullApps');
+			}
+		}
+
 	}
 }
 
@@ -1298,7 +1311,7 @@ function wsAppResize(wsio, data) {
 							elemWidth: app.width, elemHeight: app.height,
 							force: true, date: new Date()};
 		// send the order
-		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+		setItemPositionAndSize(updateItem);
 	}
 }
 
@@ -1748,7 +1761,7 @@ function tileApplications() {
 		// send the order
 		broadcast('startMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		broadcast('startResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
-		broadcast('setItemPositionAndSize', updateItem, 'receivesWindowModification');
+		setItemPositionAndSize(updateItem);
 		broadcast('finishedMove', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		broadcast('finishedResize', {id: updateItem.id, date: updateItem.date}, 'requiresFullApps');
 		if(updateApp !== null && updateApp.application === "movie_player") calculateValidBlocks(updateApp, 128, videoHandles);
@@ -3556,7 +3569,7 @@ function togglePointerMode(uniqueID) {
 function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	if ( sagePointers[uniqueID] === undefined ) return;
 
-	remoteInteraction[uniqueID].initiatePointerClick();
+	
 
 	var app;
 	var elem = findAppUnderPointer(pointerX, pointerY);
@@ -3564,7 +3577,7 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
 	var itemUnderPointer = ct || elem;
-
+	remoteInteraction[uniqueID].initiatePointerClick(itemUnderPointer);
 	//Draw widget connectors
 	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
 	if (ct !== null) {
@@ -3612,6 +3625,8 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 	// apps
 	var elemCtrl;
+	var elemX, elemY, ePosition, eUser, now, event; 
+
 
 	if(elem !== null){
 		if( remoteInteraction[uniqueID].windowManagementMode() ){
@@ -3703,14 +3718,14 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 				}
 			}
 			else{
-				var elemX = pointerX - elem.left;
-				var elemY = pointerY - elem.top - config.ui.titleBarHeight;
+				elemX = pointerX - elem.left;
+				elemY = pointerY - elem.top - config.ui.titleBarHeight;
 
-				var ePosition = {x: elemX, y: elemY};
-				var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-				var now = new Date();
+				ePosition = {x: elemX, y: elemY};
+				eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+				now = new Date();
 
-				var event = {id: elem.id, type: "pointerPress", position: ePosition, user: eUser, data: data, date: now};
+				event = {id: elem.id, type: "pointerPress", position: ePosition, user: eUser, data: data, date: now};
 
 				broadcast('eventInItem', event, 'receivesInputEvents');
 
@@ -3727,19 +3742,21 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 	}
 	var selectedAnnotationWindow = annotations.findAnnotationsUnderPointer(pointerX,pointerY);
 	//console.log(selectedAnnotationWindow);
-	if(selectedAnnotationWindow.annotation!==null){
+	if(selectedAnnotationWindow.window!==null){
 		if (selectedAnnotationWindow.onButton === true){
-			toggleAnnotationWindow(selectedAnnotationWindow.annotation);
+			toggleAnnotationWindow(selectedAnnotationWindow.window);
 		}
-		else if(selectedAnnotationWindow.onAddButton === true){
-			var noteData = {
-				appId:selectedAnnotationWindow.annotation.appId,
-				user: sagePointers[uniqueID]? sagePointers[uniqueID].label : "Sage User",
-				uniqueID: uniqueID,
-				createdOn: "mar05"
-			};
-			var noteItem = annotations.addNote(noteData);
-			broadcast('addNewNoteToAnnotationWindow', noteItem, 'requiresFullApps');
+		else{
+			elemX = pointerX - selectedAnnotationWindow.window.left;
+			elemY = pointerY - selectedAnnotationWindow.window.top;
+
+			ePosition = {x: elemX, y: elemY};
+			eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color, uniqueID:uniqueID};
+			now = new Date();
+
+			event = {id: selectedAnnotationWindow.window.id, appId: selectedAnnotationWindow.window.appId, type: "pointerPress", position: ePosition, user: eUser, data: data, date: now};
+
+			broadcast('eventInAnnotationWindow', event, 'receivesInputEvents');
 		}
 	}
 	
@@ -3887,7 +3904,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 						var updatedItem = remoteInteraction[uniqueID].releaseItem(false);
 						if(updatedItem !== null) {
 							updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-							broadcast('setItemPosition', updatedItem, 'receivesWindowModification');
+							setItemPosition(updatedItem);
 							broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 
 							addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "move", action: "end", application: {id: elem.id, type: elem.application}, location: {x: parseInt(elem.left, 10), y: parseInt(elem.top, 10), width: parseInt(elem.width, 10), height: parseInt(elem.height, 10)}}, time: Date.now()});
@@ -3924,12 +3941,13 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "pointerRelease", application: {id: elem.id, type: elem.application}, position: {x: parseInt(ePosition.x, 10), y: parseInt(ePosition.y, 10)}}, time: Date.now()});
 		}
 	}
-	var click = remoteInteraction[uniqueID].completePointerClick(uniqueID, pointerX,pointerY);
-	console.log(click);
-	if (click !==null && elem!== null && annotations.expectsClick(elem.id,uniqueID) == true){ 
+	var click = remoteInteraction[uniqueID].completePointerClick(elem,sagePointers[uniqueID].label, pointerX,pointerY);
+	if (click !==null && elem!== null && data.button === "left"){ 
 		// A click was made on app window and it was expected by its annotation window
-		var noteMarker = annotations.createOrSetMarker(elem.id,click);
-		broadcast('addAnnotationMarker', noteMarker, 'requiresFullApps');
+		var noteMarker = annotations.setMarkerPosition(elem,click);
+		if (noteMarker!==null){
+			broadcast('setAnnotationMarker', noteMarker, 'requiresFullApps');
+		}	
 	}
 
 }
@@ -4010,7 +4028,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		}
 		else if(updatedResizeItem !== null){
 			updatedResizeItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-			broadcast('setItemPositionAndSize', updatedResizeItem, 'receivesWindowModification');
+			setItemPositionAndSize(updatedResizeItem);
 			updatedApp = findAppById(updatedResizeItem.elemId);
 			if (updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
             if (updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
@@ -4147,7 +4165,7 @@ function pointerScroll( uniqueID, data ) {
 			var updatedApp = findAppById(updatedItem.elemId);
 			if(updatedApp !== null) {
 				updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-				broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+				setItemPositionAndSize(updatedItem);
 				if(updatedApp !== null && updatedApp.application === "movie_player") calculateValidBlocks(updatedApp, 128, videoHandles);
 				if(updatedApp !== null && updatedApp.application === "media_block_stream") calculateValidBlocks(updatedApp, 128, mediaBlockStreams);
 
@@ -4258,7 +4276,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 
 						updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-						broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+						setItemPositionAndSize(updatedItem);
 						// the PDF files need an extra redraw
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4285,7 +4303,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 
 						updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-						broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+						setItemPositionAndSize(updatedItem);
 						// the PDF files need an extra redraw
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4328,7 +4346,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 
 						updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-						broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+						setItemPositionAndSize(updatedItem);
 						// the PDF files need an extra redraw
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4355,7 +4373,7 @@ function pointerFullZone(uniqueID, pointerX, pointerY) {
 						addEventToUserLog(uniqueID, {type: "windowManagement", data: {type: "resize", action: "start", application: {id: updatedApp.id, type: updatedApp.application}, location: {x: parseInt(updatedApp.left, 10), y: parseInt(updatedApp.top, 10), width: parseInt(updatedApp.width, 10), height: parseInt(updatedApp.height, 10)}}, time: Date.now()});
 
 						updatedItem.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-						broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+						setItemPositionAndSize(updatedItem);
 						// the PDF files need an extra redraw
 						broadcast('finishedMove', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
 						broadcast('finishedResize', {id: updatedItem.elemId, date: new Date()}, 'requiresFullApps');
@@ -4448,24 +4466,45 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 function keyPress( uniqueID, pointerX, pointerY, data ) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
+	var elemX, elemY, ePosition, eUser, now, event;
 
 	if ( remoteInteraction[uniqueID].appInteractionMode() ) {
 		var elem = findAppUnderPointer(pointerX, pointerY);
 		if( elem !== null ){
-			var elemX = pointerX - elem.left;
-			var elemY = pointerY - elem.top - config.ui.titleBarHeight;
+			elemX = pointerX - elem.left;
+			elemY = pointerY - elem.top - config.ui.titleBarHeight;
 
-			var ePosition = {x: elemX, y: elemY};
-			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-			var now = new Date();
+			ePosition = {x: elemX, y: elemY};
+			eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+			now = new Date();
 
-			var event = {id: elem.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: now};
+			event = {id: elem.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: now};
 
 			broadcast('eventInItem', event, 'receivesInputEvents');
 
 			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: {type: "keyboard", application: {id: elem.id, type: elem.application}, code: data.code, character: data.character}, time: Date.now()});
+
+			return;
 		}
 	}
+	var annotationWindow = annotations.findAnnotationsUnderPointer(pointerX,pointerY).window;
+	if (annotationWindow!== null){
+		elemX = pointerX - annotationWindow.left;
+		elemY = pointerY - annotationWindow.top;
+
+		ePosition = {x: elemX, y: elemY};
+		eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color, uniqueID:uniqueID};
+		now = new Date();
+
+		event = {id: annotationWindow.id, appId: annotationWindow.appId, type: "keyboard", position: ePosition, user: eUser, data: data, date: now};
+
+		broadcast('eventInAnnotationWindow', event, 'receivesInputEvents');
+
+		addEventToUserLog(uniqueID, {type: "annotationInteraction", data: {type: "keyboard", application: {id: annotationWindow.appId, type: annotationWindow.application}, code: data.code, character: data.character}, time: Date.now()});
+
+		return;
+	}
+
 }
 
 function deleteApplication( elem ) {
@@ -4493,7 +4532,12 @@ function deleteApplication( elem ) {
 		if (broadcastWS !== null) broadcastWS.emit('stopMediaCapture', {streamId: broadcastID});
 	}
 	stickyAppHandler.removeElement(elem);
+	if (elem.annotation){
+		annotations.deleteAnnotationWindow(elem.id);
+		broadcast('deleteAnnotationWindow', {appId:elem.id}, 'requiresFullApps');
+	}
 	removeElement(applications, elem);
+
 }
 
 // **************  Omicron section *****************
@@ -4792,6 +4836,13 @@ function setItemPosition(updatedMoveItem){
 		broadcast('setAnnotationWindowPosition', updatedAnnotationWindow, 'receivesWindowModification');
 }
 
+function setItemPositionAndSize(updatedItem){
+	broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
+	var updatedAnnotationWindow = annotations.updateAnnotationWindowPositionAndSize(updatedItem);
+	if (updatedAnnotationWindow)
+		broadcast('setAnnotationWindowPositionAndSize', updatedAnnotationWindow, 'receivesWindowModification');
+}
+
 function toggleAnnotationWindow(annotationWindow){
 	var data;
 	if (annotationWindow.show){
@@ -4803,4 +4854,43 @@ function toggleAnnotationWindow(annotationWindow){
 		broadcast('showAnnotationWindow',data,'receivesWindowModification');
 	}
 
+};
+
+function wsAnnotationUpdate(wsio, noteItem){
+	console.log(noteItem);
+	var annotationWindow = annotations.getAnnotationWindowForApp(noteItem.credentials.appId);
+	if (annotationWindow){
+		annotations.saveAnnotationForFile(annotationWindow.filename, noteItem.credentials.id, {
+			id: noteItem.credentials.id, 
+			userLabel: noteItem.credentials.userLabel, 
+			createdOn: noteItem.credentials.createdOn, 
+			marker:noteItem.credentials.marker, 
+			text:noteItem.text
+		});
+	} 
+	
+	//console.log(noteItem);
+}
+
+function wsRequestForNewNote(wsio, data){
+	var app = findAppById(data.appId);
+	var noteData = {
+		appId:data.appId,
+		userLabel: sagePointers[data.uniqueID]? sagePointers[data.uniqueID].label : "Sage User",
+		createdOn: Date.now(),
+		marker:data.requestMarker?  {position:{x:2,y:2},page:app.data.page || 1} : null,		
+	};
+
+	var noteItem = annotations.addNewNote(noteData);
+	broadcast('addNewNoteToAnnotationWindow', noteItem, 'requiresFullApps');
+}
+
+function wsRequestForNoteDeletion(wsio, data){
+	broadcast ('deleteNote', data, 'requiresFullApps');
+}
+
+function wsSetNoteAsEditable(wsio, data){
+	console.log("Set note editable!",data);
+	annotations.setNoteAsEditable(data);
+	broadcast('makeNoteEditable', data,'requiresFullApps');
 }

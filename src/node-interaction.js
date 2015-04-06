@@ -512,8 +512,8 @@ Interaction.prototype.appInteractionMode = function(){
  *@method initiatePointerClick
  */
 
-Interaction.prototype.initiatePointerClick = function(){
-	this.clickInProgress = true;
+Interaction.prototype.initiatePointerClick = function(item){
+	this.clickInProgress = item;
 };
 
 /**
@@ -521,17 +521,17 @@ Interaction.prototype.initiatePointerClick = function(){
  */
 
 Interaction.prototype.cancelPointerClick = function(){
-	this.clickInProgress = false;
+	this.clickInProgress = null;
 };
 
 /**
  *@method completePointerClick
  */
  
-Interaction.prototype.completePointerClick = function(uniqueID,pointerX, pointerY){
-	if (this.clickInProgress===true){
-		this.clickInProgress = false;
-		return {uniqueID:uniqueID, pointerX:pointerX, pointerY:pointerY};
+Interaction.prototype.completePointerClick = function(item, userLabel, pointerX, pointerY){
+	if (this.clickInProgress!==null && this.clickInProgress === item){
+		this.clickInProgress = null;
+		return {userLabel:userLabel, pointerX:pointerX, pointerY:pointerY};
 	}
 	return null;
 };

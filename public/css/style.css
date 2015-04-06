@@ -128,10 +128,9 @@ body {
 
 .annotationWindow{
 	position:absolute;
-	background-color: #888888;
+	background-color: #d8dfea;
 	border: solid 1px #000000;
 	overflow: hidden;
-	box-shadow: 8px 0px 15px #222222;
 }
 
 .annotationButton{
@@ -142,13 +141,42 @@ body {
 }
 .annotationButton-text{
 	position: absolute;
-	float:left;
 	white-space: nowrap;
 	-webkit-transform:rotate(90deg);
 	-moz-transform:rotate(90deg);
 	transform:rotate(90deg);
-	-webkit-transform-origin: left bottom 0;
-	-moz-transform-origin: left bottom 0;
-	transform-origin: left bottom 0;
+	-webkit-transform-origin: left 100% 0;
+	-moz-transform-origin: left 100% 0;
+	transform-origin: left 100% 0;
 	color: white;
+	vertical-align: middle;
+	text-align: center;
+}
+
+.annotationMarker{
+	position:absolute;
+	background-color: rgba(252, 240, 173, 0.6);
+	color: black;
+	font-family:sans-serif;
+	border-radius: 3px;
+	border: solid 2px rgba(60,60,60,0.7);
+	text-align: center;
+	vertical-align: middle;
+	overflow: hidden;
+	box-shadow: none;
+	z-index: 0;
+}
+
+.annotationMarkerEditable{
+	position:absolute;
+	background-color: rgba(252, 240, 173, 0.6);
+	color: black;
+	font-family:sans-serif;
+	border-radius: 3px;
+	border: none;
+	text-align: center;
+	vertical-align: middle;
+	overflow: hidden;
+	box-shadow: 2px 2px 2px 1px #222222;
+	z-index: 1;
 }
