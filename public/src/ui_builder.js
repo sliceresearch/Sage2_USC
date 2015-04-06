@@ -599,14 +599,16 @@ function UIBuilder(json_cfg, clientID) {
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
-		pointerElem.style.left = (-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top = (-this.pointerOffsetY-this.offsetY).toString()  + "px";
 		pointerElem.style.zIndex = 10000;
 		
 		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
+			pointerElem.style.left = "0px";
+			pointerElem.style.top = "0px";
 			document.getElementById(pointer_data.portal+"_overlay").appendChild(pointerElem);
 		}
 		else {
+			pointerElem.style.left = (-this.pointerOffsetX-this.offsetX).toString() + "px";
+			pointerElem.style.top = (-this.pointerOffsetY-this.offsetY).toString()  + "px";
 			this.main.appendChild(pointerElem);
 		}
 
