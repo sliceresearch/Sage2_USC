@@ -318,7 +318,6 @@ function SAGE2DisplayUI() {
 		for (i=0; i<orderArray.length; i++) {
 			for (j=0; j<this.applications.length; j++) {
 				if (this.applications[j].id === orderArray[i]) {
-					console.log("swap: " + this.applications[i].id + " " + this.applications[j].id)
 					var tmp = this.applications[i];
 					this.applications[i] = this.applications[j];
 					this.applications[j] = tmp;

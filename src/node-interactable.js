@@ -214,11 +214,13 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLay
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
 	for (i=0; i<allLayerIds.length; i++) {
-		for (key in this.interactableObjects[allLayerIds[i]]) {
-			if (this.interactableObjects[allLayerIds[i]][key].zIndex > currZIndex) {
-				if (this.interactableObjects[allLayerIds[i]][key].zIndex > maxZIndex) 
-					maxZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
-				this.interactableObjects[allLayerIds[i]][key].zIndex--;
+		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
+			for (key in this.interactableObjects[allLayerIds[i]]) {
+				if (this.interactableObjects[allLayerIds[i]][key].zIndex > currZIndex) {
+					if (this.interactableObjects[allLayerIds[i]][key].zIndex > maxZIndex) 
+						maxZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
+					this.interactableObjects[allLayerIds[i]][key].zIndex--;
+				}
 			}
 		}
 	}
@@ -240,12 +242,27 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
 	for (i=0; i<allLayerIds.length; i++) {
-		for (key in this.interactableObjects[allLayerIds[i]]) {
-			zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = this.interactableObjects[allLayerIds[i]][key].zIndex;
+		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
+			for (key in this.interactableObjects[allLayerIds[i]]) {
+				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = this.interactableObjects[allLayerIds[i]][key].zIndex;
+			}
 		}
 	}
 	return zIndexList;
 };
+
+
+/**
+* Move geometric object to front (edit zIndex)
+*
+* @method moveObjectToFront
+* @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
+* @return object {Object} geometric object with given id
+*/
+InteractableManager.prototype.getObject = function(id, layerId) {
+	return this.interactableObjects[layerId][id];
+}
 
 /**
 * Search for topmost geometric object (optionally within a given layer)
