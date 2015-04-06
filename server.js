@@ -4631,6 +4631,16 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
 			handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
 
 			remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
+			
+			var eLogData = {
+				host: remote.portal.host,
+				port: remote.portal.port,
+				application: {
+					id: appInstance.id,
+					type: appInstance.application
+				}
+			};
+			addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 		});
 	}
 	else {
