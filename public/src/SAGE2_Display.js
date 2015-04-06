@@ -349,183 +349,11 @@ function setupListeners() {
 
 	////////////////////////////////////////////////
 	wsio.on('createAppWindow', function(data) {
-		resetIdle();
+		createAppWindow(data, ui.main.id);
+	});
 
-		var date = new Date(data.date);
-
-		var translate = "translate(" + data.left + "px," + data.top + "px)";
-
-		var windowTitle = document.createElement("div");
-		windowTitle.id  = data.id + "_title";
-		windowTitle.className    = "windowTitle";
-		windowTitle.style.width  = data.width.toString() + "px";
-		windowTitle.style.height = ui.titleBarHeight.toString() + "px";
-		windowTitle.style.left   = (-ui.offsetX).toString() + "px";
-		windowTitle.style.top    = (-ui.offsetY).toString() + "px";
-		windowTitle.style.webkitTransform = translate;
-		windowTitle.style.mozTransform    = translate;
-		windowTitle.style.transform       = translate;
-		windowTitle.style.zIndex = itemCount.toString();
-		if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
-		ui.main.appendChild(windowTitle);
-
-		var windowIcons = document.createElement("img");
-		windowIcons.src = "images/layout3.webp";
-		windowIcons.height = Math.round(ui.titleBarHeight);
-		windowIcons.style.position = "absolute";
-		windowIcons.style.right    = "0px";
-		windowTitle.appendChild(windowIcons);
-
-		var titleText = document.createElement("p");
-		titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-		titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-		titleText.style.color      = "#FFFFFF";
-		titleText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
-		titleText.textContent      = data.title;
-		windowTitle.appendChild(titleText);
-
-		var windowItem = document.createElement("div");
-		windowItem.id  = data.id;
-		windowItem.className      = "windowItem";
-		windowItem.style.left     = (-ui.offsetX).toString() + "px";
-		windowItem.style.top      = (ui.titleBarHeight-ui.offsetY).toString() + "px";
-		windowItem.style.webkitTransform = translate;
-		windowItem.style.mozTransform    = translate;
-		windowItem.style.transform       = translate;
-		windowItem.style.overflow = "hidden";
-		windowItem.style.zIndex   = (itemCount+1).toString();
-		if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
-		ui.main.appendChild(windowItem);
-
-		// App launched in window
-		if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
-        if(data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
-
-		// convert url if hostname is alias for current origin
-		var url = cleanURL(data.url);
-
-		function loadApplication() {
-			var init = {
-				id:     data.id,
-				x:      data.left,
-				y:      data.top+ui.titleBarHeight,
-				width:  data.width,
-				height: data.height,
-				resrc:  url,
-				date:   date
-			};
-
-			// load new app
-			if(window[data.application] === undefined) {
-				var js = document.createElement("script");
-				js.addEventListener('error', function(event) {
-					console.log("Error loading script: " + data.application + ".js");
-				}, false);
-				js.addEventListener('load', function(event) {
-					var newapp = new window[data.application]();
-					newapp.init(init);
-
-					if (newapp.state !== undefined) {
-						Object.observe(newapp.state, function (changes) {
-							if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
-						}, ['update', 'add']);
-					}
-
-					newapp.load(data.data, date);
-					newapp.refresh(date);
-
-					applications[data.id]   = newapp;
-					controlObjects[data.id] = newapp;
-
-					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-				}, false);
-				js.type = "text/javascript";
-				js.src = url + "/" + data.application + ".js";
-				console.log(url + "/" + data.application + ".js");
-				document.head.appendChild(js);
-			}
-
-			// load existing app
-			else {
-				var app = new window[data.application]();
-				app.init(init);
-
-				if(app.state !== undefined){
-					Object.observe(app.state, function(changes) {
-						if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
-					}, ['update', 'add']);
-				}
-
-				app.load(data.data, date);
-				app.refresh(date);
-
-				applications[data.id] = app;
-				controlObjects[data.id] = app;
-
-				if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-				if (data.application === "movie_player") setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
-			}
-		}
-
-		// load all dependencies
-		if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
-			loadApplication();
-		}
-		else {
-			var loadResource = function(idx) {
-				if (dependencies[data.resrc[idx]] === true) {
-					if((idx+1) < data.resrc.length) {
-						loadResource(idx+1);
-					}
-					else {
-						console.log("all resources loaded");
-						loadApplication();
-					}
-
-					return;
-				}
-
-				dependencies[data.resrc[idx]] = false;
-
-				var js = document.createElement("script");
-				js.addEventListener('error', function(event) {
-					console.log("Error loading script: " + data.resrc[idx]);
-				}, false);
-
-				js.addEventListener('load', function(event) {
-					dependencies[data.resrc[idx]] = true;
-
-					if((idx+1) < data.resrc.length) {
-						loadResource(idx+1);
-					}
-					else {
-						console.log("all resources loaded");
-						loadApplication();
-					}
-				});
-				js.type = "text/javascript";
-				js.src = url + "/" + data.resrc[idx];
-				document.head.appendChild(js);
-			};
-			// Start loading the first resource
-			loadResource(0);
-		}
-
-		var cornerSize = Math.min(data.width, data.height) / 5;
-        var dragCorner = document.createElement("div");
-        dragCorner.className      = "dragCorner";
-        dragCorner.style.position = "absolute";
-        dragCorner.style.width    = cornerSize.toString() + "px";
-        dragCorner.style.height   = cornerSize.toString() + "px";
-        dragCorner.style.top      = (data.height-cornerSize).toString() + "px";
-        dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
-		dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
-        dragCorner.style.border   = "none";
-        dragCorner.style.zIndex   = "1";
-        windowItem.appendChild(dragCorner);
-
-		itemCount += 2;
-
+	wsio.on('createAppWindowInDataSharingPortal', function(data) {
+		createAppWindow(data.application, data.portal);
 	});
 	////////////////////////////////////////////////
 
@@ -1090,4 +918,185 @@ function setupListeners() {
 		console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
+}
+
+function createAppWindow(data, parentId) {
+	resetIdle();
+
+	var parent = document.getElementById(parentId);
+
+	var date = new Date(data.date);
+	var translate = "translate(" + data.left + "px," + data.top + "px)";
+
+	var windowTitle = document.createElement("div");
+	windowTitle.id  = data.id + "_title";
+	windowTitle.className    = "windowTitle";
+	windowTitle.style.width  = data.width.toString() + "px";
+	windowTitle.style.height = ui.titleBarHeight.toString() + "px";
+	windowTitle.style.left   = (-ui.offsetX).toString() + "px";
+	windowTitle.style.top    = (-ui.offsetY).toString() + "px";
+	windowTitle.style.webkitTransform = translate;
+	windowTitle.style.mozTransform    = translate;
+	windowTitle.style.transform       = translate;
+	windowTitle.style.zIndex = itemCount.toString();
+	if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
+
+	var windowIcons = document.createElement("img");
+	windowIcons.src = "images/layout3.webp";
+	windowIcons.height = Math.round(ui.titleBarHeight);
+	windowIcons.style.position = "absolute";
+	windowIcons.style.right    = "0px";
+	windowTitle.appendChild(windowIcons);
+
+	var titleText = document.createElement("p");
+	titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
+	titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
+	titleText.style.color      = "#FFFFFF";
+	titleText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
+	titleText.textContent      = data.title;
+	windowTitle.appendChild(titleText);
+
+	var windowItem = document.createElement("div");
+	windowItem.id  = data.id;
+	windowItem.className      = "windowItem";
+	windowItem.style.left     = (-ui.offsetX).toString() + "px";
+	windowItem.style.top      = (ui.titleBarHeight-ui.offsetY).toString() + "px";
+	windowItem.style.webkitTransform = translate;
+	windowItem.style.mozTransform    = translate;
+	windowItem.style.transform       = translate;
+	windowItem.style.overflow = "hidden";
+	windowItem.style.zIndex   = (itemCount+1).toString();
+	if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
+
+	var cornerSize = Math.min(data.width, data.height) / 5;
+    var dragCorner = document.createElement("div");
+    dragCorner.className      = "dragCorner";
+    dragCorner.style.position = "absolute";
+    dragCorner.style.width    = cornerSize.toString() + "px";
+    dragCorner.style.height   = cornerSize.toString() + "px";
+    dragCorner.style.top      = (data.height-cornerSize).toString() + "px";
+    dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
+	dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
+    dragCorner.style.border   = "none";
+    dragCorner.style.zIndex   = "1";
+    windowItem.appendChild(dragCorner);
+	
+	parent.appendChild(windowTitle);
+	parent.appendChild(windowItem);
+
+	// App launched in window
+	if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+    if(data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+
+	// convert url if hostname is alias for current origin
+	var url = cleanURL(data.url);
+
+	function loadApplication() {
+		var init = {
+			id:     data.id,
+			x:      data.left,
+			y:      data.top+ui.titleBarHeight,
+			width:  data.width,
+			height: data.height,
+			resrc:  url,
+			date:   date
+		};
+
+		// load new app
+		if(window[data.application] === undefined) {
+			var js = document.createElement("script");
+			js.addEventListener('error', function(event) {
+				console.log("Error loading script: " + data.application + ".js");
+			}, false);
+			js.addEventListener('load', function(event) {
+				var newapp = new window[data.application]();
+				newapp.init(init);
+
+				if (newapp.state !== undefined) {
+					Object.observe(newapp.state, function (changes) {
+						if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
+					}, ['update', 'add']);
+				}
+
+				newapp.load(data.data, date);
+				newapp.refresh(date);
+
+				applications[data.id]   = newapp;
+				controlObjects[data.id] = newapp;
+
+				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+			}, false);
+			js.type = "text/javascript";
+			js.src = url + "/" + data.application + ".js";
+			console.log(url + "/" + data.application + ".js");
+			document.head.appendChild(js);
+		}
+
+		// load existing app
+		else {
+			var app = new window[data.application]();
+			app.init(init);
+
+			if(app.state !== undefined){
+				Object.observe(app.state, function(changes) {
+					if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
+				}, ['update', 'add']);
+			}
+
+			app.load(data.data, date);
+			app.refresh(date);
+
+			applications[data.id] = app;
+			controlObjects[data.id] = app;
+
+			if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+			if (data.application === "movie_player") setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+		}
+	}
+
+	// load all dependencies
+	if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
+		loadApplication();
+	}
+	else {
+		var loadResource = function(idx) {
+			if (dependencies[data.resrc[idx]] === true) {
+				if((idx+1) < data.resrc.length) {
+					loadResource(idx+1);
+				}
+				else {
+					console.log("all resources loaded");
+					loadApplication();
+				}
+
+				return;
+			}
+
+			dependencies[data.resrc[idx]] = false;
+
+			var js = document.createElement("script");
+			js.addEventListener('error', function(event) {
+				console.log("Error loading script: " + data.resrc[idx]);
+			}, false);
+
+			js.addEventListener('load', function(event) {
+				dependencies[data.resrc[idx]] = true;
+
+				if((idx+1) < data.resrc.length) {
+					loadResource(idx+1);
+				}
+				else {
+					console.log("all resources loaded");
+					loadApplication();
+				}
+			});
+			js.type = "text/javascript";
+			js.src = url + "/" + data.resrc[idx];
+			document.head.appendChild(js);
+		};
+		// Start loading the first resource
+		loadResource(0);
+	}
+
+	itemCount += 2;
 }

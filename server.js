@@ -3824,6 +3824,11 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 	SAGE2Items.portals.addButtonToItem(dataSession.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.portals.addButtonToItem(dataSession.id, "dragCorner", "rectangle", {x: geometry.w-cornerSize, y: geometry.h+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
+	SAGE2Items.portals.interactMgr = new InteractableManager();
+	SAGE2Items.portals.interactMgr.addLayer("radialMenus",  2);
+	SAGE2Items.portals.interactMgr.addLayer("widgets",      1);
+	SAGE2Items.portals.interactMgr.addLayer("applications", 0);
+
 	broadcast('initializeDataSharingSession', dataSession);
 	remoteSharingSessions[dataSession.id] = {portal: dataSession, wsio: remoteWSIO};
 }
@@ -4321,14 +4326,14 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj) {
 		var localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
-			appInstance.left = localPt.x;
-			appInstance.top = localPt.y;
-			appInstance.width = app.previousPosition.width;
-			appInstance.height = app.previousPosition.height;
+			appInstance.left = localPt.x / obj.data.scale;
+			appInstance.top = (localPt.y-config.ui.titleBarHeight) / obj.data.scale;
+			appInstance.width = app.previousPosition.width / obj.data.scale;
+			appInstance.height = app.previousPosition.height / obj.data.scale;
 			
+			broadcast('createAppWindowInDataSharingPortal', {portal: obj.data.id, application: appInstance});
 			// TODO:
-			//   - add app geometry as button inside portal
-			//   - send app to display clients to render inside portal
+			//   - add app geometry inside portal
 			//   - send message to remote site to add new shared app   
 		});
 	}
@@ -5868,6 +5873,7 @@ function handleApplicationResize(appId) {
 function handleDataSharingPortalResize(portalId) {
 	if (SAGE2Items.portals.list[portalId] === undefined) return;
 
+	SAGE2Items.portals.list[portalId].scale = SAGE2Items.portals.list[portalId].width / SAGE2Items.portals.list[portalId].natural_width;
 	var portalWidth = SAGE2Items.portals.list[portalId].width;
 	var portalHeight = SAGE2Items.portals.list[portalId].height;
 
