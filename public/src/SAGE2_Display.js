@@ -455,8 +455,15 @@ function setupListeners() {
 
 		var app = applications[position_data.elemId];
 		if(app !== undefined) {
-			app.sage2_x = parseInt(position_data.elemLeft, 10);
-			app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+			var parentTransform = getParentTransform(selectedElem);
+			if (parentTransform !== null) {
+				app.sage2_x = parseInt(position_data.elemLeft, 10)*parentTransform.scale.x + parentTransform.translate.x + ui.offsetX;
+				app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10)*parentTransform.scale.y + parentTransform.translate.y + ui.offsetY;
+			}
+			else {
+				app.sage2_x = parseInt(position_data.elemLeft, 10);
+				app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+			}
 
 			var date  = new Date(position_data.date);
 			if (position_data.force || app.moveEvents === "continuous") {
@@ -566,10 +573,19 @@ function setupListeners() {
 
 		var app = applications[position_data.elemId];
 		if(app !== undefined) {
-			app.sage2_x      = parseInt(position_data.elemLeft, 10);
-			app.sage2_y      = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
-			app.sage2_width  = parseInt(position_data.elemWidth, 10);
-			app.sage2_height = parseInt(position_data.elemHeight, 10);
+			var parentTransform = getParentTransform(selectedElem);
+			if (parentTransform !== null) {
+				app.sage2_x = parseInt(position_data.elemLeft, 10)*parentTransform.scale.x + parentTransform.translate.x + ui.offsetX;
+				app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10)*parentTransform.scale.y + parentTransform.translate.y + ui.offsetY;
+				app.sage2_width  = parseInt(position_data.elemWidth, 10)*parentTransform.scale.x;
+				app.sage2_height = parseInt(position_data.elemHeight, 10)*parentTransform.scale.y;
+			}
+			else {
+				app.sage2_x = parseInt(position_data.elemLeft, 10);
+				app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+				app.sage2_width  = parseInt(position_data.elemWidth, 10);
+				app.sage2_height = parseInt(position_data.elemHeight, 10);
+			}
 
 			var date = new Date(position_data.date);
 			if(position_data.force || app.resizeEvents === "continuous") {
@@ -1101,4 +1117,29 @@ function createAppWindow(data, parentId, offsetX, offsetY) {
 	}
 
 	itemCount += 2;
+}
+
+function getParentTransform(elem) {
+	var parentTransform = elem.parentNode.style.transform;
+	if (!parentTransform) return null;
+
+	var translate = {x: 0, y: 0};
+	var scale = {x: 1, y: 1};
+	var tIdx = parentTransform.indexOf("translate");
+	if(tIdx >= 0) {
+		var tStr = parentTransform.substring(tIdx+10, parentTransform.length);
+		tStr = tStr.substring(0, tStr.indexOf(")"));
+		var tValue = tStr.split(",");
+		translate.x = parseFloat(tValue[0]);
+		translate.y = parseFloat(tValue[1]);
+	}
+	var sIdx = parentTransform.indexOf("scale");
+	if(sIdx >= 0) {
+		var sStr = parentTransform.substring(sIdx+6, parentTransform.length);
+		sStr = sStr.substring(0, sStr.indexOf(")"));
+		var sValue = sStr.split(",");
+		scale.x = parseFloat(sValue[0]);
+		scale.y = parseFloat(sValue[1]);
+	}
+	return {translate: translate, scale: scale};
 }
