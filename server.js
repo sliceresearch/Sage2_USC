@@ -479,16 +479,17 @@ function setupListeners(wsio) {
 	wsio.on('unmuteVideo',                          wsUnmuteVideo);
 	wsio.on('loopVideo',                            wsLoopVideo);
 
-	wsio.on('addNewElementFromRemoteServer',        wsAddNewElementFromRemoteServer);
-	wsio.on('requestNextRemoteFrame',               wsRequestNextRemoteFrame);
-	wsio.on('updateRemoteMediaStreamFrame',         wsUpdateRemoteMediaStreamFrame);
-	wsio.on('stopMediaStream',                      wsStopMediaStream);
-    wsio.on('updateRemoteMediaBlockStreamFrame',    wsUpdateRemoteMediaBlockStreamFrame);
-	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
-	wsio.on('requestDataSharingSession',            wsRequestDataSharingSession);
-	wsio.on('cancelDataSharingSession',             wsCancelDataSharingSession);
-	wsio.on('acceptDataSharingSession',             wsAcceptDataSharingSession);
-	wsio.on('rejectDataSharingSession',             wsRejectDataSharingSession);
+	wsio.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+	wsio.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
+	wsio.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
+	wsio.on('stopMediaStream',                        wsStopMediaStream);
+    wsio.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
+	wsio.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
+	wsio.on('requestDataSharingSession',              wsRequestDataSharingSession);
+	wsio.on('cancelDataSharingSession',               wsCancelDataSharingSession);
+	wsio.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
+	wsio.on('rejectDataSharingSession',               wsRejectDataSharingSession);
+	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
 	wsio.on('selectedControlId',                    wsSelectedControlId);
@@ -1473,7 +1474,6 @@ function createAppFromDescription(app, callback) {
 	console.log(sageutils.header("Session") + "App", app.id);
 
 	var cloneApp = function(appInstance, videohandle) {
-		appInstance.id              = getUniqueAppId();
 		appInstance.left            = app.left;
 		appInstance.top             = app.top;
 		appInstance.width           = app.width;
@@ -1522,6 +1522,7 @@ function loadSession (filename) {
 
 			session.apps.forEach(function(element, index, array) {
 				createAppFromDescription(element, function(appInstance, videohandle) {
+					appInstance.id = getUniqueAppId();
 					if (appInstance.animation) {
 						var i;
 						SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
@@ -2391,6 +2392,21 @@ function wsRejectDataSharingSession(wsio, data) {
 	showWaitDialog(false);
 }
 
+function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
+	var key;
+	var remote = null;
+	for (key in remoteSharingSessions) {
+		if (remoteSharingSessions[key].wsio.id === wsio.id) {
+			remote = remoteSharingSessions[key];
+			break;
+		}
+	}
+	if (remote !== null) {
+		remoteSharingSessions[remote.portal.id].appCount++;
+		broadcast('createAppWindowInDataSharingPortal', {portal: remote.portal.id, application: data});
+	}
+}
+
 // **************  Widget Control Messages *****************
 
 function wsAddNewControl(wsio, data){
@@ -2695,6 +2711,10 @@ var getNewUserId = (function() {
 		return id;
 	};
 })();
+
+function getUniqueSharedAppId(portalId) {
+	return "app_" + remoteSharingSessions[portalId].appCount + "_" + portalId;
+}
 
 function getApplications() {
 	var uploadedApps = assets.listApps();
@@ -3063,6 +3083,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('cancelDataSharingSession', wsCancelDataSharingSession);
 		remote.on('acceptDataSharingSession', wsAcceptDataSharingSession);
 		remote.on('rejectDataSharingSession', wsRejectDataSharingSession);
+		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 		remote.emit('addClient', clientDescription);
 		remoteSites[index].connected = true;
@@ -3830,7 +3851,7 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 	SAGE2Items.portals.interactMgr.addLayer("applications", 0);
 
 	broadcast('initializeDataSharingSession', dataSession);
-	remoteSharingSessions[dataSession.id] = {portal: dataSession, wsio: remoteWSIO};
+	remoteSharingSessions[dataSession.id] = {portal: dataSession, wsio: remoteWSIO, appCount: 0};
 }
 
 function requestNewDataSharingSession(remote) {
@@ -4326,12 +4347,16 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj) {
 		var localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
+			appInstance.id = getUniqueSharedAppId(obj.data.id);
 			appInstance.left = localPt.x / obj.data.scale;
 			appInstance.top = (localPt.y-config.ui.titleBarHeight) / obj.data.scale;
 			appInstance.width = app.previousPosition.width / obj.data.scale;
 			appInstance.height = app.previousPosition.height / obj.data.scale;
+
+			remoteSharingSessions[obj.data.id].appCount++;
 			
 			broadcast('createAppWindowInDataSharingPortal', {portal: obj.data.id, application: appInstance});
+			remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
 			// TODO:
 			//   - add app geometry inside portal
 			//   - send message to remote site to add new shared app   
