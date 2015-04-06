@@ -4030,7 +4030,13 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
-		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPress', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+		var rData = {
+			id: uniqueID,
+			left: scaledPt.x,
+			top: scaledPt.y,
+			button: data.button
+		};
+		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPress', rData);
 	}
 
 	interactMgr.moveObjectToFront(obj.id, "portals", ["applications"]);
@@ -4235,7 +4241,9 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if(moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / moveAppPortal.data.scale};
-		remoteSharingSessions[moveAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+		if (remoteInteraction[uniqueID].local) {
+			remoteSharingSessions[moveAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+		}
 		updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(scaledPt.x, scaledPt.y);
 		moveApplicationWindow(updatedMoveItem);
 		return;
@@ -4243,7 +4251,9 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	else if(resizeAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, resizeAppPortal.type, resizeAppPortal.geometry);
 		scaledPt = {x: localPt.x / resizeAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / resizeAppPortal.data.scale};
-		remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+		if (remoteInteraction[uniqueID].local) {
+			remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+		}
 		updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(scaledPt.x, scaledPt.y);
 		moveAndResizeApplicationWindow(updatedResizeItem);
 		return;
