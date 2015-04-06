@@ -1503,7 +1503,7 @@ function createAppFromDescription(app, callback) {
 		appInstance.previous_width  = app.previous_width;
 		appInstance.previous_height = app.previous_height;
 		appInstance.maximized       = app.maximized;
-		mergeObjects(app.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+		mergeObjects(app.data, appInstance.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		callback(appInstance, videohandle);
 	};

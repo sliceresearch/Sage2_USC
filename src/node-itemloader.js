@@ -506,7 +506,7 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: external_url,
+			doc_url: external_url,
 			page: 1,
 			numPagesShown: 1
 		},

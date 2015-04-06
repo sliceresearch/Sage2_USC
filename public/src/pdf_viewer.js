@@ -70,7 +70,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			this.ctx.push(ctx);
 		}
 
-		this.state.src  = null;
+		this.state.doc_url  = null;
 		this.state.page = null;
 		this.state.numPagesShown = null;
 	},
@@ -84,18 +84,18 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	*/
 	load: function(state, date) {
 		// load new document
-		if (state.src !== undefined && state.src !== null) {
+		if (state.doc_url !== undefined && state.doc_url !== null) {
 			var _this = this;
 			this.loaded = false;
 
-			state.src = cleanURL(state.src);
+			state.doc_url = cleanURL(state.doc_url);
 
-			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
+			PDFJS.getDocument({url: state.doc_url}).then(function getDocumentCallback(pdfDocument) {
 				console.log("loaded pdf document", _this.gotresize);
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
-				_this.state.src  = state.src;
+				_this.state.doc_url  = state.doc_url;
 				_this.state.page = state.page;
 				_this.state.numPagesShown = state.numPagesShown;
 
@@ -177,7 +177,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				var blob = new Blob([buf], {type: mime});
 				var source = window.URL.createObjectURL(blob);
 
-				if(_this.src !== null) window.URL.revokeObjectURL(_this.src);
+				if(_this.src!== null) window.URL.revokeObjectURL(_this.src);
 				_this.src = source;
 
 				_this.element.src = _this.src;
