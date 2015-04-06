@@ -228,7 +228,7 @@ var remoteInteraction = {};
 var mediaBlockStreams = {};
 //var applications = []; // app windows
 var controls = [];     // app widget bars
-var radialMenus = {};  // radial menus
+//var radialMenus = {};  // radial menus
 
 
 
@@ -3677,6 +3677,9 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	console.log("pointer press on open space");
 
+	if (data.button === "right") {
+		createRadialMenu(uniqueID, pointerX, pointerX);
+	}
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -3684,7 +3687,16 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 }
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
-
+	console.log("pointer press on radial menu");
+	console.log(uniqueID);
+	console.log(pointerX);
+	console.log(pointerY);
+	console.log(data);
+	console.log(obj);
+	console.log(localPt);
+	
+	var radialMenu = obj.data.onPress(uniqueID);
+	console.log(obj.data);
 }
 
 function pointerPressOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -3850,6 +3862,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "radialMenus":
 			removeExistingHoverCorner(uniqueID);
+			pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 		case "widgets":
 			removeExistingHoverCorner(uniqueID);
@@ -3858,6 +3871,10 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 	}
+}
+
+function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	var radialMenu = obj.data.onMove(uniqueID);
 }
 
 function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -3963,6 +3980,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		case "staticUI":
 			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
 			break;
+		case "radialMenus":
+			pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj);
+			break;
 		case "applications":
 			if (dropSelectedApp(uniqueID, true) === null) {
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -3991,6 +4011,10 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		};
 		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 	}
+}
+
+function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
+	var radialMenu = obj.data.onRelease( uniqueID );
 }
 
 function dropSelectedApp(uniqueID, valid) {
@@ -5509,70 +5533,47 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 //createMediabrowser();
 function createRadialMenu( uniqueID, pointerX, pointerY ) {
 
-	var ct = findControlsUnderPointer(pointerX, pointerY);
-	var elem = findAppUnderPointer(pointerX, pointerY);
-	var now  = new Date();
+	var validLocation = true;
+	var newMenuPos = {x: pointerX, y: pointerY};
 
-	if( ct === null ) // Do not open menu over widget
+	// Make sure there's enough distance from other menus
+	
+	for (var key in SAGE2Items.radialMenus.list)
 	{
-		if( elem === null )
+		var existingRadialMenu = SAGE2Items.radialMenus.list[key];
+
+		var prevMenuPos = { x: existingRadialMenu.left, y: existingRadialMenu.top };
+
+		var distance = Math.sqrt( Math.pow( Math.abs(newMenuPos.x - prevMenuPos.x), 2 ) + Math.pow( Math.abs(newMenuPos.y - prevMenuPos.y), 2 ) );
+
+		if( existingRadialMenu.visible && distance < existingRadialMenu.radialMenuSize.x )
 		{
-			var validLocation = true;
-			var newMenuPos = {x: pointerX, y: pointerY};
-
-			// Make sure there's enough distance from other menus
-			for (var existingMenuID in radialMenus)
-			{
-				var existingRadialMenu = radialMenus[existingMenuID];
-				var prevMenuPos = { x: existingRadialMenu.left, y: existingRadialMenu.top };
-
-				var distance = Math.sqrt( Math.pow( Math.abs(newMenuPos.x - prevMenuPos.x), 2 ) + Math.pow( Math.abs(newMenuPos.y - prevMenuPos.y), 2 ) );
-
-				if( existingRadialMenu.visible && distance < existingRadialMenu.radialMenuSize.x )
-				{
-					validLocation = false;
-					console.log("Menu is too close to existing menu");
-				}
-			}
-
-			if( validLocation && radialMenus[uniqueID+"_menu"] === undefined )
-			{
-				var newRadialMenu = new Radialmenu(uniqueID+"_menu", uniqueID, config.ui);
-				newRadialMenu.setPosition(newMenuPos);
-				interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(radialMenus).length, newRadialMenu);
-				interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left+(newRadialMenu.radialMenuSize.x/2), y: newRadialMenu.top-(newRadialMenu.radialMenuSize.y/2), w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(radialMenus).length, newRadialMenu);
-				radialMenus[uniqueID+"_menu"] = newRadialMenu;
-
-				// Open a 'media' radial menu
-				broadcast('createRadialMenu', newRadialMenu.getInfo());
-			}
-			else if( validLocation && radialMenus[uniqueID+"_menu"] !== undefined )
-			{
-				radialMenus[uniqueID+"_menu"].setPosition(newMenuPos);
-
-				radialMenus[uniqueID+"_menu"].visible = true;
-				broadcast('showRadialMenu', radialMenus[uniqueID+"_menu"].getInfo());
-			}
+			validLocation = false;
+			console.log("Menu is too close to existing menu");
 		}
-		else
-		{
-			// Open a 'app' radial menu (or in this case application widget)
-			var elemCtrl = findControlById(elem.id+uniqueID+"_controls");
-			if (elemCtrl === null) {
-				broadcast('requestNewControl', {elemId: elem.id, user_id: uniqueID, user_label: "Touch", x: pointerX, y: pointerY, date: now });
-			}
-			else if (elemCtrl.show === false) {
-				showControl(elemCtrl, uniqueID, pointerX, pointerY);
-
-				var app = findAppById(elemCtrl.appId);
-				if(app !== null) {
-					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
-				}
-			}
-			else {
-				moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
-			}
-		}
+	}
+	
+	if( validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined )
+	{
+		var newRadialMenu = new Radialmenu(uniqueID+"_menu", uniqueID, config.ui);
+		newRadialMenu.setPosition(newMenuPos);
+		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
+		interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left+(newRadialMenu.radialMenuSize.x/2), y: newRadialMenu.top-(newRadialMenu.radialMenuSize.y/2), w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
+		SAGE2Items.radialMenus.list[uniqueID+"_menu"] = newRadialMenu;
+		
+		//console.log("Create New Radial menu");
+		//console.log(newRadialMenu);
+		// Open a 'media' radial menu
+		broadcast('createRadialMenu', newRadialMenu.getInfo());
+	}
+	else if( validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] !== undefined )
+	{
+		console.log("Move existing Radial menu");
+		console.log(SAGE2Items.radialMenus.list[uniqueID+"_menu"]);
+		
+		SAGE2Items.radialMenus.list[uniqueID+"_menu"].setPosition(newMenuPos);
+		SAGE2Items.radialMenus.list[uniqueID+"_menu"].visible = true;
+		broadcast('showRadialMenu', SAGE2Items.radialMenus.list[uniqueID+"_menu"].getInfo());
 	}
 	updateRadialMenu(uniqueID);
 }

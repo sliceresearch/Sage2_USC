@@ -168,4 +168,31 @@ RadialMenu.prototype.onEvent = function(data) {
 	return false;
 };
 
+/**
+*
+*
+* @method onPress
+*/
+RadialMenu.prototype.onPress = function(id) {
+	this.activeEventIDs.push(id);
+};
+
+/**
+*
+*
+* @method onPress
+*/
+RadialMenu.prototype.onMove = function(id) {
+	console.log( this.hasEventID(id) );
+};
+
+/**
+*
+*
+* @method onPress
+*/
+RadialMenu.prototype.onRelease = function(id) {
+	this.activeEventIDs.splice(this.activeEventIDs.indexOf(id), 1);
+};
+
 module.exports = RadialMenu;
