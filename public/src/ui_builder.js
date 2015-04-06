@@ -602,8 +602,8 @@ function UIBuilder(json_cfg, clientID) {
 		pointerElem.style.zIndex = 10000;
 		
 		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
-			pointerElem.style.left = "0px";
-			pointerElem.style.top = "0px";
+			pointerElem.style.left = (-this.pointerOffsetX).toString() + "px";
+			pointerElem.style.top = (-this.pointerOffsetY).toString()  + "px";
 			document.getElementById(pointer_data.portal+"_overlay").appendChild(pointerElem);
 		}
 		else {
