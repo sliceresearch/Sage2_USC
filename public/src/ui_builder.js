@@ -602,7 +602,15 @@ function UIBuilder(json_cfg, clientID) {
 		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
 		pointerElem.style.top = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
 		pointerElem.style.zIndex = 10000;
-		this.main.appendChild(pointerElem);
+		
+		console.log(pointer_data);
+		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
+			console.log("adding pointer to portal window: " + pointer_data.portal);
+			document.getElementById(pointer_data.portal).appendChild(pointerElem);
+		}
+		else {
+			this.main.appendChild(pointerElem);
+		}
 
 		var ptr = new Pointer();
 		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight);

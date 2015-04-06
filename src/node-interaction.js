@@ -34,6 +34,7 @@ function Interaction(config) {
 	this.selectOffsetX   = 0;
 	this.selectOffsetY   = 0;
 	this.selectTimeId    = {};
+	this.portal = null;
 	this.interactionMode = MODE.WINDOW_MANAGEMENT;
 	this.configuration   = config;
 
