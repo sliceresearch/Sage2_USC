@@ -503,6 +503,7 @@ function setupListeners(wsio) {
 	wsio.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
 	wsio.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
 	wsio.on('remoteSagePointerPress',                 wsRemoteSagePointerPress);
+	wsio.on('remoteSagePointerRelease',               wsRemoteSagePointerRelease);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
@@ -2446,7 +2447,8 @@ function wsRemoteSagePointerPosition(wsio, data) {
 	var pointerX = sagePointers[data.id].left;
 	var pointerY = sagePointers[data.id].top;
 
-	updatePointerPosition(data.id, pointerX, pointerY, data);
+	pointerMoveInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data)
+	//updatePointerPosition(data.id, pointerX, pointerY, data);
 }
 
 function wsRemoteSagePointerPress(wsio, data) {
@@ -2458,6 +2460,18 @@ function wsRemoteSagePointerPress(wsio, data) {
 	var pointerY = sagePointers[data.id].top;
 
 	pointerPressInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data);
+}
+
+function wsRemoteSagePointerRelease(wsio, data) {
+	if (sagePointers[data.id] === undefined) return;
+
+	sagePointers[data.id].left = data.left;
+	sagePointers[data.id].top = data.top;
+	var pointerX = sagePointers[data.id].left;
+	var pointerY = sagePointers[data.id].top;
+
+	pointerRelease(data.id, pointerX, pointerY, data);
+	//pointerReleaseInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data);
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -3172,6 +3186,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('stopRemoteSagePointer', wsStopRemoteSagePointer);
 		remote.on('remoteSagePointerPosition', wsRemoteSagePointerPosition);
 		remote.on('remoteSagePointerPress', wsRemoteSagePointerPress);
+		remote.on('remoteSagePointerRelease', wsRemoteSagePointerRelease);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 		remote.emit('addClient', clientDescription);
@@ -4434,6 +4449,28 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 	}
 }
 
+function pointerMoveInDataSharingArea(uniqueID, portalId, scaledPt, data) {
+	broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
+
+	var moveAppPortal = findApplicationPortal(remoteInteraction[uniqueID].selectedMoveItem);
+	var resizeAppPortal = findApplicationPortal(remoteInteraction[uniqueID].selectedResizeItem);
+	var updatedMoveItem;
+	var updatedResizeItem;
+	if(moveAppPortal !== null) {
+		updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(scaledPt.x, scaledPt.y);
+		moveApplicationWindow(updatedMoveItem);
+		return;
+	}
+	else if(resizeAppPortal !== null) {
+		updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(scaledPt.x, scaledPt.y);
+		moveAndResizeApplicationWindow(updatedResizeItem);
+		return;
+	}
+
+	var obj = interactMgr.getObject(portalId, "portals");
+	pointerMoveOnDataSharingPortal(uniqueID, scaledPt.x, scaledPt.y, data, obj, {x: scaledPt.x*obj.data.scale, y: scaledPt.y*obj.data.scale});
+}
+
 function removeExistingHoverCorner(uniqueID) {
 	// remove hover corner if exists
 	if(remoteInteraction[uniqueID].hoverCornerItem !== null){
@@ -4501,10 +4538,24 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	var im;
 	var obj;
-	var ignoreSelf = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem;
-    if (ignoreSelf !== undefined && ignoreSelf !== null) {
-    	im = findInteractableManager(ignoreSelf.id);
-    	obj = im.searchGeometry({x: pointerX, y: pointerY}, null, [ignoreSelf.id]);
+
+	var localPt;
+	var scaledPt;
+	var currentApp = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem;
+	var appPortal = findApplicationPortal(currentApp);
+	var updatedItem;
+	if(appPortal !== null) {
+		localPt = globalToLocal(pointerX, pointerY, appPortal.type, appPortal.geometry);
+		scaledPt = {x: localPt.x / appPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / appPortal.data.scale};
+		if (remoteInteraction[uniqueID].local) {
+			remoteSharingSessions[appPortal.id].wsio.emit('remoteSagePointerRelease', {id: uniqueID, left: scaledPt.x, top: scaledPt.y, button: data.button});
+		}
+	}
+
+
+    if (currentApp !== undefined && currentApp !== null) {
+    	im = findInteractableManager(currentApp.id);
+    	obj = im.searchGeometry({x: pointerX, y: pointerY}, null, [currentApp.id]);
     }
     else {
     	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
