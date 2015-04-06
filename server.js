@@ -4577,7 +4577,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 			break;
 		case "portals":
-			pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj);
+			pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data);
 			break;
 		default:
 			dropSelectedItem(uniqueID, true);
@@ -4606,10 +4606,11 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	*/
 }
 
-function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj) {
+function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
 	var app = dropSelectedItem(uniqueID, false);
+	var localPt;
 	if (app !== null) {
-		var localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
+		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
 			appInstance.id = getUniqueSharedAppId(obj.data.id);
@@ -4631,6 +4632,27 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj) {
 
 			remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
 		});
+	}
+	else {
+		if (remoteInteraction[uniqueID].appInteractionMode()) {
+			localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+			var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
+			var pObj = SAGE2Items.portals.interactMgr[obj.data.id].searchGeometry(scaledPt);
+			if (pObj === null) {
+				return;
+			}
+
+			var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+			switch (pObj.layerId) {
+				case "radialMenus":
+					break;
+				case "widgets":
+					break;
+				case "applications":
+					sendPointerReleaseToApplication(uniqueID, pObj.data, scaledPt.x, scaledPt.y, data);
+					break;
+			}
+		}
 	}
 }
 
