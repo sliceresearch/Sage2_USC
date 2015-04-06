@@ -188,15 +188,22 @@ InteractableManager.prototype.editZIndex = function(id, layerId, zIndex) {
 * @method moveObjectToFront
 * @param id {String} unique identifier for the geometric object
 * @param layerId {String} unique identifier for the layer
+* @param otherLayerIds {Array} unique identifiers for other layers to include in sort
 */
-InteractableManager.prototype.moveObjectToFront = function(id, layerId) {
+InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLayerIds) {
+	var i;
 	var key;
 	var currZIndex = this.interactableObjects[layerId][id].zIndex;
 	var maxZIndex = currZIndex;
-	for (key in this.interactableObjects[layerId]) {
-		if (this.interactableObjects[layerId][key].zIndex > currZIndex) {
-			if (this.interactableObjects[layerId][key].zIndex > maxZIndex) maxZIndex = this.interactableObjects[layerId][key].zIndex;
-			this.interactableObjects[layerId][key].zIndex--;
+	var allLayerIds = [layerId].concat(otherLayerIds || []);
+
+	for (i=0; i<allLayerIds.length; i++) {
+		for (key in this.interactableObjects[allLayerIds[i]]) {
+			if (this.interactableObjects[allLayerIds[i]][key].zIndex > currZIndex) {
+				if (this.interactableObjects[allLayerIds[i]][key].zIndex > maxZIndex) 
+					maxZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
+				this.interactableObjects[allLayerIds[i]][key].zIndex--;
+			}
 		}
 	}
 	this.interactableObjects[layerId][id].zIndex = maxZIndex;
@@ -207,13 +214,19 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId) {
 *
 * @method getObjectZIndexList
 * @param layerId {String} unique identifier for the layer
+* @param otherLayerIds {Array} unique identifiers for other layers to include in list
 * @return zIndexList {Obejct} list of geometric object ids and there zIndex values
 */
-InteractableManager.prototype.getObjectZIndexList = function(layerId) {
+InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayerIds) {
+	var i;
 	var key;
 	var zIndexList = {};
-	for (key in this.interactableObjects[layerId]) {
-		zIndexList[this.interactableObjects[layerId][key].id] = this.interactableObjects[layerId][key].zIndex;
+	var allLayerIds = [layerId].concat(otherLayerIds || []);
+
+	for (i=0; i<allLayerIds.length; i++) {
+		for (key in this.interactableObjects[allLayerIds[i]]) {
+			zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = this.interactableObjects[allLayerIds[i]][key].zIndex;
+		}
 	}
 	return zIndexList;
 };
@@ -238,7 +251,12 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 		results = [];
 		for(i=this.layerOrder.length-1; i>=0; i--) {
 			tmp = this.layers[this.layerOrder[i]].objects.search([point.x, point.y, point.x, point.y]);
-			results.push(tmp);
+			if (i < this.layerOrder.length-1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i+1]].zIndex) {
+				results[results.length-1] = results[results.length-1].concat(tmp);
+			}
+			else {
+				results.push(tmp);
+			}
 		}
 	}
 
