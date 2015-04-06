@@ -599,13 +599,14 @@ function UIBuilder(json_cfg, clientID) {
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
-		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		pointerElem.style.left = (0-this.pointerOffsetX-this.offsetX).toString() + "px";
+		pointerElem.style.top = (0-this.pointerOffsetY-this.offsetY).toString()  + "px";
 		pointerElem.style.zIndex = 10000;
 		
 		console.log(pointer_data);
 		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
-			console.log("adding pointer to portal window: " + pointer_data.portal);
+			pointerElem.style.left = (-8-this.pointerOffsetX-this.offsetX).toString() + "px";
+			pointerElem.style.top = (-8-this.pointerOffsetY-this.offsetY).toString()  + "px";
 			document.getElementById(pointer_data.portal).appendChild(pointerElem);
 		}
 		else {
