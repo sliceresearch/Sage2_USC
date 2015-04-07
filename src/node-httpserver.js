@@ -135,6 +135,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			var sessionMatch = false;
 
 			//console.log("Checking cookies: " + cookieList);
+			console.log("Trying to access: " + getName);
 			console.log("Checking cookies: " + req.headers.cookie);
 
 			for( var i = 0; i < cookieList.length; i++) {
