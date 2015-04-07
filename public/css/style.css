@@ -177,6 +177,6 @@ body {
 	text-align: center;
 	vertical-align: middle;
 	overflow: hidden;
-	box-shadow: 2px 2px 2px 1px #222222;
+	box-shadow: 4px 4px 4px 2px #222222;
 	z-index: 1;
 }

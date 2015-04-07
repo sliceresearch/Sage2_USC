@@ -609,7 +609,10 @@ function SAGE2_init() {
 			selectedElemTitle.style.zIndex = zval.toString();
 			selectedElem.style.zIndex = (zval+1).toString();
 			//selectedElemCtrl.style.zIndex = (zval+2).toString();
-			
+			if(annotationItems.hasOwnProperty(order.idList[i])){
+				var annotationWindow = annotationItems[order.idList[i]];
+				annotationWindow.setOrder(zval);
+			}
 			zval += 2; // 
 		}
 	});
@@ -1140,15 +1143,15 @@ function SAGE2_init() {
 		var annotationWindow = annotationItems[data.appId];
 		if (annotationWindow){
 			annotationWindow.createMarker(data);
+			annotationWindow.makeNoteEditable(data);
 		}
 	});
 
 	wsio.on('removeMarkerFromNote', function(data){
-		var app = applications[data.appId];
-		if (app){
-			data.page = app.state? (app.state.page || 1) : 1;
-			annotationItems[data.appId].addNote(data);
-			annotationItems[data.appId].createMarker(data);	
+		var annotationWindow = annotationItems[data.appId];
+		if (annotationWindow){
+			annotationWindow.removeMarker(data);
+			annotationWindow.makeNoteEditable(data);
 		}
 	});
 
@@ -1177,7 +1180,6 @@ function SAGE2_init() {
 	wsio.on('makeNoteEditable', function(data){
 		var annotationWindow = annotationItems[data.appId];
 		if (annotationWindow){
-			console.log("in makeNoteEditable");
 			annotationWindow.makeNoteEditable(data);	
 			if (data.marker){
 				var app = applications[data.appId];

@@ -75,16 +75,40 @@ annotationSystem.prototype.getAnnotationForFile = function(filename, annotationI
 annotationSystem.prototype.saveAnnotationForFile = function(filename, annotationID, data){
     var key = "/" + filename + "/" + annotationID;
     this.push(key,data,true);
-}
+};
 
 annotationSystem.prototype.saveMarkerForAnnotation = function(filename, annotationID, markerData){
     var key = "/" + filename + "/" + annotationID + "/marker";
     this.push(key,markerData,true);
-}
+};
+
+annotationSystem.prototype.saveTextForAnnotation = function(filename, annotationID, textData){
+    var key = "/" + filename + "/" + annotationID + "/text";
+    this.push(key,textData,true);
+};
+
+annotationSystem.prototype.deleteAnnotationFromFile = function(filename, annotationID){
+    var key = "/" + filename + "/" + annotationID;
+    this.delete(key);
+};
+
+annotationSystem.prototype.deleteMarkerFromAnnotation = function(filename, annotationID){
+    var key = "/" + filename + "/" + annotationID + "/marker";
+    this.delete(key);
+};
+
 
 annotationSystem.prototype.push = function(key, value, overwrite) {
     try {
         this.db.push(key, value, overwrite);
+    } catch(error) {
+        console.error(error);
+    }
+};
+
+annotationSystem.prototype.delete = function(key) {
+    try {
+        this.db.delete(key);
     } catch(error) {
         console.error(error);
     }
@@ -180,6 +204,7 @@ annotationSystem.prototype.hideAnnotationWindow = function(appId){
         if (annotationWindow.show === true){
             annotationWindow.show = false;
             annotationWindow.button.left -= annotationWindow.width;
+            this.setAllNotesAsNonEditable(appId);
             return {appId:appId,button:{left:annotationWindow.button.left,top:annotationWindow.button.top}};
         }
     }
@@ -213,33 +238,41 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
     return {appId:data.elemId, left:annotationWindow.left,top:annotationWindow.top, height:annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
 };
 
-annotationSystem.prototype.addNewNote = function(noteData){
-    if (!this.annotationWindows[noteData.appId]) return null;
-    var annotationWindow = this.annotationWindows[noteData.appId];
+annotationSystem.prototype.addNewNote = function(credentials){
+    if (!this.annotationWindows[credentials.appId]) return null;
+    var annotationWindow = this.annotationWindows[credentials.appId];
     annotationWindow.annotationCount += 1;
-    noteData.id = annotationWindow.annotationCount;
-    this.editableNote[noteData.appId][noteData.userLabel.toString()] = noteData;
-    this.saveAnnotationForFile(annotationWindow.filename, noteData.id, {
-        id: noteData.id, 
-        userLabel: noteData.userLabel, 
-        createdOn: noteData.createdOn, 
-        marker: noteData.marker, 
+    credentials.id = annotationWindow.annotationCount;
+    this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
+    this.saveAnnotationForFile(annotationWindow.filename, credentials.id, {
+        id: credentials.id, 
+        userLabel: credentials.userLabel, 
+        createdOn: credentials.createdOn, 
+        marker: credentials.marker, 
         text: null
     });
-    return noteData;
+    return credentials;
 };
 
 
-annotationSystem.prototype.setNoteAsEditable = function(noteData){
-    if (!this.annotationWindows[noteData.appId]) return null;
-    this.editableNote[noteData.appId][noteData.userLabel.toString()] = noteData;
+annotationSystem.prototype.setNoteAsEditable = function(credentials){
+    if (!this.annotationWindows[credentials.appId]) return null;
+    this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
 };
 
-annotationSystem.prototype.setNoteAsNonEditable = function(noteData){
-    if (!this.annotationWindows[noteData.appId]) return null;
-    if (this.editableNote[noteData.appId].hasOwnProperty(noteData.userLabel.toString())){
-        delete this.editableNote[noteData.appId][noteData.userLabel.toString()];
+annotationSystem.prototype.setNoteAsNonEditable = function(credentials){
+    if (!this.annotationWindows[credentials.appId]) return null;
+    if (this.editableNote[credentials.appId].hasOwnProperty(credentials.userLabel.toString())){
+        delete this.editableNote[credentials.appId][credentials.userLabel.toString()];
     }
+};
+
+annotationSystem.prototype.setAllNotesAsNonEditable = function(appId){
+    if (!this.annotationWindows[appId]) return null;
+    if (this.editableNote.hasOwnProperty(appId)){
+        delete this.editableNote[appId];
+    }
+    this.editableNote[appId] = {};
 };
 
 annotationSystem.prototype.getAnnotationWindowForApp = function(appId){
@@ -250,11 +283,8 @@ annotationSystem.prototype.getAnnotationWindowForApp = function(appId){
 annotationSystem.prototype.setMarkerPosition = function(elem,click){
     if (!this.annotationWindows[elem.id]) return null;
     var annotationWindow = this.annotationWindows[elem.id];
-    console.log("First!");
     if (elem.id in this.editableNote){
-        console.log("Here");
         if (click.userLabel.toString() in this.editableNote[elem.id]){
-            console.log("Not here either!!");
             var noteData = this.editableNote[elem.id][click.userLabel.toString()];
             if (!noteData.marker) return null;
             var position = {};

@@ -45,7 +45,6 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	this.windowDiv.style.webkitTransform = translate;
 	this.windowDiv.style.mozTransform    = translate;
 	this.windowDiv.style.transform       = translate;
-	this.windowDiv.style.zIndex			 = "20";
 	this.windowDiv.style.display		 = "block";
 	this.windowDiv.className = "annotationWindow";
 	
@@ -60,7 +59,6 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	this.buttonDiv.style.webkitTransform 	= translate;
 	this.buttonDiv.style.mozTransform    	= translate;
 	this.buttonDiv.style.transform       	= translate;
-	this.buttonDiv.style.zIndex				= "20";
 	this.buttonDiv.display 					= "block";
 	this.buttonDiv.className 				= "annotationButton";
 
@@ -80,6 +78,11 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	this.populateWindow(data.annotationData);
 };
 
+SAGE2Annotations.prototype.setOrder = function (zval){
+	this.windowDiv.style.zIndex = (zval+1).toString();
+	this.buttonDiv.style.zIndex = (zval+1).toString();
+};
+
 SAGE2Annotations.prototype.deleteWindow = function(){
 	if (this.show === true){
 		ui.main.removeChild(this.windowDiv);
@@ -95,7 +98,6 @@ SAGE2Annotations.prototype.populateWindow = function(data){
 	}
 	setTimeout(function(){
 		for (var key in data){
-			console.log(data[key].marker);
 			if (data[key].marker){
 				this.createMarker(data[key]);
 			}
@@ -104,43 +106,45 @@ SAGE2Annotations.prototype.populateWindow = function(data){
 };
 
 SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
-	this.addNoteButton						= document.createElement("div");
+	this.addNoteButton						= document.createElement("img");
 	this.addNoteButton.style.left 				= data.addNoteButton.left.toString() + "px";
 	this.addNoteButton.style.top 				= data.addNoteButton.top.toString() + "px";
-	this.addNoteButton.style.width 				= data.addNoteButton.width.toString() + "px";
+	//this.addNoteButton.style.width 				= data.addNoteButton.width.toString() + "px";
 	this.addNoteButton.style.height 			= data.addNoteButton.height.toString() + "px";
 	this.addNoteButton.id 						= data.addNoteButton.id;
 	this.addNoteButton.display 					= "block";
 	this.addNoteButton.style.borderRadius		= "2px";
+	this.addNoteButton.src 						= "images/newNote.svg";
 	this.addNoteButton.className 				= "annotationButton";
 
-	this.addSummaryNoteButton							= document.createElement("div");
+	this.addSummaryNoteButton							= document.createElement("img");
 	this.addSummaryNoteButton.style.left 				= data.addSummaryNoteButton.left.toString() + "px";
 	this.addSummaryNoteButton.style.top 				= data.addSummaryNoteButton.top.toString() + "px";
-	this.addSummaryNoteButton.style.width 				= data.addSummaryNoteButton.width.toString() + "px";
+	//this.addSummaryNoteButton.style.width 				= data.addSummaryNoteButton.width.toString() + "px";
 	this.addSummaryNoteButton.style.height 				= data.addSummaryNoteButton.height.toString() + "px";
 	this.addSummaryNoteButton.id 						= data.addSummaryNoteButton.id;
 	this.addSummaryNoteButton.display 					= "block";
 	this.addSummaryNoteButton.style.borderRadius		= "2px";
+	this.addSummaryNoteButton.src 						= "images/newNoteOnly.svg";
 	this.addSummaryNoteButton.className 				= "annotationButton";
 
-	var buttonText 				= document.createElement("p");
+	/*var buttonText 				= document.createElement("p");
 	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
 	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
 	buttonText.style.color      = "#FFFFFF";
 	buttonText.style.textAlign = "center";
 	buttonText.display			= "block";
 	buttonText.innerText      = data.addNoteButton.caption;
-	this.addNoteButton.appendChild(buttonText);
+	this.addNoteButton.appendChild(buttonText);*/
 
-	buttonText 				= document.createElement("p");
+	/*buttonText 				= document.createElement("p");
 	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
 	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
 	buttonText.style.color      = "#FFFFFF";
 	buttonText.style.textAlign = "center";
 	buttonText.display			= "block";
 	buttonText.innerText      = data.addSummaryNoteButton.caption;
-	this.addSummaryNoteButton.appendChild(buttonText);
+	this.addSummaryNoteButton.appendChild(buttonText);*/
 	this.windowDiv.appendChild(this.addNoteButton);
 	this.windowDiv.appendChild(this.addSummaryNoteButton);
 }
@@ -281,6 +285,7 @@ SAGE2Annotations.prototype.hideWindow = function(data){
 		ui.main.removeChild(this.windowDiv);
 		this.show = false;
 		this.buttonDivText.innerText = "Show notes (" + this.textAreas.length + ")"; 
+		this.makeAllNotesNonEditable();
 	}
 }
 
@@ -383,8 +388,20 @@ SAGE2Annotations.prototype.setMarkerPosition = function(data){
 	if (marker.parentNode !== appWindow){
 		appWindow.appendChild(marker);	
 	}
-	
+	var textArea = this.getNoteForCredentials(data);
+	if (textArea){
+		textArea.credentials.marker = data.marker;
+	}
 };
+
+SAGE2Annotations.prototype.getNoteForCredentials = function(credentials){
+	for (var i=0;i<this.textAreas.length;i++){
+		if (this.textAreas[i].credentials.id === credentials.id){
+			return this.textAreas[i];
+		}
+	}
+	return null;
+}
 
 SAGE2Annotations.prototype.createMarker = function(data){
 	var appWindow = document.getElementById(this.appId);
@@ -407,7 +424,6 @@ SAGE2Annotations.prototype.createMarker = function(data){
 			this.markers[data.marker.page] = {};
 		}
 		this.markers[data.marker.page][data.id]= marker;
-		console.log(this.markers[data.marker.page]);
 		var itemWidth, itemHeight;
 		if(child[0].tagName.toLowerCase() == "div") {
 			itemWidth = parseInt(child[0].style.width);
@@ -420,9 +436,28 @@ SAGE2Annotations.prototype.createMarker = function(data){
 		}
 		marker.style.left 					= parseInt(data.marker.position.x*itemWidth/100.0 - parseInt(marker.style.width)/2.0) + "px";
 		marker.style.top 					= parseInt(data.marker.position.y*itemHeight/100.0 - parseInt(marker.style.height)/2.0) + "px";
+		var textArea = this.getNoteForCredentials(data);
+		if (textArea){
+			textArea.credentials.marker = data.marker;
+			textArea.toggleNoteType();
+		}
 	}
 };
 
+SAGE2Annotations.prototype.removeMarker = function(data){
+	var markerInfo = this.getMarkerDiv(data.id);
+	if (markerInfo!==null){
+		delete this.markers[markerInfo.page][markerInfo.id];
+		if (markerInfo.markerDiv.parentNode){
+			markerInfo.markerDiv.parentNode.removeChild(markerInfo.markerDiv);
+		}
+		var textArea = this.getNoteForCredentials(data);
+		if (textArea){
+			textArea.credentials.marker = null;
+			textArea.toggleNoteType();
+		}
+	}
+}
 
 SAGE2Annotations.prototype.setAllMarkerPositionsAfterResize = function(){
 	var appWindow = document.getElementById(this.appId);
@@ -477,6 +512,7 @@ SAGE2Annotations.prototype.setPositionAndSize = function(data){
 	this.scrollKnob.style.height = this.computeKnobHeight();
 	this.scrollKnob.style.top = parseInt(this.innerDiv.scrollTop / this.innerDiv.scrollHeight * parseInt(this.scrollBar.style.height)) + "px";
 	this.addNoteButton.style.top = data.addNoteButton.top.toString() + "px";
+	this.addSummaryNoteButton.style.top = data.addNoteButton.top.toString() + "px";
 };
 
 SAGE2Annotations.prototype.moveScrollKnob = function(position){
@@ -491,7 +527,6 @@ SAGE2Annotations.prototype.setWindowScroll = function(){
 };
 
 SAGE2Annotations.prototype.requestForNewNote = function(data){
-	console.log("adding new note");
 	if (isMaster){
 		wsio.emit('requestForNewNote', {appId: this.appId, uniqueID: data.user.uniqueID, requestMarker: data.requestMarker });
 	}
@@ -499,9 +534,7 @@ SAGE2Annotations.prototype.requestForNewNote = function(data){
 
 SAGE2Annotations.prototype.getMarkerDiv = function(id){
 	var marker = null;
-	console.log(this.markers);
 	for (var page in this.markers){
-		console.log(this.markers[page],id,this.markers[page].hasOwnProperty(id));
 		if (this.markers.hasOwnProperty(page) && this.markers[page].hasOwnProperty(id)){
 			return {page: page, id:id, markerDiv: this.markers[page][id]};
 		}
@@ -530,10 +563,8 @@ SAGE2Annotations.prototype.makeNoteEditable = function(credentials){
 	var textArea;
 	if (this.editables.hasOwnProperty(credentials.userLabel)){
 		textArea = this.editables[credentials.userLabel];
-		if (textArea.credentials.id === credentials.id) return;
 		this.makeNoteNonEditable(textArea.credentials);
 	}
-	console.log(credentials);
 	for (var i=0; i<this.textAreas.length; i++){
 		if (credentials.id === this.textAreas[i].credentials.id){
 			this.textAreas[i].changeToEditable();
@@ -543,7 +574,6 @@ SAGE2Annotations.prototype.makeNoteEditable = function(credentials){
 	}
 	var markerInfo = this.getMarkerDiv(credentials.id);
 	if (markerInfo){
-		console.log("found marker",markerInfo);
 		var marker = markerInfo.markerDiv;
 		marker.className = "annotationMarkerEditable";
 	}
@@ -567,10 +597,10 @@ SAGE2Annotations.prototype.makeAllNotesNonEditable = function(){
 
 SAGE2Annotations.prototype.event = function(eventType, position, user, data, date) {
 	if (eventType === "pointerPress" && (data.button === "left")){
-		if (position.x > parseInt(this.addNoteButton.style.left) && position.x < parseInt(this.addNoteButton.style.left) + parseInt(this.addNoteButton.style.width) && position.y > parseInt(this.addNoteButton.style.top) && position.y < parseInt(this.addNoteButton.style.top) + parseInt(this.addNoteButton.style.height)){
+		if (position.x > parseInt(this.addNoteButton.style.left) && position.x < parseInt(this.addNoteButton.style.left) + parseInt(this.addNoteButton.width) && position.y > parseInt(this.addNoteButton.style.top) && position.y < parseInt(this.addNoteButton.style.top) + parseInt(this.addNoteButton.style.height)){
 			this.requestForNewNote({user:user, requestMarker:true});
 		}
-		else if (position.x > parseInt(this.addSummaryNoteButton.style.left) && position.x < parseInt(this.addSummaryNoteButton.style.left) + parseInt(this.addSummaryNoteButton.style.width) && position.y > parseInt(this.addSummaryNoteButton.style.top) && position.y < parseInt(this.addSummaryNoteButton.style.top) + parseInt(this.addSummaryNoteButton.style.height)){
+		else if (position.x > parseInt(this.addSummaryNoteButton.style.left) && position.x < parseInt(this.addSummaryNoteButton.style.left) + parseInt(this.addSummaryNoteButton.width) && position.y > parseInt(this.addSummaryNoteButton.style.top) && position.y < parseInt(this.addSummaryNoteButton.style.top) + parseInt(this.addSummaryNoteButton.style.height)){
 			this.requestForNewNote({user:user, requestMarker:false});
 		}
 		else if (position.x >parseInt(this.scrollBar.style.left) && position.x < parseInt(this.scrollBar.style.left) + parseInt(this.scrollBar.style.width) && position.y > parseInt(this.scrollBar.style.top) && position.y < parseInt(this.scrollBar.style.top) + parseInt(this.scrollBar.style.height)){
@@ -582,11 +612,13 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 			var i;
 			var onDelete = false;
 			var onDeleteOK = false;
+			var onToggleNote = false;
 			var markedForDeletion = -1;
 			for (i=this.textAreas.length-1;i>=0;i--){
 				onDelete = this.textAreas[i].onDeleteButton(position);
 				if (onDelete){
 					this.textAreas[i].setDeletionConfirm(user);
+					break;
 				}
 				else if(this.textAreas[i].deleteConfirm=== true){
 					onDeleteOK = this.textAreas[i].onDeleteOKButton(position);
@@ -596,6 +628,18 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 					else {
 						this.textAreas[i].clearDeletionConfirm(user);
 					}
+					break;
+				}
+				onToggleNote = this.textAreas[i].onToggleNoteButton(position);
+				if (onToggleNote){
+					var credentials = this.textAreas[i].credentials;
+					if (credentials.marker){
+						wsio.emit('requestForMarkerDeletion', credentials);	
+					}
+					else{
+						wsio.emit('requestForMarkerAddition', credentials);	
+					}
+					break;
 				}
 					
 			}
@@ -619,7 +663,6 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 		position.x = position.x - parseInt(this.innerDiv.style.left);
 		if (this.editables.hasOwnProperty(user.label)){
 			var textArea = this.editables[user.label];
-			console.log("trying to type!");
 			textArea.event(eventType,position,user,data,date);
 		}
 	}
@@ -645,14 +688,21 @@ function TextArea(){
 	this.div = null;
 }
 
+TextArea.prototype.toggleNoteType = function(){
+	if (this.credentials.marker!== null){
+		this.element.style.background = "#FCF0AD";
+	}
+	else{
+		this.element.style.background = "#AAFFAA";
+	}
+};
+
 TextArea.prototype.changeToEditable = function(){
-	console.log("Changing text:" + this.credentials.id + " to editable");
 	this.element.style.boxShadow = "inset 0px 0px 2px 2px #222222";
 	this.showCaret();
 };
 
 TextArea.prototype.changeToNonEditable = function(){
-	console.log("Changing text:" + this.credentials.id + " to non-editable");
 	this.element.style.boxShadow = "none";
 	this.hideCaret();
 };
@@ -730,7 +780,7 @@ TextArea.prototype.init = function(div, data){
 	data.height = 0.9 * data.height;
 	this.element = document.createElement("span");
 	this.element.id = data.id;
-	this.element.style.background = "#FCF0AD";
+	this.element.style.background = "#AAFFAA";
 	this.element.style.position = "absolute";
 	this.element.style.left = parseInt(data.left) + "px";
 	this.element.style.top = parseInt(data.top) + "px";
@@ -849,38 +899,44 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.credentialBar.style.overflow = "hidden";
 	div.appendChild(this.credentialBar);
 
+	this.toggleNoteBox = document.createElement("img");
+	this.toggleNoteBox.style.position = "absolute";
+	this.toggleNoteBox.style.left = "0px";
+	this.toggleNoteBox.style.top = "1px";
+	this.toggleNoteBox.style.height = parseInt(credBarHeight -2) +"px";
+	this.toggleNoteBox.style.display = "block";
+	this.toggleNoteBox.src = "images/noteOnly.svg";
+	this.credentialBar.appendChild(this.toggleNoteBox);
+
 	this.idBox = document.createElement("span");
 	this.idBox.style.position = "absolute";
-	this.idBox.style.left = "0px";
+	this.idBox.style.left = parseInt(0.15*data.width) + "px";
 	this.idBox.style.bottom = "0px";
 	this.idBox.style.width = parseInt(0.15*data.width) +"px";
 	this.idBox.style.display = "block";
-	//this.idBox.style.height =  parseInt(credBarHeight) +"px";
 	this.idBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
 	this.idBox.style.fontFamily = 'arial';
 	this.idBox.style.color = "white";
-	this.idBox.style.display = "inline-block";
-	this.idBox.style.paddingLeft = "4px";
+	this.idBox.style.display = "block";
+	//this.idBox.style.paddingLeft = "4px";
 	this.idBox.style.verticalAlign = "middle";
 	this.credentialBar.appendChild(this.idBox);
 	
 	this.userNameBox = document.createElement("span");
 	this.userNameBox.style.position = "absolute";
-	this.userNameBox.style.left = parseInt(0.15*data.width) +"px";
+	this.userNameBox.style.left = parseInt(this.idBox.style.left) + parseInt(this.idBox.style.width) +"px";
 	this.userNameBox.style.bottom = "0px";
 	this.userNameBox.style.width = parseInt(0.3*data.width) +"px";
-	this.userNameBox.style.display = "block";
-	//this.userNameBox.style.height =  parseInt(credBarHeight) +"px";
 	this.userNameBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
 	this.userNameBox.style.fontFamily = 'arial';
 	this.userNameBox.style.color = "white";
-	this.userNameBox.style.display = "inline-block";
+	this.userNameBox.style.display = "block";
 	this.userNameBox.style.verticalAlign = "middle";
 	this.credentialBar.appendChild(this.userNameBox);
 
 	this.dateBox = document.createElement("span");
 	this.dateBox.style.position = "absolute";
-	this.dateBox.style.right = parseInt(credBarHeight*1.4) + "px";
+	this.dateBox.style.left = parseInt(this.userNameBox.style.left) + parseInt(this.userNameBox.style.width) +"px";
 	this.dateBox.style.marginRight = "3px";
 	this.dateBox.style.bottom = "0px";
 	this.dateBox.style.width = parseInt(0.3*data.width) +"px";
@@ -897,7 +953,7 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.deleteNoteBox.style.right = "0px";
 	this.deleteNoteBox.style.top = "1px";
 	this.deleteNoteBox.style.height = parseInt(credBarHeight -2) +"px";
-	this.deleteNoteBox.style.display = "inline-block";
+	this.deleteNoteBox.style.display = "block";
 	this.deleteNoteBox.src = "images/close.svg";
 	this.credentialBar.appendChild(this.deleteNoteBox);
 };
@@ -935,10 +991,10 @@ TextArea.prototype.onDeleteOKButton = function(position){
 		var x = parseInt(position.x - parseInt(this.deletionConfirmationAlertWindow.style.left) - parseInt(this.deletionConfirmationButton.style.left));
 		var top = parseInt(this.element.style.top) + (parseInt(this.element.style.height) - parseInt(this.deletionConfirmationButton.style.bottom) - height);
 		var y = parseInt(position.y - top);
-		console.log(x,y, width,height);
-		if (y > 0 && y < height && x > 0 && x < width){
+		//console.log(x,y, width,height);
+		if (y >= 0 && y <= height && x >= 0 && x <= width){
 			return true;
-		}		
+		}	
 	}
 	return false;
 }
@@ -948,11 +1004,25 @@ TextArea.prototype.onDeleteButton = function(position){
 	var height = parseInt(this.deleteNoteBox.style.height);
 	var width = parseInt(this.deleteNoteBox.width);
 	var x = parseInt(position.x - parseInt(this.credentialBar.style.left) - (parseInt(this.credentialBar.style.width) - width));
-	if (y > 0 && y < height && x > 0 && x < width){
+	//console.log(width,y,x);
+	if (y >= 0 && y <= height && x >= 0 && x <= width){
 		return true;
 	}
 	return false;
 };
+
+TextArea.prototype.onToggleNoteButton = function(position){
+	var y = parseInt(position.y - parseInt(this.credentialBar.style.top));
+	var height = parseInt(this.toggleNoteBox.style.height);
+	var width = parseInt(this.toggleNoteBox.width);
+	var x = parseInt(position.x - parseInt(this.credentialBar.style.left) - parseInt(this.toggleNoteBox.style.left));
+	//console.log(width,y,x);
+	if (y >= 0 && y <= height && x >= 0 && x <= width){
+		return true;
+	}
+	return false;
+};
+
 
 TextArea.prototype.event = function(eventType, position, user, data, date) {
 	

@@ -484,6 +484,9 @@ function initializeWSClient(wsio) {
 		wsio.on('requestForNewNote', wsRequestForNewNote);
 		wsio.on('requestForNoteDeletion',wsRequestForNoteDeletion);
 		wsio.on('setNoteAsEditable', wsSetNoteAsEditable);
+		wsio.on('requestForMarkerDeletion', wsRequestForMarkerDeletion);
+		wsio.on('requestForMarkerAddition', wsRequestForMarkerAddition);
+
 	}
 	if(wsio.messages.requestsServerFiles){
 		wsio.on('requestAvailableApplications', wsRequestAvailableApplications);
@@ -3944,9 +3947,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var click = remoteInteraction[uniqueID].completePointerClick(elem,sagePointers[uniqueID].label, pointerX,pointerY);
 	if (click !==null && elem!== null && data.button === "left"){ 
 		// A click was made on app window and it was expected by its annotation window
-		var noteMarker = annotations.setMarkerPosition(elem,click);
-		if (noteMarker!==null){
-			broadcast('setAnnotationMarker', noteMarker, 'requiresFullApps');
+		var noteCredentials = annotations.setMarkerPosition(elem,click);
+		if (noteCredentials!==null){
+			broadcast('setAnnotationMarker', noteCredentials, 'requiresFullApps');
 		}	
 	}
 
@@ -4857,40 +4860,59 @@ function toggleAnnotationWindow(annotationWindow){
 };
 
 function wsAnnotationUpdate(wsio, noteItem){
-	console.log(noteItem);
 	var annotationWindow = annotations.getAnnotationWindowForApp(noteItem.credentials.appId);
 	if (annotationWindow){
-		annotations.saveAnnotationForFile(annotationWindow.filename, noteItem.credentials.id, {
-			id: noteItem.credentials.id, 
-			userLabel: noteItem.credentials.userLabel, 
-			createdOn: noteItem.credentials.createdOn, 
-			marker:noteItem.credentials.marker, 
-			text:noteItem.text
-		});
+		annotations.saveTextForAnnotation(annotationWindow.filename, noteItem.credentials.id, noteItem.text);
 	} 
-	
-	//console.log(noteItem);
 }
 
 function wsRequestForNewNote(wsio, data){
 	var app = findAppById(data.appId);
-	var noteData = {
+	var credentials = {
 		appId:data.appId,
 		userLabel: sagePointers[data.uniqueID]? sagePointers[data.uniqueID].label : "Sage User",
 		createdOn: Date.now(),
 		marker:data.requestMarker?  {position:{x:2,y:2},page:app.data.page || 1} : null,		
 	};
 
-	var noteItem = annotations.addNewNote(noteData);
+	var noteItem = annotations.addNewNote(credentials);
 	broadcast('addNewNoteToAnnotationWindow', noteItem, 'requiresFullApps');
 }
 
-function wsRequestForNoteDeletion(wsio, data){
-	broadcast ('deleteNote', data, 'requiresFullApps');
+function wsRequestForNoteDeletion(wsio, credentials){
+	var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
+	if (annotationWindow){
+		annotations.deleteAnnotationFromFile(annotationWindow.filename,credentials.id);
+	}
+	broadcast ('deleteNote', credentials, 'requiresFullApps');
 }
 
 function wsSetNoteAsEditable(wsio, data){
-	console.log("Set note editable!",data);
 	annotations.setNoteAsEditable(data);
 	broadcast('makeNoteEditable', data,'requiresFullApps');
+}
+
+function wsRequestForMarkerDeletion (wsio, credentials){
+	if (credentials.marker!==null){
+		var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
+		if (annotationWindow){
+			annotations.deleteMarkerFromAnnotation(annotationWindow.filename,credentials.id);
+		}
+		credentials.marker = null;
+		annotations.setNoteAsEditable(credentials);
+		broadcast('removeMarkerFromNote', credentials, 'requiresFullApps');
+	}
+}
+
+function wsRequestForMarkerAddition (wsio, credentials){
+	if (credentials.marker===null){
+		var app = findAppById(credentials.appId);
+		var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
+		credentials.marker = {position:{x:2,y:2},page:app.data.page || 1};
+		if (annotationWindow){
+			annotations.saveMarkerForAnnotation(annotationWindow.filename, credentials.id, credentials.marker);
+		}
+		annotations.setNoteAsEditable(credentials);
+		broadcast('addMarkerToNote', credentials, 'requiresFullApps');
+	}
 }
