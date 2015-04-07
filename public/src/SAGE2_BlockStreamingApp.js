@@ -497,10 +497,15 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		}
 		else {
-			this.canvas.width  = localWidth;
-			this.canvas.height = localHeight;
-			this.canvas.style.left = (viewX-localX) + "px";
-			this.canvas.style.top  = (viewY-localY) + "px";
+			var parentTransform = getTransform(this.div.parentNode);
+			this.canvas.width  = localWidth / parentTransform.scale.x;
+			this.canvas.height = localHeight / parentTransform.scale.y;
+			this.canvas.style.left = ((viewX-localX) / parentTransform.scale.x) + "px";
+			this.canvas.style.top  = ((viewY-localY) / parentTransform.scale.y) + "px";
+
+			console.log(viewX, localX, parentTransform.scale.x);
+			console.log(this.canvas.style.left + ", " + this.canvas.style.top)
+
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 
 			var left   = ((viewX     -localX) / (localRight -localX) * 2.0) - 1.0;

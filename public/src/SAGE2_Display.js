@@ -456,8 +456,11 @@ function setupListeners() {
 		var app = applications[position_data.elemId];
 		if(app !== undefined) {
 			var parentTransform = getTransform(selectedElem.parentNode);
-			app.sage2_x = parseInt(position_data.elemLeft, 10)*parentTransform.scale.x + parentTransform.translate.x;
-			app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10)*parentTransform.scale.y + parentTransform.translate.y;
+			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
+			app.sage2_x = (position_data.elemLeft+border+1)*parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_y = (position_data.elemTop+ui.titleBarHeight+border)*parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_width  = parseInt(position_data.elemWidth, 10)*parentTransform.scale.x;
+			app.sage2_height = parseInt(position_data.elemHeight, 10)*parentTransform.scale.y;
 
 			var date  = new Date(position_data.date);
 			if (position_data.force || app.moveEvents === "continuous") {
@@ -568,8 +571,9 @@ function setupListeners() {
 		var app = applications[position_data.elemId];
 		if(app !== undefined) {
 			var parentTransform = getTransform(selectedElem.parentNode);
-			app.sage2_x = parseInt(position_data.elemLeft, 10)*parentTransform.scale.x + parentTransform.translate.x;
-			app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10)*parentTransform.scale.y + parentTransform.translate.y;
+			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
+			app.sage2_x = (position_data.elemLeft+border+1)*parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_y = (position_data.elemTop+ui.titleBarHeight+border)*parentTransform.scale.y + parentTransform.translate.y;
 			app.sage2_width  = parseInt(position_data.elemWidth, 10)*parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10)*parentTransform.scale.y;
 

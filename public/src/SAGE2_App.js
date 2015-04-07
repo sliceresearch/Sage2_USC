@@ -88,8 +88,9 @@ var SAGE2_App = Class.extend( {
 		this.startDate = data.date;
 
 		var parentTransform = getTransform(this.div.parentNode);
-		this.sage2_x      = data.x*parentTransform.scale.x + parentTransform.translate.x;
-		this.sage2_y      = data.y*parentTransform.scale.y + parentTransform.translate.y;
+		var border = parseInt(this.div.parentNode.style.borderWidth || 0, 10);
+		this.sage2_x      = (data.x+border+1)*parentTransform.scale.x + parentTransform.translate.x;
+		this.sage2_y      = (data.y+border)*parentTransform.scale.y + parentTransform.translate.y;
 		this.sage2_width  = data.width*parentTransform.scale.x;
 		this.sage2_height = data.height*parentTransform.scale.y;
 

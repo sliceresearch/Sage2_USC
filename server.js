@@ -2088,11 +2088,21 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 	var j;
 	var key;
 
+	var portalX = 0;
+	var portalY = 0;
+	var portalScale = 1;
+	var portal = findApplicationPortal(app);
+	if (portal !== undefined && portal !== null) {
+		portalX = portal.data.left;
+		portalY = portal.data.top;
+		portalScale = portal.data.scale;
+	}
+
 	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
 	var verticalBlocks   = Math.ceil(app.data.height/blockSize);
 
-	var renderBlockWidth  = blockSize * app.width / app.data.width;
-	var renderBlockHeight = blockSize * app.height / app.data.height;
+	var renderBlockWidth  = (blockSize * app.width / app.data.width) * portalScale;
+	var renderBlockHeight = (blockSize * app.height / app.data.height) * portalScale;
 
 	for (key in renderhandle.clients){
 		renderhandle.clients[key].blocklist = [];
@@ -2105,8 +2115,8 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 				}
 				else {
 					var display = config.displays[renderhandle.clients[key].wsio.clientID];
-					var left = j*renderBlockWidth  + app.left;
-					var top  = i*renderBlockHeight + app.top + config.ui.titleBarHeight;
+					var left = j*renderBlockWidth  + (app.left * portalScale + portalX);
+					var top  = i*renderBlockHeight + ((app.top + config.ui.titleBarHeight) * portalScale + portalY);
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
 
@@ -6252,7 +6262,7 @@ function findInteractableManager(appId) {
 }
 
 function findApplicationPortal(app) {
-	if (app === null) return null;
+	if (app === undefined || app === null) return null;
 
 	var portalIdx = app.id.indexOf("_portal");
 	if (portalIdx < 0) return null;
