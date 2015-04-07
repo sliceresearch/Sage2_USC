@@ -503,11 +503,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			this.canvas.style.left = ((viewX-localX) / parentTransform.scale.x) + "px";
 			this.canvas.style.top  = ((viewY-localY) / parentTransform.scale.y) + "px";
 
-			console.log(viewX, localX, parentTransform.scale.x);
-			console.log(this.canvas.style.left + ", " + this.canvas.style.top)
-
-			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-
 			var left   = ((viewX     -localX) / (localRight -localX) * 2.0) - 1.0;
 			var right  = ((viewRight -localX) / (localRight -localX) * 2.0) - 1.0;
 			var top    = ((1.0 - (viewY     -localY) / (localBottom-localY)) * 2.0) - 1.0;
@@ -515,6 +510,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
 			this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
+			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		}
 	},
 
