@@ -68,7 +68,7 @@ var d3_sample = SAGE2_App.extend( {
 		    .attr("transform", function(d) { return "translate(" + d + ")"; })
 		    .attr("r", 1.5);
 
-		this.draw_d3(date);
+		this.draw_d3(data.date);
 		this.controls.finishedAddingControls(); 
 	},
 

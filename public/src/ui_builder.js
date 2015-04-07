@@ -11,7 +11,8 @@
 /**
  * Building the display background and elememnts
  *
- * @module UIBuilder
+ * @module client
+ * @submodule UIBuilder
  */
 
 /**

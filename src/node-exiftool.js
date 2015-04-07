@@ -8,6 +8,15 @@
 //
 // Copyright (c) 2014
 
+/**
+ * Metadata processing using ExifTool
+ *   ExifTool by Phil Harvey: http://www.sno.phy.queensu.ca/~phil/exiftool/
+ *
+ * @module server
+ * @submodule exiftool
+ * @class exiftool
+ */
+
 // Inspired by: https://github.com/nathanpeck/exiftool
 
 // require variables to be declared
@@ -17,8 +26,13 @@ var ChildProcess = require('child_process');
 // try to use spawnSync (node >= v12 ) or emulation
 var spawnSync    = ChildProcess.spawnSync; // || require('spawn-sync');
 
-
-// Processes a filename
+/**
+ * Process a file, using spawn method
+ *
+ * @method fileSpawn
+ * @param filename {String} name of the file to be tested
+ * @param done {Function} executed when done, done(error, metadata)
+ */
 function fileSpawn(filename, done) {
 	// The dash specifies to read data from stdin
 	var exif = ChildProcess.spawn('exiftool', ['-json', filename]);
@@ -52,7 +66,13 @@ function fileSpawn(filename, done) {
 	});
 }
 
-// Processes a filename
+/**
+ * Process a file, using exec method
+ *
+ * @method file
+ * @param filename {String} name of the file to be tested
+ * @param done {Function} executed when done, done(error, metadata)
+ */
 function file(filename, done) {
 	ChildProcess.exec('exiftool -json \"' + filename + '\"', function (error, stdout, stderr) {
 		if (error !== null) {
@@ -66,10 +86,15 @@ function file(filename, done) {
 }
 
 
-// Processes a filename
-//    watch for non-escaped filename when using spawn-sync.spawnSync
-//    node v12 is good
-//
+/**
+ * Process a file synchronously
+ *   watch for non-escaped filename when using spawn-sync.spawnSync
+ *   node v12 is good
+ *
+ * @method fileSync
+ * @param filename {String} name of the file to be tested
+ * @return {Object} return object as {err:String, metadata:Object)
+ */
 function fileSync(filename) {
 	var result = spawnSync('exiftool', ['-json', filename]);
 	// Note, status code will always equal 0 if using busy waiting fallback
@@ -85,7 +110,13 @@ function fileSync(filename) {
 	}
 }
 
-// Takes a binary buffer
+/**
+ * Process a buffer synchronously
+ *
+ * @method bufferSync
+ * @param source {Buffer} file content to be processed
+ * @return {Object} return object as {err:String, metadata:Object)
+ */
 function bufferSync(source) {
 	var result = spawnSync('exiftool',
 							['-json', '-'],
@@ -100,8 +131,13 @@ function bufferSync(source) {
 	}
 }
 
-
-// Takes a binary buffer
+/**
+ * Process a buffer
+ *
+ * @method buffer
+ * @param source {Buffer} file content to be processed
+ * @param callback {Function} executed when done, done(error, metadata)
+ */
 function buffer(source, callback) {
 	// The dash specifies to read data from stdin
 	var exif = ChildProcess.spawn('exiftool', ['-json', '-'], {stdin: 'pipe'});

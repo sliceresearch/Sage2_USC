@@ -10,7 +10,8 @@
 
 
 /**
- * @module pdf_viewer
+ * @module client
+ * @submodule pdf_viewer
  */
 
 PDFJS.workerSrc       = 'lib/pdf.worker.js';

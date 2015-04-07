@@ -11,7 +11,8 @@
 /**
  * Asset management functions for SAGE2 server
  *
- * @module node-assets
+ * @module server
+ * @submodule node-assets
  * @requires color, fluent-ffmpeg, gm, json5, node-exiftool, node-utils, node-registry
  */
 
@@ -611,7 +612,6 @@ var initialize = function (root, relativePath) {
 			AllAssets.rel  = relativePath;
 		}
 
-		console.log("Assets> initialize");
 		var thelist = [];
 		var uploadedImages = fs.readdirSync(path.join(root, "images"));
 		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
@@ -675,7 +675,7 @@ var initialize = function (root, relativePath) {
 			}
 		}
 
-		console.log("EXIF> Starting processing:", thelist);
+		if (thelist.length > 0) console.log("EXIF> Starting processing:", thelist);
 		exifAsync(thelist, function(err) {
 			if (err) {
 				console.log("EXIF> Error:", err);

@@ -27,32 +27,30 @@
 "use strict";
 
 // node: built-in
-var fs          = require('fs');                  // filesystem access
-var http        = require('http');                // http server
-var https       = require('https');               // https server
-var os          = require('os');                  // operating system access
-var path        = require('path');                // file path extraction and creation
-var readline    = require('readline');            // to build an evaluation loop
-var url         = require('url');                 // parses urls
-var util        = require('util');                // node util
+var fs            = require('fs');                  // filesystem access
+var http          = require('http');                // http server
+var https         = require('https');               // https server
+var os            = require('os');                  // operating system access
+var path          = require('path');                // file path extraction and creation
+var readline      = require('readline');            // to build an evaluation loop
+var url           = require('url');                 // parses urls
+var util          = require('util');                // node util
 
 // npm registry: defined in package.json
-var formidable  = require('formidable');       // upload processor
-var gm          = require('gm');               // graphicsmagick
-var json5       = require('json5');            // JSON format that allows comments
-var program     = require('commander');        // parsing command-line arguments
-var qrimage     = require('qr-image');         // qr-code generation
-var request     = require('request');          // external http requests
-var sprint      = require('sprint');           // pretty formating (sprintf)
-var Twit        = require('twit');             // twitter api
+var formidable    = require('formidable');       // upload processor
+var gm            = require('gm');               // graphicsmagick
+var json5         = require('json5');            // JSON format that allows comments
+var program       = require('commander');        // parsing command-line arguments
+var qrimage       = require('qr-image');         // qr-code generation
+var request       = require('request');          // external http requests
+var sprint        = require('sprint');           // pretty formating (sprintf)
+var Twit          = require('twit');             // twitter api
 
 // custom node modules
-var assets      = require('./src/node-assets');         // manages the list of files
-var exiftool    = require('./src/node-exiftool');       // gets exif tags for images
-var pixelblock  = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
-var sageutils   = require('./src/node-utils');          // provides the current version number
-
-
+var assets        = require('./src/node-assets');         // manages the list of files
+var exiftool      = require('./src/node-exiftool');       // gets exif tags for images
+var pixelblock    = require('./src/node-pixelblock');     // chops pixels buffers into square chunks
+var sageutils     = require('./src/node-utils');          // provides the current version number
 
 var Interaction = require('./src/node-interaction');    // handles sage interaction (move, resize, etc.)
 var Omicron     = require('./src/node-omicron');        // handles Omicron input events
@@ -165,11 +163,13 @@ if (config.register_site) {
 		"form": config,
 		"method": "POST"},
 		function(err, response, body) {
-			console.log('Registration with EVL site:', (err === null) ? "success" : err.code);
+			console.log('SAGE2> Registration with EVL site:', (err === null) ? "success" : err.code);
 		}
 	);
 }
 
+// Check for missing packages (pass parameter true for devel packages also)
+sageutils.checkPackages();
 
 // Setup up ImageMagick (load path from configuration file)
 var imConstraints = {imageMagick: true};
@@ -184,7 +184,10 @@ assets.setupBinaries(imConstraints, ffmpegOptions);
 
 // global variables for various paths
 var public_dir = "public"; // directory where HTTPS content is stored
-var hostOrigin = (typeof config.rproxy_port !== "undefined") ? "" : "http://"+config.host+":"+config.index_port.toString()+"/"; // base URL for this server
+var hostOrigin = ""; // base URL for this server
+if (config.rproxy_port === undefined) {
+	hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
+}
 var uploadsFolder = path.join(public_dir, "uploads"); // directory where files are uploaded
 
 // global variables to manage items
@@ -221,7 +224,7 @@ annotations.initializeDB(path.join(uploadsFolder, "annotations"));
 // find git commit version and date
 sageutils.getFullVersion(function(version) {
 	// fields: base commit branch date
-	console.log("SAGE2 Full Version:", version);
+	console.log("SAGE2> Full Version:", json5.stringify(version));
 	SAGE2_version = version;
 	broadcast('setupSAGE2Version', SAGE2_version, 'receivesDisplayConfiguration');
 
@@ -237,14 +240,13 @@ var seedWindowPosition = null;
 // Generating QR-code of URL for UI page
 var qr_png = qrimage.image(hostOrigin, { ec_level:'M', size: 15, margin:3, type: 'png' });
 var qr_out = path.join(uploadsFolder, "images", "QR.png");
-// qr_png.on('readable', function() { process.stdout.write('.'); });
-qr_png.on('end',      function() { console.log('QR> image generated', qr_out); });
+qr_png.on('end', function() { console.log('QR> image generated', qr_out); });
 qr_png.pipe(fs.createWriteStream(qr_out));
 
 
 // Make sure tmp directory is local
 process.env.TMPDIR = path.join(__dirname, "tmp");
-console.log("Temp folder: ", process.env.TMPDIR);
+console.log("SAGE2> Temp folder: ", process.env.TMPDIR);
 if(!sageutils.fileExists(process.env.TMPDIR)){
      fs.mkdirSync(process.env.TMPDIR);
 }
@@ -1405,10 +1407,10 @@ function deleteSession (filename) {
 		}
 		fs.unlink(fullpath, function (err) {
 			if (err) {
-				console.log("Sessions> coudlnt delete session ", filename, err);
+				console.log("Sessions> Could not delete session ", filename, err);
 				return;
 			}
-			console.log("Sessions> successfully deleted session", filename);
+			console.log("Sessions> Successfully deleted session", filename);
 		});
 	}
 }
@@ -2586,7 +2588,8 @@ function getApplications() {
 	// Remove 'viewer' apps
 	var i = uploadedApps.length;
 	while (i--) {
-		if (uploadedApps[i].exif.metadata.fileTypes && uploadedApps[i].exif.metadata.fileTypes.length > 0) {
+		if (uploadedApps[i].exif.metadata.fileTypes &&
+			uploadedApps[i].exif.metadata.fileTypes.length > 0) {
 			uploadedApps.splice(i, 1);
 		}
 	}
@@ -2736,8 +2739,6 @@ function setupHttpsOptions() {
 			console.log("----------\n");
 		}
 	}
-
-	console.log(certs);
 
 	var httpsOptions;
 
@@ -2974,7 +2975,7 @@ setTimeout(function() {
 
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log('Now serving SAGE2 at https://' + config.host + ':' + config.port + '/sageUI.html');
+	console.log('SAGE2> Now serving clients at https://' + config.host + ':' + config.port + '/sageUI.html');
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -3001,7 +3002,7 @@ sage2Index.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Index.on('listening', function (e) {
 	// Success
-	console.log('Now serving SAGE2 index at http://' + config.host + ':' + config.index_port);
+	console.log('SAGE2> Now serving clients at http://' + config.host + ':' + config.index_port);
 });
 
 
@@ -3216,7 +3217,7 @@ function quitSAGE2() {
 		users.session.end = Date.now();
 		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
 		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
-		console.log("Log> saved to " + userLogName);
+		console.log("LOG> saved to " + userLogName);
 	}
 
 	if (config.register_site) {
@@ -3227,7 +3228,7 @@ function quitSAGE2() {
 			"form": config,
 			"method": "POST"},
 			function (err, response, body) {
-				console.log('Deregistration with EVL site:', (err === null) ? "success" : err.code);
+				console.log('SAGE2> Deregistration with EVL site:', (err === null) ? "success" : err.code);
 				saveSession();
 				assets.saveAssets();
 				if( omicronRunning )
@@ -3579,10 +3580,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
-	var itemUnderPointer = ct || elem;
-	remoteInteraction[uniqueID].initiatePointerClick(itemUnderPointer);
+	//var itemUnderPointer = ct || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
 	if (ct !== null) {
 		if (data.button === "left") {
 			remoteInteraction[uniqueID].selectMoveControl(ct, pointerX, pointerY);
@@ -3700,7 +3700,9 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 			}
 		}
 		if ( remoteInteraction[uniqueID].appInteractionMode() || elem.application === 'thumbnailBrowser' ) {
+			console.log("Should not get past this!!");
 			if (pointerY >=elem.top && pointerY <= elem.top+config.ui.titleBarHeight){
+				console.log("comming here!!!!");
 				if(data.button === "right"){
 					elemCtrl = findControlById(elem.id+uniqueID+"_controls");
 					if (elemCtrl === null) {
@@ -3861,9 +3863,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
 	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
-	var itemUnderPointer = controlUnderPointer || elem;
+	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
 
 	if( remoteInteraction[uniqueID].windowManagementMode() ){
 		if(data.button === "left"){
@@ -3995,14 +3997,14 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var elem = null;
-	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
-	if (controlUnderPointer===null){
-		elem = findAppUnderPointer(pointerX, pointerY);
-	}
+	//var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
+	//if (controlUnderPointer===null){
+	elem = findAppUnderPointer(pointerX, pointerY);
+	//}
 
-	var itemUnderPointer = controlUnderPointer || elem;
+	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
-	showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
+	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "move");
 	// Widget connector show logic ends
 
 	// move / resize window
@@ -4649,20 +4651,18 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 	updateRadialMenu(uniqueID);
 }
 
-function updateRadialMenu( uniqueID )
-{
+function updateRadialMenu(uniqueID) {
 	// Build lists of assets
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps = assets.listApps();
+	var uploadedApps   = getApplications();
 	var savedSessions  = listSessions();
 
 	// Sort independently of case
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
-	uploadedApps.sort(   sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
 
 	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions, apps: uploadedApps};

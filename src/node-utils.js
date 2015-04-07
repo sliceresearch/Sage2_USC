@@ -12,7 +12,8 @@
  * Provides utility functions for the SAGE2 server
  *
  * @class node-utils
- * @module node-utils
+ * @module server
+ * @submodule node-utils
  * @requires package.json, semver
  */
 
@@ -229,6 +230,51 @@ function isTrue(value) {
 	}
 }
 
+/**
+ * Compare the installed pacakges versus the specified ones in packages.json
+ *   warms the user of outdated packages
+ *
+ * @method checkPackages
+ * @param inDevelopement {Bool} whether or not to check in production mode (no devel packages)
+ */
+function checkPackages(inDevelopement) {
+	var packages = {missing: [], outdated: []};
+	// check the commonly used NODE_ENV variable (development or production)
+	var indevel  = (process.env.NODE_ENV === 'development') || isTrue(inDevelopement);
+	var command  = "npm outdated --depth 0 --json  --production";
+	if (indevel) command = "npm outdated --depth 0 --json";
+	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
+		function (error, stdout, stderr) {
+			//if (error) return;
+			if (error) throw new Error("Error running npm");
+
+			var key;
+			var output = stdout ? JSON.parse(stdout) : {};
+			for (key in output) {
+				// if not a valid version number
+				if (!semver.valid(output[key].current)) {
+					packages.missing.push(key);
+				}
+				// if the version is strictly lower than requested
+				else if (semver.lt(output[key].current, output[key].wanted)) {
+					packages.outdated.push(key);
+				}
+			}
+
+			if (packages.missing.length > 0 || packages.outdated.length > 0) {
+				console.log("");
+				console.log("Packages> Warning - Packages not up to date");
+				if (packages.missing.length  > 0) console.log("Packages>	Missing:",  packages.missing);
+				if (packages.outdated.length > 0) console.log("Packages>	Outdated:", packages.outdated);
+				console.log("Packages> To update, execute: npm run in");
+				console.log("");
+			}
+			else {
+				console.log("Packages> All packages up to date");
+			}
+		}
+	);
+}
 
 exports.nodeVersion     = _NODE_VERSION;
 exports.getShortVersion = getShortVersion;
@@ -241,3 +287,4 @@ exports.compareFilename = compareFilename;
 exports.compareTitle    = compareTitle;
 exports.isTrue          = isTrue;
 exports.updateWithGIT   = updateWithGIT;
+exports.checkPackages   = checkPackages;

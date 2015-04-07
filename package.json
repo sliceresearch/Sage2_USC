@@ -57,14 +57,15 @@
 		"twit": "latest",
 		"ws": "latest",
 		"semver": "latest",
-		"nodemon": "latest",
 		"ytdl-core": "latest"
 	},
 	"devDependencies": {
+		"nodemon": "latest",
 		"jshint": "latest",
 		"yuidocjs": "latest",
 		"eslint": "latest",
 		"plato": "latest",
+		"kthxbai": "latest",
 		"mocha": "^2.0.1",
 		"mocha-jshint": "^0.0.9",
 		"istanbul": "^0.3.5",
@@ -74,7 +75,8 @@
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start": "./node_modules/.bin/node server.js -l",
+		"start": "node server.js -l",
+		"monitor": "./node_modules/.bin/nodemon server.js -l",
 		"hint": "./node_modules/.bin/jshint --verbose server.js src/*.js",
 		"hint_client": "./node_modules/.bin/jshint --verbose public/src/*.js",
 		"eslint": "./node_modules/.bin/eslint -f compact server.js src/*.js",
@@ -82,7 +84,8 @@
 		"report": "./node_modules/.bin/plato -r -l .jshintrc -d doc/report server.js src/*.js public/src/*.js",
 		"doc": "./node_modules/.bin/yuidoc -c doc/yuidoc.json",
 		"test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
-		"in": "node ./install_dependencies.js"
+		"in":     "node ./install_dependencies.js",
+		"inprod": "node ./install_dependencies.js --prod"
 	},
 	"license": "SAGE2-Software-License"
 }

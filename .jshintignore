@@ -1,4 +1,5 @@
 node_modules
+doc
 public/lib
 public/uploads
 test

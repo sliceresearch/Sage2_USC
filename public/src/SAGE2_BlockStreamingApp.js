@@ -10,7 +10,8 @@
 
 
 /**
- * @module SAGE2_BlockStreamingApp
+ * @module client
+ * @submodule SAGE2_BlockStreamingApp
  */
 
 /**

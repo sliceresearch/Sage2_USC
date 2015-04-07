@@ -9,7 +9,8 @@
 // Copyright (c) 2014
 
 /**
- * @module media_block_stream
+ * @module client
+ * @submodule media_block_stream
  */
 
 /**

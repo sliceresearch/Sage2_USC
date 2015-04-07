@@ -9,7 +9,8 @@
 // Copyright (c) 2014-2015
 
 /**
- * @module SAGE2_App
+ * @module client
+ * @submodule SAGE2_App
  */
 
 /**
