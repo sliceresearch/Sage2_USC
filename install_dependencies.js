@@ -49,12 +49,12 @@ else target = process.versions.node;
 var nums = target.split('.').map(function(n) { return parseInt(n, 10); });
 // Node v0.10.36 and above
 if (nums[0]===0 && nums[1]===10 && nums[2]>=36) {
-	console.log('Node version', process.versions.node, "but assuming 0.10.36");
+	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.36+.");
 	target = "0.10.36";
 }
 // Nove v0.12.0 and above
 if (nums[0]===0 && nums[1]===12 && nums[2]>=0) {
-	console.log('Node version', process.versions.node, "but assuming 0.12.0");
+	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.0+.");
 	target = "0.12.0";
 }
 
