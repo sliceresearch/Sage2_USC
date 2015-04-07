@@ -13,32 +13,38 @@ function DataSharing(data) {
 	var sharingTitle = document.createElement('div');
 	sharingTitle.id = this.id + "_title";
 	sharingTitle.className = "dataSharingTitle";
+	sharingTitle.style.left = (-ui.offsetX).toString() + "px";
+	sharingTitle.style.top = (-ui.offsetY).toString() + "px";
 	sharingTitle.style.width = data.width + "px";
 	sharingTitle.style.height = ui.titleBarHeight + "px";
-	sharingTitle.style.webkitTransform = "translate(" + (data.left-ui.offsetX) + "px," + (data.top-ui.offsetY) + "px)";
-	sharingTitle.style.mozTransform    = "translate(" + (data.left-ui.offsetX) + "px," + (data.top-ui.offsetY) + "px)";
-	sharingTitle.style.transform       = "translate(" + (data.left-ui.offsetX) + "px," + (data.top-ui.offsetY) + "px)";
+	sharingTitle.style.webkitTransform = "translate(" + data.left + "px," + data.top + "px)";
+	sharingTitle.style.mozTransform    = "translate(" + data.left + "px," + data.top + "px)";
+	sharingTitle.style.transform       = "translate(" + data.left + "px," + data.top + "px)";
 	sharingTitle.style.zIndex = data.zIndex;
 
 	var sharingArea = document.createElement('div');
 	sharingArea.id = this.id;
 	sharingArea.className = "dataSharingArea";
+	sharingArea.style.left = (-ui.offsetX).toString() + "px";
+	sharingArea.style.top = (-ui.offsetY).toString() + "px";
 	sharingArea.style.width = data.natural_width + "px";
 	sharingArea.style.height = data.natural_height + "px";
 	sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
-	sharingArea.style.webkitTransform = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
-	sharingArea.style.mozTransform    = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
-	sharingArea.style.transform       = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+	sharingArea.style.webkitTransform = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+	sharingArea.style.mozTransform    = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+	sharingArea.style.transform       = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.zIndex = data.zIndex;
 
 	var sharingOverlay = document.createElement('div');
 	sharingOverlay.id = this.id + "_overlay";
 	sharingOverlay.className = "dataSharingOverlay";
+	sharingOverlay.style.left = (-ui.offsetX).toString() + "px";
+	sharingOverlay.style.top = (-ui.offsetY).toString() + "px";
 	sharingOverlay.style.width = data.width + "px";
 	sharingOverlay.style.height = data.height + "px";
-	sharingOverlay.style.webkitTransform = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px)";
-	sharingOverlay.style.mozTransform    = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px)";
-	sharingOverlay.style.transform       = "translate(" + (data.left-ui.offsetX) + "px," + (data.top+ui.titleBarHeight-ui.offsetY) + "px)";
+	sharingOverlay.style.webkitTransform = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px)";
+	sharingOverlay.style.mozTransform    = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px)";
+	sharingOverlay.style.transform       = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px)";
 	sharingOverlay.style.zIndex = data.zIndex;
 
 	var connectedColor = "rgba(55, 153, 130, 1.0)";
@@ -98,19 +104,19 @@ function DataSharing(data) {
 
 	this.setPosition = function(left, top) {
 		var sharingTitle = document.getElementById(this.id + "_title");
-		sharingTitle.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
-		sharingTitle.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
-		sharingTitle.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
+		sharingTitle.style.webkitTransform = "translate(" + left + "px," + top + "px)";
+		sharingTitle.style.mozTransform    = "translate(" + left + "px," + top + "px)";
+		sharingTitle.style.transform       = "translate(" + left + "px," + top + "px)";
 
 		var sharingArea = document.getElementById(this.id);
-		sharingArea.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
-		sharingArea.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
-		sharingArea.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+		sharingArea.style.webkitTransform = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+		sharingArea.style.mozTransform    = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+		sharingArea.style.transform       = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	
 		var sharingOverlay = document.getElementById(this.id + "_overlay");
-		sharingOverlay.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
-		sharingOverlay.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
-		sharingOverlay.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
+		sharingOverlay.style.webkitTransform = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px)";
+		sharingOverlay.style.mozTransform    = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px)";
+		sharingOverlay.style.transform       = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px)";
 	};
 
 	this.setPositionAndSize = function(left, top, width, height) {
@@ -119,21 +125,21 @@ function DataSharing(data) {
 
 		var sharingTitle = document.getElementById(this.id + "_title");
 		sharingTitle.style.width = width + "px";
-		sharingTitle.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
-		sharingTitle.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
-		sharingTitle.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top-ui.offsetY) + "px)";
+		sharingTitle.style.webkitTransform = "translate(" + left + "px," + top + "px)";
+		sharingTitle.style.mozTransform    = "translate(" + left + "px," + top + "px)";
+		sharingTitle.style.transform       = "translate(" + left + "px," + top + "px)";
 
 		var sharingArea = document.getElementById(this.id);
 		sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
-		sharingArea.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
-		sharingArea.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
-		sharingArea.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+		sharingArea.style.webkitTransform = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+		sharingArea.style.mozTransform    = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
+		sharingArea.style.transform       = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	
 		var sharingOverlay = document.getElementById(this.id + "_overlay");
 		sharingOverlay.style.width = width + "px";
 		sharingOverlay.style.height = height + "px";
-		sharingOverlay.style.webkitTransform = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
-		sharingOverlay.style.mozTransform    = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
-		sharingOverlay.style.transform       = "translate(" + (left-ui.offsetX) + "px," + (top+ui.titleBarHeight-ui.offsetY) + "px)";
+		sharingOverlay.style.webkitTransform = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px)";
+		sharingOverlay.style.mozTransform    = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px)";
+		sharingOverlay.style.transform       = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px)";
 	};
 }
