@@ -3580,7 +3580,10 @@ function pointerPress( uniqueID, pointerX, pointerY, data ) {
 
 	// widgets
 	var ct = findControlsUnderPointer(pointerX, pointerY);
-	//var itemUnderPointer = ct || elem;
+
+	var itemUnderPointer = ct || elem;
+	remoteInteraction[uniqueID].initiatePointerClick(itemUnderPointer);
+
 	//Draw widget connectors
 	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "press");
 	if (ct !== null) {

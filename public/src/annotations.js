@@ -196,7 +196,6 @@ sendNoteToServer = function(credentials, text){
 	if (isMaster){
 		wsio.emit('annotationUpdate',note);
 	}
-	credentials.initialEdit = false;
 };
 
 SAGE2Annotations.prototype.deleteNote = function(credentials){
@@ -682,8 +681,7 @@ function TextArea(){
 		createdOn: null,
 		modifiedOn: null,
 		changeFlag:false,
-		marker:null,
-		initialEdit: true
+		marker:null
 	};
 	this.div = null;
 }
@@ -691,9 +689,11 @@ function TextArea(){
 TextArea.prototype.toggleNoteType = function(){
 	if (this.credentials.marker!== null){
 		this.element.style.background = "#FCF0AD";
+		this.toggleNoteBox.src = "images/removeMarker.svg";
 	}
 	else{
 		this.element.style.background = "#AAFFAA";
+		this.toggleNoteBox.src = "images/addMarker.svg";
 	}
 };
 
@@ -760,12 +760,24 @@ TextArea.prototype.setCredentials = function(data){
 	if (data.text){
 		this.setText(data.text);
 		this.newText = false;
-		this.initialEdit = false;
 	}
 	this.idBox.innerHTML = this.credentials.id;
 	var dt = new Date(data.createdOn);
-	this.dateBox.innerHTML = (dt.getMonth()+1) + "-" + dt.getDate() + "-" + dt.getFullYear();
+	this.dateBox.innerHTML = this.formatTime(data.createdOn)
+	setInterval(function(){
+		this.dateBox.innerHTML = this.formatTime(data.createdOn)
+	}.bind(this),60000);
+	
 	this.userNameBox.innerHTML = data.userLabel;
+};
+
+TextArea.prototype.formatTime = function(createdOn){
+	var then = moment(createdOn);
+	var now = moment();
+	if (now.diff(then, 'milliseconds') < 86400000){
+		return then.fromNow();
+	}
+	return then.calendar();
 };
 
 TextArea.prototype.setFirstEditCallBack = function (callback){
@@ -905,12 +917,12 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.toggleNoteBox.style.top = "1px";
 	this.toggleNoteBox.style.height = parseInt(credBarHeight -2) +"px";
 	this.toggleNoteBox.style.display = "block";
-	this.toggleNoteBox.src = "images/noteOnly.svg";
+	this.toggleNoteBox.src = "images/addMarker.svg";
 	this.credentialBar.appendChild(this.toggleNoteBox);
 
 	this.idBox = document.createElement("span");
 	this.idBox.style.position = "absolute";
-	this.idBox.style.left = parseInt(0.15*data.width) + "px";
+	this.idBox.style.left = parseInt(0.10*data.width) + "px";
 	this.idBox.style.bottom = "0px";
 	this.idBox.style.width = parseInt(0.15*data.width) +"px";
 	this.idBox.style.display = "block";
@@ -939,8 +951,8 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.dateBox.style.left = parseInt(this.userNameBox.style.left) + parseInt(this.userNameBox.style.width) +"px";
 	this.dateBox.style.marginRight = "3px";
 	this.dateBox.style.bottom = "0px";
-	this.dateBox.style.width = parseInt(0.3*data.width) +"px";
-	this.dateBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
+	this.dateBox.style.width = parseInt(0.35*data.width) +"px";
+	this.dateBox.style.fontSize = parseInt(credBarHeight)*0.55 + "px";
 	this.dateBox.style.fontFamily = 'arial';
 	this.dateBox.style.color = "white";
 	this.dateBox.style.display = "block";
