@@ -2817,7 +2817,7 @@ function getUniqueDataSharingId(remoteHost, remotePort, caller) {
 		id = config.host+":"+config.port + "|" + remoteHost+":"+remotePort;
 	else
 		id = remoteHost+":"+remotePort + "|" + config.host+":"+config.port;
-	return "portal_" + 
+	return "portal_" + id;
 }
 
 function getUniqueSharedAppId(portalId) {
