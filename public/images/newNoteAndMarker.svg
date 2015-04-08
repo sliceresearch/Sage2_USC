@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<svg width="640" height="240" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+
+ <g>
+  <title>Layer 1</title>
+  <rect stroke="#666666" id="svg_1" height="232.952368" width="633.999984" y="2.531746" x="3" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#666666"/>
+  <path stroke="#666666" id="svg_6" d="m463.258453,210.388916l9.167236,-24.104187l36.669586,-6.026108l-45.836823,30.130295l-229.179108,0l0,-180.777828l275.01593,0l0,150.647533" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#fcf0ad"/>
+  <path stroke="#666666" id="svg_9" d="m314.047638,101.267319l39.124481,0l0,-39.799099l36.830383,0l0,39.799099l39.124481,0l0,37.465408l-39.124481,0l0,39.799057l-36.830383,0l0,-39.799057l-39.124481,0l0,-37.465408z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#666666"/>
+  <path stroke="#666666" id="svg_18" d="m141.007401,36.666676c-27.157211,0 -49.174065,21.844059 -49.174065,48.788082c0,26.950562 49.174065,117.878571 49.174065,117.878571s49.174042,-90.928009 49.174042,-117.878571c0,-26.944023 -22.010254,-48.788082 -49.174042,-48.788082zm0,72.102291c-12.975388,0 -23.498611,-10.434143 -23.498611,-23.314209s10.523224,-23.314175 23.498611,-23.314175s23.498703,10.440639 23.498703,23.314175s-10.523331,23.314209 -23.498703,23.314209z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#fcf0ad"/>
+ </g>
+</svg>

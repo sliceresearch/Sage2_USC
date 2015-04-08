@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+
+ <g>
+  <title>Layer 1</title>
+  <rect stroke="#bbbbbb" id="svg_6" height="472.000012" width="632.000015" y="4" x="4" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#bbbbbb"/>
+  <rect stroke="#666666" id="svg_9" height="344.000005" width="483.000004" y="68" x="78.5" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#666666"/>
+  <path stroke="#ffffff" id="svg_5" d="m173,172.778641l71.279404,-63.278671l75.71843,67.219391l75.722778,-67.219391l71.279388,63.278671l-75.720612,67.221375l75.720612,67.220352l-71.279388,63.279663l-75.722778,-67.220337l-75.71843,67.220337l-71.279404,-63.279663l75.718369,-67.220352l-75.718369,-67.221375z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#ffffff"/>
+ </g>
+</svg>
