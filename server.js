@@ -3953,11 +3953,11 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
-    var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-    if (obj === null) {
-    	dropSelectedApp(uniqueID, true);
-    	return;
-    }
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+	if (obj === null) {
+		dropSelectedApp(uniqueID, true);
+		return;
+	}
 
 	switch (obj.layerId) {
 		case "staticUI":
