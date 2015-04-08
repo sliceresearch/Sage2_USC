@@ -2410,7 +2410,7 @@ function wsAcceptDataSharingSession(wsio, data) {
 	var sharingScale = (0.9*myMin) / Math.min(data.width, data.height);
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null);
-	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, data.width, data.height, sharingScale);
+	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, data.width, data.height, sharingScale, true);
 	remoteSharingWaitDialog = null;
 	showWaitDialog(false);
 }
@@ -2802,15 +2802,6 @@ var getUniqueAppId = (function() {
 	};
 })();
 
-var getUniqueDataSharingId = (function() {
-	var count = 0;
-	return function() {
-		var id = "portal_" + count.toString();
-		count++;
-		return id;
-	};
-})();
-
 var getNewUserId = (function() {
 	var count = 0;
 	return function() {
@@ -2819,6 +2810,15 @@ var getNewUserId = (function() {
 		return id;
 	};
 })();
+
+function getUniqueDataSharingId(remoteHost, remotePort, caller) {
+	var id;
+	if (caller == true)
+		id = config.host+":"+config.port + "|" + remoteHost+":"+remotePort;
+	else
+		id = remoteHost+":"+remotePort + "|" + config.host+":"+config.port;
+	return "portal_" + 
+}
 
 function getUniqueSharedAppId(portalId) {
 	return "app_" + remoteSharingSessions[portalId].appCount + "_" + portalId;
@@ -3895,7 +3895,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
 			var sharingScale = (0.9*myMin) / sharingSize;
 			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
-			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, sharingSize, sharingSize, sharingScale);
+			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, sharingSize, sharingSize, sharingScale, false);
 			remoteSharingRequestDialog = null;
 			showRequestDialog(false);
 			break;
@@ -3919,10 +3919,10 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 	}
 }
 
-function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, sharingWidth, sharingHeight, sharingScale) {
+function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, sharingWidth, sharingHeight, sharingScale, caller) {
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
 	var dataSession = {
-		id: getUniqueDataSharingId(),
+		id: getUniqueDataSharingId(remoteHost, remotePort, caller),
 		name: remoteName,
 		host: remoteHost,
 		port: remotePort,
@@ -3940,6 +3940,8 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 		scale: sharingScale,
 		zIndex: zIndex
 	};
+
+	console.log("New Data Sharing Session: " + dataSession.id);
 
 	var geometry = {
 		x: dataSession.left,
