@@ -349,11 +349,13 @@ function setupListeners() {
 
 	////////////////////////////////////////////////
 	wsio.on('createAppWindow', function(data) {
-		createAppWindow(data, ui.main.id, ui.offsetX, ui.offsetY);
+		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
 	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
-		createAppWindow(data.application, data.portal, 0, 0);
+		var portal = dataSharingPortals[data.portal];
+
+		createAppWindow(data.application, portal.id, portal.titleBarHeight, portal.titleTextSize, 0, 0);
 	});
 	////////////////////////////////////////////////
 
@@ -928,7 +930,7 @@ function setupListeners() {
 	});
 }
 
-function createAppWindow(data, parentId, offsetX, offsetY) {
+function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
 	resetIdle();
 
 	var parent = document.getElementById(parentId);
@@ -940,7 +942,7 @@ function createAppWindow(data, parentId, offsetX, offsetY) {
 	windowTitle.id  = data.id + "_title";
 	windowTitle.className    = "windowTitle";
 	windowTitle.style.width  = data.width.toString() + "px";
-	windowTitle.style.height = ui.titleBarHeight.toString() + "px";
+	windowTitle.style.height = titleBarHeight.toString() + "px";
 	windowTitle.style.left   = (-offsetX).toString() + "px";
 	windowTitle.style.top    = (-offsetY).toString() + "px";
 	windowTitle.style.webkitTransform = translate;
@@ -951,16 +953,16 @@ function createAppWindow(data, parentId, offsetX, offsetY) {
 
 	var windowIcons = document.createElement("img");
 	windowIcons.src = "images/layout3.webp";
-	windowIcons.height = Math.round(ui.titleBarHeight);
+	windowIcons.height = Math.round(titleBarHeight);
 	windowIcons.style.position = "absolute";
 	windowIcons.style.right    = "0px";
 	windowTitle.appendChild(windowIcons);
 
 	var titleText = document.createElement("p");
-	titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-	titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
+	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
+	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
-	titleText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
+	titleText.style.marginLeft = Math.round(titleBarHeight/4) + "px";
 	titleText.textContent      = data.title;
 	windowTitle.appendChild(titleText);
 
@@ -968,7 +970,7 @@ function createAppWindow(data, parentId, offsetX, offsetY) {
 	windowItem.id  = data.id;
 	windowItem.className      = "windowItem";
 	windowItem.style.left     = (-offsetX).toString() + "px";
-	windowItem.style.top      = (ui.titleBarHeight-offsetY).toString() + "px";
+	windowItem.style.top      = (titleBarHeight-offsetY).toString() + "px";
 	windowItem.style.webkitTransform = translate;
 	windowItem.style.mozTransform    = translate;
 	windowItem.style.transform       = translate;
@@ -1003,7 +1005,7 @@ function createAppWindow(data, parentId, offsetX, offsetY) {
 		var init = {
 			id:     data.id,
 			x:      data.left,
-			y:      data.top+ui.titleBarHeight,
+			y:      data.top+titleBarHeight,
 			width:  data.width,
 			height: data.height,
 			resrc:  url,

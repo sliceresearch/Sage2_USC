@@ -7,6 +7,8 @@ function DataSharing(data) {
 	this.naturalHeight = data.natural_height;
 	this.scaleX = data.width / data.natural_width;
 	this.scaleY = data.height / data.natural_height;
+	this.titleBarHeight = data.titleBarHeight;
+	this.titleTextSize = 0.6 * this.titleBarHeight;
 
 	console.log(data.width, data.height, data.natural_width, data.natural_height);
 

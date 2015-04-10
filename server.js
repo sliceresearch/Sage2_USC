@@ -2091,11 +2091,13 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 	var portalX = 0;
 	var portalY = 0;
 	var portalScale = 1;
+	var titleBarHeight = config.ui.titleBarHeight
 	var portal = findApplicationPortal(app);
 	if (portal !== undefined && portal !== null) {
 		portalX = portal.data.left;
 		portalY = portal.data.top;
 		portalScale = portal.data.scale;
+		titleBarHeight = portal.data.titleBarHeight;
 	}
 
 	var horizontalBlocks = Math.ceil(app.data.width /blockSize);
@@ -2116,7 +2118,7 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 				else {
 					var display = config.displays[renderhandle.clients[key].wsio.clientID];
 					var left = j*renderBlockWidth  + (app.left * portalScale + portalX);
-					var top  = i*renderBlockHeight + ((app.top + config.ui.titleBarHeight) * portalScale + portalY);
+					var top  = i*renderBlockHeight + ((app.top + titleBarHeight) * portalScale + portalY);
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
 
@@ -2410,7 +2412,7 @@ function wsAcceptDataSharingSession(wsio, data) {
 	var sharingScale = (0.9*myMin) / Math.min(data.width, data.height);
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null);
-	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, data.width, data.height, sharingScale, true);
+	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, data.width, data.height, sharingScale, data.titleBarHeight, true);
 	remoteSharingWaitDialog = null;
 	showWaitDialog(false);
 }
@@ -3893,8 +3895,9 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			var myMin = Math.min(config.totalWidth, config.totalHeight-config.ui.titleBarHeight);
 			var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
 			var sharingScale = (0.9*myMin) / sharingSize;
-			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize});
-			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, sharingSize, sharingSize, sharingScale, false);
+			var sharingTitleBarHeight = (remoteSharingRequestDialog.config.ui.titleBarHeight + config.ui.titleBarHeight) / 2;
+			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize, titleBarHeight: sharingTitleBarHeight});
+			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, sharingSize, sharingSize, sharingScale, sharingTitleBarHeight, false);
 			remoteSharingRequestDialog = null;
 			showRequestDialog(false);
 			break;
@@ -3918,7 +3921,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 	}
 }
 
-function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, sharingWidth, sharingHeight, sharingScale, caller) {
+function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
 	var dataSession = {
 		id: getUniqueDataSharingId(remoteHost, remotePort, caller),
@@ -3937,6 +3940,7 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 		natural_height: sharingHeight,
 		aspect: sharingWidth / sharingHeight,
 		scale: sharingScale,
+		titleBarHeight: sharingTitleBarHeight,
 		zIndex: zIndex
 	};
 
@@ -4632,6 +4636,7 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
 
 			remoteSharingSessions[obj.data.id].appCount++;
 			
+			// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
 			var i;
 			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
 			for (i=0; i<clients.length; i++) {
@@ -6197,6 +6202,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	var zIndex = remoteSharingSessions[portalId].appCount;
 	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, zIndex, appInstance);
 
+	var titleBarHeight = SAGE2Items.portals.list[portalId].data.titleBarHeight;
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
