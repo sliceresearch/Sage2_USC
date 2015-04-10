@@ -4396,7 +4396,6 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
-	console.log(scaledPt);
 
 	if (remoteInteraction[uniqueID].local) {
 		if (remoteInteraction[uniqueID].portal === null || remoteInteraction[uniqueID].portal.id != obj.data.id) {
@@ -6230,6 +6229,7 @@ function handleApplicationResize(appId) {
 	if(portal !== undefined && portal !== null) {
 		titleBarHeight = portal.data.titleBarHeight;
 	}
+	console.log(titleBarHeight, config.ui.titleBarHeight);
 
 	var appWidth = SAGE2Items.applications.list[appId].width;
 	var appHeight = SAGE2Items.applications.list[appId].height;
