@@ -4514,7 +4514,7 @@ function moveApplicationWindow(moveApp) {
 }
 
 function moveAndResizeApplicationWindow(resizeApp) {
-	var app = SAGE2Items.applications.list[moveApp.elemId];
+	var app = SAGE2Items.applications.list[resizeApp.elemId];
 	var portal = findApplicationPortal(app);
 	var titleBarHeight = config.ui.titleBarHeight;
 	if (portal !== undefined && portal !== null) {
