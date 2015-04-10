@@ -6204,16 +6204,16 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 
 	var titleBarHeight = SAGE2Items.portals.list[portalId].titleBarHeight;
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
-	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
-	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
+	var buttonsWidth = titleBarHeight * (324.0/111.0);
+	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appInstance.width - buttonsWidth;
 
 	SAGE2Items.applications.addItem(appInstance);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle", {x: 0, y: 0, w: appInstance.width, h: config.ui.titleBarHeight}, 0);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle", {x: 0, y: 0, w: appInstance.width, h: titleBarHeight}, 0);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
 	initializeLoadedVideo(appInstance, videohandle);
 }
