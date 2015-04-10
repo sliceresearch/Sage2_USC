@@ -6200,9 +6200,9 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	broadcast('createAppWindowInDataSharingPortal', {portal: portalId, application: appInstance});
 
 	var zIndex = remoteSharingSessions[portalId].appCount;
-	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, zIndex, appInstance);
-
 	var titleBarHeight = SAGE2Items.portals.list[portalId].titleBarHeight;
+	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+titleBarHeight}, true, zIndex, appInstance);
+
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var buttonsWidth = titleBarHeight * (324.0/111.0);
 	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
@@ -6215,25 +6215,33 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
+	console.log("App In Portal: Drag Corner (" + (appInstance.width-cornerSize) + ", " + (appInstance.height+titleBarHeight-cornerSize) + " " + cornerSize + ")");
+
 	initializeLoadedVideo(appInstance, videohandle);
 }
 
 function handleApplicationResize(appId) {
 	if (SAGE2Items.applications.list[appId] === undefined) return;
 
+	var portal = findApplicationPortal(SAGE2Items.applications.list[appId]);
+	var titleBarHeight = config.ui.titleBarHeight;
+	if(portal !== undefined && portal !== null) {
+		titleBarHeight = portal.data.titleBarHeight;
+	}
+
 	var appWidth = SAGE2Items.applications.list[appId].width;
 	var appHeight = SAGE2Items.applications.list[appId].height;
 
 	var cornerSize = 0.2 * Math.min(appWidth, appHeight);
-	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
-	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
+	var buttonsWidth = titleBarHeight * (324.0/111.0);
+	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appWidth - buttonsWidth;
 
-	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: appWidth, h: config.ui.titleBarHeight});
-	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight});
-	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
-	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: appWidth-cornerSize, y: appHeight+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
+	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: appWidth, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: appWidth-cornerSize, y: appHeight+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
 }
 
 function handleDataSharingPortalResize(portalId) {
