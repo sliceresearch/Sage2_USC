@@ -6202,7 +6202,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	var zIndex = remoteSharingSessions[portalId].appCount;
 	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, zIndex, appInstance);
 
-	var titleBarHeight = SAGE2Items.portals.list[portalId].data.titleBarHeight;
+	var titleBarHeight = SAGE2Items.portals.list[portalId].titleBarHeight;
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
