@@ -3779,7 +3779,6 @@ function getAppPositionSize(appInstance) {
 // **************  Pointer Functions *****************
 
 function createSagePointer (uniqueID, portal) {
-	console.log("createSagePointer:", portal);
 	// From addClient type == sageUI
 	sagePointers[uniqueID] = new Sagepointer(uniqueID+"_pointer");
 	sagePointers[uniqueID].portal = portal;
