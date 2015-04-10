@@ -29,7 +29,7 @@ function DataSharing(data) {
 	sharingArea.style.top = (-ui.offsetY).toString() + "px";
 	sharingArea.style.width = data.natural_width + "px";
 	sharingArea.style.height = data.natural_height + "px";
-	sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
+	//sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
 	sharingArea.style.webkitTransform = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.mozTransform    = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 	sharingArea.style.transform       = "translate(" + data.left + "px," + (data.top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
@@ -130,7 +130,7 @@ function DataSharing(data) {
 		sharingTitle.style.transform       = "translate(" + left + "px," + top + "px)";
 
 		var sharingArea = document.getElementById(this.id);
-		sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
+		//sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
 		sharingArea.style.webkitTransform = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.mozTransform    = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
 		sharingArea.style.transform       = "translate(" + left + "px," + (top+ui.titleBarHeight) + "px) scale(" + this.scaleX + "," + this.scaleY + ")";
