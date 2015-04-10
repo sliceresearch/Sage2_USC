@@ -6226,8 +6226,6 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
-	console.log("App In Portal: Drag Corner (" + (appInstance.width-cornerSize) + ", " + (appInstance.height+titleBarHeight-cornerSize) + " " + cornerSize + ")");
-
 	initializeLoadedVideo(appInstance, videohandle);
 }
 
