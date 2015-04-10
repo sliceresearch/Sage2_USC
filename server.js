@@ -4496,11 +4496,16 @@ function removeExistingHoverCorner(uniqueID) {
 }
 
 function moveApplicationWindow(moveApp) {
+	var app = SAGE2Items.applications.list[moveApp.elemId];
+	var portal = findApplicationPortal(app);
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portal !== undefined && portal !== null) {
+		titleBarHeight = portal.data.titleBarHeight;
+	}
 	var im = findInteractableManager(moveApp.elemId);
-	im.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+config.ui.titleBarHeight});
+	im.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+titleBarHeight});
 	broadcast('setItemPosition', moveApp);
 	if (SAGE2Items.renderSync.hasOwnProperty(moveApp.elemId)) {
-		var app = SAGE2Items.applications.list[moveApp.elemId];
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
@@ -4509,12 +4514,17 @@ function moveApplicationWindow(moveApp) {
 }
 
 function moveAndResizeApplicationWindow(resizeApp) {
+	var app = SAGE2Items.applications.list[moveApp.elemId];
+	var portal = findApplicationPortal(app);
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portal !== undefined && portal !== null) {
+		titleBarHeight = portal.data.titleBarHeight;
+	}
 	var im = findInteractableManager(resizeApp.elemId);
-	im.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+config.ui.titleBarHeight});
+	im.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
 	broadcast('setItemPositionAndSize', resizeApp);
 	if (SAGE2Items.renderSync.hasOwnProperty(resizeApp.elemId)) {
-		var app = SAGE2Items.applications.list[resizeApp.elemId];
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
@@ -6224,26 +6234,23 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 function handleApplicationResize(appId) {
 	if (SAGE2Items.applications.list[appId] === undefined) return;
 
-	var portal = findApplicationPortal(SAGE2Items.applications.list[appId]);
+	var app = SAGE2Items.applications.list[appId];
+	var portal = findApplicationPortal(app);
 	var titleBarHeight = config.ui.titleBarHeight;
 	if(portal !== undefined && portal !== null) {
 		titleBarHeight = portal.data.titleBarHeight;
 	}
-	console.log(titleBarHeight, config.ui.titleBarHeight);
 
-	var appWidth = SAGE2Items.applications.list[appId].width;
-	var appHeight = SAGE2Items.applications.list[appId].height;
-
-	var cornerSize = 0.2 * Math.min(appWidth, appHeight);
+	var cornerSize = 0.2 * Math.min(app.width, app.height);
 	var buttonsWidth = titleBarHeight * (324.0/111.0);
 	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
-	var startButtons = appWidth - buttonsWidth;
+	var startButtons = app.width - buttonsWidth;
 
-	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: appWidth, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: app.width, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight});
-	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: appWidth-cornerSize, y: appHeight+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
+	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: app.width-cornerSize, y: app.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
 }
 
 function handleDataSharingPortalResize(portalId) {
