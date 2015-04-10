@@ -4396,6 +4396,8 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
+	console.log(scaledPt);
+
 	if (remoteInteraction[uniqueID].local) {
 		if (remoteInteraction[uniqueID].portal === null || remoteInteraction[uniqueID].portal.id != obj.data.id) {
 			remoteInteraction[uniqueID].portal = obj.data;
@@ -4483,7 +4485,7 @@ function pointerMoveInDataSharingArea(uniqueID, portalId, scaledPt, data) {
 	}
 
 	var obj = interactMgr.getObject(portalId, "portals");
-	pointerMoveOnDataSharingPortal(uniqueID, scaledPt.x, scaledPt.y, data, obj, {x: scaledPt.x*obj.data.scale, y: scaledPt.y*obj.data.scale});
+	pointerMoveOnDataSharingPortal(uniqueID, scaledPt.x, scaledPt.y, data, obj, {x: scaledPt.x*obj.data.scale, y: scaledPt.y*obj.data.scale+config.ui.titleBarHeight});
 }
 
 function removeExistingHoverCorner(uniqueID) {
