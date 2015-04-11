@@ -1,0 +1,43 @@
+
+
+<head>
+
+
+</head>
+
+
+<body>
+
+    <div id="container"></div>
+
+
+	<form>
+	    <h2>Input</h2>
+	    <textarea rows="6" id="input"></textarea>
+	    <br>
+	    <button type="button" id="calculate">Calculate</button>
+	    <h2>Result</h2>
+	    <input id="result">
+	    <br>
+	</form>
+
+
+	<script  type="text/javascript" src="md5.js"></script>
+	<script  type="text/javascript" >
+
+		document.getElementById('calculate').addEventListener('click', getMd5Hash,    false);
+
+		
+
+		function getMd5Hash(event) {
+			console.log("Button press");
+
+			console.log(  md5(document.getElementById('input').value)  );
+
+			document.getElementById('result').value = md5(document.getElementById('input').value);
+
+		}
+
+	</script>
+
+</body>
