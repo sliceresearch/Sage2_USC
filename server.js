@@ -1025,7 +1025,6 @@ function wsStopMediaStream(wsio, data) {
 
 function wsReceivedMediaStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
-	console.log("RECEIVED MEDIA STREAM FRAME");
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
 		var sender = {wsio: null, serverId: null, clientId: null, streamId: null};
@@ -1045,6 +1044,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 			sender.serverId = mediaStreamData[0];
 			sender.clientId = mediaStreamData[1];
 			sender.streamId = mediaStreamData[2];
+			console.log("REMOTE STREAM: ", sender);
 			for (i=0; i<clients.length; i++) {
 				if (clients[i].id === sender.serverId) {
 					sender.wsio = clients[i];
@@ -2316,6 +2316,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 
 function wsRequestNextRemoteFrame(wsio, data) {
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
+	console.log("REQUEST NEXT REMOTE FRAME: " + remote_id);
 	if(SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var stream = SAGE2Items.applications.list[data.id];
 		wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, state: stream.data});
