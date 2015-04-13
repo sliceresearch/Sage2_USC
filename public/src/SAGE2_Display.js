@@ -287,8 +287,6 @@ function setupListeners() {
 		// update clones in data-sharing portals
 		var key;
 		for (key in dataSharingPortals) {
-			console.log(applications);
-			console.log("update clone: " + data.id + "_" + key);
 			app = applications[data.id + "_" + key];
 			if (app !== undefined && app !== null){
 				app.load(data.state);

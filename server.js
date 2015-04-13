@@ -1011,6 +1011,15 @@ function wsStopMediaStream(wsio, data) {
 		addEventToUserLog(wsio.id, {type: "delete", data: eLogData, time: Date.now()});
 	}
 
+	// stop all clones in shared portals
+	var key;
+	for (key in SAGE2Items.portals.list) {
+		stream = SAGE2Items.applications.list[data.id + "_" + key];
+		if (stream !== undefined && stream !== null) {
+			deleteApplication(stream.id);
+		}
+	}
+
 	/*
 	var elem = findAppById(data.id);
 	if(elem !== null) {
@@ -2320,7 +2329,7 @@ function wsRequestNextRemoteFrame(wsio, data) {
 	else                     originId = data.id;
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
 	var origin_id = config.host + ":" + config.port + "|" + data.id;
-	console.log("REQUEST NEXT REMOTE FRAME: " + remote_id);
+
 	if(SAGE2Items.applications.list.hasOwnProperty(originId)) {
 		var stream = SAGE2Items.applications.list[originId];
 		wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, state: stream.data});
