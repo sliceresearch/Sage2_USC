@@ -59,12 +59,12 @@ var DataSharing = function(data) {
 		borderRGB[1] = parseInt(rgbStr[1], 10);
 		borderRGB[2] = parseInt(rgbStr[2], 10);
 	}
-	else if(onnectedColor.indexOf("#") === 0) {
+	else if(connectedColor.indexOf("#") === 0) {
 		borderRGB[0] = parseInt(connectedColor.substring(1, 3), 16);
 		borderRGB[1] = parseInt(connectedColor.substring(3, 5), 16);
 		borderRGB[2] = parseInt(connectedColor.substring(5, 7), 16);
 	}
-	var borderColor = "rgba(" + parseInt(0.6*borderRGB[0], 10) + ", " + parseInt(0.6*borderRGB[1], 10) + ", " + parseInt(0.6*borderRGB[2], 10) + ", 1.0)"; 
+	var borderColor = "rgba(" + parseInt(0.6*borderRGB[0], 10) + ", " + parseInt(0.6*borderRGB[1], 10) + ", " + parseInt(0.6*borderRGB[2], 10) + ", 1.0)";
 
 	sharingTitle.style.backgroundColor = connectedColor;
 	sharingTitle.style.borderColor = borderColor;

@@ -865,7 +865,7 @@ function setupListeners() {
 		if (func !== undefined && func !== null)
 			func(new Date());
 	});
-	
+
 	wsio.on('moveSliderKnob', function(data) {
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
@@ -898,7 +898,7 @@ function setupListeners() {
 			}
 		}
 	});
-	
+
 	wsio.on('dropTextInputControl', function(data) { //Called when the user clicks outside the widget control while a lock exists on text input
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
@@ -907,19 +907,19 @@ function setupListeners() {
 			clearInterval(blinkControlHandle);
 		}
 	});
-	
+
 	wsio.on('requestedDataSharingSession', function(data) {
 		ui.showDataSharingRequestDialog(data);
 	});
-	
+
 	wsio.on('closeRequestDataSharingDialog', function(data) {
 		ui.hideDataSharingRequestDialog();
 	});
-	
+
 	wsio.on('dataSharingConnectionWait', function(data) {
 		ui.showDataSharingWaitingDialog(data);
 	});
-	
+
 	wsio.on('closeDataSharingWaitDialog', function(data) {
 		ui.hideDataSharingWaitingDialog();
 	});
@@ -990,7 +990,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
     dragCorner.style.border   = "none";
     dragCorner.style.zIndex   = "1";
     windowItem.appendChild(dragCorner);
-	
+
 	parent.appendChild(windowTitle);
 	parent.appendChild(windowItem);
 

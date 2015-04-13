@@ -354,7 +354,7 @@ function UIBuilder(json_cfg, clientID) {
 			}
 			machine.textContent = url;
 		}
-		
+
 		var dataSharingRequestDialog = document.createElement("div");
 		dataSharingRequestDialog.id = "dataSharingRequestDialog";
 		dataSharingRequestDialog.style.position = "absolute";
@@ -420,7 +420,7 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingRequestDialog.appendChild(dataSharingAccept);
 		dataSharingRequestDialog.appendChild(dataSharingReject);
 		this.main.appendChild(dataSharingRequestDialog);
-		
+
 		var dataSharingWaitDialog = document.createElement("div");
 		dataSharingWaitDialog.id = "dataSharingWaitDialog";
 		dataSharingWaitDialog.style.position = "absolute";
@@ -465,13 +465,13 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.appendChild(dataSharingWaitText);
 		dataSharingWaitDialog.appendChild(dataSharingCancel);
 		this.main.appendChild(dataSharingWaitDialog);
-		
+
 		var connectedColor = "rgba(55, 153, 130, 1.0)";
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
 			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
 		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
-		
-		
+
+
 		head.appendChild(fileref);
 		this.uiHidden = false;
 		this.showInterface();
@@ -600,7 +600,7 @@ function UIBuilder(json_cfg, clientID) {
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
 		pointerElem.style.zIndex = 10000;
-		
+
 		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
 			pointerElem.style.left = (-this.pointerOffsetX).toString() + "px";
 			pointerElem.style.top = (-this.pointerOffsetY).toString()  + "px";
@@ -919,7 +919,7 @@ function UIBuilder(json_cfg, clientID) {
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
 	};
-	
+
 	/**
 	* Dialog to accept/reject requests for a new data sharing session from a remote site
 	*
@@ -934,7 +934,7 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingText.textContent = "Data-sharing request from " + data.name + " (" + host + ")";
 		dataSharingRequestDialog.style.display = "block";
 	};
-	
+
 	/**
 	* Close dialog to accept/reject requests for a new data sharing session from a remote site
 	*
@@ -943,7 +943,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.hideDataSharingRequestDialog = function() {
 		document.getElementById("dataSharingRequestDialog").style.display = "none";
 	};
-	
+
 	/**
 	* Dialog that displays wait message for data sharing session from a remote site
 	*
@@ -958,7 +958,7 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingText.textContent = "Requested data-sharing session with " + data.name + " (" + host + ")";
 		dataSharingWaitDialog.style.display = "block";
 	};
-	
+
 	/**
 	* Close dialog that displays wait message for data sharing session from a remote site
 	*
