@@ -1044,7 +1044,6 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 			sender.serverId = mediaStreamData[0];
 			sender.clientId = mediaStreamData[1];
 			sender.streamId = mediaStreamData[2];
-			console.log("REMOTE STREAM: ", sender);
 			for (i=0; i<clients.length; i++) {
 				if (clients[i].id === sender.serverId) {
 					sender.wsio = clients[i];
@@ -2315,6 +2314,8 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 }
 
 function wsRequestNextRemoteFrame(wsio, data) {
+	var portalCloneIdx = data.id.indexOf("_");
+	if (portalCloneIdx >= 0) data.id = data.id.substring(0, portalCloneIdx);
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
 	console.log("REQUEST NEXT REMOTE FRAME: " + remote_id);
 	if(SAGE2Items.applications.list.hasOwnProperty(data.id)) {
