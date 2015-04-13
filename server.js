@@ -2502,7 +2502,10 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 	}
 	if (remote !== null) {
 		createAppFromDescription(data, function(appInstance, videohandle) {
-			appInstance.id = data.id;
+			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream")
+				appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
+			else
+				appInstance.id = data.id;
 			appInstance.left = data.left;
 			appInstance.top = data.top;
 			appInstance.width = data.width;
