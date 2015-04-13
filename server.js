@@ -3242,7 +3242,7 @@ function broadcast_opt(func, data, type) {
 			if(clients[i].messages[type]) clients[i].emitString( message );
 		}
 	} catch (e) {
-		// nothing
+		console.log("warning: wsio trouble emitting string to clients");
 	}
 }
 
