@@ -39,6 +39,9 @@ var media_stream = SAGE2_App.extend( {
 	init: function(data) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, "img", data);
+
+		// overwrite img element with dynamic image (based on the original img)
+		this.element = new DynamicImage(this.element);
 	},
 
 	/**
@@ -57,6 +60,12 @@ var media_stream = SAGE2_App.extend( {
 		// else if(state.encoding === "binary") base64 = btoa(state.src);
 		// this.element.src = "data:" + state.type + ";base64," + base64;
 
+		var base64;
+		if(state.encoding === "base64") base64 = state.src;
+		else if(state.encoding === "binary") base64 = btoa(state.src);
+		this.element.src = "data:" + state.type + ";base64," + base64;		
+
+		/*
 		var bin;
 		if (state.encoding === "binary") bin = state.src;
 		else if (state.encoding === "base64") bin = atob(state.src);
@@ -74,6 +83,7 @@ var media_stream = SAGE2_App.extend( {
 
 		this.src = source;
 		this.element.src = this.src;
+		*/
 	},
 
 	/**
