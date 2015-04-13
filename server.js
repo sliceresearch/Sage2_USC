@@ -2314,12 +2314,15 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 }
 
 function wsRequestNextRemoteFrame(wsio, data) {
+	var originId;
 	var portalCloneIdx = data.id.indexOf("_");
-	if (portalCloneIdx >= 0) data.id = data.id.substring(0, portalCloneIdx);
+	if (portalCloneIdx >= 0) originId = data.id.substring(0, portalCloneIdx);
+	else                     originId = data.id;
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
+	var origin_id = config.host + ":" + config.port + "|" + data.id;
 	console.log("REQUEST NEXT REMOTE FRAME: " + remote_id);
-	if(SAGE2Items.applications.list.hasOwnProperty(data.id)) {
-		var stream = SAGE2Items.applications.list[data.id];
+	if(SAGE2Items.applications.list.hasOwnProperty(originId)) {
+		var stream = SAGE2Items.applications.list[originId];
 		wsio.emit('updateRemoteMediaStreamFrame', {id: remote_id, state: stream.data});
 	}
 	else {
