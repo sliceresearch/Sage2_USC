@@ -1025,6 +1025,7 @@ function wsStopMediaStream(wsio, data) {
 
 function wsReceivedMediaStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	console.log("RECEIVED MEDIA STREAM FRAME");
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
 		var sender = {wsio: null, serverId: null, clientId: null, streamId: null};
