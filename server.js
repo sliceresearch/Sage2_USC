@@ -2755,29 +2755,29 @@ function setupHttpsOptions() {
 	// file caching for the main key of the server
 	var server_key = null;
 	var server_crt = null;
-	var server_ca  = null;
+	var server_ca  = [];
 
 	// add the default cert from the hostname specified in the config file
 	try {
 		// first try the filename based on the hostname-server.key
 		if (sageutils.fileExists(path.join("keys", config.host + "-server.key"))) {
 			// Load the certificate files
+			console.log(sageutils.header("Certificate") + "Loading certificate " + config.host + "-server.key");
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
-			if(sageutils.fileExists(path.join("keys", config.host + "-ca.crt")))
-				server_ca  = fs.readFileSync(path.join("keys", config.host + "-ca.crt"));
+			server_ca  = sageutils.loadCABundle(path.join("keys", config.host + "-ca.crt"));
 			// Build the crypto
 			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
 		} else {
 			// remove the hostname from the FQDN and search for wildcard certificate
 			//    syntax: _.rest.com.key or _.rest.bigger.com.key
 			var domain = '_.' + config.host.split('.').slice(1).join('.');
-			console.log("Domain:", domain);
+			console.log(sageutils.header("Certificate") + "Loading domain certificate " + domain + ".key");
 			server_key = fs.readFileSync( path.join("keys", domain + ".key") );
 			server_crt = fs.readFileSync( path.join("keys", domain + ".crt") );
-				// no need for CA
+			server_ca  = sageutils.loadCABundle(path.join("keys", domain + "-ca.crt"));
 			certs[config.host] = sageutils.secureContext(server_key, server_crt, server_ca);
-	}
+		}
 	}
 	catch (e) {
 		console.log("\n----------");
@@ -2794,8 +2794,7 @@ function setupHttpsOptions() {
 			certs[ alth ] = sageutils.secureContext(
 				fs.readFileSync(path.join("keys", alth + "-server.key")),
 				fs.readFileSync(path.join("keys", alth + "-server.crt")),
-				// CA is only needed for self-signed certs
-				fs.readFileSync(path.join("keys", alth + "-ca.crt"))
+				sageutils.loadCABundle(path.join("keys", alth + "-ca.crt"))
 			);
 		}
 		catch (e) {

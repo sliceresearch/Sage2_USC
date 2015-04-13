@@ -39,6 +39,31 @@ function SAGE2_initialize(data_seed) {
 }
 
 /**
+ * Detect the current browser
+ *
+ * @method SAGE2_browser
+ */
+function SAGE2_browser() {
+	var browser = {};
+	var userAgent = window.navigator.userAgent.toLowerCase();
+	browser.isOpera    = userAgent.indexOf("opera") >= 0;
+	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
+	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
+	browser.isSafari   = !browser.isChrome && userAgent.indexOf("safari") >= 0;
+	browser.isIE       = !browser.isOpera && (userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
+	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
+	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
+	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
+	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0);
+	browser.isAndroid  = userAgent.indexOf("android") >= 0;
+	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
+	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
+	browser.isLinux    = userAgent.indexOf("linux") >= 0;
+	// Copy into the global object
+	__SAGE2__.browser   = browser;
+}
+
+/**
  * Debug log function: send parameters to server for printout
  *   if mutiple paramters, sent as one array
  *

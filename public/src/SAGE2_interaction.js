@@ -286,11 +286,11 @@ function SAGE2_interaction(wsio) {
 	* @method startScreenShare
 	*/
 	this.startScreenShare = function() {
-		if (browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
+		if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
 			// post message to start chrome screen share
 			window.postMessage('capture_desktop', '*');
 		}
-		else if (browser.isFirefox === true) {
+		else if (__SAGE2__.browser.isFirefox === true) {
 			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
 			showDialog('ffShareScreenDialog');
 		}
@@ -306,11 +306,11 @@ function SAGE2_interaction(wsio) {
 	* @param data {Object} data
 	*/
 	this.captureDesktop = function(data) {
-		if( browser.isChrome === true) {
+		if (__SAGE2__.browser.isChrome === true) {
 			var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: data, maxWidth: 3840, maxHeight: 2160};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		}
-		else if (browser.isFirefox === true) {
+		else if (__SAGE2__.browser.isFirefox === true) {
 			navigator.getUserMedia({video: {mediaSource: data}, audio: false}, this.streamSuccess, this.streamFail);
 		}
 	};

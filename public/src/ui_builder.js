@@ -236,7 +236,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
@@ -246,7 +246,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
@@ -543,11 +543,14 @@ function UIBuilder(json_cfg, clientID) {
 	* @param pointer_data {Object} pointer information
 	*/
 	this.updateSagePointerPosition = function(pointer_data) {
-		var pointerElem = document.getElementById(pointer_data.id);
-		var translate   = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
-		pointerElem.style.webkitTransform = translate;
-		pointerElem.style.mozTransform    = translate;
-		pointerElem.style.transform       = translate;
+		if (this.pointerItems[pointer_data.id].isShown) {
+			var pointerElem = document.getElementById(pointer_data.id);
+			var translate   = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+			// Seems to work now with just 'transform' on firefox and chrome
+			// pointerElem.style.webkitTransform = translate;
+			// pointerElem.style.mozTransform    = translate;
+			pointerElem.style.transform = translate;
+		}
 	};
 
 	/**

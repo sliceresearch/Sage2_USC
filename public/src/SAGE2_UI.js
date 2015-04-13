@@ -65,7 +65,6 @@ var selectedFileEntry;
 var type2App;
 
 var hasMouse;
-var browser;
 
 var pointerDown;
 var pointerX, pointerY;
@@ -99,21 +98,7 @@ function SAGE2_init() {
 	}
 
 	// Detect which browser is being used
-	browser = {};
-	var userAgent = window.navigator.userAgent.toLowerCase();
-	browser.isOpera    = userAgent.indexOf("opera") >= 0;
-	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
-	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
-	browser.isSafari   = !browser.isChrome && userAgent.indexOf("safari") >= 0;
-	browser.isIE       = !browser.isOpera && (userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
-	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
-	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
-	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
-	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0);
-	browser.isAndroid  = userAgent.indexOf("android") >= 0;
-	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
-	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
-	browser.isLinux    = userAgent.indexOf("linux") >= 0;
+	SAGE2_browser();
 
 	// Create a connection to the SAGE2 server
 	wsio = new WebsocketIO();
@@ -689,9 +674,9 @@ function pointerMove(event) {
 function mouseCheck(event) {
 	var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 	var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-	if (!browser.isSafari && !browser.isIE && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
-	if (browser.isSafari  && browser.isIOS) return;
-	if (browser.isIE      && browser.isWinPhone) return;
+	if (!__SAGE2__.browser.isSafari && !__SAGE2__.browser.isIE && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
+	if (__SAGE2__.browser.isSafari  && __SAGE2__.browser.isIOS) return;
+	if (__SAGE2__.browser.isIE      && __SAGE2__.browser.isWinPhone) return;
 	hasMouse = true;
 	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");

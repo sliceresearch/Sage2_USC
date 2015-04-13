@@ -68,6 +68,9 @@ function SAGE2_init() {
 	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 
+	// Detect the current browser
+	SAGE2_browser();
+
 	isMaster = false;
 
 	wsio.open(function() {
@@ -231,7 +234,6 @@ function setupListeners() {
     });
 
     wsio.on('showSagePointer', function(pointer_data){
-		console.log(pointer_data);
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
@@ -369,8 +371,11 @@ function setupListeners() {
 		ui.main.appendChild(windowTitle);
 
 		var windowIcons = document.createElement("img");
-		windowIcons.src = "images/layout3.webp";
-		windowIcons.height = Math.round(ui.titleBarHeight);
+		if (__SAGE2__.browser.isChrome)
+			windowIcons.src = "images/layout3.webp";
+		else
+			windowIcons.src = "images/layout3.png";
+		windowIcons.height  = Math.round(ui.titleBarHeight);
 		windowIcons.style.position = "absolute";
 		windowIcons.style.right    = "0px";
 		windowTitle.appendChild(windowIcons);
