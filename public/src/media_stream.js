@@ -63,7 +63,7 @@ var media_stream = SAGE2_App.extend( {
 		var base64;
 		if(state.encoding === "base64") base64 = state.src;
 		else if(state.encoding === "binary") base64 = btoa(state.src);
-		this.element.src = "data:" + state.type + ";base64," + base64;		
+		this.element.src = "data:" + state.type + ";base64," + base64;
 
 		/*
 		var bin;

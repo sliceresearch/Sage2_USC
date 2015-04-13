@@ -2,7 +2,7 @@ var DynamicImage = function(img) {
 	this.img = null;
 	if (img === undefined || img === null)
 		this.img = new Image();
-	else 
+	else
 		this.img = img;
 	this.src = "";
 	this.width = 0;
@@ -10,7 +10,7 @@ var DynamicImage = function(img) {
 	this.objectURL = null;
 
 	Object.observe(this, this.propertyChanged.bind(this), ['update']);
-}
+};
 
 DynamicImage.prototype.propertyChanged = function(changes) {
 	var i;
@@ -51,19 +51,19 @@ DynamicImage.prototype.updateSrcFromBase64String = function(base64Img) {
 	}
 
 	this.updateImageSrc(type, buf);
-}
+};
 
 DynamicImage.prototype.updateSrcFromURL = function(url) {
 	var _this = this;
 	var xhr = new XMLHttpRequest();
-    xhr.open( "GET", url, true );
-    xhr.responseType = "arraybuffer";
-    xhr.onload = function(e) {
-    	var type = this.getResponseHeader('content-type');
-    	_this.updateImageSrc(type, this.response);
-    };
-    xhr.send();
-}
+	xhr.open( "GET", url, true );
+	xhr.responseType = "arraybuffer";
+	xhr.onload = function(e) {
+		var type = this.getResponseHeader('content-type');
+		_this.updateImageSrc(type, this.response);
+	};
+	xhr.send();
+};
 
 DynamicImage.prototype.updateImageSrc = function(type, binaryData) {
 	var blob = new Blob([binaryData], {type: type});
