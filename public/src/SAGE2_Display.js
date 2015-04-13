@@ -890,7 +890,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('requestControlId', function(data) {
+	/*wsio.on('requestControlId', function(data) {
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var ctrId = ctrl? ctrl.attr("id"):"";
 		var regC  = /_controls/;
@@ -902,6 +902,7 @@ function setupListeners() {
 		if (lockedControlElements[data.ptrId]){
 			var lckedCtrl = lockedControlElements[data.ptrId];
 			var lckedCtrlId = lckedCtrl.attr("id");
+			console.log("in requestControlId->", data);
 			if (regTI.test(lckedCtrlId)){
 				textInput = lckedCtrl.parent();
 				blinkControlHandle = textInput.data("blinkControlHandle");
@@ -926,9 +927,9 @@ function setupListeners() {
 				blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
 				textInput.data("blinkControlHandle", blinkControlHandle);
 			}
-			/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
+			if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
 				if(/line/.test(ctrId) || /knob/.test(ctrId))
-			}*/
+			}
 			wsio.emit('selectedControlId', {
 				addr:data.addr,
 				pointerX: data.x,
@@ -940,9 +941,9 @@ function setupListeners() {
 			lockedControlElements[data.ptrId] = ctrl;
 
 		}
-	});
+	});*/
 
-	wsio.on('releaseControlId', function(data){
+	/*wsio.on('releaseControlId', function(data){
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var regexSlider = /slider/;
 		var regexButton = /button/;
@@ -977,8 +978,9 @@ function setupListeners() {
 
 
 
-	});
+	});*/
 	wsio.on('executeControlFunction', function(data){
+		console.log("in executeControlFunction->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if(ctrl){
 			var ctrId = ctrl.attr('id');
@@ -1042,8 +1044,8 @@ function setupListeners() {
 		var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 		app.handle[app.property] = val;
 		var func = slider.data("updateCall");
-			if (func !== undefined && func !== null)
-				func(new Date());
+		if (func !== undefined && func !== null)
+			func(new Date());
 	});
 
 	wsio.on('keyInTextInputWidget', function(data){
@@ -1063,7 +1065,37 @@ function setupListeners() {
 			}
 		}
 	});
-	wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+	/*wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+		console.log("in dropTextInputControl->", data);
+		var ctrl = getWidgetControlInstanceById(data);
+		if (ctrl){
+			var textInput = ctrl.parent();
+			var blinkControlHandle = textInput.data("blinkControlHandle");
+			clearInterval(blinkControlHandle);
+		}
+	});*/
+	wsio.on('activateTextInputControl', function(data){
+		var ctrl = null;
+		console.log("in activateTextInputContControl->", data);
+		if (data.prevTextInput){
+			ctrl = getWidgetControlInstanceById(data.prevTextInput);
+		}
+		var textInput, blinkControlHandle;
+		if (ctrl){
+			textInput = ctrl.parent();
+			blinkControlHandle = textInput.data("blinkControlHandle");
+			clearInterval(blinkControlHandle);
+		}
+		ctrl = getWidgetControlInstanceById(data.curTextInput);
+		if(ctrl){
+			textInput = ctrl.parent();
+			blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
+			textInput.data("blinkControlHandle", blinkControlHandle);
+		}
+		
+	});
+	wsio.on('deactivateTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();

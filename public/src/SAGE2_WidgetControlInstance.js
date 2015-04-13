@@ -29,6 +29,14 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 
 	this.controlSVG = new Snap(size.width, size.height);
 
+
+	innerGeometry = {
+		center:{x:0,y:0,r:0},
+		buttons:[],
+		textInput:null,
+		slider:null
+	};
+
 	var center = {x:size.height/2.0, y:size.height/2.0}; //change to reflect controlSVG center
 
 	this.controlSVG.attr({
@@ -67,6 +75,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 			if (this.controlSpec.layoutOptions.drawSpokes === true)
 				drawSpokeForRadialLayout(instanceID, this.controlSVG, center, point);
 			this.createButton(button, point.x, point.y, dimensions.buttonRadius - 2);
+			innerGeometry.buttons.push({x:point.x,y:point.y,r:dimensions.buttonRadius-2,id:button.id});
 		}
 		theta = theta + innerThetaIncrement;
 	}
@@ -79,6 +88,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 			//if (this.layoutOptions.drawSpokes === true)
 			//	drawSpokeForRadialLayout(this.controlSVG,center,point);
 			this.createButton(button, point.x, point.y, dimensions.buttonRadius - 2);
+			innerGeometry.buttons.push({x:point.x,y:point.y,r:dimensions.buttonRadius-2,id:button.id});
 		}
 		theta = theta + outerThetaIncrement;
 	}
@@ -92,14 +102,14 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 352, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
-		this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
+		innerGeometry.slider = this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
 		d = makeWidgetBarOutlinePath(0, 16, dimensions.outerR, center, this.controlSpec.textInput.width, dimensions.buttonRadius);
 		leftMidOfBar = polarToCartesian(dimensions.outerR, 8, center);
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 8, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
-		this.createTextInput(leftMidOfBar.x, leftMidOfBar.y, d);
+		innerGeometry.textInput = this.createTextInput(leftMidOfBar.x, leftMidOfBar.y, d);
 		/*d = makeWidgetBarOutlinePath(375,405, dimensions.innerR, center, this.textInput.width);
 		leftMidOfBar = polarToCartesian(dimensions.innerR,390, center);
 		if (this.layoutOptions.drawSpokes === true)
@@ -113,7 +123,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 0, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
-		this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
+		innerGeometry.slider = this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
 	}
 	else if (this.controlSpec.hasTextInput===true){
 		d = makeWidgetBarOutlinePath(352, 368, dimensions.outerR, center, this.controlSpec.textInput.width, dimensions.buttonRadius);
@@ -122,7 +132,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 0, center);
 		if (this.controlSpec.layoutOptions.drawSpokes === true)
 			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
-		this.createTextInput(leftMidOfBar.x, leftMidOfBar.y, d);
+		innerGeometry.textInput = this.createTextInput(leftMidOfBar.x, leftMidOfBar.y, d);
 	}
 	/*else if (this.hasColorPalette===true){
 		d = makeWidgetBarOutlinePath(345,375, dimensions.innerR, center, this.textInput.width);
@@ -132,6 +142,13 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec){
 		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);
 	}*/
 	drawWidgetControlCenter(instanceID, this.controlSVG, center, dimensions.buttonRadius, "");
+	innerGeometry.center.x = center.x;
+	innerGeometry.center.y = center.y;
+	innerGeometry.center.r = dimensions.buttonRadius;
+	if (isMaster){
+		console.log(innerGeometry);
+		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID,innerGeometry:innerGeometry});	
+	}
 	var ctrHandle = document.getElementById(instanceID + "SVG");
 	return ctrHandle;
 }
@@ -216,9 +233,8 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 			return curVal + " / " + endVal;
 		};
 	}
-
+	var bound = sliderLine.getBBox();
 	function moveSlider(sliderVal){
-		var bound = sliderLine.getBBox();
 		var left = bound.x + knobWidth/2.0;
 		var right = bound.x2 - knobWidth/2.0;
 
@@ -254,7 +270,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		app.handle[app.property] = begin;
 		app.handle[app.property] = temp;
 	}
-	return slider;
+	return {id:this.controlSpec.slider.id,x:bound.x,y:bound.y-knobHeight/2,w:bound.x2-bound.x,h:knobHeight};
 };
 
 
@@ -420,7 +436,9 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline){
 			insertTextIntoTextInputWidget(textInput, this.controlSpec.textInput.defaultText.charCodeAt(i), true);
 		}
 	}
-	return textInput;
+	var rectangle = {id:this.controlSpec.textInput.id,x:parseInt(textArea.attr("x")),y:parseInt(textArea.attr("y")),h:parseInt(textArea.attr("height")),w:parseInt(textArea.attr("width"))};
+	console.log(rectangle);
+	return rectangle;
 };
 
 /*
