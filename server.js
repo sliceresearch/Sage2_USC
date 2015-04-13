@@ -2826,9 +2826,9 @@ var getNewUserId = (function() {
 function getUniqueDataSharingId(remoteHost, remotePort, caller) {
 	var id;
 	if (caller == true)
-		id = config.host+":"+config.port + "|" + remoteHost+":"+remotePort;
+		id = config.host+":"+config.port + "+" + remoteHost+":"+remotePort;
 	else
-		id = remoteHost+":"+remotePort + "|" + config.host+":"+config.port;
+		id = remoteHost+":"+remotePort + "+" + config.host+":"+config.port;
 	return "portal_" + id;
 }
 
