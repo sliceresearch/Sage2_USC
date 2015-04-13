@@ -1493,6 +1493,11 @@ function saveSession (filename) {
 function createAppFromDescription(app, callback) {
 	console.log(sageutils.header("Session") + "App", app.id);
 
+	if (app.application === "media_stream" || app.application === "media_block_stream") {
+		callback(JSON.parse(JSON.stringify(app)), null);
+		return;
+	}
+
 	var cloneApp = function(appInstance, videohandle) {
 		appInstance.left            = app.left;
 		appInstance.top             = app.top;
@@ -4639,7 +4644,11 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
 		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
-			appInstance.id = getUniqueSharedAppId(obj.data.id);
+			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream")
+				appInstance.id = app.application.id + "_" + obj.data.id;
+			else
+				appInstance.id = getUniqueSharedAppId(obj.data.id);
+
 			appInstance.left = localPt.x / obj.data.scale;
 			appInstance.top = (localPt.y-config.ui.titleBarHeight) / obj.data.scale;
 			appInstance.width = app.previousPosition.width / obj.data.scale;
