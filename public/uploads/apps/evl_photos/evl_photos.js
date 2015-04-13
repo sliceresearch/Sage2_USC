@@ -65,9 +65,10 @@ var evl_photos = SAGE2_App.extend( {
 
 		this.appName = "evl_photos:";
 
-		this.image1 = "NULL";
-		this.image2 = "NULL";
-		this.image3 = "NULL";
+		this.image1 = new Image();
+		this.image2 = new Image();
+		this.image3 = new Image();
+		this.imageTemp = null;
 
 		this.updateCounter = 0;
 
@@ -94,10 +95,16 @@ var evl_photos = SAGE2_App.extend( {
 		this.imageLoadCallbackFunc = this.imageLoadCallback.bind(this);
 		this.imageLoadFailedCallbackFunc = this.imageLoadFailedCallback.bind(this);
 
+		this.image1.onload = this.imageLoadCallbackFunc;
+		this.image1.onerror = this.imageLoadFailedCallbackFunc;
+        this.image2.onload = this.imageLoadCallbackFunc;
+		this.image2.onerror = this.imageLoadFailedCallbackFunc;
+        this.image3.onload = this.imageLoadCallbackFunc;
+		this.image3.onerror = this.imageLoadFailedCallbackFunc;
+
 		this.chooseImagery(this.state.imageSet);
 
 		this.loadInList();
-		//this.newImage();
 	},
 
 	////////////////////////////////////////
@@ -106,14 +113,13 @@ var evl_photos = SAGE2_App.extend( {
 		{
 		this.okToDraw = 10.0;
 		this.image1 = this.image3; // image1 is now the new image
+		this.image3 = this.imageTemp;
 		console.log(this.appName + "imageLoadCallback");
-		////this.newImage();
 		},
 
 	imageLoadFailedCallback: function()
 		{
 		console.log(this.appName + "image load failed on " + this.fileName);
-		////this.newImage();
 		this.update();
 		},
 
@@ -145,7 +151,6 @@ var evl_photos = SAGE2_App.extend( {
 		this.bigList = d3.csv.parse(localData);
 		console.log(this.appName + "loaded in list of " + this.bigList.length + " images" );
 
-		////this.newImage();
 		this.update();
 		this.drawEverything();
 	},
@@ -354,13 +359,14 @@ var evl_photos = SAGE2_App.extend( {
 			}
 		//console.log(this.appName + this.fileName);
 
+		this.imageTemp = this.image2; // hold onto 2
 		this.image2 = this.image1; // image2 is the previous image (needed for fading)
 
-		this.image3 = new Image(); // image3 is the new image to be loaded
+		//this.image3 = new Image(); // image3 is the new image to be loaded
 		this.image3.src = this.fileName;
-
-		this.image3.onload = this.imageLoadCallbackFunc;
-		this.image3.onerror = this.imageLoadFailedCallbackFunc;
+		//console.log(this.image1);
+		//console.log(this.image2);
+		//console.log(this.image3);
 	},
 
 	////////////////////////////////////////
@@ -417,6 +423,10 @@ var evl_photos = SAGE2_App.extend( {
 		this.sampleSVG = this.svg;
 
         this.state.imageSet= 0;
+
+		console.log(this.imageLoadCallbackFunc);
+		console.log(this.imageLoadFailedCallbackFunc);
+
 	},
 
 	load: function(state, date) {
