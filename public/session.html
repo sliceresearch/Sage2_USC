@@ -54,21 +54,23 @@
 	} //end setup listener
 
 	function keyDownDKHandler(event) {
-
 		console.log("caught a keydown event");
 		if(event.target == document.getElementById('sessionValue') && ( event.keyCode == 13 || event.which == 13 )) {
-      processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
+			processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
 		}
-
 	}
 
-  function processAndRedirect(session, location, hash) {
-    if(hash == null) { hash = md5(session); }
-    //console.log("Session:" + session);
-    //console.log("Hash:"+hash);
-    document.cookie = "session=" + hash;
-    window.location.href = location;
-  }
+	function processAndRedirect(session, location, hash) {
+		if(hash == null) { hash = md5(session); }
+		//console.log("Session:" + session);
+		//console.log("Hash:"+hash);
+		document.cookie = "session=" + hash;
+		window.location.href = location;
+	}
+
+	function buttonSubmit() {
+		processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
+	}
 
 </script>
 
