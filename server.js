@@ -504,6 +504,9 @@ function setupListeners(wsio) {
 	wsio.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
 	wsio.on('remoteSagePointerPress',                 wsRemoteSagePointerPress);
 	wsio.on('remoteSagePointerRelease',               wsRemoteSagePointerRelease);
+	wsio.on('remoteSageKeyDown',                      wsRemoteSageKeyDown);
+	wsio.on('remoteSageKeyUp',                        wsRemoteSageKeyUp);
+	wsio.on('remoteSageKeyPress',                     wsRemoteSageKeyPress);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
@@ -2476,10 +2479,8 @@ function wsRemoteSagePointerPosition(wsio, data) {
 
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
-	var pointerX = sagePointers[data.id].left;
-	var pointerY = sagePointers[data.id].top;
 
-	pointerMoveInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data)
+	pointerMoveInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data)
 	//updatePointerPosition(data.id, pointerX, pointerY, data);
 }
 
@@ -2488,10 +2489,8 @@ function wsRemoteSagePointerPress(wsio, data) {
 
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
-	var pointerX = sagePointers[data.id].left;
-	var pointerY = sagePointers[data.id].top;
 
-	pointerPressInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data);
+	pointerPressInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
 
 function wsRemoteSagePointerRelease(wsio, data) {
@@ -2499,11 +2498,36 @@ function wsRemoteSagePointerRelease(wsio, data) {
 
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
-	var pointerX = sagePointers[data.id].left;
-	var pointerY = sagePointers[data.id].top;
 
-	pointerRelease(data.id, pointerX, pointerY, data);
+	pointerRelease(data.id, data.left, data.top, data);
 	//pointerReleaseInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data);
+}
+
+function wsRemoteSageKeyDown(wsio, data) {
+	if (sagePointers[data.id] === undefined) return;
+
+	sagePointers[data.id].left = data.left;
+	sagePointers[data.id].top = data.top;
+
+	keyDownOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
+}
+
+function wsRemoteSageKeyUp(wsio, data) {
+	if (sagePointers[data.id] === undefined) return;
+
+	sagePointers[data.id].left = data.left;
+	sagePointers[data.id].top = data.top;
+
+	keyUpOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
+}
+
+function wsRemoteSageKeyPress(wsio, data) {
+	if (sagePointers[data.id] === undefined) return;
+
+	sagePointers[data.id].left = data.left;
+	sagePointers[data.id].top = data.top;
+
+	keyPressOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -3222,6 +3246,9 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('remoteSagePointerPosition', wsRemoteSagePointerPosition);
 		remote.on('remoteSagePointerPress', wsRemoteSagePointerPress);
 		remote.on('remoteSagePointerRelease', wsRemoteSagePointerRelease);
+		remote.on('remoteSageKeyDown', wsRemoteSageKeyDown);
+		remote.on('remoteSageKeyUp', wsRemoteSageKeyUp);
+		remote.on('remoteSageKeyPress', wsRemoteSageKeyPress);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 		remote.emit('addClient', clientDescription);
@@ -5049,6 +5076,7 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 			return;
 		}
 
+		var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 		switch (obj.layerId) {
 			case "staticUI":
 				break;
@@ -5057,14 +5085,23 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 			case "widgets":
 				break;
 			case "applications":
-				sendKeyDownToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
+				break;
+			case "portals":
+				keyDownOnPortal(uniqueID, obj.data, localPt, data);
 				break;
 		}
 	}
 }
 
-function sendKeyDownToApplication(uniqueID, app, pointerX, pointerY, data) {
-	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+function sendKeyDownToApplication(uniqueID, app, localPt, data) {
+	var portal = findApplicationPortal(app);
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portal !== undefined && portal !== null) {
+		titleBarHeight = portal.data.titleBarHeight;
+	}
+
+	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 	var eData =  {code: data.code, state: "down"};
 
@@ -5081,6 +5118,36 @@ function sendKeyDownToApplication(uniqueID, app, pointerX, pointerY, data) {
 		state: eData.state
 	};
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+}
+
+function keyDownOnPortal(uniqueID, portal, localPt, data) {
+	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
+	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
+		var rData = {
+			id: uniqueID,
+			left: scaledPt.x,
+			top: scaledPt.y,
+			code: data.code
+		};
+		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyDown', rData);
+	}
+
+	var pObj = SAGE2Items.portals.interactMgr[portal.id].searchGeometry(scaledPt);
+	
+	if (pObj === null) {
+		return;
+	}
+
+	var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+	switch (pObj.layerId) {
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			sendKeyDownToApplication(uniqueID, pObj.data, scaledPt, data);
+			break;
+	}
 }
 
 function keyUp( uniqueID, pointerX, pointerY, data) {
@@ -5114,6 +5181,7 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 
+	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
 		case "staticUI":
 			break;
@@ -5136,14 +5204,23 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 				}
 			}
 			else if (remoteInteraction[uniqueID].appInteractionMode()) {
-				sendKeyUpToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			}
+			break;
+		case "portals":
+			keyUpOnPortal(uniqueID, obj.data, localPt, data);
 			break;
 	}
 }
 
-function sendKeyUpToApplication(uniqueID, app, pointerX, pointerY, data) {
-	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+function sendKeyUpToApplication(uniqueID, app, localPt, data) {
+	var portal = findApplicationPortal(app);
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portal !== undefined && portal !== null) {
+		titleBarHeight = portal.data.titleBarHeight;
+	}
+
+	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 	var eData =  {code: data.code, state: "up"};
 
@@ -5160,6 +5237,36 @@ function sendKeyUpToApplication(uniqueID, app, pointerX, pointerY, data) {
 		state: eData.state
 	};
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+}
+
+function keyUpOnPortal(uniqueID, portal, localPt, data) {
+	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
+	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
+		var rData = {
+			id: uniqueID,
+			left: scaledPt.x,
+			top: scaledPt.y,
+			code: data.code
+		};
+		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyUp', rData);
+	}
+
+	var pObj = SAGE2Items.portals.interactMgr[portal.id].searchGeometry(scaledPt);
+	
+	if (pObj === null) {
+		return;
+	}
+
+	var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+	switch (pObj.layerId) {
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			sendKeyUpToApplication(uniqueID, pObj.data, scaledPt, data);
+			break;
+	}
 }
 
 function keyPress(uniqueID, pointerX, pointerY, data) {
@@ -5193,6 +5300,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			return;
 		}
 
+		var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 		switch (obj.layerId) {
 			case "staticUI":
 				break;
@@ -5201,14 +5309,23 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			case "widgets":
 				break;
 			case "applications":
-				sendKeyPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
+				break;
+			case "portals":
+				keyPressOnPortal(uniqueID, obj.data, localPt, data)
 				break;
 		}
 	}
 }
 
-function sendKeyPressToApplication(uniqueID, app, pointerX, pointerY, data) {
-	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+function sendKeyPressToApplication(uniqueID, app, localPt, data) {
+	var portal = findApplicationPortal(app);
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portal !== undefined && portal !== null) {
+		titleBarHeight = portal.data.titleBarHeight;
+	}
+
+	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
@@ -5224,6 +5341,37 @@ function sendKeyPressToApplication(uniqueID, app, pointerX, pointerY, data) {
 		character: data.character
 	};
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+}
+
+function keyPressOnPortal(uniqueID, portal, localPt, data) {
+	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
+	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
+		var rData = {
+			id: uniqueID,
+			left: scaledPt.x,
+			top: scaledPt.y,
+			code: data.code,
+			character: data.character
+		};
+		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyPress', rData);
+	}
+
+	var pObj = SAGE2Items.portals.interactMgr[portal.id].searchGeometry(scaledPt);
+	
+	if (pObj === null) {
+		return;
+	}
+
+	var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+	switch (pObj.layerId) {
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			sendKeyPressToApplication(uniqueID, pObj.data, scaledPt, data);
+			break;
+	}
 }
 
 
