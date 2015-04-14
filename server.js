@@ -4702,7 +4702,7 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 	var app = dropSelectedItem(uniqueID, false);
 	if (app !== null) {
 		var portal = findApplicationPortal(app.application);
-		if(portal.id === portalId) {
+		if(portal !== undefined && portal !== null && portal.id === portalId) {
 			dropSelectedItem(uniqueID, true);
 			return;
 		}
