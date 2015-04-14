@@ -4656,6 +4656,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
     	return;
     }
 
+	console.log("release:", obj);
 	switch (obj.layerId) {
 		case "staticUI":
 			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
