@@ -4656,7 +4656,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
     	return;
     }
 
-	console.log("release:", obj);
 	switch (obj.layerId) {
 		case "staticUI":
 			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
@@ -4741,6 +4740,7 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
 		});
 	}
 	else {
+		console.log("pointer release on portal (no app selected):", remoteInteraction[uniqueID].windowManagementMode(), remoteInteraction[uniqueID].appInteractionMode())
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
 			localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
