@@ -7,7 +7,7 @@
  *
  * Licensed under the MIT license:
  * http://www.opensource.org/licenses/MIT
- * 
+ *
  * Based on
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
  * Digest Algorithm, as defined in RFC 1321.
@@ -20,7 +20,7 @@
 /*jslint bitwise: true */
 /*global unescape, define */
 
-var blueimpMd5 = 
+var blueimpMd5 =
 
 (function ($) {
     'use strict';

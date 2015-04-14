@@ -47,18 +47,17 @@ function HttpServer(publicDirectory) {
  * @param query {String} the URL to parse
  * @return {Object} parsed elements (key, value)
  */
-function parseURLQuery(query) {
-	if (!query) return {};
-
-	var p;
-	var paramList = query.split("&");
-	var params = {};
-	for(var i=0; i<paramList.length; i++) {
-		p = paramList[i].split("=");
-		if (p.length === 2) params[p[0]] = p[1];
-	}
-	return params;
-}
+// function parseURLQuery(query) {
+// 	if (!query) return {};
+// 	var p;
+// 	var paramList = query.split("&");
+// 	var params = {};
+// 	for(var i=0; i<paramList.length; i++) {
+// 		p = paramList[i].split("=");
+// 		if (p.length === 2) params[p[0]] = p[1];
+// 	}
+// 	return params;
+// }
 
 
 /**
@@ -74,13 +73,13 @@ function detectCookies(request) {
 
     var i = 0;
 
-    while(allCookies.indexOf(';') != -1) {
+    while(allCookies.indexOf(';') !== -1) {
 
-    	cookieList.push(allCookies.substring( 0,  allCookies.indexOf(';') ) );
-    	cookieList[i] = cookieList[i].trim();
-    	allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
+		cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
+		cookieList[i] = cookieList[i].trim();
+		allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
 
-    	i++;
+		i++;
     } //end while there is a ;
     cookieList.push( allCookies.trim() );
 
@@ -142,9 +141,9 @@ HttpServer.prototype.onreq = function(req, res) {
 
 				console.log(cookieList[i]);
 
-				if( cookieList[i].indexOf("session=") != -1 ) {
+				if( cookieList[i].indexOf("session=") !== -1 ) {
 
-					if(   cookieList[i].indexOf(global.__SESSION_ID) != -1 ) {
+					if(   cookieList[i].indexOf(global.__SESSION_ID) !== -1 ) {
 						sessionMatch = true;
 					}
 
