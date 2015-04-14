@@ -4633,6 +4633,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var localPt;
 	var scaledPt;
 	var currentApp = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem;
+	
+	/*
 	var appPortal = findApplicationPortal(currentApp);
 	var updatedItem;
 	if(appPortal !== null) {
@@ -4643,10 +4645,16 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		}
 	}
 
-
     if (currentApp !== undefined && currentApp !== null) {
     	im = findInteractableManager(currentApp.id);
     	obj = im.searchGeometry({x: pointerX, y: pointerY}, null, [currentApp.id]);
+    }
+    else {
+    	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+    }
+    */
+    if (currentApp !== undefined && currentApp !== null) {
+    	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}, null, [currentApp.id]);
     }
     else {
     	obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
@@ -4699,6 +4707,18 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 }
 
 function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
+	var obj = interactMgr.getObject(portalId, "portals");
+	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
+	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
+		var rData = {
+			id: uniqueID,
+			left: scaledPt.x,
+			top: scaledPt.y,
+			button: data.button
+		};
+		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerRelease', rData);
+	}
+
 	var app = dropSelectedItem(uniqueID, false);
 	if (app !== null) {
 		var portal = findApplicationPortal(app.application);
@@ -4707,7 +4727,6 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 			return;
 		}
 
-		var obj = interactMgr.getObject(portalId, "portals");
 		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
@@ -4749,8 +4768,7 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 	else {
 		console.log("pointer release on portal (no app selected):", remoteInteraction[uniqueID].windowManagementMode(), remoteInteraction[uniqueID].appInteractionMode())
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
-			var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
-			var pObj = SAGE2Items.portals.interactMgr[obj.data.id].searchGeometry(scaledPt);
+			var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
 			if (pObj === null) {
 				return;
 			}
