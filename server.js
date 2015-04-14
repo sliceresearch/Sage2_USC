@@ -5092,7 +5092,7 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 				sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
 				break;
 			case "portals":
-				keyDownOnPortal(uniqueID, obj.data, localPt, data);
+				keyDownOnPortal(uniqueID, obj.data.id, localPt, data);
 				break;
 		}
 	}
@@ -5124,7 +5124,8 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 }
 
-function keyDownOnPortal(uniqueID, portal, localPt, data) {
+function keyDownOnPortal(uniqueID, portalId, localPt, data) {
+	var portal = SAGE2Items.portals.list[portalId];
 	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
 		var rData = {
@@ -5136,7 +5137,7 @@ function keyDownOnPortal(uniqueID, portal, localPt, data) {
 		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyDown', rData);
 	}
 
-	var pObj = SAGE2Items.portals.interactMgr[portal.id].searchGeometry(scaledPt);
+	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
 	
 	if (pObj === null) {
 		return;
@@ -5212,7 +5213,7 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 			}
 			break;
 		case "portals":
-			keyUpOnPortal(uniqueID, obj.data, localPt, data);
+			keyUpOnPortal(uniqueID, obj.data.id, localPt, data);
 			break;
 	}
 }
@@ -5243,7 +5244,8 @@ function sendKeyUpToApplication(uniqueID, app, localPt, data) {
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 }
 
-function keyUpOnPortal(uniqueID, portal, localPt, data) {
+function keyUpOnPortal(uniqueID, portalId, localPt, data) {
+	var portal = SAGE2Items.portals.list[portalId];
 	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
 		var rData = {
@@ -5255,7 +5257,7 @@ function keyUpOnPortal(uniqueID, portal, localPt, data) {
 		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyUp', rData);
 	}
 
-	var pObj = SAGE2Items.portals.interactMgr[portal.id].searchGeometry(scaledPt);
+	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
 	
 	if (pObj === null) {
 		return;
@@ -5316,7 +5318,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 				sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
 				break;
 			case "portals":
-				keyPressOnPortal(uniqueID, obj.data, localPt, data)
+				keyPressOnPortal(uniqueID, obj.data.id, localPt, data)
 				break;
 		}
 	}
@@ -5347,7 +5349,8 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 }
 
-function keyPressOnPortal(uniqueID, portal, localPt, data) {
+function keyPressOnPortal(uniqueID, portalId, localPt, data) {
+	var portal = SAGE2Items.portals.list[portalId];
 	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
 		var rData = {
@@ -5360,7 +5363,7 @@ function keyPressOnPortal(uniqueID, portal, localPt, data) {
 		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyPress', rData);
 	}
 
-	var pObj = SAGE2Items.portals.interactMgr[portal.id].searchGeometry(scaledPt);
+	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
 	
 	if (pObj === null) {
 		return;
