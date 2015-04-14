@@ -4707,7 +4707,7 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 			return;
 		}
 
-		var obj = interactMgr.getObject(portalId);
+		var obj = interactMgr.getObject(portalId, "portals");
 		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
