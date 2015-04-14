@@ -507,6 +507,7 @@ function setupListeners(wsio) {
 	wsio.on('remoteSageKeyDown',                      wsRemoteSageKeyDown);
 	wsio.on('remoteSageKeyUp',                        wsRemoteSageKeyUp);
 	wsio.on('remoteSageKeyPress',                     wsRemoteSageKeyPress);
+	wsio.on('remoteSagePointerToggleModes',          wsRemoteSagePointerToggleModes);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
@@ -2535,6 +2536,11 @@ function wsRemoteSageKeyPress(wsio, data) {
 	keyPressOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
 
+function wsRemoteSagePointerToggleModes(wsio, data) {
+	remoteInteraction[data.id].toggleModes();
+	broadcast('changeSagePointerMode', {id: sagePointers[data.id].id, mode: remoteInteraction[data.id].interactionMode});
+}
+
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 	var key;
 	var remote = null;
@@ -3257,6 +3263,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('remoteSageKeyDown', wsRemoteSageKeyDown);
 		remote.on('remoteSageKeyUp', wsRemoteSageKeyUp);
 		remote.on('remoteSageKeyPress', wsRemoteSageKeyPress);
+		remote.on('remoteSagePointerToggleModes', wsRemoteSagePointerToggleModes);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
 		remote.emit('addClient', clientDescription);
@@ -5054,28 +5061,32 @@ function pointerScrollEnd(uniqueID) {
 	}
 }
 
-function keyDown( uniqueID, pointerX, pointerY, data) {
-	if (sagePointers[uniqueID] === undefined) return;
-
-	switch (data.code) {
+function checkForSpecialKeys(uniqueID, code, flag) {
+	switch (code) {
 		case 16:
-			remoteInteraction[uniqueID].SHIFT = true;
+			remoteInteraction[uniqueID].SHIFT = flag;
 			break;
 		case 17:
-			remoteInteraction[uniqueID].CTRL = true;
+			remoteInteraction[uniqueID].CTRL = flag;
 			break;
 		case 18:
-			remoteInteraction[uniqueID].ALT = true;
+			remoteInteraction[uniqueID].ALT = flag;
 			break;
 		case 20:
-			remoteInteraction[uniqueID].CAPS = true;
+			remoteInteraction[uniqueID].CAPS = flag;
 			break;
 		case 91:
 		case 92:
 		case 93:
-			remoteInteraction[uniqueID].CMD = true;
+			remoteInteraction[uniqueID].CMD = flag;
 			break;
 	}
+}
+
+function keyDown( uniqueID, pointerX, pointerY, data) {
+	if (sagePointers[uniqueID] === undefined) return;
+
+	checkForSpecialKeys(uniqueID, data.code, true);
 
 	if (remoteInteraction[uniqueID].appInteractionMode()) {
 		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
@@ -5129,6 +5140,8 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 }
 
 function keyDownOnPortal(uniqueID, portalId, localPt, data) {
+	checkForSpecialKeys(uniqueID, data.code, true);
+
 	var portal = SAGE2Items.portals.list[portalId];
 	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
@@ -5138,7 +5151,7 @@ function keyDownOnPortal(uniqueID, portalId, localPt, data) {
 			top: scaledPt.y,
 			code: data.code
 		};
-		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyDown', rData);
+		remoteSharingSessions[portalId].wsio.emit('remoteSageKeyDown', rData);
 	}
 
 	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
@@ -5162,25 +5175,7 @@ function keyDownOnPortal(uniqueID, portalId, localPt, data) {
 function keyUp( uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
-	switch (data.code) {
-		case 16:
-			remoteInteraction[uniqueID].SHIFT = false;
-			break;
-		case 17:
-			remoteInteraction[uniqueID].CTRL = false;
-			break;
-		case 18:
-			remoteInteraction[uniqueID].ALT = false;
-			break;
-		case 20:
-			remoteInteraction[uniqueID].CAPS = false;
-			break;
-		case 91:
-		case 92:
-		case 93:
-			remoteInteraction[uniqueID].CMD = false;
-			break;
-	}
+	checkForSpecialKeys(uniqueID, data.code, false);
 
 	if (remoteInteraction[uniqueID].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
 
@@ -5249,6 +5244,8 @@ function sendKeyUpToApplication(uniqueID, app, localPt, data) {
 }
 
 function keyUpOnPortal(uniqueID, portalId, localPt, data) {
+	checkForSpecialKeys(uniqueID, data.code, false);
+
 	var portal = SAGE2Items.portals.list[portalId];
 	var scaledPt = {x: localPt.x / portal.scale, y: (localPt.y-config.ui.titleBarHeight) / portal.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
@@ -5258,7 +5255,7 @@ function keyUpOnPortal(uniqueID, portalId, localPt, data) {
 			top: scaledPt.y,
 			code: data.code
 		};
-		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyUp', rData);
+		remoteSharingSessions[portalId].wsio.emit('remoteSageKeyUp', rData);
 	}
 
 	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
@@ -5283,6 +5280,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 
+	var modeSwitch = false;
 	if (data.code === 9 && remoteInteraction[uniqueID].SHIFT && sagePointers[uniqueID].visible) {
 		// shift + tab
 		remoteInteraction[uniqueID].toggleModes();
@@ -5300,7 +5298,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			delete remoteInteraction[uniqueID].modeChange;
 		}, 500);
 
-		return;
+		modeSwitch = true;
 	}
 
 	if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -5319,10 +5317,11 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			case "widgets":
 				break;
 			case "applications":
-				sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
+				if (modeSwitch === false) sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
 				break;
 			case "portals":
-				keyPressOnPortal(uniqueID, obj.data.id, localPt, data)
+				if (modeSwitch === true) remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerToggleModes', {id: uniqueID, mode: remoteInteraction[uniqueID].interactionMode});
+				else                     keyPressOnPortal(uniqueID, obj.data.id, localPt, data)
 				break;
 		}
 	}
@@ -5364,7 +5363,7 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 			code: data.code,
 			character: data.character
 		};
-		remoteSharingSessions[portal.id].wsio.emit('remoteSageKeyPress', rData);
+		remoteSharingSessions[portalId].wsio.emit('remoteSageKeyPress', rData);
 	}
 
 	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
