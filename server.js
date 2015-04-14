@@ -2490,8 +2490,6 @@ function wsRemoteSagePointerPress(wsio, data) {
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
 
-	console.log("remote pointer press:", sagePointers[data.id].portal);
-
 	pointerPressInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
 
@@ -2510,8 +2508,6 @@ function wsRemoteSageKeyDown(wsio, data) {
 
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
-
-	console.log("remote key down:", sagePointers[data.id].portal);
 
 	keyDownOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
@@ -2543,6 +2539,7 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 			break;
 		}
 	}
+	console.log("adding element from remote server:", remote);
 	if (remote !== null) {
 		createAppFromDescription(data, function(appInstance, videohandle) {
 			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream")
@@ -2553,7 +2550,7 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 			appInstance.top = data.top;
 			appInstance.width = data.width;
 			appInstance.height = data.height;
-
+			console.log(appInstance);
 			remoteSharingSessions[remote.portal.id].appCount++;
 			
 			var i;
