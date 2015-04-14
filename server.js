@@ -2505,8 +2505,8 @@ function wsRemoteSagePointerRelease(wsio, data) {
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
 
-	pointerRelease(data.id, data.left, data.top, data);
-	//pointerReleaseInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
+	//pointerRelease(data.id, data.left, data.top, data);
+	pointerReleaseOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
 
 function wsRemoteSageKeyDown(wsio, data) {
@@ -4656,6 +4656,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
     	return;
     }
 
+    var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
 		case "staticUI":
 			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
@@ -4668,7 +4669,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			}
 			break;
 		case "portals":
-			pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data);
+			pointerReleaseOnPortal(uniqueID, obj.data.id, localPt, data);
 			break;
 		default:
 			dropSelectedItem(uniqueID, true);
@@ -4697,10 +4698,16 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	*/
 }
 
-function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
+function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 	var app = dropSelectedItem(uniqueID, false);
-	var localPt;
 	if (app !== null) {
+		var portal = findApplicationPortal(app.application);
+		if(portal.id === portalId) {
+			dropSelectedItem(uniqueID, true);
+			return;
+		}
+
+		var obj = SAGE2Items.portals.list[portalId];
 		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
 		var remote = remoteSharingSessions[obj.id];
 		createAppFromDescription(app.application, function(appInstance, videohandle) {
@@ -4742,7 +4749,6 @@ function pointerReleaseOnPortal(uniqueID, pointerX, pointerY, obj, data) {
 	else {
 		console.log("pointer release on portal (no app selected):", remoteInteraction[uniqueID].windowManagementMode(), remoteInteraction[uniqueID].appInteractionMode())
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
-			localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
 			var pObj = SAGE2Items.portals.interactMgr[obj.data.id].searchGeometry(scaledPt);
 			if (pObj === null) {
