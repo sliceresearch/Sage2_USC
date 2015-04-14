@@ -17,6 +17,7 @@
 	//      
 	// Copyright (c) 2014
 </script>
+<script  type="text/javascript" src="src/md5.js"></script>
 
 <script type="text/javascript">
 
@@ -28,35 +29,46 @@
 		var paramArray = allParams.split("&");
 		var nameAndValue;
 		var foundPassword = false;
+    var foundHash = false;
 		var pageRedirect = null;
+    var sessionParam = null;
+    var hashParam = null;
 
 		for(var i = 0; i < paramArray.length; i++) {
 			nameAndValue = paramArray[i].split("=");
 			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "sid" ) {
 				document.getElementById('sessionValue').value = nameAndValue[1];
-				document.cookie = "session=" +document.getElementById('sessionValue').value ;
 				foundPassword = true;
+        sessionParam = nameAndValue[1];
 			}
 			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "page" ) {
 				pageRedirect = nameAndValue[1];
 			}
+      if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "hash" ) {
+        hashParam = nameAndValue[1];
+        foundHash = true;
+      }
 		}
-		if(pageRedirect != null) { window.location.href = pageRedirect; }
-		if( foundPassword ) { window.location.href = "index.html"; }
+		if(pageRedirect == null) { pageRedirect = "index.html"; }
+		if( foundPassword || foundHash ) { processAndRedirect( sessionParam , pageRedirect ,  hashParam ); }
 	} //end setup listener
 
 	function keyDownDKHandler(event) {
 
 		console.log("caught a keydown event");
 		if(event.target == document.getElementById('sessionValue') && ( event.keyCode == 13 || event.which == 13 )) {
-			document.cookie = "session=" +document.getElementById('sessionValue').value ;
-			//document.cookie = "bugus=junk" ;
-			//document.cookie = "number=" + 2 ;
-			//console.log(document.cookie);
-			window.location.href = "index.html";
+      processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
 		}
 
 	}
+
+  function processAndRedirect(session, location, hash) {
+    if(hash == null) { hash = md5(session); }
+    //console.log("Session:" + session);
+    //console.log("Hash:"+hash);
+    document.cookie = "session=" + hash;
+    window.location.href = location;
+  }
 
 </script>
 
@@ -73,134 +85,11 @@
 	<h3 style="font-family:arial;text-align:center">
 		Enter the sessionID:<br>
 		<input type="text" id="sessionValue" size="40" style="font-size: 1em;" tabindex="1">
+    <br>
+    <button type="button" id="enterButton" style="height:10%; width:10%" > Enter </button>
 	</h3>
 
 </body>
 </html>
 
-
-<!--
-Java code that should do md5 need equivalent for javascript
-
-public class Md5 {
-  
-  public static void main(String[] args) {
-    
-    //shift amount setup
-    //this is a preset table i guess.
-    int[] s = 
-      { 7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
-      5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
-      4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
-      6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21 };
-    int[] k = 
-      { 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
-      0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
-      0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
-      0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
-      0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa ,
-      0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8 ,
-      0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed ,
-      0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a ,
-      0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c ,
-      0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70 ,
-      0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05 ,
-      0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665 ,
-      0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039 ,
-      0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1 ,
-      0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1 ,
-      0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391 };
-    
-    
-    byte[] bytesOfData = new byte[512/8]; //512 / 8 =
-    
-    for ( int i = 0; i < bytesOfData.length; i++ ){
-      bytesOfData[i] = 0;
-    }
-    System.out.println("Bytes in 512:" + (512/8));
-    bytesOfData[0] = 'd';//(byte) 0b00000100;
-    bytesOfData[1] = 'o';//(byte) 0b00001111;
-    bytesOfData[2] = 'g';//(byte) 0b00000111;
-    bytesOfData[3] = (byte) 0b10000000;
-    bytesOfData[63] = (byte) 0b00011000;
-    
-    System.out.println("Values so far:");
-    System.out.println(bytesOfData[0] +" "+ Integer.toBinaryString( bytesOfData[0] ) );
-    System.out.println(bytesOfData[1] +" "+ Integer.toBinaryString( bytesOfData[1] ) );
-    System.out.println(bytesOfData[2] +" "+ Integer.toBinaryString( bytesOfData[2] ) );
-    System.out.println(bytesOfData[3] +" "+ Integer.toBinaryString( bytesOfData[3] ) );
-    System.out.println(bytesOfData[63] +" "+ Integer.toBinaryString( bytesOfData[63] ) );
-    
-    
-    //initialize four buffers
-    int a0 = 0x67452301;
-    int b0 = 0xefcdab89;
-    int c0 = 0x98badcfe;
-    int d0 = 0x10325476;
-    
-    int aBuffer = 0x67452301;
-    int bBuffer = 0xefcdab89;
-    int cBuffer = 0x98badcfe;
-    int dBuffer = 0x10325476;
-    
-    int fBuffer = 0;
-    int gBuffer = 0;
-    int dtBuffer = 0;
-    
-    for( int i = 0; i < 64; i++) {
-      if(i >= 0 && i <= 15) {
-        fBuffer = (bBuffer & cBuffer) | ( (~bBuffer) & dBuffer  );
-        gBuffer = i;
-      }
-      if(i >= 16 && i <= 31) {
-        fBuffer = ( dBuffer & bBuffer ) | ((~dBuffer) & cBuffer);
-        gBuffer = (5 * i + 1) % 16;
-      }
-      if(i >= 32 && i <= 47) {
-        fBuffer = bBuffer ^ cBuffer ^ dBuffer;
-        gBuffer = (3 * i + 5) % 16;
-      }
-      if(i >= 48 && i <= 63) {
-        fBuffer = cBuffer ^ ( bBuffer | ( ~dBuffer ));
-        bBuffer = (7 * i) % 16;
-      }
-      dtBuffer = dBuffer;
-      dBuffer = cBuffer;
-      cBuffer = bBuffer;
-      bBuffer = leftRotate( 
-          (aBuffer + fBuffer + k[i] + 
-              (bytesOfData[gBuffer * 4] + bytesOfData[gBuffer * 4 + 1] + bytesOfData[gBuffer * 4+ 2] + bytesOfData[gBuffer * 4 + 3]) )  , s[i]); 
-      aBuffer = dtBuffer;
-      
-    } //end for each piece.
-    a0 += aBuffer;
-    b0 += bBuffer;
-    c0 += cBuffer;
-    d0 += dBuffer;
-    
-    printBuffer(a0);
-    printBuffer(b0);
-    printBuffer(c0);
-    printBuffer(d0);
-    
-  } //end main
-  
-  public static int leftRotate( int x, int c  ) {
-    return (x << c) | ( x >> (32 - c) );
-  }
-  
-  public static void printBuffer(int b) {
-    System.out.println( Integer.toHexString(b >> 24));
-    System.out.println(Integer.toHexString((b & 0b0000111100000000) >> 16));
-    System.out.println(Integer.toHexString((b & 0b0000000011110000) >> 16));
-    System.out.println(Integer.toHexString((b & 0b0000000000001111) ));
-  }
-  
-
-} //end class
-
-
-
-
--->
 
