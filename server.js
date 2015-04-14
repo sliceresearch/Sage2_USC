@@ -60,7 +60,8 @@ var WebsocketIO   = require('./src/node-websocket.io');   // creates WebSocket s
 var Loader        = require('./src/node-itemloader');     // handles sage item creation
 var HttpServer    = require('./src/node-httpserver');     // creates web server
 var StickyItems   = require('./src/node-stickyitems');
-
+//dkedit
+var md5				=require('./src/md5'); //dkedit will return standard md5 hash of given param.
 
 // GLOBALS
 global.__SESSION_ID = null; // changed via command line, config param, etc.
@@ -145,15 +146,17 @@ var config = loadConfiguration();
 
 //dkedit start
 if (typeof program.password  === "string" && program.password.length > 0) {
-	global.__SESSION_ID = program.password;
+	//global.__SESSION_ID = program.password;
+	global.__SESSION_ID = md5.getHash( program.password );
 	console.log("Using " + global.__SESSION_ID + " as the password for this run.");
 }
 else if (program.password) {
 	console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
 }
 else if ( config.sessionID !== undefined ) {
+	//global.__SESSION_ID = config.sessionID;
+	global.__SESSION_ID = md5.getHash( config.sessionID );
 	console.log("A sessionID was specified in the configuration file:" + config.sessionID);
-	global.__SESSION_ID = config.sessionID;
 }
 //dkedit end
 
