@@ -4627,11 +4627,11 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
-	var im;
+	//var im;
 	var obj;
 
-	var localPt;
-	var scaledPt;
+	//var localPt;
+	//var scaledPt;
 	var currentApp = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem;
 	
 	/*
@@ -4719,51 +4719,52 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerRelease', rData);
 	}
 
-	var app = dropSelectedItem(uniqueID, false);
-	if (app !== null) {
+	if (remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem) {
 		var portal = findApplicationPortal(app.application);
 		if(portal !== undefined && portal !== null && portal.id === portalId) {
 			dropSelectedItem(uniqueID, true);
 			return;
 		}
+		else {
+			var app = dropSelectedItem(uniqueID, false);
+			localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
+			var remote = remoteSharingSessions[obj.id];
+			createAppFromDescription(app.application, function(appInstance, videohandle) {
+				if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream")
+					appInstance.id = app.application.id + "_" + obj.data.id;
+				else
+					appInstance.id = getUniqueSharedAppId(obj.data.id);
 
-		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
-		var remote = remoteSharingSessions[obj.id];
-		createAppFromDescription(app.application, function(appInstance, videohandle) {
-			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream")
-				appInstance.id = app.application.id + "_" + obj.data.id;
-			else
-				appInstance.id = getUniqueSharedAppId(obj.data.id);
+				appInstance.left = localPt.x / obj.data.scale;
+				appInstance.top = (localPt.y-config.ui.titleBarHeight) / obj.data.scale;
+				appInstance.width = app.previousPosition.width / obj.data.scale;
+				appInstance.height = app.previousPosition.height / obj.data.scale;
 
-			appInstance.left = localPt.x / obj.data.scale;
-			appInstance.top = (localPt.y-config.ui.titleBarHeight) / obj.data.scale;
-			appInstance.width = app.previousPosition.width / obj.data.scale;
-			appInstance.height = app.previousPosition.height / obj.data.scale;
-
-			remoteSharingSessions[obj.data.id].appCount++;
-			
-			// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
-			var i;
-			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-			for (i=0; i<clients.length; i++) {
-				if (clients[i].clientType === "display") {
-					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				remoteSharingSessions[obj.data.id].appCount++;
+				
+				// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
+				var i;
+				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+				for (i=0; i<clients.length; i++) {
+					if (clients[i].clientType === "display") {
+						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+					}
 				}
-			}
-			handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
+				handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
 
-			remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
-			
-			var eLogData = {
-				host: remote.portal.host,
-				port: remote.portal.port,
-				application: {
-					id: appInstance.id,
-					type: appInstance.application
-				}
-			};
-			addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
-		});
+				remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
+				
+				var eLogData = {
+					host: remote.portal.host,
+					port: remote.portal.port,
+					application: {
+						id: appInstance.id,
+						type: appInstance.application
+					}
+				};
+				addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+			});
+		}
 	}
 	else {
 		console.log("pointer release on portal (no app selected):", remoteInteraction[uniqueID].windowManagementMode(), remoteInteraction[uniqueID].appInteractionMode())
