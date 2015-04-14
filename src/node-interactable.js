@@ -253,9 +253,9 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 
 
 /**
-* Move geometric object to front (edit zIndex)
+* Get geometric object with given id
 *
-* @method moveObjectToFront
+* @method getObject
 * @param id {String} unique identifier for the geometric object
 * @param layerId {String} unique identifier for the layer
 * @return object {Object} geometric object with given id
