@@ -4719,8 +4719,9 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerRelease', rData);
 	}
 
-	if (remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem) {
-		var portal = findApplicationPortal(app.application);
+	var selectedApp = remoteInteraction[uniqueID].selectedMoveItem || remoteInteraction[uniqueID].selectedResizeItem
+	if (selectedApp) {
+		var portal = findApplicationPortal(selectedApp);
 		if(portal !== undefined && portal !== null && portal.id === portalId) {
 			dropSelectedItem(uniqueID, true);
 			return;
