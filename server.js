@@ -3242,7 +3242,8 @@ function broadcast_opt(func, data, type) {
 			if(clients[i].messages[type]) clients[i].emitString( message );
 		}
 	} catch (e) {
-		console.log("warning: wsio trouble emitting string to clients");
+		// Not using console.log since it's overloaded to send messages
+		process.stdout.write("Websocket>	Warning: wsio trouble emitting string to clients\n");
 	}
 }
 
