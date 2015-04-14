@@ -2481,7 +2481,7 @@ function wsRemoteSagePointerPosition(wsio, data) {
 	sagePointers[data.id].top = data.top;
 
 	pointerMoveInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data)
-	//updatePointerPosition(data.id, pointerX, pointerY, data);
+	//updatePointerPosition(data.id, data.left, data.top, data);
 }
 
 function wsRemoteSagePointerPress(wsio, data) {
@@ -2489,6 +2489,8 @@ function wsRemoteSagePointerPress(wsio, data) {
 
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
+
+	console.log("remote pointer press:", sagePointers[data.id].portal);
 
 	pointerPressInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
@@ -2500,7 +2502,7 @@ function wsRemoteSagePointerRelease(wsio, data) {
 	sagePointers[data.id].top = data.top;
 
 	pointerRelease(data.id, data.left, data.top, data);
-	//pointerReleaseInDataSharingArea(data.id, sagePointers[data.id].portal, {x: pointerX, y: pointerY}, data);
+	//pointerReleaseInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
 
 function wsRemoteSageKeyDown(wsio, data) {
@@ -2508,6 +2510,8 @@ function wsRemoteSageKeyDown(wsio, data) {
 
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
+
+	console.log("remote key down:", sagePointers[data.id].portal);
 
 	keyDownOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
