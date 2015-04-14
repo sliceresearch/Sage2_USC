@@ -40,14 +40,12 @@ var evl_photos = SAGE2_App.extend( {
 
 		this.canvasBackground = "black";
 
-		this.canvasWidth = 800;
+		this.canvasWidth  = 800;
 		this.canvasHeight = 600;
 
-		this.sampleSVG = null;
+		this.loadTimer = 200; // could move this into an external file
 
-		this.loadTimer = 200;
-
-		this.URL1 = "";
+		this.URL1  = "";
 		this.URL1a = "";
 		this.URL1b = "";
 
@@ -91,15 +89,15 @@ var evl_photos = SAGE2_App.extend( {
 
 	initApp: function()
 	{
-		this.listFileCallbackFunc = this.listFileCallback.bind(this);
-		this.imageLoadCallbackFunc = this.imageLoadCallback.bind(this);
+		this.listFileCallbackFunc        = this.listFileCallback.bind(this);
+		this.imageLoadCallbackFunc       = this.imageLoadCallback.bind(this);
 		this.imageLoadFailedCallbackFunc = this.imageLoadFailedCallback.bind(this);
 
-		this.image1.onload = this.imageLoadCallbackFunc;
+		this.image1.onload  = this.imageLoadCallbackFunc;
 		this.image1.onerror = this.imageLoadFailedCallbackFunc;
-        this.image2.onload = this.imageLoadCallbackFunc;
+        this.image2.onload  = this.imageLoadCallbackFunc;
 		this.image2.onerror = this.imageLoadFailedCallbackFunc;
-        this.image3.onload = this.imageLoadCallbackFunc;
+        this.image3.onload  = this.imageLoadCallbackFunc;
 		this.image3.onerror = this.imageLoadFailedCallbackFunc;
 
 		this.chooseImagery(this.state.imageSet);
@@ -109,29 +107,26 @@ var evl_photos = SAGE2_App.extend( {
 
 	////////////////////////////////////////
 
-	imageLoadCallback: function()
-		{
+	imageLoadCallback: function() {
 		this.okToDraw = 10.0;
 		this.image1 = this.image3; // image1 is now the new image
 		this.image3 = this.imageTemp;
-		console.log(this.appName + "imageLoadCallback");
-		},
+		//console.log(this.appName + "imageLoadCallback");
+	},
 
-	imageLoadFailedCallback: function()
-		{
+	imageLoadFailedCallback: function() {
 		console.log(this.appName + "image load failed on " + this.fileName);
 		this.update();
-		},
+	},
 
 	////////////////////////////////////////
 	// send the list of images in the current image library to all of the client nodes
 
-	listFileCallback: function(error, data)
-	{
+	listFileCallback: function(error, data) {
 		this.broadcast("listFileCallbackNode", {error:error, data:data});
 	},
 
-	listFileCallbackNode: function(data){
+	listFileCallbackNode: function(data) {
 
 		var error = data.error;
 		var localData = data.data;
@@ -160,20 +155,14 @@ var evl_photos = SAGE2_App.extend( {
 
 	drawEverything: function ()
 	{
-		if ((this.okToDraw > -10) || (this.forceRedraw > 0))
-			{
-			this.sampleSVG.selectAll("*").remove(); 
+		if ((this.okToDraw > -10) || (this.forceRedraw > 0)) {
+			//this.svg.selectAll("*").remove(); 
 			this.forceRedraw = 0;
 
-			var newWidth = this.canvasWidth;
+			var newWidth  = this.canvasWidth;
 			var newHeight = this.canvasHeight;
 
-			this.sampleSVG.append("svg:rect")
-				.style("stroke", "black")
-				.style("fill", "black")
-				.style("fill-opacity", 1.0)
-				.attr("x", 0)
-				.attr("y", 0)
+			this.svg.select("#baserect")
 				.attr("height", newHeight)
 				.attr("width", newWidth);
 
@@ -197,44 +186,50 @@ var evl_photos = SAGE2_App.extend( {
 						image2DrawHeight = this.canvasWidth / image2ratio;
 						}
 
-				if (this.okToDraw > 1)
-					this.sampleSVG.append("svg:image")
-					.attr("xlink:href", this.image2.src)
-					.attr("opacity", 1) //(this.okToDraw * 0.1))
-					.attr("x", 0)
-					.attr("y", 0)
-					.attr("width", image2DrawWidth)
-					.attr("height", image2DrawHeight);
+				// if (this.okToDraw > 1)
+				// 	this.svg.select("#image2")
+				// 	.attr("xlink:href", this.image2.src)
+				// 	.attr("width",  image2DrawWidth)
+				// 	.attr("height", image2DrawHeight);
+				// else
+				// 	this.svg.select("#image2")
+				// 	.attr("xlink:href", this.image2.src)
+				// 	.attr("opacity", (this.okToDraw+9) * 0.1) 
+				// 	.attr("width",  image2DrawWidth)
+				// 	.attr("height", image2DrawHeight);
+				// }
+				if (this.okToDraw > 1) {
+					 this.svg.select("#image2")
+					 .attr("xlink:href", this.image2.src)
+					 .attr("opacity", 1)
+					 .attr("width",  image2DrawWidth)
+					 .attr("height", image2DrawHeight);
+				}
 				else
-					this.sampleSVG.append("svg:image")
+					this.svg.select("#image2")
 					.attr("xlink:href", this.image2.src)
 					.attr("opacity", (this.okToDraw+9) * 0.1) 
-					.attr("x", 0)
-					.attr("y", 0)
-					.attr("width", image2DrawWidth)
+					.attr("width",  image2DrawWidth)
 					.attr("height", image2DrawHeight);
 				}
 
 			if (this.image1 != "NULL") // current image
 			{
-				var image1x = this.image1.width;
-				var image1y = this.image1.height;
+				var image1x     = this.image1.width;
+				var image1y     = this.image1.height;
 				var image1ratio = image1x / image1y;
 
 				// want wide images to be aligned to top not center
-				if (image1ratio > windowRatio)
-						{
-						image1DrawWidth  =  this.canvasWidth;
-						image1DrawHeight = this.canvasWidth / image1ratio;
-						}
+				if (image1ratio > windowRatio) {
+					image1DrawWidth  =  this.canvasWidth;
+					image1DrawHeight = this.canvasWidth / image1ratio;
+				}
 
-				this.sampleSVG.append("svg:image")
-				.attr("xlink:href", this.image1.src)
-				.attr("opacity", 1.0 - (this.okToDraw * 0.1))
-				.attr("x", 0)
-				.attr("y", 0)
-				.attr("width", image1DrawWidth)
-				.attr("height", image1DrawHeight);
+				this.svg.select("#image1")
+					.attr("xlink:href", this.image1.src)
+					.attr("opacity", 1.0 - (this.okToDraw * 0.1))
+					.attr("width",  image1DrawWidth)
+					.attr("height", image1DrawHeight);
 			}
 
 			this.okToDraw -= 1.0;
@@ -372,20 +367,14 @@ var evl_photos = SAGE2_App.extend( {
 	////////////////////////////////////////
 	// if the window gets reshaped then update my drawing area
 
-	updateWindow: function (){
+	updateWindow: function () {
+		this.canvasWidth  = this.element.clientWidth;
+		this.canvasHeight = this.element.clientHeight;
 
-		x = this.element.clientWidth;
-		y = this.element.clientHeight;
+		var box="0,0,"+this.canvasWidth+","+this.canvasHeight;
 
-		this.canvasWidth = x;
-		this.canvasHeight = y;
-
-		var newWidth = this.canvasWidth;
-		var newHeight = this.canvasHeight;
-
-		var box="0,0,"+newWidth+","+newHeight;
-		this.sampleSVG.attr("width", x) 
-			.attr("height", y) 
+		this.svg.attr("width", this.canvasWidth) 
+			.attr("height", this.canvasHeight) 
 			.attr("viewBox", box)
 			.attr("preserveAspectRatio", "xMinYMin meet");
 
@@ -399,34 +388,52 @@ var evl_photos = SAGE2_App.extend( {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, "div", data);
 
-        this.maxFPS = 10.0;
-
-		// Get width height from the supporting div		
-		//var divWidth  = this.element.clientWidth;
-		//var divHeight = this.element.clientHeight;
-
+        this.maxFPS = 20.0;
 		this.element.id = "div" + data.id;
 
-		// backup of the context
-		var self = this;
-
-        var newWidth = this.canvasWidth;
-        var newHeight = this.canvasHeight;
-
 		// attach the SVG into the this.element node provided to us
-		var box="0,0,"+newWidth+","+newHeight;
+		var box="0,0,"+this.canvasWidth+","+this.canvasHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
 		    .attr("width",   data.width)
 		    .attr("height",  data.height)
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
-		this.sampleSVG = this.svg;
 
-        this.state.imageSet= 0;
+        this.state.imageSet = 0;
 
-		console.log(this.imageLoadCallbackFunc);
-		console.log(this.imageLoadFailedCallbackFunc);
+		// console.log(this.imageLoadCallbackFunc);
+		// console.log(this.imageLoadFailedCallbackFunc);
 
+		this.svg.append("svg:rect")
+			.style("stroke", "black")
+			.style("fill", "black")
+			.style("fill-opacity", 1.0)
+			.attr("x",  0)
+			.attr("y",  0)
+			.attr("id", "baserect")
+			.attr("width",  data.width)
+			.attr("height", data.height);
+		this.svg.append("svg:image")
+			.attr("opacity", 1)
+			.attr("x",  0)
+			.attr("y",  0)
+			.attr("id", "image1")
+			.attr("width",  data.width)
+			.attr("height", data.height);
+		this.svg.append("svg:image")
+			.attr("opacity", 1)
+			.attr("x",  0)
+			.attr("y",  0)
+			.attr("id", "image2")
+			.attr("width",  data.width)
+			.attr("height", data.height);
+		//this.svg.append("svg:image")
+		//	.attr("opacity", 1)
+		//	.attr("x",  0)
+		//	.attr("y",  0)
+		//	.attr("id", "image3")
+		//	.attr("width",  data.width)
+		//	.attr("height", data.height);
 	},
 
 	load: function(state, date) {
