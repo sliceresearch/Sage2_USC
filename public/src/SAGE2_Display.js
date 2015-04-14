@@ -554,15 +554,12 @@ function setupListeners() {
 			for (var item in controlItems){
 				if (item.indexOf(elem_data.elemId) > -1){
 					controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
-					removeWidgetToAppConnector(item);
+					//removeWidgetToAppConnector(item);
 					delete controlItems[item];
 				}
 
 			}
 			delete controlObjects[elem_data.elemId];
-			//var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-			//if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-			//delete controlItems[elem_data.elemId + "_controls"];
 		}
 	});
 

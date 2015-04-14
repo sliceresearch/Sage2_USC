@@ -2366,7 +2366,6 @@ function wsAddNewControl(wsio, data){
 }
 
 function wsRecordInnerGeometryForWidget(wsio, data){
-	console.log("in wsRecordInnerGeometryForWidget-->",data);
 	var center = data.innerGeometry.center;
 	var buttons = data.innerGeometry.buttons;
 	var textInput = data.innerGeometry.textInput;
@@ -3425,9 +3424,14 @@ function hideControl(ctrl){
 }
 
 function removeControlsForUser(uniqueID){
-	for (var i=controls.length-1; i>=0; i--) {
-		if (controls[i].id.indexOf(uniqueID) > -1) {
-			controls.splice(i, 1);
+	var widgets = SAGE2Items.widgets.list;
+	for (var w in widgets){
+		if (widgets.hasOwnProperty(w) && widgets[w].id.indexOf(uniqueID) > -1){
+			interactMgr.removeGeometry(widgets[w].id + "_radial", "widgets");
+			if (widgets[w].hasSideBar === true){
+				interactMgr.removeGeometry(widgets[w].id + "_sidebar", "widgets");
+			}
+			SAGE2Items.widgets.removeItem(widgets[w].id);
 		}
 	}
 	broadcast('removeControlsForUser', {user_id:uniqueID});
@@ -3712,8 +3716,6 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 }
 
 function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, pressRelease) {
-	
-	console.log("in pointerPressOnWidget!");
 	var id = obj.id.substr(0,obj.id.lastIndexOf("_"));
 	if (data.button === "left") {
 		var sidebarPoint ={x: obj.geometry.x - obj.data.left + localPt.x, y:obj.geometry.y - obj.data.top + localPt.y};
@@ -3770,7 +3772,6 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 	}
 	else {
 		if(obj.data.show === true) {
-			console.log("inside show flag!")
 			hideControl(obj.data);
 			var app = SAGE2Items.applications.list[obj.data.appId];
 			if(app !== null) {
@@ -4531,6 +4532,17 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 
 	if (remoteInteraction[uniqueID].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
 
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+
+	if (lockedControl !== null) {
+		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
+		broadcast('keyInTextInputWidget', event);
+		if (data.code === 13) { //Enter key
+			remoteInteraction[uniqueID].dropControl();
+		}
+		return;
+	}
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
@@ -4606,6 +4618,16 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			delete remoteInteraction[uniqueID].modeChange;
 		}, 500);
 
+		return;
+	}
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+
+	if (lockedControl !== null) {
+		var event = {code: data.code, printable:true, state: "press", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
+		broadcast('keyInTextInputWidget', event);
+		if (data.code === 13) { //Enter key
+			remoteInteraction[uniqueID].dropControl();
+		}
 		return;
 	}
 
@@ -4714,6 +4736,17 @@ function deleteApplication(appId) {
 
 	SAGE2Items.applications.removeItem(appId);
 	interactMgr.removeGeometry(appId, "applications");
+	var widgets = SAGE2Items.widgets.list;
+	for (var w in widgets){
+		if (widgets.hasOwnProperty(w) && widgets[w].appId === appId){
+			interactMgr.removeGeometry(widgets[w].id + "_radial", "widgets");
+			if (widgets[w].hasSideBar === true){
+				interactMgr.removeGeometry(widgets[w].id + "_sidebar", "widgets");
+			}
+			SAGE2Items.widgets.removeItem(widgets[w].id);
+		}
+	}
+	
 	stickyAppHandler.removeElement(app);
 	broadcast('deleteElement', {elemId: appId});
 }
