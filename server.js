@@ -1536,7 +1536,12 @@ function createAppFromDescription(app, callback) {
 		}
 	}
 	else {
-		appLoader.loadFileFromWebURL({url: app.url, type: app.type}, cloneApp);
+		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
+			appLoader.loadFileFromWebURL({url: app.url, type: app.type}, cloneApp);
+		}
+		else {
+			appLoader.loadApplicationFromRemoteServer(app, cloneApp);
+		}
 	}
 }
 
@@ -2539,7 +2544,7 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 			break;
 		}
 	}
-	console.log("adding element from remote server:", remote);
+	console.log("adding element from remote server:");
 	if (remote !== null) {
 		createAppFromDescription(data, function(appInstance, videohandle) {
 			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream")
@@ -2550,7 +2555,9 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 			appInstance.top = data.top;
 			appInstance.width = data.width;
 			appInstance.height = data.height;
-			console.log(appInstance);
+
+			console.log("created new app:", appInstance);
+			
 			remoteSharingSessions[remote.portal.id].appCount++;
 			
 			var i;
