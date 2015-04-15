@@ -417,14 +417,14 @@ var evl_photos = SAGE2_App.extend( {
 			.attr("opacity", 1)
 			.attr("x",  0)
 			.attr("y",  0)
-			.attr("id", "image1")
+			.attr("id", "image2") //image1
 			.attr("width",  data.width)
 			.attr("height", data.height);
 		this.svg.append("svg:image")
 			.attr("opacity", 1)
 			.attr("x",  0)
 			.attr("y",  0)
-			.attr("id", "image2")
+			.attr("id", "image1") //image2
 			.attr("width",  data.width)
 			.attr("height", data.height);
 		//this.svg.append("svg:image")
