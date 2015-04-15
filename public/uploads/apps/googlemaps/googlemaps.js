@@ -61,7 +61,8 @@ var googlemaps = SAGE2_App.extend( {
 		// need a global handler for the callback (i.e. scope pollution)
 		googlemaps_self = this;
 		// load google maps
-		addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
+		//addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
+
 
 		this.controls.addSlider({
 			begin: 0,
@@ -144,8 +145,16 @@ var googlemaps = SAGE2_App.extend( {
 			this.state.zoomLevel = 8;
 		if (this.state.center == null)
 			this.state.center = {lat:41.850033, lng:-87.6500523};
+		if (this.state.center.lat == null)
+			this.state.center.lat = 41.850033;
+		if (this.state.center.lng == null)
+			this.state.center.lng = -87.6500523;
 		if (this.state.layer == null)
 			this.state.layer = {w:false, t:false};
+		if (this.state.layer.w == null)
+			this.state.layer.w = false;
+		if (this.state.layer.t == null)
+			this.state.layer.t = false;
 
 		// Enable the visual refresh
 		google.maps.visualRefresh = true;
@@ -213,6 +222,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.state.center    = state.center;
 			this.state.layer     = state.layer;
 		}
+		this.initialize();
 	},
 
 	draw: function(date) {

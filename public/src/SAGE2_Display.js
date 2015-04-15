@@ -1079,7 +1079,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 	else {
 		var loadResource = function(idx) {
-			if (dependencies[data.resrc[idx]] === true) {
+			if (dependencies[data.resrc[idx]] !== undefined) {
 				if((idx+1) < data.resrc.length) {
 					loadResource(idx+1);
 				}
@@ -1110,7 +1110,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				}
 			});
 			js.type = "text/javascript";
-			js.src = url + "/" + data.resrc[idx];
+			if (data.resrc[idx].indexOf("http") === 0)
+				js.src = data.resrc[idx];
+			else
+				js.src = url + "/" + data.resrc[idx];
 			document.head.appendChild(js);
 		};
 		// Start loading the first resource
@@ -1118,6 +1121,11 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
+}
+
+
+function googlemapsInit() {
+	console.log("Google Maps API loaded");
 }
 
 function getTransform(elem) {

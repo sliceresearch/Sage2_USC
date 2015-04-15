@@ -3806,10 +3806,12 @@ function mergeObjects(a, b, ignore) {
 	var ig = ignore || [];
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
-			if(typeof b[key] === "object" && typeof a[key] === "object")
+			if(typeof b[key] === "object" && typeof a[key] === "object") {
 				mergeObjects(a[key], b[key]);
-			else if(typeof b[key] !== "object" && typeof a[key] !== "object")
+			}
+			else if( (b[key] === null || typeof b[key] !== "object") && (a[key] === null || typeof a[key] !== "object") ) {
 				b[key] = a[key];
+			}
 		}
 	}
 }
