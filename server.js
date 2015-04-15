@@ -3819,7 +3819,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var app;
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
-	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
+	//var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
 	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
 	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
@@ -4677,6 +4677,7 @@ function attachAppIfSticky(backgroundItem, appId){
 		stickyAppHandler.attachStickyItem(backgroundItem, app);
 }
 
+/*
 function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease){
 	var app;
 	var item;
@@ -4755,3 +4756,4 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 		}
 	}
 }
+*/
