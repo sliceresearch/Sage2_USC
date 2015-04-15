@@ -207,7 +207,8 @@ getWidgetControlInstanceById = function(ctrl){
 	var requestedSvgElement = null;
 	for(var l=0; l< svgElements.length; l++){
 		var parent = svgElements[l].parent();
-		if (svgElements[l].attr("id") === ctrl.ctrlId && svgElements[l].data("appId") === ctrl.appId && parent.data("instanceID")===ctrl.instanceID){
+		var id = svgElements[l].attr("id") || "id"; // dummy value to guard against undefined entries
+		if (id.indexOf(ctrl.ctrlId) > -1 && svgElements[l].data("appId") === ctrl.appId && parent.data("instanceID")===ctrl.instanceID){
 			requestedSvgElement = svgElements[l];
 			break;
 		}

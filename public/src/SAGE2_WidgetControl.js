@@ -155,7 +155,7 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 		if (data.staticID)
 			button.id = "button" + data.staticID;
 		else
-			button.id = "button" + this.itemCount;
+			button.id = "button" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		if (typeof data.type === "string" ){
 			var typeVar = this.buttonType[data.type];
 			if (typeof typeVar === "function")
@@ -213,7 +213,7 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 	if (this.hasTextInput === false && this.itemCount <= 30){
 		this.hasTextInput = true;
 		var textInput = new this.TextInputClass();
-		textInput.id = "textInput" + this.itemCount;
+		textInput.id = "textInput" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		textInput.appId = this.id;
 		textInput.caption = data.caption || null;
 		textInput.width = 13.0*ui.widgetControlSize;
@@ -246,7 +246,7 @@ SAGE2WidgetControl.prototype.addSlider = function(data){
 	if (this.hasSlider === false && this.itemCount <= 30){
 
 		var slider = new this.SliderClass();
-		slider.id = "slider" + this.itemCount;
+		slider.id = "slider" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		slider.appId = this.id;
 		slider.begin = data.begin;
 		slider.end = data.end;

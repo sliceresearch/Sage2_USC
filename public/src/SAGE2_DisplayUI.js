@@ -478,7 +478,7 @@ function SAGE2DisplayUI() {
 		this.pointerY = y;
 		var globalX = this.pointerX / this.scale;
 		var globalY = this.pointerY / this.scale;
-		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		this.wsio.emit('pointerPosition', {pointerX: Math.round(globalX), pointerY: Math.round(globalY)});
 	};
 
 	/**

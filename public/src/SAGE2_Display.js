@@ -68,6 +68,9 @@ function SAGE2_init() {
 	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 
+	// Detect the current browser
+	SAGE2_browser();
+
 	isMaster = false;
 
 	wsio.open(function() {
@@ -231,7 +234,6 @@ function setupListeners() {
     });
 
     wsio.on('showSagePointer', function(pointer_data){
-		console.log(pointer_data);
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
@@ -369,8 +371,11 @@ function setupListeners() {
 		ui.main.appendChild(windowTitle);
 
 		var windowIcons = document.createElement("img");
-		windowIcons.src = "images/layout3.webp";
-		windowIcons.height = Math.round(ui.titleBarHeight);
+		if (__SAGE2__.browser.isChrome)
+			windowIcons.src = "images/layout3.webp";
+		else
+			windowIcons.src = "images/layout3.png";
+		windowIcons.height  = Math.round(ui.titleBarHeight);
 		windowIcons.style.position = "absolute";
 		windowIcons.style.right    = "0px";
 		windowTitle.appendChild(windowIcons);
@@ -549,15 +554,12 @@ function setupListeners() {
 			for (var item in controlItems){
 				if (item.indexOf(elem_data.elemId) > -1){
 					controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
-					removeWidgetToAppConnector(item);
+					//removeWidgetToAppConnector(item);
 					delete controlItems[item];
 				}
 
 			}
 			delete controlObjects[elem_data.elemId];
-			//var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-			//if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-			//delete controlItems[elem_data.elemId + "_controls"];
 		}
 	});
 
@@ -890,7 +892,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('requestControlId', function(data) {
+	/*wsio.on('requestControlId', function(data) {
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var ctrId = ctrl? ctrl.attr("id"):"";
 		var regC  = /_controls/;
@@ -902,6 +904,7 @@ function setupListeners() {
 		if (lockedControlElements[data.ptrId]){
 			var lckedCtrl = lockedControlElements[data.ptrId];
 			var lckedCtrlId = lckedCtrl.attr("id");
+			console.log("in requestControlId->", data);
 			if (regTI.test(lckedCtrlId)){
 				textInput = lckedCtrl.parent();
 				blinkControlHandle = textInput.data("blinkControlHandle");
@@ -926,9 +929,9 @@ function setupListeners() {
 				blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
 				textInput.data("blinkControlHandle", blinkControlHandle);
 			}
-			/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
+			if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
 				if(/line/.test(ctrId) || /knob/.test(ctrId))
-			}*/
+			}
 			wsio.emit('selectedControlId', {
 				addr:data.addr,
 				pointerX: data.x,
@@ -940,9 +943,9 @@ function setupListeners() {
 			lockedControlElements[data.ptrId] = ctrl;
 
 		}
-	});
+	});*/
 
-	wsio.on('releaseControlId', function(data){
+	/*wsio.on('releaseControlId', function(data){
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var regexSlider = /slider/;
 		var regexButton = /button/;
@@ -977,8 +980,9 @@ function setupListeners() {
 
 
 
-	});
+	});*/
 	wsio.on('executeControlFunction', function(data){
+		console.log("in executeControlFunction->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if(ctrl){
 			var ctrId = ctrl.attr('id');
@@ -1042,8 +1046,8 @@ function setupListeners() {
 		var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 		app.handle[app.property] = val;
 		var func = slider.data("updateCall");
-			if (func !== undefined && func !== null)
-				func(new Date());
+		if (func !== undefined && func !== null)
+			func(new Date());
 	});
 
 	wsio.on('keyInTextInputWidget', function(data){
@@ -1063,7 +1067,37 @@ function setupListeners() {
 			}
 		}
 	});
-	wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+	/*wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+		console.log("in dropTextInputControl->", data);
+		var ctrl = getWidgetControlInstanceById(data);
+		if (ctrl){
+			var textInput = ctrl.parent();
+			var blinkControlHandle = textInput.data("blinkControlHandle");
+			clearInterval(blinkControlHandle);
+		}
+	});*/
+	wsio.on('activateTextInputControl', function(data){
+		var ctrl = null;
+		console.log("in activateTextInputContControl->", data);
+		if (data.prevTextInput){
+			ctrl = getWidgetControlInstanceById(data.prevTextInput);
+		}
+		var textInput, blinkControlHandle;
+		if (ctrl){
+			textInput = ctrl.parent();
+			blinkControlHandle = textInput.data("blinkControlHandle");
+			clearInterval(blinkControlHandle);
+		}
+		ctrl = getWidgetControlInstanceById(data.curTextInput);
+		if(ctrl){
+			textInput = ctrl.parent();
+			blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
+			textInput.data("blinkControlHandle", blinkControlHandle);
+		}
+		
+	});
+	wsio.on('deactivateTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();

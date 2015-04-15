@@ -90,6 +90,8 @@ RadialMenu.prototype.openThumbnailWindow = function(data) {
 RadialMenu.prototype.setPosition = function(data) {
 	this.left = data.x;
 	this.top  = data.y;
+	
+	console.log("node-radialMenu:setPosition() " + data.x + " " + data.y);
 };
 
 /**
@@ -183,7 +185,7 @@ RadialMenu.prototype.onPress = function(id) {
 * @method onPress
 */
 RadialMenu.prototype.onMove = function(id) {
-	console.log( this.hasEventID(id) );
+	//console.log( this.hasEventID(id) );
 };
 
 /**
