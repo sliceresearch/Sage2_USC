@@ -38,12 +38,13 @@ var evl_photos = SAGE2_App.extend( {
 		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
 		this.enableControls = true;
 
-		this.canvasBackground = "black";
+		this.canvasBackground = "black"; // could move this into an external file
 
 		this.canvasWidth  = 800;
 		this.canvasHeight = 600;
 
-		this.loadTimer = 200; // could move this into an external file
+		this.loadTimer = 200; // could move this into an external file - was 200
+		this.fadeCount = 10.0; // could move this into an external file
 
 		this.URL1  = "";
 		this.URL1a = "";
@@ -54,7 +55,7 @@ var evl_photos = SAGE2_App.extend( {
 
 		this.bigList = null;
 
-		this.okToDraw = 10;
+		this.okToDraw = this.fadeCount;
 		this.counter = 1;
 		this.forceRedraw = 1;
 
@@ -108,7 +109,10 @@ var evl_photos = SAGE2_App.extend( {
 	////////////////////////////////////////
 
 	imageLoadCallback: function() {
-		this.okToDraw = 10.0;
+		this.imageTemp = this.image2; // hold onto 2
+		this.image2 = this.image1; // image2 is the previous image (needed for fading)
+
+		this.okToDraw = this.fadeCount;
 		this.image1 = this.image3; // image1 is now the new image
 		this.image3 = this.imageTemp;
 		//console.log(this.appName + "imageLoadCallback");
@@ -155,7 +159,7 @@ var evl_photos = SAGE2_App.extend( {
 
 	drawEverything: function ()
 	{
-		if ((this.okToDraw > -10) || (this.forceRedraw > 0)) {
+		if ((this.okToDraw > -this.fadeCount) || (this.forceRedraw > 0)) {
 			//this.svg.selectAll("*").remove(); 
 			this.forceRedraw = 0;
 
@@ -208,7 +212,7 @@ var evl_photos = SAGE2_App.extend( {
 				else
 					this.svg.select("#image2")
 					.attr("xlink:href", this.image2.src)
-					.attr("opacity", (this.okToDraw+9) * 0.1) 
+					.attr("opacity", (this.okToDraw+9) * (1.0 / this.fadeCount))  // 0.1
 					.attr("width",  image2DrawWidth)
 					.attr("height", image2DrawHeight);
 				}
@@ -227,7 +231,7 @@ var evl_photos = SAGE2_App.extend( {
 
 				this.svg.select("#image1")
 					.attr("xlink:href", this.image1.src)
-					.attr("opacity", 1.0 - (this.okToDraw * 0.1))
+					.attr("opacity", Math.min(1.0, 1.0 - (this.okToDraw * (1.0 / this.fadeCount))))
 					.attr("width",  image1DrawWidth)
 					.attr("height", image1DrawHeight);
 			}
@@ -347,15 +351,18 @@ var evl_photos = SAGE2_App.extend( {
 
 		this.fileName = data.data;
 	
-	   if(this.fileName === null)
+		if(this.fileName === null)
 			{
 			console.log(this.appName + "no filename of new photo to load");
 			return;
 			}
 		//console.log(this.appName + this.fileName);
 
-		this.imageTemp = this.image2; // hold onto 2
-		this.image2 = this.image1; // image2 is the previous image (needed for fading)
+		// ask for image3 to load in the new image
+
+		///
+		//this.imageTemp = this.image2; // hold onto 2
+		//this.image2 = this.image1; // image2 is the previous image (needed for fading)
 
 		//this.image3 = new Image(); // image3 is the new image to be loaded
 		this.image3.src = this.fileName;
