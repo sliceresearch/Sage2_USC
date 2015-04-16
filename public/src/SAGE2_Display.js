@@ -1110,7 +1110,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				}
 			});
 			js.type = "text/javascript";
-			if (data.resrc[idx].indexOf("http") === 0)
+			if (data.resrc[idx].indexOf("http://") === 0 || data.resrc[idx].indexOf("https://") === 0 )
 				js.src = data.resrc[idx];
 			else
 				js.src = url + "/" + data.resrc[idx];
