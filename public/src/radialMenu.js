@@ -150,7 +150,7 @@ function RadialMenu(){
 	this.init = function(data, thumbElem, thumbElem2) {
 		this.divCtxDebug = false;
 
-		var id = data.id;
+		this.id = data.id;
 		radialMenuScale = data.radialMenuScale;
 		radialMenuCenter = { x: 215 * radialMenuScale, y: 215 * radialMenuScale }; // overwritten in init - based on window size
 		this.radialMenuSize = data.radialMenuSize;
@@ -161,12 +161,12 @@ function RadialMenu(){
 
 		this.textHeaderHeight = 32  * radialMenuScale;
 
-		this.element = document.getElementById(id+"_menu"); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
+		this.element = document.getElementById(this.id+"_menu"); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
 
 		this.resrcPath = "images/radialMenu/";
 
-		this.menuID = id+"_menu";
+		this.menuID = this.id+"_menu";
 		this.currentMenuState = 'radialMenu';
 		this.currentRadialState = 'radialMenu';
 		this.radialMenuCenter = radialMenuCenter;
@@ -190,7 +190,7 @@ function RadialMenu(){
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
 
-		this.thumbnailWindowDiv = document.getElementById(id+"_menuDiv");
+		this.thumbnailWindowDiv = document.getElementById(this.id+"_menuDiv");
 		this.thumbnailWindowDiv.style.left   = (this.element.style.left+this.thumbnailWindowPosition.x).toString() + "px";
 		this.thumbnailWindowDiv.style.top    = (this.element.style.top+this.thumbnailWindowPosition.y).toString() + "px";
 
@@ -210,7 +210,7 @@ function RadialMenu(){
 		this.thumbnailScrollWindowElement.style.display = "block";
 
 		this.hoverOverText = "";
-		radialMenuList[id+"_menu"] = this;
+		radialMenuList[this.id+"_menu"] = this;
 
 		if (isMaster) {
 			this.wsio = wsio;
@@ -663,10 +663,10 @@ function RadialMenu(){
 			this.thumbScrollWindowctx.redraw = true;
 			this.updateThumbnailPositions();
 			this.draw();
-
-			if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: true } );
-
+			
+			if( this.sendsToServer === true ) {
+				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: true } );
+			}
 			return true;
 		} else {
 			this.currentMenuState = 'radialMenu';
@@ -674,9 +674,9 @@ function RadialMenu(){
 			this.element.height = this.radialMenuSize.y;
 			//this.thumbnailScrollWindowElement.style.display = "None";
 
-			if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: false } );
-
+			if( this.sendsToServer === true ) {
+				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: false } );
+			}
 			return false;
 		}
 	};

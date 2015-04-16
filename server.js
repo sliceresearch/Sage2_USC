@@ -5912,14 +5912,17 @@ function wsRemoveRadialMenu( wsio, data ) {
 }
 
 function wsRadialMenuThumbnailWindow( wsio, data ) {
-	var radialMenu = SAGE2Items.radialMenus.list[data.uniqueID+"_menu"];
+	var radialMenu = SAGE2Items.radialMenus.list[data.id+"_menu"];
+	
 	if( radialMenu !== undefined )
 	{
 		radialMenu.openThumbnailWindow( data );
 
-		interactMgr.editGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: radialMenu.left, y: radialMenu.top, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y});
+		interactMgr.editGeometry(data.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: radialMenu.left, y: radialMenu.top, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y});
 
-		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
+		interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
+		
+		console.log("server::wsRadialMenuThumbnailWindow():" + data.thumbnailWindowOpen);
 	}
 }
 
