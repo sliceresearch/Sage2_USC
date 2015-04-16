@@ -38,13 +38,22 @@ var evl_photos = SAGE2_App.extend( {
 		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
 		this.enableControls = true;
 
-		this.canvasBackground = "black"; // could move this into an external file
+		this.canvasBackground = "black";
 
 		this.canvasWidth  = 800;
 		this.canvasHeight = 600;
 
-		this.loadTimer = 200; // could move this into an external file - was 200
-		this.fadeCount = 10.0; // could move this into an external file
+		this.loadTimer = 200;
+		this.fadeCount = 10.0;
+
+		if (SAGE2_photoAlbumLoadTimer != null)
+			this.loadTimer = SAGE2_photoAlbumLoadTimer;
+
+		if (SAGE2_photoAlbumFadeCount != null)
+			this.fadeCount = SAGE2_photoAlbumFadeCount;
+
+		if (SAGE2_photoAlbumCanvasBackground != null)
+			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
 
 		this.URL1  = "";
 		this.URL1a = "";
@@ -412,8 +421,8 @@ var evl_photos = SAGE2_App.extend( {
 		// console.log(this.imageLoadFailedCallbackFunc);
 
 		this.svg.append("svg:rect")
-			.style("stroke", "black")
-			.style("fill", "black")
+			.style("stroke", this.canvasBackground)
+			.style("fill", this.canvasBackground)
 			.style("fill-opacity", 1.0)
 			.attr("x",  0)
 			.attr("y",  0)
