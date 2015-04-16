@@ -44,6 +44,10 @@ function RadialMenu(id, ptrID, ui) {
 	this.radialMenuSize      = { x: radialMenuDefaultSize.x * this.radialMenuScale, y: radialMenuDefaultSize.y * this.radialMenuScale };
 	this.thumbnailWindowSize = { x: thumbnailWindowDefaultSize.x * this.radialMenuScale, y: thumbnailWindowDefaultSize.y * this.radialMenuScale };
 	this.activeEventIDs      = [];
+	
+	this.dragState = false;
+	this.dragID = -1;
+	this.dragPosition = { x: 0, y: 0 };
 }
 
 /**
@@ -91,7 +95,7 @@ RadialMenu.prototype.setPosition = function(data) {
 	this.left = data.x;
 	this.top  = data.y;
 	
-	console.log("node-radialMenu:setPosition() " + data.x + " " + data.y);
+	//console.log("node-radialMenu:setPosition() " + data.x + " " + data.y);
 };
 
 /**
@@ -182,7 +186,7 @@ RadialMenu.prototype.onPress = function(id) {
 /**
 *
 *
-* @method onPress
+* @method onMove
 */
 RadialMenu.prototype.onMove = function(id) {
 	//console.log( this.hasEventID(id) );
@@ -191,10 +195,50 @@ RadialMenu.prototype.onMove = function(id) {
 /**
 *
 *
-* @method onPress
+* @method onRelease
 */
 RadialMenu.prototype.onRelease = function(id) {
 	this.activeEventIDs.splice(this.activeEventIDs.indexOf(id), 1);
+	
+	if( this.dragState === true && this.dragID === id ) {
+		this.dragState = false;
+	}
 };
+
+/**
+* Initializes the radial menu's drag state
+*
+* @method onStartDrag
+* @param id {Integer} input ID initiating the drag
+* @param localPos {x: Float, y: Float} initial drag position
+*/
+RadialMenu.prototype.onStartDrag = function(id, localPos) {
+	
+	if( this.dragState === false ) {
+		this.dragID = id;
+		this.dragState = true;
+		this.dragPosition = localPos;
+	}
+};
+
+/**
+* Checks if an input ID is dragging the menu
+*
+* @method isDragging
+* @param id {Integer} input ID
+* @param localPos {x: Float, y: Float} input position
+* @return dragPos {x: Float, y: Float}
+*/
+RadialMenu.prototype.getDragOffset = function(id, localPos) {
+	
+	var offset = {x: 0, y: 0 };
+	if( this.dragState === true && this.dragID === id ) {
+		// If this ID is dragging the menu, return the drag offset
+		offset = { x: localPos.x - this.dragPosition.x, y: localPos.y - this.dragPosition.y };
+	}
+	console.log(offset);
+	return offset;
+};
+
 
 module.exports = RadialMenu;

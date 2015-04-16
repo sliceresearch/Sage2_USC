@@ -621,12 +621,12 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	/**
-	* Show the radial menu
+	* Update the radial menu state (visibility, position)
 	*
-	* @method showRadialMenu
+	* @method updateRadialMenu
 	* @param data {Object} menu data
 	*/
-	this.showRadialMenu = function(data) {
+	this.updateRadialMenu = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 
 		if (menuElem !== null) {
@@ -647,7 +647,7 @@ function UIBuilder(json_cfg, clientID) {
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 			
-			console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
+			//console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)
 			this.createRadialMenu(data);
@@ -677,8 +677,6 @@ function UIBuilder(json_cfg, clientID) {
 					menu.thumbnailScrollWindowElement.style.display = "block";
 					menu.thumbnailWindowDiv.style.display = "block";
 
-					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
-
 					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true ) {
 						menu.draw();
 					}
@@ -696,10 +694,10 @@ function UIBuilder(json_cfg, clientID) {
 	/**
 	* Update the list of file in the menu
 	*
-	* @method updateRadialMenu
+	* @method updateRadialMenuDocs
 	* @param data {Object} data
 	*/
-	this.updateRadialMenu = function(data) {
+	this.updateRadialMenuDocs = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
