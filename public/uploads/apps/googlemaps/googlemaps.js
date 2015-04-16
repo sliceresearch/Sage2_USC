@@ -10,17 +10,6 @@
 
 /*global google */
 
-function addScript(url, callback) {
-	var script = document.createElement( 'script' );
-	if( callback ) script.onload = callback;
-	script.type = 'text/javascript';
-	script.src = url;
-	document.body.appendChild(script);
-}
-
-// need a global handler for the callback (i.e. scope pollution)
-var googlemaps_self;
-
 var googlemaps = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
@@ -58,10 +47,8 @@ var googlemaps = SAGE2_App.extend( {
 		// Create a callback function for traffic updates
 		this.trafficCB = this.reloadTiles.bind(this);
 
-		// need a global handler for the callback (i.e. scope pollution)
-		googlemaps_self = this;
-		// load google maps
-		//addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
+		// Create a callback func for checking if Google Maps API is loaded yet
+		this.checkIfMapsLoadedFunc = this.checkIfMapsLoaded.bind(this);
 
 
 		this.controls.addSlider({
@@ -136,6 +123,15 @@ var googlemaps = SAGE2_App.extend( {
 			this.state.zoomLevel = this.map.getZoom();
 		}.bind(this)});
 		this.controls.finishedAddingControls();
+	},
+
+	checkIfMapsLoaded: function() {
+		if (google === undefined || google.maps === undefined || google.maps.Map === undefined) {
+			setTimeout(this.checkIfMapsLoadedFunc, 40);
+		}
+		else {
+			this.initialize();
+		}
 	},
 
 	initialize: function() {
@@ -222,7 +218,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.state.center    = state.center;
 			this.state.layer     = state.layer;
 		}
-		this.initialize();
+		this.checkIfMapsLoaded();
 	},
 
 	draw: function(date) {

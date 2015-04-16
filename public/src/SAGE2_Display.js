@@ -1123,11 +1123,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	itemCount += 2;
 }
 
-
-function googlemapsInit() {
-	console.log("Google Maps API loaded");
-}
-
 function getTransform(elem) {
 	var transform = elem.style.transform;
 	var translate = {x: 0, y: 0};
