@@ -605,7 +605,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
-
+		
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -642,7 +642,7 @@ function UIBuilder(json_cfg, clientID) {
 			menu.thumbnailScrollWindowElement.style.display = "block";
 			menu.thumbnailWindowDiv.style.display = "block";
 
-			//menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
+			menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";

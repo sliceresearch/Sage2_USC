@@ -236,7 +236,6 @@ RadialMenu.prototype.getDragOffset = function(id, localPos) {
 		// If this ID is dragging the menu, return the drag offset
 		offset = { x: localPos.x - this.dragPosition.x, y: localPos.y - this.dragPosition.y };
 	}
-	console.log(offset);
 	return offset;
 };
 

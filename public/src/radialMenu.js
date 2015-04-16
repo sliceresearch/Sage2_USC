@@ -709,10 +709,6 @@ function RadialMenu(){
 
 			this.element.style.left    = (data.x - offset.x - dragOffset.x).toString() + "px";
 			this.element.style.top     = (data.y - offset.y - dragOffset.y).toString()  + "px";
-
-			if( this.sendsToServer === true ) {
-				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)+this.radialMenuSize.x/2, y: (data.y - dragOffset.y)+this.radialMenuSize.y/2, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
-			}
 		}
 
 		this.thumbnailWindowDiv.style.left   = (data.windowX + this.thumbnailWindowPosition.x - 18  * radialMenuScale).toString() + "px";

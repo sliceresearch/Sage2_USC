@@ -5788,7 +5788,7 @@ function createRadialMenu( uniqueID, pointerX, pointerY ) {
 		
 		setRadialMenuPosition(uniqueID, pointerX, pointerY);
 		
-		broadcast('showRadialMenu', existingRadialMenu.getInfo());
+		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
 	updateRadialMenu(uniqueID);
 }
@@ -5916,6 +5916,10 @@ function wsRadialMenuThumbnailWindow( wsio, data ) {
 	if( radialMenu !== undefined )
 	{
 		radialMenu.openThumbnailWindow( data );
+
+		interactMgr.editGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: radialMenu.left, y: radialMenu.top, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y});
+
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
 	}
 }
 
