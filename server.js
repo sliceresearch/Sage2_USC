@@ -518,6 +518,7 @@ function setupListeners(wsio) {
 	wsio.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
 	wsio.on('finishApplicationMove',                  wsFinishApplicationMove);
 	wsio.on('finishApplicationResize',                wsFinishApplicationResize);
+	wsio.on('deleteApplication',                      wsDeleteApplication);
 	wsio.on('updateApplicationState',                 wsUpdateApplicationState);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
@@ -2742,6 +2743,15 @@ function wsFinishApplicationResize(wsio, data) {
 			}
 		};
 		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
+	}
+}
+
+function wsDeleteApplication(wsio, data) {
+	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+		SAGE2Items.applications.removeItem(data.appId);
+		var im = findInteractableManager(data.appId);
+		im.removeGeometry(data.appId, "applications");
+		broadcast('deleteElement', {elemId: data.appId});
 	}
 }
 
@@ -5687,7 +5697,7 @@ function toggleApplicationFullscreen(uniqueID, app) {
 	}
 }
 
-function deleteApplication(appId) {
+function deleteApplication(appId, portalId) {
 	if (!SAGE2Items.applications.list.hasOwnProperty(appId)) return;
 
 	var application = SAGE2Items.applications.list[appId].application;
@@ -5705,6 +5715,11 @@ function deleteApplication(appId) {
 	var im = findInteractableManager(appId);
 	im.removeGeometry(appId, "applications");
 	broadcast('deleteElement', {elemId: appId});
+
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('deleteApplication', {appId: appId, date: ts});
+	}
 }
 
 /*
