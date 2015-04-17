@@ -216,9 +216,10 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLay
 	for (i=0; i<allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
-				if (this.interactableObjects[allLayerIds[i]][key].zIndex > currZIndex) {
-					if (this.interactableObjects[allLayerIds[i]][key].zIndex > maxZIndex) 
-						maxZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
+				var itemZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
+				if (itemZIndex > currZIndex) {
+					if (itemZIndex > maxZIndex) 
+						maxZIndex = itemZIndex;
 					this.interactableObjects[allLayerIds[i]][key].zIndex--;
 				}
 			}

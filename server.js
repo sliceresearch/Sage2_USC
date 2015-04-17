@@ -511,6 +511,7 @@ function setupListeners(wsio) {
 	wsio.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
+	wsio.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
 	wsio.on('startApplicationMove',                   wsStartApplicationMove);
 	wsio.on('startApplicationResize',                 wsStartApplicationResize);
 	wsio.on('updateApplicationPosition',              wsUpdateApplicationPosition);
@@ -2450,7 +2451,7 @@ function wsAcceptDataSharingSession(wsio, data) {
 	var sharingScale = (0.9*myMin) / Math.min(data.width, data.height);
 	console.log("Data-sharing request accepted: " + data.width + "x" + data.height + ", scale: " + sharingScale);
 	broadcast('closeDataSharingWaitDialog', null);
-	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, data.width, data.height, sharingScale, data.titleBarHeight, true);
+	createNewDataSharingSession(remoteSharingWaitDialog.name, remoteSharingWaitDialog.wsio.remoteAddress.address, remoteSharingWaitDialog.wsio.remoteAddress.port, remoteSharingWaitDialog.wsio, new Date(data.date), data.width, data.height, sharingScale, data.titleBarHeight, true);
 	remoteSharingWaitDialog = null;
 	showWaitDialog(false);
 }
@@ -2555,7 +2556,7 @@ function wsRemoteSagePointerToggleModes(wsio, data) {
 }
 
 function wsRemoteSagePointerHoverCorner(wsio, data) {
-	
+
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -2593,6 +2594,11 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 			handleNewApplicationInDataSharingPortal(appInstance, videohandle, remote.portal.id);
 		});
 	}
+}
+
+function wsUpdateApplicationOrder(wsio, data) {
+	// should check timestamp first
+	broadcast('updateItemOrder', data.order);
 }
 
 function wsStartApplicationMove(wsio, data) {
@@ -3288,30 +3294,32 @@ function createRemoteConnection(wsURL, element, index) {
 			removeElement(clients, remote);
 		});
 
-		remote.on('addClient', wsAddClient);
-		remote.on('addNewElementFromRemoteServer', wsAddNewElementFromRemoteServer);
-		remote.on('requestNextRemoteFrame', wsRequestNextRemoteFrame);
-		remote.on('updateRemoteMediaStreamFrame', wsUpdateRemoteMediaStreamFrame);
-		remote.on('stopMediaStream', wsStopMediaStream);
-		remote.on('requestNextRemoteBlockFrame', wsRequestNextRemoteBlockFrame);
-		remote.on('updateRemoteMediaBlockStreamFrame', wsUpdateRemoteMediaBlockStreamFrame);
-		remote.on('stopMediaBlockStream', wsStopMediaBlockStream);
-		remote.on('requestDataSharingSession', wsRequestDataSharingSession);
-		remote.on('cancelDataSharingSession', wsCancelDataSharingSession);
-		remote.on('acceptDataSharingSession', wsAcceptDataSharingSession);
-		remote.on('rejectDataSharingSession', wsRejectDataSharingSession);
-		remote.on('createRemoteSagePointer', wsCreateRemoteSagePointer);
-		remote.on('startRemoteSagePointer', wsStartRemoteSagePointer);
-		remote.on('stopRemoteSagePointer', wsStopRemoteSagePointer);
-		remote.on('remoteSagePointerPosition', wsRemoteSagePointerPosition);
-		//remote.on('remoteSagePointerPress', wsRemoteSagePointerPress);
-		//remote.on('remoteSagePointerRelease', wsRemoteSagePointerRelease);
-		//remote.on('remoteSageKeyDown', wsRemoteSageKeyDown);
-		//remote.on('remoteSageKeyUp', wsRemoteSageKeyUp);
-		//remote.on('remoteSageKeyPress', wsRemoteSageKeyPress);
-		//remote.on('remoteSagePointerToggleModes', wsRemoteSagePointerToggleModes);
+		remote.on('addClient',                              wsAddClient);
+		remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+		remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
+		remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
+		remote.on('stopMediaStream',                        wsStopMediaStream);
+		remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
+		remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
+		remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
+		remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
+		remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
+		remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
+		remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
+		remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
+		remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
+		remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
+		remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
+		//remote.on('remoteSagePointerPress',                 wsRemoteSagePointerPress);
+		//remote.on('remoteSagePointerRelease',               wsRemoteSagePointerRelease);
+		//remote.on('remoteSageKeyDown',                      wsRemoteSageKeyDown);
+		//remote.on('remoteSageKeyUp',                        wsRemoteSageKeyUp);
+		//remote.on('remoteSageKeyPress',                     wsRemoteSageKeyPress);
+		remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
+		remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
 
+		remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
 		remote.on('startApplicationMove',                   wsStartApplicationMove);
 		remote.on('startApplicationResize',                 wsStartApplicationResize);
 		remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
@@ -4017,8 +4025,8 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			var sharingSize = parseInt(0.45 * (sharingMin + myMin), 10);
 			var sharingScale = (0.9*myMin) / sharingSize;
 			var sharingTitleBarHeight = (remoteSharingRequestDialog.config.ui.titleBarHeight + config.ui.titleBarHeight) / 2;
-			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize, titleBarHeight: sharingTitleBarHeight});
-			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, sharingSize, sharingSize, sharingScale, sharingTitleBarHeight, false);
+			remoteSharingRequestDialog.wsio.emit('acceptDataSharingSession', {width: sharingSize, height: sharingSize, titleBarHeight: sharingTitleBarHeight, date: Date.now()});
+			createNewDataSharingSession(remoteSharingRequestDialog.config.name, remoteSharingRequestDialog.config.host, remoteSharingRequestDialog.config.port, remoteSharingRequestDialog.wsio, null, sharingSize, sharingSize, sharingScale, sharingTitleBarHeight, false);
 			remoteSharingRequestDialog = null;
 			showRequestDialog(false);
 			break;
@@ -4042,7 +4050,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 	}
 }
 
-function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
+function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime, sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
 	var dataSession = {
 		id: getUniqueDataSharingId(remoteHost, remotePort, caller),
@@ -4098,7 +4106,8 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 	for (key in sagePointers) {
 		remoteWSIO.emit('createRemoteSagePointer', {id: key, portal: {host: config.host, port: config.port}});
 	}
-	remoteSharingSessions[dataSession.id] = {portal: dataSession, wsio: remoteWSIO, appCount: 0};
+	var to = caller ? remoteTime.getTime() - Date.now() : 0;
+	remoteSharingSessions[dataSession.id] = {portal: dataSession, wsio: remoteWSIO, appCount: 0, timeOffset: to};
 
 }
 
@@ -4141,7 +4150,12 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	im.moveObjectToFront(obj.id, "applications", ["portals"]);
 	var newOrder = im.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
-	// TODO: if updating app in portal - send new order to remote site
+
+	var portal = findApplicationPortal(obj.data);
+	if (portal !== undefined && portal !== null) {
+		var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+		remoteSharingSessions[portal.id].wsio.emit('updateApplicationOrder', {order: newOrder, date: ts});
+	}
 
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
 
