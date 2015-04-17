@@ -73,16 +73,17 @@ function detectCookies(request) {
 
     var i = 0;
 
-    while(allCookies.indexOf(';') !== -1) {
+    if(allCookies != null) {
+	    while(allCookies.indexOf(';') !== -1) {
 
-		cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
-		cookieList[i] = cookieList[i].trim();
-		allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
+			cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
+			cookieList[i] = cookieList[i].trim();
+			allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
 
-		i++;
-    } //end while there is a ;
-    cookieList.push( allCookies.trim() );
-
+			i++;
+	    } //end while there is a ;
+	    cookieList.push( allCookies.trim() );
+	}
 
     return cookieList;
 }
