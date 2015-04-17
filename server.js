@@ -502,13 +502,22 @@ function setupListeners(wsio) {
 	wsio.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
 	wsio.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
 	wsio.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
-	wsio.on('remoteSagePointerPress',                 wsRemoteSagePointerPress);
-	wsio.on('remoteSagePointerRelease',               wsRemoteSagePointerRelease);
-	wsio.on('remoteSageKeyDown',                      wsRemoteSageKeyDown);
-	wsio.on('remoteSageKeyUp',                        wsRemoteSageKeyUp);
-	wsio.on('remoteSageKeyPress',                     wsRemoteSageKeyPress);
-	wsio.on('remoteSagePointerToggleModes',          wsRemoteSagePointerToggleModes);
+	//wsio.on('remoteSagePointerPress',                 wsRemoteSagePointerPress);
+	//wsio.on('remoteSagePointerRelease',               wsRemoteSagePointerRelease);
+	//wsio.on('remoteSageKeyDown',                      wsRemoteSageKeyDown);
+	//wsio.on('remoteSageKeyUp',                        wsRemoteSageKeyUp);
+	//wsio.on('remoteSageKeyPress',                     wsRemoteSageKeyPress);
+	wsio.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
+	wsio.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
 	wsio.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
+
+	wsio.on('startApplicationMove',                   wsStartApplicationMove);
+	wsio.on('startApplicationResize',                 wsStartApplicationResize);
+	wsio.on('updateApplicationPosition',              wsUpdateApplicationPosition);
+	wsio.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
+	wsio.on('finishApplicationMove',                  wsFinishApplicationMove);
+	wsio.on('finishApplicationResize',                wsFinishApplicationResize);
+	wsio.on('updateApplicationState',                 wsUpdateApplicationState);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
 	wsio.on('selectedControlId',                    wsSelectedControlId);
@@ -2486,10 +2495,12 @@ function wsRemoteSagePointerPosition(wsio, data) {
 	sagePointers[data.id].left = data.left;
 	sagePointers[data.id].top = data.top;
 
-	pointerMoveInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data)
+	broadcast('updateSagePointerPosition', sagePointers[data.id]);
+	//pointerMoveInDataSharingArea(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data)
 	//updatePointerPosition(data.id, data.left, data.top, data);
 }
 
+/*
 function wsRemoteSagePointerPress(wsio, data) {
 	if (sagePointers[data.id] === undefined) return;
 
@@ -2535,10 +2546,16 @@ function wsRemoteSageKeyPress(wsio, data) {
 
 	keyPressOnPortal(data.id, sagePointers[data.id].portal, {x: data.left, y: data.top}, data);
 }
+*/
 
 function wsRemoteSagePointerToggleModes(wsio, data) {
-	remoteInteraction[data.id].toggleModes();
+	//remoteInteraction[data.id].toggleModes();
+	remoteInteraction[data.id].interactionMode = data.mode;
 	broadcast('changeSagePointerMode', {id: sagePointers[data.id].id, mode: remoteInteraction[data.id].interactionMode});
+}
+
+function wsRemoteSagePointerHoverCorner(wsio, data) {
+	
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -2577,6 +2594,35 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 		});
 	}
 }
+
+function wsStartApplicationMove(wsio, data) {
+
+}
+
+function wsStartApplicationResize(wsio, data) {
+
+}
+
+function wsUpdateApplicationPosition(wsio, data) {
+
+}
+
+function wsUpdateApplicationPositionAndSize(wsio, data) {
+	
+}
+
+function wsFinishApplicationMove(wsio, data) {
+	
+}
+
+function wsFinishApplicationResize(wsio, data) {
+	
+}
+
+function wsUpdateApplicationState(wsio, data) {
+	
+}
+
 
 // **************  Widget Control Messages *****************
 
@@ -3258,13 +3304,21 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('startRemoteSagePointer', wsStartRemoteSagePointer);
 		remote.on('stopRemoteSagePointer', wsStopRemoteSagePointer);
 		remote.on('remoteSagePointerPosition', wsRemoteSagePointerPosition);
-		remote.on('remoteSagePointerPress', wsRemoteSagePointerPress);
-		remote.on('remoteSagePointerRelease', wsRemoteSagePointerRelease);
-		remote.on('remoteSageKeyDown', wsRemoteSageKeyDown);
-		remote.on('remoteSageKeyUp', wsRemoteSageKeyUp);
-		remote.on('remoteSageKeyPress', wsRemoteSageKeyPress);
-		remote.on('remoteSagePointerToggleModes', wsRemoteSagePointerToggleModes);
+		//remote.on('remoteSagePointerPress', wsRemoteSagePointerPress);
+		//remote.on('remoteSagePointerRelease', wsRemoteSagePointerRelease);
+		//remote.on('remoteSageKeyDown', wsRemoteSageKeyDown);
+		//remote.on('remoteSageKeyUp', wsRemoteSageKeyUp);
+		//remote.on('remoteSageKeyPress', wsRemoteSageKeyPress);
+		//remote.on('remoteSagePointerToggleModes', wsRemoteSagePointerToggleModes);
 		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
+
+		remote.on('startApplicationMove',                   wsStartApplicationMove);
+		remote.on('startApplicationResize',                 wsStartApplicationResize);
+		remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
+		remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
+		remote.on('finishApplicationMove',                  wsFinishApplicationMove);
+		remote.on('finishApplicationResize',                wsFinishApplicationResize);
+		remote.on('updateApplicationState',                 wsUpdateApplicationState);
 
 		remote.emit('addClient', clientDescription);
 		remoteSites[index].connected = true;
@@ -4087,6 +4141,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	im.moveObjectToFront(obj.id, "applications", ["portals"]);
 	var newOrder = im.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
+	// TODO: if updating app in portal - send new order to remote site
 
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
 
@@ -4194,6 +4249,7 @@ function pointerPressInDataSharingArea(uniqueID, portalId, scaledPt, data) {
 function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectMoveItem(app, pointerX, pointerY);
 	broadcast('startMove', {id: app.id, date: Date.now()});
+	// TODO: if moving app in portal - send start move to remote site
 
 	var eLogData = {
 		type: "move",
@@ -4215,6 +4271,7 @@ function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
 function selectApplicationForResize(uniqueID, app, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectResizeItem(app, pointerX, pointerY);
 	broadcast('startResize', {id: app.id, date: Date.now()});
+	// TODO: if resizing app in portal - send start resize to remote site
 
 	var eLogData = {
 		type: "resize",
@@ -4441,11 +4498,14 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 				if(remoteInteraction[uniqueID].hoverCornerItem === null) {
 					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+					// TODO: if app in portal - send hover corner to remote site
 				}
 				else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
 					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+					// TODO: if app in portal - send hover corner to remote site
 					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+					// TODO: if app in portal - send hover corner to remote site
 				}
 			}
 			else if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -4515,6 +4575,7 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 				}
 				else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
 					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+					// TODO: if app in portal - send hover corner to remote site
 					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
 				}
@@ -4558,6 +4619,7 @@ function removeExistingHoverCorner(uniqueID) {
 	// remove hover corner if exists
 	if(remoteInteraction[uniqueID].hoverCornerItem !== null){
 		broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+		// TODO: if app in portal - send hover corner to remote site
 		remoteInteraction[uniqueID].setHoverCornerItem(null);
 	}
 }
@@ -5330,29 +5392,27 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		modeSwitch = true;
 	}
 
-	if (remoteInteraction[uniqueID].appInteractionMode()) {
-		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
-		if (obj === null) {
-			return;
-		}
+	if (obj === null) {
+		return;
+	}
 
-		var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-		switch (obj.layerId) {
-			case "staticUI":
-				break;
-			case "radialMenus":
-				break;
-			case "widgets":
-				break;
-			case "applications":
-				if (modeSwitch === false) sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
-				break;
-			case "portals":
-				if (modeSwitch === true) remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerToggleModes', {id: uniqueID, mode: remoteInteraction[uniqueID].interactionMode});
-				else                     keyPressOnPortal(uniqueID, obj.data.id, localPt, data)
-				break;
-		}
+	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+	switch (obj.layerId) {
+		case "staticUI":
+			break;
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			if (modeSwitch === false && remoteInteraction[uniqueID].appInteractionMode()) sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
+			break;
+		case "portals":
+			if (modeSwitch === true)                                   remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerToggleModes', {id: uniqueID, mode: remoteInteraction[uniqueID].interactionMode});
+			else if (remoteInteraction[uniqueID].appInteractionMode()) keyPressOnPortal(uniqueID, obj.data.id, localPt, data);
+			break;
 	}
 }
 
