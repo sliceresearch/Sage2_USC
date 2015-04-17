@@ -22,6 +22,7 @@ var googlemaps = SAGE2_App.extend( {
 		this.scrollAmount = null;
 		this.trafficTimer = null;
 		this.trafficCB    = null;
+		this.firstLoad    = true;
 
 	},
 
@@ -135,6 +136,8 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	initialize: function() {
+		this.firstLoad = false;
+
 		if (this.state.mapType == null)
 			this.state.mapType = google.maps.MapTypeId.HYBRID;
 		if (this.state.zoomLevel == null)
@@ -211,6 +214,40 @@ var googlemaps = SAGE2_App.extend( {
 			this.weatherLayer.setMap(null);
 	},
 
+	updateMapFromState: function() {
+		var city = new google.maps.LatLng(this.state.center.lat, this.state.center.lng);
+		var mapOptions = {
+			center: city,
+			zoom: this.state.zoomLevel,
+			mapTypeId: this.state.mapType,
+			disableDefaultUI: true,
+			zoomControl: false,
+			scaleControl: false,
+			scrollwheel: false
+		};
+		this.map.setOptions(mapOptions);
+
+		// weather layer
+		if (this.state.layer.w === true)
+			this.weatherLayer.setMap(this.map);
+		else
+			this.weatherLayer.setMap(null);
+
+		// traffic layer
+		if (this.state.layer.t === true) {
+			this.trafficLayer.setMap(this.map);
+			// add a timer updating the traffic tiles: 60sec
+			this.trafficTimer = setInterval(this.trafficCB, 60*1000);
+		}
+		else {
+			this.trafficLayer.setMap(null);
+			// remove the timer updating the traffic tiles
+			clearInterval(this.trafficTimer);
+		}
+
+		this.updateLayers();
+	},
+
 	load: function(state, date) {
 		if (state) {
 			this.state.mapType   = state.mapType;
@@ -218,7 +255,8 @@ var googlemaps = SAGE2_App.extend( {
 			this.state.center    = state.center;
 			this.state.layer     = state.layer;
 		}
-		this.checkIfMapsLoaded();
+		if (this.firstLoad) this.checkIfMapsLoaded();
+		else                this.updateMapFromState();
 	},
 
 	draw: function(date) {

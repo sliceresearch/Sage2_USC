@@ -5345,15 +5345,17 @@ function pointerScrollEnd(uniqueID) {
 	else {
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
 			var app = remoteInteraction[uniqueID].selectWheelItem;
-			var eLogData = {
-				type: "pointerScroll",
-				application: {
-					id: app.id,
-					type: app.application
-				},
-				wheelDelta: remoteInteraction[uniqueID].selectWheelDelta
-			};
-			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+			if (app !== undefined && app !== null) {
+				var eLogData = {
+					type: "pointerScroll",
+					application: {
+						id: app.id,
+						type: app.application
+					},
+					wheelDelta: remoteInteraction[uniqueID].selectWheelDelta
+				};
+				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+			}
 		}
 	}
 }
