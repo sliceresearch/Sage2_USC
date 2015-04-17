@@ -2556,7 +2556,9 @@ function wsRemoteSagePointerToggleModes(wsio, data) {
 }
 
 function wsRemoteSagePointerHoverCorner(wsio, data) {
-
+	if (SAGE2Items.portals.list.hasOwnProperty(data.portalId)) {
+		broadcast('hoverOverItemCorner', data.appHoverCorner);
+	}
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -2579,8 +2581,6 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 			appInstance.top = data.top;
 			appInstance.width = data.width;
 			appInstance.height = data.height;
-
-			console.log("created new app:", appInstance);
 			
 			remoteSharingSessions[remote.portal.id].appCount++;
 			
@@ -4550,7 +4550,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			}
 			break;
 		case "applications":
-			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
+			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			if (remoteInteraction[uniqueID].portal !== null) {
 				remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('stopRemoteSagePointer', {id: uniqueID});
 				remoteInteraction[uniqueID].portal = null;
@@ -4562,12 +4562,12 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	}
 }
 
-function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
+function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
 
 	// pointer move on app window
 	if (btn === null) {
-		removeExistingHoverCorner(uniqueID);
+		removeExistingHoverCorner(uniqueID, portalId);
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
 			sendPointerMoveToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 		}
@@ -4576,21 +4576,30 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 
 	switch (btn.id) {
 		case "titleBar":
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, portalId);
 			break;
 		case "dragCorner":
 			if (remoteInteraction[uniqueID].windowManagementMode()) {
 				if(remoteInteraction[uniqueID].hoverCornerItem === null) {
 					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-					// TODO: if app in portal - send hover corner to remote site
+					if (portalId !== undefined && portalId !== null) {
+						var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner', {appHoverCorner: {elemId: obj.data.id, flag: true}, portalId: portalId, date: ts});
+					}
 				}
 				else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
 					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
-					// TODO: if app in portal - send hover corner to remote site
+					if (portalId !== undefined && portalId !== null) {
+						var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner', {appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, portalId: portalId, date: ts});
+					}
 					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-					// TODO: if app in portal - send hover corner to remote site
+					if (portalId !== undefined && portalId !== null) {
+						var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner', {appHoverCorner: {elemId: obj.data.id, flag: true}, portalId: portalId, date: ts});
+					}
 				}
 			}
 			else if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -4598,10 +4607,10 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			}
 			break;
 		case "fullscreenButton":
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, portalId);
 			break;
 		case "closeButton":
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, portalId);
 			break;
 	}
 }
@@ -4609,40 +4618,39 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
 
-	if (remoteInteraction[uniqueID].local) {
-		if (remoteInteraction[uniqueID].portal === null || remoteInteraction[uniqueID].portal.id != obj.data.id) {
-			remoteInteraction[uniqueID].portal = obj.data;
-			var rPointer = {
-				id: uniqueID,
-				left: scaledPt.x,
-				top: scaledPt.y,
-				label: sagePointers[uniqueID].label,
-				color: sagePointers[uniqueID].color
-			};
-			remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('startRemoteSagePointer', rPointer);
-		}
-		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+	if (remoteInteraction[uniqueID].portal === null || remoteInteraction[uniqueID].portal.id !== obj.data.id) {
+		remoteInteraction[uniqueID].portal = obj.data;
+		var rPointer = {
+			id: uniqueID,
+			left: scaledPt.x,
+			top: scaledPt.y,
+			label: sagePointers[uniqueID].label,
+			color: sagePointers[uniqueID].color
+		};
+		remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('startRemoteSagePointer', rPointer);
 	}
+	remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
+
 	var btn = SAGE2Items.portals.findButtonByPoint(obj.id, localPt);
 
 	// pointer move on portal window
 	if (btn === null) {
 		var pObj = SAGE2Items.portals.interactMgr[obj.data.id].searchGeometry(scaledPt);
 		if (pObj === null) {
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, obj.data.id);
 			return;
 		}
 
 		var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
 		switch (pObj.layerId) {
 			case "radialMenus":
-				removeExistingHoverCorner(uniqueID);
+				removeExistingHoverCorner(uniqueID, obj.data.id);
 				break;
 			case "widgets":
-				removeExistingHoverCorner(uniqueID);
+				removeExistingHoverCorner(uniqueID, obj.data.id);
 				break;
 			case "applications":
-				pointerMoveOnApplication(uniqueID, scaledPt.x, scaledPt.y, data, pObj, pLocalPt)
+				pointerMoveOnApplication(uniqueID, scaledPt.x, scaledPt.y, data, pObj, pLocalPt, obj.data.id)
 				break;
 		}
 		return;
@@ -4650,7 +4658,7 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 
 	switch (btn.id) {
 		case "titleBar":
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
 		case "dragCorner":
 			if (remoteInteraction[uniqueID].windowManagementMode()) {
@@ -4660,7 +4668,8 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 				}
 				else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
 					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
-					// TODO: if app in portal - send hover corner to remote site
+					var ts = Date.now() + remoteSharingSessions[obj.data.id].timeOffset;
+					remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerHoverCorner', {appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, portalId: obj.data.id, date: ts});
 					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
 				}
@@ -4670,10 +4679,10 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 			}
 			break;
 		case "fullscreenButton":
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
 		case "closeButton":
-			removeExistingHoverCorner(uniqueID);
+			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
 	}
 }
@@ -4700,11 +4709,14 @@ function pointerMoveInDataSharingArea(uniqueID, portalId, scaledPt, data) {
 	pointerMoveOnDataSharingPortal(uniqueID, scaledPt.x, scaledPt.y, data, obj, {x: scaledPt.x*obj.data.scale, y: scaledPt.y*obj.data.scale+config.ui.titleBarHeight});
 }
 
-function removeExistingHoverCorner(uniqueID) {
+function removeExistingHoverCorner(uniqueID, portalId) {
 	// remove hover corner if exists
 	if(remoteInteraction[uniqueID].hoverCornerItem !== null){
 		broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
-		// TODO: if app in portal - send hover corner to remote site
+		if (portalId !== undefined && portalId !== null) {
+			var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+			remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner', {appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, portalId: portalId, date: ts});
+		}
 		remoteInteraction[uniqueID].setHoverCornerItem(null);
 	}
 }
