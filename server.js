@@ -2782,8 +2782,7 @@ function wsUpdateApplicationState(wsio, data) {
 			if (app.application === "movie_player") {
 				SAGE2Items.renderSync[app.id].loop = app.data.looped;
 				var ts = app.data.frame / app.data.framerate;
-				// seek if more than 1 sec off
-				if(Math.abs(ts - oldTs) > 1.0 || (app.data.paused === true && ts !== oldTs)) {
+				if(app.data.paused === true && ts !== oldTs) {
 					SAGE2Items.renderSync[app.id].decoder.seek(ts, function() {
 						if(app.data.paused === false) {
 							SAGE2Items.renderSync[app.id].decoder.play();
