@@ -2767,8 +2767,49 @@ function wsUpdateApplicationState(wsio, data) {
 	// should check timestamp first (data.date)
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
+		
+		// hang on to old values if movie player
+		var oldTs;
+		var oldPaused;
+		if (app.application === "movie_player") {
+			oldTs = app.data.frame / app.data.framerate;
+			oldPaused = app.data.paused;
+		}
+
 		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 		if (modified === true) {
+			// update video demuxer based on state
+			if (app.application === "movie_player") {
+				SAGE2Items.renderSync[app.id].loop = app.data.looped;
+				var ts = app.data.frame / app.data.framerate;
+				// seek if more than 1 sec off
+				if(Math.abs(ts - oldTs) > 1.0 || (app.data.paused === true && ts !== oldTs)) {
+					SAGE2Items.renderSync[app.id].decoder.seek(ts, function() {
+						if(app.data.paused === false) {
+							SAGE2Items.renderSync[app.id].decoder.play();
+						}
+					});
+					broadcast('updateVideoItemTime', {id: app.id, timestamp: ts, play: false});
+				}
+				else {
+					if (app.data.paused === true && oldPaused === false) {
+						SAGE2Items.renderSync[app.id].decoder.pause(function() {
+							broadcast('videoPaused', {id: app.id});
+						});
+					}
+					if (app.data.paused === false && oldPaused === true) {
+						SAGE2Items.renderSync[app.id].decoder.play();
+					}
+				}
+				if(app.data.muted === true) {
+					broadcast('videoMuted', {id: app.id});
+				}
+				else {
+					broadcast('videoUnmuted', {id: app.id});
+				}
+			}
+
+			// for all apps - send new state to app
 			broadcast('loadApplicationState', {id: app.id, state: app.data, date: Date.now()});
 		}
 	}

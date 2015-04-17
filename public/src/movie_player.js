@@ -27,6 +27,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 	*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
+		this.firstLoad = true;
 	},
 
 	/**
@@ -46,6 +47,8 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 	* @method initWidgets
 	*/
 	initWidgets: function() {
+		this.firstLoad = false;
+
 		var _this = this;
 
 		this.loopBtn = this.controls.addButton({
@@ -177,8 +180,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 	* @param date {Date} time from the server
 	*/
 	load: function(state, date) {
-		arguments.callee.superClass.load.call(this, state, date);
-
 		this.state.width                = state.width;
 		this.state.height               = state.height;
 		this.state.video_url            = state.video_url;
@@ -193,7 +194,10 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		this.state.muted                = state.muted;
 		this.state.looped               = state.looped;
 
-		this.initWidgets();
+		if (this.firstLoad) {
+			arguments.callee.superClass.load.call(this, state, date);
+			this.initWidgets();
+		}
 	},
 
 	/**

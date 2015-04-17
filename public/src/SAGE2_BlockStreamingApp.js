@@ -232,7 +232,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method initBuffers
 	*/
 	initBuffers: function() {
-		this.log(this.state);
 		for (var i=0; i<this.verticalBlocks; i++) {
 			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
