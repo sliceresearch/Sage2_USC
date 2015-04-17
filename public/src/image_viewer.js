@@ -94,6 +94,7 @@ var image_viewer = SAGE2_App.extend( {
 			} else {
 				this.state.crct = true;
 			}
+			this.addWidgetControlsToImageViewer();
 		}
 	},
 
@@ -173,5 +174,20 @@ var image_viewer = SAGE2_App.extend( {
 			if (this.top < (-(this.layer.clientHeight-this.element.height))) this.top = -(this.layer.clientHeight-this.element.height);
 			this.layer.style.top = this.top + "px";
 		}
+	},
+	addWidgetControlsToImageViewer: function(){
+		// UI stuff
+		var infoLabel = { "textual":true, "label":"info", "fill":"rgba(250,250,250,1.0)", "animation":false};
+		this.controls.addButton({type:infoLabel, sequenceNo:1, action:function(date){
+			if (this.isLayerHidden()) {
+				this.top = 0;
+				this.showLayer();
+			}
+			else {
+				this.hideLayer();
+			}
+		}.bind(this)});
+		this.controls.finishedAddingControls();
 	}
+
 });
