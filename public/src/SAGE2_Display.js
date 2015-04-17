@@ -276,6 +276,13 @@ function setupListeners() {
 		resetIdle();
     });
 
+	wsio.on('loadApplicationState', function(data) {
+		var app = applications[data.id];
+		if (app !== undefined && app !== null){
+			app.load(data.state, new Date(data.date));
+		}
+	});
+
 	wsio.on('updateMediaStreamFrame', function(data) {
 		wsio.emit('receivedMediaStreamFrame', {id: data.id});
 

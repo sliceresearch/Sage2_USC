@@ -84,7 +84,9 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	*/
 	load: function(state, date) {
 		// load new document
-		if (state.doc_url !== undefined && state.doc_url !== null) {
+		console.log("new:", state);
+		console.log("old:", this.state);
+		if (state.doc_url !== undefined && state.doc_url !== null && state.doc_url !== this.state.doc_url) {
 			var _this = this;
 			this.loaded = false;
 

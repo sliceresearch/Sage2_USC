@@ -1357,7 +1357,15 @@ function wsUpdateAppState(wsio, data) {
 	// Using updates only from master
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
-		app.data = data.state;
+		
+		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		if (modified === true) {
+			var portal = findApplicationPortal(app);
+			if (portal !== undefined && portal !== null) {
+				var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', data);
+			}
+		}
 	}
 }
 
@@ -2757,6 +2765,13 @@ function wsDeleteApplication(wsio, data) {
 
 function wsUpdateApplicationState(wsio, data) {
 	// should check timestamp first (data.date)
+	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var app = SAGE2Items.applications.list[data.id];
+		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		if (modified === true) {
+			broadcast('loadApplicationState', {id: app.id, state: app.data, date: Date.now()});
+		}
+	}
 }
 
 
@@ -3456,6 +3471,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
 		remote.on('finishApplicationMove',                  wsFinishApplicationMove);
 		remote.on('finishApplicationResize',                wsFinishApplicationResize);
+		remote.on('deleteApplication',                      wsDeleteApplication);
 		remote.on('updateApplicationState',                 wsUpdateApplicationState);
 
 		remote.emit('addClient', clientDescription);
@@ -3996,16 +4012,19 @@ function byteBufferToString(buf) {
 
 function mergeObjects(a, b, ignore) {
 	var ig = ignore || [];
+	var modified = false;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
 			if(typeof b[key] === "object" && typeof a[key] === "object") {
-				mergeObjects(a[key], b[key]);
+				modified = modified || mergeObjects(a[key], b[key]);
 			}
-			else if( (b[key] === null || typeof b[key] !== "object") && (a[key] === null || typeof a[key] !== "object") ) {
+			else if((b[key] === null || typeof b[key] !== "object") && (a[key] === null || typeof a[key] !== "object") && (a[key] !== b[key])) {
 				b[key] = a[key];
+				modified = true;
 			}
 		}
 	}
+	return modified;
 }
 
 function addEventToUserLog(id, data) {
@@ -5716,6 +5735,7 @@ function deleteApplication(appId, portalId) {
 	im.removeGeometry(appId, "applications");
 	broadcast('deleteElement', {elemId: appId});
 
+	console.log(portalId);
 	if (portalId !== undefined && portalId !== null) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('deleteApplication', {appId: appId, date: ts});
@@ -6696,7 +6716,6 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 }
 
 function handleApplicationResize(appId) {
-	console.log("handle app resize:", SAGE2Items.applications.list[appId]);
 	if (SAGE2Items.applications.list[appId] === undefined) return;
 
 	var app = SAGE2Items.applications.list[appId];
