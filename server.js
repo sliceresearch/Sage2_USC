@@ -2597,36 +2597,101 @@ function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
 }
 
 function wsUpdateApplicationOrder(wsio, data) {
-	// should check timestamp first
+	// should check timestamp first (data.date)
 	broadcast('updateItemOrder', data.order);
 }
 
 function wsStartApplicationMove(wsio, data) {
+	// should check timestamp first (data.date)
+	broadcast('startMove', {id: data.appId, date: Date.now()});
 
+	var app = SAGE2Items.applications.list[data.appId];
+	if (app !== undefined && app !== null) {
+		var eLogData = {
+			type: "move",
+			action: "start",
+			application: {
+				id: app.id,
+				type: app.application
+			},
+			location: {
+				x: parseInt(app.left, 10),
+				y: parseInt(app.top, 10),
+				width: parseInt(app.width, 10),
+				height: parseInt(app.height, 10)
+			}
+		};
+		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
+	}
 }
 
 function wsStartApplicationResize(wsio, data) {
+	// should check timestamp first (data.date)
+	broadcast('startResize', {id: data.appId, date: Date.now()});
 
+	var app = SAGE2Items.applications.list[data.appId];
+	if (app !== undefined && app !== null) {
+		var eLogData = {
+			type: "resize",
+			action: "start",
+			application: {
+				id: app.id,
+				type: app.application
+			},
+			location: {
+				x: parseInt(app.left, 10),
+				y: parseInt(app.top, 10),
+				width: parseInt(app.width, 10),
+				height: parseInt(app.height, 10)
+			}
+		};
+		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
+	}
 }
 
 function wsUpdateApplicationPosition(wsio, data) {
+	// should check timestamp first (data.date)
+	var app = SAGE2Items.applications.list[data.appPositionAndSize.elemId];
 
+	var titleBarHeight = remoteSharingSessions[data.portalId].portal.titleBarHeight;
+	var im = findInteractableManager(data.appPositionAndSize.elemId);
+	im.editGeometry(data.appPositionAndSize.elemId, "applications", "rectangle", {x: data.appPositionAndSize.elemLeft, y: data.appPositionAndSize.elemTop, w: data.appPositionAndSize.elemWidth, h: data.appPositionAndSize.elemHeight+titleBarHeight});
+	broadcast('setItemPosition', data.appPositionAndSize);
+	if (SAGE2Items.renderSync.hasOwnProperty(data.appPositionAndSize.elemId)) {
+		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
+		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
+			handleNewVideoFrame(app.id);
+		}
+	}
 }
 
 function wsUpdateApplicationPositionAndSize(wsio, data) {
-	
+	// should check timestamp first (data.date)
+	var app = SAGE2Items.applications.list[data.appPositionAndSize.elemId];
+
+	var titleBarHeight = remoteSharingSessions[data.portalId].portal.titleBarHeight;
+	var im = findInteractableManager(data.appPositionAndSize.elemId);
+	im.editGeometry(data.appPositionAndSize.elemId, "applications", "rectangle", {x: data.appPositionAndSize.elemLeft, y: data.appPositionAndSize.elemTop, w: data.appPositionAndSize.elemWidth, h: data.appPositionAndSize.elemHeight+titleBarHeight});
+	handleApplicationResize(data.appPositionAndSize.elemId);
+	broadcast('setItemPositionAndSize', data.appPositionAndSize);
+	if (SAGE2Items.renderSync.hasOwnProperty(data.appPositionAndSize.elemId)) {
+		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
+		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
+			handleNewVideoFrame(app.id);
+		}
+	}
 }
 
 function wsFinishApplicationMove(wsio, data) {
-	
+	// should check timestamp first (data.date)
 }
 
 function wsFinishApplicationResize(wsio, data) {
-	
+	// should check timestamp first (data.date)
 }
 
 function wsUpdateApplicationState(wsio, data) {
-	
+	// should check timestamp first (data.date)
 }
 
 
@@ -3998,7 +4063,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			pointerPressOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 		case "applications":
-			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
+			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			break;
 		case "portals":
 			pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt);
@@ -4145,16 +4210,15 @@ function pointerPressOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt) 
 
 }
 
-function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt) {
+function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
 	var im = findInteractableManager(obj.data.id);
 	im.moveObjectToFront(obj.id, "applications", ["portals"]);
 	var newOrder = im.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
 
-	var portal = findApplicationPortal(obj.data);
-	if (portal !== undefined && portal !== null) {
-		var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
-		remoteSharingSessions[portal.id].wsio.emit('updateApplicationOrder', {order: newOrder, date: ts});
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('updateApplicationOrder', {order: newOrder, date: ts});
 	}
 
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
@@ -4163,7 +4227,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	if (btn === null) {
 		if (remoteInteraction[uniqueID].windowManagementMode()) {
 			if (data.button === "left") {
-				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 			}
 		}
 		else if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -4174,26 +4238,27 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	switch (btn.id) {
 		case "titleBar":
-			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
+			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "dragCorner":
 			if (remoteInteraction[uniqueID].windowManagementMode()) {
-				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY);
+				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			}
 			else if (remoteInteraction[uniqueID].appInteractionMode()) {
 				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 			}
 			break;
 		case "fullscreenButton":
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, portalId);
 			break;
 		case "closeButton":
-			deleteApplication(obj.data.id);
+			deleteApplication(obj.data.id, portalId);
 			break;
 	}
 }
 
 function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	/*
 	var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
 	if (remoteInteraction[uniqueID].local && remoteInteraction[uniqueID].portal !== null) {
 		var rData = {
@@ -4204,6 +4269,7 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 		};
 		remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPress', rData);
 	}
+	*/
 
 	interactMgr.moveObjectToFront(obj.id, "portals", ["applications"]);
 	var newOrder = interactMgr.getObjectZIndexList("portals", ["applications"]);
@@ -4213,6 +4279,7 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 
 	// pointer press inside portal window
 	if (btn === null) {
+		var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
 		pointerPressInDataSharingArea(uniqueID, obj.data.id, scaledPt, data);
 		return;
 	}
@@ -4254,16 +4321,20 @@ function pointerPressInDataSharingArea(uniqueID, portalId, scaledPt, data) {
 			//pointerPressOnWidget(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
 			break;
 		case "applications":
-			pointerPressOnApplication(uniqueID, scaledPt.x, scaledPt.y, data, pObj, pLocalPt);
+			pointerPressOnApplication(uniqueID, scaledPt.x, scaledPt.y, data, pObj, pLocalPt, portalId);
 			break;
 	}
 	return;
 }
 
-function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
+function selectApplicationForMove(uniqueID, app, pointerX, pointerY, portalId) {
 	remoteInteraction[uniqueID].selectMoveItem(app, pointerX, pointerY);
 	broadcast('startMove', {id: app.id, date: Date.now()});
-	// TODO: if moving app in portal - send start move to remote site
+
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('startApplicationMove', {id: uniqueID, appId: app.id, date: ts});
+	}
 
 	var eLogData = {
 		type: "move",
@@ -4282,10 +4353,14 @@ function selectApplicationForMove(uniqueID, app, pointerX, pointerY) {
 	addEventToUserLog(uniqueID, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
-function selectApplicationForResize(uniqueID, app, pointerX, pointerY) {
+function selectApplicationForResize(uniqueID, app, pointerX, pointerY, portalId) {
 	remoteInteraction[uniqueID].selectResizeItem(app, pointerX, pointerY);
 	broadcast('startResize', {id: app.id, date: Date.now()});
-	// TODO: if resizing app in portal - send start resize to remote site
+
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('startApplicationResize', {id: uniqueID, appId: app.id, date: ts});
+	}
 
 	var eLogData = {
 		type: "resize",
@@ -4337,7 +4412,7 @@ function selectPortalForMove(uniqueID, portal, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectMoveItem(portal, pointerX, pointerY);
 
 	var eLogData = {
-		type: "resize",
+		type: "move",
 		action: "start",
 		portal: {
 			id: portal.id,
@@ -4359,7 +4434,7 @@ function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectResizeItem(portal, pointerX, pointerY);
 
 	var eLogData = {
-		type: "move",
+		type: "resize",
 		action: "start",
 		portal: {
 			id: portal.id,
@@ -4409,21 +4484,17 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if(moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / moveAppPortal.data.scale};
-		if (remoteInteraction[uniqueID].local) {
-			remoteSharingSessions[moveAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
-		}
+		remoteSharingSessions[moveAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
 		updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(scaledPt.x, scaledPt.y);
-		moveApplicationWindow(updatedMoveItem);
+		moveApplicationWindow(updatedMoveItem, moveAppPortal.id);
 		return;
 	}
 	else if(resizeAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, resizeAppPortal.type, resizeAppPortal.geometry);
 		scaledPt = {x: localPt.x / resizeAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / resizeAppPortal.data.scale};
-		if (remoteInteraction[uniqueID].local) {
-			remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
-		}
+		remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
 		updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(scaledPt.x, scaledPt.y);
-		moveAndResizeApplicationWindow(updatedResizeItem);
+		moveAndResizeApplicationWindow(updatedResizeItem, resizeAppPortal.id);
 		return;
 	}
 
@@ -4435,14 +4506,14 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedMoveItem.elemId))
 			moveDataSharingPortalWindow(updatedMoveItem);
 		else
-			moveApplicationWindow(updatedMoveItem);
+			moveApplicationWindow(updatedMoveItem, null);
 		return;
 	}
 	else if(updatedResizeItem !== null) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedResizeItem.elemId))
 			moveAndResizeDataSharingPortalWindow(updatedResizeItem);
 		else
-			moveAndResizeApplicationWindow(updatedResizeItem);
+			moveAndResizeApplicationWindow(updatedResizeItem, null);
 		return;
     }
 
@@ -4638,12 +4709,12 @@ function removeExistingHoverCorner(uniqueID) {
 	}
 }
 
-function moveApplicationWindow(moveApp) {
+function moveApplicationWindow(moveApp, portalId) {
 	var app = SAGE2Items.applications.list[moveApp.elemId];
-	var portal = findApplicationPortal(app);
+
 	var titleBarHeight = config.ui.titleBarHeight;
-	if (portal !== undefined && portal !== null) {
-		titleBarHeight = portal.data.titleBarHeight;
+	if (portalId !== undefined && portalId !== null) {
+		remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(moveApp.elemId);
 	im.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+titleBarHeight});
@@ -4654,14 +4725,19 @@ function moveApplicationWindow(moveApp) {
 			handleNewVideoFrame(app.id);
 		}
 	}
+
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('updateApplicationPosition', {appPositionAndSize: moveApp, portalId: portalId, date: ts});
+	}
 }
 
-function moveAndResizeApplicationWindow(resizeApp) {
+function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	var app = SAGE2Items.applications.list[resizeApp.elemId];
-	var portal = findApplicationPortal(app);
+
 	var titleBarHeight = config.ui.titleBarHeight;
-	if (portal !== undefined && portal !== null) {
-		titleBarHeight = portal.data.titleBarHeight;
+	if (portalId !== undefined && portalId !== null) {
+		remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(resizeApp.elemId);
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+titleBarHeight});
@@ -4672,6 +4748,11 @@ function moveAndResizeApplicationWindow(resizeApp) {
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
 		}
+	}
+
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('updateApplicationPositionAndSize', {appPositionAndSize: resizeApp, portalId: portalId, date: ts});
 	}
 }
 
