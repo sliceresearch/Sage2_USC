@@ -127,7 +127,7 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	checkIfMapsLoaded: function() {
-		if (google === undefined || google.maps === undefined || google.maps.Map === undefined) {
+		if (window.google === undefined || google.maps === undefined || google.maps.Map === undefined) {
 			setTimeout(this.checkIfMapsLoadedFunc, 40);
 		}
 		else {
@@ -137,23 +137,6 @@ var googlemaps = SAGE2_App.extend( {
 
 	initialize: function() {
 		this.firstLoad = false;
-
-		if (this.state.mapType == null)
-			this.state.mapType = google.maps.MapTypeId.HYBRID;
-		if (this.state.zoomLevel == null)
-			this.state.zoomLevel = 8;
-		if (this.state.center == null)
-			this.state.center = {lat:41.850033, lng:-87.6500523};
-		if (this.state.center.lat == null)
-			this.state.center.lat = 41.850033;
-		if (this.state.center.lng == null)
-			this.state.center.lng = -87.6500523;
-		if (this.state.layer == null)
-			this.state.layer = {w:false, t:false};
-		if (this.state.layer.w == null)
-			this.state.layer.w = false;
-		if (this.state.layer.t == null)
-			this.state.layer.t = false;
 
 		// Enable the visual refresh
 		google.maps.visualRefresh = true;
@@ -201,17 +184,25 @@ var googlemaps = SAGE2_App.extend( {
 		this.weatherLayer = new google.maps.weather.WeatherLayer({
 			temperatureUnits: google.maps.weather.TemperatureUnit.FAHRENHEIT
 		});
-		if (this.state.layer.t) {
+
+		/*
+		if (this.state.layer.t === true) {
 			this.trafficLayer.setMap(this.map);
 			// add a timer updating the traffic tiles: 60sec
 			this.trafficTimer = setInterval(this.trafficCB, 60*1000);
 		}
-		else
+		else {
 			this.trafficLayer.setMap(null);
+		}
+
 		if (this.state.layer.w)
 			this.weatherLayer.setMap(this.map);
 		else
 			this.weatherLayer.setMap(null);
+
+		this.updateLayers();
+		*/
+		this.updateMapFromState();
 	},
 
 	updateMapFromState: function() {
@@ -255,6 +246,7 @@ var googlemaps = SAGE2_App.extend( {
 			this.state.center    = state.center;
 			this.state.layer     = state.layer;
 		}
+		console.log(state.layer);
 		if (this.firstLoad) this.checkIfMapsLoaded();
 		else                this.updateMapFromState();
 	},
