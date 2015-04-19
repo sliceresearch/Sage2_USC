@@ -158,6 +158,9 @@ else if ( config.sessionID !== undefined ) {
 	global.__SESSION_ID = md5.getHash( config.sessionID );
 	console.log("A sessionID was specified in the configuration file:" + config.sessionID);
 }
+var passwordFile = path.join("keys", "passwd.json");
+fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
+console.log("pwd > saved to " + passwordFile);
 //dkedit end
 
 
