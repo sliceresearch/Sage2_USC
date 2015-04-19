@@ -3329,7 +3329,8 @@ function broadcast_opt(func, data, type) {
 			if (clients[i].messages[type]) clients[i].emitString(message);
 		}
 	} catch (e) {
-		// nothing
+		// Not using console.log since it's overloaded to send messages
+		process.stdout.write("Websocket>	Warning: wsio trouble emitting string to clients\n");
 	}
 }
 */
@@ -5068,7 +5069,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	var app;
 	var elem = findAppUnderPointer(pointerX, pointerY);
 
-	var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
+	//var controlUnderPointer = findControlsUnderPointer(pointerX, pointerY);
 	//var itemUnderPointer = controlUnderPointer || elem;
 	//Draw widget connectors
 	//showOrHideWidgetConnectors(uniqueID, itemUnderPointer, "release");
@@ -5943,6 +5944,7 @@ function attachAppIfSticky(backgroundItem, appId){
 		stickyAppHandler.attachStickyItem(backgroundItem, app);
 }
 
+/*
 function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease){
 	var app;
 	var item;
@@ -6021,3 +6023,4 @@ function showOrHideWidgetConnectors(uniqueID, itemUnderPointer, pressMoveRelease
 		}
 	}
 }
+*/

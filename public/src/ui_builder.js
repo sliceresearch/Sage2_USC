@@ -451,6 +451,10 @@ function UIBuilder(json_cfg, clientID) {
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
 
+		// Also hide the cursor on top of the SVG (doesnt inherit from style body)
+		if (this.clientID !== -1)
+			watermarkSVG.style.cursor = "none";
+
 		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
 
