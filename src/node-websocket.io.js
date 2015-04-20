@@ -221,8 +221,8 @@ WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
 * @param port {Integer} port number
 */
 WebsocketIO.prototype.updateRemoteAddress = function(host, port) {
-	if(typeof host === "string") this.remoteAddress.address = host;
-	if(typeof port === "number") this.remoteAddress.port = port;
+	if (typeof host === "string") this.remoteAddress.address = host;
+	if (typeof port === "number") this.remoteAddress.port    = port;
 	this.id = this.remoteAddress.address + ":" + this.remoteAddress.port;
 };
 
