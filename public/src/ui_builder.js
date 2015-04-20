@@ -609,7 +609,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
-		
+
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -650,7 +650,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-			
+
 			//console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)

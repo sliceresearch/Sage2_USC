@@ -267,7 +267,7 @@ function setupListeners() {
 	wsio.on('updateRadialMenu', function(menu_data){
 		ui.updateRadialMenu(menu_data);
     });
-	
+
 	wsio.on('radialMenuEvent', function(menu_data){
 		ui.radialMenuEvent(menu_data);
 		resetIdle();
@@ -277,12 +277,12 @@ function setupListeners() {
 		ui.updateRadialMenuDocs(menu_data);
 		resetIdle();
     });
-	
+
 	wsio.on('updateRadialMenuApps', function(menu_data){
 		ui.updateRadialMenuApps(menu_data);
 		resetIdle();
     });
-	
+
 	wsio.on('updateMediaStreamFrame', function(data) {
 		wsio.emit('receivedMediaStreamFrame', {id: data.id});
 
@@ -1085,27 +1085,26 @@ function setupListeners() {
 	wsio.on('activateTextInputControl', function(data){
 		var ctrl = null;
 		console.log("in activateTextInputContControl->", data);
-		if (data.prevTextInput){
+		if (data.prevTextInput) {
 			ctrl = getWidgetControlInstanceById(data.prevTextInput);
 		}
 		var textInput, blinkControlHandle;
-		if (ctrl){
+		if (ctrl) {
 			textInput = ctrl.parent();
 			blinkControlHandle = textInput.data("blinkControlHandle");
 			clearInterval(blinkControlHandle);
 		}
 		ctrl = getWidgetControlInstanceById(data.curTextInput);
-		if(ctrl){
+		if (ctrl) {
 			textInput = ctrl.parent();
 			blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
 			textInput.data("blinkControlHandle", blinkControlHandle);
 		}
-		
 	});
 	wsio.on('deactivateTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
 		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
-		if (ctrl){
+		if (ctrl) {
 			var textInput = ctrl.parent();
 			var blinkControlHandle = textInput.data("blinkControlHandle");
 			clearInterval(blinkControlHandle);

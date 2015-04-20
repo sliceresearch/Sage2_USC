@@ -653,28 +653,28 @@ function RadialMenu(){
 	 * @method setToggleMenu
 	 */
 	this.setToggleMenu = function(type) {
-		if( this.currentMenuState !== type ) {
+		if (this.currentMenuState !== type ) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
 			this.currentMenuState = type;
-			this.element.width = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
-			this.element.height = this.thumbnailWindowSize.y;
+			this.element.width    = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
+			this.element.height   = this.thumbnailWindowSize.y;
 			this.thumbnailScrollWindowElement.style.display = "block";
 			this.thumbScrollWindowctx.redraw = true;
 			this.updateThumbnailPositions();
 			this.draw();
-			
-			if( this.sendsToServer === true ) {
+
+			if (this.sendsToServer === true) {
 				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: true } );
 			}
 			return true;
 		} else {
 			this.currentMenuState = 'radialMenu';
-			this.element.width = this.radialMenuSize.x;
-			this.element.height = this.radialMenuSize.y;
+			this.element.width    = this.radialMenuSize.x;
+			this.element.height   = this.radialMenuSize.y;
 			//this.thumbnailScrollWindowElement.style.display = "None";
 
-			if( this.sendsToServer === true ) {
+			if (this.sendsToServer === true) {
 				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: false } );
 			}
 			return false;
