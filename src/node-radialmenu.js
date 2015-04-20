@@ -48,6 +48,12 @@ function RadialMenu(id, ptrID, ui) {
 	this.dragState = false;
 	this.dragID = -1;
 	this.dragPosition = { x: 0, y: 0 };
+	
+	// States
+	this.thumbnailWindowState = 0; // 0 = closed, 1 = image, 2 = pdf, 3 = video, etc.
+	this.thumbnailWindowScrollPosition = 0;
+	
+	this.buttonState = []; // idle, lit, over for every radial menu button 
 }
 
 /**
@@ -197,10 +203,12 @@ RadialMenu.prototype.onMove = function(id) {
 * @method onRelease
 */
 RadialMenu.prototype.onRelease = function(id) {
+	//console.log("node-RadialMenu.onRelease()");
 	this.activeEventIDs.splice(this.activeEventIDs.indexOf(id), 1);
-
+	//console.log("drag state "+ this.dragID + " " + id);
 	if (this.dragState === true && this.dragID === id) {
 		this.dragState = false;
+		
 	}
 };
 
@@ -232,6 +240,7 @@ RadialMenu.prototype.getDragOffset = function(id, localPos) {
 	if (this.dragState === true && this.dragID === id) {
 		// If this ID is dragging the menu, return the drag offset
 		offset = { x: localPos.x - this.dragPosition.x, y: localPos.y - this.dragPosition.y };
+		this.dragPosition = localPos;
 	}
 	return offset;
 };
