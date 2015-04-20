@@ -1194,9 +1194,8 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 // Print message from remote applications
 function wsPrintDebugInfo(wsio, data) {
 	// sprint for padding and pretty colors
-	console.log(
-			sprint("Node %2d> ", data.node) + sprint("[%s] ", data.app),
-		data.message);
+	//console.log( sprint("Node %2d> ", data.node) + sprint("[%s] ", data.app), data.message);
+	console.log(sageutils.header("Client") + data.node + " [" + data.app + "] " + data.message);
 }
 
 function wsRequestVideoFrame(wsio, data) {
@@ -2979,7 +2978,7 @@ if (config.remote_sites) {
 
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new WebsocketIO(wsURL, false, function() {
-		console.log("connected to " + element.name);
+		console.log(sageutils.header("Remote") + "Connected to " + element.name);
 		remote.remoteAddress.address = element.host;
 		remote.remoteAddress.port = element.port;
 		var clientDescription = {
@@ -3040,7 +3039,7 @@ setTimeout(function() {
 sage2ServerS.on('listening', function (e) {
 	// Success
 	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" + config.host + ":" + config.port);
-	console.log(sageutils.header("SAGE2") + "        web console at https://" + config.host + ":" + config.port + "/admin/console.html");
+	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host + ":" + config.port + "/admin/console.html");
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -3068,8 +3067,8 @@ sage2Server.on('error', function (e) {
 sage2Server.on('listening', function (e) {
 	// Success
 	console.log(sageutils.header("SAGE2") + "Serving web UI at http://" + config.host + ":" + config.index_port);
-	console.log(sageutils.header("SAGE2") + "        display 0 at http://" + config.host + ":" + config.index_port + "/display.html?clientID=0");
-	console.log(sageutils.header("SAGE2") + "        audio manager at http://" + config.host + ":" + config.index_port + "/audioManager.html");
+	console.log(sageutils.header("SAGE2") + "Display 0 at http://" + config.host + ":" + config.index_port + "/display.html?clientID=0");
+	console.log(sageutils.header("SAGE2") + "Audio manager at http://" + config.host + ":" + config.index_port + "/audioManager.html");
 });
 
 
@@ -3102,10 +3101,10 @@ process.on('SIGTERM', quitSAGE2);
 process.on('SIGINT',  quitSAGE2);
 
 
-// Start the HTTP server
-sage2Server.listen(config.index_port);
-// Start the HTTPS server
-sage2ServerS.listen(config.port);
+// Start the HTTP server (listen for IPv4 addresses 0.0.0.0)
+sage2Server.listen(config.index_port, "0.0.0.0");
+// Start the HTTPS server (listen for IPv4 addresses 0.0.0.0)
+sage2ServerS.listen(config.port, "0.0.0.0");
 
 
 // ***************************************************************************************
