@@ -145,22 +145,30 @@ var config = loadConfiguration();
 
 
 //dkedit start
+var passwordFile = path.join("keys", "passwd.json");
 if (typeof program.password  === "string" && program.password.length > 0) {
 	//global.__SESSION_ID = program.password;
 	global.__SESSION_ID = md5.getHash( program.password );
 	console.log("Using " + global.__SESSION_ID + " as the password for this run.");
+	fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
+	console.log("pwd > saved to " + passwordFile);
 }
 else if (program.password) {
 	console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
 }
-else if ( config.sessionID !== undefined ) {
+else if ( sageutils.fileExists(passwordFile) !== undefined ) {
+	var passwordFileJsonString = fs.readFileSync(passwordFile, 'utf8');
+	var passwordFileJson = json5.parse(passwordFileJsonString);
 	//global.__SESSION_ID = config.sessionID;
-	global.__SESSION_ID = md5.getHash( config.sessionID );
-	console.log("A sessionID was specified in the configuration file:" + config.sessionID);
+	if(passwordFileJson.pwd !== null) {
+		global.__SESSION_ID = passwordFileJson.pwd;
+		console.log("A sessionID was specified in the passwd.json file:" + passwordFileJson.pwd);
+	}
+	else { console.log("A passwd.json file exists, but no has was available."); }
 }
-var passwordFile = path.join("keys", "passwd.json");
-fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
-console.log("pwd > saved to " + passwordFile);
+// var passwordFile = path.join("keys", "passwd.json");
+// fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
+// console.log("pwd > saved to " + passwordFile);
 //dkedit end
 
 
