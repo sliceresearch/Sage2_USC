@@ -74,7 +74,7 @@ function SAGE2_init() {
 	isMaster = false;
 
 	wsio.open(function() {
-		log("open websocket");
+		console.log("Websocket opened");
 
 		setupListeners();
 

@@ -1195,7 +1195,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 function wsPrintDebugInfo(wsio, data) {
 	// sprint for padding and pretty colors
 	//console.log( sprint("Node %2d> ", data.node) + sprint("[%s] ", data.app), data.message);
-	console.log(sageutils.header("Client") + data.node + " [" + data.app + "] " + data.message);
+	console.log(sageutils.header("Client") + "Node " + data.node + " [" + data.app + "] " + data.message);
 }
 
 function wsRequestVideoFrame(wsio, data) {

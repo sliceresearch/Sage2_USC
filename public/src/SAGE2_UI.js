@@ -103,7 +103,7 @@ function SAGE2_init() {
 	// Create a connection to the SAGE2 server
 	wsio = new WebsocketIO();
 	wsio.open(function() {
-		console.log("open websocket");
+		console.log("Websocket opened");
 
 		setupListeners();
 
