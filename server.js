@@ -3947,6 +3947,7 @@ function pointerPosition(uniqueID, data) {
 function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
 
+	// update radial menu position if dragged outside radial menu
 	updateRadialMenuPointerPosition(uniqueID, pointerX, pointerY);
 	
 	// update app position and size if currently modifying a window
@@ -3996,7 +3997,7 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 
 	if (existingRadialMenu.dragState === true) {
 		var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
-		moveRadialMenu( uniqueID, offset.x, offset.y );
+		moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
 	}
 }
 
@@ -5776,7 +5777,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined) {
-		var newRadialMenu = new Radialmenu(uniqueID+"_menu", uniqueID, config.ui);
+		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
 		newRadialMenu.setPosition(newMenuPos);
 		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
 		interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left, y: newRadialMenu.top, w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
@@ -5805,12 +5806,14 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 function moveRadialMenu(uniqueID, pointerX, pointerY ) {
 	var existingRadialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 
-	existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
-	existingRadialMenu.visible = true;
+	if( existingRadialMenu ) {
+		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
+		existingRadialMenu.visible = true;
 
-	interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});
+		interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});
 
-	broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+	}
 }
 
 /**
@@ -5869,7 +5872,7 @@ function updateRadialMenuPointerPosition(uniqueID, pointerX, pointerY) {
 		if( radialMenu !== undefined && radialMenu.dragState === true )
 		{
 			var offset = radialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
-			moveRadialMenu( uniqueID, offset.x, offset.y );
+			moveRadialMenu( radialMenu.id, offset.x, offset.y );
 		}
 	}
 }
