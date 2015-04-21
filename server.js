@@ -3949,7 +3949,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
 	// update radial menu position if dragged outside radial menu
 	updateRadialMenuPointerPosition(uniqueID, pointerX, pointerY);
-	
+
 	// update app position and size if currently modifying a window
 	var updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
 	var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
@@ -4143,13 +4143,13 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
 	pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj);
-	
+
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
     if (obj === null) {
 		dropSelectedApp(uniqueID, true);
 		return;
     }
-	
+
 	switch (obj.layerId) {
 		case "staticUI":
 			pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj);
