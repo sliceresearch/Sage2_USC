@@ -48,12 +48,12 @@ function RadialMenu(id, ptrID, ui) {
 	this.dragState = false;
 	this.dragID = -1;
 	this.dragPosition = { x: 0, y: 0 };
-	
+
 	// States
 	this.thumbnailWindowState = 0; // 0 = closed, 1 = image, 2 = pdf, 3 = video, etc.
 	this.thumbnailWindowScrollPosition = 0;
-	
-	this.buttonState = []; // idle, lit, over for every radial menu button 
+
+	this.buttonState = []; // idle, lit, over for every radial menu button
 }
 
 /**
@@ -208,7 +208,6 @@ RadialMenu.prototype.onRelease = function(id) {
 	//console.log("drag state "+ this.dragID + " " + id);
 	if (this.dragState === true && this.dragID === id) {
 		this.dragState = false;
-		
 	}
 };
 
