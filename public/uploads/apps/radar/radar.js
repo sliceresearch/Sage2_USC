@@ -32,8 +32,6 @@ var radar = SAGE2_App.extend( {
 		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
 		this.enableControls = true;
 
-		this.currentStation = 0;
-
 		this.canvasWidth = 1.0;
 		this.canvasHeight = 1.0;
 
@@ -63,6 +61,8 @@ var radar = SAGE2_App.extend( {
 		this.OK4 = 0;
 		this.OK5 = 0;
 		this.OK6 = 0;
+
+		this.state.currentStation = 0;
 	},
 
 	////////////////////////////////////////
@@ -101,12 +101,14 @@ var radar = SAGE2_App.extend( {
 		var URL5b = "_N0R_Legend_0.gif";
 		var URL6b = "_City_Short.gif";
 
-		this.URL1 = URL1a+SAGE2_radarStations[this.currentStation].code+URL1b;
-		this.URL2 = URL2a+SAGE2_radarStations[this.currentStation].code+URL2b;
-		this.URL3 = URL3a+SAGE2_radarStations[this.currentStation].code+URL3b;
-		this.URL4 = URL4a+SAGE2_radarStations[this.currentStation].code+URL4b;
-		this.URL5 = URL5a+SAGE2_radarStations[this.currentStation].code+URL5b;
-		this.URL6 = URL6a+SAGE2_radarStations[this.currentStation].code+URL6b;
+		console.log("creating URLs for  " + this.state.currentStation);
+
+		this.URL1 = URL1a+SAGE2_radarStations[this.state.currentStation].code+URL1b;
+		this.URL2 = URL2a+SAGE2_radarStations[this.state.currentStation].code+URL2b;
+		this.URL3 = URL3a+SAGE2_radarStations[this.state.currentStation].code+URL3b;
+		this.URL4 = URL4a+SAGE2_radarStations[this.state.currentStation].code+URL4b;
+		this.URL5 = URL5a+SAGE2_radarStations[this.state.currentStation].code+URL5b;
+		this.URL6 = URL6a+SAGE2_radarStations[this.state.currentStation].code+URL6b;
 	},
 
 	////////////////////////////////////////
@@ -229,18 +231,22 @@ var radar = SAGE2_App.extend( {
 
 	nextStation: function()
 	{
-		this.currentStation += 1;
-		if (this.currentStation >= SAGE2_radarStations.length)
+		this.state.currentStation += 1;
+		if (this.state.currentStation >= SAGE2_radarStations.length)
 			{
-			this.currentStation = 0;
+			this.state.currentStation = 0;
 			}
+
+		console.log("moving to next location " + this.state.currentStation);
 	},
 
 	////////////////////////////////////////
 
 	setStation: function(newStation)
 	{
-		this.currentStation = +newStation;
+		this.state.currentStation = +newStation;
+
+		console.log("setting location to " + this.state.currentStation);
 	},
 
 	////////////////////////////////////////
@@ -283,7 +289,6 @@ var radar = SAGE2_App.extend( {
 		this.initApp();
 		this.createURLs();
 
-
 		// the master generates one random number and sends it to everyone for the load
 
 		if(isMaster){
@@ -319,6 +324,9 @@ var radar = SAGE2_App.extend( {
 
         this.maxFPS = 0.01;
 
+        this.state.currentStation = 0;
+        console.log("initalizing location to  " + this.state.currentStation);
+
         // Get width height from the supporting div     
         var divWidth  = this.element.clientWidth;
         var divHeight = this.element.clientHeight;
@@ -346,6 +354,22 @@ var radar = SAGE2_App.extend( {
 	},
 
 	load: function(state, date) {
+        console.log("load - looking for a state", state);
+        if (state)
+            {
+            console.log("load - I have state " + state);
+            this.state.currentStation = state.currentStation;
+            console.log("load - setting the location to " + this.state.currentStation);
+            }
+        else {
+            this.state.currentStation = 0; // which location to default to
+            console.log("load - no state found - setting default location 0");
+            }
+
+
+        this.startup(); // refresh the URLs after the state load
+
+
         // create the widgets
         console.log("creating controls");
         this.controls.addButton({type:"next",sequenceNo:3,action:function(date){
@@ -356,8 +380,6 @@ var radar = SAGE2_App.extend( {
         }.bind(this)});
 
         var _this = this;
-
-        
 
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
@@ -400,7 +422,6 @@ var radar = SAGE2_App.extend( {
 	
 	draw: function(date) {
 	    this.update();
-        //this.drawEverything();
 	},
 
 	resize: function(date) {
@@ -411,7 +432,6 @@ var radar = SAGE2_App.extend( {
 
     event: function(eventType, pos, user, data, date) {
 	//event: function(eventType, userId, x, y, data, date) {
-            
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
