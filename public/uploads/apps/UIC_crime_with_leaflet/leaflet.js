@@ -32,7 +32,7 @@ function addCSS( url, callback ) {
 	document.head.appendChild( fileref );
 }
 
-/*
+/* police districts now loaded from a separate file
 SAGE2_policeDistricts = [
 	"1232", 
 	"1231", 
@@ -63,7 +63,7 @@ var leaflet = SAGE2_App.extend( {
 
 		this.bigCollection = {};
 
-		this.numBeats = 3;
+		this.numBeats = SAGE2_policeDistricts.length; // 3;
 		this.currentBeats = 0;
 
 		this.g = null;
