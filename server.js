@@ -3716,13 +3716,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	console.log("pointer press on radial menu");
 
-	//var radialMenu = obj.data.onPress(uniqueID);
-	//console.log(obj.data);
-
-	var radialMenu = obj.data.onPress(uniqueID);
 	if (data.button === "left") {
-		// If clicked on button
-		// Else enter drag state
 		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
 	}
 
@@ -3987,8 +3981,6 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	var radialMenu = obj.data.onMove(uniqueID);
-
 	// Check if on button
 	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 
@@ -4192,11 +4184,12 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 }
 
 function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
+	var radialMenu;
 	if( obj === undefined )
 	{
 		for (var key in SAGE2Items.radialMenus.list)
 		{
-			var radialMenu = SAGE2Items.radialMenus.list[key];
+			radialMenu = SAGE2Items.radialMenus.list[key];
 			//console.log(data.id+"_menu: " + radialMenu);
 			if( radialMenu !== undefined )
 			{
@@ -4206,7 +4199,7 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 	}
 	else
 	{
-		var radialMenu = obj.data.onRelease( uniqueID );
+		radialMenu = obj.data.onRelease( uniqueID );
 		radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 	}
 }
@@ -5829,7 +5822,6 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY ) {
 
 	// Sets the position and visibility
 	existingRadialMenu.setPosition({x: pointerX, y: pointerY});
-	
 
 	// Update the interactable geometry
 	interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});

@@ -191,7 +191,7 @@ function RadialMenu(){
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
 
 		this.thumbnailWindowDiv = document.getElementById(this.id+"_menuDiv");
-		
+
 		// Debug: Show scrolling window background
 		if (this.divCtxDebug) {
 			this.thumbnailWindowDiv.style.backgroundColor = "rgba(10,50,200,0.2)";
