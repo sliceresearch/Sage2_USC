@@ -63,7 +63,7 @@ var leaflet = SAGE2_App.extend( {
 
 		this.bigCollection = {};
 
-		this.numBeats = SAGE2_policeDistricts.length; // 3;
+		this.numBeats = SAGE2_policeDistricts.length;
 		this.currentBeats = 0;
 
 		this.g = null;
@@ -96,7 +96,6 @@ var leaflet = SAGE2_App.extend( {
 		}
 
 	},
-
 
 	init: function(data) {
 
@@ -132,6 +131,7 @@ var leaflet = SAGE2_App.extend( {
 			mySelf.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
 
+			// want to do this same thing when we reset the location
 			if (mySelf.whichMap === 1)
 				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
 			else
@@ -163,6 +163,11 @@ var leaflet = SAGE2_App.extend( {
 		});
 	},
 
+	resetMap: function()
+	{
+    	this.map.setView([41.869910, -87.65], 17);
+	},
+
 	changeMap: function()
 	{
 		var selectedOnes = null;
@@ -190,7 +195,10 @@ var leaflet = SAGE2_App.extend( {
 	zoomIn: function()
 	{
 		var z = this.map.getZoom();
-		this.map.setZoom(z+1, {animate: false});
+		if ( z <= 19)
+		{
+			this.map.setZoom(z+1, {animate: false});
+		}
 		this.lastZoom = date;
 	
 		var z2 = this.map.getZoom();
@@ -199,7 +207,10 @@ var leaflet = SAGE2_App.extend( {
 	zoomOut: function()
 	{
 		var z = this.map.getZoom();
-		this.map.setZoom(z-1, {animate: false});
+		if (z >= 3)
+			{
+			this.map.setZoom(z-1, {animate: false});
+			}
 		this.lastZoom = date;
 	
 		var z2 = this.map.getZoom();
@@ -346,6 +357,17 @@ var leaflet = SAGE2_App.extend( {
                     "fill":"rgba(250,250,250,1.0)",
                     "animation":false
                 };
+        var homeButton = {
+                    "textual":true,
+                    "label":"home",
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
+
+        this.controls.addButton({type:homeButton,sequenceNo:2,action:function(date){
+            //This is executed after the button click animation occurs.
+            this.resetMap();
+        }.bind(this)});
 
         this.controls.addButton({type:viewButton,sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
@@ -361,7 +383,6 @@ var leaflet = SAGE2_App.extend( {
             //This is executed after the button click animation occurs.
             this.zoomOut();
         }.bind(this)});
-
 
         this.controls.finishedAddingControls(); // Important
 	},
