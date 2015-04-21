@@ -639,7 +639,7 @@ function RadialMenu(){
 		this.visible = false;
 
 		if( this.sendsToServer === true )
-			this.wsio.emit('removeRadialMenu', { id: this.menuID } );
+			this.wsio.emit('removeRadialMenu', { id: this.id } );
 
 		this.currentMenuState = 'radialMenu';
 		this.resetRadialButtonLitState();

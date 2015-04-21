@@ -5829,13 +5829,45 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY ) {
 
 	// Sets the position and visibility
 	existingRadialMenu.setPosition({x: pointerX, y: pointerY});
-	existingRadialMenu.visible = true;
+	
 
 	// Update the interactable geometry
 	interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});
-
+	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
 	broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+}
+
+/**
+* Shows radial menu and enables interactivity
+*
+* @method showRadialMenu
+* @param uniqueID {Integer} radial menu ID
+*/
+function showRadialMenu(uniqueID) {
+	var radialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
+
+	if (radialMenu !== undefined) {
+		radialMenu.visible = true;
+		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: radialMenu.left, y: radialMenu.top, r: radialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, radialMenu);
+		//interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", "circle", true);
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", false);
+	}
+}
+
+/**
+* Hides radial menu and enables interactivity
+*
+* @method hideRadialMenu
+* @param uniqueID {Integer} radial menu ID
+*/
+function hideRadialMenu(uniqueID) {
+var radialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
+	if (radialMenu !== undefined) {
+		radialMenu.visible = false;
+		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", "circle", false);
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", false);
+	}
 }
 
 function updateRadialMenu(uniqueID) {
@@ -5877,31 +5909,8 @@ function updateRadialMenuPointerPosition(uniqueID, pointerX, pointerY) {
 	}
 }
 
-// function clearRadialMenus() {
-// 	console.log("Clearing radial menus");
-// 	radialMenus = [];
-// }
-
-// Special case: just check if event is over menu (used for one-time events that don't use a start/end event)
-// function isEventOnMenu( data )
-// {
-// 	var overMenu = false;
-// 	for (var key in radialMenus)
-// 	{
-// 		var radialMenu = radialMenus[key];
-// 		if( radialMenu !== undefined )
-// 			overMenu =  radialMenu.isEventOnMenu( data );
-// 		if( overMenu )
-// 			return true;
-// 	}
-// 	return false;
-// }
-
 function wsRemoveRadialMenu( wsio, data ) {
-	var radialMenu = SAGE2Items.radialMenus.list[data.uniqueID+"_menu"];
-	if (radialMenu !== undefined) {
-		radialMenu.visible = false;
-	}
+	hideRadialMenu(data.id);
 }
 
 function wsRadialMenuThumbnailWindow( wsio, data ) {
