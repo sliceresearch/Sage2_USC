@@ -586,7 +586,7 @@ function UIBuilder(json_cfg, clientID) {
 			radialMenuContentWindowDiv.style.left     = (data.x - this.offsetX).toString() + "px";
 			radialMenuContentWindowDiv.style.top      = (data.y - this.offsetY).toString() + "px";
 			radialMenuContentWindowDiv.style.zIndex   = 9000;
-
+			
 			var menuElem1 = createDrawingElement(data.id+"_menu", "pointerItem",
 								data.x  - this.offsetX, data.y - this.offsetY,
 								data.radialMenuSize.x, data.radialMenuSize.y, 9000);
@@ -602,14 +602,14 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.appendChild(menuElem3);
 
 			radialMenuContentWindowDiv.appendChild(menuElem2);
+			var rect = menuElem1.getBoundingClientRect();
 
 			var menu = new RadialMenu();
-
 			menu.init(data, menuElem2, menuElem3);
-
+			
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
-
+			
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -680,7 +680,9 @@ function UIBuilder(json_cfg, clientID) {
 					menuElem.style.display = "block";
 					menu.thumbnailScrollWindowElement.style.display = "block";
 					menu.thumbnailWindowDiv.style.display = "block";
-
+					
+					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
+					
 					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true ) {
 						menu.draw();
 					}
