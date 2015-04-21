@@ -27,13 +27,13 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
  */
  var pdf_viewer = SAGE2_App.extend( {
 	/**
-	* Constructor, redraws done on finish events
+	* Init method, creates an 'img' tag in the DOM and a few canvas contexts to handle multiple redraws
 	*
-	* @class pdf_viewer
-	* @constructor
+	* @method init
+	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("img", data);
 
 		this.resizeEvents = "onfinish";
 
@@ -47,17 +47,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		this.src     = null;
 		this.gotresize      = false;
 		this.enableControls = true;
-	},
-
-	/**
-	* Init method, creates an 'img' tag in the DOM and a few canvas contexts to handle multiple redraws
-	*
-	* @method init
-	* @param data {Object} contains initialization values (id, width, height, ...)
-	*/
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "img", data);
+		this.old_doc_url = "";
 
 		// application specific 'init'
 		for(var i=0; i<this.numCtx; i++){
@@ -70,9 +60,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			this.ctx.push(ctx);
 		}
 
-		this.state.doc_url  = null;
-		this.state.page = null;
-		this.state.numPagesShown = null;
+		this.updateAppFromState(data.date);
 	},
 
 	/**
@@ -82,24 +70,21 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param state {Object} object to initialize or restore the app
 	* @param date {Date} time from the server
 	*/
-	load: function(state, date) {
-		// load new document
-		console.log("new:", state);
-		console.log("old:", this.state);
-		if (state.doc_url !== undefined && state.doc_url !== null && state.doc_url !== this.state.doc_url) {
+	load: function(date) {
+		this.updateAppFromState(date);
+	},
+
+	updateAppFromState: function(date) {
+		if (this.old_doc_url !== this.state.doc_url) {
 			var _this = this;
 			this.loaded = false;
 
-			state.doc_url = cleanURL(state.doc_url);
+			var docURL = cleanURL(this.state.doc_url);
 
-			PDFJS.getDocument({url: state.doc_url}).then(function getDocumentCallback(pdfDocument) {
+			PDFJS.getDocument({url: docURL}).then(function getDocumentCallback(pdfDocument) {
 				console.log("loaded pdf document", _this.gotresize);
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
-
-				_this.state.doc_url  = state.doc_url;
-				_this.state.page = state.page;
-				_this.state.numPagesShown = state.numPagesShown;
 
 				addWidgetControlsToPdfViewer(_this);
 
@@ -123,11 +108,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 					});
 				}
 			});
+			this.old_doc_url = this.state.doc_url;
 		}
 		// load new state of same document
 		else {
-			this.state.page = state.page;
-			this.state.numPagesShown = state.numPagesShown;
 			this.refresh(date);
 		}
 	},
@@ -249,29 +233,47 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 function addWidgetControlsToPdfViewer (_this){
 	// UI stuff
 	_this.controls.addButton({type:"fastforward", sequenceNo:3, action:function(date){
+		this.SAGE2UserModification = true;
+
 		this.state.page = this.pdfDoc.numPages;
+
 		this.refresh(date);
+		this.SAGE2UserModification = false;
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"rewind", sequenceNo:5, action:function(date){
+		this.SAGE2UserModification = true;
+
 		this.state.page = 1;
+
 		this.refresh(date);
+		this.SAGE2UserModification = false;
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"prev", sequenceNo:9, action:function(date){
 		if(this.state.page <= 1) return;
+		this.SAGE2UserModification = true;
+
 		this.state.page = this.state.page - 1;
+
 		this.refresh(date);
+		this.SAGE2UserModification = false;
 	}.bind(_this)});
 	_this.controls.addButton({type:"next", sequenceNo:11, action:function(date){
 		if (this.state.page >= this.pdfDoc.numPages) return;
+		this.SAGE2UserModification = true;
+
 		this.state.page = this.state.page + 1;
+
 		this.refresh(date);
+		this.SAGE2UserModification = false;
 	}.bind(_this)});
 
 	_this.controls.addSlider({begin:1, end:_this.pdfDoc.numPages, increments:1, appHandle:_this, property:"state.page", caption: "Page", action:function(date){
+		this.SAGE2UserModification = true;
 		this.refresh(date);
+		this.SAGE2UserModification = false;
 	}.bind(_this)});
-	_this.controls.finishedAddingControls();
 
+	_this.controls.finishedAddingControls();
 }

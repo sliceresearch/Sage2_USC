@@ -241,7 +241,9 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		data: {
 			src: source,
 			type: mime_type,
-			exif: exif_data
+			exif: exif_data,
+			top: 0,
+			showExif: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -287,7 +289,9 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url
 		data: {
 			src: url,
 			type: mime_type,
-			exif: exif_data
+			exif: exif_data,
+			top: 0,
+			showExif: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,

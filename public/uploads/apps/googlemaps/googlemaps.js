@@ -11,47 +11,28 @@
 /*global google */
 
 var googlemaps = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
+		this.element.id = "div" + this.id;
 
 		this.resizeEvents = "continuous"; // "onfinish";
+		
 		this.map          = null;
-		this.lastZoom     = null;
-		this.dragging     = null;
-		this.position     = null;
-		this.scrollAmount = null;
-		this.trafficTimer = null;
-		this.trafficCB    = null;
-		this.firstLoad    = true;
-
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
-
-		// application specific 'init'
-		this.element.id = "div" + data.id;
-
-		this.lastZoom     = data.date;
 		this.dragging     = false;
-		this.position     = {x:0, y:0};
+		this.position     = {x: 0, y: 0};
 		this.scrollAmount = 0;
-
-		this.zoomFactor = null;
-		// building up the state object
-		this.state.mapType   = null;
-		this.state.zoomLevel = null;
-		this.state.center    = null;
-		this.state.layer     = null;
+		this.trafficTimer = null;
 
 		// Create a callback function for traffic updates
 		this.trafficCB = this.reloadTiles.bind(this);
-
 		// Create a callback func for checking if Google Maps API is loaded yet
-		this.checkIfMapsLoadedFunc = this.checkIfMapsLoaded.bind(this);
+		this.initializeOnceMapsLoadedFunc = this.initializeOnceMapsLoaded.bind(this);
 
+		this.initializeWidgets();
+		this.initializeOnceMapsLoaded();
+	},
 
+	initializeWidgets: function() {
 		this.controls.addSlider({
 			begin: 0,
 			end: 20,
@@ -73,6 +54,8 @@ var googlemaps = SAGE2_App.extend( {
 
 		var mapLabel =  { "textual":true, "label":"Map", "fill":"rgba(250,250,250,1.0)", "animation":false};
 		this.controls.addButton({type:mapLabel, sequenceNo:7, action:function(date) {
+			this.SAGE2UserModification = true;
+
 			if (this.state.mapType === google.maps.MapTypeId.TERRAIN)
 				this.state.mapType = google.maps.MapTypeId.ROADMAP;
 			else if (this.state.mapType === google.maps.MapTypeId.ROADMAP)
@@ -84,9 +67,15 @@ var googlemaps = SAGE2_App.extend( {
 			else
 				this.state.mapType = google.maps.MapTypeId.HYBRID;
 			this.map.setMapTypeId(this.state.mapType);
+
+			this.refresh(date);
+			this.SAGE2UserModification = false;
 		}.bind(this)});
+		
 		var trafficLabel = { "textual":true, "label":"T", "fill":"rgba(250,250,250,1.0)", "animation":false};
 		this.controls.addButton({type:trafficLabel, sequenceNo:9, action:function(date){
+			this.SAGE2UserModification = true;
+
 			// add/remove traffic layer
 			if (this.trafficLayer.getMap() == null) {
 				this.trafficLayer.setMap(this.map);
@@ -99,36 +88,61 @@ var googlemaps = SAGE2_App.extend( {
 				clearInterval(this.trafficTimer);
 			}
 			this.updateLayers();
+
+			this.refresh(date);
+			this.SAGE2UserModification = false;
 		}.bind(this)});
+		
 		var weatherLabel = { "textual":true, "label":"W", "fill":"rgba(250,250,250,1.0)", "animation":false};
 		this.controls.addButton({type:weatherLabel, sequenceNo:11, action:function(date) {
+			this.SAGE2UserModification = true;
+
 			// add/remove weather layer
 			if (this.weatherLayer.getMap() == null)
 				this.weatherLayer.setMap(this.map);
 			else
 				this.weatherLayer.setMap(null);
 			this.updateLayers();
+
+			this.refresh(date);
+			this.SAGE2UserModification = false;
 		}.bind(this)});
+
 		this.controls.addButton({type:"zoom-in", sequenceNo:3, action:function(date) {
+			this.SAGE2UserModification = true;
+
 			this.map.setZoom(this.state.zoomLevel + 1);
 			this.state.zoomLevel = this.map.getZoom();
 		}.bind(this)});
+
 		this.controls.addButton({type:"zoom-out", sequenceNo:5, action:function(date) {
+			this.SAGE2UserModification = true;
+
 			this.map.setZoom(this.state.zoomLevel - 1);
 			this.state.zoomLevel = this.map.getZoom();
+
+			this.refresh(date);
+			this.SAGE2UserModification = false;
 		}.bind(this)});
+
 		this.controls.addTextInput({defaultText: "", caption:"Addr", action:function(text) {
+			this.SAGE2UserModification = true;
+
 			this.codeAddress(text);
 			this.updateCenter();
 			this.map.setZoom(15);
 			this.state.zoomLevel = this.map.getZoom();
+
+			this.refresh(date);
+			this.SAGE2UserModification = false;
 		}.bind(this)});
+
 		this.controls.finishedAddingControls();
 	},
 
-	checkIfMapsLoaded: function() {
+	initializeOnceMapsLoaded: function() {
 		if (window.google === undefined || google.maps === undefined || google.maps.Map === undefined) {
-			setTimeout(this.checkIfMapsLoadedFunc, 40);
+			setTimeout(this.initializeOnceMapsLoadedFunc, 40);
 		}
 		else {
 			this.initialize();
@@ -136,9 +150,6 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	initialize: function() {
-		this.firstLoad = false;
-
-		// Enable the visual refresh
 		google.maps.visualRefresh = true;
 		this.geocoder = new google.maps.Geocoder();
 		var city = new google.maps.LatLng(this.state.center.lat, this.state.center.lng);
@@ -154,55 +165,20 @@ var googlemaps = SAGE2_App.extend( {
 		this.map = new google.maps.Map(this.element, mapOptions);
 		this.map.setTilt(45);
 
-		// var styles = [
-		// 	{
-		// 		stylers: [
-		// 			{ hue: "#00ffe6" },
-		// 			{ saturation: -20 }
-		// 		]
-		// 	}, {
-		// 		featureType: "road",
-		// 		elementType: "geometry",
-		// 		stylers: [
-		// 			{ lightness: 100 },
-		// 			{ visibility: "simplified" }
-		// 		]
-		// 	}, {
-		// 		featureType: "road",
-		// 		elementType: "labels",
-		// 		stylers: [
-		// 			{ visibility: "off" }
-		// 		]
-		// 	}
-		// ];
-		//this.map.setOptions({styles: styles});
-
-		//
 		// Extra layers
-		//
 		this.trafficLayer = new google.maps.TrafficLayer();
 		this.weatherLayer = new google.maps.weather.WeatherLayer({
 			temperatureUnits: google.maps.weather.TemperatureUnit.FAHRENHEIT
 		});
 
-		/*
+		if (this.state.layer.w === true) {
+			this.weatherLayer.setMap(this.map);
+		}
 		if (this.state.layer.t === true) {
 			this.trafficLayer.setMap(this.map);
 			// add a timer updating the traffic tiles: 60sec
 			this.trafficTimer = setInterval(this.trafficCB, 60*1000);
 		}
-		else {
-			this.trafficLayer.setMap(null);
-		}
-
-		if (this.state.layer.w)
-			this.weatherLayer.setMap(this.map);
-		else
-			this.weatherLayer.setMap(null);
-
-		this.updateLayers();
-		*/
-		this.updateMapFromState();
 	},
 
 	updateMapFromState: function() {
@@ -239,16 +215,9 @@ var googlemaps = SAGE2_App.extend( {
 		this.updateLayers();
 	},
 
-	load: function(state, date) {
-		if (state) {
-			this.state.mapType   = state.mapType;
-			this.state.zoomLevel = state.zoomLevel;
-			this.state.center    = state.center;
-			this.state.layer     = state.layer;
-		}
-		console.log(state.layer);
-		if (this.firstLoad) this.checkIfMapsLoaded();
-		else                this.updateMapFromState();
+	load: function(date) {
+		this.updateMapFromState();
+		this.refresh(date);
 	},
 
 	draw: function(date) {

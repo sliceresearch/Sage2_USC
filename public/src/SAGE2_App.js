@@ -28,6 +28,7 @@ var SAGE2_App = Class.extend( {
 	*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
+
 		this.div          = null;
 		this.element      = null;
 		this.resrcPath    = null;
@@ -54,28 +55,34 @@ var SAGE2_App = Class.extend( {
 		this.enableControls  = null;
 		this.requestForClone = null;
 
-		//File Handling
+		// File Handling
 		this.id = null;
 		this.filePath = null;
 		this.fileDataBuffer = null;
 		this.fileRead = null;
 		this.fileWrite = null;
 		this.fileReceived = null;
+
+		// Track if in User Event loop
+		this.SAGE2UserModification = false;
 	},
 
 	/**
-	* Init method called right after the constructor
+	* SAGE2Init method called right after the constructor
 	*
-	* @method init
-	* @param elem {String} type of DOM element to be created (div, canvas, ...)
-	* @param data {Object} contains initialization values (id, width, height, ...)
+	* @method SAGE2Init
+	* @param type {String} type of DOM element to be created (div, canvas, ...)
+	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
-	init: function(elem, data) {
-		this.div     = document.getElementById(data.id);
-		this.element = document.createElement(elem);
+	SAGE2Init: function(type, data) {
+		//App ID
+		this.id = data.id;
+
+		this.div = document.getElementById(data.id);
+		this.element = document.createElement(type);
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
-		if (elem === "div") {
+		if (type === "div") {
 			this.element.style.width  = data.width  + "px";
 			this.element.style.height = data.height + "px";
 		} else {
@@ -113,14 +120,44 @@ var SAGE2_App = Class.extend( {
 
 		// Top layer
 		this.layer     = null;
-		//App ID
-		this.id = data.id;
+
 		//File Handling
 		this.fileName       = "";
 		this.fileDataBuffer = null;
 		this.fileRead       = false;
 		this.fileWrite      = false;
 		this.fileReceived   = false;
+
+		this.SAGE2CopyState(data.state);
+	},
+
+	SAGE2Load: function(state, date) {
+		this.SAGE2CopyState(state);
+		this.load(date);
+	},
+
+	SAGE2Event: function(eventType, position, user_id, data, date) {
+		this.SAGE2UserModification = true;
+		this.event(eventType, position, user_id, data, date);
+		this.SAGE2UserModification = false;
+	},
+
+	/**
+	* SAGE2CopyState method called on init or load to copy state of app instance
+	*
+	* @method SAGE2CopyState
+	* @param state {Object} contains state of app instance
+	*/
+	SAGE2CopyState: function(state) {
+		var key;
+		for (key in state) {
+			this.state[key] = state[key];
+		}
+	},
+
+	SAGE2Sync: function() {
+		if(isMaster)
+			wsio.emit('updateAppState', {id: this.id, state: this.state});
 	},
 
 	/**
@@ -236,6 +273,10 @@ var SAGE2_App = Class.extend( {
 	* @param date {Date} current time from the server
 	*/
 	refresh: function (date) {
+		if (this.SAGE2UserModification === true) {
+			this.SAGE2Sync();
+		}
+
 		// update time
 		this.preDraw(date);
 		// measure actual frame rate

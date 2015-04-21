@@ -3802,7 +3802,7 @@ function quitSAGE2() {
 			if(users[key].ip !== undefined) delete users[key].ip;
 		}
 		users.session.end = Date.now();
-		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date())+".json");
+		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date(startTime))+".json");
 		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
 		console.log(sageutils.header("LOG") + "saved log file to " + userLogName);
 	}

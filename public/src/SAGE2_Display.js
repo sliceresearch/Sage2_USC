@@ -279,7 +279,7 @@ function setupListeners() {
 	wsio.on('loadApplicationState', function(data) {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null){
-			app.load(data.state, new Date(data.date));
+			app.SAGE2Load(data.state, new Date(data.date));
 		}
 	});
 
@@ -288,7 +288,7 @@ function setupListeners() {
 
 		var app = applications[data.id];
 		if (app !== undefined && app !== null){
-			app.load(data.state);
+			app.SAGE2Load(data.state, new Date(data.date));
 		}
 
 		// update clones in data-sharing portals
@@ -296,7 +296,7 @@ function setupListeners() {
 		for (key in dataSharingPortals) {
 			app = applications[data.id + "_" + key];
 			if (app !== undefined && app !== null){
-				app.load(data.state);
+				app.SAGE2Load(data.state, new Date(data.date));
 			}
 		}
 	});
@@ -669,7 +669,7 @@ function setupListeners() {
 		var date = new Date(event_data.date);
 		var app  = applications[event_data.id];
 
-		app.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
 
 		/*
 		// adding pointer information to the event
@@ -1025,6 +1025,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			width:  data.width,
 			height: data.height,
 			resrc:  url,
+			state:  data.data,
 			date:   date
 		};
 
@@ -1037,14 +1038,15 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			js.addEventListener('load', function(event) {
 				var newapp = new window[data.application]();
 				newapp.init(init);
+				//newapp.SAGE2Init(init);
 
-				if (newapp.state !== undefined) {
-					Object.observe(newapp.state, function (changes) {
-						if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
-					}, ['update', 'add']);
-				}
+				//if (newapp.state !== undefined) {
+				//	Object.observe(newapp.state, function (changes) {
+				//		if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
+				//	}, ['update', 'add']);
+				//}
 
-				newapp.load(data.data, date);
+				//newapp.load(data.data, date);
 				newapp.refresh(date);
 
 				applications[data.id]   = newapp;
@@ -1062,14 +1064,15 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		else {
 			var app = new window[data.application]();
 			app.init(init);
+			//app.SAGE2Init(init);
 
-			if(app.state !== undefined){
-				Object.observe(app.state, function(changes) {
-					if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
-				}, ['update', 'add']);
-			}
+			//if(app.state !== undefined){
+			// 	Object.observe(app.state, function(changes) {
+			// 		if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
+			// 	}, ['update', 'add']);
+			//}
 
-			app.load(data.data, date);
+			//app.load(data.data, date);
 			app.refresh(date);
 
 			applications[data.id] = app;
