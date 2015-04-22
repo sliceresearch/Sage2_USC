@@ -3645,6 +3645,7 @@ function hidePointer(uniqueID) {
 }
 
 // Copied from pointerPress. Eventually a touch gesture will use this to toggle modes
+/*
 function togglePointerMode(uniqueID) {
 	if (sagePointers[uniqueID] === undefined) return;
 
@@ -3656,9 +3657,9 @@ function togglePointerMode(uniqueID) {
 		addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 	else
 		addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
-	*/
-}
 
+}
+*/
 
 function globalToLocal(globalX, globalY, type, geometry) {
 	var local = {};
@@ -3702,7 +3703,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
-	console.log("pointer press on open space");
+	//console.log("pointer press on open space");
 
 	if (data.button === "right") {
 		createRadialMenu(uniqueID, pointerX, pointerY);
@@ -3714,7 +3715,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 }
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	console.log("pointer press on radial menu");
+	//console.log("pointer press on radial menu");
 
 	if (data.button === "left") {
 		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
@@ -5553,10 +5554,10 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
 
-	var pX   = sagePointers[uniqueID].left;
-	var pY   = sagePointers[uniqueID].top;
-	var elem = findAppUnderPointer(pX, pY);
-
+	//var pX   = sagePointers[uniqueID].left;
+	//var pY   = sagePointers[uniqueID].top;
+	//var elem = findAppUnderPointer(pX, pY);
+	var elem = null;
 	if (elem !== null) {
 		if( elem.closeGestureID === undefined && gesture === 0 ) { // gesture: 0 = down, 1 = hold/move, 2 = up
 			elem.closeGestureID = uniqueID;
@@ -5805,6 +5806,9 @@ function moveRadialMenu(uniqueID, pointerX, pointerY ) {
 
 		interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});
 
+		var thumbnailWindowPos = existingRadialMenu.getThumbnailWindowPosition();
+		interactMgr.editGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: existingRadialMenu.thumbnailWindowSize.x, h: existingRadialMenu.thumbnailWindowSize.y});
+
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
 }
@@ -5911,11 +5915,12 @@ function wsRadialMenuThumbnailWindow( wsio, data ) {
 	if (radialMenu !== undefined) {
 		radialMenu.openThumbnailWindow(data);
 
-		interactMgr.editGeometry(data.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: radialMenu.left, y: radialMenu.top, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y});
-
-		interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
-
-		console.log("server::wsRadialMenuThumbnailWindow():" + data.thumbnailWindowOpen);
+		if( data.thumbnailWindowOpen ) {
+			var thumbnailWindowPos = radialMenu.getThumbnailWindowPosition();
+			interactMgr.addGeometry(data.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y}, true, Object.keys(SAGE2Items.radialMenus).length, radialMenu);
+		} else {
+			interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
+		}
 	}
 }
 

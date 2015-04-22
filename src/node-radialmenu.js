@@ -106,6 +106,15 @@ RadialMenu.prototype.setPosition = function(data) {
 /**
 *
 *
+* @method getThumbnailWindowPosition
+*/
+RadialMenu.prototype.getThumbnailWindowPosition = function(data) {
+	return { x: this.left + this.radialMenuSize.x/2, y: this.top - this.radialMenuSize.y/2};
+};
+
+/**
+*
+*
 * @method hasEventID
 */
 RadialMenu.prototype.hasEventID = function(id) {
