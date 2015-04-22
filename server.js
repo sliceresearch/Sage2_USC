@@ -5552,7 +5552,7 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if( sagePointers[uniqueID] === undefined )
 		return;
 
-	var pX   = sagePointers[uniqueID].left;
+	/*var pX   = sagePointers[uniqueID].left;
 	var pY   = sagePointers[uniqueID].top;
 	var elem = findAppUnderPointer(pX, pY);
 
@@ -5567,7 +5567,7 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 		else if( gesture === 2 ) { // Released, reset timer
 			elem.closeGestureID = undefined;
 		}
-	}
+	}*/
 }
 
 /*
@@ -5757,10 +5757,11 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 function createRadialMenu(uniqueID, pointerX, pointerY) {
 	var validLocation = true;
 	var newMenuPos = {x: pointerX, y: pointerY};
+	var existingRadialMenu = null;
 
 	// Make sure there's enough distance from other menus
 	for (var key in SAGE2Items.radialMenus.list) {
-		var existingRadialMenu = SAGE2Items.radialMenus.list[key];
+		existingRadialMenu = SAGE2Items.radialMenus.list[key];
 		var prevMenuPos = {x: existingRadialMenu.left, y: existingRadialMenu.top };
 		var distance    = Math.sqrt( Math.pow( Math.abs(newMenuPos.x - prevMenuPos.x), 2 ) + Math.pow( Math.abs(newMenuPos.y - prevMenuPos.y), 2 ) );
 		if (existingRadialMenu.visible && distance < existingRadialMenu.radialMenuSize.x) {

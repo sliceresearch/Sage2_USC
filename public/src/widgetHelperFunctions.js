@@ -264,7 +264,7 @@ polarToCartesian = function (radius, theta, center) {
 */
 createWidgetToAppConnector = function (instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
-	paper.line()
+	//paper.line()
 	var connectorDiv = document.createElement("div");
 	connectorDiv.id = instanceID + "connector";
 	connectorDiv.style.zIndex = 0;
@@ -482,4 +482,4 @@ makeSvgBackgroundForWidgetConnectors = function(width, height){
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
 	return backDrop;
-}
+};
