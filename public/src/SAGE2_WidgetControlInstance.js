@@ -143,9 +143,8 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 	innerGeometry.center.x = center.x;
 	innerGeometry.center.y = center.y;
 	innerGeometry.center.r = dimensions.buttonRadius;
-	if (isMaster) {
-		console.log(innerGeometry);
-		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID, innerGeometry:innerGeometry});
+	if (isMaster){
+		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID,innerGeometry:innerGeometry});	
 	}
 	var ctrHandle = document.getElementById(instanceID + "SVG");
 	return ctrHandle;
@@ -435,7 +434,6 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 		}
 	}
 	var rectangle = {id:this.controlSpec.textInput.id, x:parseInt(textArea.attr("x")), y:parseInt(textArea.attr("y")), h:parseInt(textArea.attr("height")), w:parseInt(textArea.attr("width"))};
-	console.log(rectangle);
 	return rectangle;
 };
 

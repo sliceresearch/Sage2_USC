@@ -194,6 +194,7 @@ function setupListeners() {
 			uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay, 10) : 30;
 			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
 		}
+		makeSvgBackgroundForWidgetConnectors(ui.main.style.width,ui.main.style.height);
 	});
 
 	wsio.on('hideui', function(param) {
@@ -573,7 +574,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
-			hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
+			//hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
 		}
 	});
 
@@ -581,7 +582,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===false){
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
 			controlItems[ctrl_data.id].show=true;
-			showWidgetToAppConnector(ctrl_data.id);
+			//showWidgetToAppConnector(ctrl_data.id);
 		}
 	});
 
@@ -988,7 +989,6 @@ function setupListeners() {
 
 	});*/
 	wsio.on('executeControlFunction', function(data){
-		console.log("in executeControlFunction->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if(ctrl){
 			var ctrId = ctrl.attr('id');
@@ -1035,11 +1035,25 @@ function setupListeners() {
 	});
 
 	wsio.on('sliderKnobLockAction', function(data){
-		var ctrl = getWidgetControlInstanceById(data);
+		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var func = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());
+		var ctrHandle = document.getElementById(slider.data("instanceID"));
+		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
+		var pos = data.x-ui.offsetX-widgetOffset;
+		var sliderKnob = slider.select("rect");
+		var knobWidthHalf = parseInt(sliderKnob.attr("width"))/2;
+		var knobCenterX = parseInt(sliderKnob.attr("x")) + knobWidthHalf ;
+		if (Math.abs(pos - knobCenterX) > knobWidthHalf){
+			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
+			var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+			app.handle[app.property] = updatedSliderInfo.sliderValue;
+			func = slider.data("updateCall");
+			if (func !== undefined && func !== null)
+				func(new Date());
+		}
 	});
 	wsio.on('moveSliderKnob', function(data){
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
@@ -1048,9 +1062,9 @@ function setupListeners() {
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
-		var val = mapMoveToSlider(sliderKnob, pos);
+		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
 		var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
-		app.handle[app.property] = val;
+		app.handle[app.property] = updatedSliderInfo.sliderValue;
 		var func = slider.data("updateCall");
 		if (func !== undefined && func !== null)
 			func(new Date());

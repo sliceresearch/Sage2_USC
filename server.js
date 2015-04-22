@@ -227,9 +227,9 @@ var remoteInteraction = {};
 //var mediaStreams = {};
 var mediaBlockStreams = {};
 //var applications = []; // app windows
+
 //var controls = [];     // app widget bars
 //var radialMenus = {};  // radial menus
-
 
 
 // Sticky items and window position for new clones
@@ -3749,8 +3749,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 
 				remoteInteraction[uniqueID].lockControl(ctrlData);
 				if (regSl.test(btn.id)){
-					broadcast('sliderKnobLockAction', ctrlData);
-					broadcast('moveSliderKnob', {ctrl:ctrlData, x:pointerX});
+					broadcast('sliderKnobLockAction', {ctrl:ctrlData, x:pointerX});
 				}
 				else if (regTI.test(btn.id)) {
 					broadcast('activateTextInputControl', {prevTextInput:lockedControl, curTextInput:ctrlData});
@@ -3948,38 +3947,48 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	// update app position and size if currently modifying a window
 	var updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
 	var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
+	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
+
+	
 	if (updatedMoveItem !== null) {
 		moveApplicationWindow(uniqueID, updatedMoveItem);
-		return;
 	}
 	else if (updatedResizeItem !== null) {
 		moveAndResizeApplicationWindow(updatedResizeItem);
-		return;
     }
-
-	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-	if (obj === null) {
-		removeExistingHoverCorner(uniqueID);
-		return;
+    else if (updatedControl !== null) {
+		moveWidgetControls(uniqueID, updatedControl);
 	}
-	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-	switch (obj.layerId) {
-		case "staticUI":
+   	else{
+   		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+	    if (obj === null) {
 			removeExistingHoverCorner(uniqueID);
-			break;
-		case "radialMenus":
-			removeExistingHoverCorner(uniqueID);
-			pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt);
-			break;
-		case "widgets":
-			pointerMoveOnWidgets(uniqueID, pointerX, pointerY, data, obj, localPt);
-			removeExistingHoverCorner(uniqueID);
-			break;
-		case "applications":
-			pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
-			break;
-	}
+	    }
+	    else{
+	    	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+			switch (obj.layerId) {
+				case "staticUI":
+					removeExistingHoverCorner(uniqueID);
+					break;
+				case "radialMenus":
+					removeExistingHoverCorner(uniqueID);
+					pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt);
+					break;
+				case "widgets":
+					pointerMoveOnWidgets(uniqueID, pointerX, pointerY, data, obj, localPt);
+					removeExistingHoverCorner(uniqueID);
+					break;
+				case "applications":
+					pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
+					break;
+			}
+		}
+		remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
+   	}
+    
 }
+
+
 
 function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	// Check if on button
@@ -3996,27 +4005,11 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 
 function pointerMoveOnWidgets(uniqueID, pointerX, pointerY, data, obj, localPt){
 	// widgets
-	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
-
-	if (updatedControl !== null) {
-		var app = SAGE2Items.applications.list[updatedControl.appId];
-		if (app){
-			updatedControl.appData = getAppPositionSize(app);
-			updatedControl.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-			broadcast('setControlPosition', updatedControl);
-			interactMgr.editGeometry(updatedControl.elemId+"_radial", "widgets", "circle", {x: updatedControl.elemLeft+(updatedControl.elemHeight/2), y: updatedControl.elemTop+(updatedControl.elemHeight/2), r: updatedControl.elemHeight/2});
-			if(updatedControl.hasSideBar === true) {
-				interactMgr.editGeometry(updatedControl.elemId+"_sidebar", "widgets", "rectangle", {x: updatedControl.elemLeft+updatedControl.elemHeight, y: updatedControl.elemTop+(updatedControl.elemHeight/2)-(updatedControl.elemBarHeight/2), w: updatedControl.elemWidth-updatedControl.elemHeight, h: updatedControl.elemBarHeight});
-			}
-			return;
-		}
-	}
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
 		broadcast('moveSliderKnob', {ctrl:lockedControl, x:pointerX});
 		return;
 	}
-
 	//showOrHideWidgetConnectors(uniqueID, obj.data, "move");
 	// Widget connector show logic ends
 
@@ -4111,6 +4104,19 @@ function moveAndResizeApplicationWindow(resizeApp) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
+		}
+	}
+}
+
+function moveWidgetControls (uniqueID, moveControl){
+	var app = SAGE2Items.applications.list[moveControl.appId];
+	if (app){
+		moveControl.appData = getAppPositionSize(app);
+		moveControl.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
+		broadcast('setControlPosition', moveControl);
+		interactMgr.editGeometry(moveControl.elemId+"_radial", "widgets", "circle", {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2});
+		if(moveControl.hasSideBar === true) {
+			interactMgr.editGeometry(moveControl.elemId+"_sidebar", "widgets", "rectangle", {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight});
 		}
 	}
 }
@@ -5755,6 +5761,7 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 /* ****** Radial Menu section ************************************************************** */
 
 //createMediabrowser();
+
 function createRadialMenu(uniqueID, pointerX, pointerY) {
 	var validLocation = true;
 	var newMenuPos = {x: pointerX, y: pointerY};

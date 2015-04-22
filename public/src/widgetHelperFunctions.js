@@ -15,6 +15,7 @@
  * @submodule widgets
  */
 var dynamicStyleSheets = {};
+var svgBackgroundForWidgetConnectors = null;
 
 function drawSpokeForRadialLayout(instanceID, paper, center, point){
 	var spoke = paper.line(center.x, center.y, point.x, point.y);
@@ -106,9 +107,8 @@ function mapMoveToSlider(sliderKnob, position){
 	var deltaX = (right-left)/parts;
 	var n = Math.floor(0.5 + (position-left)/deltaX);
 	if (isNaN(n)===true)
-		n = 0;
-	var sliderValue = begin + n*increments;
-	return sliderValue;
+		n = 0; 
+	return {sliderValue: begin + n*increments, newPosition: left + n * deltaX};
 }
 
 insertTextIntoTextInputWidget = function(textInput, code, printable){
@@ -250,7 +250,21 @@ polarToCartesian = function (radius, theta, center) {
 };
 
 
+/*createWidgetToAppConnector = function (instanceID) {
+	var connectorDiv = document.createElement("div");
+	connectorDiv.id = instanceID + "connector";
+	connectorDiv.style.zIndex = 0;
+	connectorDiv.style.border = "none";
+	connectorDiv.style.background = "white";
+	connectorDiv.style.position = "absolute";
+	connectorDiv.style.display = "none";
+	connectorDiv.style.height = (ui.widgetControlSize* 0.01) + "em";
+	ui.main.appendChild(connectorDiv);
+};
+*/
 createWidgetToAppConnector = function (instanceID) {
+	var paper = svgBackgroundForWidgetConnectors;
+	//paper.line()
 	var connectorDiv = document.createElement("div");
 	connectorDiv.id = instanceID + "connector";
 	connectorDiv.style.zIndex = 0;
@@ -295,10 +309,12 @@ hideAllWidgetToAppConnector = function (appId){
 };
 
 hideWidgetToAppConnector = function(instanceID, appId){
-	var connectorDiv = document.getElementById(instanceID + "connector");
+	var connector = Snap.select("[id*=\""+instanceID+"connector\"]");
+	connector.remove();
+	/*var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv){
 		connectorDiv.style.display = "none";
-	}
+	}*/
 	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 	if (selectedControl){
 		selectedControl.attr({
@@ -460,3 +476,10 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
     connectorDiv.style.display = "inline";
 };
 
+makeSvgBackgroundForWidgetConnectors = function(width, height){
+	var backDrop = new Snap(parseInt(width),parseInt(height));
+	backDrop.node.style.zIndex = "1";
+	ui.main.appendChild(backDrop.node);
+	svgBackgroundForWidgetConnectors = backDrop;
+	return backDrop;
+};
