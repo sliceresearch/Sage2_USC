@@ -28,6 +28,7 @@ function Interaction(config) {
 	this.selectedScrollItem  = null;
 	this.selectedResizeItem  = null;
 	this.selectedMoveControl = null;
+	this.previousInteractionItem = null;
 	this.controlLock     = null;
 	this.hoverControlItem = null;
 	this.hoverCornerItem = null;
@@ -49,7 +50,7 @@ function Interaction(config) {
  */
 
 Interaction.prototype.selectMoveItem = function(moveItem, pointerX, pointerY) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
 	this.selectedMoveItem    = moveItem;
 	this.selectedMoveControl = null;
 	this.selectedScrollItem  = null;
@@ -61,6 +62,7 @@ Interaction.prototype.selectMoveItem = function(moveItem, pointerX, pointerY) {
 	if(this.selectedMoveItem.previous_top    === null) this.selectedMoveItem.previous_top    = this.selectedMoveItem.top;
 	if(this.selectedMoveItem.previous_width  === null) this.selectedMoveItem.previous_width  = this.selectedMoveItem.width;
 	if(this.selectedMoveItem.previous_height === null) this.selectedMoveItem.previous_height = this.selectedMoveItem.height;
+	this.setPreviousInteractionItem(moveItem);
 };
 
 /**
@@ -74,6 +76,7 @@ Interaction.prototype.selectMoveControl = function(moveControl, pointerX, pointe
 	this.selectedResizeItem  = null;
 	this.selectOffsetX       = this.selectedMoveControl.left - pointerX;
 	this.selectOffsetY       = this.selectedMoveControl.top - pointerY;
+	this.setPreviousInteractionItem(moveControl);
 };
 
 /**
@@ -83,6 +86,7 @@ Interaction.prototype.selectMoveControl = function(moveControl, pointerX, pointe
 Interaction.prototype.releaseControl = function() {
 	// Same as release item, has been created for clarity of code
 	this.selectedMoveControl = null;
+	this.setPreviousInteractionItem(null);
 };
 
 
@@ -91,7 +95,8 @@ Interaction.prototype.releaseControl = function() {
  */
 
 Interaction.prototype.selectScrollItem = function(scrollItem) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
+
 	this.selectedMoveItem    = null;
 	this.selectedScrollItem  = scrollItem;
 	this.selectedResizeItem  = null;
@@ -103,7 +108,7 @@ Interaction.prototype.selectScrollItem = function(scrollItem) {
  */
 
 Interaction.prototype.releaseItem = function(valid) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 
 	var updatedItem = null;
 	if (!valid && this.selectedMoveItem !== null) {
@@ -125,7 +130,7 @@ Interaction.prototype.releaseItem = function(valid) {
 	this.selectedMoveItem   = null;
 	this.selectedScrollItem = null;
 	this.selectedResizeItem = null;
-
+	this.setPreviousInteractionItem(null);
 	return updatedItem;
 };
 
@@ -135,7 +140,7 @@ Interaction.prototype.releaseItem = function(valid) {
  */
 
 Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 	if (this.selectedMoveItem === null) return null;
 
 	this.selectedMoveItem.left = pointerX + this.selectOffsetX;
@@ -154,7 +159,7 @@ Interaction.prototype.moveSelectedControl = function(pointerX, pointerY) {
 	this.selectedMoveControl.left = pointerX + this.selectOffsetX;
 	this.selectedMoveControl.top  = pointerY + this.selectOffsetY;
 
-	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, hasSideBar: this.selectedMoveControl.hasSideBar, elemBarHeight: this.selectedMoveControl.barHeight, date: new Date()};
+	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, date: new Date()};
 };
 
 
@@ -230,7 +235,7 @@ Interaction.prototype.dropControl = function() {
  */
 
 Interaction.prototype.scrollSelectedItem = function(scale) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 	if (this.selectedScrollItem === null) return null;
 
 	var iWidth = this.selectedScrollItem.width * scale;
@@ -277,7 +282,7 @@ Interaction.prototype.setHoverCornerItem = function(item) {
  */
 
 Interaction.prototype.selectResizeItem = function(resizeItem, pointerX, pointerY) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
 
 	this.selectedMoveItem    = null;
 	this.selectedScrollItem  = null;
@@ -292,7 +297,7 @@ Interaction.prototype.selectResizeItem = function(resizeItem, pointerX, pointerY
  */
 
 Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 	if (this.selectedResizeItem === null) return null;
 
 	var iWidth  = pointerX - this.selectedResizeItem.left + this.selectOffsetX;
@@ -346,7 +351,7 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
  */
 
 Interaction.prototype.maximizeSelectedItem = function(item) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 	if (item === null) return null;
 
 	var wallRatio = this.configuration.totalWidth  / this.configuration.totalHeight;
@@ -390,7 +395,7 @@ Interaction.prototype.maximizeSelectedItem = function(item) {
 };
 
 Interaction.prototype.maximizeFullSelectedItem = function(item) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 	if (item === null) return null;
 
 	// back up values for restore
@@ -423,7 +428,7 @@ Interaction.prototype.maximizeFullSelectedItem = function(item) {
  */
 
 Interaction.prototype.restoreSelectedItem = function(item) {
-	//if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
+	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
 	if (item === null) return null;
 
 	item.left   = item.previous_left;
@@ -508,5 +513,20 @@ Interaction.prototype.appInteractionMode = function(){
     return this.interactionMode === MODE.APP_INTERACTION;
 };
 
+/**
+ *@method setPreviousInteractionItem
+ */
+
+Interaction.prototype.setPreviousInteractionItem = function(item){
+	this.previousInteractionItem = item;
+};
+
+/**
+ *@method getPreviousInteractionItem
+ */
+
+Interaction.prototype.getPreviousInteractionItem = function(){
+	return this.previousInteractionItem;
+};
 
 module.exports = Interaction;
