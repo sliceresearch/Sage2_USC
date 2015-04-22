@@ -25,7 +25,7 @@ var clock = SAGE2_App.extend( {
 		// application specific 'init'
 		this.ctx    = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
-		this.maxFPS = 1.0;
+		this.maxFPS = 2.0;
 		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 	

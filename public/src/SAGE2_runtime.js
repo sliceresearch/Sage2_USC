@@ -78,7 +78,7 @@ function log(obj) {
 	else
 		args = obj;
 	// send a log message to the server
-	sage2Log({app: "index", message: args});
+	sage2Log({app: "client", message: args});
 }
 
 /**

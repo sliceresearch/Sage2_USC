@@ -54,18 +54,18 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 * @method detachStickyItem
 */
 StickyItems.prototype.detachStickyItem = function(stickyItem) {
-	for (var key in this.stickyItemParent){
-		if (this.stickyItemParent.hasOwnProperty(key)){
+	for (var key in this.stickyItemParent) {
+		if (this.stickyItemParent.hasOwnProperty(key)) {
 			var idx = this.stickyItemParent[key].indexOf(stickyItem);
-			if (idx>-1){
+			if (idx>-1) {
 				this.stickyItemParent[key].splice(idx, 1);
-				if (this.stickyItemParent[key].length < 1){
+				if (this.stickyItemParent[key].length < 1) {
 					delete this.stickyItemParent[key];
 				}
 				delete this.stickyItemOffsetInfo[stickyItem.id];
 				break;
 			}
-		} 
+		}
 	}
 };
 
@@ -87,7 +87,7 @@ StickyItems.prototype.removeElement = function(elem) {
 */
 StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 	var moveItems = [];
-	if (this.stickyItemParent[updatedItem.elemId]){
+	if (this.stickyItemParent[updatedItem.elemId]) {
 		var list = this.stickyItemParent[updatedItem.elemId];
 		for (var l in list) {
 			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX;

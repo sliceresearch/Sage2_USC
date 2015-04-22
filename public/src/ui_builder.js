@@ -451,6 +451,10 @@ function UIBuilder(json_cfg, clientID) {
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
 
+		// Also hide the cursor on top of the SVG (doesnt inherit from style body)
+		if (this.clientID !== -1)
+			watermarkSVG.style.cursor = "none";
+
 		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
 
@@ -598,14 +602,14 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.appendChild(menuElem3);
 
 			radialMenuContentWindowDiv.appendChild(menuElem2);
+			var rect = menuElem1.getBoundingClientRect();
 
 			var menu = new RadialMenu();
-
 			menu.init(data, menuElem2, menuElem3);
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
-		
+
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -646,7 +650,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-			
+
 			//console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)
@@ -676,6 +680,8 @@ function UIBuilder(json_cfg, clientID) {
 					menuElem.style.display = "block";
 					menu.thumbnailScrollWindowElement.style.display = "block";
 					menu.thumbnailWindowDiv.style.display = "block";
+
+					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 
 					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true ) {
 						menu.draw();

@@ -33,7 +33,8 @@
 	makeWidgetBarOutlinePath: true, mapMoveToSlider: true,
 	SAGE2WidgetControlInstance: true, SAGE2WidgetControl: true,
 	SAGE2WidgetButtonTypes: true, controlObjects: true, controlItems: true,
-	smallWhiteGIF: true, SAGE2_browser: true, __SAGE2__: true
+	smallWhiteGIF: true, SAGE2_browser: true, __SAGE2__: true,
+	DynamicImage: true
   },
   rules: {
 	no-alert: 0,
