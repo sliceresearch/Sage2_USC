@@ -2587,9 +2587,19 @@ function wsRemoteSagePointerToggleModes(wsio, data) {
 }
 
 function wsRemoteSagePointerHoverCorner(wsio, data) {
-	if (SAGE2Items.applications.list.hasOwnProperty(data.appHoverCorner.elemId)) {
-		broadcast('hoverOverItemCorner', data.appHoverCorner);
+	var appId = data.appHoverCorner.elemId;
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(appId)) {
+		app = SAGE2Items.applications.list[appId];
 	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + appId)) {
+		data.appHoverCorner.elemId = wsio.id + "|" + appId;
+		appId = data.appHoverCorner.elemId;
+		app = SAGE2Items.applications.list[appId];
+	}
+	if (app === undefined || app === null) return;
+
+	broadcast('hoverOverItemCorner', data.appHoverCorner);
 }
 
 function wsAddNewRemoteElementInDataSharingPortal(wsio, data) {
@@ -2634,50 +2644,64 @@ function wsUpdateApplicationOrder(wsio, data) {
 
 function wsStartApplicationMove(wsio, data) {
 	// should check timestamp first (data.date)
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + data.appId)) {
+		data.appId = wsio.id + "|" + data.appId;
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	if (app === undefined || app === null) return;
+
 	broadcast('startMove', {id: data.appId, date: Date.now()});
 
-	var app = SAGE2Items.applications.list[data.appId];
-	if (app !== undefined && app !== null) {
-		var eLogData = {
-			type: "move",
-			action: "start",
-			application: {
-				id: app.id,
-				type: app.application
-			},
-			location: {
-				x: parseInt(app.left, 10),
-				y: parseInt(app.top, 10),
-				width: parseInt(app.width, 10),
-				height: parseInt(app.height, 10)
-			}
-		};
-		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
-	}
+	var eLogData = {
+		type: "move",
+		action: "start",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		location: {
+			x: parseInt(app.left, 10),
+			y: parseInt(app.top, 10),
+			width: parseInt(app.width, 10),
+			height: parseInt(app.height, 10)
+		}
+	};
+	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
 function wsStartApplicationResize(wsio, data) {
 	// should check timestamp first (data.date)
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + data.appId)) {
+		data.appId = wsio.id + "|" + data.appId;
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	if (app === undefined || app === null) return;
+	
 	broadcast('startResize', {id: data.appId, date: Date.now()});
 
-	var app = SAGE2Items.applications.list[data.appId];
-	if (app !== undefined && app !== null) {
-		var eLogData = {
-			type: "resize",
-			action: "start",
-			application: {
-				id: app.id,
-				type: app.application
-			},
-			location: {
-				x: parseInt(app.left, 10),
-				y: parseInt(app.top, 10),
-				width: parseInt(app.width, 10),
-				height: parseInt(app.height, 10)
-			}
-		};
-		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
-	}
+	var eLogData = {
+		type: "resize",
+		action: "start",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		location: {
+			x: parseInt(app.left, 10),
+			y: parseInt(app.top, 10),
+			width: parseInt(app.width, 10),
+			height: parseInt(app.height, 10)
+		}
+	};
+	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
 function wsUpdateApplicationPosition(wsio, data) {
@@ -2692,7 +2716,6 @@ function wsUpdateApplicationPosition(wsio, data) {
 		appId = data.appPositionAndSize.elemId;
 		app = SAGE2Items.applications.list[appId];
 	}
-
 	if (app === undefined || app === null) return;
 
 	var titleBarHeight = config.ui.titleBarHeight;
@@ -2726,7 +2749,6 @@ function wsUpdateApplicationPositionAndSize(wsio, data) {
 		appId = data.appPositionAndSize.elemId;
 		app = SAGE2Items.applications.list[appId];
 	}
-
 	if (app === undefined || app === null) return;
 
 	var titleBarHeight = config.ui.titleBarHeight;
@@ -2751,51 +2773,64 @@ function wsUpdateApplicationPositionAndSize(wsio, data) {
 
 function wsFinishApplicationMove(wsio, data) {
 	// should check timestamp first (data.date)
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + data.appId)) {
+		data.appId = wsio.id + "|" + data.appId;
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	if (app === undefined || app === null) return;
+
 	broadcast('finishedMove', {id: data.appId, date: Date.now()});
 
-	var app = SAGE2Items.applications.list[data.appId];
-	if (app !== undefined && app !== null) {
-		var eLogData = {
-			type: "move",
-			action: "end",
-			application: {
-				id: app.id,
-				type: app.application
-			},
-			location: {
-				x: parseInt(app.left, 10),
-				y: parseInt(app.top, 10),
-				width: parseInt(app.width, 10),
-				height: parseInt(app.height, 10)
-			}
-		};
-		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
-	}
-
+	var eLogData = {
+		type: "move",
+		action: "end",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		location: {
+			x: parseInt(app.left, 10),
+			y: parseInt(app.top, 10),
+			width: parseInt(app.width, 10),
+			height: parseInt(app.height, 10)
+		}
+	};
+	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
 function wsFinishApplicationResize(wsio, data) {
 	// should check timestamp first (data.date)
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + data.appId)) {
+		data.appId = wsio.id + "|" + data.appId;
+		app = SAGE2Items.applications.list[data.appId];
+	}
+	if (app === undefined || app === null) return;
+
 	broadcast('finishedResize', {id: data.appId, date: Date.now()});
 
-	var app = SAGE2Items.applications.list[data.appId];
-	if (app !== undefined && app !== null) {
-		var eLogData = {
-			type: "resize",
-			action: "end",
-			application: {
-				id: app.id,
-				type: app.application
-			},
-			location: {
-				x: parseInt(app.left, 10),
-				y: parseInt(app.top, 10),
-				width: parseInt(app.width, 10),
-				height: parseInt(app.height, 10)
-			}
-		};
-		addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
-	}
+	var eLogData = {
+		type: "resize",
+		action: "end",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		location: {
+			x: parseInt(app.left, 10),
+			y: parseInt(app.top, 10),
+			width: parseInt(app.width, 10),
+			height: parseInt(app.height, 10)
+		}
+	};
+	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
 function wsDeleteApplication(wsio, data) {
