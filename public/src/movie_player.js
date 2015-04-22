@@ -175,6 +175,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 	*/
     setVideoFrame: function(frameIdx) {
 		this.state.frame = frameIdx;
+		this.SAGE2Sync(false);
 	},
 
 	/**

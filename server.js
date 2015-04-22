@@ -1358,6 +1358,13 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 		
+		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		var portal = findApplicationPortal(app);
+		if (portal !== undefined && portal !== null && data.updateRemote === true) {
+			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+			remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.state});
+		}
+		/*
 		var oldTs;
 		var oldLoop;
 		var oldMute
@@ -1380,6 +1387,7 @@ function wsUpdateAppState(wsio, data) {
 				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', data);
 			}
 		}
+		*/
 	}
 }
 

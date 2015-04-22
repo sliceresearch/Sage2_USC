@@ -155,9 +155,9 @@ var SAGE2_App = Class.extend( {
 		}
 	},
 
-	SAGE2Sync: function() {
+	SAGE2Sync: function(updateRemote) {
 		if(isMaster)
-			wsio.emit('updateAppState', {id: this.id, state: this.state});
+			wsio.emit('updateAppState', {id: this.id, state: this.state, updateRemote: updateRemote});
 	},
 
 	/**
@@ -274,7 +274,7 @@ var SAGE2_App = Class.extend( {
 	*/
 	refresh: function (date) {
 		if (this.SAGE2UserModification === true) {
-			this.SAGE2Sync();
+			this.SAGE2Sync(true);
 		}
 
 		// update time
