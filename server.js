@@ -141,6 +141,8 @@ function initializeSage2Server() {
 			users = {};
 		users.session = {};
 		users.session.start = Date.now();
+
+		setInterval(saveUserLog, 300000); // every 5 minutes
 	}
 	if (!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 
@@ -1517,6 +1519,28 @@ function saveSession (filename) {
 	}
 	catch (err) {
 		console.log(sageutils.header("Session") + "error saving", err);
+	}
+}
+
+function saveUserLog(filename) {
+	if(users !== null) {
+		filename = filename || "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date(startTime))+".json";
+		//var key;
+		//for(key in users) {
+		//	if(users[key].ip !== undefined) delete users[key].ip;
+		//}
+		users.session.end = Date.now();
+		var userLogName = path.join("logs", filename);
+		if (sageutils.fileExists(userLogName)) {
+			fs.unlinkSync(userLogName);
+		}
+		var ignoreIP = function(key,value) {
+		    if (key == "ip") return undefined;
+		    else return value;
+		};
+
+		fs.writeFileSync(userLogName, json5.stringify(users, ignoreIP, 4));
+		console.log(sageutils.header("LOG") + "saved log file to " + userLogName);
 	}
 }
 
@@ -3785,20 +3809,10 @@ function formatDateToYYYYMMDD_HHMMSS(date) {
 }
 
 function quitSAGE2() {
-	if(users !== null) {
-		var key;
-		for(key in users) {
-			if(users[key].ip !== undefined) delete users[key].ip;
-		}
-		users.session.end = Date.now();
-		var userLogName = path.join("logs", "user-log_"+formatDateToYYYYMMDD_HHMMSS(new Date(startTime))+".json");
-		fs.writeFileSync(userLogName, json5.stringify(users, null, 4));
-		console.log(sageutils.header("LOG") + "saved log file to " + userLogName);
-	}
-
 	if (config.register_site) {
 		// de-register with EVL's server
 		sageutils.deregisterSAGE2(config, function() {
+			saveUserLog();
 			saveSession();
 			assets.saveAssets();
 			if( omicronRunning )
@@ -3807,6 +3821,7 @@ function quitSAGE2() {
 		});
 	}
 	else {
+		saveUserLog();
 		saveSession();
 		assets.saveAssets();
 		if( omicronRunning )
