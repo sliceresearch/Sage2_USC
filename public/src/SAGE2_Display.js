@@ -224,11 +224,21 @@ function setupListeners() {
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
-		ui.connectedToRemoteSite(data);
+		if (window.ui)
+			ui.connectedToRemoteSite(data);
+		else 
+			setTimeout(function() {
+				ui.connectedToRemoteSite(data);
+			}, 250);
 	});
 
 	wsio.on('createSagePointer', function(pointer_data){
-		ui.createSagePointer(pointer_data);
+		if (window.ui)
+			ui.createSagePointer(pointer_data);
+		else 
+			setTimeout(function() {
+				ui.createSagePointer(pointer_data);
+			}, 250);
     });
 
     wsio.on('showSagePointer', function(pointer_data){

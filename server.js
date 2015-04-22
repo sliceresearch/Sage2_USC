@@ -1364,30 +1364,6 @@ function wsUpdateAppState(wsio, data) {
 			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
 			remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.state});
 		}
-		/*
-		var oldTs;
-		var oldLoop;
-		var oldMute
-		if (app.application === "movie_player") {
-			oldTs = app.data.frame / app.data.framerate;
-			oldLoop = app.data.looped;
-			oldMute = app.data.muted;
-		}
-		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
-		if (modified === true) {
-			var portal = findApplicationPortal(app);
-			if (portal !== undefined && portal !== null) {
-				if (app.application === "movie_player") {
-					var ts = data.state.frame / data.state.framerate;
-					if(data.state.paused === false && ts !== oldTs && data.state.looped === oldLoop && data.state.muted === oldMute) {
-						return;
-					}
-				}
-				var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
-				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', data);
-			}
-		}
-		*/
 	}
 }
 
@@ -2793,16 +2769,21 @@ function wsUpdateApplicationState(wsio, data) {
 		// hang on to old values if movie player
 		var oldTs;
 		var oldPaused;
+		var oldMuted;
 		if (app.application === "movie_player") {
 			oldTs = app.data.frame / app.data.framerate;
 			oldPaused = app.data.paused;
+			oldMuted = app.data.muted;
 		}
 
 		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 		if (modified === true) {
 			// update video demuxer based on state
 			if (app.application === "movie_player") {
+				console.log("received state from remote site:", data.state);
+
 				SAGE2Items.renderSync[app.id].loop = app.data.looped;
+
 				var ts = app.data.frame / app.data.framerate;
 				if(app.data.paused === true && ts !== oldTs) {
 					SAGE2Items.renderSync[app.id].decoder.seek(ts, function() {
@@ -2820,10 +2801,10 @@ function wsUpdateApplicationState(wsio, data) {
 						SAGE2Items.renderSync[app.id].decoder.play();
 					}
 				}
-				if(app.data.muted === true) {
+				if (app.data.muted === true && oldMuted === false) {
 					broadcast('videoMuted', {id: app.id});
 				}
-				else {
+				if (app.data.muted === false && oldMuted === true) {
 					broadcast('videoUnmuted', {id: app.id});
 				}
 			}
