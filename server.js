@@ -2682,7 +2682,18 @@ function wsStartApplicationResize(wsio, data) {
 
 function wsUpdateApplicationPosition(wsio, data) {
 	// should check timestamp first (data.date)
-	var app = SAGE2Items.applications.list[data.appPositionAndSize.elemId];
+	var appId = data.appPositionAndSize.elemId;
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(appId)) {
+		app = SAGE2Items.applications.list[appId];
+	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + appId)) {
+		data.appPositionAndSize.elemId = wsio.id + "|" + appId;
+		appId = data.appPositionAndSize.elemId;
+		app = SAGE2Items.applications.list[appId];
+	}
+
+	if (app === undefined || app === null) return;
 
 	var titleBarHeight = config.ui.titleBarHeight;
 	if (data.portalId !== undefined && data.portalId !== null) {
@@ -2693,9 +2704,9 @@ function wsUpdateApplicationPosition(wsio, data) {
 	app.width = data.appPositionAndSize.elemWidth;
 	app.height = data.appPositionAndSize.elemHeight;
 	var im = findInteractableManager(data.appPositionAndSize.elemId);
-	im.editGeometry(data.appPositionAndSize.elemId, "applications", "rectangle", {x: app.left, y: app.top, w: app.width, h: app.height+titleBarHeight});
+	im.editGeometry(app.id, "applications", "rectangle", {x: app.left, y: app.top, w: app.width, h: app.height+titleBarHeight});
 	broadcast('setItemPosition', data.appPositionAndSize);
-	if (SAGE2Items.renderSync.hasOwnProperty(data.appPositionAndSize.elemId)) {
+	if (SAGE2Items.renderSync.hasOwnProperty(app.id)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
@@ -2705,7 +2716,18 @@ function wsUpdateApplicationPosition(wsio, data) {
 
 function wsUpdateApplicationPositionAndSize(wsio, data) {
 	// should check timestamp first (data.date)
-	var app = SAGE2Items.applications.list[data.appPositionAndSize.elemId];
+	var appId = data.appPositionAndSize.elemId;
+	var app = null;
+	if (SAGE2Items.applications.list.hasOwnProperty(appId)) {
+		app = SAGE2Items.applications.list[appId];
+	}
+	else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + appId)) {
+		data.appPositionAndSize.elemId = wsio.id + "|" + appId;
+		appId = data.appPositionAndSize.elemId;
+		app = SAGE2Items.applications.list[appId];
+	}
+
+	if (app === undefined || app === null) return;
 
 	var titleBarHeight = config.ui.titleBarHeight;
 	if (data.portalId !== undefined && data.portalId !== null) {
@@ -2716,10 +2738,10 @@ function wsUpdateApplicationPositionAndSize(wsio, data) {
 	app.width = data.appPositionAndSize.elemWidth;
 	app.height = data.appPositionAndSize.elemHeight;
 	var im = findInteractableManager(data.appPositionAndSize.elemId);
-	im.editGeometry(data.appPositionAndSize.elemId, "applications", "rectangle", {x: app.left, y: app.top, w: app.width, h: app.height+titleBarHeight});
-	handleApplicationResize(data.appPositionAndSize.elemId);
+	im.editGeometry(app.id, "applications", "rectangle", {x: app.left, y: app.top, w: app.width, h: app.height+titleBarHeight});
+	handleApplicationResize(app.id);
 	broadcast('setItemPositionAndSize', data.appPositionAndSize);
-	if (SAGE2Items.renderSync.hasOwnProperty(data.appPositionAndSize.elemId)) {
+	if (SAGE2Items.renderSync.hasOwnProperty(app.id)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
@@ -5793,7 +5815,6 @@ function deleteApplication(appId, portalId) {
 	im.removeGeometry(appId, "applications");
 	broadcast('deleteElement', {elemId: appId});
 
-	console.log(portalId);
 	if (portalId !== undefined && portalId !== null) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('deleteApplication', {appId: appId, date: ts});

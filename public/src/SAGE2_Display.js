@@ -229,7 +229,7 @@ function setupListeners() {
 		else 
 			setTimeout(function() {
 				ui.connectedToRemoteSite(data);
-			}, 250);
+			}, 1000);
 	});
 
 	wsio.on('createSagePointer', function(pointer_data){
@@ -238,7 +238,7 @@ function setupListeners() {
 		else 
 			setTimeout(function() {
 				ui.createSagePointer(pointer_data);
-			}, 250);
+			}, 1000);
     });
 
     wsio.on('showSagePointer', function(pointer_data){
