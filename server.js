@@ -3716,7 +3716,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	//console.log("pointer press on radial menu");
-	
+
 	// Drag Content Browser only from radial menu
 	if (data.button === "left" && obj.type !== 'rectangle' ) {
 		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
@@ -3960,7 +3960,6 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
 	var updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
 
-	
 	if (updatedMoveItem !== null) {
 		moveApplicationWindow(uniqueID, updatedMoveItem);
 	}
@@ -3970,13 +3969,13 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
     else if (updatedControl !== null) {
 		moveWidgetControls(uniqueID, updatedControl);
 	}
-   	else{
-   		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-	    if (obj === null) {
+	else {
+		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+		if (obj === null) {
 			removeExistingHoverCorner(uniqueID);
-	    }
-	    else{
-	    	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+		}
+		else {
+			var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			switch (obj.layerId) {
 				case "staticUI":
 					removeExistingHoverCorner(uniqueID);
@@ -3995,8 +3994,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			}
 		}
 		remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
-   	}
-    
+	}
 }
 
 
@@ -4006,7 +4004,7 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 
 	var existingRadialMenu = obj.data;
-	
+
 	// Content Browser is only draggable on radial menu
 	if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
 		var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
@@ -4153,8 +4151,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
 	pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj);
-	
-	if (remoteInteraction[uniqueID].lockedControl()!==null){
+
+	if (remoteInteraction[uniqueID].lockedControl()!==null) {
 		releaseSlider(uniqueID);
 	}
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});

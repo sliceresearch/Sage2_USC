@@ -143,8 +143,8 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 	innerGeometry.center.x = center.x;
 	innerGeometry.center.y = center.y;
 	innerGeometry.center.r = dimensions.buttonRadius;
-	if (isMaster){
-		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID,innerGeometry:innerGeometry});	
+	if (isMaster) {
+		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID, innerGeometry:innerGeometry});
 	}
 	var ctrHandle = document.getElementById(instanceID + "SVG");
 	return ctrHandle;

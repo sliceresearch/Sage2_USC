@@ -34,7 +34,7 @@
 	SAGE2WidgetControlInstance: true, SAGE2WidgetControl: true,
 	SAGE2WidgetButtonTypes: true, controlObjects: true, controlItems: true,
 	smallWhiteGIF: true, SAGE2_browser: true, __SAGE2__: true,
-	DynamicImage: true
+	DynamicImage: true, makeSvgBackgroundForWidgetConnectors: true
   },
   rules: {
 	no-alert: 0,

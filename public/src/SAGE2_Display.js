@@ -194,7 +194,7 @@ function setupListeners() {
 			uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay, 10) : 30;
 			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
 		}
-		makeSvgBackgroundForWidgetConnectors(ui.main.style.width,ui.main.style.height);
+		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
 
 	wsio.on('hideui', function(param) {
@@ -1035,17 +1035,17 @@ function setupListeners() {
 	});
 
 	wsio.on('sliderKnobLockAction', function(data){
-		var ctrl = getWidgetControlInstanceById(data.ctrl);
+		var ctrl   = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
-		var func = slider.data("lockCall");
+		var func   = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());
-		var ctrHandle = document.getElementById(slider.data("instanceID"));
+		var ctrHandle    = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
-		var knobWidthHalf = parseInt(sliderKnob.attr("width"))/2;
-		var knobCenterX = parseInt(sliderKnob.attr("x")) + knobWidthHalf ;
+		var knobWidthHalf = parseInt(sliderKnob.attr("width")) / 2;
+		var knobCenterX   = parseInt(sliderKnob.attr("x")) + knobWidthHalf;
 		if (Math.abs(pos - knobCenterX) > knobWidthHalf){
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
 			var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));

@@ -100,19 +100,19 @@ SAGE2WidgetControl.prototype.controlsReady = function(){
 * 	Added cover is available only to that instance of that app.
 */
 SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData){
-	if (this.buttonType[type] === undefined || this.buttonType[type] === null){
-		this.buttonType[type] = function (){
-			this.state= buttonData.state;
-			this.from= buttonData.from;
-			this.to=  buttonData.to;
-			this.width= buttonData.width;
-			this.height= buttonData.height;
-			this.fill= buttonData.fill;
-			this.label = buttonData.label;
-			this.strokeWidth= buttonData.strokeWidth;
-			this.delay= buttonData.delay;
-			this.textual= buttonData.textual;
-			this.animation= buttonData.animation;
+	if (this.buttonType[type] === undefined || this.buttonType[type] === null) {
+		this.buttonType[type] = function () {
+			this.state   = buttonData.state;
+			this.from    = buttonData.from;
+			this.to      =  buttonData.to;
+			this.width   = buttonData.width;
+			this.height  = buttonData.height;
+			this.fill    = buttonData.fill;
+			this.label   = buttonData.label;
+			this.delay   = buttonData.delay;
+			this.textual = buttonData.textual;
+			this.animation   = buttonData.animation;
+			this.strokeWidth = buttonData.strokeWidth;
 		};
 	}
 };

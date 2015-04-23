@@ -88,14 +88,14 @@ function makeWidgetBarOutlinePath(start, end, innerR, center, width, offset){
 }
 
 function mapMoveToSlider(sliderKnob, position){
-	var slider = sliderKnob.parent();
+	var slider     = sliderKnob.parent();
 	var sliderLine = slider.select("line");
-	var knobWidth = sliderKnob.attr("width");
+	var knobWidth  = sliderKnob.attr("width");
 	var bound = sliderLine.getBBox();
-	var left = bound.x + knobWidth/2.0;
+	var left  = bound.x + knobWidth/2.0;
 	var right = bound.x2 - knobWidth/2.0;
 	var begin = slider.data('begin');
-	var end = slider.data('end');
+	var end   = slider.data('end');
 	var parts = slider.data('parts');
 	var increments = slider.data('increments');
 
@@ -106,8 +106,7 @@ function mapMoveToSlider(sliderKnob, position){
 
 	var deltaX = (right-left)/parts;
 	var n = Math.floor(0.5 + (position-left)/deltaX);
-	if (isNaN(n)===true)
-		n = 0; 
+	if (isNaN(n) === true) n = 0;
 	return {sliderValue: begin + n*increments, newPosition: left + n * deltaX};
 }
 
@@ -477,7 +476,7 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 };
 
 makeSvgBackgroundForWidgetConnectors = function(width, height){
-	var backDrop = new Snap(parseInt(width),parseInt(height));
+	var backDrop = new Snap(parseInt(width), parseInt(height));
 	backDrop.node.style.zIndex = "1";
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
