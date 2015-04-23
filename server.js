@@ -3758,7 +3758,8 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 			}
 		}
 		else {
-			if (btn!==null && remoteInteraction[uniqueID].lockedControl() !== null &&(regSl.test(btn.id) || regButton.test(btn.id))){
+			var lockedControl = remoteInteraction[uniqueID].lockedControl();
+			if (lockedControl !== null && btn!==null && regButton.test(btn.id)) {
 				remoteInteraction[uniqueID].dropControl();
 				broadcast('executeControlFunction', ctrlData, 'receivesWidgetEvents');
 
@@ -3786,6 +3787,14 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "close", application: {id: app2.id, type: app2.application}}, time: Date.now()});
 			}
 		}
+	}
+}
+
+function releaseSlider(uniqueID){
+	var ctrlData = remoteInteraction[uniqueID].lockedControl();
+	if (/slider/.test(ctrlData.ctrlId) === true){
+		remoteInteraction[uniqueID].dropControl();
+		broadcast('executeControlFunction', ctrlData, 'receivesWidgetEvents');
 	}
 }
 
@@ -4143,7 +4152,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
 	pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj);
-
+	
+	if (remoteInteraction[uniqueID].lockedControl()!==null){
+		releaseSlider(uniqueID);
+	}
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
     if (obj === null) {
 		dropSelectedApp(uniqueID, true);
