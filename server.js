@@ -3716,8 +3716,9 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	//console.log("pointer press on radial menu");
-
-	if (data.button === "left") {
+	
+	// Drag Content Browser only from radial menu
+	if (data.button === "left" && obj.type !== 'rectangle' ) {
 		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
 	}
 
@@ -3994,10 +3995,10 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 	// Check if on button
 	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 
-	// Else drag radial menu
 	var existingRadialMenu = obj.data;
-
-	if (existingRadialMenu.dragState === true) {
+	
+	// Content Browser is only draggable on radial menu
+	if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
 		var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
 		moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
 	}
@@ -4488,15 +4489,17 @@ function pointerScrollEnd(uniqueID) {
 	else {
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
 			var app = remoteInteraction[uniqueID].selectWheelItem;
-			var eLogData = {
-				type: "pointerScroll",
-				application: {
-					id: app.id,
-					type: app.application
-				},
-				wheelDelta: remoteInteraction[uniqueID].selectWheelDelta
-			};
-			addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+			if( app !== undefined ) {
+				var eLogData = {
+					type: "pointerScroll",
+					application: {
+						id: app.id,
+						type: app.application
+					},
+					wheelDelta: remoteInteraction[uniqueID].selectWheelDelta
+				};
+				addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+			}
 		}
 	}
 }
