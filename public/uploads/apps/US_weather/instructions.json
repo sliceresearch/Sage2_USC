@@ -9,7 +9,7 @@
 		"scripts/suncalc.js"
 	],
 	"title": "US Weather",
-	"version": "1.1.0",
+	"version": "1.2",
 	"description": "US Weather map using D3.js",
 	"keywords": [ "maps", "weather", "geo", "d3" ],
 	"author": "Andrew Johnson <lenzman@me.com>",

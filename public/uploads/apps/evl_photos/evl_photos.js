@@ -46,13 +46,13 @@ var evl_photos = SAGE2_App.extend( {
 		this.loadTimer = 200;
 		this.fadeCount = 10.0;
 
-		if (SAGE2_photoAlbumLoadTimer != null)
+		if (SAGE2_photoAlbumLoadTimer !== null)
 			this.loadTimer = SAGE2_photoAlbumLoadTimer;
 
-		if (SAGE2_photoAlbumFadeCount != null)
+		if (SAGE2_photoAlbumFadeCount !== null)
 			this.fadeCount = SAGE2_photoAlbumFadeCount;
 
-		if (SAGE2_photoAlbumCanvasBackground != null)
+		if (SAGE2_photoAlbumCanvasBackground !== null)
 			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
 
 		this.URL1  = "";
@@ -65,7 +65,6 @@ var evl_photos = SAGE2_App.extend( {
 		this.bigList = null;
 
 		this.okToDraw = this.fadeCount;
-		this.counter = 1;
 		this.forceRedraw = 1;
 
 		this.fileName = "";
@@ -84,6 +83,8 @@ var evl_photos = SAGE2_App.extend( {
 		this.listFileNameLibrary = "";
 
 		this.state.imageSet = null;
+		this.state.counter = 1;
+
 	 },
 
 	////////////////////////////////////////
@@ -283,9 +284,9 @@ var evl_photos = SAGE2_App.extend( {
 	newImage: function ()
 	{
 		if (this.bigList === null)
-			this.counter = 0;
+			this.state.counter = 0;
 		else
-			this.counter = Math.floor(Math.random() * this.bigList.length);
+			this.state.counter = Math.floor(Math.random() * this.bigList.length);
 	},
 
 	// move to the next photo album
@@ -336,9 +337,9 @@ var evl_photos = SAGE2_App.extend( {
 		this.newImage();
 
 		// if there is no image name for that nth image then get out
-		if (this.bigList[this.counter] === null)
+		if (this.bigList[this.state.counter] === null)
 			{   
-			console.log(this.appName + "cant find filename of image number "+this.counter);
+			console.log(this.appName + "cant find filename of image number "+this.state.counter);
 			return;
 			}
 
@@ -350,7 +351,7 @@ var evl_photos = SAGE2_App.extend( {
 
 		// ideally this random number should come from the master to guarantee identical values across clients
 	
-		this.fileName = this.listFileNameLibrary + escape(this.bigList[this.counter].name) + '?' + Math.floor(Math.random() * 10000000);
+		this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) + '?' + Math.floor(Math.random() * 10000000);
 	
 		this.broadcast("updateNode", {data:this.fileName});
 		}
@@ -416,6 +417,7 @@ var evl_photos = SAGE2_App.extend( {
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 
         this.state.imageSet = 0;
+        this.state.counter = 1;
 
 		// console.log(this.imageLoadCallbackFunc);
 		// console.log(this.imageLoadFailedCallbackFunc);
