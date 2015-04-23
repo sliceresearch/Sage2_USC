@@ -46,13 +46,13 @@ var evl_photos = SAGE2_App.extend( {
 		this.loadTimer = 200;
 		this.fadeCount = 10.0;
 
-		if (SAGE2_photoAlbumLoadTimer != null)
+		if (SAGE2_photoAlbumLoadTimer !== null)
 			this.loadTimer = SAGE2_photoAlbumLoadTimer;
 
-		if (SAGE2_photoAlbumFadeCount != null)
+		if (SAGE2_photoAlbumFadeCount !== null)
 			this.fadeCount = SAGE2_photoAlbumFadeCount;
 
-		if (SAGE2_photoAlbumCanvasBackground != null)
+		if (SAGE2_photoAlbumCanvasBackground !== null)
 			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
 
 		this.URL1  = "";
