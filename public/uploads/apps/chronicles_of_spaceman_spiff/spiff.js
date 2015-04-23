@@ -34,7 +34,7 @@ var spiff = SAGE2_App.extend( {
     this.URL1b = "";
 
     this.today = "";
-    this.timeDiff = 0;
+    this.state.timeDiff = 0;
  },
 
 ////////////////////////////////////////
@@ -179,15 +179,15 @@ drawBoxNext: function  (boxLocX, boxLocY, boxHeight, boxWidth, colorOut, percOut
 
 prevCallback: function()
 {
-    this.timeDiff -= 1;
+    this.state.timeDiff -= 1;
     this.update();
 },
 
 nextCallback: function()
 {
-    this.timeDiff += 1;
-    if (this.timeDiff > 0)
-        this.timeDiff = 0;
+    this.state.timeDiff += 1;
+    if (this.state.timeDiff > 0)
+        this.state.timeDiff = 0;
     this.update();
 },
 
@@ -243,7 +243,7 @@ drawEverything: function (loadSuccess)
 update: function ()
 {
     // get new image
-    this.createURLs(this.timeDiff);
+    this.createURLs(this.state.timeDiff);
 
     this.updateSlim();
 },
@@ -327,19 +327,24 @@ updateWindow: function (){
 		this.update();
 		this.draw_d3(data.date);
         this.controls.addButton({type:"next",sequenceNo:1,action:function(date){
-            this.timeDiff += 1;
-            if (this.timeDiff > 0)
-                this.timeDiff = 0;
+            this.state.timeDiff += 1;
+            if (this.state.timeDiff > 0)
+                this.state.timeDiff = 0;
             this.update();
         }.bind(this)});
         this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){
-            this.timeDiff -= 1;
+            this.state.timeDiff -= 1;
             this.update();
         }.bind(this)});
         this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 
 	load: function(state, date) {
+        if (state) {
+            this.state.timeDiff = state.timeDiff;
+        } else {
+            this.state.timeDiff = 0;
+        }
 	},
 
 	draw_d3: function(date) {
@@ -367,14 +372,14 @@ updateWindow: function (){
 		if (eventType === "pointerRelease" && (data.button === "left") ) {
             if (position.x < 0.5 * this.element.clientWidth)   
             {
-                this.timeDiff -= 1;
+                this.state.timeDiff -= 1;
                 this.update();
             }
             else
             {
-                this.timeDiff += 1;
-                if (this.timeDiff > 0)
-                    this.timeDiff = 0;
+                this.state.timeDiff += 1;
+                if (this.state.timeDiff > 0)
+                    this.state.timeDiff = 0;
                 this.update();
             }
 		}
