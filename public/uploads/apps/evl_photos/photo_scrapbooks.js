@@ -24,6 +24,6 @@
             location:"https://sage.evl.uic.edu/evl_Pictures/",
             name:"evl"};
 
-    SAGE2_photoAlbumLoadTimer = 200;
+    SAGE2_photoAlbumLoadTimer = 300;
     SAGE2_photoAlbumFadeCount = 10.0;
     SAGE2_photoAlbumCanvasBackground = "black";
