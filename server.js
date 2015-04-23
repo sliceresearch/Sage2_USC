@@ -3734,6 +3734,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 		var regTI = /textInput/;
 		var regSl = /slider/;
 		var regButton = /button/;
+		var lockedControl = null;
 		if (pressRelease === "press"){
 			//var textInputOrSlider = SAGE2Items.widgets.findButtonByPoint(id, sidebarPoint);
 			if (btn===null) {// && textInputOrSlider===null){
@@ -3741,7 +3742,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 			}
 			else {
 				remoteInteraction[uniqueID].releaseControl();
-				var lockedControl = remoteInteraction[uniqueID].lockedControl();
+				lockedControl = remoteInteraction[uniqueID].lockedControl();
 				if (lockedControl) {
 					//If a text input widget was locked, drop it
 					broadcast('deactivateTextInputControl', lockedControl);
@@ -3758,8 +3759,8 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 			}
 		}
 		else {
-			var lockedControl = remoteInteraction[uniqueID].lockedControl();
-			if (lockedControl !== null && btn!==null && regButton.test(btn.id)) {
+			lockedControl = remoteInteraction[uniqueID].lockedControl();
+			if (lockedControl !== null && btn!==null && regButton.test(btn.id) && lockedControl.ctrlId === btn.id) {
 				remoteInteraction[uniqueID].dropControl();
 				broadcast('executeControlFunction', ctrlData, 'receivesWidgetEvents');
 
@@ -5780,10 +5781,10 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 function createRadialMenu(uniqueID, pointerX, pointerY) {
 	var validLocation = true;
 	var newMenuPos = {x: pointerX, y: pointerY};
-
+	var existingRadialMenu = null;
 	// Make sure there's enough distance from other menus
 	for (var key in SAGE2Items.radialMenus.list) {
-		var existingRadialMenu = SAGE2Items.radialMenus.list[key];
+		existingRadialMenu = SAGE2Items.radialMenus.list[key];
 		var prevMenuPos = {x: existingRadialMenu.left, y: existingRadialMenu.top };
 		var distance    = Math.sqrt( Math.pow( Math.abs(newMenuPos.x - prevMenuPos.x), 2 ) + Math.pow( Math.abs(newMenuPos.y - prevMenuPos.y), 2 ) );
 		if (existingRadialMenu.visible && distance < existingRadialMenu.radialMenuSize.x) {
