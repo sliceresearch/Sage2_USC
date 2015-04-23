@@ -236,7 +236,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
@@ -246,7 +246,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
@@ -485,8 +485,8 @@ function UIBuilder(json_cfg, clientID) {
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
-		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
-		pointerElem.style.top  = pointer_data.top  - this.pointerOffsetY - this.offsetY;
+		pointerElem.style.left = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
+		pointerElem.style.top = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
 		pointerElem.style.zIndex = 10000;
 		this.main.appendChild(pointerElem);
 
@@ -514,10 +514,12 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.showSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
+		var translate  = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
 
 		pointerElem.style.display = "block";
-		pointerElem.style.left    = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top     = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		pointerElem.style.webkitTransform = translate;
+		pointerElem.style.mozTransform    = translate;
+		pointerElem.style.transform       = translate;
 
 		this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 		this.pointerItems[pointerElem.id].setColor(pointer_data.color);
@@ -545,11 +547,14 @@ function UIBuilder(json_cfg, clientID) {
 	* @param pointer_data {Object} pointer information
 	*/
 	this.updateSagePointerPosition = function(pointer_data) {
-		var pointerElem = document.getElementById(pointer_data.id);
-		var translate   = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
-		pointerElem.style.webkitTransform = translate;
-		pointerElem.style.mozTransform    = translate;
-		pointerElem.style.transform       = translate;
+		if (this.pointerItems[pointer_data.id].isShown) {
+			var pointerElem = document.getElementById(pointer_data.id);
+			var translate   = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+			// Seems to work now with just 'transform' on firefox and chrome
+			// pointerElem.style.webkitTransform = translate;
+			// pointerElem.style.mozTransform    = translate;
+			pointerElem.style.transform = translate;
+		}
 	};
 
 	/**
@@ -597,9 +602,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.appendChild(menuElem3);
 
 			radialMenuContentWindowDiv.appendChild(menuElem2);
+			var rect = menuElem1.getBoundingClientRect();
 
 			var menu = new RadialMenu();
-
 			menu.init(data, menuElem2, menuElem3);
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
@@ -620,12 +625,12 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	/**
-	* Show the radial menu
+	* Update the radial menu state (visibility, position)
 	*
-	* @method showRadialMenu
+	* @method updateRadialMenu
 	* @param data {Object} menu data
 	*/
-	this.showRadialMenu = function(data) {
+	this.updateRadialMenu = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 
 		if (menuElem !== null) {
@@ -645,6 +650,8 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+
+			//console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)
 			this.createRadialMenu(data);
@@ -693,10 +700,10 @@ function UIBuilder(json_cfg, clientID) {
 	/**
 	* Update the list of file in the menu
 	*
-	* @method updateRadialMenu
+	* @method updateRadialMenuDocs
 	* @param data {Object} data
 	*/
-	this.updateRadialMenu = function(data) {
+	this.updateRadialMenuDocs = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
@@ -738,10 +745,10 @@ function UIBuilder(json_cfg, clientID) {
 		remote.id  = data.name;
 		remote.style.position  = "absolute";
 		remote.style.textAlign = "center";
-		remote.style.width  = data.width.toString() + "px";
-		remote.style.height = data.height.toString() + "px";
-		remote.style.left   = (-this.offsetX + data.pos).toString() + "px";
-		remote.style.top    = (-this.offsetY+2).toString() + "px";
+		remote.style.width  = data.geometry.w.toString() + "px";
+		remote.style.height = data.geometry.h.toString() + "px";
+		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
+		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
 

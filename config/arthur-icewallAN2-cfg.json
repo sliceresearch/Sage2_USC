@@ -20,12 +20,12 @@
 	},
 	"displays": [
 		{
-			row: 0,
-			column: 0
+			"row": 0,
+			"column": 0
 		},
 		{
-			row: 0,
-			column: 1
+			"row": 0,
+			"column": 1
 		}
 	],
 	"alternate_hosts": [
@@ -36,12 +36,14 @@
 		{
 			"name": "Cyber-Commons",
 			"host": "iridium.evl.uic.edu",
-			"port": 9090
+			"port": 443,
+			"secure": true
 		},
 		{
 			"name": "CAVE2",
 			"host": "lyra.evl.uic.edu",
-			"port": 9090
+			"port": 443,
+			"secure": true
 		}
 	]
 }

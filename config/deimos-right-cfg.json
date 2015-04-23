@@ -53,22 +53,26 @@
 		{
 			name: "Left",
 			host: "deimos.evl.uic.edu",
-			port: 1442
+			port: 1442,
+			secure: true
 		},
 		{
 			name: "Classroom",
 			host: "iridium.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "Green Table",
 			host: "mesaverde.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		}
 	]
 }

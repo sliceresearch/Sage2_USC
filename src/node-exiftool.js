@@ -23,6 +23,7 @@
 "use strict";
 
 var ChildProcess = require('child_process');
+
 // try to use spawnSync (node >= v12 ) or emulation
 var spawnSync    = ChildProcess.spawnSync; // || require('spawn-sync');
 

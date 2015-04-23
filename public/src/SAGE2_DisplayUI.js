@@ -48,6 +48,8 @@ function SAGE2DisplayUI() {
 		this.applications = [];
 		this.pointerX = 0;
 		this.pointerY = 0;
+
+		this.scrollTimeId = null;
 	};
 
 	/**
@@ -295,14 +297,18 @@ function SAGE2DisplayUI() {
 	* Reorder the application list and draw
 	*
 	* @method updateItemOrder
-	* @param order {Array} contains the application ids in order
+	* @param order {Object} contains the application ids and zIndex
 	*/
 	this.updateItemOrder = function(order) {
+		var orderArray = Object.keys(order).sort(function(a, b) {
+			return order[a]- order[b];
+		});
+
 		var i;
 		var j;
-		for( i=0; i<order.length; i++) {
+		for( i=0; i<orderArray.length; i++) {
 			for (j=0; j<this.applications.length; j++) {
-				if (this.applications[j].id === order[i]) {
+				if (this.applications[j].id === orderArray[i]) {
 					var tmp = this.applications[i];
 					this.applications[i] = this.applications[j];
 					this.applications[j] = tmp;
@@ -472,7 +478,7 @@ function SAGE2DisplayUI() {
 		this.pointerY = y;
 		var globalX = this.pointerX / this.scale;
 		var globalY = this.pointerY / this.scale;
-		this.wsio.emit('pointerPosition', {pointerX: globalX, pointerY: globalY});
+		this.wsio.emit('pointerPosition', {pointerX: Math.round(globalX), pointerY: Math.round(globalY)});
 	};
 
 	/**
@@ -482,8 +488,19 @@ function SAGE2DisplayUI() {
 	* @param value {Number} scroll amount
 	*/
 	this.pointerScroll = function(value) {
-		this.wsio.emit('pointerScrollStart');
+		if (this.scrollTimeId === null) {
+			this.wsio.emit('pointerScrollStart');
+		}
+		else {
+			clearTimeout(this.scrollTimeId);
+		}
 		this.wsio.emit('pointerScroll', {wheelDelta: value});
+
+		var _this = this;
+		this.scrollTimeId = setTimeout(function() {
+			_this.wsio.emit('pointerScrollEnd');
+			_this.scrollTimeId = null;
+		}, 500);
 	};
 
 	/**

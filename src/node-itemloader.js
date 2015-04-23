@@ -16,9 +16,7 @@
  * @requires decompress-zip, gm, mime, request, ytdl-core, node-demux, node-exiftool, node-assets, node-utils, node-registry
  */
 
-// require variables to be declared
 "use strict";
-
 
 var fs           = require('fs');
 var path         = require('path');
@@ -114,23 +112,40 @@ AppLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 				console.log("request error", err1);
 				throw err1;
 			}
-			var result = exiftool.buffer(body, function(err2, info) {
-				if (err2) {
-					console.log("Error processing image:", url, mime_type, name, result.err);
-				}
-				else {
-					if (info.ImageWidth && info.ImageHeight) {
-						_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
-							function(appInstance) {
+			// var result = exiftool.buffer(body, function(err2, info) {
+			// 	if (err2) {
+			// 		console.log("Error processing image:", url, mime_type, name, result.err);
+			// 	}
+			// 	else {
+			// 		if (info.ImageWidth && info.ImageHeight) {
+			// 			_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
+			// 				function(appInstance) {
+			// 					_this.scaleAppToFitDisplay(appInstance);
+			// 					callback(appInstance);
+			// 				}
+			// 				);
+			// 		} else {
+			// 			console.log("File not recognized:", mime_type, url);
+			// 		}
+			// 	}
+			// });
+
+			var localPath = path.join(_this.publicDir, "uploads", "images", name);
+
+			fs.writeFile(localPath, body, function (err2) {
+				if (err2) console.log("Error saving image:", url, localPath);
+
+				assets.exifAsync([localPath], function(err3) {
+					if (!err3) {
+						_this.loadImageFromFile(localPath, mime_type, url, url, name, function(appInstance) {
 								_this.scaleAppToFitDisplay(appInstance);
 								callback(appInstance);
-							}
-							);
-					} else {
-						console.log("File not recognized:", mime_type, url);
+						});
 					}
-				}
+				});
+
 			});
+
 		}
 	);
 };
@@ -248,74 +263,156 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 	callback(appInstance);
 };
 
+AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url, external_url, name, exif_data, callback) {
+
+	var aspectRatio = width / height;
+
+	var metadata         = {};
+	metadata.title       = "Image Viewer";
+	metadata.version     = "1.0.0";
+	metadata.description = "Image viewer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["image", "picture", "viewer"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		application: "image_viewer",
+		icon: exif_data.SAGE2thumbnail,
+		type: mime_type,
+		url: external_url,
+		data: {
+			src: url,
+			type: mime_type,
+			exif: exif_data
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5*this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		metadata: metadata,
+		sticky: false,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
 AppLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 
-	if(mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp"){
-		fs.readFile(file, function (err, data) {
-			if(err) {
-				console.log("Error> opening file", file);
-				return; // throw err;
-			}
+	if (mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp") {
+
+		// fs.readFile(file, function (err, data) {
+		// 	if(err) {
+		// 		console.log("Error> opening file", file);
+		// 		return; // throw err;
+		// 	}
+		// 	// Query the exif data
+		// 	var dims = assets.getDimensions(file);
+		// 	var exif = assets.getExifData(file);
+		// 	if (dims) {
+		// 		_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+		// 			callback(appInstance);
+		// 		});
+		// 	} else {
+		// 		console.log("File not recognized:", file, mime_type, url);
+		// 	}
+		// });
 
 			// Query the exif data
 			var dims = assets.getDimensions(file);
 			var exif = assets.getExifData(file);
 
 			if (dims) {
-				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+				this.loadImageFromServer(dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
 					callback(appInstance);
 				});
 			} else {
 				console.log("File not recognized:", file, mime_type, url);
 			}
-		});
+
 	}
 	// SVG file
 	else if (mime_type === "image/svg+xml") {
-		fs.readFile(file, function (err, data) {
-			if(err) {
-				console.log("Error> opening file", file);
-				return; // throw err;
-			}
+		// fs.readFile(file, function (err, data) {
+		// 	if(err) {
+		// 		console.log("Error> opening file", file);
+		// 		return; // throw err;
+		// 	}
 
-			// Query the exif data
-			var box  = assets.getTag(file, "ViewBox").split(' ');
-			var dims = {width:parseInt(box[2]), height:parseInt(box[3])};
-			var exif = assets.getExifData(file);
+		// 	// Query the exif data
+		// 	var box  = assets.getTag(file, "ViewBox").split(' ');
+		// 	var dims = {width:parseInt(box[2]), height:parseInt(box[3])};
+		// 	var exif = assets.getExifData(file);
 
-			if (dims) {
-				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
-					callback(appInstance);
-				});
-			} else {
-				console.log("File not recognized:", file, mime_type, url);
-			}
-		});
+		// 	if (dims) {
+		// 		_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+		// 			callback(appInstance);
+		// 		});
+		// 	} else {
+		// 		console.log("File not recognized:", file, mime_type, url);
+		// 	}
+		// });
+
+		// Query the exif data
+		var box  = assets.getTag(file, "ViewBox").split(' ');
+		var svgDims = {width:parseInt(box[2]), height:parseInt(box[3])};
+		var svgExif = assets.getExifData(file);
+
+		if (svgDims) {
+			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, url, external_url, name, svgExif, function(appInstance) {
+				callback(appInstance);
+			});
+		} else {
+			console.log("File not recognized:", file, mime_type, url);
+		}
 	}
-	else{
-		imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").toBuffer(function (err, buffer) {
+	else {
+		// imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").toBuffer(function (err, buffer) {
+		// 	if(err) {
+		// 		console.log("Error> processing image file", file);
+		// 		return; // throw err;
+		// 	}
+
+		// 	// Query the exif data
+		// 	var dims = assets.getDimensions(file);
+		// 	var exif = assets.getExifData(file);
+
+		// 	if (dims) {
+		// 		_this.loadImageFromDataBuffer(buffer, dims.width, dims.height, "image/png", url, external_url, name, exif, function(appInstance) {
+		// 			callback(appInstance);
+		// 		});
+		// 	} else {
+		// 		console.log("File not recognized:", file, mime_type, url);
+		// 	}
+		// });
+
+		var localPath = path.join(this.publicDir, "uploads", "tmp", name) + ".png";
+
+		imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function (err, buffer) {
 			if(err) {
 				console.log("Error> processing image file", file);
-				return; // throw err;
+				return;
 			}
 
-			// imageMagick(buffer).size(function (err, size) {
-			// 	if(err) {
-			// 		console.log("Error> getting buffer size for file", file);
-			// 		return; // throw err;
-			// 	}
-			// 	_this.loadImageFromDataBuffer(buffer, size.width, size.height, "image/png", url, external_url, name, function(appInstance) {
-			// 		callback(appInstance);
-			// 	});
-			// });
-
 			// Query the exif data
-			var dims = assets.getDimensions(file);
-			var exif = assets.getExifData(file);
+			var imgDims = assets.getDimensions(file);
+			var imgExif = assets.getExifData(file);
 
 			if (dims) {
-				_this.loadImageFromDataBuffer(buffer, dims.width, dims.height, "image/png", url, external_url, name, exif, function(appInstance) {
+				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", url+".png", external_url+".png", name+".png", imgExif, function(appInstance) {
 					callback(appInstance);
 				});
 			} else {
@@ -337,8 +434,6 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 		var stretch = data.display_aspect_ratio / (data.width / data.height);
 		var native_width  = data.width * stretch;
 		var native_height = data.height;
-
-		console.log(data);
 
 		var appInstance = {
 			id: null,
