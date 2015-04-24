@@ -40,6 +40,8 @@ var texture_cube = SAGE2_App.extend( {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, "canvas", data);
 		
+		this.maxFPS = 30;
+
 		this.fpsText = document.createElement('p');
 		this.fpsText.textContent = "0.00 fps";
 		this.fpsText.style.fontFamily = "Verdana,sans-serif";

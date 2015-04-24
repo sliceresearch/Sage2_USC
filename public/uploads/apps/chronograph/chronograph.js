@@ -99,7 +99,7 @@ var chronograph = SAGE2_App.extend( {
 		this.ready = false;
 
 		// Draw once per second
-		this.maxFPS = 1.0;
+		this.maxFPS = 2.0;
 		var flipButton = {
 			"textual":true,
 			"label":"Flip",

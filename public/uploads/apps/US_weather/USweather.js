@@ -33,8 +33,6 @@ var USweather = SAGE2_App.extend( {
 
         this.gwin.boxSize = 35;
 
-        this.gwin.mode = 1;
-
         this.gwin.appID = "";
 
         this.appName = "evl_photos:";
@@ -60,6 +58,8 @@ var USweather = SAGE2_App.extend( {
 
         this.gwin.numIconsLoaded = 0;
 
+		this.state.mode = 1;
+		this.state.itsF = "F";
 	},
 
 	////////////////////////////////////////
@@ -352,15 +352,15 @@ var USweather = SAGE2_App.extend( {
 
 	nextMode: function()
 	{
-		this.gwin.mode = this.gwin.mode + 1;
-		if (this.gwin.mode > 2)
-				this.gwin.mode = 0;
+		this.state.mode = this.state.mode + 1;
+		if (this.state.mode > 2)
+			this.state.mode = 0;
 
-		if (this.gwin.mode === 0)
+		if (this.state.mode === 0)
 			{
 			this.convertToTemp();
 			} 
-		else if (this.gwin.mode === 1)
+		else if (this.state.mode === 1)
 			{
 			this.convertToIcon();
 			} 
@@ -401,7 +401,7 @@ var USweather = SAGE2_App.extend( {
 		var tempToShow;
 
 
-		if (this.gwin.itsF === "C") // there is a sage versionof this
+		if (this.gwin.itsF === "C") // there is a sage version of this
 			{
 			tempToShow = (Math.round((parseInt(theText)-32)*5/9));
 			//console.log(tempToShow);
@@ -479,12 +479,12 @@ var USweather = SAGE2_App.extend( {
 			.attr("height", this.gwin.boxSize)
 			.attr("width", this.gwin.boxSize);
 
-		if (this.gwin.mode === 0)
+		if (this.state.mode === 0)
 			{
 			textVisibility = "visible";
 			iconVisibility = "hidden";
 			} 
-		else if (this.gwin.mode === 1)
+		else if (this.state.mode === 1)
 			{
 			textVisibility = "hidden";
 			iconVisibility = "visible";
@@ -542,7 +542,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "hidden");
 
-		this.gwin.mode = 0;
+		this.state.mode = 0;
 	},
 
 	convertToIcon: function ()
@@ -556,7 +556,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "visible");
 
-		this.gwin.mode = 1;
+		this.state.mode = 1;
 	},
 
 	convertToNone: function ()
@@ -569,7 +569,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "hidden");
 
-		this.gwin.mode = 2;
+		this.state.mode = 2;
 	},
 
 	getCorrectWeatherIcon: function(weatherCondition, night)
@@ -696,8 +696,10 @@ var USweather = SAGE2_App.extend( {
     load: function(state, date) {
         if (state) {
             this.state.itsF = state.itsF;
+            this.state.mode = state.mode;
         } else {
             this.state.itsF = "F"; // Fahrenheit or Celsius
+            this.state.mode = 0;
         }
 
         var tempButton = {
@@ -727,17 +729,17 @@ var USweather = SAGE2_App.extend( {
 
         this.controls.addButton({type:"temp",sequenceNo:4,action:function(date){
             //This is executed after the button click animation occurs.
-            this.gwin.mode = 0;
+            this.state.mode = 0;
             this.convertToTemp();
         }.bind(this)});
         this.controls.addButton({type:"icon",sequenceNo:6,action:function(date){
             //This is executed after the button click animation occurs.
-            this.gwin.mode = 1;
+            this.state.mode = 1;
             this.convertToIcon();
         }.bind(this)});
         this.controls.addButton({type:"color",sequenceNo:8,action:function(date){
             //This is executed after the button click animation occurs.
-            this.gwin.mode = 2;
+            this.state.mode = 2;
             this.convertToNone();
         }.bind(this)});
         this.controls.finishedAddingControls(); // Important

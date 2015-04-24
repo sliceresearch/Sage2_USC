@@ -194,5 +194,33 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		this.state.looped               = state.looped;
 
 		this.initWidgets();
+	},
+
+	/**
+	* Handles event processing, arrow keys to navigate, and r to redraw
+	*
+	* @method event
+	* @param eventType {String} the type of event
+	* @param position {Object} contains the x and y positions of the event
+	* @param user_id {Object} data about the user who triggered the event
+	* @param data {Object} object containing extra data about the event,
+	* @param date {Date} current time from the server
+	*/
+	event: function(type, position, user, data, date) {
+		// Space Bar - toggle play/pause
+		if (type === "keyboard") {
+			if (data.character === " ") {
+				if (this.state.paused === true) {
+					console.log("play: " + this.div.id);
+					if(isMaster) wsio.emit('playVideo', {id: this.div.id});
+					this.state.paused = false;
+				}
+				else {
+					console.log("pause: " + this.div.id);
+					if(isMaster) wsio.emit('pauseVideo', {id: this.div.id});
+					this.state.paused = true;
+				}
+			}
+		}
 	}
 });

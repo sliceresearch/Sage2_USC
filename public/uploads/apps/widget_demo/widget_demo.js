@@ -16,10 +16,7 @@ var widget_demo = SAGE2_App.extend( {
 		this.ctx = null;
 		this.resrcPath = null;
 		
-		
-		
 		this.timer = null;
-		this.redraw = null;
 
 		this.resizeEvents = "onfinish";
 

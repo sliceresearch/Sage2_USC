@@ -100,19 +100,19 @@ SAGE2WidgetControl.prototype.controlsReady = function(){
 * 	Added cover is available only to that instance of that app.
 */
 SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData){
-	if (this.buttonType[type] === undefined || this.buttonType[type] === null){
-		this.buttonType[type] = function (){
-			this.state= buttonData.state;
-			this.from= buttonData.from;
-			this.to=  buttonData.to;
-			this.width= buttonData.width;
-			this.height= buttonData.height;
-			this.fill= buttonData.fill;
-			this.label = buttonData.label;
-			this.strokeWidth= buttonData.strokeWidth;
-			this.delay= buttonData.delay;
-			this.textual= buttonData.textual;
-			this.animation= buttonData.animation;
+	if (this.buttonType[type] === undefined || this.buttonType[type] === null) {
+		this.buttonType[type] = function () {
+			this.state   = buttonData.state;
+			this.from    = buttonData.from;
+			this.to      =  buttonData.to;
+			this.width   = buttonData.width;
+			this.height  = buttonData.height;
+			this.fill    = buttonData.fill;
+			this.label   = buttonData.label;
+			this.delay   = buttonData.delay;
+			this.textual = buttonData.textual;
+			this.animation   = buttonData.animation;
+			this.strokeWidth = buttonData.strokeWidth;
 		};
 	}
 };
@@ -155,7 +155,7 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 		if (data.staticID)
 			button.id = "button" + data.staticID;
 		else
-			button.id = "button" + this.itemCount;
+			button.id = "button" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		if (typeof data.type === "string" ){
 			var typeVar = this.buttonType[data.type];
 			if (typeof typeVar === "function")
@@ -213,7 +213,7 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 	if (this.hasTextInput === false && this.itemCount <= 30){
 		this.hasTextInput = true;
 		var textInput = new this.TextInputClass();
-		textInput.id = "textInput" + this.itemCount;
+		textInput.id = "textInput" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		textInput.appId = this.id;
 		textInput.caption = data.caption || null;
 		textInput.width = 13.0*ui.widgetControlSize;
@@ -246,7 +246,7 @@ SAGE2WidgetControl.prototype.addSlider = function(data){
 	if (this.hasSlider === false && this.itemCount <= 30){
 
 		var slider = new this.SliderClass();
-		slider.id = "slider" + this.itemCount;
+		slider.id = "slider" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		slider.appId = this.id;
 		slider.begin = data.begin;
 		slider.end = data.end;

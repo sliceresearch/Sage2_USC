@@ -91,6 +91,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			state.src = cleanURL(state.src);
 
 			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
+				console.log("loaded pdf document", _this.gotresize);
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
@@ -102,9 +103,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 
 				// if already got a resize event, just redraw, otherwise send message
 				if (_this.gotresize) {
-					_this.redraw = true;
 					_this.refresh(date);
-				} else {
+					_this.gotresize = false;
+				}
+				else {
 					// Getting the size of the page
 					_this.pdfDoc.getPage(1).then(function(page) {
 						var viewport = page.getViewport(1.0);
@@ -191,12 +193,12 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	resize: function(date) {
+		console.log("resize pdf viewer");
 		for(var i=0; i<this.numCtx; i++){
 			this.canvas[i].width  = this.element.width;
 			this.canvas[i].height = this.element.height;
 		}
 		// Force a redraw after resize
-		this.redraw    = true;
 		this.gotresize = true;
 		this.refresh(date);
 	},
@@ -246,31 +248,26 @@ function addWidgetControlsToPdfViewer (_this){
 	// UI stuff
 	_this.controls.addButton({type:"fastforward", sequenceNo:3, action:function(date){
 		this.state.page = this.pdfDoc.numPages;
-		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"rewind", sequenceNo:5, action:function(date){
 		this.state.page = 1;
-		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addButton({type:"prev", sequenceNo:9, action:function(date){
 		if(this.state.page <= 1) return;
 		this.state.page = this.state.page - 1;
-		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 	_this.controls.addButton({type:"next", sequenceNo:11, action:function(date){
 		if (this.state.page >= this.pdfDoc.numPages) return;
 		this.state.page = this.state.page + 1;
-		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 
 	_this.controls.addSlider({begin:1, end:_this.pdfDoc.numPages, increments:1, appHandle:_this, property:"state.page", caption: "Page", action:function(date){
-		this.redraw = true;
 		this.refresh(date);
 	}.bind(_this)});
 	_this.controls.finishedAddingControls();

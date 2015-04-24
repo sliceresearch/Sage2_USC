@@ -10,7 +10,7 @@
 	},
 	"ui": {
 		"clock": 24,
-		"show_url": true
+		"show_url": true,
 		"show_version": true
 	},
 	"resolution": {
@@ -35,17 +35,20 @@
 		{
 			"name": "IceWallTM",
 			"host": "thor.evl.uic.edu",
-			"port": 7070
+			"port": 7070,
+			"secure": true
 		},
 		{
 			"name": "Cyber-Commons",
 			"host": "iridium.evl.uic.edu",
-			"port": 443
+			"port": 443,
+			"secure": true
 		},
 		{
 			"name": "CAVE2",
 			"host": "lyra.evl.uic.edu",
-			"port": 443
+			"port": 443,
+			"secure": true
 		}
 	]
 }
