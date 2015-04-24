@@ -4132,7 +4132,6 @@ function moveWidgetControls (uniqueID, moveControl){
 		broadcast('setControlPosition', moveControl);
 		var circle =  {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2};
 		var bar = {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight};
-		//console.log("moving->", bar);		 
 		interactMgr.editGeometry(moveControl.elemId+"_radial", "widgets", "circle", circle);
 		if(moveControl.hasSideBar === true) {
 			interactMgr.editGeometry(moveControl.elemId+"_sidebar", "widgets", "rectangle", bar );
