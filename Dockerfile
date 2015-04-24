@@ -14,6 +14,7 @@ COPY    package.json /tmp/package.json
 RUN     cd /tmp; npm install
 RUN     mkdir -p /sage2; cp -a /tmp/node_modules /sage2/
 
+
 COPY    . /sage2
 EXPOSE  80
 EXPOSE  443
