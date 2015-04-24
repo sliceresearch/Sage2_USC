@@ -466,12 +466,21 @@ function initializeExistingControls(wsio){
 	var i;
 	var uniqueID;
 	var app;
+	var zIndex;
+	var data;
 	var controlList = SAGE2Items.widgets.list;
 	for (i in controlList) {
 		if (controlList.hasOwnProperty(i) && SAGE2Items.applications.list.hasOwnProperty(controlList[i].appId)) {
-			wsio.emit('createControl', controlList[i]);
-			uniqueID = controlList[i].id.substring(controlList[i].appId.length, controlList[i].id.lastIndexOf("_"));
-			app = SAGE2Items.applications.list[controlList[i].appId];
+			data = controlList[i];
+			wsio.emit('createControl', data);
+			zIndex = SAGE2Items.widgets.numItems;
+			interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, true, zIndex, data);
+			if (data.hasSideBar === true) {
+				interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, true, zIndex, data);
+			}
+			SAGE2Items.widgets.addItem(data);
+			uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
+			app = SAGE2Items.applications.list[data.appId];
 			addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 		}
 	}
@@ -2365,11 +2374,11 @@ function wsAddNewControl(wsio, data){
 }
 
 function wsRecordInnerGeometryForWidget(wsio, data){
-	var center = data.innerGeometry.center;
+	//var center = data.innerGeometry.center;
 	var buttons = data.innerGeometry.buttons;
 	var textInput = data.innerGeometry.textInput;
 	var slider = data.innerGeometry.slider;
-	SAGE2Items.widgets.addButtonToItem(data.instanceID, "center", "circle", {x:center.x, y: center.y, r:center.r}, 0);
+	//SAGE2Items.widgets.addButtonToItem(data.instanceID, "center", "circle", {x:center.x, y: center.y, r:center.r}, 0);
 	for (var i=0; i<buttons.length; i++){
 		SAGE2Items.widgets.addButtonToItem(data.instanceID, buttons[i].id, "circle", {x:buttons[i].x, y: buttons[i].y, r:buttons[i].r}, 0);
 	}
@@ -3416,9 +3425,9 @@ function hideControl(ctrl){
 	if (ctrl.show === true) {
 		ctrl.show = false;
 		broadcast('hideControl', {id:ctrl.id, appId:ctrl.appId});
-		interactMgr.editVisibility(ctrl.id+"_radial", "widgets", "circle", false);
+		interactMgr.editVisibility(ctrl.id+"_radial", "widgets", false);
 		if(ctrl.hasSideBar === true) {
-			interactMgr.editVisibility(ctrl.id+"_sidebar", "widgets", "rectangle", false);
+			interactMgr.editVisibility(ctrl.id+"_sidebar", "widgets", false);
 		}
 	}
 }
@@ -3438,12 +3447,11 @@ function removeControlsForUser(uniqueID){
 }
 
 function showControl(ctrl, uniqueID, pointerX, pointerY){
-	console.log(ctrl);
 	if (ctrl.show === false) {
 		ctrl.show = true;
-		interactMgr.editVisibility(ctrl.id+"_radial", "widgets", "circle", true);
+		interactMgr.editVisibility(ctrl.id+"_radial", "widgets", true);
 		if(ctrl.hasSideBar === true) {
-			interactMgr.editVisibility(ctrl.id+"_sidebar", "widgets", "rectangle", true);
+			interactMgr.editVisibility(ctrl.id+"_sidebar", "widgets", true);
 		}
 		moveControlToPointer(ctrl, uniqueID, pointerX, pointerY);
 		broadcast('showControl', {id: ctrl.id, appId: ctrl.appId, user_color: sagePointers[uniqueID]? sagePointers[uniqueID].color: null});
@@ -3781,7 +3789,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 		}
 	}
 	else {
-		if (obj.data.show === true) {
+		if (obj.data.show === true && pressRelease === "press") {
 			hideControl(obj.data);
 			var app2 = SAGE2Items.applications.list[obj.data.appId];
 			if (app2 !== null) {
@@ -4122,9 +4130,12 @@ function moveWidgetControls (uniqueID, moveControl){
 		moveControl.appData = getAppPositionSize(app);
 		moveControl.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 		broadcast('setControlPosition', moveControl);
-		interactMgr.editGeometry(moveControl.elemId+"_radial", "widgets", "circle", {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2});
+		var circle =  {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2};
+		var bar = {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight};
+		//console.log("moving->", bar);		 
+		interactMgr.editGeometry(moveControl.elemId+"_radial", "widgets", "circle", circle);
 		if(moveControl.hasSideBar === true) {
-			interactMgr.editGeometry(moveControl.elemId+"_sidebar", "widgets", "rectangle", {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight});
+			interactMgr.editGeometry(moveControl.elemId+"_sidebar", "widgets", "rectangle", bar );
 		}
 	}
 }

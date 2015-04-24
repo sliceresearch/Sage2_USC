@@ -1063,6 +1063,7 @@ function setupListeners() {
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
 		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
+		//console.log("moving->",data.x,pos,updatedSliderInfo.sliderValue);
 		var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 		app.handle[app.property] = updatedSliderInfo.sliderValue;
 		var func = slider.data("updateCall");
