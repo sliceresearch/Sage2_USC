@@ -28,7 +28,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 
 	this.controlSVG = new Snap(size.width, size.height);
 
-	innerGeometry = {
+	var innerGeometry = {
 		center:{x:0, y:0, r:0},
 		buttons:[],
 		textInput:null,

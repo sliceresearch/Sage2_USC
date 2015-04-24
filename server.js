@@ -4096,8 +4096,7 @@ function moveApplicationWindow(uniqueID, moveApp) {
 	var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(moveApp);
 
 	for (var idx=0; idx<updatedStickyItems.length; idx++) {
-
-				var stickyItem = updatedStickyItems[idx];
+		var stickyItem = updatedStickyItems[idx];
 		interactMgr.editGeometry(stickyItem.elemId, "applications", "rectangle", {x: stickyItem.elemLeft, y: stickyItem.elemTop, w: stickyItem.elemWidth, h: stickyItem.elemHeight+config.ui.titleBarHeight});
 		updatedStickyItems[idx].user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 		broadcast('setItemPosition', updatedStickyItems[idx]);
