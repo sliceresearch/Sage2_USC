@@ -349,14 +349,8 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 
 
 SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
-	this.addButton({type:"closeApp", id:"CloseApp", sequenceNo:data.sequence.closeApp, action:function(date){
-		if (isMaster)
-			wsio.emit('closeAppFromControl', {appId:data.id});
-	}});
-	this.addButton({type:"closeBar", id:"CloseWidget", sequenceNo:data.sequence.closeBar, action:function(date){
-		if (isMaster)
-			wsio.emit('hideWidgetFromControl', {instanceID:data.instanceID});
-	}});
+	this.addButton({type:"closeApp", id:"CloseApp", sequenceNo:data.sequence.closeApp});
+	this.addButton({type:"closeBar", id:"CloseWidget", sequenceNo:data.sequence.closeBar});
 };
 
 

@@ -1030,10 +1030,23 @@ function setupListeners() {
 			if (func !== undefined && func !== null)
 				func(new Date());
 			*/
-			var appId = ctrl.parent().data("appId");
+			var appId = data.ctrl.appId;
 			var app = applications[appId];
-			app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, Date.now());
-
+			switch(ctrlId){
+				case "CloseApp":
+					if (isMaster){
+						wsio.emit('closeAppFromControl', {appId:appId});
+					}
+					break;
+				case "CloseWidget":
+					if (isMaster){
+						wsio.emit('hideWidgetFromControl', {instanceID:data.ctrl.instanceID});
+					}
+					break;
+				default:
+					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, Date.now());
+					break;
+			}
 			
 			//Check whether a request for clone was made.
 			if(app.cloneable === true && app.requestForClone === true){
