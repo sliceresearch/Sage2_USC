@@ -279,10 +279,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 */
 function addWidgetControlsToPdfViewer (_this){
 	// UI stuff
-	_this.controls.addButton({type:"fastforward", sequenceNo:3, id:"LastPage"});
-	_this.controls.addButton({type:"rewind", sequenceNo:5, id:"FirstPage"});
-	_this.controls.addButton({type:"prev", sequenceNo:9, id:"PreviousPage"});
-	_this.controls.addButton({type:"next", sequenceNo:11, id:"NextPage"});
+	_this.controls.addButton({type:"fastforward", sequenceNo:2, id:"LastPage"});
+	_this.controls.addButton({type:"rewind", sequenceNo:6, id:"FirstPage"});
+	_this.controls.addButton({type:"prev", sequenceNo:5, id:"PreviousPage"});
+	_this.controls.addButton({type:"next", sequenceNo:3, id:"NextPage"});
 	_this.controls.addSlider({begin:1, end:_this.pdfDoc.numPages, increments:1, appHandle:_this, property:"state.page", caption: "Page", id:"Page"});
 	_this.controls.finishedAddingControls();
 
