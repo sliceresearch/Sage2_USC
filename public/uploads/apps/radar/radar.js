@@ -372,13 +372,13 @@ var radar = SAGE2_App.extend( {
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3,action:function(date){
+        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"});/*, action:function(date){
             //This is executed after the button click animation occurs.
             this.nextStation();
             this.startup();
             this.draw(date);
         }.bind(this)});
-
+		*/
         var _this = this;
 
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
@@ -391,11 +391,11 @@ var radar = SAGE2_App.extend( {
                     "animation":false
                 };
 
-                _this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, action:function(date){
+                _this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, id: loopIdxWithPrefix});/*, action:function(date){
                     this.setStation(loopIdxWithPrefix);
                     this.startup();
                     this.draw(date);
-                }.bind(_this) });
+                }.bind(_this) });*/
             }(loopIdxWithPrefix));
         }
 
@@ -435,11 +435,21 @@ var radar = SAGE2_App.extend( {
 
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
-		if (eventType === "pointerMove" ) {
+		else if (eventType === "pointerMove" ) {
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextStation();
             this.startup();
+            this.draw(date);
+		}
+		else if (eventType === "widgetEvent"){
+			if (data.ctrlId === "Next"){
+				this.nextStation();
+			}
+			else{
+				this.setStation(data.ctrlId);
+			}
+			this.startup();
             this.draw(date);
 		}
 	}

@@ -364,25 +364,13 @@ var leaflet = SAGE2_App.extend( {
                     "animation":false
                 };
 
-        this.controls.addButton({type:homeButton,sequenceNo:2,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.resetMap();
-        }.bind(this)});
+        this.controls.addButton({type:homeButton,sequenceNo:2, id:"Home"});
 
-        this.controls.addButton({type:viewButton,sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.changeMap();
-        }.bind(this)});
+        this.controls.addButton({type:viewButton,sequenceNo:4, id:"View"});
 
+        this.controls.addButton({type:"fastforward",sequenceNo:6, id:"ZoomIn"});
 
-        this.controls.addButton({type:"fastforward",sequenceNo:6,action:function(date){
-            this.zoomIn();
-        }.bind(this)});
-
-        this.controls.addButton({type:"rewind",sequenceNo:7,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.zoomOut();
-        }.bind(this)});
+        this.controls.addButton({type:"rewind",sequenceNo:7, id:"ZoomOut"});
 
         this.controls.finishedAddingControls(); // Important
 	},
@@ -427,20 +415,20 @@ var leaflet = SAGE2_App.extend( {
 			this.position.x = pos.x;
 			this.position.y = pos.y;
 		}
-		if (eventType === "pointerMove" && this.dragging ) {
+		else if (eventType === "pointerMove" && this.dragging ) {
 			// need to turn animation off here or the pan stutters
 			this.map.panBy([this.position.x-pos.x, this.position.y-pos.y], {animate: false});
 			this.position.x = pos.x;
 			this.position.y = pos.y;
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
 			this.position.x = pos.x;
 			this.position.y = pos.y;
 		}
 
 		// Scroll events for zoom
-		if (eventType === "pointerScroll") {
+		else if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;
 
@@ -461,11 +449,30 @@ var leaflet = SAGE2_App.extend( {
 			}
 		}
 
-		if (eventType == "keyboard" && data.character == "m") {
-				// m key down
-				// change map type
-				this.changeMap();
-				}
+		else if (eventType == "keyboard" && data.character == "m") {
+			// m key down
+			// change map type
+			this.changeMap();
+		}
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Home":
+					this.resetMap();
+					break;
+				case "View":
+					this.changeMap();
+					break;
+				case "ZoomIn":
+					this.zoomIn();
+					break;
+				case "ZoomOut":
+					this.zoomOut();
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					return;
+			}
+		}
 
 		this.refresh(date);
 	}

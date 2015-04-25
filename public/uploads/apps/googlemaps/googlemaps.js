@@ -77,13 +77,13 @@ var googlemaps = SAGE2_App.extend( {
 		});
 
 		var mapLabel =  { "textual":true, "label":"Map", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:mapLabel, sequenceNo:7, id:"Map"});
+		this.controls.addButton({type:mapLabel, sequenceNo:4, id:"Map"});
 		var trafficLabel = { "textual":true, "label":"T", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:trafficLabel, sequenceNo:9, id:"Traffic"});
+		this.controls.addButton({type:trafficLabel, sequenceNo:5, id:"Traffic"});
 		var weatherLabel = { "textual":true, "label":"W", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:weatherLabel, sequenceNo:11, id: "Weather"});
-		this.controls.addButton({type:"zoom-in", sequenceNo:3, id:"ZoomIn"});
-		this.controls.addButton({type:"zoom-out", sequenceNo:5, id:"ZoomOut"});
+		this.controls.addButton({type:weatherLabel, sequenceNo:3, id: "Weather"});
+		this.controls.addButton({type:"zoom-in", sequenceNo:8, id:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out", sequenceNo:9, id:"ZoomOut"});
 		this.controls.addTextInput({defaultText: "", caption:"Addr", id:"Address"});
 		this.controls.finishedAddingControls();
 	},
