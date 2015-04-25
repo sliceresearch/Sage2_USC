@@ -64,6 +64,7 @@ var googlemaps = SAGE2_App.extend( {
 		addScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googlemaps_self.initialize');
 
 		this.controls.addSlider({
+			id: "Zoom",
 			begin: 0,
 			end: 20,
 			increments: 1,
@@ -72,68 +73,18 @@ var googlemaps = SAGE2_App.extend( {
 			caption: "Zoom",
 			labelFormatFunction: function(value, end) {
 				return ((value<10)?"0":"") + value + "/" + end;
-			},
-			lockAction:function(date) {
-			},
-			updateAction:function(date) {
-			},
-			action:function(date) {
-				this.map.setZoom(this.state.zoomLevel);
-			}.bind(this)
+			}
 		});
 
 		var mapLabel =  { "textual":true, "label":"Map", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:mapLabel, sequenceNo:7, action:function(date) {
-			if (this.state.mapType === google.maps.MapTypeId.TERRAIN)
-				this.state.mapType = google.maps.MapTypeId.ROADMAP;
-			else if (this.state.mapType === google.maps.MapTypeId.ROADMAP)
-				this.state.mapType = google.maps.MapTypeId.SATELLITE;
-			else if (this.state.mapType === google.maps.MapTypeId.SATELLITE)
-				this.state.mapType = google.maps.MapTypeId.HYBRID;
-			else if (this.state.mapType === google.maps.MapTypeId.HYBRID)
-				this.state.mapType = google.maps.MapTypeId.TERRAIN;
-			else
-				this.state.mapType = google.maps.MapTypeId.HYBRID;
-			this.map.setMapTypeId(this.state.mapType);
-		}.bind(this)});
+		this.controls.addButton({type:mapLabel, sequenceNo:7, id:"Map"});
 		var trafficLabel = { "textual":true, "label":"T", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:trafficLabel, sequenceNo:9, action:function(date){
-			// add/remove traffic layer
-			if (this.trafficLayer.getMap() == null) {
-				this.trafficLayer.setMap(this.map);
-				// add a timer updating the traffic tiles: 60sec
-				this.trafficTimer = setInterval(this.trafficCB, 60*1000);
-			}
-			else {
-				this.trafficLayer.setMap(null);
-				// remove the timer updating the traffic tiles
-				clearInterval(this.trafficTimer);
-			}
-			this.updateLayers();
-		}.bind(this)});
+		this.controls.addButton({type:trafficLabel, sequenceNo:9, id:"Traffic"});
 		var weatherLabel = { "textual":true, "label":"W", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:weatherLabel, sequenceNo:11, action:function(date) {
-			// add/remove weather layer
-			if (this.weatherLayer.getMap() == null)
-				this.weatherLayer.setMap(this.map);
-			else
-				this.weatherLayer.setMap(null);
-			this.updateLayers();
-		}.bind(this)});
-		this.controls.addButton({type:"zoom-in", sequenceNo:3, action:function(date) {
-			this.map.setZoom(this.state.zoomLevel + 1);
-			this.state.zoomLevel = this.map.getZoom();
-		}.bind(this)});
-		this.controls.addButton({type:"zoom-out", sequenceNo:5, action:function(date) {
-			this.map.setZoom(this.state.zoomLevel - 1);
-			this.state.zoomLevel = this.map.getZoom();
-		}.bind(this)});
-		this.controls.addTextInput({defaultText: "", caption:"Addr", action:function(text) {
-			this.codeAddress(text);
-			this.updateCenter();
-			this.map.setZoom(15);
-			this.state.zoomLevel = this.map.getZoom();
-		}.bind(this)});
+		this.controls.addButton({type:weatherLabel, sequenceNo:11, id: "Weather"});
+		this.controls.addButton({type:"zoom-in", sequenceNo:3, id:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out", sequenceNo:5, id:"ZoomOut"});
+		this.controls.addTextInput({defaultText: "", caption:"Addr", id:"Address"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -305,43 +256,58 @@ var googlemaps = SAGE2_App.extend( {
 
 			this.refresh(date);
 		}
-
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Map":
+					this.changeMapType();
+					break;
+				case "Weather":
+					this.toggleWeather();
+					break;
+				case "Traffic":
+					this.toggleTraffic();
+					break;
+				case "ZoomIn":
+					this.relativeZoom(1);
+					break;
+				case "ZoomOut":
+					this.relativeZoom(-1);
+					break;
+				case "Zoom":
+					switch (data.action){
+						case "sliderLock":
+							break;
+						case "sliderUpdate":
+							break;
+						case "sliderRelease":
+							this.map.setZoom(this.state.zoomLevel);
+							break;
+						default:
+							console.log("No handler for: "+ data.ctrlId + "->" + data.action);
+							break;
+					}
+					break;
+				case "Address":
+					this.codeAddress(data.text);
+					this.updateCenter();
+					this.map.setZoom(15);
+					this.state.zoomLevel = this.map.getZoom();
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+			}
+		}
 		else if (eventType === "keyboard") {
 			if(data.character === "m") {
 				// change map type
-				if (this.state.mapType === google.maps.MapTypeId.TERRAIN)
-					this.state.mapType = google.maps.MapTypeId.ROADMAP;
-				else if (this.state.mapType === google.maps.MapTypeId.ROADMAP)
-					this.state.mapType = google.maps.MapTypeId.SATELLITE;
-				else if (this.state.mapType === google.maps.MapTypeId.SATELLITE)
-					this.state.mapType = google.maps.MapTypeId.HYBRID;
-				else if (this.state.mapType === google.maps.MapTypeId.HYBRID)
-					this.state.mapType = google.maps.MapTypeId.TERRAIN;
-				else
-					this.state.mapType = google.maps.MapTypeId.HYBRID;
-				this.map.setMapTypeId(this.state.mapType);
+				this.changeMapType();
 			}
 			else if (data.character === "t") {
-				// add/remove traffic layer
-				if (this.trafficLayer.getMap() == null) {
-					this.trafficLayer.setMap(this.map);
-					// add a timer updating the traffic tiles: 60sec
-					this.trafficTimer = setInterval(this.trafficCB, 60*1000);
-				}
-				else {
-					this.trafficLayer.setMap(null);
-					// remove the timer updating the traffic tiles
-					clearInterval(this.trafficTimer);
-				}
-				this.updateLayers();
+				this.toggleTraffic();
 			}
 			else if (data.character === "w") {
 				// add/remove weather layer
-				if (this.weatherLayer.getMap() == null)
-					this.weatherLayer.setMap(this.map);
-				else
-					this.weatherLayer.setMap(null);
-				this.updateLayers();
+				this.toggleWeather();
 			}
 
 			this.refresh(date);
@@ -350,15 +316,11 @@ var googlemaps = SAGE2_App.extend( {
 		else if (eventType === "specialKey") {
 			if (data.code === 18 && data.state === "down") {      // alt
 				// zoom in
-				z = this.map.getZoom();
-				this.map.setZoom(z+1);
-				this.state.zoomLevel = this.map.getZoom();
+				this.relativeZoom(1);
 			}
 			else if (data.code === 17 && data.state === "down") { // control
 				// zoom out
-				z = this.map.getZoom();
-				this.map.setZoom(z-1);
-				this.state.zoomLevel = this.map.getZoom();
+				this.relativeZoom(-1);
 			}
 			else if (data.code === 37 && data.state === "down") { // left
 				this.map.panBy(-100, 0);
@@ -380,7 +342,47 @@ var googlemaps = SAGE2_App.extend( {
 			this.refresh(date);
 		}
 	},
-
+	changeMapType: function(){
+		if (this.state.mapType === google.maps.MapTypeId.TERRAIN)
+			this.state.mapType = google.maps.MapTypeId.ROADMAP;
+		else if (this.state.mapType === google.maps.MapTypeId.ROADMAP)
+			this.state.mapType = google.maps.MapTypeId.SATELLITE;
+		else if (this.state.mapType === google.maps.MapTypeId.SATELLITE)
+			this.state.mapType = google.maps.MapTypeId.HYBRID;
+		else if (this.state.mapType === google.maps.MapTypeId.HYBRID)
+			this.state.mapType = google.maps.MapTypeId.TERRAIN;
+		else
+			this.state.mapType = google.maps.MapTypeId.HYBRID;
+		this.map.setMapTypeId(this.state.mapType);
+	},
+	toggleWeather: function() {
+		if (this.weatherLayer.getMap() == null)
+			this.weatherLayer.setMap(this.map);
+		else
+			this.weatherLayer.setMap(null);
+		this.updateLayers();
+	},
+	toggleTraffic: function() {
+		// add/remove traffic layer
+		if (this.trafficLayer.getMap() == null) {
+			this.trafficLayer.setMap(this.map);
+			// add a timer updating the traffic tiles: 60sec
+			this.trafficTimer = setInterval(this.trafficCB, 60*1000);
+		}
+		else {
+			this.trafficLayer.setMap(null);
+			// remove the timer updating the traffic tiles
+			clearInterval(this.trafficTimer);
+		}
+		this.updateLayers();
+	},
+	relativeZoom: function(delta){
+		delta = parseInt(delta);
+		delta = (delta > -1)? 1 : -1; 
+		z = this.map.getZoom();
+		this.map.setZoom(z+delta);
+		this.state.zoomLevel = this.map.getZoom();
+	},
 	codeAddress: function(text) {
 		this.geocoder.geocode( { 'address': text}, function(results, status) {
 			if (status === google.maps.GeocoderStatus.OK) {

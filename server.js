@@ -3743,6 +3743,8 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 		var regSl = /slider/;
 		var regButton = /button/;
 		var lockedControl = null;
+		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+
 		if (pressRelease === "press"){
 			//var textInputOrSlider = SAGE2Items.widgets.findButtonByPoint(id, sidebarPoint);
 			if (btn===null) {// && textInputOrSlider===null){
@@ -3759,7 +3761,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 
 				remoteInteraction[uniqueID].lockControl(ctrlData);
 				if (regSl.test(btn.id)){
-					broadcast('sliderKnobLockAction', {ctrl:ctrlData, x:pointerX});
+					broadcast('sliderKnobLockAction', {ctrl:ctrlData, x:pointerX, user: eUser});
 				}
 				else if (regTI.test(btn.id)) {
 					broadcast('activateTextInputControl', {prevTextInput:lockedControl, curTextInput:ctrlData});
@@ -3770,7 +3772,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 			lockedControl = remoteInteraction[uniqueID].lockedControl();
 			if (lockedControl !== null && btn!==null && regButton.test(btn.id) && lockedControl.ctrlId === btn.id) {
 				remoteInteraction[uniqueID].dropControl();
-				broadcast('executeControlFunction', ctrlData, 'receivesWidgetEvents');
+				broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser} , 'receivesWidgetEvents');
 
 				var app = SAGE2Items.applications.list[ctrlData.appId];
 				if (app) {
@@ -3803,7 +3805,8 @@ function releaseSlider(uniqueID){
 	var ctrlData = remoteInteraction[uniqueID].lockedControl();
 	if (/slider/.test(ctrlData.ctrlId) === true){
 		remoteInteraction[uniqueID].dropControl();
-		broadcast('executeControlFunction', ctrlData, 'receivesWidgetEvents');
+		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+		broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser} , 'receivesWidgetEvents');
 	}
 }
 
@@ -4023,8 +4026,10 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 function pointerMoveOnWidgets(uniqueID, pointerX, pointerY, data, obj, localPt){
 	// widgets
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
+	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		broadcast('moveSliderKnob', {ctrl:lockedControl, x:pointerX});
+		broadcast('moveSliderKnob', {ctrl:lockedControl, x:pointerX, user: eUser});
 		return;
 	}
 	//showOrHideWidgetConnectors(uniqueID, obj.data, "move");
@@ -4617,7 +4622,8 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
 	if (lockedControl !== null) {
-		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
+		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID, user: eUser};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) { //Enter key
 			remoteInteraction[uniqueID].dropControl();
@@ -4705,7 +4711,8 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
 	if (lockedControl !== null) {
-		var event = {code: data.code, printable:true, state: "press", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID};
+		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+		var event = {code: data.code, printable:true, state: "press", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID, user: eUser};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) { //Enter key
 			remoteInteraction[uniqueID].dropControl();

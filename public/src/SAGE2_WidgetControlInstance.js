@@ -207,7 +207,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		slider.add(sliderCaption);
 	sliderKnob.data("appId", this.controlSpec.slider.appId);
 	sliderKnobLabel.data("appId", this.controlSpec.slider.appId);
-
+	slider.attr("id", this.controlSpec.slider.id);
 	slider.data("appId", this.controlSpec.slider.appId);
 	slider.data("instanceID", this.instanceID);
 	slider.data("caption", this.controlSpec.slider.caption);
@@ -351,6 +351,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	button.data("call", buttonSpec.call);
 	button.data("appId", buttonSpec.appId);
 	button.data("instanceID", this.instanceID);
+	button.attr("id", buttonSpec.id);
 	return button;
 };
 
@@ -415,6 +416,7 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	textArea.data("appId", this.controlSpec.textInput.appId);
 	textData.data("appId", this.controlSpec.textInput.appId);
 	blinker.data("appId", this.controlSpec.textInput.appId);
+	textInput.attr("id", this.controlSpec.textInput.id);
 	textInput.data("instanceID", this.instanceID);
 	textInput.data("appId", this.controlSpec.textInput.appId);
 	textInput.data("buffer", "");
