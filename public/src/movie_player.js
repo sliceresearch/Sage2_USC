@@ -214,7 +214,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 					_this.state.paused = true;
 					_this.playPauseBtn.state = 0;
 					break;
-				
 				case "Seek":
 					switch (data.action){
 						case "sliderLock":
