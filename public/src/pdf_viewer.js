@@ -244,7 +244,6 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 					if (this.state.page >= this.pdfDoc.numPages) return;
 					this.state.page = this.state.page + 1;
 					break;
-				
 				case "Page":
 					switch (data.action){
 						case "sliderRelease":
@@ -285,5 +284,4 @@ function addWidgetControlsToPdfViewer (_this){
 	_this.controls.addButton({type:"next", sequenceNo:3, id:"NextPage"});
 	_this.controls.addSlider({begin:1, end:_this.pdfDoc.numPages, increments:1, appHandle:_this, property:"state.page", caption: "Page", id:"Page"});
 	_this.controls.finishedAddingControls();
-
 }

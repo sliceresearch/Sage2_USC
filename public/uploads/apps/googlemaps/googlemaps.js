@@ -378,8 +378,8 @@ var googlemaps = SAGE2_App.extend( {
 	},
 	relativeZoom: function(delta){
 		delta = parseInt(delta);
-		delta = (delta > -1)? 1 : -1; 
-		z = this.map.getZoom();
+		delta = (delta > -1)? 1 : -1;
+		var z = this.map.getZoom();
 		this.map.setZoom(z+delta);
 		this.state.zoomLevel = this.map.getZoom();
 	},

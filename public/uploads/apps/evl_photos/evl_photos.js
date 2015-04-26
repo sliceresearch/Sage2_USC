@@ -467,10 +467,10 @@ var evl_photos = SAGE2_App.extend( {
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3,action:function(date){
+        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"}); /*action:function(date){
             //This is executed after the button click animation occurs.
             this.nextAlbum();
-        }.bind(this)});
+        }.bind(this)});*/
 
         var _this = this;
 
@@ -485,9 +485,9 @@ var evl_photos = SAGE2_App.extend( {
                     "animation":false
                 };
 
-                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx, action:function(date){
+                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx,id: loopIdxWithPrefix});/* action:function(date){
                     this.setAlbum(loopIdxWithPrefix);
-                }.bind(_this) });
+                }.bind(_this) });*/
             }(loopIdxWithPrefix));
         }
 
@@ -525,6 +525,14 @@ var evl_photos = SAGE2_App.extend( {
         if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextAlbum();
         }
+        else if (eventType === "widgetEvent"){
+			if (data.ctrlId === "Next"){
+				this.nextAlbum();
+			}
+			else{
+				this.setAlbum(data.ctrlId);
+			}
+		}
     }
 	
 });

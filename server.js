@@ -3772,7 +3772,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 			lockedControl = remoteInteraction[uniqueID].lockedControl();
 			if (lockedControl !== null && btn!==null && regButton.test(btn.id) && lockedControl.ctrlId === btn.id) {
 				remoteInteraction[uniqueID].dropControl();
-				broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser} , 'receivesWidgetEvents');
+				broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser}, 'receivesWidgetEvents');
 
 				var app = SAGE2Items.applications.list[ctrlData.appId];
 				if (app) {
@@ -3806,7 +3806,7 @@ function releaseSlider(uniqueID){
 	if (/slider/.test(ctrlData.ctrlId) === true){
 		remoteInteraction[uniqueID].dropControl();
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-		broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser} , 'receivesWidgetEvents');
+		broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser}, 'receivesWidgetEvents');
 	}
 }
 
@@ -4137,7 +4137,7 @@ function moveWidgetControls (uniqueID, moveControl){
 		broadcast('setControlPosition', moveControl);
 		var circle =  {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2};
 		var bar = {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight};
-		//console.log("moving->", bar);		 
+		//console.log("moving->", bar);
 		interactMgr.editGeometry(moveControl.elemId+"_radial", "widgets", "circle", circle);
 		if(moveControl.hasSideBar === true) {
 			interactMgr.editGeometry(moveControl.elemId+"_sidebar", "widgets", "rectangle", bar );
