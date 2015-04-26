@@ -138,8 +138,9 @@ function initializeSage2Server() {
 			users = {};
 		users.session = {};
 		users.session.start = Date.now();
+
+		if (!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 	}
-	if (!sageutils.fileExists("logs")) fs.mkdirSync("logs");
 
 	// Get full version of SAGE2 - git branch, commit, date
 	sageutils.getFullVersion(function(version) {
