@@ -30,6 +30,7 @@ var web_earth = SAGE2_App.extend( {
 
 		this.maxFPS = 20.0;
 		this.ready  = false;
+		this.controls.finishedAddingControls();
 	},
 
 	initialize: function() {

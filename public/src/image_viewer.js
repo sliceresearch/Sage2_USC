@@ -213,7 +213,7 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
-		if (eventType === "keyboard" && data.character==="i") {
+		if ((eventType === "keyboard" && data.character==="i") || (eventType==="widgetEvent" && data.ctrlId === "Info")) {
 			if (this.isLayerHidden()) {
 				this.top = 0;
 				this.showLayer();
@@ -235,15 +235,7 @@ var image_viewer = SAGE2_App.extend( {
 	addWidgetControlsToImageViewer: function(){
 		// UI stuff
 		var infoLabel = { "textual":true, "label":"info", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:infoLabel, sequenceNo:1, action:function(date){
-			if (this.isLayerHidden()) {
-				this.top = 0;
-				this.showLayer();
-			}
-			else {
-				this.hideLayer();
-			}
-		}.bind(this)});
+		this.controls.addButton({type:infoLabel, sequenceNo:1, id:"Info"});
 		this.controls.finishedAddingControls();
 	}
 
