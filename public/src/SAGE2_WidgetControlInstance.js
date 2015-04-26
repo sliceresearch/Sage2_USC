@@ -56,7 +56,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 	this.controlSpec.addDefaultButtons({
 		id:this.id,
 		instanceID:this.instanceID,
-		sequence:{closeApp: parseInt(3*outerSequence/4 + innerSequence + 1), closeBar: parseInt(outerSequence/2 + innerSequence +1)}
+		sequence:{closeApp: parseInt(3*outerSequence/4 + innerSequence + 1), closeBar: 0 } //parseInt(outerSequence/2 + innerSequence +1)}
 	});
 	var innerThetaIncrement = (endAngle - startAngle)/innerSequence;
 	var outerThetaIncrement = (endAngle - startAngle)/outerSequence;
@@ -139,10 +139,18 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);
 	}*/
-	drawWidgetControlCenter(instanceID, this.controlSVG, center, dimensions.buttonRadius, "");
-	innerGeometry.center.x = center.x;
-	innerGeometry.center.y = center.y;
-	innerGeometry.center.r = dimensions.buttonRadius;
+	var centerButton = this.controlSpec.buttonSequence["0"];
+	if (centerButton!==undefined && centerButton!==null){
+		this.createButton(centerButton, center.x, center.y, dimensions.buttonRadius - 2);
+		innerGeometry.buttons.push({x:center.x, y:center.y, r:dimensions.buttonRadius-2, id:centerButton.id});
+	}
+	else{
+		drawWidgetControlCenter(instanceID, this.controlSVG, center, dimensions.buttonRadius, "");
+		innerGeometry.center.x = center.x;
+		innerGeometry.center.y = center.y;
+		innerGeometry.center.r = dimensions.buttonRadius;
+	}
+	
 	if (isMaster) {
 		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID, innerGeometry:innerGeometry});
 	}
