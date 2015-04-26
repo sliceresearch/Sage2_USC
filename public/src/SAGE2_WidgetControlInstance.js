@@ -150,7 +150,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 		innerGeometry.center.y = center.y;
 		innerGeometry.center.r = dimensions.buttonRadius;
 	}
-	
+
 	if (isMaster) {
 		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID, innerGeometry:innerGeometry});
 	}
