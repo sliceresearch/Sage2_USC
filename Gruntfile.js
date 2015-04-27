@@ -67,16 +67,23 @@ module.exports = function(grunt) {
 						"public/src/SAGE2_UI.js" ]
 				}
 			}
-		}
+		},
+        mochacli: {
+          options: {
+            bail: true
+          },
+          all: ['test/*.js']
+        }
 	});
 
 	// Load the dependencies
 	grunt.loadNpmTasks('eslint-grunt');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-mocha-cli');
 
 	// this would be run by typing "grunt test" on the command line
-	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify']);
+	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);

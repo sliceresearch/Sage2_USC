@@ -66,6 +66,7 @@
 		"eslint-grunt": "latest",
 		"grunt-contrib-yuidoc": "latest",
 		"grunt-contrib-uglify": "latest",
+        "grunt-mocha-cli": "latest",
 		"nodemon": "latest",
 		"eslint": "latest",
 		"kthxbai": "latest",
@@ -83,7 +84,7 @@
 		"lint":    "./node_modules/.bin/grunt eslint",
 		"doc":     "./node_modules/.bin/grunt yuidoc",
 		"mini":    "./node_modules/.bin/grunt uglify --verbose",
-		"test":    "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
+		"test":    "./node_modules/.bin/grunt all",
 		"in":      "node ./install_dependencies.js",
 		"inprod":  "node ./install_dependencies.js --prod"
 	},
