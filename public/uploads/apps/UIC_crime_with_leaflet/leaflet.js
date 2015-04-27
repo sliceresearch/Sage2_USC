@@ -192,7 +192,7 @@ var leaflet = SAGE2_App.extend( {
 			}
 	},
 
-	zoomIn: function()
+	zoomIn: function(date)
 	{
 		var z = this.map.getZoom();
 		if ( z <= 19)
@@ -204,7 +204,7 @@ var leaflet = SAGE2_App.extend( {
 		var z2 = this.map.getZoom();
 	},
 
-	zoomOut: function()
+	zoomOut: function(date)
 	{
 		var z = this.map.getZoom();
 		if (z >= 3)
@@ -380,6 +380,7 @@ var leaflet = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		var mySelf = this;
 		//console.log("getting new data");
 
 		if (this.allLoaded === 1)
@@ -436,13 +437,13 @@ var leaflet = SAGE2_App.extend( {
 
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
-				this.zoomIn();
+				this.zoomIn(date);
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
-				this.zoomOut();
+				this.zoomOut(date);
 
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
@@ -463,10 +464,10 @@ var leaflet = SAGE2_App.extend( {
 					this.changeMap();
 					break;
 				case "ZoomIn":
-					this.zoomIn();
+					this.zoomIn(date);
 					break;
 				case "ZoomOut":
-					this.zoomOut();
+					this.zoomOut(date);
 					break;
 				default:
 					console.log("No handler for:", data.ctrlId);
