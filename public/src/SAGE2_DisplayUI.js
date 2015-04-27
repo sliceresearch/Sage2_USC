@@ -259,12 +259,14 @@ function SAGE2DisplayUI() {
 		};
 		data.icon.onerror = function(event) {
 			setTimeout(function() {
-				data.icon.src = icon+"_512.png";
+				//data.icon.src = icon+"_512.png";
+				data.icon.src = icon+"_128.jpg";
 			}, 1000);
 		};
 		data.iconLoaded = false;
-		if (icon) data.icon.src = icon+"_512.png";
-		else data.icon.src = "images/blank.png";
+		//if (icon) data.icon.src = icon+"_512.png";
+		if (icon) data.icon.src = icon+"_128.jpg";
+		else data.icon.src = "images/blank.jpg";
 		this.applications.push(data);
 	};
 
