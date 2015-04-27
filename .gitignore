@@ -25,7 +25,6 @@ config/custom.types
 
 # generated content
 doc/api
-doc/report
 
 # Dependency directory
 node_modules
