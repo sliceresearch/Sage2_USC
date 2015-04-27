@@ -79,14 +79,15 @@
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start": "node server.js -l",
+		"start":   "node server.js -l",
 		"monitor": "./node_modules/.bin/nodemon -e js,html -I -L server.js -l",
-		"lint": "./node_modules/.bin/grunt eslint",
-		"doc":  "./node_modules/.bin/grunt yuidoc",
-		"report": "./node_modules/.bin/plato -r -l .jshintrc -d doc/report server.js src/*.js public/src/*.js public/admin/*.js",
-		"test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
-		"in":     "node ./install_dependencies.js",
-		"inprod": "node ./install_dependencies.js --prod"
+		"lint":    "./node_modules/.bin/grunt eslint",
+		"doc":     "./node_modules/.bin/grunt yuidoc",
+		"mini":    "./node_modules/.bin/grunt uglify --verbose",
+		"report":  "./node_modules/.bin/plato -r -l .jshintrc -d doc/report server.js src/*.js public/src/*.js public/admin/*.js",
+		"test":    "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=15000 ./test/*.js",
+		"in":      "node ./install_dependencies.js",
+		"inprod":  "node ./install_dependencies.js --prod"
 	},
 	"license": "SAGE2-Software-License"
 }

@@ -39,7 +39,7 @@ module.exports = function(grunt) {
 		uglify: {
 			options: {
 				compress: true,
-				report: 'gzip',
+				report: 'min',
 				preserveComments: false
 			},
 			build: {
@@ -76,7 +76,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 
 	// this would be run by typing "grunt test" on the command line
-	grunt.registerTask('all', ['eslint', 'yuidoc']);
+	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);
