@@ -220,8 +220,7 @@ function SAGE2_init() {
 		}
 	});
 
-	resizeMenuUI();
-	resizeDialogs();
+	SAGE2_resize();
 }
 
 function setupListeners() {
@@ -235,6 +234,7 @@ function setupListeners() {
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
 		displayUI.init(config, wsio);
+		displayUI.resize();
 
 		var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 		var screenMin = Math.min(screen.width, screen.height);
@@ -275,7 +275,7 @@ function setupListeners() {
 			var appsPerRow = Math.min(data.length - i, 6);
 			for(var j=0; j<appsPerRow; j++) {
 				var col = document.createElement('td');
-				col.id = "app_row_" + data[i+j].exif.FileName;
+				col.id = "available_app_row_" + data[i+j].exif.FileName;
 				col.setAttribute("application", data[i+j].exif.FileName);
 				col.style.verticalAlign = "top";
 				col.style.textAlign = "center";
@@ -283,13 +283,13 @@ function setupListeners() {
 				col.style.paddingTop = "12px";
 				col.style.paddingBottom = "12px";
 				var appIcon = document.createElement('img');
-				appIcon.id = "app_icon_" + data[i+j].exif.FileName;
+				appIcon.id = "available_app_icon_" + data[i+j].exif.FileName;
 				appIcon.setAttribute("application", data[i+j].exif.FileName);
 				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.png";
 				appIcon.width = parseInt(size * 0.8, 10);
 				appIcon.height = parseInt(size * 0.8, 10);
 				var appName = document.createElement('p');
-				appName.id = "app_name_" + data[i+j].exif.FileName;
+				appName.id = "available_app_name_" + data[i+j].exif.FileName;
 				appName.setAttribute("application", data[i+j].exif.FileName);
 				appName.textContent = data[i+j].exif.metadata.title;
 				col.appendChild(appIcon);
@@ -358,50 +358,15 @@ function SAGE2_resize() {
  * @method resizeMenuUI
  */
 function resizeMenuUI() {
-	//var menuScale = (window.innerWidth/window.devicePixelRatio) > 512 ? 1.0 : 0.65;
-	var menuScale = window.innerWidth > 1024 ? 1.0 : 0.65;
+	var menuContainer = document.getElementById('menuContainer');
+	var menuUI        = document.getElementById('menuUI');
 
-	var sage2Pointer = document.getElementById('sage2pointer');
-	sage2Pointer.width  = Math.floor(48 * menuScale);
-	sage2Pointer.height = Math.floor(48 * menuScale);
-	var sharescreen  = document.getElementById('sharescreen');
-	sharescreen.width   = Math.floor(48 * menuScale);
-	sharescreen.height  = Math.floor(48 * menuScale);
-	var applauncher  = document.getElementById('applauncher');
-	applauncher.width   = Math.floor(48 * menuScale);
-	applauncher.height  = Math.floor(48 * menuScale);
-	var mediabrowser = document.getElementById('mediabrowser');
-	mediabrowser.width  = Math.floor(48 * menuScale);
-	mediabrowser.height = Math.floor(48 * menuScale);
-	var arrangement  = document.getElementById('arrangement');
-	arrangement.width   = Math.floor(48 * menuScale);
-	arrangement.height  = Math.floor(48 * menuScale);
-	var settings     = document.getElementById('settings');
-	settings.width      = Math.floor(48 * menuScale);
-	settings.height     = Math.floor(48 * menuScale);
-	var info         = document.getElementById('info');
-	info.width          = Math.floor(48 * menuScale);
-	info.height         = Math.floor(48 * menuScale);
-	//var webbrowser = document.getElementById('browser');
-	//webbrowser.width  = Math.floor(48 * menuScale);
-	//webbrowser.height = Math.floor(48 * menuScale);
-
-	var uiButton = getCSSProperty("style_ui.css", ".uiButton");
-	if (uiButton !== null) {
-		uiButton.style.width  = Math.floor(165 * menuScale) + "px";
-		uiButton.style.height = Math.floor( 64 * menuScale) + "px";
-	}
-	var uiButtonImg = getCSSProperty("style_ui.css", ".uiButton img");
-	if (uiButtonImg !== null) {
-		uiButtonImg.style.top  = Math.floor(8 * menuScale) + "px";
-		uiButtonImg.style.left = Math.floor(8 * menuScale) + "px";
-	}
-	var uiButtonP = getCSSProperty("style_ui.css", ".uiButton p");
-	if (uiButtonP !== null) {
-		uiButtonP.style.fontSize = Math.floor(12 * menuScale) + "px";
-		uiButtonP.style.top  = Math.floor(20 * menuScale) + "px";
-		uiButtonP.style.left = Math.floor(64 * menuScale) + "px";
-	}
+	var menuScale = 1.0;
+	if (window.innerWidth < 856) menuScale = window.innerWidth / 856;
+	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
+	menuUI.style.mozTransform = "scale(" + menuScale + ")";
+	menuUI.style.transform = "scale(" + menuScale + ")";
+	menuContainer.style.height = parseInt(86*menuScale, 10) + "px";
 }
 
 /**
@@ -600,16 +565,20 @@ function fileUploadFromUI() {
  * @param event {Event} event data
  */
 function pointerPress(event) {
+	/*if (event.target.className.length >= 9 && event.target.className.substring(0, 9) === "appWindow") {
+		var appId = event.target.id;
+		if (appId.indexOf("_title", appId.length - 6) >= 0)
+			appId = appId.substring(0, appId.length - 6);
+		else if (appId.indexOf("_area", appId.length - 5) >= 0)
+			appId = appId.substring(0, appId.length - 5);
+		else if (appId.indexOf("_icon", appId.length - 5) >= 0)
+			appId = appId.substring(0, appId.length - 5);
+	}*/
+
 	if (event.target.id === "sage2UI") {
-		// update the position of the pointer
-		var rect = event.target.getBoundingClientRect();
-		var mouseX = event.clientX - rect.left;
-		var mouseY = event.clientY - rect.top;
 		// pointerDown used to detect the drag event
 		pointerDown = true;
-		pointerX    = mouseX;
-		pointerY    = mouseY;
-		displayUI.pointerMove(mouseX, mouseY);
+		displayUI.pointerMove(pointerX, pointerY);
 
 		// then send the click
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -626,15 +595,9 @@ function pointerPress(event) {
  */
 function pointerRelease(event) {
 	if (event.target.id === "sage2UI") {
-		// update the position of the pointer
-		var rect = event.target.getBoundingClientRect();
-		var mouseX = event.clientX - rect.left;
-		var mouseY = event.clientY - rect.top;
 		// pointerDown used to detect the drag event
 		pointerDown = false;
-		pointerX    = mouseX;
-		pointerY    = mouseY;
-		displayUI.pointerMove(mouseX, mouseY);
+		displayUI.pointerMove(pointerX, pointerY);
 
 		// then send the pointer release
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -672,9 +635,10 @@ function pointerMove(event) {
 		pointerY   = mouseY;
 		// Send pointer event only during drag events
 		if (pointerDown) {
-			displayUI.pointerMove(mouseX, mouseY);
+			displayUI.pointerMove(pointerX, pointerY);
 		}
-	} else {
+	}
+	else {
 		// Loose focus
 		pointerDown = false;
 	}
@@ -705,13 +669,13 @@ function mouseCheck(event) {
 
 	document.removeEventListener('mousemove', mouseCheck, false);
 
-	var uiButtonImg = getCSSProperty("style_ui.css", ".uiButton:hover img");
+	var uiButtonImg = getCSSProperty("style_ui.css", "#menuUI tr td:hover img");
 	if (uiButtonImg !== null) {
-		uiButtonImg.style['-webkit-transform'] = "scale(1.2)";
-		uiButtonImg.style['-moz-transform']    = "scale(1.2)";
-		uiButtonImg.style.transform            = "scale(1.2)";
+		uiButtonImg.style.webkitTransform = "scale(1.2)";
+		uiButtonImg.style.mozTransform    = "scale(1.2)";
+		uiButtonImg.style.transform       = "scale(1.2)";
 	}
-	var uiButtonP = getCSSProperty("style_ui.css", ".uiButton p");
+	var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
 	if (uiButtonP !== null) {
 		uiButtonP.style.opacity = "0.0";
 	}
@@ -881,11 +845,11 @@ function handleClick(element) {
 	}
 
 	// Application Selected
-	else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
+	else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		var application_selected = element.getAttribute("application");
 
 		if (selectedAppEntry !== null) selectedAppEntry.style.backgroundColor = "transparent";
-		selectedAppEntry = document.getElementById('app_row_' + application_selected);
+		selectedAppEntry = document.getElementById('available_app_row_' + application_selected);
 		selectedAppEntry.style.backgroundColor = "#6C6C6C";
 	}
 
@@ -955,9 +919,9 @@ function pointerDblClick(event) {
 function handleDblClick(element) {
 	if (element.id === "sage2UI") {
 		displayUI.pointerDblClick();
-		//event.preventDefault();
+		if (event.preventDefault) event.preventDefault();
 	}
-	else if (element.id.length > 4 && element.id.substring(0, 4) === "app_") {
+	else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		loadSelectedApplication();
 		hideDialog('appLauncherDialog');
 	}
@@ -977,7 +941,7 @@ function handleDblClick(element) {
  */
 function pointerScroll(event) {
 	if (event.target.id === "sage2UI") {
-		displayUI.pointerScroll(event.deltaY);
+		displayUI.pointerScroll(pointerX, pointerY, event.deltaY);
 		event.preventDefault();
 	}
 }
@@ -1165,10 +1129,12 @@ function touchMove(event) {
 			touch0Y = event.touches[0].clientY - rect.top;
 			touch1X = event.touches[1].clientX - rect.left;
 			touch1Y = event.touches[1].clientY - rect.top;
+			touchX  = parseInt((touch0X+touch1X)/2, 10);
+			touchY  = parseInt((touch0Y+touch1Y)/2, 10);
 			newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
 			if (Math.abs(newDist - touchDist) > 25) {
 				wheelDelta = parseInt((touchDist-newDist)/256, 10);
-				displayUI.pointerScroll(wheelDelta);
+				displayUI.pointerScroll(touchX, touchY, wheelDelta);
 				touchDist = newDist;
 			}
 		}
@@ -1257,7 +1223,7 @@ function noBackspace(event) {
  * @param event {Event} event data
  */
 function keyDown(event) {
-	if (displayUI.keyDown(parseInt(event.keyCode, 10))) {
+	if (displayUI.keyDown(pointerX, pointerY, parseInt(event.keyCode, 10))) {
 		event.preventDefault();
 	}
 }
@@ -1269,7 +1235,7 @@ function keyDown(event) {
  * @param event {Event} event data
  */
 function keyUp(event) {
-	if (displayUI.keyUp(parseInt(event.keyCode, 10))) {
+	if (displayUI.keyUp(pointerX, pointerY, parseInt(event.keyCode, 10))) {
 		event.preventDefault();
 	}
 }
@@ -1287,7 +1253,7 @@ function keyPress(event) {
 		displayUI.pointerMove(pointerX, pointerY);
 	}
 
-	if (displayUI.keyPress(parseInt(event.charCode, 10))) {
+	if (displayUI.keyPress(pointerX, pointerY, parseInt(event.charCode, 10))) {
 		event.preventDefault();
 	}
 }
