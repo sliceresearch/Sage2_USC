@@ -1018,7 +1018,8 @@ function setupListeners() {
 				}
 				ctrlId = ctrl.parent().attr("id").replace("button", "");
 			}
-			else{
+
+			else {
 				ctrlId = ctrl.parent().attr("id").replace("slider", "");
 				action = "sliderRelease";
 			}
@@ -1029,8 +1030,8 @@ function setupListeners() {
 				func(new Date());
 			*/
 			var appId = data.ctrl.appId;
-			var app = applications[appId];
-			switch(ctrlId){
+			var app   = applications[appId];
+			switch(ctrlId) {
 				case "CloseApp":
 					if (isMaster){
 						wsio.emit('closeAppFromControl', {appId:appId});
@@ -1046,11 +1047,11 @@ function setupListeners() {
 					break;
 			}
 
-			//Check whether a request for clone was made.
-			if(app.cloneable === true && app.requestForClone === true){
+			// Check whether a request for clone was made.
+			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
 				console.log("cloning app:" + appId);
-				if(isMaster)
+				if (isMaster)
 					wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 			}
 
@@ -1100,8 +1101,8 @@ function setupListeners() {
 		var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 		appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
 
-		var appId = data.ctrl.appId;
-		var app = applications[appId];
+		var appId  = data.ctrl.appId;
+		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
 		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
 		/*
