@@ -1363,10 +1363,12 @@ function wsSearchTweets(wsio, data) {
 function wsSaveSesion(wsio, data) {
 	var sname = "";
 	if (data) {
+		// If a name is passed, use it
 		sname = data;
 	} else {
+		// Otherwise use the date in the name
 		var ad    = new Date();
-		sname = sprint("session-%4d_%02d_%02d-%02d:%02d:%02s",
+		sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
 							ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
 							ad.getHours(), ad.getMinutes(), ad.getSeconds() );
 	}

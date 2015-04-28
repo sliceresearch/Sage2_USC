@@ -902,7 +902,7 @@ function handleClick(element) {
 		hideDialog('arrangementDialog');
 	}
 	else if (element.id === "savesession") {
-		var template = "Session " + dateToYYYYMMDDHHMMSS(new Date());
+		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
 		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
 		if (filename !== null) {
 			wsio.emit('saveSesion', filename);
@@ -1402,8 +1402,8 @@ function pad(n, width, z) {
  * @return {String} formatted string
  */
 function dateToYYYYMMDDHHMMSS(date) {
-	return date.getFullYear() + "-" + pad(date.getMonth()+1, 2) + "-" + pad(date.getDate(), 2) + " " +
-			pad(date.getHours(), 2) + ":" + pad(date.getMinutes(), 2) + ":" + pad(date.getSeconds(), 2);
+	return date.getFullYear() + "_" + pad(date.getMonth()+1, 2) + "_" + pad(date.getDate(), 2) + "_" +
+			pad(date.getHours(), 2) + "_" + pad(date.getMinutes(), 2) + "_" + pad(date.getSeconds(), 2);
 }
 
 /**
