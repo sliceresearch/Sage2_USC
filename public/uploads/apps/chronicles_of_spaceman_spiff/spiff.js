@@ -326,21 +326,8 @@ updateWindow: function (){
 
 		this.update();
 		this.draw_d3(data.date);
-<<<<<<< HEAD
-        this.controls.addButton({type:"next",sequenceNo:1,action:function(date){
-            this.state.timeDiff += 1;
-            if (this.state.timeDiff > 0)
-                this.state.timeDiff = 0;
-            this.update();
-        }.bind(this)});
-        this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){
-            this.state.timeDiff -= 1;
-            this.update();
-        }.bind(this)});
-=======
         this.controls.addButton({type:"next",sequenceNo:1, id:"Next"});
         this.controls.addButton({type:"prev",sequenceNo:7, id:"Prev"});
->>>>>>> 4cfec3aed5acb26386f70dcabf11aaf361a5a63d
         this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 
@@ -369,42 +356,27 @@ updateWindow: function (){
 	},
 
     showNextPage: function() {
-        this.timeDiff += 1;
-        if (this.timeDiff > 0)
-            this.timeDiff = 0;
+        this.state.timeDiff += 1;
+        if (this.state.timeDiff > 0)
+            this.state.timeDiff = 0;
         this.update();
     },
     showPreviousPage: function() {
-        this.timeDiff -= 1;
+        this.state.timeDiff -= 1;
         this.update();
     },
     event: function(eventType, position, user, data, date) {
 	//event: function(eventType, userId, x, y, data, date) {
-		if (eventType === "pointerPress" && (data.button === "left") ) {
+	   if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
 		else if (eventType === "pointerMove" ) {
 		}
-<<<<<<< HEAD
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
-            if (position.x < 0.5 * this.element.clientWidth)   
-            {
-                this.state.timeDiff -= 1;
-                this.update();
-            }
-            else
-            {
-                this.state.timeDiff += 1;
-                if (this.state.timeDiff > 0)
-                    this.state.timeDiff = 0;
-                this.update();
-=======
 		else if (eventType === "pointerRelease" && (data.button === "left") ) {
             if (position.x < 0.5 * this.element.clientWidth) {
                 this.showPreviousPage();
             }
             else {
                 this.showNextPage();
->>>>>>> 4cfec3aed5acb26386f70dcabf11aaf361a5a63d
             }
 		}
         else if (eventType === "widgetEvent"){
