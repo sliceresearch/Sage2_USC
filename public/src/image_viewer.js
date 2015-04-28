@@ -157,9 +157,16 @@ var image_viewer = SAGE2_App.extend( {
 	* @return {Boolean} Returns true if out of screen
 	*/
 	isHidden: function() {
-		return (this.sage2_x > (ui.offsetX + this.config.resolution.width)  ||
+		var checkWidth  = this.config.resolution.width;
+		var checkHeight = this.config.resolution.height;
+		if (clientID===-1) {
+			// set the resolution to be the whole display wall
+			checkWidth  *= this.config.layout.columns;
+			checkHeight *= this.config.layout.rows;
+		}
+		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
 				(this.sage2_x + this.sage2_width) < ui.offsetX ||
-				this.sage2_y > (ui.offsetY + this.config.resolution.height) ||
+				this.sage2_y > (ui.offsetY + checkHeight) ||
 				(this.sage2_y + this.sage2_height) < ui.offsetY);
 	},
 
