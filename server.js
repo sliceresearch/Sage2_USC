@@ -4088,7 +4088,6 @@ function removeExistingHoverCorner(uniqueID) {
 }
 
 function moveApplicationWindow(uniqueID, moveApp) {
-
 	var backgroundObj = interactMgr.searchGeometry({x: moveApp.elemLeft-1, y: moveApp.elemTop-1});
 	if (backgroundObj!==null){
 		if (backgroundObj.layerId === "applications"){
@@ -4256,7 +4255,7 @@ function dropSelectedApp(uniqueID, valid) {
 function dropMoveApp(uniqueID, app, valid) {
 	if (valid !== false) valid = true;
 	var updatedItem = remoteInteraction[uniqueID].releaseItem(valid);
-	if (updatedItem !== null) moveApplicationWindow(updatedItem);
+	if (updatedItem !== null) moveApplicationWindow(uniqueID, updatedItem);
 
 	broadcast('finishedMove', {id: app.id, date: Date.now()});
 
