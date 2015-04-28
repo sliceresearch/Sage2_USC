@@ -159,7 +159,7 @@ Interaction.prototype.moveSelectedControl = function(pointerX, pointerY) {
 	this.selectedMoveControl.left = pointerX + this.selectOffsetX;
 	this.selectedMoveControl.top  = pointerY + this.selectOffsetY;
 
-	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, date: new Date()};
+	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, elemBarHeight: this.selectedMoveControl.barHeight, hasSideBar: this.selectedMoveControl.hasSideBar, date: Date.now()};
 };
 
 

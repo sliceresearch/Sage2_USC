@@ -22,7 +22,7 @@
 		auto_hide_delay: 120,  // delay in seconds
 	},
 	resolution: {
-		width: 12288,
+		width: 7680,
 		height: 2160
 	},
 	layout: {

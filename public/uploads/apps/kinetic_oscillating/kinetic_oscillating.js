@@ -56,22 +56,8 @@ var kinetic_oscillating = SAGE2_App.extend( {
 			}
 			this.broadcast("initializeBlobs", {blobPoints: blobPoints, blobOpacity: blobOpacity});
 		}
-		this.controls.addButton({type:"zoom-in",sequenceNo:3,action:function(date){ 
-			// zoom in within the stage
-			var scale = this.stage.scale();
-			scale.x *= 1.2;
-			scale.y *= 1.2;
-			this.stage.setScale(scale);
-			this.lastZoom = date;
-		}.bind(this)});
-		this.controls.addButton({type:"zoom-out",sequenceNo:5,action:function(date){ 
-			// zoom out within the stage
-			var scale = this.stage.scale();
-			scale.x *= 0.8;
-			scale.y *= 0.8;
-			this.stage.setScale(scale);
-			this.lastZoom = date;
-		}.bind(this)});
+		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"ZoomOut"});
 		this.controls.finishedAddingControls();
 	},
 	
@@ -133,7 +119,13 @@ var kinetic_oscillating = SAGE2_App.extend( {
 
 		this.refresh(date);
 	},
-	
+	relativeZoom: function (factor, date){
+		var scale = this.stage.scale();
+		scale.x *= factor;
+		scale.y *= factor;
+		this.stage.setScale(scale);
+		this.lastZoom = date;
+	},
 	event: function(eventType, position, user_id, data, date) {
 		// Scroll events for zoom
 		if (eventType === "pointerScroll") {
@@ -141,19 +133,18 @@ var kinetic_oscillating = SAGE2_App.extend( {
 			var diff = date - this.lastZoom;
 			if (amount >= 1 && (diff>100)) {
 				// zoom in within the stage
-				var scale = this.stage.scale();
-				scale.x *= 1.2;
-				scale.y *= 1.2;
-				this.stage.setScale(scale);
-				this.lastZoom = date;
+				this.relativeZoom(1.2,date);
 			}
 			else if (amount <= 1 && (diff>100)) {
-				// zoom out within the stage
-				var scale = this.stage.scale();
-				scale.x *= 0.8;
-				scale.y *= 0.8;
-				this.stage.setScale(scale);
-				this.lastZoom = date;
+				this.relativeZoom(0.8,date);	
+			}
+		}
+		else if (eventType === "widgetEvent"){
+			if (data.ctrlId === "ZoomIn"){
+				this.relativeZoom(1.2,date);
+			}
+			else if (data.ctrlId === "ZoomOut"){
+				this.relativeZoom(0.8,date);
 			}
 		}
 	}

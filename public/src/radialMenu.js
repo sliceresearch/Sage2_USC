@@ -893,6 +893,10 @@ function RadialMenu(){
 					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  ) {
 						this.hoverOverText = thumbButton.getData().filename;
 						this.hoverOverThumbnail = thumbButton.buttonImage;
+						if (thumbButton.buttonImage.lsrc) {
+							this.hoverOverThumbnail.src = thumbButton.buttonImage.lsrc;
+							this.ctx.redraw = true;
+						}
 						this.hoverOverMeta = thumbButton.getData().meta;
 					}
 
@@ -1041,7 +1045,8 @@ function RadialMenu(){
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail !== null ) {
 						customIcon = new Image();
-						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_256.png";
+						customIcon.lsrc = imageList[i].exif.SAGE2thumbnail+"_256.jpg";
+						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_128.jpg";
 						thumbnailButton.setButtonImage( customIcon );
 					} else
 						thumbnailButton.setButtonImage( idleImageIcon );
@@ -1062,7 +1067,8 @@ function RadialMenu(){
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
-					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_256.png";
+					customIcon.lsrc = pdfList[i].exif.SAGE2thumbnail+"_256.jpg";
+					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_128.jpg";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idlePDFIcon );
@@ -1082,7 +1088,8 @@ function RadialMenu(){
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
-					customIcon.src = videoList[i].exif.SAGE2thumbnail+"_256.png";
+					customIcon.lsrc = videoList[i].exif.SAGE2thumbnail+"_256.jpg";
+					customIcon.src = videoList[i].exif.SAGE2thumbnail+"_128.jpg";
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setButtonImage( customIcon );
 				} else
@@ -1105,7 +1112,8 @@ function RadialMenu(){
 
 				if ( appList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
-					customIcon.src = appList[i].exif.SAGE2thumbnail+"_256.png";
+					customIcon.lsrc = appList[i].exif.SAGE2thumbnail+"_256.jpg";
+					customIcon.src = appList[i].exif.SAGE2thumbnail+"_128.jpg";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idleAppIcon );

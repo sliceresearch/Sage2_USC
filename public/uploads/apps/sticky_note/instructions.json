@@ -1,5 +1,6 @@
 {
 	"main_script": "sticky_note.js",
+        "icon": "sticky_note.png",
 	"width": 600,
 	"height": 600,
 	"animation": true,

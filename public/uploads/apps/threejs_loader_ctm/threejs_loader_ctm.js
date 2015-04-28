@@ -61,43 +61,13 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 				});
 			});
 		});
-		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
-			this.orbitControls.pan(this.orbitControls.keyPanSpeed, 0);
-			this.orbitControls.update();
-			this.refresh(date);
-		}.bind(this)});
-		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
-			// right
-			this.orbitControls.pan(  - this.orbitControls.keyPanSpeed, 0);
-			this.orbitControls.update();
-			this.refresh(date);
-		}.bind(this)});
-		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
-			// up
-			this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);
-			this.orbitControls.update();
-			this.refresh(date);
-		}.bind(this)});
-		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
-			// down
-			this.orbitControls.pan(0, - this.orbitControls.keyPanSpeed);
-			this.orbitControls.update();
-			this.refresh(date);
-		}.bind(this)});
-				
-		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
-			this.orbitControls.scale(4);
-			this.refresh(date);
-		}.bind(this)});
-		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
-			this.orbitControls.scale(-4);
-			this.refresh(date);
-		}.bind(this)});
-		this.controls.addButton({type:"loop",sequenceNo:8,action:function(date){ 
-			this.rotating = ! this.rotating;
-			this.orbitControls.autoRotate = this.rotating;
-			this.refresh(date);
-		}.bind(this)});
+		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
+		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
+		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
+		this.controls.addButton({type:"down-arrow",sequenceNo:10, id:"Down"});
+		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"ZoomOut"});
+		this.controls.addButton({type:"loop",sequenceNo:6, id:"Loop"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -304,6 +274,44 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 					this.orbitControls.update();
 					this.refresh(date);
 				}				
+			}
+			else if (eventType === "widgetEvent"){
+				switch(data.ctrlId){
+					case "Up":
+						// up
+						this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);
+						this.orbitControls.update();
+						break;
+					case "Down":
+						// down
+						this.orbitControls.pan(0, - this.orbitControls.keyPanSpeed);
+						this.orbitControls.update();
+						break;
+					case "Left":
+						//Left
+						this.orbitControls.pan(this.orbitControls.keyPanSpeed, 0);
+						this.orbitControls.update();
+						break;
+					case "Right":
+						// right
+						this.orbitControls.pan(- this.orbitControls.keyPanSpeed, 0);
+						this.orbitControls.update();
+						break;
+					case "ZoomIn":
+						this.orbitControls.scale(4);
+						break;
+					case "ZoomOut":
+						this.orbitControls.scale(-4);
+						break;
+					case "Loop":
+						this.rotating = ! this.rotating;
+						this.orbitControls.autoRotate = this.rotating;
+						break;
+					default:
+						console.log("No handler for:", data.ctrlId);
+						return;
+				}
+				this.refresh(date);
 			}
 		}
 	}

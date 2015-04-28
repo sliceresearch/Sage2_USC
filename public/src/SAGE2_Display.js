@@ -989,10 +989,11 @@ function setupListeners() {
 
 	});*/
 	wsio.on('executeControlFunction', function(data){
-		var ctrl = getWidgetControlInstanceById(data);
+		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		if(ctrl){
-			var ctrId = ctrl.attr('id');
-			if (/button/.test(ctrId)){
+			var ctrlId = ctrl.attr('id');
+			var action = "buttonPress";
+			if (/button/.test(ctrlId)){
 				ctrl = ctrl.parent().select("path") || ctrl.parent().select("text");
 				var animationInfo = ctrl.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
@@ -1015,18 +1016,42 @@ function setupListeners() {
 						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 					}
 				}
-
+				ctrlId = ctrl.parent().attr("id").replace("button", "");
 			}
+
+			else {
+				ctrlId = ctrl.parent().attr("id").replace("slider", "");
+				action = "sliderRelease";
+			}
+
+			/*
 			var func = ctrl.parent().data("call");
-			var appId = ctrl.parent().data("appId");
-			var app = applications[appId];
 			if (func !== undefined && func !== null)
 				func(new Date());
-			//Check whether a request for clone was made.
-			if(app.cloneable === true && app.requestForClone === true){
+			*/
+			var appId = data.ctrl.appId;
+			var app   = applications[appId];
+			switch(ctrlId) {
+				case "CloseApp":
+					if (isMaster){
+						wsio.emit('closeAppFromControl', {appId:appId});
+					}
+					break;
+				case "CloseWidget":
+					if (isMaster){
+						wsio.emit('hideWidgetFromControl', {instanceID:data.ctrl.instanceID});
+					}
+					break;
+				default:
+					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
+					break;
+			}
+
+			// Check whether a request for clone was made.
+			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
 				console.log("cloning app:" + appId);
-				if(isMaster)
+				if (isMaster)
 					wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 			}
 
@@ -1037,9 +1062,15 @@ function setupListeners() {
 	wsio.on('sliderKnobLockAction', function(data){
 		var ctrl   = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
+		var appId = data.ctrl.appId;
+		var app = applications[appId];
+		var ctrlId = slider.attr("id").replace("slider", "");
+		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
+		/*
 		var func   = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());
+		*/
 		var ctrHandle    = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
@@ -1048,11 +1079,14 @@ function setupListeners() {
 		var knobCenterX   = parseInt(sliderKnob.attr("x")) + knobWidthHalf;
 		if (Math.abs(pos - knobCenterX) > knobWidthHalf){
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
-			var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
-			app.handle[app.property] = updatedSliderInfo.sliderValue;
+			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
+			app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+			/*
 			func = slider.data("updateCall");
 			if (func !== undefined && func !== null)
 				func(new Date());
+			*/
 		}
 	});
 	wsio.on('moveSliderKnob', function(data){
@@ -1063,11 +1097,19 @@ function setupListeners() {
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
 		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
-		var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
-		app.handle[app.property] = updatedSliderInfo.sliderValue;
+		//console.log("moving->",data.x,pos,updatedSliderInfo.sliderValue);
+		var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+		appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
+
+		var appId  = data.ctrl.appId;
+		var app    = applications[appId];
+		var ctrlId = slider.attr("id").replace("slider", "");
+		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+		/*
 		var func = slider.data("updateCall");
 		if (func !== undefined && func !== null)
 			func(new Date());
+		*/
 	});
 
 	wsio.on('keyInTextInputWidget', function(data){
@@ -1079,11 +1121,16 @@ function setupListeners() {
 				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
 			else{
-				var func = textInput.data("call");
+				var ctrlId = textInput.attr("id").replace("textInput", "");
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
+				var app = applications[data.appId];
+				app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
+				/*
+				var func = textInput.data("call");
 				if (func !== undefined && func !== null)
 					func(getTextFromTextInputWidget(textInput));
+				*/
 			}
 		}
 	});

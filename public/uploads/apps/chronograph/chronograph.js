@@ -107,11 +107,7 @@ var chronograph = SAGE2_App.extend( {
 			"animation":false
 		};
 		// Instead of a string, the type field can be used to specify the button type data itself
-		this.controls.addButton({type:flipButton, sequenceNo:4, action:function(date) {
-			if (this.ready) {
-				this.flip(date);
-			}
-		}.bind(this)});
+		this.controls.addButton({type:flipButton, sequenceNo:4, id:"Flip"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -266,6 +262,15 @@ var chronograph = SAGE2_App.extend( {
 				if(data.character === " ")
 					this.flip(date);
 			}
+			else if (eventType === "widgetEvent"){
+				if (data.ctrlId === "Flip"){
+					this.flip(date);
+				}
+				else{
+					console.log("No handler for:", data.ctrlId);
+				}
+			}
+			
 		}
 	}
 });

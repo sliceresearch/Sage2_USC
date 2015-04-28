@@ -37,6 +37,7 @@
 	DynamicImage: true, makeSvgBackgroundForWidgetConnectors: true
   },
   rules: {
+	no-console: 0,
 	no-alert: 0,
 	strict: 0,
 	no-caller: 0,
