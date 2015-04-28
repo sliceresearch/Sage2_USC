@@ -1016,15 +1016,13 @@ function setupListeners() {
 						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 					}
 				}
-				ctrlId = ctrl.parent().attr("id").replace("button","");
+				ctrlId = ctrl.parent().attr("id").replace("button", "");
 			}
 			else{
-				ctrlId = ctrl.parent().attr("id").replace("slider","");
+				ctrlId = ctrl.parent().attr("id").replace("slider", "");
 				action = "sliderRelease";
 			}
-			
-			
-			
+
 			/*
 			var func = ctrl.parent().data("call");
 			if (func !== undefined && func !== null)
@@ -1047,7 +1045,7 @@ function setupListeners() {
 					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
 					break;
 			}
-			
+
 			//Check whether a request for clone was made.
 			if(app.cloneable === true && app.requestForClone === true){
 				app.requestForClone = false;
@@ -1065,7 +1063,7 @@ function setupListeners() {
 		var slider = ctrl.parent();
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
-		var ctrlId = slider.attr("id").replace("slider","");
+		var ctrlId = slider.attr("id").replace("slider", "");
 		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
 		/*
 		var func   = slider.data("lockCall");
@@ -1104,7 +1102,7 @@ function setupListeners() {
 
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
-		var ctrlId = slider.attr("id").replace("slider","");
+		var ctrlId = slider.attr("id").replace("slider", "");
 		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
 		/*
 		var func = slider.data("updateCall");
@@ -1122,7 +1120,7 @@ function setupListeners() {
 				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
 			else{
-				var ctrlId = textInput.attr("id").replace("textInput","");
+				var ctrlId = textInput.attr("id").replace("textInput", "");
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
