@@ -136,6 +136,21 @@ HttpServer.prototype.onreq = function(req, res) {
 					header['Access-Control-Allow-Credentials'] = true;
 				}
 
+				// Useful Cache-Control response headers include:
+				// max-age=[seconds] — specifies the maximum amount of time that a representation will be considered fresh.
+				// s-maxage=[seconds] — similar to max-age, except that it only applies to shared (e.g., proxy) caches.
+				// public — marks authenticated responses as cacheable;
+				// private — allows caches that are specific to one user (e.g., in a browser) to store the response
+				// no-cache — forces caches to submit the request to the origin server for validation before releasing a cached copy, every time.
+				// no-store — instructs caches not to keep a copy of the representation under any conditions.
+				// must-revalidate — tells caches that they must obey any freshness information you give them about a representation.
+				// proxy-revalidate — similar to must-revalidate, except that it only applies to proxy caches.
+				//
+				// For example:
+				// Cache-Control: max-age=3600, must-revalidate
+				//
+				// header["Cache-Control"] = "no-cache";
+
 				var total = stats.size;
 				if (typeof req.headers.range !== 'undefined') {
 					var range = req.headers.range;

@@ -75,7 +75,7 @@ function SAGE2_init() {
 	wsio = new WebsocketIO();
 
 	wsio.open(function() {
-		console.log("open websocket");
+		console.log("Websocket opened");
 		var clientDescription = {
 			clientType: "sageAnnotation",
 			sendsPointerData: true,

@@ -44,6 +44,16 @@ function RadialMenu(id, ptrID, ui) {
 	this.radialMenuSize      = { x: radialMenuDefaultSize.x * this.radialMenuScale, y: radialMenuDefaultSize.y * this.radialMenuScale };
 	this.thumbnailWindowSize = { x: thumbnailWindowDefaultSize.x * this.radialMenuScale, y: thumbnailWindowDefaultSize.y * this.radialMenuScale };
 	this.activeEventIDs      = [];
+
+	this.dragState = false;
+	this.dragID = -1;
+	this.dragPosition = { x: 0, y: 0 };
+
+	// States
+	this.thumbnailWindowState = 0; // 0 = closed, 1 = image, 2 = pdf, 3 = video, etc.
+	this.thumbnailWindowScrollPosition = 0;
+
+	this.buttonState = []; // idle, lit, over for every radial menu button
 }
 
 /**
@@ -101,6 +111,16 @@ RadialMenu.prototype.openThumbnailWindow = function(data) {
 RadialMenu.prototype.setPosition = function(data) {
 	this.left = data.x;
 	this.top  = data.y;
+	//console.log("node-radialMenu:setPosition() " + data.x + " " + data.y);
+};
+
+/**
+*
+*
+* @method getThumbnailWindowPosition
+*/
+RadialMenu.prototype.getThumbnailWindowPosition = function(data) {
+	return { x: this.left + this.radialMenuSize.x/2, y: this.top - this.radialMenuSize.y/2};
 };
 
 /**
@@ -178,5 +198,71 @@ RadialMenu.prototype.onEvent = function(data) {
 	}
 	return false;
 };
+
+/**
+*
+*
+* @method onPress
+*/
+RadialMenu.prototype.onPress = function(id) {
+	this.activeEventIDs.push(id);
+};
+
+/**
+*
+*
+* @method onMove
+*/
+RadialMenu.prototype.onMove = function(id) {
+	//console.log( this.hasEventID(id) );
+};
+
+/**
+*
+*
+* @method onRelease
+*/
+RadialMenu.prototype.onRelease = function(id) {
+	//console.log("node-RadialMenu.onRelease()");
+	this.activeEventIDs.splice(this.activeEventIDs.indexOf(id), 1);
+	//console.log("drag state "+ this.dragID + " " + id);
+	if (this.dragState === true && this.dragID === id) {
+		this.dragState = false;
+	}
+};
+
+/**
+* Initializes the radial menu's drag state
+*
+* @method onStartDrag
+* @param id {Integer} input ID initiating the drag
+* @param localPos {x: Float, y: Float} initial drag position
+*/
+RadialMenu.prototype.onStartDrag = function(id, localPos) {
+	if (this.dragState === false) {
+		this.dragID       = id;
+		this.dragState    = true;
+		this.dragPosition = localPos;
+	}
+};
+
+/**
+* Checks if an input ID is dragging the menu
+*
+* @method isDragging
+* @param id {Integer} input ID
+* @param localPos {x: Float, y: Float} input position
+* @return dragPos {x: Float, y: Float}
+*/
+RadialMenu.prototype.getDragOffset = function(id, localPos) {
+	var offset = {x: 0, y: 0 };
+	if (this.dragState === true && this.dragID === id) {
+		// If this ID is dragging the menu, return the drag offset
+		offset = { x: localPos.x - this.dragPosition.x, y: localPos.y - this.dragPosition.y };
+		this.dragPosition = localPos;
+	}
+	return offset;
+};
+
 
 module.exports = RadialMenu;

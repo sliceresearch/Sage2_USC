@@ -14,7 +14,7 @@ var clock = SAGE2_App.extend( {
 
 		this.ctx          = null;
 		this.minDim       = null;
-		this.resizeEvents = "onfinish";
+		this.resizeEvents = "continuous";
 		this.enableControls = true;
 	},
 	
@@ -25,7 +25,7 @@ var clock = SAGE2_App.extend( {
 		// application specific 'init'
 		this.ctx    = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
-		this.maxFPS = 1.0;
+		this.maxFPS = 2.0;
 		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 	
@@ -156,7 +156,6 @@ var clock = SAGE2_App.extend( {
 	resize: function(date) {
 		console.log("clock> resize");
 		this.minDim = Math.min(this.element.width, this.element.height);
-		//this.redraw = true;
 		this.refresh(date);
 	},
 	

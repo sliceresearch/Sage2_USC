@@ -52,27 +52,27 @@ function Pointer() {
 		this.color = color;
 		this.mode  = 0;
 
-		var pointerIconSize    = height * 0.65;
-		var pointerIconX       = height * 0.25;
-		var pointerIconY       = height * 0.20;
+		var pointerIconSize    = Math.round(height * 0.65);
+		var pointerIconX       = Math.round(height * 0.25);
+		var pointerIconY       = Math.round(height * 0.20);
 		this.pointerIconLoaded = false;
 
-		var winModeIconSize    = height * 0.330;
-		var winModeIconX       = height * 0.0925;
-		var winModeIconY       = height * 0.044167;
+		var winModeIconSize    = Math.round(height * 0.330);
+		var winModeIconX       = Math.round(height * 0.0925);
+		var winModeIconY       = Math.round(height * 0.044167);
 		this.winModeIconLoaded = false;
 
-		var appModeIconSize    = height * 0.330;
-		var appModeIconX       = height * 0.0925;
-		var appModeIconY       = height * 0.044167;
+		var appModeIconSize    = Math.round(height * 0.330);
+		var appModeIconX       = Math.round(height * 0.0925);
+		var appModeIconY       = Math.round(height * 0.044167);
 		this.appModeIconLoaded = false;
 
-		var labelBGX = height * 0.40;
-		var labelBGY = height * 0.65;
-		var labelBGWidth  = height * 1.00;
-		var labelBGHeight = height * 0.275;
-		var labelTextX    = height * 0.5425;
-		var labelTextY    = height * 0.8475;
+		var labelBGX = Math.round(height * 0.40);
+		var labelBGY = Math.round(height * 0.65);
+		var labelBGWidth  = Math.round(height * 1.00);
+		var labelBGHeight = Math.round(height * 0.275);
+		var labelTextX    = Math.round(height * 0.5425);
+		var labelTextY    = Math.round(height * 0.8475);
 		var labelTextSize = Math.round(0.17*height);
 
 		var _this = this;
@@ -133,17 +133,20 @@ function Pointer() {
 				_this.updateIconColors();
 		});
 
-		this.labelBG = this.snap.rect(labelBGX, labelBGY, labelBGWidth, labelBGHeight, labelBGHeight/2, labelBGHeight/2).attr({
+		// Black background, transparent
+		this.labelBG = this.snap.rect(labelBGX, labelBGY, labelBGWidth, labelBGHeight, labelBGHeight/2, labelBGHeight/2);
+		this.labelBG.attr({
 			fill: "rgba(0, 0, 0, 0.6)"
 		});
 
+		// Arimo: SAGE2 "official" font
 		this.labelText = this.snap.text(labelTextX, labelTextY, label).attr({
 			fill: "#FFFFFF",
 			fontSize: labelTextSize + "px",
-			fontFamily: "Verdana,Arial,Helvetica"
+			fontFamily: "Arimo"
 		});
-
-		this.labelBG.attr({width: this.labelText.node.clientWidth + labelBGHeight});
+		// Get the size of the text and padding
+		this.labelBG.attr({width: this.labelText.node.getBoundingClientRect().width + labelBGHeight});
 	};
 
 	/**
@@ -164,9 +167,10 @@ function Pointer() {
 	* @param label {String} label for the username
 	*/
 	this.setLabel = function(label) {
-		var labelBGHeight = this.snap.node.clientHeight * 0.275;
 		this.labelText.attr({text: label});
-		this.labelBG.attr({width: this.labelText.node.clientWidth + labelBGHeight});
+		var labelBGHeight = Math.round(this.snap.node.getBoundingClientRect().height * 0.275);
+		// Get the size of the text and padding
+		this.labelBG.attr({width: this.labelText.node.getBoundingClientRect().width + labelBGHeight});
 	};
 
 	/**

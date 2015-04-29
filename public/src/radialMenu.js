@@ -146,7 +146,7 @@ function RadialMenu(){
 	this.init = function(data, thumbElem, thumbElem2) {
 		this.divCtxDebug = false;
 
-		var id = data.id;
+		this.id = data.id;
 		this.radialMenuScale = data.radialMenuScale;
 		this.radialMenuCenter = { x: radialMenuCenter.x * this.radialMenuScale, y: radialMenuCenter.y * this.radialMenuScale }; // overwritten in init - based on window size
 		this.radialMenuSize = data.radialMenuSize;
@@ -157,12 +157,12 @@ function RadialMenu(){
 
 		this.textHeaderHeight = 32  * this.radialMenuScale;
 
-		this.element = document.getElementById(id+"_menu"); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
+		this.element = document.getElementById(this.id+"_menu"); // gets because pointer is assumed to be created with initial connection (else createElement( canvas tag)
 		this.ctx     = this.element.getContext("2d");
 
 		this.resrcPath = "images/radialMenu/";
 
-		this.menuID = id+"_menu";
+		this.menuID = this.id+"_menu";
 		this.currentMenuState = 'radialMenu';
 		this.currentRadialState = 'radialMenu';
 
@@ -185,9 +185,7 @@ function RadialMenu(){
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
 
-		this.thumbnailWindowDiv = document.getElementById(id+"_menuDiv");
-		this.thumbnailWindowDiv.style.left   = (this.element.style.left+this.thumbnailWindowPosition.x).toString() + "px";
-		this.thumbnailWindowDiv.style.top    = (this.element.style.top+this.thumbnailWindowPosition.y).toString() + "px";
+		this.thumbnailWindowDiv = document.getElementById(this.id+"_menuDiv");
 
 		// Debug: Show scrolling window background
 		if (this.divCtxDebug) {
@@ -205,7 +203,7 @@ function RadialMenu(){
 		this.thumbnailScrollWindowElement.style.display = "block";
 
 		this.hoverOverText = "";
-		radialMenuList[id+"_menu"] = this;
+		radialMenuList[this.id+"_menu"] = this;
 
 		if (isMaster) {
 			this.wsio = wsio;
@@ -634,7 +632,7 @@ function RadialMenu(){
 		this.visible = false;
 
 		if( this.sendsToServer === true )
-			this.wsio.emit('removeRadialMenu', { id: this.menuID } );
+			this.wsio.emit('removeRadialMenu', { id: this.id } );
 
 		this.currentMenuState = 'radialMenu';
 		this.resetRadialButtonLitState();
@@ -648,30 +646,30 @@ function RadialMenu(){
 	 * @method setToggleMenu
 	 */
 	this.setToggleMenu = function(type) {
-		if( this.currentMenuState !== type ) {
+		if (this.currentMenuState !== type ) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
 			this.currentMenuState = type;
-			this.element.width = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
-			this.element.height = this.thumbnailWindowSize.y;
+			this.element.width    = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
+			this.element.height   = this.thumbnailWindowSize.y;
 			this.thumbnailScrollWindowElement.style.display = "block";
 			this.thumbScrollWindowctx.redraw = true;
 			this.updateThumbnailPositions();
 			this.draw();
 
-			if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: true } );
-
+			if (this.sendsToServer === true) {
+				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: true } );
+			}
 			return true;
 		} else {
 			this.currentMenuState = 'radialMenu';
-			this.element.width = this.radialMenuSize.x;
-			this.element.height = this.radialMenuSize.y;
+			this.element.width    = this.radialMenuSize.x;
+			this.element.height   = this.radialMenuSize.y;
 			//this.thumbnailScrollWindowElement.style.display = "None";
 
-			if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuWindowToggle', { id: this.menuID, thumbnailWindowOpen: false } );
-
+			if (this.sendsToServer === true) {
+				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: false } );
+			}
 			return false;
 		}
 	};
@@ -707,10 +705,6 @@ function RadialMenu(){
 
 			this.element.style.left    = (data.x - offset.x - dragOffset.x).toString() + "px";
 			this.element.style.top     = (data.y - offset.y - dragOffset.y).toString()  + "px";
-
-			if( this.sendsToServer === true ) {
-				this.wsio.emit('radialMenuMoved', { id: this.menuID, x: (data.x - dragOffset.x)+this.radialMenuSize.x/2, y: (data.y - dragOffset.y)+this.radialMenuSize.y/2, radialMenuSize: this.radialMenuSize, thumbnailWindowSize: thumbnailWindowSize } );
-			}
 		}
 
 		this.thumbnailWindowDiv.style.left   = (data.windowX + this.thumbnailWindowPosition.x - 18  * this.radialMenuScale).toString() + "px";
@@ -896,6 +890,10 @@ function RadialMenu(){
 					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  ) {
 						this.hoverOverText = thumbButton.getData().filename;
 						this.hoverOverThumbnail = thumbButton.buttonImage;
+						if (thumbButton.buttonImage.lsrc) {
+							this.hoverOverThumbnail.src = thumbButton.buttonImage.lsrc;
+							this.ctx.redraw = true;
+						}
 						this.hoverOverMeta = thumbButton.getData().meta;
 					}
 
@@ -1031,9 +1029,8 @@ function RadialMenu(){
 		var i = 0;
 		var thumbnailButton;
 		var customIcon;
-		
 		var invalidFilenameRegex = "[:#$%^&@]";
-		
+
 		if( imageList !== null ) {
 			var validImages = 0;
 			for( i = 0; i < imageList.length; i++ ) {
@@ -1049,7 +1046,8 @@ function RadialMenu(){
 					// Thumbnail image
 					if ( imageList[i].exif.SAGE2thumbnail !== null ) {
 						customIcon = new Image();
-						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_256.png";
+						customIcon.lsrc = imageList[i].exif.SAGE2thumbnail+"_256.jpg";
+						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_128.jpg";
 						thumbnailButton.setButtonImage( customIcon );
 					} else
 						thumbnailButton.setButtonImage( idleImageIcon );
@@ -1078,7 +1076,8 @@ function RadialMenu(){
 				// Thumbnail image
 				if ( pdfList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
-					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_256.png";
+					customIcon.lsrc = pdfList[i].exif.SAGE2thumbnail+"_256.jpg";
+					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_128.jpg";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idlePDFIcon );
@@ -1105,7 +1104,8 @@ function RadialMenu(){
 				// Thumbnail image
 				if ( videoList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
-					customIcon.src = videoList[i].exif.SAGE2thumbnail+"_256.png";
+					customIcon.lsrc = videoList[i].exif.SAGE2thumbnail+"_256.jpg";
+					customIcon.src = videoList[i].exif.SAGE2thumbnail+"_128.jpg";
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setButtonImage( customIcon );
 				} else
@@ -1133,7 +1133,8 @@ function RadialMenu(){
 
 				if ( appList[i].exif.SAGE2thumbnail !== null ) {
 					customIcon = new Image();
-					customIcon.src = appList[i].exif.SAGE2thumbnail+"_256.png";
+					customIcon.lsrc = appList[i].exif.SAGE2thumbnail+"_256.jpg";
+					customIcon.src = appList[i].exif.SAGE2thumbnail+"_128.jpg";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idleAppIcon );

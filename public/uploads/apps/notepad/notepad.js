@@ -36,9 +36,6 @@ var notepad = SAGE2_App.extend( {
 
 		
 		this.timer = null;
-		this.redraw = null;
-		this.enableControls = null;
-		this.controls = null;
 		
 		this.resizeEvents = "continuous";
 	},
@@ -124,6 +121,9 @@ var notepad = SAGE2_App.extend( {
 	init: function(data) {
 		// call super-class 'init'
 		arguments.callee.superClass.init.call(this, "canvas", data);
+
+		// Set the framerate
+		this.maxFPS = 4;
 	
 		this.ctx = this.element.getContext('2d');
 		this.resrcPath = data.resrc;
@@ -180,7 +180,6 @@ var notepad = SAGE2_App.extend( {
 					if (this.ctx.measureText(this.textArr[i]).width > wrSpc){
 						var cut = Math.floor(wrSpc/this.ctx.measureText(this.textArr[i]).width * this.textArr[i].length); 
 						var re = new RegExp(".{1," + cut + "}","g");
-						console.log(re);
 						var mLines = this.textArr[i].match(re);
 						for(var ml=0;ml<mLines.length;ml++){
 							this.ctx.fillText(mLines[ml],this.space + this.lMargin,count*this.fontHeight);
@@ -258,7 +257,6 @@ var notepad = SAGE2_App.extend( {
 	    if( type == "pointerPress" ){
 	       if( data.button == "left" ){
 				if ((userId.id in this.blinkerArr)===false){
-					console.log(user_color);
 					var bkr = new this.blinker(userId.id,this.ctx,date,user_color);					
 					this.blinkerArr[userId.id] = bkr;
 					
@@ -316,8 +314,6 @@ var notepad = SAGE2_App.extend( {
 				if ((userId.id in this.blinkerArr) == false) return; // Bad code. need to remove once the event handler has been modified.
 				var curL = this.blinkerArr[userId.id].blinkerL;
 				var curC = this.blinkerArr[userId.id].blinkerC;
-				console.log(curC);
-				//alert(theAsciiCode);
 				if (theAsciiCode == 13){
 					this.enterKey(curL, curC, userId.id);		
 				
@@ -343,7 +339,6 @@ var notepad = SAGE2_App.extend( {
             var theJavascriptCode = data.code;
 			var curL = userId.id && this.blinkerArr[userId.id].blinkerL;
 			var curC = this.blinkerArr[userId.id].blinkerC;
-			//console.log(curC);
 			if (theJavascriptCode == 8){
 				if (curL in this.textArr ){
 					

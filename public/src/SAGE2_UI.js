@@ -65,7 +65,6 @@ var selectedFileEntry;
 var type2App;
 
 var hasMouse;
-var browser;
 
 var pointerDown;
 var pointerX, pointerY;
@@ -99,27 +98,16 @@ function SAGE2_init() {
 	}
 
 	// Detect which browser is being used
-	browser = {};
-	var userAgent = window.navigator.userAgent.toLowerCase();
-	browser.isOpera    = userAgent.indexOf("opera") >= 0;
-	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
-	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
-	browser.isSafari   = !browser.isChrome && userAgent.indexOf("safari") >= 0;
-	browser.isIE       = !browser.isOpera && (userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
-	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
-	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
-	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
-	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0);
-	browser.isAndroid  = userAgent.indexOf("android") >= 0;
-	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
-	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
-	browser.isLinux    = userAgent.indexOf("linux") >= 0;
+	SAGE2_browser();
 
 	// Create a connection to the SAGE2 server
 	wsio = new WebsocketIO();
 	wsio.open(function() {
-		console.log("open websocket");
+		console.log("Websocket opened");
 
+		setupListeners();
+
+		/*
 		var clientDescription = {
 			clientType: "sageUI",
 			sendsPointerData: true,
@@ -140,6 +128,16 @@ function SAGE2_init() {
 			receivesInputEvents: false,
 			receivesRemoteServerInfo: false
 		};
+		*/
+		var clientDescription = {
+			clientType: "sageUI",
+			requests: {
+				config: true,
+				version: false,
+				time: false,
+				console: false
+			}
+		};
 		wsio.emit('addClient', clientDescription);
 
 		interactor = new SAGE2_interaction(wsio);
@@ -155,118 +153,6 @@ function SAGE2_init() {
 				clearInterval(refresh);
 			});
 		}, 2000);
-	});
-
-	wsio.on('initialize', function(data) {
-		interactor.setInteractionId(data.UID);
-		pointerDown = false;
-		pointerX    = 0;
-		pointerY    = 0;
-	});
-
-	wsio.on('setupDisplayConfiguration', function(config) {
-		displayUI = new SAGE2DisplayUI();
-		displayUI.init(config, wsio);
-
-		var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
-		var screenMin = Math.min(screen.width, screen.height);
-		interactor.setPointerSensitivity(sage2Min/screenMin);
-	});
-
-	wsio.on('createAppWindowPositionSizeOnly', function(data) {
-		displayUI.addAppWindow(data);
-	});
-
-	wsio.on('deleteElement', function(data) {
-		displayUI.deleteApp(data.elemId);
-	});
-
-	wsio.on('updateItemOrder', function(data) {
-		displayUI.updateItemOrder(data.idList);
-	});
-
-	wsio.on('setItemPosition', function(data) {
-		displayUI.setItemPosition(data);
-	});
-
-	wsio.on('setItemPositionAndSize', function(data) {
-		displayUI.setItemPositionAndSize(data);
-	});
-
-	wsio.on('availableApplications', function(data) {
-		var appList = document.getElementById('appList');
-		var appListContainer = document.getElementById('appListContainer');
-		var size = parseInt(appListContainer.style.width, 10) / 6;
-
-		removeAllChildren(appList);
-
-		var i = 0;
-		while(i < data.length) {
-			var row = document.createElement('tr');
-			var appsPerRow = Math.min(data.length - i, 6);
-			for(var j=0; j<appsPerRow; j++) {
-				var col = document.createElement('td');
-				col.id = "app_row_" + data[i+j].exif.FileName;
-				col.setAttribute("application", data[i+j].exif.FileName);
-				col.style.verticalAlign = "top";
-				col.style.textAlign = "center";
-				col.style.width = size + "px";
-				col.style.paddingTop = "12px";
-				col.style.paddingBottom = "12px";
-				var appIcon = document.createElement('img');
-				appIcon.id = "app_icon_" + data[i+j].exif.FileName;
-				appIcon.setAttribute("application", data[i+j].exif.FileName);
-				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.png";
-				appIcon.width = parseInt(size * 0.8, 10);
-				appIcon.height = parseInt(size * 0.8, 10);
-				var appName = document.createElement('p');
-				appName.id = "app_name_" + data[i+j].exif.FileName;
-				appName.setAttribute("application", data[i+j].exif.FileName);
-				appName.textContent = data[i+j].exif.metadata.title;
-				col.appendChild(appIcon);
-				col.appendChild(appName);
-				row.appendChild(col);
-			}
-			appList.appendChild(row);
-			i += appsPerRow;
-		}
-
-		showDialog('appLauncherDialog');
-	});
-
-	wsio.on('storedFileList', function(data) {
-		document.getElementById('images-dir').checked   = false;
-		document.getElementById('pdfs-dir').checked     = false;
-		document.getElementById('videos-dir').checked   = false;
-		document.getElementById('sessions-dir').checked = false;
-
-		var images = document.getElementById('images');
-		var videos = document.getElementById('videos');
-		var pdfs = document.getElementById('pdfs');
-		var sessions = document.getElementById('sessions');
-
-		removeAllChildren(images);
-		removeAllChildren(videos);
-		removeAllChildren(pdfs);
-		removeAllChildren(sessions);
-
-		var longestImageName   = createFileList(data, "images",   images);
-		var longestVideoName   = createFileList(data, "videos",   videos);
-		var longestPdfName     = createFileList(data, "pdfs",     pdfs);
-		var longestSessionName = createFileList(data, "sessions", sessions);
-
-		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
-		document.getElementById('fileListElems').style.width = (longest+60).toString() + "px";
-
-		showDialog('mediaBrowserDialog');
-	});
-
-	wsio.on('requestNextFrame', function(data) {
-		interactor.sendMediaStreamFrame();
-	});
-
-	wsio.on('stopMediaCapture', function() {
-		if (interactor.mediaStream !== null) interactor.mediaStream.stop();
 	});
 
 	var sage2UI = document.getElementById('sage2UI');
@@ -322,6 +208,122 @@ function SAGE2_init() {
 	resizeMenuUI();
 	resizeDialogs();
 }
+
+function setupListeners() {
+	wsio.on('initialize', function(data) {
+		interactor.setInteractionId(data.UID);
+		pointerDown = false;
+		pointerX    = 0;
+		pointerY    = 0;
+	});
+
+	wsio.on('setupDisplayConfiguration', function(config) {
+		displayUI = new SAGE2DisplayUI();
+		displayUI.init(config, wsio);
+
+		var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
+		var screenMin = Math.min(screen.width, screen.height);
+		interactor.setPointerSensitivity(sage2Min/screenMin);
+	});
+
+	wsio.on('createAppWindowPositionSizeOnly', function(data) {
+		displayUI.addAppWindow(data);
+	});
+
+	wsio.on('deleteElement', function(data) {
+		displayUI.deleteApp(data.elemId);
+	});
+
+	wsio.on('updateItemOrder', function(data) {
+		//displayUI.updateItemOrder(data.idList);
+		displayUI.updateItemOrder(data);
+	});
+
+	wsio.on('setItemPosition', function(data) {
+		displayUI.setItemPosition(data);
+	});
+
+	wsio.on('setItemPositionAndSize', function(data) {
+		displayUI.setItemPositionAndSize(data);
+	});
+
+	wsio.on('availableApplications', function(data) {
+		var appList = document.getElementById('appList');
+		var appListContainer = document.getElementById('appListContainer');
+		var size = parseInt(appListContainer.style.width, 10) / 6;
+
+		removeAllChildren(appList);
+
+		var i = 0;
+		while(i < data.length) {
+			var row = document.createElement('tr');
+			var appsPerRow = Math.min(data.length - i, 6);
+			for(var j=0; j<appsPerRow; j++) {
+				var col = document.createElement('td');
+				col.id = "app_row_" + data[i+j].exif.FileName;
+				col.setAttribute("application", data[i+j].exif.FileName);
+				col.style.verticalAlign = "top";
+				col.style.textAlign = "center";
+				col.style.width = size + "px";
+				col.style.paddingTop = "12px";
+				col.style.paddingBottom = "12px";
+				var appIcon = document.createElement('img');
+				appIcon.id = "app_icon_" + data[i+j].exif.FileName;
+				appIcon.setAttribute("application", data[i+j].exif.FileName);
+				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_128.jpg";
+				appIcon.width = parseInt(size * 0.8, 10);
+				appIcon.height = parseInt(size * 0.8, 10);
+				var appName = document.createElement('p');
+				appName.id = "app_name_" + data[i+j].exif.FileName;
+				appName.setAttribute("application", data[i+j].exif.FileName);
+				appName.textContent = data[i+j].exif.metadata.title;
+				col.appendChild(appIcon);
+				col.appendChild(appName);
+				row.appendChild(col);
+			}
+			appList.appendChild(row);
+			i += appsPerRow;
+		}
+
+		showDialog('appLauncherDialog');
+	});
+
+	wsio.on('storedFileList', function(data) {
+		document.getElementById('images-dir').checked   = false;
+		document.getElementById('pdfs-dir').checked     = false;
+		document.getElementById('videos-dir').checked   = false;
+		document.getElementById('sessions-dir').checked = false;
+
+		var images = document.getElementById('images');
+		var videos = document.getElementById('videos');
+		var pdfs = document.getElementById('pdfs');
+		var sessions = document.getElementById('sessions');
+
+		removeAllChildren(images);
+		removeAllChildren(videos);
+		removeAllChildren(pdfs);
+		removeAllChildren(sessions);
+
+		var longestImageName   = createFileList(data, "images",   images);
+		var longestVideoName   = createFileList(data, "videos",   videos);
+		var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+		var longestSessionName = createFileList(data, "sessions", sessions);
+
+		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+		document.getElementById('fileListElems').style.width = (longest+60).toString() + "px";
+
+		showDialog('mediaBrowserDialog');
+	});
+
+	wsio.on('requestNextFrame', function(data) {
+		interactor.sendMediaStreamFrame();
+	});
+
+	wsio.on('stopMediaCapture', function() {
+		if (interactor.mediaStream !== null) interactor.mediaStream.stop();
+	});
+}
+
 
 /**
  * Handler resizes
@@ -672,9 +674,9 @@ function pointerMove(event) {
 function mouseCheck(event) {
 	var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 	var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-	if (!browser.isSafari && !browser.isIE && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
-	if (browser.isSafari  && browser.isIOS) return;
-	if (browser.isIE      && browser.isWinPhone) return;
+	if (!__SAGE2__.browser.isSafari && !__SAGE2__.browser.isIE && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
+	if (__SAGE2__.browser.isSafari  && __SAGE2__.browser.isIOS) return;
+	if (__SAGE2__.browser.isIE      && __SAGE2__.browser.isWinPhone) return;
 	hasMouse = true;
 	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
@@ -761,13 +763,13 @@ function handleClick(element) {
 	// Media Browser Dialog
 	else if (element.id === "fileOpenBtn") {
 		loadSelectedFile();
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
 	}
 	else if (element.id === "fileCloseBtn") {
 		selectedFileEntry = null;
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
 	}
@@ -775,7 +777,7 @@ function handleClick(element) {
 	else if (element.id === "fileUploadBtn") {
 		// clear the preview panel
 		selectedFileEntry = null;
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		// close the media browswer
 		hideDialog('mediaBrowserDialog');
@@ -816,7 +818,7 @@ function handleClick(element) {
 			var file = selectedFileEntry.getAttribute("file");
 			wsio.emit('deleteElementFromStoredFiles', {application: application, filename: file});
 
-			document.getElementById('thumbnail').src = "images/blank.png";
+			document.getElementById('thumbnail').src = "images/blank.jpg";
 			document.getElementById('metadata_text').textContent = "";
 			selectedFileEntry = null;
 			hideDialog('mediaBrowserDialog');
@@ -883,7 +885,7 @@ function handleClick(element) {
 		var metadata = document.getElementById('metadata');
 		var size = Math.min(parseInt(metadata.style.width, 10), parseInt(metadata.style.height, 10)) * 0.9 - 32;
 		var thumbnail = document.getElementById('thumbnail');
-		thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_256.png";
+		thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_128.jpg";
 		thumbnail.width = size;
 		thumbnail.height = size;
 		var metadata_text = document.getElementById('metadata_text');
@@ -900,7 +902,7 @@ function handleClick(element) {
 		hideDialog('arrangementDialog');
 	}
 	else if (element.id === "savesession") {
-		var template = "Session " + dateToYYYYMMDDHHMMSS(new Date());
+		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
 		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
 		if (filename !== null) {
 			wsio.emit('saveSesion', filename);
@@ -946,7 +948,7 @@ function handleDblClick(element) {
 	}
 	else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
 		loadSelectedFile();
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
 	}
@@ -1400,8 +1402,8 @@ function pad(n, width, z) {
  * @return {String} formatted string
  */
 function dateToYYYYMMDDHHMMSS(date) {
-	return date.getFullYear() + "-" + pad(date.getMonth()+1, 2) + "-" + pad(date.getDate(), 2) + " " +
-			pad(date.getHours(), 2) + ":" + pad(date.getMinutes(), 2) + ":" + pad(date.getSeconds(), 2);
+	return date.getFullYear() + "_" + pad(date.getMonth()+1, 2) + "_" + pad(date.getDate(), 2) + "_" +
+			pad(date.getHours(), 2) + "_" + pad(date.getMinutes(), 2) + "_" + pad(date.getSeconds(), 2);
 }
 
 /**

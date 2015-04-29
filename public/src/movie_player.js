@@ -49,67 +49,30 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		var _this = this;
 
 		this.loopBtn = this.controls.addButton({
+			id:"Loop",
 			type: "loop",
-			sequenceNo: 3,
-			action: function(date) {
-				if(_this.state.looped === true) {
-					console.log("no loop: " + _this.div.id);
-					if(isMaster) wsio.emit('loopVideo', {id: _this.div.id, loop: false});
-					_this.state.looped = false;
-				}
-				else {
-					console.log("loop: " + _this.div.id);
-					if(isMaster) wsio.emit('loopVideo', {id: _this.div.id, loop: true});
-					_this.state.looped = true;
-				}
-			}
+			sequenceNo: 6
 		});
 
 		this.muteBtn = this.controls.addButton({
+			id:"Mute",
 			type: "mute",
-			sequenceNo: 5,
-			action: function(date) {
-				if(_this.state.muted === true) {
-					console.log("unmute: " + _this.div.id);
-					if(isMaster) wsio.emit('unmuteVideo', {id: _this.div.id});
-					_this.state.muted = false;
-				}
-				else {
-					console.log("mute: " + _this.div.id);
-					if(isMaster) wsio.emit('muteVideo', {id: _this.div.id});
-					_this.state.muted = true;
-				}
-			}
+			sequenceNo: 2
 		});
 
 		this.playPauseBtn = this.controls.addButton({
+			id:"PlayPause",
 			type: "play-pause",
-			sequenceNo: 9,
-			action: function(date) {
-				if(_this.state.paused === true) {
-					console.log("play: " + _this.div.id);
-					if(isMaster) wsio.emit('playVideo', {id: _this.div.id});
-					_this.state.paused = false;
-				}
-				else {
-					console.log("pause: " + _this.div.id);
-					if(isMaster) wsio.emit('pauseVideo', {id: _this.div.id});
-					_this.state.paused = true;
-				}
-			}
+			sequenceNo: 3
 		});
 		this.stopBtn = this.controls.addButton({
+			id:"Stop",
 			type: "stop",
-			sequenceNo: 11,
-			action: function(date) {
-				console.log("pause: " + _this.div.id);
-				if(isMaster) wsio.emit('stopVideo', {id: _this.div.id});
-				_this.state.paused = true;
-				_this.playPauseBtn.state = 0;
-			}
+			sequenceNo: 5
 		});
 
 		this.controls.addSlider({
+			id:"Seek",
 			begin: 0,
 			end: this.state.numframes-1,
 			increments: 1,
@@ -118,22 +81,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 			labelFormatFunction: function(value, end) {
 				var duration = parseInt(1000 * (value / _this.state.framerate), 10);
 				return formatHHMMSS(duration);
-			},
-			lockAction: function(date) {
-				if(_this.state.paused === false) {
-					console.log("pause: " + _this.div.id);
-					if(isMaster) {
-						wsio.emit('pauseVideo', {id: _this.div.id});
-					}
-				}
-				else {
-					_this.state.playAfterSeek = false;
-				}
-			},
-			action: function(date) {
-				if(isMaster) {
-					wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.state.framerate), play: !_this.state.paused});
-				}
 			}
 		});
 
@@ -194,5 +141,104 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		this.state.looped               = state.looped;
 
 		this.initWidgets();
+	},
+
+	/**
+	* Handles event processing, arrow keys to navigate, and r to redraw
+	*
+	* @method event
+	* @param eventType {String} the type of event
+	* @param position {Object} contains the x and y positions of the event
+	* @param user_id {Object} data about the user who triggered the event
+	* @param data {Object} object containing extra data about the event,
+	* @param date {Date} current time from the server
+	*/
+	event: function(eventType, position, user, data, date) {
+		// Space Bar - toggle play/pause
+		if (eventType === "keyboard") {
+			if (data.character === " ") {
+				if (this.state.paused === true) {
+					console.log("play: " + this.div.id);
+					if(isMaster) wsio.emit('playVideo', {id: this.div.id});
+					this.state.paused = false;
+				}
+				else {
+					console.log("pause: " + this.div.id);
+					if(isMaster) wsio.emit('pauseVideo', {id: this.div.id});
+					this.state.paused = true;
+				}
+			}
+		}
+		else if (eventType === "widgetEvent"){
+			var _this = this;
+			switch(data.ctrlId){
+				case "Loop":
+					if(_this.state.looped === true) {
+						console.log("no loop: " + _this.div.id);
+						if(isMaster) wsio.emit('loopVideo', {id: _this.div.id, loop: false});
+						_this.state.looped = false;
+					}
+					else {
+						console.log("loop: " + _this.div.id);
+						if(isMaster) wsio.emit('loopVideo', {id: _this.div.id, loop: true});
+						_this.state.looped = true;
+					}
+					break;
+				case "Mute":
+					if(_this.state.muted === true) {
+						console.log("unmute: " + _this.div.id);
+						if(isMaster) wsio.emit('unmuteVideo', {id: _this.div.id});
+						_this.state.muted = false;
+					}
+					else {
+						console.log("mute: " + _this.div.id);
+						if(isMaster) wsio.emit('muteVideo', {id: _this.div.id});
+						_this.state.muted = true;
+					}
+					break;
+				case "PlayPause":
+					if(_this.state.paused === true) {
+						console.log("play: " + _this.div.id);
+						if(isMaster) wsio.emit('playVideo', {id: _this.div.id});
+						_this.state.paused = false;
+					}
+					else {
+						console.log("pause: " + _this.div.id);
+						if(isMaster) wsio.emit('pauseVideo', {id: _this.div.id});
+						_this.state.paused = true;
+					}
+					break;
+				case "Stop":
+					console.log("pause: " + _this.div.id);
+					if(isMaster) wsio.emit('stopVideo', {id: _this.div.id});
+					_this.state.paused = true;
+					_this.playPauseBtn.state = 0;
+					break;
+				case "Seek":
+					switch (data.action){
+						case "sliderLock":
+							if(_this.state.paused === false) {
+								console.log("pause: " + _this.div.id);
+								if(isMaster) {
+									wsio.emit('pauseVideo', {id: _this.div.id});
+								}
+							}
+							else {
+								_this.state.playAfterSeek = false;
+							}
+							break;
+						case "sliderUpdate":
+							break;
+						case "sliderRelease":
+							if(isMaster) {
+								wsio.emit('updateVideoTime', {id: _this.div.id, timestamp: (_this.state.frame / _this.state.framerate), play: !_this.state.paused});
+							}
+							break;
+					}
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+			}
+		}
 	}
 });

@@ -32,7 +32,7 @@ function addCSS( url, callback ) {
 	document.head.appendChild( fileref );
 }
 
-/*
+/* police districts now loaded from a separate file
 SAGE2_policeDistricts = [
 	"1232", 
 	"1231", 
@@ -63,7 +63,7 @@ var leaflet = SAGE2_App.extend( {
 
 		this.bigCollection = {};
 
-		this.numBeats = 3;
+		this.numBeats = SAGE2_policeDistricts.length;
 		this.currentBeats = 0;
 
 		this.g = null;
@@ -96,7 +96,6 @@ var leaflet = SAGE2_App.extend( {
 		}
 
 	},
-
 
 	init: function(data) {
 
@@ -132,6 +131,7 @@ var leaflet = SAGE2_App.extend( {
 			mySelf.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
 
+			// want to do this same thing when we reset the location
 			if (mySelf.whichMap === 1)
 				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
 			else
@@ -163,6 +163,11 @@ var leaflet = SAGE2_App.extend( {
 		});
 	},
 
+	resetMap: function()
+	{
+    	this.map.setView([41.869910, -87.65], 17);
+	},
+
 	changeMap: function()
 	{
 		var selectedOnes = null;
@@ -187,19 +192,25 @@ var leaflet = SAGE2_App.extend( {
 			}
 	},
 
-	zoomIn: function()
+	zoomIn: function(date)
 	{
 		var z = this.map.getZoom();
-		this.map.setZoom(z+1, {animate: false});
+		if ( z <= 19)
+		{
+			this.map.setZoom(z+1, {animate: false});
+		}
 		this.lastZoom = date;
 	
 		var z2 = this.map.getZoom();
 	},
 
-	zoomOut: function()
+	zoomOut: function(date)
 	{
 		var z = this.map.getZoom();
-		this.map.setZoom(z-1, {animate: false});
+		if (z >= 3)
+			{
+			this.map.setZoom(z-1, {animate: false});
+			}
 		this.lastZoom = date;
 	
 		var z2 = this.map.getZoom();
@@ -346,22 +357,20 @@ var leaflet = SAGE2_App.extend( {
                     "fill":"rgba(250,250,250,1.0)",
                     "animation":false
                 };
+        var homeButton = {
+                    "textual":true,
+                    "label":"home",
+                    "fill":"rgba(250,250,250,1.0)",
+                    "animation":false
+                };
 
-        this.controls.addButton({type:viewButton,sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.changeMap();
-        }.bind(this)});
+        this.controls.addButton({type:homeButton,sequenceNo:2, id:"Home"});
 
+        this.controls.addButton({type:viewButton,sequenceNo:4, id:"View"});
 
-        this.controls.addButton({type:"fastforward",sequenceNo:6,action:function(date){
-            this.zoomIn();
-        }.bind(this)});
+        this.controls.addButton({type:"fastforward",sequenceNo:6, id:"ZoomIn"});
 
-        this.controls.addButton({type:"rewind",sequenceNo:7,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.zoomOut();
-        }.bind(this)});
-
+        this.controls.addButton({type:"rewind",sequenceNo:7, id:"ZoomOut"});
 
         this.controls.finishedAddingControls(); // Important
 	},
@@ -371,6 +380,7 @@ var leaflet = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
+		var mySelf = this;
 		//console.log("getting new data");
 
 		if (this.allLoaded === 1)
@@ -406,20 +416,20 @@ var leaflet = SAGE2_App.extend( {
 			this.position.x = pos.x;
 			this.position.y = pos.y;
 		}
-		if (eventType === "pointerMove" && this.dragging ) {
+		else if (eventType === "pointerMove" && this.dragging ) {
 			// need to turn animation off here or the pan stutters
 			this.map.panBy([this.position.x-pos.x, this.position.y-pos.y], {animate: false});
 			this.position.x = pos.x;
 			this.position.y = pos.y;
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left") ) {
 			this.dragging = false;
 			this.position.x = pos.x;
 			this.position.y = pos.y;
 		}
 
 		// Scroll events for zoom
-		if (eventType === "pointerScroll") {
+		else if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;
 
@@ -427,24 +437,43 @@ var leaflet = SAGE2_App.extend( {
 
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
-				this.zoomIn();
+				this.zoomIn(date);
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 			else if (amount <= -3 && (diff>300)) {
 				// zoom out
-				this.zoomOut();
+				this.zoomOut(date);
 
 				
 				//this.log("scroll: " + amount + ", diff: " + diff + ", zoom: " + z + "(" + z2 + ")");
 			}
 		}
 
-		if (eventType == "keyboard" && data.character == "m") {
-				// m key down
-				// change map type
-				this.changeMap();
-				}
+		else if (eventType == "keyboard" && data.character == "m") {
+			// m key down
+			// change map type
+			this.changeMap();
+		}
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Home":
+					this.resetMap();
+					break;
+				case "View":
+					this.changeMap();
+					break;
+				case "ZoomIn":
+					this.zoomIn(date);
+					break;
+				case "ZoomOut":
+					this.zoomOut(date);
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					return;
+			}
+		}
 
 		this.refresh(date);
 	}

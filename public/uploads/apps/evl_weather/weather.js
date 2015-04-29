@@ -844,27 +844,10 @@ var weather = SAGE2_App.extend( {
         // create the widgets
         console.log("creating controls");
 
-        this.controls.addButtonType("c", cButton);
-        this.controls.addButtonType("k", kButton);
-        this.controls.addButtonType("f", fButton);
-
-        this.controls.addButton({type:"f",sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.itsF = "F";
-            this.updateAll();
-        }.bind(this)});
-        this.controls.addButton({type:"c",sequenceNo:5,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.itsF = "C";
-            this.updateAll();
-        }.bind(this)});
-        this.controls.addButton({type:"k",sequenceNo:6,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.itsF = "K";
-            this.updateAll();
-        }.bind(this)});
+        this.controls.addButton({type:fButton,sequenceNo:4, id:"F"});
+        this.controls.addButton({type:cButton,sequenceNo:5, id:"C"});
+        this.controls.addButton({type:kButton,sequenceNo:6, id:"K"});
         this.controls.finishedAddingControls(); // Important
-        
 
         this.refresh(date);
 	},
@@ -891,10 +874,14 @@ var weather = SAGE2_App.extend( {
 	//event: function(eventType, userId, x, y, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
-		if (eventType === "pointerMove" ) {
+		else if (eventType === "pointerMove" ) {
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextTemp();
+            this.updateAll();
+		}
+		else if (eventType === "widgetEvent"){
+			this.state.itsF = data.ctrlId;
             this.updateAll();
 		}
 	}

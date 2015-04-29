@@ -28,6 +28,7 @@ function Interaction(config) {
 	this.selectedScrollItem  = null;
 	this.selectedResizeItem  = null;
 	this.selectedMoveControl = null;
+	this.previousInteractionItem = null;
 	this.controlLock     = null;
 	this.hoverControlItem = null;
 	this.hoverCornerItem = null;
@@ -61,6 +62,7 @@ Interaction.prototype.selectMoveItem = function(moveItem, pointerX, pointerY) {
 	if(this.selectedMoveItem.previous_top    === null) this.selectedMoveItem.previous_top    = this.selectedMoveItem.top;
 	if(this.selectedMoveItem.previous_width  === null) this.selectedMoveItem.previous_width  = this.selectedMoveItem.width;
 	if(this.selectedMoveItem.previous_height === null) this.selectedMoveItem.previous_height = this.selectedMoveItem.height;
+	this.setPreviousInteractionItem(moveItem);
 };
 
 /**
@@ -74,6 +76,7 @@ Interaction.prototype.selectMoveControl = function(moveControl, pointerX, pointe
 	this.selectedResizeItem  = null;
 	this.selectOffsetX       = this.selectedMoveControl.left - pointerX;
 	this.selectOffsetY       = this.selectedMoveControl.top - pointerY;
+	this.setPreviousInteractionItem(moveControl);
 };
 
 /**
@@ -83,6 +86,7 @@ Interaction.prototype.selectMoveControl = function(moveControl, pointerX, pointe
 Interaction.prototype.releaseControl = function() {
 	// Same as release item, has been created for clarity of code
 	this.selectedMoveControl = null;
+	this.setPreviousInteractionItem(null);
 };
 
 
@@ -126,7 +130,7 @@ Interaction.prototype.releaseItem = function(valid) {
 	this.selectedMoveItem   = null;
 	this.selectedScrollItem = null;
 	this.selectedResizeItem = null;
-
+	this.setPreviousInteractionItem(null);
 	return updatedItem;
 };
 
@@ -155,7 +159,7 @@ Interaction.prototype.moveSelectedControl = function(pointerX, pointerY) {
 	this.selectedMoveControl.left = pointerX + this.selectOffsetX;
 	this.selectedMoveControl.top  = pointerY + this.selectOffsetY;
 
-	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, date: new Date()};
+	return {elemId: this.selectedMoveControl.id, appId:this.selectedMoveControl.appId, elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top, elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height, elemBarHeight: this.selectedMoveControl.barHeight, hasSideBar: this.selectedMoveControl.hasSideBar, date: Date.now()};
 };
 
 
@@ -509,5 +513,20 @@ Interaction.prototype.appInteractionMode = function(){
     return this.interactionMode === MODE.APP_INTERACTION;
 };
 
+/**
+ *@method setPreviousInteractionItem
+ */
+
+Interaction.prototype.setPreviousInteractionItem = function(item){
+	this.previousInteractionItem = item;
+};
+
+/**
+ *@method getPreviousInteractionItem
+ */
+
+Interaction.prototype.getPreviousInteractionItem = function(){
+	return this.previousInteractionItem;
+};
 
 module.exports = Interaction;

@@ -33,8 +33,6 @@ var USweather = SAGE2_App.extend( {
 
         this.gwin.boxSize = 35;
 
-        this.gwin.mode = 1;
-
         this.gwin.appID = "";
 
         this.appName = "evl_photos:";
@@ -60,6 +58,8 @@ var USweather = SAGE2_App.extend( {
 
         this.gwin.numIconsLoaded = 0;
 
+		this.state.mode = 1;
+		this.state.itsF = "F";
 	},
 
 	////////////////////////////////////////
@@ -352,15 +352,15 @@ var USweather = SAGE2_App.extend( {
 
 	nextMode: function()
 	{
-		this.gwin.mode = this.gwin.mode + 1;
-		if (this.gwin.mode > 2)
-				this.gwin.mode = 0;
+		this.state.mode = this.state.mode + 1;
+		if (this.state.mode > 2)
+			this.state.mode = 0;
 
-		if (this.gwin.mode === 0)
+		if (this.state.mode === 0)
 			{
 			this.convertToTemp();
 			} 
-		else if (this.gwin.mode === 1)
+		else if (this.state.mode === 1)
 			{
 			this.convertToIcon();
 			} 
@@ -401,7 +401,7 @@ var USweather = SAGE2_App.extend( {
 		var tempToShow;
 
 
-		if (this.gwin.itsF === "C") // there is a sage versionof this
+		if (this.gwin.itsF === "C") // there is a sage version of this
 			{
 			tempToShow = (Math.round((parseInt(theText)-32)*5/9));
 			//console.log(tempToShow);
@@ -479,12 +479,12 @@ var USweather = SAGE2_App.extend( {
 			.attr("height", this.gwin.boxSize)
 			.attr("width", this.gwin.boxSize);
 
-		if (this.gwin.mode === 0)
+		if (this.state.mode === 0)
 			{
 			textVisibility = "visible";
 			iconVisibility = "hidden";
 			} 
-		else if (this.gwin.mode === 1)
+		else if (this.state.mode === 1)
 			{
 			textVisibility = "hidden";
 			iconVisibility = "visible";
@@ -542,7 +542,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "hidden");
 
-		this.gwin.mode = 0;
+		this.state.mode = 0;
 	},
 
 	convertToIcon: function ()
@@ -556,7 +556,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "visible");
 
-		this.gwin.mode = 1;
+		this.state.mode = 1;
 	},
 
 	convertToNone: function ()
@@ -569,7 +569,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "hidden");
 
-		this.gwin.mode = 2;
+		this.state.mode = 2;
 	},
 
 	getCorrectWeatherIcon: function(weatherCondition, night)
@@ -696,8 +696,10 @@ var USweather = SAGE2_App.extend( {
     load: function(state, date) {
         if (state) {
             this.state.itsF = state.itsF;
+            this.state.mode = state.mode;
         } else {
             this.state.itsF = "F"; // Fahrenheit or Celsius
+            this.state.mode = 0;
         }
 
         var tempButton = {
@@ -725,21 +727,9 @@ var USweather = SAGE2_App.extend( {
         this.controls.addButtonType("icon", iconButton);
         this.controls.addButtonType("color", colorButton);
 
-        this.controls.addButton({type:"temp",sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.gwin.mode = 0;
-            this.convertToTemp();
-        }.bind(this)});
-        this.controls.addButton({type:"icon",sequenceNo:6,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.gwin.mode = 1;
-            this.convertToIcon();
-        }.bind(this)});
-        this.controls.addButton({type:"color",sequenceNo:8,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.gwin.mode = 2;
-            this.convertToNone();
-        }.bind(this)});
+        this.controls.addButton({type:tempButton,sequenceNo:4, id:"Temperature"});
+        this.controls.addButton({type:iconButton,sequenceNo:6, id:"Icon"});
+        this.controls.addButton({type:colorButton,sequenceNo:8, id:"Color"});
         this.controls.finishedAddingControls(); // Important
         
 
@@ -768,11 +758,30 @@ var USweather = SAGE2_App.extend( {
     //event: function(eventType, userId, x, y, data, date) {
         if (eventType === "pointerPress" && (data.button === "left") ) {
         }
-        if (eventType === "pointerMove" ) {
+        else if (eventType === "pointerMove" ) {
         }
-        if (eventType === "pointerRelease" && (data.button === "left") ) {
+        else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextMode();
         }
+        else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Temperature":
+					this.state.mode = 0;
+            		this.convertToTemp();
+					break;
+				case "Icon":
+            		this.state.mode = 1;
+            		this.convertToIcon();
+					break;
+				case "Color":
+					this.state.mode = 2;
+            		this.convertToNone();
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					return;
+			}
+		}
     }
     
 });
