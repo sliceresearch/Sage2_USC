@@ -27,6 +27,7 @@
  */
 function StickyItems() {
 	this.stickyItemParent = {};
+	this.stickyItemOffsetInfo = {};
 }
 
 /**
@@ -44,7 +45,7 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 		this.stickyItemParent[backgroundItem.id] = [];
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
-	stickyItem.offsetInfo = {offsetX:stickyItem.left - backgroundItem.left, offsetY:stickyItem.top - backgroundItem.top };
+	this.stickyItemOffsetInfo[stickyItem.id] = {offsetX:stickyItem.left - backgroundItem.left, offsetY:stickyItem.top - backgroundItem.top };
 };
 
 /**
@@ -54,11 +55,16 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 */
 StickyItems.prototype.detachStickyItem = function(stickyItem) {
 	for (var key in this.stickyItemParent) {
-		if (!this.stickyItemParent[key]) continue;
-		var idx = this.stickyItemParent[key].indexOf(stickyItem);
-		if (idx>-1) {
-			this.stickyItemParent[key].splice(idx, 1);
-			return;
+		if (this.stickyItemParent.hasOwnProperty(key)) {
+			var idx = this.stickyItemParent[key].indexOf(stickyItem);
+			if (idx>-1) {
+				this.stickyItemParent[key].splice(idx, 1);
+				if (this.stickyItemParent[key].length < 1) {
+					delete this.stickyItemParent[key];
+				}
+				delete this.stickyItemOffsetInfo[stickyItem.id];
+				break;
+			}
 		}
 	}
 };
@@ -69,14 +75,7 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 * @method removeElement
 */
 StickyItems.prototype.removeElement = function(elem) {
-	for (var key in this.stickyItemParent){
-		if (!this.stickyItemParent[key]) continue;
-		var idx = this.stickyItemParent[key].indexOf(elem);
-		if (idx>-1){
-			this.stickyItemParent[key].splice(idx, 1);
-			break;
-		}
-	}
+	this.detachStickyItem(elem);
 	if (elem.id in this.stickyItemParent)
 		delete this.stickyItemParent[elem.id];
 };
@@ -86,13 +85,13 @@ StickyItems.prototype.removeElement = function(elem) {
 *
 * @method moveItemsStickingToUpdatedItem
 */
-StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem, pointerX, pointerY) {
+StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 	var moveItems = [];
-	if (this.stickyItemParent[updatedItem.elemId]){
+	if (this.stickyItemParent[updatedItem.elemId]) {
 		var list = this.stickyItemParent[updatedItem.elemId];
 		for (var l in list) {
-			list[l].left = updatedItem.elemLeft + list[l].offsetInfo.offsetX;
-			list[l].top  = updatedItem.elemTop + list[l].offsetInfo.offsetY;
+			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX;
+			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY;
 			var item     = {elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top, elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()};
 			moveItems.push(item);
 		}

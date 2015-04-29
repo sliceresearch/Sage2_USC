@@ -138,9 +138,16 @@ var image_viewer = SAGE2_App.extend( {
 	* @return {Boolean} Returns true if out of screen
 	*/
 	isHidden: function() {
-		return (this.sage2_x > (ui.offsetX + this.config.resolution.width)  ||
+		var checkWidth  = this.config.resolution.width;
+		var checkHeight = this.config.resolution.height;
+		if (clientID===-1) {
+			// set the resolution to be the whole display wall
+			checkWidth  *= this.config.layout.columns;
+			checkHeight *= this.config.layout.rows;
+		}
+		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
 				(this.sage2_x + this.sage2_width) < ui.offsetX ||
-				this.sage2_y > (ui.offsetY + this.config.resolution.height) ||
+				this.sage2_y > (ui.offsetY + checkHeight) ||
 				(this.sage2_y + this.sage2_height) < ui.offsetY);
 	},
 
@@ -194,7 +201,7 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
-		if (eventType === "keyboard" && data.character==="i") {
+		if ((eventType === "keyboard" && data.character==="i") || (eventType==="widgetEvent" && data.ctrlId === "Info")) {
 			if (this.isLayerHidden()) {
 				this.state.top = 0;
 				this.state.showExif = true;
@@ -218,5 +225,13 @@ var image_viewer = SAGE2_App.extend( {
 
 			this.refresh(date);
 		}
+	},
+	addWidgetControlsToImageViewer: function(){
+		// UI stuff
+		var infoLabel = { "textual":true, "label":"info", "fill":"rgba(250,250,250,1.0)", "animation":false};
+		this.controls.addButton({type:infoLabel, sequenceNo:1, id:"Info"});
+		this.controls.finishedAddingControls();
 	}
+
 });
+

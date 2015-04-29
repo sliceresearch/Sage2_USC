@@ -91,6 +91,39 @@ function secureContext(key, crt, ca) {
 	return ctx.context;
 }
 
+/**
+ * Load a CA bundle file and return an array of certificates
+ *
+ * @method loadCABundle
+ * @param filename {String} name of the file to parse
+ * @return {Array} array of certificates data
+ */
+function loadCABundle(filename) {
+	// Initialize the array of certs
+	var certs_array = [];
+	var certs_idx   = -1;
+	// Read the file
+	if (fileExists(filename)) {
+		var rawdata = fs.readFileSync(filename, {encoding:'utf8'});
+		var lines   = rawdata.split('\n');
+		lines.forEach(function(line) {
+			if (line === "-----BEGIN CERTIFICATE-----") {
+				certs_idx = certs_idx + 1;
+				certs_array[certs_idx] = line + '\n';
+			}
+			else if (line === "-----END CERTIFICATE-----") {
+				certs_array[certs_idx] += line;
+			}
+			else  {
+				certs_array[certs_idx] += line + '\n';
+			}
+		});
+	} else {
+		console.log('loadCABundle>	Could not find CA file:', filename);
+	}
+	return certs_array;
+}
+
 
 /**
  * Base version comes from evaluating the package.json file
@@ -322,6 +355,13 @@ function registerSAGE2(config) {
 	);
 }
 
+/**
+ * Unregister from EVL server
+ *
+ * @method deregisterSAGE2
+ * @param config {Object} local SAGE2 configuration
+ * @param callback {Function} to be called when done
+ */
 function deregisterSAGE2(config, callback) {
 	request({
 		"rejectUnauthorized": false,
@@ -352,3 +392,4 @@ module.exports.updateWithGIT   = updateWithGIT;
 module.exports.checkPackages   = checkPackages;
 module.exports.registerSAGE2   = registerSAGE2;
 module.exports.deregisterSAGE2 = deregisterSAGE2;
+module.exports.loadCABundle    = loadCABundle;

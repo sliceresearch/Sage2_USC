@@ -69,10 +69,13 @@ function SAGE2_init() {
 	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 
+	// Detect the current browser
+	SAGE2_browser();
+
 	isMaster = false;
 
 	wsio.open(function() {
-		log("open websocket");
+		console.log("Websocket opened");
 
 		setupListeners();
 
@@ -192,6 +195,7 @@ function setupListeners() {
 			uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay, 10) : 30;
 			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay*1000);
 		}
+		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
 
 	wsio.on('hideui', function(param) {
@@ -242,7 +246,6 @@ function setupListeners() {
     });
 
     wsio.on('showSagePointer', function(pointer_data){
-		console.log(pointer_data);
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
@@ -273,16 +276,22 @@ function setupListeners() {
 		ui.createRadialMenu(menu_data);
     });
 
-	wsio.on('showRadialMenu', function(menu_data){
-		ui.showRadialMenu(menu_data);
+	wsio.on('updateRadialMenu', function(menu_data){
+		ui.updateRadialMenu(menu_data);
     });
+
 	wsio.on('radialMenuEvent', function(menu_data){
 		ui.radialMenuEvent(menu_data);
 		resetIdle();
     });
 
-	wsio.on('updateRadialMenu', function(menu_data){
-		ui.updateRadialMenu(menu_data);
+	wsio.on('updateRadialMenuDocs', function(menu_data){
+		ui.updateRadialMenuDocs(menu_data);
+		resetIdle();
+    });
+
+	wsio.on('updateRadialMenuApps', function(menu_data){
+		ui.updateRadialMenuApps(menu_data);
 		resetIdle();
     });
 
@@ -406,15 +415,12 @@ function setupListeners() {
 			for (var item in controlItems){
 				if (item.indexOf(elem_data.elemId) > -1){
 					controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
-					removeWidgetToAppConnector(item);
+					//removeWidgetToAppConnector(item);
 					delete controlItems[item];
 				}
 
 			}
 			delete controlObjects[elem_data.elemId];
-			//var deleteElemCtrl = document.getElementById(elem_data.elemId + "_controls");
-			//if (deleteElemCtrl) deleteElemCtrl.parentNode.removeChild(deleteElemCtrl);
-			//delete controlItems[elem_data.elemId + "_controls"];
 		}
 	});
 
@@ -422,7 +428,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
-			hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
+			//hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
 		}
 	});
 
@@ -430,7 +436,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===false){
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
 			controlItems[ctrl_data.id].show=true;
-			showWidgetToAppConnector(ctrl_data.id);
+			//showWidgetToAppConnector(ctrl_data.id);
 		}
 	});
 
@@ -750,7 +756,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('requestControlId', function(data) {
+	/*wsio.on('requestControlId', function(data) {
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var ctrId = ctrl? ctrl.attr("id"):"";
 		var regC  = /_controls/;
@@ -762,6 +768,7 @@ function setupListeners() {
 		if (lockedControlElements[data.ptrId]){
 			var lckedCtrl = lockedControlElements[data.ptrId];
 			var lckedCtrlId = lckedCtrl.attr("id");
+			console.log("in requestControlId->", data);
 			if (regTI.test(lckedCtrlId)){
 				textInput = lckedCtrl.parent();
 				blinkControlHandle = textInput.data("blinkControlHandle");
@@ -786,9 +793,9 @@ function setupListeners() {
 				blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
 				textInput.data("blinkControlHandle", blinkControlHandle);
 			}
-			/*if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
+			if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
 				if(/line/.test(ctrId) || /knob/.test(ctrId))
-			}*/
+			}
 			wsio.emit('selectedControlId', {
 				addr:data.addr,
 				pointerX: data.x,
@@ -800,9 +807,9 @@ function setupListeners() {
 			lockedControlElements[data.ptrId] = ctrl;
 
 		}
-	});
+	});*/
 
-	wsio.on('releaseControlId', function(data) {
+	/*wsio.on('releaseControlId', function(data){
 		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
 		var regexSlider = /slider/;
 		var regexButton = /button/;
@@ -834,15 +841,14 @@ function setupListeners() {
 
 			}
 		}
+	});*/
 
-
-
-	});
-	wsio.on('executeControlFunction', function(data) {
-		var ctrl = getWidgetControlInstanceById(data);
+	wsio.on('executeControlFunction', function(data){
+		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		if(ctrl){
-			var ctrId = ctrl.attr('id');
-			if (/button/.test(ctrId)){
+			var ctrlId = ctrl.attr('id');
+			var action = "buttonPress";
+			if (/button/.test(ctrlId)){
 				ctrl = ctrl.parent().select("path") || ctrl.parent().select("text");
 				var animationInfo = ctrl.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
@@ -865,18 +871,42 @@ function setupListeners() {
 						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 					}
 				}
-
+				ctrlId = ctrl.parent().attr("id").replace("button", "");
 			}
+
+			else {
+				ctrlId = ctrl.parent().attr("id").replace("slider", "");
+				action = "sliderRelease";
+			}
+
+			/*
 			var func = ctrl.parent().data("call");
-			var appId = ctrl.parent().data("appId");
-			var app = applications[appId];
 			if (func !== undefined && func !== null)
 				func(new Date());
-			//Check whether a request for clone was made.
-			if(app.cloneable === true && app.requestForClone === true){
+			*/
+			var appId = data.ctrl.appId;
+			var app   = applications[appId];
+			switch(ctrlId) {
+				case "CloseApp":
+					if (isMaster){
+						wsio.emit('closeAppFromControl', {appId:appId});
+					}
+					break;
+				case "CloseWidget":
+					if (isMaster){
+						wsio.emit('hideWidgetFromControl', {instanceID:data.ctrl.instanceID});
+					}
+					break;
+				default:
+					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
+					break;
+			}
+
+			// Check whether a request for clone was made.
+			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
 				console.log("cloning app:" + appId);
-				if(isMaster)
+				if (isMaster)
 					wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
 			}
 
@@ -884,12 +914,35 @@ function setupListeners() {
 
 	});
 
-	wsio.on('sliderKnobLockAction', function(data) {
-		var ctrl = getWidgetControlInstanceById(data);
+	wsio.on('sliderKnobLockAction', function(data){
+		var ctrl   = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
-		var func = slider.data("lockCall");
+		var appId = data.ctrl.appId;
+		var app = applications[appId];
+		var ctrlId = slider.attr("id").replace("slider", "");
+		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
+		/*
+		var func   = slider.data("lockCall");
 		if (func !== undefined && func !== null)
 			func(new Date());
+		*/
+		var ctrHandle    = document.getElementById(slider.data("instanceID"));
+		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
+		var pos = data.x-ui.offsetX-widgetOffset;
+		var sliderKnob = slider.select("rect");
+		var knobWidthHalf = parseInt(sliderKnob.attr("width")) / 2;
+		var knobCenterX   = parseInt(sliderKnob.attr("x")) + knobWidthHalf;
+		if (Math.abs(pos - knobCenterX) > knobWidthHalf){
+			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
+			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
+			app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+			/*
+			func = slider.data("updateCall");
+			if (func !== undefined && func !== null)
+				func(new Date());
+			*/
+		}
 	});
 
 	wsio.on('moveSliderKnob', function(data) {
@@ -899,12 +952,20 @@ function setupListeners() {
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
-		var val = mapMoveToSlider(sliderKnob, pos);
-		var app = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
-		app.handle[app.property] = val;
+		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
+		//console.log("moving->",data.x,pos,updatedSliderInfo.sliderValue);
+		var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+		appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
+
+		var appId  = data.ctrl.appId;
+		var app    = applications[appId];
+		var ctrlId = slider.attr("id").replace("slider", "");
+		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+		/*
 		var func = slider.data("updateCall");
-			if (func !== undefined && func !== null)
-				func(new Date());
+		if (func !== undefined && func !== null)
+			func(new Date());
+		*/
 	});
 
 	wsio.on('keyInTextInputWidget', function(data) {
@@ -916,18 +977,54 @@ function setupListeners() {
 				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
 			else{
-				var func = textInput.data("call");
+				var ctrlId = textInput.attr("id").replace("textInput", "");
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
+				var app = applications[data.appId];
+				app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
+				/*
+				var func = textInput.data("call");
 				if (func !== undefined && func !== null)
 					func(getTextFromTextInputWidget(textInput));
+				*/
 			}
 		}
 	});
 
-	wsio.on('dropTextInputControl', function(data) { //Called when the user clicks outside the widget control while a lock exists on text input
+	/*wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+		console.log("in dropTextInputControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
+			var textInput = ctrl.parent();
+			var blinkControlHandle = textInput.data("blinkControlHandle");
+			clearInterval(blinkControlHandle);
+		}
+	});*/
+
+	wsio.on('activateTextInputControl', function(data){
+		var ctrl = null;
+		console.log("in activateTextInputContControl->", data);
+		if (data.prevTextInput) {
+			ctrl = getWidgetControlInstanceById(data.prevTextInput);
+		}
+		var textInput, blinkControlHandle;
+		if (ctrl) {
+			textInput = ctrl.parent();
+			blinkControlHandle = textInput.data("blinkControlHandle");
+			clearInterval(blinkControlHandle);
+		}
+		ctrl = getWidgetControlInstanceById(data.curTextInput);
+		if (ctrl) {
+			textInput = ctrl.parent();
+			blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
+			textInput.data("blinkControlHandle", blinkControlHandle);
+		}
+	});
+	
+	wsio.on('deactivateTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
+		console.log("in deactivateTextInputContControl->", data);
+		var ctrl = getWidgetControlInstanceById(data);
+		if (ctrl) {
 			var textInput = ctrl.parent();
 			var blinkControlHandle = textInput.data("blinkControlHandle");
 			clearInterval(blinkControlHandle);

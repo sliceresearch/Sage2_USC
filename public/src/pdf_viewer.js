@@ -86,7 +86,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
-				addWidgetControlsToPdfViewer(_this);
+				_this.addWidgetControlsToPdfViewer();
 
 				// if already got a resize event, just redraw, otherwise send message
 				if (_this.gotresize) {
@@ -114,6 +114,21 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		else {
 			this.refresh(date);
 		}
+	},
+
+	/**
+	* Adds custom widgets to app
+	*
+	* @method addWidgetControlsToPdfViewer
+	*/
+	addWidgetControlsToPdfViewer: function() {
+		this.controls.addButton({type: "fastforward", sequenceNo: 2, id: "LastPage"});
+		this.controls.addButton({type: "rewind",      sequenceNo: 6, id: "FirstPage"});
+		this.controls.addButton({type: "prev",        sequenceNo: 5, id: "PreviousPage"});
+		this.controls.addButton({type: "next",        sequenceNo: 3, id: "NextPage"});
+		this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1, appHandle: this, property: "state.page", caption: "Page", id: "Page"});
+
+		this.controls.finishedAddingControls();
 	},
 
 	/**
@@ -199,10 +214,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param data {Object} object containing extra data about the event,
 	* @param date {Date} current time from the server
 	*/
-	event: function(type, position, user, data, date) {
+	event: function(eventType, position, user, data, date) {
 		// Left Arrow  - go back one page
 		// Right Arrow - go forward one page
-		if (type === "specialKey") {
+		if (eventType === "specialKey") {
 			if (data.code === 37 && data.state === "up") { // Left Arrow
 				if(this.state.page <= 1) return;
 				this.state.page = this.state.page - 1;
@@ -214,66 +229,41 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				this.refresh(date);
 			}
 		}
-		if (type === "keyboard") {
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "LastPage":
+					this.state.page = this.pdfDoc.numPages;
+					break;
+				case "FirstPage":
+					this.state.page = 1;
+					break;
+				case "PreviousPage":
+					if(this.state.page <= 1) return;
+					this.state.page = this.state.page - 1;
+					break;
+				case "NextPage":
+					if (this.state.page >= this.pdfDoc.numPages) return;
+					this.state.page = this.state.page + 1;
+					break;
+				case "Page":
+					switch (data.action){
+						case "sliderRelease":
+							break;
+						default:
+							//console.log("No handler for: "+ data.ctrlId + "->" + data.action);
+							return;
+					}
+					break;
+				default:
+					//console.log("No handler for:", data.ctrlId);
+					return;
+			}
+			this.refresh(date);
+		}
+		else if (eventType === "keyboard") {
 			if(data.character === "r" || data.character === "R"){
 				this.refresh(date);
 			}
 		}
 	}
-
 });
-
-
-/**
-* Handles event processing for the app
-*
-* @method addWidgetControlsToPdfViewer
-* @param _this {Object} handle to the pdf app
-*/
-function addWidgetControlsToPdfViewer (_this){
-	// UI stuff
-	_this.controls.addButton({type:"fastforward", sequenceNo:3, action:function(date){
-		this.SAGE2UserModification = true;
-
-		this.state.page = this.pdfDoc.numPages;
-
-		this.refresh(date);
-		this.SAGE2UserModification = false;
-	}.bind(_this)});
-
-	_this.controls.addButton({type:"rewind", sequenceNo:5, action:function(date){
-		this.SAGE2UserModification = true;
-
-		this.state.page = 1;
-
-		this.refresh(date);
-		this.SAGE2UserModification = false;
-	}.bind(_this)});
-
-	_this.controls.addButton({type:"prev", sequenceNo:9, action:function(date){
-		if(this.state.page <= 1) return;
-		this.SAGE2UserModification = true;
-
-		this.state.page = this.state.page - 1;
-
-		this.refresh(date);
-		this.SAGE2UserModification = false;
-	}.bind(_this)});
-	_this.controls.addButton({type:"next", sequenceNo:11, action:function(date){
-		if (this.state.page >= this.pdfDoc.numPages) return;
-		this.SAGE2UserModification = true;
-
-		this.state.page = this.state.page + 1;
-
-		this.refresh(date);
-		this.SAGE2UserModification = false;
-	}.bind(_this)});
-
-	_this.controls.addSlider({begin:1, end:_this.pdfDoc.numPages, increments:1, appHandle:_this, property:"state.page", caption: "Page", action:function(date){
-		this.SAGE2UserModification = true;
-		this.refresh(date);
-		this.SAGE2UserModification = false;
-	}.bind(_this)});
-
-	_this.controls.finishedAddingControls();
-}

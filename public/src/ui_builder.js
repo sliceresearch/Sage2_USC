@@ -236,7 +236,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
@@ -246,7 +246,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
@@ -569,6 +569,10 @@ function UIBuilder(json_cfg, clientID) {
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
 
+		// Also hide the cursor on top of the SVG (doesnt inherit from style body)
+		if (this.clientID !== -1)
+			watermarkSVG.style.cursor = "none";
+
 		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
 
@@ -596,6 +600,8 @@ function UIBuilder(json_cfg, clientID) {
 	* @param pointer_data {Object} pointer information
 	*/
 	this.createSagePointer = function(pointer_data) {
+		if (this.pointerItems.hasOwnProperty(pointer_data.id)) return;
+		
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
@@ -677,21 +683,23 @@ function UIBuilder(json_cfg, clientID) {
 	* @param pointer_data {Object} pointer information
 	*/
 	this.updateSagePointerPosition = function(pointer_data) {
-		var pointerElem = document.getElementById(pointer_data.id);
+		if (this.pointerItems[pointer_data.id].isShown) {
+			var pointerElem = document.getElementById(pointer_data.id);
 
-		var translate;
-		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
-			var left = pointer_data.left*dataSharingPortals[pointer_data.portal].scaleX;
-			var top = pointer_data.top*dataSharingPortals[pointer_data.portal].scaleY;
-			translate = "translate(" + left + "px," + top + "px)";
-		}
-		else {
-			translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
-		}
+			var translate;
+			if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
+				var left = pointer_data.left*dataSharingPortals[pointer_data.portal].scaleX;
+				var top = pointer_data.top*dataSharingPortals[pointer_data.portal].scaleY;
+				translate = "translate(" + left + "px," + top + "px)";
+			}
+			else {
+				translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+			}
 
-		pointerElem.style.webkitTransform = translate;
-		pointerElem.style.mozTransform    = translate;
-		pointerElem.style.transform       = translate;
+			pointerElem.style.webkitTransform = translate;
+			pointerElem.style.mozTransform    = translate;
+			pointerElem.style.transform       = translate;
+		}
 	};
 
 	/**
@@ -739,9 +747,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.appendChild(menuElem3);
 
 			radialMenuContentWindowDiv.appendChild(menuElem2);
+			var rect = menuElem1.getBoundingClientRect();
 
 			var menu = new RadialMenu();
-
 			menu.init(data, menuElem2, menuElem3);
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
@@ -762,12 +770,12 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	/**
-	* Show the radial menu
+	* Update the radial menu state (visibility, position)
 	*
-	* @method showRadialMenu
+	* @method updateRadialMenu
 	* @param data {Object} menu data
 	*/
-	this.showRadialMenu = function(data) {
+	this.updateRadialMenu = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 
 		if (menuElem !== null) {
@@ -787,6 +795,8 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+
+			//console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)
 			this.createRadialMenu(data);
@@ -835,10 +845,10 @@ function UIBuilder(json_cfg, clientID) {
 	/**
 	* Update the list of file in the menu
 	*
-	* @method updateRadialMenu
+	* @method updateRadialMenuDocs
 	* @param data {Object} data
 	*/
-	this.updateRadialMenu = function(data) {
+	this.updateRadialMenuDocs = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);

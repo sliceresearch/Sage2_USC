@@ -36,8 +36,6 @@ var notepad = SAGE2_App.extend( {
 
 		
 		this.timer = null;
-		this.enableControls = null;
-		this.controls = null;
 		
 		this.resizeEvents = "continuous";
 	},

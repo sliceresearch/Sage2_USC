@@ -342,16 +342,23 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	else                          appIcon.style.height = "100%";
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
-			appIcon.src = data.icon+"_512.png";
+			//appIcon.src = data.icon+"_512.png";
+			appIcon.src = data.icon+"_512.jpg";
 		}, 1000);
 	};
-	if (data.icon)
-		appIcon.src = data.icon+"_512.png";
-	else if (data.application === "media_stream" || data.application === "media_block_stream")
+	if (data.icon) {
+		//appIcon.src = data.icon+"_512.png";
+		appIcon.src = data.icon+"_512.jpg";
+	}
+	else if (data.application === "media_stream" || data.application === "media_block_stream") {
 		appIcon.src = this.generateMediaStreamIcon(data.title, data.color);
-	else
+	}
+	else {
 		appIcon.src = "images/blank.png";
+	}
 	
+	console.log(appIcon.src);
+
 	appWindowArea.appendChild(appIcon);
 	appWindow.appendChild(appWindowTitle);
 	appWindow.appendChild(appWindowArea);

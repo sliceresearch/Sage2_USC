@@ -97,7 +97,7 @@ var sticky_note = SAGE2_App.extend( {
 		str = "";
 
 		while(wordCount < list.length){
-			console.log("Compare:",rightEnd,(this.textLines[lineNumber]).getBBox().x2);
+			//console.log("Compare:",rightEnd,(this.textLines[lineNumber]).getBBox().x2);
 			this.textLines[lineNumber].attr("text",str+list[wordCount]);
 			right = this.textLines[lineNumber].getBBox().x2;
 			if (right < rightEnd){
@@ -130,15 +130,9 @@ var sticky_note = SAGE2_App.extend( {
 			}
 				
 		}
-		this.controls.addTextInput({defaultText: text,action:this.wrapText.bind(this)});
-		this.controls.addButton({type:"duplicate",sequenceNo:6,action:function(date){
-			this.requestForClone = true;
-			this.cloneData = this.text;
-		}.bind(this)});
-		this.controls.addButton({type:"new",sequenceNo:8,action:function(date){
-			this.requestForClone = true;
-			this.cloneData = "";
-		}.bind(this)});
+		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
+		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
+		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -178,6 +172,24 @@ var sticky_note = SAGE2_App.extend( {
 			}
 			else if (data.code === 40 && data.state === "down") { // down arrow
 			}			
+		}
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "DuplicateNote":
+					this.requestForClone = true;
+					this.cloneData = this.text;
+					break;
+				case "NewNote":
+					this.requestForClone = true;
+					this.cloneData = "";
+					break;
+				case "TextInput":
+					this.wrapText(data.text);
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					break;
+			}
 		}
 	},
 	quit: function(){

@@ -16,6 +16,7 @@
  * @class SAGE2_AudioManager
  */
 
+var clientID;
 var wsio;
 var autoplay;
 var hostAlias = {};
@@ -26,13 +27,16 @@ var hostAlias = {};
  * @method SAGE2_init
  */
 function SAGE2_init() {
+	// Just a given number
+	clientID = -2;
+
 	autoplay = false;
 	wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
 
 	wsio.open(function() {
-		console.log("open websocket");
+		console.log("Websocket opened");
 
 		setupListeners();
 

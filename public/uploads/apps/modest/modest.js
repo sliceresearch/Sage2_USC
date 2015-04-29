@@ -42,25 +42,13 @@ var modest = SAGE2_App.extend( {
 		var sf     = new MM.Location(37.7749295, -122.4194155);
 		this.map.setCenterZoom(sf, 14);
 		this.log("Modest map at " + JSON.stringify(sf));
-		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
-			this.map.panLeft();
-		}.bind(this)});
-		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
-			this.map.panRight();
-		}.bind(this)});
-		this.controls.addButton({type:"up-arrow",sequenceNo:4,action:function(date){ 
-			this.map.panUp();
-		}.bind(this)});
-		this.controls.addButton({type:"down-arrow",sequenceNo:10,action:function(date){ 
-			this.map.panDown();
-		}.bind(this)});
+		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
+		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
+		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
+		this.controls.addButton({type:"down-arrow",sequenceNo:10, id:"Down"});
 				
-		this.controls.addButton({type:"zoom-in",sequenceNo:5,action:function(date){ 
-			this.map.zoomIn();
-		}.bind(this)});
-		this.controls.addButton({type:"zoom-out",sequenceNo:6,action:function(date){ 
-			this.map.zoomOut();
-		}.bind(this)});
+		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"ZoomOut"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -143,6 +131,30 @@ var modest = SAGE2_App.extend( {
 			}
 			
 			this.refresh(date);
+		}
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Up":
+					this.map.panUp();
+					break;
+				case "Down":
+					this.map.panDown();
+					break;
+				case "Left":
+					this.map.panLeft();
+					break;
+				case "Right":
+					this.map.panRight();
+					break;
+				case "ZoomIn":
+					this.map.zoomIn();
+					break;
+				case "ZoomOut":
+					this.map.zoomOut();
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+			}
 		}
 	}
 

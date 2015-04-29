@@ -138,26 +138,7 @@ var forecast = SAGE2_App.extend( {
 		}, "JSON");
 
 		// Build the application menu
-		this.controls.addTextInput({action: function(text) {
-			_this.city = text;
-		//	if(isMaster){
-				// _this.searchTweets("tweetResults", {q: _this.query, language: "en", count: 100}, false);
-				console.log('Forecast> got new city:', _this.city);
-				var newmap_url = "http://maps.googleapis.com/maps/api/staticmap?center="+_this.city+"&zoom=10&size=300x300";
-				_this.imageId.attr({href: newmap_url});
-
-				readFile('https://maps.googleapis.com/maps/api/geocode/json?address='+_this.city,
-					function (err, response) {
-						if (err) this.log('Gmaps geocoding error', err);
-						if (response.results[0]) {
-							_this.city      = response.results[0].address_components[0].long_name;
-							_this.location  = response.results[0].geometry.location.lat + ',';
-							_this.location += response.results[0].geometry.location.lng;
-							_this.getData();
-						}
-				}, "JSON");
-		//	}
-		}});
+		this.controls.addTextInput({caption:"City", id:"City"}); 
 		this.controls.finishedAddingControls();
 
 		// Request data
@@ -240,8 +221,27 @@ var forecast = SAGE2_App.extend( {
 	
 	event: function(eventType, userId, x, y, data, date) {
 		// this.refresh(date);
+		if (eventType === "widgetEvent" && data.ctrlId === "City"){
+			this.forcastForNewCity(data.text);
+		}
 	},
-
+	forcastForNewCity: function(city){
+		this.city = city;
+		console.log('Forecast> got new city:', this.city);
+		var newmap_url = "http://maps.googleapis.com/maps/api/staticmap?center="+this.city+"&zoom=10&size=300x300";
+		this.imageId.attr({href: newmap_url});
+		var _this = this;
+		readFile('https://maps.googleapis.com/maps/api/geocode/json?address='+this.city,
+			function (err, response) {
+				if (err) this.log('Gmaps geocoding error', err);
+				if (response.results[0]) {
+					_this.city      = response.results[0].address_components[0].long_name;
+					_this.location  = response.results[0].geometry.location.lat + ',';
+					_this.location += response.results[0].geometry.location.lng;
+					_this.getData();
+				}
+		}, "JSON");
+	},
 	quit: function() {
 		this.log('Forecast> quit');
 		if (this.updateTimer) clearInterval(this.updateTimer);
