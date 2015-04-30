@@ -4183,6 +4183,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "radialMenus":
 			pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj);
+			dropSelectedApp(uniqueID, true);
 			break;
 		case "applications":
 			if (dropSelectedApp(uniqueID, true) === null) {
@@ -4194,6 +4195,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		case "widgets":
 			var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "release");
+			dropSelectedApp(uniqueID, true);
 			break;
 		default:
 			dropSelectedApp(uniqueID, true);
