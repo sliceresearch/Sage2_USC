@@ -29,9 +29,6 @@ var radar = SAGE2_App.extend( {
 			this.resizeEvents = "continuous";
 			this.svg = null;
 
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-		this.enableControls = true;
-
 		this.canvasWidth = 1.0;
 		this.canvasHeight = 1.0;
 
@@ -372,33 +369,18 @@ var radar = SAGE2_App.extend( {
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"});/*, action:function(date){
-            //This is executed after the button click animation occurs.
-            this.nextStation();
-            this.startup();
-            this.draw(date);
-        }.bind(this)});
-		*/
-        var _this = this;
+        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"});
 
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
-            (function(loopIdxWithPrefix){
-                var siteButton = {
-                    "textual":true,
-                    "label":SAGE2_radarStations[loopIdx].name,
-                    "fill":"rgba(250,250,250,1.0)",
-                    "animation":false
-                };
-
-                _this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, id: loopIdxWithPrefix});/*, action:function(date){
-                    this.setStation(loopIdxWithPrefix);
-                    this.startup();
-                    this.draw(date);
-                }.bind(_this) });*/
-            }(loopIdxWithPrefix));
-        }
-
+            var siteButton = {
+                "textual":true,
+                "label":SAGE2_radarStations[loopIdx].name,
+                "fill":"rgba(250,250,250,1.0)",
+                "animation":false
+            };
+            this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, id: loopIdxWithPrefix});
+		}
         this.controls.finishedAddingControls(); // Important
 	},
 
