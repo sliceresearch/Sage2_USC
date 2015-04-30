@@ -5884,9 +5884,8 @@ function showRadialMenu(uniqueID) {
 
 	if (radialMenu !== undefined) {
 		radialMenu.visible = true;
-		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: radialMenu.left, y: radialMenu.top, r: radialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, radialMenu);
-		//interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", "circle", true);
-		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", false);
+		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", true);
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", false);
 	}
 }
 
@@ -5900,8 +5899,8 @@ function hideRadialMenu(uniqueID) {
 var radialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 	if (radialMenu !== undefined) {
 		radialMenu.visible = false;
-		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", "circle", false);
-		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", false);
+		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", false);
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", false);
 	}
 }
 
@@ -5954,12 +5953,7 @@ function wsRadialMenuThumbnailWindow( wsio, data ) {
 	if (radialMenu !== undefined) {
 		radialMenu.openThumbnailWindow(data);
 
-		if( data.thumbnailWindowOpen ) {
-			var thumbnailWindowPos = radialMenu.getThumbnailWindowPosition();
-			interactMgr.addGeometry(data.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y}, true, Object.keys(SAGE2Items.radialMenus).length, radialMenu);
-		} else {
-			interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
-		}
+		interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", data.thumbnailWindowOpen);
 	}
 }
 
