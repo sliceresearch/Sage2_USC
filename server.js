@@ -318,6 +318,17 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
+
+	// Just making sure the data is valid JSON (one gets strings from C++)
+	if (sageutils.isTrue(data.requests.config)) data.requests.config = true;
+	else data.requests.config = false;
+	if (sageutils.isTrue(data.requests.version)) data.requests.version = true;
+	else data.requests.version = false;
+	if (sageutils.isTrue(data.requests.time)) data.requests.time = true;
+	else data.requests.time = false;
+	if (sageutils.isTrue(data.requests.console)) data.requests.console = true;
+	else data.requests.console = false;
+
 	wsio.updateRemoteAddress(data.host, data.port); // overwrite host and port if defined
 	wsio.clientType = data.clientType;
 
