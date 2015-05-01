@@ -1077,6 +1077,7 @@ function RadialMenu(){
 		var i = 0;
 		var thumbnailButton;
 		var customIcon;
+		var invalidFilenameRegex = "[:#$%^&@]";
 
 		if( imageList !== null ) {
 			var validImages = 0;
@@ -1095,6 +1096,11 @@ function RadialMenu(){
 						thumbnailButton.setButtonImage( customIcon );
 					} else
 						thumbnailButton.setButtonImage( idleImageIcon );
+
+					// File has a bad filename for thumbnails, set default icon
+					if( imageList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+						thumbnailButton.setButtonImage( idleImageIcon );
+					}
 
 					this.thumbnailButtons.push(thumbnailButton);
 					this.imageThumbnailButtons.push(thumbnailButton);
@@ -1118,6 +1124,10 @@ function RadialMenu(){
 				} else
 					thumbnailButton.setButtonImage( idlePDFIcon );
 
+				// File has a bad filename for thumbnails, set default icon
+				if( pdfList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+					thumbnailButton.setButtonImage( idlePDFIcon );
+				}
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.pdfThumbnailButtons.push(thumbnailButton);
@@ -1139,6 +1149,11 @@ function RadialMenu(){
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idleVideoIcon );
+
+				// File has a bad filename for thumbnails, set default icon
+				if( videoList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+					thumbnailButton.setButtonImage( idleVideoIcon );
+				}
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.videoThumbnailButtons.push(thumbnailButton);
@@ -1162,6 +1177,11 @@ function RadialMenu(){
 					thumbnailButton.setButtonImage( customIcon );
 				} else
 					thumbnailButton.setButtonImage( idleAppIcon );
+
+				// File has a bad filename for thumbnails, set default icon
+				if( appList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
+					thumbnailButton.setButtonImage( idleAppIcon );
+				}
 
 				this.thumbnailButtons.push(thumbnailButton);
 				this.appThumbnailButtons.push(thumbnailButton);

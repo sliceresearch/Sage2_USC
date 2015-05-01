@@ -359,6 +359,17 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
+
+	// Just making sure the data is valid JSON (one gets strings from C++)
+	if (sageutils.isTrue(data.requests.config)) data.requests.config = true;
+	else data.requests.config = false;
+	if (sageutils.isTrue(data.requests.version)) data.requests.version = true;
+	else data.requests.version = false;
+	if (sageutils.isTrue(data.requests.time)) data.requests.time = true;
+	else data.requests.time = false;
+	if (sageutils.isTrue(data.requests.console)) data.requests.console = true;
+	else data.requests.console = false;
+
 	wsio.updateRemoteAddress(data.host, data.port); // overwrite host and port if defined
 	wsio.clientType = data.clientType;
 
@@ -5329,6 +5340,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "radialMenus":
 			pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj);
+			dropSelectedApp(uniqueID, true);
 			break;
 		case "applications":
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
@@ -5343,6 +5355,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		case "widgets":
 			var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "release");
+			dropSelectedApp(uniqueID, true);
 			break;
 		default:
 			dropSelectedItem(uniqueID, true, portal.id);
@@ -7394,9 +7407,8 @@ function showRadialMenu(uniqueID) {
 
 	if (radialMenu !== undefined) {
 		radialMenu.visible = true;
-		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: radialMenu.left, y: radialMenu.top, r: radialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, radialMenu);
-		//interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", "circle", true);
-		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", false);
+		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", true);
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", false);
 	}
 }
 
@@ -7410,8 +7422,8 @@ function hideRadialMenu(uniqueID) {
 var radialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 	if (radialMenu !== undefined) {
 		radialMenu.visible = false;
-		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", "circle", false);
-		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", false);
+		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", false);
+		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", false);
 	}
 }
 
@@ -7464,12 +7476,7 @@ function wsRadialMenuThumbnailWindow( wsio, data ) {
 	if (radialMenu !== undefined) {
 		radialMenu.openThumbnailWindow(data);
 
-		if( data.thumbnailWindowOpen ) {
-			var thumbnailWindowPos = radialMenu.getThumbnailWindowPosition();
-			interactMgr.addGeometry(data.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y}, true, Object.keys(SAGE2Items.radialMenus).length, radialMenu);
-		} else {
-			interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", "rectangle", data.thumbnailWindowOpen);
-		}
+		interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", data.thumbnailWindowOpen);
 	}
 }
 
