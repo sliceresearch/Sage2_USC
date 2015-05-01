@@ -4215,8 +4215,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
-	var app = dropSelectedApp(uniqueID, false);
-	if (app !== null) {
+	var app    = dropSelectedApp(uniqueID, false);
+	if (app !== null && remote.wsio.connected) {
 		remote.wsio.emit('addNewElementFromRemoteServer', app);
 
 		var eLogData = {
@@ -5840,7 +5840,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 	updateRadialMenu(uniqueID);
 }
-
+/**
 function createThumbnailWindow(uniqueID, pointerX, pointerY) {
 	var validLocation = true;
 	var newMenuPos = {x: pointerX, y: pointerY};
@@ -5862,7 +5862,7 @@ function createThumbnailWindow(uniqueID, pointerX, pointerY) {
 	}
 	updateRadialMenu(uniqueID);
 }
-
+**/
 /**
 * Translates position of a radial menu by an offset
 *
