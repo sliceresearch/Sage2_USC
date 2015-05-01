@@ -5966,6 +5966,8 @@ function wsRadialMenuThumbnailWindow( wsio, data ) {
 	if (radialMenu !== undefined) {
 		radialMenu.openThumbnailWindow(data);
 
+		var thumbnailWindowPos = radialMenu.getThumbnailWindowPosition();
+		interactMgr.editGeometry(data.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: radialMenu.thumbnailWindowSize.x, h: radialMenu.thumbnailWindowSize.y});
 		interactMgr.editVisibility(data.id+"_menu_thumbnail", "radialMenus", data.thumbnailWindowOpen);
 	}
 }
