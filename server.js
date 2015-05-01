@@ -3797,6 +3797,9 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 					else if (btn.id.indexOf("buttonCloseWidget") >= 0) {
 						addEventToUserLog(data.addr, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
 					}
+					else if (btn.id.indexOf("buttonShareApp") >= 0) {
+						console.log("sharing app");
+					}
 					else {
 						addEventToUserLog(data.addr, {type: "widgetAction", data: {application: data.appId, widget: data.ctrlId}, time: Date.now()});
 					}
