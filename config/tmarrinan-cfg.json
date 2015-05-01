@@ -22,8 +22,8 @@
 		menubar: {
 			backgroundColor: "rgba(12, 15, 40, 0.5)",
 			textColor: "rgba(235, 230, 175, 1.0)",
-			remoteConnectedColor: "rgba(97, 173, 226, 1.0)",
-			remoteDisconnectedColor: "rgba(64, 114, 149, 1.0)"
+			remoteConnectedColor: "#61ADE2",
+			remoteDisconnectedColor: "#647295"
 		}
 	},
 	resolution: {

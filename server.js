@@ -116,6 +116,7 @@ function initializeSage2Server() {
 		if(config.dependencies.FFMpeg !== undefined) ffmpegOptions.appPath = config.dependencies.FFMpeg;
 	}
 	imageMagick = gm.subClass(imageMagickOptions);
+	assets.initializeConfiguration(config);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
 
 	// Set default host origin for this server
