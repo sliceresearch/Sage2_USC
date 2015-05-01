@@ -5841,6 +5841,28 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	updateRadialMenu(uniqueID);
 }
 
+function createThumbnailWindow(uniqueID, pointerX, pointerY) {
+	var validLocation = true;
+	var newMenuPos = {x: pointerX, y: pointerY};
+	var existingRadialMenu = null;
+
+	if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined) {
+		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
+		newRadialMenu.setPosition(newMenuPos);
+
+		interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left, y: newRadialMenu.top, w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
+		SAGE2Items.radialMenus.list[uniqueID+"_menu"] = newRadialMenu;
+
+		// Open a 'media' radial menu
+		broadcast('createRadialMenu', newRadialMenu.getInfo());
+	}
+	else if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] !== undefined) {
+		setRadialMenuPosition(uniqueID, pointerX, pointerY);
+		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+	}
+	updateRadialMenu(uniqueID);
+}
+
 /**
 * Translates position of a radial menu by an offset
 *
