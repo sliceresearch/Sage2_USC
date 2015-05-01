@@ -115,7 +115,7 @@ function RadialMenu(){
 	this.radialMenuButtons = {};
 	this.thumbnailWindows = {};
 
-	this.showOnlyThumbnailWindow = true;
+	this.showOnlyThumbnailWindow = false;
 
 	this.thumbnailButtons = [];
 	this.imageThumbnailButtons = [];
