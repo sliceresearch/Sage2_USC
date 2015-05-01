@@ -4215,8 +4215,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
-	var app = dropSelectedApp(uniqueID, false);
-	if (app !== null) {
+	var app    = dropSelectedApp(uniqueID, false);
+	if (app !== null && remote.wsio.connected) {
 		remote.wsio.emit('addNewElementFromRemoteServer', app);
 
 		var eLogData = {
