@@ -349,8 +349,9 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 
 
 SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
-	this.addButton({type:"closeApp", id:"CloseApp", sequenceNo:data.sequence.closeApp});
-	this.addButton({type:"closeBar", id:"CloseWidget", sequenceNo:data.sequence.closeBar});
+	this.addButton({type: "closeApp", id: "CloseApp",    sequenceNo:data.sequence.closeApp});
+	this.addButton({type: "closeBar", id: "CloseWidget", sequenceNo:data.sequence.closeBar});
+	this.addButton({type: "shareApp", id: "ShareApp",    sequenceNo:data.sequence.shareApp});
 };
 
 

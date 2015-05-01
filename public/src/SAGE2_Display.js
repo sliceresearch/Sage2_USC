@@ -1042,6 +1042,9 @@ function setupListeners() {
 						wsio.emit('hideWidgetFromControl', {instanceID:data.ctrl.instanceID});
 					}
 					break;
+				case "ShareApp":
+					console.log("SHARE APP");
+					break;
 				default:
 					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
 					break;

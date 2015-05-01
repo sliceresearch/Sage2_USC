@@ -244,6 +244,25 @@ var SAGE2WidgetButtonTypes = {
 		this.textual=false;
 		this.animation=false;
 	},
+	"shareApp": function() {
+		this.textual = true;
+		this.label = "R";
+		this.fill = "#6D6D6D";
+		this.animation = false;
+		/*
+		this.state = null;
+		this.from = "m -0.9 -1.3 l -0.4 0.4 l 0.9 2.3 l 1.0 -1.0 z";
+		this.to = "m -0.9 -1.3 l -0.4 0.4 l 0.9 2.3 l 1.0 -1.0 z";
+		this.width = 10;
+		this.height = 10;
+		this.fill="#6D6D6D";
+		this.toFill="#6D6D6D";
+		this.strokeWidth= 1;
+		this.delay=600;
+		this.textual=false;
+		this.animation=false;
+		*/
+	},
 	"default": function (){
 		this.textual=true;
 		this.label="Hello";

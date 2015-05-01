@@ -54,9 +54,13 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 	var outerSequence = 20;
 
 	this.controlSpec.addDefaultButtons({
-		id:this.id,
-		instanceID:this.instanceID,
-		sequence:{closeApp: parseInt(3*outerSequence/4 + innerSequence + 1), closeBar: 0 } //parseInt(outerSequence/2 + innerSequence +1)}
+		id: this.id,
+		instanceID: this.instanceID,
+		sequence: {
+			closeApp: parseInt(14*outerSequence/20 + innerSequence + 1),
+			closeBar: 0,
+			shareApp: parseInt(16*outerSequence/20 + innerSequence + 1)
+		}
 	});
 	var innerThetaIncrement = (endAngle - startAngle)/innerSequence;
 	var outerThetaIncrement = (endAngle - startAngle)/outerSequence;
