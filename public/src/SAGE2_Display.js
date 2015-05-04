@@ -854,7 +854,7 @@ function setupListeners() {
 			var action = "buttonPress";
 			var ctrlParent = ctrl.parent();
 			if (/button/.test(ctrlId)){
-				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg") ;
+				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg");
 				var animationInfo = ctrlParent.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
 					var delay = animationInfo.delay;

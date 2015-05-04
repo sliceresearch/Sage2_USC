@@ -327,7 +327,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		type.label = type.label.slice(0, 5);
 	}
 	else if (type.img!==undefined && type.img!==null){
-		Snap.load(type.img,function(frag){
+		Snap.load(type.img, function(frag){
 			var gs = frag.select("svg");
 			gs.attr({
 				id: buttonSpec.id + "cover",
@@ -337,7 +337,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 				height:buttonRad2x + "px"
 			});
 			buttonCoverReady(gs);
-		}.bind(this));
+		});
 	}
 	else {
 

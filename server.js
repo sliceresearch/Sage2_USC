@@ -4288,7 +4288,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-	
+
 	if (obj === null) {
 		pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
 		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
