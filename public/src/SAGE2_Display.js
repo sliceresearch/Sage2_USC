@@ -993,9 +993,10 @@ function setupListeners() {
 		if(ctrl){
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
+			var ctrlParent = ctrl.parent();
 			if (/button/.test(ctrlId)){
-				ctrl = ctrl.parent().select("path") || ctrl.parent().select("text");
-				var animationInfo = ctrl.data("animationInfo");
+				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg") ;
+				var animationInfo = ctrlParent.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
 					var delay = animationInfo.delay;
 					var state = animationInfo.state;
@@ -1016,11 +1017,11 @@ function setupListeners() {
 						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 					}
 				}
-				ctrlId = ctrl.parent().attr("id").replace("button", "");
+				ctrlId = ctrlParent.attr("id").replace("button", "");
 			}
 
 			else {
-				ctrlId = ctrl.parent().attr("id").replace("slider", "");
+				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
 			}
 

@@ -50,6 +50,8 @@ var widget_demo = SAGE2_App.extend( {
 		this.controls.addButton({type:"duplicate",sequenceNo:14, id:"Duplicate"});
 		this.controls.addButton({type:"new",sequenceNo:15, id:"New"});
 		
+		//this.controls.addButton({type:"new",sequenceNo:15, id:"New"});
+		
 
 		var watchButton = {
 			"textual":true,
@@ -78,7 +80,8 @@ var widget_demo = SAGE2_App.extend( {
 		};
 		this.buttonHandle = this.controls.addButton({type:plusButton,sequenceNo:17, id:"Plus"});
 
-	
+		this.controls.addButton({type:"remote",sequenceNo:18, id:"Remote"});
+		this.controls.addButton({type:"shareScreen",sequenceNo:19, id:"ShareScreen"});
 	
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"

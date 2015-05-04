@@ -461,8 +461,6 @@ function setupListeners(wsio) {
 	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
-	//wsio.on('selectedControlId',                    wsSelectedControlId);
-	//wsio.on('releasedControlId',                    wsReleasedControlId);
 	wsio.on('closeAppFromControl',                  wsCloseAppFromControl);
 	wsio.on('hideWidgetFromControl',                wsHideWidgetFromControl);
 	wsio.on('openRadialMenuFromControl',            wsOpenRadialMenuFromControl);
@@ -3701,9 +3699,10 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-
+	
 	if (obj === null) {
 		pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
+		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
 		return;
 	}
 
@@ -3722,6 +3721,8 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 	}
+	remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
+
 }
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
@@ -4183,8 +4184,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		releaseSlider(uniqueID);
 	}
     var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+
     if (obj === null) {
 		dropSelectedApp(uniqueID, true);
+		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
 		return;
     }
 
@@ -4211,6 +4214,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		default:
 			dropSelectedApp(uniqueID, true);
 	}
+	remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
 }
 
 function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
