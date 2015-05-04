@@ -5252,15 +5252,15 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
-	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.id) && remote.wsio.connected) {
-		remote.wsio.emit('addNewElementFromRemoteServer', app);
+	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
+		remote.wsio.emit('addNewElementFromRemoteServer', app.application);
 
 		var eLogData = {
 			host: remote.wsio.remoteAddress.address,
 			port: remote.wsio.remoteAddress.port,
 			application: {
-				id: app.id,
-				type: app.application
+				id: app.application.id,
+				type: app.application.application
 			}
 		};
 		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
