@@ -8,6 +8,10 @@
 		"scripts/d3.v3.min.js",
 		"photo_scrapbooks.js"
 	],
+	"load": {
+		"imageSet": 0,
+		"counter": 1
+	},
 	"title": "EVL Photo Slideshow",
 	"version": "1.3",
 	"description": "A slideshow / webcam viewer",

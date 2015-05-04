@@ -244,6 +244,16 @@ var SAGE2WidgetButtonTypes = {
 		this.textual=false;
 		this.animation=false;
 	},
+	"remote":function(){
+		this.img = "images/ui/remote.svg";
+		this.textual=false;
+		this.animation=false;
+	},
+	"shareScreen":function(){
+		this.img = "images/ui/sharescreen.svg";
+		this.textual=false;
+		this.animation=false;
+	},
 	"default": function (){
 		this.textual=true;
 		this.label="Hello";

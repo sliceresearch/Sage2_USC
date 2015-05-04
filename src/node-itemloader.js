@@ -35,6 +35,8 @@ var registry     = require('../src/node-registry');        // Registry Manager
 
 var imageMagick;
 
+/** don't use path.join for URL creation - all URLs use forward slashes **/
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -198,8 +200,8 @@ AppLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name
 
 
 AppLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
-	var local_url = path.join("uploads", "pdfs", name);
-	var localPath = path.join(this.publicDir, local_url);
+	var local_url = "uploads/pdfs/"+name;
+	var localPath = path.join(this.publicDir, "uploads", "pdfs", name);
 	var _this = this;
 
 	var tmp = fs.createWriteStream(localPath);
@@ -233,13 +235,15 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data.SAGE2thumbnail,
+		icon: exif_data ? exif_data.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
 			src: source,
 			type: mime_type,
-			exif: exif_data
+			exif: exif_data,
+			top: 0,
+			showExif: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -279,13 +283,15 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data.SAGE2thumbnail,
+		icon: exif_data ? exif_data.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
 			src: url,
 			type: mime_type,
-			exif: exif_data
+			exif: exif_data,
+			top: 0,
+			showExif: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -502,11 +508,11 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		id: null,
 		title: name,
 		application: "pdf_viewer",
-		icon: exif.SAGE2thumbnail,
+		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: external_url,
+			doc_url: external_url,
 			page: 1,
 			numPagesShown: 1
 		},
@@ -541,8 +547,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
     fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
         if(err) throw err;
 
+        var appUrl = "uploads/apps/"+appName;
 		var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
-		var appUrl = path.join("uploads", "apps", appName);
 		var app_external_url = _this.hostOrigin + encodeReservedURL(appUrl);
 		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
 		appInstance.data = url;
@@ -726,9 +732,9 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var dir = registry.getDirectory(file.filename);
-	var url = path.join("uploads", dir, file.filename);
+	var url = "uploads/"+dir+"/"+file.filename;
 	var external_url = this.hostOrigin + encodeReservedURL(url);
-	var localPath = path.join(this.publicDir, url);
+	var localPath = path.join(this.publicDir, "uploads", dir, file.filename);
 	var mime_type = mime.lookup(localPath);
 
 	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
@@ -747,9 +753,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
     if (!fs.existsSync(path.join(this.publicDir, "uploads", dir))) {
         fs.mkdirSync(path.join(this.publicDir, "uploads", dir));
     }
-	var url = path.join("uploads", dir, file.name);
+	var url = "uploads/"+dir+"/"+file.name;
 	var external_url = this.hostOrigin + encodeReservedURL(url);
-	var localPath = path.join(this.publicDir, url);
+	var localPath = path.join(this.publicDir, "uploads", dir, file.name);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
@@ -759,9 +765,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		var extension   = splits.pop();
 		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
 		// Regenerate path and url
-		url = path.join("uploads", dir, newfilename);
+		url = "uploads/"+dir+"/"+newfilename;
 		external_url = this.hostOrigin + encodeReservedURL(url);
-		localPath    = path.join(this.publicDir, url);
+		localPath    = path.join(this.publicDir, "uploads", dir, newfilename);
 	}
 
 	fs.rename(file.path, localPath, function(err1) {
@@ -813,7 +819,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 		else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
-				var url = path.join("uploads", dir, name);
+				var url = "uploads/"+dir+"/"+name;
 				var external_url = this.hostOrigin + encodeReservedURL(url);
 				this.loadZipAppFromFile(appData.path, appData.type, url, external_url, name, function(appInstance) {
 					callback(appInstance, null);
@@ -896,7 +902,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				date: new Date()
 			};
 			if(appData.application.application === "pdf_viewer") {
-				anInstance.data.src = anInstance.url;
+				anInstance.data.doc_url = anInstance.url;
 			}
 
 			this.scaleAppToFitDisplay(anInstance);
@@ -920,7 +926,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
         id: null,
         title: exif.metadata.title,
         application: appName,
-        icon: exif.SAGE2thumbnail,
+        icon: exif ? exif.SAGE2thumbnail : null,
         type: mime_type,
         url: external_url,
         data: instructions.load,

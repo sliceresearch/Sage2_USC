@@ -10,18 +10,15 @@
 
 
 var widget_demo = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-		this.element = null;
-		this.ctx = null;
-		this.resrcPath = null;
+	load: function(date) {
 		
+	},
+
+	
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 		this.timer = null;
-
 		this.resizeEvents = "onfinish";
-
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-		this.enableControls = true;
 
 		//Some variables that the widget will use to communicate with the app
 
@@ -29,11 +26,14 @@ var widget_demo = SAGE2_App.extend( {
 		this.colorIdx = 0; // Chooses red initially
 		this.brightness = 64;
 		this.displayText = "";
-
 		
+	
+		this.ctx = this.element.getContext('2d');
+		this.minDim = Math.min(this.element.width, this.element.height);
+		this.appInit(data.date);
 	},
 	
-	load: function(state, date) {
+	appInit: function(date){
 		this.playPauseHandle = this.controls.addButton({type:"play-pause",sequenceNo:1, id:"PlayPause"});
 		this.controls.addButton({type:"stop",sequenceNo:2, id:"Stop"});
 		this.controls.addButton({type:"mute",sequenceNo:3, id:"Mute"});
@@ -49,6 +49,8 @@ var widget_demo = SAGE2_App.extend( {
 		this.controls.addButton({type:"fastforward",sequenceNo:13, id:"FastForward"});
 		this.controls.addButton({type:"duplicate",sequenceNo:14, id:"Duplicate"});
 		this.controls.addButton({type:"new",sequenceNo:15, id:"New"});
+		
+		//this.controls.addButton({type:"new",sequenceNo:15, id:"New"});
 		
 
 		var watchButton = {
@@ -78,7 +80,8 @@ var widget_demo = SAGE2_App.extend( {
 		};
 		this.buttonHandle = this.controls.addButton({type:plusButton,sequenceNo:17, id:"Plus"});
 
-	
+		this.controls.addButton({type:"remote",sequenceNo:18, id:"Remote"});
+		this.controls.addButton({type:"shareScreen",sequenceNo:19, id:"ShareScreen"});
 	
 		//appHandle and property are used to bind the app property to the slider knob, in this case this.brightness is bound to the knob
 		//property can also be a nested value, for example this.a.b. To bind this.a.b to the knob, call using- appHandle:this and property:"a.b"
@@ -102,22 +105,10 @@ var widget_demo = SAGE2_App.extend( {
 		}.bind(this)});*/
 		this.controls.finishedAddingControls(); // Important
 	},
-
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
-	
-		this.ctx = this.element.getContext('2d');
-		this.minDim = Math.min(this.element.width, this.element.height);
-	},
-	
-	
 	
 
 	
 	draw: function(date) {
-		arguments.callee.superClass.preDraw.call(this, date);
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		

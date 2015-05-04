@@ -9,23 +9,17 @@
 // Copyright (c) 2014
 
 var zoom = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
+	init: function(data) {
+		this.SAGE2Init("div", data);
+		
 		this.resizeEvents = "continuous";
-		this.viewer    = null;
+
 		this.lastZoom  = null;
 		this.lastClick = null;
 		this.isShift   = null;
 		this.dragging  = null;
 		this.position  = null;
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
-		
-		// application specific 'init'
+
 		this.element.id = "div" + data.id;
 		this.lastZoom  = data.date;
 		this.lastClick = data.date;
@@ -42,11 +36,6 @@ var zoom = SAGE2_App.extend( {
 			//tileSources: this.resrcPath + "halfdome.dzi"
 		});
 
-
-
-
-
-
 		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
 		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
 		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
@@ -57,7 +46,7 @@ var zoom = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {

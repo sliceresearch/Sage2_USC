@@ -56,11 +56,11 @@ body {
 }
 
 #background {
-	position:absolute;
+	position: absolute;
 }
 
 #main {
-	position:absolute;
+	position: absolute;
 	left: 0px;
 	top: 0px;
 	width: 100%;
@@ -68,15 +68,15 @@ body {
 }
 
 #upperBar {
-	position:absolute;
+	position: absolute;
 	width: 100%;
 	background: rgba(0,0,0,0.5);
 }
 
 .windowItem {
-	position:absolute;
+	position: absolute;
 	border: 1px solid #000000;
-	box-shadow: 8px 0px 15px #222222;
+	box-shadow: 8px 4px 15px #222222;
 }
 .windowItemNoBorder {
         border: 1px solid rgba(0,0,0,0);
@@ -84,15 +84,15 @@ body {
 }
 
 .windowTitle {
-	position:absolute;
+	position: absolute;
 	background-color: #666666;
 	border: solid 1px #000000;
 	overflow: hidden;
-	box-shadow: 8px 0px 15px #222222;
+	box-shadow: 8px 4px 15px #222222;
 }
 
 .windowControls {
-	position:absolute;
+	position: absolute;
 	background-color: rgba(0,0,0,0.0);
 	/*border: solid 1px #000000;*/
 	/*box-shadow: 8px 8px 12px #222222;*/
@@ -100,7 +100,7 @@ body {
 }
 
 .pointerItem {
-	position:absolute;
+	position: absolute;
 	display: block;
 }
 
@@ -111,17 +111,59 @@ body {
 .widgetBackground{
 	fill: rgba(140,140,140,1.0);
 	stroke: rgba(230,230,230,1.0);
-	stroke-width:1;
+	stroke-width: 1;
 }
 .widgetText {
-	text-anchor:middle;
-	font-family:sans-serif;
+	text-anchor: middle;
+	font-family: sans-serif;
 	fill: rgba(250,250,250,1.0);
 }
 
-.textInput{
-	font-family:sans-serif;
+.textInput {
+	font-family: sans-serif;
 	fill: rgba(250,250,250,1.0);
-	font-weight:lighter; 
-	font-style:normal;
+	font-weight: lighter; 
+	font-style: normal;
+}
+
+.dataSharingArea {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	overflow: hidden;
+	/*border: 4px solid #000000;*/
+	background-color: rgba(255, 255, 255, 0.75);
+	box-shadow: 8px 4px 15px #222222;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	-webkit-transform-origin: 0% 0% 0;
+	-moz-transform-origin: 0% 0% 0;
+	transform-origin: 0% 0% 0;
+}
+
+.dataSharingOverlay {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	overflow: hidden;
+	-webkit-transform-origin: 0% 0% 0;
+	-moz-transform-origin: 0% 0% 0;
+	transform-origin: 0% 0% 0;
+}
+
+.dataSharingTitle {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	overflow: hidden;
+	border: 4px solid #000000;
+	border-bottom: none;
+	box-shadow: 8px 4px 15px #222222;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	-webkit-transform-origin: 0% 0% 0;
+	-moz-transform-origin: 0% 0% 0;
+	transform-origin: 0% 0% 0;
 }

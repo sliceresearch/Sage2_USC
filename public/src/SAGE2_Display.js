@@ -32,6 +32,7 @@ var widgetConnectorRequestList = {};
 
 var applications = {};
 var dependencies = {};
+var dataSharingPortals = {};
 
 // UI object to build the element on the wall
 var ui;
@@ -227,11 +228,25 @@ function setupListeners() {
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
-		ui.connectedToRemoteSite(data);
+		if (window.ui) {
+			ui.connectedToRemoteSite(data);
+		}
+		else {
+			setTimeout(function() {
+				ui.connectedToRemoteSite(data);
+			}, 1000);
+		}
 	});
 
 	wsio.on('createSagePointer', function(pointer_data){
-		ui.createSagePointer(pointer_data);
+		if (window.ui) {
+			ui.createSagePointer(pointer_data);
+		}
+		else {
+			setTimeout(function() {
+				ui.createSagePointer(pointer_data);
+			}, 1000);
+		}
     });
 
     wsio.on('showSagePointer', function(pointer_data){
@@ -284,12 +299,28 @@ function setupListeners() {
 		resetIdle();
     });
 
+	wsio.on('loadApplicationState', function(data) {
+		var app = applications[data.id];
+		if (app !== undefined && app !== null){
+			app.SAGE2Load(data.state, new Date(data.date));
+		}
+	});
+
 	wsio.on('updateMediaStreamFrame', function(data) {
 		wsio.emit('receivedMediaStreamFrame', {id: data.id});
 
 		var app = applications[data.id];
-		if(app !== undefined && app !== null){
-			app.load(data.state);
+		if (app !== undefined && app !== null){
+			app.SAGE2Load(data.state, new Date(data.date));
+		}
+
+		// update clones in data-sharing portals
+		var key;
+		for (key in dataSharingPortals) {
+			app = applications[data.id + "_" + key];
+			if (app !== undefined && app !== null){
+				app.SAGE2Load(data.state, new Date(data.date));
+			}
 		}
 	});
 
@@ -357,186 +388,13 @@ function setupListeners() {
 
 	////////////////////////////////////////////////
 	wsio.on('createAppWindow', function(data) {
-		resetIdle();
+		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
+	});
 
-		var date = new Date(data.date);
+	wsio.on('createAppWindowInDataSharingPortal', function(data) {
+		var portal = dataSharingPortals[data.portal];
 
-		var translate = "translate(" + data.left + "px," + data.top + "px)";
-
-		var windowTitle = document.createElement("div");
-		windowTitle.id  = data.id + "_title";
-		windowTitle.className    = "windowTitle";
-		windowTitle.style.width  = data.width.toString() + "px";
-		windowTitle.style.height = ui.titleBarHeight.toString() + "px";
-		windowTitle.style.left   = (-ui.offsetX).toString() + "px";
-		windowTitle.style.top    = (-ui.offsetY).toString() + "px";
-		windowTitle.style.webkitTransform = translate;
-		windowTitle.style.mozTransform    = translate;
-		windowTitle.style.transform       = translate;
-		windowTitle.style.zIndex = itemCount.toString();
-		if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
-		ui.main.appendChild(windowTitle);
-
-		var windowIcons = document.createElement("img");
-		if (__SAGE2__.browser.isChrome)
-			windowIcons.src = "images/layout3.webp";
-		else
-			windowIcons.src = "images/layout3.png";
-		windowIcons.height  = Math.round(ui.titleBarHeight);
-		windowIcons.style.position = "absolute";
-		windowIcons.style.right    = "0px";
-		windowTitle.appendChild(windowIcons);
-
-		var titleText = document.createElement("p");
-		titleText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-		titleText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-		titleText.style.color      = "#FFFFFF";
-		titleText.style.marginLeft = Math.round(ui.titleBarHeight/4) + "px";
-		titleText.textContent      = data.title;
-		windowTitle.appendChild(titleText);
-
-		var windowItem = document.createElement("div");
-		windowItem.id  = data.id;
-		windowItem.className      = "windowItem";
-		windowItem.style.left     = (-ui.offsetX).toString() + "px";
-		windowItem.style.top      = (ui.titleBarHeight-ui.offsetY).toString() + "px";
-		windowItem.style.webkitTransform = translate;
-		windowItem.style.mozTransform    = translate;
-		windowItem.style.transform       = translate;
-		windowItem.style.overflow = "hidden";
-		windowItem.style.zIndex   = (itemCount+1).toString();
-		if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
-		ui.main.appendChild(windowItem);
-
-		// App launched in window
-		if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
-        if(data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
-
-		// convert url if hostname is alias for current origin
-		var url = cleanURL(data.url);
-
-		function loadApplication() {
-			var init = {
-				id:     data.id,
-				x:      data.left,
-				y:      data.top+ui.titleBarHeight,
-				width:  data.width,
-				height: data.height,
-				resrc:  url,
-				date:   date
-			};
-
-			// load new app
-			if(window[data.application] === undefined) {
-				var js = document.createElement("script");
-				js.addEventListener('error', function(event) {
-					console.log("Error loading script: " + data.application + ".js");
-				}, false);
-				js.addEventListener('load', function(event) {
-					var newapp = new window[data.application]();
-					newapp.init(init);
-
-					if (newapp.state !== undefined) {
-						Object.observe(newapp.state, function (changes) {
-							if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
-						}, ['update', 'add']);
-					}
-
-					newapp.load(data.data, date);
-					newapp.refresh(date);
-
-					applications[data.id]   = newapp;
-					controlObjects[data.id] = newapp;
-
-					if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-				}, false);
-				js.type = "text/javascript";
-				js.src = url + "/" + data.application + ".js";
-				console.log(url + "/" + data.application + ".js");
-				document.head.appendChild(js);
-			}
-
-			// load existing app
-			else {
-				var app = new window[data.application]();
-				app.init(init);
-
-				if(app.state !== undefined){
-					Object.observe(app.state, function(changes) {
-						if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
-					}, ['update', 'add']);
-				}
-
-				app.load(data.data, date);
-				app.refresh(date);
-
-				applications[data.id] = app;
-				controlObjects[data.id] = app;
-
-				if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-				if (data.application === "movie_player") setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
-			}
-		}
-
-		// load all dependencies
-		if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
-			loadApplication();
-		}
-		else {
-			var loadResource = function(idx) {
-				if (dependencies[data.resrc[idx]] === true) {
-					if((idx+1) < data.resrc.length) {
-						loadResource(idx+1);
-					}
-					else {
-						console.log("all resources loaded");
-						loadApplication();
-					}
-
-					return;
-				}
-
-				dependencies[data.resrc[idx]] = false;
-
-				var js = document.createElement("script");
-				js.addEventListener('error', function(event) {
-					console.log("Error loading script: " + data.resrc[idx]);
-				}, false);
-
-				js.addEventListener('load', function(event) {
-					dependencies[data.resrc[idx]] = true;
-
-					if((idx+1) < data.resrc.length) {
-						loadResource(idx+1);
-					}
-					else {
-						console.log("all resources loaded");
-						loadApplication();
-					}
-				});
-				js.type = "text/javascript";
-				js.src = url + "/" + data.resrc[idx];
-				document.head.appendChild(js);
-			};
-			// Start loading the first resource
-			loadResource(0);
-		}
-
-		var cornerSize = Math.min(data.width, data.height) / 5;
-        var dragCorner = document.createElement("div");
-        dragCorner.className      = "dragCorner";
-        dragCorner.style.position = "absolute";
-        dragCorner.style.width    = cornerSize.toString() + "px";
-        dragCorner.style.height   = cornerSize.toString() + "px";
-        dragCorner.style.top      = (data.height-cornerSize).toString() + "px";
-        dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
-		dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
-        dragCorner.style.border   = "none";
-        dragCorner.style.zIndex   = "1";
-        windowItem.appendChild(dragCorner);
-
-		itemCount += 2;
-
+		createAppWindow(data.application, portal.id, portal.titleBarHeight, portal.titleTextSize, 0, 0);
 	});
 	////////////////////////////////////////////////
 
@@ -593,25 +451,12 @@ function setupListeners() {
 		for (key in order) {
 			var selectedElemTitle = document.getElementById(key + "_title");
 			var selectedElem = document.getElementById(key);
+			var selectedElemOverlay = document.getElementById(key + "_overlay");
 
-			selectedElemTitle.style.zIndex = order[key].toString();
-			selectedElem.style.zIndex = order[key].toString();
+			if (selectedElemTitle) selectedElemTitle.style.zIndex = order[key].toString();
+			if (selectedElem) selectedElem.style.zIndex = order[key].toString();
+			if (selectedElemOverlay) selectedElemOverlay.style.zIndex = order[key].toString();
 		}
-		/*
-		var i;
-		var zval = 0;
-		for(i=0; i<order.idList.length; i++){
-			var selectedElemTitle = document.getElementById(order.idList[i] + "_title");
-			var selectedElem = document.getElementById(order.idList[i]);
-			//var selectedElemCtrl = document.getElementById(order.idList[i] + "_controls");
-
-			selectedElemTitle.style.zIndex = zval.toString();
-			selectedElem.style.zIndex = (zval+1).toString();
-			//selectedElemCtrl.style.zIndex = (zval+2).toString();
-
-			zval += 2;
-		}
-		*/
 	});
 
 	wsio.on('hoverOverItemCorner', function(elem_data) {
@@ -630,6 +475,11 @@ function setupListeners() {
 	wsio.on('setItemPosition', function(position_data) {
 		resetIdle();
 
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
+
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
 		selectedElemTitle.style.webkitTransform = translate;
@@ -643,8 +493,12 @@ function setupListeners() {
 
 		var app = applications[position_data.elemId];
 		if(app !== undefined) {
-			app.sage2_x = parseInt(position_data.elemLeft, 10);
-			app.sage2_y = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
+			var parentTransform = getTransform(selectedElem.parentNode);
+			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
+			app.sage2_x = (position_data.elemLeft+border+1)*parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_y = (position_data.elemTop+ui.titleBarHeight+border)*parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_width  = parseInt(position_data.elemWidth, 10)*parentTransform.scale.x;
+			app.sage2_height = parseInt(position_data.elemHeight, 10)*parentTransform.scale.y;
 
 			var date  = new Date(position_data.date);
 			if (position_data.force || app.moveEvents === "continuous") {
@@ -715,6 +569,11 @@ function setupListeners() {
 	wsio.on('setItemPositionAndSize', function(position_data) {
 		resetIdle();
 
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPositionAndSize(position_data.elemLeft, position_data.elemTop, position_data.elemWidth, position_data.elemHeight);
+			return;
+		}
+
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
 		selectedElemTitle.style.webkitTransform = translate;
@@ -749,10 +608,12 @@ function setupListeners() {
 
 		var app = applications[position_data.elemId];
 		if(app !== undefined) {
-			app.sage2_x      = parseInt(position_data.elemLeft, 10);
-			app.sage2_y      = parseInt(position_data.elemTop+ui.titleBarHeight, 10);
-			app.sage2_width  = parseInt(position_data.elemWidth, 10);
-			app.sage2_height = parseInt(position_data.elemHeight, 10);
+			var parentTransform = getTransform(selectedElem.parentNode);
+			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
+			app.sage2_x = (position_data.elemLeft+border+1)*parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_y = (position_data.elemTop+ui.titleBarHeight+border)*parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_width  = parseInt(position_data.elemWidth, 10)*parentTransform.scale.x;
+			app.sage2_height = parseInt(position_data.elemHeight, 10)*parentTransform.scale.y;
 
 			var date = new Date(position_data.date);
 			if(position_data.force || app.resizeEvents === "continuous") {
@@ -824,11 +685,11 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('eventInItem', function(event_data){
+	wsio.on('eventInItem', function(event_data) {
 		var date = new Date(event_data.date);
 		var app  = applications[event_data.id];
 
-		app.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
 
 		/*
 		// adding pointer information to the event
@@ -838,7 +699,7 @@ function setupListeners() {
 		*/
 	});
 
-	wsio.on('requestNewControl', function(data){
+	wsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);
 		if (data.elemId !== undefined && data.elemId !== null){
 			if(controlObjects[data.elemId] !== undefined){
@@ -864,7 +725,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('createControl', function(data){
+	wsio.on('createControl', function(data) {
 		if (controlItems[data.id] === null || controlItems[data.id] === undefined) {
 			var ctrDiv =  document.createElement("div");
 			ctrDiv.id = data.id;
@@ -889,7 +750,7 @@ function setupListeners() {
 
 		}
 	});
-	wsio.on('removeControlsForUser', function(data){
+	wsio.on('removeControlsForUser', function(data) {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
@@ -984,18 +845,17 @@ function setupListeners() {
 
 			}
 		}
-
-
-
 	});*/
+
 	wsio.on('executeControlFunction', function(data){
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		if(ctrl){
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
+			var ctrlParent = ctrl.parent();
 			if (/button/.test(ctrlId)){
-				ctrl = ctrl.parent().select("path") || ctrl.parent().select("text");
-				var animationInfo = ctrl.data("animationInfo");
+				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg");
+				var animationInfo = ctrlParent.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
 					var delay = animationInfo.delay;
 					var state = animationInfo.state;
@@ -1016,11 +876,11 @@ function setupListeners() {
 						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 					}
 				}
-				ctrlId = ctrl.parent().attr("id").replace("button", "");
+				ctrlId = ctrlParent.attr("id").replace("button", "");
 			}
 
 			else {
-				ctrlId = ctrl.parent().attr("id").replace("slider", "");
+				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
 			}
 
@@ -1043,7 +903,7 @@ function setupListeners() {
 					}
 					break;
 				default:
-					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
+					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
 					break;
 			}
 
@@ -1065,7 +925,7 @@ function setupListeners() {
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
 		/*
 		var func   = slider.data("lockCall");
 		if (func !== undefined && func !== null)
@@ -1081,7 +941,7 @@ function setupListeners() {
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
 			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-			app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
 			/*
 			func = slider.data("updateCall");
 			if (func !== undefined && func !== null)
@@ -1089,7 +949,8 @@ function setupListeners() {
 			*/
 		}
 	});
-	wsio.on('moveSliderKnob', function(data){
+
+	wsio.on('moveSliderKnob', function(data) {
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
@@ -1104,7 +965,7 @@ function setupListeners() {
 		var appId  = data.ctrl.appId;
 		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
 		/*
 		var func = slider.data("updateCall");
 		if (func !== undefined && func !== null)
@@ -1112,7 +973,7 @@ function setupListeners() {
 		*/
 	});
 
-	wsio.on('keyInTextInputWidget', function(data){
+	wsio.on('keyInTextInputWidget', function(data) {
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
@@ -1125,7 +986,7 @@ function setupListeners() {
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
-				app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
+				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
 				/*
 				var func = textInput.data("call");
 				if (func !== undefined && func !== null)
@@ -1134,6 +995,7 @@ function setupListeners() {
 			}
 		}
 	});
+
 	/*wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
 		console.log("in dropTextInputControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
@@ -1143,6 +1005,7 @@ function setupListeners() {
 			clearInterval(blinkControlHandle);
 		}
 	});*/
+
 	wsio.on('activateTextInputControl', function(data){
 		var ctrl = null;
 		console.log("in activateTextInputContControl->", data);
@@ -1162,6 +1025,7 @@ function setupListeners() {
 			textInput.data("blinkControlHandle", blinkControlHandle);
 		}
 	});
+
 	wsio.on('deactivateTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
 		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
@@ -1171,4 +1035,237 @@ function setupListeners() {
 			clearInterval(blinkControlHandle);
 		}
 	});
+
+	wsio.on('requestedDataSharingSession', function(data) {
+		ui.showDataSharingRequestDialog(data);
+	});
+
+	wsio.on('closeRequestDataSharingDialog', function(data) {
+		ui.hideDataSharingRequestDialog();
+	});
+
+	wsio.on('dataSharingConnectionWait', function(data) {
+		ui.showDataSharingWaitingDialog(data);
+	});
+
+	wsio.on('closeDataSharingWaitDialog', function(data) {
+		ui.hideDataSharingWaitingDialog();
+	});
+
+	wsio.on('initializeDataSharingSession', function(data) {
+		console.log(data);
+		dataSharingPortals[data.id] = new DataSharing(data);
+	});
+}
+
+function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
+	resetIdle();
+
+	var parent = document.getElementById(parentId);
+
+	var date = new Date(data.date);
+	var translate = "translate(" + data.left + "px," + data.top + "px)";
+
+	var windowTitle = document.createElement("div");
+	windowTitle.id  = data.id + "_title";
+	windowTitle.className    = "windowTitle";
+	windowTitle.style.width  = data.width.toString() + "px";
+	windowTitle.style.height = titleBarHeight.toString() + "px";
+	windowTitle.style.left   = (-offsetX).toString() + "px";
+	windowTitle.style.top    = (-offsetY).toString() + "px";
+	windowTitle.style.webkitTransform = translate;
+	windowTitle.style.mozTransform    = translate;
+	windowTitle.style.transform       = translate;
+	windowTitle.style.zIndex = itemCount.toString();
+	if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
+
+	var windowIcons = document.createElement("img");
+	windowIcons.src = "images/layout3.webp";
+	windowIcons.height = Math.round(titleBarHeight);
+	windowIcons.style.position = "absolute";
+	windowIcons.style.right    = "0px";
+	windowTitle.appendChild(windowIcons);
+
+	var titleText = document.createElement("p");
+	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
+	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
+	titleText.style.color      = "#FFFFFF";
+	titleText.style.marginLeft = Math.round(titleBarHeight/4) + "px";
+	titleText.textContent      = data.title;
+	windowTitle.appendChild(titleText);
+
+	var windowItem = document.createElement("div");
+	windowItem.id  = data.id;
+	windowItem.className      = "windowItem";
+	windowItem.style.left     = (-offsetX).toString() + "px";
+	windowItem.style.top      = (titleBarHeight-offsetY).toString() + "px";
+	windowItem.style.webkitTransform = translate;
+	windowItem.style.mozTransform    = translate;
+	windowItem.style.transform       = translate;
+	windowItem.style.overflow = "hidden";
+	windowItem.style.zIndex   = (itemCount+1).toString();
+	if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
+
+	var cornerSize = Math.min(data.width, data.height) / 5;
+    var dragCorner = document.createElement("div");
+    dragCorner.className      = "dragCorner";
+    dragCorner.style.position = "absolute";
+    dragCorner.style.width    = cornerSize.toString() + "px";
+    dragCorner.style.height   = cornerSize.toString() + "px";
+    dragCorner.style.top      = (data.height-cornerSize).toString() + "px";
+    dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
+	dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
+    dragCorner.style.border   = "none";
+    dragCorner.style.zIndex   = "1";
+    windowItem.appendChild(dragCorner);
+
+	parent.appendChild(windowTitle);
+	parent.appendChild(windowItem);
+
+	// App launched in window
+	if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+    if(data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+
+	// convert url if hostname is alias for current origin
+	var url = cleanURL(data.url);
+
+	function loadApplication() {
+		var init = {
+			id:     data.id,
+			x:      data.left,
+			y:      data.top+titleBarHeight,
+			width:  data.width,
+			height: data.height,
+			resrc:  url,
+			state:  data.data,
+			date:   date
+		};
+
+		// load new app
+		if(window[data.application] === undefined) {
+			var js = document.createElement("script");
+			js.addEventListener('error', function(event) {
+				console.log("Error loading script: " + data.application + ".js");
+			}, false);
+			js.addEventListener('load', function(event) {
+				var newapp = new window[data.application]();
+				newapp.init(init);
+				//newapp.SAGE2Init(init);
+
+				//if (newapp.state !== undefined) {
+				//	Object.observe(newapp.state, function (changes) {
+				//		if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
+				//	}, ['update', 'add']);
+				//}
+
+				//newapp.load(data.data, date);
+				newapp.refresh(date);
+
+				applications[data.id]   = newapp;
+				controlObjects[data.id] = newapp;
+
+				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+			}, false);
+			js.type = "text/javascript";
+			js.src = url + "/" + data.application + ".js";
+			console.log(url + "/" + data.application + ".js");
+			document.head.appendChild(js);
+		}
+
+		// load existing app
+		else {
+			var app = new window[data.application]();
+			app.init(init);
+			//app.SAGE2Init(init);
+
+			//if(app.state !== undefined){
+			// 	Object.observe(app.state, function(changes) {
+			// 		if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
+			// 	}, ['update', 'add']);
+			//}
+
+			//app.load(data.data, date);
+			app.refresh(date);
+
+			applications[data.id] = app;
+			controlObjects[data.id] = app;
+
+			if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+			if (data.application === "movie_player") setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+		}
+	}
+
+	// load all dependencies
+	if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
+		loadApplication();
+	}
+	else {
+		var loadResource = function(idx) {
+			if (dependencies[data.resrc[idx]] !== undefined) {
+				if((idx+1) < data.resrc.length) {
+					loadResource(idx+1);
+				}
+				else {
+					console.log("all resources loaded");
+					loadApplication();
+				}
+
+				return;
+			}
+
+			dependencies[data.resrc[idx]] = false;
+
+			var js = document.createElement("script");
+			js.addEventListener('error', function(event) {
+				console.log("Error loading script: " + data.resrc[idx]);
+			}, false);
+
+			js.addEventListener('load', function(event) {
+				dependencies[data.resrc[idx]] = true;
+
+				if((idx+1) < data.resrc.length) {
+					loadResource(idx+1);
+				}
+				else {
+					console.log("all resources loaded");
+					loadApplication();
+				}
+			});
+			js.type = "text/javascript";
+			if (data.resrc[idx].indexOf("http://") === 0 || data.resrc[idx].indexOf("https://") === 0 )
+				js.src = data.resrc[idx];
+			else
+				js.src = url + "/" + data.resrc[idx];
+			document.head.appendChild(js);
+		};
+		// Start loading the first resource
+		loadResource(0);
+	}
+
+	itemCount += 2;
+}
+
+function getTransform(elem) {
+	var transform = elem.style.transform;
+	var translate = {x: 0, y: 0};
+	var scale = {x: 1, y: 1};
+	if (transform) {
+		var tIdx = transform.indexOf("translate");
+		if(tIdx >= 0) {
+			var tStr = transform.substring(tIdx+10, transform.length);
+			tStr = tStr.substring(0, tStr.indexOf(")"));
+			var tValue = tStr.split(",");
+			translate.x = parseFloat(tValue[0]);
+			translate.y = parseFloat(tValue[1]);
+		}
+		var sIdx = transform.indexOf("scale");
+		if(sIdx >= 0) {
+			var sStr = transform.substring(sIdx+6, transform.length);
+			sStr = sStr.substring(0, sStr.indexOf(")"));
+			var sValue = sStr.split(",");
+			scale.x = parseFloat(sValue[0]);
+			scale.y = parseFloat(sValue[1]);
+		}
+	}
+	return {translate: translate, scale: scale};
 }
