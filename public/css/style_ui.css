@@ -52,17 +52,74 @@ span {
 	margin: 10px 10px 0px 10px;
 }
 
+#applicationsDiv {
+	position: absolute;
+	overflow: hidden;
+	background-color: #B4B4B4;
+	margin: 2px 0px 0px 2px;
+}
+
 #sage2UI {
+	position: absolute;
 	border: solid 2px #565656;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
+	z-index: 9999;
+}
+
+#menuContainer {
+	width: 100%;
+	float: left;
+	text-align: center;
 }
 
 #menuUI {
-	float: left;
+	margin: 0 auto;
 	white-space: nowrap;
-	position: absolute;
+	-webkit-transform-origin: 0% 0%;
+	-moz-transform-origin: 0% 0%;
+	transform-origin: 0% 0%;
+}
+
+#menuUI tr td {
+	min-width: 120px;
+	text-align: center;
+}
+
+#menuUI tr td img {
+	display: block;
+	margin: 8px auto;
+	-webkit-transition: 100ms ease-in-out;
+	-moz-transition: 100ms ease-in-out;
+	transition: 100ms ease-in-out;
+}
+
+#menuUI tr td:hover img {
+	-webkit-transform: scale(1.0);
+	-moz-transform: scale(1.0);
+	transform: scale(1.0);
+	background-color: "#FF0000";
+}
+
+#menuUI tr td p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	white-space: nowrap;
+	display: inline;
+	padding: 2px 8px 2px 8px;
+	color: #FFFFFF;
+	background-color: #787878;
+	border-radius: 8px;
+	opacity: 1.0;
+	cursor: default;
+	-webkit-transition: opacity 100ms ease-in-out;
+	-moz-transition: opacity 100ms ease-in-out;
+	transition: opacity 100ms ease-in-out;
+}
+
+#menuUI tr td:hover img + p{
+	opacity: 1.0;
 }
 
 #textWidthTest {
@@ -75,17 +132,48 @@ span {
 	width: auto;
 }
 
+.appWindow {
+	display: block;
+	position: absolute;
+}
+
+.appWindowTitle {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.appWindowArea {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.appWindowIcon {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	-webkit-user-drag: none;
+	-moz-user-drag: none;
+	user-drag: none;
+}
+
+/*
 .uiButton {
-	position: relative;
-	width: 165px;
-	height: 64px;
+	width: 100px;
+	height: 90px;
 	display: inline-block;
 }
 
 .uiButton img {
-	position: absolute;
-	top: 8px;
-    left: 8px;
+
 	-webkit-transition: 100ms ease-in-out;
 	-moz-transition: 100ms ease-in-out;
 	transition: 100ms ease-in-out;
@@ -98,9 +186,7 @@ span {
 }
 
 .uiButton p {
-	position: absolute;
-	top: 20px;
-	left: 64px;
+
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;
 	white-space: nowrap;
@@ -118,6 +204,7 @@ span {
 .uiButton:hover img + p {
 	opacity: 1.0;
 }
+*/
 
 .clear {
 	clear: both;
@@ -319,8 +406,6 @@ span {
 	bottom: 10px;
 }
 
-
-
 #settingsDialog {
 	top: 50%;
 	left: 50%;
@@ -495,7 +580,7 @@ span {
 	width: 100%;
 	height: 100%;
 	background-color: #000000;
-	z-index: 1001;
+	z-index: 10001;
 	opacity: .65;
 	cursor: default;
 }
@@ -508,7 +593,7 @@ span {
 	width: 100%;
 	height: 100%;
 	background-color: #464646;
-	z-index: 1001;
+	z-index: 10001;
 	cursor: default;
 }
 
@@ -577,7 +662,7 @@ span {
 	border: 4px solid #787878;
 	border-radius: 12px;
 	background-color: #FFFFFF;
-	z-index:1002;
+	z-index: 10002;
 	overflow: hidden;
 	cursor: default;
 }

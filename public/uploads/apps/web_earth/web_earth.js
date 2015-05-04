@@ -9,27 +9,19 @@
 // Copyright (c) 2015
 
 var web_earth = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "onfinish";
-		this.map          = null;
-		this.ready        - null;
-	},
+		this.maxFPS = 20.0;
 
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
-
-		// application specific 'init'
 		this.element.id = "div" + data.id;
 
-		// building up the state object
-		this.state.zoomLevel = null;
-		this.state.center    = null;
+		this.map = null;
+		this.ready = false;
 
-		this.maxFPS = 20.0;
-		this.ready  = false;
+		this.updateMapFromState();
+
 		this.controls.finishedAddingControls();
 	},
 
@@ -47,12 +39,9 @@ var web_earth = SAGE2_App.extend( {
 		console.log(this.map);
 	},
 
-	load: function(state, date) {
-		if (state) {
-			this.state.zoomLevel = state.zoomLevel;
-			this.state.center    = state.center;
-		}
+	load: function(date) {
 		this.updateMapFromState();
+		this.refresh(date);
 	},
 
 	draw: function(date) {
@@ -86,13 +75,13 @@ var web_earth = SAGE2_App.extend( {
 		var z;
 
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			this.refresh(date);
+			//this.refresh(date);
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
-			this.refresh(date);
+			//this.refresh(date);
 		}
 		else if (eventType === "pointerRelease" && (data.button === "left")) {
-			this.refresh(date);
+			//this.refresh(date);
 		}
 
 		// Scroll events for zoom

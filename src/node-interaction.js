@@ -35,6 +35,7 @@ function Interaction(config) {
 	this.selectOffsetX   = 0;
 	this.selectOffsetY   = 0;
 	this.selectTimeId    = {};
+	this.portal = null;
 	this.interactionMode = MODE.WINDOW_MANAGEMENT;
 	this.configuration   = config;
 
@@ -53,7 +54,7 @@ Interaction.prototype.selectMoveItem = function(moveItem, pointerX, pointerY) {
 	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
 	this.selectedMoveItem    = moveItem;
 	this.selectedMoveControl = null;
-	this.selectedScrollItem  = null;
+	//this.selectedScrollItem  = null;
 	this.selectedResizeItem  = null;
 	this.selectOffsetX = this.selectedMoveItem.left - pointerX;
 	this.selectOffsetY = this.selectedMoveItem.top - pointerY;
@@ -285,7 +286,7 @@ Interaction.prototype.selectResizeItem = function(resizeItem, pointerX, pointerY
 	if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
 
 	this.selectedMoveItem    = null;
-	this.selectedScrollItem  = null;
+	//this.selectedScrollItem  = null;
 	this.selectedMoveControl = null;
 	this.selectedResizeItem  = resizeItem;
 	this.selectOffsetX       = this.selectedResizeItem.width  - (pointerX - this.selectedResizeItem.left);
