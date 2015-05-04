@@ -50,7 +50,7 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	load: function(date) {
 		this.updateAppFromState();
-		this.refresh(date)
+		this.refresh(date);
 	},
 
 	/**

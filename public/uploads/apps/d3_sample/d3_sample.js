@@ -20,20 +20,10 @@ function addCSS( url, callback ) {
 
 
 var d3_sample = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "continuous"; //"onfinish";
-		this.vertices = null;
-		this.voronoi  = null;
-		this.svg      = null;
-		this.path     = null;
-	},
-
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 
 		// Get width height from the supporting div		
 		var width  = this.element.clientWidth;
@@ -72,7 +62,7 @@ var d3_sample = SAGE2_App.extend( {
 		this.controls.finishedAddingControls(); 
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 	},
 
 	draw_d3: function(date) {

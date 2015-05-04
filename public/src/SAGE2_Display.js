@@ -898,7 +898,7 @@ function setupListeners() {
 					}
 					break;
 				default:
-					app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
+					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
 					break;
 			}
 
@@ -920,7 +920,7 @@ function setupListeners() {
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
 		/*
 		var func   = slider.data("lockCall");
 		if (func !== undefined && func !== null)
@@ -936,7 +936,7 @@ function setupListeners() {
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
 			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-			app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
 			/*
 			func = slider.data("updateCall");
 			if (func !== undefined && func !== null)
@@ -960,7 +960,7 @@ function setupListeners() {
 		var appId  = data.ctrl.appId;
 		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
 		/*
 		var func = slider.data("updateCall");
 		if (func !== undefined && func !== null)
@@ -981,7 +981,7 @@ function setupListeners() {
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
-				app.event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
+				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
 				/*
 				var func = textInput.data("call");
 				if (func !== undefined && func !== null)

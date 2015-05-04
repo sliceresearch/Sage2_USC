@@ -9,27 +9,21 @@
 // Copyright (c) 2014
 
 var clock = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.ctx          = null;
-		this.minDim       = null;
-		this.resizeEvents = "continuous";
-		this.enableControls = true;
-	},
-	
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
+		this.SAGE2Init("canvas", data);
+
+		this.resizeEvents = "continuous";
 		
 		// application specific 'init'
 		this.ctx    = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.maxFPS = 2.0;
+
+		this.enableControls = true;
 		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {
