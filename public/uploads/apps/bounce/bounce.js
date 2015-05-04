@@ -9,49 +9,33 @@
 // Copyright (c) 2014
 
 var bounce = SAGE2_App.extend( {
-    construct: function() {
-		arguments.callee.superClass.construct.call(this);
-		this.ctx     = null;
-		this.ballImg = null;
-		this.sizex   = null;
-		this.sizey   = null;
-		this.moveEvents   = "continuous";
-		this.resizeEvents = "continuous";
-	},
-
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
+		this.SAGE2Init("canvas", data);
 
 		// Set the framerate
 		this.maxFPS = 30;
+		// Receive move / resize events continuously
+		this.moveEvents   = "continuous";
+		this.resizeEvents = "continuous";
 
 		this.ctx = this.element.getContext('2d');
-		this.minDim = Math.min(this.element.width, this.element.height);
-
-		this.state.vel = null;
-		this.state.pos = null;
-		this.state.dir = null;
 
 		this.ballImg = new Image();
 		this.ballImg.src = this.resrcPath + "images/evllogo.png";
 		this.minDim = Math.min(this.element.width, this.element.height);
 
-		this.sizex = 0.2 * this.minDim;
-		this.sizey = 0.2 * this.minDim;
+		this.sizex = ((this.sage2_x/ui.json_cfg.totalWidth) *0.5 + 0.5) * (0.4*this.minDim);
+		this.sizey = ((this.sage2_y/ui.json_cfg.totalHeight)*0.5 + 0.5) * (0.4*this.minDim);
+
+		console.log(this.state);
+		console.log(this.sizex, this.sizey);
+
 		this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 
-	load: function(state, date) {
-		if (state) {
-			this.state.vel = state.vel;
-			this.state.pos = state.pos;
-			this.state.dir = state.dir;
-		} else {
-			this.state.vel = 1;
-			this.state.pos = [0.5, 0.5];
-			this.state.dir = [0.7071, 0.7071];
-		}
+	load: function(date) {
+		// this.state has now been updated
+		this.refresh(date);
 	},
 
 	draw: function(date) {
@@ -75,6 +59,8 @@ var bounce = SAGE2_App.extend( {
 		var x = this.state.pos[0]*this.minDim - (this.sizex/2);
 		var y = this.state.pos[1]*this.minDim - (this.sizey/2);
 		this.ctx.drawImage(this.ballImg, x, y, this.sizex, this.sizey);
+
+		this.SAGE2Sync(false);
 	},
 
 	resize: function(date) {

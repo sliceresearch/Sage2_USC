@@ -409,8 +409,62 @@ var evl_photos = SAGE2_App.extend( {
 	////////////////////////////////////////
 
     init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
+		this.SAGE2Init("div", data);
+
+		this.resizeEvents = "continuous"; //onfinish
+		this.svg = null;
+
+		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+		this.enableControls = true;
+
+		this.canvasBackground = "black";
+
+		this.canvasWidth  = 800;
+		this.canvasHeight = 600;
+
+		this.loadTimer = 15; // default value to be replaced from photo_scrapbooks.js
+		this.fadeCount = 10.0; // default value to be replaced from photo_scrapbooks.js
+
+		if (SAGE2_photoAlbumLoadTimer !== null)
+			this.loadTimer = SAGE2_photoAlbumLoadTimer;
+
+		if (SAGE2_photoAlbumFadeCount !== null)
+			this.fadeCount = SAGE2_photoAlbumFadeCount;
+
+		if (this.fadeCount == 0)
+				this.fadeCount = 1; // avoid divide by zero later on
+
+		if (SAGE2_photoAlbumCanvasBackground !== null)
+			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
+
+		this.URL1  = "";
+		this.URL1a = "";
+		this.URL1b = "";
+
+		this.today = "";
+		this.timeDiff = 0;
+
+		this.bigList = null;
+
+		this.okToDraw = this.fadeCount;
+		this.forceRedraw = 1;
+
+		this.fileName = "";
+		this.listFileName = "";
+
+		this.appName = "evl_photos:";
+
+		this.image1 = new Image();
+		this.image2 = new Image();
+		this.image3 = new Image();
+		this.imageTemp = null;
+
+		this.updateCounter = 0;
+
+		this.listFileNamePhotos = "";
+		this.listFileNameLibrary = "";
+
+
 
         this.maxFPS = 30.0;
 		this.element.id = "div" + data.id;
@@ -423,8 +477,6 @@ var evl_photos = SAGE2_App.extend( {
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 
-        this.state.imageSet = 0;
-        this.state.counter = 1;
 
 		// console.log(this.imageLoadCallbackFunc);
 		// console.log(this.imageLoadFailedCallbackFunc);
@@ -459,20 +511,9 @@ var evl_photos = SAGE2_App.extend( {
 		//	.attr("id", "image3")
 		//	.attr("width",  data.width)
 		//	.attr("height", data.height);
-	},
 
-	load: function(state, date) {
-        console.log("looking for a state", state);
-        if (state)
-            {
-            console.log("I have state " + state);
-            this.state.imageSet = state.imageSet;
-            }
-        else {
-            this.state.imageSet = 0; // which album
-            }
 
-        // create the widgets
+		// create the widgets
         console.log("creating controls");
         this.controls.addButton({type:"next",sequenceNo:3, id:"Next"}); /*action:function(date){
             //This is executed after the button click animation occurs.
@@ -503,7 +544,10 @@ var evl_photos = SAGE2_App.extend( {
         this.initApp();
 
         this.update();
-        this.draw_d3(date);
+        this.draw_d3(data.date);
+	},
+
+	load: function(date) {
 	},
 
 	draw_d3: function(date) {
@@ -511,7 +555,6 @@ var evl_photos = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-	    
         this.drawEverything();
 	},
 
@@ -531,6 +574,7 @@ var evl_photos = SAGE2_App.extend( {
         }
         if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextAlbum();
+            this.refresh(date);
         }
         else if (eventType === "widgetEvent"){
 			if (data.ctrlId === "Next"){
@@ -539,6 +583,7 @@ var evl_photos = SAGE2_App.extend( {
 			else{
 				this.setAlbum(data.ctrlId);
 			}
+			this.refresh(date);
 		}
     }
 	

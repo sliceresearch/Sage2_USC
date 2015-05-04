@@ -9,10 +9,8 @@
 // Copyright (c) 2014
 
 var texture_cube = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.fpsText = null;
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 		
 		this.gl = null;
 		this.shaderProgram = null;
@@ -26,7 +24,6 @@ var texture_cube = SAGE2_App.extend( {
 		this.cubeVertexTextureCoordBuffer = null;
 		this.cubeVertexIndexBuffer = null;
 
-		this.time = null;
 		this.rotx = null;
 		this.roty = null;
 		
@@ -34,11 +31,6 @@ var texture_cube = SAGE2_App.extend( {
 		
 		this.webglContextLost = this.webglContextLostMethod.bind(this);
 		this.webglContextRestored = this.webglContextRestoredMethod.bind(this);
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		this.maxFPS = 30;
 
@@ -399,15 +391,15 @@ var texture_cube = SAGE2_App.extend( {
 		this.gl.uniformMatrix3fv(this.shaderProgram.nMatrixUniform, false, normalMatrix);
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {
 		if(this.shaderProgram === undefined || this.shaderProgram === null) return;
 		if(this.texture.image.isLoaded === undefined || this.texture.image.isLoaded === false) return;
 	
-		this.rotx += 10.0 * this.dt;
-		this.roty -= 15.0 * this.dt;
+		this.rotx =  10.0 * this.t;
+		this.roty = -15.0 * this.t;
 		
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		

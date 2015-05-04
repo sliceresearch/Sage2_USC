@@ -1,8 +1,8 @@
 {
 	"main_script": "atom_smasher.js",
 	"icon": "threejs.webp",
-	"width": 4230,
-	"height": 4230,
+	"width": 1200,
+	"height": 1200,
 	"animation": true,
 	"dependencies": [
 		"scripts/three.min.js"

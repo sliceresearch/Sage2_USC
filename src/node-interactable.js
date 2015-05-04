@@ -157,6 +157,22 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 };
 
 /**
+* Edit geometric object position / size / type
+*
+* @method editGeometry
+* @param id {String} unique identifier for the geometric object
+* @return hasObject {Boolean} whether or not an object with the given id exists
+*/
+InteractableManager.prototype.hasObjectWithId = function(id) {
+	var key;
+	for (key in this.interactableObjects) {
+		if (this.interactableObjects[key].hasOwnProperty(id))
+			return true;
+	}
+	return false;
+};
+
+/**
 * Edit visibility of geometric object
 *
 * @method editVisibility
@@ -188,15 +204,24 @@ InteractableManager.prototype.editZIndex = function(id, layerId, zIndex) {
 * @method moveObjectToFront
 * @param id {String} unique identifier for the geometric object
 * @param layerId {String} unique identifier for the layer
+* @param otherLayerIds {Array} unique identifiers for other layers to include in sort
 */
-InteractableManager.prototype.moveObjectToFront = function(id, layerId) {
+InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLayerIds) {
+	var i;
 	var key;
 	var currZIndex = this.interactableObjects[layerId][id].zIndex;
 	var maxZIndex = currZIndex;
-	for (key in this.interactableObjects[layerId]) {
-		if (this.interactableObjects[layerId][key].zIndex > currZIndex) {
-			if (this.interactableObjects[layerId][key].zIndex > maxZIndex) maxZIndex = this.interactableObjects[layerId][key].zIndex;
-			this.interactableObjects[layerId][key].zIndex--;
+	var allLayerIds = [layerId].concat(otherLayerIds || []);
+
+	for (i=0; i<allLayerIds.length; i++) {
+		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
+			for (key in this.interactableObjects[allLayerIds[i]]) {
+				var itemZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
+				if (itemZIndex > currZIndex) {
+					if (itemZIndex > maxZIndex) maxZIndex = itemZIndex;
+					this.interactableObjects[allLayerIds[i]][key].zIndex--;
+				}
+			}
 		}
 	}
 	this.interactableObjects[layerId][id].zIndex = maxZIndex;
@@ -207,15 +232,36 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId) {
 *
 * @method getObjectZIndexList
 * @param layerId {String} unique identifier for the layer
+* @param otherLayerIds {Array} unique identifiers for other layers to include in list
 * @return zIndexList {Obejct} list of geometric object ids and there zIndex values
 */
-InteractableManager.prototype.getObjectZIndexList = function(layerId) {
+InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayerIds) {
+	var i;
 	var key;
 	var zIndexList = {};
-	for (key in this.interactableObjects[layerId]) {
-		zIndexList[this.interactableObjects[layerId][key].id] = this.interactableObjects[layerId][key].zIndex;
+	var allLayerIds = [layerId].concat(otherLayerIds || []);
+
+	for (i=0; i<allLayerIds.length; i++) {
+		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
+			for (key in this.interactableObjects[allLayerIds[i]]) {
+				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = this.interactableObjects[allLayerIds[i]][key].zIndex;
+			}
+		}
 	}
 	return zIndexList;
+};
+
+
+/**
+* Get geometric object with given id
+*
+* @method getObject
+* @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
+* @return object {Object} geometric object with given id
+*/
+InteractableManager.prototype.getObject = function(id, layerId) {
+	return this.interactableObjects[layerId][id];
 };
 
 /**
@@ -224,9 +270,10 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId) {
 * @method searchGeometry
 * @param point {Object} {x: , y: }
 * @param layerId {String} unique identifier for the layer
+* @param ignoreList {Array} list of ids to ignore during the search
 * @return {Object} geometric object
 */
-InteractableManager.prototype.searchGeometry = function(point, layerId) {
+InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreList) {
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {
 		results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
@@ -237,11 +284,16 @@ InteractableManager.prototype.searchGeometry = function(point, layerId) {
 		results = [];
 		for(i=this.layerOrder.length-1; i>=0; i--) {
 			tmp = this.layers[this.layerOrder[i]].objects.search([point.x, point.y, point.x, point.y]);
-			results.push(tmp);
+			if (i < this.layerOrder.length-1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i+1]].zIndex) {
+				results[results.length-1] = results[results.length-1].concat(tmp);
+			}
+			else {
+				results.push(tmp);
+			}
 		}
 	}
 
-	return findTopmostGeometry(point, results);
+	return findTopmostGeometry(point, results, ignoreList);
 };
 
 /**
@@ -250,23 +302,26 @@ InteractableManager.prototype.searchGeometry = function(point, layerId) {
 * @method findTopmostGeometry
 * @param point {Object} {x: , y: }
 * @param geometryList {Array} list of geometric objects
+* @param ignoreList {Array} list of ids to ignore during the search
 * @return {Object} geometric object
 */
-function findTopmostGeometry(point, geometryList) {
+function findTopmostGeometry(point, geometryList, ignoreList) {
 	var i, j;
 	var topmost = null;
+	if (!(ignoreList instanceof Array)) ignoreList = [];
 	for(i=0; i<geometryList.length; i++) {
 		for(j=0; j<geometryList[i].length; j++) {
-			if(geometryList[i][j].type === "circle") {
+			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) continue;
+			if (geometryList[i][j].type === "circle") {
 				var x = point.x - geometryList[i][j].geometry.x;
 				var y = point.y - geometryList[i][j].geometry.y;
 				var r = geometryList[i][j].geometry.r;
-				if((x*x + y*y) < (r*r) && geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+				if ((x*x + y*y) < (r*r) && geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
 			}
 			else {
-				if(geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+				if (geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
 			}

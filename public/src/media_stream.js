@@ -20,28 +20,14 @@
  */
 var media_stream = SAGE2_App.extend( {
 	/**
-	* Constructor
-	*
-	* @class media_stream
-	* @constructor
-	*/
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-		this.src = null;
-	},
-
-	/**
 	* Init method, creates a 'img' tag in the DOM
 	*
 	* @method init
 	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "img", data);
-
-		// overwrite img element with dynamic image (based on the original img)
-		this.element = new DynamicImage(this.element);
+		this.SAGE2Init("img", data);
+		this.src = null;
 	},
 
 	/**
@@ -51,7 +37,7 @@ var media_stream = SAGE2_App.extend( {
 	* @param state {Object} object to initialize or restore the app
 	* @param date {Date} time from the server
 	*/
-	load: function(state, date) {
+	load: function(date) {
 		// modifying img.src directly leads to memory leaks
 		// explicitly allocate and deallocate: 'createObjectURL' / 'revokeObjectURL'
 
@@ -60,15 +46,9 @@ var media_stream = SAGE2_App.extend( {
 		// else if(state.encoding === "binary") base64 = btoa(state.src);
 		// this.element.src = "data:" + state.type + ";base64," + base64;
 
-		var base64;
-		if(state.encoding === "base64") base64 = state.src;
-		else if(state.encoding === "binary") base64 = btoa(state.src);
-		this.element.src = "data:" + state.type + ";base64," + base64;
-
-		/*
 		var bin;
-		if (state.encoding === "binary") bin = state.src;
-		else if (state.encoding === "base64") bin = atob(state.src);
+		if (this.state.encoding === "binary") bin = this.state.src;
+		else if (this.state.encoding === "base64") bin = atob(this.state.src);
 
 		var buf  = new ArrayBuffer(bin.length);
 		var view = new Uint8Array(buf);
@@ -76,14 +56,13 @@ var media_stream = SAGE2_App.extend( {
 			view[i] = bin.charCodeAt(i);
 		}
 
-		var blob   = new Blob([buf], {type: state.type});
+		var blob   = new Blob([buf], {type: this.state.type});
 		var source = window.URL.createObjectURL(blob);
 
 		if (this.src !== null) window.URL.revokeObjectURL(this.src);
 
 		this.src = source;
 		this.element.src = this.src;
-		*/
 	},
 
 	/**

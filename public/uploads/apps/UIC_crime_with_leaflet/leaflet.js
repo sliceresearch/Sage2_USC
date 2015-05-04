@@ -41,8 +41,33 @@ SAGE2_policeDistricts = [
 */
 
 var leaflet = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	getNewData: function(meSelf, beat, date){
+
+		if(isMaster){
+
+			var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
+
+			d3.json(query, function(collection) {
+				meSelf.currentBeats++;
+
+
+				//console.log("grabbing beat"+beat);
+
+				if (meSelf.currentBeats === 1)
+						meSelf.bigCollection = collection;
+				else
+						meSelf.bigCollection = meSelf.bigCollection.concat(collection);
+
+				// when I have all the data start parsing it
+				if (meSelf.currentBeats === meSelf.numBeats)
+					meSelf.dealWithData(meSelf.bigCollection, date);
+			});
+		}
+
+	},
+
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "continuous"; //"onfinish";
 		this.svg      = null;
@@ -69,38 +94,6 @@ var leaflet = SAGE2_App.extend( {
 		this.g = null;
 
 		this.allLoaded = 0;
-	},
-
-
-	getNewData: function(meSelf, beat, date){
-
-		if(isMaster){
-
-			var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
-
-			d3.json(query, function(collection) {
-				meSelf.currentBeats++;
-
-
-				console.log("grabbing beat"+beat);
-
-				if (meSelf.currentBeats === 1)
-						meSelf.bigCollection = collection;
-				else
-						meSelf.bigCollection = meSelf.bigCollection.concat(collection);
-
-				// when I have all the data start parsing it
-				if (meSelf.currentBeats === meSelf.numBeats)
-					meSelf.dealWithData(meSelf.bigCollection, date);
-			});
-		}
-
-	},
-
-	init: function(data) {
-
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 
 		// Get width height from the supporting div		
 		var myWidth  = this.element.clientWidth;
@@ -161,6 +154,24 @@ var leaflet = SAGE2_App.extend( {
 				.attr("height",  myHeight)
 				.attr("viewBox", box);
 		});
+
+		var viewButton = {
+            "textual":true,
+            "label":"view",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        var homeButton = {
+            "textual":true,
+            "label":"home",
+            "fill":"rgba(250,250,250,1.0)",
+            "animation":false
+        };
+        this.controls.addButton({type:homeButton,sequenceNo:2, id:"Home"});
+        this.controls.addButton({type:viewButton,sequenceNo:4, id:"View"});
+        this.controls.addButton({type:"fastforward",sequenceNo:6, id:"ZoomIn"});
+        this.controls.addButton({type:"rewind",sequenceNo:7, id:"ZoomOut"});
+        this.controls.finishedAddingControls(); // Important
 	},
 
 	resetMap: function()
@@ -250,7 +261,7 @@ var leaflet = SAGE2_App.extend( {
 					d.myDate = parseDate(d.date_of_occurrence);
 					d.daysAgo = (today - d.myDate) / 1000 / 60 / 60 / 24; //7-373
 
-					console.log(today, "X", d.myDate);
+					//console.log(today, "X", d.myDate);
 
 					if (d.daysAgo < 31)
 						d.inLastMonth = 1;
@@ -347,32 +358,7 @@ var leaflet = SAGE2_App.extend( {
 	},
 
 
-	load: function(state, date) {
-		// create the widgets
-        console.log("creating controls");
-
-        var viewButton = {
-                    "textual":true,
-                    "label":"view",
-                    "fill":"rgba(250,250,250,1.0)",
-                    "animation":false
-                };
-        var homeButton = {
-                    "textual":true,
-                    "label":"home",
-                    "fill":"rgba(250,250,250,1.0)",
-                    "animation":false
-                };
-
-        this.controls.addButton({type:homeButton,sequenceNo:2, id:"Home"});
-
-        this.controls.addButton({type:viewButton,sequenceNo:4, id:"View"});
-
-        this.controls.addButton({type:"fastforward",sequenceNo:6, id:"ZoomIn"});
-
-        this.controls.addButton({type:"rewind",sequenceNo:7, id:"ZoomOut"});
-
-        this.controls.finishedAddingControls(); // Important
+	load: function(date) {
 	},
 
 	draw_d3: function(date) {
@@ -433,7 +419,7 @@ var leaflet = SAGE2_App.extend( {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;
 
-			console.log(data);
+			//console.log(data);
 
 			if (amount >= 3 && (diff>300)) {
 				// zoom in
