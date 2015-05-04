@@ -49,7 +49,7 @@ function SAGE2DisplayUI() {
  */
 SAGE2DisplayUI.prototype.init = function(config, wsio) {
 	this.svgLoadedFunc = this.svgLoaded.bind(this);
-	
+
 	this.config = config;
 	this.wsio = wsio;
 
@@ -70,7 +70,7 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 	logo.style.transform = "translate(-50%, -50%)";
 	if ((this.config.totalWidth/this.config.totalWidth) <= this.logoAspect)
 		logo.style.width = "75%";
-	else 
+	else
 		logo.style.height = "75%";
 	logo.src = "images/EVL-LAVA_UI.svg";
 
@@ -356,7 +356,7 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	else {
 		appIcon.src = "images/blank.png";
 	}
-	
+
 	console.log(appIcon.src);
 
 	appWindowArea.appendChild(appIcon);
@@ -437,7 +437,7 @@ SAGE2DisplayUI.prototype.deleteApp = function(id) {
 	var applicationsDiv  = document.getElementById('applicationsDiv');
 	var appWindow = document.getElementById(id);
 	applicationsDiv.removeChild(appWindow);
-	
+
 	delete this.applications[id];
 };
 
@@ -479,7 +479,7 @@ SAGE2DisplayUI.prototype.drawRoundedRect = function(ctx, x, y, width, height, ra
  * @param maxWidth {Number} maximum width
  */
 SAGE2DisplayUI.prototype.textLineCount = function(ctx, text, maxWidth) {
- 	var words = text.split(" ");
+	var words = text.split(" ");
 	var line  = "";
 	var count = 1;
 
@@ -507,7 +507,7 @@ SAGE2DisplayUI.prototype.textLineCount = function(ctx, text, maxWidth) {
  * @param y {Number} position y
  * @param maxWidth {Number} maximum width
  * @param lineHeight {Number} line height
- */ 
+ */
 SAGE2DisplayUI.prototype.wrapText = function(ctx, text, x, y, maxWidth, lineHeight) {
 	var words = text.split(" ");
 	var line  = "";
@@ -640,7 +640,7 @@ SAGE2DisplayUI.prototype.keyUp = function(x, y, keyCode) {
  * @method keyPress
  * @param charCode {Number} character code
  */
-SAGE2DisplayUI.prototype.keyPress = function(x ,y, charCode) {
+SAGE2DisplayUI.prototype.keyPress = function(x, y, charCode) {
 	this.pointerMove(x, y);
 	this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 	return true;

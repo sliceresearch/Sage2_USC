@@ -170,7 +170,7 @@ InteractableManager.prototype.hasObjectWithId = function(id) {
 			return true;
 	}
 	return false;
-}
+};
 
 /**
 * Edit visibility of geometric object
@@ -218,8 +218,7 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLay
 			for (key in this.interactableObjects[allLayerIds[i]]) {
 				var itemZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
 				if (itemZIndex > currZIndex) {
-					if (itemZIndex > maxZIndex) 
-						maxZIndex = itemZIndex;
+					if (itemZIndex > maxZIndex) maxZIndex = itemZIndex;
 					this.interactableObjects[allLayerIds[i]][key].zIndex--;
 				}
 			}
@@ -263,7 +262,7 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 */
 InteractableManager.prototype.getObject = function(id, layerId) {
 	return this.interactableObjects[layerId][id];
-}
+};
 
 /**
 * Search for topmost geometric object (optionally within a given layer)

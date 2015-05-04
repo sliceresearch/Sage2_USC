@@ -116,7 +116,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 	* @param date {Date} time from the server
 	*/
 	load: function(date) {
-		
 	},
 
 	/**

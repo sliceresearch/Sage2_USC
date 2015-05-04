@@ -601,7 +601,7 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.createSagePointer = function(pointer_data) {
 		if (this.pointerItems.hasOwnProperty(pointer_data.id)) return;
-		
+
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";

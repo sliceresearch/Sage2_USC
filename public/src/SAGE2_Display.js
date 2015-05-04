@@ -228,21 +228,25 @@ function setupListeners() {
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
-		if (window.ui)
+		if (window.ui) {
 			ui.connectedToRemoteSite(data);
-		else 
+		}
+		else {
 			setTimeout(function() {
 				ui.connectedToRemoteSite(data);
 			}, 1000);
+		}
 	});
 
 	wsio.on('createSagePointer', function(pointer_data){
-		if (window.ui)
+		if (window.ui) {
 			ui.createSagePointer(pointer_data);
-		else 
+		}
+		else {
 			setTimeout(function() {
 				ui.createSagePointer(pointer_data);
 			}, 1000);
+		}
     });
 
     wsio.on('showSagePointer', function(pointer_data){
@@ -1020,7 +1024,7 @@ function setupListeners() {
 			textInput.data("blinkControlHandle", blinkControlHandle);
 		}
 	});
-	
+
 	wsio.on('deactivateTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
 		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);

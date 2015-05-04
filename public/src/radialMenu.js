@@ -50,8 +50,6 @@ var radialMenuList = {};
 // common radial menu icons
 var radialButtonIcon = new Image();
 radialButtonIcon.src = "images/radialMenu/icon_radial_button_circle.svg";
-var radialMenuLevel2Icon = new Image();
-radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
 
 // load thumbnail icons
 var idleExitIcon = new Image();
@@ -106,7 +104,7 @@ function RadialMenu(){
 
 	this.thumbnailScrollWindowElement = null;
 	this.thumbScrollWindowctx = null;
-	
+
 	this.thumbnailScrollWindowElement2 = null;
 	this.thumbScrollWindowctx2 = null;
 
@@ -115,7 +113,7 @@ function RadialMenu(){
 
 	// This is the number of thumbnails in the window WITHOUT scrolling
 	this.thumbnailGridSize = { x: 10, y: 10 }; // Overwritten in setThumbnailPosition().
-	
+
 	this.level1Buttons = [];
 	this.level2Buttons = [];
 
