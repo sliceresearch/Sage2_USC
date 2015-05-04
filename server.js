@@ -83,6 +83,7 @@ var publicDirectory    = "public";
 var hostOrigin         = "";
 var uploadsDirectory   = path.join(publicDirectory, "uploads");
 var SAGE2Items         = {};
+var sharedApps         = {};
 var users              = null;
 var sessionDirectory   = path.join(__dirname, "sessions");
 var appLoader          = null;
@@ -371,6 +372,7 @@ function wsAddClient(wsio, data) {
 	if (sageutils.isTrue(data.requests.console)) data.requests.console = true;
 	else data.requests.console = false;
 
+	console.log("client:", data.host, data.port);
 	wsio.updateRemoteAddress(data.host, data.port); // overwrite host and port if defined
 	wsio.clientType = data.clientType;
 
@@ -500,6 +502,7 @@ function setupListeners(wsio) {
 	wsio.on('loopVideo',                            wsLoopVideo);
 
 	wsio.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+	wsio.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
 	wsio.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
 	wsio.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
 	wsio.on('stopMediaStream',                        wsStopMediaStream);
@@ -1380,10 +1383,21 @@ function wsUpdateAppState(wsio, data) {
 		var app = SAGE2Items.applications.list[data.id];
 
 		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
-		var portal = findApplicationPortal(app);
-		if (portal !== undefined && portal !== null && data.updateRemote === true) {
-			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
-			remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.state, date: ts});
+		
+		if (data.updateRemote === true) {
+			var portal = findApplicationPortal(app);
+			if (portal !== undefined && portal !== null) {
+				var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.state, date: ts});
+			}
+			else if (sharedApps[data.id] !== undefined) {
+				var i;
+				for (i=0; i<sharedApps[data.id].length; i++) {
+					//var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+					var ts = Date.now();
+					sharedApps[data.id][i].wsio.emit('updateApplicationState', {id: sharedApps[data.id][i].sharedId, state: data.state, date: ts});
+				}
+			}
 		}
 	}
 }
@@ -2375,6 +2389,43 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 		}
 
 		mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+
+		handleNewApplication(appInstance, videohandle);
+
+		if(appInstance.animation){
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i=0; i<clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+		}
+	});
+}
+
+function wsAddNewSharedElementFromRemoteServer(wsio, data) {
+	console.log("add shared element from remote server");
+	var i;
+
+	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
+		console.log("Remote App: " + appInstance.title + " (" + appInstance.application + ")");
+		
+
+		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
+			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
+			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
+			for(i=0; i<clients.length; i++){
+				if(clients[i].clientType === "display") {
+					console.log("render client: " + clients[i].id);
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+		}
+		else {
+			appInstance.id = data.id;
+		}
+
+		mergeObjects(data.application.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		handleNewApplication(appInstance, videohandle);
 
@@ -3568,8 +3619,7 @@ if (config.remote_sites) {
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new WebsocketIO(wsURL, false, function() {
 		console.log(sageutils.header("Remote") + "Connected to " + element.name);
-		remote.remoteAddress.address = element.host;
-		remote.remoteAddress.port = element.port;
+		remote.updateRemoteAddress(element.host, element.port);
 		var clientDescription = {
 			clientType: "remoteServer",
 			host: config.host,
@@ -3593,6 +3643,7 @@ function createRemoteConnection(wsURL, element, index) {
 
 		remote.on('addClient',                              wsAddClient);
 		remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+		remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
 		remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
 		remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
 		remote.on('stopMediaStream',                        wsStopMediaStream);
@@ -4326,6 +4377,9 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	// don't allow data-pushing
+
+	/*
 	switch (obj.id) {
 		case "dataSharingRequestDialog":
 			break;
@@ -4362,6 +4416,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			// remote site icon
 			requestNewDataSharingSession(obj.data);
 	}
+	*/
 }
 
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime, sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
@@ -5254,17 +5309,39 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	// don't allow data-pushing
 	//dropSelectedItem(uniqueID, true);
 
+	/*
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
-	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.id) && remote.wsio.connected) {
-		remote.wsio.emit('addNewElementFromRemoteServer', app);
+	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
+		remote.wsio.emit('addNewElementFromRemoteServer', app.application);
 
 		var eLogData = {
 			host: remote.wsio.remoteAddress.address,
 			port: remote.wsio.remoteAddress.port,
 			application: {
-				id: app.id,
-				type: app.application
+				id: app.application.id,
+				type: app.application.application
+			}
+		};
+		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+	}
+	*/
+
+	var remote = obj.data;
+	var app = dropSelectedItem(uniqueID, false, null);
+	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
+		var sharedId = app.application.id + "_" + config.host+":"+config.port + "+" + remote.wsio.id;
+		if (sharedApps[app.application.id] === undefined) sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
+		else sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
+
+		remote.wsio.emit('addNewSharedElementFromRemoteServer', {application: app.application, id: sharedId});
+
+		var eLogData = {
+			host: remote.wsio.remoteAddress.address,
+			port: remote.wsio.remoteAddress.port,
+			application: {
+				id: app.application.id,
+				type: app.application.application
 			}
 		};
 		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
