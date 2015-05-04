@@ -54,6 +54,9 @@ var SAGE2_App = Class.extend( {
 		this.enableControls  = null;
 		this.requestForClone = null;
 
+		// "was visible" state
+		this.vis = null;
+
 		//File Handling
 		this.id = null;
 		this.filePath = null;
@@ -86,6 +89,9 @@ var SAGE2_App = Class.extend( {
 
 		this.resrcPath = data.resrc + "/";
 		this.startDate = data.date;
+
+		// visible
+		this.vis = true;
 
 		this.sage2_x      = data.x;
 		this.sage2_y      = data.y;
@@ -195,6 +201,36 @@ var SAGE2_App = Class.extend( {
 	},
 
 	/**
+	* Calculate if the application is hidden in this display
+	*
+	* @method isHidden
+	* @return {Boolean} Returns true if out of screen
+	*/
+	isHidden: function() {
+		var checkWidth  = this.config.resolution.width;
+		var checkHeight = this.config.resolution.height;
+		if (clientID===-1) {
+			// set the resolution to be the whole display wall
+			checkWidth  *= this.config.layout.columns;
+			checkHeight *= this.config.layout.rows;
+		}
+		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
+				(this.sage2_x + this.sage2_width) < ui.offsetX ||
+				this.sage2_y > (ui.offsetY + checkHeight) ||
+				(this.sage2_y + this.sage2_height) < ui.offsetY);
+	},
+
+	/**
+	* Calculate if the application is visible in this display
+	*
+	* @method isVisible
+	* @return {Boolean} Returns true if visible
+	*/
+	isVisible: function() {
+		return !this.isHidden();
+	},
+
+	/**
 	* Method called before the draw function, calculates timing and frame rate
 	*
 	* @method preDraw
@@ -212,6 +248,22 @@ var SAGE2_App = Class.extend( {
 			this.timer  = 0.0;
 		}
 
+		// Check for visibility
+		var visible = this.isVisible();
+		if (!visible && this.vis) {
+			// trigger the app visibility callback, if there's one
+			if (this.onVisible) this.onVisible(false);
+			// app became hidden
+			this.vis = false;
+		}
+		if (visible && !this.vis) {
+			// trigger the visibility callback, if there's one
+			if (this.onVisible) this.onVisible(true);
+			// app became visible
+			this.vis = true;
+		}
+
+		// Increase time
 		this.sec += this.dt;
 	},
 

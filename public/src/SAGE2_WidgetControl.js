@@ -152,8 +152,8 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 	if (this.itemCount <= 30){
 		var button = new this.ButtonClass();
 		button.appId = this.id;
-		if (data.staticID)
-			button.id = "button" + data.staticID;
+		if (data.id !== undefined && data.id!== null)
+			button.id = "button" + data.id;
 		else
 			button.id = "button" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		if (typeof data.type === "string" ){
@@ -213,7 +213,10 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 	if (this.hasTextInput === false && this.itemCount <= 30){
 		this.hasTextInput = true;
 		var textInput = new this.TextInputClass();
-		textInput.id = "textInput" + ((this.itemCount<10)? "0" : "") + this.itemCount;
+		if (data.id !== undefined && data.id!== null)
+			textInput.id = "textInput" + data.id;
+		else
+			textInput.id = "textInput" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		textInput.appId = this.id;
 		textInput.caption = data.caption || null;
 		textInput.width = 13.0*ui.widgetControlSize;
@@ -246,7 +249,10 @@ SAGE2WidgetControl.prototype.addSlider = function(data){
 	if (this.hasSlider === false && this.itemCount <= 30){
 
 		var slider = new this.SliderClass();
-		slider.id = "slider" + ((this.itemCount<10)? "0" : "") + this.itemCount;
+		if (data.id !== undefined && data.id!== null)
+			slider.id = "slider" + data.id;
+		else
+			slider.id = "slider" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		slider.appId = this.id;
 		slider.begin = data.begin;
 		slider.end = data.end;
@@ -343,14 +349,8 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 
 
 SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
-	this.addButton({type:"closeApp", staticID:"CloseApp", sequenceNo:data.sequence.closeApp, action:function(date){
-		if (isMaster)
-			wsio.emit('closeAppFromControl', {appId:data.id});
-	}});
-	this.addButton({type:"closeBar", staticID:"CloseWidget", sequenceNo:data.sequence.closeBar, action:function(date){
-		if (isMaster)
-			wsio.emit('hideWidgetFromControl', {instanceID:data.instanceID});
-	}});
+	this.addButton({type:"closeApp", id:"CloseApp", sequenceNo:data.sequence.closeApp});
+	this.addButton({type:"closeBar", id:"CloseWidget", sequenceNo:data.sequence.closeBar});
 };
 
 

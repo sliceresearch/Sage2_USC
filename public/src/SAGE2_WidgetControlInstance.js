@@ -28,7 +28,7 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 
 	this.controlSVG = new Snap(size.width, size.height);
 
-	innerGeometry = {
+	var innerGeometry = {
 		center:{x:0, y:0, r:0},
 		buttons:[],
 		textInput:null,
@@ -49,14 +49,14 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 	var buttonCount = this.controlSpec.itemCount;
 	var startAngle = 0;
 	var endAngle = 360;
-	var sequenceMaximum = 30;
+	var sequenceMaximum = 32;
 	var innerSequence = 12;
-	var outerSequence = 18;
+	var outerSequence = 20;
 
 	this.controlSpec.addDefaultButtons({
 		id:this.id,
 		instanceID:this.instanceID,
-		sequence:{closeApp: parseInt(outerSequence/2 + innerSequence-1), closeBar: parseInt(outerSequence/2 + innerSequence +1)}
+		sequence:{closeApp: parseInt(3*outerSequence/4 + innerSequence + 1), closeBar: 0 } //parseInt(outerSequence/2 + innerSequence +1)}
 	});
 	var innerThetaIncrement = (endAngle - startAngle)/innerSequence;
 	var outerThetaIncrement = (endAngle - startAngle)/outerSequence;
@@ -139,10 +139,18 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 			drawSpokeForRadialLayout(this.controlSVG,center,leftMidOfBar);
 		this.createColorPalette(leftMidOfBar.x,leftMidOfBar.y, d);
 	}*/
-	drawWidgetControlCenter(instanceID, this.controlSVG, center, dimensions.buttonRadius, "");
-	innerGeometry.center.x = center.x;
-	innerGeometry.center.y = center.y;
-	innerGeometry.center.r = dimensions.buttonRadius;
+	var centerButton = this.controlSpec.buttonSequence["0"];
+	if (centerButton!==undefined && centerButton!==null){
+		this.createButton(centerButton, center.x, center.y, dimensions.buttonRadius - 2);
+		innerGeometry.buttons.push({x:center.x, y:center.y, r:dimensions.buttonRadius-2, id:centerButton.id});
+	}
+	else{
+		drawWidgetControlCenter(instanceID, this.controlSVG, center, dimensions.buttonRadius, "");
+		innerGeometry.center.x = center.x;
+		innerGeometry.center.y = center.y;
+		innerGeometry.center.r = dimensions.buttonRadius;
+	}
+
 	if (isMaster) {
 		wsio.emit('recordInnerGeometryForWidget', {instanceID:instanceID, innerGeometry:innerGeometry});
 	}
@@ -207,7 +215,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		slider.add(sliderCaption);
 	sliderKnob.data("appId", this.controlSpec.slider.appId);
 	sliderKnobLabel.data("appId", this.controlSpec.slider.appId);
-
+	slider.attr("id", this.controlSpec.slider.id);
 	slider.data("appId", this.controlSpec.slider.appId);
 	slider.data("instanceID", this.instanceID);
 	slider.data("caption", this.controlSpec.slider.caption);
@@ -351,6 +359,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	button.data("call", buttonSpec.call);
 	button.data("appId", buttonSpec.appId);
 	button.data("instanceID", this.instanceID);
+	button.attr("id", buttonSpec.id);
 	return button;
 };
 
@@ -415,6 +424,7 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	textArea.data("appId", this.controlSpec.textInput.appId);
 	textData.data("appId", this.controlSpec.textInput.appId);
 	blinker.data("appId", this.controlSpec.textInput.appId);
+	textInput.attr("id", this.controlSpec.textInput.id);
 	textInput.data("instanceID", this.instanceID);
 	textInput.data("appId", this.controlSpec.textInput.appId);
 	textInput.data("buffer", "");

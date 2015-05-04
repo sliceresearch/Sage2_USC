@@ -41,13 +41,13 @@
             location:"https://sage.evl.uic.edu/evl_Pictures/",
             name:"evl"};
 
-// load timer is how long to show a single image before loading the next one
-// or refreshing the current one
+// load timer is how long to show a single image in seconds before loading 
+// the next one or refreshing the current one
 
-    SAGE2_photoAlbumLoadTimer = 300;
+    SAGE2_photoAlbumLoadTimer = 20;
 
-// fade count is how many frames the fade between the old and new image takes (more is longer)
-    SAGE2_photoAlbumFadeCount = 10.0;
+// fade count is how many frames it takes to fade between the old and new image
+    SAGE2_photoAlbumFadeCount = 20;
 
-// canvas bacground gives the color of the background of the window
+// canvas background gives the color of the background of the window
     SAGE2_photoAlbumCanvasBackground = "black";

@@ -270,7 +270,7 @@ function setupListeners() {
 				var appIcon = document.createElement('img');
 				appIcon.id = "app_icon_" + data[i+j].exif.FileName;
 				appIcon.setAttribute("application", data[i+j].exif.FileName);
-				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.png";
+				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_128.jpg";
 				appIcon.width = parseInt(size * 0.8, 10);
 				appIcon.height = parseInt(size * 0.8, 10);
 				var appName = document.createElement('p');
@@ -763,13 +763,13 @@ function handleClick(element) {
 	// Media Browser Dialog
 	else if (element.id === "fileOpenBtn") {
 		loadSelectedFile();
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
 	}
 	else if (element.id === "fileCloseBtn") {
 		selectedFileEntry = null;
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
 	}
@@ -777,7 +777,7 @@ function handleClick(element) {
 	else if (element.id === "fileUploadBtn") {
 		// clear the preview panel
 		selectedFileEntry = null;
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		// close the media browswer
 		hideDialog('mediaBrowserDialog');
@@ -818,7 +818,7 @@ function handleClick(element) {
 			var file = selectedFileEntry.getAttribute("file");
 			wsio.emit('deleteElementFromStoredFiles', {application: application, filename: file});
 
-			document.getElementById('thumbnail').src = "images/blank.png";
+			document.getElementById('thumbnail').src = "images/blank.jpg";
 			document.getElementById('metadata_text').textContent = "";
 			selectedFileEntry = null;
 			hideDialog('mediaBrowserDialog');
@@ -885,7 +885,7 @@ function handleClick(element) {
 		var metadata = document.getElementById('metadata');
 		var size = Math.min(parseInt(metadata.style.width, 10), parseInt(metadata.style.height, 10)) * 0.9 - 32;
 		var thumbnail = document.getElementById('thumbnail');
-		thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_256.png";
+		thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_128.jpg";
 		thumbnail.width = size;
 		thumbnail.height = size;
 		var metadata_text = document.getElementById('metadata_text');
@@ -902,7 +902,7 @@ function handleClick(element) {
 		hideDialog('arrangementDialog');
 	}
 	else if (element.id === "savesession") {
-		var template = "Session " + dateToYYYYMMDDHHMMSS(new Date());
+		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
 		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
 		if (filename !== null) {
 			wsio.emit('saveSesion', filename);
@@ -948,7 +948,7 @@ function handleDblClick(element) {
 	}
 	else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
 		loadSelectedFile();
-		document.getElementById('thumbnail').src = "images/blank.png";
+		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
 	}
@@ -1402,8 +1402,8 @@ function pad(n, width, z) {
  * @return {String} formatted string
  */
 function dateToYYYYMMDDHHMMSS(date) {
-	return date.getFullYear() + "-" + pad(date.getMonth()+1, 2) + "-" + pad(date.getDate(), 2) + " " +
-			pad(date.getHours(), 2) + ":" + pad(date.getMinutes(), 2) + ":" + pad(date.getSeconds(), 2);
+	return date.getFullYear() + "_" + pad(date.getMonth()+1, 2) + "_" + pad(date.getDate(), 2) + "_" +
+			pad(date.getHours(), 2) + "_" + pad(date.getMinutes(), 2) + "_" + pad(date.getSeconds(), 2);
 }
 
 /**

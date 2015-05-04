@@ -727,21 +727,9 @@ var USweather = SAGE2_App.extend( {
         this.controls.addButtonType("icon", iconButton);
         this.controls.addButtonType("color", colorButton);
 
-        this.controls.addButton({type:"temp",sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.mode = 0;
-            this.convertToTemp();
-        }.bind(this)});
-        this.controls.addButton({type:"icon",sequenceNo:6,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.mode = 1;
-            this.convertToIcon();
-        }.bind(this)});
-        this.controls.addButton({type:"color",sequenceNo:8,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.mode = 2;
-            this.convertToNone();
-        }.bind(this)});
+        this.controls.addButton({type:tempButton,sequenceNo:4, id:"Temperature"});
+        this.controls.addButton({type:iconButton,sequenceNo:6, id:"Icon"});
+        this.controls.addButton({type:colorButton,sequenceNo:8, id:"Color"});
         this.controls.finishedAddingControls(); // Important
         
 
@@ -770,11 +758,30 @@ var USweather = SAGE2_App.extend( {
     //event: function(eventType, userId, x, y, data, date) {
         if (eventType === "pointerPress" && (data.button === "left") ) {
         }
-        if (eventType === "pointerMove" ) {
+        else if (eventType === "pointerMove" ) {
         }
-        if (eventType === "pointerRelease" && (data.button === "left") ) {
+        else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextMode();
         }
+        else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Temperature":
+					this.state.mode = 0;
+            		this.convertToTemp();
+					break;
+				case "Icon":
+            		this.state.mode = 1;
+            		this.convertToIcon();
+					break;
+				case "Color":
+					this.state.mode = 2;
+            		this.convertToNone();
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					return;
+			}
+		}
     }
     
 });

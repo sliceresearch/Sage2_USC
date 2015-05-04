@@ -48,7 +48,7 @@ var tweetcloud = SAGE2_App.extend( {
 		queryDiv.style.left     = "0px";
 		queryDiv.style.backgroundColor = "rgba(255, 255, 255, 0.8)";
 		queryDiv.style.border = "solid 2px rgba(0, 0, 0, 0.4)";
-		
+		this.queryDiv = queryDiv;
 		var queryText = document.createElement('p');
 		queryText.id = data.id + "_queryText";
 		queryText.textContent = this.query;
@@ -62,7 +62,8 @@ var tweetcloud = SAGE2_App.extend( {
 		queryText.style.webkitTransform = "translate(0%, -50%)";
 		queryText.style.mozTransform = "translate(0%, -50%)";
 		queryText.style.transform = "translate(0%, -50%)";
-		
+		this.queryText = queryText;
+
 		var error = document.createElement('p');
 		error.id = data.id + "_error";
 		error.textContent = "";
@@ -92,16 +93,7 @@ var tweetcloud = SAGE2_App.extend( {
 		this.updateWordCloudFunc = this.updateWordCloud.bind(this);
 		this.sortByDateFunc = this.sortByDate.bind(this);
 		
-		this.controls.addTextInput({action: function(text) {
-			_this.query = text;
-			_this.clear();
-			var width = parseInt(_this.element.style.width,  10);
-			queryText.textContent = _this.query;
-			queryDiv.style.width = (queryText.clientWidth + (width*0.03)).toString() + "px";
-			if(isMaster){
-				_this.searchTweets("tweetResults", {q: _this.query, language: "en", count: 100}, false);
-			}
-		}});
+		this.controls.addTextInput({id:"Search"});
 		this.controls.finishedAddingControls(); // Important
 	},
 
@@ -303,6 +295,17 @@ var tweetcloud = SAGE2_App.extend( {
 				if(isMaster){
 					this.searchTweets("tweetResults", {q: this.query, language: "en", count: 100}, false);
 				}
+			}
+		}
+
+		else if (eventType === "widgetEvent" && data.ctrlId === "Search"){
+			this.query = data.text;
+			this.clear();
+			var width = parseInt(this.element.style.width,  10);
+			this.queryText.textContent = this.query;
+			this.queryDiv.style.width = (this.queryText.clientWidth + (width*0.03)).toString() + "px";
+			if(isMaster){
+				this.searchTweets("tweetResults", {q: this.query, language: "en", count: 100}, false);
 			}
 		}
 	}
