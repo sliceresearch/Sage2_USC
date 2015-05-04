@@ -2437,6 +2437,8 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 				}
 			}
 		}
+
+		sharedApps[appInstance.id] = [{wsio: wsio, sharedId: data.remoteAppId}];
 	});
 }
 
@@ -5334,7 +5336,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		if (sharedApps[app.application.id] === undefined) sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
 		else sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
 
-		remote.wsio.emit('addNewSharedElementFromRemoteServer', {application: app.application, id: sharedId});
+		remote.wsio.emit('addNewSharedElementFromRemoteServer', {application: app.application, id: sharedId, remoteAppId: app.application.id});
 
 		var eLogData = {
 			host: remote.wsio.remoteAddress.address,
