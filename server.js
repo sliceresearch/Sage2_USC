@@ -1583,12 +1583,14 @@ function createAppFromDescription(app, callback) {
 	};
 
 	var appURL = url.parse(app.url);
+	
 	if (appURL.hostname === config.host) {
 		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
 			appLoader.loadFileFromLocalStorage({application: app.application, filename: app.title}, cloneApp);
 		}
 		else {
-			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: app.application}, cloneApp);
+		    var appDirectory = appURL.pathname.substring(appURL.pathname.lastIndexOf("/")+1,appURL.pathname.length);
+			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: appDirectory}, cloneApp);
 		}
 	}
 	else {
@@ -4169,6 +4171,9 @@ function byteBufferToString(buf) {
 }
 
 function mergeObjects(a, b, ignore) {
+    if ((a === undefined) || (a === null))
+	return false;
+
 	var ig = ignore || [];
 	var modified = false;
 	for(var key in b) {
