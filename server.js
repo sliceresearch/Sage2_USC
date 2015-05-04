@@ -1379,7 +1379,6 @@ function wsUpdateAppState(wsio, data) {
 		var app = SAGE2Items.applications.list[data.id];
 
 		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
-		console.log("update state", app.data);
 		var portal = findApplicationPortal(app);
 		if (portal !== undefined && portal !== null && data.updateRemote === true) {
 			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
