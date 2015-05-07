@@ -1647,7 +1647,10 @@ function listClients() {
 	console.log("Clients (%d)\n------------", clients.length);
 	for(i=0; i<clients.length; i++){
 		if (clients[i].clientType === "display") {
-			console.log(sprint("%2d: %s (%s %s)", i, clients[i].id, clients[i].clientType, clients[i].clientID));
+			if (clients[i] === masterDisplay)
+				console.log(sprint("%2d: %s (%s %s) master", i, clients[i].id, clients[i].clientType, clients[i].clientID));
+			else
+				console.log(sprint("%2d: %s (%s %s)", i, clients[i].id, clients[i].clientType, clients[i].clientID));
 		}
 		else {
 			console.log(sprint("%2d: %s (%s)", i, clients[i].id, clients[i].clientType));
