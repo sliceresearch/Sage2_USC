@@ -69,7 +69,7 @@ var SAGE2_App = Class.extend( {
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
 		// Modify state sync options
-		this.SAGE2StateSyncOptions = {visible: true, hover: null, press: {name: null, value: null}};
+		this.SAGE2StateSyncOptions = {visible: true, hover: null, press: {name: null, value: null}, scroll: 0};
 	},
 
 	/**
@@ -143,7 +143,7 @@ var SAGE2_App = Class.extend( {
 
 		this.SAGE2CopyState(data.state);
 
-		this.state.center.test = {x: 10, y: 20};
+		//this.state.center.test = {x: 10, y: 20};
 
 		this.SAGE2InitializeAppOptionsFromState();
 	},
@@ -157,8 +157,8 @@ var SAGE2_App = Class.extend( {
 
 	SAGE2Event: function(eventType, position, user_id, data, date) {
 		if (this.SAGE2StateSyncOptions.visible === true && (eventType === "pointerPress" || eventType === "pointerMove" || eventType === "pointerRelease" || eventType === "pointerScroll" || eventType === "keyboard" || eventType === "specialKey")) {
-			var itemIdx = parseInt(position.y / Math.round(1.5*this.config.ui.titleTextSize), 10);
-			var children = document.getElementById(this.id + "_state").childNodes;
+			var itemIdx = parseInt((position.y-this.SAGE2StateSyncOptions.scroll) / Math.round(1.5*this.config.ui.titleTextSize), 10);
+			var children = document.getElementById(this.id + "_statecontainer").childNodes;
 			var hoverChild = null;
 			var syncedPrev
 			var synced;
@@ -224,6 +224,18 @@ var SAGE2_App = Class.extend( {
 					this.SAGE2StateSyncOptions.press.value = null;
 					break;
 				case "pointerScroll":
+					var windowStateContatiner = document.getElementById(this.id + "_statecontainer");
+					this.SAGE2StateSyncOptions.scroll -= data.wheelDelta;
+					var minY = Math.min(this.sage2_height - windowStateContatiner.clientHeight, 0);
+					if (this.SAGE2StateSyncOptions.scroll < minY)
+						this.SAGE2StateSyncOptions.scroll = minY;
+					if (this.SAGE2StateSyncOptions.scroll > 0)
+						this.SAGE2StateSyncOptions.scroll = 0;
+
+					var newTransform = "translate(0px," + this.SAGE2StateSyncOptions.scroll + "px)";
+					windowStateContatiner.style.webkitTransform = newTransform;
+					windowStateContatiner.style.mozTransform = newTransform;
+					windowStateContatiner.style.transform = newTransform;
 					break;
 				case "keyboard":
 					break;
@@ -263,7 +275,7 @@ var SAGE2_App = Class.extend( {
 	},
 
 	SAGE2AddAppOption: function(name, parent, level, save) {
-		var windowState = document.getElementById(this.id + "_state");
+		var windowStateContatiner = document.getElementById(this.id + "_statecontainer");
 
 		var p = document.createElement('p');
 		p.style.whiteSpace = "noWrap";
@@ -280,7 +292,7 @@ var SAGE2_App = Class.extend( {
 		s.style.fontFamily = "\"Lucida Console\", Monaco, monospace";
 
 		p.appendChild(s);
-		windowState.appendChild(p);
+		windowStateContatiner.appendChild(p);
 
 		save[name] = {_name: p, _value: s, _sync: true};
 

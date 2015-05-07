@@ -1135,6 +1135,15 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowState.style.zIndex = "1";
 	//windowState.style.display = "none";
 
+	var windowStateContatiner = document.createElement("div");
+	windowStateContatiner.id = data.id + "_statecontainer";
+	windowStateContatiner.style.position = "absolute";
+	windowStateContatiner.style.top = "0px";
+	windowStateContatiner.style.left = "0px";
+	windowStateContatiner.style.webkitTransform = "translate(0px,0px)";
+	windowStateContatiner.style.mozTransform = "translate(0px,0px)";
+	windowStateContatiner.style.transform = "translate(0px,0px)";
+	windowState.appendChild(windowStateContatiner);
 	windowItem.appendChild(windowState);
 
 	var cornerSize = Math.min(data.width, data.height) / 5;
