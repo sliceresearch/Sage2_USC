@@ -1120,7 +1120,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowState.style.backgroundColor = "rgba(0,0,0,0.8)";
 	windowState.style.lineHeight = Math.round(1.5*titleTextSize) + "px";
 	windowState.style.zIndex = "1";
-	windowState.style.display = "none";
+	//windowState.style.display = "none";
 
 	windowItem.appendChild(windowState);
 

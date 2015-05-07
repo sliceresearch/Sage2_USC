@@ -167,3 +167,55 @@ body {
 	-moz-transform-origin: 0% 0% 0;
 	transform-origin: 0% 0% 0;
 }
+
+.stateObject {
+	color: #FFFFFF;
+}
+
+.stateObject[state='hover'] {
+	color: #EECC00;
+}
+
+.stateObject[state='unsynced'] {
+	color: #727272;
+}
+
+.stateNumber {
+	color: #AF7DFF;
+}
+
+.stateNumber[synced=false] {
+	color: #727272;
+}
+
+.stateBoolean {
+	color: #FC1F70;
+}
+
+.stateBoolean[synced=false] {
+	color: #727272;
+}
+
+.stateString {
+	color: #E6DC6D;
+}
+
+.stateString[synced=false] {
+	color: #727272;
+}
+
+.stateNull {
+	color: #A4E402;
+}
+
+.stateNull[synced=false] {
+	color: #727272;
+}
+
+.stateArray {
+	color: #60D9F1;
+}
+
+.stateArray[synced=false] {
+	color: #727272;
+}
