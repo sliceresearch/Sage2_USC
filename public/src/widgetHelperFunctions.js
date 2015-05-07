@@ -31,11 +31,13 @@ function drawBackgroundForWidgetRadialDial(instanceID, paper, center, radius){
 	var backGround = paper.circle(center.x, center.y, radius);
 	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(190,190,190,0.7)-rgba(90,90,90,0.4)");
 	backGround.attr({
+		id: instanceID + "backGround",
 		fill: grad,//"rgba(60,60,60,0.5)",
 		stroke: "rgba(250,250,250,1.0)",
 		strokeDasharray: "2,1",
 		strokeWidth: 5
 	});
+	backGround.data("paper", paper);
 	backGround.data("instanceID", instanceID);
 }
 
@@ -308,16 +310,16 @@ hideAllWidgetToAppConnector = function (appId){
 };
 
 hideWidgetToAppConnector = function(instanceID, appId){
-	var connector = Snap.select("[id*=\""+instanceID+"connector\"]");
-	connector.remove();
+	//var connector = Snap.select("[id*=\""+instanceID+"connector\"]");
+	//connector.remove();
 	/*var connectorDiv = document.getElementById(instanceID + "connector");
 	if (connectorDiv){
 		connectorDiv.style.display = "none";
 	}*/
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
 	if (selectedControl){
 		selectedControl.attr({
-			fill: "rgba(110,110,110,1.0)",
+			stroke: "rgba(250,250,250,1.0)",
 			filter:null
 		});
 	}
@@ -348,72 +350,25 @@ showWidgetToAppConnector = function (instanceID, color){
 	}
 };
 
-moveAndShowWidgetToAppConnector = function(position_data){
+/*showWidgetConnectors = function(data){
 	var hOffset;
 	var selectedAppTitle, re, styleCaption;
-	hOffset = (ui.titleBarHeight + position_data.height)/2;
-	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	hOffset = (ui.titleBarHeight + data.height)/2;
+	selectedAppTitle = document.getElementById(data.id + "_title");
 	if (!selectedAppTitle)return;
 	re = /\.|\:/g;
-	styleCaption = position_data.user_id.split(re).join("");
+	styleCaption = data.user_id.split(re).join("");
 	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle";
 	for (var item in controlItems){
-		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+		if (item.indexOf(data.id) > -1 && controlItems[item].show){
 			var control = controlItems[item].divHandle;
 			var cLeft = parseInt(control.style.left);
 			var cTop = parseInt(control.style.top);
 			var cHeight = parseInt(control.style.height);
-			moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.left-ui.offsetX + position_data.width/2.0, position_data.top-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
+			moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, data.left-ui.offsetX + data.width/2.0, data.top-ui.offsetY+hOffset, cHeight/2.0, data.user_color);
 		}
 	}
-};
-
-
-removeWidgetToAppConnector = function (instanceID){
-	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (connectorDiv){
-		connectorDiv.parentNode.removeChild(connectorDiv);
-	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl){
-		selectedControl.attr({
-			fill: "rgba(110,110,110,1.0)",
-			filter:null
-		});
-	}
-};
-
-setConnectorColor = function (instanceID, color){
-	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (!connectorDiv) return;
-	connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color;
-	if (!color){
-		color = '#666666';
-	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl){
-		var paper = selectedControl.data("paper");
-		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
-		selectedControl.attr({
-			fill: color,
-			filter:shadow
-		});
-	}
-};
-
-setAllConnectorColor = function(position_data){
-	var selectedAppTitle, re, styleCaption;
-	selectedAppTitle = document.getElementById(position_data.id + "_title");
-	if (!selectedAppTitle)return;
-	re = /\.|\:/g;
-	styleCaption = position_data.user_id.split(re).join("");
-	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle";
-	for (var item in controlItems){
-		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
-			setConnectorColor(item, position_data.user_color);
-		}
-	}
-};
+};*/
 
 moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
 	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
@@ -430,7 +385,7 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 		});
 	}
 
-	var connectorDiv = document.getElementById(instanceID + "connector");
+	/*var connectorDiv = document.getElementById(instanceID + "connector");
 	if (!connectorDiv) return;
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
@@ -472,8 +427,57 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
 	connectorDiv.style.mozTransform    = transform;
 	connectorDiv.style.transform       = transform;
     connectorDiv.style.boxShadow = '0px 0px 15px 5px ' + color;
-    connectorDiv.style.display = "inline";
+    connectorDiv.style.display = "inline";*/
 };
+
+
+removeWidgetToAppConnector = function (instanceID){
+	var connectorDiv = document.getElementById(instanceID + "connector");
+	if (connectorDiv){
+		connectorDiv.parentNode.removeChild(connectorDiv);
+	}
+	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
+	if (selectedControl){
+		selectedControl.attr({
+			fill: "rgba(110,110,110,1.0)",
+			filter:null
+		});
+	}
+};
+
+setConnectorColor = function (instanceID, color){
+	//var connectorDiv = document.getElementById(instanceID + "connector");
+	//if (!connectorDiv) return;
+	//connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color;
+	if (!color){
+		color = '#666666';
+	}
+	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
+	if (selectedControl){
+		var paper = selectedControl.data("paper");
+		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
+		selectedControl.attr({
+			stroke: color,
+			filter:shadow
+		});
+	}
+};
+
+showWidgetConnectors = function(position_data){
+	var selectedAppTitle, re, styleCaption;
+	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	if (!selectedAppTitle)return;
+	re = /\.|\:/g;
+	styleCaption = position_data.user_id.split(re).join("");
+	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle";
+	for (var item in controlItems){
+		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
+			setConnectorColor(item, position_data.user_color);
+		}
+	}
+};
+
+
 
 makeSvgBackgroundForWidgetConnectors = function(width, height){
 	var backDrop = new Snap(parseInt(width), parseInt(height));

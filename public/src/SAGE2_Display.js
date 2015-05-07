@@ -252,18 +252,18 @@ function setupListeners() {
     wsio.on('showSagePointer', function(pointer_data){
 		ui.showSagePointer(pointer_data);
 		resetIdle();
-		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		//var re = /\.|\:/g;
-		//var stlyeCaption = uniqueID.split(re).join("");
-		//addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		var re = /\.|\:/g;
+		var stlyeCaption = uniqueID.split(re).join("");
+		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('hideSagePointer', function(pointer_data){
 		ui.hideSagePointer(pointer_data);
-		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		//var re = /\.|\:/g;
-		//var stlyeCaption = uniqueID.split(re).join("");
-		//removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		var re = /\.|\:/g;
+		var stlyeCaption = uniqueID.split(re).join("");
+		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('updateSagePointerPosition', function(pointer_data){
@@ -536,16 +536,18 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('showWidgetToAppConnector', function(position_data){
-		moveAndShowWidgetToAppConnector(position_data);
-		if (!(position_data.id in widgetConnectorRequestList)){
-			widgetConnectorRequestList[position_data.id] = [];
+	wsio.on('showWidgetToAppConnector', function(data){
+		//console.log("show:",data);
+		showWidgetConnectors(data);
+		if (!(data.id in widgetConnectorRequestList)){
+			widgetConnectorRequestList[data.id] = [];
 		}
-		widgetConnectorRequestList[position_data.id].push(position_data);
+		widgetConnectorRequestList[data.id].push(data);
 	});
 
 
 	wsio.on('hideWidgetToAppConnector', function(control_data){
+		//console.log("hide:",control_data);
 		if (control_data.id in widgetConnectorRequestList) {
 			var lst = widgetConnectorRequestList[control_data.id];
 			if (lst.length > 1) {
@@ -553,7 +555,7 @@ function setupListeners() {
 				for (var i=len-1; i>=0; i--) {
 					if (control_data.user_id === lst[i].user_id) {
 						lst.splice(i, 1);
-						setAllConnectorColor(lst[len-2]);
+						showWidgetConnectors(lst[len-2]);
 						break;
 					}
 				}
@@ -710,8 +712,8 @@ function setupListeners() {
 					wsio.emit('addNewControl', {
 						id:data.elemId+ data.user_id + "_controls",
 						appId : data.elemId,
-						left:data.x,
-						top:data.y,
+						left:data.x-size.height/2,
+						top:data.y-size.height/2,
 						width:size.width,
 						height:size.height,
 						barHeight: size.barHeight,
@@ -746,6 +748,7 @@ function setupListeners() {
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id] = {show:data.show, divHandle:ctrDiv};
 				//createWidgetToAppConnector(data.id);
+				//setConnectorColor(data.id,)
 			}
 
 		}

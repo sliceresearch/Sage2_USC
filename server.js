@@ -4251,9 +4251,10 @@ function hidePointer(uniqueID) {
 	console.log(sageutils.header("Pointer") + "stopping: " + uniqueID);
 
 	sagePointers[uniqueID].stop();
-	if (remoteInteraction[uniqueID].hoverOverControl() !== null){
-		broadcast('hideWidgetToAppConnector', remoteInteraction[uniqueID].hoverOverControl());
-		remoteInteraction[uniqueID].leaveControlArea();
+	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
+	if (prevInteractionItem !== null){
+		showOrHideWidgetLinks({uniqueID:uniqueID,show:false,item:prevInteractionItem});
+		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
 	}
 	broadcast('hideSagePointer', sagePointers[uniqueID]);
 }
@@ -4296,9 +4297,9 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 
 	if (obj === null) {
 		pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
-		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
 		return;
 	}
+	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
 
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
@@ -4309,17 +4310,21 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 		case "widgets":
+			if (prevInteractionItem===null){
+				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:true});
+			}
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "press");
 			break;
 		case "applications":
+			if (prevInteractionItem===null){
+				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:true});
+			}
 			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			break;
 		case "portals":
 			pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 	}
-	remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
-
 }
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
@@ -4834,6 +4839,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedMoveItem;
 	var updatedResizeItem;
 	var updatedControl;
+	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
+
 	if(moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / moveAppPortal.data.scale};
@@ -4884,8 +4891,17 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('stopRemoteSagePointer', {id: uniqueID});
 			remoteInteraction[uniqueID].portal = null;
 		}
+		if (prevInteractionItem !== null){
+			showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
+		}
     }
     else {
+    	if (prevInteractionItem !== obj){
+    		if (prevInteractionItem!==null){
+    			showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
+    		}
+			showOrHideWidgetLinks({uniqueID:uniqueID,item:obj, show:true});
+		}
 		localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 		switch (obj.layerId) {
 			case "staticUI":
@@ -5220,9 +5236,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
     }
     if (obj === null) {
 		dropSelectedItem(uniqueID, true, portal.id);
-		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
 		return;
     }
+    var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
 
     var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {
@@ -5235,6 +5251,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			dropSelectedItem(uniqueID, true, portal.id);
 			break;
 		case "applications":
+			if (prevInteractionItem===null){
+				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:false});
+			}
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
 					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
@@ -5245,13 +5264,15 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			pointerReleaseOnPortal(uniqueID, obj.data.id, localPt, data);
 			break;
 		case "widgets":
+			if (prevInteractionItem===null){
+				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:false});
+			}
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "release");
 			dropSelectedItem(uniqueID, true, portal.id);
 			break;
 		default:
 			dropSelectedItem(uniqueID, true, portal.id);
 	}
-	remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
 }
 
 function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
@@ -7410,6 +7431,24 @@ function attachAppIfSticky(backgroundItem, appId){
 	stickyAppHandler.detachStickyItem(app);
 	if (backgroundItem !== null)
 		stickyAppHandler.attachStickyItem(backgroundItem, app);
+}
+
+
+function showOrHideWidgetLinks(data){
+	var obj = data.item;
+	var appId = obj.data.appId || obj.id;
+	var app = SAGE2Items.applications.list[appId];
+	if (app!==null && app!==undefined){
+		app = getAppPositionSize(app);
+		app.user_color = sagePointers[data.uniqueID]? sagePointers[data.uniqueID].color : null;
+		app.user_id = data.uniqueID;
+		if (data.show===true){
+			broadcast('showWidgetToAppConnector', app);
+		}
+		else{
+			broadcast('hideWidgetToAppConnector', app);
+		}
+	}
 }
 
 /*
