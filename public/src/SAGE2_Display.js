@@ -852,6 +852,9 @@ function setupListeners() {
 	});*/
 
 	wsio.on('executeControlFunction', function(data){
+		// TODO: add `date` to `data` object
+		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
+
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		if(ctrl){
 			var ctrlId = ctrl.attr('id');
@@ -926,6 +929,9 @@ function setupListeners() {
 	});
 
 	wsio.on('sliderKnobLockAction', function(data){
+		// TODO: add `date` to `data` object
+		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
+
 		var ctrl   = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var appId = data.ctrl.appId;
@@ -957,6 +963,9 @@ function setupListeners() {
 	});
 
 	wsio.on('moveSliderKnob', function(data) {
+		// TODO: add `date` to `data` object
+		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
+
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
@@ -980,6 +989,9 @@ function setupListeners() {
 	});
 
 	wsio.on('keyInTextInputWidget', function(data) {
+		// TODO: add `date` to `data` object
+		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
+
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
@@ -992,7 +1004,8 @@ function setupListeners() {
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
-				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
+				
+				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, new Date());
 				/*
 				var func = textInput.data("call");
 				if (func !== undefined && func !== null)

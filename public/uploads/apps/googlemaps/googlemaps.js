@@ -271,6 +271,7 @@ var googlemaps = SAGE2_App.extend( {
 				default:
 					console.log("No handler for:", data.ctrlId);
 			}
+			this.refresh(date);
 		}
 		else if (eventType === "keyboard") {
 			if(data.character === "m") {
