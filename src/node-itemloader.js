@@ -243,7 +243,8 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 			type: mime_type,
 			exif: exif_data,
 			top: 0,
-			showExif: false
+			showExif: false,
+			crct: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -291,7 +292,8 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url
 			type: mime_type,
 			exif: exif_data,
 			top: 0,
-			showExif: false
+			showExif: false,
+			crct: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -461,7 +463,8 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 				framerate: data.frame_rate,
 				display_aspect_ratio: data.display_aspect_ratio,
 				muted: false,
-				looped: false
+				looped: false,
+				playAfterSeek: false
 			},
 			resrc: null,
 			left:  _this.titleBarHeight,

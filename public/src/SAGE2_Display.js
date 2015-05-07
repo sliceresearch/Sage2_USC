@@ -581,6 +581,10 @@ function setupListeners() {
 		selectedElemTitle.style.transform       = translate;
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
+		var selectedElemState = document.getElementById(position_data.elemId + "_state");
+		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
+		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
+
 		var selectedElem = document.getElementById(position_data.elemId);
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
@@ -1097,7 +1101,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowTitle.appendChild(titleText);
 
 	var windowItem = document.createElement("div");
-	windowItem.id  = data.id;
+	windowItem.id = data.id;
 	windowItem.className      = "windowItem";
 	windowItem.style.left     = (-offsetX).toString() + "px";
 	windowItem.style.top      = (titleBarHeight-offsetY).toString() + "px";
@@ -1107,6 +1111,18 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowItem.style.overflow = "hidden";
 	windowItem.style.zIndex   = (itemCount+1).toString();
 	if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
+
+	var windowState = document.createElement("div");
+	windowState.id = data.id + "_state";
+	windowState.style.position = "absolute";
+	windowState.style.width  = data.width.toString() + "px";
+	windowState.style.height = data.height.toString() + "px";
+	windowState.style.backgroundColor = "rgba(0,0,0,0.8)";
+	windowState.style.lineHeight = Math.round(1.5*titleTextSize) + "px";
+	windowState.style.zIndex = "1";
+	windowState.style.display = "none";
+
+	windowItem.appendChild(windowState);
 
 	var cornerSize = Math.min(data.width, data.height) / 5;
     var dragCorner = document.createElement("div");
@@ -1118,7 +1134,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
     dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
 	dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
     dragCorner.style.border   = "none";
-    dragCorner.style.zIndex   = "1";
+    dragCorner.style.zIndex   = "2";
     windowItem.appendChild(dragCorner);
 
 	parent.appendChild(windowTitle);
@@ -1152,7 +1168,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			js.addEventListener('load', function(event) {
 				var newapp = new window[data.application]();
 				newapp.init(init);
-				//newapp.SAGE2Init(init);
+				//newapp.SAGE2Load(newapp.state, date);
 
 				//if (newapp.state !== undefined) {
 				//	Object.observe(newapp.state, function (changes) {
@@ -1178,7 +1194,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		else {
 			var app = new window[data.application]();
 			app.init(init);
-			//app.SAGE2Init(init);
+			app.SAGE2Load(app.state, date);
 
 			//if(app.state !== undefined){
 			// 	Object.observe(app.state, function(changes) {

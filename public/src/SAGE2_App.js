@@ -140,10 +140,13 @@ var SAGE2_App = Class.extend( {
 		this.fileReceived   = false;
 
 		this.SAGE2CopyState(data.state);
+		this.SAGE2InitializeAppOptionsFromState();
 	},
 
 	SAGE2Load: function(state, date) {
 		this.SAGE2CopyState(state);
+		this.SAGE2UpdateAppOptionsFromState();
+
 		this.load(date);
 	},
 
@@ -166,7 +169,97 @@ var SAGE2_App = Class.extend( {
 		}
 	},
 
+	SAGE2InitializeAppOptionsFromState: function() {
+		this.SAGE2StateOptions = {};
+
+		var key;
+		for (key in this.state) {
+			this.SAGE2AddAppOption(key, this.state, 0, this.SAGE2StateOptions);
+		}
+	},
+
+	SAGE2AddAppOption: function(name, parent, level, save) {
+		var windowState = document.getElementById(this.id + "_state");
+
+		var p = document.createElement('p');
+		p.style.color    = "#FFFFFF";
+		p.style.whiteSpace = "noWrap";
+		p.style.fontSize = Math.round(this.config.ui.titleTextSize) + "px";
+		p.style.fontFamily = "\"Lucida Console\", Monaco, monospace";
+		p.style.marginLeft = Math.round(2*(level+1)*this.config.ui.titleTextSize - this.config.ui.titleTextSize) + "px";
+		p.textContent = name + ": ";
+
+		var s = document.createElement('span');
+		s.style.fontSize = Math.round(this.config.ui.titleTextSize) + "px";
+		s.style.fontFamily = "\"Lucida Console\", Monaco, monospace";
+
+		p.appendChild(s);
+		windowState.appendChild(p);
+
+		save[name] = {_name: p, _value: s, _sync: true};
+
+		if (typeof parent[name] === "number") {
+			s.style.color = "#AF7DFF";
+			s.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "boolean") {
+			s.style.color = "#FC1F70";
+			s.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "string") {
+			s.style.color = "#E6DC6D";
+			s.textContent = parent[name];
+		}
+		else if (parent[name] === null) {
+			s.style.color = "#A4E402";
+			s.textContent = "null";
+		}
+		else if (parent[name] instanceof Array) {
+			s.style.color = "#60D9F1";
+			s.textContent = "[" + parent[name].join(", ") + "]";
+		}
+		else if (typeof parent[name] === "object") {
+			var key;
+			for (key in parent[name]) {
+				this.SAGE2AddAppOption(key, parent[name], level+1, save[name]);
+			}
+		}
+	},
+
+	SAGE2UpdateAppOptionsFromState: function() {
+		var key;
+		for (key in this.state) {
+			this.SAGE2UpdateAppOption(key, this.state, this.SAGE2StateOptions);
+		}
+	},
+
+	SAGE2UpdateAppOption: function(name, parent, save) {
+		if (typeof parent[name] === "number") {
+			save[name]._value.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "boolean") {
+			save[name]._value.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "string") {
+			save[name]._value.textContent = parent[name];
+		}
+		else if (parent[name] === null) {
+			save[name]._value.textContent = "null";
+		}
+		else if (parent[name] instanceof Array) {
+			save[name]._value.textContent = "[" + parent[name].join(", ") + "]";
+		}
+		else if (typeof parent[name] === "object") {
+			var key;
+			for (key in parent[name]) {
+				this.SAGE2UpdateAppOption(key, parent[name], save[name]);
+			}
+		}
+	},
+
 	SAGE2Sync: function(updateRemote) {
+		this.SAGE2UpdateAppOptionsFromState();
+		
 		if(isMaster)
 			wsio.emit('updateAppState', {id: this.id, state: this.state, updateRemote: updateRemote});
 	},

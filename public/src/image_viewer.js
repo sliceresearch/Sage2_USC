@@ -141,7 +141,7 @@ var image_viewer = SAGE2_App.extend( {
 	* @method syntaxHighlight
 	* @param json {Object} object containing metadata
 	*/
-	syntaxHighlight: function(json, cb) {
+	syntaxHighlight: function(json) {
 		if (typeof json !== 'string') {
 			json = JSON.stringify(json, undefined, 4);
 		}

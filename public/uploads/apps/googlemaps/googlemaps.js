@@ -135,8 +135,10 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	load: function(date) {
-		this.updateMapFromState();
-		this.refresh(date);
+		if (this.map !== undefined && this.map !== null) {
+			this.updateMapFromState();
+			this.refresh(date);
+		}
 	},
 
 	draw: function(date) {
