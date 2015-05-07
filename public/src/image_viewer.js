@@ -40,6 +40,7 @@ var image_viewer = SAGE2_App.extend( {
 		this.vis = true;
 
 		this.updateAppFromState();
+		this.addWidgetControlsToImageViewer();
 	},
 
 	/**
