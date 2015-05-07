@@ -10,18 +10,15 @@
 
 
 var widget_demo = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-		this.element = null;
-		this.ctx = null;
-		this.resrcPath = null;
+	load: function(date) {
 		
+	},
+
+	
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 		this.timer = null;
-
 		this.resizeEvents = "onfinish";
-
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-		this.enableControls = true;
 
 		//Some variables that the widget will use to communicate with the app
 
@@ -29,11 +26,14 @@ var widget_demo = SAGE2_App.extend( {
 		this.colorIdx = 0; // Chooses red initially
 		this.brightness = 64;
 		this.displayText = "";
-
 		
+	
+		this.ctx = this.element.getContext('2d');
+		this.minDim = Math.min(this.element.width, this.element.height);
+		this.appInit(data.date);
 	},
 	
-	load: function(state, date) {
+	appInit: function(date){
 		this.playPauseHandle = this.controls.addButton({type:"play-pause",sequenceNo:1, id:"PlayPause"});
 		this.controls.addButton({type:"stop",sequenceNo:2, id:"Stop"});
 		this.controls.addButton({type:"mute",sequenceNo:3, id:"Mute"});
@@ -105,22 +105,10 @@ var widget_demo = SAGE2_App.extend( {
 		}.bind(this)});*/
 		this.controls.finishedAddingControls(); // Important
 	},
-
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
-	
-		this.ctx = this.element.getContext('2d');
-		this.minDim = Math.min(this.element.width, this.element.height);
-	},
-	
-	
 	
 
 	
 	draw: function(date) {
-		arguments.callee.superClass.preDraw.call(this, date);
 		// clear canvas		
 		this.ctx.clearRect(0,0, this.element.width, this.element.height);
 		
