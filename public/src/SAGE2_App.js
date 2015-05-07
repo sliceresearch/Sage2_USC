@@ -306,7 +306,8 @@ var SAGE2_App = Class.extend( {
 		else if (typeof parent[name] === "string") {
 			s.className = "stateString";
 			s.setAttribute("synced", true);
-			s.textContent = parent[name];
+			if (parent[name].length <= 260) s.textContent = parent[name];
+			else                            s.textContent = parent[name].substring(0, 257) + "...";
 		}
 		else if (parent[name] === null) {
 			s.className = "stateNull";
@@ -316,7 +317,9 @@ var SAGE2_App = Class.extend( {
 		else if (parent[name] instanceof Array) {
 			s.className = "stateArray";
 			s.setAttribute("synced", true);
-			s.textContent = "[" + parent[name].join(", ") + "]";
+			var joined = parent[name].join(", ");
+			if (joined.length <= 258) s.textContent = "[" + joined + "]";
+			else                      s.textContent = "[" + joined.substring(0, 255) + "...]";
 		}
 		else if (typeof parent[name] === "object") {
 			var key;
@@ -341,13 +344,16 @@ var SAGE2_App = Class.extend( {
 			save[name]._value.textContent = parent[name].toString();
 		}
 		else if (typeof parent[name] === "string") {
-			save[name]._value.textContent = parent[name];
+			if (parent[name].length <= 260) save[name]._value.textContent = parent[name];
+			else                            save[name]._value.textContent = parent[name].substring(0, 257) + "...";
 		}
 		else if (parent[name] === null) {
 			save[name]._value.textContent = "null";
 		}
 		else if (parent[name] instanceof Array) {
-			save[name]._value.textContent = "[" + parent[name].join(", ") + "]";
+			var joined = parent[name].join(", ");
+			if (joined.length <= 258) save[name]._value.textContent = "[" + joined + "]";
+			else                      save[name]._value.textContent = "[" + joined.substring(0, 255) + "...]";
 		}
 		else if (typeof parent[name] === "object") {
 			var key;

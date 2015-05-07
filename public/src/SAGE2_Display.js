@@ -1132,7 +1132,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowState.style.height = data.height.toString() + "px";
 	windowState.style.backgroundColor = "rgba(0,0,0,0.8)";
 	windowState.style.lineHeight = Math.round(1.5*titleTextSize) + "px";
-	windowState.style.zIndex = "1";
+	windowState.style.zIndex = "100";
 	//windowState.style.display = "none";
 
 	var windowStateContatiner = document.createElement("div");
@@ -1156,7 +1156,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
     dragCorner.style.left     = (data.width-cornerSize).toString() + "px";
 	dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
     dragCorner.style.border   = "none";
-    dragCorner.style.zIndex   = "2";
+    dragCorner.style.zIndex   = "101";
     windowItem.appendChild(dragCorner);
 
 	parent.appendChild(windowTitle);
