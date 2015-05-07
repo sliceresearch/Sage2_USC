@@ -156,8 +156,10 @@ function setupListeners() {
 	wsio.on('broadcast', function(data) {
 		if(applications[data.app] === undefined){
 			// should have better way to determine if app is loaded
+			//   or already killed
 			setTimeout(function() {
-				applications[data.app][data.func](data.data);
+				if (applications[data.app] && applications[data.app][data.func])
+					applications[data.app][data.func](data.data);
 			}, 500);
 		}
 		else {
