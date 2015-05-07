@@ -142,9 +142,6 @@ var SAGE2_App = Class.extend( {
 		this.fileReceived   = false;
 
 		this.SAGE2CopyState(data.state);
-
-		//this.state.center.test = {x: 10, y: 20};
-
 		this.SAGE2InitializeAppOptionsFromState();
 	},
 
