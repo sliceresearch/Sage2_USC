@@ -52,6 +52,7 @@ var commandline         = require('./src/node-sage2commandline'); // handles com
 var exiftool            = require('./src/node-exiftool');         // gets exif tags for images
 var pixelblock          = require('./src/node-pixelblock');       // chops pixels buffers into square chunks
 var sageutils           = require('./src/node-utils');            // provides the current version number
+var md5                 = require('./src/md5');                   // return standard md5 hash of given param
 
 var HttpServer          = require('./src/node-httpserver');       // creates web server
 var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
@@ -63,12 +64,11 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
-//dkedit
-var md5				=require('./src/md5'); //dkedit will return standard md5 hash of given param.
-
 
 
 // Globals
+
+// Session hash for security
 global.__SESSION_ID    = null;
 
 var sage2Server        = null;
@@ -114,7 +114,7 @@ function initializeSage2Server() {
 	sageutils.checkPackages(); // pass parameter `true` for devel packages also
 
 	// Setup binaries path
-	if(config.dependencies !== undefined) {
+	if (config.dependencies !== undefined) {
 		if(config.dependencies.ImageMagick !== undefined) imageMagickOptions.appPath = config.dependencies.ImageMagick;
 		if(config.dependencies.FFMpeg !== undefined) ffmpegOptions.appPath = config.dependencies.FFMpeg;
 	}
@@ -122,7 +122,7 @@ function initializeSage2Server() {
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
 
 	// Set default host origin for this server
-	if(config.rproxy_port === undefined) {
+	if (config.rproxy_port === undefined) {
 		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
 	}
 
@@ -173,6 +173,7 @@ function initializeSage2Server() {
 	if (!sageutils.fileExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
+
 	// Setup tmp directory in uploads
 	var uploadTemp = path.join(__dirname, "public", "uploads", "tmp");
 	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + uploadTemp);
@@ -185,32 +186,28 @@ function initializeSage2Server() {
 		fs.mkdirSync(sessionDirectory);
 	}
 
-	//dkedit start
+	// Check for the session password file
 	var passwordFile = path.join("keys", "passwd.json");
 	if (typeof program.password  === "string" && program.password.length > 0) {
-		//global.__SESSION_ID = program.password;
+		// Creating a new hash from the password
 		global.__SESSION_ID = md5.getHash( program.password );
-		console.log("Using " + global.__SESSION_ID + " as the password for this run.");
+		console.log(sageutils.header("Secure") + "Using " + global.__SESSION_ID + " as the key for this session");
+		// Saving the hash
 		fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
-		console.log("pwd > saved to " + passwordFile);
+		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
 	}
-	else if (program.password) {
-		console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
-	}
-	else if ( sageutils.fileExists(passwordFile) !== undefined ) {
+	else if (sageutils.fileExists(passwordFile)) {
+		// If a password file exists, load it
 		var passwordFileJsonString = fs.readFileSync(passwordFile, 'utf8');
-		var passwordFileJson = json5.parse(passwordFileJsonString);
-		//global.__SESSION_ID = config.sessionID;
-		if(passwordFileJson.pwd !== null) {
+		var passwordFileJson       = JSON.parse(passwordFileJsonString);
+		if (passwordFileJson.pwd !== null) {
 			global.__SESSION_ID = passwordFileJson.pwd;
-			console.log("A sessionID was specified in the passwd.json file:" + passwordFileJson.pwd);
+			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
 		}
-		else { console.log("A passwd.json file exists, but no has was available."); }
+		else {
+			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
+		}
 	}
-	// var passwordFile = path.join("keys", "passwd.json");
-	// fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
-	// console.log("pwd > saved to " + passwordFile);
-	//dkedit end
 
 	// Initialize assets
 	assets.initialize(uploadsDirectory, 'uploads');

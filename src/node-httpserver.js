@@ -76,9 +76,9 @@ function detectCookies(request) {
 		while (allCookies.indexOf(';') !== -1) {
 			cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
 			cookieList[i] = cookieList[i].trim();
-			allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
+			allCookies    = allCookies.substring( allCookies.indexOf(';') + 1 );
 			i++;
-		} //end while there is a ;
+		} // end while there is a ;
 		cookieList.push( allCookies.trim() );
 	}
     return cookieList;
@@ -106,9 +106,10 @@ HttpServer.prototype.redirect = function(res, aurl) {
  */
 HttpServer.prototype.onreq = function(req, res) {
 	var stream;
+	var i;
 
 	if (req.method === "GET") {
-		var reqURL = url.parse(req.url);
+		var reqURL  = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
@@ -121,58 +122,33 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 
+		// Get the actual path of the file
 		var pathname = this.publicDirectory + getName;
 
-		// SESSION ID CHECK
-		if (global.__SESSION_ID && path.extname(pathname) === ".html" &&  (getName.indexOf("/session.html") !== 0 ) ) {
-
-
-			var cookieList = detectCookies(req);
-			var sessionMatch = false;
-
-			//console.log("Checking cookies: " + cookieList);
-			console.log("Trying to access: " + getName);
-			console.log("Checking cookies: " + req.headers.cookie);
-
-			for( var i = 0; i < cookieList.length; i++) {
-
-				console.log(cookieList[i]);
-
-				if( cookieList[i].indexOf("session=") !== -1 ) {
-
-					if(   cookieList[i].indexOf(global.__SESSION_ID) !== -1 ) {
-						sessionMatch = true;
+		// Are we trying to session management
+		if (global.__SESSION_ID) {
+			// if the request is for an HTML page (no security check otherwise)
+			//    and it is not session.html
+			if (path.extname(pathname) === ".html" &&
+				(getName.indexOf("/session.html") !== 0)) {
+				// Get the cookies from the request header
+				var cookieList = detectCookies(req);
+				// Go through the list of cookies
+				var sessionMatch = false;
+				for (i=0; i<cookieList.length; i++) {
+					if (cookieList[i].indexOf("session=") !== -1) {
+						// We found it
+						if (cookieList[i].indexOf(global.__SESSION_ID) !== -1) {
+							sessionMatch = true;
+						}
 					}
-
+				}
+				// If no match, go back to password page
+				if (!sessionMatch) {
+					this.redirect(res, "session.html");
 				}
 			}
-
-			if( !sessionMatch ) {
-				this.redirect(res, "session.html");
-			}
-
-			// var params = parseURLQuery(reqURL.query); // note every field will be a string
-
-			// //dkedit
-			// console.log("pathname:" + pathname);
-			// console.log("getName:" + getName);
-
-			// //if not servering the session.html page and the url session doesn't match
-			// if (   (getName.indexOf("/session.html") !== 0 )   && (params.session !== global.__SESSION_ID)  ) {
-			// 	// failed
-			// 	// serve page that asks for session id instead
-			// 	//
-			// 	// this.redirect(res, "session.html?onload="+getName);
-
-			// 	console.log("Preventing access to the webpage, redirecting to session.html");
-			// 	console.log("getName is:" + getName);
-			// 	this.redirect(res, "session.html");
-			// 	return;
-			// 	//
-			// 	// in session.html, when user enters a session id in a popup dialog
-			// 	// the page should use 'window.location.replace(<onload?session=<value>>)'
-			// }
-		} //end checking the session id and path is an html file
+		}
 
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
