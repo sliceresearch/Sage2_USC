@@ -72,19 +72,15 @@ function detectCookies(request) {
     var allCookies = request.headers.cookie;
 
     var i = 0;
-
-    if(allCookies != null) {
-	    while(allCookies.indexOf(';') !== -1) {
-
+    if (allCookies != null) {
+		while (allCookies.indexOf(';') !== -1) {
 			cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
 			cookieList[i] = cookieList[i].trim();
 			allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
-
 			i++;
-	    } //end while there is a ;
-	    cookieList.push( allCookies.trim() );
+		} //end while there is a ;
+		cookieList.push( allCookies.trim() );
 	}
-
     return cookieList;
 }
 

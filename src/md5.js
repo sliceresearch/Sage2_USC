@@ -18,7 +18,7 @@
  */
 
 /*jslint bitwise: true */
-/*global unescape, define */
+/*global unescape */
 
 /* Modified to work with noderequire 2015 04 13 */
 
