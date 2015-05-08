@@ -47,17 +47,45 @@ function HttpServer(publicDirectory) {
  * @param query {String} the URL to parse
  * @return {Object} parsed elements (key, value)
  */
-function parseURLQuery(query) {
-	if (!query) return {};
+// function parseURLQuery(query) {
+// 	if (!query) return {};
+// 	var p;
+// 	var paramList = query.split("&");
+// 	var params = {};
+// 	for(var i=0; i<paramList.length; i++) {
+// 		p = paramList[i].split("=");
+// 		if (p.length === 2) params[p[0]] = p[1];
+// 	}
+// 	return params;
+// }
 
-	var p;
-	var paramList = query.split("&");
-	var params = {};
-	for(var i=0; i<paramList.length; i++) {
-		p = paramList[i].split("=");
-		if (p.length === 2) params[p[0]] = p[1];
+
+/**
+ * Given a request, will attempt to detect all associated cookies.
+ *
+ * @method detectCookies
+ * @param request {Object} the request that came from a client
+ * @return {Object} containing the list of cookies in string format
+ */
+function detectCookies(request) {
+    var cookieList = [];
+    var allCookies = request.headers.cookie;
+
+    var i = 0;
+
+    if(allCookies != null) {
+	    while(allCookies.indexOf(';') !== -1) {
+
+			cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
+			cookieList[i] = cookieList[i].trim();
+			allCookies = allCookies.substring( allCookies.indexOf(';') + 1 );
+
+			i++;
+	    } //end while there is a ;
+	    cookieList.push( allCookies.trim() );
 	}
-	return params;
+
+    return cookieList;
 }
 
 /**
@@ -100,21 +128,55 @@ HttpServer.prototype.onreq = function(req, res) {
 		var pathname = this.publicDirectory + getName;
 
 		// SESSION ID CHECK
-		if (global.__SESSION_ID && path.extname(pathname) === ".html") {
-			var params = parseURLQuery(reqURL.query); // note every field will be a string
+		if (global.__SESSION_ID && path.extname(pathname) === ".html" &&  (getName.indexOf("/session.html") !== 0 ) ) {
 
-			// check params.session
-			if (params.session !== global.__SESSION_ID) {
-				// failed
-				// serve page that asks for session id instead
-				//
-				// this.redirect(res, "session.html?onload="+getName);
-				return;
-				//
-				// in session.html, when user enters a session id in a popup dialog
-				// the page should use 'window.location.replace(<onload?session=<value>>)'
+
+			var cookieList = detectCookies(req);
+			var sessionMatch = false;
+
+			//console.log("Checking cookies: " + cookieList);
+			console.log("Trying to access: " + getName);
+			console.log("Checking cookies: " + req.headers.cookie);
+
+			for( var i = 0; i < cookieList.length; i++) {
+
+				console.log(cookieList[i]);
+
+				if( cookieList[i].indexOf("session=") !== -1 ) {
+
+					if(   cookieList[i].indexOf(global.__SESSION_ID) !== -1 ) {
+						sessionMatch = true;
+					}
+
+				}
 			}
-		}
+
+			if( !sessionMatch ) {
+				this.redirect(res, "session.html");
+			}
+
+			// var params = parseURLQuery(reqURL.query); // note every field will be a string
+
+			// //dkedit
+			// console.log("pathname:" + pathname);
+			// console.log("getName:" + getName);
+
+			// //if not servering the session.html page and the url session doesn't match
+			// if (   (getName.indexOf("/session.html") !== 0 )   && (params.session !== global.__SESSION_ID)  ) {
+			// 	// failed
+			// 	// serve page that asks for session id instead
+			// 	//
+			// 	// this.redirect(res, "session.html?onload="+getName);
+
+			// 	console.log("Preventing access to the webpage, redirecting to session.html");
+			// 	console.log("getName is:" + getName);
+			// 	this.redirect(res, "session.html");
+			// 	return;
+			// 	//
+			// 	// in session.html, when user enters a session id in a popup dialog
+			// 	// the page should use 'window.location.replace(<onload?session=<value>>)'
+			// }
+		} //end checking the session id and path is an html file
 
 		// redirect a folder path to its containing index.html
 		if (sageutils.fileExists(pathname)) {
@@ -220,3 +282,10 @@ HttpServer.prototype.httpPOST = function(name, callback) {
 };
 
 module.exports = HttpServer;
+
+
+
+
+
+
+

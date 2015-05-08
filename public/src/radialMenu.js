@@ -799,7 +799,7 @@ function RadialMenu(){
 				this.wsio.emit('tileApplications');
 				this.wsio.emit('radialMenuClick', {button: "tileApplications", user: user} );
 			}
-
+			
 			if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() ) {
 				this.resetRadialButtonLitState();
 				if( this.setToggleMenu('imageThumbnailWindow') ) {

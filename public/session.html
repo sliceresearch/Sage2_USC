@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
+
+<title>SAGE2 UI - Mobile</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2014
+</script>
+<script  type="text/javascript" src="src/md5.js"></script>
+
+<script type="text/javascript">
+
+	function setupListener() {
+		document.getElementById('sessionValue').addEventListener('keydown', keyDownDKHandler,    false);
+		document.getElementById('sessionValue').focus();
+
+		var allParams = window.location.search.substring(1);
+		var paramArray = allParams.split("&");
+		var nameAndValue;
+		var foundPassword = false;
+    var foundHash = false;
+		var pageRedirect = null;
+    var sessionParam = null;
+    var hashParam = null;
+
+		for(var i = 0; i < paramArray.length; i++) {
+			nameAndValue = paramArray[i].split("=");
+			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "session" ) {
+				document.getElementById('sessionValue').value = nameAndValue[1];
+				foundPassword = true;
+        		sessionParam = nameAndValue[1];
+			}
+			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "page" ) {
+				pageRedirect = nameAndValue[1] + "=" + nameAndValue[2];
+			}
+      if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "hash" ) {
+        hashParam = nameAndValue[1];
+        foundHash = true;
+      }
+		}
+		if(pageRedirect == null) { pageRedirect = "index.html"; }
+		if( foundPassword || foundHash ) { processAndRedirect( sessionParam , pageRedirect ,  hashParam ); }
+	} //end setup listener
+
+	function keyDownDKHandler(event) {
+		console.log("caught a keydown event");
+		if(event.target == document.getElementById('sessionValue') && ( event.keyCode == 13 || event.which == 13 )) {
+			processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
+		}
+	}
+
+	function processAndRedirect(session, location, hash) {
+		if(hash == null) { hash = md5(session); }
+		//console.log("Session:" + session);
+		//console.log("Hash:"+hash);
+		document.cookie = "session=" + hash;
+		window.location.href = location;
+	}
+
+	function buttonSubmit() {
+		processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
+	}
+
+</script>
+
+</head>
+
+<body onload="setupListener()">
+
+
+	<h1 style="font-family:arial;text-align:center">This SAGE2 wall has a session lock on it.
+	</h1>
+
+	<br>
+	
+	<h3 style="font-family:arial;text-align:center">
+		Enter the sessionID:<br>
+		<input type="text" id="sessionValue" size="40" style="font-size: 1em;" tabindex="1">
+    <br>
+    <button type="button" id="enterButton" style="height:10%; width:10%" onclick="buttonSubmit()"> Enter </button>
+	</h3>
+
+</body>
+</html>
+
+

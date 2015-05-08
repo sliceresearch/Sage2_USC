@@ -63,6 +63,9 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
+//dkedit
+var md5				=require('./src/md5'); //dkedit will return standard md5 hash of given param.
+
 
 
 // Globals
@@ -181,6 +184,33 @@ function initializeSage2Server() {
 	if (!sageutils.fileExists(sessionDirectory)) {
 		fs.mkdirSync(sessionDirectory);
 	}
+
+	//dkedit start
+	var passwordFile = path.join("keys", "passwd.json");
+	if (typeof program.password  === "string" && program.password.length > 0) {
+		//global.__SESSION_ID = program.password;
+		global.__SESSION_ID = md5.getHash( program.password );
+		console.log("Using " + global.__SESSION_ID + " as the password for this run.");
+		fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
+		console.log("pwd > saved to " + passwordFile);
+	}
+	else if (program.password) {
+		console.log("The -p flag was used but a session id was not given. Session ID is not being applied.");
+	}
+	else if ( sageutils.fileExists(passwordFile) !== undefined ) {
+		var passwordFileJsonString = fs.readFileSync(passwordFile, 'utf8');
+		var passwordFileJson = json5.parse(passwordFileJsonString);
+		//global.__SESSION_ID = config.sessionID;
+		if(passwordFileJson.pwd !== null) {
+			global.__SESSION_ID = passwordFileJson.pwd;
+			console.log("A sessionID was specified in the passwd.json file:" + passwordFileJson.pwd);
+		}
+		else { console.log("A passwd.json file exists, but no has was available."); }
+	}
+	// var passwordFile = path.join("keys", "passwd.json");
+	// fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
+	// console.log("pwd > saved to " + passwordFile);
+	//dkedit end
 
 	// Initialize assets
 	assets.initialize(uploadsDirectory, 'uploads');
