@@ -36,13 +36,13 @@
 
 		for(var i = 0; i < paramArray.length; i++) {
 			nameAndValue = paramArray[i].split("=");
-			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "sid" ) {
+			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "session" ) {
 				document.getElementById('sessionValue').value = nameAndValue[1];
 				foundPassword = true;
-        sessionParam = nameAndValue[1];
+        		sessionParam = nameAndValue[1];
 			}
 			if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "page" ) {
-				pageRedirect = nameAndValue[1];
+				pageRedirect = nameAndValue[1] + "=" + nameAndValue[2];
 			}
       if( typeof nameAndValue[0] === "string" && nameAndValue[0] === "hash" ) {
         hashParam = nameAndValue[1];
