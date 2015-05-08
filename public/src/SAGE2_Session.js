@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014-15
+// Copyright (c) 2015
 
 /**
  * SAGE2 Session page code
@@ -16,44 +16,51 @@
  * @class SAGE2_Session
  */
 
-
 /**
  * Entry point of the application
  *
  * @method SAGE2_init
  */
 function SAGE2_init() {
-	document.getElementById('sessionValue').addEventListener('keydown', keyDownDKHandler,    false);
+	// Set callback on the text box
+	document.getElementById('sessionValue').addEventListener('keydown', keyDownDKHandler, false);
+	// Put focus in the box
 	document.getElementById('sessionValue').focus();
 
-	var nameAndValue;
-	var i;
-	var allParams     = window.location.search.substring(1);
-	var paramArray    = allParams.split("&");
 	var foundPassword = false;
 	var foundHash     = false;
 	var pageRedirect  = null;
 	var sessionParam  = null;
 	var hashParam     = null;
 
-	for (i=0; i<paramArray.length; i++) {
-		nameAndValue = paramArray[i].split("=");
-		if (typeof nameAndValue[0] === "string" && nameAndValue[0] === "session" ) {
-			document.getElementById('sessionValue').value = nameAndValue[1];
-			foundPassword = true;
-			sessionParam  = nameAndValue[1];
-		}
-		if (typeof nameAndValue[0] === "string" && nameAndValue[0] === "page" ) {
-			pageRedirect = nameAndValue[1] + "=" + nameAndValue[2];
-		}
-		if (typeof nameAndValue[0] === "string" && nameAndValue[0] === "hash" ) {
-			hashParam = nameAndValue[1];
-			foundHash = true;
-		}
+	// Decode the URL inot paramaeters
+	//    (getParameterByName in SAGE2_runtime)
+	var session = getParameterByName("session");
+	var page    = getParameterByName("page");
+	var hash    = getParameterByName("hash");
+
+	// Is there a session value
+	if (session !== "") {
+		document.getElementById('sessionValue').value = session;
+		foundPassword = true;
+		sessionParam  = session;
 	}
+	// Is there a page value
+	if (page !== "") {
+		pageRedirect = page;
+	}
+	// Is there a hash value
+	if (hash !== "") {
+		hashParam = hash;
+		foundHash = true;
+	}
+
+	// If no page specified, go the UI
 	if (pageRedirect == null) {
 		pageRedirect = "index.html";
 	}
+
+	// If everything good, redirect
 	if (foundPassword || foundHash ) {
 		processAndRedirect(sessionParam, pageRedirect,  hashParam);
 	}
