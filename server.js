@@ -3710,9 +3710,19 @@ sage2Server.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving web UI at http://" + config.host + ":" + config.index_port);
-	console.log(sageutils.header("SAGE2") + "Display 0 at http://" + config.host + ":" + config.index_port + "/display.html?clientID=0");
-	console.log(sageutils.header("SAGE2") + "Audio manager at http://" + config.host + ":" + config.index_port + "/audioManager.html");
+	var ui_url = "http://" + config.host + ":" + config.index_port;
+	var dp_url = "http://" + config.host + ":" + config.index_port + "/display.html?clientID=0";
+	var am_url = "http://" + config.host + ":" + config.index_port + "/audioManager.html";
+	if (global.__SESSION_ID) {
+		//	localhost:9292/session.html?page=display.html?clientID=0&hash=24e6dfd123f5d006a2f72a4ca5b34ad9
+		//	localhost:9292/session.html?page=audioManager.html&hash=24e6dfd123f5d006a2f72a4ca5b34ad9
+		ui_url = "http://" + config.host + ":" + config.index_port + "/session.html?hash=" + global.__SESSION_ID;
+		dp_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID;
+		am_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=audioManager.html&hash=" + global.__SESSION_ID;
+	}
+	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
+	console.log(sageutils.header("SAGE2") + "Display 0 at "      + dp_url);
+	console.log(sageutils.header("SAGE2") + "Audio manager at "  + am_url);
 });
 
 

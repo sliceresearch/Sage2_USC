@@ -33,8 +33,8 @@ function SAGE2_init() {
 	var sessionParam  = null;
 	var hashParam     = null;
 
-	// Decode the URL inot paramaeters
-	//    (getParameterByName in SAGE2_runtime)
+	// Decode the URL into parameters
+	//    (getParameterByName function in SAGE2_runtime)
 	var session = getParameterByName("session");
 	var page    = getParameterByName("page");
 	var hash    = getParameterByName("hash");
