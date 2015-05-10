@@ -419,7 +419,7 @@ function setupListeners() {
 			for (var item in controlItems){
 				if (item.indexOf(elem_data.elemId) > -1){
 					controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
-					//removeWidgetToAppConnector(item);
+					removeWidgetConnector(item);
 					delete controlItems[item];
 				}
 
@@ -432,7 +432,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
-			//hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
+			hideWidgetConnector(ctrl_data.id, ctrl_data.appId);
 		}
 	});
 
@@ -440,7 +440,6 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===false){
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
 			controlItems[ctrl_data.id].show=true;
-			//showWidgetToAppConnector(ctrl_data.id);
 		}
 	});
 
@@ -505,7 +504,7 @@ function setupListeners() {
 				app.move(date);
 			}
 		}
-		/*if (position_data.elemId in controlObjects){
+		if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -513,10 +512,10 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
+					moveWidgetConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
 				}
 			}
-		}*/
+		}
 
 	});
 
@@ -528,8 +527,8 @@ function setupListeners() {
 		if(selectedControl !== undefined && selectedControl !== null) {
 			selectedControl.style.left = eLeft.toString() + "px";
 			selectedControl.style.top = eTop.toString() + "px";
-			//var hOffset = (ui.titleBarHeight + appData.height)/2;
-			//moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0, position_data.user_color);
+			var hOffset = (ui.titleBarHeight + appData.height)/2;
+			moveWidgetConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0);
 		}
 		else {
 			console.log("cannot find control: " + position_data.elemId);
@@ -562,7 +561,7 @@ function setupListeners() {
 			}
 			else if (lst.length === 1) {
 				delete widgetConnectorRequestList[control_data.id];
-				hideAllWidgetToAppConnector(control_data.id);
+				hideAllWidgetConnectors(control_data.id);
 			}
 		}
 
@@ -625,7 +624,7 @@ function setupListeners() {
 				if (app.move) app.move(date);
 			}
 		}
-		/*if (position_data.elemId in controlObjects && position_data.user_color){
+		if (position_data.elemId in controlObjects && position_data.user_color){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -633,10 +632,10 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
+					moveWidgetConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
 				}
 			}
-		}*/
+		}
 	});
 
 	wsio.on('startMove', function(data) {
@@ -747,8 +746,7 @@ function setupListeners() {
 				ctrDiv.appendChild(handle);
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id] = {show:data.show, divHandle:ctrDiv};
-				//createWidgetToAppConnector(data.id);
-				//setConnectorColor(data.id,)
+				createWidgetConnector(data.id);
 			}
 
 		}
@@ -757,7 +755,7 @@ function setupListeners() {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
-				//removeWidgetToAppConnector(idx);
+				removeWidgetConnector(idx);
 				delete controlItems[idx];
 			}
 		}

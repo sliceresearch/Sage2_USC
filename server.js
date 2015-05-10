@@ -264,7 +264,7 @@ var sagePointers = {};
 var remoteInteraction = {};
 //var mediaStreams = {};
 var mediaBlockStreams = {};
-//var applications = []; // app windows
+var appUserColors = {}; // a dict to keep track of app instance colors(for widget connectors)
 
 var remoteSharingRequestDialog = null;
 var remoteSharingWaitDialog = null;
@@ -4067,7 +4067,7 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 
 	var app = SAGE2Items.applications.list[ctrl.appId];
 	var appPos = (app===null)? null : getAppPositionSize(app);
-	broadcast('setControlPosition', {date: dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, elemHeight: ctrl.height, user_color: sagePointers[uniqueID] ? sagePointers[uniqueID].color : null, appData: appPos});
+	broadcast('setControlPosition', {date: dt, elemId: ctrl.id, elemLeft:ctrl.left, elemTop: ctrl.top, elemHeight: ctrl.height, appData: appPos});
 }
 
 // function moveAppToFront(id) {
@@ -4831,7 +4831,7 @@ function pointerPosition(uniqueID, data) {
 
 function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
-
+	
 	var localPt;
 	var scaledPt;
 	var moveAppPortal = findApplicationPortal(remoteInteraction[uniqueID].selectedMoveItem);
@@ -4839,8 +4839,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedMoveItem;
 	var updatedResizeItem;
 	var updatedControl;
-	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
-
+	
 	if(moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / moveAppPortal.data.scale};
@@ -4884,6 +4883,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 
+	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
+	
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
     if (obj === null) {
 		removeExistingHoverCorner(uniqueID);
@@ -4896,11 +4897,20 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		}
     }
     else {
+    	var color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
+
     	if (prevInteractionItem !== obj){
     		if (prevInteractionItem!==null){
     			showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
     		}
-			showOrHideWidgetLinks({uniqueID:uniqueID,item:obj, show:true});
+			showOrHideWidgetLinks({uniqueID:uniqueID,item:obj, user_color:color, show:true});
+		}
+		else {
+			var appId = obj.data.appId || obj.id;
+			if(appUserColors[appId] !== color){
+				showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
+				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj, user_color:color, show:true});		
+			}
 		}
 		localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 		switch (obj.layerId) {
@@ -5123,7 +5133,6 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 		}
 	}
 	im.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+titleBarHeight});
-	moveApp.user_color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 	broadcast('setItemPosition', moveApp);
 	if (SAGE2Items.renderSync.hasOwnProperty(moveApp.elemId)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
@@ -5142,7 +5151,6 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	for (var idx=0; idx<updatedStickyItems.length; idx++) {
 		var stickyItem = updatedStickyItems[idx];
 		im.editGeometry(stickyItem.elemId, "applications", "rectangle", {x: stickyItem.elemLeft, y: stickyItem.elemTop, w: stickyItem.elemWidth, h: stickyItem.elemHeight+config.ui.titleBarHeight});
-		updatedStickyItems[idx].user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 		broadcast('setItemPosition', updatedStickyItems[idx]);
 	}
 }
@@ -5186,7 +5194,6 @@ function moveWidgetControls (uniqueID, moveControl){
 	var app = SAGE2Items.applications.list[moveControl.appId];
 	if (app){
 		moveControl.appData = getAppPositionSize(app);
-		moveControl.user_color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 		broadcast('setControlPosition', moveControl);
 		var circle =  {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2};
 		var bar = {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight};
@@ -7440,9 +7447,10 @@ function showOrHideWidgetLinks(data){
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
 		app = getAppPositionSize(app);
-		app.user_color = sagePointers[data.uniqueID]? sagePointers[data.uniqueID].color : null;
 		app.user_id = data.uniqueID;
 		if (data.show===true){
+			app.user_color = data.user_color;
+			appUserColors[appId] = app.user_color;
 			broadcast('showWidgetToAppConnector', app);
 		}
 		else{

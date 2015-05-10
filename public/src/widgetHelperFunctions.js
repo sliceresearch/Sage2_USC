@@ -251,30 +251,14 @@ polarToCartesian = function (radius, theta, center) {
 };
 
 
-/*createWidgetToAppConnector = function (instanceID) {
-	var connectorDiv = document.createElement("div");
-	connectorDiv.id = instanceID + "connector";
-	connectorDiv.style.zIndex = 0;
-	connectorDiv.style.border = "none";
-	connectorDiv.style.background = "white";
-	connectorDiv.style.position = "absolute";
-	connectorDiv.style.display = "none";
-	connectorDiv.style.height = (ui.widgetControlSize* 0.01) + "em";
-	ui.main.appendChild(connectorDiv);
-};
-*/
-createWidgetToAppConnector = function (instanceID) {
+createWidgetConnector = function (instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
-	//paper.line()
-	var connectorDiv = document.createElement("div");
-	connectorDiv.id = instanceID + "connector";
-	connectorDiv.style.zIndex = 0;
-	connectorDiv.style.border = "none";
-	connectorDiv.style.background = "white";
-	connectorDiv.style.position = "absolute";
-	connectorDiv.style.display = "none";
-	connectorDiv.style.height = (ui.widgetControlSize* 0.01) + "em";
-	ui.main.appendChild(connectorDiv);
+	var connector = paper.line(0,0,0,0);
+	connector.attr({
+		id: instanceID+"link",
+		strokeWidth:4
+
+	});
 };
 
 addStyleElementForTitleColor = function (caption, color){
@@ -296,31 +280,32 @@ removeStyleElementForTitleColor = function (caption){
 	}
 };
 
-hideAllWidgetToAppConnector = function (appId){
+hideAllWidgetConnectors = function (appId){
 	var selectedAppTitle;
 	if (appId in controlObjects){
 		selectedAppTitle = document.getElementById(appId + "_title");
 		selectedAppTitle.className = "windowTitle";
 		for (var item in controlItems){
 			if (item.indexOf(appId) > -1){
-				hideWidgetToAppConnector(item, appId);
+				hideWidgetConnector(item, appId);
 			}
 		}
 	}
 };
 
-hideWidgetToAppConnector = function(instanceID, appId){
-	//var connector = Snap.select("[id*=\""+instanceID+"connector\"]");
-	//connector.remove();
-	/*var connectorDiv = document.getElementById(instanceID + "connector");
-	if (connectorDiv){
-		connectorDiv.style.display = "none";
-	}*/
+hideWidgetConnector = function(instanceID, appId){
+	 var connector = Snap.select("[id*=\""+instanceID+"link\"]");
+	if (connector){
+		connector.attr({
+			stroke:"none",
+			filter:null,
+			fill:"none"
+		});
+	}
 	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
 	if (selectedControl){
 		selectedControl.attr({
-			stroke: "rgba(250,250,250,1.0)",
-			filter:null
+			stroke: "rgba(250,250,250,1.0)"
 		});
 	}
 	if (appId in controlObjects){
@@ -330,63 +315,8 @@ hideWidgetToAppConnector = function(instanceID, appId){
 	}
 };
 
-showWidgetToAppConnector = function (instanceID, color){
-	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (connectorDiv){
-		connectorDiv.style.display = "inline";
-	}
-	if (!color){
-		color = '#666666';
-	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
 
-	if (selectedControl){
-		var paper = selectedControl.data("paper");
-		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
-		selectedControl.attr({
-			fill: color,
-			filter:shadow
-		});
-	}
-};
-
-/*showWidgetConnectors = function(data){
-	var hOffset;
-	var selectedAppTitle, re, styleCaption;
-	hOffset = (ui.titleBarHeight + data.height)/2;
-	selectedAppTitle = document.getElementById(data.id + "_title");
-	if (!selectedAppTitle)return;
-	re = /\.|\:/g;
-	styleCaption = data.user_id.split(re).join("");
-	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle";
-	for (var item in controlItems){
-		if (item.indexOf(data.id) > -1 && controlItems[item].show){
-			var control = controlItems[item].divHandle;
-			var cLeft = parseInt(control.style.left);
-			var cTop = parseInt(control.style.top);
-			var cHeight = parseInt(control.style.height);
-			moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, data.left-ui.offsetX + data.width/2.0, data.top-ui.offsetY+hOffset, cHeight/2.0, data.user_color);
-		}
-	}
-};*/
-
-moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, color) {
-	//console.log(instanceID,x1,y1,x2,y2,cutLength,color);
-	if (!color)
-		color = '#666666';
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	var paper = selectedControl.data("paper");
-	var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
-
-	if (selectedControl){
-		selectedControl.attr({
-			fill: color,
-			filter:shadow
-		});
-	}
-
-	/*var connectorDiv = document.getElementById(instanceID + "connector");
-	if (!connectorDiv) return;
+moveWidgetConnector = function (instanceID, x1, y1, x2, y2, cutLength) {
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b );
@@ -394,72 +324,44 @@ moveWidgetToAppConnector = function (instanceID, x1, y1, x2, y2, cutLength, colo
     var alpha = (cutLength-2)/width;
     x1 = alpha*x2 + (1-alpha)*x1;
     y1 = alpha*y2 + (1-alpha)*y1;
-	if(y1 < y2){
-        var pom = y1;
-        y1 = y2;
-        y2 = pom;
-        pom = x1;
-        x1 = x2;
-        x2 = pom;
-    }
 
-    a = Math.abs(x1-x2);
-    b = Math.abs(y1-y2);
-    var c;
-    var sx = (x1+x2)/2;
-    var sy = (y1+y2)/2;
-    width = Math.sqrt(a*a + b*b);
-    var x = sx - width/2;
-    var y = sy;
-
-    a = width / 2;
-
-    c = Math.abs(sx-x);
-
-    b = Math.sqrt(Math.abs(x1-x)*Math.abs(x1-x)+Math.abs(y1-y)*Math.abs(y1-y) );
-
-    var cosb = (b*b - a*a - c*c) / (2*a*c);
-    var rad = Math.acos(cosb);
-    var deg = (rad*180)/Math.PI;
-    var transform = 'translate('+x+'px,'+y+'px) rotate('+deg+'deg)';
-    connectorDiv.style.width = width + "px";
-    connectorDiv.style.webkitTransform = transform;
-	connectorDiv.style.mozTransform    = transform;
-	connectorDiv.style.transform       = transform;
-    connectorDiv.style.boxShadow = '0px 0px 15px 5px ' + color;
-    connectorDiv.style.display = "inline";*/
+    var connector = Snap.select("[id*=\""+instanceID+"link\"]");
+	if (connector){
+		connector.attr({
+			x1:x1,
+			y1:y1,
+			x2:x2,
+			y2:y2
+		});
+	}
+	
 };
 
 
-removeWidgetToAppConnector = function (instanceID){
-	var connectorDiv = document.getElementById(instanceID + "connector");
-	if (connectorDiv){
-		connectorDiv.parentNode.removeChild(connectorDiv);
-	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"menuCenter\"]");
-	if (selectedControl){
-		selectedControl.attr({
-			fill: "rgba(110,110,110,1.0)",
-			filter:null
-		});
+removeWidgetConnector = function (instanceID){
+	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
+	if (connector){
+		connector.remove();
 	}
 };
 
 setConnectorColor = function (instanceID, color){
-	//var connectorDiv = document.getElementById(instanceID + "connector");
-	//if (!connectorDiv) return;
-	//connectorDiv.style.boxShadow = '0px 0px 15px 5px '+color;
 	if (!color){
 		color = '#666666';
 	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
-	if (selectedControl){
-		var paper = selectedControl.data("paper");
-		var shadow = paper.filter(Snap.filter.shadow(0, 0, selectedControl.attr("r")*4, color, 5));
-		selectedControl.attr({
-			stroke: color,
+	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
+	if (connector){
+		var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0,6, color, 3));
+		connector.attr({
+			stroke:"rgba(250,250,250,1.0)",
 			filter:shadow
 		});
+	}
+	
+
+	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
+	if (selectedControl){
+		selectedControl.attr("stroke", color);
 	}
 };
 
