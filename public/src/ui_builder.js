@@ -276,12 +276,19 @@ function UIBuilder(json_cfg, clientID) {
 		// version id
 		var version = document.createElement('p');
 		version.id  = "version";
-		// EVL-LAVA logo
-		var logo = document.createElement('object');
-		logo.id = "logo";
-		// background watermark
-		var watermark = document.createElement('object');
+		// logo and background watermark
+		var watermark;
+		var logo;
+		if (__SAGE2__.browser.isIE) {
+			watermark = document.createElement('img');
+			logo      = document.createElement('img');
+		}
+		else {
+			watermark = document.createElement('object');
+			logo      = document.createElement('object');
+		}
 		watermark.id = "watermark";
+		logo.id = "logo";
 
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
@@ -336,13 +343,22 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.transform  = "translateY(-50%)";
 
 		logo.addEventListener('load', this.logoLoadedFunc, false);
-		logo.data = "images/EVL-LAVA.svg";
-		logo.type = "image/svg+xml";
+		if (__SAGE2__.browser.isIE) {
+			logo.src  = "images/EVL-LAVA.svg";
+		} else {
+			logo.data = "images/EVL-LAVA.svg";
+			logo.type = "image/svg+xml";
+		}
 
-		if(this.json_cfg.background.watermark !== undefined){
+		if (this.json_cfg.background.watermark !== undefined) {
 			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
-			watermark.data = this.json_cfg.background.watermark.svg;
-			watermark.type = "image/svg+xml";
+			if (__SAGE2__.browser.isIE) {
+				// using an image tag in IE
+				watermark.src  = this.json_cfg.background.watermark.svg;
+			} else {
+				watermark.data = this.json_cfg.background.watermark.svg;
+				watermark.type = "image/svg+xml";
+			}
 		}
 
 		if (this.json_cfg.ui.show_url) {
@@ -517,14 +533,22 @@ function UIBuilder(json_cfg, clientID) {
 	* @param event {Event} event
 	*/
 	this.logoLoaded = function(event) {
-		var logo    = document.getElementById('logo');
-		var logoSVG = logo.getSVGDocument().querySelector('svg');
-		var bbox    = logoSVG.getBBox();
-		var height  = 0.95 * this.titleBarHeight;
-		var width   = height * (bbox.width/bbox.height);
-
+		var logo   = document.getElementById('logo');
+		var height = 0.95 * this.titleBarHeight;
+		var width;
+		if (__SAGE2__.browser.isIE) {
+			width = height * (logo.width/logo.height);
+			logo.style.backgroundColor = "rgba(255,255,255,0.75)";
+		} else {
+			var logoSVG = logo.getSVGDocument().querySelector('svg');
+			var bbox    = logoSVG.getBBox();
+			width = height * (bbox.width/bbox.height);
+			var textColor = "rgba(255, 255, 255, 1.0)";
+			if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+				textColor = this.json_cfg.ui.menubar.textColor;
+			this.changeSVGColor(logoSVG, "path", null, textColor);
+		}
 		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
-
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
@@ -536,11 +560,6 @@ function UIBuilder(json_cfg, clientID) {
 		logo.style.webkitTransform  = "translateY(-50%)";
 		logo.style.mozTransform     = "translateY(-50%)";
 		logo.style.transform        = "translateY(-50%)";
-
-		var textColor = "rgba(255, 255, 255, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
-			textColor = this.json_cfg.ui.menubar.textColor;
-		this.changeSVGColor(logoSVG, "path", null, textColor);
 	};
 
 	/**
@@ -550,33 +569,36 @@ function UIBuilder(json_cfg, clientID) {
 	* @param event {Event} event
 	*/
 	this.watermarkLoaded = function(event) {
-		var watermark    = document.getElementById('watermark');
-		var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
-
-		var bbox = watermarkSVG.getBBox();
 		var width;
 		var height;
-
-		if (bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+		var watermark = document.getElementById('watermark');
+		if (__SAGE2__.browser.isIE) {
+			// using an image tag in IE
 			width  = this.json_cfg.totalWidth / 2;
-			height = width * bbox.height/bbox.width;
+			height = watermark.height;
+			watermark.width = width;
+			watermark.style.opacity = 0.4;
+		} else {
+			var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
+			var bbox = watermarkSVG.getBBox();
+			if (bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+				width  = this.json_cfg.totalWidth / 2;
+				height = width * bbox.height/bbox.width;
+			}
+			else {
+				height = this.json_cfg.totalHeight / 2;
+				width  = height * bbox.width/bbox.height;
+			}
+			watermark.width  = width;
+			watermark.height = height;
+			// Also hide the cursor on top of the SVG (doesnt inherit from style body)
+			if (this.clientID !== -1)
+				watermarkSVG.style.cursor = "none";
+			this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 		}
-		else {
-			height = this.json_cfg.totalHeight / 2;
-			width  = height * bbox.width/bbox.height;
-		}
-
-		watermark.width  = width;
-		watermark.height = height;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
-
-		// Also hide the cursor on top of the SVG (doesnt inherit from style body)
-		if (this.clientID !== -1)
-			watermarkSVG.style.cursor = "none";
-
-		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
 
 	/**
