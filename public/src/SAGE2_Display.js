@@ -597,13 +597,13 @@ function setupListeners() {
 
 		var child = selectedElem.getElementsByClassName("sageItem");
 
-		// if the element is a div, resize should use the style object
-		if (child[0].tagName.toLowerCase() === "div") {
+		// if the element is a div or iframe, resize should use the style object
+		if (child[0].tagName.toLowerCase() === "div" || child[0].tagName.toLowerCase() === "iframe") {
 			child[0].style.width  = Math.round(position_data.elemWidth)  + "px";
 			child[0].style.height = Math.round(position_data.elemHeight) + "px";
 		}
 		else {
-			// if it's a canvas, just use width and height
+			// if it's a canvas or else, just use width and height
 			child[0].width  = Math.round(position_data.elemWidth);
 			child[0].height = Math.round(position_data.elemHeight);
 		}
