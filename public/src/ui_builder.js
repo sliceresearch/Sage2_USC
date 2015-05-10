@@ -103,6 +103,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.mozTransform    = "scale("+(newratio)+")";
 			this.bg.style.transform       = "scale("+(newratio)+")";
 
+			this.main.style.width  = wallWidth  + "px";
+			this.main.style.height = wallHeight + "px";
+
 			window.onresize = function(event) {
 				// recalculate after every window resize
 				_this.browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;

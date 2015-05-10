@@ -13,6 +13,8 @@
 
 /* CSS Document */
 
+@import url('fonts.css');
+
 * {
 	margin: 0;
 	padding: 0;
@@ -25,12 +27,12 @@ body {
 }
 
 p, label, span {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 }
 
 input, button {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 11px;
 }
 	

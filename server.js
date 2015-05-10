@@ -52,6 +52,7 @@ var commandline         = require('./src/node-sage2commandline'); // handles com
 var exiftool            = require('./src/node-exiftool');         // gets exif tags for images
 var pixelblock          = require('./src/node-pixelblock');       // chops pixels buffers into square chunks
 var sageutils           = require('./src/node-utils');            // provides the current version number
+var md5                 = require('./src/md5');                   // return standard md5 hash of given param
 
 var HttpServer          = require('./src/node-httpserver');       // creates web server
 var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
@@ -66,6 +67,8 @@ var WebsocketIO         = require('./src/node-websocket.io');     // creates Web
 
 
 // Globals
+
+// Session hash for security
 global.__SESSION_ID    = null;
 
 var sage2Server        = null;
@@ -111,7 +114,7 @@ function initializeSage2Server() {
 	sageutils.checkPackages(); // pass parameter `true` for devel packages also
 
 	// Setup binaries path
-	if(config.dependencies !== undefined) {
+	if (config.dependencies !== undefined) {
 		if(config.dependencies.ImageMagick !== undefined) imageMagickOptions.appPath = config.dependencies.ImageMagick;
 		if(config.dependencies.FFMpeg !== undefined) ffmpegOptions.appPath = config.dependencies.FFMpeg;
 	}
@@ -119,7 +122,7 @@ function initializeSage2Server() {
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
 
 	// Set default host origin for this server
-	if(config.rproxy_port === undefined) {
+	if (config.rproxy_port === undefined) {
 		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
 	}
 
@@ -170,6 +173,7 @@ function initializeSage2Server() {
 	if (!sageutils.fileExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
+
 	// Setup tmp directory in uploads
 	var uploadTemp = path.join(__dirname, "public", "uploads", "tmp");
 	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + uploadTemp);
@@ -180,6 +184,29 @@ function initializeSage2Server() {
 	// Make sure sessions directory exists
 	if (!sageutils.fileExists(sessionDirectory)) {
 		fs.mkdirSync(sessionDirectory);
+	}
+
+	// Check for the session password file
+	var passwordFile = path.join("keys", "passwd.json");
+	if (typeof program.password  === "string" && program.password.length > 0) {
+		// Creating a new hash from the password
+		global.__SESSION_ID = md5.getHash( program.password );
+		console.log(sageutils.header("Secure") + "Using " + global.__SESSION_ID + " as the key for this session");
+		// Saving the hash
+		fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
+		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
+	}
+	else if (sageutils.fileExists(passwordFile)) {
+		// If a password file exists, load it
+		var passwordFileJsonString = fs.readFileSync(passwordFile, 'utf8');
+		var passwordFileJson       = JSON.parse(passwordFileJsonString);
+		if (passwordFileJson.pwd !== null) {
+			global.__SESSION_ID = passwordFileJson.pwd;
+			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
+		}
+		else {
+			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
+		}
 	}
 
 	// Initialize assets
@@ -1647,7 +1674,10 @@ function listClients() {
 	console.log("Clients (%d)\n------------", clients.length);
 	for(i=0; i<clients.length; i++){
 		if (clients[i].clientType === "display") {
-			console.log(sprint("%2d: %s (%s %s)", i, clients[i].id, clients[i].clientType, clients[i].clientID));
+			if (clients[i] === masterDisplay)
+				console.log(sprint("%2d: %s (%s %s) master", i, clients[i].id, clients[i].clientType, clients[i].clientID));
+			else
+				console.log(sprint("%2d: %s (%s %s)", i, clients[i].id, clients[i].clientType, clients[i].clientID));
 		}
 		else {
 			console.log(sprint("%2d: %s (%s)", i, clients[i].id, clients[i].clientType));
@@ -3680,9 +3710,19 @@ sage2Server.on('error', function (e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Server.on('listening', function (e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving web UI at http://" + config.host + ":" + config.index_port);
-	console.log(sageutils.header("SAGE2") + "Display 0 at http://" + config.host + ":" + config.index_port + "/display.html?clientID=0");
-	console.log(sageutils.header("SAGE2") + "Audio manager at http://" + config.host + ":" + config.index_port + "/audioManager.html");
+	var ui_url = "http://" + config.host + ":" + config.index_port;
+	var dp_url = "http://" + config.host + ":" + config.index_port + "/display.html?clientID=0";
+	var am_url = "http://" + config.host + ":" + config.index_port + "/audioManager.html";
+	if (global.__SESSION_ID) {
+		//	localhost:9292/session.html?page=display.html?clientID=0&hash=24e6dfd123f5d006a2f72a4ca5b34ad9
+		//	localhost:9292/session.html?page=audioManager.html&hash=24e6dfd123f5d006a2f72a4ca5b34ad9
+		ui_url = "http://" + config.host + ":" + config.index_port + "/session.html?hash=" + global.__SESSION_ID;
+		dp_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID;
+		am_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=audioManager.html&hash=" + global.__SESSION_ID;
+	}
+	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
+	console.log(sageutils.header("SAGE2") + "Display 0 at "      + dp_url);
+	console.log(sageutils.header("SAGE2") + "Audio manager at "  + am_url);
 });
 
 

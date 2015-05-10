@@ -47,17 +47,41 @@ function HttpServer(publicDirectory) {
  * @param query {String} the URL to parse
  * @return {Object} parsed elements (key, value)
  */
-function parseURLQuery(query) {
-	if (!query) return {};
+// function parseURLQuery(query) {
+// 	if (!query) return {};
+// 	var p;
+// 	var paramList = query.split("&");
+// 	var params = {};
+// 	for(var i=0; i<paramList.length; i++) {
+// 		p = paramList[i].split("=");
+// 		if (p.length === 2) params[p[0]] = p[1];
+// 	}
+// 	return params;
+// }
 
-	var p;
-	var paramList = query.split("&");
-	var params = {};
-	for(var i=0; i<paramList.length; i++) {
-		p = paramList[i].split("=");
-		if (p.length === 2) params[p[0]] = p[1];
+
+/**
+ * Given a request, will attempt to detect all associated cookies.
+ *
+ * @method detectCookies
+ * @param request {Object} the request that came from a client
+ * @return {Object} containing the list of cookies in string format
+ */
+function detectCookies(request) {
+    var cookieList = [];
+    var allCookies = request.headers.cookie;
+
+    var i = 0;
+    if (allCookies != null) {
+		while (allCookies.indexOf(';') !== -1) {
+			cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
+			cookieList[i] = cookieList[i].trim();
+			allCookies    = allCookies.substring( allCookies.indexOf(';') + 1 );
+			i++;
+		} // end while there is a ;
+		cookieList.push( allCookies.trim() );
 	}
-	return params;
+    return cookieList;
 }
 
 /**
@@ -82,9 +106,10 @@ HttpServer.prototype.redirect = function(res, aurl) {
  */
 HttpServer.prototype.onreq = function(req, res) {
 	var stream;
+	var i;
 
 	if (req.method === "GET") {
-		var reqURL = url.parse(req.url);
+		var reqURL  = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
@@ -97,22 +122,31 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 
+		// Get the actual path of the file
 		var pathname = this.publicDirectory + getName;
 
-		// SESSION ID CHECK
-		if (global.__SESSION_ID && path.extname(pathname) === ".html") {
-			var params = parseURLQuery(reqURL.query); // note every field will be a string
-
-			// check params.session
-			if (params.session !== global.__SESSION_ID) {
-				// failed
-				// serve page that asks for session id instead
-				//
-				// this.redirect(res, "session.html?onload="+getName);
-				return;
-				//
-				// in session.html, when user enters a session id in a popup dialog
-				// the page should use 'window.location.replace(<onload?session=<value>>)'
+		// Are we trying to session management
+		if (global.__SESSION_ID) {
+			// if the request is for an HTML page (no security check otherwise)
+			//    and it is not session.html
+			if (path.extname(pathname) === ".html" &&
+				(getName.indexOf("/session.html") !== 0)) {
+				// Get the cookies from the request header
+				var cookieList = detectCookies(req);
+				// Go through the list of cookies
+				var sessionMatch = false;
+				for (i=0; i<cookieList.length; i++) {
+					if (cookieList[i].indexOf("session=") !== -1) {
+						// We found it
+						if (cookieList[i].indexOf(global.__SESSION_ID) !== -1) {
+							sessionMatch = true;
+						}
+					}
+				}
+				// If no match, go back to password page
+				if (!sessionMatch) {
+					this.redirect(res, "session.html");
+				}
 			}
 		}
 
@@ -124,15 +158,14 @@ HttpServer.prototype.onreq = function(req, res) {
 				return;
 			} else {
 				var header = {};
-				var type   = mime.lookup(pathname);
-				header["Content-Type"] = type;
+				header["Content-Type"] = mime.lookup(pathname);
 				header["Access-Control-Allow-Headers" ] = "Range";
 				header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
 
 				if (req.headers.origin !== undefined) {
-					header['Access-Control-Allow-Origin' ] = req.headers.origin;
-					header['Access-Control-Allow-Methods'] = "GET";
-					header['Access-Control-Allow-Headers'] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+					header['Access-Control-Allow-Origin' ]     = req.headers.origin;
+					header['Access-Control-Allow-Methods']     = "GET";
+					header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
 					header['Access-Control-Allow-Credentials'] = true;
 				}
 
@@ -156,15 +189,15 @@ HttpServer.prototype.onreq = function(req, res) {
 					var range = req.headers.range;
 					var parts = range.replace(/bytes=/, "").split("-");
 					var partialstart = parts[0];
-					var partialend = parts[1];
+					var partialend   = parts[1];
 
 					var start = parseInt(partialstart, 10);
 					var end = partialend ? parseInt(partialend, 10) : total-1;
 					var chunksize = (end-start)+1;
 
-					header["Content-Range"] = "bytes " + start + "-" + end + "/" + total;
-					header["Accept-Ranges"] = "bytes";
-					header["Content-Length"]= chunksize;
+					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
+					header["Accept-Ranges"]  = "bytes";
+					header["Content-Length"] = chunksize;
 
 					res.writeHead(206, header);
 
@@ -220,3 +253,10 @@ HttpServer.prototype.httpPOST = function(name, callback) {
 };
 
 module.exports = HttpServer;
+
+
+
+
+
+
+

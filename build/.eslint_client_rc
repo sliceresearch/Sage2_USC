@@ -35,7 +35,8 @@
 	SAGE2WidgetButtonTypes: true, controlObjects: true, controlItems: true,
 	smallWhiteGIF: true, SAGE2_browser: true, __SAGE2__: true,
 	DynamicImage: true, makeSvgBackgroundForWidgetConnectors: true,
-	getTransform: true, DataSharing: true, dataSharingPortals: true
+	getTransform: true, DataSharing: true, dataSharingPortals: true,
+	md5: true
   },
   rules: {
 	no-console: 0,
