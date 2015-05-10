@@ -51,29 +51,25 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 	this.svgLoadedFunc = this.svgLoaded.bind(this);
 
 	this.config = config;
-	this.wsio = wsio;
-
-	//this.logo.addEventListener('load', this.svgLoadedFunc, false);
-	//this.logo.src = "images/EVL-LAVA_UI.svg";
+	this.wsio   = wsio;
 
 	this.mediaStreamIcon = document.createElement('canvas');
-	this.mediaStreamIcon.width = 512;
+	this.mediaStreamIcon.width  = 512;
 	this.mediaStreamIcon.height = 512;
 
 	var applicationsDiv = document.getElementById('applicationsDiv');
 	var logo = document.createElement('img');
 	logo.style.position = "absolute";
-	logo.style.left = "50%";
-	logo.style.top = "50%";
+	logo.style.left     = "50%";
+	logo.style.top      = "50%";
 	logo.style.webkitTransform = "translate(-50%, -50%)";
-	logo.style.mozTransform = "translate(-50%, -50%)";
-	logo.style.transform = "translate(-50%, -50%)";
+	logo.style.mozTransform    = "translate(-50%, -50%)";
+	logo.style.transform       = "translate(-50%, -50%)";
 	if ((this.config.totalWidth/this.config.totalWidth) <= this.logoAspect)
-		logo.style.width = "75%";
+		logo.style.width  = "75%";
 	else
 		logo.style.height = "75%";
 	logo.src = "images/EVL-LAVA_UI.svg";
-
 	applicationsDiv.appendChild(logo);
 };
 

@@ -1083,7 +1083,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 
 	var windowIcons = document.createElement("img");
-	windowIcons.src = "images/layout3.webp";
+	//windowIcons.src = "images/layout3.webp";
+	windowIcons.src = "images/layout3.png";
 	windowIcons.height = Math.round(titleBarHeight);
 	windowIcons.style.position = "absolute";
 	windowIcons.style.right    = "0px";

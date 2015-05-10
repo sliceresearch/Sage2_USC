@@ -78,18 +78,11 @@ var texture_cube = SAGE2_App.extend( {
 	},
 	
 	initGL: function() {
-		try{
-			this.gl = this.element.getContext("webgl");
-		} catch(e) {
-			try{
-				this.gl = this.element.getContext("experimental-webgl");
-			} catch(e){
-				alert("Canvas \"webgl\" and \"experimental-webgl\" unavailable.");
-			}
-		}
-		if(!this.gl){
+		this.gl = this.element.getContext("webgl");
+		if (!this.gl)
+			this.gl = this.element.getContext("experimental-webgl");
+		if (!this.gl)
 			alert("Unable to initialize WebGL. Your browser may not support it.");
-		}
 	},
 	
 	webglContextLostMethod: function(event) {

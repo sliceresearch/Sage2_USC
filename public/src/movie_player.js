@@ -133,17 +133,34 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
 				if (this.state.paused === true) {
-					console.log("play: " + this.div.id);
-					if(isMaster) wsio.emit('playVideo', {id: this.div.id});
+					if (isMaster) wsio.emit('playVideo', {id: this.div.id});
 					this.state.paused = false;
 				}
 				else {
-					console.log("pause: " + this.div.id);
-					if(isMaster) wsio.emit('pauseVideo', {id: this.div.id});
+					if (isMaster) wsio.emit('pauseVideo', {id: this.div.id});
 					this.state.paused = true;
 				}
-
 				this.refresh(date);
+			}
+			else if (data.character === "l") {
+				if (this.state.looped === true) {
+					if (isMaster) wsio.emit('loopVideo', {id: this.div.id, loop: false});
+					this.state.looped = false;
+				}
+				else {
+					if (isMaster) wsio.emit('loopVideo', {id: this.div.id, loop: true});
+					this.state.looped = true;
+				}
+			}
+			else if (data.character === "m") {
+				if (this.state.muted === true) {
+					if (isMaster) wsio.emit('unmuteVideo', {id: this.div.id});
+					this.state.muted = false;
+				}
+				else {
+					if (isMaster) wsio.emit('muteVideo', {id: this.div.id});
+					this.state.muted = true;
+				}
 			}
 		}
 		else if (eventType === "widgetEvent"){
