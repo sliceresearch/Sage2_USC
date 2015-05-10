@@ -23,48 +23,23 @@
 <script type="text/javascript" src="src/SAGE2_runtime.js"></script>
 <script type="text/javascript" src="src/SAGE2_Session.js"></script>
 
-<style>
-	@font-face {
-		font-family: 'Arimo';
-		src: url('/css/Arimo-Regular.ttf') format('truetype');
-		font-weight: normal;
-		font-style: normal;
-	}
-	@font-face {
-		font-family: 'Arimo';
-		src: url('/css/Arimo-Italic.ttf') format('truetype');
-		font-weight: normal;
-		font-style: italic;
-	}
-	@font-face {
-		font-family: 'Arimo';
-		src: url('/css/Arimo-Bold.ttf') format('truetype');
-		font-weight: bold;
-		font-style: normal;
-	}
-	@font-face {
-		font-family: 'Arimo';
-		src: url('/css/Arimo-BoldItalic.ttf') format('truetype');
-		font-weight: bold;
-		font-style: italic;
-	}
-</style>
+<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
+	
 </head>
 
 <body onload="SAGE2_init()">
 
-
-	<h1 style="font-family:Arimo;text-align:center">This SAGE2 wall has a session lock on it.
+	<h1 style="text-align:center">This SAGE2 wall has a session lock on it.
 	</h1>
 
 	<br>
 	
-	<h3 style="font-family:Arimo;text-align:center">
+	<h3 style="text-align:center">
 		Enter the sessionID:<br>
 		<input type="text" id="sessionValue" size="40" style="font-size: 1em;" tabindex="1">
     <br>
 
-    <button type="button" id="enterButton" style="height:10%; width:10%" onclick="buttonSubmit()"> Enter </button>
+    <button class="button_session" type="button" id="enterButton" onclick="buttonSubmit()"> Enter </button>
 	</h3>
 
 </body>
