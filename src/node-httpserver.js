@@ -158,15 +158,14 @@ HttpServer.prototype.onreq = function(req, res) {
 				return;
 			} else {
 				var header = {};
-				var type   = mime.lookup(pathname);
-				header["Content-Type"] = type;
+				header["Content-Type"] = mime.lookup(pathname);
 				header["Access-Control-Allow-Headers" ] = "Range";
 				header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
 
 				if (req.headers.origin !== undefined) {
-					header['Access-Control-Allow-Origin' ] = req.headers.origin;
-					header['Access-Control-Allow-Methods'] = "GET";
-					header['Access-Control-Allow-Headers'] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+					header['Access-Control-Allow-Origin' ]     = req.headers.origin;
+					header['Access-Control-Allow-Methods']     = "GET";
+					header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
 					header['Access-Control-Allow-Credentials'] = true;
 				}
 
@@ -190,15 +189,15 @@ HttpServer.prototype.onreq = function(req, res) {
 					var range = req.headers.range;
 					var parts = range.replace(/bytes=/, "").split("-");
 					var partialstart = parts[0];
-					var partialend = parts[1];
+					var partialend   = parts[1];
 
 					var start = parseInt(partialstart, 10);
 					var end = partialend ? parseInt(partialend, 10) : total-1;
 					var chunksize = (end-start)+1;
 
-					header["Content-Range"] = "bytes " + start + "-" + end + "/" + total;
-					header["Accept-Ranges"] = "bytes";
-					header["Content-Length"]= chunksize;
+					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
+					header["Accept-Ranges"]  = "bytes";
+					header["Content-Length"] = chunksize;
 
 					res.writeHead(206, header);
 
