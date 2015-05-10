@@ -13,6 +13,8 @@
 
 /* CSS Document */
 
+@import url('fonts.css');
+
 * {
 	margin: 0;
 	padding: 0;
@@ -24,21 +26,43 @@ body {
 }
 
 p {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #000000;
 }
 
 label {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #000000;
 }
 
 span {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #000000;
+}
+
+h1 {
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 18pt;
+	font-weight: normal;
+	font-style: normal;
+}
+
+h2 {
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 14pt;
+	font-weight: normal;
+	font-style: normal;
+	margin: 10px;
+}
+
+h3 {
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 12pt;
+	font-weight: normal;
+	font-style: normal;
 }
 
 #mainUI {
@@ -103,7 +127,7 @@ span {
 }
 
 #menuUI tr td p {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	white-space: nowrap;
 	display: inline;
@@ -123,7 +147,7 @@ span {
 }
 
 #textWidthTest {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	white-space: nowrap;
 	position: absolute;
@@ -165,46 +189,6 @@ span {
 	user-drag: none;
 }
 
-/*
-.uiButton {
-	width: 100px;
-	height: 90px;
-	display: inline-block;
-}
-
-.uiButton img {
-
-	-webkit-transition: 100ms ease-in-out;
-	-moz-transition: 100ms ease-in-out;
-	transition: 100ms ease-in-out;
-}
-
-.uiButton:hover img {
-	-webkit-transform: scale(1.0);
-	-moz-transform: scale(1.0);
-	transform: scale(1.0);
-}
-
-.uiButton p {
-
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	white-space: nowrap;
-	padding: 2px 4px 2px 4px;
-	color: #FFFFFF;
-	background-color: #787878;
-	border-radius: 8px;
-	opacity: 1.0;
-	cursor: default;
-	-webkit-transition: opacity 100ms ease-in-out;
-	-moz-transition: opacity 100ms ease-in-out;
-	transition: opacity 100ms ease-in-out;
-}
-
-.uiButton:hover img + p {
-	opacity: 1.0;
-}
-*/
 
 .clear {
 	clear: both;
@@ -301,7 +285,7 @@ span {
 
 #metadata_text {
 	display: block;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #FFFFFF;
 	white-space: pre-wrap;
@@ -643,7 +627,21 @@ span {
 .button {
 	padding: 10px 12px 10px 12px;
 	border-radius: 12px;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	background-color: #787878;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+.button_session {
+	padding: 10px 12px 10px 12px;
+	margin: 10px;
+	width: 20%;
+	border-radius: 1px;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #FFFFFF;
 	background-color: #787878;
@@ -670,7 +668,7 @@ span {
 /***** File Browser *****/
 
 .css-treeview {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -724,7 +722,7 @@ span {
 
 /******** Text - Width Test ********/
 #textWidthTest {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 11px;
 	position: absolute;
 	bottom: 0px;
