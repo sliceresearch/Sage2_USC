@@ -112,7 +112,7 @@ function mapMoveToSlider(sliderKnob, position){
 	return {sliderValue: begin + n*increments, newPosition: left + n * deltaX};
 }
 
-insertTextIntoTextInputWidget = function(textInput, code, printable){
+function insertTextIntoTextInputWidget(textInput, code, printable){
 	var textBox = textInput.select("rect");
 	var boxWidth = textBox.attr("width");
 	var tAxVal = textInput.data("left");
@@ -196,14 +196,13 @@ insertTextIntoTextInputWidget = function(textInput, code, printable){
 	textInput.data("prefix", prefix);
 	textInput.data("suffix", suffix);
 	textInput.data("tail", tail);
+}
 
-};
-
-getTextFromTextInputWidget = function(textInput){
+function getTextFromTextInputWidget(textInput){
 	return textInput.data("head") + textInput.data("prefix") + textInput.data("suffix") + textInput.data("tail");
-};
+}
 
-getWidgetControlInstanceById = function(ctrl){
+function getWidgetControlInstanceById(ctrl){
 	var svgElements = Snap.selectAll('*');
 	var requestedSvgElement = null;
 	for(var l=0; l< svgElements.length; l++){
@@ -216,9 +215,9 @@ getWidgetControlInstanceById = function(ctrl){
 	}
 	//console.log("getWdiget:",requestedSvgElement);
 	return requestedSvgElement;
-};
+}
 
-getProperty = function (objectHandle, property){
+function getProperty(objectHandle, property){
 	var names = property.split('.');
 	var handle  = objectHandle;
 	var i     = 0;
@@ -226,9 +225,9 @@ getProperty = function (objectHandle, property){
 		handle = handle[names[i]];
 	}
 	return {handle:handle, property:names[i]};
-};
+}
 
-getWidgetControlInstanceUnderPointer = function(data, offsetX, offsetY){
+function getWidgetControlInstanceUnderPointer(data, offsetX, offsetY){
 	var pointerElement = document.getElementById(data.ptrId);
 	pointerElement.style.left = (parseInt(pointerElement.style.left) + 10000) + "px";
 	var widgetControlUnderPointer = Snap.getElementByPoint(data.x - offsetX, data.y - offsetY);
@@ -237,10 +236,10 @@ getWidgetControlInstanceUnderPointer = function(data, offsetX, offsetY){
 	//if (/control/.test(widgetControlId) || /button/.test(widgetControlId) || /slider/.test(widgetControlId) || /textInput/.test(widgetControlId))
 	return widgetControlUnderPointer;
 	//return null;
-};
+}
 
 
-polarToCartesian = function (radius, theta, center) {
+function polarToCartesian(radius, theta, center) {
 	theta = theta * Math.PI / 180.0;
 	if (center === undefined || center === null){
 		center = {x:0, y:0};
@@ -248,20 +247,20 @@ polarToCartesian = function (radius, theta, center) {
 	var x = center.x + radius*Math.cos(theta);
 	var y = center.y - radius*Math.sin(theta);
 	return {x:x, y:y};
-};
+}
 
 
-createWidgetConnector = function (instanceID) {
+function createWidgetConnector(instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
-	var connector = paper.line(0,0,0,0);
+	var connector = paper.line(0, 0, 0, 0);
 	connector.attr({
 		id: instanceID+"link",
 		strokeWidth:4
 
 	});
-};
+}
 
-addStyleElementForTitleColor = function (caption, color){
+function addStyleElementForTitleColor(caption, color){
 	dynamicStyleSheets[caption] = caption;
 	var sheet = document.createElement('style');
 	sheet.id = "title"+caption;
@@ -270,17 +269,17 @@ addStyleElementForTitleColor = function (caption, color){
 		color = '#666666';
 	sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: linear-gradient(left,"+color+" " +percent+"%, #666666 100%); }";
 	document.body.appendChild(sheet);
-};
+}
 
-removeStyleElementForTitleColor = function (caption){
+function removeStyleElementForTitleColor(caption){
 	var sheet = document.getElementById("title"+caption);
 	if (sheet){
 		sheet.parentNode.removeChild(sheet);
 		delete dynamicStyleSheets[caption];
 	}
-};
+}
 
-hideAllWidgetConnectors = function (appId){
+function hideAllWidgetConnectors(appId){
 	var selectedAppTitle;
 	if (appId in controlObjects){
 		selectedAppTitle = document.getElementById(appId + "_title");
@@ -291,10 +290,10 @@ hideAllWidgetConnectors = function (appId){
 			}
 		}
 	}
-};
+}
 
-hideWidgetConnector = function(instanceID, appId){
-	 var connector = Snap.select("[id*=\""+instanceID+"link\"]");
+function hideWidgetConnector(instanceID, appId){
+	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
 		connector.attr({
 			stroke:"none",
@@ -313,10 +312,9 @@ hideWidgetConnector = function(instanceID, appId){
 		var selectedAppTitle = document.getElementById(appId + "_title");
 		selectedAppTitle.className = "windowTitle";
 	}
-};
+}
 
-
-moveWidgetConnector = function (instanceID, x1, y1, x2, y2, cutLength) {
+function moveWidgetConnector(instanceID, x1, y1, x2, y2, cutLength) {
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b );
@@ -334,38 +332,34 @@ moveWidgetConnector = function (instanceID, x1, y1, x2, y2, cutLength) {
 			y2:y2
 		});
 	}
-	
-};
+}
 
-
-removeWidgetConnector = function (instanceID){
+function removeWidgetConnector(instanceID){
 	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
 		connector.remove();
 	}
-};
+}
 
-setConnectorColor = function (instanceID, color){
+function setConnectorColor(instanceID, color){
 	if (!color){
 		color = '#666666';
 	}
 	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
-		var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0,6, color, 3));
+		var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 6, color, 3));
 		connector.attr({
 			stroke:"rgba(250,250,250,1.0)",
 			filter:shadow
 		});
 	}
-	
-
 	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
 	if (selectedControl){
 		selectedControl.attr("stroke", color);
 	}
-};
+}
 
-showWidgetConnectors = function(position_data){
+function showWidgetConnectors(position_data){
 	var selectedAppTitle, re, styleCaption;
 	selectedAppTitle = document.getElementById(position_data.id + "_title");
 	if (!selectedAppTitle)return;
@@ -377,14 +371,12 @@ showWidgetConnectors = function(position_data){
 			setConnectorColor(item, position_data.user_color);
 		}
 	}
-};
+}
 
-
-
-makeSvgBackgroundForWidgetConnectors = function(width, height){
+function makeSvgBackgroundForWidgetConnectors(width, height){
 	var backDrop = new Snap(parseInt(width), parseInt(height));
 	backDrop.node.style.zIndex = "1";
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
 	return backDrop;
-};
+}

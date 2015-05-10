@@ -4293,7 +4293,7 @@ function hidePointer(uniqueID) {
 	sagePointers[uniqueID].stop();
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
 	if (prevInteractionItem !== null){
-		showOrHideWidgetLinks({uniqueID:uniqueID,show:false,item:prevInteractionItem});
+		showOrHideWidgetLinks({uniqueID:uniqueID, show:false, item:prevInteractionItem});
 		remoteInteraction[uniqueID].setPreviousInteractionItem(null);
 	}
 	broadcast('hideSagePointer', sagePointers[uniqueID]);
@@ -4351,13 +4351,13 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "widgets":
 			if (prevInteractionItem===null){
-				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:true});
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, show:true});
 			}
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "press");
 			break;
 		case "applications":
 			if (prevInteractionItem===null){
-				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:true});
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, show:true});
 			}
 			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			break;
@@ -4871,7 +4871,7 @@ function pointerPosition(uniqueID, data) {
 
 function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	broadcast('updateSagePointerPosition', sagePointers[uniqueID]);
-	
+
 	var localPt;
 	var scaledPt;
 	var moveAppPortal = findApplicationPortal(remoteInteraction[uniqueID].selectedMoveItem);
@@ -4879,7 +4879,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedMoveItem;
 	var updatedResizeItem;
 	var updatedControl;
-	
+
 	if(moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale, y: (localPt.y-config.ui.titleBarHeight) / moveAppPortal.data.scale};
@@ -4924,7 +4924,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
-	
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
     if (obj === null) {
 		removeExistingHoverCorner(uniqueID);
@@ -4933,23 +4933,22 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			remoteInteraction[uniqueID].portal = null;
 		}
 		if (prevInteractionItem !== null){
-			showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
+			showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 		}
     }
     else {
-    	var color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
-
-    	if (prevInteractionItem !== obj){
-    		if (prevInteractionItem!==null){
-    			showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
-    		}
-			showOrHideWidgetLinks({uniqueID:uniqueID,item:obj, user_color:color, show:true});
+		var color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
+		if (prevInteractionItem !== obj){
+			if (prevInteractionItem!==null){
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
+			}
+			showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 		}
 		else {
 			var appId = obj.data.appId || obj.id;
 			if(appUserColors[appId] !== color){
-				showOrHideWidgetLinks({uniqueID:uniqueID,item:prevInteractionItem, show:false});
-				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj, user_color:color, show:true});		
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 			}
 		}
 		localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
@@ -5299,7 +5298,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "applications":
 			if (prevInteractionItem===null){
-				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:false});
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, show:false});
 			}
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -5312,7 +5311,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "widgets":
 			if (prevInteractionItem===null){
-				showOrHideWidgetLinks({uniqueID:uniqueID,item:obj,show:false});
+				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, show:false});
 			}
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "release");
 			dropSelectedItem(uniqueID, true, portal.id);
