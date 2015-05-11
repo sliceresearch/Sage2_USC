@@ -3714,8 +3714,6 @@ sage2Server.on('listening', function (e) {
 	var dp_url = "http://" + config.host + ":" + config.index_port + "/display.html?clientID=0";
 	var am_url = "http://" + config.host + ":" + config.index_port + "/audioManager.html";
 	if (global.__SESSION_ID) {
-		//	localhost:9292/session.html?page=display.html?clientID=0&hash=24e6dfd123f5d006a2f72a4ca5b34ad9
-		//	localhost:9292/session.html?page=audioManager.html&hash=24e6dfd123f5d006a2f72a4ca5b34ad9
 		ui_url = "http://" + config.host + ":" + config.index_port + "/session.html?hash=" + global.__SESSION_ID;
 		dp_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID;
 		am_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=audioManager.html&hash=" + global.__SESSION_ID;
