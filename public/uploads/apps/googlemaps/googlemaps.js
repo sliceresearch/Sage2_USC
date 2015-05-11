@@ -101,6 +101,7 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	updateMapFromState: function() {
+		//console.log(this.state);
 		var city = new google.maps.LatLng(this.state.center.lat, this.state.center.lng);
 		var mapOptions = {
 			center: city,

@@ -604,6 +604,27 @@ function cleanURL(url) {
 }
 
 /**
+ *
+ */
+function ignoreFields(obj, fields) {
+	var key;
+
+	var result = {};
+	for (key in obj) {
+		if (fields.indexOf(key) < 0) {
+			if (obj[key] === null || obj[key] instanceof Array || typeof obj[key] !== "object") {
+				result[key] = obj[key];
+			}
+			else {
+				result[key] = ignoreFields(obj[key], fields);
+			}
+		}
+	}
+	if (isEmpty(result)) return undefined;
+	return result;
+}
+
+/**
  * Test if element is equal to true (used in .every call on an array)
  *
  * @method isTrue

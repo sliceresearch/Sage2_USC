@@ -469,6 +469,7 @@ function setupListeners(wsio) {
 
 	wsio.on('finishedRenderingAppFrame',            wsFinishedRenderingAppFrame);
 	wsio.on('updateAppState',                       wsUpdateAppState);
+	wsio.on('updateStateOptions',                   wsUpdateStateOptions);
 	wsio.on('appResize',                            wsAppResize);
 	wsio.on('broadcast',                            wsBroadcast);
 	wsio.on('searchTweets',                         wsSearchTweets);
@@ -534,6 +535,7 @@ function setupListeners(wsio) {
 	wsio.on('finishApplicationResize',                wsFinishApplicationResize);
 	wsio.on('deleteApplication',                      wsDeleteApplication);
 	wsio.on('updateApplicationState',                 wsUpdateApplicationState);
+	wsio.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
 	//wsio.on('selectedControlId',                    wsSelectedControlId);
@@ -1382,21 +1384,34 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
-		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 		
 		if (data.updateRemote === true) {
 			var portal = findApplicationPortal(app);
 			if (portal !== undefined && portal !== null) {
 				var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
-				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.state, date: ts});
+				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.remoteState, date: ts});
 			}
 			else if (sharedApps[data.id] !== undefined) {
 				var i;
 				for (i=0; i<sharedApps[data.id].length; i++) {
 					//var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
 					var ts = Date.now();
-					sharedApps[data.id][i].wsio.emit('updateApplicationState', {id: sharedApps[data.id][i].sharedId, state: data.state, date: ts});
+					sharedApps[data.id][i].wsio.emit('updateApplicationState', {id: sharedApps[data.id][i].sharedId, state: data.remoteState, date: ts});
 				}
+			}
+		}
+	}
+}
+
+function wsUpdateStateOptions(wsio, data) {
+	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		if (sharedApps[data.id] !== undefined) {
+			var i;
+			for (i=0; i<sharedApps[data.id].length; i++) {
+				//var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+				var ts = Date.now();
+				sharedApps[data.id][i].wsio.emit('updateApplicationStateOptions', {id: sharedApps[data.id][i].sharedId, options: data.options, date: ts});
 			}
 		}
 	}
@@ -3027,6 +3042,13 @@ function wsUpdateApplicationState(wsio, data) {
 	}
 }
 
+function wsUpdateApplicationStateOptions(wsio, data) {
+	// should check timestamp first (data.date)
+	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		broadcast('loadApplicationOptions', {id: data.id, options: data.options});
+	}
+}
+
 
 // **************  Widget Control Messages *****************
 
@@ -3681,6 +3703,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('finishApplicationResize',                wsFinishApplicationResize);
 		remote.on('deleteApplication',                      wsDeleteApplication);
 		remote.on('updateApplicationState',                 wsUpdateApplicationState);
+		remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
 
 		remote.emit('addClient', clientDescription);
 		remoteSites[index].connected = true;
@@ -4232,10 +4255,12 @@ function mergeObjects(a, b, ignore) {
 	var modified = false;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
-			if(typeof b[key] === "object" && typeof a[key] === "object") {
+			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
+			var bRecurse = (b[key] === null || b[key] instanceof Array || typeof b[key] !== "object") ? false : true;
+			if (aRecurse && bRecurse) {
 				modified = mergeObjects(a[key], b[key]) || modified;
 			}
-			else if((b[key] === null || typeof b[key] !== "object") && (a[key] === null || typeof a[key] !== "object") && (a[key] !== b[key])) {
+			else if (!aRecurse && !bRecurse && a[key] !== b[key]) {
 				b[key] = a[key];
 				modified = true;
 			}

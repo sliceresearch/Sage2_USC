@@ -152,6 +152,43 @@ var SAGE2_App = Class.extend( {
 		this.load(date);
 	},
 
+	SAGE2LoadOptions: function(optionFlags) {
+		this.SAGE2LoadOptionsHelper(this.SAGE2StateOptions, optionFlags);
+		this.SAGE2UpdateOptionsAfterLoad(this.SAGE2StateOptions);
+	},
+
+	SAGE2LoadOptionsHelper: function(options, optionFlags) {
+		var key;
+		for (key in optionFlags) {
+			if (key === "_sync") {
+				options._sync = optionFlags._sync;
+			}
+			else {
+				this.SAGE2LoadOptionsHelper(options[key], optionFlags[key]);
+			}
+		}
+	},
+
+	SAGE2UpdateOptionsAfterLoad: function(parent) {
+		var key;
+		for (key in parent) {
+			if (parent.hasOwnProperty(key) && key[0] !== "_") {
+				if (parent[key]._sync) {
+					parent[key]._name.setAttribute("state", "idle");
+					parent[key]._name.setAttribute("synced", true);
+					parent[key]._value.setAttribute("synced", true);
+					this.SAGE2UpdateOptionsAfterLoad(parent[key]);
+				}
+				else {
+					parent[key]._name.setAttribute("state", "unsynced");
+					parent[key]._name.setAttribute("synced", false);
+					parent[key]._value.setAttribute("synced", false);
+					this.SAGE2UpdateOptionsAfterLoad(parent[key]);
+				}
+			}
+		}
+	},
+
 	SAGE2Event: function(eventType, position, user_id, data, date) {
 		if (this.SAGE2StateSyncOptions.visible === true && (eventType === "pointerPress" || eventType === "pointerMove" || eventType === "pointerRelease" || eventType === "pointerScroll" || eventType === "keyboard" || eventType === "specialKey")) {
 			var itemIdx = parseInt((position.y-this.SAGE2StateSyncOptions.scroll) / Math.round(1.5*this.config.ui.titleTextSize), 10);
@@ -215,6 +252,11 @@ var SAGE2_App = Class.extend( {
 							this.SAGE2StateSyncOptions.press.name.setAttribute("state", "unsynced");
 							this.SAGE2StateSyncOptions.press.value.setAttribute("synced", false);
 							this.SAGE2StateSyncChildren(this.SAGE2StateSyncOptions.press.name, this.SAGE2StateOptions, false);
+						}
+
+						if (isMaster) {
+							var stateOp = ignoreFields(this.SAGE2StateOptions, ["_name", "_value"]);
+							wsio.emit('updateStateOptions', {id: this.id, options: stateOp});
 						}
 					}
 					this.SAGE2StateSyncOptions.press.name = null;
@@ -425,7 +467,7 @@ var SAGE2_App = Class.extend( {
 
 		if(isMaster) {
 			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
-			wsio.emit('updateAppState', {id: this.id, state: syncedState, updateRemote: updateRemote});
+			wsio.emit('updateAppState', {id: this.id, localState: this.state, remoteState: syncedState, updateRemote: updateRemote});
 		}
 	},
 

@@ -301,8 +301,15 @@ function setupListeners() {
 
 	wsio.on('loadApplicationState', function(data) {
 		var app = applications[data.id];
-		if (app !== undefined && app !== null){
+		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
+		}
+	});
+
+	wsio.on('loadApplicationOptions', function(data) {
+		var app = applications[data.id];
+		if (app !== undefined && app !== null) {
+			app.SAGE2LoadOptions(data.options);
 		}
 	});
 
