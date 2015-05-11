@@ -4540,10 +4540,10 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 
 				remoteInteraction[uniqueID].lockControl(ctrlData);
 				if (regSl.test(btn.id)){
-					broadcast('sliderKnobLockAction', {ctrl:ctrlData, x:pointerX, user: eUser});
+					broadcast('sliderKnobLockAction', {ctrl:ctrlData, x:pointerX, user: eUser, date:Date.now()});
 				}
 				else if (regTI.test(btn.id)) {
-					broadcast('activateTextInputControl', {prevTextInput:lockedControl, curTextInput:ctrlData});
+					broadcast('activateTextInputControl', {prevTextInput:lockedControl, curTextInput:ctrlData, date:Date.now()});
 				}
 			}
 		}
@@ -4551,7 +4551,7 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 			lockedControl = remoteInteraction[uniqueID].lockedControl();
 			if (lockedControl !== null && btn!==null && regButton.test(btn.id) && lockedControl.ctrlId === btn.id) {
 				remoteInteraction[uniqueID].dropControl();
-				broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser}, 'receivesWidgetEvents');
+				broadcast('executeControlFunction', {ctrl:ctrlData, user:eUser, date:Date.now()}, 'receivesWidgetEvents');
 
 				var app = SAGE2Items.applications.list[ctrlData.appId];
 				if (app) {
@@ -5011,7 +5011,7 @@ function pointerMoveOnWidgets(uniqueID, pointerX, pointerY, data, obj, localPt){
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 
 	if (lockedControl && /slider/.test(lockedControl.ctrlId)){
-		broadcast('moveSliderKnob', {ctrl:lockedControl, x:pointerX, user: eUser});
+		broadcast('moveSliderKnob', {ctrl:lockedControl, x:pointerX, user: eUser, date:Date.now()});
 		return;
 	}
 	//showOrHideWidgetConnectors(uniqueID, obj.data, "move");

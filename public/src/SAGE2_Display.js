@@ -626,7 +626,7 @@ function setupListeners() {
 				if (app.move) app.move(date);
 			}
 		}
-		if (position_data.elemId in controlObjects && position_data.user_color){
+		if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -906,7 +906,7 @@ function setupListeners() {
 					}
 					break;
 				default:
-					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
+					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date(data.date));
 					break;
 			}
 
@@ -928,7 +928,7 @@ function setupListeners() {
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date(data.date));
 		/*
 		var func   = slider.data("lockCall");
 		if (func !== undefined && func !== null)
@@ -944,7 +944,7 @@ function setupListeners() {
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
 			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
 			/*
 			func = slider.data("updateCall");
 			if (func !== undefined && func !== null)
@@ -968,7 +968,7 @@ function setupListeners() {
 		var appId  = data.ctrl.appId;
 		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
 		/*
 		var func = slider.data("updateCall");
 		if (func !== undefined && func !== null)
