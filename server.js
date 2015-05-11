@@ -2439,6 +2439,9 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 		}
 
 		sharedApps[appInstance.id] = [{wsio: wsio, sharedId: data.remoteAppId}];
+
+		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", true);
+		broadcast('setAppSharingFlag', {id: appInstance.id, sharing: true});
 	});
 }
 
@@ -4660,6 +4663,9 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 			}
 			break;
+		case "syncButton":
+			broadcast('toggleSyncOptions', {id: obj.data.id});
+			break;
 		case "fullscreenButton":
 			toggleApplicationFullscreen(uniqueID, obj.data, portalId);
 			break;
@@ -5340,6 +5346,8 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		var sharedId = app.application.id + "_" + config.host+":"+config.port + "+" + remote.wsio.id;
 		if (sharedApps[app.application.id] === undefined) sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
 		else sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
+
+		SAGE2Items.applications.editButtonVisibilityOnItem(app.application.id, "syncButton", true);
 
 		remote.wsio.emit('addNewSharedElementFromRemoteServer', {application: app.application, id: sharedId, remoteAppId: app.application.id});
 		broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
@@ -7137,6 +7145,7 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+(1*(buttonsPad+oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+(2*(buttonsPad+oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
 }
@@ -7165,6 +7174,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+(1*(buttonsPad+oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+(2*(buttonsPad+oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
 }

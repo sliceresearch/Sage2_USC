@@ -1089,6 +1089,18 @@ function setupListeners() {
 			windowIconSync.display = "none";
 		}
 	});
+
+	wsio.on('toggleSyncOptions', function(data) {
+		var windowState = document.getElementById(data.id + "_state");
+		if (applications[data.id].SAGE2StateSyncOptions.visible === false) {
+			applications[data.id].SAGE2StateSyncOptions.visible = true;
+			windowState.style.display = "block";
+		}
+		else {
+			applications[data.id].SAGE2StateSyncOptions.visible = false;
+			windowState.style.display = "none";
+		}
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
