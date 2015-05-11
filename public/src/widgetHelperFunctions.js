@@ -375,7 +375,10 @@ function showWidgetToAppConnectors(data){
 
 function makeSvgBackgroundForWidgetConnectors(width, height){
 	var backDrop = new Snap(parseInt(width), parseInt(height));
-	backDrop.node.style.zIndex = "1";
+	backDrop.node.style.zIndex = "0";
+	backDrop.node.style.left = "0px";
+	backDrop.node.style.top = "0px";
+	backDrop.node.style.position = "absolute";
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
 	return backDrop;
