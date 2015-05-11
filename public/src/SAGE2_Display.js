@@ -421,7 +421,7 @@ function setupListeners() {
 			for (var item in controlItems){
 				if (item.indexOf(elem_data.elemId) > -1){
 					controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
-					removeWidgetConnector(item);
+					removeWidgetToAppConnector(item);
 					delete controlItems[item];
 				}
 
@@ -434,7 +434,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
-			hideWidgetConnector(ctrl_data.id, ctrl_data.appId);
+			hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
 		}
 	});
 
@@ -514,7 +514,7 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
+					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
 				}
 			}
 		}
@@ -530,7 +530,7 @@ function setupListeners() {
 			selectedControl.style.left = eLeft.toString() + "px";
 			selectedControl.style.top = eTop.toString() + "px";
 			var hOffset = (ui.titleBarHeight + appData.height)/2;
-			moveWidgetConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0);
+			moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0);
 		}
 		else {
 			console.log("cannot find control: " + position_data.elemId);
@@ -539,7 +539,7 @@ function setupListeners() {
 
 	wsio.on('showWidgetToAppConnector', function(data){
 		//console.log("show:",data);
-		showWidgetConnectors(data);
+		showWidgetToAppConnectors(data);
 		if (!(data.id in widgetConnectorRequestList)){
 			widgetConnectorRequestList[data.id] = [];
 		}
@@ -556,7 +556,7 @@ function setupListeners() {
 				for (var i=len-1; i>=0; i--) {
 					if (control_data.user_id === lst[i].user_id) {
 						lst.splice(i, 1);
-						showWidgetConnectors(lst[len-2]);
+						showWidgetToAppConnectors(lst[len-2]);
 						break;
 					}
 				}
@@ -634,7 +634,7 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
+					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
 				}
 			}
 		}
@@ -748,7 +748,7 @@ function setupListeners() {
 				ctrDiv.appendChild(handle);
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id] = {show:data.show, divHandle:ctrDiv};
-				createWidgetConnector(data.id);
+				createWidgetToAppConnector(data.id);
 			}
 
 		}
@@ -757,98 +757,11 @@ function setupListeners() {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
-				removeWidgetConnector(idx);
+				removeWidgetToAppConnector(idx);
 				delete controlItems[idx];
 			}
 		}
 	});
-
-	/*wsio.on('requestControlId', function(data) {
-		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
-		var ctrId = ctrl? ctrl.attr("id"):"";
-		var regC  = /_controls/;
-		var regB  = /button/;
-		var regS  = /slider/;
-		var regTI = /textInput/;
-		var textInput;
-		var blinkControlHandle;
-		if (lockedControlElements[data.ptrId]){
-			var lckedCtrl = lockedControlElements[data.ptrId];
-			var lckedCtrlId = lckedCtrl.attr("id");
-			console.log("in requestControlId->", data);
-			if (regTI.test(lckedCtrlId)){
-				textInput = lckedCtrl.parent();
-				blinkControlHandle = textInput.data("blinkControlHandle");
-				clearInterval(blinkControlHandle);
-			}
-
-		}
-
-		if(ctrl){
-			var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
-			if (instanceID)
-				controlItems[instanceID].divHandle.style.zIndex = "9991";
-		}
-
-
-		if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
-			var temp = regC.test(ctrId)? null:ctrId;
-
-			var aId = ctrl.data("appId");
-			if(regTI.test(ctrId)===true){
-				textInput = ctrl.parent();
-				blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
-				textInput.data("blinkControlHandle", blinkControlHandle);
-			}
-			if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
-				if(/line/.test(ctrId) || /knob/.test(ctrId))
-			}
-			wsio.emit('selectedControlId', {
-				addr:data.addr,
-				pointerX: data.x,
-				pointerY: data.y,
-				ctrlId: temp,
-				instanceID: ctrl.parent().data("instanceID"),
-				appId: aId
-			});
-			lockedControlElements[data.ptrId] = ctrl;
-
-		}
-	});*/
-
-	/*wsio.on('releaseControlId', function(data){
-		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
-		var regexSlider = /slider/;
-		var regexButton = /button/;
-		var regexTextInput = /textInput/;
-		var lockedControl = lockedControlElements[data.ptrId];
-		if (ctrl){
-			var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
-			if (instanceID){
-				controlItems[instanceID].divHandle.style.zIndex = "9990";
-			}
-		}
-
-
-		if (lockedControl){
-			if (regexTextInput.test(lockedControl.attr("id"))===false){
-				lockedControlElements[data.ptrId] = null;
-			}
-			ctrl = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
-			var ctrlId = ctrl? ctrl.attr("id"): "";
-			if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
-				wsio.emit('releasedControlId', {
-					addr:data.addr,
-					pointerX: data.x,
-					pointerY: data.y,
-					instanceID: lockedControl.parent().data("instanceID"),
-					ctrlId: lockedControl.attr("id"),
-					appId: lockedControl.data("appId")
-				});
-
-			}
-		}
-	});*/
 
 	wsio.on('executeControlFunction', function(data){
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
@@ -887,11 +800,6 @@ function setupListeners() {
 				action = "sliderRelease";
 			}
 
-			/*
-			var func = ctrl.parent().data("call");
-			if (func !== undefined && func !== null)
-				func(new Date());
-			*/
 			var appId = data.ctrl.appId;
 			var app   = applications[appId];
 			switch(ctrlId) {
@@ -929,11 +837,6 @@ function setupListeners() {
 		var app = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
 		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date(data.date));
-		/*
-		var func   = slider.data("lockCall");
-		if (func !== undefined && func !== null)
-			func(new Date());
-		*/
 		var ctrHandle    = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
@@ -945,11 +848,6 @@ function setupListeners() {
 			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
 			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
-			/*
-			func = slider.data("updateCall");
-			if (func !== undefined && func !== null)
-				func(new Date());
-			*/
 		}
 	});
 
@@ -961,26 +859,18 @@ function setupListeners() {
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
 		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
-		//console.log("moving->",data.x,pos,updatedSliderInfo.sliderValue);
 		var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 		appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-
 		var appId  = data.ctrl.appId;
 		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
 		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
-		/*
-		var func = slider.data("updateCall");
-		if (func !== undefined && func !== null)
-			func(new Date());
-		*/
 	});
 
 	wsio.on('keyInTextInputWidget', function(data) {
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
-
 			if (data.code !== 13) {
 				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
@@ -990,24 +880,9 @@ function setupListeners() {
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
 				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
-				/*
-				var func = textInput.data("call");
-				if (func !== undefined && func !== null)
-					func(getTextFromTextInputWidget(textInput));
-				*/
 			}
 		}
 	});
-
-	/*wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
-		console.log("in dropTextInputControl->", data);
-		var ctrl = getWidgetControlInstanceById(data);
-		if (ctrl){
-			var textInput = ctrl.parent();
-			var blinkControlHandle = textInput.data("blinkControlHandle");
-			clearInterval(blinkControlHandle);
-		}
-	});*/
 
 	wsio.on('activateTextInputControl', function(data){
 		var ctrl = null;

@@ -250,7 +250,7 @@ function polarToCartesian(radius, theta, center) {
 }
 
 
-function createWidgetConnector(instanceID) {
+function createWidgetToAppConnector(instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
 	var connector = paper.line(0, 0, 0, 0);
 	connector.attr({
@@ -286,13 +286,13 @@ function hideAllWidgetConnectors(appId){
 		selectedAppTitle.className = "windowTitle";
 		for (var item in controlItems){
 			if (item.indexOf(appId) > -1){
-				hideWidgetConnector(item, appId);
+				hideWidgetToAppConnector(item, appId);
 			}
 		}
 	}
 }
 
-function hideWidgetConnector(instanceID, appId){
+function hideWidgetToAppConnector(instanceID, appId){
 	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
 		connector.attr({
@@ -314,7 +314,7 @@ function hideWidgetConnector(instanceID, appId){
 	}
 }
 
-function moveWidgetConnector(instanceID, x1, y1, x2, y2, cutLength) {
+function moveWidgetToAppConnector(instanceID, x1, y1, x2, y2, cutLength) {
 	var a = Math.abs(x1-x2);
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b );
@@ -334,7 +334,7 @@ function moveWidgetConnector(instanceID, x1, y1, x2, y2, cutLength) {
 	}
 }
 
-function removeWidgetConnector(instanceID){
+function removeWidgetToAppConnector(instanceID){
 	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
 		connector.remove();
@@ -359,16 +359,16 @@ function setConnectorColor(instanceID, color){
 	}
 }
 
-function showWidgetConnectors(position_data){
+function showWidgetToAppConnectors(data){
 	var selectedAppTitle, re, styleCaption;
-	selectedAppTitle = document.getElementById(position_data.id + "_title");
+	selectedAppTitle = document.getElementById(data.id + "_title");
 	if (!selectedAppTitle)return;
 	re = /\.|\:/g;
-	styleCaption = position_data.user_id.split(re).join("");
+	styleCaption = data.user_id.split(re).join("");
 	selectedAppTitle.className = dynamicStyleSheets[styleCaption]? "title" + styleCaption : "windowTitle";
 	for (var item in controlItems){
-		if (item.indexOf(position_data.id) > -1 && controlItems[item].show){
-			setConnectorColor(item, position_data.user_color);
+		if (item.indexOf(data.id) > -1 && controlItems[item].show){
+			setConnectorColor(item, data.user_color);
 		}
 	}
 }
