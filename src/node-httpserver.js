@@ -228,6 +228,38 @@ HttpServer.prototype.onreq = function(req, res) {
 			this.postFuncs[postName](req, res);
 		}
 	}
+	else if (req.method === "PUT") {
+		// Need some authentication / security here
+		//
+		var putName = decodeURIComponent(url.parse(req.url).pathname);
+		// Remove the first / if there
+		if (putName[0] === '/') putName = putName.slice(1);
+
+		var fileLength = 0;
+		var filename   = path.join(this.publicDirectory, "uploads", "tmp", putName);
+		var wstream    = fs.createWriteStream(filename);
+
+		wstream.on('finish', function () {
+			// stream closed
+			console.log('HTTP>		PUT file has been written', putName, fileLength, 'bytes');
+		});
+		// Getting data
+		req.on('data', function(chunk) {
+			// Write into output stream
+			wstream.write(chunk);
+			fileLength += chunk.length;
+		});
+		// Data no more
+		req.on('end', function() {
+			// No more date
+			console.log("HTTP>		PUT Received:", fileLength, filename, putName);
+			// Close the write stream
+			wstream.end();
+			// empty 200 OK response for now
+			res.writeHead(200, "OK", {'Content-Type': 'text/html'});
+			res.end();
+		});
+	}
 };
 
 /**
