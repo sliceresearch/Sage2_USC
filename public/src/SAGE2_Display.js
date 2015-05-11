@@ -1098,12 +1098,29 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowTitle.style.zIndex = itemCount.toString();
 	if (ui.noDropShadow===true) windowTitle.style.boxShadow = "none";
 
-	var windowIcons = document.createElement("img");
-	windowIcons.src = "images/layout3.webp";
-	windowIcons.height = Math.round(titleBarHeight);
-	windowIcons.style.position = "absolute";
-	windowIcons.style.right    = "0px";
-	windowTitle.appendChild(windowIcons);
+	var iconWidth = Math.round(titleBarHeight) * (300/235);
+	var iconSpace = 0.1*iconWidth;
+	var windowIconSync = document.createElement("img");
+	windowIconSync.src = "images/window-sync.svg";
+	windowIconSync.height = Math.round(titleBarHeight);
+	windowIconSync.style.position = "absolute";
+	windowIconSync.style.right    = Math.round(2*(iconWidth + iconSpace)) + "px";
+	windowIconSync.style.display = "none";
+	windowTitle.appendChild(windowIconSync);
+
+	var windowIconFullscreen = document.createElement("img");
+	windowIconFullscreen.src = "images/window-fullscreen.svg";
+	windowIconFullscreen.height = Math.round(titleBarHeight);
+	windowIconFullscreen.style.position = "absolute";
+	windowIconFullscreen.style.right    = Math.round(1*(iconWidth + iconSpace)) + "px";
+	windowTitle.appendChild(windowIconFullscreen);
+
+	var windowIconClose = document.createElement("img");
+	windowIconClose.src = "images/window-close.svg";
+	windowIconClose.height = Math.round(titleBarHeight);
+	windowIconClose.style.position = "absolute";
+	windowIconClose.style.right    = "0px";
+	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
@@ -1133,7 +1150,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowState.style.backgroundColor = "rgba(0,0,0,0.8)";
 	windowState.style.lineHeight = Math.round(1.5*titleTextSize) + "px";
 	windowState.style.zIndex = "100";
-	//windowState.style.display = "none";
+	windowState.style.display = "none";
 
 	var windowStateContatiner = document.createElement("div");
 	windowStateContatiner.id = data.id + "_statecontainer";

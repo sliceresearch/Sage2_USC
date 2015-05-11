@@ -69,7 +69,7 @@ var SAGE2_App = Class.extend( {
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
 		// Modify state sync options
-		this.SAGE2StateSyncOptions = {visible: true, hover: null, press: {name: null, value: null}, scroll: 0};
+		this.SAGE2StateSyncOptions = {visible: false, hover: null, press: {name: null, value: null}, scroll: 0};
 	},
 
 	/**

@@ -4453,17 +4453,22 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 		h: dataSession.height+config.ui.titleBarHeight
 	};
 
-	var cornerSize = 0.2 * Math.min(geometry.w, geometry.h);
+	var cornerSize   = 0.2 * Math.min(geometry.w, geometry.h);
+	var oneButton    = Math.round(config.ui.titleBarHeight) * (300/235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = geometry.w - Math.round(2*oneButton + buttonsPad);
+	/*
 	var buttonsWidth = (config.ui.titleBarHeight-4) * (324.0/111.0);
 	var buttonsPad   = (config.ui.titleBarHeight-4) * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = geometry.w - buttonsWidth;
+	*/
 
 	interactMgr.addGeometry(dataSession.id, "portals", "rectangle", geometry, true, zIndex, dataSession);
 
 	SAGE2Items.portals.addItem(dataSession);
 	SAGE2Items.portals.addButtonToItem(dataSession.id, "titleBar", "rectangle", {x: 0, y: 0, w: geometry.w, h: config.ui.titleBarHeight}, 0);
-	SAGE2Items.portals.addButtonToItem(dataSession.id, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.portals.addButtonToItem(dataSession.id, "fullscreenButton", "rectangle", {x: startButtons, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.portals.addButtonToItem(dataSession.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.portals.addButtonToItem(dataSession.id, "dragCorner", "rectangle", {x: geometry.w-cornerSize, y: geometry.h+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
@@ -7114,16 +7119,22 @@ function handleNewApplication(appInstance, videohandle) {
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
 	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight}, true, zIndex, appInstance);
 
-	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
+	var cornerSize   = 0.2 * Math.min(appInstance.width, appInstance.height);
+	var oneButton    = Math.round(config.ui.titleBarHeight) * (300/235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = appInstance.width - Math.round(3*oneButton + 2*buttonsPad);
+	/*
 	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
 	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appInstance.width - buttonsWidth;
+	*/
 
 	SAGE2Items.applications.addItem(appInstance);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle", {x: 0, y: 0, w: appInstance.width, h: config.ui.titleBarHeight}, 0);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "syncButton", "rectangle", {x: startButtons, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+(1*(buttonsPad+oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+(2*(buttonsPad+oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -7137,15 +7148,21 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle", {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+titleBarHeight}, true, zIndex, appInstance);
 
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
+	var oneButton    = Math.round(titleBarHeight) * (300/235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = appInstance.width - Math.round(3*oneButton + 2*buttonsPad);
+	/*
 	var buttonsWidth = titleBarHeight * (324.0/111.0);
 	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appInstance.width - buttonsWidth;
+	*/
 
 	SAGE2Items.applications.addItem(appInstance);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle", {x: 0, y: 0, w: appInstance.width, h: titleBarHeight}, 0);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "syncButton", "rectangle", {x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle", {x: startButtons+(1*(buttonsPad+oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+(2*(buttonsPad+oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -7162,14 +7179,20 @@ function handleApplicationResize(appId) {
 	}
 
 	var cornerSize = 0.2 * Math.min(app.width, app.height);
+	var oneButton    = Math.round(titleBarHeight) * (300/235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = app.width - Math.round(3*oneButton + 2*buttonsPad);
+	/*
 	var buttonsWidth = titleBarHeight * (324.0/111.0);
 	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = app.width - buttonsWidth;
+	*/
 
 	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle", {x: 0, y: 0, w: app.width, h: titleBarHeight});
-	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
-	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "syncButton", "rectangle", {x: startButtons, y: 0, w: oneButton, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle", {x: startButtons+(1*(buttonsPad+oneButton)), y: 0, w: oneButton, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle", {x: startButtons+(2*(buttonsPad+oneButton)), y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle", {x: app.width-cornerSize, y: app.height+titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
 }
 
@@ -7180,14 +7203,19 @@ function handleDataSharingPortalResize(portalId) {
 	var portalWidth = SAGE2Items.portals.list[portalId].width;
 	var portalHeight = SAGE2Items.portals.list[portalId].height;
 
-	var cornerSize = 0.2 * Math.min(portalWidth, portalHeight);
+	var cornerSize   = 0.2 * Math.min(portalWidth, portalHeight);
+	var oneButton    = Math.round(config.ui.titleBarHeight) * (300/235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = portalWidth - Math.round(2*oneButton + buttonsPad);
+	/*
 	var buttonsWidth = (config.ui.titleBarHeight-4) * (324.0/111.0);
 	var buttonsPad   = (config.ui.titleBarHeight-4) * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = portalWidth - buttonsWidth;
+	*/
 
 	SAGE2Items.portals.editButtonOnItem(portalId, "titleBar", "rectangle", {x: 0, y: 0, w: portalWidth, h: config.ui.titleBarHeight});
-	SAGE2Items.portals.editButtonOnItem(portalId, "fullscreenButton", "rectangle", {x: startButtons+buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight});
+	SAGE2Items.portals.editButtonOnItem(portalId, "fullscreenButton", "rectangle", {x: startButtons, y: 0, w: oneButton, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "dragCorner", "rectangle", {x: portalWidth-cornerSize, y: portalHeight+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize});
 }
