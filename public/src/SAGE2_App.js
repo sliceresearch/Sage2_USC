@@ -368,6 +368,7 @@ var SAGE2_App = Class.extend( {
 		for (key in parent) {
 			if (parent.hasOwnProperty(key) && key[0] !== "_") {
 				if (parent[key]._name === node) {
+					parent[key]._sync = true;
 					if (parent !== this.SAGE2StateOptions) {
 						parent._name.setAttribute("state", "idle");
 						parent._name.setAttribute("synced", true);
@@ -389,6 +390,7 @@ var SAGE2_App = Class.extend( {
 		for (key in parent) {
 			if (parent.hasOwnProperty(key) && key[0] !== "_") {
 				if (parent[key]._name === node) {
+					parent[key]._sync = flag;
 					this.SAGE2StateSyncChildrenHelper(parent[key], flag);
 					break;
 				}
@@ -420,9 +422,28 @@ var SAGE2_App = Class.extend( {
 
 	SAGE2Sync: function(updateRemote) {
 		this.SAGE2UpdateAppOptionsFromState();
-		
-		if(isMaster)
-			wsio.emit('updateAppState', {id: this.id, state: this.state, updateRemote: updateRemote});
+
+		if(isMaster) {
+			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
+			wsio.emit('updateAppState', {id: this.id, state: syncedState, updateRemote: updateRemote});
+		}
+	},
+
+	SAGE2CopySyncedState: function(state, syncOptions) {
+		var key;
+		var copy = {};
+		for (key in state) {
+			if (syncOptions[key]._sync === true) {
+				if (state[key] === null || state[key] instanceof Array || typeof state[key] !== "object") {
+					copy[key] = state[key];
+				}
+				else {
+					copy[key] = this.SAGE2CopySyncedState(state[key], syncOptions[key]);
+				}
+			}
+		}
+		if (isEmpty(copy)) return undefined;
+		return copy;
 	},
 
 	/**
