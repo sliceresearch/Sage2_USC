@@ -1075,6 +1075,20 @@ function setupListeners() {
 		console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
+
+	wsio.on('setAppSharingFlag', function(data) {
+		var windowTitle = document.getElementById(data.id + "_title");
+		var windowIconSync = document.getElementById(data.id + "_iconSync");
+
+		if (data.sharing === true) {
+			windowTitle.style.backgroundColor = "#39C4A6";
+			windowIconSync.style.display = "block";
+		}
+		else {
+			windowTitle.style.backgroundColor = "#666666";
+			windowIconSync.display = "none";
+		}
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
@@ -1101,14 +1115,16 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	var iconWidth = Math.round(titleBarHeight) * (300/235);
 	var iconSpace = 0.1*iconWidth;
 	var windowIconSync = document.createElement("img");
+	windowIconSync.id  = data.id + "_iconSync";
 	windowIconSync.src = "images/window-sync.svg";
 	windowIconSync.height = Math.round(titleBarHeight);
 	windowIconSync.style.position = "absolute";
 	windowIconSync.style.right    = Math.round(2*(iconWidth + iconSpace)) + "px";
-	windowIconSync.style.display = "none";
+	windowIconSync.style.display  = "none";
 	windowTitle.appendChild(windowIconSync);
 
 	var windowIconFullscreen = document.createElement("img");
+	windowIconFullscreen.id  = data.id + "_iconFullscreen";
 	windowIconFullscreen.src = "images/window-fullscreen.svg";
 	windowIconFullscreen.height = Math.round(titleBarHeight);
 	windowIconFullscreen.style.position = "absolute";
@@ -1116,6 +1132,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowTitle.appendChild(windowIconFullscreen);
 
 	var windowIconClose = document.createElement("img");
+	windowIconClose.id  = data.id + "_iconClose";
 	windowIconClose.src = "images/window-close.svg";
 	windowIconClose.height = Math.round(titleBarHeight);
 	windowIconClose.style.position = "absolute";

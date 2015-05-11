@@ -5342,6 +5342,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		else sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
 
 		remote.wsio.emit('addNewSharedElementFromRemoteServer', {application: app.application, id: sharedId, remoteAppId: app.application.id});
+		broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
 
 		var eLogData = {
 			host: remote.wsio.remoteAddress.address,
