@@ -540,10 +540,12 @@ function setupListeners() {
 	wsio.on('showWidgetToAppConnector', function(data){
 		//console.log("show:",data);
 		showWidgetToAppConnectors(data);
-		if (!(data.id in widgetConnectorRequestList)){
-			widgetConnectorRequestList[data.id] = [];
-		}
-		widgetConnectorRequestList[data.id].push(data);
+		if (data.user_color!==null){
+			if (!(data.id in widgetConnectorRequestList)){
+				widgetConnectorRequestList[data.id] = [];
+			}
+			widgetConnectorRequestList[data.id].push(data);
+		}		
 	});
 
 
