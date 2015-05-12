@@ -25,8 +25,8 @@ var previewWindowWidth = 0.2;
 
 var radialMenuCenter = { x: 215, y: 215 }; // scaled in init - based on window size
 
-var angleSeparation = 35;
-var initAngle = 55;
+var angleSeparation = 36;
+var initAngle = 90;
 var angle = 0;
 var menuRadius = 100;
 var menuButtonSize = 100; // pie image size
@@ -44,45 +44,38 @@ var radialMenuList = {};
 //var enableEventRedraw = false;
 
 // common radial menu icons
+var radialMenuIcons = {};
+
+// Creates an image and adds to dictionary with image path as key
+function loadImageIcon(src) {
+	var newIcon = new Image();
+	newIcon.src = src;
+	radialMenuIcons[src] =  newIcon;
+}
+
 var radialButtonIcon = new Image();
 radialButtonIcon.src = "images/radialMenu/icon_radial_button_circle.svg";
-var radialMenuLevel2Icon = new Image();
-radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
-var idleExitIcon = new Image();
-idleExitIcon.src = "images/ui/close.svg";
-
-// Level 1 radial icons
-var idleRemoteSitesIcon = new Image();
-idleRemoteSitesIcon.src = "images/ui/remote.svg";
-var idlePDFIcon = new Image();
-idlePDFIcon.src = "images/ui/pdfs.svg";
-var idleImageIcon = new Image();
-idleImageIcon.src = "images/ui/images.svg";
-var idleVideoIcon = new Image();
-idleVideoIcon.src = "images/ui/videos.svg";
-var idleAppIcon = new Image();
-idleAppIcon.src = "images/ui/applauncher.svg";
-var idleSessionIcon = new Image();
-idleSessionIcon.src = "images/ui/loadsession.svg";
-var idleSaveSessionIcon = new Image();
-idleSaveSessionIcon.src = "images/ui/savesession.svg";
-var idleSettingsIcon = new Image();
-idleSettingsIcon.src = "images/ui/arrangement.svg";
-
-// Level 2 radial icons
-var idleFolderIcon = new Image();
-idleFolderIcon.src = "images/radialMenu/open131.svg";
-var idleCloseAppIcon = new Image();
-idleCloseAppIcon.src = "images/radialMenu/window27.svg";
-var idleCloseAllIcon = new Image();
-idleCloseAllIcon.src = "images/ui/clearcontent.svg";
-var idleMaximizeIcon = new Image();
-idleMaximizeIcon.src = "images/radialMenu/maximize.svg";
-var idleTileIcon = new Image();
-idleTileIcon.src = "images/ui/tilecontent.svg";
-
 var radialDragIcon = new Image();
 radialDragIcon.src = "images/radialMenu/drag-ring.svg";
+
+
+var radialMenuLevel2Icon = new Image();
+radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
+
+// Level 1 radial icons
+loadImageIcon("images/ui/close.svg");
+loadImageIcon("images/ui/remote.svg");
+loadImageIcon("images/ui/pdfs.svg");
+loadImageIcon("images/ui/images.svg");
+loadImageIcon("images/ui/videos.svg");
+loadImageIcon("images/ui/applauncher.svg");
+loadImageIcon("images/ui/loadsession.svg");
+loadImageIcon("images/ui/savesession.svg");
+loadImageIcon("images/ui/arrangement.svg")
+
+// Level 2 radial icons
+loadImageIcon("images/ui/clearcontent.svg")
+loadImageIcon("images/ui/tilecontent.svg")
 
 /**
  * Radial menu and Thumbnail Content Window
@@ -217,7 +210,17 @@ function RadialMenu(){
 		this.radialDragButton = this.createRadialButton( radialDragIcon, false, 500, this.imageThumbSize, 'centered', 'circle', 0, 0 );
 
 		this.radialCenterButton = this.createRadialButton( radialButtonIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 );
-
+		
+		// Generate the radial menu buttons as specified by the server
+		for (var buttonName in data.layout) {
+			var buttonInfo = data.layout[buttonName];
+			this.addRadialMenuButton(buttonName, radialMenuIcons[buttonInfo.icon], overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', buttonInfo.radialPosition, buttonInfo.radialLevel);
+		}
+		
+		
+		
+		 
+		/*
 		this.radialRemoteSitesButton = this.addRadialMenuButton("radialRemoteSitesButton", idleRemoteSitesIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 0, 1);
 		this.radialRemoteSitesButton.setHidden(true);
 
@@ -305,7 +308,7 @@ function RadialMenu(){
 		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
 		this.radial2AppButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
 		this.radial2AppButton.setRotation( angle - Math.PI/2 );
-
+		*/
 
 	};
 
@@ -449,8 +452,16 @@ function RadialMenu(){
 			}
 		}
 
-
 		this.radialCenterButton.draw();
+		
+		var i = 0;
+		if( this.currentRadialState === 'radialMenu' ) {
+			for ( i = 0; i < this.level1Buttons.length; i++ ) {
+				this.level1Buttons[i].draw();
+			}
+		}
+		
+		/*
 		this.radialCloseButton.draw();
 		this.radialSettingsButton.draw();
 
@@ -470,7 +481,8 @@ function RadialMenu(){
 
 			this.thumbnailWindowDiv.style.backgroundColor = "rgba(10,50,200,0.0)";
 		}
-
+		*/
+		
 		// Thumbnail window
 		if( this.currentMenuState !== 'radialMenu' ) {
 			this.thumbnailWindowDiv.style.backgroundColor = "rgba(5,5,5,0.5)";
@@ -726,7 +738,8 @@ function RadialMenu(){
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
 		this.buttonOverCount = 0; // Count number of buttons have a pointer over it
-
+		
+		/*
 		// Level 0 - Always visible -----------------------------------
 		this.buttonOverCount += this.radialCloseButton.onEvent(type, user.id, position, data);
 		if ( this.radialCloseButton.isClicked() && data.button === "left" ) {
@@ -735,11 +748,12 @@ function RadialMenu(){
 			}
 			this.closeMenu();
 		}
-
+		
+		
 		this.buttonOverCount += this.radialSettingsButton.onEvent(type, user.id, position, data);
 		this.buttonOverCount += this.radialSessionButton.onEvent(type, user.id, position, data);
 		this.buttonOverCount += this.radialSaveSessionButton.onEvent(type, user.id, position, data);
-
+		*/
 		// Level 1 -----------------------------------
 		var i = 0;
 		if( this.currentRadialState === 'radialMenu' ) {
@@ -749,7 +763,8 @@ function RadialMenu(){
 				this.buttonOverCount += this.level1Buttons[i].onEvent(type, user.id, position, data);
 			}
 		}
-
+	
+		/*
 		if( this.radialSettingsButton.isClicked() ) {
 			if( this.settingMenuOpen ) {
 				this.settingMenuOpen = false;
@@ -851,7 +866,8 @@ function RadialMenu(){
 			this.radial2VideoButton.onEvent(type, user.id, position, data);
 			this.radial2AppButton.onEvent(type, user.id, position, data);
 		}
-
+		*/
+		
 		// Thumbnail window ----------------------------
 		if( this.currentMenuState !== 'radialMenu' ) {
 			var currentThumbnailButtons = this.imageThumbnailButtons;
@@ -1050,11 +1066,11 @@ function RadialMenu(){
 						customIcon.src = imageList[i].exif.SAGE2thumbnail+"_128.jpg";
 						thumbnailButton.setButtonImage( customIcon );
 					} else
-						thumbnailButton.setButtonImage( idleImageIcon );
+						thumbnailButton.setButtonImage( radialMenuIcons["images/ui/images.svg"] );
 
 					// File has a bad filename for thumbnails, set default icon
 					if( imageList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
-						thumbnailButton.setButtonImage( idleImageIcon );
+						thumbnailButton.setButtonImage( radialMenuIcons["images/ui/images.svg"] );
 					}
 
 					this.thumbnailButtons.push(thumbnailButton);
@@ -1080,11 +1096,11 @@ function RadialMenu(){
 					customIcon.src = pdfList[i].exif.SAGE2thumbnail+"_128.jpg";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
-					thumbnailButton.setButtonImage( idlePDFIcon );
+					thumbnailButton.setButtonImage( radialMenuIcons["images/ui/pdfs.svg"] );
 
 				// File has a bad filename for thumbnails, set default icon
 				if( pdfList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
-					thumbnailButton.setButtonImage( idlePDFIcon );
+					thumbnailButton.setButtonImage( radialMenuIcons["images/ui/pdfs.svg"] );
 				}
 
 				this.thumbnailButtons.push(thumbnailButton);
@@ -1109,11 +1125,11 @@ function RadialMenu(){
 					//console.log("uploads/assets/"+imageList[i].exif.SAGE2thumbnail);
 					thumbnailButton.setButtonImage( customIcon );
 				} else
-					thumbnailButton.setButtonImage( idleVideoIcon );
+					thumbnailButton.setButtonImage( radialMenuIcons["images/ui/videos.svg"] );
 
 				// File has a bad filename for thumbnails, set default icon
 				if( videoList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
-					thumbnailButton.setButtonImage( idleVideoIcon );
+					thumbnailButton.setButtonImage( radialMenuIcons["images/ui/videos.svg"] );
 				}
 
 				this.thumbnailButtons.push(thumbnailButton);
@@ -1137,11 +1153,11 @@ function RadialMenu(){
 					customIcon.src = appList[i].exif.SAGE2thumbnail+"_128.jpg";
 					thumbnailButton.setButtonImage( customIcon );
 				} else
-					thumbnailButton.setButtonImage( idleAppIcon );
+					thumbnailButton.setButtonImage( radialMenuIcons["images/ui/applauncher.svg"] );
 
 				// File has a bad filename for thumbnails, set default icon
 				if( appList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null ) {
-					thumbnailButton.setButtonImage( idleAppIcon );
+					thumbnailButton.setButtonImage( radialMenuIcons["images/ui/applauncher.svg"] );
 				}
 
 				this.thumbnailButtons.push(thumbnailButton);
@@ -1153,7 +1169,7 @@ function RadialMenu(){
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				thumbnailButton.setData( {application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif} );
-				thumbnailButton.setButtonImage( idleSessionIcon );
+				thumbnailButton.setButtonImage( radialMenuIcons["images/ui/loadsession.svg"] );
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize( this.imageThumbSize, this.imageThumbSize );
