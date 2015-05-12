@@ -696,10 +696,10 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		{
 			// Create pointer
 			if (address in omicronManager.sagePointers) {
-				omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)", sourceType: "Touch" } );
+				omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(242, 182, 15, 1.0)", sourceType: "Touch" } );
 			} else {
 				omicronManager.createSagePointer(address);
-				omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(255, 255, 255, 1.0)", sourceType: "Touch" } );
+				omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(242, 182, 15, 1.0)", sourceType: "Touch" } );
 				omicronManager.pointerPress(address, posX, posY, { button: "left" } );
 			}
 		}
@@ -717,7 +717,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 			{
 				console.log("Touch gesture: Three finger hold");
 			}
-			omicronManager.createRadialMenu( sourceID, posX, posY );
+			//omicronManager.createRadialMenu( sourceID, posX, posY );
+			omicronManager.pointerPress(address, posX, posY, { button: "right" } );
 		}
 		else if( e.flags === FLAG_SINGLE_CLICK )
 		{
