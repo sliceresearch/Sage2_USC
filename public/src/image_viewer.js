@@ -39,6 +39,9 @@ var image_viewer = SAGE2_App.extend( {
 		// visible
 		this.vis = true;
 
+		// old image url
+		this.old_img_url = "";
+
 		this.updateAppFromState();
 	},
 
@@ -59,35 +62,43 @@ var image_viewer = SAGE2_App.extend( {
 	* @method updateAppFromState
 	*/
 	updateAppFromState: function() {
-		this.element.src  = this.state.src;
+		if (this.old_img_url !== this.state.img_url) {
+			var imgURL = cleanURL(this.state.img_url);
+			this.element.src = imgURL;
 
-		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
+			this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
+
+			// Fix iPhone picture: various orientations
+			var ratio = this.state.exif.ImageHeight / this.state.exif.ImageWidth;
+			var inv = 1.0 / ratio;
+			if (this.state.exif.Orientation === 'Rotate 90 CW') {
+				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
+				if (!this.state.crct)
+					this.sendResize(this.element.height, this.element.width);
+				this.state.crct = true;
+			}
+			else if (this.state.exif.Orientation === 'Rotate 270 CW') {
+				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(-90deg)";
+				if (!this.state.crct)
+					this.sendResize(this.element.height, this.element.width);
+				this.state.crct = true;
+			}
+			else if (this.state.exif.Orientation === 'Rotate 180') {
+				this.element.style.webkitTransform = "rotate(180deg)";
+				this.state.crct = true;
+			} else {
+				this.state.crct = true;
+			}
+			this.old_img_url = this.state.img_url;
+		}
+		
 		if (this.state.showExif === true) {
 			this.showLayer();
 		}
+		else {
+			this.hideLayer();
+		}
 		this.layer.style.top = this.state.top + "px";
-
-		// Fix iPhone picture: various orientations
-		var ratio = this.state.exif.ImageHeight / this.state.exif.ImageWidth;
-		var inv = 1.0 / ratio;
-		if (this.state.exif.Orientation === 'Rotate 90 CW') {
-			this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
-			if (!this.state.crct)
-				this.sendResize(this.element.height, this.element.width);
-			this.state.crct = true;
-		}
-		else if (this.state.exif.Orientation === 'Rotate 270 CW') {
-			this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(-90deg)";
-			if (!this.state.crct)
-				this.sendResize(this.element.height, this.element.width);
-			this.state.crct = true;
-		}
-		else if (this.state.exif.Orientation === 'Rotate 180') {
-			this.element.style.webkitTransform = "rotate(180deg)";
-			this.state.crct = true;
-		} else {
-			this.state.crct = true;
-		}
 	},
 
 	/**
@@ -98,10 +109,13 @@ var image_viewer = SAGE2_App.extend( {
 	* @param visibility {bool} became visible or hidden
 	*/
 	onVisible: function(visibility) {
-		if (visibility)
-			this.element.src = this.state.src;
-		else
+		if (visibility) {
+			var imgURL = cleanURL(this.state.img_url);
+			this.element.src = imgURL;
+		}
+		else {
 			this.element.src = smallWhiteGIF();
+		}
 	},
 
 	/**

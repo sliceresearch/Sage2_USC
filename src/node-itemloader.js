@@ -239,7 +239,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: source,
+			img_url: source,
 			type: mime_type,
 			exif: exif_data,
 			top: 0,
@@ -280,6 +280,8 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url
 	metadata.license     = "SAGE2-Software-License";
 	metadata.keywords    = ["image", "picture", "viewer"];
 
+	console.log(external_url);
+
 	var appInstance = {
 		id: null,
 		title: name,
@@ -288,7 +290,7 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: url,
+			img_url: external_url,
 			type: mime_type,
 			exif: exif_data,
 			top: 0,
