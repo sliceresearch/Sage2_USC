@@ -50,14 +50,11 @@ var radialMenuList = {};
 // common radial menu icons
 var radialButtonIcon = new Image();
 radialButtonIcon.src = "images/radialMenu/icon_radial_button_circle.svg";
-var radialMenuLevel2Icon = new Image();
-radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
+
+// load thumbnail icons
 var idleExitIcon = new Image();
 idleExitIcon.src = "images/ui/close.svg";
 
-// Level 1 radial icons
-var idleRemoteSitesIcon = new Image();
-idleRemoteSitesIcon.src = "images/ui/remote.svg";
 var idlePDFIcon = new Image();
 idlePDFIcon.src = "images/ui/pdfs.svg";
 var idleImageIcon = new Image();
@@ -73,7 +70,7 @@ idleSaveSessionIcon.src = "images/ui/savesession.svg";
 var idleSettingsIcon = new Image();
 idleSettingsIcon.src = "images/ui/arrangement.svg";
 
-// Level 2 radial icons
+// Level 2 icons
 var idleFolderIcon = new Image();
 idleFolderIcon.src = "images/radialMenu/open131.svg";
 var idleCloseAppIcon = new Image();
@@ -85,8 +82,16 @@ idleMaximizeIcon.src = "images/radialMenu/maximize.svg";
 var idleTileIcon = new Image();
 idleTileIcon.src = "images/ui/tilecontent.svg";
 
+// radial menu icons
+var radialMenuIcon = new Image();
+radialMenuIcon.src = "images/radialMenu/icon_radial_button_circle.svg";
+var radialMenuLevel2Icon = new Image();
+radialMenuLevel2Icon.src = "images/radialMenu/icon_radial_level2_360.png";
+
 var radialDragIcon = new Image();
 radialDragIcon.src = "images/radialMenu/drag-ring.svg";
+
+
 
 /**
  * Radial menu and Thumbnail Content Window
@@ -108,6 +113,9 @@ function RadialMenu(){
 
 	// This is the number of thumbnails in the window WITHOUT scrolling
 	this.thumbnailGridSize = { x: 10, y: 10 }; // Overwritten in setThumbnailPosition().
+
+	this.level1Buttons = [];
+	this.level2Buttons = [];
 
 	this.level1Buttons = [];
 	this.level2Buttons = [];
@@ -232,9 +240,6 @@ function RadialMenu(){
 			this.radialDragButton = this.createRadialButton( radialDragIcon, false, 500, this.imageThumbSize, 'centered', 'circle', 0, 0 );
 
 			this.radialCenterButton = this.createRadialButton( radialButtonIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 );
-
-			this.radialRemoteSitesButton = this.addRadialMenuButton("radialRemoteSitesButton", idleRemoteSitesIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 0, 1);
-			this.radialRemoteSitesButton.setHidden(true);
 
 			this.radialPDFButton = this.addRadialMenuButton("radialPDFButton", idlePDFIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 1, 1);
 
@@ -468,7 +473,6 @@ function RadialMenu(){
 				}
 			}
 
-
 			this.radialCenterButton.draw();
 			this.radialCloseButton.draw();
 			this.radialSettingsButton.draw();
@@ -479,7 +483,6 @@ function RadialMenu(){
 			}
 
 			if( this.currentRadialState === 'radialMenu' ) {
-				this.radialMenuButtons.radialRemoteSitesButton.draw();
 				this.radialMenuButtons.radialImageButton.draw();
 				this.radialMenuButtons.radialPDFButton.draw();
 				this.radialMenuButtons.radialVideoButton.draw();
@@ -699,7 +702,6 @@ function RadialMenu(){
 	 * @method resetRadialButtonLitState
 	 */
 	this.resetRadialButtonLitState = function() {
-		this.radialRemoteSitesButton.isLit = false;
 		this.radialImageButton.isLit = false;
 		this.radialPDFButton.isLit = false;
 		this.radialVideoButton.isLit = false;
@@ -796,11 +798,6 @@ function RadialMenu(){
 			if( this.radial2TileButton.isClicked() && this.sendsToServer === true ) {
 				this.wsio.emit('tileApplications');
 				this.wsio.emit('radialMenuClick', {button: "tileApplications", user: user} );
-			}
-
-
-			if( this.radialRemoteSitesButton.isClicked() ) {
-				this.resetRadialButtonLitState();
 			}
 
 			if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() ) {

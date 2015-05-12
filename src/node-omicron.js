@@ -769,4 +769,5 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 
 	if (emit>2) { dstart = Date.now(); emit = 0; }
 };
+
 module.exports = OmicronManager;

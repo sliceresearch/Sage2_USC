@@ -8,6 +8,10 @@
 		"scripts/d3.v3.min.js",
 		"scripts/suncalc.js"
 	],
+	"load": {
+		"mode": 1,
+		"itsF": "F"
+	},
 	"title": "US Weather",
 	"version": "1.2",
 	"description": "US Weather map using D3.js",

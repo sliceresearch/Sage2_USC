@@ -4,10 +4,13 @@
 	"width": 600,
 	"height": 400,
 	"animation": false,
-	"load": {
-	},
 	"dependencies": [
 	],
+	"load": {
+		"file": "",
+		"stereoMode": "interleave",
+		"anaglyphMode": "Optimized+Anaglyph"
+	},
 	"title": "Stereo image viewer",
 	"version": "1.0.0",
 	"description": "Display stereo images",

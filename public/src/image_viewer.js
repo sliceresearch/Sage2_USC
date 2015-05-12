@@ -20,40 +20,17 @@
  */
 var image_viewer = SAGE2_App.extend( {
 	/**
-	* Constructor
-	*
-	* @class image_viewer
-	* @constructor
-	*/
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.src = null;
-		this.top = null;
-		this.vis = null;
-	},
-
-	/**
 	* Init method, creates an 'img' tag in the DOM
 	*
 	* @method init
-	* @param data {Object} contains initialization values (id, width, height, ...)
+	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "img", data);
-
-		// application specific 'init'
-		this.state.src  = null;
-		this.state.type = null;
-		this.state.exif = null;
-		this.state.crct = null;
+		this.SAGE2Init("img", data);
 
 		this.createLayer("rgba(0,0,0,0.85)");
 		this.pre = document.createElement('pre');
 		this.layer.appendChild(this.pre);
-		this.top = 0;
-		this.state.crct = false;
 
 		// To get position and size updates
 		this.resizeEvents = "continuous";
@@ -61,52 +38,71 @@ var image_viewer = SAGE2_App.extend( {
 
 		// visible
 		this.vis = true;
+
+		this.updateAppFromState();
+		this.addWidgetControlsToImageViewer();
 	},
 
 	/**
 	* Load the app from a previous state
 	*
 	* @method load
-	* @param state {Object} object to initialize or restore the app
 	* @param date {Date} time from the server
 	*/
-	load: function(state, date) {
-		if (state.src !== undefined && state.src !== null) {
-			//this.element.src  = "data:" + state.type + ";base64," + state.src;
-			this.element.src  = state.src;
-			this.state.src  = state.src;
-			this.state.type = state.type;
-			this.state.exif = state.exif;
-			this.state.crct = state.crct;
+	load: function(date) {
+		this.updateAppFromState();
+		this.refresh(date);
+	},
 
-			this.pre.innerHTML = this.syntaxHighlight(state.exif);
+	/**
+	* Update the app from it's new state
+	*
+	* @method updateAppFromState
+	*/
+	updateAppFromState: function() {
+		this.element.src  = this.state.src;
 
-			// Fix iPhone picture: various orientations
-			var ratio_exif = this.state.exif.ImageHeight / this.state.exif.ImageWidth;
-			var ratio      = ratio_exif;
-			var inv   = 1.0 / ratio;
-			if (this.state.exif.Orientation === 'Rotate 90 CW') {
-				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
-				if (!this.state.crct)
-					this.sendResize(this.element.height, this.element.width);
-				this.state.crct = true;
-			}
-			else if (this.state.exif.Orientation === 'Rotate 270 CW') {
-				this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(-90deg)";
-				if (!this.state.crct)
-					this.sendResize(this.element.height, this.element.width);
-				this.state.crct = true;
-			}
-			else if (this.state.exif.Orientation === 'Rotate 180') {
-				this.element.style.webkitTransform = "rotate(180deg)";
-				this.state.crct = true;
-			} else {
-				this.state.crct = true;
-			}
-			// Force a redraw to test visibility
-			this.draw(date);
-			this.addWidgetControlsToImageViewer();
+		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
+		if (this.state.showExif === true) {
+			this.showLayer();
 		}
+		this.layer.style.top = this.state.top + "px";
+
+		// Fix iPhone picture: various orientations
+		var ratio = this.state.exif.ImageHeight / this.state.exif.ImageWidth;
+		var inv = 1.0 / ratio;
+		if (this.state.exif.Orientation === 'Rotate 90 CW') {
+			this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
+			if (!this.state.crct)
+				this.sendResize(this.element.height, this.element.width);
+			this.state.crct = true;
+		}
+		else if (this.state.exif.Orientation === 'Rotate 270 CW') {
+			this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(-90deg)";
+			if (!this.state.crct)
+				this.sendResize(this.element.height, this.element.width);
+			this.state.crct = true;
+		}
+		else if (this.state.exif.Orientation === 'Rotate 180') {
+			this.element.style.webkitTransform = "rotate(180deg)";
+			this.state.crct = true;
+		} else {
+			this.state.crct = true;
+		}
+	},
+
+	/**
+	* Visibility callback, when app becomes locally visible or hidden.
+	*    Called during preDraw
+	*
+	* @method onVisible
+	* @param visibility {bool} became visible or hidden
+	*/
+	onVisible: function(visibility) {
+		if (visibility)
+			this.element.src = this.state.src;
+		else
+			this.element.src = smallWhiteGIF();
 	},
 
 	/**
@@ -116,16 +112,6 @@ var image_viewer = SAGE2_App.extend( {
 	* @param date {Date} current time from the server
 	*/
 	draw: function(date) {
-		// Check for visibility
-		var visible = this.isVisible();
-		if (!visible && this.vis) {
-			this.element.src = smallWhiteGIF();
-			this.vis = false;
-		}
-		if (visible && !this.vis) {
-			this.element.src = this.state.src;
-			this.vis = true;
-		}
 	},
 
 	/**
@@ -136,7 +122,7 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	resize: function(date) {
 		// Force a redraw to test visibility
-		this.draw(date);
+		this.refresh(date);
 	},
 
 	/**
@@ -147,37 +133,7 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	move: function(date) {
 		// Force a redraw to test visibility
-		this.draw(date);
-	},
-
-	/**
-	* Calculate if the application is hidden in this display
-	*
-	* @method isHidden
-	* @return {Boolean} Returns true if out of screen
-	*/
-	isHidden: function() {
-		var checkWidth  = this.config.resolution.width;
-		var checkHeight = this.config.resolution.height;
-		if (clientID===-1) {
-			// set the resolution to be the whole display wall
-			checkWidth  *= this.config.layout.columns;
-			checkHeight *= this.config.layout.rows;
-		}
-		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
-				(this.sage2_x + this.sage2_width) < ui.offsetX ||
-				this.sage2_y > (ui.offsetY + checkHeight) ||
-				(this.sage2_y + this.sage2_height) < ui.offsetY);
-	},
-
-	/**
-	* Calculate if the application is visible in this display
-	*
-	* @method isVisible
-	* @return {Boolean} Returns true if visible
-	*/
-	isVisible: function() {
-		return !this.isHidden();
+		this.refresh(date);
 	},
 
 	/**
@@ -186,7 +142,7 @@ var image_viewer = SAGE2_App.extend( {
 	* @method syntaxHighlight
 	* @param json {Object} object containing metadata
 	*/
-	syntaxHighlight: function(json) {
+	syntaxHighlight: function(json, cb) {
 		if (typeof json !== 'string') {
 			json = JSON.stringify(json, undefined, 4);
 		}
@@ -222,21 +178,27 @@ var image_viewer = SAGE2_App.extend( {
 		// Press 'i' to display EXIF information
 		if ((eventType === "keyboard" && data.character==="i") || (eventType==="widgetEvent" && data.ctrlId === "Info")) {
 			if (this.isLayerHidden()) {
-				this.top = 0;
+				this.state.top = 0;
+				this.state.showExif = true;
 				this.showLayer();
 			}
 			else {
+				this.state.showExif = false;
 				this.hideLayer();
 			}
+
+			this.refresh(date);
 		}
 		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {
-			var amount = data.wheelDelta / 64;
+			var amount = -data.wheelDelta / 32;
 
-			this.top += ui.titleTextSize * amount;
-			if (this.top > 0) this.top = 0;
-			if (this.top < (-(this.layer.clientHeight-this.element.height))) this.top = -(this.layer.clientHeight-this.element.height);
-			this.layer.style.top = this.top + "px";
+			this.state.top += ui.titleTextSize * amount;
+			if (this.state.top > 0) this.state.top = 0;
+			if (this.state.top < (-(this.layer.clientHeight-this.element.height))) this.state.top = -(this.layer.clientHeight-this.element.height);
+			this.layer.style.top = this.state.top + "px";
+
+			this.refresh(date);
 		}
 	},
 	addWidgetControlsToImageViewer: function(){

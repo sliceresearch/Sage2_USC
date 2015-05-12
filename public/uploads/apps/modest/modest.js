@@ -10,8 +10,8 @@
 
 
 var modest = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "continuous"; // "onfinish";
 		this.map          = null;
@@ -19,11 +19,6 @@ var modest = SAGE2_App.extend( {
 		this.lastZoom     = null;
 		this.dragging     = null;
 		this.scrollAmount = null;
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 
 		// application specific 'init'	
 		this.element.id = "div" + data.id;
@@ -52,7 +47,7 @@ var modest = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 	},
 
 	draw: function(date) {
@@ -155,6 +150,7 @@ var modest = SAGE2_App.extend( {
 				default:
 					console.log("No handler for:", data.ctrlId);
 			}
+			this.refresh(date);
 		}
 	}
 

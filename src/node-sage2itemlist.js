@@ -32,7 +32,7 @@ function SAGE2ItemList() {
 	this.numItems = 0;
 	this.list = {};
 
-	this.interactMgr = new InteractableManager();
+	this.interactable= new InteractableManager();
 }
 
 /**
@@ -44,7 +44,7 @@ function SAGE2ItemList() {
 SAGE2ItemList.prototype.addItem = function(item) {
 	this.numItems++;
 	this.list[item.id] = item;
-	this.interactMgr.addLayer(item.id, 0);
+	this.interactable.addLayer(item.id, 0);
 };
 
 /**
@@ -57,7 +57,7 @@ SAGE2ItemList.prototype.removeItem = function(id) {
 	if(this.list.hasOwnProperty(id)) {
 		this.numItems--;
 		delete this.list[id];
-		this.interactMgr.removeLayer(id);
+		this.interactable.removeLayer(id);
 	}
 };
 
@@ -85,7 +85,7 @@ SAGE2ItemList.prototype.editItem = function(id, newProperties) {
 * @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
 */
 SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry, zIndex) {
-	this.interactMgr.addGeometry(buttonId, id, type, geometry, true, zIndex, null);
+	this.interactable.addGeometry(buttonId, id, type, geometry, true, zIndex, null);
 };
 
 /**
@@ -98,7 +98,7 @@ SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry,
 * @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
 */
 SAGE2ItemList.prototype.editButtonOnItem = function(id, buttonId, type, geometry) {
-	this.interactMgr.editGeometry(buttonId, id, type, geometry);
+	this.interactable.editGeometry(buttonId, id, type, geometry);
 };
 
 /**
@@ -110,7 +110,7 @@ SAGE2ItemList.prototype.editButtonOnItem = function(id, buttonId, type, geometry
 * @return button {Object} button under the point
 */
 SAGE2ItemList.prototype.findButtonByPoint = function(id, point) {
-	return this.interactMgr.searchGeometry(point, id);
+	return this.interactable.searchGeometry(point, id);
 };
 
 /**

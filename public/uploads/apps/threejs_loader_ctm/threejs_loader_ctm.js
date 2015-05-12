@@ -20,29 +20,22 @@ function addScriptForThreejs( url, callback ) {
 
 
 var threejs_loader_ctm = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.width  = null;
-		this.height = null;
+	init: function(data) {
+		this.SAGE2Init("div", data);
+	
 		this.resizeEvents = "continuous";
 
 		this.renderer = null;
 		this.camera   = null;
 		this.scene    = null;
-		this.controls = null;
 		this.ready    = null;
 
 		this.cameraCube = null;
 		this.sceneCube  = null;
 		this.dragging   = null;
 		this.rotating   = null;
-	},
 
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
-	
+
 		this.element.id = "div" + data.id;
 		this.frame  = 0;
 		this.width  = this.element.clientWidth;
@@ -61,6 +54,7 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 				});
 			});
 		});
+
 		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
 		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
 		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
@@ -72,6 +66,7 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 	},
 
 	initialize: function(date) {
+		console.log("initialize ctm");
 		// CAMERA
 		this.camera = new THREE.PerspectiveCamera( 25, this.width / this.width, 1, 10000 );
 		this.camera.position.set( 185, 40, 170 );
@@ -198,7 +193,7 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		this.resize(date);
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 
 	draw: function(date) {

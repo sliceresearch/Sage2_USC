@@ -36,8 +36,8 @@
 
 
 var forecast = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.ctx          = null;
 		this.minDim       = null;
@@ -50,11 +50,6 @@ var forecast = SAGE2_App.extend( {
 		this.location     = null;
 		this.updateTimer  = null;
 		this.imageId      = null;
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 		
 		this.element.id = "div" + data.id;
 		this.element.style.backgroundColor = '#2a2a2a';
@@ -203,7 +198,7 @@ var forecast = SAGE2_App.extend( {
 		}
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {
@@ -223,6 +218,7 @@ var forecast = SAGE2_App.extend( {
 		// this.refresh(date);
 		if (eventType === "widgetEvent" && data.ctrlId === "City"){
 			this.forcastForNewCity(data.text);
+			this.refresh(date);
 		}
 	},
 	forcastForNewCity: function(city){

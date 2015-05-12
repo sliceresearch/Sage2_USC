@@ -9,21 +9,15 @@
 // Copyright (c) 2014
 
 var tweetcloud = SAGE2_App.extend( {
-	construct: function() {
-		// call super-class 'construct'
-		arguments.callee.superClass.construct.call(this);
-		
+	init: function(data) {
+		this.SAGE2Init("div", data);
+
 		this.svg    = null;
 		this.tweets = null;
 		this.query  = null;
 		
 		this.resizeEvents = "continuous";
 		this.enableControls = true;
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 		
 		var _this = this;
 		
@@ -93,11 +87,11 @@ var tweetcloud = SAGE2_App.extend( {
 		this.updateWordCloudFunc = this.updateWordCloud.bind(this);
 		this.sortByDateFunc = this.sortByDate.bind(this);
 		
-		this.controls.addTextInput({id:"Search"});
+		this.controls.addTextInput({id: "Search"});
 		this.controls.finishedAddingControls(); // Important
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 		
 	},
 	

@@ -22,46 +22,6 @@
 */
 
 var radar = SAGE2_App.extend( {
-
-	construct: function() {
-			arguments.callee.superClass.construct.call(this);
-
-			this.resizeEvents = "continuous";
-			this.svg = null;
-
-		this.canvasWidth = 1.0;
-		this.canvasHeight = 1.0;
-
-		this.sampleSVG = null;
-
-		this.image1 = new Image();
-		this.image2 = new Image();
-		this.image3 = new Image();
-		this.image4 = new Image();
-		this.image5 = new Image(); 
-		this.image6 = new Image();
-
-		this.image3a = new Image();
-		this.image4a = new Image();
-		this.image5a = new Image();
-
-		this.URL1 = "";
-		this.URL2 = "";
-		this.URL3 = "";
-		this.URL4 = "";
-		this.URL5 = "";
-		this.URL6 = "";
-
-		this.OK1 = 0;
-		this.OK2 = 0;
-		this.OK3 = 0;
-		this.OK4 = 0;
-		this.OK5 = 0;
-		this.OK6 = 0;
-
-		this.state.currentStation = 0;
-	},
-
 	////////////////////////////////////////
 
 	initApp: function()
@@ -316,12 +276,43 @@ var radar = SAGE2_App.extend( {
 
 
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
+		this.SAGE2Init("div", data);
+
+		this.resizeEvents = "continuous";
+		this.svg = null;
+
+		this.canvasWidth = 1.0;
+		this.canvasHeight = 1.0;
+
+		this.sampleSVG = null;
+
+		this.image1 = new Image();
+		this.image2 = new Image();
+		this.image3 = new Image();
+		this.image4 = new Image();
+		this.image5 = new Image(); 
+		this.image6 = new Image();
+
+		this.image3a = new Image();
+		this.image4a = new Image();
+		this.image5a = new Image();
+
+		this.URL1 = "";
+		this.URL2 = "";
+		this.URL3 = "";
+		this.URL4 = "";
+		this.URL5 = "";
+		this.URL6 = "";
+
+		this.OK1 = 0;
+		this.OK2 = 0;
+		this.OK3 = 0;
+		this.OK4 = 0;
+		this.OK5 = 0;
+		this.OK6 = 0;
 
         this.maxFPS = 0.01;
 
-        this.state.currentStation = 0;
         console.log("initalizing location to  " + this.state.currentStation);
 
         // Get width height from the supporting div     
@@ -329,9 +320,6 @@ var radar = SAGE2_App.extend( {
         var divHeight = this.element.clientHeight;
 
         this.element.id = "div" + data.id;
-
-        // backup of the context
-        var self = this;
 
         // set background color for areas around my app (in case of non-proportional scaling)
         this.element.style.backgroundColor = "black";
@@ -344,28 +332,8 @@ var radar = SAGE2_App.extend( {
             .attr("viewBox", box);
         this.sampleSVG = this.svg;
 
-        this.startup();
-
-		this.update();
-		this.draw_d3(data.date);
-	},
-
-	load: function(state, date) {
-        console.log("load - looking for a state", state);
-        if (state)
-            {
-            console.log("load - I have state " + state);
-            this.state.currentStation = state.currentStation;
-            console.log("load - setting the location to " + this.state.currentStation);
-            }
-        else {
-            this.state.currentStation = 0; // which location to default to
-            console.log("load - no state found - setting default location 0");
-            }
-
 
         this.startup(); // refresh the URLs after the state load
-
 
         // create the widgets
         console.log("creating controls");
@@ -382,6 +350,13 @@ var radar = SAGE2_App.extend( {
             this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, id: loopIdxWithPrefix});
 		}
         this.controls.finishedAddingControls(); // Important
+
+		this.update();
+		this.draw_d3(data.date);
+	},
+
+	load: function(date) {
+        this.refresh(date);
 	},
 
 	draw_d3: function(date) {
@@ -422,7 +397,7 @@ var radar = SAGE2_App.extend( {
 		else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextStation();
             this.startup();
-            this.draw(date);
+            this.refresh(date);
 		}
 		else if (eventType === "widgetEvent"){
 			if (data.ctrlId === "Next"){
@@ -432,7 +407,7 @@ var radar = SAGE2_App.extend( {
 				this.setStation(data.ctrlId);
 			}
 			this.startup();
-            this.draw(date);
+            this.refresh(date);
 		}
 	}
 	
