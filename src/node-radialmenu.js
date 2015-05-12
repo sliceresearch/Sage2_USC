@@ -54,6 +54,24 @@ function RadialMenu(id, ptrID, ui) {
 	this.thumbnailWindowScrollPosition = 0;
 
 	this.buttonState = []; // idle, lit, over for every radial menu button
+	
+	this.radialButtons = [];
+	
+	this.buttonAngle = 36; // Degrees of separation between each radial button position
+	
+	// id - unique button id
+	// icon - button icon
+	// radialPosition - 0 = top of menu, 1 = buttonAngle degrees clockwise, 2 = buttonAngle*2 degrees clockwise, etc.
+	this.radialButton[0] = {id: 0, icon: "images/ui/images.svg", radialPosition: 0, radialLevel = 1, group: "radialMenu", action: "contentWindow", window: "images"};
+	this.radialButton[1] = {id: 1, icon: "images/ui/pdfs.svg", radialPosition: 1, radialLevel = 1, group: "radialMenu", action: "contentWindow", window: "pdfs"};
+	this.radialButton[2] = {id: 2, icon: "images/ui/videos.svg", radialPosition: 2, radialLevel = 1, group: "radialMenu", action: "contentWindow", window: "videos"};
+	this.radialButton[3] = {id: 3, icon: "images/ui/applauncher.svg", radialPosition: 3, radialLevel = 1, group: "radialMenu", action: "contentWindow", window: "applauncher"};
+	this.radialButton[4] = {id: 4, icon: "images/ui/loadsession.svg", radialPosition: 4, radialLevel = 1, group: "radialMenu", action: "contentWindow", window: "sessions"};
+	this.radialButton[5] = {id: 5, icon: "images/ui/savesession.svg", radialPosition: 5, radialLevel = 1, group: "radialMenu", action: "saveSession"};
+	this.radialButton[6] = {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel = 1, group: "radialMenu", action: "toggleRadial", "settingsMenu"};
+	this.radialButton[7] = {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel = 1, group: "radialMenu", action: "close", window: "radialMenu"};
+	this.radialButton[8] = {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 7.175, radialLevel = 2, group: "settingsMenu", action: "tileContent"};
+	this.radialButton[9] = {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.875, radialLevel = 2, group: "settingsMenu", action: "clearAllContent"};
 }
 
 /**
