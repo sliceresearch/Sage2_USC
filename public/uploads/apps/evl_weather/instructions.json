@@ -8,6 +8,9 @@
 		"scripts/d3.v3.min.js",
 		"scripts/suncalc.js"
 	],
+	"load": {
+		"itsF": "F"
+	},
 	"title": "EVL Weather Map",
 	"version": "1.1.0",
 	"description": "EVL weather monitoring",

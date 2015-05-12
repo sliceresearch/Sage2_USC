@@ -72,6 +72,12 @@
 			port: 443,
 			secure: true
 		},
+                {
+                        name: "PhD Room",
+                        host: "dante.evl.uic.edu",
+                        port: 443,
+                        secure: true
+                },
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",

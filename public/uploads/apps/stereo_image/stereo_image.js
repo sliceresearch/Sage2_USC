@@ -9,44 +9,36 @@
 // Copyright (c) 2014
 
 var stereo_image = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 
 		this.resizeEvents = "onfinish";
 		this.moveEvents   = "onfinish";
 
-		this.ctx = null;
-		this.stereoImg = null;
-		this.stereoImgLoaded = false;
-		this.manualOffset = 0;
-		this.interleaveOffset = 0;
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
-
-		// application specific 'init'
-		this.ctx = this.element.getContext('2d');
-
-		this.state.stereoMode = "interleave";
-		this.state.anaglyphMode = "Optimized+Anaglyph";
-		this.controls.addButton({type:"prev",sequenceNo:7, id:"PreviousStereoMode"});
-		this.controls.addButton({type:"next",sequenceNo:1, id:"NextStereoMode"});
-		var modeLabel =  { "textual":true, "label":"Mode", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:modeLabel,sequenceNo:4, id:"ChangeAnaglyphMode"});
-		this.controls.finishedAddingControls();
-	},
-
-	load: function(file, date) {
 		var _this = this;
 		this.stereoImg = new Image();
 		this.stereoImg.addEventListener('load', function() {
 			_this.stereoImgLoaded = true;
 			_this.sendResize(_this.stereoImg.naturalWidth/2, _this.stereoImg.naturalHeight);
-			_this.refresh(date);
+			_this.refresh(data.date);
 		}, false);
-		this.stereoImg.src = file;
+		this.stereoImgLoaded = false;
+		this.manualOffset = 0;
+		this.interleaveOffset = 0;
+
+		this.ctx = this.element.getContext('2d');
+
+		this.state.stereoMode = "interleave";
+		this.state.anaglyphMode = "Optimized+Anaglyph";
+		this.controls.addButton({type: "prev",sequenceNo: 7, id: "PreviousStereoMode"});
+		this.controls.addButton({type: "next",sequenceNo: 1, id: "NextStereoMode"});
+		var modeLabel =  {textual: true, label: "Mode", fill: "rgba(250,250,250,1.0)", animation: false};
+		this.controls.addButton({type: modeLabel, sequenceNo: 4, id: "ChangeAnaglyphMode"});
+		this.controls.finishedAddingControls();
+	},
+
+	load: function(date) {
+		this.stereoImg.src = this.state.file;
 	},
 
 	draw: function(date) {

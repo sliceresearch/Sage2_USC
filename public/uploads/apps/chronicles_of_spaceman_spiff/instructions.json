@@ -1,5 +1,5 @@
 {
-	"main_script": "spiff.js",
+	"main_script": "chronicles_of_spaceman_spiff.js",
 	"icon": "calvin.png",
 	"width": 600,
 	"height": 220,
@@ -7,6 +7,9 @@
 	"dependencies": [
 		"scripts/d3.v3.min.js"
 	],
+	"load": {
+		"timeDiff": 0
+	},
 	"title": "Chronicles of Spaceman Spiff",
 	"version": "1.2.1",
 	"description": "Daily Calvin and Hobbes comic",

@@ -25,6 +25,7 @@ function initializeCommandLineParameters(version, printFunction) {
 		.option('-q, --no-output',            'Quiet, no output')
 		.option('-s, --session [name]',       'Load a session file (last session if omitted)')
 		.option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
+		.option('-p, --password <password>',  'Sets the password to connect to SAGE2 session')
 		.parse(process.argv);
 
 	// Logging mechanism

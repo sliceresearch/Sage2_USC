@@ -21,13 +21,13 @@
  */
 var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	/**
-	* Constructor
+	* Init method, creates an 'canvas' tag in the DOM and setups up WebGL
 	*
-	* @class SAGE2_BlockStreamingApp
-	* @constructor
+	* @method init
+	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	blockStreamInit: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.moveEvents       = "onfinish";
 		this.resizeEvents     = "onfinish";
@@ -51,25 +51,10 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		this.validBlocks      = [];
 		this.receivedBlocks   = [];
 
-		this.state.paused = true;
-		this.state.muted = false;
-		this.state.looped = false;
-		this.state.frame = 0;
-
 		this.squareVertexPositionBuffer     = [];
 		this.squareVertexTextureCoordBuffer = [];
 		this.squareVertexIndexBuffer        = [];
-	},
 
-	/**
-	* Init method, creates an 'canvas' tag in the DOM and setups up WebGL
-	*
-	* @method init
-	* @param data {Object} contains initialization values (id, width, height, ...)
-	*/
-	init: function(elem, data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, elem, data);
 		this.canvas = document.createElement('canvas');
 		this.canvas.id = data.id + "_canvas";
 		this.canvas.style.position = "absolute";
@@ -232,7 +217,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method initBuffers
 	*/
 	initBuffers: function() {
-		this.log(this.state);
 		for (var i=0; i<this.verticalBlocks; i++) {
 			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
@@ -405,16 +389,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	/**
 	* Loads the app from a previous state and initializes the buffers and textures
 	*
-	* @method load
-	* @param state {Object} object to initialize or restore the app
-	* @param date {Date} time from the server
+	* @method firstLoad
 	*/
-	load: function(state, date) {
-		this.state.width                = state.width;
-		this.state.height               = state.height;
-		this.state.display_aspect_ratio = state.display_aspect_ratio;
-		this.state.muted                = state.muted;
-
+	firstLoad: function() {
 		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
 		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
 		this.receivedBlocks   = initializeArray(this.horizontalBlocks*this.verticalBlocks, false);
@@ -497,11 +474,11 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		}
 		else {
-			this.canvas.width  = localWidth;
-			this.canvas.height = localHeight;
-			this.canvas.style.left = (viewX-localX) + "px";
-			this.canvas.style.top  = (viewY-localY) + "px";
-			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+			var parentTransform = getTransform(this.div.parentNode);
+			this.canvas.width  = localWidth / parentTransform.scale.x;
+			this.canvas.height = localHeight / parentTransform.scale.y;
+			this.canvas.style.left = ((viewX-localX) / parentTransform.scale.x) + "px";
+			this.canvas.style.top  = ((viewY-localY) / parentTransform.scale.y) + "px";
 
 			var left   = ((viewX     -localX) / (localRight -localX) * 2.0) - 1.0;
 			var right  = ((viewRight -localX) / (localRight -localX) * 2.0) - 1.0;
@@ -510,6 +487,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
 			this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
+			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		}
 	},
 
