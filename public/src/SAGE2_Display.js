@@ -434,7 +434,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
-			hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
+			clearConnectorColor(ctrl_data.id, ctrl_data.appId);
 		}
 	});
 
@@ -545,7 +545,7 @@ function setupListeners() {
 				widgetConnectorRequestList[data.id] = [];
 			}
 			widgetConnectorRequestList[data.id].push(data);
-		}		
+		}
 	});
 
 
@@ -565,7 +565,7 @@ function setupListeners() {
 			}
 			else if (lst.length === 1) {
 				delete widgetConnectorRequestList[control_data.id];
-				hideAllWidgetConnectors(control_data.id);
+				hideWidgetToAppConnectors(control_data.id);
 			}
 		}
 

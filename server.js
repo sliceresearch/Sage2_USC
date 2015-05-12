@@ -5288,7 +5288,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		dropSelectedItem(uniqueID, true, portal.id);
 		return;
     }
-    
 
     var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 	switch (obj.layerId) {

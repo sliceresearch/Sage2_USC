@@ -279,7 +279,7 @@ function addStyleElementForTitleColor(caption, color){
 			color = '#666666';
 		sheet.innerHTML = ".title"+caption+" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;background-image: -webkit-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -moz-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -ms-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: -o-linear-gradient(left,"+color+" " +percent+"%, #666666 100%); background-image: linear-gradient(left,"+color+" " +percent+"%, #666666 100%); }";
 		document.body.appendChild(sheet);
-	}	
+	}
 }
 
 function removeStyleElementForTitleColor(caption){
@@ -290,20 +290,20 @@ function removeStyleElementForTitleColor(caption){
 	}
 }
 
-function hideAllWidgetConnectors(appId){
+function hideWidgetToAppConnectors(appId){
 	var selectedAppTitle;
 	if (appId in controlObjects){
 		selectedAppTitle = document.getElementById(appId + "_title");
 		selectedAppTitle.className = "windowTitle";
 		for (var item in controlItems){
 			if (item.indexOf(appId) > -1){
-				hideWidgetToAppConnector(item, appId);
+				clearConnectorColor(item, appId);
 			}
 		}
 	}
 }
 
-function hideWidgetToAppConnector(instanceID, appId){
+function clearConnectorColor(instanceID, appId){
 	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
 		connector.attr({
