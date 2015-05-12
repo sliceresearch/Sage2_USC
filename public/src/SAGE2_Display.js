@@ -514,7 +514,7 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
+					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.4);
 				}
 			}
 		}
@@ -530,7 +530,7 @@ function setupListeners() {
 			selectedControl.style.left = eLeft.toString() + "px";
 			selectedControl.style.top = eTop.toString() + "px";
 			var hOffset = (ui.titleBarHeight + appData.height)/2;
-			moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0);
+			moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.4);
 		}
 		else {
 			console.log("cannot find control: " + position_data.elemId);
@@ -634,7 +634,7 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0);
+					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.4);
 				}
 			}
 		}

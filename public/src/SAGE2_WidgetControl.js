@@ -322,7 +322,7 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 	dimensions.outerR = ui.widgetControlSize * 6.0;
 	dimensions.secondRadius = dimensions.firstRadius + dimensions.buttonRadius*2.5;
 
-	size.height = dimensions.outerR * 2 + 5;
+	size.height = dimensions.outerR * 2.4; //10% extra on all sides
 	size.width = size.height;
 	size.barHeight = dimensions.buttonRadius*4;
 	size.hasSideBar = false;

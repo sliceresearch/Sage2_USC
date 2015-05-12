@@ -28,17 +28,25 @@ function drawSpokeForRadialLayout(instanceID, paper, center, point){
 }
 
 function drawBackgroundForWidgetRadialDial(instanceID, paper, center, radius){
-	var backGround = paper.circle(center.x, center.y, radius);
+	var backGroundFill = paper.circle(center.x, center.y, radius);
+	var backGroundStroke = paper.circle(center.x, center.y, radius);
 	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(190,190,190,0.7)-rgba(90,90,90,0.4)");
-	backGround.attr({
+	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius*0.05, "rgba(220,220,220,0.8)", 4));
+	backGroundFill.attr({
 		id: instanceID + "backGround",
-		fill: grad,//"rgba(60,60,60,0.5)",
-		stroke: "rgba(250,250,250,1.0)",
-		strokeDasharray: "2,1",
-		strokeWidth: 5
+		fill: grad,
+		stroke: "none"
 	});
-	backGround.data("paper", paper);
-	backGround.data("instanceID", instanceID);
+	backGroundStroke.attr({
+		id: instanceID + "backGroundEdge",
+		fill: "none",
+		stroke: "rgba(220,220,220,0.8)",
+		filter: shadow,
+		strokeDasharray: "12,2",
+		strokeWidth: radius*0.03
+	});
+	backGroundFill.data("paper", paper);
+	backGroundFill.data("instanceID", instanceID);
 }
 
 function drawWidgetControlCenter(instanceID, paper, center, radius, initialText){
@@ -253,10 +261,11 @@ function polarToCartesian(radius, theta, center) {
 function createWidgetToAppConnector(instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
 	var connector = paper.line(0, 0, 0, 0);
+	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 10, "rgba(220,220,220,0.8)", 4));
 	connector.attr({
 		id: instanceID+"link",
-		strokeWidth:4
-
+		strokeWidth:ui.widgetControlSize*0.18,
+		filter:shadow
 	});
 }
 
@@ -297,14 +306,13 @@ function hideWidgetToAppConnector(instanceID, appId){
 	if (connector){
 		connector.attr({
 			stroke:"none",
-			filter:null,
 			fill:"none"
 		});
 	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
+	var selectedControl = Snap.select("[id*=\""+instanceID+"backGroundEdge\"]");
 	if (selectedControl){
 		selectedControl.attr({
-			stroke: "rgba(250,250,250,1.0)"
+			stroke: "rgba(220,220,220,0.8)"
 		});
 	}
 	if (appId in controlObjects){
@@ -319,7 +327,7 @@ function moveWidgetToAppConnector(instanceID, x1, y1, x2, y2, cutLength) {
     var b = Math.abs(y1-y2);
     var width = Math.sqrt(a*a + b*b );
     if (parseInt(width)===0)return;
-    var alpha = (cutLength-2)/width;
+    var alpha = (cutLength)/width;
     x1 = alpha*x2 + (1-alpha)*x1;
     y1 = alpha*y2 + (1-alpha)*y1;
 
@@ -347,13 +355,11 @@ function setConnectorColor(instanceID, color){
 	}
 	var connector = Snap.select("[id*=\""+instanceID+"link\"]");
 	if (connector){
-		var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 6, color, 3));
 		connector.attr({
-			stroke:"rgba(250,250,250,1.0)",
-			filter:shadow
+			stroke:color
 		});
 	}
-	var selectedControl = Snap.select("[id*=\""+instanceID+"backGround\"]");
+	var selectedControl = Snap.select("[id*=\""+instanceID+"backGroundEdge\"]");
 	if (selectedControl){
 		selectedControl.attr("stroke", color);
 	}
