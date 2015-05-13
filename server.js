@@ -4497,7 +4497,7 @@ function showRequestDialog(flag) {
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	//console.log("pointer press on radial menu");
-	console.log(obj);
+
 	// Drag Content Browser only from radial menu
 	if (data.button === "left" && obj.type !== 'rectangle' ) {
 		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );

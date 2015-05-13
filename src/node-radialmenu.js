@@ -33,7 +33,7 @@ function RadialMenu(id, ptrID, ui) {
 	this.pointerid = ptrID;
 	this.label     = "";
 	this.color     = [255, 255, 255];
-	this.left      = 0;
+	this.left      = 0; // left/top is the center of the radial menu, NOT the upper left
 	this.top       = 0;
 	this.visible   = true;
 	this.wsio      = undefined;
@@ -84,23 +84,24 @@ function RadialMenu(id, ptrID, ui) {
 RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 	this.interactMgr = interactMgr;
 
-	this.interactMgr.addGeometry(this.id+"_menu_radial", "radialMenus", "circle", {x: this.left, y: this.top, r: this.radialMenuSize.y/2}, false, Object.keys(radialMenus).length, this);
+	this.interactMgr.addGeometry(this.id+"_menu_radial", "radialMenus", "circle", {x: this.left, y: this.top, r: this.radialMenuSize.y/2}, true, Object.keys(radialMenus).length, this);
 	this.interactMgr.addGeometry(this.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: this.left, y: this.top, w: this.thumbnailWindowSize.x, h: this.thumbnailWindowSize.y}, false, Object.keys(radialMenus).length, this);
-	
-	console.log(this.radialButtons);
+
 	for (var buttonName in this.radialButtons) {
 		var buttonInfo = this.radialButtons[buttonName];
 		
+		var menuRadius = 100;
+		var buttonRadius = 50;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI/180);
-		var position = {x: this.left - this.radialMenuScale  * Math.cos(angle), y: this.top - this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - menuRadius * Math.cos(angle), y: this.top - menuRadius * Math.sin(angle) };
 		var visible = true;
 		
-		
+		console.log(position);
 		if( buttonInfo.radialLevel != 1 ) {
 			visible = false;
 		}
 		
-		this.interactMgr.addGeometry(this.id+"_menu_radial_button_"+buttonInfo.id, "radialMenus", "circle", {x: position.x, y: position.y, r: this.radialMenuSize.y/2}, visible, Object.keys(radialMenus).length, this);
+		this.interactMgr.addGeometry(this.id+"_menu_radial_button_"+buttonInfo.id, "radialMenus", "circle", {x: position.x, y: position.y, r: buttonRadius}, visible, Object.keys(radialMenus).length, this);
 	}
 };
 
@@ -163,6 +164,23 @@ RadialMenu.prototype.setPosition = function(data) {
 
 	this.interactMgr.editGeometry(this.id+"_menu_radial", "radialMenus", "circle", {x: this.left, y: this.top, r: this.radialMenuSize.y/2});
 	this.interactMgr.editGeometry(this.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: this.getThumbnailWindowPosition().x, y: this.getThumbnailWindowPosition().y, w: this.thumbnailWindowSize.x, h: this.thumbnailWindowSize.y});
+
+	for (var buttonName in this.radialButtons) {
+		var buttonInfo = this.radialButtons[buttonName];
+		
+		var menuRadius = 150;
+		var buttonRadius = 50;
+		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI/180);
+		var position = {x: this.left - menuRadius * Math.cos(angle), y: this.top - menuRadius * Math.sin(angle) };
+		var visible = true;
+		
+		
+		if( buttonInfo.radialLevel != 1 ) {
+			visible = false;
+		}
+
+		this.interactMgr.editGeometry(this.id+"_menu_radial_button_"+buttonInfo.id, "radialMenus", "circle", {x: position.x, y: position.y, r: 100/2});
+	}
 };
 
 /**
