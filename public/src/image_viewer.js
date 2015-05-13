@@ -91,7 +91,7 @@ var image_viewer = SAGE2_App.extend( {
 			}
 			this.old_img_url = this.state.img_url;
 		}
-		
+
 		if (this.state.showExif === true) {
 			this.showLayer();
 		}

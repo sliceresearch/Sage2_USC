@@ -194,7 +194,7 @@ var SAGE2_App = Class.extend( {
 			var itemIdx = parseInt((position.y-this.SAGE2StateSyncOptions.scroll) / Math.round(1.5*this.config.ui.titleTextSize), 10);
 			var children = document.getElementById(this.id + "_statecontainer").childNodes;
 			var hoverChild = null;
-			var syncedPrev
+			var syncedPrev;
 			var synced;
 			if (itemIdx < children.length) {
 				hoverChild = children[itemIdx];
@@ -239,7 +239,7 @@ var SAGE2_App = Class.extend( {
 					break;
 				case "pointerRelease":
 					if (hoverChild === this.SAGE2StateSyncOptions.press.name) {
-						var syncedPrev = this.SAGE2StateSyncOptions.press.name.getAttribute("synced");
+						syncedPrev = this.SAGE2StateSyncOptions.press.name.getAttribute("synced");
 						var synced = (syncedPrev === true || syncedPrev === "true") ? false : true;
 						this.SAGE2StateSyncOptions.press.name.setAttribute("synced", synced);
 						if (synced === true) {

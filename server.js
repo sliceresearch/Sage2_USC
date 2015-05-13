@@ -1385,18 +1385,19 @@ function wsUpdateAppState(wsio, data) {
 		var app = SAGE2Items.applications.list[data.id];
 
 		mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
-		
+
 		if (data.updateRemote === true) {
+			var ts;
 			var portal = findApplicationPortal(app);
 			if (portal !== undefined && portal !== null) {
-				var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+				ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
 				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.remoteState, date: ts});
 			}
 			else if (sharedApps[data.id] !== undefined) {
 				var i;
 				for (i=0; i<sharedApps[data.id].length; i++) {
 					//var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
-					var ts = Date.now();
+					ts = Date.now();
 					sharedApps[data.id][i].wsio.emit('updateApplicationState', {id: sharedApps[data.id][i].sharedId, state: data.remoteState, date: ts});
 				}
 			}
@@ -2424,7 +2425,6 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 
 	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
 		console.log("Remote App: " + appInstance.title + " (" + appInstance.application + ")");
-		
 
 		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;

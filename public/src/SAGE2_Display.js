@@ -1011,7 +1011,7 @@ function setupListeners() {
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
-				
+
 				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, new Date());
 				/*
 				var func = textInput.data("call");

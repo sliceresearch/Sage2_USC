@@ -135,7 +135,7 @@ var setupBinaries = function(imOptions, ffmpegOptions) {
 
 var initializeConfiguration = function(cfg) {
 	config = cfg;
-}
+};
 
 
 var listAssets = function() {
@@ -507,6 +507,7 @@ var getExifData = function (id) {
 var exifAsync = function(cmds, cb) {
 	var execNext = function() {
 		var file = cmds.shift();
+		var exif;
 		if (sageutils.fileExists(file)) {
 			if(fs.lstatSync(file).isDirectory()) {
 				var instuctionsFile   = path.join(file, "instructions.json");
@@ -542,7 +543,7 @@ var exifAsync = function(cmds, cb) {
 							metadata.directory = instructions.directory;
 							registry.register(app, instructions.fileTypes, instructions.directory, false);
 				} else metadata.fileTypes = [];
-				var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
+				exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
 				addFile(file, exif, function() {
 					if (cmds.length > 0) execNext();
@@ -565,7 +566,7 @@ var exifAsync = function(cmds, cb) {
 			}
 		}
 		else {
-			var exif = {FileName: file, icon: null, MIMEType: "application/remote_site", metadata: null};
+			exif = {FileName: file, icon: null, MIMEType: "application/remote_site", metadata: null};
 			addFile(file, exif, function() {
 				if (cmds.length > 0) execNext();
 				else cb(null);
