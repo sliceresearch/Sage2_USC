@@ -1,0 +1,18 @@
+{
+	"main_script": "APPNAME.js",
+	"icon": "APPNAME.png",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+		"value": 4
+	},
+	"title": "APPNAME",
+	"version": "1.0.0",
+	"description": "SAGE2 application APPNAME",
+	"keywords": [ "sage2", "APPNAME" ],
+	"author": "FIRSTNAME LASTNAME <EMAIL>",
+	"license": "SAGE2-Software-License"
+}
