@@ -109,14 +109,7 @@ annotationSystem.prototype.push = function(key, value, overwrite) {
 annotationSystem.prototype.delete = function(key) {
     try {
         this.db.delete(key);
-    } catch(error) {
-        console.error(error);
-    }
-};
-
-annotationSystem.prototype.deleteAnnotation = function(filename, annotationID) {
-    try {
-        this.db.push(key, value, overwrite);
+        this.db.save();
     } catch(error) {
         console.error(error);
     }
@@ -139,8 +132,8 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
             id: appInstance.id + "_showNote",
             left:appInstance.left  + appInstance.width,
             top:appInstance.top + config.ui.titleBarHeight + appInstance.height*0.4,
-            width:config.ui.titleBarHeight, // Set this to ui.titleBarHeight
-            height: appInstance.height*0.2,
+            width:config.ui.titleBarHeight,
+            height: config.ui.titleBarHeight*12,
             caption:"Show notes"
         },
         addNoteButton: {
@@ -161,15 +154,27 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         },
         notes:[],
         annotationData: null,
-        annotationCount: 0,
+        annotationCount: null,
+        nextId:null,
         appHandle:appInstance // For easy access to the state of the app
     };
     annotationWindow.annotationData = this.getAllAnnotationsForFile(appInstance.title);
-    annotationWindow.annotationCount = (annotationWindow.annotationData)? (function(){
+    annotationWindow.nextId = (annotationWindow.annotationData)? (function(){
+        var data = annotationWindow.annotationData;
         var count = 0;
-        for(var key in annotationWindow.annotationData){
-            if (annotationWindow.annotationData.hasOwnProperty(key)){
-                count += 1;
+        for(var key in data){
+            if (data.hasOwnProperty(key)){
+                count = Math.max(count, parseInt(data[key].id));
+            }
+        }
+        return count+1;
+    })() : 1;
+    annotationWindow.annotationCount = (annotationWindow.annotationData)? (function(){
+        var data = annotationWindow.annotationData;
+        var count = 0;
+        for(var key in data){
+            if (data.hasOwnProperty(key)){
+                count +=1;
             }
         }
         return count;
@@ -241,8 +246,8 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
 annotationSystem.prototype.addNewNote = function(credentials){
     if (!this.annotationWindows[credentials.appId]) return null;
     var annotationWindow = this.annotationWindows[credentials.appId];
-    annotationWindow.annotationCount += 1;
-    credentials.id = annotationWindow.annotationCount;
+    credentials.id = annotationWindow.nextId;
+    annotationWindow.nextId += 1;
     this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
     this.saveAnnotationForFile(annotationWindow.filename, credentials.id, {
         id: credentials.id, 

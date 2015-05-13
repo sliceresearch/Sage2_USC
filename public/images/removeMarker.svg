@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <svg width="320" height="240" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
  <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
-
  <g>
   <title>Layer 1</title>
-  <rect stroke="#666666" id="svg_1" height="232.952379" width="314.555555" y="2.531746" x="3" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#666666"/>
-  <path stroke="#666666" id="svg_18" d="m219.523865,12.857147c-37.019135,0 -67.031204,28.605324 -67.031204,63.889153c0,35.292412 67.031204,154.364799 67.031204,154.364799s67.031158,-119.072388 67.031158,-154.364799c0,-35.283829 -30.003052,-63.889153 -67.031158,-63.889153zm0,94.41967c-17.687256,0 -32.031952,-13.663734 -32.031952,-30.530518s14.344696,-30.530449 32.031952,-30.530449s32.032104,13.672272 32.032104,30.530449s-14.344818,30.530518 -32.032104,30.530518z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#aaffaa"/>
-  <path transform="rotate(-45 70.2765884399414,74.25006103515625) " stroke="#aaffaa" id="svg_28" d="m7.39803,68.297676l125.757121,0l0,11.90477l-125.757121,0l0,-11.90477z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="8" fill="#aaffaa"/>
-  <path id="svg_30" stroke="#aaffaa" transform="rotate(45 70.27659606933594,74.25005340576172) " d="m7.398051,68.297691l125.757085,0l0,11.904724l-125.757085,0l0,-11.904724z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="8" fill="#aaffaa"/>
+  <rect id="svg_1" height="240" width="320" stroke-width="0" stroke="#bbbbbb" fill="#bbbbbb"/>
+  <rect id="svg_9" height="180" width="260" y="30" x="30" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" stroke="#bbbbbb" fill="#666666"/>
+  <circle stroke="#ffffff" fill-opacity="0" id="svg_10" r="78.700974" cy="120" cx="160" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="23" fill="#000000"/>
+  <path stroke="#bbbbbb" id="svg_8" d="m160.002304,65.656189c-23.747253,0 -43.002304,14.243706 -43.002304,31.814598c0,17.577477 43.002304,76.873024 43.002304,76.873024s42.997696,-59.295547 42.997696,-76.873024c0,-17.570892 -19.246201,-31.814598 -42.997696,-31.814598zm0,47.019768c-11.346771,0 -20.549927,-6.803215 -20.549927,-15.20517s9.203156,-15.201767 20.549927,-15.201767s20.545288,6.806412 20.545288,15.201767s-9.198914,15.20517 -20.545288,15.20517z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" fill="#ffffff"/>
+  <rect stroke="#666666" transform="rotate(45 160,120.00000000000001) " id="svg_12" height="24.656853" width="172" y="107.671569" x="74" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" fill="#ffffff"/>
  </g>
 </svg>

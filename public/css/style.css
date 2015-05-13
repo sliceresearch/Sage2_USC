@@ -138,20 +138,22 @@ body {
 	background-color: #666666;
 	border: solid 1px #000000;
 	overflow: hidden;
+	vertical-align: middle;
+	color: white;
+	display: block;
+	text-align: center;
 }
 .annotationButton-text{
 	position: absolute;
+	left: 50%;
+	top: 50%;
+	-webkit-transform:translateX(-50%)translateY(-50%)rotate(90deg);
+	-moz-transform:translateX(-50%)translateY(-50%)rotate(90deg);
+	transform:translateX(-50%)translateY(-50%)rotate(90deg);
 	white-space: nowrap;
-	-webkit-transform:rotate(90deg);
-	-moz-transform:rotate(90deg);
-	transform:rotate(90deg);
-	-webkit-transform-origin: left 100% 0;
-	-moz-transform-origin: left 100% 0;
-	transform-origin: left 100% 0;
-	color: white;
-	vertical-align: middle;
-	text-align: center;
+	color: white;	
 }
+
 
 .annotationMarker{
 	position:absolute;

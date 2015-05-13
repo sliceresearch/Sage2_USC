@@ -30,6 +30,8 @@ var SAGE2Annotations = function (){
 
 SAGE2Annotations.prototype.makeWindow = function(data){
 	var translate = "translate(" + (-ui.offsetX).toString()  + "px," + (-ui.offsetY).toString() + "px)";
+	var buttontransform = "transform-origin: left bottom 0; rotate(90deg);";
+
 	//data.button.width = ui.titleBarHeight;
 	this.id = data.id;
 	this.appId = data.appId;
@@ -51,25 +53,21 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 
 
 	this.buttonDiv 							= document.createElement("div");
+	this.buttonDiv.className 				= "annotationButton";
 	this.buttonDiv.style.left 				= data.button.left.toString()+ "px";
 	this.buttonDiv.style.top 				= data.button.top.toString()+ "px";
 	this.buttonDiv.style.width 				= data.button.width.toString() + "px";
 	this.buttonDiv.style.height 			= data.button.height.toString() + "px";
-	this.buttonDiv.id 						= data.button.id;
 	this.buttonDiv.style.webkitTransform 	= translate;
 	this.buttonDiv.style.mozTransform    	= translate;
 	this.buttonDiv.style.transform       	= translate;
-	this.buttonDiv.display 					= "block";
-	this.buttonDiv.className 				= "annotationButton";
-
-	var buttonText 				= document.createElement("p");
-	buttonText.className 		= "annotationButton-text";
-	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-	buttonText.style.color      = "#FFFFFF";
-	buttonText.display			= "block";
-	buttonText.innerText      = data.button.caption;
-	this.buttonDivText = buttonText;
+	
+	var buttonText = document.createElement("p");
+	buttonText.className 					= "annotationButton-text";
+	buttonText.textContent					= data.button.caption;
+	buttonText.style.lineHeight 			= parseInt(ui.titleBarHeight) + "px";
+	buttonText.style.fontSize				= parseInt(ui.titleTextSize) + "px";
+	this.buttonText 						= buttonText;
 	this.buttonDiv.appendChild(buttonText);
 	ui.main.appendChild(this.buttonDiv);
 
@@ -114,7 +112,7 @@ SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
 	this.addNoteButton.id 						= data.addNoteButton.id;
 	this.addNoteButton.display 					= "block";
 	this.addNoteButton.style.borderRadius		= "2px";
-	this.addNoteButton.src 						= "images/newNote.svg";
+	this.addNoteButton.src 						= "images/newNoteAndMarker.svg";
 	this.addNoteButton.className 				= "annotationButton";
 
 	this.addSummaryNoteButton							= document.createElement("img");
@@ -127,24 +125,6 @@ SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
 	this.addSummaryNoteButton.style.borderRadius		= "2px";
 	this.addSummaryNoteButton.src 						= "images/newNoteOnly.svg";
 	this.addSummaryNoteButton.className 				= "annotationButton";
-
-	/*var buttonText 				= document.createElement("p");
-	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-	buttonText.style.color      = "#FFFFFF";
-	buttonText.style.textAlign = "center";
-	buttonText.display			= "block";
-	buttonText.innerText      = data.addNoteButton.caption;
-	this.addNoteButton.appendChild(buttonText);*/
-
-	/*buttonText 				= document.createElement("p");
-	buttonText.style.lineHeight = Math.round(ui.titleBarHeight) + "px";
-	buttonText.style.fontSize   = Math.round(ui.titleTextSize) + "px";
-	buttonText.style.color      = "#FFFFFF";
-	buttonText.style.textAlign = "center";
-	buttonText.display			= "block";
-	buttonText.innerText      = data.addSummaryNoteButton.caption;
-	this.addSummaryNoteButton.appendChild(buttonText);*/
 	this.windowDiv.appendChild(this.addNoteButton);
 	this.windowDiv.appendChild(this.addSummaryNoteButton);
 }
@@ -175,9 +155,9 @@ SAGE2Annotations.prototype.addNote = function(data){
 
 SAGE2Annotations.prototype.updateShowButtonCaption = function(){
 	if (this.show===true){
-		this.buttonDivText.innerText = "Hide notes (" + this.textAreas.length + ")"; 
+		this.buttonText.textContent = "Hide notes (" + this.textAreas.length + ")"; 
 	}else{
-		this.buttonDivText.innerText = "Show notes (" + this.textAreas.length + ")"; 
+		this.buttonText.textContent = "Show notes (" + this.textAreas.length + ")"; 
 	}
 };
 
@@ -199,7 +179,6 @@ sendNoteToServer = function(credentials, text){
 };
 
 SAGE2Annotations.prototype.deleteNote = function(credentials){
-	this.deleteMarker(credentials.id);
 	var markedForDeletion = null;
 	for(var i=0;i<this.textAreas.length;i++){
 		if (this.textAreas[i].credentials.id === credentials.id){
@@ -207,7 +186,8 @@ SAGE2Annotations.prototype.deleteNote = function(credentials){
 			break;
 		}
 	}
-	if (markedForDeletion){
+	if (markedForDeletion!==null){
+		this.deleteMarker(credentials.id);
 		this.textAreas[markedForDeletion].kill();
 		this.textAreas.splice(markedForDeletion,1);
 		for (var i = this.textAreas.length-1; i>=0; i--){
@@ -273,7 +253,7 @@ SAGE2Annotations.prototype.showWindow = function(data){
 		this.scrollKnob.style.height = this.computeKnobHeight();
 		this.show = true;
 		this.setWindowScroll();
-		this.buttonDivText.innerText = "Hide notes (" + this.textAreas.length + ")"; 
+		this.updateShowButtonCaption();
 	}
 }
 
@@ -283,7 +263,7 @@ SAGE2Annotations.prototype.hideWindow = function(data){
 		this.buttonDiv.style.left = data.button.left.toString() + "px";;
 		ui.main.removeChild(this.windowDiv);
 		this.show = false;
-		this.buttonDivText.innerText = "Show notes (" + this.textAreas.length + ")"; 
+		this.updateShowButtonCaption(); 
 		this.makeAllNotesNonEditable();
 	}
 }
@@ -410,12 +390,14 @@ SAGE2Annotations.prototype.createMarker = function(data){
 	if (!markerInfo){
 		var marker 							= document.createElement("div");
 		marker.style.height					= parseInt(ui.titleBarHeight) + "px";
+		marker.style.lineHeight				= parseInt(ui.titleBarHeight) + "px";
+		marker.style.fontSize				= parseInt(ui.titleBarHeight /2) + "px";
 		marker.style.width 					= parseInt(parseInt(marker.style.height) * 1.2)+ "px";
 		marker.id 							= "marker_" + data.id;
 		//marker.style.zIndex					= "20";
 		marker.display 						= "block";
 		marker.className 					= "annotationMarker";
-		marker.innerText					= data.id;
+		marker.innerHTML					= data.id;
 		if (this.show){
 			appWindow.appendChild(marker);
 		}
@@ -499,8 +481,6 @@ SAGE2Annotations.prototype.setPosition = function(data){
 };
 
 SAGE2Annotations.prototype.setPositionAndSize = function(data){
-	//var buttonOffsetLeft = parseInt(this.buttonDiv.style.left) - parseInt(this.windowDiv.style.left);
-	//var buttonOffsetTop = parseInt(this.buttonDiv.style.top) - parseInt(this.windowDiv.style.top);
 	this.windowDiv.style.left = data.left.toString() + "px";
 	this.windowDiv.style.top  = data.top.toString() + "px";
 	this.windowDiv.style.height = data.height.toString() + "px";
@@ -642,7 +622,7 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 				}
 					
 			}
-			if (markedForDeletion>-1){
+			if (markedForDeletion>-1 && isMaster){
 				wsio.emit('requestForNoteDeletion', this.textAreas[markedForDeletion].credentials);
 			}
 			else{
@@ -789,7 +769,7 @@ TextArea.prototype.init = function(div, data){
 	this.makeCredentialBar(div,data);
 
 	this.credentials.appId = data.appId;
-	data.height = 0.9 * data.height;
+	data.height = 0.85 * data.height;
 	this.element = document.createElement("span");
 	this.element.id = data.id;
 	this.element.style.background = "#AAFFAA";
@@ -896,8 +876,8 @@ TextArea.prototype.init = function(div, data){
 };
 
 TextArea.prototype.makeCredentialBar = function(div, data){
-	var credBarHeight = data.height * 0.1;
-	var credBarTop = data.top + data.height*0.9;
+	var credBarHeight = data.height * 0.15;
+	var credBarTop = data.top + data.height*0.85;
 	this.credentialBar = document.createElement("span");
 
 	this.credentialBar.style.background = "#777777";
