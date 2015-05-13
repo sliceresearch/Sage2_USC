@@ -240,7 +240,7 @@ var SAGE2_App = Class.extend( {
 				case "pointerRelease":
 					if (hoverChild === this.SAGE2StateSyncOptions.press.name) {
 						syncedPrev = this.SAGE2StateSyncOptions.press.name.getAttribute("synced");
-						var synced = (syncedPrev === true || syncedPrev === "true") ? false : true;
+						synced = (syncedPrev === true || syncedPrev === "true") ? false : true;
 						this.SAGE2StateSyncOptions.press.name.setAttribute("synced", synced);
 						if (synced === true) {
 							this.SAGE2StateSyncOptions.press.name.setAttribute("state", "idle");
