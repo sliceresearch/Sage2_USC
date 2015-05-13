@@ -210,10 +210,11 @@ function RadialMenu(){
 		this.radialDragButton = this.createRadialButton( radialDragIcon, false, 500, this.imageThumbSize, 'centered', 'circle', 0, 0 );
 
 		this.radialCenterButton = this.createRadialButton( radialButtonIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 0, 0 );
-		
+
 		// Generate the radial menu buttons as specified by the server
 		for (var buttonName in data.layout) {
 			var buttonInfo = data.layout[buttonName];
+			
 			this.addRadialMenuButton(buttonName, radialMenuIcons[buttonInfo.icon], overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', buttonInfo.radialPosition, buttonInfo.radialLevel);
 		}
 		
@@ -733,7 +734,7 @@ function RadialMenu(){
 	 * @param type {String} i.e. "pointerPress", "pointerMove", "pointerRelease"
 	 * @param position {x: Float, y: Float} event position
 	 * @param user {Integer} userID
-	 * @param data {} Other event parameters like button: "left"
+	 * @param data { button: "left/right", color: "#000000" }
 	 */
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );

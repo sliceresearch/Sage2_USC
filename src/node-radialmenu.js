@@ -55,24 +55,55 @@ function RadialMenu(id, ptrID, ui) {
 
 	this.buttonState = []; // idle, lit, over for every radial menu button
 	
-	this.radialButtons = [];
-	
+	this.radialButtons = {};
+
 	this.buttonAngle = 36; // Degrees of separation between each radial button position
-	
+	this.menuButtonSize = 100;
+
 	// id - unique button id
 	// icon - button icon
 	// radialPosition - 0 = top of menu, 1 = buttonAngle degrees clockwise, 2 = buttonAngle*2 degrees clockwise, etc.
-	this.radialButtons.push( "images", {id: 0, icon: "images/ui/images.svg", radialPosition: 0, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "images"} );
-	this.radialButtons.push( "pdfs", {id: 1, icon: "images/ui/pdfs.svg", radialPosition: 1, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "pdfs"} );
-	this.radialButtons.push( "videos", {id: 2, icon: "images/ui/videos.svg", radialPosition: 2, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "videos"} );
-	this.radialButtons.push( "apps", {id: 3, icon: "images/ui/applauncher.svg", radialPosition: 3, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "applauncher"} );
-	this.radialButtons.push( "loadSession", {id: 4, icon: "images/ui/loadsession.svg", radialPosition: 4, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "sessions"} );
-	this.radialButtons.push( "saveSession", {id: 5, icon: "images/ui/savesession.svg", radialPosition: 5, radialLevel: 1, group: "radialMenu", action: "saveSession"} );
-	this.radialButtons.push( "settings", {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel: 1, group: "radialMenu", action: "toggleRadial", radial: "settingsMenu"} );
-	this.radialButtons.push( "closeMenu", {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel: 1, group: "radialMenu", action: "close", window: "radialMenu"} );
-	this.radialButtons.push( "tileContent", {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 7.175, radialLevel: 2, group: "settingsMenu", action: "tileContent"} );
-	this.radialButtons.push( "clearContent", {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.875, radialLevel: 2, group: "settingsMenu", action: "clearAllContent"} );
+	this.radialButtons["images"] = {id: 0, icon: "images/ui/images.svg", radialPosition: 0, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "images"};
+	this.radialButtons["pdfs"] = {id: 1, icon: "images/ui/pdfs.svg", radialPosition: 1, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "pdfs"};
+	this.radialButtons["videos"] = {id: 2, icon: "images/ui/videos.svg", radialPosition: 2, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "videos"};
+	this.radialButtons["apps"] = {id: 3, icon: "images/ui/applauncher.svg", radialPosition: 3, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "applauncher"};
+	this.radialButtons["loadSession"] = {id: 4, icon: "images/ui/loadsession.svg", radialPosition: 4, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "sessions"};
+	this.radialButtons["saveSession"] = {id: 5, icon: "images/ui/savesession.svg", radialPosition: 5, radialLevel: 1, group: "radialMenu", action: "saveSession"};
+	this.radialButtons["settings"] = {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel: 1, group: "radialMenu", action: "toggleRadial", radial: "settingsMenu"};
+	this.radialButtons["closeMenu"] = {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel: 1, group: "radialMenu", action: "close", window: "radialMenu"};
+	this.radialButtons["tileContent"] = {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 7.175, radialLevel: 2, group: "settingsMenu", action: "tileContent"};
+	this.radialButtons["clearContent"] = {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.875, radialLevel: 2, group: "settingsMenu", action: "clearAllContent"};
 }
+
+/**
+*	Adds geometry to the Interaction module
+*
+* @method generateGeometry
+* @param interactMgr Interaction manager
+*/
+RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
+	this.interactMgr = interactMgr;
+
+	this.interactMgr.addGeometry(this.id+"_menu_radial", "radialMenus", "circle", {x: this.left, y: this.top, r: this.radialMenuSize.y/2}, false, Object.keys(radialMenus).length, this);
+	this.interactMgr.addGeometry(this.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: this.left, y: this.top, w: this.thumbnailWindowSize.x, h: this.thumbnailWindowSize.y}, false, Object.keys(radialMenus).length, this);
+	
+	console.log(this.radialButtons);
+	for (var buttonName in this.radialButtons) {
+		var buttonInfo = this.radialButtons[buttonName];
+		
+		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI/180);
+		var position = {x: this.left - this.radialMenuScale  * Math.cos(angle), y: this.top - this.radialMenuScale * Math.sin(angle) };
+		var visible = true;
+		
+		
+		if( buttonInfo.radialLevel != 1 ) {
+			visible = false;
+		}
+		
+		this.interactMgr.addGeometry(this.id+"_menu_radial_button_"+buttonInfo.id, "radialMenus", "circle", {x: position.x, y: position.y, r: this.radialMenuSize.y/2}, visible, Object.keys(radialMenus).length, this);
+	}
+};
+
 
 /**
 *
@@ -129,7 +160,9 @@ RadialMenu.prototype.openThumbnailWindow = function(data) {
 RadialMenu.prototype.setPosition = function(data) {
 	this.left = data.x;
 	this.top  = data.y;
-	//console.log("node-radialMenu:setPosition() " + data.x + " " + data.y);
+
+	this.interactMgr.editGeometry(this.id+"_menu_radial", "radialMenus", "circle", {x: this.left, y: this.top, r: this.radialMenuSize.y/2});
+	this.interactMgr.editGeometry(this.id+"_menu_thumbnail", "radialMenus", "rectangle", {x: this.getThumbnailWindowPosition().x, y: this.getThumbnailWindowPosition().y, w: this.thumbnailWindowSize.x, h: this.thumbnailWindowSize.y});
 };
 
 /**

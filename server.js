@@ -4339,6 +4339,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+
 	switch (obj.layerId) {
 		case "staticUI":
 			pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt);
@@ -4496,12 +4497,13 @@ function showRequestDialog(flag) {
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	//console.log("pointer press on radial menu");
-
+	console.log(obj);
 	// Drag Content Browser only from radial menu
 	if (data.button === "left" && obj.type !== 'rectangle' ) {
 		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
 	}
 
+	data = { button: data.button, color: sagePointers[uniqueID].color };
 	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 }
 
@@ -7244,7 +7246,6 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 }
 
 /* ****** Radial Menu section ************************************************************** */
-
 //createMediabrowser();
 
 function createRadialMenu(uniqueID, pointerX, pointerY) {
@@ -7264,13 +7265,11 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined) {
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
+		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
-		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
-		interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left, y: newRadialMenu.top, w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
+		
 		SAGE2Items.radialMenus.list[uniqueID+"_menu"] = newRadialMenu;
 
-		//console.log("Create New Radial menu");
-		//console.log(newRadialMenu);
 		// Open a 'media' radial menu
 		broadcast('createRadialMenu', newRadialMenu.getInfo());
 	}
@@ -7315,13 +7314,9 @@ function moveRadialMenu(uniqueID, pointerX, pointerY ) {
 	var existingRadialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 
 	if( existingRadialMenu ) {
+		
 		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
 		existingRadialMenu.visible = true;
-
-		interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});
-
-		var thumbnailWindowPos = existingRadialMenu.getThumbnailWindowPosition();
-		interactMgr.editGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: existingRadialMenu.thumbnailWindowSize.x, h: existingRadialMenu.thumbnailWindowSize.y});
 
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
