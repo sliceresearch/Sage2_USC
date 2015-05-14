@@ -10,58 +10,6 @@
     // might also allow people to focus on smaller state level
 
 var USweather = SAGE2_App.extend( {
-    construct: function() {
-        arguments.callee.superClass.construct.call(this);
-
-        this.resizeEvents = "continuous"; //onfinish
-        this.svg = null;
-
-        // Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-        this.enableControls = true;
-
-        this.gwin = {};
-        this.gwin.canvasWidth = 1200;
-        this.gwin.canvasHeight = 800;
-
-        this.gwin.sampleSVG = null;
-
-        this.gwin.latMinTemp = 26.5;
-        this.gwin.latMaxTemp = 48.5;
-
-        this.gwin.lonMinTemp = -124;
-        this.gwin.lonMaxTemp = -67;
-
-        this.gwin.boxSize = 35;
-
-        this.gwin.mode = 1;
-
-        this.gwin.appID = "";
-
-        this.appName = "evl_photos:";
-
-        this.gwin.projection = null;
-
-        this.gwin.iconmostlycloudynight = new Image();
-        this.gwin.iconpartlycloudynight = new Image();
-        this.gwin.iconclearnight        = new Image();
-        this.gwin.iconsnow              = new Image();
-        this.gwin.iconunknown           = new Image();
-        this.gwin.iconstorms            = new Image();
-        this.gwin.icontstorms           = new Image();
-        this.gwin.iconmostlycloudy      = new Image();
-        this.gwin.iconpartlycloudy      = new Image();
-        this.gwin.iconrain              = new Image();
-        this.gwin.iconfog               = new Image();
-        this.gwin.iconhazy              = new Image();
-        this.gwin.iconsleet             = new Image();
-        this.gwin.iconcloudy            = new Image();
-        this.gwin.iconclear             = new Image();
-        this.gwin.iconsunny             = new Image();
-
-        this.gwin.numIconsLoaded = 0;
-
-	},
-
 	////////////////////////////////////////
 
 	tempConvert: function(data)
@@ -352,15 +300,15 @@ var USweather = SAGE2_App.extend( {
 
 	nextMode: function()
 	{
-		this.gwin.mode = this.gwin.mode + 1;
-		if (this.gwin.mode > 2)
-				this.gwin.mode = 0;
+		this.state.mode = this.state.mode + 1;
+		if (this.state.mode > 2)
+			this.state.mode = 0;
 
-		if (this.gwin.mode === 0)
+		if (this.state.mode === 0)
 			{
 			this.convertToTemp();
 			} 
-		else if (this.gwin.mode === 1)
+		else if (this.state.mode === 1)
 			{
 			this.convertToIcon();
 			} 
@@ -401,7 +349,7 @@ var USweather = SAGE2_App.extend( {
 		var tempToShow;
 
 
-		if (this.gwin.itsF === "C") // there is a sage versionof this
+		if (this.gwin.itsF === "C") // there is a sage version of this
 			{
 			tempToShow = (Math.round((parseInt(theText)-32)*5/9));
 			//console.log(tempToShow);
@@ -479,12 +427,12 @@ var USweather = SAGE2_App.extend( {
 			.attr("height", this.gwin.boxSize)
 			.attr("width", this.gwin.boxSize);
 
-		if (this.gwin.mode === 0)
+		if (this.state.mode === 0)
 			{
 			textVisibility = "visible";
 			iconVisibility = "hidden";
 			} 
-		else if (this.gwin.mode === 1)
+		else if (this.state.mode === 1)
 			{
 			textVisibility = "hidden";
 			iconVisibility = "visible";
@@ -542,7 +490,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "hidden");
 
-		this.gwin.mode = 0;
+		this.state.mode = 0;
 	},
 
 	convertToIcon: function ()
@@ -556,7 +504,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "visible");
 
-		this.gwin.mode = 1;
+		this.state.mode = 1;
 	},
 
 	convertToNone: function ()
@@ -569,7 +517,7 @@ var USweather = SAGE2_App.extend( {
 		selectedOnes = d3.selectAll("#" +this.gwin.appID + "IDicon");
 		selectedOnes.attr("visibility", "hidden");
 
-		this.gwin.mode = 2;
+		this.state.mode = 2;
 	},
 
 	getCorrectWeatherIcon: function(weatherCondition, night)
@@ -650,8 +598,52 @@ var USweather = SAGE2_App.extend( {
 	////////////////////////////////////////
 
     init: function(data) {
-        // call super-class 'init'
-        arguments.callee.superClass.init.call(this, "div", data);
+        this.SAGE2Init("div", data);
+
+        this.resizeEvents = "continuous"; //onfinish
+        this.svg = null;
+
+        // Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+        this.enableControls = true;
+
+        this.gwin = {};
+        this.gwin.canvasWidth = 1200;
+        this.gwin.canvasHeight = 800;
+
+        this.gwin.sampleSVG = null;
+
+        this.gwin.latMinTemp = 26.5;
+        this.gwin.latMaxTemp = 48.5;
+
+        this.gwin.lonMinTemp = -124;
+        this.gwin.lonMaxTemp = -67;
+
+        this.gwin.boxSize = 35;
+
+        this.gwin.appID = "";
+
+        this.appName = "evl_photos:";
+
+        this.gwin.projection = null;
+
+        this.gwin.iconmostlycloudynight = new Image();
+        this.gwin.iconpartlycloudynight = new Image();
+        this.gwin.iconclearnight        = new Image();
+        this.gwin.iconsnow              = new Image();
+        this.gwin.iconunknown           = new Image();
+        this.gwin.iconstorms            = new Image();
+        this.gwin.icontstorms           = new Image();
+        this.gwin.iconmostlycloudy      = new Image();
+        this.gwin.iconpartlycloudy      = new Image();
+        this.gwin.iconrain              = new Image();
+        this.gwin.iconfog               = new Image();
+        this.gwin.iconhazy              = new Image();
+        this.gwin.iconsleet             = new Image();
+        this.gwin.iconcloudy            = new Image();
+        this.gwin.iconclear             = new Image();
+        this.gwin.iconsunny             = new Image();
+
+        this.gwin.numIconsLoaded = 0;
 
         this.makeCallbackFunc = this.makeCallback.bind(this);
         this.jsonCallbackFunc = this.jsonCallback.bind(this);
@@ -691,14 +683,6 @@ var USweather = SAGE2_App.extend( {
         this.drawBox(0, 0, this.gwin.canvasHeight, this.gwin.canvasWidth, "black", 1);
 
         this.draw_d3(data.date);
-    },
-
-    load: function(state, date) {
-        if (state) {
-            this.state.itsF = state.itsF;
-        } else {
-            this.state.itsF = "F"; // Fahrenheit or Celsius
-        }
 
         var tempButton = {
             "textual":true,
@@ -725,24 +709,13 @@ var USweather = SAGE2_App.extend( {
         this.controls.addButtonType("icon", iconButton);
         this.controls.addButtonType("color", colorButton);
 
-        this.controls.addButton({type:"temp",sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.gwin.mode = 0;
-            this.convertToTemp();
-        }.bind(this)});
-        this.controls.addButton({type:"icon",sequenceNo:6,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.gwin.mode = 1;
-            this.convertToIcon();
-        }.bind(this)});
-        this.controls.addButton({type:"color",sequenceNo:8,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.gwin.mode = 2;
-            this.convertToNone();
-        }.bind(this)});
+        this.controls.addButton({type:tempButton,sequenceNo:4, id:"Temperature"});
+        this.controls.addButton({type:iconButton,sequenceNo:6, id:"Icon"});
+        this.controls.addButton({type:colorButton,sequenceNo:8, id:"Color"});
         this.controls.finishedAddingControls(); // Important
-        
+    },
 
+    load: function(date) {
         this.refresh(date);
     },
 
@@ -768,11 +741,34 @@ var USweather = SAGE2_App.extend( {
     //event: function(eventType, userId, x, y, data, date) {
         if (eventType === "pointerPress" && (data.button === "left") ) {
         }
-        if (eventType === "pointerMove" ) {
+        else if (eventType === "pointerMove" ) {
         }
-        if (eventType === "pointerRelease" && (data.button === "left") ) {
+        else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextMode();
+            this.refresh(date);
         }
+        else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "Temperature":
+					this.state.mode = 0;
+            		this.convertToTemp();
+            		this.refresh(date);
+					break;
+				case "Icon":
+            		this.state.mode = 1;
+            		this.convertToIcon();
+            		this.refresh(date);
+					break;
+				case "Color":
+					this.state.mode = 2;
+            		this.convertToNone();
+            		this.refresh(date);
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					return;
+			}
+		}
     }
     
 });

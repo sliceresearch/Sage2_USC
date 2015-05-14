@@ -9,10 +9,8 @@
 // Copyright (c) 2014
 
 var texture_cube = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.fpsText = null;
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 		
 		this.gl = null;
 		this.shaderProgram = null;
@@ -26,7 +24,6 @@ var texture_cube = SAGE2_App.extend( {
 		this.cubeVertexTextureCoordBuffer = null;
 		this.cubeVertexIndexBuffer = null;
 
-		this.time = null;
 		this.rotx = null;
 		this.roty = null;
 		
@@ -34,12 +31,9 @@ var texture_cube = SAGE2_App.extend( {
 		
 		this.webglContextLost = this.webglContextLostMethod.bind(this);
 		this.webglContextRestored = this.webglContextRestoredMethod.bind(this);
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
 		
+		this.maxFPS = 30;
+
 		this.fpsText = document.createElement('p');
 		this.fpsText.textContent = "0.00 fps";
 		this.fpsText.style.fontFamily = "Verdana,sans-serif";
@@ -84,18 +78,11 @@ var texture_cube = SAGE2_App.extend( {
 	},
 	
 	initGL: function() {
-		try{
-			this.gl = this.element.getContext("webgl");
-		} catch(e) {
-			try{
-				this.gl = this.element.getContext("experimental-webgl");
-			} catch(e){
-				alert("Canvas \"webgl\" and \"experimental-webgl\" unavailable.");
-			}
-		}
-		if(!this.gl){
+		this.gl = this.element.getContext("webgl");
+		if (!this.gl)
+			this.gl = this.element.getContext("experimental-webgl");
+		if (!this.gl)
 			alert("Unable to initialize WebGL. Your browser may not support it.");
-		}
 	},
 	
 	webglContextLostMethod: function(event) {
@@ -397,15 +384,15 @@ var texture_cube = SAGE2_App.extend( {
 		this.gl.uniformMatrix3fv(this.shaderProgram.nMatrixUniform, false, normalMatrix);
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {
 		if(this.shaderProgram === undefined || this.shaderProgram === null) return;
 		if(this.texture.image.isLoaded === undefined || this.texture.image.isLoaded === false) return;
 	
-		this.rotx += 10.0 * this.dt;
-		this.roty -= 15.0 * this.dt;
+		this.rotx =  10.0 * this.t;
+		this.roty = -15.0 * this.t;
 		
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 		

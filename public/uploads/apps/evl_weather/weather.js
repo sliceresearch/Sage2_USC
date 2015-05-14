@@ -15,101 +15,9 @@
 ////////////////////////////////////////
 
 var weather = SAGE2_App.extend( {
-    construct: function() {
-        arguments.callee.superClass.construct.call(this);
-
-        this.resizeEvents = "continuous"; //onfinish
-        this.svg = null;
-
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-		this.enableControls = true;
-
-		this.gwin = {};
-		this.myTag = "";
-  
-		this.gwin.sampleSVG = null;
-
-		this.gwin.date = "Loading ...";
-		this.gwin.hour = "" ;
-		this.gwin.ampm = "";
-		this.gwin.outside = "NULL";
-		this.gwin.roughDate = "";
-
-		this.gwin.displayFont = "Arial";
-		this.gwin.massiveFontSize = "38px";
-		this.gwin.largeFontSize = "36px";
-		this.gwin.smallFontSize = "18px";
-
-		this.gwin.canvasBackground = "white";
-
-		this.gwin.rounded = 8; 
-
-		this.gwin.margin = 20;
-		this.gwin.canvasHeight = 400;
-		this.gwin.canvasWidth = 450 + (2 * this.gwin.margin);
-
-		this.gwin.weatherIcon = "";
-		this.gwin.weatherImage = new Image();
-		this.gwin.iconSet = "";
-
-		this.gwin.conditions = "";
-
-		this.glob = {};
-		this.glob.perc1 = 1;
-		this.glob.perc2 = 1;
-		this.glob.perc3 = 1;
-		this.glob.perc4 = 1;
-		this.glob.perc5 = 1;
-		this.glob.perc6 = 1;
-		this.glob.perc7 = 1;
-		this.glob.color1 = "NULL";
-		this.glob.color2 = "NULL";
-		this.glob.color3 = "NULL";
-		this.glob.color4 = "NULL";
-		this.glob.color5 = "NULL";
-		this.glob.color6 = "NULL";
-		this.glob.color7 = "NULL";
-
-		this.glob.color1b = "#AAAAAA";
-		this.glob.color2b = "#AAAAAA";
-		this.glob.color3b = "#AAAAAA";
-		this.glob.color4b = "#AAAAAA";
-		this.glob.color5b = "#AAAAAA";
-		this.glob.color6b = "#AAAAAA";
-		this.glob.color7b = "#AAAAAA";
-
-		this.glob.data1 = -1;
-		this.glob.data2 = -1;
-		this.glob.data3 = -1;
-		this.glob.data4 = -1;
-		this.glob.data5 = -1;
-		this.glob.data6 = -1;
-		this.glob.data7 = -1;
-
-		this.glob.colorOut = "#AAAAAA";
-		this.glob.colorOutb = "#AAAAAA";
-		this.glob.percOut = 0;
-
-		this.glob.temp_hot            = 85;
-		this.glob.temp_nice           = 70;
-		this.glob.temp_cold           = 60;
-		this.glob.temp_colderer       = 32;
-		this.glob.temp_coldererer     = 0;
-
-		// add the temperature unit into the state
-		this.state.itsF = null;
-
-	},
-
 	////////////////////////////////////////
-
-	initApp: function(temperatureScale)
+	initApp: function()
 	{
-		// should also make sure temperatureScale is a legal value
-
-		if (temperatureScale)
-			this.state.itsF = temperatureScale.toUpperCase();
-
 		this.weatherOutsideCallbackFunc = this.weatherOutsideCallback.bind(this);
 		this.weatherInsideCallbackFunc = this.weatherInsideCallback.bind(this);
 	},
@@ -787,8 +695,85 @@ var weather = SAGE2_App.extend( {
 
 
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
+		this.SAGE2Init("div", data);
+
+		this.resizeEvents = "continuous"; //onfinish
+        this.svg = null;
+
+		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+		this.enableControls = true;
+
+		this.gwin = {};
+		this.myTag = "";
+  
+		this.gwin.sampleSVG = null;
+
+		this.gwin.date = "Loading ...";
+		this.gwin.hour = "" ;
+		this.gwin.ampm = "";
+		this.gwin.outside = "NULL";
+		this.gwin.roughDate = "";
+
+		this.gwin.displayFont = "Arial";
+		this.gwin.massiveFontSize = "38px";
+		this.gwin.largeFontSize = "36px";
+		this.gwin.smallFontSize = "18px";
+
+		this.gwin.canvasBackground = "white";
+
+		this.gwin.rounded = 8; 
+
+		this.gwin.margin = 20;
+		this.gwin.canvasHeight = 400;
+		this.gwin.canvasWidth = 450 + (2 * this.gwin.margin);
+
+		this.gwin.weatherIcon = "";
+		this.gwin.weatherImage = new Image();
+		this.gwin.iconSet = "";
+
+		this.gwin.conditions = "";
+
+		this.glob = {};
+		this.glob.perc1 = 1;
+		this.glob.perc2 = 1;
+		this.glob.perc3 = 1;
+		this.glob.perc4 = 1;
+		this.glob.perc5 = 1;
+		this.glob.perc6 = 1;
+		this.glob.perc7 = 1;
+		this.glob.color1 = "NULL";
+		this.glob.color2 = "NULL";
+		this.glob.color3 = "NULL";
+		this.glob.color4 = "NULL";
+		this.glob.color5 = "NULL";
+		this.glob.color6 = "NULL";
+		this.glob.color7 = "NULL";
+
+		this.glob.color1b = "#AAAAAA";
+		this.glob.color2b = "#AAAAAA";
+		this.glob.color3b = "#AAAAAA";
+		this.glob.color4b = "#AAAAAA";
+		this.glob.color5b = "#AAAAAA";
+		this.glob.color6b = "#AAAAAA";
+		this.glob.color7b = "#AAAAAA";
+
+		this.glob.data1 = -1;
+		this.glob.data2 = -1;
+		this.glob.data3 = -1;
+		this.glob.data4 = -1;
+		this.glob.data5 = -1;
+		this.glob.data6 = -1;
+		this.glob.data7 = -1;
+
+		this.glob.colorOut = "#AAAAAA";
+		this.glob.colorOutb = "#AAAAAA";
+		this.glob.percOut = 0;
+
+		this.glob.temp_hot            = 85;
+		this.glob.temp_nice           = 70;
+		this.glob.temp_cold           = 60;
+		this.glob.temp_colderer       = 32;
+		this.glob.temp_coldererer     = 0;
 
         this.maxFPS = 0.02;
 
@@ -810,17 +795,10 @@ var weather = SAGE2_App.extend( {
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 		this.gwin.sampleSVG = this.svg;
 
-        this.initApp ("F");
+		console.log(this.state.itsF);
+        this.initApp();
 		this.updateAll();
-		this.draw_d3(data.date);
-	},
 
-	load: function(state, date) {
-        if (state) {
-            this.state.itsF = state.itsF;
-        } else {
-            this.state.itsF = "F"; // Fahrenheit or Celsius or Kelvin
-        }
 
         var kButton = {
             "textual":true,
@@ -844,28 +822,15 @@ var weather = SAGE2_App.extend( {
         // create the widgets
         console.log("creating controls");
 
-        this.controls.addButtonType("c", cButton);
-        this.controls.addButtonType("k", kButton);
-        this.controls.addButtonType("f", fButton);
-
-        this.controls.addButton({type:"f",sequenceNo:4,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.itsF = "F";
-            this.updateAll();
-        }.bind(this)});
-        this.controls.addButton({type:"c",sequenceNo:5,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.itsF = "C";
-            this.updateAll();
-        }.bind(this)});
-        this.controls.addButton({type:"k",sequenceNo:6,action:function(date){
-            //This is executed after the button click animation occurs.
-            this.state.itsF = "K";
-            this.updateAll();
-        }.bind(this)});
+        this.controls.addButton({type:fButton,sequenceNo:4, id:"F"});
+        this.controls.addButton({type:cButton,sequenceNo:5, id:"C"});
+        this.controls.addButton({type:kButton,sequenceNo:6, id:"K"});
         this.controls.finishedAddingControls(); // Important
-        
 
+		this.draw_d3(data.date);
+	},
+
+	load: function(date) {
         this.refresh(date);
 	},
 
@@ -891,11 +856,17 @@ var weather = SAGE2_App.extend( {
 	//event: function(eventType, userId, x, y, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left") ) {
 		}
-		if (eventType === "pointerMove" ) {
+		else if (eventType === "pointerMove" ) {
 		}
-		if (eventType === "pointerRelease" && (data.button === "left") ) {
+		else if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextTemp();
             this.updateAll();
+            this.refresh(date);
+		}
+		else if (eventType === "widgetEvent"){
+			this.state.itsF = data.ctrlId;
+            this.updateAll();
+            this.refresh(date);
 		}
 	}
 	

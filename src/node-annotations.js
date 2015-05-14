@@ -117,7 +117,7 @@ annotationSystem.prototype.delete = function(key) {
 
 
 annotationSystem.prototype.loadAnnotations = function(appInstance, config){
-    if (!appInstance.annotation) return;
+    if (!appInstance.annotation) return null;
     var annotationWindow = {
         id: appInstance.id + "_notes",
         appId:appInstance.id,

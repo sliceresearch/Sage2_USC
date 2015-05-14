@@ -19,11 +19,6 @@
 //
 
 var chronograph = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-		this.ready = null;
-	},
-
 	// Adds a parameter to the clock
 	addParameter: function(name, value) {
 		this[name] = value;
@@ -85,21 +80,45 @@ var chronograph = SAGE2_App.extend( {
 
 	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "object", data);
+		this.SAGE2Init("object", data);
 
 		// application specific 'init'
+		var _this  = this;
+		// Callback when the SVG file is loaded
+		this.element.onload = function() {
+			// Get the SVG document inside the Object tag
+			var svgDoc = _this.element.contentDocument;
+			// initialize clock
+			if (svgDoc.getElementById('background') &&
+				svgDoc.getElementById('dial') &&
+				svgDoc.getElementById('hourHand') &&
+				svgDoc.getElementById('minuteHand') &&
+				svgDoc.getElementById('secondHand') &&
+				svgDoc.getElementById('axisCover')) {
+
+				// Update the clock
+				_this.updateClock();
+
+				// draw clock
+				_this.ready = true;
+
+				// show clock
+				_this.showElement('clock', true);
+				_this.refresh(data.date);
+			}
+		};
 		this.element.setAttribute('id',    'myclock');
 		this.element.setAttribute('data',   this.resrcPath + 'chronograph.svg');
 		this.element.setAttribute('type',  'image/svg+xml');
 
+
 		// Customize the clock
-		this.state.mode = 0;
 		this.setParameters();
 
 		this.ready = false;
 
 		// Draw once per second
-		this.maxFPS = 1.0;
+		this.maxFPS = 2.0;
 		var flipButton = {
 			"textual":true,
 			"label":"Flip",
@@ -107,11 +126,7 @@ var chronograph = SAGE2_App.extend( {
 			"animation":false
 		};
 		// Instead of a string, the type field can be used to specify the button type data itself
-		this.controls.addButton({type:flipButton, sequenceNo:4, action:function(date) {
-			if (this.ready) {
-				this.flip(date);
-			}
-		}.bind(this)});
+		this.controls.addButton({type:flipButton, sequenceNo:4, id:"Flip"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -178,36 +193,9 @@ var chronograph = SAGE2_App.extend( {
 	},
 
 
-	load: function(state, date) {
-		// is it empty state object ?
-		if (Object.getOwnPropertyNames(state).length !== 0) {
-			this.state.mode = state.mode;
-			this.setParameters();
-		}
-		var _this  = this;
-		// Callback when the SVG file is loaded
-		this.element.onload = function() {
-			// Get the SVG document inside the Object tag
-			var svgDoc = _this.element.contentDocument;
-			// initialize clock
-			if (svgDoc.getElementById('background') &&
-				svgDoc.getElementById('dial') &&
-				svgDoc.getElementById('hourHand') &&
-				svgDoc.getElementById('minuteHand') &&
-				svgDoc.getElementById('secondHand') &&
-				svgDoc.getElementById('axisCover')) {
-
-				// Update the clock
-				_this.updateClock();
-
-				// draw clock
-				_this.ready = true;
-
-				// show clock
-				_this.showElement('clock', true);
-				_this.refresh(date);
-			}
-		};
+	load: function(date) {
+		this.setParameters();
+		this.refresh(date);
 	},
 
 	draw: function(date) {
@@ -263,9 +251,19 @@ var chronograph = SAGE2_App.extend( {
 				this.flip(date);
 			}
 			else if (eventType === "keyboard") {
-				if(data.character === " ")
+				if(data.character === " "){
 					this.flip(date);
+				}
 			}
+			else if (eventType === "widgetEvent"){
+				if (data.ctrlId === "Flip"){
+					this.flip(date);
+				}
+				else{
+					console.log("No handler for:", data.ctrlId);
+				}
+			}
+			
 		}
 	}
 });

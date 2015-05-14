@@ -16,9 +16,7 @@
  * @requires decompress-zip, gm, mime, request, ytdl-core, node-demux, node-exiftool, node-assets, node-utils, node-registry
  */
 
-// require variables to be declared
 "use strict";
-
 
 var fs           = require('fs');
 var path         = require('path');
@@ -36,6 +34,8 @@ var sageutils    = require('../src/node-utils');           // provides utility f
 var registry     = require('../src/node-registry');        // Registry Manager
 
 var imageMagick;
+
+/** don't use path.join for URL creation - all URLs use forward slashes **/
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,23 +114,40 @@ AppLoader.prototype.loadImageFromURL = function(url, mime_type, name, strictSSL,
 				console.log("request error", err1);
 				throw err1;
 			}
-			var result = exiftool.buffer(body, function(err2, info) {
-				if (err2) {
-					console.log("Error processing image:", url, mime_type, name, result.err);
-				}
-				else {
-					if (info.ImageWidth && info.ImageHeight) {
-						_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
-							function(appInstance) {
+			// var result = exiftool.buffer(body, function(err2, info) {
+			// 	if (err2) {
+			// 		console.log("Error processing image:", url, mime_type, name, result.err);
+			// 	}
+			// 	else {
+			// 		if (info.ImageWidth && info.ImageHeight) {
+			// 			_this.loadImageFromDataBuffer(body, info.ImageWidth, info.ImageHeight, mime_type, url, url, name, info,
+			// 				function(appInstance) {
+			// 					_this.scaleAppToFitDisplay(appInstance);
+			// 					callback(appInstance);
+			// 				}
+			// 				);
+			// 		} else {
+			// 			console.log("File not recognized:", mime_type, url);
+			// 		}
+			// 	}
+			// });
+
+			var localPath = path.join(_this.publicDir, "uploads", "images", name);
+
+			fs.writeFile(localPath, body, function (err2) {
+				if (err2) console.log("Error saving image:", url, localPath);
+
+				assets.exifAsync([localPath], function(err3) {
+					if (!err3) {
+						_this.loadImageFromFile(localPath, mime_type, url, url, name, function(appInstance) {
 								_this.scaleAppToFitDisplay(appInstance);
 								callback(appInstance);
-							}
-							);
-					} else {
-						console.log("File not recognized:", mime_type, url);
+						});
 					}
-				}
+				});
+
 			});
+
 		}
 	);
 };
@@ -183,8 +200,8 @@ AppLoader.prototype.loadVideoFromURL = function(url, mime_type, source_url, name
 
 
 AppLoader.prototype.loadPdfFromURL = function(url, mime_type, name, strictSSL, callback) {
-	var local_url = path.join("uploads", "pdfs", name);
-	var localPath = path.join(this.publicDir, local_url);
+	var local_url = "uploads/pdfs/"+name;
+	var localPath = path.join(this.publicDir, "uploads", "pdfs", name);
 	var _this = this;
 
 	var tmp = fs.createWriteStream(localPath);
@@ -218,13 +235,63 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data.SAGE2thumbnail,
+		icon: exif_data ? exif_data.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
 			src: source,
 			type: mime_type,
-			exif: exif_data
+			exif: exif_data,
+			top: 0,
+			showExif: false
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5*this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		metadata: metadata,
+		sticky: false,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
+AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, url, external_url, name, exif_data, callback) {
+
+	var aspectRatio = width / height;
+
+	var metadata         = {};
+	metadata.title       = "Image Viewer";
+	metadata.version     = "1.0.0";
+	metadata.description = "Image viewer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["image", "picture", "viewer"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		application: "image_viewer",
+		icon: exif_data ? exif_data.SAGE2thumbnail : null,
+		type: mime_type,
+		url: external_url,
+		data: {
+			src: url,
+			type: mime_type,
+			exif: exif_data,
+			top: 0,
+			showExif: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -252,71 +319,107 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 AppLoader.prototype.loadImageFromFile = function(file, mime_type, url, external_url, name, callback) {
 	var _this = this;
 
-	if(mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp"){
-		fs.readFile(file, function (err, data) {
-			if(err) {
-				console.log("Error> opening file", file);
-				return; // throw err;
-			}
+	if (mime_type === "image/jpeg" || mime_type === "image/png" || mime_type === "image/webp") {
+
+		// fs.readFile(file, function (err, data) {
+		// 	if(err) {
+		// 		console.log("Error> opening file", file);
+		// 		return; // throw err;
+		// 	}
+		// 	// Query the exif data
+		// 	var dims = assets.getDimensions(file);
+		// 	var exif = assets.getExifData(file);
+		// 	if (dims) {
+		// 		_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+		// 			callback(appInstance);
+		// 		});
+		// 	} else {
+		// 		console.log("File not recognized:", file, mime_type, url);
+		// 	}
+		// });
 
 			// Query the exif data
 			var dims = assets.getDimensions(file);
 			var exif = assets.getExifData(file);
 
 			if (dims) {
-				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+				this.loadImageFromServer(dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
 					callback(appInstance);
 				});
 			} else {
 				console.log("File not recognized:", file, mime_type, url);
 			}
-		});
+
 	}
 	// SVG file
 	else if (mime_type === "image/svg+xml") {
-		fs.readFile(file, function (err, data) {
-			if(err) {
-				console.log("Error> opening file", file);
-				return; // throw err;
-			}
+		// fs.readFile(file, function (err, data) {
+		// 	if(err) {
+		// 		console.log("Error> opening file", file);
+		// 		return; // throw err;
+		// 	}
 
-			// Query the exif data
-			var box  = assets.getTag(file, "ViewBox").split(' ');
-			var dims = {width:parseInt(box[2]), height:parseInt(box[3])};
-			var exif = assets.getExifData(file);
+		// 	// Query the exif data
+		// 	var box  = assets.getTag(file, "ViewBox").split(' ');
+		// 	var dims = {width:parseInt(box[2]), height:parseInt(box[3])};
+		// 	var exif = assets.getExifData(file);
 
-			if (dims) {
-				_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
-					callback(appInstance);
-				});
-			} else {
-				console.log("File not recognized:", file, mime_type, url);
-			}
-		});
+		// 	if (dims) {
+		// 		_this.loadImageFromDataBuffer(data, dims.width, dims.height, mime_type, url, external_url, name, exif, function(appInstance) {
+		// 			callback(appInstance);
+		// 		});
+		// 	} else {
+		// 		console.log("File not recognized:", file, mime_type, url);
+		// 	}
+		// });
+
+		// Query the exif data
+		var box  = assets.getTag(file, "ViewBox").split(' ');
+		var svgDims = {width:parseInt(box[2]), height:parseInt(box[3])};
+		var svgExif = assets.getExifData(file);
+
+		if (svgDims) {
+			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, url, external_url, name, svgExif, function(appInstance) {
+				callback(appInstance);
+			});
+		} else {
+			console.log("File not recognized:", file, mime_type, url);
+		}
 	}
-	else{
-		imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").toBuffer(function (err, buffer) {
+	else {
+		// imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").toBuffer(function (err, buffer) {
+		// 	if(err) {
+		// 		console.log("Error> processing image file", file);
+		// 		return; // throw err;
+		// 	}
+
+		// 	// Query the exif data
+		// 	var dims = assets.getDimensions(file);
+		// 	var exif = assets.getExifData(file);
+
+		// 	if (dims) {
+		// 		_this.loadImageFromDataBuffer(buffer, dims.width, dims.height, "image/png", url, external_url, name, exif, function(appInstance) {
+		// 			callback(appInstance);
+		// 		});
+		// 	} else {
+		// 		console.log("File not recognized:", file, mime_type, url);
+		// 	}
+		// });
+
+		var localPath = path.join(this.publicDir, "uploads", "tmp", name) + ".png";
+
+		imageMagick(file+"[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function (err, buffer) {
 			if(err) {
 				console.log("Error> processing image file", file);
-				return; // throw err;
+				return;
 			}
 
-			// imageMagick(buffer).size(function (err, size) {
-			// 	if(err) {
-			// 		console.log("Error> getting buffer size for file", file);
-			// 		return; // throw err;
-			// 	}
-			// 	_this.loadImageFromDataBuffer(buffer, size.width, size.height, "image/png", url, external_url, name, function(appInstance) {
-			// 		callback(appInstance);
-			// 	});
-			// });
-
 			// Query the exif data
-			var dims = assets.getDimensions(file);
-			var exif = assets.getExifData(file);
+			var imgDims = assets.getDimensions(file);
+			var imgExif = assets.getExifData(file);
 
 			if (dims) {
-				_this.loadImageFromDataBuffer(buffer, dims.width, dims.height, "image/png", url, external_url, name, exif, function(appInstance) {
+				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", url+".png", external_url+".png", name+".png", imgExif, function(appInstance) {
 					callback(appInstance);
 				});
 			} else {
@@ -338,8 +441,6 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 		var stretch = data.display_aspect_ratio / (data.width / data.height);
 		var native_width  = data.width * stretch;
 		var native_height = data.height;
-
-		console.log(data);
 
 		var appInstance = {
 			id: null,
@@ -408,11 +509,11 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, url, external_ur
 		id: null,
 		title: name,
 		application: "pdf_viewer",
-		icon: exif.SAGE2thumbnail,
+		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: external_url,
+			doc_url: external_url,
 			page: 1,
 			numPagesShown: 1
 		},
@@ -448,8 +549,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
     fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
         if(err) throw err;
 
+        var appUrl = "uploads/apps/"+appName;
 		var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
-		var appUrl = path.join("uploads", "apps", appName);
 		var app_external_url = _this.hostOrigin + encodeReservedURL(appUrl);
 		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
 		appInstance.data = url;
@@ -633,9 +734,9 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var dir = registry.getDirectory(file.filename);
-	var url = path.join("uploads", dir, file.filename);
+	var url = "uploads/"+dir+"/"+file.filename;
 	var external_url = this.hostOrigin + encodeReservedURL(url);
-	var localPath = path.join(this.publicDir, url);
+	var localPath = path.join(this.publicDir, "uploads", dir, file.filename);
 	var mime_type = mime.lookup(localPath);
 
 	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
@@ -654,9 +755,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
     if (!fs.existsSync(path.join(this.publicDir, "uploads", dir))) {
         fs.mkdirSync(path.join(this.publicDir, "uploads", dir));
     }
-	var url = path.join("uploads", dir, file.name);
+	var url = "uploads/"+dir+"/"+file.name;
 	var external_url = this.hostOrigin + encodeReservedURL(url);
-	var localPath = path.join(this.publicDir, url);
+	var localPath = path.join(this.publicDir, "uploads", dir, file.name);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
@@ -666,9 +767,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		var extension   = splits.pop();
 		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
 		// Regenerate path and url
-		url = path.join("uploads", dir, newfilename);
+		url = "uploads/"+dir+"/"+newfilename;
 		external_url = this.hostOrigin + encodeReservedURL(url);
-		localPath    = path.join(this.publicDir, url);
+		localPath    = path.join(this.publicDir, "uploads", dir, newfilename);
 	}
 
 	fs.rename(file.path, localPath, function(err1) {
@@ -720,7 +821,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 		else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
-				var url = path.join("uploads", dir, name);
+				var url = "uploads/"+dir+"/"+name;
 				var external_url = this.hostOrigin + encodeReservedURL(url);
 				this.loadZipAppFromFile(appData.path, appData.type, url, external_url, name, function(appInstance) {
 					callback(appInstance, null);
@@ -803,7 +904,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				date: new Date()
 			};
 			if(appData.application.application === "pdf_viewer") {
-				anInstance.data.src = anInstance.url;
+				anInstance.data.doc_url = anInstance.url;
 			}
 
 			this.scaleAppToFitDisplay(anInstance);
@@ -827,7 +928,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
         id: null,
         title: exif.metadata.title,
         application: appName,
-        icon: exif.SAGE2thumbnail,
+        icon: exif ? exif.SAGE2thumbnail : null,
         type: mime_type,
         url: external_url,
         data: instructions.load,

@@ -45,6 +45,8 @@ function SAGE2_interaction(wsio) {
 	this.deltaY = 0;
 	// Send frequency (frames per second)
 	this.sendFrequency = 25;
+	// Timeout for when scrolling ends
+	this.scrollTimeId = null;
 	/////////////////////////////////
 
 	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
@@ -284,11 +286,11 @@ function SAGE2_interaction(wsio) {
 	* @method startScreenShare
 	*/
 	this.startScreenShare = function() {
-		if (browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
+		if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
 			// post message to start chrome screen share
 			window.postMessage('capture_desktop', '*');
 		}
-		else if (browser.isFirefox === true) {
+		else if (__SAGE2__.browser.isFirefox === true) {
 			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
 			showDialog('ffShareScreenDialog');
 		}
@@ -304,11 +306,11 @@ function SAGE2_interaction(wsio) {
 	* @param data {Object} data
 	*/
 	this.captureDesktop = function(data) {
-		if( browser.isChrome === true) {
+		if (__SAGE2__.browser.isChrome === true) {
 			var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: data, maxWidth: 3840, maxHeight: 2160};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		}
-		else if (browser.isFirefox === true) {
+		else if (__SAGE2__.browser.isFirefox === true) {
 			navigator.getUserMedia({video: {mediaSource: data}, audio: false}, this.streamSuccess, this.streamFail);
 		}
 	};
@@ -472,8 +474,7 @@ function SAGE2_interaction(wsio) {
 			var px  = this.deltaX * this.sensitivity;
 			var py  = this.deltaY * this.sensitivity;
 			// Send the event
-			//this.wsio.emit('pointerMove', {deltaX: px, deltaY: py});
-			this.wsio.emit('ptm', {dx: Math.round(px), dy: Math.round(py)});
+			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;
@@ -518,8 +519,19 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} scroll event
 	*/
 	this.pointerScrollMethod = function(event) {
-		this.wsio.emit('pointerScrollStart');
+		if (this.scrollTimeId === null) {
+			this.wsio.emit('pointerScrollStart');
+		}
+		else {
+			clearTimeout(this.scrollTimeId);
+		}
 		this.wsio.emit('pointerScroll', {wheelDelta: event.deltaY});
+
+		var _this = this;
+		this.scrollTimeId = setTimeout(function() {
+			_this.wsio.emit('pointerScrollEnd');
+			_this.scrollTimeId = null;
+		}, 500);
 		if (event.preventDefault) event.preventDefault();
 	};
 

@@ -8,8 +8,6 @@
 //
 // Copyright (c) 2014
 
-"use strict";
-
 /**
  * @module client
  * @submodule Class

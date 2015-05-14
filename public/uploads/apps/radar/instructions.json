@@ -8,8 +8,11 @@
 		"scripts/d3.v3.min.js",
 		"radarStations.js"
 	],
+	"load": {
+		"currentStation": 0
+	},
 	"title": "Radar Maps",
-	"version": "1.2",
+	"version": "1.3",
 	"description": "Radar maps of various locations",
 	"keywords": [ "maps", "d3", "geo", "weather" ],
 	"author": "Andrew Johnson <lenzman@me.com>",

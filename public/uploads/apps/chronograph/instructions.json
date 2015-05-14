@@ -4,10 +4,11 @@
 	"width": 600,
 	"height": 600,
 	"animation": true,
-	"load": {
-	},
 	"dependencies": [
 	],
+	"load": {
+		"mode": 0
+	},
 	"title": "Chronograph",
 	"version": "1.0.0",
 	"description": "A chronograph written in Canvas 2D",

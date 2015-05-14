@@ -14,8 +14,8 @@ Array.prototype.diff = function(num){
 }
 
 var sticky_note = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "continuous"; // "onfinish";
 
@@ -25,13 +25,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.textLines = [];
 		this.enableControls = true;
 		this.cloneable = true;
-	},
 
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
-
-		// application specific 'init'
 
 		this.element.id = "div" + data.id;
 
@@ -75,6 +69,12 @@ var sticky_note = SAGE2_App.extend( {
 			})
 			this.textLines.push(lineText);
 		}
+
+		var text = "Enter note"; // use this.state for saving text entry
+		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
+		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
+		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
+		this.controls.finishedAddingControls();
 	},
 
 	// get messages from the server through a broadcast call
@@ -97,7 +97,7 @@ var sticky_note = SAGE2_App.extend( {
 		str = "";
 
 		while(wordCount < list.length){
-			console.log("Compare:",rightEnd,(this.textLines[lineNumber]).getBBox().x2);
+			//console.log("Compare:",rightEnd,(this.textLines[lineNumber]).getBBox().x2);
 			this.textLines[lineNumber].attr("text",str+list[wordCount]);
 			right = this.textLines[lineNumber].getBBox().x2;
 			if (right < rightEnd){
@@ -121,7 +121,9 @@ var sticky_note = SAGE2_App.extend( {
 	},
 
 	load: function(state, date) {
+		// data in this.state - shouldn't just be used as local var
 		var text = "Enter note";
+		/*
 		if (state){
 			state.loadData = state.loadData || "";
 			if (state.loadData.length > 0){
@@ -130,15 +132,10 @@ var sticky_note = SAGE2_App.extend( {
 			}
 				
 		}
-		this.controls.addTextInput({defaultText: text,action:this.wrapText.bind(this)});
-		this.controls.addButton({type:"duplicate",sequenceNo:6,action:function(date){
-			this.requestForClone = true;
-			this.cloneData = this.text;
-		}.bind(this)});
-		this.controls.addButton({type:"new",sequenceNo:8,action:function(date){
-			this.requestForClone = true;
-			this.cloneData = "";
-		}.bind(this)});
+		*/
+		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
+		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
+		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -155,7 +152,7 @@ var sticky_note = SAGE2_App.extend( {
 
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// Move the circle when I click
-			this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
+			//this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
 		}
 		else if (eventType === "pointerRelease" && (data.button === "left")) {
 		}
@@ -178,6 +175,24 @@ var sticky_note = SAGE2_App.extend( {
 			}
 			else if (data.code === 40 && data.state === "down") { // down arrow
 			}			
+		}
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "DuplicateNote":
+					this.requestForClone = true;
+					this.cloneData = this.text;
+					break;
+				case "NewNote":
+					this.requestForClone = true;
+					this.cloneData = "";
+					break;
+				case "TextInput":
+					this.wrapText(data.text);
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					break;
+			}
 		}
 	},
 	quit: function(){

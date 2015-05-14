@@ -9,63 +9,36 @@
 // Copyright (c) 2014
 
 var stereo_image = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 
 		this.resizeEvents = "onfinish";
 		this.moveEvents   = "onfinish";
 
-		this.ctx = null;
-		this.stereoImg = null;
-		this.stereoImgLoaded = false;
-		this.manualOffset = 0;
-		this.interleaveOffset = 0;
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
-
-		// application specific 'init'
-		this.ctx = this.element.getContext('2d');
-
-		this.state.stereoMode = "interleave";
-		this.state.anaglyphMode = "Optimized+Anaglyph";
-		this.controls.addButton({type:"prev",sequenceNo:7,action:function(date){ 
-			if (this.state.stereoMode === "lefteye")    this.state.stereoMode = "righteye";
-			else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "anaglyph";
-			else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "interleave";
-			else if (this.state.stereoMode === "interleave") this.state.stereoMode = "lefteye";
-			this.refresh(date);			
-		}.bind(this)});
-		this.controls.addButton({type:"next",sequenceNo:1,action:function(date){ 
-			if (this.state.stereoMode === "lefteye")    this.state.stereoMode = "interleave";
-			else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "lefteye";
-			else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "righteye";
-			else if (this.state.stereoMode === "interleave") this.state.stereoMode = "anaglyph";
-			this.refresh(date);
-		}.bind(this)});
-		var modeLabel =  { "textual":true, "label":"Mode", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:modeLabel,sequenceNo:4,action:function(date){ 
-			if (this.state.anaglyphMode === "TrueAnaglyph")       this.state.anaglyphMode = "GrayAnaglyph";
-			else if (this.state.anaglyphMode === "GrayAnaglyph")       this.state.anaglyphMode = "ColorAnaglyph";
-			else if (this.state.anaglyphMode === "ColorAnaglyph")      this.state.anaglyphMode = "OptimizedAnaglyph";
-			else if (this.state.anaglyphMode === "OptimizedAnaglyph")  this.state.anaglyphMode = "Optimized+Anaglyph";
-			else if (this.state.anaglyphMode === "Optimized+Anaglyph") this.state.anaglyphMode = "TrueAnaglyph";
-			this.refresh(date);
-		}.bind(this)});
-		this.controls.finishedAddingControls();
-	},
-
-	load: function(file, date) {
 		var _this = this;
 		this.stereoImg = new Image();
 		this.stereoImg.addEventListener('load', function() {
 			_this.stereoImgLoaded = true;
 			_this.sendResize(_this.stereoImg.naturalWidth/2, _this.stereoImg.naturalHeight);
-			_this.refresh(date);
+			_this.refresh(data.date);
 		}, false);
-		this.stereoImg.src = file;
+		this.stereoImgLoaded = false;
+		this.manualOffset = 0;
+		this.interleaveOffset = 0;
+
+		this.ctx = this.element.getContext('2d');
+
+		this.state.stereoMode = "interleave";
+		this.state.anaglyphMode = "Optimized+Anaglyph";
+		this.controls.addButton({type: "prev",sequenceNo: 7, id: "PreviousStereoMode"});
+		this.controls.addButton({type: "next",sequenceNo: 1, id: "NextStereoMode"});
+		var modeLabel =  {textual: true, label: "Mode", fill: "rgba(250,250,250,1.0)", animation: false};
+		this.controls.addButton({type: modeLabel, sequenceNo: 4, id: "ChangeAnaglyphMode"});
+		this.controls.finishedAddingControls();
+	},
+
+	load: function(date) {
+		this.stereoImg.src = this.state.file;
 	},
 
 	draw: function(date) {
@@ -248,39 +221,45 @@ var stereo_image = SAGE2_App.extend( {
 	resize: function(date) {
 		this.refresh(date);
 	},
+	nextStereoMode: function(date){
+		if      (this.state.stereoMode === "lefteye")    this.state.stereoMode = "interleave";
+		else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "lefteye";
+		else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "righteye";
+		else if (this.state.stereoMode === "interleave") this.state.stereoMode = "anaglyph";
+		this.refresh(date);
+	},
+	previousStereoMode: function(date){
+		if      (this.state.stereoMode === "lefteye")    this.state.stereoMode = "righteye";
+		else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "anaglyph";
+		else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "interleave";
+		else if (this.state.stereoMode === "interleave") this.state.stereoMode = "lefteye";
+		this.refresh(date);
+	},
+	changeAnaglyphMode: function(date){
+		if (this.state.anaglyphMode === "TrueAnaglyph")       this.state.anaglyphMode = "GrayAnaglyph";
+		else if (this.state.anaglyphMode === "GrayAnaglyph")       this.state.anaglyphMode = "ColorAnaglyph";
+		else if (this.state.anaglyphMode === "ColorAnaglyph")      this.state.anaglyphMode = "OptimizedAnaglyph";
+		else if (this.state.anaglyphMode === "OptimizedAnaglyph")  this.state.anaglyphMode = "Optimized+Anaglyph";
+		else if (this.state.anaglyphMode === "Optimized+Anaglyph") this.state.anaglyphMode = "TrueAnaglyph";
+		this.refresh(date);
+	},
 
-	event: function(type, position, user, data, date) {
+	event: function(eventType, position, user, data, date) {
 		// Left Arrow  - toggle to next stereo mode
 		// Right Arrow - toggle to prev stereo mode
-		if(type === "specialKey") {
+		if(eventType === "specialKey") {
 			if(data.code === 37 && data.state === "up"){ // Left Arrow
-				if      (this.state.stereoMode === "lefteye")    this.state.stereoMode = "righteye";
-				else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "anaglyph";
-				else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "interleave";
-				else if (this.state.stereoMode === "interleave") this.state.stereoMode = "lefteye";
-
-				this.refresh(date);
+				this.previousStereoMode(date);
 			}
 			else if(data.code === 39 && data.state === "up"){ // Right Arrow
-				if      (this.state.stereoMode === "lefteye")    this.state.stereoMode = "interleave";
-				else if (this.state.stereoMode === "righteye")   this.state.stereoMode = "lefteye";
-				else if (this.state.stereoMode === "anaglyph")   this.state.stereoMode = "righteye";
-				else if (this.state.stereoMode === "interleave") this.state.stereoMode = "anaglyph";
-
-				this.refresh(date);
+				this.nextStereoMode(date);
 			}
 		}
 
-		else if(type === "keyboard") {
+		else if(eventType === "keyboard") {
 			// modify anaglyph mode
 			if(data.character === "m" || data.character === "M"){
-				if      (this.state.anaglyphMode === "TrueAnaglyph")       this.state.anaglyphMode = "GrayAnaglyph";
-				else if (this.state.anaglyphMode === "GrayAnaglyph")       this.state.anaglyphMode = "ColorAnaglyph";
-				else if (this.state.anaglyphMode === "ColorAnaglyph")      this.state.anaglyphMode = "OptimizedAnaglyph";
-				else if (this.state.anaglyphMode === "OptimizedAnaglyph")  this.state.anaglyphMode = "Optimized+Anaglyph";
-				else if (this.state.anaglyphMode === "Optimized+Anaglyph") this.state.anaglyphMode = "TrueAnaglyph";
-
-				this.refresh(date);
+				this.changeAnaglyphMode(date);
 			}
 			// manually switch interleave offset
 			if(data.character === "o" || data.character === "O"){
@@ -288,6 +267,22 @@ var stereo_image = SAGE2_App.extend( {
 				this.interleaveOffset = (this.sage2_y+this.manualOffset) % 2;
 				
 				this.refresh(date);
+			}
+		}
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "PreviousStereoMode":
+					this.previousStereoMode(date);
+					break;
+				case "NextStereoMode":
+					this.nextStereoMode(date);
+					break;
+				case "ChangeAnaglyphMode":
+					this.changeAnaglyphMode(date);
+					break;
+				default:
+					console.log("No handler for:", data.ctrlId);
+					break;
 			}
 		}
 	}
