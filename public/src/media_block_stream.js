@@ -26,7 +26,8 @@ var media_block_stream = SAGE2_BlockStreamingApp.extend( {
 	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
 	init: function(data) {
-		this.SAGE2Init("div", data);
+		this.blockStreamInit(data);
+		this.firstLoad();
 	},
 
 	/**
