@@ -9,42 +9,9 @@
 // Copyright (c) 2014
 
 
-var notepad = SAGE2_App.extend( {
-	construct: function() {
-
-		this.element = null;
-		this.ctx = null;
-		this.resrcPath = null;
-		this.lines = null;
-		this.linesVisble = null;
-		this.columns = null;
-
-		this.fontSize = 12;
-		this.font = "Arial";
-		this.bold = false;
-		this.fontHeight = null;
-		this.height = null;
-		this.space = null;
-		this.lMargin = 40;
-
-		this.minDim = null;
-		this.text = "";
-		this.textArr = [];
-		this.blinkerArr = [];
-		this.specialKeyFlag = false;
-		this.range=[];
-
-		
-		this.timer = null;
-		this.redraw = null;
-		this.enableControls = null;
-		this.controls = null;
-		
-		this.resizeEvents = "continuous";
-	},
-	
-	load: function(state, date) {
-		
+var notepad = SAGE2_App.extend( {	
+	load: function(date) {
+		this.refresh(date);
 	},
 
 	computeMetrics: function(){
@@ -63,8 +30,8 @@ var notepad = SAGE2_App.extend( {
 	findRange: function(){
 		this.range[0] = [1,this.linesVisible];
 	},
-	getHeightOfText: function (bold, font, size)
-	{
+
+	getHeightOfText: function (bold, font, size){
 		var div = document.createElement('DIV');
 		div.innerHTML = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		div.style.position = 'absolute';
@@ -122,14 +89,37 @@ var notepad = SAGE2_App.extend( {
 	},
 	
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
+		this.SAGE2Init("canvas", data);
+
+		this.lines = null;
+		this.linesVisble = null;
+		this.columns = null;
+
+		this.fontSize = 12;
+		this.font = "Arial";
+		this.bold = false;
+		this.fontHeight = null;
+		this.height = null;
+		this.space = null;
+		this.lMargin = 40;
+
+		this.minDim = null;
+		this.text = "";
+		this.textArr = [];
+		this.blinkerArr = [];
+		this.specialKeyFlag = false;
+		this.range=[];
+
+		
+		this.timer = null;
+		
+		this.resizeEvents = "continuous";
+
 
 		// Set the framerate
 		this.maxFPS = 4;
 	
 		this.ctx = this.element.getContext('2d');
-		this.resrcPath = data.resrc;
 		//this.fs = require('fs');
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.computeMetrics() ;

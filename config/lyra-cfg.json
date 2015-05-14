@@ -206,27 +206,32 @@
 		{
 			name: "Cyber-Commons",
 			host: "iridium.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "CAVE2 Column",
 			host: "preeka.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "PhD Room",
 			host: "dante.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "Green Room",
 			host: "mesaverde.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		}
 	],
         apis: {

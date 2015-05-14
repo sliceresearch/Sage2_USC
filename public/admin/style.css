@@ -13,30 +13,7 @@
 
 /* CSS Document */
 
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Regular.ttf') format('truetype');
-	font-weight: normal;
-	font-style: normal;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Italic.ttf') format('truetype');
-	font-weight: normal;
-	font-style: italic;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Bold.ttf') format('truetype');
-	font-weight: bold;
-	font-style: normal;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-BoldItalic.ttf') format('truetype');
-	font-weight: bold;
-	font-style: italic;
-}
+@import url('/css/fonts.css');
 
 * {
 	margin: 0;
@@ -114,7 +91,8 @@ p {
   color: #f0f0f0;
   background: #000;
   height:40em;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 .commandline {
 	border: #000 solid 0px;

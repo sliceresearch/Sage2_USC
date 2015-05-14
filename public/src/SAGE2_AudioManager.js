@@ -16,6 +16,7 @@
  * @class SAGE2_AudioManager
  */
 
+var clientID;
 var wsio;
 var autoplay;
 var hostAlias = {};
@@ -26,13 +27,20 @@ var hostAlias = {};
  * @method SAGE2_init
  */
 function SAGE2_init() {
+	// Just a given number
+	clientID = -2;
+
 	autoplay = false;
 	wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
 
 	wsio.open(function() {
-		console.log("open websocket");
+		console.log("Websocket opened");
+
+		setupListeners();
+
+		/*
 		var clientDescription = {
 			clientType: "audioManager",
 			sendsPointerData: false,
@@ -50,6 +58,16 @@ function SAGE2_init() {
 			receivesPointerData: false,
 			receivesInputEvents: true,
 			receivesRemoteServerInfo: false
+		};
+		*/
+		var clientDescription = {
+			clientType: "audioManager",
+			requests: {
+				config: true,
+				version: false,
+				time: false,
+				console: false
+			}
 		};
 		wsio.emit('addClient', clientDescription);
 	});
@@ -72,7 +90,9 @@ function SAGE2_init() {
 			xhr.send();
 		}, 2000);
 	});
+}
 
+function setupListeners() {
 	wsio.on('initialize', function(data) {
 		// var serverTime = new Date(data.time);
 		// var clientTime = new Date();
@@ -177,8 +197,6 @@ function SAGE2_init() {
 			main.appendChild(vid);
 			videosTable.appendChild(videoRow);
 		}
-
-		if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 	});
 
 	wsio.on('videoPlaying', function(data) {
@@ -224,10 +242,6 @@ function SAGE2_init() {
 	wsio.on('deleteElement', function(elem_data) {
 		deleteElement(elem_data.elemId);
 		deleteElement(elem_data.elemId + "_row");
-	});
-
-	wsio.on('animateCanvas', function(data) {
-		wsio.emit('finishedRenderingAppFrame', {id: data.id});
 	});
 }
 

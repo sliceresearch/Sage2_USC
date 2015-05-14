@@ -140,7 +140,7 @@ var listAssets = function() {
 	// Print
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		console.log("Assets>", idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
+		console.log(sageutils.header("Assets"), idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
 		idx++;
 	}
 };
@@ -159,9 +159,9 @@ var saveAssets = function(filename) {
 		fs.writeFileSync(fullpath, JSON.stringify(AllAssets, null, 4));
 	}
 	catch (err) {
-		console.log("Assets> error saving list", err);
+		console.log(sageutils.header("Assets") + "error saving assets", err);
 	}
-	console.log("Assets> saved to " + fullpath);
+	console.log(sageutils.header("Assets") + "saved assets file to " + fullpath);
 };
 
 var generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -175,9 +175,9 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 
 	// seems to have an issue with noProfile
 	//imageMagick(infile+"[0]").noProfile().bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
-	imageMagick(infile+"[0]").bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+	imageMagick(infile+"[0]").bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgb(71,71,71)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.jpg', function(err) {
 		if (err) {
-			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
 		}
 		// recursive call to generate the next size
@@ -194,9 +194,9 @@ var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index
 		return;
 	}
 
-	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function (err) {
+	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "85").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgb(71,71,71)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.jpg', function (err) {
 		if (err) {
-			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
 		}
 		// recursive call to generate the next size
@@ -207,7 +207,7 @@ var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index
 var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
 	imageMagick(width, height, "#ffffff").append(infile+"[0]").colorspace("RGB").noProfile().flatten().toBuffer("PNG", function(err, buffer) {
 		if (err) {
-			console.log("Assets> cannot generate thumbnails for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate thumbnails for:", infile);
 			return;
 		}
 
@@ -230,10 +230,10 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 
 	var cmd = ffmpeg(infile);
 	cmd.on('end', function() {
-		var tmpImg = outfile+'_'+size+'_1.png';
-		imageMagick(tmpImg).command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgba(0,0,0,0)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.png', function(err) {
+		var tmpImg = outfile+'_'+size+'_1.jpg';
+		imageMagick(tmpImg).command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgb(71,71,71)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.jpg', function(err) {
 			if (err) {
-				console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+				console.log(sageutils.header("Assets") + "cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 				return;
 			}
 			fs.unlink(tmpImg, function (err2) {
@@ -244,7 +244,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 		});
 	}).screenshots({
 		timestamps: ["10%"],
-		filename: path.basename(outfile)+"_%r_%i.png",
+		filename: path.basename(outfile)+"_%r_%i.jpg",
 		folder: path.dirname(outfile),
 		size: size
 	});
@@ -266,9 +266,9 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 	var circle = radius + " " + radius + " " + edge + " " + radius;
 	var img = corner + " " + corner + " " + width + " " + width;
 
-	imageMagick(sizes[index], sizes[index], "rgba(255,255,255,0)").command("convert").in("-fill", "rgb("+acolor.r+","+acolor.g+","+acolor.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+sizes[index]+'.png', function(err) {
+	imageMagick(sizes[index], sizes[index], "rgb(71,71,71)").command("convert").in("-fill", "rgb("+acolor.r+","+acolor.g+","+acolor.b+")").in("-draw", "circle "+circle).in("-draw", "image src-over "+img+" '"+infile+"'").write(outfile+'_'+sizes[index]+'.jpg', function(err) {
 		if (err) {
-			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
 			return;
 		}
 		// recursive call to generate the next size
@@ -293,17 +293,17 @@ var addFile = function(filename, exif, callback) {
 
 	// If it's an image, process for thumbnail
 	if (exif.MIMEType.indexOf('image/') > -1) {
-		generateImageThumbnails(filename, thumb, [1024, 512, 256], null, function() {
+		generateImageThumbnails(filename, thumb, [512, 256, 128], null, function() {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/pdf') {
-		generatePdfThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [1024, 512, 256], null, function() {
+		generatePdfThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256, 128], null, function() {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
-		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [1024, 512, 256], null, function() {
+		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256, 128], null, function() {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
@@ -359,7 +359,7 @@ var addFile = function(filename, exif, callback) {
 					b: Math.round(255 - ((255 - primaryColor.b) * tint))
 				};
 
-				generateAppThumbnails(exif.icon, thumb, primaryTint, [1024, 512, 256], null, function() {
+				generateAppThumbnails(exif.icon, thumb, primaryTint, [512, 256, 128], null, function() {
 					callback();
 				});
 			};
@@ -455,7 +455,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log("EXIF> Adding " + app + " (App)");
+			console.log(sageutils.header("EXIF") + "Adding " + app + " (App)");
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "")
@@ -494,7 +494,7 @@ var exifAsync = function(cmds, cb) {
 					console.log("internal error for file", file);
 					cb(err);
 				} else {
-					console.log("EXIF> Adding " + data.FileName);
+					console.log(sageutils.header("EXIF") + "Adding " + data.FileName);
 					addFile(data.SourceFile, data, function() {
 						if (cmds.length > 0) execNext();
 						else cb(null);
@@ -513,7 +513,7 @@ var exifAsync = function(cmds, cb) {
 // 			console.log("internal error");
 // 			cb(result.err);
 // 		} else {
-// 			console.log("EXIF> Adding", result.metadata.FileName);
+// 			console.log(sageutils.header("EXIF") + "Adding", result.metadata.FileName);
 // 			addFile(result.metadata.SourceFile, result.metadata);
 // 			if (cmds.length) execNext();
 // 			else cb(null);
@@ -585,15 +585,15 @@ var initialize = function (root, relativePath) {
 		if (!sageutils.fileExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
 
 		// Make sure unknownapp images exist
-		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.png');
-		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.png');
+		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.jpg');
+		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.jpg');
 		if (!sageutils.fileExists(unknownapp_256)) fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
-		var unknownapp_512Img = path.resolve(root, '..', 'images', 'unknownapp_512.png');
-		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.png');
+		var unknownapp_512Img = path.resolve(root, '..', 'images', 'unknownapp_512.jpg');
+		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
 		if (!sageutils.fileExists(unknownapp_512)) fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
-		var unknownapp_1024Img = path.resolve(root, '..', 'images', 'unknownapp_1024.png');
-		var unknownapp_1024 = path.join(assetAppsFolder, 'unknownapp_1024.png');
-		if (!sageutils.fileExists(unknownapp_1024)) fs.createReadStream(unknownapp_1024Img).pipe(fs.createWriteStream(unknownapp_1024));
+		var unknownapp_128Img = path.resolve(root, '..', 'images', 'unknownapp_128.jpg');
+		var unknownapp_128 = path.join(assetAppsFolder, 'unknownapp_128.jpg');
+		if (!sageutils.fileExists(unknownapp_128)) fs.createReadStream(unknownapp_128Img).pipe(fs.createWriteStream(unknownapp_128));
 
 		AllAssets = {};
 
@@ -667,7 +667,7 @@ var initialize = function (root, relativePath) {
 		// delete the elements which not there anymore
 		for (item in AllAssets.list) {
 			if (AllAssets.list[item].Valid === false) {
-				console.log("Assets> Removing old item", item);
+				console.log(sageutils.header("Assets") + "Removing old item", item);
 				delete AllAssets.list[item];
 			} else {
 				// Just remove the Valid flag
@@ -675,12 +675,14 @@ var initialize = function (root, relativePath) {
 			}
 		}
 
-		if (thelist.length > 0) console.log("EXIF> Starting processing:", thelist);
+		if (thelist.length > 0) {
+			console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
+		}
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log("EXIF> Error:", err);
+				console.log(sageutils.header("EXIF") + "Error:", err);
 			} else {
-				console.log("EXIF> Done");
+				console.log(sageutils.header("EXIF") + "Done");
 			}
 		});
 	}
@@ -695,7 +697,7 @@ var regenerateAssets = function() {
 	var assetFile = path.join(assetFolder, 'assets.json');
 	if (sageutils.fileExists(assetFile)) {
 		fs.unlinkSync(assetFile);
-		console.log('Assets> successfully deleted', assetFile);
+		console.log(sageutils.header("Assets") + "successfully deleted", assetFile);
 	}
 	var rootdir = AllAssets.root;
 	var relativ = AllAssets.rel;

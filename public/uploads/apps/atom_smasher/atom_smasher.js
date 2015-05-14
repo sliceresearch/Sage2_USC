@@ -12,8 +12,8 @@
 
 
 var atom_smasher = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.width  = null;
 		this.height = null;
@@ -43,11 +43,6 @@ var atom_smasher = SAGE2_App.extend( {
 		this.time = null;
 		this.rotateSpeed = 0.2;
 
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 	
 		this.element.id = "div" + data.id;
 		this.frame  = 0;
@@ -291,7 +286,7 @@ this.scene.add( circle );
 		this.frameCtr = 0;
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 
 	draw: function(date) {

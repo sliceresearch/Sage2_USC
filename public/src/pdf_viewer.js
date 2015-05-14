@@ -27,13 +27,13 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
  */
  var pdf_viewer = SAGE2_App.extend( {
 	/**
-	* Constructor, redraws done on finish events
+	* Init method, creates an 'img' tag in the DOM and a few canvas contexts to handle multiple redraws
 	*
-	* @class pdf_viewer
-	* @constructor
+	* @method init
+	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("img", data);
 
 		this.resizeEvents = "onfinish";
 
@@ -47,17 +47,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		this.src     = null;
 		this.gotresize      = false;
 		this.enableControls = true;
-	},
-
-	/**
-	* Init method, creates an 'img' tag in the DOM and a few canvas contexts to handle multiple redraws
-	*
-	* @method init
-	* @param data {Object} contains initialization values (id, width, height, ...)
-	*/
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "img", data);
+		this.old_doc_url = "";
 
 		// application specific 'init'
 		for(var i=0; i<this.numCtx; i++){
@@ -70,9 +60,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			this.ctx.push(ctx);
 		}
 
-		this.state.src  = null;
-		this.state.page = null;
-		this.state.numPagesShown = null;
+		this.updateAppFromState(data.date);
 	},
 
 	/**
@@ -82,29 +70,30 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param state {Object} object to initialize or restore the app
 	* @param date {Date} time from the server
 	*/
-	load: function(state, date) {
-		// load new document
-		if (state.src !== undefined && state.src !== null) {
+	load: function(date) {
+		this.updateAppFromState(date);
+	},
+
+	updateAppFromState: function(date) {
+		if (this.old_doc_url !== this.state.doc_url) {
 			var _this = this;
 			this.loaded = false;
 
-			state.src = cleanURL(state.src);
+			var docURL = cleanURL(this.state.doc_url);
 
-			PDFJS.getDocument({url: state.src}).then(function getDocumentCallback(pdfDocument) {
+			PDFJS.getDocument({url: docURL}).then(function getDocumentCallback(pdfDocument) {
+				console.log("loaded pdf document", _this.gotresize);
 				_this.pdfDoc = pdfDocument;
 				_this.loaded = true;
 
-				_this.state.src  = state.src;
-				_this.state.page = state.page;
-				_this.state.numPagesShown = state.numPagesShown;
-
-				addWidgetControlsToPdfViewer(_this);
+				_this.addWidgetControlsToPdfViewer();
 
 				// if already got a resize event, just redraw, otherwise send message
 				if (_this.gotresize) {
-					_this.redraw = true;
 					_this.refresh(date);
-				} else {
+					_this.gotresize = false;
+				}
+				else {
 					// Getting the size of the page
 					_this.pdfDoc.getPage(1).then(function(page) {
 						var viewport = page.getViewport(1.0);
@@ -119,13 +108,28 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 					});
 				}
 			});
+			this.old_doc_url = this.state.doc_url;
 		}
 		// load new state of same document
 		else {
-			this.state.page = state.page;
-			this.state.numPagesShown = state.numPagesShown;
 			this.refresh(date);
 		}
+	},
+
+	/**
+	* Adds custom widgets to app
+	*
+	* @method addWidgetControlsToPdfViewer
+	*/
+	addWidgetControlsToPdfViewer: function() {
+		if (this.pdfDoc.numPages>1){
+			this.controls.addButton({type: "fastforward", sequenceNo: 2, id: "LastPage"});
+			this.controls.addButton({type: "rewind",      sequenceNo: 6, id: "FirstPage"});
+			this.controls.addButton({type: "prev",        sequenceNo: 5, id: "PreviousPage"});
+			this.controls.addButton({type: "next",        sequenceNo: 3, id: "NextPage"});
+			this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1, appHandle: this, property: "state.page", caption: "Page", id: "Page"});
+		}
+		this.controls.finishedAddingControls();
 	},
 
 	/**
@@ -175,7 +179,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				var blob = new Blob([buf], {type: mime});
 				var source = window.URL.createObjectURL(blob);
 
-				if(_this.src !== null) window.URL.revokeObjectURL(_this.src);
+				if(_this.src!== null) window.URL.revokeObjectURL(_this.src);
 				_this.src = source;
 
 				_this.element.src = _this.src;
@@ -191,12 +195,12 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	resize: function(date) {
+		console.log("resize pdf viewer");
 		for(var i=0; i<this.numCtx; i++){
 			this.canvas[i].width  = this.element.width;
 			this.canvas[i].height = this.element.height;
 		}
 		// Force a redraw after resize
-		this.redraw    = true;
 		this.gotresize = true;
 		this.refresh(date);
 	},
@@ -211,10 +215,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param data {Object} object containing extra data about the event,
 	* @param date {Date} current time from the server
 	*/
-	event: function(type, position, user, data, date) {
+	event: function(eventType, position, user, data, date) {
 		// Left Arrow  - go back one page
 		// Right Arrow - go forward one page
-		if (type === "specialKey") {
+		if (eventType === "specialKey") {
 			if (data.code === 37 && data.state === "up") { // Left Arrow
 				if(this.state.page <= 1) return;
 				this.state.page = this.state.page - 1;
@@ -226,53 +230,41 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				this.refresh(date);
 			}
 		}
-		if (type === "keyboard") {
+		else if (eventType === "widgetEvent"){
+			switch(data.ctrlId){
+				case "LastPage":
+					this.state.page = this.pdfDoc.numPages;
+					break;
+				case "FirstPage":
+					this.state.page = 1;
+					break;
+				case "PreviousPage":
+					if(this.state.page <= 1) return;
+					this.state.page = this.state.page - 1;
+					break;
+				case "NextPage":
+					if (this.state.page >= this.pdfDoc.numPages) return;
+					this.state.page = this.state.page + 1;
+					break;
+				case "Page":
+					switch (data.action){
+						case "sliderRelease":
+							break;
+						default:
+							//console.log("No handler for: "+ data.ctrlId + "->" + data.action);
+							return;
+					}
+					break;
+				default:
+					//console.log("No handler for:", data.ctrlId);
+					return;
+			}
+			this.refresh(date);
+		}
+		else if (eventType === "keyboard") {
 			if(data.character === "r" || data.character === "R"){
 				this.refresh(date);
 			}
 		}
 	}
-
 });
-
-
-/**
-* Handles event processing for the app
-*
-* @method addWidgetControlsToPdfViewer
-* @param _this {Object} handle to the pdf app
-*/
-function addWidgetControlsToPdfViewer (_this){
-	// UI stuff
-	_this.controls.addButton({type:"fastforward", sequenceNo:3, action:function(date){
-		this.state.page = this.pdfDoc.numPages;
-		this.redraw = true;
-		this.refresh(date);
-	}.bind(_this)});
-
-	_this.controls.addButton({type:"rewind", sequenceNo:5, action:function(date){
-		this.state.page = 1;
-		this.redraw = true;
-		this.refresh(date);
-	}.bind(_this)});
-
-	_this.controls.addButton({type:"prev", sequenceNo:9, action:function(date){
-		if(this.state.page <= 1) return;
-		this.state.page = this.state.page - 1;
-		this.redraw = true;
-		this.refresh(date);
-	}.bind(_this)});
-	_this.controls.addButton({type:"next", sequenceNo:11, action:function(date){
-		if (this.state.page >= this.pdfDoc.numPages) return;
-		this.state.page = this.state.page + 1;
-		this.redraw = true;
-		this.refresh(date);
-	}.bind(_this)});
-
-	_this.controls.addSlider({begin:1, end:_this.pdfDoc.numPages, increments:1, appHandle:_this, property:"state.page", caption: "Page", action:function(date){
-		this.redraw = true;
-		this.refresh(date);
-	}.bind(_this)});
-	_this.controls.finishedAddingControls();
-
-}

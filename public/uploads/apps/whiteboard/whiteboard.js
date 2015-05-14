@@ -10,21 +10,10 @@
 
 
 var whiteboard = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "onfinish";
-		this.stage  = null;
-		this.layer  = null;
-		this.width  = null;
-		this.height = null;
-
-		this.allLayers = null;
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 		
 		this.element.id = "div" + data.id;
 		this.element.style.backgroundColor    = "rgba(0,0,0,1)";
@@ -45,7 +34,7 @@ var whiteboard = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {

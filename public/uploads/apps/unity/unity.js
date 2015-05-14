@@ -62,6 +62,7 @@ var unity = SAGE2_App.extend( {
 		var script2 = document.createElement('script');
 		script2.src = this.resrcPath + "Release/webgl.js";
 		document.body.appendChild(script2);
+		this.controls.finishedAddingControls();
 
 	},
 	

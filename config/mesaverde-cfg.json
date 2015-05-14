@@ -49,27 +49,32 @@
 		{
 			name: "CyberCommons",
 			host: "iridium.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "LAVA1",
 			host: "canoe-samoa.ics.hawaii.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "LAVA2",
 			host: "canoe-lava-2.manoa.hawaii.edu",
-			port: 443
+			port: 443,
+			secure: true
 		}
 	]
 }

@@ -43,16 +43,19 @@ var evl_photos = SAGE2_App.extend( {
 		this.canvasWidth  = 800;
 		this.canvasHeight = 600;
 
-		this.loadTimer = 200;
-		this.fadeCount = 10.0;
+		this.loadTimer = 15; // default value to be replaced from photo_scrapbooks.js
+		this.fadeCount = 10.0; // default value to be replaced from photo_scrapbooks.js
 
-		if (SAGE2_photoAlbumLoadTimer != null)
+		if (SAGE2_photoAlbumLoadTimer !== null)
 			this.loadTimer = SAGE2_photoAlbumLoadTimer;
 
-		if (SAGE2_photoAlbumFadeCount != null)
+		if (SAGE2_photoAlbumFadeCount !== null)
 			this.fadeCount = SAGE2_photoAlbumFadeCount;
 
-		if (SAGE2_photoAlbumCanvasBackground != null)
+		if (this.fadeCount == 0)
+				this.fadeCount = 1; // avoid divide by zero later on
+
+		if (SAGE2_photoAlbumCanvasBackground !== null)
 			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
 
 		this.URL1  = "";
@@ -65,7 +68,6 @@ var evl_photos = SAGE2_App.extend( {
 		this.bigList = null;
 
 		this.okToDraw = this.fadeCount;
-		this.counter = 1;
 		this.forceRedraw = 1;
 
 		this.fileName = "";
@@ -84,6 +86,8 @@ var evl_photos = SAGE2_App.extend( {
 		this.listFileNameLibrary = "";
 
 		this.state.imageSet = null;
+		this.state.counter = 1;
+
 	 },
 
 	////////////////////////////////////////
@@ -168,7 +172,7 @@ var evl_photos = SAGE2_App.extend( {
 
 	drawEverything: function ()
 	{
-		if ((this.okToDraw > -this.fadeCount) || (this.forceRedraw > 0)) {
+		if ((this.okToDraw >= -this.fadeCount) || (this.forceRedraw > 0)) {
 			//this.svg.selectAll("*").remove(); 
 			this.forceRedraw = 0;
 
@@ -211,39 +215,43 @@ var evl_photos = SAGE2_App.extend( {
 				// 	.attr("width",  image2DrawWidth)
 				// 	.attr("height", image2DrawHeight);
 				// }
-				if (this.okToDraw > 1) {
+				if (this.okToDraw > 1)
+					{
 					 this.svg.select("#image2")
 					 .attr("xlink:href", this.image2.src)
 					 .attr("opacity", 1)
 					 .attr("width",  image2DrawWidth)
 					 .attr("height", image2DrawHeight);
-				}
+					}
 				else
+					{
 					this.svg.select("#image2")
 					.attr("xlink:href", this.image2.src)
-					.attr("opacity", (this.okToDraw+9) * (1.0 / this.fadeCount))  // 0.1
+					.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw+9) / this.fadeCount)))
 					.attr("width",  image2DrawWidth)
 					.attr("height", image2DrawHeight);
+					}
 				}
 
 			if (this.image1 != "NULL") // current image
-			{
+				{
 				var image1x     = this.image1.width;
 				var image1y     = this.image1.height;
 				var image1ratio = image1x / image1y;
 
 				// want wide images to be aligned to top not center
-				if (image1ratio > windowRatio) {
+				if (image1ratio > windowRatio)
+					{
 					image1DrawWidth  =  this.canvasWidth;
 					image1DrawHeight = this.canvasWidth / image1ratio;
-				}
+					}
 
 				this.svg.select("#image1")
 					.attr("xlink:href", this.image1.src)
-					.attr("opacity", Math.min(1.0, 1.0 - (this.okToDraw * (1.0 / this.fadeCount))))
+					.attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))))
 					.attr("width",  image1DrawWidth)
 					.attr("height", image1DrawHeight);
-			}
+				}
 
 			this.okToDraw -= 1.0;
 			}
@@ -255,7 +263,7 @@ var evl_photos = SAGE2_App.extend( {
 			{
 			this.updateCounter += 1;
 
-			if (this.updateCounter > this.loadTimer)
+			if (this.updateCounter > (this.loadTimer*this.maxFPS))
 				{
 				this.update();
 				}
@@ -283,9 +291,9 @@ var evl_photos = SAGE2_App.extend( {
 	newImage: function ()
 	{
 		if (this.bigList === null)
-			this.counter = 0;
+			this.state.counter = 0;
 		else
-			this.counter = Math.floor(Math.random() * this.bigList.length);
+			this.state.counter = Math.floor(Math.random() * this.bigList.length);
 	},
 
 	// move to the next photo album
@@ -336,9 +344,9 @@ var evl_photos = SAGE2_App.extend( {
 		this.newImage();
 
 		// if there is no image name for that nth image then get out
-		if (this.bigList[this.counter] === null)
+		if (this.bigList[this.state.counter] === null)
 			{   
-			console.log(this.appName + "cant find filename of image number "+this.counter);
+			console.log(this.appName + "cant find filename of image number "+this.state.counter);
 			return;
 			}
 
@@ -350,7 +358,7 @@ var evl_photos = SAGE2_App.extend( {
 
 		// ideally this random number should come from the master to guarantee identical values across clients
 	
-		this.fileName = this.listFileNameLibrary + escape(this.bigList[this.counter].name) + '?' + Math.floor(Math.random() * 10000000);
+		this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) + '?' + Math.floor(Math.random() * 10000000);
 	
 		this.broadcast("updateNode", {data:this.fileName});
 		}
@@ -401,10 +409,64 @@ var evl_photos = SAGE2_App.extend( {
 	////////////////////////////////////////
 
     init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
+		this.SAGE2Init("div", data);
 
-        this.maxFPS = 20.0;
+		this.resizeEvents = "continuous"; //onfinish
+		this.svg = null;
+
+		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
+		this.enableControls = true;
+
+		this.canvasBackground = "black";
+
+		this.canvasWidth  = 800;
+		this.canvasHeight = 600;
+
+		this.loadTimer = 15; // default value to be replaced from photo_scrapbooks.js
+		this.fadeCount = 10.0; // default value to be replaced from photo_scrapbooks.js
+
+		if (SAGE2_photoAlbumLoadTimer !== null)
+			this.loadTimer = SAGE2_photoAlbumLoadTimer;
+
+		if (SAGE2_photoAlbumFadeCount !== null)
+			this.fadeCount = SAGE2_photoAlbumFadeCount;
+
+		if (this.fadeCount == 0)
+				this.fadeCount = 1; // avoid divide by zero later on
+
+		if (SAGE2_photoAlbumCanvasBackground !== null)
+			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
+
+		this.URL1  = "";
+		this.URL1a = "";
+		this.URL1b = "";
+
+		this.today = "";
+		this.timeDiff = 0;
+
+		this.bigList = null;
+
+		this.okToDraw = this.fadeCount;
+		this.forceRedraw = 1;
+
+		this.fileName = "";
+		this.listFileName = "";
+
+		this.appName = "evl_photos:";
+
+		this.image1 = new Image();
+		this.image2 = new Image();
+		this.image3 = new Image();
+		this.imageTemp = null;
+
+		this.updateCounter = 0;
+
+		this.listFileNamePhotos = "";
+		this.listFileNameLibrary = "";
+
+
+
+        this.maxFPS = 30.0;
 		this.element.id = "div" + data.id;
 
 		// attach the SVG into the this.element node provided to us
@@ -415,7 +477,6 @@ var evl_photos = SAGE2_App.extend( {
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
 
-        this.state.imageSet = 0;
 
 		// console.log(this.imageLoadCallbackFunc);
 		// console.log(this.imageLoadFailedCallbackFunc);
@@ -450,25 +511,14 @@ var evl_photos = SAGE2_App.extend( {
 		//	.attr("id", "image3")
 		//	.attr("width",  data.width)
 		//	.attr("height", data.height);
-	},
 
-	load: function(state, date) {
-        console.log("looking for a state", state);
-        if (state)
-            {
-            console.log("I have state " + state);
-            this.state.imageSet = state.imageSet;
-            }
-        else {
-            this.state.imageSet = 0; // which album
-            }
 
-        // create the widgets
+		// create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3,action:function(date){
+        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"}); /*action:function(date){
             //This is executed after the button click animation occurs.
             this.nextAlbum();
-        }.bind(this)});
+        }.bind(this)});*/
 
         var _this = this;
 
@@ -483,9 +533,9 @@ var evl_photos = SAGE2_App.extend( {
                     "animation":false
                 };
 
-                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx, action:function(date){
+                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx,id: loopIdxWithPrefix});/* action:function(date){
                     this.setAlbum(loopIdxWithPrefix);
-                }.bind(_this) });
+                }.bind(_this) });*/
             }(loopIdxWithPrefix));
         }
 
@@ -494,7 +544,10 @@ var evl_photos = SAGE2_App.extend( {
         this.initApp();
 
         this.update();
-        this.draw_d3(date);
+        this.draw_d3(data.date);
+	},
+
+	load: function(date) {
 	},
 
 	draw_d3: function(date) {
@@ -502,7 +555,6 @@ var evl_photos = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-	    
         this.drawEverything();
 	},
 
@@ -522,7 +574,17 @@ var evl_photos = SAGE2_App.extend( {
         }
         if (eventType === "pointerRelease" && (data.button === "left") ) {
             this.nextAlbum();
+            this.refresh(date);
         }
+        else if (eventType === "widgetEvent"){
+			if (data.ctrlId === "Next"){
+				this.nextAlbum();
+			}
+			else{
+				this.setAlbum(data.ctrlId);
+			}
+			this.refresh(date);
+		}
     }
 	
 });

@@ -103,6 +103,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.mozTransform    = "scale("+(newratio)+")";
 			this.bg.style.transform       = "scale("+(newratio)+")";
 
+			this.main.style.width  = wallWidth  + "px";
+			this.main.style.height = wallHeight + "px";
+
 			window.onresize = function(event) {
 				// recalculate after every window resize
 				_this.browserRatio = document.documentElement.clientWidth / document.documentElement.clientHeight;
@@ -236,7 +239,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = 0;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
@@ -246,7 +249,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize*4;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
@@ -273,12 +276,19 @@ function UIBuilder(json_cfg, clientID) {
 		// version id
 		var version = document.createElement('p');
 		version.id  = "version";
-		// EVL-LAVA logo
-		var logo = document.createElement('object');
-		logo.id = "logo";
-		// background watermark
-		var watermark = document.createElement('object');
+		// logo and background watermark
+		var watermark;
+		var logo;
+		if (__SAGE2__.browser.isIE) {
+			watermark = document.createElement('img');
+			logo      = document.createElement('img');
+		}
+		else {
+			watermark = document.createElement('object');
+			logo      = document.createElement('object');
+		}
 		watermark.id = "watermark";
+		logo.id = "logo";
 
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
@@ -333,13 +343,22 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.transform  = "translateY(-50%)";
 
 		logo.addEventListener('load', this.logoLoadedFunc, false);
-		logo.data = "images/EVL-LAVA.svg";
-		logo.type = "image/svg+xml";
+		if (__SAGE2__.browser.isIE) {
+			logo.src  = "images/EVL-LAVA.svg";
+		} else {
+			logo.data = "images/EVL-LAVA.svg";
+			logo.type = "image/svg+xml";
+		}
 
-		if(this.json_cfg.background.watermark !== undefined){
+		if (this.json_cfg.background.watermark !== undefined) {
 			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
-			watermark.data = this.json_cfg.background.watermark.svg;
-			watermark.type = "image/svg+xml";
+			if (__SAGE2__.browser.isIE) {
+				// using an image tag in IE
+				watermark.src  = this.json_cfg.background.watermark.svg;
+			} else {
+				watermark.data = this.json_cfg.background.watermark.svg;
+				watermark.type = "image/svg+xml";
+			}
 		}
 
 		if (this.json_cfg.ui.show_url) {
@@ -354,6 +373,124 @@ function UIBuilder(json_cfg, clientID) {
 			}
 			machine.textContent = url;
 		}
+
+		var dataSharingRequestDialog = document.createElement("div");
+		dataSharingRequestDialog.id = "dataSharingRequestDialog";
+		dataSharingRequestDialog.style.position = "absolute";
+		dataSharingRequestDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
+		dataSharingRequestDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 13*this.titleBarHeight)).toString() + "px";
+		dataSharingRequestDialog.style.width = (26*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.height = (8*this.titleBarHeight).toString() + "px";
+		dataSharingRequestDialog.style.webkitBoxSizing = "border-box";
+		dataSharingRequestDialog.style.mozBoxSizing = "border-box";
+		dataSharingRequestDialog.style.boxSizing = "border-box";
+		dataSharingRequestDialog.style.backgroundColor =  "#666666";
+		dataSharingRequestDialog.style.border =  "2px solid #000000";
+		dataSharingRequestDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
+		dataSharingRequestDialog.style.zIndex = 8999;
+		dataSharingRequestDialog.style.display = "none";
+		var dataSharingText = document.createElement("p");
+		dataSharingText.id = "dataSharingRequestDialog_text";
+		dataSharingText.textContent = "";
+		dataSharingText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingText.style.color = "#FFFFFF";
+		dataSharingText.style.marginBottom = (this.titleBarHeight/4).toString() + "px";
+		var dataSharingAccept = document.createElement("div");
+		dataSharingAccept.id = "dataSharingRequestDialog_accept";
+		dataSharingAccept.style.position = "absolute";
+		dataSharingAccept.style.left = (this.titleBarHeight/4).toString() + "px";
+		dataSharingAccept.style.bottom = (this.titleBarHeight/4).toString() + "px";
+		dataSharingAccept.style.width = (9*this.titleBarHeight).toString() + "px";
+		dataSharingAccept.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingAccept.style.webkitBoxSizing = "border-box";
+		dataSharingAccept.style.mozBoxSizing = "border-box";
+		dataSharingAccept.style.boxSizing = "border-box";
+		dataSharingAccept.style.backgroundColor =  "rgba(55, 153, 130, 1.0)";
+		dataSharingAccept.style.border =  "2px solid #000000";
+		dataSharingAccept.style.textAlign = "center";
+		dataSharingAccept.style.lineHeight = (3*this.titleBarHeight).toString() + "px";
+		var dataSharingAcceptText = document.createElement("p");
+		dataSharingAcceptText.id = "dataSharingRequestDialog_acceptText";
+		dataSharingAcceptText.textContent = "Accept";
+		dataSharingAcceptText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingAcceptText.style.color = "#FFFFFF";
+		dataSharingAccept.appendChild(dataSharingAcceptText);
+		var dataSharingReject = document.createElement("div");
+		dataSharingReject.id = "dataSharingRequestDialog_reject";
+		dataSharingReject.style.position = "absolute";
+		dataSharingReject.style.right = (this.titleBarHeight/4).toString() + "px";
+		dataSharingReject.style.bottom = (this.titleBarHeight/4).toString() + "px";
+		dataSharingReject.style.width = (9*this.titleBarHeight).toString() + "px";
+		dataSharingReject.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingReject.style.webkitBoxSizing = "border-box";
+		dataSharingReject.style.mozBoxSizing = "border-box";
+		dataSharingReject.style.boxSizing = "border-box";
+		dataSharingReject.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		dataSharingReject.style.border =  "2px solid #000000";
+		dataSharingReject.style.textAlign = "center";
+		dataSharingReject.style.lineHeight = (3*this.titleBarHeight).toString() + "px";
+		var dataSharingRejectText = document.createElement("p");
+		dataSharingRejectText.id = "dataSharingRequestDialog_rejectText";
+		dataSharingRejectText.textContent = "Reject";
+		dataSharingRejectText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingRejectText.style.color = "#FFFFFF";
+		dataSharingReject.appendChild(dataSharingRejectText);
+		dataSharingRequestDialog.appendChild(dataSharingText);
+		dataSharingRequestDialog.appendChild(dataSharingAccept);
+		dataSharingRequestDialog.appendChild(dataSharingReject);
+		this.main.appendChild(dataSharingRequestDialog);
+
+		var dataSharingWaitDialog = document.createElement("div");
+		dataSharingWaitDialog.id = "dataSharingWaitDialog";
+		dataSharingWaitDialog.style.position = "absolute";
+		dataSharingWaitDialog.style.top = (-this.offsetY + (2*this.titleBarHeight)).toString() + "px";
+		dataSharingWaitDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth/2 - 13*this.titleBarHeight)).toString() + "px";
+		dataSharingWaitDialog.style.width = (26*this.titleBarHeight).toString() + "px";
+		dataSharingWaitDialog.style.height = (8*this.titleBarHeight).toString() + "px";
+		dataSharingWaitDialog.style.webkitBoxSizing = "border-box";
+		dataSharingWaitDialog.style.mozBoxSizing = "border-box";
+		dataSharingWaitDialog.style.boxSizing = "border-box";
+		dataSharingWaitDialog.style.backgroundColor =  "#666666";
+		dataSharingWaitDialog.style.border =  "2px solid #000000";
+		dataSharingWaitDialog.style.padding = (this.titleBarHeight/4).toString() + "px";
+		dataSharingWaitDialog.style.zIndex = 8999;
+		dataSharingWaitDialog.style.display = "none";
+		var dataSharingWaitText = document.createElement("p");
+		dataSharingWaitText.id = "dataSharingWaitDialog_text";
+		dataSharingWaitText.textContent = "";
+		dataSharingWaitText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingWaitText.style.color = "#FFFFFF";
+		dataSharingWaitText.style.marginBottom = (this.titleBarHeight/4).toString() + "px";
+		var dataSharingCancel = document.createElement("div");
+		dataSharingCancel.id = "dataSharingWaitDialog_cancel";
+		dataSharingCancel.style.position = "absolute";
+		dataSharingCancel.style.right = (this.titleBarHeight/4).toString() + "px";
+		dataSharingCancel.style.bottom = (this.titleBarHeight/4).toString() + "px";
+		dataSharingCancel.style.width = (9*this.titleBarHeight).toString() + "px";
+		dataSharingCancel.style.height = (3*this.titleBarHeight).toString() + "px";
+		dataSharingCancel.style.webkitBoxSizing = "border-box";
+		dataSharingCancel.style.mozBoxSizing = "border-box";
+		dataSharingCancel.style.boxSizing = "border-box";
+		dataSharingCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		dataSharingCancel.style.border =  "2px solid #000000";
+		dataSharingCancel.style.textAlign = "center";
+		dataSharingCancel.style.lineHeight = (3*this.titleBarHeight).toString() + "px";
+		var dataSharingCancelText = document.createElement("p");
+		dataSharingCancelText.id = "dataSharingWaitDialog_cancelText";
+		dataSharingCancelText.textContent = "Cancel";
+		dataSharingCancelText.style.fontSize = Math.round(2*this.titleTextSize) + "px";
+		dataSharingCancelText.style.color = "#FFFFFF";
+		dataSharingCancel.appendChild(dataSharingCancelText);
+		dataSharingWaitDialog.appendChild(dataSharingWaitText);
+		dataSharingWaitDialog.appendChild(dataSharingCancel);
+		this.main.appendChild(dataSharingWaitDialog);
+
+		var connectedColor = "rgba(55, 153, 130, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteConnectedColor !== undefined)
+			connectedColor = this.json_cfg.ui.menubar.remoteConnectedColor;
+		var disconnectedColor = "rgba(173, 42, 42, 1.0)";
+
+
 		head.appendChild(fileref);
 		this.uiHidden = false;
 		this.showInterface();
@@ -396,14 +533,22 @@ function UIBuilder(json_cfg, clientID) {
 	* @param event {Event} event
 	*/
 	this.logoLoaded = function(event) {
-		var logo    = document.getElementById('logo');
-		var logoSVG = logo.getSVGDocument().querySelector('svg');
-		var bbox    = logoSVG.getBBox();
-		var height  = 0.95 * this.titleBarHeight;
-		var width   = height * (bbox.width/bbox.height);
-
+		var logo   = document.getElementById('logo');
+		var height = 0.95 * this.titleBarHeight;
+		var width;
+		if (__SAGE2__.browser.isIE) {
+			width = height * (logo.width/logo.height);
+			logo.style.backgroundColor = "rgba(255,255,255,0.75)";
+		} else {
+			var logoSVG = logo.getSVGDocument().querySelector('svg');
+			var bbox    = logoSVG.getBBox();
+			width = height * (bbox.width/bbox.height);
+			var textColor = "rgba(255, 255, 255, 1.0)";
+			if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
+				textColor = this.json_cfg.ui.menubar.textColor;
+			this.changeSVGColor(logoSVG, "path", null, textColor);
+		}
 		var rightOffset = this.offsetX - (this.json_cfg.resolution.width*(this.json_cfg.layout.columns-1));
-
 		logo.width  = width;
 		logo.height = height;
 		logo.style.position   = "absolute";
@@ -415,11 +560,6 @@ function UIBuilder(json_cfg, clientID) {
 		logo.style.webkitTransform  = "translateY(-50%)";
 		logo.style.mozTransform     = "translateY(-50%)";
 		logo.style.transform        = "translateY(-50%)";
-
-		var textColor = "rgba(255, 255, 255, 1.0)";
-		if(this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined)
-			textColor = this.json_cfg.ui.menubar.textColor;
-		this.changeSVGColor(logoSVG, "path", null, textColor);
 	};
 
 	/**
@@ -429,33 +569,36 @@ function UIBuilder(json_cfg, clientID) {
 	* @param event {Event} event
 	*/
 	this.watermarkLoaded = function(event) {
-		var watermark    = document.getElementById('watermark');
-		var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
-
-		var bbox = watermarkSVG.getBBox();
 		var width;
 		var height;
-
-		if (bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+		var watermark = document.getElementById('watermark');
+		if (__SAGE2__.browser.isIE) {
+			// using an image tag in IE
 			width  = this.json_cfg.totalWidth / 2;
-			height = width * bbox.height/bbox.width;
+			height = watermark.height;
+			watermark.width = width;
+			watermark.style.opacity = 0.4;
+		} else {
+			var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
+			var bbox = watermarkSVG.getBBox();
+			if (bbox.width/bbox.height >= this.json_cfg.totalWidth/this.json_cfg.totalHeight) {
+				width  = this.json_cfg.totalWidth / 2;
+				height = width * bbox.height/bbox.width;
+			}
+			else {
+				height = this.json_cfg.totalHeight / 2;
+				width  = height * bbox.width/bbox.height;
+			}
+			watermark.width  = width;
+			watermark.height = height;
+			// Also hide the cursor on top of the SVG (doesnt inherit from style body)
+			if (this.clientID !== -1)
+				watermarkSVG.style.cursor = "none";
+			this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 		}
-		else {
-			height = this.json_cfg.totalHeight / 2;
-			width  = height * bbox.width/bbox.height;
-		}
-
-		watermark.width  = width;
-		watermark.height = height;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
-
-		// Also hide the cursor on top of the SVG (doesnt inherit from style body)
-		if (this.clientID !== -1)
-			watermarkSVG.style.cursor = "none";
-
-		this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 	};
 
 	/**
@@ -482,13 +625,23 @@ function UIBuilder(json_cfg, clientID) {
 	* @param pointer_data {Object} pointer information
 	*/
 	this.createSagePointer = function(pointer_data) {
+		if (this.pointerItems.hasOwnProperty(pointer_data.id)) return;
+
 		var pointerElem = document.createElement('div');
 		pointerElem.id  = pointer_data.id;
 		pointerElem.className  = "pointerItem";
-		pointerElem.style.left = pointer_data.left - this.pointerOffsetX - this.offsetX;
-		pointerElem.style.top  = pointer_data.top  - this.pointerOffsetY - this.offsetY;
 		pointerElem.style.zIndex = 10000;
-		this.main.appendChild(pointerElem);
+
+		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
+			pointerElem.style.left = (-this.pointerOffsetX).toString() + "px";
+			pointerElem.style.top = (-this.pointerOffsetY).toString()  + "px";
+			document.getElementById(pointer_data.portal+"_overlay").appendChild(pointerElem);
+		}
+		else {
+			pointerElem.style.left = (-this.pointerOffsetX-this.offsetX).toString() + "px";
+			pointerElem.style.top = (-this.pointerOffsetY-this.offsetY).toString()  + "px";
+			this.main.appendChild(pointerElem);
+		}
 
 		var ptr = new Pointer();
 		ptr.init(pointerElem.id, pointer_data.label, pointer_data.color, this.pointerWidth, this.pointerHeight);
@@ -514,10 +667,20 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.showSagePointer = function(pointer_data) {
 		var pointerElem = document.getElementById(pointer_data.id);
+		var translate;
+		if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
+			var left = pointer_data.left*dataSharingPortals[pointer_data.portal].scaleX;
+			var top = pointer_data.top*dataSharingPortals[pointer_data.portal].scaleY;
+			translate = "translate(" + left + "px," + top + "px)";
+		}
+		else {
+			translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+		}
 
 		pointerElem.style.display = "block";
-		pointerElem.style.left    = (pointer_data.left-this.pointerOffsetX-this.offsetX).toString() + "px";
-		pointerElem.style.top     = (pointer_data.top-this.pointerOffsetY-this.offsetY).toString()  + "px";
+		pointerElem.style.webkitTransform = translate;
+		pointerElem.style.mozTransform    = translate;
+		pointerElem.style.transform       = translate;
 
 		this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 		this.pointerItems[pointerElem.id].setColor(pointer_data.color);
@@ -545,11 +708,23 @@ function UIBuilder(json_cfg, clientID) {
 	* @param pointer_data {Object} pointer information
 	*/
 	this.updateSagePointerPosition = function(pointer_data) {
-		var pointerElem = document.getElementById(pointer_data.id);
-		var translate   = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
-		pointerElem.style.webkitTransform = translate;
-		pointerElem.style.mozTransform    = translate;
-		pointerElem.style.transform       = translate;
+		if (this.pointerItems[pointer_data.id].isShown) {
+			var pointerElem = document.getElementById(pointer_data.id);
+
+			var translate;
+			if (pointer_data.portal !== undefined && pointer_data.portal !== null) {
+				var left = pointer_data.left*dataSharingPortals[pointer_data.portal].scaleX;
+				var top = pointer_data.top*dataSharingPortals[pointer_data.portal].scaleY;
+				translate = "translate(" + left + "px," + top + "px)";
+			}
+			else {
+				translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
+			}
+
+			pointerElem.style.webkitTransform = translate;
+			pointerElem.style.mozTransform    = translate;
+			pointerElem.style.transform       = translate;
+		}
 	};
 
 	/**
@@ -597,9 +772,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.appendChild(menuElem3);
 
 			radialMenuContentWindowDiv.appendChild(menuElem2);
+			var rect = menuElem1.getBoundingClientRect();
 
 			var menu = new RadialMenu();
-
 			menu.init(data, menuElem2, menuElem3);
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
@@ -620,12 +795,12 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	/**
-	* Show the radial menu
+	* Update the radial menu state (visibility, position)
 	*
-	* @method showRadialMenu
+	* @method updateRadialMenu
 	* @param data {Object} menu data
 	*/
-	this.showRadialMenu = function(data) {
+	this.updateRadialMenu = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 
 		if (menuElem !== null) {
@@ -645,6 +820,8 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+
+			//console.log("RadialMenu " + menuElem.id + " at " + menuElem.style.left + " " + menuElem.style.top);
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)
 			this.createRadialMenu(data);
@@ -693,10 +870,10 @@ function UIBuilder(json_cfg, clientID) {
 	/**
 	* Update the list of file in the menu
 	*
-	* @method updateRadialMenu
+	* @method updateRadialMenuDocs
 	* @param data {Object} data
 	*/
-	this.updateRadialMenu = function(data) {
+	this.updateRadialMenuDocs = function(data) {
 		var menuElem = document.getElementById(data.id+"_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
@@ -738,10 +915,10 @@ function UIBuilder(json_cfg, clientID) {
 		remote.id  = data.name;
 		remote.style.position  = "absolute";
 		remote.style.textAlign = "center";
-		remote.style.width  = data.width.toString() + "px";
-		remote.style.height = data.height.toString() + "px";
-		remote.style.left   = (-this.offsetX + data.pos).toString() + "px";
-		remote.style.top    = (-this.offsetY+2).toString() + "px";
+		remote.style.width  = data.geometry.w.toString() + "px";
+		remote.style.height = data.geometry.h.toString() + "px";
+		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
+		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
 
@@ -776,6 +953,54 @@ function UIBuilder(json_cfg, clientID) {
 		var remote = document.getElementById(data.name);
 		if (data.connected) remote.style.backgroundColor = connectedColor;
 		else remote.style.backgroundColor = disconnectedColor;
+	};
+
+	/**
+	* Dialog to accept/reject requests for a new data sharing session from a remote site
+	*
+	* @method showDataSharingRequestDialog
+	* @param data {Object} remote site information
+	*/
+	this.showDataSharingRequestDialog = function(data) {
+		var port = (data.port === 80 || data.port === 443) ? "" : ":" + data.port;
+		var host = data.host + port;
+		var dataSharingRequestDialog = document.getElementById("dataSharingRequestDialog");
+		var dataSharingText = document.getElementById("dataSharingRequestDialog_text");
+		dataSharingText.textContent = "Data-sharing request from " + data.name + " (" + host + ")";
+		dataSharingRequestDialog.style.display = "block";
+	};
+
+	/**
+	* Close dialog to accept/reject requests for a new data sharing session from a remote site
+	*
+	* @method hideDataSharingRequestDialog
+	*/
+	this.hideDataSharingRequestDialog = function() {
+		document.getElementById("dataSharingRequestDialog").style.display = "none";
+	};
+
+	/**
+	* Dialog that displays wait message for data sharing session from a remote site
+	*
+	* @method showDataSharingWaitingDialog
+	* @param data {Object} remote site information
+	*/
+	this.showDataSharingWaitingDialog = function(data) {
+		var port = (data.port === 80 || data.port === 443) ? "" : ":" + data.port;
+		var host = data.host + port;
+		var dataSharingWaitDialog = document.getElementById("dataSharingWaitDialog");
+		var dataSharingText = document.getElementById("dataSharingWaitDialog_text");
+		dataSharingText.textContent = "Requested data-sharing session with " + data.name + " (" + host + ")";
+		dataSharingWaitDialog.style.display = "block";
+	};
+
+	/**
+	* Close dialog that displays wait message for data sharing session from a remote site
+	*
+	* @method hideDataSharingWaitingDialog
+	*/
+	this.hideDataSharingWaitingDialog = function() {
+		document.getElementById("dataSharingWaitDialog").style.display = "none";
 	};
 
 	/**

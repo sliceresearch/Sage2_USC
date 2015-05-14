@@ -28,6 +28,7 @@ var SAGE2_App = Class.extend( {
 	*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
+
 		this.div          = null;
 		this.element      = null;
 		this.resrcPath    = null;
@@ -45,7 +46,6 @@ var SAGE2_App = Class.extend( {
 
 		this.timer  = null;
 		this.maxFPS = null;
-		this.redraw = null;
 		this.sticky = null;
 		this.config = null;
 		this.controls  = null;
@@ -55,6 +55,9 @@ var SAGE2_App = Class.extend( {
 		this.enableControls  = null;
 		this.requestForClone = null;
 
+		// "was visible" state
+		this.vis = null;
+
 		//File Handling
 		this.id = null;
 		this.filePath = null;
@@ -62,21 +65,27 @@ var SAGE2_App = Class.extend( {
 		this.fileRead = null;
 		this.fileWrite = null;
 		this.fileReceived = null;
+
+		// Track if in User Event loop
+		this.SAGE2UserModification = false;
 	},
 
 	/**
-	* Init method called right after the constructor
+	* SAGE2Init method called right after the constructor
 	*
-	* @method init
-	* @param elem {String} type of DOM element to be created (div, canvas, ...)
-	* @param data {Object} contains initialization values (id, width, height, ...)
+	* @method SAGE2Init
+	* @param type {String} type of DOM element to be created (div, canvas, ...)
+	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
-	init: function(elem, data) {
-		this.div     = document.getElementById(data.id);
-		this.element = document.createElement(elem);
+	SAGE2Init: function(type, data) {
+		//App ID
+		this.id = data.id;
+
+		this.div = document.getElementById(data.id);
+		this.element = document.createElement(type);
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
-		if (elem === "div") {
+		if (type === "div") {
 			this.element.style.width  = data.width  + "px";
 			this.element.style.height = data.height + "px";
 		} else {
@@ -87,6 +96,16 @@ var SAGE2_App = Class.extend( {
 
 		this.resrcPath = data.resrc + "/";
 		this.startDate = data.date;
+
+		// visible
+		this.vis = true;
+
+		var parentTransform = getTransform(this.div.parentNode);
+		var border = parseInt(this.div.parentNode.style.borderWidth || 0, 10);
+		this.sage2_x      = (data.x+border+1)*parentTransform.scale.x + parentTransform.translate.x;
+		this.sage2_y      = (data.y+border)*parentTransform.scale.y + parentTransform.translate.y;
+		this.sage2_width  = data.width*parentTransform.scale.x;
+		this.sage2_height = data.height*parentTransform.scale.y;
 
 		this.sage2_x      = data.x;
 		this.sage2_y      = data.y;
@@ -106,21 +125,50 @@ var SAGE2_App = Class.extend( {
 		// Frame rate control
 		this.timer     = 0;
 		this.maxFPS    = 30.0; // Default to 30fps for performance reasons
-		this.redraw    = true;
 
 		// keep a copy of the wall configuration
 		this.config    = ui.json_cfg;
 
 		// Top layer
 		this.layer     = null;
-		//App ID
-		this.id = data.id;
+
 		//File Handling
 		this.fileName       = "";
 		this.fileDataBuffer = null;
 		this.fileRead       = false;
 		this.fileWrite      = false;
 		this.fileReceived   = false;
+
+		this.SAGE2CopyState(data.state);
+	},
+
+	SAGE2Load: function(state, date) {
+		this.SAGE2CopyState(state);
+		this.load(date);
+	},
+
+	SAGE2Event: function(eventType, position, user_id, data, date) {
+		this.SAGE2UserModification = true;
+		this.event(eventType, position, user_id, data, date);
+		this.SAGE2UserModification = false;
+	},
+
+	/**
+	* SAGE2CopyState method called on init or load to copy state of app instance
+	*
+	* @method SAGE2CopyState
+	* @param state {Object} contains state of app instance
+	*/
+	SAGE2CopyState: function(state) {
+		var key;
+		for (key in state) {
+			this.state[key] = state[key];
+		}
+	},
+
+	SAGE2Sync: function(updateRemote) {
+		if(isMaster)
+			wsio.emit('updateAppState', {id: this.id, state: this.state, updateRemote: updateRemote});
 	},
 
 	/**
@@ -197,6 +245,36 @@ var SAGE2_App = Class.extend( {
 	},
 
 	/**
+	* Calculate if the application is hidden in this display
+	*
+	* @method isHidden
+	* @return {Boolean} Returns true if out of screen
+	*/
+	isHidden: function() {
+		var checkWidth  = this.config.resolution.width;
+		var checkHeight = this.config.resolution.height;
+		if (clientID===-1) {
+			// set the resolution to be the whole display wall
+			checkWidth  *= this.config.layout.columns;
+			checkHeight *= this.config.layout.rows;
+		}
+		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
+				(this.sage2_x + this.sage2_width) < ui.offsetX ||
+				this.sage2_y > (ui.offsetY + checkHeight) ||
+				(this.sage2_y + this.sage2_height) < ui.offsetY);
+	},
+
+	/**
+	* Calculate if the application is visible in this display
+	*
+	* @method isVisible
+	* @return {Boolean} Returns true if visible
+	*/
+	isVisible: function() {
+		return !this.isHidden();
+	},
+
+	/**
 	* Method called before the draw function, calculates timing and frame rate
 	*
 	* @method preDraw
@@ -209,14 +287,27 @@ var SAGE2_App = Class.extend( {
 		this.dt = (date.getTime() -  this.prevDate.getTime()) / 1000;
 
 		// Frame rate control
-		this.timer = this.timer + this.dt;
+		this.timer += this.dt;
 		if (this.timer > (1.0/this.maxFPS)) {
 			this.timer  = 0.0;
-			this.redraw = true;
 		}
-		// If we ask for more, just let it run
-		if (this.maxFPS>=60.0) this.redraw = true;
 
+		// Check for visibility
+		var visible = this.isVisible();
+		if (!visible && this.vis) {
+			// trigger the app visibility callback, if there's one
+			if (this.onVisible) this.onVisible(false);
+			// app became hidden
+			this.vis = false;
+		}
+		if (visible && !this.vis) {
+			// trigger the visibility callback, if there's one
+			if (this.onVisible) this.onVisible(true);
+			// app became visible
+			this.vis = true;
+		}
+
+		// Increase time
 		this.sec += this.dt;
 	},
 
@@ -239,20 +330,21 @@ var SAGE2_App = Class.extend( {
 	* @param date {Date} current time from the server
 	*/
 	refresh: function (date) {
+		if (this.SAGE2UserModification === true) {
+			this.SAGE2Sync(true);
+		}
+
 		// update time
 		this.preDraw(date);
-		// actual application draw
-		if (this.redraw) {
-			// If drawing, measure actual frame rate
-			if( this.sec >= 1.0){
-				this.fps       = this.frame_sec / this.sec;
-				this.frame_sec = 0;
-				this.sec       = 0;
-			}
-			this.draw(date);
-			this.frame_sec++;
-			this.redraw = false;
+		// measure actual frame rate
+		if( this.sec >= 1.0){
+			this.fps       = this.frame_sec / this.sec;
+			this.frame_sec = 0;
+			this.sec       = 0;
 		}
+		// actual application draw
+		this.draw(date);
+		this.frame_sec++;
 		// update time and misc
 		this.postDraw(date);
 	},

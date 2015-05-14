@@ -20,10 +20,10 @@
 		show_url: true,
 		show_version: true,
 		menubar: {
-			backgroundColor: "rgba(24, 30, 79, 0.5)",
+			backgroundColor: "rgba(12, 15, 40, 0.5)",
 			textColor: "rgba(235, 230, 175, 1.0)",
-			remoteConnectedColor: "rgba(96, 171, 224, 1.0)",
-			remoteDisconnectedColor: "rgba(100, 100, 100, 1.0)"
+			remoteConnectedColor: "rgba(97, 173, 226, 1.0)",
+			remoteDisconnectedColor: "rgba(64, 114, 149, 1.0)"
 		}
 	},
 	resolution: {
@@ -52,27 +52,32 @@
 		{
 			name: "Desk",
 			host: "thor.evl.uic.edu",
-			port: 7070
+			port: 7070,
+			secure: true
 		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "Cyber-Commons",
 			host: "iridium.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		},
 		{
 			name: "Green Room",
 			host: "mesaverde.evl.uic.edu",
-			port: 443
+			port: 443,
+			secure: true
 		}
 	],
 	apis: {

@@ -44,7 +44,7 @@ var prime = SAGE2_App.extend( {
 		// Attach the callbacks to the worker object
 		this.worker.onmessage = this.msgFunc;
 		this.worker.onerror   = this.errFunc;
-		this.controls.addButton({type:"play-pause",sequenceNo:1, initialState:1,action:function(date){ 
+		this.controls.addButton({type:"play-pause",sequenceNo:1, id:"PlayPause", initialState:1,action:function(date){ 
 			this.state.running = ! this.state.running;
 			if (this.state.running) this.maxFPS = 30;
 			else this.maxFPS = 2;
@@ -153,7 +153,7 @@ var prime = SAGE2_App.extend( {
 	},
 	
 	event: function(eventType, position, user_id, data, date) {
-		if (eventType === "pointerPress") {
+		if (eventType === "pointerPress" || (eventType === "widgetEvent" && data.ctrlId === "PlayPause")) {
 			// Any pointer click, start/stop the computation
 			this.state.running = ! this.state.running;
 			if (this.state.running) this.maxFPS = 30;
