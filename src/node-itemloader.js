@@ -553,7 +553,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
 		var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
 		var app_external_url = _this.hostOrigin + encodeReservedURL(appUrl);
 		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
-		appInstance.data = url;
+		appInstance.data.file = url;
 		callback(appInstance);
     });
 };

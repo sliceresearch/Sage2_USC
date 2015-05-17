@@ -583,6 +583,10 @@ function setupListeners() {
 			dataSharingPortals[position_data.elemId].setPositionAndSize(position_data.elemLeft, position_data.elemTop, position_data.elemWidth, position_data.elemHeight);
 			return;
 		}
+		var selectedElem = document.getElementById(position_data.elemId);
+		var child        = selectedElem.getElementsByClassName("sageItem");
+		// If application not ready, return
+		if (child.length < 1) return;
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
@@ -591,7 +595,6 @@ function setupListeners() {
 		selectedElemTitle.style.transform       = translate;
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
-		var selectedElem = document.getElementById(position_data.elemId);
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
 		selectedElem.style.transform       = translate;
@@ -602,8 +605,6 @@ function setupListeners() {
         dragCorner[0].style.height = cornerSize.toString() + "px";
         dragCorner[0].style.top    = (Math.round(position_data.elemHeight)-cornerSize).toString() + "px";
         dragCorner[0].style.left   = (Math.round(position_data.elemWidth)-cornerSize).toString()  + "px";
-
-		var child = selectedElem.getElementsByClassName("sageItem");
 
 		// if the element is a div or iframe, resize should use the style object
 		if (child[0].tagName.toLowerCase() === "div" || child[0].tagName.toLowerCase() === "iframe") {
