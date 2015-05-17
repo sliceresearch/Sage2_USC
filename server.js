@@ -1119,6 +1119,10 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
+		var key;
+		for (key in SAGE2Items.renderSync[data.id].clients) {
+			SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
+		}
 		var sender = {wsio: null, serverId: null, clientId: null, streamId: null};
 		var mediaStreamData = data.id.split("|");
 		if (mediaStreamData.length === 2) { // local stream --> client | stream_id
@@ -1250,6 +1254,10 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
+		var key;
+		for (key in SAGE2Items.renderSync[data.id].clients) {
+			SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
+		}
 		var sender = {wsio: null, serverId: null, clientId: null, streamId: null};
 		var mediaBlockStreamData = data.id.split("|");
 		if (mediaBlockStreamData.length === 2) { // local stream --> client | stream_id

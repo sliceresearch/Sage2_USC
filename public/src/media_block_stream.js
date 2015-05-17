@@ -20,24 +20,14 @@
  */
 var media_block_stream = SAGE2_BlockStreamingApp.extend( {
 	/**
-	* Constructor
-	*
-	* @class media_block_stream
-	* @constructor
-	*/
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-	},
-
-	/**
 	* Init method, creates a 'div' tag in the DOM
 	*
 	* @method init
 	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
+		this.blockStreamInit(data);
+		this.firstLoad();
 	},
 
 	/**
@@ -47,8 +37,7 @@ var media_block_stream = SAGE2_BlockStreamingApp.extend( {
 	* @param state {Object} object to initialize or restore the app
 	* @param date {Date} time from the server
 	*/
-	load: function(state, date) {
-		arguments.callee.superClass.load.call(this, state, date);
+	load: function(date) {
 	}
 
 });
