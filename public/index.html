@@ -35,11 +35,52 @@
 </head>
 
 <body onload="SAGE2_init()" onresize="SAGE2_resize()">
+
+	<nav>
+		<ul>
+			<li><a href="#">File</a>
+				<ul>
+					<li><a href="#">Open</a></li>
+					<li><a href="#">Save</a></li>
+					<li><a href="#"></a></li>
+					<li><a href="#">&mdash;&mdash;&mdash;</a></li>
+					<li><a href="#">Quit</a></li>
+				</ul>
+			</li>
+			<li><a href="#">Edit</a>
+				<ul>
+					<li><a href="#">Undo</a></li>
+					<li><a href="#">Redo</a></li>
+					<li><a href="#">&mdash;&mdash;&mdash;</a></li>
+					<li><a href="#">Cut</a></li>
+					<li><a href="#">Copy</a></li>
+					<li><a href="#">Paste</a></li>
+				</ul>
+			</li>
+			<li><a href="#">Applications</a>
+			<ul>
+				<li><a href="#">Desktop sharing</a></li>
+				<li><a href="#">Google maps</a></li>
+			</ul>
+			</li>
+			<li><a href="#">Settings</a></li>
+			<li><a href="#">Update</a></li>
+		</ul>
+	</nav>
+	<nav>
+		<ul style="position:absolute;top:2px;right:20px">
+			<li class="help" ><a href="#">Help</a>
+			<ul>
+				<li><a href="help/index.html" target="_blank">Help</a></li>
+				<li><a href="admin/index.html" target="_blank">Admin</a></li>
+				<li><a href="help/info.html" target="_blank">Info</a></li>
+			</ul>
+			</li>
+		</ul>
+	</nav>
+
+
 	<div id="mainUI">
-
-		<img src="images/sage2_logo.png" height="80" style="display:block;margin-left:auto;margin-right:auto;"/>
-
-		<div class="clear"></div>
 
 		<div id="displayUI">
 			<div id="applicationsDiv"></div>
