@@ -82,11 +82,11 @@ function SAGE2_init() {
 			'lib/*': '/lib/*.js'
 		}
 	});
-	// Define some dependencies (shortnames)
-	System.paths['jquery']     = '//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js';
-	System.paths['d3']         = '//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js';
-	System.paths['d3local']    = '/lib/d3.v3.min.js';
-	System.paths['threejs']    = '/lib/three.min.js';
+	// Define some dependencies (shortname to be loaded with a require call)
+	System.paths.jquery     = '//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js';
+	System.paths.d3         = '//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js';
+	System.paths.d3local    = '/lib/d3.v3.min.js';
+	System.paths.threejs    = '/lib/three.min.js';
 	//System.paths['googlemaps'] = '//maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather';
 
 //	System.meta['main'] = {
