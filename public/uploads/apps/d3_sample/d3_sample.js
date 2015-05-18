@@ -8,6 +8,9 @@
 //
 // Copyright (c) 2014
 
+//require('lib/d3.v3.min');
+//require('d3');
+require('d3local');
 
 function addCSS( url, callback ) {
     var fileref = document.createElement("link")
@@ -19,10 +22,14 @@ function addCSS( url, callback ) {
 }
 
 
-var d3_sample = SAGE2_App.extend( {
+function polygon(d) {
+  return "M" + d.join("L") + "Z";
+}
+
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
-
+		
 		this.resizeEvents = "continuous"; //"onfinish";
 
 		// Get width height from the supporting div		
@@ -100,7 +107,3 @@ var d3_sample = SAGE2_App.extend( {
 	
 });
 
-
-function polygon(d) {
-  return "M" + d.join("L") + "Z";
-}

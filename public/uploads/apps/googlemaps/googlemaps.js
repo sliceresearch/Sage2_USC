@@ -10,7 +10,18 @@
 
 /*global google */
 
-var googlemaps = SAGE2_App.extend( {
+//require('https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather&callback=googleMapsForSAGE2Init');
+//require('googlemaps');
+
+
+require('//maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather&callback=googleMapsForSAGE2Init');
+
+
+function googleMapsForSAGE2Init() {
+	console.log("Google Maps API loaded");
+}
+		
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 		this.element.id = "div" + this.id;
@@ -22,6 +33,8 @@ var googlemaps = SAGE2_App.extend( {
 		this.position     = {x: 0, y: 0};
 		this.scrollAmount = 0;
 		this.trafficTimer = null;
+
+		console.log('gmaps> init');
 
 		// Create a callback function for traffic updates
 		this.trafficCB = this.reloadTiles.bind(this);
@@ -60,6 +73,7 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	initializeOnceMapsLoaded: function() {
+		console.log('gmaps> initializeOnceMapsLoaded');
 		if (window.google === undefined || google.maps === undefined || google.maps.Map === undefined) {
 			setTimeout(this.initializeOnceMapsLoadedFunc, 40);
 		}
@@ -69,6 +83,7 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	initialize: function() {
+		console.log('gmaps> initialize');
 		google.maps.visualRefresh = true;
 		this.geocoder = new google.maps.Geocoder();
 		var city = new google.maps.LatLng(this.state.center.lat, this.state.center.lng);

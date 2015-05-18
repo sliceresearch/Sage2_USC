@@ -5,7 +5,6 @@
 	"height": 300,
 	"animation": true,
 	"dependencies": [
-		"scripts/three.min.js"
 	],
 	"title": "Three.js minimal app",
 	"version": "1.0.0",

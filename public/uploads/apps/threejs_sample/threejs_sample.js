@@ -8,25 +8,17 @@
 //
 // Copyright (c) 2014
 
+// local to the app
+//var THREE = require('./scripts/three.min');
+// system version
+var THREE = require('threejs');
 
-var threejs_sample = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
-
-		this.width  = null;
-		this.height = null;
-		this.resizeEvents = "continuous";
-
-		this.renderer = null;
-		this.camera   = null;
-		this.scene    = null;
-	},
-	
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
-	
-		this.element.id = "div" + data.id;
+		this.SAGE2Init("div", data);
+
+		this.resizeEvents = "continuous";
+		this.element.id   = "div" + data.id;
 		this.frame  = 0;
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
@@ -73,7 +65,7 @@ var threejs_sample = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 
 	draw: function(date) {

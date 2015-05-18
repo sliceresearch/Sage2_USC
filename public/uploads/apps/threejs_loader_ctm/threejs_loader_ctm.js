@@ -8,18 +8,15 @@
 //
 // Copyright (c) 2014
 
+// No var, because THREE.js needs to be global for following scripts
+THREE = require('threejs');
 
+require("./scripts/OrbitControls");
+require("./scripts/ctm/lzma");
+require("./scripts/ctm/ctm");
+require("./scripts/ctm/CTMLoader");
 
-function addScriptForThreejs( url, callback ) {
-	var script = document.createElement( 'script' );
-	if( callback ) script.onload = callback;
-	script.type = 'text/javascript';
-	script.src = url;
-	document.body.appendChild( script );  
-}
-
-
-var threejs_loader_ctm = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 	
@@ -44,16 +41,8 @@ var threejs_loader_ctm = SAGE2_App.extend( {
 		this.ready    = false;
 		this.rotating = false;
 
-		var _this = this;
-		addScriptForThreejs(_this.resrcPath + "scripts/OrbitControls.js", function() {
-			addScriptForThreejs(_this.resrcPath + "scripts/ctm/lzma.js", function() {
-				addScriptForThreejs(_this.resrcPath + "scripts/ctm/ctm.js", function() {
-					addScriptForThreejs(_this.resrcPath + "scripts/ctm/CTMLoader.js", function() {
-						_this.initialize(data.date);
-					});
-				});
-			});
-		});
+		// Build the scene
+		this.initialize(data.date);
 
 		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
 		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});

@@ -6,7 +6,6 @@
 	"animation": true,
 	"resize": "free",
 	"dependencies": [
-		"scripts/three.min.js"
 	],
 	"title": "Three.js OpenCTM loader",
 	"version": "1.0.0",
