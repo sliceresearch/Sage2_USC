@@ -74,6 +74,27 @@ function SAGE2_init() {
 
 	isMaster = false;
 
+	// Dependency manager
+	System.config({
+		// set all requires to "lib" for library code
+		baseURL: '/uploads/apps/',
+		paths: {
+			'lib/*': '/lib/*.js'
+		}
+	});
+	// Define some dependencies (shortnames)
+	System.paths['jquery']     = '//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js';
+	System.paths['d3']         = '//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js';
+	System.paths['d3local']    = '/lib/d3.v3.min.js';
+	System.paths['threejs']    = '/lib/three.min.js';
+	//System.paths['googlemaps'] = '//maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather';
+
+//	System.meta['main'] = {
+//		 format: 'cjs',
+//		deps: ['lib/d3.v3.min', 'lib/nv.d3.min']
+//	};
+//
+
 	wsio.open(function() {
 		console.log("Websocket opened");
 
@@ -1025,51 +1046,44 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 		// load new app
 		if(window[data.application] === undefined) {
-			var js = document.createElement("script");
-			js.addEventListener('error', function(event) {
-				console.log("Error loading script: " + data.application + ".js");
-			}, false);
-			js.addEventListener('load', function(event) {
-				var newapp = new window[data.application]();
+//			var js = document.createElement("script");
+//			js.addEventListener('error', function(event) {
+//				console.log("Error loading script: " + data.application + ".js");
+//			}, false);
+//			js.addEventListener('load', function(event) {
+//				var newapp = new window[data.application]();
+//				newapp.init(init);
+//				newapp.refresh(date);
+//
+//				applications[data.id]   = newapp;
+//				controlObjects[data.id] = newapp;
+//
+//				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+//			}, false);
+//			js.type = "text/javascript";
+//			js.src = url + "/" + data.application + ".js";
+//			console.log(url + "/" + data.application + ".js");
+//			document.head.appendChild(js);
+
+			console.log('Have to load:', url, data.url, data.application + ".js");
+			System.import(data.application + "/" + data.application ).then(function(loadedApp) {
+				console.log('loading done', typeof loadedApp);
+				var newapp = new loadedApp();
 				newapp.init(init);
-				//newapp.SAGE2Init(init);
-
-				//if (newapp.state !== undefined) {
-				//	Object.observe(newapp.state, function (changes) {
-				//		if(isMaster) wsio.emit('updateAppState', {id: data.id, state: newapp.state});
-				//	}, ['update', 'add']);
-				//}
-
-				//newapp.load(data.data, date);
 				newapp.refresh(date);
-
 				applications[data.id]   = newapp;
 				controlObjects[data.id] = newapp;
-
 				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-			}, false);
-			js.type = "text/javascript";
-			js.src = url + "/" + data.application + ".js";
-			console.log(url + "/" + data.application + ".js");
-			document.head.appendChild(js);
+			});
 		}
 
 		// load existing app
 		else {
 			var app = new window[data.application]();
 			app.init(init);
-			//app.SAGE2Init(init);
-
-			//if(app.state !== undefined){
-			// 	Object.observe(app.state, function(changes) {
-			// 		if(isMaster) wsio.emit('updateAppState', {id: data.id, state: app.state});
-			// 	}, ['update', 'add']);
-			//}
-
-			//app.load(data.data, date);
 			app.refresh(date);
 
-			applications[data.id] = app;
+			applications[data.id]   = app;
 			controlObjects[data.id] = app;
 
 			if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
