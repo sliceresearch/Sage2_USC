@@ -14,7 +14,7 @@
 // now in D3 / SVG / SAGE
 ////////////////////////////////////////
 
-var weather = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	////////////////////////////////////////
 	initApp: function()
 	{

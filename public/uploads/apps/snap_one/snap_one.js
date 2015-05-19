@@ -9,7 +9,7 @@
 // Copyright (c) 2014
 
 
-var snap_one = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 

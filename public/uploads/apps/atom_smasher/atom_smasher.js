@@ -10,8 +10,9 @@
 //
 // Atom Smasher app written by Todd Margolis
 
+var THREE = require('threejs');
 
-var atom_smasher = SAGE2_App.extend( {
+module.exports = atom_smasher = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 

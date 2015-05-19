@@ -21,7 +21,7 @@
     ];
 */
 
-var radar = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	////////////////////////////////////////
 
 	initApp: function()

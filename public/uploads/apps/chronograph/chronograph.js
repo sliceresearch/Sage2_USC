@@ -18,7 +18,7 @@
 //    Home:    http://www.3Quarks.com/
 //
 
-var chronograph = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	// Adds a parameter to the clock
 	addParameter: function(name, value) {
 		this[name] = value;

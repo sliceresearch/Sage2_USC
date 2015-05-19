@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014
 
-var playcanvas = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 

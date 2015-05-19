@@ -15,7 +15,7 @@
 ////////////////////////////////////////
 
 
-var cave2_monitor = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
     ////////////////////////////////////////
     initApp: function()
     {

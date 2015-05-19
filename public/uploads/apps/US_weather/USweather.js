@@ -9,7 +9,7 @@
 
     // might also allow people to focus on smaller state level
 
-var USweather = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	////////////////////////////////////////
 
 	tempConvert: function(data)

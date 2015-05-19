@@ -9,7 +9,7 @@
 // Copyright (c) 2014
 
 
-var whiteboard = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 

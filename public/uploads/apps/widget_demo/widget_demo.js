@@ -9,7 +9,7 @@
 // Copyright (c) 2014
 
 
-var widget_demo = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	load: function(date) {
 		
 	},
