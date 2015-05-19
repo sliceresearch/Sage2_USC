@@ -197,7 +197,7 @@ annotationSystem.prototype.showAnnotationWindow = function(appId){
         if (annotationWindow.show === false){
             annotationWindow.show = true;
             annotationWindow.button.left += annotationWindow.width;
-            return {appId:appId,left:annotationWindow.left,top:annotationWindow.top,button:{left:annotationWindow.button.left,top:annotationWindow.button.top}};
+            return {appId:appId, show:annotationWindow.show, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
         }
     }
     return null;
@@ -210,7 +210,7 @@ annotationSystem.prototype.hideAnnotationWindow = function(appId){
             annotationWindow.show = false;
             annotationWindow.button.left -= annotationWindow.width;
             this.setAllNotesAsNonEditable(appId);
-            return {appId:appId,button:{left:annotationWindow.button.left,top:annotationWindow.button.top}};
+            return {appId:appId, show:annotationWindow.show, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
         }
     }
     return null;
@@ -226,7 +226,7 @@ annotationSystem.prototype.updateAnnotationWindowPosition = function(data){
     annotationWindow.top = data.elemTop + this.config.ui.titleBarHeight;
     annotationWindow.button.left = annotationWindow.left + buttonOffsetLeft;
     annotationWindow.button.top = annotationWindow.top + buttonOffsetTop;
-    return {appId:data.elemId, left:annotationWindow.left,top:annotationWindow.top,button:{left:annotationWindow.button.left,top:annotationWindow.button.top}};
+    return {appId:data.elemId, show:annotationWindow.show, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
 };
 
 annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data){
@@ -240,7 +240,7 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
     annotationWindow.button.left = annotationWindow.left + buttonOffsetLeft;
     annotationWindow.button.top = annotationWindow.top + buttonOffsetTop;
     annotationWindow.addNoteButton.top = data.elemHeight - this.config.ui.titleBarHeight - 3;
-    return {appId:data.elemId, left:annotationWindow.left,top:annotationWindow.top, height:annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
+    return {appId:data.elemId, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
 };
 
 annotationSystem.prototype.addNewNote = function(credentials){

@@ -237,6 +237,7 @@ InteractableManager.prototype.editComplexGeometry = function(id, layerId, shapeD
 				pkg.x2 = geometry.x + geometry.w;
 				pkg.y2 = geometry.y + geometry.h;
 			}
+			pkg.visible = shapeData[key].visible;
 			this.layers[layerId].objects.insert(pkg);
 		}
 	}
@@ -348,7 +349,7 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 	for (i=0; i<allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
-				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
+				zIndexList[key] = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
 			}
 		}
 	}
@@ -466,7 +467,7 @@ function setZIndexOfObj(obj, zIndex){
 	}
 	else {
 		for(var key in obj){
-			if (obj.hasOwnProperty(key)){
+			if (obj.hasOwnProperty(key) && obj[key].hasOwnProperty("zIndex")){
 				obj[key].zIndex = zIndex;
 			}
 		}

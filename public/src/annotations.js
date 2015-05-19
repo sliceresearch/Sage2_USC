@@ -77,8 +77,8 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 };
 
 SAGE2Annotations.prototype.setOrder = function (zval){
-	this.windowDiv.style.zIndex = (zval+1).toString();
-	this.buttonDiv.style.zIndex = (zval+1).toString();
+	this.windowDiv.style.zIndex = (zval).toString();
+	this.buttonDiv.style.zIndex = (zval).toString();
 };
 
 SAGE2Annotations.prototype.deleteWindow = function(){

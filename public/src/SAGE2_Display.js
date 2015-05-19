@@ -460,7 +460,7 @@ function setupListeners() {
 			if (selectedElemOverlay) selectedElemOverlay.style.zIndex = order[key].toString();
 			if(annotationItems.hasOwnProperty(key)){
 				var annotationWindow = annotationItems[key];
-				annotationWindow.setOrder(order[key].toString());
+				annotationWindow.setOrder(order[key]);
 			}
 		}
 	});
@@ -938,6 +938,7 @@ function setupListeners() {
 	wsio.on('createAnnotationWindow',function(data){
 		var appAnnotation = new SAGE2Annotations();
 		appAnnotation.makeWindow(data);
+		appAnnotation.setOrder(data.zIndex);
 		annotationItems[data.appId] = appAnnotation;
 	});
 
@@ -1117,7 +1118,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowItem.style.mozTransform    = translate;
 	windowItem.style.transform       = translate;
 	windowItem.style.overflow = "hidden";
-	windowItem.style.zIndex   = (itemCount+1).toString();
+	windowItem.style.zIndex   = itemCount.toString();
 	if (ui.noDropShadow === true) windowItem.style.boxShadow = "none";
 
 	var cornerSize = Math.min(data.width, data.height) / 5;
