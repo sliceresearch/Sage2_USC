@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="sage2.appcache">
 <head lang="en">
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
@@ -43,8 +43,7 @@
 					<li><a href="#">Open</a></li>
 					<li><a href="#">Save</a></li>
 					<li><a href="#"></a></li>
-					<li><a href="#">&mdash;&mdash;&mdash;</a></li>
-					<li><a href="#">Quit</a></li>
+					<li><a href="#" onclick="window.location='http://google.com';">Leave</a>
 				</ul>
 			</li>
 			<li><a href="#">Edit</a>
@@ -59,17 +58,13 @@
 			</li>
 			<li><a href="#">Applications</a>
 			<ul>
-				<li><a href="#">Desktop sharing</a></li>
-				<li><a href="#">Google maps</a></li>
+				<li><a href="#" onClick="interactor.startScreenShare();">Screen sharing</a></li>
+				<li><a href="#" onClick="loadApplicationByName('googlemaps')">Google maps</a></li>
 			</ul>
 			</li>
 			<li><a href="#">Settings</a></li>
 			<li><a href="#">Update</a></li>
-		</ul>
-	</nav>
-	<nav>
-		<ul style="position:absolute;top:2px;right:20px">
-			<li class="help" ><a href="#">Help</a>
+			<li><a href="#">Help</a>
 			<ul>
 				<li><a href="help/index.html" target="_blank">Help</a></li>
 				<li><a href="admin/index.html" target="_blank">Admin</a></li>

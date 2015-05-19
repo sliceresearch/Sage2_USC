@@ -738,8 +738,9 @@ h3 {
 nav {
 	font-family: Arimo, Helvetica, sans-serif;
 	margin: 2px 2px;
+	border: 1px solid #6b727c;
 	text-align: left;
-	width: 100%;
+	width: 100% -3px;
 	background: #cccccc;
 	z-index: 19999;
 }

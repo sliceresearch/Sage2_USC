@@ -1246,6 +1246,17 @@ function keyPress(event) {
 }
 
 /**
+ * Start an application by name
+ *
+ * @method loadApplicationByName
+ */
+function loadApplicationByName(name) {
+	if (name !== null) {
+		wsio.emit('loadApplication', {application: name, user: interactor.uniqueID});
+	}
+}
+
+/**
  * Start the selected application
  *
  * @method loadSelectedApplication
