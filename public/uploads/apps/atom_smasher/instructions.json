@@ -5,7 +5,6 @@
 	"height": 1200,
 	"animation": true,
 	"dependencies": [
-		"scripts/three.min.js"
 	],
 	"title": "Atom Smasher",
 	"version": "1.0.0",

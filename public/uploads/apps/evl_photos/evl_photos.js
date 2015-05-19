@@ -28,7 +28,7 @@
             location:"https://sage.evl.uic.edu/evl_Pictures/"};
 */
 
-var evl_photos = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
     construct: function() {
         arguments.callee.superClass.construct.call(this);
 

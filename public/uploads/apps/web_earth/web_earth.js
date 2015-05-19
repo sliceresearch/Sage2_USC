@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2015
 
-var web_earth = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 

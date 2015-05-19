@@ -40,7 +40,7 @@ SAGE2_policeDistricts = [
 	];
 */
 
-var leaflet = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	getNewData: function(meSelf, beat, date){
 
 		if(isMaster){

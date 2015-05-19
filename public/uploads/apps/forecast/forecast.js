@@ -35,7 +35,7 @@
 
 
 
-var forecast = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 

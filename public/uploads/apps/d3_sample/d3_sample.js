@@ -9,8 +9,8 @@
 // Copyright (c) 2014
 
 //require('lib/d3.v3.min');
-//require('d3');
-require('d3local');
+//require('d3local');
+require('d3');
 
 function addCSS( url, callback ) {
     var fileref = document.createElement("link")

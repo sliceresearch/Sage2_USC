@@ -13,7 +13,7 @@
 // Written by Andy Johnson - 2014
 ////////////////////////////////////////
 
-var chronicles_of_spaceman_spiff = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
     ////////////////////////////////////////
     initApp: function()
     {

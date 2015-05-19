@@ -66,7 +66,7 @@ var shader_fs_rb = "\
 
 
 
-var stereo_viewer = SAGE2_App.extend( {
+module.exports = SAGE2_App.extend( {
 	construct: function() {
 		this.src = null;
 		this.ctx = null;
