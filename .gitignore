@@ -23,6 +23,9 @@ build/Release
 # Custom app types
 config/custom.types
 
+# application cache
+public/sage2.appcache
+
 # generated content
 doc/api
 
