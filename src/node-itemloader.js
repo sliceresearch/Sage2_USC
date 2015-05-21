@@ -451,6 +451,7 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			data: {
 				width: data.width,
 				height: data.height,
+				colorspace: "YUV420p",
 				video_url: external_url,
 				video_type: mime_type,
 				audio_url: external_url,
@@ -655,7 +656,7 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 };
 
 
-AppLoader.prototype.createMediaBlockStream = function(source, type, encoding, name, color, width, height, callback) {
+AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, width, height, callback) {
 	var aspectRatio = width/height;
 
 	var metadata         = {};
@@ -674,9 +675,9 @@ AppLoader.prototype.createMediaBlockStream = function(source, type, encoding, na
 		type: "application/stream",
 		url: null,
 		data: {
-			src: source,
-			type: type,
-			encoding: encoding
+			colorspace: colorspace || "YUV420p",
+			width: width,
+			height: height
 		},
 		resrc: null,
 		left: this.titleBarHeight,
