@@ -25,6 +25,7 @@
 		clock: 24,
 		show_url: true,
 		show_version: true,
+		show_menubar: true,
 		noDropShadow: true,
 		auto_hide_ui: true,
 		auto_hide_delay: 30,
