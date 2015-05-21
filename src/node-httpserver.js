@@ -44,12 +44,10 @@ function HttpServer(publicDirectory) {
 	var fileCache = path.join(publicDirectory, "sage2.appcache");
 	fs.readFile(fileCache, 'utf8', function (err, data) {
 		if (err) { console.log('Error reading', fileCache); return; }
-		console.log('Read cache file');
 		// Change the date in comment, force to flush the cache
 		var result = data.replace(/# SAGE@start .*/, "# SAGE@start " + Date());
 		// write the resulting content
 		fs.writeFileSync(fileCache, result, 'utf8');
-		console.log('Done', data===result);
 	});
 }
 
