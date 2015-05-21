@@ -72,6 +72,13 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 	//logo.src = "images/EVL-LAVA_UI.svg";
 	logo.src = "images/sage2.svg";
 	applicationsDiv.appendChild(logo);
+
+	// Show/Hide a menubr in the UI - hidden by default
+	var menubar = document.getElementById('menubar');
+	if (this.config.ui.show_menubar && this.config.ui.show_menubar===true)
+		menubar.style.display = "block";
+	else
+		menubar.style.display = "none";
 };
 
 /**
