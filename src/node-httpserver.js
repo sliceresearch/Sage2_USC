@@ -23,6 +23,7 @@ var fs   = require('fs');
 var path = require('path');
 var url  = require('url');
 var mime = require('mime');
+var zlib = require('zlib');
 
 var sageutils = require('../src/node-utils');    // provides utility functions
 
@@ -196,31 +197,54 @@ HttpServer.prototype.onreq = function(req, res) {
 				//
 				// header["Cache-Control"] = "no-cache";
 
+				// Get the file size from the 'stat' system call
 				var total = stats.size;
 				if (typeof req.headers.range !== 'undefined') {
+					// Parse the range request from the HTTP header
 					var range = req.headers.range;
 					var parts = range.replace(/bytes=/, "").split("-");
 					var partialstart = parts[0];
 					var partialend   = parts[1];
 
 					var start = parseInt(partialstart, 10);
-					var end = partialend ? parseInt(partialend, 10) : total-1;
+					var end   = partialend ? parseInt(partialend, 10) : total-1;
 					var chunksize = (end-start)+1;
 
+					// Set the range into the HTPP header for the response
 					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
 					header["Accept-Ranges"]  = "bytes";
 					header["Content-Length"] = chunksize;
 
+					// Write the HTTP header, 206 Partial Content
 					res.writeHead(206, header);
-
+					// Read part of the file
 					stream = fs.createReadStream(pathname, {start: start, end: end});
+					// Pass it to the HTTP response
 					stream.pipe(res);
 				}
 				else {
-					header["Content-Length"] = total;
-					res.writeHead(200, header);
+					// Check for allowed compression
+					var acceptEncoding = req.headers['accept-encoding'] || '';
+					// Open the file as a stream
 					stream = fs.createReadStream(pathname);
-					stream.pipe(res);
+					if (acceptEncoding.match(/gzip/)) {
+						// Set the encoding to gzip
+						header["Content-Encoding"] = 'gzip';
+						// Write the HTTP response header
+						res.writeHead(200, header);
+						// Pipe the file input onto the HTTP response
+						stream.pipe(zlib.createGzip()).pipe(res);
+					} else if (acceptEncoding.match(/deflate/)) {
+						// Set the encoding to deflate
+						header["Content-Encoding"] = 'deflate';
+						res.writeHead(200, header);
+						stream.pipe(zlib.createDeflate()).pipe(res);
+					} else {
+						// No HTTP compression, just set file size
+						header["Content-Length"] = total;
+						res.writeHead(200, header);
+						stream.pipe(res);
+					}
 				}
 			}
 		}
