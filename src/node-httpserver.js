@@ -168,6 +168,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				this.redirect(res, getName+"/index.html");
 				return;
 			} else {
+				//console.log('Request>	', pathname);
 				var header = {};
 				header["Content-Type"] = mime.lookup(pathname);
 				header["Access-Control-Allow-Headers" ] = "Range";

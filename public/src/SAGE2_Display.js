@@ -63,99 +63,103 @@ function resetIdle() {
  * @method SAGE2_init
  */
 function SAGE2_init() {
-	clientID = parseInt(getParameterByName("clientID")) || 0;
-	console.log("clientID: " + clientID);
-
-	wsio = new WebsocketIO();
-	console.log("Connected to server: ", window.location.origin);
-
-	// Detect the current browser
-	SAGE2_browser();
-
-	isMaster = false;
-
 	// Dependency manager
 	System.config({
-		// set all requires to "lib" for library code
+		// Base path for applications
 		baseURL: '/uploads/apps/',
+		// Redirections for libraries and source files
 		paths: {
-			'lib/*': '/lib/*.js'
+			'lib/*': '/lib/*.js',
+			'src/*': '/src/*.js'
 		}
 	});
-	// Define some dependencies (shortname to be loaded with a require call)
-	System.paths.jquery     = '//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js';
-	System.paths.d3         = '//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js';
-	System.paths.d3local    = '/lib/d3.v3.min.js';
-	System.paths.threejs    = '/lib/three.min.js';
+	// Define some shortnames
+	System.map.main     = '/src/SAGE2_main';
+	System.map.pdfjs    = '/lib/pdf';
+	System.map.glmatrix = '/lib/glMatrix-0.9.5.min';
+	System.map.observe  = '/lib/observe.poly';
+
 	//System.paths['googlemaps'] = '//maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather';
 
-//	System.meta['main'] = {
-//		 format: 'cjs',
-//		deps: ['lib/d3.v3.min', 'lib/nv.d3.min']
-//	};
-//
+	// Preload some dependencies (in CommonJS format)
+	System.meta['/src/SAGE2_main'] = {
+		// CommonJS module
+		format: 'cjs',
+		// Dependencies of 'main'
+		deps: [
+			//libraries
+			'pdfjs', 'glmatrix', 'observe',
+			// SAGE2 sources
+			'src/ui_builder',
+			'src/widgetHelperFunctions',
+			'src/pointer',
+			'src/DynamicImage',
+			'src/SAGE2_DataSharing',
+			'src/Class',
+			'src/SAGE2_App',
+			'src/SAGE2_BlockStreamingApp',
+			'src/image_viewer',
+			'src/pdf_viewer',
+			'src/media_stream',
+			'src/media_block_stream',
+			'src/movie_player',
+			'src/SAGE2_WidgetButtonTypes',
+			'src/SAGE2_WidgetControl',
+			'src/SAGE2_WidgetControlInstance',
+			'src/radialMenu'
+		]
+	};
 
-	wsio.open(function() {
-		console.log("Websocket opened");
+	// Bootstrap SAGE2 dependencies
+	System.import('main').then(function(m) {
+		// Once 'main' is loaded, starting building up
+		clientID = parseInt(getParameterByName("clientID")) || 0;
+		console.log("clientID: " + clientID);
 
-		setupListeners();
+		wsio = new WebsocketIO();
+		console.log("Connected to server: ", window.location.origin);
 
-		/*
-		var clientDescription = {
-			clientType: "display",
-			clientID: clientID,
-			sendsPointerData: false,
-			sendsMediaStreamFrames: false,
-			requestsServerFiles: true,
-			sendsWebContentToLoad: false,
-			sendsVideoSynchonization: true,
-			sharesContentWithRemoteServer: false,
-			receivesDisplayConfiguration: true,
-			receivesClockTime: true,
-			requiresFullApps: true,
-			requiresAppPositionSizeTypeOnly: false,
-			receivesMediaStreamFrames: true,
-			receivesWindowModification: true,
-			receivesPointerData: true,
-			receivesInputEvents: true,
-			receivesRemoteServerInfo: true,
-			requestsWidgetControl: true,
-			receivesWidgetEvents: true,
-			requestsAppClone: true,
-			requestsFileHandling: true
+		// Detect the current browser
+		SAGE2_browser();
 
-		};
-		*/
-		var clientDescription = {
-			clientType: "display",
-			clientID: clientID,
-			requests: {
-				config: true,
-				version: true,
-				time: true,
-				console: false
-			}
-		};
-		wsio.emit('addClient', clientDescription);
-	});
+		isMaster = false;
 
-	// Socket close event (ie server crashed)
-	wsio.on('close', function (evt) {
-		var refresh = setInterval(function () {
-			// make a dummy request to test the server every 2 sec
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/", true);
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200) {
-					console.log("server ready");
-					// when server ready, clear the interval callback
-					clearInterval(refresh);
-					// and reload the page
-					window.location.reload();
+		wsio.open(function() {
+			console.log("Websocket opened");
+
+			setupListeners();
+
+			var clientDescription = {
+				clientType: "display",
+				clientID: clientID,
+				requests: {
+					config: true,
+					version: true,
+					time: true,
+					console: false
 				}
 			};
-			xhr.send();
-		}, 2000);
+			wsio.emit('addClient', clientDescription);
+		});
+
+		// Socket close event (ie server crashed)
+		wsio.on('close', function (evt) {
+			var refresh = setInterval(function () {
+				// make a dummy request to test the server every 2 sec
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", "/", true);
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState === 4 && xhr.status === 200) {
+						console.log("server ready");
+						// when server ready, clear the interval callback
+						clearInterval(refresh);
+						// and reload the page
+						window.location.reload();
+					}
+				};
+				xhr.send();
+			}, 2000);
+		});
 	});
 }
 
@@ -207,6 +211,14 @@ function setupListeners() {
 		for(i=0; i<json_cfg.alternate_hosts.length; i++) {
 			hostAlias["http://"  + json_cfg.alternate_hosts[i] + http_port]  = window.location.origin;
 			hostAlias["https://" + json_cfg.alternate_hosts[i] + https_port] = window.location.origin;
+		}
+
+		// Get library list from server
+		if (json_cfg.apis && json_cfg.apis.libs) {
+			for (i in json_cfg.apis.libs) {
+				console.log('Library> defining', i, json_cfg.apis.libs[i]);
+				System.map[i] = json_cfg.apis.libs[i];
+			}
 		}
 
 		// Build the elements visible on the wall
