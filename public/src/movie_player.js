@@ -10,7 +10,7 @@
 
 /**
  * @module client
- * @submodule image_viewer
+ * @submodule movie_player
  */
 
 /**

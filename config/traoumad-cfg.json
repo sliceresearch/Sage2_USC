@@ -25,12 +25,12 @@
 		clock: 24,
 		show_url: true,
 		show_version: true,
-		show_menubar: true,
 		noDropShadow: true,
 		auto_hide_ui: true,
 		auto_hide_delay: 30,
 		maxWindowWidth : 8192,
-		maxWindowHeight : 8192
+		maxWindowHeight : 8192,
+		show_menubar: true
 	},
 	resolution: {
 		width: 1920,
@@ -73,12 +73,12 @@
 			port: 443,
 			secure: true
 		},
-                {
-                        name: "PhD Room",
-                        host: "dante.evl.uic.edu",
-                        port: 443,
-                        secure: true
-                },
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
@@ -95,6 +95,12 @@
 		},
 		forecastio: {
 			apiKey: "92f925ff56c3a45ab18402d3753b3c88"
+		},
+		libs: {
+			jquery:  "//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min",
+			d3web:   "//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min",
+			d3:      "/lib/d3.v3.min",
+			threejs: "/lib/three.min"
 		}
 	}
 }
