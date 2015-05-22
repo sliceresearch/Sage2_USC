@@ -1191,6 +1191,9 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	var key;
     var id = byteBufferToString(buffer);
 
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+		return;
+
 	for (key in SAGE2Items.renderSync[id].clients) {
 		SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
 	}
