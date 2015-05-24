@@ -1213,11 +1213,8 @@ function wsStartNewMediaBlockStream(wsio, data) {
 		}
 	}
 
-    appLoader.createMediaBlockStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, function(appInstance) {
-		appInstance.id     = data.id;
-        appInstance.width  = data.width;
-        appInstance.height = data.height;
-        appInstance.data   = data;
+    appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
+		appInstance.id = data.id;
         handleNewApplication(appInstance, null);
         calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
     });
@@ -1228,13 +1225,21 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	var key;
     var id = byteBufferToString(buffer);
 
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+		return;
+
 	for (key in SAGE2Items.renderSync[id].clients) {
 		SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
 	}
 
-	var yuvBuffer = buffer.slice(id.length+1);
+	var imgBuffer = buffer.slice(id.length+1);
 
-    var blockBuffers = pixelblock.yuv420ToPixelBlocks(yuvBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
+	var colorspace = SAGE2Items.applications.list[id].data.colorspace;
+	var blockBuffers;
+	if (colorspace === "RGBA")
+		blockBuffers = pixelblock.rgbaToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
+	else if (colorspace === "YUV420p")
+		blockBuffers = pixelblock.yuv420ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
