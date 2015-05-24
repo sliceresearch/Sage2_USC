@@ -298,6 +298,7 @@ SAGE2Annotations.prototype.hideAllMarkers = function(appId){
 };
 
 SAGE2Annotations.prototype.showMarkersForPage = function(data){
+	console.log("in showMarkersForPage->",data,this.show);
 	if (this.show===false) return;
 	var appWindow = document.getElementById(data.appId);
 	var id, markerPage, showPage = data.page || 1;
@@ -1021,6 +1022,8 @@ TextArea.prototype.event = function(eventType, position, user, data, date) {
 	
 	if (eventType === "pointerPress" && (data.button === "left")) {
 		if (position.x < parseInt(this.element.style.left) || position.x > (parseInt(this.element.style.left) + parseInt(this.element.style.width)) || position.y < parseInt(this.element.style.top) || position.y > (parseInt(this.element.style.top)+parseInt(this.element.style.height)))
+			return false;
+		if (user.label !== this.credentials.userLabel)
 			return false;
 		//console.log(position.x,position.y);
 		this.updateCaretPos(position.x,position.y);

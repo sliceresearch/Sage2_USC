@@ -940,6 +940,14 @@ function setupListeners() {
 		appAnnotation.makeWindow(data);
 		appAnnotation.setOrder(data.zIndex);
 		annotationItems[data.appId] = appAnnotation;
+		var app    = applications[data.appId];
+		Object.observe(app.state, function (changes) {
+			for (var key in changes){
+				if (changes[key].name === "page"){
+					appAnnotation.showMarkersForPage({appId:data.appId, page: app.state.page});	
+				}
+			}
+		});
 	});
 
 	wsio.on('deleteAnnotationWindow',function(data){
@@ -1006,12 +1014,12 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('showAnnotationMarkersForPage', function(data){
+	/*wsio.on('showAnnotationMarkersForPage', function(data){
 		var annotationWindow = annotationItems[data.appId];
 		if (annotationWindow){
 			annotationWindow.showMarkersForPage({appId:data.appId, page: data.page});	
 		}
-	});
+	});*/
 
 	wsio.on('makeNoteEditable', function(data){
 		var annotationWindow = annotationItems[data.appId];

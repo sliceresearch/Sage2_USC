@@ -133,7 +133,7 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
             left:appInstance.left  + appInstance.width,
             top:appInstance.top + config.ui.titleBarHeight + appInstance.height*0.4,
             width:config.ui.titleBarHeight,
-            height: config.ui.titleBarHeight*12,
+            height: config.ui.titleBarHeight*8,
             caption:"Show notes"
         },
         addNoteButton: {
@@ -262,6 +262,7 @@ annotationSystem.prototype.addNewNote = function(credentials){
 
 annotationSystem.prototype.setNoteAsEditable = function(credentials){
     if (!this.annotationWindows[credentials.appId]) return null;
+    console.log(credentials.appId,!this.annotationWindows[credentials.appId])
     this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
 };
 
@@ -289,6 +290,7 @@ annotationSystem.prototype.setMarkerPosition = function(elem,click){
     if (!this.annotationWindows[elem.id]) return null;
     var annotationWindow = this.annotationWindows[elem.id];
     if (elem.id in this.editableNote){
+        console.log(click.userLabel.toString(), this.editableNote[elem.id],click.userLabel.toString() in this.editableNote[elem.id]);
         if (click.userLabel.toString() in this.editableNote[elem.id]){
             var noteData = this.editableNote[elem.id][click.userLabel.toString()];
             if (!noteData.marker) return null;
@@ -298,6 +300,7 @@ annotationSystem.prototype.setMarkerPosition = function(elem,click){
             noteData.marker.position = position;
             noteData.marker.page = annotationWindow.appHandle.data.page || 1;
             this.saveMarkerForAnnotation(annotationWindow.filename, noteData.id, noteData.marker);
+            console.log(noteData.marker);
             return noteData;
         }
     }

@@ -514,8 +514,8 @@ Interaction.prototype.appInteractionMode = function(){
  *@method initiatePointerClick
  */
 
-Interaction.prototype.initiatePointerClick = function(item){
-	this.clickInProgress = item;
+Interaction.prototype.initiatePointerClick = function(pointerX, pointerY){
+	this.clickInProgress = {x:pointerX, y:pointerY};
 };
 
 /**
@@ -530,8 +530,8 @@ Interaction.prototype.cancelPointerClick = function(){
  *@method completePointerClick
  */
  
-Interaction.prototype.completePointerClick = function(item, userLabel, pointerX, pointerY){
-	if (this.clickInProgress!==null && this.clickInProgress === item){
+Interaction.prototype.completePointerClick = function(userLabel, pointerX, pointerY){
+	if (this.clickInProgress!==null && this.clickInProgress.x === pointerX && this.clickInProgress.y === pointerY){
 		this.clickInProgress = null;
 		return {userLabel:userLabel, pointerX:pointerX, pointerY:pointerY};
 	}

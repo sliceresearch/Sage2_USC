@@ -1444,9 +1444,6 @@ function wsUpdateAppState(wsio, data) {
 	// Using updates only from master
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
-		if (app.annotation === true && data.state.hasOwnProperty("page") && app.data.page.toString() !== data.state.page.toString()){
-			broadcast('showAnnotationMarkersForPage', {appId:data.id, page: data.state.page}, 'requiresFullApps');
-		}
 		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 		var portal = findApplicationPortal(app);
 		if (portal !== undefined && portal !== null && data.updateRemote === true) {
@@ -2979,12 +2976,19 @@ function wsFinishApplicationResize(wsio, data) {
 }
 
 function wsDeleteApplication(wsio, data) {
-	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+	/*if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+		var app = SAGE2Items.applications.list[data.appId];
 		SAGE2Items.applications.removeItem(data.appId);
 		var im = findInteractableManager(data.appId);
 		im.removeGeometry(data.appId, "applications");
 		broadcast('deleteElement', {elemId: data.appId});
-	}
+		stickyAppHandler.removeElement(app);
+		if (app.annotation){
+			annotations.deleteAnnotationWindow(app.id);
+			broadcast('deleteAnnotationWindow', {appId:app.id}, 'requiresFullApps');
+		}
+	}*/
+	deleteApplication(data.appId);
 }
 
 function wsUpdateApplicationState(wsio, data) {
@@ -4439,16 +4443,17 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, "press");
 			break;
 		case "applications":
-			remoteInteraction[uniqueID].initiatePointerClick(obj);//itemUnderPointer
+			remoteInteraction[uniqueID].initiatePointerClick(pointerX, pointerY);//itemUnderPointer
 			if (prevInteractionItem===null){
 				remoteInteraction[uniqueID].pressOnItem(obj);
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 			}
-			if (obj.id === obj.data.id+"window"){
-				pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);	
+
+			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+				pointerPressOnAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt);
 			}
 			else{
-				pointerPressOnAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt);
+				pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);	
 			}
 			break;
 		case "portals":
@@ -4726,6 +4731,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			}
 			else{
 				var elemCtrl = SAGE2Items.widgets.list[obj.data.id+uniqueID+"_controls"];
+				console.log("widget->",elemCtrl);
 				if (!elemCtrl) {
 					broadcast('requestNewControl', {elemId: obj.data.id, user_id: uniqueID, user_label: sagePointers[uniqueID]? sagePointers[uniqueID].label : "", x: pointerX, y: pointerY, date: Date.now() });
 				}
@@ -4779,11 +4785,11 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 	}
 	*/
 
-	interactMgr.moveObjectToFront(obj.id, "portals", ["applications"]);
+	interactMgr.moveObjectToFront(obj.data.id, "portals", ["applications"]);
 	var newOrder = interactMgr.getObjectZIndexList("portals", ["applications"]);
 	broadcast('updateItemOrder', newOrder);
 
-	var btn = SAGE2Items.portals.findButtonByPoint(obj.id, localPt);
+	var btn = SAGE2Items.portals.findButtonByPoint(obj.data.id, localPt);
 
 	// pointer press inside portal window
 	if (btn === null) {
@@ -5056,7 +5062,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 		}
 		else {
-			var appId = obj.data.appId || obj.id;
+			var appId = obj.data.appId || obj.data.id;
 			if(appUserColors[appId] !== color){
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
@@ -5200,7 +5206,7 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 	}
 	remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerPosition', {id: uniqueID, left: scaledPt.x, top: scaledPt.y});
 
-	var btn = SAGE2Items.portals.findButtonByPoint(obj.id, localPt);
+	var btn = SAGE2Items.portals.findButtonByPoint(obj.data.id, localPt);
 
 	// pointer move on portal window
 	if (btn === null) {
@@ -5430,6 +5436,15 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			dropSelectedItem(uniqueID, true, portal.id);
 			break;
 		case "applications":
+			var click = remoteInteraction[uniqueID].completePointerClick(sagePointers[uniqueID].label, pointerX,pointerY);
+			console.log(click, obj.id,obj.data.id+"window",obj.id === obj.data.id+"window" );
+			if (click !==null && data.button === "left" && obj.id === obj.data.id+"window"){ 
+				// A click was made on app window and it was expected by its annotation window
+				var noteCredentials = annotations.setMarkerPosition(obj.data,click);
+				if (noteCredentials!==null){
+					broadcast('setAnnotationMarker', noteCredentials, 'requiresFullApps');
+				}	
+			}
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
 					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
@@ -5674,7 +5689,7 @@ function pointerDblClick(uniqueID, pointerX, pointerY) {
 }
 
 function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt) {
-	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.data.id, localPt);
 
 	// pointer press on app window
 	if (btn === null) {
@@ -5723,9 +5738,9 @@ function pointerScrollStart(uniqueID, pointerX, pointerY) {
 }
 
 function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt) {
-	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.data.id, localPt);
 
-	interactMgr.moveObjectToFront(obj.id, obj.layerId);
+	interactMgr.moveObjectToFront(obj.data.id, obj.layerId);
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
 
@@ -6292,6 +6307,11 @@ function deleteApplication(appId, portalId) {
 	if (portalId !== undefined && portalId !== null) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('deleteApplication', {appId: appId, date: ts});
+	}
+
+	if (app.annotation){
+		annotations.deleteAnnotationWindow(app.id);
+		broadcast('deleteAnnotationWindow', {appId:app.id}, 'requiresFullApps');
 	}
 }
 
@@ -7705,7 +7725,7 @@ function attachAppIfSticky(backgroundItem, appId){
 
 function showOrHideWidgetLinks(data){
 	var obj = data.item;
-	var appId = obj.data.appId || obj.id;
+	var appId = obj.data.appId || obj.data.id;
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
 		app = getAppPositionSize(app);
@@ -7859,7 +7879,7 @@ function wsAnnotationUpdate(wsio, noteItem){
 }
 
 function wsRequestForNewNote(wsio, data){
-	var app = SAGE2Items.applications.list[credentials.appId];
+	var app = SAGE2Items.applications.list[data.appId];
 	var credentials = {
 		appId:data.appId,
 		userLabel: sagePointers[data.uniqueID]? sagePointers[data.uniqueID].label : "Sage User",
