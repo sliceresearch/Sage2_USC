@@ -358,6 +358,9 @@ var SAGE2_App = Class.extend( {
 		if (typeof this.quit === 'function' ) {
 			this.quit();
 		}
+		if (isMaster && this.hasFileBuffer === true){
+			wsio.emit('closeFileBuffer', {id:this.div.id});
+		}
 	},
 
 	/**
@@ -416,5 +419,22 @@ var SAGE2_App = Class.extend( {
 		else
 			args = msg;
 		sage2Log({app: this.div.id, message: args});
-	}
+	},
+
+	/**
+	* Application request for fileBuffer
+	*
+	* @method requestFileBuffer
+	* @param fileName {String} name of the file to which data will be saved.
+	*/
+	requestFileBuffer: function (fileName) {
+		this.hasFileBuffer = true;
+		if (isMaster){
+			var msgObject = {};
+			msgObject.id        = this.div.id;
+			msgObject.fileName  = fileName;
+			// Send the message to the server
+			wsio.emit('requestFileBuffer', msgObject);
+		}
+	},
 });

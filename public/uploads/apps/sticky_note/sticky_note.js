@@ -25,7 +25,8 @@ var sticky_note = SAGE2_App.extend( {
 		this.textLines = [];
 		this.enableControls = true;
 		this.cloneable = true;
-
+		this.buffer = [];
+		this.caretPos = 0;
 
 		this.element.id = "div" + data.id;
 
@@ -75,6 +76,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
 		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
 		this.controls.finishedAddingControls();
+		this.requestFileBuffer("stickyNote_" + Date.now());
 	},
 
 	// get messages from the server through a broadcast call
@@ -193,6 +195,17 @@ var sticky_note = SAGE2_App.extend( {
 					console.log("No handler for:", data.ctrlId);
 					break;
 			}
+		}
+		else if (eventType === 'bufferUpdate'){
+			if (data.data!==null && data.data!==undefined){
+				this.buffer.splice(data.index,data.deleteCount,data.data);
+				this.wrapText(this.buffer.join(''));
+			}
+			else if (data.deleteCount>0){
+				this.buffer.splice(data.index+data.offset,data.deleteCount);
+				this.wrapText(this.buffer.join(''));
+			}
+			this.caretPos = data.index + data.offset;
 		}
 	},
 	quit: function(){

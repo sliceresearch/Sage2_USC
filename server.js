@@ -65,7 +65,7 @@ var Sagepointer         = require('./src/node-sagepointer');      // handles sag
 var StickyItems         = require('./src/node-stickyitems');
 var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
 var AnnotationManager   = require('./src/node-annotations');
-
+var FileBufferManager	= require('./src/node-filebuffer');
 // Globals
 
 // Session hash for security
@@ -92,7 +92,7 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
 var startTime          = Date.now();
-
+var fileBufferManager  = new FileBufferManager(uploadsDirectory);
 
 console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
@@ -568,15 +568,16 @@ function setupListeners(wsio) {
 	wsio.on('openRadialMenuFromControl',            wsOpenRadialMenuFromControl);
 	wsio.on('recordInnerGeometryForWidget',			wsRecordInnerGeometryForWidget);
 
-	wsio.on('annotationUpdate', wsAnnotationUpdate);
-	wsio.on('requestForNewNote', wsRequestForNewNote);
-	wsio.on('requestForNoteDeletion',wsRequestForNoteDeletion);
-	wsio.on('setNoteAsEditable', wsSetNoteAsEditable);
+	wsio.on('annotationUpdate', 		wsAnnotationUpdate);
+	wsio.on('requestForNewNote', 		wsRequestForNewNote);
+	wsio.on('requestForNoteDeletion',	wsRequestForNoteDeletion);
+	wsio.on('setNoteAsEditable', 		wsSetNoteAsEditable);
 	wsio.on('requestForMarkerDeletion', wsRequestForMarkerDeletion);
 	wsio.on('requestForMarkerAddition', wsRequestForMarkerAddition);
 
-
-	wsio.on('createAppClone',                       wsCreateAppClone);
+	wsio.on('requestFileBuffer', 		wsRequestFileBuffer);
+	wsio.on('closeFileBuffer', 			wsCloseFileBuffer);
+	wsio.on('createAppClone',			wsCreateAppClone);
 
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
@@ -6076,6 +6077,10 @@ function sendKeyUpToApplication(uniqueID, app, localPt, data) {
 	var eData =  {code: data.code, state: "up"};
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
+	if (fileBufferManager.hasFileBufferForApp(app.id)){
+		event.type = 'bufferUpdate';
+		event.data = fileBufferManager.insertChar({appId:app.id,code:data.code,printable:false});
+	}
 	broadcast('eventInItem', event);
 
 	var eLogData = {
@@ -6194,6 +6199,10 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
+	if (fileBufferManager.hasFileBufferForApp(app.id)){
+		event.type = 'bufferUpdate';
+		event.data = fileBufferManager.insertChar({appId:app.id,code:data.code,printable:true});
+	}
 	broadcast('eventInItem', event);
 
 	var eLogData = {
@@ -7932,4 +7941,21 @@ function wsRequestForMarkerAddition (wsio, credentials){
 		annotations.setNoteAsEditable(credentials);
 		broadcast('addMarkerToNote', credentials, 'requiresFullApps');
 	}
+}
+
+function wsRequestFileBuffer (wsio, data){
+	fileBufferManager.requestBuffer(data.id);
+	if (data.fileName!==null && data.fileName!==undefined){
+		var app = SAGE2Items.applications.list[data.id];
+		console.log("requesting file buffer:", app.application);
+		var ext = "txt";
+		if (app.application === "sticky_note"){
+			ext = "stxt";
+		}
+		fileBufferManager.associateFile({appId:data.id, fileName:data.fileName, extension:ext});
+	}
+}
+
+function wsCloseFileBuffer (wsio, data){
+	fileBufferManager.closeFileBuffer(data.id);
 }
