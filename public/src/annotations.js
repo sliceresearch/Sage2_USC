@@ -641,6 +641,7 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 	else{
 		position.y = position.y + (this.innerDiv.scrollTop - parseInt(this.innerDiv.style.top));
 		position.x = position.x - parseInt(this.innerDiv.style.left);
+		console.log(String.fromCharCode(data.code));
 		if (this.editables.hasOwnProperty(user.label)){
 			var textArea = this.editables[user.label];
 			textArea.event(eventType,position,user,data,date);

@@ -245,7 +245,7 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
     annotationWindow.button.left = annotationWindow.left + buttonOffsetLeft;
     annotationWindow.button.top = annotationWindow.top + buttonOffsetTop;
     annotationWindow.addNoteButton.top = data.elemHeight - this.config.ui.titleBarHeight - 3;
-    return {appId:data.elemId, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
+    return {appId:data.elemId, show:annotationWindow.show, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
 };
 
 annotationSystem.prototype.addNewNote = function(credentials){

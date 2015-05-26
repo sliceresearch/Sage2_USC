@@ -4405,7 +4405,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			}
 
 			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
-				pointerPressOnAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt);
+				eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'pointerPress');
 			}
 			else{
 				pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
@@ -4562,7 +4562,7 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 }
 
-function pointerPressOnAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt){
+function eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, eventType){
 	var selectedAnnotationWindow = annotations.getAnnotationWindowForApp(obj.data.id);
 	//console.log(selectedAnnotationWindow);
 	if(selectedAnnotationWindow!==null){
@@ -4576,7 +4576,7 @@ function pointerPressOnAnnotation(uniqueID, pointerX, pointerY, data, obj, local
 			var ePosition = {x: elemX, y: elemY};
 			var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color, uniqueID:uniqueID};
 
-			var event = {id: selectedAnnotationWindow.id, appId: selectedAnnotationWindow.appId, type: "pointerPress", position: ePosition, user: eUser, data: data, date: Date.now()};
+			var event = {id: selectedAnnotationWindow.id, appId: selectedAnnotationWindow.appId, type: eventType, position: ePosition, user: eUser, data: data, date: Date.now()};
 
 			broadcast('eventInAnnotationWindow', event, 'receivesInputEvents');
 		}
@@ -5889,7 +5889,13 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 			case "widgets":
 				break;
 			case "applications":
-				sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
+				if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+					data.state = 'down';
+					eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'specialKey');
+				}
+				else{
+					sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
+				}
 				break;
 			case "portals":
 				keyDownOnPortal(uniqueID, obj.data.id, localPt, data);
@@ -6003,6 +6009,10 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 					};
 					addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
 				}
+			}
+			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+				data.state = 'up';
+				eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'specialKey');
 			}
 			else if (remoteInteraction[uniqueID].appInteractionMode()) {
 				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
@@ -6128,11 +6138,20 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		case "widgets":
 			break;
 		case "applications":
-			if (modeSwitch === false && remoteInteraction[uniqueID].appInteractionMode()) sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
+			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+				eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'keyboard');
+			}
+			else if (modeSwitch === false && remoteInteraction[uniqueID].appInteractionMode()){
+				sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
+			}
 			break;
 		case "portals":
-			if (modeSwitch === true)                                   remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerToggleModes', {id: uniqueID, mode: remoteInteraction[uniqueID].interactionMode});
-			else if (remoteInteraction[uniqueID].appInteractionMode()) keyPressOnPortal(uniqueID, obj.data.id, localPt, data);
+			if (modeSwitch === true){
+				remoteSharingSessions[obj.data.id].wsio.emit('remoteSagePointerToggleModes', {id: uniqueID, mode: remoteInteraction[uniqueID].interactionMode});
+			}
+			else if (remoteInteraction[uniqueID].appInteractionMode()){
+				keyPressOnPortal(uniqueID, obj.data.id, localPt, data);
+			}
 			break;
 	}
 }
@@ -6197,7 +6216,6 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 			break;
 	}
 }
-
 
 function toggleApplicationFullscreen(uniqueID, app) {
 	var resizeApp;
