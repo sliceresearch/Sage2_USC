@@ -11,6 +11,9 @@
 /**
  * @module filebuffer
  */
+
+"use strict";
+
 var fs        = require('fs');
 var path      = require('path');
 var sageutils = require('../src/node-utils');    // provides utility functions
@@ -20,7 +23,7 @@ function FileBuffer (root){
 	this.buffers = {};
 	this.files = {};
 	this.root = root;
-	this.textFileFolder = path.join(root,"text");
+	this.textFileFolder = path.join(root, "texts");
 	if (!sageutils.fileExists(this.textFileFolder)){
 		fs.mkdirSync(this.textFileFolder);
 	}
@@ -35,7 +38,7 @@ function Buffer(appId){
 
 Buffer.prototype.insertStr = function(text){
 	var str = this.str.join("");
-	this.str = (str.slice(0,this.caret) + text + str.slice(this.caret)).split();
+	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split();
 	this.caret = this.caret + text.length;
 	this.changeCount = text.length;
 	var result = {index:this.caret-text.length, offset:0, deleteCount:0, data:text};
@@ -74,7 +77,7 @@ Buffer.prototype.insertChar = function(code, printable){
 				break;
 			case 8://backspace
 				if (this.caret > 0){
-					this.str.splice(this.caret-1,1);
+					this.str.splice(this.caret-1, 1);
 					this.caret = this.caret - 1;
 					this.changeCount = this.changeCount + 1;
 					result.offset = -1;
@@ -83,7 +86,7 @@ Buffer.prototype.insertChar = function(code, printable){
 				break;
 			case 46://delete
 				if (this.caret < this.str.length){
-					this.str.splice(this.caret,1);
+					this.str.splice(this.caret, 1);
 					this.changeCount = this.changeCount + 1;
 					result.deleteCount = 1;
 				}
@@ -98,7 +101,7 @@ FileBuffer.prototype.requestBuffer = function(appId){
 	if ((appId.toString() in this.buffers)===false){
 		var buf = new Buffer(appId);
 		this.buffers[appId] = buf;
-		Object.observe(buf,function(changes){
+		Object.observe(buf, function(changes){
 			for(var key in changes){
 				if (changes[key].name === 'changeCount' && parseInt(buf.changeCount) > 20){
 					this.writeToFile(appId);
@@ -125,7 +128,7 @@ FileBuffer.prototype.hasFileBufferForApp = function(appId){
 };
 
 FileBuffer.prototype.associateFile = function(data){
-	var fileName = path.join(this.textFileFolder,data.fileName,data.extension);
+	var fileName = path.join(this.textFileFolder, data.fileName + "." + data.extension);
 	this.files[data.appId] = fileName;
 };
 

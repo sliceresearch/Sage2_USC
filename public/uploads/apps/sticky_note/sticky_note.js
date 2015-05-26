@@ -25,8 +25,11 @@ var sticky_note = SAGE2_App.extend( {
 		this.textLines = [];
 		this.enableControls = true;
 		this.cloneable = true;
-		this.buffer = [];
-		this.caretPos = 0;
+		this.state.buffer = (data.state.bufferEmpty)? "" : data.state.buffer;
+		this.state.caretPos = data.state.caretPos || 0;
+		this.state.bufferEmpty = false;
+		this.state.fileName = "sticky_note" + Date.now();
+		this.state.fontSize = data.state.fontSize || "16px";
 
 		this.element.id = "div" + data.id;
 
@@ -34,7 +37,8 @@ var sticky_note = SAGE2_App.extend( {
 		//this.maxFPS = 1/2;
 
 		var _myself = this;
-
+		this.width = data.width;
+		this.height = data.height;
 		// Make the SVG element fill the app
 		this.svg = Snap("100%","100%");
 		this.element.appendChild(this.svg.node);
@@ -43,102 +47,42 @@ var sticky_note = SAGE2_App.extend( {
 		this.margin = 0.05*this.vw;
 		this.svg.attr("viewBox", "0,0," + this.vw + "," + this.vh);
 		this.backColor = [175,175,200];
-
+		this.lineHeight = 1.4;
+		
 		this.lineColor = this.backColor.diff(60);
 		//console.log(this.lineColor);
 		
 		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
 		rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
-
-		this.numberOfLines = 12;
-		this.lineHeight = this.vh/(this.numberOfLines+1);
-
-		for (var i=1;i<=this.numberOfLines;i++){
-			var rule = this.svg.line(this.margin,i*this.lineHeight,this.vw-this.margin,i*this.lineHeight);
-			rule.attr({
-				stroke:"rgba(" + this.lineColor.join(",") + ",1.0)",
-				fill:"none",
-				strokeWidth:2
-				//style:"shape-rendering:crispEdges;"
-			});
-			var start = this.margin;
-			if (i === 1)
-				start = this.margin * 3;
-			var lineText = this.svg.text(start,(i-0.2)*this.lineHeight,"");
-			lineText.attr({
-				style:"font-family: sans-serif; font-size: 3.2em;"
-			})
-			this.textLines.push(lineText);
-		}
-
-		var text = "Enter note"; // use this.state for saving text entry
-		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
+		this.setupWindow();
+		this.setText();
+		this.controls.addTextInput({defaultText: this.state.fileName, id:"TextInput", caption:"file"});
 		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
 		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
+		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"increaseFont"});
+		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"decreaseFont"});
 		this.controls.finishedAddingControls();
-		this.requestFileBuffer("stickyNote_" + Date.now());
+		this.requestFileBuffer(this.state.fileName);
+		console.log("state:",this.state);
 	},
 
 	// get messages from the server through a broadcast call
 	onMessage: function(data) {
 
 	},
-
-	wrapText: function(text){
-		this.text = text;
-		//list.push(text.slice(0,n-4));
-		var regex = /\b/g;
-		var list = text.split(regex);
-		//var seperators = text.match(regex);
-		var rightEnd = this.vw-this.margin;
-
-		//list.push.apply(list,text.slice(n-4).match(regex));
-		var wordCount = 0;
-		var lineNumber = 0;
-		var right = 0;
-		str = "";
-
-		while(wordCount < list.length){
-			//console.log("Compare:",rightEnd,(this.textLines[lineNumber]).getBBox().x2);
-			this.textLines[lineNumber].attr("text",str+list[wordCount]);
-			right = this.textLines[lineNumber].getBBox().x2;
-			if (right < rightEnd){
-				str = str + list[wordCount];
-			}
-			else{
-				this.textLines[lineNumber].attr("text",str);
-				lineNumber = lineNumber + 1;
-				if (lineNumber >= this.textLines.length)
-					break;
-				right = this.textLines[lineNumber].attr("x");
-				str = list[wordCount];
-			}
-			wordCount = wordCount + 1;
-		}
-		lineNumber = lineNumber+1;
-		while(lineNumber < this.textLines.length){
-			this.textLines[lineNumber].attr("text","");
-			lineNumber = lineNumber + 1;
-		}
+	setText: function(){
+		this.prefixText.innerHTML = this.state.buffer.slice(0,this.state.caretPos).replace(/\r\n|\r|\n/g,"<br>");
+		this.suffixText.innerHTML = this.state.buffer.slice(this.state.caretPos).replace(/\r\n|\r|\n/g,"<br>");
 	},
+	
 
 	load: function(state, date) {
-		// data in this.state - shouldn't just be used as local var
-		var text = "Enter note";
-		/*
-		if (state){
-			state.loadData = state.loadData || "";
-			if (state.loadData.length > 0){
-				this.wrapText(state.loadData);
-				text = state.loadData;
-			}
-				
+		this.SAGE2CopyState(state);
+		if (this.state.bufferEmpty===true){
+			this.state.buffer = "";
+			this.state.bufferEmpty = false;
 		}
-		*/
-		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
-		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
-		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
-		this.controls.finishedAddingControls();
+		this.setText();
 	},
 
 	draw: function(date) {
@@ -147,14 +91,26 @@ var sticky_note = SAGE2_App.extend( {
 	},
 
 	resize: function(date) {
-		// no need, it's SVG!
+		this.width = parseInt(this.element.style.width);
+		this.height = parseInt(this.element.style.height);
+		this.setWindowElementSize();
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-
+		this.caret.className = "blinking-cursor";
+		this.caret.innerHTML = "|";
+		if (this.timeoutId!==undefined&&this.timeoutId!==null){
+			clearTimeout(this.timeoutId);
+			this.timeoutId = null;
+		}
+		this.timeoutId = setTimeout(function(){
+			this.caret.className = "";
+			this.caret.innerHTML = "";
+		}.bind(this),5000);
+		if(this.state.bufferEmpty===true){
+			this.state.bufferEmpty = false;
+		}
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			// Move the circle when I click
-			//this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
 		}
 		else if (eventType === "pointerRelease" && (data.button === "left")) {
 		}
@@ -182,14 +138,25 @@ var sticky_note = SAGE2_App.extend( {
 			switch(data.ctrlId){
 				case "DuplicateNote":
 					this.requestForClone = true;
-					this.cloneData = this.text;
 					break;
 				case "NewNote":
 					this.requestForClone = true;
-					this.cloneData = "";
+					this.state.bufferEmpty = true;
 					break;
 				case "TextInput":
-					this.wrapText(data.text);
+					this.requestFileBuffer(data.text);
+					break;
+				case "increaseFont":
+					this.state.fontSize = Math.min(parseInt(this.state.fontSize) + 2, 40) + "px";
+					this.setFontSize();
+					if (this.isOverflowed()){
+						this.state.fontSize =  Math.max(parseInt(this.state.fontSize) - 2, 10) + "px";
+						this.setFontSize();
+					}
+					break;
+				case "decreaseFont":
+					this.state.fontSize =  Math.max(parseInt(this.state.fontSize) - 2, 10) + "px";
+					this.setFontSize();
 					break;
 				default:
 					console.log("No handler for:", data.ctrlId);
@@ -197,19 +164,101 @@ var sticky_note = SAGE2_App.extend( {
 			}
 		}
 		else if (eventType === 'bufferUpdate'){
+			var buff = this.state.buffer.split("");
 			if (data.data!==null && data.data!==undefined){
-				this.buffer.splice(data.index,data.deleteCount,data.data);
-				this.wrapText(this.buffer.join(''));
+				buff.splice(data.index,data.deleteCount,data.data);
 			}
 			else if (data.deleteCount>0){
-				this.buffer.splice(data.index+data.offset,data.deleteCount);
-				this.wrapText(this.buffer.join(''));
+				buff.splice(data.index+data.offset,data.deleteCount);
 			}
-			this.caretPos = data.index + data.offset;
+			this.state.buffer = buff.join("");
+			this.state.caretPos = data.index + data.offset;
+			this.setText();
 		}
 	},
 	quit: function(){
 		
+	},
+
+	setWindowElementSize: function(){
+		this.insetElement.style.left = parseInt(0.05*this.width) +"px";
+		this.insetElement.style.top = parseInt(0.05*this.height) + "px";
+		this.insetElement.style.width = parseInt(0.9*this.width) +"px";
+		this.insetElement.style.height = parseInt(0.9*this.height) +"px";
+	},
+
+	setFontSize: function(){
+		this.prefixText.style.lineHeight = this.lineHeight;
+		this.prefixText.style.fontSize = this.state.fontSize;
+		this.prefixText.style.fontFamily = 'arial';
+		this.caret.style.fontSize = this.state.fontSize;
+		this.caret.style.lineHeight = this.lineHeight;
+		this.suffixText.style.lineHeight = this.lineHeight;
+		this.suffixText.style.fontSize = this.state.fontSize;
+		this.suffixText.style.fontFamily = 'arial';
+	},
+	setupWindow: function(){
+		this.insetElement = document.createElement("span");
+		this.insetElement.style.position = "absolute";
+		this.insetElement.style.display = "block";
+		this.setWindowElementSize();
+		this.element.appendChild(this.insetElement);
+		
+		this.startMarker = document.createElement("span");
+		this.startMarker.style.width = "0px";
+		this.startMarker.style.height = "0px";
+		this.startMarker.style.border = "none";
+		this.insetElement.appendChild(this.startMarker);
+
+		this.prefixText = document.createElement("p");
+		this.prefixText.id = "prefix";
+		
+		
+		this.prefixText.style.wordWrap = "break-word";
+		this.prefixText.style.display = "inline";
+		this.prefixText.innerHTML = "";//"Lorem ipsum dolor sit amet,<br> consectetur adipiscing elit.";//" Donec sollicitudin mattis metus, ut dignissim quam consequat id. Quisque massa est, scelerisque a diam nec, condimentum malesuada purus. Phasellus consectetur massa ut mollis sagittis. Nullam ullamcorper augue vitae tempor auctor.";//" Maecenas vitae semper ante. Donec ex justo, tempus eu convallis non, tincidunt nec arcu. Fusce mollis dui a mauris tempor efficitur. Nam eget mollis nulla. Suspendisse feugiat suscipit blandit. Interdum et malesuada fames ac ante ipsum primis in faucibus. Morbi scelerisque nec diam vel molestie. Mauris tristique cursus accumsan. Pellentesque commodo bibendum ex vitae viverra. Vestibulum vitae nisl est. Vivamus imperdiet pulvinar tempus. Proin nec velit metus.";
+		this.prefixText.style.textAlign = "justify";
+		this.insetElement.appendChild(this.prefixText);
+
+		this.caret = document.createElement("span");
+		//this.caret.className = "blinking-cursor";
+		
+		this.caret.style.border = "none";
+		//this.caret.innerHTML = "|";		
+		this.insetElement.appendChild(this.caret);
+
+
+		this.suffixText = document.createElement("p");
+		this.suffixText.id = "prefix";
+		
+		this.suffixText.style.textAlign = "justify";
+		this.suffixText.style.wordWrap = "break-word";
+		this.suffixText.style.display = "inline";
+		//this.suffixText.innerHTML = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sollicitudin mattis metus, ut dignissim quam consequat id. Quisque massa est, scelerisque a diam nec, condimentum malesuada purus. Phasellus consectetur massa ut mollis sagittis. Nullam ullamcorper augue vitae tempor auctor. Maecenas vitae semper ante. Donec ex justo, tempus eu convallis non, tincidunt nec arcu. Fusce mollis dui a mauris tempor efficitur. Nam eget mollis nulla. Suspendisse feugiat suscipit blandit. Interdum et malesuada fames ac ante ipsum primis in faucibus. Morbi scelerisque nec diam vel molestie. Mauris tristique cursus accumsan. Pellentesque commodo bibendum ex vitae viverra. Vestibulum vitae nisl est. Vivamus imperdiet pulvinar tempus. Proin nec velit metus.";
+		this.insetElement.appendChild(this.suffixText);
+		
+		this.endMarker = document.createElement("span");
+		this.insetElement.appendChild(this.endMarker);
+		this.element.appendChild(this.insetElement);
+		this.setFontSize();
+	},
+	isOverflowed: function(){
+    	return this.insetElement.scrollHeight > this.insetElement.clientHeight || this.insetElement.scrollWidth > this.insetElement.clientWidth;
 	}
+	/*blinkCaret: function(){
+		setInterval(function(){
+			this.showCaret();
+			setTimeout(this.hideCaret,400);
+		}, 900);
+	},
+
+	hideCaret:function(){
+		this.caret.style.border = "none";
+	},
+
+	showCaret:function(){
+		this.caret.style.border = "solid 1px black";
+	}*/
+
 
 });

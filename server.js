@@ -596,7 +596,7 @@ function initializeExistingControls(wsio){
 			wsio.emit('createControl', data);
 			zIndex = SAGE2Items.widgets.numItems;
 			var radialGeometry = {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2};
-			
+
 			if (data.hasSideBar === true) {
 				var shapeData = {
 					radial:{
@@ -615,8 +615,7 @@ function initializeExistingControls(wsio){
 			else{
 				interactMgr.addGeometry(data.id, "widgets", "circle", radialGeometry, true, zIndex, data);
 			}
-			
-			
+
 			/*interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, true, zIndex, data);
 			if (data.hasSideBar === true) {
 				interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, true, zIndex, data);
@@ -2678,9 +2677,11 @@ function wsReleasedControlId(wsio, data) {
 
 function wsCreateAppClone(wsio, data) {
 	var app = SAGE2Items.applications.list[data.id];
-
+	mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 	createAppFromDescription(app, function(appInstance, videohandle) {
 		appInstance.id = getUniqueAppId();
+		appInstance.left = appInstance.left + 20;
+		appInstance.top = appInstance.top + 20;
 		if (appInstance.animation) {
 			var i;
 			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
@@ -2690,7 +2691,6 @@ function wsCreateAppClone(wsio, data) {
 				}
 			}
 		}
-
 		handleNewApplication(appInstance, videohandle);
 	});
 	/*
@@ -2868,15 +2868,15 @@ function wsUpdateApplicationPosition(wsio, data) {
 	}
 	if (app === undefined || app === null) return;
 
-	var titleBarHeight = config.ui.titleBarHeight;
+	/*var titleBarHeight = config.ui.titleBarHeight;
 	if (data.portalId !== undefined && data.portalId !== null) {
 		titleBarHeight = remoteSharingSessions[data.portalId].portal.titleBarHeight;
-	}
+	}*/
 	app.left = data.appPositionAndSize.elemLeft;
 	app.top = data.appPositionAndSize.elemTop;
 	app.width = data.appPositionAndSize.elemWidth;
 	app.height = data.appPositionAndSize.elemHeight;
-	setItemPosition(data.appPositionAndSize, "applications");
+	setItemPosition(data.appPositionAndSize, "applications", data.portalId);
 	if (SAGE2Items.renderSync.hasOwnProperty(app.id)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
@@ -2899,17 +2899,17 @@ function wsUpdateApplicationPositionAndSize(wsio, data) {
 	}
 	if (app === undefined || app === null) return;
 
-	var titleBarHeight = config.ui.titleBarHeight;
+	/*var titleBarHeight = config.ui.titleBarHeight;
 	if (data.portalId !== undefined && data.portalId !== null) {
 		titleBarHeight = remoteSharingSessions[data.portalId].portal.titleBarHeight;
-	}
+	}*/
 	app.left = data.appPositionAndSize.elemLeft;
 	app.top = data.appPositionAndSize.elemTop;
 	app.width = data.appPositionAndSize.elemWidth;
 	app.height = data.appPositionAndSize.elemHeight;
-	var im = findInteractableManager(data.appPositionAndSize.elemId);
+	//var im = findInteractableManager(data.appPositionAndSize.elemId);
 	//im.editGeometry(app.id, "applications", "rectangle", {x: app.left, y: app.top, w: app.width, h: app.height+titleBarHeight});
-	setItemPositionAndSize(data.appPositionAndSize, "applications");
+	setItemPositionAndSize(data.appPositionAndSize, "applications", data.portalId);
 	handleApplicationResize(app.id);
 	if (SAGE2Items.renderSync.hasOwnProperty(app.id)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
@@ -3062,7 +3062,7 @@ function wsAddNewControl(wsio, data) {
 
 	var zIndex = SAGE2Items.widgets.numItems;
 	var radialGeometry = {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2};
-			
+
 	if (data.hasSideBar === true) {
 		var shapeData = {
 			radial:{
@@ -3092,56 +3092,6 @@ function wsAddNewControl(wsio, data) {
 	addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application: {id: app.id, type: app.application}}, time: Date.now()});
 }
 
-/*
-function wsSelectedControlId(wsio, data){ // Get the id of a ctrl widgetbar or ctrl element(button and so on)
-	var regTI = /textInput/;
-	var regSl = /slider/;
-	var regButton = /button/;
-	if (data.ctrlId !== null) { // If a button or a slider is pressed, release the widget itself so that it is not picked up for moving
-		remoteInteraction[data.addr].releaseControl();
-	}
-	//console.log("lock:", remoteInteraction[data.addr].lockedControl() );
-	var lockedControl = remoteInteraction[data.addr].lockedControl();
-	if (lockedControl){
-		//If a text input widget was locked, drop it
-		var appdata = {ctrlId:lockedControl.ctrlId, appId:lockedControl.appId};
-		broadcast('dropTextInputControl', appdata);
-		remoteInteraction[data.addr].dropControl();
-	}
-	if (regButton.test(data.ctrlId) || regTI.test(data.ctrlId) || regSl.test(data.ctrlId)) {
-		var appData = {ctrlId:data.ctrlId, appId:data.appId, instanceID:data.instanceID};
-		remoteInteraction[data.addr].lockControl(appData);
-		if (regSl.test(appData.ctrlId) && /knob/.test(appData.ctrlId))
-			broadcast('sliderKnobLockAction', appData);
-	}
-}
-
-function wsReleasedControlId(wsio, data){
-	var regSl = /slider/;
-	var regButton = /button/;
-	if (data.ctrlId !==null && remoteInteraction[data.addr].lockedControl() !== null &&(regSl.test(data.ctrlId) || regButton.test(data.ctrlId))) {
-		remoteInteraction[data.addr].dropControl();
-		broadcast('executeControlFunction', {ctrlId: data.ctrlId, appId: data.appId, instanceID: data.instanceID}, 'receivesWidgetEvents');
-
-		var app;
-		if(data.ctrlId.indexOf("buttonCloseApp") >= 0) {
-			app = findAppById(data.appId);
-			if(app !== null) {
-				addEventToUserLog(data.addr, {type: "delete", data: {application: {id: app.id, type: app.application}}, time: Date.now()});
-			}
-		}
-		else if(data.ctrlId.indexOf("buttonCloseWidget") >= 0) {
-			app = findAppById(data.appId);
-			if(app !== null) {
-				addEventToUserLog(data.addr, {type: "widgetMenu", data: {action: "close", application: {id: app.id, type: app.application}}, time: Date.now()});
-			}
-		}
-		else {
-			addEventToUserLog(data.addr, {type: "widgetAction", data: {application: data.appId, widget: data.ctrlId}, time: Date.now()});
-		}
-	}
-}
-*/
 
 function wsCloseAppFromControl(wsio, data){
 	deleteApplication(data.appId);
@@ -3181,7 +3131,6 @@ function getNewWindowPosition(seedPosition){
 	return newWindowPosition;
 }
 */
-
 
 function loadConfiguration() {
 	var configFile = null;
@@ -4172,7 +4121,7 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 	var bottomMargin = config.totalHeight - ctrl.height;
 	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2;
-	var radialGeometry = {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2}
+	var radialGeometry = {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2};
 	if (ctrl.hasSideBar === true) {
 		var shapeData = {
 			radial:{
@@ -4191,7 +4140,7 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 	else{
 		interactMgr.editGeometry(ctrl.id, "widgets", "circle", radialGeometry);
 	}
-			
+
 	/*interactMgr.editGeometry(ctrl.id+"_radial", "widgets", "circle", {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2});
 	if(ctrl.hasSideBar === true) {
 		interactMgr.editGeometry(ctrl.id+"_sidebar", "widgets", "rectangle", {x: ctrl.left+ctrl.height, y: ctrl.top+(ctrl.height/2)-(ctrl.barHeight/2), w: ctrl.width-ctrl.height, h: ctrl.barHeight});
@@ -4459,7 +4408,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 				pointerPressOnAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt);
 			}
 			else{
-				pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);	
+				pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			}
 			break;
 		case "portals":
@@ -4737,7 +4686,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			}
 			else{
 				var elemCtrl = SAGE2Items.widgets.list[obj.data.id+uniqueID+"_controls"];
-				console.log("widget->",elemCtrl);
+				//console.log("widget->", elemCtrl);
 				if (!elemCtrl) {
 					broadcast('requestNewControl', {elemId: obj.data.id, user_id: uniqueID, user_label: sagePointers[uniqueID]? sagePointers[uniqueID].label : "", x: pointerX, y: pointerY, date: Date.now() });
 				}
@@ -5283,10 +5232,10 @@ function removeExistingHoverCorner(uniqueID, portalId) {
 function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	var app = SAGE2Items.applications.list[moveApp.elemId];
 
-	var titleBarHeight = config.ui.titleBarHeight;
+	/*var titleBarHeight = config.ui.titleBarHeight;
 	if (portalId !== undefined && portalId !== null) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
-	}
+	}*/
 	var im = findInteractableManager(moveApp.elemId);
 	var backgroundObj = im.searchGeometry({x: moveApp.elemLeft-1, y: moveApp.elemTop-1});
 	if (backgroundObj!== null) {
@@ -5295,7 +5244,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 		}
 	}
 	//im.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+titleBarHeight});
-	setItemPosition(moveApp, "applications");
+	setItemPosition(moveApp, "applications", portalId);
 	if (SAGE2Items.renderSync.hasOwnProperty(moveApp.elemId)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
 		if(app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
@@ -5311,7 +5260,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(moveApp);
 
 	for (var idx=0; idx<updatedStickyItems.length; idx++) {
-		var stickyItem = updatedStickyItems[idx];
+		//var stickyItem = updatedStickyItems[idx];
 		//im.editGeometry(stickyItem.elemId, "applications", "rectangle", {x: stickyItem.elemLeft, y: stickyItem.elemTop, w: stickyItem.elemWidth, h: stickyItem.elemHeight+config.ui.titleBarHeight});
 		setItemPosition(updatedStickyItems[idx], "applications");
 	}
@@ -5320,13 +5269,13 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	var app = SAGE2Items.applications.list[resizeApp.elemId];
 
-	var titleBarHeight = config.ui.titleBarHeight;
+	/*var titleBarHeight = config.ui.titleBarHeight;
 	if (portalId !== undefined && portalId !== null) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
-	}
-	var im = findInteractableManager(resizeApp.elemId);
+	}*/
+	//var im = findInteractableManager(resizeApp.elemId);
 	//im.editGeometry(resizeApp.elemId, "applications", "rectangle", {x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight+titleBarHeight});
-	setItemPositionAndSize(resizeApp, "applications");
+	setItemPositionAndSize(resizeApp, "applications", portalId);
 	handleApplicationResize(resizeApp.elemId);
 	if (SAGE2Items.renderSync.hasOwnProperty(resizeApp.elemId)) {
 		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
@@ -5442,14 +5391,14 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			dropSelectedItem(uniqueID, true, portal.id);
 			break;
 		case "applications":
-			var click = remoteInteraction[uniqueID].completePointerClick(sagePointers[uniqueID].label, pointerX,pointerY);
-			console.log(click, obj.id,obj.data.id+"window",obj.id === obj.data.id+"window" );
-			if (click !==null && data.button === "left" && obj.id === obj.data.id+"window"){ 
+			var click = remoteInteraction[uniqueID].completePointerClick(sagePointers[uniqueID].label, pointerX, pointerY);
+			console.log(click, obj.id, obj.data.id+"window", obj.id === obj.data.id+"window");
+			if (click !==null && data.button === "left" && obj.id === obj.data.id+"window"){
 				// A click was made on app window and it was expected by its annotation window
-				var noteCredentials = annotations.setMarkerPosition(obj.data,click);
+				var noteCredentials = annotations.setMarkerPosition(obj.data, click);
 				if (noteCredentials!==null){
 					broadcast('setAnnotationMarker', noteCredentials, 'requiresFullApps');
-				}	
+				}
 			}
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
@@ -6079,7 +6028,7 @@ function sendKeyUpToApplication(uniqueID, app, localPt, data) {
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	if (fileBufferManager.hasFileBufferForApp(app.id)){
 		event.type = 'bufferUpdate';
-		event.data = fileBufferManager.insertChar({appId:app.id,code:data.code,printable:false});
+		event.data = fileBufferManager.insertChar({appId:app.id, code:data.code, printable:false});
 	}
 	broadcast('eventInItem', event);
 
@@ -6201,7 +6150,7 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
 	if (fileBufferManager.hasFileBufferForApp(app.id)){
 		event.type = 'bufferUpdate';
-		event.data = fileBufferManager.insertChar({appId:app.id,code:data.code,printable:true});
+		event.data = fileBufferManager.insertChar({appId:app.id, code:data.code, printable:true});
 	}
 	broadcast('eventInItem', event);
 
@@ -6600,7 +6549,7 @@ function deleteApplication(appId, portalId) {
 			broadcast('eventInAnnotationWindow', event, 'receivesInputEvents');
 		}
 	}
-	
+
 }
 */
 
@@ -6799,12 +6748,12 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		}
 	}
 	var click = remoteInteraction[uniqueID].completePointerClick(elem,sagePointers[uniqueID].label, pointerX,pointerY);
-	if (click !==null && elem!== null && data.button === "left"){ 
+	if (click !==null && elem!== null && data.button === "left"){
 		// A click was made on app window and it was expected by its annotation window
 		var noteCredentials = annotations.setMarkerPosition(elem,click);
 		if (noteCredentials!==null){
 			broadcast('setAnnotationMarker', noteCredentials, 'requiresFullApps');
-		}	
+		}
 	}
 
 }
@@ -7325,11 +7274,11 @@ function handleNewApplication(appInstance, videohandle) {
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
 	var appWindowGeometry = {x: appInstance.left, y: appInstance.top, w: appInstance.width, h: appInstance.height+config.ui.titleBarHeight};
 	if (appInstance.annotation === true){
-		var annotationWindow = annotations.loadAnnotations(appInstance,config);
+		var annotationWindow = annotations.loadAnnotations(appInstance, config);
 		if (annotationWindow!==undefined && annotationWindow !== null){
 			annotationWindow.zIndex = zIndex;
 			var noteButton = annotationWindow.button;
-			broadcast('createAnnotationWindow',annotationWindow);
+			broadcast('createAnnotationWindow', annotationWindow);
 			var annotationWindowGeometry = {x: annotationWindow.left, y: annotationWindow.top, w: annotationWindow.width, h: annotationWindow.height};
 			var annotationButtonGeometry = {x: noteButton.left, y:noteButton.top, w: noteButton.width, h: noteButton.height};
 			var shapeData = {
@@ -7353,9 +7302,8 @@ function handleNewApplication(appInstance, videohandle) {
 		}
 	}
 	else{
-		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", appWindowGeometry, true, zIndex, appInstance);	
+		interactMgr.addGeometry(appInstance.id, "applications", "rectangle", appWindowGeometry, true, zIndex, appInstance);
 	}
-	
 
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
@@ -7369,9 +7317,8 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle", {x: startButtons+buttonsPad+oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {x: appInstance.width-cornerSize, y: appInstance.height+config.ui.titleBarHeight-cornerSize, w: cornerSize, h: cornerSize}, 2);
 	initializeLoadedVideo(appInstance, videohandle);
-	
 
-}	
+}
 
 function handleNewApplicationInDataSharingPortal(appInstance, videohandle, portalId) {
 	broadcast('createAppWindowInDataSharingPortal', {portal: portalId, application: appInstance});
@@ -7757,10 +7704,14 @@ function showOrHideWidgetLinks(data){
 	}
 }
 
-function setItemPosition(updatedMoveItem, layerId){
+function setItemPosition(updatedMoveItem, layerId, portalId){
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portalId !== undefined && portalId !== null) {
+		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
+	}
 	broadcast('setItemPosition', updatedMoveItem);
 	var im = findInteractableManager(updatedMoveItem.elemId);
-	var itemWindowGeometry = {x: updatedMoveItem.elemLeft, y: updatedMoveItem.elemTop, w: updatedMoveItem.elemWidth, h: updatedMoveItem.elemHeight+config.ui.titleBarHeight};
+	var itemWindowGeometry = {x: updatedMoveItem.elemLeft, y: updatedMoveItem.elemTop, w: updatedMoveItem.elemWidth, h: updatedMoveItem.elemHeight+titleBarHeight};
 	if (layerId === "applications"){
 		var app = SAGE2Items.applications.list[updatedMoveItem.elemId];
 		if (app.annotation === true){
@@ -7791,20 +7742,22 @@ function setItemPosition(updatedMoveItem, layerId){
 			}
 		}
 		else{
-			im.editGeometry(updatedMoveItem.elemId, layerId, "rectangle", itemWindowGeometry);	
+			im.editGeometry(updatedMoveItem.elemId, layerId, "rectangle", itemWindowGeometry);
 		}
 	}
 	else{
 		im.editGeometry(updatedMoveItem.elemId, layerId, "rectangle", itemWindowGeometry);
 	}
-	
-	
 }
 
-function setItemPositionAndSize(updatedItem, layerId){
+function setItemPositionAndSize(updatedItem, layerId, portalId){
+	var titleBarHeight = config.ui.titleBarHeight;
+	if (portalId !== undefined && portalId !== null) {
+		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
+	}
 	broadcast('setItemPositionAndSize', updatedItem, 'receivesWindowModification');
 	var im = findInteractableManager(updatedItem.elemId);
-	var itemWindowGeometry = {x: updatedItem.elemLeft, y: updatedItem.elemTop, w: updatedItem.elemWidth, h: updatedItem.elemHeight+config.ui.titleBarHeight};
+	var itemWindowGeometry = {x: updatedItem.elemLeft, y: updatedItem.elemTop, w: updatedItem.elemWidth, h: updatedItem.elemHeight+titleBarHeight};
 	if (layerId === "applications"){
 		var app = SAGE2Items.applications.list[updatedItem.elemId];
 		if (app.annotation === true){
@@ -7835,7 +7788,7 @@ function setItemPositionAndSize(updatedItem, layerId){
 			}
 		}
 		else{
-			im.editGeometry(updatedItem.elemId, layerId, "rectangle", itemWindowGeometry);	
+			im.editGeometry(updatedItem.elemId, layerId, "rectangle", itemWindowGeometry);
 		}
 	}
 	else{
@@ -7847,16 +7800,16 @@ function toggleAnnotationWindow(annotationWindow){
 	var updatedAnnotationWindow;
 	if (annotationWindow.show){
 		updatedAnnotationWindow = annotations.hideAnnotationWindow(annotationWindow.appId);
-		broadcast('hideAnnotationWindow',updatedAnnotationWindow,'receivesWindowModification')
+		broadcast('hideAnnotationWindow', updatedAnnotationWindow, 'receivesWindowModification');
 	}
 	else{
 		updatedAnnotationWindow = annotations.showAnnotationWindow(annotationWindow.appId);
-		broadcast('showAnnotationWindow',updatedAnnotationWindow,'receivesWindowModification');
+		broadcast('showAnnotationWindow', updatedAnnotationWindow, 'receivesWindowModification');
 	}
 	var im = findInteractableManager(annotationWindow.appId);
 	var app = SAGE2Items.applications.list[annotationWindow.appId];
 	var itemWindowGeometry = {x: app.left, y: app.top, w: app.width, h: app.height+config.ui.titleBarHeight};
-	
+
 	if (updatedAnnotationWindow!==undefined && updatedAnnotationWindow!==null){
 		var noteButton = updatedAnnotationWindow.button;
 		var annotationWindowGeometry = {x: updatedAnnotationWindow.left, y: updatedAnnotationWindow.top, w: updatedAnnotationWindow.width, h: updatedAnnotationWindow.height};
@@ -7880,16 +7833,14 @@ function toggleAnnotationWindow(annotationWindow){
 		};
 		im.editComplexGeometry(annotationWindow.appId, "applications", shapeData);
 	}
-		
-		
 
-};
+}
 
 function wsAnnotationUpdate(wsio, noteItem){
 	var annotationWindow = annotations.getAnnotationWindowForApp(noteItem.credentials.appId);
 	if (annotationWindow){
 		annotations.saveTextForAnnotation(annotationWindow.filename, noteItem.credentials.id, noteItem.text);
-	} 
+	}
 }
 
 function wsRequestForNewNote(wsio, data){
@@ -7898,7 +7849,7 @@ function wsRequestForNewNote(wsio, data){
 		appId:data.appId,
 		userLabel: sagePointers[data.uniqueID]? sagePointers[data.uniqueID].label : "Sage User",
 		createdOn: Date.now(),
-		marker:data.requestMarker?  {position:{x:2,y:2},page:app.data.page || 1} : null,		
+		marker:data.requestMarker?  {position:{x:2, y:2}, page:app.data.page || 1} : null
 	};
 
 	var noteItem = annotations.addNewNote(credentials);
@@ -7908,21 +7859,21 @@ function wsRequestForNewNote(wsio, data){
 function wsRequestForNoteDeletion(wsio, credentials){
 	var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
 	if (annotationWindow){
-		annotations.deleteAnnotationFromFile(annotationWindow.filename,credentials.id);
+		annotations.deleteAnnotationFromFile(annotationWindow.filename, credentials.id);
 	}
-	broadcast ('deleteNote', credentials, 'requiresFullApps');
+	broadcast('deleteNote', credentials, 'requiresFullApps');
 }
 
 function wsSetNoteAsEditable(wsio, data){
 	annotations.setNoteAsEditable(data);
-	broadcast('makeNoteEditable', data,'requiresFullApps');
+	broadcast('makeNoteEditable', data, 'requiresFullApps');
 }
 
 function wsRequestForMarkerDeletion (wsio, credentials){
 	if (credentials.marker!==null){
 		var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
 		if (annotationWindow){
-			annotations.deleteMarkerFromAnnotation(annotationWindow.filename,credentials.id);
+			annotations.deleteMarkerFromAnnotation(annotationWindow.filename, credentials.id);
 		}
 		credentials.marker = null;
 		annotations.setNoteAsEditable(credentials);
@@ -7934,7 +7885,7 @@ function wsRequestForMarkerAddition (wsio, credentials){
 	if (credentials.marker===null){
 		var app = SAGE2Items.applications.list[credentials.appId];
 		var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
-		credentials.marker = {position:{x:2,y:2},page:app.data.page || 1};
+		credentials.marker = {position:{x:2, y:2}, page:app.data.page || 1};
 		if (annotationWindow){
 			annotations.saveMarkerForAnnotation(annotationWindow.filename, credentials.id, credentials.marker);
 		}

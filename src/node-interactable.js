@@ -150,8 +150,6 @@ InteractableManager.prototype.addComplexGeometry = function(id, layerId, shapeDa
 		this.layers[layerId].objects.insert(pkg);
 		complexPkg[key] = pkg;
 	}
-
-	
 	this.interactableObjects[layerId][id] = complexPkg;
 };
 
@@ -285,7 +283,6 @@ InteractableManager.prototype.editVisibility = function(id, layerId, visible, pa
 			}
 		}
 	}
-	
 };
 
 
@@ -438,7 +435,7 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 
 /**
 * Get method for the zIndex of an Object
-* @method getZIndexOfObj 
+* @method getZIndexOfObj
 * @param obj {Object} pkg information of the geometric object
 */
 
@@ -456,7 +453,7 @@ function getZIndexOfObj(obj){
 }
 /**
 * Set method for the zIndex of an Object
-* @method setZIndexOfObj 
+* @method setZIndexOfObj
 * @param obj {Object} pkg information of the geometric object
 * @param zIndex {Integer} determines ordering of the geometries within a given layers
 */
