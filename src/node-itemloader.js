@@ -27,6 +27,7 @@ var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = require('node-demux');
+var mv           = require('mv');
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
 var assets       = require('../src/node-assets');          // asset management
@@ -771,7 +772,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		localPath    = path.join(this.publicDir, "uploads", dir, newfilename);
 	}
 
-	fs.rename(file.path, localPath, function(err1) {
+	mv(file.path, localPath, function(err1) {
 		if (err1) throw err1;
 
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
