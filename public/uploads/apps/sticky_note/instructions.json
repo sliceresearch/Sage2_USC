@@ -1,12 +1,19 @@
 {
 	"main_script": "sticky_note.js",
-        "icon": "sticky_note.png",
-	"width": 600,
-	"height": 600,
+    "icon": "sticky_note.png",
+	"width": 300,
+	"height": 300,
 	"animation": true,
 	"sticky": true,
 	"dependencies": [
 	],
+	"load": {
+		"buffer": "",
+		"caretPos": 0,
+		"bufferEmpty": false,
+		"fontSize": "16px",
+		"fileName": "sticky_note"
+	},
 	"title": "Sticky Note",
 	"version": "1.0.0",
 	"description": "It sticks!",

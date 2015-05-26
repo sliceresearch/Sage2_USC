@@ -12,6 +12,7 @@
  * @module annotationSystem
  */
 
+"use strict";
 
 var fs        = require('fs');
 var path      = require('path');
@@ -64,7 +65,7 @@ annotationSystem.prototype.getAllAnnotationsForFile = function(filename){
         annotations = "";
     }
     return annotations;
-}
+};
 
 annotationSystem.prototype.getAnnotationForFile = function(filename, annotationID){
     var annotation = "";
@@ -74,20 +75,21 @@ annotationSystem.prototype.getAnnotationForFile = function(filename, annotationI
         console.error("Annotation not found for " + filename + ":" + annotationID);
     }
     return annotation;
-}
+};
+
 annotationSystem.prototype.saveAnnotationForFile = function(filename, annotationID, data){
     var key = "/" + filename + "/" + annotationID;
-    this.push(key,data,true);
+    this.push(key, data, true);
 };
 
 annotationSystem.prototype.saveMarkerForAnnotation = function(filename, annotationID, markerData){
     var key = "/" + filename + "/" + annotationID + "/marker";
-    this.push(key,markerData,true);
+    this.push(key, markerData, true);
 };
 
 annotationSystem.prototype.saveTextForAnnotation = function(filename, annotationID, textData){
     var key = "/" + filename + "/" + annotationID + "/text";
-    this.push(key,textData,true);
+    this.push(key, textData, true);
 };
 
 annotationSystem.prototype.deleteAnnotationFromFile = function(filename, annotationID){
@@ -149,7 +151,7 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         },
         addSummaryNoteButton: {
             id:appInstance.id + "_addSummaryNote",
-            left: 12 + appInstance.width*0.20 ,
+            left: 12 + appInstance.width*0.10,
             top:appInstance.height - config.ui.titleBarHeight - 3,
             width:appInstance.width*0.20,
             height:config.ui.titleBarHeight,
@@ -184,7 +186,7 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
     })() : 0;
     annotationWindow.button.caption = "Show notes (" + annotationWindow.annotationCount + ")";
     this.annotationWindows[appInstance.id] = annotationWindow;
-    this.editableNote[appInstance.id] = {}; 
+    this.editableNote[appInstance.id] = {};
     this.config = config;
     return annotationWindow;
 };
@@ -200,11 +202,11 @@ annotationSystem.prototype.showAnnotationWindow = function(appId){
         if (annotationWindow.show === false){
             annotationWindow.show = true;
             annotationWindow.button.left += annotationWindow.width;
-            return {appId:appId, show:annotationWindow.show, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
+            return {appId:appId, show:annotationWindow.show, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
         }
     }
     return null;
-}
+};
 
 annotationSystem.prototype.hideAnnotationWindow = function(appId){
     if (this.annotationWindows[appId]) {
@@ -213,11 +215,11 @@ annotationSystem.prototype.hideAnnotationWindow = function(appId){
             annotationWindow.show = false;
             annotationWindow.button.left -= annotationWindow.width;
             this.setAllNotesAsNonEditable(appId);
-            return {appId:appId, show:annotationWindow.show, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
+            return {appId:appId, show:annotationWindow.show, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
         }
     }
     return null;
-}
+};
 
 
 annotationSystem.prototype.updateAnnotationWindowPosition = function(data){
@@ -229,7 +231,7 @@ annotationSystem.prototype.updateAnnotationWindowPosition = function(data){
     annotationWindow.top = data.elemTop + this.config.ui.titleBarHeight;
     annotationWindow.button.left = annotationWindow.left + buttonOffsetLeft;
     annotationWindow.button.top = annotationWindow.top + buttonOffsetTop;
-    return {appId:data.elemId, show:annotationWindow.show, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
+    return {appId:data.elemId, show:annotationWindow.show, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}};
 };
 
 annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data){
@@ -243,7 +245,7 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
     annotationWindow.button.left = annotationWindow.left + buttonOffsetLeft;
     annotationWindow.button.top = annotationWindow.top + buttonOffsetTop;
     annotationWindow.addNoteButton.top = data.elemHeight - this.config.ui.titleBarHeight - 3;
-    return {appId:data.elemId, left:annotationWindow.left,top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left,top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
+    return {appId:data.elemId, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
 };
 
 annotationSystem.prototype.addNewNote = function(credentials){
@@ -253,10 +255,10 @@ annotationSystem.prototype.addNewNote = function(credentials){
     annotationWindow.nextId += 1;
     this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
     this.saveAnnotationForFile(annotationWindow.filename, credentials.id, {
-        id: credentials.id, 
-        userLabel: credentials.userLabel, 
-        createdOn: credentials.createdOn, 
-        marker: credentials.marker, 
+        id: credentials.id,
+        userLabel: credentials.userLabel,
+        createdOn: credentials.createdOn,
+        marker: credentials.marker,
         text: null
     });
     return credentials;
@@ -265,7 +267,7 @@ annotationSystem.prototype.addNewNote = function(credentials){
 
 annotationSystem.prototype.setNoteAsEditable = function(credentials){
     if (!this.annotationWindows[credentials.appId]) return null;
-    console.log(credentials.appId,!this.annotationWindows[credentials.appId])
+    console.log(credentials.appId, !this.annotationWindows[credentials.appId]);
     this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
 };
 
@@ -289,11 +291,11 @@ annotationSystem.prototype.getAnnotationWindowForApp = function(appId){
 };
 
 
-annotationSystem.prototype.setMarkerPosition = function(elem,click){
+annotationSystem.prototype.setMarkerPosition = function(elem, click){
     if (!this.annotationWindows[elem.id]) return null;
     var annotationWindow = this.annotationWindows[elem.id];
     if (elem.id in this.editableNote){
-        console.log(click.userLabel.toString(), this.editableNote[elem.id],click.userLabel.toString() in this.editableNote[elem.id]);
+        console.log(click.userLabel.toString(), this.editableNote[elem.id], click.userLabel.toString() in this.editableNote[elem.id]);
         if (click.userLabel.toString() in this.editableNote[elem.id]){
             var noteData = this.editableNote[elem.id][click.userLabel.toString()];
             if (!noteData.marker) return null;
@@ -334,7 +336,7 @@ annotationSystem.prototype.findAnnotationsUnderPointer = function(pointerX, poin
         }
     }
     return data;
-}
+};
 
 
 module.exports = annotationSystem;

@@ -118,7 +118,7 @@ SAGE2Annotations.prototype.makeButtonsForAnnotationWindow = function(data){
 	this.addSummaryNoteButton							= document.createElement("img");
 	this.addSummaryNoteButton.style.left 				= data.addSummaryNoteButton.left.toString() + "px";
 	this.addSummaryNoteButton.style.top 				= data.addSummaryNoteButton.top.toString() + "px";
-	//this.addSummaryNoteButton.style.width 				= data.addSummaryNoteButton.width.toString() + "px";
+	//this.addSummaryNoteButton.style.width 			= data.addSummaryNoteButton.width.toString() + "px";
 	this.addSummaryNoteButton.style.height 				= data.addSummaryNoteButton.height.toString() + "px";
 	this.addSummaryNoteButton.id 						= data.addSummaryNoteButton.id;
 	this.addSummaryNoteButton.display 					= "block";
@@ -673,7 +673,7 @@ TextArea.prototype.toggleNoteType = function(){
 		this.toggleNoteBox.src = "images/removeMarker.svg";
 	}
 	else{
-		this.element.style.background = "#AAFFAA";
+		this.element.style.background = "#BBEEBB";
 		this.toggleNoteBox.src = "images/addMarker.svg";
 	}
 };
@@ -773,7 +773,7 @@ TextArea.prototype.init = function(div, data){
 	data.height = 0.85 * data.height;
 	this.element = document.createElement("span");
 	this.element.id = data.id;
-	this.element.style.background = "#AAFFAA";
+	this.element.style.background = "#BBEEBB";
 	this.element.style.position = "absolute";
 	this.element.style.left = parseInt(data.left) + "px";
 	this.element.style.top = parseInt(data.top) + "px";

@@ -831,7 +831,7 @@ function setupListeners() {
 				app.requestForClone = false;
 				console.log("cloning app:" + appId);
 				if (isMaster)
-					wsio.emit('createAppClone', {id : appId, cloneData: app.cloneData});
+					wsio.emit('createAppClone', {id : appId, state: app.state});
 			}
 
 		}

@@ -529,7 +529,7 @@ Interaction.prototype.cancelPointerClick = function(){
 /**
  *@method completePointerClick
  */
- 
+
 Interaction.prototype.completePointerClick = function(userLabel, pointerX, pointerY){
 	if (this.clickInProgress!==null && this.clickInProgress.x === pointerX && this.clickInProgress.y === pointerY){
 		this.clickInProgress = null;
