@@ -36,7 +36,6 @@ var sticky_note = SAGE2_App.extend( {
 		// Set refresh once every 2 sec.
 		//this.maxFPS = 1/2;
 
-		var _myself = this;
 		this.width = data.width;
 		this.height = data.height;
 		// Make the SVG element fill the app
@@ -46,7 +45,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.vw = 1000;
 		this.margin = 0.05*this.vw;
 		this.svg.attr("viewBox", "0,0," + this.vw + "," + this.vh);
-		this.backColor = [175,175,200];
+		this.backColor = [187,238,187];
 		this.lineHeight = 1.4;
 		
 		this.lineColor = this.backColor.diff(60);

@@ -1,8 +1,8 @@
 {
 	"main_script": "sticky_note.js",
-        "icon": "sticky_note.png",
-	"width": 600,
-	"height": 600,
+    "icon": "sticky_note.png",
+	"width": 300,
+	"height": 300,
 	"animation": true,
 	"sticky": true,
 	"dependencies": [
