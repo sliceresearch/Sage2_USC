@@ -69,7 +69,11 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 		logo.style.width  = "75%";
 	else
 		logo.style.height = "75%";
-	logo.src = "images/EVL-LAVA_UI.svg";
+	if (this.config.background.watermark.svg !== undefined) {
+		logo.src = this.config.background.watermark.svg;
+	} else {
+		logo.src = "images/EVL-LAVA_UI.svg";
+	}
 	applicationsDiv.appendChild(logo);
 };
 
