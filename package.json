@@ -59,6 +59,7 @@
 		"mv": "latest",
 		"ws": "latest",
 		"semver": "latest",
+		"fsmonitor": "latest",
 		"ytdl-core": "latest"
 	},
 	"devDependencies": {
