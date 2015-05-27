@@ -209,6 +209,22 @@ function initializeSage2Server() {
 		}
 	}
 
+	// Monitoring some folders (test)
+	sageutils.monitorFolders([
+		path.join(uploadsDirectory, "images"),
+		path.join(uploadsDirectory, "pdfs"),
+		path.join(uploadsDirectory, "videos")],
+		function(change) {
+			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			if (change.addedFiles.length > 0)      console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+			if (change.modifiedFiles.length > 0)   console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+			if (change.removedFiles.length > 0)    console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
+			if (change.addedFolders.length > 0)    console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
+			if (change.modifiedFolders.length > 0) console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
+			if (change.removedFolders.length > 0)  console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
+		}
+	);
+
 	// Initialize assets
 	assets.initialize(uploadsDirectory, 'uploads');
 
