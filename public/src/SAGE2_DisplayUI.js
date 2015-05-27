@@ -59,6 +59,7 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 
 	var applicationsDiv = document.getElementById('applicationsDiv');
 	var logo = document.createElement('img');
+	logo.style.opacity  = 0.4;
 	logo.style.position = "absolute";
 	logo.style.left     = "50%";
 	logo.style.top      = "50%";
@@ -69,10 +70,11 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 		logo.style.width  = "75%";
 	else
 		logo.style.height = "75%";
+	// If bacground watermark defined
 	if (this.config.background.watermark.svg !== undefined) {
 		logo.src = this.config.background.watermark.svg;
 	} else {
-		logo.src = "images/EVL-LAVA_UI.svg";
+		logo.src = "images/sage2.svg";
 	}
 	applicationsDiv.appendChild(logo);
 };
@@ -169,7 +171,7 @@ SAGE2DisplayUI.prototype.resize = function() {
 	if (window.innerWidth < 856) menuScale = window.innerWidth / 856;
 
 	var freeWidth   = window.innerWidth  - 25; // window width minus padding
-	var freeHeight  = window.innerHeight - 100 - 3 - (86*menuScale); // size of top SAGE2 logo, bottom margin, and bottom buttons
+	var freeHeight  = window.innerHeight - 20 - 3 - (86*menuScale); //  bottom margin, and bottom buttons
 	var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 
 	// Calculate new sizes
