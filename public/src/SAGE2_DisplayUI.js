@@ -321,19 +321,19 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	var appWindowTitle = document.createElement('div');
 	appWindowTitle.id = data.id + "_title";
-	appWindowTitle.className = "appWindowTitle";
-	appWindowTitle.style.left = "0px";
-	appWindowTitle.style.top = "0px";
-	appWindowTitle.style.width = Math.round(data.width * this.scale) + "px";
+	appWindowTitle.className    = "appWindowTitle";
+	appWindowTitle.style.left   = "0px";
+	appWindowTitle.style.top    = "0px";
+	appWindowTitle.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 	appWindowTitle.style.backgroundColor = "rgba(230, 230, 230, 1.0)";
 
 	var appWindowArea = document.createElement('div');
 	appWindowArea.id = data.id + "_area";
-	appWindowArea.className = "appWindowArea";
-	appWindowArea.style.left = "0px";
-	appWindowArea.style.top = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-	appWindowArea.style.width = Math.round(data.width * this.scale) + "px";
+	appWindowArea.className    = "appWindowArea";
+	appWindowArea.style.left   = "0px";
+	appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+	appWindowArea.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowArea.style.height = Math.round(data.height * this.scale) + "px";
 	appWindowArea.style.backgroundColor = "rgba(72, 72, 72, 1.0)";
 
@@ -349,15 +349,16 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 			appIcon.src = data.icon+"_512.jpg";
 		}, 1000);
 	};
+
 	if (data.icon) {
-		//appIcon.src = data.icon+"_512.png";
 		appIcon.src = data.icon+"_512.jpg";
 	}
 	else if (data.application === "media_stream" || data.application === "media_block_stream") {
 		appIcon.src = this.generateMediaStreamIcon(data.title, data.color);
 	}
 	else {
-		appIcon.src = "images/blank.png";
+		//appIcon.src = "images/blank.png";
+		appIcon.src = "images/unknownapp_512.png";
 	}
 
 	appWindowArea.appendChild(appIcon);
