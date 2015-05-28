@@ -66,13 +66,12 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 	logo.style.webkitTransform = "translate(-50%, -50%)";
 	logo.style.mozTransform    = "translate(-50%, -50%)";
 	logo.style.transform       = "translate(-50%, -50%)";
-	if ((this.config.totalWidth/this.config.totalWidth) <= this.logoAspect)
+	if ((this.config.totalWidth/this.config.totalHeight) <= this.logoAspect)
 		logo.style.width  = "75%";
 	else
 		logo.style.height = "75%";
 	// If bacground watermark defined
-	if (this.config.background.watermark !== undefined &&
-		this.config.background.watermark.svg !== undefined) {
+	if (this.config.background.watermark !== undefined && this.config.background.watermark.svg !== undefined) {
 		logo.src = this.config.background.watermark.svg;
 	} else {
 		logo.src = "images/sage2.svg";
