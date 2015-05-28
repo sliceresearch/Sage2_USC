@@ -79,7 +79,7 @@ var googlemaps = SAGE2_App.extend( {
 			disableDefaultUI: true,
 			zoomControl: false,
 			scaleControl: false,
-			scrollwheel: false
+			scrollwheel: false,
 		};
 		this.map = new google.maps.Map(this.element, mapOptions);
 		this.map.setTilt(45);
