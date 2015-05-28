@@ -71,7 +71,8 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 	else
 		logo.style.height = "75%";
 	// If bacground watermark defined
-	if (this.config.background.watermark.svg !== undefined) {
+	if (this.config.background.watermark !== undefined &&
+		this.config.background.watermark.svg !== undefined) {
 		logo.src = this.config.background.watermark.svg;
 	} else {
 		logo.src = "images/sage2.svg";
@@ -340,11 +341,12 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	var appIcon = document.createElement('img');
 	appIcon.id = data.id + "_icon";
 	appIcon.className = "appWindowIcon";
-	if (data.width < data.height) appIcon.style.width  = "100%";
-	else                          appIcon.style.height = "100%";
+	if (data.width < data.height)
+		appIcon.style.width  = "100%";
+	else
+		appIcon.style.height = "100%";
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
-			//appIcon.src = data.icon+"_512.png";
 			appIcon.src = data.icon+"_512.jpg";
 		}, 1000);
 	};
@@ -358,8 +360,6 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	else {
 		appIcon.src = "images/blank.png";
 	}
-
-	console.log(appIcon.src);
 
 	appWindowArea.appendChild(appIcon);
 	appWindow.appendChild(appWindowTitle);
