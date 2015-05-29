@@ -36,5 +36,13 @@
 		"127.0.0.1"
 	],
 	remote_sites: [
-	]
+	],
+	apis: {
+		libs: {
+			jquery:  "//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min",
+			d3web:   "//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min",
+			d3:      "/lib/d3.v3.min",
+			threejs: "/lib/three.min"
+		}
+	}
 }

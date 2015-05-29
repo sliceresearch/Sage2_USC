@@ -1038,8 +1038,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	parent.appendChild(windowItem);
 
 	// App launched in window
-	if(data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
-    if(data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+	if (data.application === "media_stream") wsio.emit('receivedMediaStreamFrame', {id: data.id});
+    if (data.application === "media_block_stream") wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
 
 	// convert url if hostname is alias for current origin
 	var url = cleanURL(data.url);
@@ -1077,7 +1077,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 //			console.log(url + "/" + data.application + ".js");
 //			document.head.appendChild(js);
 
-			console.log('Have to load:', url, data.url, data.application + ".js");
+			console.log('Have to load:', data.application + ".js");
+			console.log('Deps:', data.resrc);
+
 			System.import(data.application + "/" + data.application ).then(function(loadedApp) {
 				console.log('loading done', typeof loadedApp);
 				var newapp = new loadedApp();
@@ -1090,20 +1092,24 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		}
 
 		// load existing app
-		else {
-			var app = new window[data.application]();
-			app.init(init);
-			app.refresh(date);
+		// else {
+		// 	var app = new window[data.application]();
+		// 	app.init(init);
+		// 	app.refresh(date);
 
-			applications[data.id]   = app;
-			controlObjects[data.id] = app;
+		// 	applications[data.id]   = app;
+		// 	controlObjects[data.id] = app;
 
-			if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
-			if (data.application === "movie_player") setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
-		}
+		// 	if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+		// 	if (data.application === "movie_player") setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+		// }
 	}
 
+	console.log("Loading application", data.resrc);
+	loadApplication();
+
 	// load all dependencies
+	/*
 	if(data.resrc === undefined || data.resrc === null || data.resrc.length === 0){
 		loadApplication();
 	}
@@ -1149,7 +1155,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		// Start loading the first resource
 		loadResource(0);
 	}
-
+	*/
 	itemCount += 2;
 }
 
