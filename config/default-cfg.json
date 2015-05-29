@@ -9,7 +9,7 @@
 	background: {
 		color: "#333333",
 		watermark: {
-			svg: "images/EVL-LAVA.svg",
+			svg: "images/sage2.svg",
 			color: "rgba(255, 255, 255, 0.5)"
 		}
 	},

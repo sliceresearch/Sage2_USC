@@ -59,18 +59,23 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
 
 	var applicationsDiv = document.getElementById('applicationsDiv');
 	var logo = document.createElement('img');
+	logo.style.opacity  = 0.4;
 	logo.style.position = "absolute";
 	logo.style.left     = "50%";
 	logo.style.top      = "50%";
 	logo.style.webkitTransform = "translate(-50%, -50%)";
 	logo.style.mozTransform    = "translate(-50%, -50%)";
 	logo.style.transform       = "translate(-50%, -50%)";
-	if ((this.config.totalWidth/this.config.totalWidth) <= this.logoAspect)
+	if ((this.config.totalWidth/this.config.totalHeight) <= this.logoAspect)
 		logo.style.width  = "75%";
 	else
 		logo.style.height = "75%";
-	//logo.src = "images/EVL-LAVA_UI.svg";
-	logo.src = "images/sage2.svg";
+	// If bacground watermark defined
+	if (this.config.background.watermark !== undefined && this.config.background.watermark.svg !== undefined) {
+		logo.src = this.config.background.watermark.svg;
+	} else {
+		logo.src = "images/sage2.svg";
+	}
 	applicationsDiv.appendChild(logo);
 
 	// Show/Hide a menubr in the UI - hidden by default
@@ -173,7 +178,7 @@ SAGE2DisplayUI.prototype.resize = function() {
 	if (window.innerWidth < 856) menuScale = window.innerWidth / 856;
 
 	var freeWidth   = window.innerWidth  - 25; // window width minus padding
-	var freeHeight  = window.innerHeight - 50 - 3 - (86*menuScale); //  bottom margin, and bottom buttons
+	var freeHeight  = window.innerHeight - 20 - 3 - (86*menuScale); //  bottom margin, and bottom buttons
 	var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 
 	// Calculate new sizes
@@ -323,45 +328,45 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	var appWindowTitle = document.createElement('div');
 	appWindowTitle.id = data.id + "_title";
-	appWindowTitle.className = "appWindowTitle";
-	appWindowTitle.style.left = "0px";
-	appWindowTitle.style.top = "0px";
-	appWindowTitle.style.width = Math.round(data.width * this.scale) + "px";
+	appWindowTitle.className    = "appWindowTitle";
+	appWindowTitle.style.left   = "0px";
+	appWindowTitle.style.top    = "0px";
+	appWindowTitle.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 	appWindowTitle.style.backgroundColor = "rgba(230, 230, 230, 1.0)";
 
 	var appWindowArea = document.createElement('div');
 	appWindowArea.id = data.id + "_area";
-	appWindowArea.className = "appWindowArea";
-	appWindowArea.style.left = "0px";
-	appWindowArea.style.top = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-	appWindowArea.style.width = Math.round(data.width * this.scale) + "px";
+	appWindowArea.className    = "appWindowArea";
+	appWindowArea.style.left   = "0px";
+	appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+	appWindowArea.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowArea.style.height = Math.round(data.height * this.scale) + "px";
 	appWindowArea.style.backgroundColor = "rgba(72, 72, 72, 1.0)";
 
 	var appIcon = document.createElement('img');
 	appIcon.id = data.id + "_icon";
 	appIcon.className = "appWindowIcon";
-	if (data.width < data.height) appIcon.style.width  = "100%";
-	else                          appIcon.style.height = "100%";
+	if (data.width < data.height)
+		appIcon.style.width  = "100%";
+	else
+		appIcon.style.height = "100%";
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
-			//appIcon.src = data.icon+"_512.png";
 			appIcon.src = data.icon+"_512.jpg";
 		}, 1000);
 	};
+
 	if (data.icon) {
-		//appIcon.src = data.icon+"_512.png";
 		appIcon.src = data.icon+"_512.jpg";
 	}
 	else if (data.application === "media_stream" || data.application === "media_block_stream") {
 		appIcon.src = this.generateMediaStreamIcon(data.title, data.color);
 	}
 	else {
-		appIcon.src = "images/blank.png";
+		//appIcon.src = "images/blank.png";
+		appIcon.src = "images/unknownapp_512.png";
 	}
-
-	console.log(appIcon.src);
 
 	appWindowArea.appendChild(appIcon);
 	appWindow.appendChild(appWindowTitle);
