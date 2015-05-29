@@ -62,7 +62,7 @@ module.exports = atom_smasher = SAGE2_App.extend( {
 		this.scene.fog = new THREE.Fog( 0x050505, 3000, 3500 );
 
 		this.camera.position.x = 0; 	// for display size: 4230
-//		this.camera.position.x = 1700;	// for display size: 15360
+		// this.camera.position.x = 1700;	// for display size: 15360
 
 		this.camera.position.z = 1500;
 		this.renderer.setSize(this.width, this.height);
@@ -172,20 +172,19 @@ module.exports = atom_smasher = SAGE2_App.extend( {
 			this.lines[p] = new THREE.Line( this.lineGeometries[p], this.lineMaterials[p] );
 			this.scene.add( this.lines[p] );
 		}
-/*
-// Circle for testing aspect ratio problems
-var CircleMaterial = new THREE.MeshBasicMaterial({
-	color: 0x0000ff
-});
+		/*
+		// Circle for testing aspect ratio problems
+		var CircleMaterial = new THREE.MeshBasicMaterial({
+			color: 0x0000ff
+		});
 
-var radius = 150;
-var segments = 32;
+		var radius = 150;
+		var segments = 32;
 
-var circleGeometry = new THREE.CircleGeometry( radius, segments );				
-var circle = new THREE.Mesh( circleGeometry, CircleMaterial );
-this.scene.add( circle );
-*/
-		//
+		var circleGeometry = new THREE.CircleGeometry( radius, segments );				
+		var circle = new THREE.Mesh( circleGeometry, CircleMaterial );
+		this.scene.add( circle );
+		*/
 
 		this.renderer.setClearColor( this.scene.fog.color, 1 );
 
@@ -346,7 +345,6 @@ this.scene.add( circle );
 	},
 
 	startResize: function(date) {
-	
 	},
 	
 	resize: function(date) {

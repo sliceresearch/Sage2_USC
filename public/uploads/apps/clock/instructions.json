@@ -6,8 +6,6 @@
 	"animation": true,
 	"load": {
 	},
-	"dependencies": [
-	],
 	"title": "Clock",
 	"version": "1.0.0",
 	"description": "A 2D clock written in Canvas 2D",
