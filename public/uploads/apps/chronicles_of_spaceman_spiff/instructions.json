@@ -4,9 +4,6 @@
 	"width": 600,
 	"height": 220,
 	"animation": true,
-	"dependencies": [
-		"scripts/d3.v3.min.js"
-	],
 	"load": {
 		"timeDiff": 0
 	},

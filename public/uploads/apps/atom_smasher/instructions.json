@@ -1,11 +1,9 @@
 {
 	"main_script": "atom_smasher.js",
 	"icon": "threejs.webp",
-	"width": 1200,
-	"height": 1200,
+	"width": 800,
+	"height": 800,
 	"animation": true,
-	"dependencies": [
-	],
 	"title": "Atom Smasher",
 	"version": "1.0.0",
 	"description": "Three.js animation simulating particle collisions",

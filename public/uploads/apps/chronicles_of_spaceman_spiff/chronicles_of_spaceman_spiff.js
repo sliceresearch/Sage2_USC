@@ -8,10 +8,12 @@
 //
 // Copyright (c) 2014
 
-////////////////////////////////////////
+////
 // simple image of the day / calvin and hobbes comic viewer
 // Written by Andy Johnson - 2014
-////////////////////////////////////////
+////
+
+require('d3');
 
 module.exports = SAGE2_App.extend( {
     ////////////////////////////////////////

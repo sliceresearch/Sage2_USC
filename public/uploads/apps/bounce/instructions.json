@@ -4,8 +4,6 @@
 	"width": 400,
 	"height": 300,
 	"animation": true,
-	"dependencies": [
-	],
 	"load": {
 		"vel": 1.0,
 		"pos": [0.5, 0.5],

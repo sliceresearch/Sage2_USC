@@ -4,8 +4,6 @@
 	"width": 600,
 	"height": 600,
 	"animation": true,
-	"dependencies": [
-	],
 	"load": {
 		"mode": 0
 	},
