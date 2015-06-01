@@ -3830,11 +3830,18 @@ function showRequestDialog(flag) {
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	//console.log("pointer press on radial menu");
 
-	// Drag Content Browser only from radial menu
-	if (data.button === "left" && obj.type !== 'rectangle' ) {
-		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
-	}
+	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
+		// Pressing on radial menu button
+		console.log("Pressed radial button: " + obj.id);
+	} else {
+		// Not on a button
+		// Drag Content Browser only from radial menu
+		if (data.button === "left" && obj.type !== 'rectangle' ) {
+			obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
+		}
 
+	}
+	
 	data = { button: data.button, color: sagePointers[uniqueID].color };
 	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 }
@@ -5794,7 +5801,7 @@ function updateRadialMenu(uniqueID) {
 // Standard case: Checks for event down and up events to determine menu ownership of event
 function radialMenuEvent( data )
 {
-	broadcast('radialMenuEvent', data);
+	//broadcast('radialMenuEvent', data);
 }
 
 // Check for pointer move events that are dragging a radial menu (but outside the menu)
