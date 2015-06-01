@@ -887,7 +887,13 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 
 	// Iterate over all the clients of this app
 	for (key in SAGE2Items.renderSync[data.id].clients) {
-		var did     = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
+		var did = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
+		// Overview display
+		if (did === -1) {
+			// send the full frame to be displayed
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			continue;
+		}
 		var display = config.displays[did];
 		// app coordinates
 		var left    = stream.left;
