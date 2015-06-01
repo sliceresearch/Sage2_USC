@@ -717,7 +717,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 			{
 				console.log("Touch gesture: Three finger hold");
 			}
-			omicronManager.createRadialMenu( sourceID, posX, posY );
+			//omicronManager.createRadialMenu( sourceID, posX, posY );
+			omicronManager.pointerPress(address, posX, posY, { button: "right" } );
 		}
 		else if( e.flags === FLAG_SINGLE_CLICK )
 		{

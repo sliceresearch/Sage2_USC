@@ -577,7 +577,6 @@ function UIBuilder(json_cfg, clientID) {
 			width  = this.json_cfg.totalWidth / 2;
 			height = watermark.height;
 			watermark.width = width;
-			watermark.style.opacity = 0.4;
 		} else {
 			var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
 			var bbox = watermarkSVG.getBBox();
@@ -596,6 +595,7 @@ function UIBuilder(json_cfg, clientID) {
 				watermarkSVG.style.cursor = "none";
 			this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 		}
+		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";

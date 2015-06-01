@@ -15,21 +15,19 @@ var stereo_image = SAGE2_App.extend( {
 		this.resizeEvents = "onfinish";
 		this.moveEvents   = "onfinish";
 
+		this.stereoImgLoaded  = false;
+		this.manualOffset     = 0;
+		this.interleaveOffset = 0;
+		this.ctx = this.element.getContext('2d');
+
 		var _this = this;
 		this.stereoImg = new Image();
 		this.stereoImg.addEventListener('load', function() {
 			_this.stereoImgLoaded = true;
 			_this.sendResize(_this.stereoImg.naturalWidth/2, _this.stereoImg.naturalHeight);
-			_this.refresh(data.date);
 		}, false);
-		this.stereoImgLoaded = false;
-		this.manualOffset = 0;
-		this.interleaveOffset = 0;
+		this.stereoImg.src = this.state.file;
 
-		this.ctx = this.element.getContext('2d');
-
-		this.state.stereoMode = "interleave";
-		this.state.anaglyphMode = "Optimized+Anaglyph";
 		this.controls.addButton({type: "prev",sequenceNo: 7, id: "PreviousStereoMode"});
 		this.controls.addButton({type: "next",sequenceNo: 1, id: "NextStereoMode"});
 		var modeLabel =  {textual: true, label: "Mode", fill: "rgba(250,250,250,1.0)", animation: false};
@@ -205,17 +203,14 @@ var stereo_image = SAGE2_App.extend( {
 	},
 	
 	startMove: function(date) {
-		
 	},
 	
 	move: function(date) {
 		this.interleaveOffset = (this.sage2_y+this.manualOffset) % 2;
-		
 		this.refresh(date);
 	},
 	
 	startResize: function(date) {
-	
 	},
 	
 	resize: function(date) {
