@@ -1,0 +1,26 @@
+#!/bin/sh
+
+pkill -HUP chrome
+
+server="bigdaddy.evl.uic.edu"
+global_param="--new-window --window-size=5464,768 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors --no-default-browser-check"
+
+for i in {0..2}
+do
+	node="bigdaddy"$i
+	UDD="/tmp/chrome/$node"
+	#/bin/rm -fr $UDD
+	mkdir -p $UDD/Default
+	param="$global_param --user-data-dir=$UDD"
+	
+	env DISPLAY=:0.$i google-chrome $param "http://$server/display.html?clientID=$i" &
+done
+
+#sleep 3
+#set result=`env DISPLAY=:0.0 xdotool search --name "SAGE2: Display - Google Chrome"`;
+#set arr=($result);
+#echo "window: $arr[1]";
+#env DISPLAY=:0.0 xdotool windowmove $arr[1] 0 0' &
+#env DISPLAY=:0.0 xdotool mousemove --sync 10 10;
+#env DISPLAY=:0.0 xdotool mousemove --sync 0 0' &
+

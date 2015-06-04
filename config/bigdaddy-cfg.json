@@ -1,0 +1,94 @@
+{
+	name: "CAVE2Wall",
+	host: "bigdaddy.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		image: {
+			url: "images/background/chicago_skyline_iridium.jpg",
+			style: "fit"
+		},
+		watermark: {
+			svg: "images/EVL-logo.svg",
+			color: "rgba(255, 255, 255, 0.2)"
+		},
+		clip: true
+	},
+	ui: {
+		clock: 24,
+		show_url: true,
+		show_version: false,
+                noDropShadow: true,
+                auto_hide_ui: true,
+                auto_hide_delay: 30,
+                maxWindowWidth : 8192,
+                maxWindowHeight : 8192
+	},
+	resolution: {
+		width: 5464,
+		height: 767
+	},
+	layout: {
+		rows: 3,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 1,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 0
+		},
+		{
+			row: 2,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1"
+	],
+	remote_sites: [
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA1",
+			host: "canoe-samoa.ics.hawaii.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA2",
+			host: "canoe-lava-2.manoa.hawaii.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443,
+			secure: true
+		}
+	],
+	experimental: {
+	}
+}
+
