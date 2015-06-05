@@ -4265,7 +4265,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		else {
 			var appId = obj.id;
         		if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
-                		obj.data.appId;
+                		appId = obj.data.appId;
 			if(appUserColors[appId] !== color){
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
@@ -5861,7 +5861,7 @@ function showOrHideWidgetLinks(data){
 	var obj = data.item;
 	var appId = obj.id;
 	if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
-		obj.data.appId;
+		appId = obj.data.appId;
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
 		app = getAppPositionSize(app);
