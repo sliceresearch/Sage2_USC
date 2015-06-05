@@ -4264,8 +4264,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		}
 		else {
 			var appId = obj.id;
-        		if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
-                		appId = obj.data.appId;
+			if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+				appId = obj.data.appId;
 			if(appUserColors[appId] !== color){
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
