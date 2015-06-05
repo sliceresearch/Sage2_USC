@@ -16,11 +16,24 @@ do
 	env DISPLAY=:0.$i google-chrome $param "http://$server/display.html?clientID=$i" &
 done
 
-#sleep 3
-#set result=`env DISPLAY=:0.0 xdotool search --name "SAGE2: Display - Google Chrome"`;
+#sleep 8
+set result=`env DISPLAY=:0.0 xdotool search --name "SAGE2: Display - Google Chrome"`;
 #set arr=($result);
 #echo "window: $arr[1]";
 #env DISPLAY=:0.0 xdotool windowmove $arr[1] 0 0' &
 #env DISPLAY=:0.0 xdotool mousemove --sync 10 10;
 #env DISPLAY=:0.0 xdotool mousemove --sync 0 0' &
+
+sleep 3
+
+xdotool mousemove --sync 10 10
+xdotool mousemove --sync 0 0
+
+win1=`xdotool search --screen 0 --name "SAGE2: Display"`
+xdotool windowmove $win1 0 0
+win2=`xdotool search --screen 1 --name "SAGE2: Display"`
+xdotool windowmove $win2 0 0
+win3=`xdotool search --screen 2 --name "SAGE2: Display"`
+xdotool windowmove $win3 0 0
+
 
