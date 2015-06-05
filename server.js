@@ -5858,7 +5858,7 @@ function attachAppIfSticky(backgroundItem, appId){
 function showOrHideWidgetLinks(data){
 	var obj = data.item;
 	var appId = obj.id;
-	if (obj.data !== undefined && obj.data.appId !== undefined)
+	if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
 		obj.data.appId;
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
