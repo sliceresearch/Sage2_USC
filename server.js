@@ -4263,7 +4263,9 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 		}
 		else {
-			var appId = obj.data.appId || obj.id;
+			var appId = obj.id;
+			if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+				appId = obj.data.appId;
 			if(appUserColors[appId] !== color){
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
@@ -5857,7 +5859,9 @@ function attachAppIfSticky(backgroundItem, appId){
 
 function showOrHideWidgetLinks(data){
 	var obj = data.item;
-	var appId = obj.data.appId || obj.id;
+	var appId = obj.id;
+	if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+		appId = obj.data.appId;
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
 		app = getAppPositionSize(app);
