@@ -20,6 +20,9 @@
 // 		app only reads in data at launch - could re-load every 12 hours
 //		app shows all crimes in past year the same - could make current less transparent
 
+require('d3');
+require('./scripts/leaflet');
+require('./policeDistricts');
 
 function addCSS( url, callback ) {
     var fileref = document.createElement("link");
