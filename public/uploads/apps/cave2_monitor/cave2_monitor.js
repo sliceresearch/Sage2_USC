@@ -651,6 +651,9 @@ module.exports = SAGE2_App.extend( {
             this.drawBox(x+50, y, 14, 40, this.glob.colorOut, this.glob.percOut);
             this.drawBox(x+50, y, 14, 40, this.glob.colorOutb, 1.0 - this.glob.percOut);
 
+            // Making sure proc is a number (luc)
+            proc = Number(proc);
+
             if (proc <= 0)
                 this.drawTextRightWhite(x+85, y+11, "", "10px");
             else if (proc < this.glob.temp_colderer)
