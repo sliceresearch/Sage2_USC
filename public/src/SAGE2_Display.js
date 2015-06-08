@@ -809,12 +809,12 @@ function setupListeners() {
 				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg");
 				var animationInfo = ctrlParent.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
-					var delay = animationInfo.delay;
-					var state = animationInfo.state;
+					var delay    = animationInfo.delay;
+					var state    = animationInfo.state;
 					var fromPath = animationInfo.from;
-					var toPath = animationInfo.to;
+					var toPath   = animationInfo.to;
 					var fromFill = animationInfo.fill;
-					var toFill = animationInfo.toFill;
+					var toFill   = animationInfo.toFill;
 					if (toFill === null || toFill === undefined) toFill = fromFill;
 					if (state===null){
 						ctrl.animate({"path":toPath, "fill":toFill}, delay, mina.bounce, function(){
@@ -1078,16 +1078,14 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 //			document.head.appendChild(js);
 
 			console.log('Have to load:', data.application + ".js");
-			console.log('Deps:', data.resrc);
 
 			System.import(data.application + "/" + data.application ).then(function(loadedApp) {
-				console.log('loading done', typeof loadedApp);
 				var newapp = new loadedApp();
 				newapp.init(init);
 				newapp.refresh(date);
 				applications[data.id]   = newapp;
 				controlObjects[data.id] = newapp;
-				if(data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				if (data.animation === true) wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			});
 		}
 

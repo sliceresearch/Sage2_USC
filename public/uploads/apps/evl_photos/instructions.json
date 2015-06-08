@@ -4,10 +4,6 @@
 	"width": 800,
 	"height": 600,
 	"animation": true,
-	"dependencies": [
-		"scripts/d3.v3.min.js",
-		"photo_scrapbooks.js"
-	],
 	"load": {
 		"imageSet": 0,
 		"counter": 1

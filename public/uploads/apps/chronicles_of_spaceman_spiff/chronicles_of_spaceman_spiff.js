@@ -274,8 +274,6 @@ module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
 
-        console.log(this.state);
-
         this.resizeEvents = "continuous"; //onfinish
         this.svg = null;
 

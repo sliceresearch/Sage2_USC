@@ -24,7 +24,7 @@
 // or they can be stored in different URLs
 
 
-    SAGE2_photoAlbums = [];
+ var   SAGE2_photoAlbums = [];
     SAGE2_photoAlbums[0] = {list:"http://lyra.evl.uic.edu:9000/sagewalls/photos.txt",
             location:"http://lyra.evl.uic.edu:9000/sagewalls/",
             name:"sage"};
@@ -44,10 +44,10 @@
 // load timer is how long to show a single image in seconds before loading 
 // the next one or refreshing the current one
 
-    SAGE2_photoAlbumLoadTimer = 20;
+var    SAGE2_photoAlbumLoadTimer = 20;
 
 // fade count is how many frames it takes to fade between the old and new image
-    SAGE2_photoAlbumFadeCount = 20;
+var    SAGE2_photoAlbumFadeCount = 20;
 
 // canvas background gives the color of the background of the window
-    SAGE2_photoAlbumCanvasBackground = "black";
+var    SAGE2_photoAlbumCanvasBackground = "black";

@@ -8,94 +8,21 @@
 //
 // Copyright (c) 2014
 
-////////////////////////////////////////
+////
 // simple photo slideshow
 // Written by Andy Johnson - 2014
-////////////////////////////////////////
+////
 
-/*
-    SAGE2_photoAlbums = [];
-    SAGE2_photoAlbums[0] = {list:"http://lyra.evl.uic.edu:9000/evl_Pictures/photos.txt",
-            location:"http://lyra.evl.uic.edu:9000/evl_Pictures/"};
-    SAGE2_photoAlbums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam2.txt",
-            location:"ftp://ftp.evl.uic.edu/pub/INcoming/spiff/"};
-    SAGE2_photoAlbums[2] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
-            location:"http://cdn.abclocal.go.com/three/wls/webcam/"};
-    SAGE2_photoAlbums[3] = {list:"http://lyra.evl.uic.edu:9000/posters/photos.txt",
-            location:"http://lyra.evl.uic.edu:9000/posters/"};
-
-    SAGE2_photoAlbums[4] = {list:"https://sage.evl.uic.edu/evl_Pictures/photos.txt",
-            location:"https://sage.evl.uic.edu/evl_Pictures/"};
-*/
+require('d3');
+require('./photo_scrapbooks')
 
 module.exports = SAGE2_App.extend( {
-    construct: function() {
-        arguments.callee.superClass.construct.call(this);
-
-		this.resizeEvents = "continuous"; //onfinish
-		this.svg = null;
-
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-		this.enableControls = true;
-
-		this.canvasBackground = "black";
-
-		this.canvasWidth  = 800;
-		this.canvasHeight = 600;
-
-		this.loadTimer = 15; // default value to be replaced from photo_scrapbooks.js
-		this.fadeCount = 10.0; // default value to be replaced from photo_scrapbooks.js
-
-		if (SAGE2_photoAlbumLoadTimer !== null)
-			this.loadTimer = SAGE2_photoAlbumLoadTimer;
-
-		if (SAGE2_photoAlbumFadeCount !== null)
-			this.fadeCount = SAGE2_photoAlbumFadeCount;
-
-		if (this.fadeCount == 0)
-				this.fadeCount = 1; // avoid divide by zero later on
-
-		if (SAGE2_photoAlbumCanvasBackground !== null)
-			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
-
-		this.URL1  = "";
-		this.URL1a = "";
-		this.URL1b = "";
-
-		this.today = "";
-		this.timeDiff = 0;
-
-		this.bigList = null;
-
-		this.okToDraw = this.fadeCount;
-		this.forceRedraw = 1;
-
-		this.fileName = "";
-		this.listFileName = "";
-
-		this.appName = "evl_photos:";
-
-		this.image1 = new Image();
-		this.image2 = new Image();
-		this.image3 = new Image();
-		this.imageTemp = null;
-
-		this.updateCounter = 0;
-
-		this.listFileNamePhotos = "";
-		this.listFileNameLibrary = "";
-
-		this.state.imageSet = null;
-		this.state.counter = 1;
-
-	 },
-
 	////////////////////////////////////////
 	// choose a specific image library from those loaded to cycle through
 
 	chooseImagery: function(selection)
 	{
-		this.listFileNamePhotos = SAGE2_photoAlbums[selection].list;
+		this.listFileNamePhotos  = SAGE2_photoAlbums[selection].list;
 		this.listFileNameLibrary = SAGE2_photoAlbums[selection].location;
 	},
 
@@ -113,7 +40,6 @@ module.exports = SAGE2_App.extend( {
 		this.image2.onerror = this.imageLoadFailedCallbackFunc;
         this.image3.onload  = this.imageLoadCallbackFunc;
 		this.image3.onerror = this.imageLoadFailedCallbackFunc;
-
 		this.chooseImagery(this.state.imageSet);
 
 		this.loadInList();
@@ -189,62 +115,46 @@ module.exports = SAGE2_App.extend( {
 			var image2DrawWidth = this.canvasWidth;
 			var image2DrawHeight = this.canvasHeight;
 
-			if (this.image2 != "NULL") // previous image
-				{
+			// previous image
+			if (this.image2 != "NULL") {
 				//console.log("original image is " + this.image2.width + "," + this.image2.height);
 				var image2x = this.image2.width;
 				var image2y = this.image2.height;
 				var image2ratio = image2x / image2y;
 
 				// want wide images to be aligned to top not center
-				if (image2ratio > windowRatio)
-						{
-						image2DrawWidth  =  this.canvasWidth;
-						image2DrawHeight = this.canvasWidth / image2ratio;
-						}
+				if (image2ratio > windowRatio) {
+					image2DrawWidth  =  this.canvasWidth;
+					image2DrawHeight = this.canvasWidth / image2ratio;
+				}
 
-				// if (this.okToDraw > 1)
-				// 	this.svg.select("#image2")
-				// 	.attr("xlink:href", this.image2.src)
-				// 	.attr("width",  image2DrawWidth)
-				// 	.attr("height", image2DrawHeight);
-				// else
-				// 	this.svg.select("#image2")
-				// 	.attr("xlink:href", this.image2.src)
-				// 	.attr("opacity", (this.okToDraw+9) * 0.1) 
-				// 	.attr("width",  image2DrawWidth)
-				// 	.attr("height", image2DrawHeight);
-				// }
-				if (this.okToDraw > 1)
-					{
-					 this.svg.select("#image2")
-					 .attr("xlink:href", this.image2.src)
-					 .attr("opacity", 1)
-					 .attr("width",  image2DrawWidth)
-					 .attr("height", image2DrawHeight);
-					}
-				else
-					{
+				if (this.okToDraw > 1) {
+					this.svg.select("#image2")
+					.attr("xlink:href", this.image2.src)
+					.attr("opacity", 1)
+					.attr("width",  image2DrawWidth)
+					.attr("height", image2DrawHeight);
+				}
+				else {
 					this.svg.select("#image2")
 					.attr("xlink:href", this.image2.src)
 					.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw+9) / this.fadeCount)))
 					.attr("width",  image2DrawWidth)
 					.attr("height", image2DrawHeight);
-					}
 				}
+			}
 
-			if (this.image1 != "NULL") // current image
-				{
+			// current image
+			if (this.image1 != "NULL") {
 				var image1x     = this.image1.width;
 				var image1y     = this.image1.height;
 				var image1ratio = image1x / image1y;
 
 				// want wide images to be aligned to top not center
-				if (image1ratio > windowRatio)
-					{
+				if (image1ratio > windowRatio) {
 					image1DrawWidth  =  this.canvasWidth;
 					image1DrawHeight = this.canvasWidth / image1ratio;
-					}
+				}
 
 				this.svg.select("#image1")
 					.attr("xlink:href", this.image1.src)
@@ -253,21 +163,17 @@ module.exports = SAGE2_App.extend( {
 					.attr("height", image1DrawHeight);
 				}
 
-			this.okToDraw -= 1.0;
+				this.okToDraw -= 1.0;
 			}
 
 
 		// if enough time has passed grab a new image and display it
-
-		if(isMaster)
-			{
+		if (isMaster) {
 			this.updateCounter += 1;
-
-			if (this.updateCounter > (this.loadTimer*this.maxFPS))
-				{
+			if (this.updateCounter > (this.loadTimer*this.maxFPS)) {
 				this.update();
-				}
 			}
+		}
 	},  
 
 	////////////////////////////////////////
@@ -275,12 +181,10 @@ module.exports = SAGE2_App.extend( {
 
 	loadInList: function ()
 	{
-		if(isMaster)
-			{
+		if (isMaster) {
 			this.listFileName = this.listFileNamePhotos;
 			d3.text(this.listFileName, this.listFileCallbackFunc);
-			}
-
+		}
 	},
 
 	////////////////////////////////////////
@@ -323,44 +227,39 @@ module.exports = SAGE2_App.extend( {
 
 	update: function ()
 	{
-		if(isMaster)
-		{
-		//console.log(this.appName + "UPDATE");
-
-		// reset the timer counting towards the next image swap 
-		this.updateCounter = 0;
+		if (isMaster) {
+			// reset the timer counting towards the next image swap 
+			this.updateCounter = 0;
 
 
-		// if there is no big list of images to pick from then get out
-		if (this.bigList === null)
-			{
-			console.log(this.appName + "list of photos not populated yet");
-			return;
+			// if there is no big list of images to pick from then get out
+			if (this.bigList === null) {
+				console.log(this.appName + "list of photos not populated yet");
+				return;
 			}
 
-		// randomly pick a new image to show from the current photo album
-		// which can be showing the same image if the album represents a webcam
+			// randomly pick a new image to show from the current photo album
+			// which can be showing the same image if the album represents a webcam
 
-		this.newImage();
+			this.newImage();
 
-		// if there is no image name for that nth image then get out
-		if (this.bigList[this.state.counter] === null)
-			{   
-			console.log(this.appName + "cant find filename of image number "+this.state.counter);
-			return;
+			// if there is no image name for that nth image then get out
+			if (this.bigList[this.state.counter] === null) {   
+				console.log(this.appName + "cant find filename of image number "+this.state.counter);
+				return;
 			}
 
-		// escape makes a string url-compatible
-		// except for ()s, commas, &s, and odd characters like umlauts and graves
+			// escape makes a string url-compatible
+			// except for ()s, commas, &s, and odd characters like umlauts and graves
 
-		// this also appends a random number to the end of the request to avoid browser caching
-		// in case this is a single image repeatedly loaded from a webcam
+			// this also appends a random number to the end of the request to avoid browser caching
+			// in case this is a single image repeatedly loaded from a webcam
 
-		// ideally this random number should come from the master to guarantee identical values across clients
-	
-		this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) + '?' + Math.floor(Math.random() * 10000000);
-	
-		this.broadcast("updateNode", {data:this.fileName});
+			// ideally this random number should come from the master to guarantee identical values across clients
+		
+			this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) + '?' + Math.floor(Math.random() * 10000000);
+		
+			this.broadcast("updateNode", {data:this.fileName});
 		}
 	},
 
@@ -368,24 +267,13 @@ module.exports = SAGE2_App.extend( {
 
 		this.fileName = data.data;
 	
-		if(this.fileName === null)
-			{
+		if (this.fileName === null) {
 			console.log(this.appName + "no filename of new photo to load");
 			return;
-			}
-		//console.log(this.appName + this.fileName);
+		}
 
 		// ask for image3 to load in the new image
-
-		///
-		//this.imageTemp = this.image2; // hold onto 2
-		//this.image2 = this.image1; // image2 is the previous image (needed for fading)
-
-		//this.image3 = new Image(); // image3 is the new image to be loaded
 		this.image3.src = this.fileName;
-		//console.log(this.image1);
-		//console.log(this.image2);
-		//console.log(this.image3);
 	},
 
 	////////////////////////////////////////
@@ -431,7 +319,7 @@ module.exports = SAGE2_App.extend( {
 		if (SAGE2_photoAlbumFadeCount !== null)
 			this.fadeCount = SAGE2_photoAlbumFadeCount;
 
-		if (this.fadeCount == 0)
+		if (this.fadeCount === 0)
 				this.fadeCount = 1; // avoid divide by zero later on
 
 		if (SAGE2_photoAlbumCanvasBackground !== null)
@@ -461,10 +349,11 @@ module.exports = SAGE2_App.extend( {
 
 		this.updateCounter = 0;
 
-		this.listFileNamePhotos = "";
+		this.listFileNamePhotos  = "";
 		this.listFileNameLibrary = "";
 
-
+		this.listFileNamePhotos  = "";
+		this.listFileNameLibrary = "";
 
         this.maxFPS = 30.0;
 		this.element.id = "div" + data.id;
@@ -476,10 +365,6 @@ module.exports = SAGE2_App.extend( {
 		    .attr("height",  data.height)
 		    .attr("viewBox", box)
             .attr("preserveAspectRatio", "xMinYMin meet"); // new
-
-
-		// console.log(this.imageLoadCallbackFunc);
-		// console.log(this.imageLoadFailedCallbackFunc);
 
 		this.svg.append("svg:rect")
 			.style("stroke", this.canvasBackground)
@@ -504,22 +389,9 @@ module.exports = SAGE2_App.extend( {
 			.attr("id", "image1") //image2
 			.attr("width",  data.width)
 			.attr("height", data.height);
-		//this.svg.append("svg:image")
-		//	.attr("opacity", 1)
-		//	.attr("x",  0)
-		//	.attr("y",  0)
-		//	.attr("id", "image3")
-		//	.attr("width",  data.width)
-		//	.attr("height", data.height);
-
 
 		// create the widgets
-        console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"}); /*action:function(date){
-            //This is executed after the button click animation occurs.
-            this.nextAlbum();
-        }.bind(this)});*/
-
+        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"});
         var _this = this;
 
         for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++){
@@ -533,16 +405,13 @@ module.exports = SAGE2_App.extend( {
                     "animation":false
                 };
 
-                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx,id: loopIdxWithPrefix});/* action:function(date){
-                    this.setAlbum(loopIdxWithPrefix);
-                }.bind(_this) });*/
+                _this.controls.addButton({type:albumButton, sequenceNo:5+loopIdx,id: loopIdxWithPrefix});
             }(loopIdxWithPrefix));
         }
 
         this.controls.finishedAddingControls(); // Important
 
         this.initApp();
-
         this.update();
         this.draw_d3(data.date);
 	},
@@ -555,7 +424,7 @@ module.exports = SAGE2_App.extend( {
 	},
 	
 	draw: function(date) {
-        this.drawEverything();
+      	this.drawEverything();
 	},
 
 	resize: function(date) {
