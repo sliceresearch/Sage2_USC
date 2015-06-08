@@ -1,13 +1,18 @@
 
-////////////////////////////////////////
+///
 // Weather across the Continental US Viewer
 // example of D3 + GEOjson use
 // Written by Andy Johnson - Spring 2014
-////////////////////////////////////////
+///
     
     // could allow clicking on individual elements to change its state
 
     // might also allow people to focus on smaller state level
+
+// Load the D3 library
+require('d3');
+// Load an local package
+SunCalc = require('./scripts/suncalc');
 
 module.exports = SAGE2_App.extend( {
 	////////////////////////////////////////
