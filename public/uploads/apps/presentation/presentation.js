@@ -10,16 +10,11 @@
 
 
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("iframe", data);
 
 		this.resizeEvents = "continuous";
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "iframe", data);
-		
+
 		// application specific 'init'
 		this.element.frameborder = 0;
 
@@ -30,7 +25,7 @@ module.exports = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {

@@ -4,10 +4,8 @@
 	"width": 800,
 	"height": 450,
 	"animation": false,
-	"dependencies": [
-	],
 	"title": "Presentation",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Experiments showing online presentation",
 	"keywords": [ "online", "presentation", "microsoft", "google" ],
 	"author": "Luc Renambot <renambot@gmail.com>",
