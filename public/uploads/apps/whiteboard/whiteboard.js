@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2014
 
+require('./lib/kinetic-v5.1.0.min');
 
 module.exports = SAGE2_App.extend( {
 	init: function(data) {
