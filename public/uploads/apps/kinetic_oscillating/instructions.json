@@ -5,7 +5,7 @@
 	"height": 300,
 	"animation": true,
 	"title": "Kinetic Oscillating",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Kinetic.js demo #2",
 	"keywords": [ "kinetic", "demo", "animation" ],
 	"author": "Luc Renambot <renambot@gmail.com>",

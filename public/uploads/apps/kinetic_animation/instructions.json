@@ -5,7 +5,7 @@
 	"height": 300,
 	"animation": true,
 	"title": "Kinetic Animation",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Kinetic.js demo #1",
 	"keywords": [ "kinetic", "demo", "animation" ],
 	"author": "Luc Renambot <renambot@gmail.com>",
