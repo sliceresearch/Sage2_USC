@@ -21,6 +21,9 @@
     ];
 */
 
+require('d3');
+require('./radarStations');
+
 module.exports = SAGE2_App.extend( {
 	////////////////////////////////////////
 
