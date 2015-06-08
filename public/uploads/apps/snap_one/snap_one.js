@@ -8,21 +8,17 @@
 //
 // Copyright (c) 2014
 
+// Snap.svg already loaded
 
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "continuous"; // "onfinish";
 
 		this.svg  = null;
 		this.obj  = null;
 		this.text = null;
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 
 		// application specific 'init'
 		this.element.id = "div" + data.id;

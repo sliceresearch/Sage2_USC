@@ -4,8 +4,6 @@
 	"width": 600,
 	"height": 600,
 	"animation": true,
-	"dependencies": [
-	],
 	"title": "Snap SVG example",
 	"version": "1.0.0",
 	"description": "Example application using Snap.svg",
