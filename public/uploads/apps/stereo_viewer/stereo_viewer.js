@@ -67,18 +67,7 @@ var shader_fs_rb = "\
 
 
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		this.src = null;
-		this.ctx = null;
-		this.img = null;
-		this.gl  = null;
-		this.texture = null;
-		this.program = null;
-		this.ready   = false;
-		this.resizeEvents = "onfinish";
-		//this.resizeEvents = "continuous";
-	},
-	
+
 	getShader: function(theSource, type) {
 		var shader;
 
@@ -130,7 +119,16 @@ module.exports = SAGE2_App.extend( {
 
 	init: function(data) {
 		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
+		this.SAGE2Init("canvas", data);
+
+		this.src = null;
+		this.ctx = null;
+		this.img = null;
+		this.gl  = null;
+		this.texture = null;
+		this.program = null;
+		this.ready   = false;
+		this.resizeEvents = "onfinish";
 
 		this.gl = this.element.getContext('webgl');
 		this.ready = false;
@@ -211,7 +209,7 @@ module.exports = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {

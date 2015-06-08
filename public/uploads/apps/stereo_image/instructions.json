@@ -4,15 +4,13 @@
 	"width": 600,
 	"height": 400,
 	"animation": false,
-	"dependencies": [
-	],
 	"load": {
 		"file": "",
 		"stereoMode": "interleave",
 		"anaglyphMode": "Optimized+Anaglyph"
 	},
 	"title": "Stereo image viewer",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Display stereo images",
 	"keywords": [ "3d", "stereo", "viewer" ],
 	"fileTypes": [ "jps", "pns"],
