@@ -2,13 +2,10 @@
 	"main_script": "zoom.js",
 	"icon": "zoom.webp",
 	"width": 800,
-	"height": 224,
+	"height": 600,
 	"resize": "free",
-	"dependencies": [
-		  "openseadragon.min.js"
-	],
 	"title": "Multi-Res Image Viewer",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "High-resolution Image Viewer using the Openseadragon API",
 	"keywords": [ "openseadragon", "image", "viewer" ],
 	"author": "Luc Renambot <renambot@gmail.com>",

@@ -8,6 +8,9 @@
 //
 // Copyright (c) 2014
 
+require('./openseadragon.min');
+
+
 module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
@@ -32,8 +35,7 @@ module.exports = SAGE2_App.extend( {
 			id: this.element.id,      // suppporting div
 			prefixUrl:   this.resrcPath + "/images/",
 			// change tileSources for your dataset
-			tileSources: this.resrcPath + "chicago.dzi"
-			//tileSources: this.resrcPath + "halfdome.dzi"
+			tileSources: this.resrcPath + "y.dzi"
 		});
 
 		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
