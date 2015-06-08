@@ -8,6 +8,9 @@
 //
 // Copyright (c) 2014
 
+require('d3');
+d3.layout.cloud = require('./scripts/d3.layout.cloud');
+
 module.exports = SAGE2_App.extend( {
 	init: function(data) {
 		this.SAGE2Init("div", data);
