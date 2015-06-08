@@ -6,9 +6,6 @@
 	"animation": true,
 	"load": {
 	},
-	"dependencies": [
-		"playcanvas-latest.js"
-	],
 	"title": "Play Canvas Demo",
 	"version": "1.0.0",
 	"description": "Demo using the Playcanvas game engine",

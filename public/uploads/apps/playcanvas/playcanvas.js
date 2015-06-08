@@ -8,54 +8,52 @@
 //
 // Copyright (c) 2014
 
+pc = require('./playcanvas-latest');
+
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 
 		this.resizeEvents = "onfinish";
 		this.renderer = null;
 		this.scene    = null;
 		this.camera   = null;
 		this.model    = null;
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
 
         // Create the graphics device
-        var device = new pc.gfx.Device(this.element);
+        var device = new pc.pc.gfx.Device(this.element);
 
         // Create renderer
-        this.renderer = new pc.scene.ForwardRenderer(device);
+        this.renderer = new pc.pc.scene.ForwardRenderer(device);
 
         // Create Scene
-        this.scene = new pc.scene.Scene();
+        this.scene = new pc.pc.scene.Scene();
 
         // Create camera node
-        this.camera = new pc.scene.CameraNode();
+        this.camera = new pc.pc.scene.CameraNode();
         this.camera.setClearOptions({
             color: [0.4, 0.45, 0.5]
         });
         this.camera.setLocalPosition(0, 7, 24);
 
         // Set up a default scene light
-        var light = new pc.scene.LightNode();
-        light.setType(pc.scene.LIGHTTYPE_POINT);
+        var light = new pc.pc.scene.LightNode();
+        light.setType(pc.pc.scene.LIGHTTYPE_POINT);
         light.setAttenuationEnd(100);
         light.setLocalPosition(5, 0, 15);
         light.setEnabled(true);
         this.scene.addLight(light);
 
         // Create resource and asset loaders
-        var loader = new pc.resources.ResourceLoader();
-        var assets = new pc.asset.AssetRegistry(loader);
+        var loader = new pc.pc.resources.ResourceLoader();
+        var assets = new pc.pc.asset.AssetRegistry(loader);
 
         // Register loaders for models, textures and materials
-        loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(assets));
-        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(device));
-        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
-        loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
+        loader.registerHandler(pc.pc.resources.MaterialRequest, new pc.pc.resources.MaterialResourceHandler(assets));
+        loader.registerHandler(pc.pc.resources.TextureRequest, new pc.pc.resources.TextureResourceHandler(device));
+        loader.registerHandler(pc.pc.resources.ModelRequest, new pc.pc.resources.ModelResourceHandler(device, assets));
+        loader.registerHandler(pc.pc.resources.JsonRequest, new pc.pc.resources.JsonResourceHandler());
 
         var self = this;
         assets.loadFromUrl(this.resrcPath + "assets/statue/Statue_1.json", "model").then(function (asset) {
