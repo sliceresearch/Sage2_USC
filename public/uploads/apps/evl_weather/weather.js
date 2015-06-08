@@ -8,11 +8,16 @@
 //
 // Copyright (c) 2014
 
-////////////////////////////////////////
+/////
 // simple evl weather viewer
 // Written by Andy Johnson - 2005 - 2014
 // now in D3 / SVG / SAGE
-////////////////////////////////////////
+/////
+
+// Load the D3 library
+require('d3');
+// Load an local package
+SunCalc = require('./scripts/suncalc');
 
 module.exports = SAGE2_App.extend( {
 	////////////////////////////////////////

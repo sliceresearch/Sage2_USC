@@ -1077,9 +1077,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 //			console.log(url + "/" + data.application + ".js");
 //			document.head.appendChild(js);
 
-			console.log('Have to load:', data.application + ".js");
+			// Take the last part of the URL: folder name
+			var applicationFolder = data.url.split('/').pop();
 
-			System.import(data.application + "/" + data.application ).then(function(loadedApp) {
+			System.import(applicationFolder + "/" + data.application ).then(function(loadedApp) {
 				var newapp = new loadedApp();
 				newapp.init(init);
 				newapp.refresh(date);

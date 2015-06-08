@@ -4,15 +4,11 @@
 	"width": 490,
 	"height": 400,
 	"animation": true,
-	"dependencies": [
-		"scripts/d3.v3.min.js",
-		"scripts/suncalc.js"
-	],
 	"load": {
 		"itsF": "F"
 	},
 	"title": "EVL Weather Map",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "EVL weather monitoring",
 	"keywords": [ "d3", "2d", "temperature", "weather" ],
 	"author": "Andrew Johnson <lenzman@me.com>",
