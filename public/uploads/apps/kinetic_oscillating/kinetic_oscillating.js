@@ -8,9 +8,10 @@
 //
 // Copyright (c) 2014
 
+
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("div", data);
 
 		this.stage   = null;
 		this.layer   = null;
@@ -22,11 +23,6 @@ module.exports = SAGE2_App.extend( {
 		this.height  = null;
 		this.resizeEvents = "onfinish";
 		this.lastZoom = null;
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 
 		this.maxFPS = 30;
 		
