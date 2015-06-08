@@ -12,7 +12,6 @@ require('./scripts/kinetic-v5.1.0.min');
 
 module.exports = SAGE2_App.extend( {
 	init: function(data) {
-		// call super-class 'init'
 		this.SAGE2Init("div", data);
 
 		this.minDim = null;
