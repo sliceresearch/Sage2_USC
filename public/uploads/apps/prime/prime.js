@@ -9,20 +9,16 @@
 // Copyright (c) 2014
 
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
+		
 		this.resizeEvents = "onfinish";
 
 		this.ctx     = null;
 		this.worker  = null;
 		this.msgFunc = null;
 		this.errFunc = null;
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
-		
+
 		// application specific 'init'
 		this.ctx    = this.element.getContext('2d');
 		this.maxFPS = 30.0;
@@ -69,7 +65,7 @@ module.exports = SAGE2_App.extend( {
 		this.worker.postMessage(0);	
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 		if (state.prime !== undefined) {
 			this.state.count   = state.count;
 			this.state.prime   = state.prime;

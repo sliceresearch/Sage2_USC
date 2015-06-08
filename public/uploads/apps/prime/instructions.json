@@ -6,10 +6,8 @@
 	"animation": true,
 	"load": {
 	},
-	"dependencies": [
-	],
 	"title": "Prime numbers",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Demo showing the use of WebWorkers to calculate prime numbers",
 	"keywords": [ "webworker", "thread", "prime", "computation" ],
 	"author": "Luc Renambot <renambot@gmail.com>",
