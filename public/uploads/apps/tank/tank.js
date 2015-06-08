@@ -9,8 +9,8 @@
 // See included LICENSE.txt file
 
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		this.SAGE2Init("canvas", data);
 
 		this.ctx = null;
 		this.resizeEvents = "continuous";
@@ -29,11 +29,6 @@ module.exports = SAGE2_App.extend( {
 		this.spawnRefresh = null;
 		this.maxFPS = 60.0;
 		console.log("Completed construction");
-	},
-	
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "canvas", data);
 		
 		// application specific 'init'
 		this.ctx = this.element.getContext('2d');
@@ -55,7 +50,7 @@ module.exports = SAGE2_App.extend( {
 
 	},
 	
-	load: function(state, date) {
+	load: function(date) {
 	},
 	
 	draw: function(date) {
