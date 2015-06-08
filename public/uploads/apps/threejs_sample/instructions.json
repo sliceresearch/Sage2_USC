@@ -4,10 +4,8 @@
 	"width": 400,
 	"height": 300,
 	"animation": true,
-	"dependencies": [
-	],
 	"title": "Three.js minimal app",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A simple Three.js demonstration",
 	"keywords": [ "three", "3d", "animation" ],
 	"author": "Luc Renambot <renambot@gmail.com>",

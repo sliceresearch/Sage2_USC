@@ -5,10 +5,8 @@
 	"height": 500,
 	"animation": true,
 	"resize": "free",
-	"dependencies": [
-	],
 	"title": "Three.js OpenCTM loader",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A Three.js OpenCTM model loader example (adapted from http://threejs.org)",
 	"keywords": [ "three", "3d", "animation" ],
 	"author": "Luc Renambot <renambot@gmail.com>",

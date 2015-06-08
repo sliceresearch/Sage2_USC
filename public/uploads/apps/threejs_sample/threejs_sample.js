@@ -8,9 +8,6 @@
 //
 // Copyright (c) 2014
 
-// local to the app
-//var THREE = require('./scripts/three.min');
-// system version
 var THREE = require('threejs');
 
 module.exports = SAGE2_App.extend( {
