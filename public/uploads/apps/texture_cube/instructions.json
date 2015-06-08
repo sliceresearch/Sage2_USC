@@ -6,9 +6,6 @@
 	"animation": true,
 	"load": {
 	},
-	"dependencies": [
-		"scripts/glMatrix-0.9.5.min.js"
-	],
 	"title": "Textured Cube",
 	"version": "1.0.0",
 	"description": "A WebGL demonstation of animation and texturing",
