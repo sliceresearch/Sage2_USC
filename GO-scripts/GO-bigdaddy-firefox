@@ -1,0 +1,43 @@
+#!/bin/sh
+
+pkill -HUP firefox
+
+nvidia-settings -n -i --assign=":0.0/SyncToVBlank=0"
+nvidia-settings -n -i --assign=":0.1/SyncToVBlank=0"
+nvidia-settings -n -i --assign=":0.2/SyncToVBlank=0"
+
+nvidia-settings -n -i --assign=":0.0/FXAA=0" --assign=":0.0/FSAA=0" --assign="FSAAAppControlled=0" --assign="FSAAAppEnhanced=0" --assign="LogAniso=0" --assign="TextureSharpen=1" --assign="GPUPowerMizerMode=1" --assign="OpenGLImageSettings=3"
+nvidia-settings -n -i --assign=":0.1/FXAA=0" --assign=":0.1/FSAA=0" --assign="FSAAAppControlled=0" --assign="FSAAAppEnhanced=0" --assign="LogAniso=0" --assign="TextureSharpen=1" --assign="GPUPowerMizerMode=1" --assign="OpenGLImageSettings=3"
+nvidia-settings -n -i --assign=":0.2/FXAA=0" --assign=":0.2/FSAA=0" --assign="FSAAAppControlled=0" --assign="FSAAAppEnhanced=0" --assign="LogAniso=0" --assign="TextureSharpen=1" --assign="GPUPowerMizerMode=1" --assign="OpenGLImageSettings=3"
+
+
+
+server="bigdaddy.evl.uic.edu"
+global_param="-no-remote --width 5464 --height 768"
+
+rm -fr /home/evl/luc/.mozilla/firefox
+for i in {0..2}
+do
+	node="bigdaddy"$i
+	firefox -CreateProfile $node
+done
+
+pkill -HUP firefox
+
+for i in {0..2}
+do
+	node="bigdaddy"$i
+	param="$global_param -P $node"
+	
+	env DISPLAY=:0.$i firefox $param http://$server/display.html\?clientID=$i &
+done
+
+sleep 8
+
+# Fullscreen
+windows=`xdotool search --name "SAGE2: Display"`
+for f in $windows
+do
+	xdotool key --window $f F11
+done
+

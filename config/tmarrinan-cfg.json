@@ -78,6 +78,12 @@
 			host: "mesaverde.evl.uic.edu",
 			port: 443,
 			secure: true
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443,
+			secure: true
 		}
 	],
 	apis: {
