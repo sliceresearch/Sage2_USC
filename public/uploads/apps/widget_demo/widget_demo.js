@@ -10,11 +10,7 @@
 
 
 module.exports = SAGE2_App.extend( {
-	load: function(date) {
-		
-	},
 
-	
 	init: function(data) {
 		this.SAGE2Init("canvas", data);
 		this.timer = null;
@@ -33,6 +29,9 @@ module.exports = SAGE2_App.extend( {
 		this.appInit(data.date);
 	},
 	
+	load: function(date) {
+	},
+
 	appInit: function(date){
 		this.playPauseHandle = this.controls.addButton({type:"play-pause",sequenceNo:1, id:"PlayPause"});
 		this.controls.addButton({type:"stop",sequenceNo:2, id:"Stop"});
