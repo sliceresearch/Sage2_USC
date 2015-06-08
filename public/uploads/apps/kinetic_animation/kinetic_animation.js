@@ -8,9 +8,12 @@
 //
 // Copyright (c) 2014
 
+require('./scripts/kinetic-v5.1.0.min');
+
 module.exports = SAGE2_App.extend( {
-	construct: function() {
-		arguments.callee.superClass.construct.call(this);
+	init: function(data) {
+		// call super-class 'init'
+		this.SAGE2Init("div", data);
 
 		this.minDim = null;
 		this.stage  = null;
@@ -18,11 +21,6 @@ module.exports = SAGE2_App.extend( {
 		this.width  = null;
 		this.height = null;
 		this.resizeEvents = "continuous";
-	},
-
-	init: function(data) {
-		// call super-class 'init'
-		arguments.callee.superClass.init.call(this, "div", data);
 
 		this.maxFPS = 30;
 
@@ -38,7 +36,7 @@ module.exports = SAGE2_App.extend( {
 		this.controls.finishedAddingControls(); 
 	},
 
-	load: function(state, date) {
+	load: function(date) {
 	},
 
 	draw: function(date) {
