@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2014
 
+var MM = require('./scripts/modestmaps');
 
 module.exports = SAGE2_App.extend( {
 	init: function(data) {

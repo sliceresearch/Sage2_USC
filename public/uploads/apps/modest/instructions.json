@@ -4,9 +4,6 @@
 	"width": 800,
 	"height": 381,
 	"resize": "free",
-	"dependencies": [
-		"scripts/modestmaps.min.js"
-	],
 	"title": "Modest Maps",
 	"version": "1.0.0",
 	"description": "Demo using the Modest Maps API",
