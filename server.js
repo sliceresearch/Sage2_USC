@@ -3845,9 +3845,8 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 		if (data.button === "left" && obj.type !== 'rectangle' ) {
 			obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
 		}
-
 	}
-	
+
 	data = { button: data.button, color: sagePointers[uniqueID].color };
 	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 }
@@ -4327,10 +4326,16 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 
 	var existingRadialMenu = obj.data;
 
-	// Content Browser is only draggable on radial menu
-	if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
-		var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
-		moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
+		// Pressing on radial menu button
+		console.log("over radial button: " + obj.id);
+	} else {
+		// Not on a button
+		// Drag Content Browser only from radial menu
+		if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
+			var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
+			moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+		}
 	}
 }
 
@@ -4743,7 +4748,9 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
+	
 	var radialMenu;
+
 	if( obj === undefined )
 	{
 		for (var key in SAGE2Items.radialMenus.list)
@@ -4758,8 +4765,14 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 	}
 	else
 	{
-		radialMenu = obj.data.onRelease( uniqueID );
-		radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+		if ( obj.id.indexOf("menu_radial_button") != -1 ) {
+			// Pressing on radial menu button
+			console.log("pointer release on radial button: " + obj.id);
+		} else {
+			// Not on a button
+			radialMenu = obj.data.onRelease( uniqueID );
+			radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+		}
 	}
 }
 
