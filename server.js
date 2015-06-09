@@ -887,7 +887,13 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 
 	// Iterate over all the clients of this app
 	for (key in SAGE2Items.renderSync[data.id].clients) {
-		var did     = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
+		var did = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
+		// Overview display
+		if (did === -1) {
+			// send the full frame to be displayed
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			continue;
+		}
 		var display = config.displays[did];
 		// app coordinates
 		var left    = stream.left;
@@ -1135,6 +1141,7 @@ function wsUpdateAppState(wsio, data) {
 		var app = SAGE2Items.applications.list[data.id];
 
 		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+
 		var portal = findApplicationPortal(app);
 		if (portal !== undefined && portal !== null && data.updateRemote === true) {
 			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
@@ -3556,17 +3563,16 @@ function byteBufferToString(buf) {
 }
 
 function mergeObjects(a, b, ignore) {
-    if ((a === undefined) || (a === null))
-	return false;
-
 	var ig = ignore || [];
 	var modified = false;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
-			if(typeof b[key] === "object" && typeof a[key] === "object") {
+			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
+			var bRecurse = (b[key] === null || b[key] instanceof Array || typeof b[key] !== "object") ? false : true;
+			if (aRecurse && bRecurse) {
 				modified = mergeObjects(a[key], b[key]) || modified;
 			}
-			else if((b[key] === null || typeof b[key] !== "object") && (a[key] === null || typeof a[key] !== "object") && (a[key] !== b[key])) {
+			else if (!aRecurse && !bRecurse && a[key] !== b[key]) {
 				b[key] = a[key];
 				modified = true;
 			}
@@ -4266,7 +4272,9 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 		}
 		else {
-			var appId = obj.data.appId || obj.id;
+			var appId = obj.id;
+			if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+				appId = obj.data.appId;
 			if(appUserColors[appId] !== color){
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
@@ -5853,7 +5861,9 @@ function attachAppIfSticky(backgroundItem, appId){
 
 function showOrHideWidgetLinks(data){
 	var obj = data.item;
-	var appId = obj.data.appId || obj.id;
+	var appId = obj.id;
+	if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+		appId = obj.data.appId;
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
 		app = getAppPositionSize(app);
