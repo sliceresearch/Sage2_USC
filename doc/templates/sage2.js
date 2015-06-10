@@ -22,7 +22,6 @@ var APPNAME = SAGE2_App.extend( {
 		this.maxFPS = 2.0;
 		// Not adding controls but making the default buttons available
 		this.controls.finishedAddingControls();
-		this.enableControls = true;
 	},
 
 	load: function(date) {
@@ -48,7 +47,7 @@ var APPNAME = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 		}
-		else if (eventType === "pointerMove" && this.dragging) {
+		else if (eventType === "pointerMove") {
 		}
 		else if (eventType === "pointerRelease" && (data.button === "left")) {
 		}
