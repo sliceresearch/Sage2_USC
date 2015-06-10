@@ -178,6 +178,7 @@ function RadialMenu(){
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
 
+		this.radialMenuDiv = document.getElementById(this.id+"_menu");
 		this.thumbnailWindowDiv = document.getElementById(this.id+"_menuDiv");
 
 		// Debug: Show scrolling window background
@@ -318,7 +319,7 @@ function RadialMenu(){
 	 * @param state
 	 */
 	this.setRadialButtonState = function(buttonID, state) {
-		console.log("setRadialButtonState");
+		//console.log("setRadialButtonState");
 		this.radialMenuButtons[buttonID].setButtonState(state);
 		this.draw();
 	}
@@ -506,7 +507,7 @@ function RadialMenu(){
 				currentThumbnailButtons = this.pdfThumbnailButtons;
 			else if( this.currentMenuState === 'videoThumbnailWindow' )
 				currentThumbnailButtons = this.videoThumbnailButtons;
-			else if( this.currentMenuState === 'appThumbnailWindow' )
+			else if( this.currentMenuState === 'applauncherThumbnailWindow' )
 				currentThumbnailButtons = this.appThumbnailButtons;
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
@@ -654,8 +655,8 @@ function RadialMenu(){
 	this.closeMenu = function() {
 		this.visible = false;
 
-		if( this.sendsToServer === true )
-			this.wsio.emit('removeRadialMenu', { id: this.id } );
+		this.radialMenuDiv.style.display = "none";
+		this.thumbnailWindowDiv.style.display = "none";
 
 		this.currentMenuState = 'radialMenu';
 		this.resetRadialButtonLitState();
@@ -676,23 +677,25 @@ function RadialMenu(){
 			this.element.width    = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
 			this.element.height   = this.thumbnailWindowSize.y;
 			this.thumbnailScrollWindowElement.style.display = "block";
+			this.thumbnailWindowDiv.style.display = "block";
 			this.thumbScrollWindowctx.redraw = true;
 			this.updateThumbnailPositions();
 			this.draw();
 
-			if (this.sendsToServer === true) {
-				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: true } );
-			}
+			//if (this.sendsToServer === true) {
+			//	this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: true } );
+			//}
 			return true;
 		} else {
 			this.currentMenuState = 'radialMenu';
 			this.element.width    = this.radialMenuSize.x;
 			this.element.height   = this.radialMenuSize.y;
-			//this.thumbnailScrollWindowElement.style.display = "None";
-
-			if (this.sendsToServer === true) {
-				this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: false } );
-			}
+			this.thumbnailWindowDiv.style.display = "none";
+			this.draw();
+			
+			//if (this.sendsToServer === true) {
+			//	this.wsio.emit('radialMenuWindowToggle', { id: this.id, thumbnailWindowOpen: false } );
+			//}
 			return false;
 		}
 	};
@@ -703,15 +706,15 @@ function RadialMenu(){
 	 * @method resetRadialButtonLitState
 	 */
 	this.resetRadialButtonLitState = function() {
-		this.radialRemoteSitesButton.isLit = false;
-		this.radialImageButton.isLit = false;
-		this.radialPDFButton.isLit = false;
-		this.radialVideoButton.isLit = false;
-		this.radialAppButton.isLit = false;
-		this.radialSessionButton.isLit = false;
-		this.radialSaveSessionButton.isLit = false;
-		this.radialCloseButton.isLit = false;
-		this.radialSessionButton.isLit = false;
+		//this.radialRemoteSitesButton.isLit = false;
+		//this.radialImageButton.isLit = false;
+		//this.radialPDFButton.isLit = false;
+		//this.radialVideoButton.isLit = false;
+		//this.radialAppButton.isLit = false;
+		//this.radialSessionButton.isLit = false;
+		//this.radialSaveSessionButton.isLit = false;
+		//this.radialCloseButton.isLit = false;
+		//this.radialSessionButton.isLit = false;
 	};
 
 	/**
@@ -845,7 +848,7 @@ function RadialMenu(){
 		}
 		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() ) {
 			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('appThumbnailWindow') )
+			if( this.setToggleMenu('applauncherThumbnailWindow') )
 			{
 				this.radialAppButton.isLit = true;
 				if( this.sendsToServer === true )
@@ -889,7 +892,7 @@ function RadialMenu(){
 				currentThumbnailButtons = this.pdfThumbnailButtons;
 			else if( this.currentMenuState === 'videoThumbnailWindow' )
 				currentThumbnailButtons = this.videoThumbnailButtons;
-			else if( this.currentMenuState === 'appThumbnailWindow' )
+			else if( this.currentMenuState === 'applauncherThumbnailWindow' )
 				currentThumbnailButtons = this.appThumbnailButtons;
 			else if( this.currentMenuState === 'sessionThumbnailWindow' )
 				currentThumbnailButtons = this.sessionThumbnailButtons;
@@ -907,7 +910,7 @@ function RadialMenu(){
 					this.buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 
 					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false ) {
-						if( this.currentMenuState === 'appThumbnailWindow' ) {
+						if( this.currentMenuState === 'applauncherThumbnailWindow' ) {
 							this.loadApplication( thumbButton.getData(), user  );
 						} else {
 							this.loadFileFromServer( thumbButton.getData(), user  );
@@ -1258,7 +1261,7 @@ function RadialMenu(){
 		//var maxScrollPosX = this.thumbnailWindowPosition.x - (maxCols - neededColumns + 2) * (this.imageThumbSize + thumbSpacer);
 
 		// Special thumbnail size for custom apps
-		if( this.currentMenuState === 'appThumbnailWindow' ) {
+		if( this.currentMenuState === 'applauncherThumbnailWindow' ) {
 			maxRows = Math.floor((this.thumbnailWindowSize.y-this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
 			maxCols = Math.floor((this.thumbnailWindowSize.x-this.thumbnailWindowPosition.x) / (this.imageThumbSize * 2 + thumbSpacer));
 			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows );
@@ -1285,7 +1288,7 @@ function RadialMenu(){
 			this.setThumbnailPosition( this.videoThumbnailButtons, this.imageThumbSize, thumbSpacer, maxRows, neededColumns );
 		}
 
-		if( this.currentMenuState === 'appThumbnailWindow' ) {
+		if( this.currentMenuState === 'applauncherThumbnailWindow' ) {
 			this.setThumbnailPosition( this.appThumbnailButtons, this.imageThumbSize * 2, thumbSpacer, maxRows, neededColumns );
 		}
 
@@ -1535,7 +1538,6 @@ function ButtonWidget() {
 	};
 	
 	this.setButtonState = function(state) {
-		console.log("button set to "+state);
 		this.state = state;
 		this.ctx.redraw = true;
 	};

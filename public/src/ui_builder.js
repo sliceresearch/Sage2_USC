@@ -808,14 +808,15 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.display = "block";
 			menu.thumbnailScrollWindowElement.style.display = "block";
-			menu.thumbnailWindowDiv.style.display = "block";
+			if( menu.currentMenuState !== 'radialMenu' ) {
+				menu.thumbnailWindowDiv.style.display = "block";
+			} else {
+				menu.thumbnailWindowDiv.style.display = "none";
+				menu.draw();
+			}
 			menu.visible = true;
 
 			var rect = menuElem.getBoundingClientRect();
-			menuElem.style.display = "block";
-			menu.thumbnailScrollWindowElement.style.display = "block";
-			menu.thumbnailWindowDiv.style.display = "block";
-
 			menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
@@ -836,9 +837,20 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.radialMenuEvent = function(data) {
 		if( data.type == "stateChange" ) {
-			var buttonStates = data.buttonStates;
-			for( buttonName in buttonStates ) {
-				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, buttonStates[buttonName]);
+			
+			// Update the button state
+			var menuState = data.menuState;
+			for( buttonName in menuState.buttonState ) {
+				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, menuState.buttonState[buttonName]);
+			}
+			
+			// State also contains new actions
+			if( data.menuState.action != undefined ) {
+				if( data.menuState.action.type == "contentWindow" ) {
+					this.radialMenus[data.menuID+"_menu"].setToggleMenu(data.menuState.action.window+"ThumbnailWindow");
+				} else if( data.menuState.action.type == "close" ) {
+					this.radialMenus[data.menuID+"_menu"].closeMenu();
+				}
 			}
 		}
 	};
