@@ -3834,13 +3834,15 @@ function showRequestDialog(flag) {
 }
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	var existingRadialMenu = obj.data;
 	//console.log("pointer press on radial menu");
-
 	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
 		// Pressing on radial menu button
 		//console.log("Pressed radial button: " + obj.id);
-		data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
-		radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		var buttonStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress");
+		if( buttonStateChange != undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, buttonStates: buttonStateChange });
+		}
 	} else {
 		// Not on a button
 		// Drag Content Browser only from radial menu
@@ -4320,19 +4322,16 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	// Check if on button
-	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
-
 	var existingRadialMenu = obj.data;
-	
+
 	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
 		// Pressing on radial menu button
 		//console.log("over radial button: " + obj.id);
 		//data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
 		//radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
-		var buttonStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID);
-		if( buttonStateChange != -1 ) {
-			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, id: existingRadialMenu.getShortButtonName(obj.id), newState: buttonStateChange });
+		var buttonStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerMove");
+		if( buttonStateChange != undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, buttonStates: buttonStateChange });
 		}
 	} else {
 		// Not on a button
@@ -4758,8 +4757,6 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
-	var radialMenu;
-
 	if( obj === undefined )
 	{
 		for (var key in SAGE2Items.radialMenus.list)
@@ -4774,16 +4771,18 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 	}
 	else
 	{
+		var radialMenu = obj.data;
 		if ( obj.id.indexOf("menu_radial_button") != -1 ) {
 			// Pressing on radial menu button
 			//console.log("pointer release on radial button: " + obj.id);
-			radialMenu = obj.data.onRelease( uniqueID );
-			data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
-			radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+			radialMenu.onRelease( uniqueID );
+			var buttonStateChange = radialMenu.onButtonEvent(obj.id, uniqueID, "pointerRelease");
+			if( buttonStateChange != undefined ) {
+				radialMenuEvent({type: "stateChange", menuID: radialMenu.id, buttonStates: buttonStateChange });
+			}
 		} else {
 			// Not on a button
 			radialMenu = obj.data.onRelease( uniqueID );
-			//radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 		}
 	}
 }

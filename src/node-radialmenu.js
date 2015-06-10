@@ -93,9 +93,9 @@ RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 		var buttonInfo = this.radialButtons[buttonName];
 		
 		var menuRadius = 100;
-		var buttonRadius = 50;
+		var buttonRadius = 50 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI/180);
-		var position = {x: this.left - menuRadius * this.radialMenuScale * Math.cos(angle), y: this.top - menuRadius * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - (menuRadius - buttonRadius/2) * this.radialMenuScale * Math.cos(angle), y: this.top - (menuRadius - buttonRadius/2) * this.radialMenuScale * Math.sin(angle) };
 		var visible = true;
 
 		if( buttonInfo.radialLevel != 1 ) {
@@ -123,24 +123,44 @@ RadialMenu.prototype.getInfo = function() {
 * @param pointerID
 * @return stateChange -1 = no change, 0 = now idle, 1 = now mouse over, 2 = now clicked
 */
-RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID) {
+RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType) {
 	var buttonName = buttonID.substring((this.id+"_menu_radial_button_").length, buttonID.length);
+	var buttonStates = {};
 	if( pointerID in this.radialButtons[buttonName].pointers ) {
 		//console.log("Existing pointer event: "+pointerID + " on button " + buttonName);
-		
-		// If button was previously idle
-		if( this.radialButtons[buttonName].state == 0 ) {
-			this.radialButtons[buttonName].state = 1;
-			return 1; // Set state to hover over
-		} else {
-			return -1; // No state change
+		if( buttonType == "pointerPress" ) {
+			this.radialButtons[buttonName].state = 2;
+		} else if( buttonType == "pointerRelease" ) {
+			this.radialButtons[buttonName].state = 4;
 		}
+		buttonStates[buttonName] = this.radialButtons[buttonName].state;
+		return buttonStates; // No State change
 	}
 	else {
+		// Clear ID from other buttons (in case pointer moved so fast, that a clear event on menu never happened)
+		for (var otherButtonName in this.radialButtons) {
+			if( otherButtonName != buttonName ){
+				delete this.radialButtons[otherButtonName].pointers[pointerID];
+				if( Object.keys(this.radialButtons[otherButtonName].pointers).length == 0 ) {
+					if( this.radialButtons[otherButtonName].state != 0 ) {
+						this.radialButtons[otherButtonName].state = 0;
+					}
+				}
+				buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
+			}
+		}
 		console.log("New pointer event: "+pointerID + " on button " + buttonName);
 		this.radialButtons[buttonName].pointers[pointerID] = "";
+		if( buttonType == "pointerMove" ) {
+			this.radialButtons[buttonName].state = 1;
+		} else if( buttonType == "pointerPress" ) {
+			this.radialButtons[buttonName].state = 2;
+		} else if( buttonType == "pointerRelease" ) {
+			this.radialButtons[buttonName].state = 4;
+		}
+		buttonStates[buttonName] = this.radialButtons[buttonName].state
 		delete this.pointersOnMenu[pointerID];
-		return -1; // No state change
+		return buttonStates;
 	}
 };
 
@@ -164,7 +184,7 @@ RadialMenu.prototype.onMenuEvent = function(pointerID) {
 		for (var buttonName in this.radialButtons) {
 			delete this.radialButtons[buttonName].pointers[pointerID];
 			if( Object.keys(this.radialButtons[buttonName].pointers).length == 0 ) {
-				if( this.radialButtons[buttonName].state == 1 ) {
+				if( this.radialButtons[buttonName].state != 0 ) {
 					this.radialButtons[buttonName].state = 0;
 				} else {
 				}
@@ -240,16 +260,16 @@ RadialMenu.prototype.setPosition = function(data) {
 		
 		var buttonInfo = this.radialButtons[buttonName];
 		
-		var menuRadius = 150;
-		var buttonRadius = 50;
+		var menuRadius = 100;
+		var buttonRadius = 25 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI/180);
-		var position = {x: this.left - menuRadius * this.radialMenuScale * Math.cos(angle), y: this.top - menuRadius * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - (menuRadius - buttonRadius/2) * this.radialMenuScale * Math.cos(angle), y: this.top - (menuRadius - buttonRadius/2) * this.radialMenuScale * Math.sin(angle) };
 		var visible = true;
-		
-		
+
 		if( buttonInfo.radialLevel != 1 ) {
 			visible = false;
 		}
+
 		//console.log("setPosition: " + buttonName + " " +menuRadius * Math.cos(angle) + " " + menuRadius * Math.sin(angle) );
 		this.interactMgr.editGeometry(this.id+"_menu_radial_button_"+buttonName, "radialMenus", "circle", {x: position.x, y: position.y, r: buttonRadius});
 	}

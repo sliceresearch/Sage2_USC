@@ -835,9 +835,7 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Event} event
 	*/
 	this.radialMenuEvent = function(data) {
-		if( data.type == "stateChange" && data.id != undefined ) {
-			this.radialMenus[data.menuID+"_menu"].setRadialButtonState(data.id, data.newState);
-		} else if( data.type == "stateChange" ) {
+		if( data.type == "stateChange" ) {
 			var buttonStates = data.buttonStates;
 			for( buttonName in buttonStates ) {
 				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, buttonStates[buttonName]);
