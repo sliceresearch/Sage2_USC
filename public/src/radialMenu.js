@@ -217,10 +217,7 @@ function RadialMenu(){
 			
 			this.addRadialMenuButton(buttonName, radialMenuIcons[buttonInfo.icon], overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', buttonInfo.radialPosition, buttonInfo.radialLevel);
 		}
-		
-		
-		
-		 
+
 		/*
 		this.radialRemoteSitesButton = this.addRadialMenuButton("radialRemoteSitesButton", idleRemoteSitesIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 0, 1);
 		this.radialRemoteSitesButton.setHidden(true);
@@ -312,6 +309,19 @@ function RadialMenu(){
 		*/
 
 	};
+	
+	/**
+	 * Sets the state of a radial menu button
+	 *
+	 * @method createRadialButton
+	 * @param buttonID
+	 * @param state
+	 */
+	this.setRadialButtonState = function(buttonID, state) {
+		console.log("setRadialButtonState");
+		this.radialMenuButtons[buttonID].setButtonState(state);
+		this.draw();
+	}
 
 	/**
 	 * Helper function for creating a radial button (more generic than addRadialMenuButton)
@@ -1402,7 +1412,7 @@ function ButtonWidget() {
 		this.ctx.save();
 		this.ctx.translate( translate.x, translate.y );
 
-		if( this.state === 5 ) {
+		if( this.state === 1 ) {
 			this.ctx.fillStyle = this.mouseOverColor;
 		}
 		else if( this.state === 3 ) {
@@ -1523,7 +1533,13 @@ function ButtonWidget() {
 			return 0;
 		}
 	};
-
+	
+	this.setButtonState = function(state) {
+		console.log("button set to "+state);
+		this.state = state;
+		this.ctx.redraw = true;
+	};
+	
 	this.isPositionOver = function(id, position) {
 		var x = position.x;
 		var y = position.y;

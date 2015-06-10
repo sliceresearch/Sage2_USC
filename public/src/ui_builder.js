@@ -835,34 +835,12 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Event} event
 	*/
 	this.radialMenuEvent = function(data) {
-		for (var menuID in this.radialMenus) {
-			var menuElem = document.getElementById(menuID);
-			var menu     = this.radialMenus[menuID];
-
-			if (menuElem !== null) {
-				var rect = menuElem.getBoundingClientRect();
-
-				var pointerX = data.x - rect.left - this.offsetX;
-				var pointerY = data.y - rect.top - this.offsetY;
-
-				if (menu.visible) {
-					menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
-					menuElem.style.display = "block";
-					menu.thumbnailScrollWindowElement.style.display = "block";
-					menu.thumbnailWindowDiv.style.display = "block";
-
-					menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
-
-					if( menu.ctx.redraw === true || menu.thumbScrollWindowctx.redraw === true ) {
-						menu.draw();
-					}
-				}
-				// If instead of else in case event triggered close menu
-				if (menu.visible === false) {
-					menuElem.style.display = "none";
-					menu.thumbnailScrollWindowElement.style.display = "none";
-					menu.thumbnailWindowDiv.style.display = "none";
-				}
+		if( data.type == "stateChange" && data.id != undefined ) {
+			this.radialMenus[data.menuID+"_menu"].setRadialButtonState(data.id, data.newState);
+		} else if( data.type == "stateChange" ) {
+			var buttonStates = data.buttonStates;
+			for( buttonName in buttonStates ) {
+				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, buttonStates[buttonName]);
 			}
 		}
 	};

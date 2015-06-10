@@ -3838,7 +3838,9 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 
 	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
 		// Pressing on radial menu button
-		console.log("Pressed radial button: " + obj.id);
+		//console.log("Pressed radial button: " + obj.id);
+		data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 	} else {
 		// Not on a button
 		// Drag Content Browser only from radial menu
@@ -3846,9 +3848,6 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 			obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
 		}
 	}
-
-	data = { button: data.button, color: sagePointers[uniqueID].color };
-	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 }
 
 function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, pressRelease) {
@@ -4325,16 +4324,27 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 
 	var existingRadialMenu = obj.data;
-
+	
 	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
 		// Pressing on radial menu button
-		console.log("over radial button: " + obj.id);
+		//console.log("over radial button: " + obj.id);
+		//data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+		//radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		var buttonStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID);
+		if( buttonStateChange != -1 ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, id: existingRadialMenu.getShortButtonName(obj.id), newState: buttonStateChange });
+		}
 	} else {
 		// Not on a button
+		var buttonStates = existingRadialMenu.onMenuEvent(uniqueID);
+		if( buttonStates != undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, buttonStates: buttonStates });
+		}
 		// Drag Content Browser only from radial menu
 		if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
 			var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
 			moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+			radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
 		}
 	}
 }
@@ -4748,7 +4758,6 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
-	
 	var radialMenu;
 
 	if( obj === undefined )
@@ -4767,11 +4776,14 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 	{
 		if ( obj.id.indexOf("menu_radial_button") != -1 ) {
 			// Pressing on radial menu button
-			console.log("pointer release on radial button: " + obj.id);
+			//console.log("pointer release on radial button: " + obj.id);
+			radialMenu = obj.data.onRelease( uniqueID );
+			data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+			radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 		} else {
 			// Not on a button
 			radialMenu = obj.data.onRelease( uniqueID );
-			radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+			//radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 		}
 	}
 }
@@ -5819,9 +5831,12 @@ function updateRadialMenu(uniqueID) {
 	broadcast('updateRadialMenuDocs', {id: uniqueID, fileList: list});
 }
 
-// Standard case: Checks for event down and up events to determine menu ownership of event
+// Sends button state update messages to display
 function radialMenuEvent( data )
 {
+	if( data.type == "stateChange" ) {
+		broadcast('radialMenuEvent', data);
+	}
 	//broadcast('radialMenuEvent', data);
 }
 
