@@ -887,9 +887,9 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 
 	// Iterate over all the clients of this app
 	for (key in SAGE2Items.renderSync[data.id].clients) {
-		var did     = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
-		if (!(did in config.displays)) {
-			console.log("Config for display not found");
+		var did = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
+		// Overview display
+		if (did === -1) {
 			// send the full frame to be displayed
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
 			continue;
@@ -1141,6 +1141,7 @@ function wsUpdateAppState(wsio, data) {
 		var app = SAGE2Items.applications.list[data.id];
 
 		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+
 		var portal = findApplicationPortal(app);
 		if (portal !== undefined && portal !== null && data.updateRemote === true) {
 			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
@@ -3562,17 +3563,16 @@ function byteBufferToString(buf) {
 }
 
 function mergeObjects(a, b, ignore) {
-    if ((a === undefined) || (a === null))
-	return false;
-
 	var ig = ignore || [];
 	var modified = false;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
-			if(typeof b[key] === "object" && typeof a[key] === "object") {
+			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
+			var bRecurse = (b[key] === null || b[key] instanceof Array || typeof b[key] !== "object") ? false : true;
+			if (aRecurse && bRecurse) {
 				modified = mergeObjects(a[key], b[key]) || modified;
 			}
-			else if((b[key] === null || typeof b[key] !== "object") && (a[key] === null || typeof a[key] !== "object") && (a[key] !== b[key])) {
+			else if (!aRecurse && !bRecurse && a[key] !== b[key]) {
 				b[key] = a[key];
 				modified = true;
 			}
@@ -3671,6 +3671,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
 	var color = sagePointers[uniqueID]? sagePointers[uniqueID].color : null;
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+
 	switch (obj.layerId) {
 		case "staticUI":
 			pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt);
@@ -3835,12 +3836,18 @@ function showRequestDialog(flag) {
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	//console.log("pointer press on radial menu");
 
-	// Drag Content Browser only from radial menu
-	if (data.button === "left" && obj.type !== 'rectangle' ) {
-		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
+	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
+		// Pressing on radial menu button
+		//console.log("Pressed radial button: " + obj.id);
+		data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
+	} else {
+		// Not on a button
+		// Drag Content Browser only from radial menu
+		if (data.button === "left" && obj.type !== 'rectangle' ) {
+			obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
+		}
 	}
-
-	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 }
 
 function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, localPt, pressRelease) {
@@ -4263,7 +4270,9 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
 		}
 		else {
-			var appId = obj.id || obj.data.appId
+			var appId = obj.id;
+			if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+				appId = obj.data.appId;
 			if(appUserColors[appId] !== color){
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:prevInteractionItem, show:false});
 				showOrHideWidgetLinks({uniqueID:uniqueID, item:obj, user_color:color, show:true});
@@ -4315,11 +4324,28 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
 
 	var existingRadialMenu = obj.data;
-
-	// Content Browser is only draggable on radial menu
-	if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
-		var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
-		moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+	
+	if ( obj.id.indexOf("menu_radial_button") != -1 ) {
+		// Pressing on radial menu button
+		//console.log("over radial button: " + obj.id);
+		//data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+		//radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		var buttonStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID);
+		if( buttonStateChange != -1 ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, id: existingRadialMenu.getShortButtonName(obj.id), newState: buttonStateChange });
+		}
+	} else {
+		// Not on a button
+		var buttonStates = existingRadialMenu.onMenuEvent(uniqueID);
+		if( buttonStates != undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, buttonStates: buttonStates });
+		}
+		// Drag Content Browser only from radial menu
+		if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
+			var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
+			moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+			radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		}
 	}
 }
 
@@ -4733,6 +4759,7 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 
 function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 	var radialMenu;
+
 	if( obj === undefined )
 	{
 		for (var key in SAGE2Items.radialMenus.list)
@@ -4747,8 +4774,17 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 	}
 	else
 	{
-		radialMenu = obj.data.onRelease( uniqueID );
-		radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+		if ( obj.id.indexOf("menu_radial_button") != -1 ) {
+			// Pressing on radial menu button
+			//console.log("pointer release on radial button: " + obj.id);
+			radialMenu = obj.data.onRelease( uniqueID );
+			data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+			radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+		} else {
+			// Not on a button
+			radialMenu = obj.data.onRelease( uniqueID );
+			//radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+		}
 	}
 }
 
@@ -5670,7 +5706,6 @@ if ( config.experimental && config.experimental.omicron && config.experimental.o
 }
 
 /* ****** Radial Menu section ************************************************************** */
-
 //createMediabrowser();
 
 function createRadialMenu(uniqueID, pointerX, pointerY) {
@@ -5690,13 +5725,11 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined) {
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
+		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
-		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
-		interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left, y: newRadialMenu.top, w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
+		
 		SAGE2Items.radialMenus.list[uniqueID+"_menu"] = newRadialMenu;
 
-		//console.log("Create New Radial menu");
-		//console.log(newRadialMenu);
 		// Open a 'media' radial menu
 		broadcast('createRadialMenu', newRadialMenu.getInfo());
 	}
@@ -5719,13 +5752,9 @@ function moveRadialMenu(uniqueID, pointerX, pointerY ) {
 	var existingRadialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 
 	if( existingRadialMenu ) {
+		
 		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
 		existingRadialMenu.visible = true;
-
-		interactMgr.editGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y/2});
-
-		var thumbnailWindowPos = existingRadialMenu.getThumbnailWindowPosition();
-		interactMgr.editGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: thumbnailWindowPos.x, y: thumbnailWindowPos.y, w: existingRadialMenu.thumbnailWindowSize.x, h: existingRadialMenu.thumbnailWindowSize.y});
 
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
@@ -5802,10 +5831,13 @@ function updateRadialMenu(uniqueID) {
 	broadcast('updateRadialMenuDocs', {id: uniqueID, fileList: list});
 }
 
-// Standard case: Checks for event down and up events to determine menu ownership of event
+// Sends button state update messages to display
 function radialMenuEvent( data )
 {
-	broadcast('radialMenuEvent', data);
+	if( data.type == "stateChange" ) {
+		broadcast('radialMenuEvent', data);
+	}
+	//broadcast('radialMenuEvent', data);
 }
 
 // Check for pointer move events that are dragging a radial menu (but outside the menu)
@@ -5857,7 +5889,9 @@ function attachAppIfSticky(backgroundItem, appId){
 
 function showOrHideWidgetLinks(data){
 	var obj = data.item;
-        var appId = obj.id || obj.data.appId
+	var appId = obj.id;
+	if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined)
+		appId = obj.data.appId;
 	var app = SAGE2Items.applications.list[appId];
 	if (app!==null && app!==undefined){
 		app = getAppPositionSize(app);
