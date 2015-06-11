@@ -128,7 +128,41 @@ module.exports.yuv420ToPixelBlocks = function(yuvBuffer, width, height, maxSize)
  * @return {Array} array of buffer, one for each block of pixel
  */
 module.exports.yuv422ToPixelBlocks = function(yuvBuffer, width, height, maxSize) {
+        var uStart = width*height;
+        var vStart = uStart + (width*height/4);
+        //
+        var i, j, k;
+        var blockBuffers = [];
+        //
+        var horizontalBlocks = Math.ceil(width/maxSize);
+        var verticalBlocks   = Math.ceil(height/maxSize);
+        for (i=0; i<verticalBlocks; i++) {
+                for (j=0; j<horizontalBlocks; j++) {
+                        var bWidth  = (j+1)*maxSize > width  ? width -(j*maxSize) : maxSize;
+                        var bHeight = (i+1)*maxSize > height ? height-(i*maxSize) : maxSize;
+                        var buStart = bWidth*bHeight;
+                        var bvStart = buStart + (bWidth*bHeight/4);
+                        var block   = new Buffer(bWidth*bHeight*1.5);
+                        //
+                        for (k=0; k<bHeight; k++) {
+                                var row = i*maxSize + k;
+                                var col = j*maxSize;
+                                var yStart = row*width + col;
 
+                                yuvBuffer.copy(block, k*bWidth, yStart, yStart+bWidth);
+                                if(k%2 === 0){
+                                        var uvRow   = Math.floor(row/2);
+                                        var uvCol   = Math.floor(col/2);
+                                        var uvStart = uvRow*width/2 + uvCol;
+                                        //
+                                        yuvBuffer.copy(block, buStart+k/2*bWidth/2, uStart+uvStart, uStart+uvStart+bWidth/2);
+                                        yuvBuffer.copy(block, bvStart+k/2*bWidth/2, vStart+uvStart, vStart+uvStart+bWidth/2);
+                                }
+                        }
+                        blockBuffers.push(block);
+                }
+        }
+        return blockBuffers;
 };
 
 /**

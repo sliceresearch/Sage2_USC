@@ -1027,6 +1027,8 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 		blockBuffers = pixelblock.rgbaToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 	else if (colorspace === "YUV420p")
 		blockBuffers = pixelblock.yuv420ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
+        else if (colorspace === "YUV422")
+                blockBuffers = pixelblock.yuv422ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
