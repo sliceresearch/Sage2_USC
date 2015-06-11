@@ -1054,8 +1054,6 @@ function wsStopMediaBlockStream(wsio, data) {
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
-	console.log('wsReceivedMediaBlockStreamFrame');
-
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
