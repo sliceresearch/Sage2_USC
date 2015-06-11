@@ -1175,7 +1175,8 @@ function escapeDialog(event) {
  */
 function noBackspace(event) {
 	// backspace keyCode is 8
-	if (parseInt(event.keyCode, 10) === 8) {
+	// allow backspace in text box: target.type is defined for input elements
+	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
 		event.preventDefault();
 	} else {
 		return true;

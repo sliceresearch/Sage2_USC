@@ -49,7 +49,8 @@ function SAGE2_interaction(wsio) {
 	this.scrollTimeId = null;
 	/////////////////////////////////
 
-	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "SAGE2_user";
+	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null ||
+		localStorage.SAGE2_ptrName  === "Default") localStorage.SAGE2_ptrName  = "SAGE2_user";
 	if (localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
 
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
