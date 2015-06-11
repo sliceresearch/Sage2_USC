@@ -216,6 +216,21 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
+		// Left Click  - go back one page
+		// Right Click - go forward one page
+		if (eventType === "pointerPress") {
+			if (data.button === "left") {
+				if(this.state.page <= 1) return;
+				this.state.page = this.state.page - 1;
+				this.refresh(date);
+			}
+			else if (data.button === "right") {
+				if (this.state.page >= this.pdfDoc.numPages) return;
+				this.state.page = this.state.page + 1;
+				this.refresh(date);
+			}
+		}
+
 		// Left Arrow  - go back one page
 		// Right Arrow - go forward one page
 		if (eventType === "specialKey") {
