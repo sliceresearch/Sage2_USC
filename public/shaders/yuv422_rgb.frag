@@ -2,7 +2,6 @@ precision mediump float;
 
 uniform sampler2D rgb_image; // actually it's bgra
 varying vec2 v_texCoord;
-vec4 mysample;
 
 void main() {
         // for now, just use the (interpolated) luma

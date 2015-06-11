@@ -28,7 +28,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	*/
 	blockStreamInit: function(data) {
 		this.SAGE2Init("div", data);
-                this.log("blockStreamInit");
 
 		this.moveEvents       = "onfinish";
 		this.resizeEvents     = "onfinish";
@@ -202,7 +201,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	},
 
 	initYUV422Shaders: function(callback) {
-                this.log("initYUV422Shaders");
 		var _this = this;
 		var vertFile = "shaders/yuv422_rgb.vert";
 		var fragFile = "shaders/yuv422_rgb.frag";
@@ -237,7 +235,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 			callback();
 		});
-                this.log("initYUV422Shaders done");
 	},
 
 	/**
@@ -305,7 +302,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method initBuffers
 	*/
 	initBuffers: function() {
-		this.log("initBuffers...");
 		for (var i=0; i<this.verticalBlocks; i++) {
 			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
@@ -358,7 +354,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.squareVertexIndexBuffer.push(squareVertexIndexBuffer);
 			}
 		}
-		this.log("initBuffers done");
 	},
 
 	/**
@@ -463,7 +458,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 
     initYUV422Textures: function() {
-		this.log("initYUV422Textures");
 		for (var i=0; i<this.verticalBlocks; i++) {
 			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
@@ -487,7 +481,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.rgbaBuffer.push(rgbaBuffer);
 			}
 		}
-		this.log("initYUV422Textures done");
     },
 
 	/**
@@ -502,6 +495,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			this.textureDataRGBA(blockIdx, buffer);
         else if (this.state.colorspace === "YUV420p")
 			this.textureDataYUV420p(blockIdx, buffer);
+        else if (this.state.colorspace === "YUV422")
+			this.textureDataYUV422(blockIdx, buffer);
 	},
 
 	textureDataRGBA: function(blockIdx, rgbaBuffer) {
@@ -511,6 +506,11 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 	textureDataYUV420p: function(blockIdx, yuvBuffer) {
 		this.yuvBuffer[blockIdx] = yuvBuffer;
+		this.receivedBlocks[blockIdx] = true;
+	},
+
+	textureDataYUV422: function(blockIdx, rgbaBuffer) {
+		this.rgbaBuffer[blockIdx] = rgbaBuffer;
 		this.receivedBlocks[blockIdx] = true;
 	},
 
@@ -587,7 +587,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 			}
 		}
-                this.log("updateTexturesYUV422 done");
 	},
 
 	/**
@@ -632,8 +631,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
 		this.updateTextures();
-
-		this.log("updateTextures done");
 
 		if (this.state.colorspace === "RGBA")
 			this.drawRGBA();
@@ -694,7 +691,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	},
 
     drawYUV422: function() {
-                this.log("drawYUV422");
 		for(var i=0; i<this.verticalBlocks; i++){
 			for(var j=0; j<this.horizontalBlocks; j++){
 				var blockIdx = i*this.horizontalBlocks+j;
@@ -713,7 +709,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems, this.gl.UNSIGNED_SHORT, 0);
 			}
 		}
-                this.log("drawYUV422 done");
     },
 
 	/**
