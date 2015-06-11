@@ -105,30 +105,11 @@ function SAGE2_init() {
 	wsio.open(function() {
 		console.log("Websocket opened");
 
+		// Start an initial resize of the UI once we get a connection
+		SAGE2_resize();
+
 		setupListeners();
 
-		/*
-		var clientDescription = {
-			clientType: "sageUI",
-			sendsPointerData: true,
-			sendsMediaStreamFrames: true,
-			uploadsContent: true,
-			requestsServerFiles: true,
-			sendsWebContentToLoad: true,
-			launchesWebBrowser: true,
-			sendsVideoSynchonization: false,
-			sharesContentWithRemoteServer: false,
-			receivesDisplayConfiguration: true,
-			receivesClockTime: false,
-			requiresFullApps: false,
-			requiresAppPositionSizeTypeOnly: true,
-			receivesMediaStreamFrames: false,
-			receivesWindowModification: true,
-			receivesPointerData: false,
-			receivesInputEvents: false,
-			receivesRemoteServerInfo: false
-		};
-		*/
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
@@ -204,8 +185,6 @@ function SAGE2_init() {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
 	});
-
-	SAGE2_resize();
 }
 
 function setupListeners() {
