@@ -128,6 +128,7 @@ module.exports.yuv420ToPixelBlocks = function(yuvBuffer, width, height, maxSize)
  * @return {Array} array of buffer, one for each block of pixel
  */
 module.exports.yuv422ToPixelBlocks = function(yuvBuffer, width, height, maxSize) {
+        console.log("YUV422ToPixelBlocks");
         var uStart = width*height;
         var vStart = uStart + (width*height/4);
         //
