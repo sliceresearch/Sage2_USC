@@ -128,6 +128,7 @@ module.exports.yuv420ToPixelBlocks = function(yuvBuffer, width, height, maxSize)
  * @return {Array} array of buffer, one for each block of pixel
  */
 module.exports.yuv422ToPixelBlocks = function(yuvBuffer, width, height, maxSize) {
+        // assume yuv422 uyvy - effectively 16bbp in two-pixel macropixels
         var i, j, k;
         var blockBuffers = [];
 
@@ -135,16 +136,20 @@ module.exports.yuv422ToPixelBlocks = function(yuvBuffer, width, height, maxSize)
         var verticalBlocks   = Math.ceil(height/maxSize);
         for (i=0; i<verticalBlocks; i++) {
                 for (j=0; j<horizontalBlocks; j++) {
+                        // width, height of this block in pixels
                         var bWidth  = (j+1)*maxSize > width  ? width -(j*maxSize) : maxSize;
                         var bHeight = (i+1)*maxSize > height ? height-(i*maxSize) : maxSize;
-                        var block   = new Buffer(bWidth*bHeight*4);
+                        // uint8 block buffer (2 bytes per pixel)
+                        var block   = new Buffer(bWidth*bHeight*2);
 
                         for (k=0; k<bHeight; k++) {
+                                // pixel row, col
                                 var row = i*maxSize + k;
                                 var col = j*maxSize;
-                                var start = 4*(row*width + col);
+                                //
+                                var start = 2*(row*width + col);
 
-                                yuvBuffer.copy(block, k*bWidth*4, start, start+bWidth*4);
+                                yuvBuffer.copy(block, k*bWidth*2, start, start+bWidth*2);
                         }
                         blockBuffers.push(block);
                 }

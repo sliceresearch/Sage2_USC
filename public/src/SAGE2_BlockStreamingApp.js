@@ -462,9 +462,10 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
-
+				this.log("bWidth,bHeight:",bWidth,bHeight);
 				var rgbaTexture = this.gl.createTexture();
 
+                                // still allocating same size buffer as for RGBA??
 				var rgbaBuffer = new Uint8Array(bWidth*bHeight*4);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbaTexture);
@@ -473,6 +474,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
                                 // linear filtering should be ok
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+                                // temporarily try without wrap/clamp
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
@@ -583,7 +585,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.rgbaBuffer[blockIdx]);
+				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth/2, bHeight, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.rgbaBuffer[blockIdx]);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 			}
 		}
