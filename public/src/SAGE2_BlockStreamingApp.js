@@ -462,14 +462,14 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			for (var j=0; j<this.horizontalBlocks; j++) {
 				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
 				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
-				this.log("bWidth,bHeight:",bWidth,bHeight);
+				//this.log("bWidth,bHeight:",bWidth,bHeight);
 				var rgbaTexture = this.gl.createTexture();
 
                                 // still allocating same size buffer as for RGBA??
 				var rgbaBuffer = new Uint8Array(bWidth*bHeight*4);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbaTexture);
-				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, bWidth, bHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgbaBuffer);
+				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, bWidth/2, bHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgbaBuffer);
 
                                 // linear filtering should be ok
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
