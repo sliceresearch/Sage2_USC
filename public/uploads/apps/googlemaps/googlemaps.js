@@ -33,24 +33,23 @@ var googlemaps = SAGE2_App.extend( {
 	},
 
 	initializeWidgets: function() {
-		var mapLabel     = {textual: true, label: "Map", fill: "rgba(250,250,250,1.0)", animation: false};
-		var trafficLabel = {textual: true, label: "T",   fill: "rgba(250,250,250,1.0)", animation: false};
-		var weatherLabel = {textual: true, label: "W",   fill: "rgba(250,250,250,1.0)", animation: false};
+		//var mapLabel     = {textual: true, label: "Map", fill: "rgba(250,250,250,1.0)", animation: false};
+		//var trafficLabel = {textual: true, label: "T",   fill: "rgba(250,250,250,1.0)", animation: false};
+		//var weatherLabel = {textual: true, label: "W",   fill: "rgba(250,250,250,1.0)", animation: false};
 
-		this.controls.addButton({type: mapLabel,     sequenceNo: 4, id: "Map"});
-		this.controls.addButton({type: trafficLabel, sequenceNo: 5, id: "Traffic"});
-		this.controls.addButton({type: weatherLabel, sequenceNo: 3, id: "Weather"});
-		this.controls.addButton({type: "zoom-in",    sequenceNo: 8, id: "ZoomIn"});
-		this.controls.addButton({type: "zoom-out",   sequenceNo: 9, id: "ZoomOut"});
-		this.controls.addTextInput({defaultText: "", caption:"Addr", id:"Address"});
+		this.controls.addButton({label: "Map",     	position: 4, identifier: "Map"});
+		this.controls.addButton({label: "T", 		position: 5, identifier: "Traffic"});
+		this.controls.addButton({label: "W", 		position: 3, identifier: "Weather"});
+		this.controls.addButton({type: "zoom-in",   position: 8, identifier: "ZoomIn"});
+		this.controls.addButton({type: "zoom-out",  position: 9, identifier: "ZoomOut"});
+		this.controls.addTextInput({defaultText: "", caption:"Addr", identifier:"Address"});
 		this.controls.addSlider({
-			id: "Zoom",
-			begin: 0,
-			end: 20,
+			identifier: "Zoom",
+			minimum: 0,
+			maximum: 20,
 			increments: 1,
-			appHandle: this,
-			property: "state.zoomLevel",
-			caption: "Zoom",
+			property: "this.state.zoomLevel",
+			label: "Zoom",
 			labelFormatFunction: function(value, end) {
 				return ((value<10)?"0":"") + value + "/" + end;
 			}
@@ -230,11 +229,12 @@ var googlemaps = SAGE2_App.extend( {
 			this.refresh(date);
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "Map":
 					this.changeMapType();
 					break;
 				case "Weather":
+					console.log("reaching action for weather!!");
 					this.toggleWeather();
 					break;
 				case "Traffic":

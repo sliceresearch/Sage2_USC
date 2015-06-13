@@ -123,11 +123,11 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	*/
 	addWidgetControlsToPdfViewer: function() {
 		if (this.pdfDoc.numPages>1){
-			this.controls.addButton({type: "fastforward", sequenceNo: 2, id: "LastPage"});
-			this.controls.addButton({type: "rewind",      sequenceNo: 6, id: "FirstPage"});
-			this.controls.addButton({type: "prev",        sequenceNo: 5, id: "PreviousPage"});
-			this.controls.addButton({type: "next",        sequenceNo: 3, id: "NextPage"});
-			this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1, appHandle: this, property: "state.page", caption: "Page", id: "Page"});
+			this.controls.addButton({type: "fastforward", position: 2, identifier: "LastPage"});
+			this.controls.addButton({type: "rewind",      position: 6, identifier: "FirstPage"});
+			this.controls.addButton({type: "prev",        position: 5, identifier: "PreviousPage"});
+			this.controls.addButton({type: "next",        position: 3, identifier: "NextPage"});
+			this.controls.addSlider({minimum: 1, maximum: this.pdfDoc.numPages, increments: 1, property: "this.state.page", label: "Page", identifier: "Page"});
 		}
 		this.controls.finishedAddingControls();
 	},
@@ -246,7 +246,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			}
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "LastPage":
 					this.state.page = this.pdfDoc.numPages;
 					break;

@@ -41,35 +41,34 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		var _this = this;
 
 		this.loopBtn = this.controls.addButton({
-			id:"Loop",
+			identifier:"Loop",
 			type: "loop",
-			sequenceNo: 6
+			position: 6
 		});
 
 		this.muteBtn = this.controls.addButton({
-			id:"Mute",
+			identifier:"Mute",
 			type: "mute",
-			sequenceNo: 2
+			position: 2
 		});
 
 		this.playPauseBtn = this.controls.addButton({
-			id:"PlayPause",
+			identifier:"PlayPause",
 			type: "play-pause",
-			sequenceNo: 3
+			position: 3
 		});
 		this.stopBtn = this.controls.addButton({
-			id:"Stop",
+			identifier:"Stop",
 			type: "stop",
-			sequenceNo: 5
+			position: 5
 		});
 
 		this.controls.addSlider({
-			id:"Seek",
-			begin: 0,
-			end: this.state.numframes-1,
+			identifier:"Seek",
+			minimum: 0,
+			maximum: this.state.numframes-1,
 			increments: 1,
-			appHandle: this,
-			property: "state.frame",
+			property: "this.state.frame",
 			labelFormatFunction: function(value, end) {
 				var duration = parseInt(1000 * (value / _this.state.framerate), 10);
 				return formatHHMMSS(duration);
@@ -164,7 +163,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 			}
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "Loop":
 					if(this.state.looped === true) {
 						console.log("no loop: " + this.div.id);

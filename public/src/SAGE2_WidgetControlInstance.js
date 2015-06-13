@@ -168,11 +168,11 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	var sliderAreaWidth = sliderArea.getBBox().w;
 	sliderArea.attr("class", "widgetBackground");
 	var fontSize = 0.045 * ui.widgetControlSize;
-	var sliderCaption = null;
-	if (this.controlSpec.slider.caption) {
-		sliderCaption = this.controlSVG.text(x+ui.widgetControlSize, y, this.controlSpec.slider.caption);
-		sliderCaption.attr({
-			id: this.controlSpec.slider.id+ "caption",
+	var sliderLabel = null;
+	if (this.controlSpec.slider.label) {
+		sliderLabel = this.controlSVG.text(x+ui.widgetControlSize, y, this.controlSpec.slider.label);
+		sliderLabel.attr({
+			id: this.controlSpec.slider.id+ "label",
 			dy:(0.26 * ui.widgetControlSize) + "px",
 			class:"widgetText",
 			fontSize: (fontSize*0.8) + "em"
@@ -211,27 +211,27 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	//var callabckFunc = this.slider.call.bind(applications[this.slider.appId]);
 
 	var slider = this.controlSVG.group(sliderArea, sliderLine, sliderKnob, sliderKnobLabel);
-	if (sliderCaption!==null)
-		slider.add(sliderCaption);
+	if (sliderLabel!==null)
+		slider.add(sliderLabel);
 	sliderKnob.data("appId", this.controlSpec.slider.appId);
 	sliderKnobLabel.data("appId", this.controlSpec.slider.appId);
 	slider.attr("id", this.controlSpec.slider.id);
 	slider.data("appId", this.controlSpec.slider.appId);
 	slider.data("instanceID", this.instanceID);
-	slider.data("caption", this.controlSpec.slider.caption);
-	slider.data('call', this.controlSpec.slider.call);
-	slider.data('lockCall', this.controlSpec.slider.lockCall);
-	slider.data('updateCall', this.controlSpec.slider.updateCall);
+	slider.data("label", this.controlSpec.slider.label);
+	//slider.data('call', this.controlSpec.slider.call);
+	//slider.data('lockCall', this.controlSpec.slider.lockCall);
+	//slider.data('updateCall', this.controlSpec.slider.updateCall);
 	slider.data('appProperty', this.controlSpec.slider.appProperty);
-	var app = getProperty(this.controlSpec.slider.appHandle, this.controlSpec.slider.appProperty);
+	var app = getPropertyHandle(applications[this.controlSpec.slider.appId], this.controlSpec.slider.appProperty);
 	var begin = this.controlSpec.slider.begin;
 	var end = this.controlSpec.slider.end;
-	var parts = this.controlSpec.slider.parts;
+	var steps = this.controlSpec.slider.steps;
 	var increments = this.controlSpec.slider.increments;
-	slider.data('begin', this.controlSpec.slider.begin);
-	slider.data('end', this.controlSpec.slider.end);
-	slider.data('parts', this.controlSpec.slider.parts);
-	slider.data('increments', this.controlSpec.slider.increments);
+	slider.data('begin', begin);
+	slider.data('end', end);
+	slider.data('steps', steps);
+	slider.data('increments', increments);
 	var formatFunction = this.controlSpec.slider.knobLabelFormatFunction;
 	if (!formatFunction) {
 		formatFunction = function (curVal, endVal) {
@@ -243,7 +243,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		var left = bound.x + knobWidth/2.0;
 		var right = bound.x2 - knobWidth/2.0;
 
-		var deltaX = (right-left)/parts;
+		var deltaX = (right-left)/steps;
 
 		var n = Math.floor(0.5 + (sliderVal-begin)/increments);
 		if (isNaN(n)===true)

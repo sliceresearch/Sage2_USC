@@ -817,7 +817,7 @@ function setupListeners() {
 					}
 					break;
 				default:
-					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date(data.date));
+					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action:action}, new Date(data.date));
 					break;
 			}
 
@@ -839,7 +839,7 @@ function setupListeners() {
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date(data.date));
+		app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action:"sliderLock"}, new Date(data.date));
 		var ctrHandle    = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
@@ -848,9 +848,9 @@ function setupListeners() {
 		var knobCenterX   = parseInt(sliderKnob.attr("x")) + knobWidthHalf;
 		if (Math.abs(pos - knobCenterX) > knobWidthHalf){
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
-			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+			var appObj = getPropertyHandle(applications[slider.data("appId")], slider.data("appProperty"));
 			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
+			app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action:"sliderUpdate"}, new Date(data.date));
 		}
 	});
 
@@ -862,12 +862,12 @@ function setupListeners() {
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
 		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
-		var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
+		var appObj = getPropertyHandle(applications[slider.data("appId")], slider.data("appProperty"));
 		appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
 		var appId  = data.ctrl.appId;
 		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
+		app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action:"sliderUpdate"}, new Date(data.date));
 	});
 
 	wsio.on('keyInTextInputWidget', function(data) {
@@ -882,7 +882,7 @@ function setupListeners() {
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
-				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
+				app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
 			}
 		}
 	});

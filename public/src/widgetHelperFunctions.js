@@ -106,7 +106,7 @@ function mapMoveToSlider(sliderKnob, position){
 	var right = bound.x2 - knobWidth/2.0;
 	var begin = slider.data('begin');
 	var end   = slider.data('end');
-	var parts = slider.data('parts');
+	var steps = slider.data('steps');
 	var increments = slider.data('increments');
 
 	if(position< left )
@@ -114,7 +114,7 @@ function mapMoveToSlider(sliderKnob, position){
 	else if (position > right )
 		position = right;
 
-	var deltaX = (right-left)/parts;
+	var deltaX = (right-left)/steps;
 	var n = Math.floor(0.5 + (position-left)/deltaX);
 	if (isNaN(n) === true) n = 0;
 	return {sliderValue: begin + n*increments, newPosition: left + n * deltaX};
@@ -225,10 +225,10 @@ function getWidgetControlInstanceById(ctrl){
 	return requestedSvgElement;
 }
 
-function getProperty(objectHandle, property){
+function getPropertyHandle(objectHandle, property){
 	var names = property.split('.');
 	var handle  = objectHandle;
-	var i     = 0;
+	var i     = 1;
 	for (; i<names.length-1; i++) {
 		handle = handle[names[i]];
 	}
