@@ -291,12 +291,19 @@ function SAGE2_interaction(wsio) {
 			// post message to start chrome screen share
 			window.postMessage('capture_desktop', '*');
 		}
+		else if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled !== true) {
+			if (window.confirm("Let's install the SAGE2 screen sharing extension for Chrome (or visit the help page).\nOnce done, please reload the SAGE UI page")) {
+				window.open("https://chrome.google.com/webstore/detail/sage2-screen-capture/mbkfcmpjbkmmdcfocaclghbobhnjfpkk", "Good luck!");
+			} else {
+				window.open("help/index.html", "Good luck!");
+			}
+		}
 		else if (__SAGE2__.browser.isFirefox === true) {
 			// attempt to start firefox screen share - can replace 'screen' with 'window' (but need user choice ahead of time)
 			showDialog('ffShareScreenDialog');
 		}
 		else {
-			alert("Cannot share screen: \"SAGE2 Screen Capture\" not enabled for this domain.");
+			alert("Cannot find screen capture support in this browser. Sorry.");
 		}
 	};
 
@@ -343,6 +350,16 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamFailMethod = function(event) {
 		console.log("no access to media capture");
+
+		if (__SAGE2__.browser.isChrome === true) {
+			alert('Screen capture failed. Make sure to install and enable the Chrome SAGE2 extension. See Window/Extension menu');
+		}
+		else if (__SAGE2__.browser.isFirefox === true) {
+			alert('Screen capture failed.\nTo enable screen capture in Firefox:\n1- Open "about:config"\n2- Set "media.getusermedia.screensharing.enabled" to true\n3- Add your domain (or localhost) in "media.getusermedia.screensharing.allowed_domains" ');
+		}
+		else {
+			alert("Cannot find screen capture support in this browser. Sorry.");
+		}
 	};
 
 	/**
