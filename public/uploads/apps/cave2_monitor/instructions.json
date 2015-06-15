@@ -5,7 +5,6 @@
 	"height": 630,
 	"animation": true,
 	"dependencies": [
-		"scripts/d3.v3.min.js"
 	],
 	"title": "CAVE2 Monitor",
 	"version": "1.1.0",
