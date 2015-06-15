@@ -10,26 +10,27 @@
 //
 // Copyright (c) 2015
 
-// npm registry: built-in or defined in package.json
-var fs          = require('fs');                  // filesystem access
-var http        = require('http');                // http server
-var https       = require('https');               // https server
-var os          = require('os');                  // operating system access
+/**
+ * Connect to a SAGE2 server
+ *
+ * ./sage_shell.js <url>
+ *
+ * @class shell
+ * @module commands
+ * @submodule shell
+ */
+
+"use strict";
+
 var path        = require('path');                // file path extraction and creation
 var json5       = require('json5');               // JSON5 parsing
-var request     = require('request');             // external http requests
 var readline    = require('readline');            // to build an evaluation loop
 
 // custom node modules
-var websocketIO = require(__dirname + '/../src/node-websocket.io');   // creates WebSocket server and clients
+var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
 var connection;
 var command;
 var wssURL;
-
-// Bound random number
-function randomNumber(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 
 // create the websocket connection and start the timer
@@ -101,6 +102,27 @@ function createRemoteConnection(wsURL) {
 // default URL
 wssURL = "wss://localhost:443";
 
+// First command
+command = "help";
+
+if (process.argv.length === 2) {
+	console.log('');
+	console.log('Usage> sage_shell.js <url>');
+	console.log('');
+	console.log('Example>     ./sage_shell.js localhost:9090');
+	console.log('');
+	process.exit(0);
+}
+
+if (process.argv.length === 3 && ( (process.argv[2] === '-h') || (process.argv[2] === '--help') ) ) {
+	console.log('');
+	console.log('Usage> sage_shell.js <url>');
+	console.log('');
+	console.log('Example>     ./sage_shell.js localhost:9090');
+	console.log('');
+	process.exit(0);
+}
+
 // If there's an argument, use it as a url
 //     wss://hostname:portnumber
 if (process.argv.length >= 3) {
@@ -122,8 +144,6 @@ if (process.argv.length >= 3) {
 	}
 }
 
-// Firs command
-command = "help";
-
 // Create and go !
 connection = createRemoteConnection(wssURL);
+console.log('Starting>', connection.ws.url);

@@ -10,26 +10,26 @@
 //
 // Copyright (c) 2015
 
-// npm registry: built-in or defined in package.json
-var fs          = require('fs');                  // filesystem access
-var http        = require('http');                // http server
-var https       = require('https');               // https server
-var os          = require('os');                  // operating system access
+/**
+ * Send a command to a SAGE2 server
+ *
+ * ./sage_command.js <url> <command> [params]
+ *
+ * @class command
+ * @module commands
+ * @submodule command
+ */
+
+"use strict";
+
 var path        = require('path');                // file path extraction and creation
 var json5       = require('json5');               // JSON5 parsing
-var request     = require('request');             // external http requests
 
 // custom node modules
-var websocketIO = require(__dirname + '/../src/node-websocket.io');   // creates WebSocket server and clients
+var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
 var connection;
 var command;
 var wssURL;
-
-// Bound random number
-function randomNumber(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 
 // create the websocket connection and start the timer
 function createRemoteConnection(wsURL) {
@@ -59,7 +59,8 @@ function createRemoteConnection(wsURL) {
 
 			remote.emit('command', command);
 
-			setTimeout(function() { process.exit(0); }, 1000);			
+			// Wait for 1sec to quit
+			setTimeout(function() { process.exit(0); }, 1000);
 		});
 
 		remote.on('setupSAGE2Version', function(wsio, data) {
@@ -84,6 +85,24 @@ function createRemoteConnection(wsURL) {
 // default URL
 wssURL = "wss://localhost:443";
 
+if (process.argv.length === 2) {
+	console.log('');
+	console.log('Usage> sage_command.js <url> <command> [paramaters]');
+	console.log('');
+	console.log('Example>     ./sage_command.js localhost:9090 load demo');
+	console.log('');
+	process.exit(0);
+}
+
+if (process.argv.length === 3 && ( (process.argv[2] === '-h') || (process.argv[2] === '--help') ) ) {
+	console.log('');
+	console.log('Usage> sage_command.js <url> <command> [paramaters]');
+	console.log('');
+	console.log('Example>     ./sage_command.js localhost:9090 load demo');
+	console.log('');
+	process.exit(0);
+}
+
 // If there's an argument, use it as a url
 //     wss://hostname:portnumber
 if (process.argv.length >= 3) {
@@ -107,7 +126,7 @@ if (process.argv.length >= 3) {
 
 if (process.argv.length >= 4) {
 	// Remove the first paramaters
-	process.argv.splice(0,3);
+	process.argv.splice(0, 3);
 	// take all the rest
 	command = process.argv.join(' ');
 } else {
@@ -119,3 +138,4 @@ console.log('Client> sending command:', command);
 
 // Create and go !
 connection = createRemoteConnection(wssURL);
+console.log('Starting>', connection.ws.url);

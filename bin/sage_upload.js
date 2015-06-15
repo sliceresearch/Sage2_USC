@@ -10,25 +10,29 @@
 //
 // Copyright (c) 2015
 
-// npm registry: built-in or defined in package.json
+/**
+ * Upload a file to a SAGE2 server and open it
+ *
+ * ./sage_upload.js <url> <filename>
+ *
+ * @class upload
+ * @module commands
+ * @submodule upload
+ */
+
+"use strict";
+
 var fs          = require('fs');                  // filesystem access
-var http        = require('http');                // http server
-var https       = require('https');               // https server
-var os          = require('os');                  // operating system access
 var path        = require('path');                // file path extraction and creation
 var json5       = require('json5');               // JSON5 parsing
 var request     = require('request');             // external http requests
 
 // custom node modules
-var websocketIO = require(__dirname + '/../src/node-websocket.io');   // creates WebSocket server and clients
+var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
 var connection;
 var imageFilename;
 var wssURL;
 
-// Bound random number
-function randomNumber(min, max) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 function postForm(formData, callback) {
 	var httpsURL = wssURL.replace('wss', 'https');
@@ -59,7 +63,7 @@ function uploadPictures() {
 		}
 		console.log('Upload> success');
 		process.exit(0);
-		//setTimeout(function() { connection.emit('tileApplications'); }, 100);			
+		//setTimeout(function() { connection.emit('tileApplications'); }, 100);
 	});
 }
 
@@ -110,6 +114,24 @@ function createRemoteConnection(wsURL) {
 wssURL        = "wss://localhost:443";
 imageFilename = "note.jpg";
 
+if (process.argv.length === 2) {
+	console.log('');
+	console.log('Usage> sage_upload.js <url> <filename>');
+	console.log('');
+	console.log('Example>     ./sage_upload.js localhost:9090 image.jpg');
+	console.log('');
+	process.exit(0);
+}
+
+if (process.argv.length === 3 && ( (process.argv[2] === '-h') || (process.argv[2] === '--help') ) ) {
+	console.log('');
+	console.log('Usage> sage_upload.js <url> <filename>');
+	console.log('');
+	console.log('Example>     ./sage_upload.js localhost:9090 image.jpg');
+	console.log('');
+	process.exit(0);
+}
+
 // If there's an argument, use it as a url
 //     wss://hostname:portnumber
 if (process.argv.length >= 3) {
@@ -139,3 +161,4 @@ console.log('Client> uploading', imageFilename);
 
 // Create and go !
 connection = createRemoteConnection(wssURL);
+console.log('Starting>', connection.ws.url);
