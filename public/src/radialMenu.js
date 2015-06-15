@@ -1349,7 +1349,7 @@ function ButtonWidget() {
 	// 2  = Pressed
 	// 3  = Clicked
 	// 4  = Released
-	// 5	= OverEnter (First over event)
+	// 5	= Lit
 	this.state = 0;
 
 	this.buttonData = {};
@@ -1430,7 +1430,7 @@ function ButtonWidget() {
 			this.state = 1;
 		}
 		if( this.useBackgroundColor ) {
-			if( this.isLit )
+			if( this.state === 5 )
 				this.ctx.fillStyle = this.litColor;
 			else
 				this.ctx.fillStyle = this.defaultColor;
@@ -1451,7 +1451,7 @@ function ButtonWidget() {
 			// draw the original image
 			this.ctx.drawImage( this.buttonImage, offset.x, offset.y, this.width, this.height );
 
-			if( this.isLit === true )
+			if( this.state === 5 )
 				this.drawTintImage( this.buttonImage, offset, this.width, this.height, this.litColor, 0.5 );
 
 			// Tint the image
@@ -1460,7 +1460,7 @@ function ButtonWidget() {
 					this.ctx.fillRect(offsetHitbox.x, offsetHitbox.y, this.hitboxWidth, this.hitboxheight);
 				}
 				else {
-					if( this.isLit === false && this.useEventOverColor)
+					if( this.state !== 5 && this.useEventOverColor)
 						this.drawTintImage( this.buttonImage, offset, this.width, this.height, this.ctx.fillStyle, 0.8 );
 				}
 			}
