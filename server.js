@@ -3744,6 +3744,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 }
 
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime, sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
+	console.log("remote: " + remoteHost + ":" + remotePort);
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
 	var dataSession = {
 		id: getUniqueDataSharingId(remoteHost, remotePort, caller),
@@ -4843,6 +4844,19 @@ function sendPointerReleaseToApplication(uniqueID, app, pointerX, pointerY, data
 	};
 
 	broadcast('eventInItem', event);
+
+	var eLogData = {
+		type: "pointerRelease",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		position: {
+			x: parseInt(ePosition.x, 10),
+			y: parseInt(ePosition.y, 10)
+		}
+	};
+	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 }
 
 function pointerDblClick(uniqueID, pointerX, pointerY) {
@@ -4906,16 +4920,23 @@ function pointerScrollStart(uniqueID, pointerX, pointerY) {
 			pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt);
 			break;
 		case "portals":
+			pointerScrollStartOnPortal(uniqueID, pointerX, pointerY, obj, localPt);
 			break;
 	}
 }
 
-function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt) {
-	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
-
-	interactMgr.moveObjectToFront(obj.id, obj.layerId);
-	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
+function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt, portalId) {
+	var im = findInteractableManager(obj.id);
+	im.moveObjectToFront(obj.id, "applications", ["portals"]);
+	var newOrder = im.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
+
+	if (portalId !== undefined && portalId !== null) {
+		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+		remoteSharingSessions[portalId].wsio.emit('updateApplicationOrder', {order: newOrder, date: ts});
+	}
+
+	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
 
 	// pointer scroll on app window
 	if (btn === null) {
@@ -4947,6 +4968,41 @@ function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, loca
 			break;
 		case "closeButton":
 			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			break;
+	}
+}
+
+function pointerScrollStartOnPortal(uniqueID, pointerX, pointerY, obj, localPt) {
+	interactMgr.moveObjectToFront(obj.id, "portals", ["applications"]);
+	var newOrder = interactMgr.getObjectZIndexList("portals", ["applications"]);
+	broadcast('updateItemOrder', newOrder);
+
+	var btn = SAGE2Items.portals.findButtonByPoint(obj.id, localPt);
+
+	// pointer press inside portal window
+	if (btn === null) {
+		var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
+		pointerScrollStartInDataSharingArea(uniqueID, obj.data.id, scaledPt);
+	}
+}
+
+function pointerScrollStartInDataSharingArea(uniqueID, portalId, scaledPt) {
+	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
+	if (pObj === null) {
+		//pointerScrollStartOnOpenSpace(uniqueID, pointerX, pointerY, data);
+		return;
+	}
+
+	var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+	switch (pObj.layerId) {
+		case "radialMenus":
+			//pointerScrollStartOnRadialMenu(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
+			break;
+		case "widgets":
+			//pointerScrollStartOnWidget(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
+			break;
+		case "applications":
+			pointerScrollStartOnApplication(uniqueID, scaledPt.x, scaledPt.y, pObj, pLocalPt, portalId);
 			break;
 	}
 }
@@ -4995,7 +5051,7 @@ function pointerScroll(uniqueID, data) {
 				return;
 			}
 
-			//var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+			var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			switch (obj.layerId) {
 				case "staticUI":
 					break;
@@ -5004,15 +5060,55 @@ function pointerScroll(uniqueID, data) {
 				case "widgets":
 					break;
 				case "applications":
-					sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+					sendPointerScrollToApplication(uniqueID, obj.data, localPt, data);
+					break;
+				case "portals":
+					pointerScrollOnPortal(uniqueID, pointerX, pointerY, obj, localPt, data);
 					break;
 			}
 		}
 	}
 }
 
-function sendPointerScrollToApplication(uniqueID, app, pointerX, pointerY, data) {
-	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+function pointerScrollOnPortal(uniqueID, pointerX, pointerY, obj, localPt, data) {
+	interactMgr.moveObjectToFront(obj.id, "portals", ["applications"]);
+	var newOrder = interactMgr.getObjectZIndexList("portals", ["applications"]);
+	broadcast('updateItemOrder', newOrder);
+
+	var btn = SAGE2Items.portals.findButtonByPoint(obj.id, localPt);
+
+	// pointer press inside portal window
+	if (btn === null) {
+		var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y-config.ui.titleBarHeight) / obj.data.scale};
+		pointerScrollInDataSharingArea(uniqueID, obj.data.id, scaledPt, data);
+	}
+}
+
+function pointerScrollInDataSharingArea(uniqueID, portalId, scaledPt, data) {
+	var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
+	if (pObj === null) {
+		//pointerScrollOnOpenSpace(uniqueID, pointerX, pointerY, data);
+		return;
+	}
+
+	var pLocalPt = globalToLocal(scaledPt.x, scaledPt.y, pObj.type, pObj.geometry);
+	switch (pObj.layerId) {
+		case "radialMenus":
+			//pointerScrollOnRadialMenu(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
+			break;
+		case "widgets":
+			//pointerScrollOnWidget(uniqueID, pointerX, pointerY, data, pObj, pLocalPt);
+			break;
+		case "applications":
+			sendPointerScrollToApplication(uniqueID, pObj.data, pLocalPt, data);
+			break;
+	}
+	return;
+}
+
+function sendPointerScrollToApplication(uniqueID, app, localPt, data) {
+	//var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+	var ePosition = {x: localPt.x, y: localPt.y - config.ui.titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
 
 	var event = {id: app.id, type: "pointerScroll", position: ePosition, user: eUser, data: data, date: Date.now()};

@@ -44,7 +44,7 @@ function SAGE2_init() {
 	SAGE2_editor.setHighlightActiveLine(false);
 	SAGE2_editor.setShowPrintMargin(false);
 	// remove line numbers
-	//SAGE2_editor.renderer.setShowGutter(false); 
+	//SAGE2_editor.renderer.setShowGutter(false);
 	// scroll warning
 	SAGE2_editor.$blockScrolling = Infinity;
 	// set the text
@@ -138,10 +138,10 @@ function setupListeners(wsio) {
 		console.log('initialize');
 
 		//readFile("/src/SAGE2_runtime.js", function(error, data) {
-		readFile("/config/default-cfg.json", function(error, data) {
+		readFile("/config/default-cfg.json", function(error, text) {
 			if (!error) {
 				SAGE2_editor.getSession().setMode("ace/mode/json");
-				SAGE2_editor.setValue(data, -1);
+				SAGE2_editor.setValue(text, -1);
 				SAGE2_editor.gotoLine(0);
 			}
 		});

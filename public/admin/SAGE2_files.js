@@ -94,8 +94,8 @@ function setupListeners(wsio) {
 		output = [];
 		for (i = 0, f; f = data[i]; i++) {
 			output.push('<tr>',
-				'<td>&#8226;</td>',				
-				'<td> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></td>',				
+				'<td>&#8226;</td>',
+				'<td> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></td>',
 				'<td>', unescape(f.exif.metadata.title), '</td>',
 				'<td>', f.exif.metadata.description, '</td>',
 				'<td>', f.exif.metadata.author, '</td>',
@@ -115,7 +115,7 @@ function setupListeners(wsio) {
 		output = [];
 		for (i = 0, f; f = data.sessions[i]; i++) {
 			output.push('<tr>',
-				'<td>&#8226;</td>',				
+				'<td>&#8226;</td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileDate, '</td>',
 				'<td>', f.exif.FileSize, ' bytes</td>',
@@ -126,8 +126,8 @@ function setupListeners(wsio) {
 		output = [];
 		for (i = 0, f; f = data.images[i]; i++) {
 			output.push('<tr>',
-				'<td>&#8226;</td>',				
-				'<td><a href=/uploads/images/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',				
+				'<td>&#8226;</td>',
+				'<td><a href=/uploads/images/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileType, '</td>',
 				'<td>', f.exif.FileSize, '</td>',
@@ -138,8 +138,8 @@ function setupListeners(wsio) {
 		output = [];
 		for (i = 0, f; f = data.pdfs[i]; i++) {
 			output.push('<tr>',
-				'<td>&#8226;</td>',				
-				'<td><a href=/uploads/pdfs/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',				
+				'<td>&#8226;</td>',
+				'<td><a href=/uploads/pdfs/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileType, '</td>',
 				'<td>', f.exif.FileSize, '</td>',
@@ -150,8 +150,8 @@ function setupListeners(wsio) {
 		output = [];
 		for (i = 0, f; f = data.videos[i]; i++) {
 			output.push('<tr>',
-				'<td>&#8226;</td>',				
-				'<td><a href=/uploads/videos/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',				
+				'<td>&#8226;</td>',
+				'<td><a href=/uploads/videos/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileType, '</td>',
 				'<td>', f.exif.FileSize, '</td>',
