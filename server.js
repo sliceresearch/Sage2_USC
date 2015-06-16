@@ -3705,6 +3705,7 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	/*
 	switch (obj.id) {
 		case "dataSharingRequestDialog":
 			break;
@@ -3741,6 +3742,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			// remote site icon
 			requestNewDataSharingSession(obj.data);
 	}
+	*/
 }
 
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime, sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
