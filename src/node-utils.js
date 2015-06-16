@@ -14,7 +14,7 @@
  * @class node-utils
  * @module server
  * @submodule node-utils
- * @requires package.json, semver
+ * @requires package.json, request, semver
  */
 
 // require variables to be declared
@@ -28,8 +28,9 @@ var fs      = require('fs');                  // filesystem access
 var path    = require('path');                // resolve directory paths
 var tls     = require('tls');                 // https encryption
 
-var request = require('request');             // http requests
-var semver  = require('semver');              // parse version numbers
+var request   = require('request');           // http requests
+var semver    = require('semver');            // parse version numbers
+var fsmonitor = require('fsmonitor');         // file system monitoring
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -375,6 +376,53 @@ function deregisterSAGE2(config, callback) {
 	);
 }
 
+/**
+ * Place a callback on a list of folders to monitor.
+ *  callback triggered when a change is detected:
+ *    this.root contains the monitored folder
+ *  parameter contains the following list:
+ *    addedFiles, modifiedFiles, removedFiles,
+ *    addedFolders, modifiedFolders, removedFolders
+ *
+ * @method deregisterSAGE2
+ * @param folders {Array} list of folders
+ * @param callback {Function} to be called when a change is detected
+ */
+function monitorFolders(folders, callback) {
+	// for each folder
+	for (var folder in folders) {
+		// get a full path
+		var folderpath = path.resolve(folders[folder]);
+		// get information on the folder
+		var stat       = fs.lstatSync(folderpath);
+		// making sure it is a folder
+		if (stat.isDirectory()) {
+			console.log(header("Monitor") + "watching folder " + folderpath);
+			var monitor = fsmonitor.watch(folderpath, {
+				// only matching: all true for now
+				matches:  function(relpath) {return true; },
+				// and excluding: nothing for now
+				excludes: function(relpath) {return false; }
+			});
+			// place the callback the change event
+			monitor.on('change', callback);
+		}
+	}
+}
+
+// Example of callback:
+//
+// function fsChanged(change) {
+// 	console.log("fsChanged in", this.root);
+// 	console.log("   Added files:    %j",   change.addedFiles);
+// 	console.log("   Modified files: %j",   change.modifiedFiles);
+// 	console.log("   Removed files:  %j",   change.removedFiles);
+// 	console.log("   Added folders:    %j", change.addedFolders);
+// 	console.log("   Modified folders: %j", change.modifiedFolders);
+// 	console.log("   Removed folders:  %j", change.removedFolders);
+// }
+//
+
 
 module.exports.nodeVersion     = _NODE_VERSION;
 module.exports.getNodeVersion  = getNodeVersion;
@@ -393,3 +441,4 @@ module.exports.checkPackages   = checkPackages;
 module.exports.registerSAGE2   = registerSAGE2;
 module.exports.deregisterSAGE2 = deregisterSAGE2;
 module.exports.loadCABundle    = loadCABundle;
+module.exports.monitorFolders  = monitorFolders;

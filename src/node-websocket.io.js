@@ -132,56 +132,58 @@ WebsocketIO.prototype.on = function(name, callback) {
 * @param data {Object} data to be sent with the message
 */
 WebsocketIO.prototype.emit = function(name, data, attempts) {
-	if (name === null || name === "") {
-		console.log("WebsocketIO>\tError, no message name specified");
-		return;
-	}
-
-	var _this = this;
-	var message;
-	var alias = this.remoteListeners[name];
-	if(alias === undefined) {
-		if(attempts === undefined) attempts = 16;
-		if(attempts >= 0) {
-			setImmediate(function() {
-				_this.emit(name, data, attempts-1);
-			});
+	if (this.ws.readyState === 1) {
+		if (name === null || name === "") {
+			console.log("WebsocketIO>\tError, no message name specified");
+			return;
 		}
+
+		var _this = this;
+		var message;
+		var alias = this.remoteListeners[name];
+		if(alias === undefined) {
+			if(attempts === undefined) attempts = 16;
+			if(attempts >= 0) {
+				setImmediate(function() {
+					_this.emit(name, data, attempts-1);
+				});
+			}
+			else {
+				console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+			}
+			return;
+		}
+
+		// send binary data as array buffer
+		if (Buffer.isBuffer(data)) {
+			var funcName = new Buffer(alias);
+			message      = Buffer.concat([funcName, data]);
+
+			try {
+				this.ws.send(message, {binary: true, mask: false}, function(err){
+					if(err) console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
+					// else success
+				});
+			}
+			catch(e) {
+				console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
+			}
+		}
+		// send data as JSON string
 		else {
-			console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
-		}
-		return;
-	}
+			message = {f: alias, d: data};
 
-	// send binary data as array buffer
-	if (Buffer.isBuffer(data)) {
-		var funcName = new Buffer(alias);
-		message      = Buffer.concat([funcName, data]);
-
-		try {
-			this.ws.send(message, {binary: true, mask: false}, function(err){
-				if(err) console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
-				// else success
-			});
-		}
-		catch(e) {
-			console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
-		}
-	}
-	// send data as JSON string
-	else {
-		message = {f: alias, d: data};
-
-		// double error handling
-		try {
-			var msgString = JSON.stringify(message);
-			this.ws.send(msgString, {binary: false, mask: false}, function(err){
-				if(err) console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
-				// else success
-			});
-		}
-		catch(e) {
-			console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
+			// double error handling
+			try {
+				var msgString = JSON.stringify(message);
+				this.ws.send(msgString, {binary: false, mask: false}, function(err){
+					if(err) console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
+					// else success
+				});
+			}
+			catch(e) {
+				console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
+			}
 		}
 	}
 };
@@ -193,24 +195,26 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 * @param data {String} data to be sent as the message
 */
 WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
-	var _this = this;
-	var alias = this.remoteListeners[name];
-	if(alias === undefined) {
-		if(attempts === undefined) attempts = 16;
-		if(attempts >= 0) {
-			setImmediate(function() {
-				_this.emitString(name, dataString, attempts-1);
-			});
+	if (this.ws.readyState === 1) {
+		var _this = this;
+		var alias = this.remoteListeners[name];
+		if(alias === undefined) {
+			if(attempts === undefined) attempts = 16;
+			if(attempts >= 0) {
+				setImmediate(function() {
+					_this.emitString(name, dataString, attempts-1);
+				});
+			}
+			else {
+				console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+			}
+			return;
 		}
-		else {
-			console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
-		}
-		return;
+
+		var message = "{\"f\":\""+alias+"\",\"d\":"+dataString+"}";
+
+		this.ws.send(message, {binary: false, mask: false});
 	}
-
-	var message = "{\"f\":\""+alias+"\",\"d\":"+dataString+"}";
-
-	this.ws.send(message, {binary: false, mask: false});
 };
 
 /**

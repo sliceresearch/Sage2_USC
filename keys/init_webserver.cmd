@@ -8,16 +8,16 @@ password=foobar
 server=$1
 
 echo "Start: CA"
-openssl genrsa -des3 -out ca.key  -passout pass:$password 1024
-openssl req -new -key ca.key -out ca.csr -passin pass:$password -subj "/CN=$server"
+openssl genrsa -des3 -out ca.key  -passout pass:$password 2048
+openssl req -new -key ca.key -sha256 -out ca.csr -passin pass:$password -subj "/CN=$server"
 openssl x509 -req -days 365 -in ca.csr -out $server-ca.crt -signkey ca.key  -passin pass:$password
 echo ""
 echo ""
 
 #FQDN - hostname (webserver)
 echo "Start Server Certificate"
-openssl genrsa -des3 -out $server-server.key -passout pass:$password 1024
-openssl req -new -key $server-server.key -out server.csr -passin pass:$password -subj "/CN=$server"
+openssl genrsa -des3 -out $server-server.key -passout pass:$password 2048
+openssl req -new -sha256 -key $server-server.key -out server.csr -passin pass:$password -subj "/CN=$server"
 echo ""
 echo ""
 
@@ -28,7 +28,7 @@ echo ""
 echo ""
 
 echo "Sign Server Certificate"
-openssl x509 -req -days 365 -in server.csr -signkey $server-server.key -out $server-server.crt
+openssl x509 -req -sha256 -days 365 -in server.csr -signkey $server-server.key -out $server-server.crt
 echo ""
 echo ""
 

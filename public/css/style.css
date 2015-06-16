@@ -13,31 +13,8 @@
 
 /* CSS Document */
 
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Regular.ttf') format('truetype');
-	font-weight: normal;
-	font-style: normal;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Italic.ttf') format('truetype');
-	font-weight: normal;
-	font-style: italic;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Bold.ttf') format('truetype');
-	font-weight: bold;
-	font-style: normal;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-BoldItalic.ttf') format('truetype');
-	font-weight: bold;
-	font-style: italic;
-}
 
+@import url('fonts.css');
 
 * {
 	margin: 0;
@@ -45,7 +22,7 @@
 }
 	
 p {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 }
 
 body {
@@ -115,12 +92,12 @@ body {
 }
 .widgetText {
 	text-anchor: middle;
-	font-family: sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	fill: rgba(250,250,250,1.0);
 }
 
 .textInput {
-	font-family: sans-serif;
+	font-family: Arimo, Helvetica, sans-serif;
 	fill: rgba(250,250,250,1.0);
 	font-weight: lighter; 
 	font-style: normal;

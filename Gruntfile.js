@@ -1,3 +1,6 @@
+var fs   = require('fs');
+var path = require('path');
+
 module.exports = function(grunt) {
 	// Init
 	grunt.initConfig({
@@ -65,27 +68,82 @@ module.exports = function(grunt) {
 						"public/src/SAGE2_interaction.js",
 						"public/src/SAGE2_DisplayUI.js",
 						"public/src/SAGE2_UI.js" ]
+				}	}
+		},
+		// prompt questions when generating a new application: 'genapp' task
+		prompt: {
+			genapp: {
+				options: {
+					questions: [
+					{ config: 'appname',   type: 'input', message: 'Application name' },
+					{ config: 'firstname', type: 'input', message: 'Author first name' },
+					{ config: 'lastname',  type: 'input', message: 'Author last name' },
+					{ config: 'email',     type: 'input', message: 'Author email' }
+					]
 				}
 			}
 		},
-        mochacli: {
-          options: {
-            bail: true
-          },
-          all: ['test/*.js']
-        }
+		mochacli: {
+			options: {
+				bail: true
+			},
+			all: ['test/*.js']
+		}
 	});
 
 	// Load the dependencies
 	grunt.loadNpmTasks('eslint-grunt');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-mocha-cli');
+	grunt.loadNpmTasks('grunt-mocha-cli');
+	grunt.loadNpmTasks('grunt-prompt');
 
 	// this would be run by typing "grunt test" on the command line
 	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);
+
+	// Build a SAGE2 app folder and such (do not call directly, see 'newapp' task)
+	grunt.registerTask('genapp', 'Generate a SAGE2 app skeleton', function() {
+		// it's async task
+		var done     = this.async();
+		// get the name from the prompt
+		var appname  = grunt.config("appname");
+		// use ir or get the name from command line
+		var newapp   = appname || grunt.option('name');
+		// calculate new paths
+		var appdir   = path.join(__dirname, "public", "uploads", "apps", newapp);
+		var templdir = path.join(__dirname, "doc", "templates");
+		// create the application folder
+		fs.mkdirSync(appdir);
+		// read the instructions, and put the name in
+		fs.readFile(path.join(templdir, "instructions.json"), 'utf8', function (err,data) {
+			// substitute APPNAME for the new app name
+			var result = data.replace(/APPNAME/g, newapp);
+			result = result.replace(/FIRSTNAME/g, grunt.config("firstname"));
+			result = result.replace(/LASTNAME/g,  grunt.config("lastname"));
+			result = result.replace(/EMAIL/g,     grunt.config("email"));
+			// write the resulting content
+			fs.writeFileSync(path.join(appdir, "instructions.json"), result, 'utf8');
+			// Read the template code
+			fs.readFile(path.join(templdir, "sage2.js"), 'utf8', function (err2,data2) {
+				// substitute APPNAME for the new app name
+				var result2 = data2.replace(/APPNAME/g, newapp);
+				result2 = result2.replace(/FIRSTNAME/g, grunt.config("firstname"));
+				result2 = result2.replace(/LASTNAME/g,  grunt.config("lastname"));
+				result2 = result2.replace(/EMAIL/g,     grunt.config("email"));
+				// write the resulting content
+				fs.writeFileSync(path.join(appdir, newapp+".js"), result2, 'utf8');
+				// Copy the icon
+				fs.writeFileSync(path.join(appdir, newapp+".png"), fs.readFileSync(path.join(templdir, "sage2.png")));
+				// We are done
+				grunt.log.write('New application done: ', newapp, 'in', appdir);
+				done();
+			});
+		});
+	});
+	// build a new app with questions
+	grunt.registerTask('newapp', ['prompt:genapp', 'genapp']);
 };
 

@@ -27,6 +27,7 @@ var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = require('node-demux');
+var mv           = require('mv');
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
 var assets       = require('../src/node-assets');          // asset management
@@ -455,6 +456,7 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, url, external_
 			data: {
 				width: data.width,
 				height: data.height,
+				colorspace: "YUV420p",
 				video_url: external_url,
 				video_type: mime_type,
 				audio_url: external_url,
@@ -556,7 +558,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, url,
 		var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
 		var app_external_url = _this.hostOrigin + encodeReservedURL(appUrl);
 		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
-		appInstance.data = url;
+		appInstance.data.file = url;
 		callback(appInstance);
     });
 };
@@ -660,7 +662,7 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 };
 
 
-AppLoader.prototype.createMediaBlockStream = function(source, type, encoding, name, color, width, height, callback) {
+AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, width, height, callback) {
 	var aspectRatio = width/height;
 
 	var metadata         = {};
@@ -679,9 +681,9 @@ AppLoader.prototype.createMediaBlockStream = function(source, type, encoding, na
 		type: "application/stream",
 		url: null,
 		data: {
-			src: source,
-			type: type,
-			encoding: encoding
+			colorspace: colorspace || "YUV420p",
+			width: width,
+			height: height
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -775,7 +777,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		localPath    = path.join(this.publicDir, "uploads", dir, newfilename);
 	}
 
-	fs.rename(file.path, localPath, function(err1) {
+	mv(file.path, localPath, function(err1) {
 		if (err1) throw err1;
 
 		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {

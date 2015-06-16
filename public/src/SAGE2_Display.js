@@ -156,8 +156,10 @@ function setupListeners() {
 	wsio.on('broadcast', function(data) {
 		if(applications[data.app] === undefined){
 			// should have better way to determine if app is loaded
+			//   or already killed
 			setTimeout(function() {
-				applications[data.app][data.func](data.data);
+				if (applications[data.app] && applications[data.app][data.func])
+					applications[data.app][data.func](data.data);
 			}, 500);
 		}
 		else {
@@ -252,18 +254,18 @@ function setupListeners() {
     wsio.on('showSagePointer', function(pointer_data){
 		ui.showSagePointer(pointer_data);
 		resetIdle();
-		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		//var re = /\.|\:/g;
-		//var stlyeCaption = uniqueID.split(re).join("");
-		//addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		var re = /\.|\:/g;
+		var stlyeCaption = uniqueID.split(re).join("");
+		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('hideSagePointer', function(pointer_data){
 		ui.hideSagePointer(pointer_data);
-		//var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		//var re = /\.|\:/g;
-		//var stlyeCaption = uniqueID.split(re).join("");
-		//removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
+		var re = /\.|\:/g;
+		var stlyeCaption = uniqueID.split(re).join("");
+		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
     });
 
     wsio.on('updateSagePointerPosition', function(pointer_data){
@@ -426,7 +428,7 @@ function setupListeners() {
 			for (var item in controlItems){
 				if (item.indexOf(elem_data.elemId) > -1){
 					controlItems[item].divHandle.parentNode.removeChild(controlItems[item].divHandle);
-					//removeWidgetToAppConnector(item);
+					removeWidgetToAppConnector(item);
 					delete controlItems[item];
 				}
 
@@ -439,7 +441,7 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===true){
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show=false;
-			//hideWidgetToAppConnector(ctrl_data.id, ctrl_data.appId);
+			clearConnectorColor(ctrl_data.id, ctrl_data.appId);
 		}
 	});
 
@@ -447,7 +449,6 @@ function setupListeners() {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show===false){
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
 			controlItems[ctrl_data.id].show=true;
-			//showWidgetToAppConnector(ctrl_data.id);
 		}
 	});
 
@@ -512,7 +513,7 @@ function setupListeners() {
 				app.move(date);
 			}
 		}
-		/*if (position_data.elemId in controlObjects){
+		if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -520,10 +521,10 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
+					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.4);
 				}
 			}
-		}*/
+		}
 
 	});
 
@@ -535,24 +536,28 @@ function setupListeners() {
 		if(selectedControl !== undefined && selectedControl !== null) {
 			selectedControl.style.left = eLeft.toString() + "px";
 			selectedControl.style.top = eTop.toString() + "px";
-			//var hOffset = (ui.titleBarHeight + appData.height)/2;
-			//moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.0, position_data.user_color);
+			var hOffset = (ui.titleBarHeight + appData.height)/2;
+			moveWidgetToAppConnector(position_data.elemId, eLeft+position_data.elemHeight/2.0, eTop+position_data.elemHeight/2.0, appData.left-ui.offsetX + appData.width/2.0, appData.top-ui.offsetY + hOffset, position_data.elemHeight/2.4);
 		}
 		else {
 			console.log("cannot find control: " + position_data.elemId);
 		}
 	});
 
-	wsio.on('showWidgetToAppConnector', function(position_data){
-		moveAndShowWidgetToAppConnector(position_data);
-		if (!(position_data.id in widgetConnectorRequestList)){
-			widgetConnectorRequestList[position_data.id] = [];
+	wsio.on('showWidgetToAppConnector', function(data){
+		//console.log("show:",data);
+		showWidgetToAppConnectors(data);
+		if (data.user_color!==null){
+			if (!(data.id in widgetConnectorRequestList)){
+				widgetConnectorRequestList[data.id] = [];
+			}
+			widgetConnectorRequestList[data.id].push(data);
 		}
-		widgetConnectorRequestList[position_data.id].push(position_data);
 	});
 
 
 	wsio.on('hideWidgetToAppConnector', function(control_data){
+		//console.log("hide:",control_data);
 		if (control_data.id in widgetConnectorRequestList) {
 			var lst = widgetConnectorRequestList[control_data.id];
 			if (lst.length > 1) {
@@ -560,14 +565,14 @@ function setupListeners() {
 				for (var i=len-1; i>=0; i--) {
 					if (control_data.user_id === lst[i].user_id) {
 						lst.splice(i, 1);
-						setAllConnectorColor(lst[len-2]);
+						showWidgetToAppConnectors(lst[len-2]);
 						break;
 					}
 				}
 			}
 			else if (lst.length === 1) {
 				delete widgetConnectorRequestList[control_data.id];
-				hideAllWidgetToAppConnector(control_data.id);
+				hideWidgetToAppConnectors(control_data.id);
 			}
 		}
 
@@ -580,6 +585,10 @@ function setupListeners() {
 			dataSharingPortals[position_data.elemId].setPositionAndSize(position_data.elemLeft, position_data.elemTop, position_data.elemWidth, position_data.elemHeight);
 			return;
 		}
+		var selectedElem = document.getElementById(position_data.elemId);
+		var child        = selectedElem.getElementsByClassName("sageItem");
+		// If application not ready, return
+		if (child.length < 1) return;
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
@@ -593,6 +602,7 @@ function setupListeners() {
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
 
 		var selectedElem = document.getElementById(position_data.elemId);
+
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
 		selectedElem.style.transform       = translate;
@@ -604,15 +614,13 @@ function setupListeners() {
         dragCorner[0].style.top    = (Math.round(position_data.elemHeight)-cornerSize).toString() + "px";
         dragCorner[0].style.left   = (Math.round(position_data.elemWidth)-cornerSize).toString()  + "px";
 
-		var child = selectedElem.getElementsByClassName("sageItem");
-
-		// if the element is a div, resize should use the style object
-		if (child[0].tagName.toLowerCase() === "div") {
+		// if the element is a div or iframe, resize should use the style object
+		if (child[0].tagName.toLowerCase() === "div" || child[0].tagName.toLowerCase() === "iframe") {
 			child[0].style.width  = Math.round(position_data.elemWidth)  + "px";
 			child[0].style.height = Math.round(position_data.elemHeight) + "px";
 		}
 		else {
-			// if it's a canvas, just use width and height
+			// if it's a canvas or else, just use width and height
 			child[0].width  = Math.round(position_data.elemWidth);
 			child[0].height = Math.round(position_data.elemHeight);
 		}
@@ -634,7 +642,7 @@ function setupListeners() {
 				if (app.move) app.move(date);
 			}
 		}
-		/*if (position_data.elemId in controlObjects && position_data.user_color){
+		if (position_data.elemId in controlObjects){
 			var hOffset = (ui.titleBarHeight + position_data.elemHeight)/2;
 			for (var item in controlItems){
 				if (controlItems.hasOwnProperty(item) && item.indexOf(position_data.elemId) > -1 && controlItems[item].show){
@@ -642,10 +650,10 @@ function setupListeners() {
 					var cLeft = parseInt(control.style.left);
 					var cTop = parseInt(control.style.top);
 					var cHeight = parseInt(control.style.height);
-					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.0, position_data.user_color);
+					moveWidgetToAppConnector(item, cLeft + cHeight/2.0, cTop + cHeight/2.0, position_data.elemLeft-ui.offsetX + position_data.elemWidth/2.0, position_data.elemTop-ui.offsetY+hOffset, cHeight/2.4);
 				}
 			}
-		}*/
+		}
 	});
 
 	wsio.on('startMove', function(data) {
@@ -721,8 +729,8 @@ function setupListeners() {
 					wsio.emit('addNewControl', {
 						id:data.elemId+ data.user_id + "_controls",
 						appId : data.elemId,
-						left:data.x,
-						top:data.y,
+						left:data.x-size.height/2,
+						top:data.y-size.height/2,
 						width:size.width,
 						height:size.height,
 						barHeight: size.barHeight,
@@ -756,7 +764,7 @@ function setupListeners() {
 				ctrDiv.appendChild(handle);
 				ui.main.appendChild(ctrDiv);
 				controlItems[data.id] = {show:data.show, divHandle:ctrDiv};
-				//createWidgetToAppConnector(data.id);
+				createWidgetToAppConnector(data.id);
 			}
 
 		}
@@ -765,98 +773,11 @@ function setupListeners() {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
-				//removeWidgetToAppConnector(idx);
+				removeWidgetToAppConnector(idx);
 				delete controlItems[idx];
 			}
 		}
 	});
-
-	/*wsio.on('requestControlId', function(data) {
-		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
-		var ctrId = ctrl? ctrl.attr("id"):"";
-		var regC  = /_controls/;
-		var regB  = /button/;
-		var regS  = /slider/;
-		var regTI = /textInput/;
-		var textInput;
-		var blinkControlHandle;
-		if (lockedControlElements[data.ptrId]){
-			var lckedCtrl = lockedControlElements[data.ptrId];
-			var lckedCtrlId = lckedCtrl.attr("id");
-			console.log("in requestControlId->", data);
-			if (regTI.test(lckedCtrlId)){
-				textInput = lckedCtrl.parent();
-				blinkControlHandle = textInput.data("blinkControlHandle");
-				clearInterval(blinkControlHandle);
-			}
-
-		}
-
-		if(ctrl){
-			var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
-			if (instanceID)
-				controlItems[instanceID].divHandle.style.zIndex = "9991";
-		}
-
-
-		if ( regC.test(ctrId)|| regB.test(ctrId) || regS.test(ctrId) || regTI.test(ctrId)){
-			var temp = regC.test(ctrId)? null:ctrId;
-
-			var aId = ctrl.data("appId");
-			if(regTI.test(ctrId)===true){
-				textInput = ctrl.parent();
-				blinkControlHandle = setInterval(textInput.data("blinkCallback"), 1000);
-				textInput.data("blinkControlHandle", blinkControlHandle);
-			}
-			if (regS.test(ctrId)){ // Check whether the knob should be locked to this pointer
-				if(/line/.test(ctrId) || /knob/.test(ctrId))
-			}
-			wsio.emit('selectedControlId', {
-				addr:data.addr,
-				pointerX: data.x,
-				pointerY: data.y,
-				ctrlId: temp,
-				instanceID: ctrl.parent().data("instanceID"),
-				appId: aId
-			});
-			lockedControlElements[data.ptrId] = ctrl;
-
-		}
-	});*/
-
-	/*wsio.on('releaseControlId', function(data){
-		var ctrl  = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
-		var regexSlider = /slider/;
-		var regexButton = /button/;
-		var regexTextInput = /textInput/;
-		var lockedControl = lockedControlElements[data.ptrId];
-		if (ctrl){
-			var instanceID = ctrl.data("instanceID") || ctrl.parent().data("instanceID");
-			if (instanceID){
-				controlItems[instanceID].divHandle.style.zIndex = "9990";
-			}
-		}
-
-
-		if (lockedControl){
-			if (regexTextInput.test(lockedControl.attr("id"))===false){
-				lockedControlElements[data.ptrId] = null;
-			}
-			ctrl = getWidgetControlInstanceUnderPointer(data, ui.offsetX, ui.offsetY);
-			var ctrlId = ctrl? ctrl.attr("id"): "";
-			if (regexSlider.test(lockedControl.attr("id")) || (regexButton.test(ctrlId) && (lockedControl.attr("id") === ctrlId))){
-				wsio.emit('releasedControlId', {
-					addr:data.addr,
-					pointerX: data.x,
-					pointerY: data.y,
-					instanceID: lockedControl.parent().data("instanceID"),
-					ctrlId: lockedControl.attr("id"),
-					appId: lockedControl.data("appId")
-				});
-
-			}
-		}
-	});*/
 
 	wsio.on('executeControlFunction', function(data){
 		// TODO: add `date` to `data` object
@@ -866,9 +787,10 @@ function setupListeners() {
 		if(ctrl){
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
+			var ctrlParent = ctrl.parent();
 			if (/button/.test(ctrlId)){
-				ctrl = ctrl.parent().select("path") || ctrl.parent().select("text");
-				var animationInfo = ctrl.data("animationInfo");
+				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg");
+				var animationInfo = ctrlParent.data("animationInfo");
 				if (animationInfo.textual === false && animationInfo.animation === true){
 					var delay = animationInfo.delay;
 					var state = animationInfo.state;
@@ -889,19 +811,14 @@ function setupListeners() {
 						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 					}
 				}
-				ctrlId = ctrl.parent().attr("id").replace("button", "");
+				ctrlId = ctrlParent.attr("id").replace("button", "");
 			}
 
 			else {
-				ctrlId = ctrl.parent().attr("id").replace("slider", "");
+				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
 			}
 
-			/*
-			var func = ctrl.parent().data("call");
-			if (func !== undefined && func !== null)
-				func(new Date());
-			*/
 			var appId = data.ctrl.appId;
 			var app   = applications[appId];
 			switch(ctrlId) {
@@ -919,7 +836,7 @@ function setupListeners() {
 					console.log("SHARE APP");
 					break;
 				default:
-					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date());
+					app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:action}, new Date(data.date));
 					break;
 			}
 
@@ -944,12 +861,7 @@ function setupListeners() {
 		var appId = data.ctrl.appId;
 		var app = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date());
-		/*
-		var func   = slider.data("lockCall");
-		if (func !== undefined && func !== null)
-			func(new Date());
-		*/
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderLock"}, new Date(data.date));
 		var ctrHandle    = document.getElementById(slider.data("instanceID"));
 		var widgetOffset = ctrHandle? parseInt(ctrHandle.style.left):0;
 		var pos = data.x-ui.offsetX-widgetOffset;
@@ -960,12 +872,7 @@ function setupListeners() {
 			var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
 			var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 			appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
-			/*
-			func = slider.data("updateCall");
-			if (func !== undefined && func !== null)
-				func(new Date());
-			*/
+			app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
 		}
 	});
 
@@ -980,19 +887,12 @@ function setupListeners() {
 		var pos = data.x-ui.offsetX-widgetOffset;
 		var sliderKnob = slider.select("rect");
 		var updatedSliderInfo = mapMoveToSlider(sliderKnob, pos);
-		//console.log("moving->",data.x,pos,updatedSliderInfo.sliderValue);
 		var appObj = getProperty(applications[slider.data("appId")], slider.data("appProperty"));
 		appObj.handle[appObj.property] = updatedSliderInfo.sliderValue;
-
 		var appId  = data.ctrl.appId;
 		var app    = applications[appId];
 		var ctrlId = slider.attr("id").replace("slider", "");
-		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date());
-		/*
-		var func = slider.data("updateCall");
-		if (func !== undefined && func !== null)
-			func(new Date());
-		*/
+		app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"sliderUpdate"}, new Date(data.date));
 	});
 
 	wsio.on('keyInTextInputWidget', function(data) {
@@ -1002,7 +902,6 @@ function setupListeners() {
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl){
 			var textInput = ctrl.parent();
-
 			if (data.code !== 13) {
 				insertTextIntoTextInputWidget(textInput, data.code, data.printable);
 			}
@@ -1012,25 +911,10 @@ function setupListeners() {
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
 
-				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, new Date());
-				/*
-				var func = textInput.data("call");
-				if (func !== undefined && func !== null)
-					func(getTextFromTextInputWidget(textInput));
-				*/
+				app.SAGE2Event("widgetEvent", null, data.user, {ctrlId: ctrlId, action:"textEnter", text:getTextFromTextInputWidget(textInput)}, Date.now());
 			}
 		}
 	});
-
-	/*wsio.on('dropTextInputControl', function(data){ //Called when the user clicks outside the widget control while a lock exists on text input
-		console.log("in dropTextInputControl->", data);
-		var ctrl = getWidgetControlInstanceById(data);
-		if (ctrl){
-			var textInput = ctrl.parent();
-			var blinkControlHandle = textInput.data("blinkControlHandle");
-			clearInterval(blinkControlHandle);
-		}
-	});*/
 
 	wsio.on('activateTextInputControl', function(data){
 		var ctrl = null;

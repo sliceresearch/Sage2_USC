@@ -13,30 +13,7 @@
 
 /* CSS Document */
 
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Regular.ttf') format('truetype');
-	font-weight: normal;
-	font-style: normal;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Italic.ttf') format('truetype');
-	font-weight: normal;
-	font-style: italic;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-Bold.ttf') format('truetype');
-	font-weight: bold;
-	font-style: normal;
-}
-@font-face {
-	font-family: 'Arimo';
-	src: url('/css/Arimo-BoldItalic.ttf') format('truetype');
-	font-weight: bold;
-	font-style: italic;
-}
+@import url('/css/fonts.css');
 
 * {
 	margin: 0;
@@ -100,7 +77,7 @@ footer {
 }
 
 
-p {
+p, tr, td {
 	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 10pt;
 	text-indent: 25px;
@@ -126,8 +103,9 @@ p {
 }
 input, select, textarea {
 	margin: 2px 0 2px 5px;
-    color: #f0f0f0;
+	color: #f0f0f0;
 }
+
 input[type=text]:focus, textarea:focus {
 	outline: none;
 }
@@ -197,3 +175,22 @@ main {
 .siteType {
 	margin-bottom: 5px;
 }
+
+.myButton {
+	background-color:#77b55a;
+	border:3px solid #4b8f29;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	padding:9px 23px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #5b8a3c;
+}
+.myButton:hover {
+	background-color:#72b352;
+}
+.myButton:active {
+	position:relative;
+	top:1px;
+}
+

@@ -43,6 +43,7 @@ var image_viewer = SAGE2_App.extend( {
 		this.old_img_url = "";
 
 		this.updateAppFromState();
+		this.addWidgetControlsToImageViewer();
 	},
 
 	/**

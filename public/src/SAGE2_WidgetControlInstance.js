@@ -288,6 +288,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 */
 SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy, rad) {
 	var buttonRad = rad;
+	var buttonRad2x = 2*rad;
 	var buttonBack = this.controlSVG.circle(cx, cy, buttonRad);
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
@@ -297,6 +298,21 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	});
 	var type = buttonSpec.type;
 
+	var button = this.controlSVG.group(buttonBack);
+	var instanceID = this.instanceID;
+
+	function buttonCoverReady(cover){
+		button.add(cover);
+		cover.data("call", buttonSpec.call);
+		cover.data("animationInfo", type);
+		cover.data("appId", buttonSpec.appId);
+		buttonBack.data("appId", buttonSpec.appId);
+		button.data("call", buttonSpec.call);
+		button.data("appId", buttonSpec.appId);
+		button.data("instanceID", instanceID);
+		button.data("animationInfo", type);
+		button.attr("id", buttonSpec.id);
+	}
 	var buttonCover;
 
 	if (type.textual === true) {
@@ -311,9 +327,23 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			stroke:"none",
 			fill:type.fill
 		});
+		buttonCoverReady(buttonCover);
 		type.label = type.label.slice(0, 5);
 	}
-	else{
+	else if (type.img!==undefined && type.img!==null){
+		Snap.load(type.img, function(frag){
+			var gs = frag.select("svg");
+			gs.attr({
+				id: buttonSpec.id + "cover",
+				x: (cx - buttonRad) + "px",
+				y: (cy - buttonRad) + "px",
+				width:buttonRad2x + "px",
+				height:buttonRad2x + "px"
+			});
+			buttonCoverReady(gs);
+		});
+	}
+	else {
 
 		type.from = "M " + cx + " " + cy  + " " + type.from;
 		type.to = "M " + cx + " " + cy  + " " + type.to;
@@ -339,6 +369,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			stroke:"rgba(250,250,250,1.0)",
 			style:"stroke-linecap:round; stroke-linejoin:round"
 		});
+		buttonCoverReady(buttonCover);
 	}
 
 	if (type.state !== null && type.state !== undefined) {
@@ -352,18 +383,6 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			}
 		});
 	}
-
-	//var callabckFunc = buttonSpec.call.bind(applications[ buttonSpec.appId]);
-	var button = this.controlSVG.group(buttonBack, buttonCover);
-
-	buttonCover.data("call", buttonSpec.call);
-	buttonCover.data("animationInfo", type);
-	buttonCover.data("appId", buttonSpec.appId);
-	buttonBack.data("appId", buttonSpec.appId);
-	button.data("call", buttonSpec.call);
-	button.data("appId", buttonSpec.appId);
-	button.data("instanceID", this.instanceID);
-	button.attr("id", buttonSpec.id);
 	return button;
 };
 

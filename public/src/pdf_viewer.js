@@ -122,12 +122,13 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @method addWidgetControlsToPdfViewer
 	*/
 	addWidgetControlsToPdfViewer: function() {
-		this.controls.addButton({type: "fastforward", sequenceNo: 2, id: "LastPage"});
-		this.controls.addButton({type: "rewind",      sequenceNo: 6, id: "FirstPage"});
-		this.controls.addButton({type: "prev",        sequenceNo: 5, id: "PreviousPage"});
-		this.controls.addButton({type: "next",        sequenceNo: 3, id: "NextPage"});
-		this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1, appHandle: this, property: "state.page", caption: "Page", id: "Page"});
-
+		if (this.pdfDoc.numPages>1){
+			this.controls.addButton({type: "fastforward", sequenceNo: 2, id: "LastPage"});
+			this.controls.addButton({type: "rewind",      sequenceNo: 6, id: "FirstPage"});
+			this.controls.addButton({type: "prev",        sequenceNo: 5, id: "PreviousPage"});
+			this.controls.addButton({type: "next",        sequenceNo: 3, id: "NextPage"});
+			this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1, appHandle: this, property: "state.page", caption: "Page", id: "Page"});
+		}
 		this.controls.finishedAddingControls();
 	},
 
@@ -215,6 +216,21 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
+		// Left Click  - go back one page
+		// Right Click - go forward one page
+		if (eventType === "pointerPress") {
+			if (data.button === "left") {
+				if(this.state.page <= 1) return;
+				this.state.page = this.state.page - 1;
+				this.refresh(date);
+			}
+			else if (data.button === "right") {
+				if (this.state.page >= this.pdfDoc.numPages) return;
+				this.state.page = this.state.page + 1;
+				this.refresh(date);
+			}
+		}
+
 		// Left Arrow  - go back one page
 		// Right Arrow - go forward one page
 		if (eventType === "specialKey") {

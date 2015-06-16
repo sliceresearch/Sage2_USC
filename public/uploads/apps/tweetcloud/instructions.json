@@ -6,7 +6,6 @@
 	"animation": false,
 	"resize": "free",
 	"dependencies": [
-		"scripts/d3.v3.min.js",
 		"scripts/d3.layout.cloud.js"
 	],
 	"title": "Tweet Cloud",

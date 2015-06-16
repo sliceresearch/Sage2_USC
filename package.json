@@ -56,8 +56,10 @@
 		"request": "latest",
 		"sprint": "^0.3.1",
 		"twit": "latest",
+		"mv": "latest",
 		"ws": "latest",
 		"semver": "latest",
+		"fsmonitor": "latest",
 		"ytdl-core": "latest"
 	},
 	"devDependencies": {
@@ -66,7 +68,8 @@
 		"eslint-grunt": "latest",
 		"grunt-contrib-yuidoc": "latest",
 		"grunt-contrib-uglify": "latest",
-        "grunt-mocha-cli": "latest",
+		"grunt-prompt": "latest",
+		"grunt-mocha-cli": "latest",
 		"nodemon": "latest",
 		"eslint": "latest",
 		"kthxbai": "latest",
@@ -80,10 +83,11 @@
 	},
 	"scripts": {
 		"start":   "node server.js -l",
-		"monitor": "./node_modules/.bin/nodemon -e js,html -I -L server.js -l",
+		"monitor": "./node_modules/.bin/nodemon -e json,js,html -I -L -i public/uploads server.js -l",
 		"lint":    "./node_modules/.bin/grunt eslint",
 		"doc":     "./node_modules/.bin/grunt yuidoc",
 		"mini":    "./node_modules/.bin/grunt uglify --verbose",
+		"newapp":  "./node_modules/.bin/grunt newapp",
 		"test":    "./node_modules/.bin/grunt all",
 		"in":      "node ./install_dependencies.js",
 		"inprod":  "node ./install_dependencies.js --prod"
