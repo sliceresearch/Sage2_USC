@@ -4574,7 +4574,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	}
 	var im = findInteractableManager(moveApp.elemId);
 	var backgroundObj = im.searchGeometry({x: moveApp.elemLeft-1, y: moveApp.elemTop-1});
-	if (backgroundObj !== undefined && backgroundObj !== null) {
+	if (backgroundObj !== undefined && backgroundObj !== null && backgroundObj.data !== null) {
 		console.log(backgroundObj);
 		if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
 			attachAppIfSticky(backgroundObj.data, moveApp.elemId);
