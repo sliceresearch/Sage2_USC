@@ -476,6 +476,9 @@ function setupListeners(wsio) {
 	wsio.on('stopMediaStream',                      wsStopMediaStream);
 	wsio.on('startNewMediaBlockStream',             wsStartNewMediaBlockStream);
 	wsio.on('updateMediaBlockStreamFrame',          wsUpdateMediaBlockStreamFrame);
+	wsio.on('updateMediaBlockStreamFrameInit',          wsUpdateMediaBlockStreamFrameInit);
+	wsio.on('updateMediaBlockStreamFrameBlock',          wsUpdateMediaBlockStreamFrameFrag3);
+	wsio.on('updateMediaBlockStreamFrameFinal',          wsUpdateMediaBlockStreamFrameFinal3);
 	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
 
 	wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
@@ -949,6 +952,7 @@ function wsStopMediaStream(wsio, data) {
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
+        //console.log("wsReceivedMediaStreamFrame: "+Date.now());
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
@@ -968,6 +972,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextFrame', {streamId: sender.streamId});
+                        //console.log("wsReceivedMediaStreamFrame - requestNextFrame: "+Date.now());
 		}
 		else if (mediaStreamData.length === 3) { // remote stream --> remote_server | client | stream_id
 			sender.serverId = mediaStreamData[0];
@@ -980,6 +985,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId + "|" + sender.streamId});
+                        //console.log("wsReceivedMediaStreamFrame - requestNextFrame: "+Date.now());
 		}
 	}
 }
@@ -991,7 +997,6 @@ function wsStartNewMediaBlockStream(wsio, data) {
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
-
 
 	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height};
 	for (var i=0; i<clients.length; i++) {
@@ -1005,12 +1010,163 @@ function wsStartNewMediaBlockStream(wsio, data) {
         handleNewApplication(appInstance, null);
         calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
     });
+    console.log("Started media stream");
 }
 
+// as for wsUpdateMediaBlockStreamFrame but with pixel block splitting client-side and pixblocks sent as separate messages (for efficiency)
+function wsUpdateMediaBlockStreamFrameFrag1(wsio, buffer) {
+        //console.log("wsUpdateMediaBlockStreamFrameFrag", Date.now());
+        var i;
+        var key;
+    var id = byteBufferToString(buffer);
+    //console.log("source ID ",id);
+
+    // drop blocks from unknown source ID
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+                return;
+    // ensure blocks property exists
+    if (!SAGE2Items.applications.list[id].data.hasOwnProperty("blocks")) {
+      SAGE2Items.applications.list[id].data.blocks=[];
+    }
+    var imgBuffer = buffer.slice(id.length+1);
+    SAGE2Items.applications.list[id].data.blocks.push(imgBuffer);
+}
+
+// as for wsUpdateMediaBlockStreamFrame but with pixel block splitting client-side and pixblocks sent as separate messages (for efficiency)
+// - blocks are created from stream client side (cf src/node-pixelblock.js) and sent one per message
+function wsUpdateMediaBlockStreamFrameFrag2(wsio, buffer) {
+        //console.log("wsUpdateMediaBlockStreamFrameFrag", Date.now());
+        var i;
+        var key;
+    var id = byteBufferToString(buffer);
+    //console.log("source ID ",id);
+
+    // drop blocks from unknown source ID
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+                return;
+    // ensure blocks property exists
+    if (!SAGE2Items.applications.list[id].data.hasOwnProperty("blocks")) {
+      SAGE2Items.applications.list[id].data.blocks=[];
+    }
+    var imgBuffer = buffer.slice(id.length+1);
+    SAGE2Items.applications.list[id].data.blocks.push(imgBuffer);
+}
+
+// as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
+function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
+        console.log("wsUpdateMediaBlockStreamFrameInit", Date.now());
+        var key;
+    var id = byteBufferToString(buffer);
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+                return;
+    SAGE2Items.applications.list[id].data.block=0;
+    for (key in SAGE2Items.renderSync[id].clients) {
+                SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
+    }
+}
+
+// as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
+// - wsUpdateMediaBlockStreamFrameFirst must be sent before sending blocks
+function wsUpdateMediaBlockStreamFrameFrag3(wsio, buffer) {
+        console.log("wsUpdateMediaBlockStreamFrameFrag3", Date.now());
+        var key;
+    var id = byteBufferToString(buffer);
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+                return;
+    var i=SAGE2Items.applications.list[id].data.block;
+    var imgBuffer = buffer.slice(id.length+1);
+
+    var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
+    var dateBuffer = intToByteBuffer(Date.now(), 8);
+    var blockIdxBuffer = intToByteBuffer(i, 2);
+    var pixelbuffer = Buffer.concat([idBuffer, blockIdxBuffer, dateBuffer, imgBuffer]);
+
+    for (key in SAGE2Items.renderSync[id].clients) {
+                        if (SAGE2Items.renderSync[id].clients[key].blocklist.indexOf(i) >= 0) {
+                                SAGE2Items.renderSync[id].clients[key].wsio.emit('updateMediaBlockStreamFrame', pixelbuffer);
+                        } else {
+                          // this client has no blocks, so it is ready for next frame!
+                          SAGE2Items.renderSync[id].clients[key].readyForNextFrame = true;
+                        }
+    }
+
+    SAGE2Items.applications.list[id].data.block=i+1;
+}
+
+// simple version - blocks are just horizontal slices; reassemble then pass to current UpdateMediaBlockStreamFrame
+function wsUpdateMediaBlockStreamFrameFinal1(wsio, buffer) {
+    var id = byteBufferToString(buffer);
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+		return;
+    var blocks = SAGE2Items.applications.list[id].data.blocks;
+    var blockLength = blocks[0].length // in bytes
+    // ensure blocks property exists
+    if (!SAGE2Items.applications.list[id].data.hasOwnProperty("buffer")) {
+      var fullBufferSize = id.length + 1 + blocks.length * blocks[0].length;
+      var newBuffer = Buffer(fullBufferSize);
+      SAGE2Items.applications.list[id].data.buffer = newBuffer;
+      // set ID
+      for (var i = 0; i < id.length; i++) {
+        newBuffer[i] = buffer[i];
+      }
+      newBuffer[id.length] = 0;
+    }
+    var fullBuffer = SAGE2Items.applications.list[id].data.buffer;
+    for (var i = 0; i < blocks.length; i++) {
+      blocks[i].copy(fullBuffer, id.length+1+(i*blockLength))
+    }
+    wsUpdateMediaBlockStreamFrame(wsio, fullBuffer);
+    SAGE2Items.applications.list[id].data.blocks=[];
+}
+
+// new version - blocks are created from stream client side (cf src/node-pixelblock.js) and sent one per message
+function wsUpdateMediaBlockStreamFrameFinal2(wsio, buffer) {
+        var i;
+        var key;
+    var id = byteBufferToString(buffer);
+        //console.log("wsUpdateMediaBlockStreamFrameFinal2", id, Date.now());
+    if (!SAGE2Items.applications.list.hasOwnProperty(id))
+                return;
+        for (key in SAGE2Items.renderSync[id].clients) {
+                SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
+        }
+        var blockBuffers = SAGE2Items.applications.list[id].data.blocks;
+    //console.log("blockBuffers total: ",blockBuffers.length);
+    // TODO: push this to client-side?
+    var pixelbuffer = [];
+    var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
+    var dateBuffer = intToByteBuffer(Date.now(), 8);
+    var blockIdxBuffer;
+    for (i=0; i<blockBuffers.length; i++) {
+        blockIdxBuffer = intToByteBuffer(i, 2);
+        pixelbuffer[i] = Buffer.concat([idBuffer, blockIdxBuffer, dateBuffer, blockBuffers[i]]);
+    }
+    for (key in SAGE2Items.renderSync[id].clients) {
+                for (i=0; i<pixelbuffer.length; i++){
+                        if (SAGE2Items.renderSync[id].clients[key].blocklist.indexOf(i) >= 0) {
+                                SAGE2Items.renderSync[id].clients[key].wsio.emit('updateMediaBlockStreamFrame', pixelbuffer[i]);
+                        } else {
+                // this client has no blocks, so it is ready for next frame!
+                SAGE2Items.renderSync[id].clients[key].readyForNextFrame = true;
+            }
+                }
+        }
+        SAGE2Items.applications.list[id].data.blocks = [];
+}
+
+// as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
+// - blocks are pre-assembled client-side and sent on to displays as they arrive --- nothing to do!
+function wsUpdateMediaBlockStreamFrameFinal3(wsio, buffer) {
+}
+
+// existing version - whole frame at a time
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
+        console.log("wsUpdateMediaBlockStreamFrame", Date.now());
+        //wsio.emit('confirmUpdateRecvd', {})
 	var i;
 	var key;
     var id = byteBufferToString(buffer);
+    //console.log("buffer ID ",id);
 
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
 		return;
@@ -1028,6 +1184,7 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	else if (colorspace === "YUV420p")
 		blockBuffers = pixelblock.yuv420ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
+    console.log("blockBuffers.length ",blockBuffers.length);
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
     var dateBuffer = intToByteBuffer(Date.now(), 8);
@@ -1054,6 +1211,7 @@ function wsStopMediaBlockStream(wsio, data) {
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
+        //console.log("wsReceivedMediaBlockStreamFrame: "+Date.now());
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
@@ -1074,6 +1232,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextFrame', {streamId: sender.streamId});
+                        //console.log("wsReceivedMediaBlockStreamFrame - requestNextFrame: "+Date.now());
 		}
 		else if (mediaBlockStreamData.length === 3) { // remote stream --> remote_server | client | stream_id
 			sender.serverId = mediaBlockStreamData[0];
@@ -1086,6 +1245,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId + "|" + sender.streamId});
+                        //console.log("wsReceivedMediaBlockStreamFrame - requestNextFrame: "+Date.now());
 		}
 	}
 }
@@ -2130,6 +2290,7 @@ function wsRequestNextRemoteBlockFrame(wsio, data) {
 }
 
 function wsUpdateRemoteMediaBlockStreamFrame(wsio, data) {
+        console.log("wsUpdateRemoteMediaBlockStreamFrame\n");
 	if (!SAGE2Items.applications.list.hasOwnProperty(data.id)) return;
 
 	var key;
@@ -3548,6 +3709,7 @@ function intToByteBuffer(aInt, bytes) {
 	return buf;
 }
 
+// create String from null-terminated prefix of buf
 function byteBufferToString(buf) {
 	var str = "";
 	var i = 0;
