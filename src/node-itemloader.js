@@ -658,6 +658,7 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 
 
 AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, width, height, callback) {
+        console.log("createMediaBlockStream");
 	var aspectRatio = width/height;
 
 	var metadata         = {};
