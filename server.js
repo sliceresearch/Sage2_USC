@@ -4639,8 +4639,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	// don't allow data-pushing
-	//dropSelectedItem(uniqueID, true);
+	dropSelectedItem(uniqueID, true);
 
+	/*
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
 	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
@@ -4656,6 +4657,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 		};
 		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 	}
+	*/
 }
 
 function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
