@@ -972,7 +972,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextFrame', {streamId: sender.streamId});
-                        //console.log("wsReceivedMediaStreamFrame - requestNextFrame: "+Date.now());
+                        console.log("wsReceivedMediaStreamFrame - requestNextFrame: "+Date.now());
 		}
 		else if (mediaStreamData.length === 3) { // remote stream --> remote_server | client | stream_id
 			sender.serverId = mediaStreamData[0];
@@ -985,7 +985,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId + "|" + sender.streamId});
-                        //console.log("wsReceivedMediaStreamFrame - requestNextFrame: "+Date.now());
+                        console.log("wsReceivedMediaStreamFrame - requestNextFrame: "+Date.now());
 		}
 	}
 }
@@ -1054,7 +1054,7 @@ function wsUpdateMediaBlockStreamFrameFrag2(wsio, buffer) {
 
 // as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
 function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
-        console.log("wsUpdateMediaBlockStreamFrameInit", Date.now());
+        //console.log("wsUpdateMediaBlockStreamFrameInit", Date.now());
         var key;
     var id = byteBufferToString(buffer);
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
@@ -1068,7 +1068,7 @@ function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
 // as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
 // - wsUpdateMediaBlockStreamFrameFirst must be sent before sending blocks
 function wsUpdateMediaBlockStreamFrameFrag3(wsio, buffer) {
-        console.log("wsUpdateMediaBlockStreamFrameFrag3", Date.now());
+        //console.log("wsUpdateMediaBlockStreamFrameFrag3", Date.now());
         var key;
     var id = byteBufferToString(buffer);
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
@@ -1162,7 +1162,7 @@ function wsUpdateMediaBlockStreamFrameFinal3(wsio, buffer) {
 // existing version - whole frame at a time
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
         console.log("wsUpdateMediaBlockStreamFrame", Date.now());
-        //wsio.emit('confirmUpdateRecvd', {})
+        wsio.emit('confirmUpdateRecvd', {})
 	var i;
 	var key;
     var id = byteBufferToString(buffer);
@@ -1186,7 +1186,6 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
         else if (colorspace === "YUV422")
                 blockBuffers = pixelblock.yuv422ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
-    console.log("blockBuffers.length ",blockBuffers.length);
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
     var dateBuffer = intToByteBuffer(Date.now(), 8);
@@ -1234,7 +1233,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextFrame', {streamId: sender.streamId});
-                        //console.log("wsReceivedMediaBlockStreamFrame - requestNextFrame: "+Date.now());
+                        console.log("wsReceivedMediaBlockStreamFrame - requestNextFrame: "+Date.now());
 		}
 		else if (mediaBlockStreamData.length === 3) { // remote stream --> remote_server | client | stream_id
 			sender.serverId = mediaBlockStreamData[0];
@@ -1247,7 +1246,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 				}
 			}
 			if (sender.wsio !== null) sender.wsio.emit('requestNextRemoteFrame', {id: sender.clientId + "|" + sender.streamId});
-                        //console.log("wsReceivedMediaBlockStreamFrame - requestNextFrame: "+Date.now());
+                        console.log("wsReceivedMediaBlockStreamFrame - requestNextFrame: "+Date.now());
 		}
 	}
 }
