@@ -3563,6 +3563,8 @@ function byteBufferToString(buf) {
 function mergeObjects(a, b, ignore) {
 	var ig = ignore || [];
 	var modified = false;
+	// test in case of old sessions
+	if (a === undefined || b === undefined) return modified;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
 			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
