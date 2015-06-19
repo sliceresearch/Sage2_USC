@@ -373,7 +373,8 @@ function UIBuilder(json_cfg, clientID) {
 			}
 			// If the SAGE2 session is password protected, add a lock symbol
 			if (this.json_cfg.passordProtected)
-				machine.innerHTML = url + " &#128274;";
+				// not portable: machine.innerHTML = url + " &#128274;";
+				machine.innerHTML = url + " <span><img style=\"vertical-align: text-top;\" src=\"images/lock.png\" height=" + this.titleTextSize + "/></span>";
 			else
 				machine.textContent = url;
 		}
