@@ -50,7 +50,7 @@ var sticky_note = SAGE2_App.extend( {
 		
 		this.lineColor = this.backColor.diff(60);
 		//console.log(this.lineColor);
-		
+		this.tailText = "";
 		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
 		rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
 		this.setupWindow();
@@ -62,6 +62,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"decreaseFont"});
 		this.controls.finishedAddingControls();
 		this.requestFileBuffer(this.state.fileName);
+		
 		console.log("state:",this.state);
 	},
 
@@ -72,6 +73,14 @@ var sticky_note = SAGE2_App.extend( {
 	setText: function(){
 		this.prefixText.innerHTML = this.state.buffer.slice(0,this.state.caretPos).replace(/\r\n|\r|\n/g,"<br>");
 		this.suffixText.innerHTML = this.state.buffer.slice(this.state.caretPos).replace(/\r\n|\r|\n/g,"<br>");
+		if (this.isOverflowed()){
+			this.suffixText.innerHTML = this.state.buffer.slice(this.state.caretPos,-1).replace(/\r\n|\r|\n/g,"<br>");
+			this.tailText = this.state.buffer.slice(this.state.caretPos,-1) + this.tailText;
+		}
+		else if (this.tailText.length > 0){
+			this.suffixText.innerHTML = this.suffixText.innerHTML + this.tailText.slice(0,1).replace(/\r\n|\r|\n/g,"<br>");
+			this.tailText = this.tailText.slice(1);
+		}
 	},
 	
 
@@ -186,6 +195,10 @@ var sticky_note = SAGE2_App.extend( {
 		this.insetElement.style.height = parseInt(0.9*this.height) +"px";
 	},
 
+	setCredentials: function(){
+
+	},
+
 	setFontSize: function(){
 		this.prefixText.style.lineHeight = this.lineHeight;
 		this.prefixText.style.fontSize = this.state.fontSize;
@@ -198,8 +211,10 @@ var sticky_note = SAGE2_App.extend( {
 	},
 	setupWindow: function(){
 		this.insetElement = document.createElement("span");
+		this.insetElement.id = "inset";
 		this.insetElement.style.position = "absolute";
 		this.insetElement.style.display = "block";
+		this.insetElement.style.overflow = "hidden";
 		this.setWindowElementSize();
 		this.element.appendChild(this.insetElement);
 		
@@ -228,7 +243,7 @@ var sticky_note = SAGE2_App.extend( {
 
 
 		this.suffixText = document.createElement("p");
-		this.suffixText.id = "prefix";
+		this.suffixText.id = "suffix";
 		
 		this.suffixText.style.textAlign = "justify";
 		this.suffixText.style.wordWrap = "break-word";
@@ -242,7 +257,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.setFontSize();
 	},
 	isOverflowed: function(){
-    	return this.insetElement.scrollHeight > this.insetElement.clientHeight || this.insetElement.scrollWidth > this.insetElement.clientWidth;
+    	return parseInt(this.insetElement.style.height) > parseInt(0.9*this.height) || this.insetElement.scrollHeight > this.insetElement.clientHeight || this.insetElement.scrollWidth > this.insetElement.clientWidth;
 	}
 	/*blinkCaret: function(){
 		setInterval(function(){
