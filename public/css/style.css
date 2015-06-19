@@ -190,7 +190,6 @@ body {
 
 .annotationMarkerEditable{
 	position:absolute;
-	background-color: rgba(252, 240, 173, 0.6);
 	color: black;
 	font-family:sans-serif;
 	border-radius: 3px;

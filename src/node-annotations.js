@@ -130,7 +130,7 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         filename: appInstance.title,
         left: appInstance.left  + appInstance.width,
         top:appInstance.top + config.ui.titleBarHeight,
-        width:appInstance.width*0.65,
+        width:config.ui.titleBarHeight*12,
         height:appInstance.height,
         show:false,
         button: {
@@ -145,15 +145,15 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
             id:appInstance.id + "_addNote",
             left:6,
             top:appInstance.height - config.ui.titleBarHeight - 3,
-            width:appInstance.width*0.20,
+            width:config.ui.titleBarHeight*2,
             height:config.ui.titleBarHeight,
             caption:"New Note"
         },
         addSummaryNoteButton: {
             id:appInstance.id + "_addSummaryNote",
-            left: 12 + appInstance.width*0.10,
+            left: 12 + config.ui.titleBarHeight*3,
             top:appInstance.height - config.ui.titleBarHeight - 3,
-            width:appInstance.width*0.20,
+            width:config.ui.titleBarHeight*2,
             height:config.ui.titleBarHeight,
             caption:"New Summary Note"
         },

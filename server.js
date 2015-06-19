@@ -241,6 +241,7 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+	startTimeUpdateBroadcasts();
 }
 
 function setUpDialogsAsInteractableObjects() {
@@ -7295,6 +7296,7 @@ function handleNewApplication(appInstance, videohandle) {
 		var annotationWindow = annotations.loadAnnotations(appInstance, config);
 		if (annotationWindow!==undefined && annotationWindow !== null){
 			annotationWindow.zIndex = zIndex;
+			annotationWindow.now = Date.now();
 			var noteButton = annotationWindow.button;
 			broadcast('createAnnotationWindow', annotationWindow);
 			var annotationWindowGeometry = {x: annotationWindow.left, y: annotationWindow.top, w: annotationWindow.width, h: annotationWindow.height};
@@ -7871,7 +7873,7 @@ function wsRequestForNewNote(wsio, data){
 	};
 
 	var noteItem = annotations.addNewNote(credentials);
-	broadcast('addNewNoteToAnnotationWindow', noteItem, 'requiresFullApps');
+	broadcast('addNewNoteToAnnotationWindow', {credentials: noteItem, color:sagePointers[data.uniqueID].color} , 'requiresFullApps');
 }
 
 function wsRequestForNoteDeletion(wsio, credentials){
@@ -7883,7 +7885,7 @@ function wsRequestForNoteDeletion(wsio, credentials){
 }
 
 function wsSetNoteAsEditable(wsio, data){
-	annotations.setNoteAsEditable(data);
+	annotations.setNoteAsEditable(data.credentials);
 	broadcast('makeNoteEditable', data, 'requiresFullApps');
 }
 
@@ -7899,7 +7901,8 @@ function wsRequestForMarkerDeletion (wsio, credentials){
 	}
 }
 
-function wsRequestForMarkerAddition (wsio, credentials){
+function wsRequestForMarkerAddition (wsio, data){
+	var credentials = data.credentials;
 	if (credentials.marker===null){
 		var app = SAGE2Items.applications.list[credentials.appId];
 		var annotationWindow = annotations.getAnnotationWindowForApp(credentials.appId);
@@ -7908,7 +7911,7 @@ function wsRequestForMarkerAddition (wsio, credentials){
 			annotations.saveMarkerForAnnotation(annotationWindow.filename, credentials.id, credentials.marker);
 		}
 		annotations.setNoteAsEditable(credentials);
-		broadcast('addMarkerToNote', credentials, 'requiresFullApps');
+		broadcast('addMarkerToNote', data, 'requiresFullApps');
 	}
 }
 
@@ -7927,4 +7930,11 @@ function wsRequestFileBuffer (wsio, data){
 
 function wsCloseFileBuffer (wsio, data){
 	fileBufferManager.closeFileBuffer(data.id);
+}
+
+
+function startTimeUpdateBroadcasts(){
+	setInterval(function(){
+		broadcast('timeUpdate', {now:Date.now()});
+	}, 60000);
 }

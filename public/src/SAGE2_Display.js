@@ -973,20 +973,22 @@ function setupListeners() {
 		}
 	});
 	wsio.on('addNewNoteToAnnotationWindow', function(data){
-		var annotationWindow = annotationItems[data.appId];
+		var credentials = data.credentials;
+		var annotationWindow = annotationItems[credentials.appId];
 		if (annotationWindow){
-			annotationItems[data.appId].addNote(data);	
-			if (data.marker !== null){
-				annotationWindow.createMarker(data);
+			annotationItems[credentials.appId].addNote(credentials);	
+			if (credentials.marker !== null){
+				annotationWindow.createMarker(credentials);
 			}
 			annotationWindow.makeNoteEditable(data);
 		}
 	});
 
 	wsio.on('addMarkerToNote', function(data){
-		var annotationWindow = annotationItems[data.appId];
+		var credentials = data.credentials;
+		var annotationWindow = annotationItems[credentials.appId];
 		if (annotationWindow){
-			annotationWindow.createMarker(data);
+			annotationWindow.createMarker(credentials);
 			annotationWindow.makeNoteEditable(data);
 		}
 	});
@@ -995,7 +997,7 @@ function setupListeners() {
 		var annotationWindow = annotationItems[data.appId];
 		if (annotationWindow){
 			annotationWindow.removeMarker(data);
-			annotationWindow.makeNoteEditable(data);
+			annotationWindow.makeNoteEditable({credentials: data, color:null});
 		}
 	});
 
@@ -1021,15 +1023,22 @@ function setupListeners() {
 		}
 	});*/
 
+	wsio.on('timeUpdate', function(data){
+		for(var key in annotationItems){
+			annotationItems[key].updateTime(data.now);
+		}
+	});
 	wsio.on('makeNoteEditable', function(data){
-		var annotationWindow = annotationItems[data.appId];
+		var appId = data.credentials.appId;
+		var credentials = data.credentials;
+		var annotationWindow = annotationItems[appId];
 		if (annotationWindow){
 			annotationWindow.makeNoteEditable(data);	
-			if (data.marker){
-				var app = applications[data.appId];
+			if (credentials.marker){
+				var app = applications[appId];
 				if (app.hasOwnProperty("state")){
 					if (app.state.hasOwnProperty("page")){
-						app.state.page = data.marker.page;
+						app.state.page = credentials.marker.page;
 						app.redraw = true;
 						app.refresh(new Date());
 					}

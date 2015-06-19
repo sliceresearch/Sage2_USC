@@ -22,10 +22,11 @@ var SAGE2Annotations = function (){
 	this.show = null;
 	this.buttonDiv = null;
 	this.textAreas = [];
-	this.textAreaHeight = 140;
+	this.textAreaHeight = ui.titleBarHeight*4.5;
 	this.newTextAreaOffset = 10;
 	this.markers = {};
 	this.editables = {};
+	this.currentTime = null;
 }
 
 SAGE2Annotations.prototype.makeWindow = function(data){
@@ -37,7 +38,6 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	this.appId = data.appId;
 	this.data = data.annotationData;
 	this.show = data.show;
-	
 	this.windowDiv = document.createElement("div");
 	this.windowDiv.id = data.id;
 	this.windowDiv.style.left = data.left.toString()+ "px";
@@ -74,6 +74,8 @@ SAGE2Annotations.prototype.makeWindow = function(data){
 	this.makeButtonsForAnnotationWindow(data);
 	this.prepareWindow();
 	this.populateWindow(data.annotationData);
+	this.updateTime(data.now);
+	
 };
 
 SAGE2Annotations.prototype.setOrder = function (zval){
@@ -200,13 +202,14 @@ SAGE2Annotations.prototype.deleteNote = function(credentials){
 
 
 SAGE2Annotations.prototype.prepareWindow = function(){
+	var scrollBarWidth = parseInt(ui.titleBarHeight*0.6);
 	this.innerDiv = document.createElement("div");
 	this.innerDiv.id = "innerWindowID";
 	this.innerDiv.className = "innerWindow";
 	this.innerDiv.style.left = "6px";
 	this.innerDiv.style.top = "6px";
-	this.innerDiv.style.width = (parseInt(this.windowDiv.style.width) - ui.titleBarHeight - 15).toString() + "px";
-	this.innerDiv.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
+	this.innerDiv.style.width = (parseInt(this.windowDiv.style.width) - scrollBarWidth - 15).toString() + "px";
+	this.innerDiv.style.height = (parseInt(this.windowDiv.style.height) - scrollBarWidth - 15).toString() + "px";
 	this.innerDiv.style.display = "block";
 	this.innerDiv.style.position = "relative";
 	this.innerDiv.style.borderRadius = "3px 3px 3px 3px";
@@ -218,9 +221,9 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 
 	this.scrollBar = document.createElement("div");
 	this.scrollBar.id = "scrollBar";
-	this.scrollBar.style.left = (parseInt(this.windowDiv.style.width) - ui.titleBarHeight - 6).toString() + "px";
+	this.scrollBar.style.left = (parseInt(this.windowDiv.style.width) - scrollBarWidth - 6).toString() + "px";
 	this.scrollBar.style.top = "6px";
-	this.scrollBar.style.width = ui.titleBarHeight.toString() + "px";
+	this.scrollBar.style.width = scrollBarWidth + "px";
 	this.scrollBar.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
 	this.scrollBar.style.display = "block";
 	this.scrollBar.style.position = "absolute";
@@ -233,7 +236,7 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.scrollKnob.id = "scrollKnob";
 	this.scrollKnob.style.left = "1px";
 	this.scrollKnob.style.top = "2px";
-	this.scrollKnob.style.width = (ui.titleBarHeight-4).toString() + "px";
+	this.scrollKnob.style.width = (parseInt(this.scrollBar.style.width)-4).toString() + "px";
 	this.scrollKnob.style.height = (parseInt(this.scrollBar.style.height)-4).toString() + "px";
 	this.scrollKnob.style.display = "block";
 	this.scrollKnob.style.position = "absolute";
@@ -532,12 +535,14 @@ SAGE2Annotations.prototype.makeNoteNonEditable = function(credentials){
 		if (markerInfo){
 			var marker = markerInfo.markerDiv;
 			marker.className = "annotationMarker";
+			marker.style.backgroundColor = "rgba(252, 240, 173, 0.6)";
 		}
 		delete this.editables[credentials.userLabel];
 	}
 }
 
-SAGE2Annotations.prototype.makeNoteEditable = function(credentials){
+SAGE2Annotations.prototype.makeNoteEditable = function(data){
+	var credentials = data.credentials;
 	var appWindow = document.getElementById(this.appId);
 	if (!appWindow) return;
 	var textArea;
@@ -547,7 +552,7 @@ SAGE2Annotations.prototype.makeNoteEditable = function(credentials){
 	}
 	for (var i=0; i<this.textAreas.length; i++){
 		if (credentials.id === this.textAreas[i].credentials.id){
-			this.textAreas[i].changeToEditable();
+			this.textAreas[i].changeToEditable(data.color);
 			this.editables[credentials.userLabel] = this.textAreas[i];
 			break;
 		}
@@ -556,6 +561,11 @@ SAGE2Annotations.prototype.makeNoteEditable = function(credentials){
 	if (markerInfo){
 		var marker = markerInfo.markerDiv;
 		marker.className = "annotationMarkerEditable";
+		console.log("color:", data.color);	
+		if (data.color !== undefined && data.color !== null){
+			marker.style.backgroundColor = data.color;
+
+		}
 	}
 	
 };
@@ -617,7 +627,7 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 						wsio.emit('requestForMarkerDeletion', credentials);	
 					}
 					else{
-						wsio.emit('requestForMarkerAddition', credentials);	
+						wsio.emit('requestForMarkerAddition', {credentials: credentials, color:user.color});	
 					}
 					break;
 				}
@@ -631,7 +641,7 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 				for (i=this.textAreas.length-1;i>=0;i--){
 					clickedIn = this.textAreas[i].event(eventType,position,user,data,date);
 					if (clickedIn && isMaster){
-						wsio.emit("setNoteAsEditable", this.textAreas[i].credentials);
+						wsio.emit("setNoteAsEditable", {credentials:this.textAreas[i].credentials, color:user.color});
 					}
 				}
 			}
@@ -649,7 +659,11 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 	}
 };
 
-
+SAGE2Annotations.prototype.updateTime = function(now){
+	for (var i=0;i<this.textAreas.length;i++){
+		this.textAreas[i].updateTime(now);
+	}
+}
 
 
 function TextArea(){
@@ -679,14 +693,14 @@ TextArea.prototype.toggleNoteType = function(){
 	}
 };
 
-TextArea.prototype.changeToEditable = function(){
-	this.element.style.boxShadow = "inset 0px 0px 2px 2px #222222";
-	this.showCaret();
+TextArea.prototype.changeToEditable = function(color){
+	this.element.style.boxShadow = "inset 0px 0px 4px 4px " + color;
+	//this.showCaret();
 };
 
 TextArea.prototype.changeToNonEditable = function(){
 	this.element.style.boxShadow = "none";
-	this.hideCaret();
+	//this.hideCaret();
 };
 
 TextArea.prototype.kill = function(){
@@ -745,20 +759,30 @@ TextArea.prototype.setCredentials = function(data){
 	}
 	this.idBox.innerHTML = this.credentials.id;
 	var dt = new Date(data.createdOn);
-	this.dateBox.innerHTML = this.formatTime(data.createdOn)
-	setInterval(function(){
-		this.dateBox.innerHTML = this.formatTime(data.createdOn)
-	}.bind(this),60000);
-	
+	this.dateBox.innerHTML = this.formatTime(data.createdOn, data.createdOn);	
 	this.userNameBox.innerHTML = data.userLabel;
 };
 
-TextArea.prototype.formatTime = function(createdOn){
+TextArea.prototype.updateTime = function(now){
+	this.dateBox.innerHTML = this.formatTime(this.credentials.createdOn,now);
+};
+
+TextArea.prototype.formatTime = function(createdOn, nowInms){
+	moment.locale('en', {
+	    calendar : {
+	        lastDay : '[Yesterday,] LT',
+	        sameDay : '[Today,] LT',
+	        nextDay : '[Tomorrow,] LT',
+	        lastWeek : '[last] ddd[,] LT',
+	        nextWeek : 'ddd[,] LT',
+	        sameElse : 'L'
+	    }
+	});
 	var then = moment(createdOn);
-	var now = moment();
-	if (now.diff(then, 'milliseconds') < 86400000){
-		return then.fromNow();
-	}
+	var now = moment(nowInms);
+	/*if (now.diff(then, 'milliseconds') < 86400000){
+		return then.from(now).replace("minute", "min");
+	}*/
 	return then.calendar();
 };
 
@@ -771,7 +795,7 @@ TextArea.prototype.init = function(div, data){
 	this.makeCredentialBar(div,data);
 
 	this.credentials.appId = data.appId;
-	data.height = 0.85 * data.height;
+	data.height = 5.0/6.0 * data.height;
 	this.element = document.createElement("span");
 	this.element.id = data.id;
 	this.element.style.background = "#BBEEBB";
@@ -802,9 +826,6 @@ TextArea.prototype.init = function(div, data){
 
 	this.prefixText = document.createElement("p");
 	this.prefixText.id = "prefix";
-	this.prefixText.style.lineHeight = 1.2;
-	this.prefixText.style.fontSize = 16 + "px";
-	this.prefixText.style.fontFamily = 'arial';
 	this.prefixText.style.wordWrap = "break-word";
 	this.prefixText.style.display = "inline";
 	this.prefixText.innerHTML = "";//"Lorem ipsum dolor sit amet,<br> consectetur adipiscing elit.";//" Donec sollicitudin mattis metus, ut dignissim quam consequat id. Quisque massa est, scelerisque a diam nec, condimentum malesuada purus. Phasellus consectetur massa ut mollis sagittis. Nullam ullamcorper augue vitae tempor auctor.";//" Maecenas vitae semper ante. Donec ex justo, tempus eu convallis non, tincidunt nec arcu. Fusce mollis dui a mauris tempor efficitur. Nam eget mollis nulla. Suspendisse feugiat suscipit blandit. Interdum et malesuada fames ac ante ipsum primis in faucibus. Morbi scelerisque nec diam vel molestie. Mauris tristique cursus accumsan. Pellentesque commodo bibendum ex vitae viverra. Vestibulum vitae nisl est. Vivamus imperdiet pulvinar tempus. Proin nec velit metus.";
@@ -812,21 +833,14 @@ TextArea.prototype.init = function(div, data){
 	this.insetElement.appendChild(this.prefixText);
 
 	this.caret = document.createElement("span");
-	this.caret.style.width = "0px";
-	this.caret.style.border = "none";
-	this.caret.style.height = parseInt(this.prefixText.style.fontSize) * this.prefixText.style.lineHeight + "px";
 	this.insetElement.appendChild(this.caret);
 
 
 	this.suffixText = document.createElement("p");
 	this.suffixText.id = "prefix";
-	this.suffixText.style.lineHeight = 1.2;
-	this.suffixText.style.fontSize = 16 + "px";
-	this.suffixText.style.fontFamily = 'arial';
 	this.suffixText.style.textAlign = "justify";
 	this.suffixText.style.wordWrap = "break-word";
 	this.suffixText.style.display = "inline";
-	//this.suffixText.innerHTML = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sollicitudin mattis metus, ut dignissim quam consequat id. Quisque massa est, scelerisque a diam nec, condimentum malesuada purus. Phasellus consectetur massa ut mollis sagittis. Nullam ullamcorper augue vitae tempor auctor. Maecenas vitae semper ante. Donec ex justo, tempus eu convallis non, tincidunt nec arcu. Fusce mollis dui a mauris tempor efficitur. Nam eget mollis nulla. Suspendisse feugiat suscipit blandit. Interdum et malesuada fames ac ante ipsum primis in faucibus. Morbi scelerisque nec diam vel molestie. Mauris tristique cursus accumsan. Pellentesque commodo bibendum ex vitae viverra. Vestibulum vitae nisl est. Vivamus imperdiet pulvinar tempus. Proin nec velit metus.";
 	this.insetElement.appendChild(this.suffixText);
 	
 	this.endMarker = document.createElement("span");
@@ -846,18 +860,18 @@ TextArea.prototype.init = function(div, data){
 	this.deletionConfirmationAlertWindow.style.border = "solid 1px black";
 	this.deletionConfirmationAlertWindow.style.display = "block";
 	
-	alertText = document.createElement("p");
-	alertText.style.textAlign = "center";
-	alertText.style.lineHeight = 1.2;
-	alertText.style.fontSize = parseInt(ui.titleBarHeight - 3) + "px";
-	alertText.style.fontFamily = 'arial';
-	alertText.style.color = 'white';
-	alertText.style.wordWrap = "break-word";
-	alertText.style.overflow = "hidden";
-	alertText.style.display = "block";
-	alertText.style.margin = parseInt(ui.titleBarHeight) + "px";
-	alertText.innerText = "Click OK to confirm note deletion!";
-	this.deletionConfirmationAlertWindow.appendChild(alertText);
+	this.alertText = document.createElement("p");
+	this.alertText.style.textAlign = "center";
+	this.alertText.style.lineHeight = 1.2;
+	this.alertText.style.fontSize = parseInt(ui.titleBarHeight - 3) + "px";
+	this.alertText.style.fontFamily = 'arial';
+	this.alertText.style.color = 'white';
+	this.alertText.style.wordWrap = "break-word";
+	this.alertText.style.overflow = "hidden";
+	this.alertText.style.display = "block";
+	this.alertText.style.margin = parseInt(ui.titleBarHeight) + "px";
+	this.alertText.innerText = "Click OK to confirm note deletion!";
+	this.deletionConfirmationAlertWindow.appendChild(this.alertText);
 	this.deletionConfirmationButton =  document.createElement("span");
 	this.deletionConfirmationButton.style.background = "#EE6666";
 	this.deletionConfirmationButton.style.position = "absolute";
@@ -868,18 +882,47 @@ TextArea.prototype.init = function(div, data){
 	this.deletionConfirmationButton.style.border = "solid 1px black";
 	this.deletionConfirmationButton.style.display = "block";
 	this.deletionConfirmationButton.style.textAlign = "center";
-	this.deletionConfirmationButton.style.lineHeight = 1.0;
-	this.deletionConfirmationButton.style.fontSize = parseInt(ui.titleBarHeight - 3) + "px";
+	this.deletionConfirmationButton.style.lineHeight = parseInt(ui.titleBarHeight) + "px";
+	this.deletionConfirmationButton.style.fontSize = parseInt(ui.titleBarHeight*0.6) + "px";
 	this.deletionConfirmationButton.style.fontFamily = 'arial';
+	this.deletionConfirmationButton.style.verticalAlign = "middle";
 	this.deletionConfirmationButton.style.color = 'white';
 	this.deletionConfirmationButton.innerText = "OK";
 	this.deletionConfirmationAlertWindow.appendChild(this.deletionConfirmationButton);
 	this.div = div;
+	this.setCredentialBarFontSize(data.height/6.0);
+	this.setFontSize(ui.titleTextSize*0.8);
+};
+
+TextArea.prototype.setFontSize = function(fontSize){
+	this.prefixText.style.lineHeight = 1.2;
+	this.caret.style.lineHeight = 1.2;
+	this.suffixText.style.lineHeight = 1.2;
+	this.prefixText.style.fontSize = parseInt(fontSize) + "px";
+	this.caret.style.fontSize = parseInt(fontSize) + "px";
+	this.suffixText.style.fontSize = parseInt(fontSize) + "px";
+	this.prefixText.style.fontFamily = 'arial';
+	this.suffixText.style.fontFamily = 'arial';
+},
+
+TextArea.prototype.setCredentialBarFontSize = function(credBarHeight){
+	var credBarTextSize = parseInt(credBarHeight*0.6) + "px";
+	this.idBox.style.fontSize = credBarTextSize;
+	this.idBox.style.fontFamily = 'arial';
+	this.userNameBox.style.fontSize = credBarTextSize;
+	this.userNameBox.style.fontFamily = 'arial';
+	this.dateBox.style.fontSize = credBarTextSize;
+	this.dateBox.style.fontFamily = 'arial';
+	this.deletionConfirmationButton.style.fontSize = parseInt(parseInt(credBarTextSize)*1.2) + "px";
+	this.deletionConfirmationButton.style.fontFamily = 'arial';
+	this.alertText.style.fontSize = parseInt(parseInt(credBarTextSize)*1.2) + "px";
+	this.alertText.style.fontFamily = 'arial';
 };
 
 TextArea.prototype.makeCredentialBar = function(div, data){
-	var credBarHeight = data.height * 0.15;
-	var credBarTop = data.top + data.height*0.85;
+	var credBarHeight = data.height / 6.0;
+	var credBarTextSize = parseInt(credBarHeight*0.4) + "px";
+	var credBarTop = data.top + data.height*(5.0/6.0);
 	this.credentialBar = document.createElement("span");
 
 	this.credentialBar.style.background = "#777777";
@@ -907,8 +950,9 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.idBox.style.left = parseInt(0.10*data.width) + "px";
 	this.idBox.style.bottom = "0px";
 	this.idBox.style.width = parseInt(0.15*data.width) +"px";
+	this.idBox.style.lineHeight = parseInt(credBarHeight) +"px";
 	this.idBox.style.display = "block";
-	this.idBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
+	this.idBox.style.fontSize = credBarTextSize;
 	this.idBox.style.fontFamily = 'arial';
 	this.idBox.style.color = "white";
 	this.idBox.style.display = "block";
@@ -921,7 +965,8 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.userNameBox.style.left = parseInt(this.idBox.style.left) + parseInt(this.idBox.style.width) +"px";
 	this.userNameBox.style.bottom = "0px";
 	this.userNameBox.style.width = parseInt(0.3*data.width) +"px";
-	this.userNameBox.style.fontSize = parseInt(credBarHeight)*0.75 + "px";
+	this.userNameBox.style.fontSize = credBarTextSize;
+	this.userNameBox.style.lineHeight = parseInt(credBarHeight) +"px";
 	this.userNameBox.style.fontFamily = 'arial';
 	this.userNameBox.style.color = "white";
 	this.userNameBox.style.display = "block";
@@ -934,7 +979,8 @@ TextArea.prototype.makeCredentialBar = function(div, data){
 	this.dateBox.style.marginRight = "3px";
 	this.dateBox.style.bottom = "0px";
 	this.dateBox.style.width = parseInt(0.35*data.width) +"px";
-	this.dateBox.style.fontSize = parseInt(credBarHeight)*0.55 + "px";
+	this.dateBox.style.fontSize = credBarTextSize;
+	this.dateBox.style.lineHeight = parseInt(credBarHeight) +"px";
 	this.dateBox.style.fontFamily = 'arial';
 	this.dateBox.style.color = "white";
 	this.dateBox.style.display = "block";
@@ -1017,6 +1063,18 @@ TextArea.prototype.onToggleNoteButton = function(position){
 	return false;
 };
 
+TextArea.prototype.updateCaret = function(){
+	this.caret.className = "blinking-cursor";
+	this.caret.innerHTML = "|";
+	if (this.timeoutId!==undefined&&this.timeoutId!==null){
+		clearTimeout(this.timeoutId);
+		this.timeoutId = null;
+	}
+	this.timeoutId = setTimeout(function(){
+		this.caret.className = "";
+		this.caret.innerHTML = "";
+	}.bind(this),5000);
+};
 
 TextArea.prototype.event = function(eventType, position, user, data, date) {
 	
@@ -1028,8 +1086,9 @@ TextArea.prototype.event = function(eventType, position, user, data, date) {
 			return false;
 		//console.log(position.x,position.y);
 		this.updateCaretPos(position.x,position.y);
-		if (this.caret.style.display === "none")
-			this.caret.style.display = "inline";
+		/*if (this.caret.style.display === "none")
+			this.caret.style.display = "inline";*/
+		this.updateCaret();
 		return true;
 
 	}
@@ -1079,6 +1138,7 @@ TextArea.prototype.event = function(eventType, position, user, data, date) {
 			}
 		}		
 	}
+	this.updateCaret();
 	return true;
 }
 
