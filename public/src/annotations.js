@@ -149,7 +149,7 @@ SAGE2Annotations.prototype.addNote = function(data){
 	for (var i = this.textAreas.length-1; i>=0; i--){
 		this.textAreas[i].setTop(10 + (this.textAreas.length-1-i)*(this.textAreaHeight+this.newTextAreaOffset));
 	}
-	this.scrollKnob.style.height = this.computeKnobHeight();
+	this.computeKnobHeight();
 	this.moveScrollKnob({x:0,y:0});
 	this.updateShowButtonCaption();
 	
@@ -163,9 +163,22 @@ SAGE2Annotations.prototype.updateShowButtonCaption = function(){
 	}
 };
 
+SAGE2Annotations.prototype.setInnerDivHeight = function(height){
+	this.innerDiv.style.height = height + "px";
+	this.scrollBar.style.height = height + "px";
+	this.computeKnobHeight();
+};
+
 SAGE2Annotations.prototype.computeKnobHeight = function(){
-		var val = parseInt(this.scrollBar.style.height) * parseInt(this.innerDiv.style.height) / parseInt(this.innerDiv.scrollHeight) ;
-		return (val-4).toString() + "px";
+	var scrollHeight = parseInt(this.innerDiv.scrollHeight);
+	var val = parseInt(this.scrollBar.style.height);
+	if (scrollHeight > 0){
+		val = val * parseInt(this.innerDiv.style.height) / scrollHeight ;
+		this.scrollKnob.style.top = parseInt(this.innerDiv.scrollTop * parseInt(this.scrollBar.style.height)/ scrollHeight) + "px"; 		
+	}
+	this.scrollKnob.style.height = (val-4).toString() + "px";
+	
+	console.log("height:",val);	
 };
 
 
@@ -195,7 +208,7 @@ SAGE2Annotations.prototype.deleteNote = function(credentials){
 		for (var i = this.textAreas.length-1; i>=0; i--){
 			this.textAreas[i].setTop(10 + (this.textAreas.length-1-i)*(this.textAreaHeight+this.newTextAreaOffset));
 		}
-		this.scrollKnob.style.height = this.computeKnobHeight();
+		this.computeKnobHeight();
 		this.updateShowButtonCaption();
 	}
 };
@@ -209,7 +222,7 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.innerDiv.style.left = "6px";
 	this.innerDiv.style.top = "6px";
 	this.innerDiv.style.width = (parseInt(this.windowDiv.style.width) - scrollBarWidth - 15).toString() + "px";
-	this.innerDiv.style.height = (parseInt(this.windowDiv.style.height) - scrollBarWidth - 15).toString() + "px";
+	
 	this.innerDiv.style.display = "block";
 	this.innerDiv.style.position = "relative";
 	this.innerDiv.style.borderRadius = "3px 3px 3px 3px";
@@ -224,7 +237,6 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.scrollBar.style.left = (parseInt(this.windowDiv.style.width) - scrollBarWidth - 6).toString() + "px";
 	this.scrollBar.style.top = "6px";
 	this.scrollBar.style.width = scrollBarWidth + "px";
-	this.scrollBar.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
 	this.scrollBar.style.display = "block";
 	this.scrollBar.style.position = "absolute";
 	this.scrollBar.style.borderRadius = "3px 3px 3px 3px";
@@ -237,13 +249,15 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.scrollKnob.style.left = "1px";
 	this.scrollKnob.style.top = "2px";
 	this.scrollKnob.style.width = (parseInt(this.scrollBar.style.width)-4).toString() + "px";
-	this.scrollKnob.style.height = (parseInt(this.scrollBar.style.height)-4).toString() + "px";
+	//this.scrollKnob.style.height = (parseInt(this.scrollBar.style.height)-4).toString() + "px";
 	this.scrollKnob.style.display = "block";
 	this.scrollKnob.style.position = "absolute";
 	this.scrollKnob.style.borderRadius = "3px 3px 3px 3px";
 	this.scrollKnob.style.border = "solid 1px #000000";
 	this.scrollKnob.style.backgroundColor = "#999999";
 	this.scrollBar.appendChild(this.scrollKnob);
+
+	this.setInnerDivHeight(parseInt(this.windowDiv.style.height) - scrollBarWidth - 15);
 }	
 
 SAGE2Annotations.prototype.showWindow = function(data){
@@ -253,7 +267,7 @@ SAGE2Annotations.prototype.showWindow = function(data){
 		this.buttonDiv.style.top = data.button.top.toString() + "px";;
 		this.buttonDiv.style.left = data.button.left.toString() + "px";;
 		ui.main.appendChild(this.windowDiv);
-		this.scrollKnob.style.height = this.computeKnobHeight();
+		this.computeKnobHeight();
 		this.show = true;
 		this.setWindowScroll();
 		this.updateShowButtonCaption();
@@ -485,14 +499,15 @@ SAGE2Annotations.prototype.setPosition = function(data){
 };
 
 SAGE2Annotations.prototype.setPositionAndSize = function(data){
+	var scrollBarWidth = parseInt(ui.titleBarHeight*0.6);
 	this.windowDiv.style.left = data.left.toString() + "px";
 	this.windowDiv.style.top  = data.top.toString() + "px";
 	this.windowDiv.style.height = data.height.toString() + "px";
 	this.buttonDiv.style.left = (data.button.left).toString() + "px";
 	this.buttonDiv.style.top = (data.button.top).toString() + "px";
-	this.innerDiv.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
-	this.scrollBar.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
-	this.scrollKnob.style.height = this.computeKnobHeight();
+	this.setInnerDivHeight(parseInt(this.windowDiv.style.height) - scrollBarWidth - 15);
+	//this.scrollBar.style.height = (parseInt(this.windowDiv.style.height) - ui.titleBarHeight - 15).toString() + "px";
+	//this.scrollKnob.style.height = this.computeKnobHeight();
 	this.scrollKnob.style.top = parseInt(this.innerDiv.scrollTop / this.innerDiv.scrollHeight * parseInt(this.scrollBar.style.height)) + "px";
 	this.addNoteButton.style.top = data.addNoteButton.top.toString() + "px";
 	this.addSummaryNoteButton.style.top = data.addNoteButton.top.toString() + "px";
@@ -579,6 +594,7 @@ SAGE2Annotations.prototype.makeAllNotesNonEditable = function(){
 			if (markerInfo){
 				var marker = markerInfo.markerDiv;
 				marker.className = "annotationMarker";
+				marker.style.backgroundColor = "rgba(252, 240, 173, 0.6)";
 			}
 			delete this.editables[key];
 		}
