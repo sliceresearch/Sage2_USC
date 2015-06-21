@@ -4567,7 +4567,7 @@ function eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, eve
 	var selectedAnnotationWindow = annotations.getAnnotationWindowForApp(obj.data.id);
 	//console.log(selectedAnnotationWindow);
 	if(selectedAnnotationWindow!==null){
-		if (obj.id.indexOf("noteButton") > -1){
+		if (obj.id.indexOf("noteButton") > -1 && eventType === "pointerPress"){
 			toggleAnnotationWindow(selectedAnnotationWindow);
 		}
 		else{
@@ -5686,7 +5686,13 @@ function pointerScrollStart(uniqueID, pointerX, pointerY) {
 		case "widgets":
 			break;
 		case "applications":
-			pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt);
+			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+				remoteInteraction[uniqueID].selectWheelItem = obj.data;
+				remoteInteraction[uniqueID].selectWheelDelta = 0;
+			}
+			else{
+				pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, localPt);
+			}
 			break;
 		case "portals":
 			break;
@@ -5771,13 +5777,11 @@ function pointerScroll(uniqueID, data) {
 		moveAndResizeApplicationWindow(updatedResizeItem);
 	}
 	else {
+		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+		if (obj === null) {
+			return;
+		}
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
-			var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-
-			if (obj === null) {
-				return;
-			}
-
 			//var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 			switch (obj.layerId) {
 				case "staticUI":
@@ -5787,9 +5791,20 @@ function pointerScroll(uniqueID, data) {
 				case "widgets":
 					break;
 				case "applications":
-					sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+					if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+						eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, null, 'pointerScroll');
+						remoteInteraction[uniqueID].selectWheelDelta += data.wheelDelta;
+					}
+					else{
+						sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+					}
+					
 					break;
 			}
+		}
+		else if (obj.layerId && (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton")){
+			eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, null, 'pointerScroll');
+			remoteInteraction[uniqueID].selectWheelDelta += data.wheelDelta;
 		}
 	}
 }

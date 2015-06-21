@@ -144,17 +144,17 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         addNoteButton: {
             id:appInstance.id + "_addNote",
             left:6,
-            top:appInstance.height - config.ui.titleBarHeight - 3,
+            top:6,
             width:config.ui.titleBarHeight*2,
-            height:config.ui.titleBarHeight,
+            height:config.ui.titleBarHeight*0.6,
             caption:"New Note"
         },
         addSummaryNoteButton: {
             id:appInstance.id + "_addSummaryNote",
             left: 12 + config.ui.titleBarHeight*3,
-            top:appInstance.height - config.ui.titleBarHeight - 3,
+            top:6,
             width:config.ui.titleBarHeight*2,
-            height:config.ui.titleBarHeight,
+            height:config.ui.titleBarHeight*0.6,
             caption:"New Summary Note"
         },
         notes:[],
@@ -244,7 +244,7 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
     annotationWindow.top = data.elemTop + this.config.ui.titleBarHeight;
     annotationWindow.button.left = annotationWindow.left + buttonOffsetLeft;
     annotationWindow.button.top = annotationWindow.top + buttonOffsetTop;
-    annotationWindow.addNoteButton.top = data.elemHeight - this.config.ui.titleBarHeight - 3;
+    annotationWindow.addNoteButton.top = 6;
     return {appId:data.elemId, show:annotationWindow.show, left:annotationWindow.left, top:annotationWindow.top, width:annotationWindow.width, height: annotationWindow.height, button:{left:annotationWindow.button.left, top:annotationWindow.button.top, width: annotationWindow.button.width, height:annotationWindow.button.height}, addNoteButton:{top:annotationWindow.addNoteButton.top}};
 };
 

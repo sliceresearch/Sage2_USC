@@ -220,7 +220,7 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.innerDiv.id = "innerWindowID";
 	this.innerDiv.className = "innerWindow";
 	this.innerDiv.style.left = "6px";
-	this.innerDiv.style.top = "6px";
+	this.innerDiv.style.top = (scrollBarWidth + 12) + "px";
 	this.innerDiv.style.width = (parseInt(this.windowDiv.style.width) - scrollBarWidth - 15).toString() + "px";
 	
 	this.innerDiv.style.display = "block";
@@ -235,7 +235,7 @@ SAGE2Annotations.prototype.prepareWindow = function(){
 	this.scrollBar = document.createElement("div");
 	this.scrollBar.id = "scrollBar";
 	this.scrollBar.style.left = (parseInt(this.windowDiv.style.width) - scrollBarWidth - 6).toString() + "px";
-	this.scrollBar.style.top = "6px";
+	this.scrollBar.style.top = (scrollBarWidth + 12) + "px";
 	this.scrollBar.style.width = scrollBarWidth + "px";
 	this.scrollBar.style.display = "block";
 	this.scrollBar.style.position = "absolute";
@@ -520,8 +520,17 @@ SAGE2Annotations.prototype.moveScrollKnob = function(position){
 	this.setWindowScroll();	
 }; 	
 
-SAGE2Annotations.prototype.setWindowScroll = function(){
-	this.innerDiv.scrollTop = parseInt(this.scrollKnob.style.top)/parseInt(this.scrollBar.style.height) * this.innerDiv.scrollHeight;		
+SAGE2Annotations.prototype.setWindowScroll = function(value){
+	if (value!==undefined && value !== null){
+		this.innerDiv.scrollTop += value;
+		if (this.innerDiv.scrollTop < 0){
+			this.innerDiv.scrollTop = 0;
+		}
+		this.scrollKnob.style.top = parseInt(this.innerDiv.scrollTop * parseInt(this.scrollBar.style.height) / this.innerDiv.scrollHeight) + "px";		  
+	}
+	else{
+		this.innerDiv.scrollTop = parseInt(this.scrollKnob.style.top)/parseInt(this.scrollBar.style.height) * this.innerDiv.scrollHeight;		
+	}
 };
 
 SAGE2Annotations.prototype.requestForNewNote = function(data){
@@ -663,6 +672,9 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 			}
 			
 		}
+	}
+	else if (eventType === "pointerScroll"){
+		this.setWindowScroll(data.wheelDelta);
 	}
 	else{
 		position.y = position.y + (this.innerDiv.scrollTop - parseInt(this.innerDiv.style.top));
