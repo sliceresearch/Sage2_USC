@@ -718,10 +718,15 @@ function handleClick(element) {
 		var filenameTemplate = "note_" + dateToYYYYMMDDHHMMSS(new Date());
 		var value = "New note"
 		var name = prompt("Enter filename for new note:", filenameTemplate);
-		var text = prompt("Enter text for new note:", value);
-		if (name===null)
-			name = filenameTemplate;
-		wsio.emit('createNewNote', {fileName:name, text:text, dir: "notes", user: interactor.uniqueID});	
+		if (name !== null){
+			if (name===""){
+				name = filenameTemplate;
+			}
+			var text = prompt("Enter text for new note:", value);
+			if (text !== null){
+				wsio.emit('createNewNote', {fileName:name, text:text, dir: "notes", user: interactor.uniqueID});	
+			}
+		}
 	}
 
 	// App Launcher Dialog

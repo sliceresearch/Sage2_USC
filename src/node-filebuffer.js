@@ -100,8 +100,6 @@ Buffer.prototype.insertChar = function(code, printable){
 				break;
 		}
 	}
-	console.log(result);
-	console.log(this.str);
 	return result;
 };
 
@@ -147,7 +145,6 @@ FileBuffer.prototype.hasFileBufferForApp = function(appId){
 FileBuffer.prototype.associateFile = function(data){
 	var fileName = path.join(this.textFileFolder, data.fileName + "." + data.extension);
 	this.files[data.appId] = fileName;
-	console.log("File:", fileName);
 };
 
 FileBuffer.prototype.writeToFile = function(appId){

@@ -184,10 +184,14 @@ var sticky_note = SAGE2_App.extend( {
 	},
 
 	setWindowElementSize: function(){
+		this.credentialElement.style.right = "5%";
+		this.credentialElement.style.top = "5%";
+		this.credentialElement.style.lineHeight = 1.0;
+		this.credentialElement.style.fontSize = parseInt(0.03*this.height) + "px";
 		this.insetElement.style.left = parseInt(0.05*this.width) +"px";
-		this.insetElement.style.top = parseInt(0.05*this.height) + "px";
+		this.insetElement.style.top = parseInt(0.15*this.height) + "px";
 		this.insetElement.style.width = parseInt(0.9*this.width) +"px";
-		this.insetElement.style.height = parseInt(0.9*this.height) +"px";
+		this.insetElement.style.height = parseInt(0.8*this.height) +"px";
 	},
 
 	setCredentials: function(){
@@ -205,6 +209,16 @@ var sticky_note = SAGE2_App.extend( {
 		this.suffixText.style.fontFamily = 'arial';
 	},
 	setupWindow: function(){
+		this.credentialElement = document.createElement("span");
+		this.credentialElement.id = "credentials";
+		this.credentialElement.style.position = "absolute";
+		this.credentialElement.style.display = "block";
+		this.credentialElement.style.overflow = "hidden";
+		this.credentialElement.innerText = this.state.owner + " : " + this.getCreationTime();
+		this.credentialElement.style.fontFamily = 'arial';
+		this.credentialElement.style.color = "rgba(80,80,80,0.8)";
+		this.element.appendChild(this.credentialElement);
+
 		this.insetElement = document.createElement("span");
 		this.insetElement.id = "inset";
 		this.insetElement.style.position = "absolute";
@@ -251,6 +265,22 @@ var sticky_note = SAGE2_App.extend( {
 		this.element.appendChild(this.insetElement);
 		this.setFontSize();
 	},
+
+	getCreationTime: function(){
+		moment.locale('en', {
+		    calendar : {
+		        lastDay : '[Yesterday,] LT',
+		        sameDay : '[Today,] LT',
+		        nextDay : '[Tomorrow,] LT',
+		        lastWeek : '[last] ddd[,] LT',
+		        nextWeek : 'ddd[,] LT',
+		        sameElse : 'L'
+		    }
+		});
+		var then = moment(this.state.createdOn);
+		return then.calendar();
+	},
+
 	isOverflowed: function(){
     	return parseInt(this.insetElement.style.height) > parseInt(0.9*this.height) || this.insetElement.scrollHeight > this.insetElement.clientHeight || this.insetElement.scrollWidth > this.insetElement.clientWidth;
 	}

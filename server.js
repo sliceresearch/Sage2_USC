@@ -2134,7 +2134,7 @@ function wsLoadFileFromServer(wsio, data) {
 
 
 function wsCreateNewNote(wsio, data) {
-	data.date = Date.now();
+	data.createdOn = Date.now();
 	createNote(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
@@ -5496,7 +5496,6 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		case "applications":
 			var click = remoteInteraction[uniqueID].completePointerClick(sagePointers[uniqueID].label, pointerX, pointerY);
-			console.log(click, obj.id, obj.data.id+"window", obj.id === obj.data.id+"window");
 			if (click !==null && data.button === "left" && obj.id === obj.data.id+"window"){
 				// A click was made on app window and it was expected by its annotation window
 				var noteCredentials = annotations.setMarkerPosition(obj.data, click);

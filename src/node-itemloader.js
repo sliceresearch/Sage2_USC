@@ -826,7 +826,7 @@ AppLoader.prototype.createNewNoteFromText = function(data, callback) {
 		url: external_url,
 		data: {
 			owner:data.user,
-			createdOn: data.date,
+			createdOn: data.createdOn,
 			buffer: data.text,
 			caretPos: data.text.length,
 			bufferEmpty: (data.text.length === 0),
