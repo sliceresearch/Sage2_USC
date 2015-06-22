@@ -853,7 +853,7 @@ AppLoader.prototype.createNewNoteFromText = function(data, callback) {
 		date:      new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
-	callback(appInstance);
+	callback(appInstance, null);
 };
 AppLoader.prototype.loadApplication = function(appData, callback) {
 	var app, dir;

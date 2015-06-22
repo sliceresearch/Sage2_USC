@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+ <g>
+  <title>Layer 1</title>
+  <circle stroke="#787878" id="svg_2" r="251.32588" cy="256.00001" cx="256.00001" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="#787878"/>
+  <path stroke="#fafafa" id="svg_7" d="m339.331543,409.999756l8.333282,-41.066101l33.335175,-10.26886l-41.668457,51.334961l-208.331573,0l0,-307.999519l250.000031,0l0,256.664558" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" fill="#fafafa"/>
+  <path stroke="#fafafa" transform="rotate(86.03117370605469 304.5659790039063,261.6438903808593) " id="svg_1" d="m296.316162,246.956757c-0.207153,-0.281448 -0.466797,-0.564346 -0.791046,-0.774673c-1.410858,-0.937271 -3.40451,-0.655823 -4.442139,0.633942c-1.036346,1.286255 -0.711945,3.091263 0.700195,4.028519c1.294739,0.844315 3.004852,0.631927 4.105652,-0.352631l-30.073517,37.482422l-9.350769,30.688354l29.360443,-17.547638l66.842438,-83.348495l-20.010742,-13.141479l-6.448853,8.057983c-0.375793,-1.33519 -1.191956,-2.60054 -2.525024,-3.490036c-3.108917,-2.015259 -7.434937,-1.406082 -9.688232,1.406097c-12.860626,16.04628 -5.724792,20.31044 -17.678406,36.357635zm-14.713165,50.177887l-15.10199,9.040863l4.805878,-15.811523l10.296112,6.77066zm17.782623,-50.998367c9.259766,-12.36972 8.378998,-15.741821 16.305878,-26.730347c1.307922,0.820801 2.822876,1.102249 4.299591,1.031708l-20.605469,25.698639z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="0" fill="#787878"/>
+  <line id="svg_3" y2="144" x2="326.499992" y1="143" x1="183.499992" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" stroke="#787878" fill="none"/>
+  <line id="svg_4" y2="170" x2="326.5" y1="169" x1="183.5" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" stroke="#787878" fill="none"/>
+  <line id="svg_5" y2="192" x2="326.5" y1="191" x1="183.5" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" stroke="#787878" fill="none"/>
+  <line stroke="#787878" id="svg_6" y2="216" x2="244.5" y1="215" x1="183.5" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="5" fill="none"/>
+ </g>
+</svg>

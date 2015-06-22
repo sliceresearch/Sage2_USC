@@ -40,10 +40,10 @@ function Buffer(data){
 
 Buffer.prototype.insertStr = function(text){
 	var str = this.str.join("");
-	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split();
+	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split('');
 	this.caret = this.caret + text.length;
 	this.changeCount = text.length;
-	var result = {index:this.caret-text.length, offset:0, deleteCount:0, data:text};
+	var result = {index:this.caret-text.length, offset:text.length, deleteCount:0, data:text};
 	return result;
 };
 
@@ -100,7 +100,8 @@ Buffer.prototype.insertChar = function(code, printable){
 				break;
 		}
 	}
-
+	console.log(result);
+	console.log(this.str);
 	return result;
 };
 
@@ -117,6 +118,14 @@ FileBuffer.prototype.requestBuffer = function(data){
 				}
 			}
 		}.bind(this));
+	}
+};
+
+FileBuffer.prototype.editCredentialsForBuffer = function(data){
+	if ((data.appId.toString() in this.buffers)===true){
+		var buf = this.buffers[data.appId];
+		buf.owner = data.owner;
+		buf.createdOn = data.createdOn;
 	}
 };
 

@@ -22,11 +22,11 @@ var sticky_note = SAGE2_App.extend( {
 		this.state.buffer = (data.state.bufferEmpty)? "" : data.state.buffer;
 		this.state.caretPos = data.state.caretPos || 0;
 		this.state.bufferEmpty = false;
-		this.state.fileName = "sticky_note" + Date.now();
+		this.state.fileName = data.state.fileName || data.state.owner + "Note";
 		this.state.fontSize = data.state.fontSize || "16px";
 
 		this.element.id = "div" + data.id;
-
+		this.copyNumber = 1;
 		// Set refresh once every 2 sec.
 		//this.maxFPS = 1/2;
 
@@ -147,6 +147,7 @@ var sticky_note = SAGE2_App.extend( {
 					break;
 				case "TextInput":
 					this.requestFileBuffer({fileName:data.text, owner:this.state.owner,createdOn:null});
+					this.requestNewTitle(data.text);
 					break;
 				case "increaseFont":
 					this.state.fontSize = Math.min(parseInt(this.state.fontSize) + 2, 40) + "px";

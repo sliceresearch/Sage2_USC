@@ -439,4 +439,19 @@ var SAGE2_App = Class.extend( {
 			wsio.emit('requestFileBuffer', msgObject);
 		}
 	},
+	/**
+	* Application request for fileBuffer
+	*
+	* @method requestFileBuffer
+	* @param fileName {String} name of the file to which data will be saved.
+	*/
+	requestNewTitle: function (newTitle) {
+		if (isMaster){
+			var msgObject = {};
+			msgObject.id        = this.div.id;
+			msgObject.title 	= newTitle;
+			// Send the message to the server
+			wsio.emit('requestNewTitle', msgObject);
+		}
+	},
 });

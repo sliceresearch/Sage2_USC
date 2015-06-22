@@ -831,7 +831,7 @@ function setupListeners() {
 				app.requestForClone = false;
 				console.log("cloning app:" + appId);
 				if (isMaster)
-					wsio.emit('createAppClone', {id : appId, state: app.state});
+					wsio.emit('createAppClone', {id : appId, state: app.state, user:data.user});
 			}
 
 		}
@@ -1077,6 +1077,14 @@ function setupListeners() {
 	wsio.on('initializeDataSharingSession', function(data) {
 		console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
+	});
+
+	wsio.on('setTitle', function(data) {
+		if (data.id !== null && data.id !== undefined){
+			var titleDiv = document.getElementById(data.id + "_title");
+			var pElement = titleDiv.getElementsByTagName("p");
+			pElement[0].textContent = data.title;
+		}
 	});
 }
 
