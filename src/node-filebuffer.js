@@ -23,14 +23,16 @@ function FileBuffer (root){
 	this.buffers = {};
 	this.files = {};
 	this.root = root;
-	this.textFileFolder = path.join(root, "texts");
+	this.textFileFolder = path.join(root, "notes");
 	if (!sageutils.fileExists(this.textFileFolder)){
 		fs.mkdirSync(this.textFileFolder);
 	}
 }
 
-function Buffer(appId){
-	this.appId = appId;
+function Buffer(data){
+	this.appId = data.appId;
+	this.owner = data.owner;
+	this.createdOn = data.createdOn;
 	this.str = [];
 	this.caret = 0;
 	this.changeCount = 0;
@@ -38,10 +40,10 @@ function Buffer(appId){
 
 Buffer.prototype.insertStr = function(text){
 	var str = this.str.join("");
-	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split();
+	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split('');
 	this.caret = this.caret + text.length;
 	this.changeCount = text.length;
-	var result = {index:this.caret-text.length, offset:0, deleteCount:0, data:text};
+	var result = {index:this.caret-text.length, offset:text.length, deleteCount:0, data:text};
 	return result;
 };
 
@@ -50,7 +52,12 @@ Buffer.prototype.resetChange = function(){
 };
 
 Buffer.prototype.getData = function(){
-	return this.str.join("");
+	var data = {
+		owner: this.owner,
+		createdOn: this.createdOn,
+		text: this.str.join("")
+	};
+	return data;
 };
 
 Buffer.prototype.insertChar = function(code, printable){
@@ -93,14 +100,16 @@ Buffer.prototype.insertChar = function(code, printable){
 				break;
 		}
 	}
-
+	console.log(result);
+	console.log(this.str);
 	return result;
 };
 
-FileBuffer.prototype.requestBuffer = function(appId){
-	if ((appId.toString() in this.buffers)===false){
-		var buf = new Buffer(appId);
-		this.buffers[appId] = buf;
+FileBuffer.prototype.requestBuffer = function(data){
+	if ((data.appId.toString() in this.buffers)===false){
+		console.log("Creating buffer for:", data.appId);
+		var buf = new Buffer(data);
+		this.buffers[data.appId] = buf;
 		Object.observe(buf, function(changes){
 			for(var key in changes){
 				if (changes[key].name === 'changeCount' && parseInt(buf.changeCount) > 20){
@@ -109,6 +118,14 @@ FileBuffer.prototype.requestBuffer = function(appId){
 				}
 			}
 		}.bind(this));
+	}
+};
+
+FileBuffer.prototype.editCredentialsForBuffer = function(data){
+	if ((data.appId.toString() in this.buffers)===true){
+		var buf = this.buffers[data.appId];
+		buf.owner = data.owner;
+		buf.createdOn = data.createdOn;
 	}
 };
 
@@ -130,13 +147,15 @@ FileBuffer.prototype.hasFileBufferForApp = function(appId){
 FileBuffer.prototype.associateFile = function(data){
 	var fileName = path.join(this.textFileFolder, data.fileName + "." + data.extension);
 	this.files[data.appId] = fileName;
+	console.log("File:", fileName);
 };
 
 FileBuffer.prototype.writeToFile = function(appId){
 	if (this.buffers.hasOwnProperty(appId) && this.files.hasOwnProperty(appId)){
 		var buffer = this.buffers[appId];
 		var fileName = this.files[appId];
-		fs.writeFile(fileName, buffer.getData(), function (err) {
+
+		fs.writeFile(fileName, JSON.stringify(buffer.getData()), function (err) {
 			if (err){
 				console.log("Could not save file: " + fileName);
 			}
@@ -155,7 +174,7 @@ FileBuffer.prototype.insertChar = function(data){
 FileBuffer.prototype.insertStr = function(data){
 	if (this.buffers.hasOwnProperty(data.appId)){
 		var buffer = this.buffers[data.appId];
-		return buffer.insertStr(data.str);
+		return buffer.insertStr(data.text);
 	}
 };
 

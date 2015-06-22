@@ -88,6 +88,7 @@ var uploadsDirectory   = path.join(publicDirectory, "uploads");
 var SAGE2Items         = {};
 var users              = null;
 var sessionDirectory   = path.join(__dirname, "sessions");
+var notesDirectory	   = path.join(uploadsDirectory, "notes");
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
@@ -576,9 +577,11 @@ function setupListeners(wsio) {
 	wsio.on('requestForMarkerDeletion', wsRequestForMarkerDeletion);
 	wsio.on('requestForMarkerAddition', wsRequestForMarkerAddition);
 
+	wsio.on('requestNewTitle',			wsRequestNewTitle);
 	wsio.on('requestFileBuffer', 		wsRequestFileBuffer);
 	wsio.on('closeFileBuffer', 			wsCloseFileBuffer);
 	wsio.on('createAppClone',			wsCreateAppClone);
+	wsio.on('createNewNote',			wsCreateNewNote);
 
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
@@ -1565,6 +1568,76 @@ function listSessions() {
 	return thelist;
 }
 
+function listNotes() {
+	var thelist = [];
+	// Walk through the note files: sync I/Os to build the array
+	var files = fs.readdirSync(notesDirectory);
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
+		var filename = path.join(notesDirectory, file);
+		var stat = fs.statSync(filename);
+		// is it a file
+		if (stat.isFile()) {
+			// doest it ends in .json
+			if (filename.indexOf(".json", filename.length - 5) >= 0) {
+				// use its change time (creation, update, ...)
+				var ad = new Date(stat.ctime);
+				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
+										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+				// Make it look like an exif data structure
+				thelist.push( { exif: { FileName: file.slice(0, -5),  FileSize:stat.size, FileDate: strdate} } );
+			}
+		}
+	}
+	return thelist;
+}
+
+function deleteNote (filename) {
+	if (filename) {
+		var fullpath = path.join(notesDirectory, filename);
+		// if it doesn't end in .json, add it
+		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+			fullpath += '.json';
+		}
+		fs.unlink(fullpath, function (err) {
+			if (err) {
+				console.log("Notes> Could not delete note ", filename, err);
+				return;
+			}
+			console.log("Notes> Successfully deleted note", filename);
+		});
+	}
+}
+
+function loadNote(filename) {
+	if (filename) {
+		var fullpath = path.join(notesDirectory, filename);
+		// if it doesn't end in .json, add it
+		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+			fullpath += '.json';
+		}
+		fs.readFile(fullpath, function(err, data) {
+			if (err) {
+				console.log(sageutils.header("SAGE2") + "error reading note", err);
+			} else {
+				console.log(sageutils.header("SAGE2") + "reading note from " + fullpath);
+
+				var note = JSON.parse(data);
+				createNote({text: note.text, user: note.owner, createdOn:note.createdOn, fileName: filename}, function(appInstance) {
+					appInstance.id = getUniqueAppId();
+					fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+					fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+					fileBufferManager.insertStr({appId:appInstance.id, text:note.text});
+					handleNewApplication(appInstance, null);
+					addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+				});
+				
+			}
+		});
+	}
+}
+
 function deleteSession (filename) {
 	if (filename) {
 		var fullpath = path.join(sessionDirectory, filename);
@@ -1656,6 +1729,7 @@ function createAppFromDescription(app, callback) {
 		callback(appInstance, videohandle);
 	};
 
+	console.log(app.url);
 	var appURL = url.parse(app.url);
 
 	if (appURL.hostname === config.host) {
@@ -2045,6 +2119,10 @@ function wsLoadFileFromServer(wsio, data) {
 
 		addEventToUserLog(wsio.id, {type: "openFile", data: {name: data.filename, application: {id: null, type: "session"}}, time: Date.now()});
 	}
+	else if (data.application === "sticky_note"){
+		console.log("Loading:::",data.filename);
+		loadNote(data.filename);
+	}
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			appInstance.id = getUniqueAppId();
@@ -2052,6 +2130,34 @@ function wsLoadFileFromServer(wsio, data) {
 			addEventToUserLog(data.user, {type: "openFile", data: {name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});
 	}
+}
+
+
+function wsCreateNewNote(wsio, data) {
+	data.date = Date.now();
+	createNote(data, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+		fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+		fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+		fileBufferManager.insertStr({appId:appInstance.id, text:data.text});
+		handleNewApplication(appInstance, null);
+		addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+	});
+}
+function createNote(data, callback) {
+	if (data.text===null || data.text === undefined){
+		data.text = "";
+	}
+	if (data.user !== null && data.user !== undefined){
+		if (sagePointers.hasOwnProperty(data.user)){
+			data.user = sagePointers[data.user].label || "SAGE2_User";	
+		}
+	}
+	else {
+		data.user = "SAGE2_User";
+	}
+	data.dir = data.dir || "notes";
+	appLoader.createNewNoteFromText(data, callback);
 }
 
 function initializeLoadedVideo(appInstance, videohandle) {
@@ -2306,6 +2412,9 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 	} else if (data.application === 'pdf_viewer') {
 		// an pdf
 		assets.deletePDF(data.filename);
+	}
+	else if (data.application === 'sticky_note'){
+		deleteNote(data.filename);
 	}
 	else {
 		// I dont know
@@ -2679,47 +2788,39 @@ function wsReleasedControlId(wsio, data) {
 function wsCreateAppClone(wsio, data) {
 	var app = SAGE2Items.applications.list[data.id];
 	mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
-	createAppFromDescription(app, function(appInstance, videohandle) {
-		appInstance.id = getUniqueAppId();
-		appInstance.left = appInstance.left + 20;
-		appInstance.top = appInstance.top + 20;
-		if (appInstance.animation) {
-			var i;
-			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-			for (i=0; i<clients.length; i++) {
-				if (clients[i].clientType === "display") {
-					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+	if (app.application === "sticky_note"){
+		var userLabel = "SAGE2_User";
+		if (data.user.hasOwnProperty("label") && data.user.label !== null && data.user.label !== undefined){
+			userLabel = data.user.label;
+		}
+		createNote({text: (app.data.bufferEmpty)? "" : app.data.buffer, user: userLabel, createdOn:Date.now(), fileName:userLabel+Date.now()}, function(appInstance) {
+			appInstance.id = getUniqueAppId();
+			appInstance.left = appInstance.left + 20;
+			appInstance.top = appInstance.top + 20;
+			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+			fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
+			handleNewApplication(appInstance, null);
+			addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		});
+	}
+	else{
+		createAppFromDescription(app, function(appInstance, videohandle) {
+			appInstance.id = getUniqueAppId();
+			appInstance.left = appInstance.left + 20;
+			appInstance.top = appInstance.top + 20;
+			if (appInstance.animation) {
+				var i;
+				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+				for (i=0; i<clients.length; i++) {
+					if (clients[i].clientType === "display") {
+						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+					}
 				}
 			}
-		}
-		handleNewApplication(appInstance, videohandle);
-	});
-	/*
-	var appData = {application: "custom_app", filename: app.application};
-	appLoader.loadFileFromLocalStorage(appData, function(clone, videohandle) {
-		clone.id = getUniqueAppId();
-		var pos = getNewWindowPosition({x: app.left, y: app.top});
-		clone.left = pos.x;
-		clone.top = pos.y;
-		clone.width = app.width;
-		clone.height = app.height;
-		if(clone.animation){
-			var i;
-			SAGE2Items.renderSync[clone.id] = {clients: {}, date: Date.now()};
-			for (i=0; i<clients.length; i++) {
-				if (clients[i].clientType === "display") {
-					SAGE2Items.renderSync[clone.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
-				}
-			}
-		}
-		if (clone.data)
-			clone.data.loadData = data.cloneData;
-		else
-			clone.data = {loadData: data.cloneData};
-
-		handleNewApplication(clone, videohandle);
-	});
-	*/
+			handleNewApplication(appInstance, videohandle);
+		});
+	}
 }
 
 function wsRemoteSagePointerPosition(wsio, data) {
@@ -3309,15 +3410,17 @@ function getSavedFilesList() {
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
+	var savedNotes     = listNotes();
 	var savedSessions  = listSessions();
 
 	// Sort independently of case
 	uploadedImages.sort( sageutils.compareFilename );
 	uploadedVideos.sort( sageutils.compareFilename );
 	uploadedPdfs.sort(   sageutils.compareFilename );
+	savedNotes.sort(     sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
 
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions};
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, notes:savedNotes, sessions: savedSessions};
 
 	return list;
 }
@@ -7931,25 +8034,42 @@ function wsRequestForMarkerAddition (wsio, data){
 }
 
 function wsRequestFileBuffer (wsio, data){
-	fileBufferManager.requestBuffer(data.id);
+	if (data.createdOn === null || data.createdOn === undefined){
+		data.createdOn = Date.now();
+	}
+	if (fileBufferManager.hasFileBufferForApp(data.id) === true){
+		fileBufferManager.editCredentialsForBuffer({appId:data.id, owner: data.owner, createdOn: data.createdOn});
+	}
+	else{
+		fileBufferManager.requestBuffer({appId:data.id, owner: data.owner, createdOn: data.createdOn});		
+	}
+	
 	if (data.fileName!==null && data.fileName!==undefined){
 		var app = SAGE2Items.applications.list[data.id];
 		console.log("requesting file buffer:", app.application);
 		var ext = "txt";
 		if (app.application === "sticky_note"){
-			ext = "stxt";
+			ext = "json";
 		}
 		fileBufferManager.associateFile({appId:data.id, fileName:data.fileName, extension:ext});
 	}
 }
 
 function wsCloseFileBuffer (wsio, data){
+	console.log("Closing buffer for:", data.id);
 	fileBufferManager.closeFileBuffer(data.id);
 }
-
 
 function startTimeUpdateBroadcasts(){
 	setInterval(function(){
 		broadcast('timeUpdate', {now:Date.now()});
 	}, 60000);
+}
+
+function wsRequestNewTitle (wsio, data){
+	var app = SAGE2Items.applications.list[data.id];
+	if (app !== null && app !== undefined){
+		app.title = data.title;
+		broadcast('setTitle', data);
+	}
 }
