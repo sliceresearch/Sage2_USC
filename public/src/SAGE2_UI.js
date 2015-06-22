@@ -187,6 +187,7 @@ function SAGE2_init() {
 		images: "image_viewer",
 		videos: "movie_player",
 		pdfs: "pdf_viewer",
+		notes: "sticky_note",
 		sessions: "load_session"
 	};
 
@@ -292,25 +293,29 @@ function setupListeners() {
 	wsio.on('storedFileList', function(data) {
 		document.getElementById('images-dir').checked   = false;
 		document.getElementById('pdfs-dir').checked     = false;
+		document.getElementById('notes-dir').checked    = false;
 		document.getElementById('videos-dir').checked   = false;
 		document.getElementById('sessions-dir').checked = false;
 
 		var images = document.getElementById('images');
 		var videos = document.getElementById('videos');
 		var pdfs = document.getElementById('pdfs');
+		var notes = document.getElementById('notes');
 		var sessions = document.getElementById('sessions');
 
 		removeAllChildren(images);
 		removeAllChildren(videos);
 		removeAllChildren(pdfs);
+		removeAllChildren(notes);
 		removeAllChildren(sessions);
 
 		var longestImageName   = createFileList(data, "images",   images);
 		var longestVideoName   = createFileList(data, "videos",   videos);
 		var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+		var longestNoteName    = createFileList(data, "notes",     notes);
 		var longestSessionName = createFileList(data, "sessions", sessions);
 
-		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestNoteName, longestSessionName);
 		document.getElementById('fileListElems').style.width = (longest+60).toString() + "px";
 
 		showDialog('mediaBrowserDialog');
@@ -708,6 +713,15 @@ function handleClick(element) {
 	}
 	else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
 		showDialog('infoDialog');
+	}
+	else if (element.id === "note"         || element.id === "noteContainer"         || element.id === "noteLabel") {
+		var filenameTemplate = "note_" + dateToYYYYMMDDHHMMSS(new Date());
+		var value = "New note"
+		var name = prompt("Enter filename for new note:", filenameTemplate);
+		var text = prompt("Enter text for new note:", value);
+		if (name===null)
+			name = filenameTemplate;
+		wsio.emit('createNewNote', {fileName:name, text:text, dir: "notes", user: interactor.uniqueID});	
 	}
 
 	// App Launcher Dialog

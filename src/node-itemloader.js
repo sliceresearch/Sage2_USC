@@ -739,7 +739,7 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var external_url = this.hostOrigin + encodeReservedURL(url);
 	var localPath = path.join(this.publicDir, "uploads", dir, file.filename);
 	var mime_type = mime.lookup(localPath);
-
+	
 	this.loadApplication({location: "file", path: localPath, url: url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
@@ -797,7 +797,64 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		}
 	});
 };
+AppLoader.prototype.createNewNoteFromText = function(data, callback) {
+	var url = "uploads/"+data.dir+"/"+data.fileName;
+	var external_url = this.hostOrigin + encodeReservedURL(url);
 
+	// Assume default to Letter size
+	var page_width  = 300;
+	var page_height = 300;
+
+	var aspectRatio = page_width/page_height;
+
+	var metadata         = {};
+	metadata.title       = "Sticky Note";
+	metadata.version     = "1.0.0";
+	metadata.description = "Note taking tool for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["text", "document", "editor"];
+
+	//var exif = assets.getExifData(file);
+
+	var appInstance = {
+		id: null,
+		title: data.fileName? data.fileName : "Sticky Note",
+		application: "sticky_note",
+		icon: null,//exif ? exif.SAGE2thumbnail : null,
+		type: "application",
+		url: external_url,
+		data: {
+			owner:data.user,
+			createdOn: data.date,
+			buffer: data.text,
+			caretPos: data.text.length,
+			bufferEmpty: (data.text.length === 0),
+			fontSize: "16px",
+			fileName: data.fileName? data.fileName : "Sticky Note"
+		},
+		resrc:  null,
+		left:   this.titleBarHeight,
+		top:    1.5 * this.titleBarHeight,
+		width:  page_width,
+		height: page_height,
+		native_width:    page_width,
+		native_height:   page_height,
+		previous_left:   null,
+		previous_top:    null,
+		previous_width:  null,
+		previous_height: null,
+		maximized: false,
+		aspect:    aspectRatio,
+		animation: false,
+		metadata: metadata,
+		sticky: true,
+		annotation:false,
+		date:      new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
 AppLoader.prototype.loadApplication = function(appData, callback) {
 	var app, dir;
 	if (appData.location === "file") {

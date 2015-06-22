@@ -138,7 +138,7 @@ var SAGE2_App = Class.extend( {
 		this.fileRead       = false;
 		this.fileWrite      = false;
 		this.fileReceived   = false;
-
+		this.hasFileBuffer = false;
 		this.SAGE2CopyState(data.state);
 	},
 
@@ -427,12 +427,14 @@ var SAGE2_App = Class.extend( {
 	* @method requestFileBuffer
 	* @param fileName {String} name of the file to which data will be saved.
 	*/
-	requestFileBuffer: function (fileName) {
+	requestFileBuffer: function (data) {
 		this.hasFileBuffer = true;
 		if (isMaster){
 			var msgObject = {};
 			msgObject.id        = this.div.id;
-			msgObject.fileName  = fileName;
+			msgObject.fileName  = data.fileName;
+			msgObject.owner 	= data.owner;
+			msgObject.createdOn = data.createdOn;
 			// Send the message to the server
 			wsio.emit('requestFileBuffer', msgObject);
 		}

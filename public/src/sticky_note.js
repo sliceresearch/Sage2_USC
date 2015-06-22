@@ -7,11 +7,6 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
-Array.prototype.diff = function(num){
-	return this.map(function(x){
-		return x - num;
-	});
-}
 
 var sticky_note = SAGE2_App.extend( {
 	init: function(data) {
@@ -20,11 +15,10 @@ var sticky_note = SAGE2_App.extend( {
 		this.resizeEvents = "continuous"; // "onfinish";
 
 		this.svg  = null;
-		this.obj  = null;
-		this.text = null;
-		this.textLines = [];
-		this.enableControls = true;
 		this.cloneable = true;
+		this.hasFileBuffer = true;
+		this.state.owner = data.state.owner;
+		this.state.createdOn = data.state.createdOn;
 		this.state.buffer = (data.state.bufferEmpty)? "" : data.state.buffer;
 		this.state.caretPos = data.state.caretPos || 0;
 		this.state.bufferEmpty = false;
@@ -48,7 +42,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.backColor = [187,238,187];
 		this.lineHeight = 1.4;
 		
-		this.lineColor = this.backColor.diff(60);
+		//this.lineColor = this.backColor.diff(60);
 		//console.log(this.lineColor);
 		this.tailText = "";
 		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
@@ -61,7 +55,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"increaseFont"});
 		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"decreaseFont"});
 		this.controls.finishedAddingControls();
-		this.requestFileBuffer(this.state.fileName);
+		//this.requestFileBuffer(this.state.fileName);
 		
 		console.log("state:",this.state);
 	},
@@ -152,7 +146,7 @@ var sticky_note = SAGE2_App.extend( {
 					this.state.bufferEmpty = true;
 					break;
 				case "TextInput":
-					this.requestFileBuffer(data.text);
+					this.requestFileBuffer({fileName:data.text, owner:this.state.owner,createdOn:null});
 					break;
 				case "increaseFont":
 					this.state.fontSize = Math.min(parseInt(this.state.fontSize) + 2, 40) + "px";
