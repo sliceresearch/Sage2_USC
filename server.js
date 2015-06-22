@@ -3843,6 +3843,11 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 		if( menuStateChange != undefined ) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
 		}
+	} else if ( obj.id.indexOf("menu_thumbnail") != -1 ) {
+		// Pressing on thumbnail window
+		//console.log("Pointer press on thumbnail window");
+		data = { button: data.button, color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
 	} else {
 		// Not on a button
 		// Drag Content Browser only from radial menu
@@ -4333,6 +4338,11 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 		if( menuStateChange != undefined ) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
 		}
+	} else if ( obj.id.indexOf("menu_thumbnail") != -1 ) {
+		// PointerMove on thumbnail window
+		//console.log("Pointer move on thumbnail window");
+		data = { button: data.button, color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
 	} else {
 		// Not on a button
 		var menuButtonState = existingRadialMenu.onMenuEvent(uniqueID);
@@ -4780,6 +4790,11 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 			if( menuState != undefined ) {
 				radialMenuEvent({type: "stateChange", menuID: radialMenu.id, menuState: menuState });
 			}
+		}  else if ( obj.id.indexOf("menu_thumbnail") != -1 ) {
+			// PointerRelease on thumbnail window
+			//console.log("Pointer release on thumbnail window");
+			data = { button: data.button, color: sagePointers[uniqueID].color };
+			radialMenuEvent({type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data});
 		} else {
 			// Not on a button
 			radialMenu = obj.data.onRelease( uniqueID );
@@ -5833,8 +5848,9 @@ function radialMenuEvent( data )
 {
 	if( data.type == "stateChange" ) {
 		broadcast('radialMenuEvent', data);
+	} else {
+		broadcast('radialMenuEvent', data);
 	}
-	//broadcast('radialMenuEvent', data);
 }
 
 // Check for pointer move events that are dragging a radial menu (but outside the menu)

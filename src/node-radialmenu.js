@@ -141,7 +141,6 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType) {
 				} else {
 					this.thumbnailWindowState =  this.radialButtons[buttonName].window;
 					this.radialButtons[buttonName].state = 5;
-					console.log(this.radialButtons[buttonName].state);
 				}
 
 				// Clear button lit state for other buttonState
@@ -175,9 +174,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType) {
 				this.radialButtons[buttonName].state = 4;
 			}
 		}
-		
-		
-		console.log(this.radialButtons[buttonName].state);
+
 		buttonStates[buttonName] = this.radialButtons[buttonName].state;
 		return {action: action, buttonState: buttonStates};
 	}
@@ -203,7 +200,6 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType) {
 		} else if( buttonType == "pointerRelease" && this.radialButtons[buttonName].state != 5 ) {
 			this.radialButtons[buttonName].state = 4;
 		}
-		console.log(this.radialButtons[buttonName].state);
 		buttonStates[buttonName] = this.radialButtons[buttonName].state
 		delete this.pointersOnMenu[pointerID];
 		return {buttonState: buttonStates};
