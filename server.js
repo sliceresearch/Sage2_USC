@@ -5493,10 +5493,12 @@ function deleteApplication(appId, portalId) {
 
 
 function pointerDraw(uniqueID, data) {
-	if(sagePointers[uniqueID] === undefined) return;
+	// not a pointer anymore
+	//if (sagePointers[uniqueID] === undefined) return;
 
 	var ePos  = {x: 0, y: 0};
-	var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220, 10, 10]};
+	//var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220, 10, 10]};
+	var eUser = {id: null, label: 'drawing', color: [220, 10, 10]};
 	var now   = Date.now();
 
 	var key;
