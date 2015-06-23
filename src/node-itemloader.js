@@ -830,7 +830,7 @@ AppLoader.prototype.createNewNoteFromText = function(data, callback) {
 			buffer: data.text,
 			caretPos: data.text.length,
 			bufferEmpty: (data.text.length === 0),
-			fontSize: "16px",
+			fontSize: "32px",
 			fileName: data.fileName? data.fileName : "Sticky Note"
 		},
 		resrc:  null,

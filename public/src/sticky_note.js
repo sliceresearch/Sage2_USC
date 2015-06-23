@@ -23,7 +23,7 @@ var sticky_note = SAGE2_App.extend( {
 		this.state.caretPos = data.state.caretPos || 0;
 		this.state.bufferEmpty = false;
 		this.state.fileName = data.state.fileName || data.state.owner + "Note";
-		this.state.fontSize = data.state.fontSize || "16px";
+		this.state.fontSize = data.state.fontSize || "32px";
 
 		this.element.id = "div" + data.id;
 		this.copyNumber = 1;
@@ -150,7 +150,7 @@ var sticky_note = SAGE2_App.extend( {
 					this.requestNewTitle(data.text);
 					break;
 				case "increaseFont":
-					this.state.fontSize = Math.min(parseInt(this.state.fontSize) + 2, 40) + "px";
+					this.state.fontSize = Math.min(parseInt(this.state.fontSize) + 2, 50) + "px";
 					this.setFontSize();
 					if (this.isOverflowed()){
 						this.state.fontSize =  Math.max(parseInt(this.state.fontSize) - 2, 10) + "px";

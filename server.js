@@ -5341,10 +5341,16 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
 	}*/
 	var im = findInteractableManager(moveApp.elemId);
-	var backgroundObj = im.searchGeometry({x: moveApp.elemLeft-1, y: moveApp.elemTop-1});
-	if (backgroundObj!== null) {
-		if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
-			attachAppIfSticky(backgroundObj.data, moveApp.elemId);
+	if (app.sticky===true){
+		var backgroundObj = im.searchGeometryInBox({x1: moveApp.elemLeft, y1: moveApp.elemTop, x2:moveApp.elemLeft + moveApp.elemWidth, y2:moveApp.elemTop + moveApp.elemHeight}, null,[moveApp.elemId]);
+		console.log("backgroundObj:", backgroundObj);
+		if (backgroundObj!== null && backgroundObj!== undefined && backgroundObj.data!== null && backgroundObj.data!== undefined) {
+			if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
+				updateStickyItemAttachment(backgroundObj.data, moveApp.elemId);
+			}
+		}
+		else {
+			updateStickyItemAttachment(null,moveApp.elemId);
 		}
 	}
 	//im.editGeometry(moveApp.elemId, "applications", "rectangle", {x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight+titleBarHeight});
@@ -5990,7 +5996,17 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) return;
 
 	checkForSpecialKeys(uniqueID, data.code, true);
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
+	if (lockedControl !== null) {
+		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+		var event = {code: data.code, printable:false, state: "down", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID, user: eUser};
+		broadcast('keyInTextInputWidget', event);
+		if (data.code === 13) { //Enter key
+			remoteInteraction[uniqueID].dropControl();
+		}
+		return;
+	}
 	if (remoteInteraction[uniqueID].appInteractionMode()) {
 		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
@@ -6034,6 +6050,10 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 	var eData =  {code: data.code, state: "down"};
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
+	if (fileBufferManager.hasFileBufferForApp(app.id)){
+		event.type = 'bufferUpdate';
+		event.data = fileBufferManager.insertChar({appId:app.id, code:data.code, printable:false});
+	}
 	broadcast('eventInItem', event);
 
 	var eLogData = {
@@ -6088,17 +6108,7 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 
 	if (remoteInteraction[uniqueID].modeChange !== undefined && (data.code === 9 || data.code === 16)) return;
 
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
-
-	if (lockedControl !== null) {
-		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-		var event = {code: data.code, printable:false, state: "up", ctrlId:lockedControl.ctrlId, appId:lockedControl.appId, instanceID:lockedControl.instanceID, user: eUser};
-		broadcast('keyInTextInputWidget', event);
-		if (data.code === 13) { //Enter key
-			remoteInteraction[uniqueID].dropControl();
-		}
-		return;
-	}
+	
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
@@ -6154,10 +6164,6 @@ function sendKeyUpToApplication(uniqueID, app, localPt, data) {
 	var eData =  {code: data.code, state: "up"};
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
-	if (fileBufferManager.hasFileBufferForApp(app.id)){
-		event.type = 'bufferUpdate';
-		event.data = fileBufferManager.insertChar({appId:app.id, code:data.code, printable:false});
-	}
 	broadcast('eventInItem', event);
 
 	var eLogData = {
@@ -7812,7 +7818,7 @@ function wsRadialMenuMoved( wsio, data ) {
 }
 
 
-function attachAppIfSticky(backgroundItem, appId){
+function updateStickyItemAttachment(backgroundItem, appId){
 	var app = SAGE2Items.applications.list[appId];
 	if (app === null || app.sticky !== true) return;
 	stickyAppHandler.detachStickyItem(app);

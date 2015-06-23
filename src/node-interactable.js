@@ -398,6 +398,7 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 	return findTopmostGeometry(point, results, ignoreList);
 };
 
+
 /**
 * Finds for topmost geometric object (highest zIndex)
 *
@@ -432,6 +433,77 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 	}
 	return null;
 }
+
+/**
+* Search for topmost geometric object (optionally within a given layer)
+*
+* @method searchGeometryInBox
+* @param box {Object} {x1: , y1: , x2: , y2: }
+* @param layerId {String} unique identifier for the layer
+* @param ignoreList {Array} list of ids to ignore during the search
+* @return {Object} geometric object
+*/
+InteractableManager.prototype.searchGeometryInBox = function(box, layerId, ignoreList) {
+	var results = [];
+	if (layerId !== undefined && layerId !== null) {
+		results.push(this.layers[layerId].objects.search([box.x1, box.y1, box.x2, box.y2]));
+	}
+	else {
+		var i;
+		var tmp;
+		results = [];
+		for(i=this.layerOrder.length-1; i>=0; i--) {
+			tmp = this.layers[this.layerOrder[i]].objects.search([box.x1, box.y1, box.x2, box.y2]);
+			if (i < this.layerOrder.length-1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i+1]].zIndex) {
+				results[results.length-1] = results[results.length-1].concat(tmp);
+			}
+			else {
+				results.push(tmp);
+			}
+		}
+	}
+
+	return findTopmostGeometryInBox(box, results, ignoreList);
+};
+
+/**
+* Finds for topmost geometric object (highest zIndex)
+*
+* @method findTopmostGeometryInBox
+* @param point {Object} {x1: , y1: , x2: , y2: }
+* @param geometryList {Array} list of geometric objects
+* @param ignoreList {Array} list of ids to ignore during the search
+* @return {Object} geometric object
+*/
+function findTopmostGeometryInBox(box, geometryList, ignoreList) {
+	var i, j;
+	var topmost = null;
+	if (!(ignoreList instanceof Array)) ignoreList = [];
+	for(i=0; i<geometryList.length; i++) {
+		for(j=0; j<geometryList[i].length; j++) {
+			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) continue;
+			if (geometryList[i][j].type === "circle") {
+				/*var x = point.x - geometryList[i][j].geometry.x;
+				var y = point.y - geometryList[i][j].geometry.y;
+				var r = geometryList[i][j].geometry.r;
+				if ((x*x + y*y) < (r*r) && geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+					topmost = geometryList[i][j];
+				}*/
+				//TODO : Implement box and circle collision detection
+				continue;
+			}
+			else {
+				if (geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+					topmost = geometryList[i][j];
+				}
+			}
+		}
+		if(topmost !== null) return topmost;
+	}
+	return null;
+}
+
+
 
 /**
 * Get method for the zIndex of an Object
