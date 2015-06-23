@@ -853,9 +853,6 @@ function UIBuilder(json_cfg, clientID) {
 			}
 		}
 		else {
-			console.log("radialMenuEvent (old):");
-			console.log(data);
-			
 			for (var menuID in this.radialMenus) {
 				var menuElem = document.getElementById(menuID);
 				var menu     = this.radialMenus[menuID];

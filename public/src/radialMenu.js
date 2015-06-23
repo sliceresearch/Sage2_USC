@@ -218,97 +218,6 @@ function RadialMenu(){
 			
 			this.addRadialMenuButton(buttonName, radialMenuIcons[buttonInfo.icon], overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', buttonInfo.radialPosition, buttonInfo.radialLevel);
 		}
-
-		/*
-		this.radialRemoteSitesButton = this.addRadialMenuButton("radialRemoteSitesButton", idleRemoteSitesIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 0, 1);
-		this.radialRemoteSitesButton.setHidden(true);
-
-		this.radialPDFButton = this.addRadialMenuButton("radialPDFButton", idlePDFIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 1, 1);
-
-		this.radialImageButton = this.addRadialMenuButton("radialImageButton", idleImageIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 2, 1);
-
-		this.radialVideoButton = this.addRadialMenuButton("radialVideoButton", idleVideoIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 3, 1);
-
-		this.radialAppButton = this.addRadialMenuButton("radialAppButton", idleAppIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 4, 1);
-
-		this.radialSessionButton = this.addRadialMenuButton("radialSessionButton", idleSessionIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 5, 1);
-
-		this.radialSaveSessionButton = this.addRadialMenuButton("radialSaveSessionButton", idleSaveSessionIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 6, 1);
-
-		this.radialSettingsButton = this.addRadialMenuButton("radialSettingsButton", idleSettingsIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 7.5, 1);
-
-		this.radialCloseButton = this.addRadialMenuButton("radialCloseButton", idleExitIcon, overlayIconScale, {buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: 'circle'}, 'centered', 8.5, 1);
-
-		// Radial level 2 (Not currently used + really old way of creating buttons)
-		var menu2ButtonSize = 140;
-		var menuLevel2Radius = menuRadius + menuButtonSize/2 + 10;
-
-		this.radial2CloseAllButton = this.createRadialButton( radialButtonIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 7.875, menuLevel2Radius );
-		this.radial2CloseAllButton.setOverlayImage( idleCloseAllIcon, overlayIconScale );
-
-		this.radial2TileButton = this.createRadialButton( radialButtonIcon, false, menuButtonSize, menuButtonHitboxSize, 'centered', 'circle', 7.175, menuLevel2Radius );
-		this.radial2TileButton.setOverlayImage( idleTileIcon, overlayIconScale );
-
-		this.radial2ImageButton = new ButtonWidget();
-		this.radial2ImageButton.init(0, this.ctx, null);
-		this.radial2ImageButton.setButtonImage( radialButtonIcon );
-		this.radial2ImageButton.useBackgroundColor = false;
-		this.radial2ImageButton.setOverlayImage( idleImageIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
-
-		this.radial2PDFButton = new ButtonWidget();
-		this.radial2PDFButton.init(0, this.ctx, null);
-		this.radial2PDFButton.setButtonImage( radialButtonIcon );
-		this.radial2PDFButton.useBackgroundColor = false;
-		this.radial2PDFButton.setOverlayImage( idlePDFIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
-
-		this.radial2VideoButton = new ButtonWidget();
-		this.radial2VideoButton.init(0, this.ctx, null);
-		this.radial2VideoButton.setButtonImage( radialButtonIcon );
-		this.radial2VideoButton.useBackgroundColor = false;
-		this.radial2VideoButton.setOverlayImage( idleVideoIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
-
-		this.radial2AppButton = new ButtonWidget();
-		this.radial2AppButton.init(0, this.ctx, null);
-		this.radial2AppButton.setButtonImage( radialButtonIcon );
-		this.radial2AppButton.useBackgroundColor = false;
-		this.radial2AppButton.setOverlayImage( idleAppIcon, overlayIconScale * menuButtonSize/menu2ButtonSize );
-
-
-		this.radial2ImageButton.setSize( menu2ButtonSize, menu2ButtonSize );
-		this.radial2PDFButton.setSize( menu2ButtonSize, menu2ButtonSize );
-		this.radial2VideoButton.setSize( menu2ButtonSize, menu2ButtonSize );
-		this.radial2AppButton.setSize( menu2ButtonSize, menu2ButtonSize );
-
-
-		this.radial2ImageButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-		this.radial2PDFButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-		this.radial2VideoButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-		this.radial2AppButton.setHitboxSize( menuButtonHitboxSize, menuButtonHitboxSize );
-
-		this.radial2ImageButton.alignment = 'centered';
-		this.radial2PDFButton.alignment = 'centered';
-		this.radial2VideoButton.alignment = 'centered';
-		this.radial2AppButton.alignment = 'centered';
-		this.radial2CloseAllButton.alignment = 'centered';
-		this.radial2TileButton.alignment = 'centered';
-
-		angle = (initAngle + angleSeparation * 1) * (Math.PI/180);
-		this.radial2ImageButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2ImageButton.setRotation( angle - Math.PI/2 );
-
-		angle = (initAngle + angleSeparation * 0) * (Math.PI/180);
-		this.radial2PDFButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2PDFButton.setRotation( angle - Math.PI/2 );
-
-		angle = (initAngle + angleSeparation * 2) * (Math.PI/180);
-		this.radial2VideoButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2VideoButton.setRotation( angle - Math.PI/2 );
-
-		angle = (initAngle + angleSeparation * 3) * (Math.PI/180);
-		this.radial2AppButton.setPosition( this.radialMenuCenter.x - menuLevel2Radius * Math.cos(angle), this.radialMenuCenter.y - menuLevel2Radius * Math.sin(angle) );
-		this.radial2AppButton.setRotation( angle - Math.PI/2 );
-		*/
-
 	};
 	
 	/**
@@ -472,28 +381,6 @@ function RadialMenu(){
 				this.level1Buttons[i].draw();
 			}
 		}
-		
-		/*
-		this.radialCloseButton.draw();
-		this.radialSettingsButton.draw();
-
-		if( this.settingMenuOpen ) {
-			this.radial2CloseAllButton.draw();
-			this.radial2TileButton.draw();
-		}
-
-		if( this.currentRadialState === 'radialMenu' ) {
-			this.radialMenuButtons.radialRemoteSitesButton.draw();
-			this.radialMenuButtons.radialImageButton.draw();
-			this.radialMenuButtons.radialPDFButton.draw();
-			this.radialMenuButtons.radialVideoButton.draw();
-			this.radialMenuButtons.radialAppButton.draw();
-			this.radialMenuButtons.radialSessionButton.draw();
-			this.radialMenuButtons.radialSaveSessionButton.draw();
-
-			this.thumbnailWindowDiv.style.backgroundColor = "rgba(10,50,200,0.0)";
-		}
-		*/
 		
 		// Thumbnail window
 		if( this.currentMenuState !== 'radialMenu' ) {
@@ -752,22 +639,7 @@ function RadialMenu(){
 	this.onEvent = function(type, position, user, data) {
 		//console.log("RadialMenu " + this.menuID + " " + type + " " + position + " " + user + " " + data );
 		this.buttonOverCount = 0; // Count number of buttons have a pointer over it
-		
-		/*
-		// Level 0 - Always visible -----------------------------------
-		this.buttonOverCount += this.radialCloseButton.onEvent(type, user.id, position, data);
-		if ( this.radialCloseButton.isClicked() && data.button === "left" ) {
-			if( this.sendsToServer === true ) {
-				this.wsio.emit('radialMenuClick', {button: "closeButton", user: user} );
-			}
-			this.closeMenu();
-		}
-		
-		
-		this.buttonOverCount += this.radialSettingsButton.onEvent(type, user.id, position, data);
-		this.buttonOverCount += this.radialSessionButton.onEvent(type, user.id, position, data);
-		this.buttonOverCount += this.radialSaveSessionButton.onEvent(type, user.id, position, data);
-		*/
+
 		// Level 1 -----------------------------------
 		var i = 0;
 		if( this.currentRadialState === 'radialMenu' ) {
@@ -777,110 +649,6 @@ function RadialMenu(){
 				this.buttonOverCount += this.level1Buttons[i].onEvent(type, user.id, position, data);
 			}
 		}
-	
-		/*
-		if( this.radialSettingsButton.isClicked() ) {
-			if( this.settingMenuOpen ) {
-				this.settingMenuOpen = false;
-				this.radialSettingsButton.isLit = false;
-				if( this.sendsToServer === true ) {
-					this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "closed"}} );
-				}
-			} else {
-				this.settingMenuOpen = true;
-				this.radialSettingsButton.isLit = true;
-				if( this.sendsToServer === true ) {
-					this.wsio.emit('radialMenuClick', {button: "settingsButton", user: user, data: {state: "opened"}} );
-				}
-			}
-		}
-
-		if( this.settingMenuOpen ) {
-			this.buttonOverCount += this.radial2CloseAllButton.onEvent(type, user.id, position, data);
-			this.buttonOverCount += this.radial2TileButton.onEvent(type, user.id, position, data);
-		}
-
-		if( this.radial2CloseAllButton.isClicked() && this.sendsToServer === true ) {
-			this.wsio.emit('clearDisplay');
-			this.wsio.emit('radialMenuClick', {button: "clearDisplay", user: user} );
-		}
-		if( this.radial2TileButton.isClicked() && this.sendsToServer === true ) {
-			this.wsio.emit('tileApplications');
-			this.wsio.emit('radialMenuClick', {button: "tileApplications", user: user} );
-		}
-
-
-		if( this.radialRemoteSitesButton.isClicked() ) {
-			this.resetRadialButtonLitState();
-		}
-
-		if( this.radialImageButton.isClicked() || this.radial2ImageButton.isClicked() ) {
-			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('imageThumbnailWindow') ) {
-				this.radialImageButton.isLit = true;
-				if( this.sendsToServer === true ) {
-					this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "opened"}} );
-				}
-			} else if( this.sendsToServer === true ) {
-				this.wsio.emit('radialMenuClick', {button: "imageWindow", user: user, data: {state: "closed"}} );
-			}
-		}
-		if( this.radialPDFButton.isClicked() || this.radial2PDFButton.isClicked() ) {
-			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('pdfThumbnailWindow') ) {
-				this.radialPDFButton.isLit = true;
-				if( this.sendsToServer === true ) {
-					this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "opened"}} );
-				}
-			} else if( this.sendsToServer === true )	{
-				this.wsio.emit('radialMenuClick', {button: "pdfWindow", user: user,  data: {state: "closed"}} );
-			}
-		}
-		if( this.radialVideoButton.isClicked() || this.radial2VideoButton.isClicked() ) {
-			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('videoThumbnailWindow') ) {
-				this.radialVideoButton.isLit = true;
-				if( this.sendsToServer === true )
-					this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "opened"}} );
-			}
-			else if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuClick', {button: "videoWindow", user: user,  data: {state: "closed"}} );
-		}
-		if( this.radialAppButton.isClicked() || this.radial2AppButton.isClicked() ) {
-			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('applauncherThumbnailWindow') )
-			{
-				this.radialAppButton.isLit = true;
-				if( this.sendsToServer === true )
-					this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "opened"}} );
-			}
-			else if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuClick', {button: "appWindow", user: user,  data: {state: "closed"}} );
-		}
-		if( this.radialSessionButton.isClicked() ) {
-			this.resetRadialButtonLitState();
-			if( this.setToggleMenu('sessionThumbnailWindow') ) {
-				this.radialSessionButton.isLit = true;
-				if( this.sendsToServer === true )
-					this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user,  data: {state: "opened"}} );
-			}
-			else if( this.sendsToServer === true )
-				this.wsio.emit('radialMenuClick', {button: "sessionWindow", user: user, data: {state: "closed"}} );
-		}
-		if( this.radialSaveSessionButton.isClicked() && this.sendsToServer === true ) {
-			this.wsio.emit('saveSesion');
-			this.wsio.emit('requestStoredFiles');
-			this.wsio.emit('radialMenuClick', {button: "saveSession", user: user} );
-		}
-
-		// Level 2 -----------------------------------
-		if( this.currentRadialState === 'radialAppMenu2' ) {
-			this.radial2ImageButton.onEvent(type, user.id, position, data);
-			this.radial2PDFButton.onEvent(type, user.id, position, data);
-			this.radial2VideoButton.onEvent(type, user.id, position, data);
-			this.radial2AppButton.onEvent(type, user.id, position, data);
-		}
-		*/
 		
 		// Thumbnail window ----------------------------
 		if( this.currentMenuState !== 'radialMenu' ) {
@@ -909,7 +677,7 @@ function RadialMenu(){
 					thumbEventPos.x -= this.thumbnailWindowScrollOffset.x;
 					this.buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 
-					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false ) {
+					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false && data.button === 'left' ) {
 						if( this.currentMenuState === 'applauncherThumbnailWindow' ) {
 							this.loadApplication( thumbButton.getData(), user  );
 						} else {

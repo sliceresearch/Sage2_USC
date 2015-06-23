@@ -4778,6 +4778,10 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 				radialMenu.onRelease(uniqueID);
 			}
 		}
+		// If pointer release is outside window, use the pointerRelease type to end the
+		// scroll event, but don't trigger any clicks because of a 'null' button (clicks expects a left/right)
+		data = { button: "null", color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data});
 	}
 	else
 	{
