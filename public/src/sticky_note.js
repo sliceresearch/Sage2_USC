@@ -35,18 +35,16 @@ var sticky_note = SAGE2_App.extend( {
 		// Make the SVG element fill the app
 		this.svg = Snap("100%","100%");
 		this.element.appendChild(this.svg.node);
-		this.vh = 1000*data.width/data.height;
-		this.vw = 1000;
-		this.margin = 0.05*this.vw;
-		this.svg.attr("viewBox", "0,0," + this.vw + "," + this.vh);
+		
+		this.svg.attr("viewBox", "0,0," + this.width + "," + this.height);
 		this.backColor = [187,238,187];
 		this.lineHeight = 1.4;
 		
 		//this.lineColor = this.backColor.diff(60);
 		//console.log(this.lineColor);
 		this.tailText = "";
-		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
-		rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
+		this.rectbg = this.svg.rect(0, 0, this.width, this.height);
+		this.rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
 		this.setupWindow();
 		this.setText();
 		this.controls.addTextInput({defaultText: this.state.fileName, id:"TextInput", caption:"file"});
@@ -95,6 +93,11 @@ var sticky_note = SAGE2_App.extend( {
 	resize: function(date) {
 		this.width = parseInt(this.element.style.width);
 		this.height = parseInt(this.element.style.height);
+		this.svg.attr("viewBox", "0,0," + this.width + "," + this.height);
+		this.rectbg.attr({
+			width: this.width,
+			height: this.height
+		});
 		this.setWindowElementSize();
 	},
 
