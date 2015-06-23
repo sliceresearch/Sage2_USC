@@ -52,7 +52,8 @@ function sagePointer(wsio) {
 	this.chunk = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024*1024*1024); // 20GB just as a precaution
 
-	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null) localStorage.SAGE2_ptrName  = "Default";
+	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null ||
+		localStorage.SAGE2_ptrName  === "Default") localStorage.SAGE2_ptrName  = "SAGE2_user";
 	if (localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
 
 	this.sagePointerLabel.value = localStorage.SAGE2_ptrName;

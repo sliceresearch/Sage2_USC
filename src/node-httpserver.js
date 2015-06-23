@@ -123,7 +123,15 @@ HttpServer.prototype.onreq = function(req, res) {
 		}
 
 		// Get the actual path of the file
-		var pathname = this.publicDirectory + getName;
+		var pathname;
+
+		// Routes
+		if (getName.indexOf('/config/') === 0) {
+			// if trying to access config files, add the correct path
+			pathname = path.join(this.publicDirectory, '..', getName);
+		} else {
+			pathname = this.publicDirectory + getName;
+		}
 
 		// Are we trying to session management
 		if (global.__SESSION_ID) {
