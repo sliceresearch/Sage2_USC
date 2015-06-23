@@ -779,7 +779,15 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
-
+			
+			// Set initial thumbnail window position and size
+			var rect = menuElem1.getBoundingClientRect();
+			menu.thumbnailWindowDiv.style.left   = (rect.left + menu.thumbnailWindowPosition.x - 18  * menu.radialMenuScale).toString() + "px";
+			menu.thumbnailWindowDiv.style.top    = (rect.top + menu.thumbnailWindowPosition.y + menu.textHeaderHeight).toString() + "px";
+			
+			menu.thumbnailWindowDiv.style.width   = (menu.thumbnailWindowSize.x + menu.imageThumbSize/2 - 10 - menu.radialMenuSize.x - 25 * menu.radialMenuScale).toString() + "px";
+			menu.thumbnailWindowDiv.style.height    = (menu.thumbnailWindowSize.y - menu.textHeaderHeight * 2).toString() + "px";
+		
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
