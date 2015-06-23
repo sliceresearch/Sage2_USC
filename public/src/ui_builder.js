@@ -242,8 +242,8 @@ function UIBuilder(json_cfg, clientID) {
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
-			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		} else {
 			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
