@@ -289,7 +289,7 @@ function newLayer() {
 	status.text( (currentLayer+1) + '/' + numLayers);
 	uigrp.draw();
 
-	wsio.emit('pointerDraw', {command: 'newlayer'});
+	wsio_global.emit('pointerDraw', {command: 'newlayer'});
 }
 
 /**
@@ -317,7 +317,7 @@ function nextLayer() {
 		status.text( (currentLayer+1) + '/' + numLayers);
 		uigrp.draw();
 
-		wsio.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+		wsio_global.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
 	}
 }
 
@@ -345,7 +345,7 @@ function previousLayer() {
 		status.text( (currentLayer+1) + '/' + numLayers);
 		uigrp.draw();
 
-		wsio.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+		wsio_global.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
 	}
 }
 
@@ -449,7 +449,7 @@ function mouseup(ev) {
 			aSpline.strokeWidth(avg*8.0);
 		layer.draw();
 
-		wsio.emit('pointerDraw', {command: 'draw', points: newpoints, pressure:avg, color:pencolor} );
+		wsio_global.emit('pointerDraw', {command: 'draw', points: newpoints, pressure:avg, color:pencolor} );
 	}
 }
 
