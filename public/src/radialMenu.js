@@ -120,6 +120,7 @@ function RadialMenu(){
 	this.addRadialMenuButton = function(name, icon, iconScale, dim, alignment, radialAnglePos, radialLevel ){
 		var button = this.createRadialButton( radialButtonIcon, false, dim.buttonSize, dim.hitboxSize, alignment, dim.shape, radialAnglePos, menuRadius );
 		button.setOverlayImage( icon, iconScale );
+		button.isLit = true; // Button will stay lit regardless of hover-over
 
 		if( radialLevel === 1 )
 			this.level1Buttons.push(button);
@@ -299,8 +300,9 @@ function RadialMenu(){
 	 */
 	this.redraw = function() {
 		this.thumbScrollWindowctx.redraw = true;
-
+		
 		this.draw();
+		this.drawThumbnailWindow();
 	};
 
 	/**
@@ -311,20 +313,6 @@ function RadialMenu(){
 	this.draw = function() {
 		// clear canvas
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
-
-		if( this.thumbScrollWindowctx.redraw || this.currentMenuState === 'radialMenu') {
-			this.thumbScrollWindowctx.clearRect(0, 0, this.thumbnailScrollWindowElement.width, this.thumbnailScrollWindowElement.height);
-		}
-		if( this.windowInteractionMode === false ) {
-			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)";
-			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
-		} else if( this.dragThumbnailWindow === true ) {
-			this.ctx.fillStyle = "rgba(55, 55, 5, 0.5)";
-			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
-		} else {
-			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)";
-			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
-		}
 
 		// TEMP: Just to clearly see context edge
 		if( this.divCtxDebug ) {
@@ -380,6 +368,27 @@ function RadialMenu(){
 			for ( i = 0; i < this.level1Buttons.length; i++ ) {
 				this.level1Buttons[i].draw();
 			}
+		}
+		
+		this.drawThumbnailWindow();
+		
+		this.ctx.redraw = false;
+	};
+
+	this.drawThumbnailWindow = function() {
+		if( this.thumbScrollWindowctx.redraw || this.currentMenuState === 'radialMenu') {
+			this.thumbScrollWindowctx.clearRect(0, 0, this.thumbnailScrollWindowElement.width, this.thumbnailScrollWindowElement.height);
+		}
+		
+		if( this.windowInteractionMode === false ) {
+			this.ctx.fillStyle = "rgba(5, 15, 55, 0.5)";
+			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
+		} else if( this.dragThumbnailWindow === true ) {
+			this.ctx.fillStyle = "rgba(55, 55, 5, 0.5)";
+			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
+		} else {
+			this.ctx.fillStyle = "rgba(5, 5, 5, 0.5)";
+			this.thumbScrollWindowctx.fillStyle = this.ctx.fillStyle;
 		}
 		
 		// Thumbnail window
@@ -530,10 +539,8 @@ function RadialMenu(){
 				}
 			}
 		}
-
-		this.ctx.redraw = false;
-	};
-
+	}
+	
 	/**
 	 * Closes the menu, sends close signal to server
 	 *
@@ -678,6 +685,7 @@ function RadialMenu(){
 					this.buttonOverCount += thumbButton.onEvent(type, user.id, thumbEventPos, data);
 
 					if ( thumbButton.isReleased() && this.scrollOpenContentLock === false && data.button === 'left' ) {
+
 						if( this.currentMenuState === 'applauncherThumbnailWindow' ) {
 							this.loadApplication( thumbButton.getData(), user  );
 						} else {
@@ -688,6 +696,7 @@ function RadialMenu(){
 					if ( thumbButton.isPositionOver(user.id, thumbEventPos)  ) {
 						this.hoverOverText = thumbButton.getData().filename;
 						this.hoverOverThumbnail = thumbButton.buttonImage;
+						
 						if (thumbButton.buttonImage.lsrc) {
 							this.hoverOverThumbnail.src = thumbButton.buttonImage.lsrc;
 							this.ctx.redraw = true;
@@ -696,7 +705,7 @@ function RadialMenu(){
 					}
 
 					if( thumbButton.isFirstOver()  ) // Only occurs on first pointerMove event over button
-						this.ctx.redraw = true; // Redraws radial menu and metadata window (independent of thumbnails)
+						this.redraw(); // Redraws radial menu and metadata window (independent of thumbnails)
 				}
 			}
 		}
@@ -719,6 +728,9 @@ function RadialMenu(){
 				}
 			}
 			this.ctx.redraw = true;
+			
+			this.scrollOpenContentLock = false;
+
 		} else if( type === "pointerMove" ) {
 			if( this.dragThumbnailWindow === true ) {
 				// Controls the content window scrolling.
@@ -768,7 +780,6 @@ function RadialMenu(){
 			}
 			else if( this.dragThumbnailWindow === true ) {
 				this.dragThumbnailWindow = false;
-				this.scrollOpenContentLock = false;
 			}
 		}
 
@@ -1188,14 +1199,14 @@ function ButtonWidget() {
 		}
 		else if( this.state === 3 ) {
 			this.ctx.fillStyle = this.clickedColor;
-			this.state = 2; // Pressed state
+			//this.state = 2; // Pressed state
 		}
 		else if( this.state === 2 ) {
 			this.ctx.fillStyle = this.pressedColor;
 		}
 		else if( this.state === 4 ) {
 			this.ctx.fillStyle = this.releasedColor;
-			this.state = 1;
+			//this.state = 1;
 		}
 		if( this.useBackgroundColor ) {
 			if( this.state === 5 )
@@ -1271,7 +1282,7 @@ function ButtonWidget() {
 		if( this.state < 0 ) {// Button is disabled or hidden
 			return 0;
 		}
-
+		
 		if( this.isPositionOver( user, position ) ) {
 			if( this.state === 5 ) {
 				this.state = 1;
@@ -1297,12 +1308,14 @@ function ButtonWidget() {
 
 			return 1;
 		} else {
-			if( this.state !== 0 && this.useEventOverColor )
-				this.ctx.redraw = true;
-			this.state = 0;
-
+			if( this.isLit == false ) {
+				if( this.state !== 0 && this.useEventOverColor )
+					this.ctx.redraw = true;
+				this.state = 0;
+			}
 			return 0;
 		}
+		
 	};
 	
 	this.setButtonState = function(state) {
