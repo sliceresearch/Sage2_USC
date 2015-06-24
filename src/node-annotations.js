@@ -123,6 +123,7 @@ annotationSystem.prototype.delete = function(key) {
 
 annotationSystem.prototype.loadAnnotations = function(appInstance, config){
     if (!appInstance.annotation) return null;
+    var noteData = this.getAllAnnotationsForFile(appInstance.title);
     var annotationWindow = {
         id: appInstance.id + "_notes",
         appId:appInstance.id,
@@ -158,22 +159,26 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
             caption:"New Summary Note"
         },
         notes:[],
-        annotationData: null,
         annotationCount: null,
         appHandle:appInstance, // For easy access to the state of the app
+        annotationData:noteData,
         getUniqueId:(function() {
             var count = 1;
+            var data = noteData;
             return function() {
+                while(data.hasOwnProperty(count)===true){
+                    count++;
+                }
                 var id = count.toString();
                 count++;
                 return id;
             };
         })()
     };
-    annotationWindow.annotationData = this.getAllAnnotationsForFile(appInstance.title);
     
-    annotationWindow.annotationCount = (annotationWindow.annotationData)? (function(){
-        var data = annotationWindow.annotationData;
+    
+    annotationWindow.annotationCount = (noteData)? (function(){
+        var data = noteData;
         var count = 0;
         for(var key in data){
             if (data.hasOwnProperty(key)){
