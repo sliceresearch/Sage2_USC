@@ -6039,6 +6039,7 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 }
 
 function sendKeyDownToApplication(uniqueID, app, localPt, data) {
+	console.log("keydown:",data.code);
 	var portal = findApplicationPortal(app);
 	var titleBarHeight = config.ui.titleBarHeight;
 	if (portal !== undefined && portal !== null) {
@@ -6051,6 +6052,7 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	if (fileBufferManager.hasFileBufferForApp(app.id)){
+		console.log("keydownhere:",data.code);
 		event.type = 'bufferUpdate';
 		event.data = fileBufferManager.insertChar({appId:app.id, code:data.code, printable:false});
 	}

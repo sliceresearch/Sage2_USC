@@ -160,20 +160,18 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         notes:[],
         annotationData: null,
         annotationCount: null,
-        nextId:null,
-        appHandle:appInstance // For easy access to the state of the app
+        appHandle:appInstance, // For easy access to the state of the app
+        getUniqueId:(function() {
+            var count = 1;
+            return function() {
+                var id = count.toString();
+                count++;
+                return id;
+            };
+        })()
     };
     annotationWindow.annotationData = this.getAllAnnotationsForFile(appInstance.title);
-    annotationWindow.nextId = (annotationWindow.annotationData)? (function(){
-        var data = annotationWindow.annotationData;
-        var count = 0;
-        for(var key in data){
-            if (data.hasOwnProperty(key)){
-                count = Math.max(count, parseInt(data[key].id));
-            }
-        }
-        return count+1;
-    })() : 1;
+    
     annotationWindow.annotationCount = (annotationWindow.annotationData)? (function(){
         var data = annotationWindow.annotationData;
         var count = 0;
@@ -251,8 +249,7 @@ annotationSystem.prototype.updateAnnotationWindowPositionAndSize = function(data
 annotationSystem.prototype.addNewNote = function(credentials){
     if (!this.annotationWindows[credentials.appId]) return null;
     var annotationWindow = this.annotationWindows[credentials.appId];
-    credentials.id = annotationWindow.nextId;
-    annotationWindow.nextId += 1;
+    credentials.id = annotationWindow.getUniqueId();
     this.editableNote[credentials.appId][credentials.userLabel.toString()] = credentials;
     this.saveAnnotationForFile(annotationWindow.filename, credentials.id, {
         id: credentials.id,

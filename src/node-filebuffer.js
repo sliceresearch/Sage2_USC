@@ -70,6 +70,18 @@ Buffer.prototype.insertChar = function(code, printable){
 		result.data = String.fromCharCode(code);
 	}else{
 		switch (code){
+			case 35://End
+				if (this.caret < this.str.length){
+					result.offset = this.str.length - this.caret;
+					this.caret = this.str.length;
+				}
+				break;
+			case 36://Home
+				if (this.caret > 0){
+					result.offset = -this.caret;
+					this.caret = 0;
+				}
+				break;
 			case 37://left
 				if (this.caret > 0){
 					this.caret = this.caret - 1;
