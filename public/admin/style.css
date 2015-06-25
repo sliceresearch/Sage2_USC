@@ -79,7 +79,7 @@ footer {
 
 p, tr, td {
 	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-size: 12pt;
 	text-indent: 25px;
 	color: #FFFFFF;
 }
@@ -87,7 +87,7 @@ p, tr, td {
 .mycode {
   border: #000 solid 5px;
   font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
-  font-size: 11px;
+  font-size: 14px;
   color: #f0f0f0;
   background: #000;
   height:40em;
@@ -132,27 +132,14 @@ section ol {
 
 section li {
 	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-size: 12pt;
 	font-weight: normal;
 	font-style: normal;
 	text-indent: 5px;
 	margin-left: 25px;
 	color: #FFFFFF;
-}
+} 
 
-a, a:visited {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 10pt;
-	text-decoration: none;
-	color: #FFFFFF;
-}
-
-a:hover {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 10pt;
-	text-decoration: underline;
-	color: #FFFFFF;
-}
 
 body {
 	background: #333333;
@@ -160,7 +147,7 @@ body {
 	height: 100%;
 	text-align: center;
 	min-width:500px;
-	zoom:1.2;
+	/*zoom:1.2;*/
 }
 
 main {

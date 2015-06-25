@@ -36,20 +36,12 @@ function SAGE2_init() {
 		setupListeners(wsio);
 
 		// Register to the server as a console
-		/*
-		var clientDescription = {
-			clientType: "consoleManager",
-			receivesDisplayConfiguration: true,
-			receivesConsoleMessages: true,
-			sendsCommands: true
-		};
-		*/
 		var clientDescription = {
 			clientType: "consoleManager",
 			requests: {
-				config: true,
+				config:  true,
 				version: true,
-				time: false,
+				time:    false,
 				console: true
 			}
 		};
