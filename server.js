@@ -3847,7 +3847,7 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 		// Pressing on radial menu button
 		//console.log("Pressed radial button: " + obj.id);
 		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress");
-		if( menuStateChange != undefined ) {
+		if( menuStateChange !== undefined ) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
 		}
 	} else if ( obj.id.indexOf("menu_thumbnail") != -1 ) {
@@ -4342,7 +4342,7 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 		//data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
 		//radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
 		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerMove");
-		if( menuStateChange != undefined ) {
+		if( menuStateChange !== undefined ) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
 		}
 	} else if ( obj.id.indexOf("menu_thumbnail") != -1 ) {
@@ -4353,7 +4353,7 @@ function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localP
 	} else {
 		// Not on a button
 		var menuButtonState = existingRadialMenu.onMenuEvent(uniqueID);
-		if( menuButtonState != undefined ) {
+		if( menuButtonState !== undefined ) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuButtonState });
 		}
 		// Drag Content Browser only from radial menu
@@ -4798,7 +4798,7 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 			//console.log("pointer release on radial button: " + obj.id);
 			radialMenu.onRelease( uniqueID );
 			var menuState = radialMenu.onButtonEvent(obj.id, uniqueID, "pointerRelease");
-			if( menuState != undefined ) {
+			if( menuState !== undefined ) {
 				radialMenuEvent({type: "stateChange", menuID: radialMenu.id, menuState: menuState });
 			}
 		}  else if ( obj.id.indexOf("menu_thumbnail") != -1 ) {
