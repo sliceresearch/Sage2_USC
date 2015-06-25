@@ -1668,6 +1668,7 @@ function saveSession (filename) {
 	var states     = {};
 	states.apps    = [];
 	states.numapps = 0;
+	states.stickyAppHandlerData = stickyAppHandler.getStickyItemsStructure();
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
 		var a = SAGE2Items.applications.list[key];
@@ -1767,23 +1768,47 @@ function loadSession (filename) {
 
 			var session = JSON.parse(data);
 			console.log(sageutils.header("Session") + "number of applications", session.numapps);
-
+			var idMap = {};
 			session.apps.forEach(function(element, index, array) {
-				createAppFromDescription(element, function(appInstance, videohandle) {
-					appInstance.id = getUniqueAppId();
-					if (appInstance.animation) {
-						var i;
-						SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-						for (i=0; i<clients.length; i++) {
-							if (clients[i].clientType === "display") {
-								SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				if (element.application === "sticky_note"){
+					var userLabel = "SAGE2_User";
+					var data = element.data;
+					if (data.hasOwnProperty("owner") && data.owner !== null && data.owner!== undefined){
+						userLabel = data.owner;
+					}
+					createNote({text: (data.bufferEmpty)? "" : data.buffer, user: userLabel, createdOn:data.createdOn || null, fileName:data.fileName || userLabel+Date.now()}, function(appInstance) {
+						appInstance.id = getUniqueAppId();
+						appInstance.left = element.left;
+						appInstance.top = element.top;
+						appInstance.width = element.width;
+						appInstance.height = element.height;
+						appInstance.data.fontSize = data.fontSize;
+						fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+						fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+						fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
+						handleNewApplication(appInstance, null);
+						addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+						idMap[element.id] = appInstance.id;
+					});
+				}
+				else{
+					createAppFromDescription(element, function(appInstance, videohandle) {
+						appInstance.id = getUniqueAppId();
+						if (appInstance.animation) {
+							var i;
+							SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+							for (i=0; i<clients.length; i++) {
+								if (clients[i].clientType === "display") {
+									SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+								}
 							}
 						}
-					}
-
-					handleNewApplication(appInstance, videohandle);
-				});
+						handleNewApplication(appInstance, videohandle);
+						idMap[element.id] = appInstance.id;
+					});
+				}
 			});
+			addLoadedSessionDataToStickyAppHandler(idMap, session.stickyAppHandlerData);
 		}
 	});
 }
@@ -8078,5 +8103,30 @@ function wsRequestNewTitle (wsio, data){
 	if (app !== null && app !== undefined){
 		app.title = data.title;
 		broadcast('setTitle', data);
+	}
+}
+
+function addLoadedSessionDataToStickyAppHandler(idMap, stickyDataStructure){
+	if (stickyDataStructure===null || stickyDataStructure=== undefined) return;
+	var stickyItemParent = stickyDataStructure.stickyItemParent;
+	for (var key in stickyItemParent){
+		if (stickyItemParent.hasOwnProperty(key)){
+			var newBkgAppId = idMap[key];
+			if (newBkgAppId!==null && newBkgAppId!==undefined){
+				var bkgApp = SAGE2Items.applications.list[newBkgAppId];
+				if (bkgApp !== null && bkgApp !== undefined){
+					for (var idx=0; idx<stickyItemParent[key].length;idx++){
+						var newStickyItemId = stickyItemParent[key][idx];
+						if (newStickyItemId !== null && newStickyItemId !== undefined){
+							var newStickyApp = SAGE2Items.applications.list[newStickyItemId];
+							if (newStickyApp !== null && newStickyApp !== undefined){
+								stickyAppHandler.attachStickyItem(bkgApp,newStickyApp);
+							}
+						}
+					}
+				}
+				
+			}
+		}
 	}
 }

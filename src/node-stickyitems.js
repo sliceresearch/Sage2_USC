@@ -33,6 +33,53 @@ function StickyItems() {
 /**
 *
 *
+* @method getStickyItemsStructure
+*/
+StickyItems.prototype.getStickyItemsStructure = function() {
+	var managerObj = {
+		stickyItemParent:{},
+		stickyItemOffsetInfo:{}
+	};
+	for (var key in this.stickyItemParent){
+		if (this.stickyItemParent.hasOwnProperty(key)){
+			managerObj.stickyItemParent[key] = [];
+			for (var idx=0; idx<this.stickyItemParent[key].length;idx++){
+				managerObj.stickyItemParent[key].push(this.stickyItemParent[key][idx].id);
+			}
+				
+		}
+	}
+	for (var key2 in this.stickyItemOffsetInfo){
+		if (this.stickyItemOffsetInfo.hasOwnProperty(key2)){
+			managerObj.stickyItemOffsetInfo[key2] = this.stickyItemOffsetInfo[key2];	
+		}
+	}
+	return managerObj;
+};
+
+/**
+*
+*
+* @method copyStickyItemsStructure
+*/
+StickyItems.prototype.copyStickyItemsStructure = function(managerObj) {
+	this.stickyItemParent = {};
+	this.stickyItemOffsetInfo = {};
+	for (var key in managerObj.stickyItemParent){
+		if (managerObj.stickyItemParent.hasOwnProperty(key)){
+			this.stickyItemParent[key] = managerObj.stickyItemParent[key];	
+		}
+	}
+	for (var key2 in managerObj.stickyItemOffsetInfo){
+		if (managerObj.stickyItemOffsetInfo.hasOwnProperty(key2)){
+			this.stickyItemParent[key2] = managerObj.stickyItemParent[key2];	
+		}
+	}
+};
+
+/**
+*
+*
 * @method attachStickyItem
 */
 StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
@@ -68,6 +115,7 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 		}
 	}
 };
+
 
 /**
 *
@@ -109,5 +157,7 @@ StickyItems.prototype.getStickingItems = function(elemId) {
 		return this.stickyItemParent[elemId];
 	return [];
 };
+
+
 
 module.exports = StickyItems;
