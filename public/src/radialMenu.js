@@ -699,11 +699,9 @@ function RadialMenu(){
 						
 						if (thumbButton.buttonImage.lsrc) {
 							this.hoverOverThumbnail.src = thumbButton.buttonImage.lsrc;
-							this.ctx.redraw = true;
 						}
 						this.hoverOverMeta = thumbButton.getData().meta;
 					}
-
 					if( thumbButton.isFirstOver()  ) // Only occurs on first pointerMove event over button
 						this.redraw(); // Redraws radial menu and metadata window (independent of thumbnails)
 				}
@@ -1138,6 +1136,7 @@ function ButtonWidget() {
 		this.ctx = ctx;
 		this.resrcPath = resrc;
 
+		this.tintImage = document.createElement('canvas');
 		//console.log("ButtonWidget init()");
 	};
 
@@ -1258,14 +1257,13 @@ function ButtonWidget() {
 	this.drawTintImage = function( image, offset, width, height, color, alpha ) {
 		// Tint the image (Part 1)
 		// create offscreen buffer,
-		var buffer = document.createElement('canvas');
-		buffer.width = width;
-		buffer.height = height;
-		var bx = buffer.getContext('2d');
+		this.tintImage.width = width;
+		this.tintImage.height = height;
+		var bx = this.tintImage.getContext('2d');
 
 		// fill offscreen buffer with the tint color
 		bx.fillStyle = color;
-		bx.fillRect(0, 0, buffer.width, buffer.height);
+		bx.fillRect(0, 0, this.tintImage.width, this.tintImage.height);
 
 		// destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
 		bx.globalCompositeOperation = "destination-atop";
@@ -1275,7 +1273,7 @@ function ButtonWidget() {
 		this.ctx.globalAlpha = alpha;
 
 		// draw the tinted overlay
-		this.ctx.drawImage( buffer, offset.x, offset.y, width, height );
+		this.ctx.drawImage( this.tintImage, offset.x, offset.y, width, height );
 	};
 
 	this.onEvent = function( type, user, position, data ) {
