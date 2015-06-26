@@ -784,15 +784,15 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
-			
+
 			// Set initial thumbnail window position and size
 			rect = menuElem1.getBoundingClientRect();
 			menu.thumbnailWindowDiv.style.left   = (rect.left + menu.thumbnailWindowPosition.x - 18  * menu.radialMenuScale).toString() + "px";
 			menu.thumbnailWindowDiv.style.top    = (rect.top + menu.thumbnailWindowPosition.y + menu.textHeaderHeight).toString() + "px";
-			
+
 			menu.thumbnailWindowDiv.style.width   = (menu.thumbnailWindowSize.x + menu.imageThumbSize/2 - 10 - menu.radialMenuSize.x - 25 * menu.radialMenuScale).toString() + "px";
 			menu.thumbnailWindowDiv.style.height    = (menu.thumbnailWindowSize.y - menu.textHeaderHeight * 2).toString() + "px";
-		
+
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -849,7 +849,7 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Event} event
 	*/
 	this.radialMenuEvent = function(data) {
-		if( data.type == "stateChange" ) {
+		if( data.type === "stateChange" ) {
 			// Update the button state
 			var menuState = data.menuState;
 			for( var buttonName in menuState.buttonState ) {
@@ -858,9 +858,9 @@ function UIBuilder(json_cfg, clientID) {
 
 			// State also contains new actions
 			if( data.menuState.action !== undefined ) {
-				if( data.menuState.action.type == "contentWindow" ) {
+				if( data.menuState.action.type === "contentWindow" ) {
 					this.radialMenus[data.menuID+"_menu"].setToggleMenu(data.menuState.action.window+"ThumbnailWindow");
-				} else if( data.menuState.action.type == "close" ) {
+				} else if( data.menuState.action.type === "close" ) {
 					this.radialMenus[data.menuID+"_menu"].closeMenu();
 				}
 			}
@@ -881,7 +881,6 @@ function UIBuilder(json_cfg, clientID) {
 					}
 				}
 			}
-			
 		}
 	};
 
