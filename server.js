@@ -6032,39 +6032,39 @@ function keyDown( uniqueID, pointerX, pointerY, data) {
 		}
 		return;
 	}
-	if (remoteInteraction[uniqueID].appInteractionMode()) {
-		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+	
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
-		if (obj === null) {
-			return;
-		}
+	if (obj === null) {
+		return;
+	}
 
-		var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-		switch (obj.layerId) {
-			case "staticUI":
-				break;
-			case "radialMenus":
-				break;
-			case "widgets":
-				break;
-			case "applications":
-				if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
-					data.state = 'down';
-					eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'specialKey');
-				}
-				else{
-					sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
-				}
-				break;
-			case "portals":
+	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+	switch (obj.layerId) {
+		case "staticUI":
+			break;
+		case "radialMenus":
+			break;
+		case "widgets":
+			break;
+		case "applications":
+			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+				data.state = 'down';
+				eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'specialKey');
+			}
+			else if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
+			}
+			break;
+		case "portals":
+			if (remoteInteraction[uniqueID].appInteractionMode()) {
 				keyDownOnPortal(uniqueID, obj.data.id, localPt, data);
-				break;
-		}
+			}
+			break;
 	}
 }
 
 function sendKeyDownToApplication(uniqueID, app, localPt, data) {
-	console.log("keydown:",data.code);
 	var portal = findApplicationPortal(app);
 	var titleBarHeight = config.ui.titleBarHeight;
 	if (portal !== undefined && portal !== null) {
@@ -6077,7 +6077,6 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	if (fileBufferManager.hasFileBufferForApp(app.id)){
-		console.log("keydownhere:",data.code);
 		event.type = 'bufferUpdate';
 		event.data = fileBufferManager.insertChar({appId:app.id, code:data.code, printable:false});
 	}
@@ -6152,7 +6151,11 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 		case "widgets":
 			break;
 		case "applications":
-			if (remoteInteraction[uniqueID].windowManagementMode()) {
+			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
+				data.state = 'up';
+				eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'specialKey');
+			}
+			else if (remoteInteraction[uniqueID].windowManagementMode()) {
 				if (data.code === 8 || data.code === 46) { // backspace or delete
 					deleteApplication(obj.data.id);
 
@@ -6164,10 +6167,6 @@ function keyUp( uniqueID, pointerX, pointerY, data) {
 					};
 					addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
 				}
-			}
-			if (obj.id === obj.data.id+"noteWindow" || obj.id === obj.data.id+"noteButton"){
-				data.state = 'up';
-				eventInAnnotation(uniqueID, pointerX, pointerY, data, obj, localPt, 'specialKey');
 			}
 			else if (remoteInteraction[uniqueID].appInteractionMode()) {
 				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);

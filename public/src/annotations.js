@@ -648,6 +648,8 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 				onToggleNote = this.textAreas[i].onToggleNoteButton(position);
 				if (onToggleNote){
 					var credentials = this.textAreas[i].credentials;
+					if (user.label !== credentials.userLabel)
+						return;
 					if (credentials.marker){
 						wsio.emit('requestForMarkerDeletion', credentials);	
 					}
