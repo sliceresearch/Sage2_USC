@@ -368,8 +368,13 @@ function closeWebSocketClient(wsio) {
 			}
 		}
 	}
-
-	if (wsio.clientType === "webBrowser") webBrowserClient = null;
+	else if (wsio.clientType === "webBrowser") {
+		webBrowserClient = null;
+	}
+	else {
+		// if it's an application, assume it's a stream and try
+		deleteApplication(wsio.id+'|0');
+	}
 
 	if (wsio === masterDisplay) {
 		masterDisplay = null;
@@ -3526,7 +3531,7 @@ function allTrueDict(dict, property) {
 }
 
 function removeElement(list, elem) {
-	if(list.indexOf(elem) >= 0){
+	if (list.indexOf(elem) >= 0) {
 		moveElementToEnd(list, elem);
 		list.pop();
 	}
