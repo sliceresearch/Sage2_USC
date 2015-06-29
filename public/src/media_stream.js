@@ -35,10 +35,10 @@ var media_stream = SAGE2_App.extend( {
 
 		this.img1 = new Image();
 		this.img2 = new Image();
-		
+
 		this.img1IsLoaded = false;
 		this.img2IsLoaded = false;
-		
+
 		this.img1.addEventListener('load', this.img1LoadedFunc, false);
 		this.img2.addEventListener('load', this.img2LoadedFunc, false);
 	},
