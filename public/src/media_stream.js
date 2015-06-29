@@ -26,8 +26,33 @@ var media_stream = SAGE2_App.extend( {
 	* @param data {Object} contains initialization values (id, width, height, ...)
 	*/
 	init: function(data) {
-		this.SAGE2Init("img", data);
-		this.src = null;
+		this.SAGE2Init("canvas", data);
+		this.ctx = this.element.getContext('2d');
+		this.bufferId = 0;
+
+		this.img1LoadedFunc = this.img1Loaded.bind(this);
+		this.img2LoadedFunc = this.img2Loaded.bind(this);
+
+		this.img1 = new Image();
+		this.img2 = new Image();
+		
+		this.img1IsLoaded = false;
+		this.img2IsLoaded = false;
+		
+		this.img1.addEventListener('load', this.img1LoadedFunc, false);
+		this.img2.addEventListener('load', this.img2LoadedFunc, false);
+	},
+
+	img1Loaded: function(event) {
+		this.bufferId = 0;
+		this.img1IsLoaded = true;
+		this.draw(this.date);
+	},
+
+	img2Loaded: function(event) {
+		this.draw(this.date);
+		this.img2IsLoaded = true;
+		this.bufferId = 1;
 	},
 
 	/**
@@ -38,6 +63,20 @@ var media_stream = SAGE2_App.extend( {
 	* @param date {Date} time from the server
 	*/
 	load: function(date) {
+		this.date = date;
+
+		var b64;
+		if (this.state.encoding === "binary") b64 = btoa(this.state.src);
+		else if (this.state.encoding === "base64") b64 = this.state.src;
+
+		if (this.bufferId === 0) {
+			this.img2.src = "data:" + this.state.type + ";base64," + b64;
+		}
+		else {
+			this.img1.src = "data:" + this.state.type + ";base64," + b64;
+		}
+
+
 		// modifying img.src directly leads to memory leaks
 		// explicitly allocate and deallocate: 'createObjectURL' / 'revokeObjectURL'
 
@@ -46,6 +85,7 @@ var media_stream = SAGE2_App.extend( {
 		// else if(state.encoding === "binary") base64 = btoa(state.src);
 		// this.element.src = "data:" + state.type + ";base64," + base64;
 
+		/*
 		var bin;
 		if (this.state.encoding === "binary") bin = this.state.src;
 		else if (this.state.encoding === "base64") bin = atob(this.state.src);
@@ -63,6 +103,7 @@ var media_stream = SAGE2_App.extend( {
 
 		this.src = source;
 		this.element.src = this.src;
+		*/
 	},
 
 	/**
@@ -72,6 +113,13 @@ var media_stream = SAGE2_App.extend( {
 	* @param date {Date} current time from the server
 	*/
 	draw: function(date) {
+		if (this.bufferId === 0 && this.img1IsLoaded === true) {
+
+			this.ctx.drawImage(this.img1, 0, 0, this.element.width, this.element.height);
+		}
+		else if (this.bufferId === 1 && this.img2IsLoaded === true) {
+			this.ctx.drawImage(this.img2, 0, 0, this.element.width, this.element.height);
+		}
 	},
 
 	/**
