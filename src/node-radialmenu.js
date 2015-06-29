@@ -59,6 +59,7 @@ function RadialMenu(id, ptrID, ui) {
 
 	this.buttonAngle = 36; // Degrees of separation between each radial button position
 	this.menuButtonSize = 100;
+	this.menuRadius = 110;
 
 	this.pointersOnMenu = {}; // Stores the pointerIDs that are on the menu, but not on a button
 
@@ -71,10 +72,10 @@ function RadialMenu(id, ptrID, ui) {
 	this.radialButtons.apps = {id: 3, icon: "images/ui/applauncher.svg", radialPosition: 3, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "applauncher", state: 0, pointers: {} };
 	this.radialButtons.loadSession = {id: 4, icon: "images/ui/loadsession.svg", radialPosition: 4, radialLevel: 1, group: "radialMenu", action: "contentWindow", window: "session", state: 0, pointers: {} };
 	this.radialButtons.saveSession = {id: 5, icon: "images/ui/savesession.svg", radialPosition: 5, radialLevel: 1, group: "radialMenu", action: "saveSession", state: 0, pointers: {} };
-	this.radialButtons.settings = {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel: 1, group: "radialMenu", action: "toggleRadial", radial: "settingsMenu", state: 0, pointers: {} };
-	this.radialButtons.closeMenu = {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel: 1, group: "radialMenu", action: "close", window: "radialMenu", state: 0, pointers: {} };
-	this.radialButtons.tileContent = {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 7.175, radialLevel: 2, group: "settingsMenu", action: "tileContent", state: 0, pointers: {} };
-	this.radialButtons.clearContent = {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.875, radialLevel: 2, group: "settingsMenu", action: "clearAllContent", state: 0, pointers: {} };
+	//this.radialButtons.settings = {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel: 1, group: "radialMenu", action: "toggleRadial", radial: "settingsMenu", state: 0, pointers: {} };
+	this.radialButtons.closeMenu = {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel: 0, group: "radialMenu", action: "close", window: "radialMenu", state: 0, pointers: {} };
+	//this.radialButtons.tileContent = {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 7.175, radialLevel: 2, group: "settingsMenu", action: "tileContent", state: 0, pointers: {} };
+	//this.radialButtons.clearContent = {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.875, radialLevel: 2, group: "settingsMenu", action: "clearAllContent", state: 0, pointers: {} };
 }
 
 /**
@@ -92,13 +93,15 @@ RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 	for (var buttonName in this.radialButtons) {
 		var buttonInfo = this.radialButtons[buttonName];
 
-		var menuRadius = 100;
 		var buttonRadius = 25 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI / 180);
-		var position = {x: this.left - (menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle), y: this.top - (menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle), y: this.top - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
 		var visible = true;
 
-		if( buttonInfo.radialLevel !== 1 ) {
+		if( buttonInfo.radialLevel === 0 ) {
+			position = {x: this.left - (0 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle), y: this.top - (0 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		}
+		else if( buttonInfo.radialLevel !== 1 ) {
 			visible = false;
 		}
 
@@ -123,7 +126,7 @@ RadialMenu.prototype.getInfo = function() {
 * @param pointerID
 * @return stateChange -1 = no change, 0 = now idle, 1 = now mouse over, 2 = now clicked
 */
-RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType) {
+RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, color) {
 	var buttonName = buttonID.substring((this.id + "_menu_radial_button_").length, buttonID.length);
 	var buttonStates = {};
 	var action;
@@ -178,7 +181,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType) {
 		}
 
 		buttonStates[buttonName] = this.radialButtons[buttonName].state;
-		return {action: action, buttonState: buttonStates};
+		return {action: action, buttonState: buttonStates, color: color};
 	}
 	else {
 		// Clear ID from other buttons (in case pointer moved so fast, that a clear event on menu never happened)
@@ -311,15 +314,13 @@ RadialMenu.prototype.setPosition = function(data) {
 
 		var buttonInfo = this.radialButtons[buttonName];
 
-		var menuRadius = 100;
 		var buttonRadius = 25 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI / 180);
-		var position = {x: this.left - (menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle), y: this.top - (menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
-		//var visible = true;
-		// Not currently used
-		//if( buttonInfo.radialLevel !== 1 ) {
-		//	visible = false;
-		//}
+		var position = {x: this.left - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle), y: this.top - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+
+		if( buttonInfo.radialLevel === 0 ) {
+			position = {x: this.left - (0 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle), y: this.top - (0 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		}
 
 		//console.log("setPosition: " + buttonName + " " +menuRadius * Math.cos(angle) + " " + menuRadius * Math.sin(angle) );
 		this.interactMgr.editGeometry(this.id + "_menu_radial_button_" + buttonName, "radialMenus", "circle", {x: position.x, y: position.y, r: buttonRadius});

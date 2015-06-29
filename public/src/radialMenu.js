@@ -98,6 +98,7 @@ function RadialMenu(){
 	// This is the number of thumbnails in the window WITHOUT scrolling
 	this.thumbnailGridSize = { x: 10, y: 10 }; // Overwritten in setThumbnailPosition().
 
+	this.level0Buttons = [];
 	this.level1Buttons = [];
 	this.level2Buttons = [];
 
@@ -118,12 +119,23 @@ function RadialMenu(){
 	 * @return {ButtonWidget} the ButtonWidget object created
 	 */
 	this.addRadialMenuButton = function(name, icon, iconScale, dim, alignment, radialAnglePos, radialLevel ){
-		var button = this.createRadialButton( radialButtonIcon, false, dim.buttonSize, dim.hitboxSize, alignment, dim.shape, radialAnglePos, menuRadius );
+		var button;
+
+		if( radialLevel === 0 ) {
+			button = this.createRadialButton( radialButtonIcon, false, dim.buttonSize, dim.hitboxSize, alignment, dim.shape, radialAnglePos, 0 );
+			button.setOverlayImage( icon, iconScale );
+			button.isLit = true; // Button will stay lit regardless of hover-over
+			this.level0Buttons.push(button);
+		} else if( radialLevel === 1 ) {
+			button = this.createRadialButton( radialButtonIcon, false, dim.buttonSize, dim.hitboxSize, alignment, dim.shape, radialAnglePos, menuRadius );
+			button.setOverlayImage( icon, iconScale );
+			button.isLit = true; // Button will stay lit regardless of hover-over
+			this.level1Buttons.push(button);
+		} else if( radialLevel === 2 ) {
+			button = this.createRadialButton( radialButtonIcon, false, dim.buttonSize, dim.hitboxSize, alignment, dim.shape, radialAnglePos, menuRadius );
 		button.setOverlayImage( icon, iconScale );
 		button.isLit = true; // Button will stay lit regardless of hover-over
-
-		if( radialLevel === 1 ) {
-			this.level1Buttons.push(button);
+			this.level2Buttons.push(button);
 		}
 		this.radialMenuButtons[name] = button;
 		return button;
@@ -228,8 +240,10 @@ function RadialMenu(){
 	 * @param buttonID
 	 * @param state
 	 */
-	this.setRadialButtonState = function(buttonID, state) {
-		//console.log("setRadialButtonState");
+	this.setRadialButtonState = function(buttonID, state, color) {
+		if( color !== undefined ) {
+			this.radialMenuButtons[buttonID].mouseOverColor = color;
+		}
 		this.radialMenuButtons[buttonID].setButtonState(state);
 		this.draw();
 	};
@@ -345,12 +359,8 @@ function RadialMenu(){
 		// draw lines to each button
 		var i;
 		for( i = 0; i < this.level1Buttons.length; i++) {
-
 			if( this.level1Buttons[i].isHidden() === false ) {
 				this.ctx.beginPath();
-
-				//this.ctx.moveTo(this.radialMenuCenter.x, this.radialMenuCenter.y);
-				//this.ctx.lineTo(this.level1Buttons[i].posX, this.level1Buttons[i].posY);
 
 				// We"re adding -Math.PI/2 since angle also accounts for the initial orientation of the button image
 				this.ctx.moveTo(this.radialMenuCenter.x + (menuButtonSize / 4 * this.radialMenuScale) * Math.cos(this.level1Buttons[i].angle - Math.PI / 2), this.radialMenuCenter.y + (menuButtonSize / 4 * this.radialMenuScale) * Math.sin(this.level1Buttons[i].angle - Math.PI / 2));
@@ -363,9 +373,13 @@ function RadialMenu(){
 			}
 		}
 
-		this.radialCenterButton.draw();
-
+		if( this.level0Buttons.length === 0 ) {
+			this.radialCenterButton.draw();
+		}
 		if( this.currentRadialState === "radialMenu" ) {
+			for ( i = 0; i < this.level0Buttons.length; i++ ) {
+				this.level0Buttons[i].draw();
+			}
 			for ( i = 0; i < this.level1Buttons.length; i++ ) {
 				this.level1Buttons[i].draw();
 			}
@@ -717,7 +731,7 @@ function RadialMenu(){
 						this.hoverOverMeta = thumbButton.getData().meta;
 					}
 					if( thumbButton.isFirstOver() ) { // Only occurs on first pointerMove event over button
-						this.redraw(); // Redraws radial menu and metadata window (independent of thumbnails)
+						this.redraw();
 					}
 				}
 			}
@@ -1123,8 +1137,7 @@ function ButtonWidget() {
 	this.clickedColor = "rgba(10, 210, 10, 1.0 )";
 	this.pressedColor = "rgba(10, 210, 210, 1.0 )";
 
-	//this.releasedColor = "rgba(10, 10, 210, 1.0 )";
-	this.releasedColor = "rgba(210, 210, 210, 1.0)";
+	this.releasedColor = "rgba(10, 10, 210, 1.0 )";
 
 	this.litColor = "rgba(10, 210, 210, 1.0 )";
 
@@ -1139,16 +1152,18 @@ function ButtonWidget() {
 	this.hitboxShape = "box";
 
 	this.isLit = false;
+	this.isHoveredOver = false;
 
 	// Button states:
 	// -2 = Hidden (and Disabled)
 	// -1 = Disabled (Visible, but ignores events - eventually will be dimmed?)
 	// 0  = Idle
-	// 1  = Over
+	// 1  = First over
 	// 2  = Pressed
-	// 3  = Clicked
+	// 3  = Held
 	// 4  = Released
 	// 5	= Lit
+	// 6	= Over
 	this.state = 0;
 
 	this.buttonData = {};
@@ -1215,20 +1230,6 @@ function ButtonWidget() {
 		this.ctx.save();
 		this.ctx.translate( translate.x, translate.y );
 
-		if( this.state === 1 ) {
-			this.ctx.fillStyle = this.mouseOverColor;
-		}
-		else if( this.state === 3 ) {
-			this.ctx.fillStyle = this.clickedColor;
-			//this.state = 2; // Pressed state
-		}
-		else if( this.state === 2 ) {
-			this.ctx.fillStyle = this.pressedColor;
-		}
-		else if( this.state === 4 ) {
-			this.ctx.fillStyle = this.releasedColor;
-			//this.state = 1;
-		}
 		if( this.useBackgroundColor ) {
 			if( this.state === 5 ) {
 				this.ctx.fillStyle = this.litColor;
@@ -1244,6 +1245,20 @@ function ButtonWidget() {
 				//this.ctx.fill();
 			//}
 		}
+		if( this.state === 1 ) {
+			this.ctx.fillStyle = this.mouseOverColor;
+		}
+		else if( this.state === 3 ) {
+			this.ctx.fillStyle = this.clickedColor;
+			//this.state = 2; // Pressed state
+		}
+		else if( this.state === 2 ) {
+			this.ctx.fillStyle = this.pressedColor;
+		}
+		else if( this.state === 4 ) {
+			this.ctx.fillStyle = this.releasedColor;
+			//this.state = 1;
+		}
 
 		// Draw icon aligned centered
 		if( this.buttonImage !== null ) {
@@ -1254,7 +1269,10 @@ function ButtonWidget() {
 
 			if( this.state === 5 ) {
 				this.drawTintImage( this.buttonImage, offset, this.width, this.height, this.litColor, 0.5 );
+			} else if( this.state === 1 ) {
+				this.drawTintImage( this.buttonImage, offset, this.width, this.height, this.mouseOverColor, 0.8 );
 			}
+			/*
 			// Tint the image
 			if( this.state !== 0 ) {
 				if( this.simpleTint ) {
@@ -1266,7 +1284,7 @@ function ButtonWidget() {
 					}
 				}
 			}
-
+			*/
 		}
 		this.ctx.restore();
 
@@ -1306,9 +1324,7 @@ function ButtonWidget() {
 		}
 
 		if( this.isPositionOver( user, position ) ) {
-			if( this.state === 5 ) {
-				this.state = 1;
-			}
+			this.mouseOverColor = data.color;
 
 			if( type === "pointerPress" && this.state !== 2 ) {
 				this.state = 3; // Click state
@@ -1320,7 +1336,20 @@ function ButtonWidget() {
 				if( this.useEventOverColor ) {
 					this.ctx.redraw = true;
 				}
-			} else if( this.state !== 2 ) {
+			} else if( type === "pointerMove" ) {
+				if( this.state !== 1 ) {
+					this.state = 1;
+					if( this.useEventOverColor ) {
+						this.ctx.redraw = true;
+					}
+				}
+				else if( this.state === 1 ) {
+					//this.state = 6;
+
+				}
+			}
+
+			/*else if( this.state !== 2 ) {
 				if( this.state !== 1 ) {
 					this.state = 5;
 					if( this.useEventOverColor ) {
@@ -1330,8 +1359,7 @@ function ButtonWidget() {
 				else {
 					this.state = 1;
 				}
-			}
-
+			}*/
 			return 1;
 		} else {
 			if( this.isLit === false ) {
@@ -1377,7 +1405,7 @@ function ButtonWidget() {
 	};
 
 	this.isFirstOver = function() {
-		if ( this.state === 5 ) {
+		if ( this.state === 1 ) {
 			return true;
 		} else {
 			return false;
@@ -1385,7 +1413,7 @@ function ButtonWidget() {
 	};
 
 	this.isOver = function() {
-		if ( this.state === 1 ) {
+		if ( this.state === 1 || this.state === 6 ) {
 			return true;
 		} else {
 			return false;

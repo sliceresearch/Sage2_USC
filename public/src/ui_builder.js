@@ -853,7 +853,7 @@ function UIBuilder(json_cfg, clientID) {
 			// Update the button state
 			var menuState = data.menuState;
 			for( var buttonName in menuState.buttonState ) {
-				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, menuState.buttonState[buttonName]);
+				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, menuState.buttonState[buttonName], menuState.color);
 			}
 
 			// State also contains new actions
