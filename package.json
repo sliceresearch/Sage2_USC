@@ -71,7 +71,6 @@
 		"grunt-prompt": "latest",
 		"grunt-mocha-cli": "latest",
 		"nodemon": "latest",
-		"eslint": "latest",
 		"kthxbai": "latest",
 		"mocha": "^2.0.1",
 		"mocha-jshint": "^0.0.9",

@@ -186,6 +186,9 @@ function initializeSage2Server() {
 		fs.mkdirSync(sessionDirectory);
 	}
 
+	// Add a flag into the configuration to denote password status (used on display side)
+	//   not protected by default
+	config.passordProtected = false;
 	// Check for the session password file
 	var passwordFile = path.join("keys", "passwd.json");
 	if (typeof program.password  === "string" && program.password.length > 0) {
@@ -195,6 +198,8 @@ function initializeSage2Server() {
 		// Saving the hash
 		fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
 		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
+		// the session is protected
+		config.passordProtected = true;
 	}
 	else if (sageutils.fileExists(passwordFile)) {
 		// If a password file exists, load it
@@ -203,6 +208,8 @@ function initializeSage2Server() {
 		if (passwordFileJson.pwd !== null) {
 			global.__SESSION_ID = passwordFileJson.pwd;
 			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
+			// the session is protected
+			config.passordProtected = true;
 		}
 		else {
 			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
@@ -361,8 +368,13 @@ function closeWebSocketClient(wsio) {
 			}
 		}
 	}
-
-	if (wsio.clientType === "webBrowser") webBrowserClient = null;
+	else if (wsio.clientType === "webBrowser") {
+		webBrowserClient = null;
+	}
+	else {
+		// if it's an application, assume it's a stream and try
+		deleteApplication(wsio.id+'|0');
+	}
 
 	if (wsio === masterDisplay) {
 		masterDisplay = null;
@@ -479,6 +491,7 @@ function setupListeners(wsio) {
 	wsio.on('updateMediaBlockStreamFrameInit',          wsUpdateMediaBlockStreamFrameInit);
 	wsio.on('updateMediaBlockStreamFrameBlock',          wsUpdateMediaBlockStreamFrameFrag3);
 	wsio.on('updateMediaBlockStreamFrameFinal',          wsUpdateMediaBlockStreamFrameFinal3);
+	wsio.on('frameNumber',          wsFrameNumber);
 	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
 
 	wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
@@ -992,7 +1005,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 
 // **************  Media Block Stream Functions *****************
 function wsStartNewMediaBlockStream(wsio, data) {
-    console.log("Starting media stream: ", data);
+    console.log("Starting media block stream: ", data);
     // Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
@@ -1004,13 +1017,14 @@ function wsStartNewMediaBlockStream(wsio, data) {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
 		}
 	}
+    SAGE2Items.renderSync[data.id].sendNextFrame = true;
 
     appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
         handleNewApplication(appInstance, null);
         calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
     });
-    console.log("Started media stream");
+    console.log("Started media block stream");
 }
 
 // as for wsUpdateMediaBlockStreamFrame but with pixel block splitting client-side and pixblocks sent as separate messages (for efficiency)
@@ -1059,6 +1073,16 @@ function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
     var id = byteBufferToString(buffer);
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
                 return;
+    if (!SAGE2Items.renderSync[id].sendNextFrame) {
+      console.log("init: drop frame");
+      SAGE2Items.renderSync[id].sendFrameFrags = false;
+      return;
+    } else {
+      console.log("init: READY for frame ", Date.now());
+      SAGE2Items.renderSync[id].sendFrameFrags = true;
+    }
+    SAGE2Items.renderSync[id].sendNextFrame = false;
+ 
     SAGE2Items.applications.list[id].data.block=0;
     for (key in SAGE2Items.renderSync[id].clients) {
                 SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
@@ -1069,10 +1093,16 @@ function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
 // - wsUpdateMediaBlockStreamFrameFirst must be sent before sending blocks
 function wsUpdateMediaBlockStreamFrameFrag3(wsio, buffer) {
         //console.log("wsUpdateMediaBlockStreamFrameFrag3", Date.now());
+        //wsio.emit('confirmUpdateReceived', {})
         var key;
     var id = byteBufferToString(buffer);
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
                 return;
+
+    if (!SAGE2Items.renderSync[id].sendFrameFrags) {
+      return;
+    }
+
     var i=SAGE2Items.applications.list[id].data.block;
     var imgBuffer = buffer.slice(id.length+1);
 
@@ -1155,18 +1185,28 @@ function wsUpdateMediaBlockStreamFrameFinal2(wsio, buffer) {
 }
 
 // as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
-// - blocks are pre-assembled client-side and sent on to displays as they arrive --- nothing to do!
+// - blocks are pre-assembled client-side and sent on to displays as they arrive
 function wsUpdateMediaBlockStreamFrameFinal3(wsio, buffer) {
+    //console.log("wsUpdateMediaBlockStreamFrameFinal", Date.now());
+    //var id = byteBufferToString(buffer);
+    //SAGE2Items.renderSync[id].sendNextFrame = false;
 }
 
 // existing version - whole frame at a time
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
-        console.log("wsUpdateMediaBlockStreamFrame", Date.now());
-        wsio.emit('confirmUpdateRecvd', {})
+        //console.log("wsUpdateMediaBlockStreamFrame", Date.now());
+        //wsio.emit('confirmUpdateRecvd', {})
 	var i;
 	var key;
     var id = byteBufferToString(buffer);
     //console.log("buffer ID ",id);
+
+    if (!SAGE2Items.renderSync[id].sendNextFrame) {
+      console.log("drop frame");
+      return; 
+    } else {
+      console.log("DRAW FRAME ", Date.now());
+    }
 
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
 		return;
@@ -1186,6 +1226,7 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
         else if (colorspace === "YUV422")
                 blockBuffers = pixelblock.yuv422ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
+    //console.log("blockBuffers.length ",blockBuffers.length);
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
     var dateBuffer = intToByteBuffer(Date.now(), 8);
@@ -1205,17 +1246,26 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
             }
 		}
 	}
+    SAGE2Items.renderSync[id].sendNextFrame = false;
+}
+
+function wsFrameNumber(wsio, data) {
+        var frame = data.frameNumber;
+	console.log("Received client frame# ",frame);
+        wsio.emit("frameNumber",{frameNumber:frame}); 
 }
 
 function wsStopMediaBlockStream(wsio, data) {
+        console.log("wsStopMediaBlockStream");
 	deleteApplication(data.id);
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
-        //console.log("wsReceivedMediaBlockStreamFrame: "+Date.now());
+        //console.log("wsReceivedMediaBlockStreamFrame: ",data,Date.now());
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		SAGE2Items.renderSync[data.id].sendNextFrame = true;
 		var i;
 		var key;
 		for (key in SAGE2Items.renderSync[data.id].clients) {
@@ -3681,7 +3731,7 @@ function allTrueDict(dict, property) {
 }
 
 function removeElement(list, elem) {
-	if(list.indexOf(elem) >= 0){
+	if (list.indexOf(elem) >= 0) {
 		moveElementToEnd(list, elem);
 		list.pop();
 	}
@@ -3726,6 +3776,8 @@ function byteBufferToString(buf) {
 function mergeObjects(a, b, ignore) {
 	var ig = ignore || [];
 	var modified = false;
+	// test in case of old sessions
+	if (a === undefined || b === undefined) return modified;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
 			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
@@ -3837,7 +3889,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
 		case "radialMenus":
-			pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt);
+			pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color);
 			break;
 		case "widgets":
 			if (prevInteractionItem===null){
@@ -3993,12 +4045,27 @@ function showRequestDialog(flag) {
 	interactMgr.editVisibility("rejectDataSharingRequest", "staticUI", flag);
 }
 
-function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
+function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color) {
+	var existingRadialMenu = obj.data;
 	//console.log("pointer press on radial menu");
-
-	// Drag Content Browser only from radial menu
-	if (data.button === "left" && obj.type !== 'rectangle' ) {
-		obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
+	if ( obj.id.indexOf("menu_radial_button") !== -1 ) {
+		// Pressing on radial menu button
+		//console.log("Pressed radial button: " + obj.id);
+		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress", color);
+		if( menuStateChange !== undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
+		}
+	} else if ( obj.id.indexOf("menu_thumbnail") !== -1 ) {
+		// Pressing on thumbnail window
+		//console.log("Pointer press on thumbnail window");
+		data = { button: data.button, color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
+	} else {
+		// Not on a button
+		// Drag Content Browser only from radial menu
+		if (data.button === "left" && obj.type !== 'rectangle' ) {
+			obj.data.onStartDrag(uniqueID, {x: pointerX, y: pointerY} );
+		}
 	}
 
 	radialMenuEvent({type: "pointerPress", id: uniqueID, x: pointerX, y: pointerY, data: data});
@@ -4442,7 +4509,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 				}
 				break;
 			case "radialMenus":
-				pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt);
+				pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color);
 				removeExistingHoverCorner(uniqueID);
 				if (remoteInteraction[uniqueID].portal !== null) {
 					remoteSharingSessions[remoteInteraction[uniqueID].portal.id].wsio.emit('stopRemoteSagePointer', {id: uniqueID});
@@ -4473,16 +4540,35 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	remoteInteraction[uniqueID].setPreviousInteractionItem(obj);
 }
 
-function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	// Check if on button
-	radialMenuEvent( { type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data } );
-
+function pointerMoveOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color) {
 	var existingRadialMenu = obj.data;
 
-	// Content Browser is only draggable on radial menu
-	if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
-		var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
-		moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+	if ( obj.id.indexOf("menu_radial_button") !== -1 ) {
+		// Pressing on radial menu button
+		//console.log("over radial button: " + obj.id);
+		//data = { buttonID: obj.id, button: data.button, color: sagePointers[uniqueID].color };
+		//radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerMove", color);
+		if( menuStateChange !== undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
+		}
+	} else if ( obj.id.indexOf("menu_thumbnail") !== -1 ) {
+		// PointerMove on thumbnail window
+		//console.log("Pointer move on thumbnail window");
+		data = { button: data.button, color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
+	} else {
+		// Not on a button
+		var menuButtonState = existingRadialMenu.onMenuEvent(uniqueID);
+		if( menuButtonState !== undefined ) {
+			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuButtonState });
+		}
+		// Drag Content Browser only from radial menu
+		if (existingRadialMenu.dragState === true && obj.type !== 'rectangle' ) {
+			var offset = existingRadialMenu.getDragOffset(uniqueID, {x: pointerX, y: pointerY});
+			moveRadialMenu( existingRadialMenu.id, offset.x, offset.y );
+			radialMenuEvent({type: "pointerMove", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		}
 	}
 }
 
@@ -4895,7 +4981,6 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
-	var radialMenu;
 	if( obj === undefined )
 	{
 		for (var key in SAGE2Items.radialMenus.list)
@@ -4907,11 +4992,31 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 				radialMenu.onRelease(uniqueID);
 			}
 		}
+		// If pointer release is outside window, use the pointerRelease type to end the
+		// scroll event, but don't trigger any clicks because of a 'null' button (clicks expects a left/right)
+		data = { button: "null", color: sagePointers[uniqueID].color };
+		radialMenuEvent({type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data});
 	}
 	else
 	{
-		radialMenu = obj.data.onRelease( uniqueID );
-		radialMenuEvent( { type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data } );
+		var radialMenu = obj.data;
+		if ( obj.id.indexOf("menu_radial_button") !== -1 ) {
+			// Pressing on radial menu button
+			//console.log("pointer release on radial button: " + obj.id);
+			radialMenu.onRelease( uniqueID );
+			var menuState = radialMenu.onButtonEvent(obj.id, uniqueID, "pointerRelease");
+			if( menuState !== undefined ) {
+				radialMenuEvent({type: "stateChange", menuID: radialMenu.id, menuState: menuState });
+			}
+		}  else if ( obj.id.indexOf("menu_thumbnail") !== -1 ) {
+			// PointerRelease on thumbnail window
+			//console.log("Pointer release on thumbnail window");
+			data = { button: data.button, color: sagePointers[uniqueID].color };
+			radialMenuEvent({type: "pointerRelease", id: uniqueID, x: pointerX, y: pointerY, data: data});
+		} else {
+			// Not on a button
+			radialMenu = obj.data.onRelease( uniqueID );
+		}
 	}
 }
 
@@ -5647,10 +5752,12 @@ function deleteApplication(appId, portalId) {
 
 
 function pointerDraw(uniqueID, data) {
-	if(sagePointers[uniqueID] === undefined) return;
+	// not a pointer anymore
+	//if (sagePointers[uniqueID] === undefined) return;
 
 	var ePos  = {x: 0, y: 0};
-	var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220, 10, 10]};
+	//var eUser = {id: sagePointers[uniqueID].id, label: 'drawing', color: [220, 10, 10]};
+	var eUser = {id: null, label: 'drawing', color: [220, 10, 10]};
 	var now   = Date.now();
 
 	var key;
@@ -5854,8 +5961,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined) {
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
 		newRadialMenu.setPosition(newMenuPos);
-		interactMgr.addGeometry(uniqueID+"_menu_radial", "radialMenus", "circle", {x: newRadialMenu.left, y: newRadialMenu.top, r: newRadialMenu.radialMenuSize.y/2}, true, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
-		interactMgr.addGeometry(uniqueID+"_menu_thumbnail", "radialMenus", "rectangle", {x: newRadialMenu.left, y: newRadialMenu.top, w: newRadialMenu.thumbnailWindowSize.x, h: newRadialMenu.thumbnailWindowSize.y}, false, Object.keys(SAGE2Items.radialMenus).length, newRadialMenu);
+
 		SAGE2Items.radialMenus.list[uniqueID+"_menu"] = newRadialMenu;
 
 		//console.log("Create New Radial menu");
@@ -5882,6 +5988,7 @@ function moveRadialMenu(uniqueID, pointerX, pointerY ) {
 	var existingRadialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 
 	if( existingRadialMenu ) {
+
 		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
 		existingRadialMenu.visible = true;
 
@@ -5940,9 +6047,7 @@ function showRadialMenu(uniqueID) {
 function hideRadialMenu(uniqueID) {
 var radialMenu = SAGE2Items.radialMenus.list[uniqueID+"_menu"];
 	if (radialMenu !== undefined) {
-		radialMenu.visible = false;
-		interactMgr.editVisibility(uniqueID+"_menu_radial", "radialMenus", false);
-		interactMgr.editVisibility(uniqueID+"_menu_thumbnail", "radialMenus", false);
+		radialMenu.hide();
 	}
 }
 
@@ -5968,7 +6073,20 @@ function updateRadialMenu(uniqueID) {
 // Standard case: Checks for event down and up events to determine menu ownership of event
 function radialMenuEvent( data )
 {
-	broadcast('radialMenuEvent', data);
+	if( data.type === "stateChange" ) {
+		broadcast('radialMenuEvent', data);
+
+		if( data.menuState.action !== undefined && data.menuState.action.type === "saveSession" )
+		{
+			var ad    = new Date();
+			var sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
+							ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
+							ad.getHours(), ad.getMinutes(), ad.getSeconds() );
+			saveSession(sname);
+		}
+	} else {
+		broadcast('radialMenuEvent', data);
+	}
 }
 
 // Check for pointer move events that are dragging a radial menu (but outside the menu)
