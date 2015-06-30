@@ -479,6 +479,7 @@ function setupListeners(wsio) {
 	wsio.on('updateMediaBlockStreamFrameInit',          wsUpdateMediaBlockStreamFrameInit);
 	wsio.on('updateMediaBlockStreamFrameBlock',          wsUpdateMediaBlockStreamFrameFrag3);
 	wsio.on('updateMediaBlockStreamFrameFinal',          wsUpdateMediaBlockStreamFrameFinal3);
+	wsio.on('frameNumber',          wsFrameNumber);
 	wsio.on('stopMediaBlockStream',                 wsStopMediaBlockStream);
 
 	wsio.on('requestVideoFrame',                    wsRequestVideoFrame);
@@ -992,7 +993,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 
 // **************  Media Block Stream Functions *****************
 function wsStartNewMediaBlockStream(wsio, data) {
-    console.log("Starting media stream: ", data);
+    console.log("Starting media block stream: ", data);
     // Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
@@ -1004,13 +1005,14 @@ function wsStartNewMediaBlockStream(wsio, data) {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
 		}
 	}
+    SAGE2Items.renderSync[data.id].sendNextFrame = true;
 
     appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
         handleNewApplication(appInstance, null);
         calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
     });
-    console.log("Started media stream");
+    console.log("Started media block stream");
 }
 
 // as for wsUpdateMediaBlockStreamFrame but with pixel block splitting client-side and pixblocks sent as separate messages (for efficiency)
@@ -1054,11 +1056,21 @@ function wsUpdateMediaBlockStreamFrameFrag2(wsio, buffer) {
 
 // as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
 function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
-        console.log("wsUpdateMediaBlockStreamFrameInit", Date.now());
+        //console.log("wsUpdateMediaBlockStreamFrameInit", Date.now());
         var key;
     var id = byteBufferToString(buffer);
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
                 return;
+    if (!SAGE2Items.renderSync[id].sendNextFrame) {
+      console.log("init: drop frame");
+      SAGE2Items.renderSync[id].sendFrameFrags = false;
+      return;
+    } else {
+      console.log("init: READY for frame ", Date.now());
+      SAGE2Items.renderSync[id].sendFrameFrags = true;
+    }
+    SAGE2Items.renderSync[id].sendNextFrame = false;
+ 
     SAGE2Items.applications.list[id].data.block=0;
     for (key in SAGE2Items.renderSync[id].clients) {
                 SAGE2Items.renderSync[id].clients[key].readyForNextFrame = false;
@@ -1068,11 +1080,17 @@ function wsUpdateMediaBlockStreamFrameInit(wsio, buffer) {
 // as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
 // - wsUpdateMediaBlockStreamFrameFirst must be sent before sending blocks
 function wsUpdateMediaBlockStreamFrameFrag3(wsio, buffer) {
-        console.log("wsUpdateMediaBlockStreamFrameFrag3", Date.now());
+        //console.log("wsUpdateMediaBlockStreamFrameFrag3", Date.now());
+        //wsio.emit('confirmUpdateReceived', {})
         var key;
     var id = byteBufferToString(buffer);
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
                 return;
+
+    if (!SAGE2Items.renderSync[id].sendFrameFrags) {
+      return;
+    }
+
     var i=SAGE2Items.applications.list[id].data.block;
     var imgBuffer = buffer.slice(id.length+1);
 
@@ -1155,18 +1173,28 @@ function wsUpdateMediaBlockStreamFrameFinal2(wsio, buffer) {
 }
 
 // as for wsUpdateMediaBlockStreamFrameFrag2 but with blocks sent straight to display clients without waiting for last block
-// - blocks are pre-assembled client-side and sent on to displays as they arrive --- nothing to do!
+// - blocks are pre-assembled client-side and sent on to displays as they arrive
 function wsUpdateMediaBlockStreamFrameFinal3(wsio, buffer) {
+    //console.log("wsUpdateMediaBlockStreamFrameFinal", Date.now());
+    //var id = byteBufferToString(buffer);
+    //SAGE2Items.renderSync[id].sendNextFrame = false;
 }
 
 // existing version - whole frame at a time
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
-        console.log("wsUpdateMediaBlockStreamFrame", Date.now());
+        //console.log("wsUpdateMediaBlockStreamFrame", Date.now());
         //wsio.emit('confirmUpdateRecvd', {})
 	var i;
 	var key;
     var id = byteBufferToString(buffer);
     //console.log("buffer ID ",id);
+
+    if (!SAGE2Items.renderSync[id].sendNextFrame) {
+      console.log("drop frame");
+      return; 
+    } else {
+      console.log("DRAW FRAME ", Date.now());
+    }
 
     if (!SAGE2Items.applications.list.hasOwnProperty(id))
 		return;
@@ -1186,7 +1214,7 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
         else if (colorspace === "YUV422")
                 blockBuffers = pixelblock.yuv422ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width, SAGE2Items.renderSync[id].height, mediaBlockSize);
 
-    console.log("blockBuffers.length ",blockBuffers.length);
+    //console.log("blockBuffers.length ",blockBuffers.length);
     var pixelbuffer = [];
     var idBuffer = Buffer.concat([new Buffer(id), new Buffer([0])]);
     var dateBuffer = intToByteBuffer(Date.now(), 8);
@@ -1206,17 +1234,26 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
             }
 		}
 	}
+    SAGE2Items.renderSync[id].sendNextFrame = false;
+}
+
+function wsFrameNumber(wsio, data) {
+        var frame = data.frameNumber;
+	console.log("Received client frame# ",frame);
+        wsio.emit("frameNumber",{frameNumber:frame}); 
 }
 
 function wsStopMediaBlockStream(wsio, data) {
+        console.log("wsStopMediaBlockStream");
 	deleteApplication(data.id);
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
-        //console.log("wsReceivedMediaBlockStreamFrame: "+Date.now());
+        //console.log("wsReceivedMediaBlockStreamFrame: ",data,Date.now());
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		SAGE2Items.renderSync[data.id].sendNextFrame = true;
 		var i;
 		var key;
 		for (key in SAGE2Items.renderSync[data.id].clients) {
