@@ -186,6 +186,9 @@ function initializeSage2Server() {
 		fs.mkdirSync(sessionDirectory);
 	}
 
+	// Add a flag into the configuration to denote password status (used on display side)
+	//   not protected by default
+	config.passordProtected = false;
 	// Check for the session password file
 	var passwordFile = path.join("keys", "passwd.json");
 	if (typeof program.password  === "string" && program.password.length > 0) {
@@ -195,6 +198,8 @@ function initializeSage2Server() {
 		// Saving the hash
 		fs.writeFileSync(passwordFile, JSON.stringify( { pwd: global.__SESSION_ID} ) );
 		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
+		// the session is protected
+		config.passordProtected = true;
 	}
 	else if (sageutils.fileExists(passwordFile)) {
 		// If a password file exists, load it
@@ -203,6 +208,8 @@ function initializeSage2Server() {
 		if (passwordFileJson.pwd !== null) {
 			global.__SESSION_ID = passwordFileJson.pwd;
 			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
+			// the session is protected
+			config.passordProtected = true;
 		}
 		else {
 			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
@@ -3764,6 +3771,8 @@ function byteBufferToString(buf) {
 function mergeObjects(a, b, ignore) {
 	var ig = ignore || [];
 	var modified = false;
+	// test in case of old sessions
+	if (a === undefined || b === undefined) return modified;
 	for(var key in b) {
 		if(a[key] !== undefined && ig.indexOf(key) < 0) {
 			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;

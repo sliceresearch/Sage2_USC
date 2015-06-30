@@ -371,7 +371,12 @@ function UIBuilder(json_cfg, clientID) {
 				if(iport !== 80) url += ":" + iport;
 				url += window.location.pathname;
 			}
-			machine.textContent = url;
+			// If the SAGE2 session is password protected, add a lock symbol
+			if (this.json_cfg.passordProtected)
+				// not portable: machine.innerHTML = url + " &#128274;";
+				machine.innerHTML = url + " <span><img style=\"vertical-align: text-top;\" src=\"images/lock.png\" height=" + this.titleTextSize + "/></span>";
+			else
+				machine.textContent = url;
 		}
 
 		var dataSharingRequestDialog = document.createElement("div");
