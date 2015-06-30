@@ -16,6 +16,8 @@
  * @class SAGE2_Editor
  */
 
+/*global ace: true */
+
 var SAGE2_editor;
 
 /**
@@ -44,7 +46,7 @@ function SAGE2_init() {
 	SAGE2_editor.setHighlightActiveLine(false);
 	SAGE2_editor.setShowPrintMargin(false);
 	// remove line numbers
-	//SAGE2_editor.renderer.setShowGutter(false); 
+	//SAGE2_editor.renderer.setShowGutter(false);
 	// scroll warning
 	SAGE2_editor.$blockScrolling = Infinity;
 	// set the text
@@ -134,10 +136,9 @@ function SAGE2_saveFile() {
 function setupListeners(wsio) {
 
 	// Got a reply from the server
-	wsio.on('initialize', function(data) {
+	wsio.on('initialize', function(init_data) {
 		console.log('initialize');
 
-		//readFile("/src/SAGE2_runtime.js", function(error, data) {
 		readFile("/config/default-cfg.json", function(error, data) {
 			if (!error) {
 				SAGE2_editor.getSession().setMode("ace/mode/json");

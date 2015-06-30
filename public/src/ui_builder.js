@@ -242,8 +242,8 @@ function UIBuilder(json_cfg, clientID) {
 			this.pointerWidth   = this.json_cfg.ui.pointerSize*3;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
-			this.pointerOffsetX = Math.round(0.025384*this.pointerHeight);
-			this.pointerOffsetY = Math.round(0.060805*this.pointerHeight);
+			this.pointerOffsetX = Math.round(0.27917*this.pointerHeight);
+			this.pointerOffsetY = Math.round(0.24614*this.pointerHeight);
 		} else {
 			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
 			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
@@ -785,6 +785,14 @@ function UIBuilder(json_cfg, clientID) {
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
 
+			// Set initial thumbnail window position and size
+			rect = menuElem1.getBoundingClientRect();
+			menu.thumbnailWindowDiv.style.left   = (rect.left + menu.thumbnailWindowPosition.x - 18  * menu.radialMenuScale).toString() + "px";
+			menu.thumbnailWindowDiv.style.top    = (rect.top + menu.thumbnailWindowPosition.y + menu.textHeaderHeight).toString() + "px";
+
+			menu.thumbnailWindowDiv.style.width   = (menu.thumbnailWindowSize.x + menu.imageThumbSize/2 - 10 - menu.radialMenuSize.x - 25 * menu.radialMenuScale).toString() + "px";
+			menu.thumbnailWindowDiv.style.height    = (menu.thumbnailWindowSize.y - menu.textHeaderHeight * 2).toString() + "px";
+
 			// keep track of the menus
 			this.radialMenus[data.id+"_menu"] = menu;
 			this.radialMenus[data.id+"_menu"].draw();
@@ -813,14 +821,15 @@ function UIBuilder(json_cfg, clientID) {
 
 			menuElem.style.display = "block";
 			menu.thumbnailScrollWindowElement.style.display = "block";
-			menu.thumbnailWindowDiv.style.display = "block";
+			if( menu.currentMenuState !== 'radialMenu' ) {
+				menu.thumbnailWindowDiv.style.display = "block";
+			} else {
+				menu.thumbnailWindowDiv.style.display = "none";
+				menu.draw();
+			}
 			menu.visible = true;
 
 			var rect = menuElem.getBoundingClientRect();
-			menuElem.style.display = "block";
-			menu.thumbnailScrollWindowElement.style.display = "block";
-			menu.thumbnailWindowDiv.style.display = "block";
-
 			menu.moveMenu( {x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY} );
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
@@ -840,12 +849,37 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Event} event
 	*/
 	this.radialMenuEvent = function(data) {
-		if( data.type == "stateChange" && data.id != undefined ) {
-			this.radialMenus[data.menuID+"_menu"].setRadialButtonState(data.id, data.newState);
-		} else if( data.type == "stateChange" ) {
-			var buttonStates = data.buttonStates;
-			for( buttonName in buttonStates ) {
-				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, buttonStates[buttonName]);
+		if( data.type === "stateChange" ) {
+			// Update the button state
+			var menuState = data.menuState;
+			for( var buttonName in menuState.buttonState ) {
+				this.radialMenus[data.menuID+"_menu"].setRadialButtonState(buttonName, menuState.buttonState[buttonName], menuState.color);
+			}
+
+			// State also contains new actions
+			if( data.menuState.action !== undefined ) {
+				if( data.menuState.action.type === "contentWindow" ) {
+					this.radialMenus[data.menuID+"_menu"].setToggleMenu(data.menuState.action.window+"ThumbnailWindow");
+				} else if( data.menuState.action.type === "close" ) {
+					this.radialMenus[data.menuID+"_menu"].closeMenu();
+				}
+			}
+		}
+		else {
+			for (var menuID in this.radialMenus) {
+				var menuElem = document.getElementById(menuID);
+				var menu     = this.radialMenus[menuID];
+
+				if (menuElem !== null) {
+					var rect = menuElem.getBoundingClientRect();
+
+					var pointerX = data.x - rect.left - this.offsetX;
+					var pointerY = data.y - rect.top - this.offsetY;
+
+					if (menu.visible) {
+						menu.onEvent( data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data );
+					}
+				}
 			}
 		}
 	};
