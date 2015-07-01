@@ -1,6 +1,6 @@
 {
-	"main_script": "threejs_loader_ctm.js",
-	"icon": "threejs_loader_ctm.webp",
+	"main_script": "car_threejs.js",
+	"icon": "car_threejs.webp",
 	"width": 800,
 	"height": 500,
 	"animation": true,
@@ -8,7 +8,7 @@
 	"dependencies": [
 		"scripts/three.min.js"
 	],
-	"title": "Three.js OpenCTM loader",
+	"title": "Car in Three.js",
 	"version": "1.0.0",
 	"description": "A Three.js OpenCTM model loader example (adapted from http://threejs.org)",
 	"keywords": [ "three", "3d", "animation" ],
