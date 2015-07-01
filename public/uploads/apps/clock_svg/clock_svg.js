@@ -18,7 +18,7 @@
 //    Home:    http://www.3Quarks.com/
 //
 
-var chronograph = SAGE2_App.extend( {
+var clock_svg = SAGE2_App.extend( {
 	// Adds a parameter to the clock
 	addParameter: function(name, value) {
 		this[name] = value;
@@ -108,7 +108,7 @@ var chronograph = SAGE2_App.extend( {
 			}
 		};
 		this.element.setAttribute('id',    'myclock');
-		this.element.setAttribute('data',   this.resrcPath + 'chronograph.svg');
+		this.element.setAttribute('data',   this.resrcPath + 'clock_svg.svg');
 		this.element.setAttribute('type',  'image/svg+xml');
 
 
@@ -233,7 +233,7 @@ var chronograph = SAGE2_App.extend( {
 	},
 
 	resize: function(date) {
-		//console.log("chronograph> resize", this.element.width, this.element.height);
+		//console.log("clock_svg> resize", this.element.width, this.element.height);
 		this.refresh(date);
 	},
 
