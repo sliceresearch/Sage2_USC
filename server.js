@@ -1798,7 +1798,9 @@ function loadSession (filename) {
 					});
 				}
 			});
-			addLoadedSessionDataToStickyAppHandler(idMap, session.stickyAppHandlerData);
+			setTimeout(function(){
+				addLoadedSessionDataToStickyAppHandler(idMap, session.stickyAppHandlerData);
+			}, 1500);
 		}
 	});
 }
