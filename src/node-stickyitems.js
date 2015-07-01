@@ -84,7 +84,6 @@ StickyItems.prototype.copyStickyItemsStructure = function(managerObj) {
 */
 StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 	if (backgroundItem.id === stickyItem.id) return;
-	console.log("attached:", backgroundItem.id, stickyItem.id);
 	if (this.stickyItemParent[backgroundItem.id]) {
 		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);
@@ -95,6 +94,25 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
 	this.stickyItemOffsetInfo[stickyItem.id] = {offsetX:(stickyItem.left - backgroundItem.left)/backgroundItem.width, offsetY:(stickyItem.top - backgroundItem.top)/backgroundItem.height};
+};
+
+/**
+*
+*
+* @method attachStickyItemWithPredifnedOffset
+*/
+StickyItems.prototype.attachStickyItemWithPredifnedOffset = function(backgroundItem, stickyItem, offset) {
+	if (backgroundItem.id === stickyItem.id) return;
+	if (this.stickyItemParent[backgroundItem.id]) {
+		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
+			this.stickyItemParent[backgroundItem.id].push(stickyItem);
+		}
+	}
+	else {
+		this.stickyItemParent[backgroundItem.id] = [];
+		this.stickyItemParent[backgroundItem.id].push(stickyItem);
+	}
+	this.stickyItemOffsetInfo[stickyItem.id] = offset;
 };
 
 /**

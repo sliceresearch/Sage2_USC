@@ -1800,7 +1800,7 @@ function loadSession (filename) {
 			});
 			setTimeout(function(){
 				addLoadedSessionDataToStickyAppHandler(idMap, session.stickyAppHandlerData);
-			}, 1500);
+			}, 2500);
 		}
 	});
 }
@@ -8119,9 +8119,9 @@ function wsRequestNewTitle (wsio, data){
 }
 
 function addLoadedSessionDataToStickyAppHandler(idMap, stickyDataStructure){
-	console.log("here1");
 	if (stickyDataStructure===null || stickyDataStructure=== undefined) return;
 	var stickyItemParent = stickyDataStructure.stickyItemParent;
+	var stickyItemOffsetInfo = stickyDataStructure.stickyItemOffsetInfo;
 	//console.log("here2");
 	for (var key in stickyItemParent){
 		if (stickyItemParent.hasOwnProperty(key)){
@@ -8131,13 +8131,15 @@ function addLoadedSessionDataToStickyAppHandler(idMap, stickyDataStructure){
 				if (bkgApp !== null && bkgApp !== undefined){
 					//console.log("here5");
 					for (var idx=0; idx<stickyItemParent[key].length;idx++){
-						var newStickyItemId = stickyItemParent[key][idx];
-						if (newStickyItemId !== null && newStickyItemId !== undefined){
+						var oldStickyItemId = stickyItemParent[key][idx];
+						var newStickyItemId = idMap[oldStickyItemId];
+						var offset = stickyItemOffsetInfo[oldStickyItemId];
+						if (newStickyItemId !== null && newStickyItemId !== undefined && offset!==null && offset !== undefined){
 							//console.log("here4");
 							var newStickyApp = SAGE2Items.applications.list[newStickyItemId];
 							if (newStickyApp !== null && newStickyApp !== undefined){
 								//console.log("here3");
-								stickyAppHandler.attachStickyItem(bkgApp,newStickyApp);
+								stickyAppHandler.attachStickyItemWithPredifnedOffset(bkgApp,newStickyApp, offset);
 							}
 						}
 					}
