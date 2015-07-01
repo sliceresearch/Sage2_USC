@@ -45,7 +45,7 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 		this.stickyItemParent[backgroundItem.id] = [];
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
-	this.stickyItemOffsetInfo[stickyItem.id] = {offsetX:stickyItem.left - backgroundItem.left, offsetY:stickyItem.top - backgroundItem.top };
+	this.stickyItemOffsetInfo[stickyItem.id] = {offsetX:(stickyItem.left - backgroundItem.left)/backgroundItem.width, offsetY:(stickyItem.top - backgroundItem.top)/backgroundItem.height};
 };
 
 /**
@@ -90,8 +90,8 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 	if (this.stickyItemParent[updatedItem.elemId]) {
 		var list = this.stickyItemParent[updatedItem.elemId];
 		for (var l in list) {
-			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX;
-			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY;
+			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX * updatedItem.elemWidth;
+			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY * updatedItem.elemHeight;
 			var item     = {elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top, elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()};
 			moveItems.push(item);
 		}

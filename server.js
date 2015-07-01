@@ -5391,6 +5391,11 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('updateApplicationPositionAndSize', {appPositionAndSize: resizeApp, portalId: portalId, date: ts});
 	}
+	var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(resizeApp);
+
+	for (var idx=0; idx<updatedStickyItems.length; idx++) {
+		setItemPosition(updatedStickyItems[idx], "applications");
+	}
 }
 
 function moveDataSharingPortalWindow(movePortal) {
