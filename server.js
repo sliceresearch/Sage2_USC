@@ -4870,6 +4870,10 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 	*/
 
 	interactMgr.moveObjectToFront(obj.data.id, "portals", ["applications"]);
+	var stickyList = stickyAppHandler.getStickingItems(obj.data.id);
+	for (var idx in stickyList){
+		interactMgr.moveObjectToFront(stickyList[idx].id, obj.layerId);
+	}
 	var newOrder = interactMgr.getObjectZIndexList("portals", ["applications"]);
 	broadcast('updateItemOrder', newOrder);
 
@@ -5841,6 +5845,10 @@ function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, loca
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.data.id, localPt);
 
 	interactMgr.moveObjectToFront(obj.data.id, obj.layerId);
+	var stickyList = stickyAppHandler.getStickingItems(obj.data.id);
+	for (var idx in stickyList){
+		interactMgr.moveObjectToFront(stickyList[idx].id, obj.layerId);
+	}
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
 
