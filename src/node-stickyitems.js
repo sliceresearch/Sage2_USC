@@ -83,6 +83,8 @@ StickyItems.prototype.copyStickyItemsStructure = function(managerObj) {
 * @method attachStickyItem
 */
 StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
+	if (backgroundItem.id === stickyItem.id) return;
+	console.log("attached:", backgroundItem.id, stickyItem.id);
 	if (this.stickyItemParent[backgroundItem.id]) {
 		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);

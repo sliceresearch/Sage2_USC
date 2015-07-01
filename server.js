@@ -5371,7 +5371,6 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	var im = findInteractableManager(moveApp.elemId);
 	if (app.sticky===true){
 		var backgroundObj = im.searchGeometryInBox({x1: moveApp.elemLeft, y1: moveApp.elemTop, x2:moveApp.elemLeft + moveApp.elemWidth, y2:moveApp.elemTop + moveApp.elemHeight}, null,[moveApp.elemId]);
-		console.log("backgroundObj:", backgroundObj);
 		if (backgroundObj!== null && backgroundObj!== undefined && backgroundObj.data!== null && backgroundObj.data!== undefined) {
 			if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
 				updateStickyItemAttachment(backgroundObj.data, moveApp.elemId);
@@ -8118,19 +8117,24 @@ function wsRequestNewTitle (wsio, data){
 }
 
 function addLoadedSessionDataToStickyAppHandler(idMap, stickyDataStructure){
+	console.log("here1");
 	if (stickyDataStructure===null || stickyDataStructure=== undefined) return;
 	var stickyItemParent = stickyDataStructure.stickyItemParent;
+	//console.log("here2");
 	for (var key in stickyItemParent){
 		if (stickyItemParent.hasOwnProperty(key)){
 			var newBkgAppId = idMap[key];
 			if (newBkgAppId!==null && newBkgAppId!==undefined){
 				var bkgApp = SAGE2Items.applications.list[newBkgAppId];
 				if (bkgApp !== null && bkgApp !== undefined){
+					//console.log("here5");
 					for (var idx=0; idx<stickyItemParent[key].length;idx++){
 						var newStickyItemId = stickyItemParent[key][idx];
 						if (newStickyItemId !== null && newStickyItemId !== undefined){
+							//console.log("here4");
 							var newStickyApp = SAGE2Items.applications.list[newStickyItemId];
 							if (newStickyApp !== null && newStickyApp !== undefined){
+								//console.log("here3");
 								stickyAppHandler.attachStickyItem(bkgApp,newStickyApp);
 							}
 						}
