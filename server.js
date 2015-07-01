@@ -1610,7 +1610,7 @@ function deleteNote (filename) {
 	}
 }
 
-function loadNote(filename) {
+function loadNote(filename, callback) {
 	if (filename) {
 		var fullpath = path.join(notesDirectory, filename);
 		// if it doesn't end in .json, add it
@@ -1624,14 +1624,7 @@ function loadNote(filename) {
 				console.log(sageutils.header("SAGE2") + "reading note from " + fullpath);
 
 				var note = JSON.parse(data);
-				createNote({text: note.text, user: note.owner, createdOn:note.createdOn, fileName: filename}, function(appInstance) {
-					appInstance.id = getUniqueAppId();
-					fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
-					fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
-					fileBufferManager.insertStr({appId:appInstance.id, text:note.text});
-					handleNewApplication(appInstance, null);
-					addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
-				});
+				createNote({text: note.text, user: note.owner, createdOn:note.createdOn, fileName: filename}, callback);
 				
 			}
 		});
@@ -1771,12 +1764,8 @@ function loadSession (filename) {
 			var idMap = {};
 			session.apps.forEach(function(element, index, array) {
 				if (element.application === "sticky_note"){
-					var userLabel = "SAGE2_User";
 					var data = element.data;
-					if (data.hasOwnProperty("owner") && data.owner !== null && data.owner!== undefined){
-						userLabel = data.owner;
-					}
-					createNote({text: (data.bufferEmpty)? "" : data.buffer, user: userLabel, createdOn:data.createdOn || null, fileName:data.fileName || userLabel+Date.now()}, function(appInstance) {
+					loadNote(data.fileName, function(appInstance) {
 						appInstance.id = getUniqueAppId();
 						appInstance.left = element.left;
 						appInstance.top = element.top;
@@ -1784,8 +1773,9 @@ function loadSession (filename) {
 						appInstance.height = element.height;
 						appInstance.data.fontSize = data.fontSize;
 						fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
-						fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
 						fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
+						fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+						
 						handleNewApplication(appInstance, null);
 						addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 						idMap[element.id] = appInstance.id;
@@ -2146,7 +2136,14 @@ function wsLoadFileFromServer(wsio, data) {
 	}
 	else if (data.application === "sticky_note"){
 		console.log("Loading:::",data.filename);
-		loadNote(data.filename);
+		loadNote(data.filename, function(appInstance) {
+			appInstance.id = getUniqueAppId();
+			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+			fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
+			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+			handleNewApplication(appInstance, null);
+			addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		});
 	}
 	else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
@@ -2165,6 +2162,7 @@ function wsCreateNewNote(wsio, data) {
 		fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
 		fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
 		fileBufferManager.insertStr({appId:appInstance.id, text:data.text});
+		
 		handleNewApplication(appInstance, null);
 		addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
@@ -2823,8 +2821,9 @@ function wsCreateAppClone(wsio, data) {
 			appInstance.left = appInstance.left + 20;
 			appInstance.top = appInstance.top + 20;
 			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
-			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
 			fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
+			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+			
 			handleNewApplication(appInstance, null);
 			addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});

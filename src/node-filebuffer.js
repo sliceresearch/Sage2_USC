@@ -30,19 +30,20 @@ function FileBuffer (root){
 }
 
 function Buffer(data){
+	this.changeCount = 0;
 	this.appId = data.appId;
 	this.owner = data.owner;
 	this.createdOn = data.createdOn;
 	this.str = [];
 	this.caret = 0;
-	this.changeCount = 0;
+	
 }
 
 Buffer.prototype.insertStr = function(text){
 	var str = this.str.join("");
 	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split('');
 	this.caret = this.caret + text.length;
-	this.changeCount = text.length;
+	this.changeCount = this.changeCount + text.length;
 	var result = {index:this.caret-text.length, offset:text.length, deleteCount:0, data:text};
 	return result;
 };
@@ -120,14 +121,6 @@ FileBuffer.prototype.requestBuffer = function(data){
 		console.log("Creating buffer for:", data.appId);
 		var buf = new Buffer(data);
 		this.buffers[data.appId] = buf;
-		Object.observe(buf, function(changes){
-			for(var key in changes){
-				if (changes[key].name === 'changeCount' && parseInt(buf.changeCount) > 20){
-					this.writeToFile(appId);
-					break;
-				}
-			}
-		}.bind(this));
 	}
 };
 
@@ -157,6 +150,7 @@ FileBuffer.prototype.hasFileBufferForApp = function(appId){
 FileBuffer.prototype.associateFile = function(data){
 	var fileName = path.join(this.textFileFolder, data.fileName + "." + data.extension);
 	this.files[data.appId] = fileName;
+	console.log("file attached to buffer:", data.appId, fileName);
 };
 
 FileBuffer.prototype.writeToFile = function(appId){
@@ -176,14 +170,22 @@ FileBuffer.prototype.writeToFile = function(appId){
 FileBuffer.prototype.insertChar = function(data){
 	if (this.buffers.hasOwnProperty(data.appId)){
 		var buffer = this.buffers[data.appId];
-		return buffer.insertChar(data.code, data.printable);
+		var update = buffer.insertChar(data.code, data.printable);
+		if (buffer.changeCount>15){
+			this.writeToFile(data.appId);
+		}
+		return update;
 	}
 };
 
 FileBuffer.prototype.insertStr = function(data){
 	if (this.buffers.hasOwnProperty(data.appId)){
 		var buffer = this.buffers[data.appId];
-		return buffer.insertStr(data.text);
+		var update = buffer.insertStr(data.text);
+		if (buffer.changeCount>15){
+			this.writeToFile(data.appId);
+		}
+		return update;
 	}
 };
 
