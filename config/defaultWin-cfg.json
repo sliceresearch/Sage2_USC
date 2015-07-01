@@ -39,7 +39,7 @@
 	],
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.9.1-Q16/",
-		FFMpeg: "C:/Dev/ffmpeg-win64-shared/"
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
     },
     apis: {
 		twitter: {
