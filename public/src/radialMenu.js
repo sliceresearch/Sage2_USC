@@ -763,8 +763,6 @@ function RadialMenu(){
 				// Controls the content window scrolling.
 				// Note:Scrolling is +right, -left so offset should always be negative
 				if( this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false ) {
-					var scrollDist = 0;
-
 					var nextScrollPos = this.thumbnailWindowScrollOffset;
 
 					nextScrollPos.x += (position.x - this.thumbnailWindowDragPosition.x) * thumbnailScrollScale;
@@ -777,24 +775,7 @@ function RadialMenu(){
 						nextScrollPos.y = 0;
 					}
 
-					if( this.thumbnailWindowScrollLock.x === false ) {
-						this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
-						scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
-					}
-					if( this.thumbnailWindowScrollLock.y === false ) {
-						this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
-						scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
-					}
-
-					if( scrollDist < 0 ) {
-						scrollDist *= -1;
-					}
-					if( scrollDist >= thumbnailDisableSelectionScrollDistance ) {
-						this.scrollOpenContentLock = true;
-					}
-
-					this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString() + "px";
-
+					this.scrollThumbnailWindow(nextScrollPos);
 					this.thumbnailWindowDragPosition = position;
 				} else {
 					this.thumbnailWindowScrollOffset.x = 0;
@@ -811,7 +792,34 @@ function RadialMenu(){
 				this.dragThumbnailWindow = false;
 			}
 		}
+		else if( type === "pointerScroll" ) {
+			var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
+			this.scrollThumbnailWindow( {x: wheelDelta, y: 0 } );
+		}
+	};
 
+	this.scrollThumbnailWindow = function(nextScrollPos) {
+		var scrollDist = 0;
+		if( this.thumbnailWindowScrollLock.x === false ) {
+			this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
+			scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
+		}
+		if( this.thumbnailWindowScrollLock.y === false ) {
+			this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
+			scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
+		}
+
+		if( scrollDist < 0 ) {
+			scrollDist *= -1;
+		}
+		if( scrollDist >= thumbnailDisableSelectionScrollDistance ) {
+			this.scrollOpenContentLock = true;
+		}
+
+		if( this.thumbnailWindowScrollOffset.x > 0 ) {
+			this.thumbnailWindowScrollOffset.x = 0;
+		}
+		this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString() + "px";
 	};
 
 	/**
@@ -1348,7 +1356,6 @@ function ButtonWidget() {
 
 				}
 			}
-
 			/*else if( this.state !== 2 ) {
 				if( this.state !== 1 ) {
 					this.state = 5;

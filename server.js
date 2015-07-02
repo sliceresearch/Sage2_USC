@@ -5049,27 +5049,37 @@ function pointerScroll(uniqueID, data) {
 		moveAndResizeApplicationWindow(updatedResizeItem);
 	}
 	else {
-		if (remoteInteraction[uniqueID].appInteractionMode()) {
-			var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
-			if (obj === null) {
-				return;
-			}
+		if (obj === null) {
+			return;
+		}
 
-			//var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-			switch (obj.layerId) {
-				case "staticUI":
-					break;
-				case "radialMenus":
-					break;
-				case "widgets":
-					break;
-				case "applications":
+		switch (obj.layerId) {
+			case "staticUI":
+				break;
+			case "radialMenus":
+				sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data);
+				break;
+			case "widgets":
+				break;
+			case "applications":
+				if (remoteInteraction[uniqueID].appInteractionMode()) {
 					sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-					break;
-			}
+				}
+				break;
 		}
 	}
+}
+
+function sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data) {
+	if ( obj.id.indexOf("menu_thumbnail") !== -1 ) {
+		// PointerMove on thumbnail window
+		//console.log("Pointer move on thumbnail window");
+		var event = { button: data.button, color: sagePointers[uniqueID].color, wheelDelta: data.wheelDelta };
+		radialMenuEvent({type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: event});
+	}
+	remoteInteraction[uniqueID].selectWheelDelta += data.wheelDelta;
 }
 
 function sendPointerScrollToApplication(uniqueID, app, pointerX, pointerY, data) {
