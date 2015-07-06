@@ -50,7 +50,7 @@ function SAGE2_browser() {
 	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
 	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
 	browser.isSafari   = !browser.isChrome && userAgent.indexOf("safari") >= 0;
-	browser.isIE       = !browser.isOpera && (userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
+	browser.isIE       = !browser.isOpera && (userAgent.indexOf("edge") >= 0 || userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
 	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
 	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
 	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
