@@ -67,7 +67,7 @@ h3 {
 
 #mainUI {
 	margin: 0px;
-	overflow: auto;
+	overflow: hidden;
 }
 
 #displayUI {
