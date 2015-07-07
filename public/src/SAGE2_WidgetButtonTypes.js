@@ -23,7 +23,7 @@
  * @type {Object}
  */
 var SAGE2WidgetButtonTypes = {
-	"play-pause": function () {
+	/*"play-pause": function () {
 		this.from = "m -3 -5 l 6 5 l -6 5 z";//"m -5 -5 l 0 10 l 6 -3 l 4 -2 z";
 		this.to = "m -2 -5 l 0 10 m 4 -10 l 0 10";//"m -2 -5 l 0 10 m 4 0 l 0 -10";
 		this.width = 10;
@@ -338,6 +338,13 @@ var SAGE2WidgetButtonTypes = {
 	"loop":function(){
 		this.img = "images/appUi/loopBtn.svg";
 		this.img2 = "images/appUi/dontLoopBtn.svg";
+		this.state = 0;
+		this.textual=false;
+		this.animation=false;
+	},
+	"play-pause":function(){
+		this.img = "images/appUi/playBtn.svg";
+		this.img2 = "images/appUi/playBtn.svg";
 		this.state = 0;
 		this.textual=false;
 		this.animation=false;
