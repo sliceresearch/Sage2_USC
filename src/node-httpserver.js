@@ -40,25 +40,6 @@ function HttpServer(publicDirectory) {
 	this.onrequest = this.onreq.bind(this);
 }
 
-/**
- * Splits parameters off a URL
- *
- * @method parseURLQuery
- * @param query {String} the URL to parse
- * @return {Object} parsed elements (key, value)
- */
-// function parseURLQuery(query) {
-// 	if (!query) return {};
-// 	var p;
-// 	var paramList = query.split("&");
-// 	var params = {};
-// 	for(var i=0; i<paramList.length; i++) {
-// 		p = paramList[i].split("=");
-// 		if (p.length === 2) params[p[0]] = p[1];
-// 	}
-// 	return params;
-// }
-
 
 /**
  * Given a request, will attempt to detect all associated cookies.
@@ -125,15 +106,50 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Get the actual path of the file
 		var pathname;
 
+		////////////////////////
 		// Routes
+		////////////////////////
+
+		// API call: /config
 		if (getName.indexOf('/config/') === 0) {
 			// if trying to access config files, add the correct path
 			pathname = path.join(this.publicDirectory, '..', getName);
-		} else {
-			pathname = this.publicDirectory + getName;
+		}
+		// Sources folders: bypass the search
+		else if (getName.lastIndexOf('/images/', 0) === 0 ||
+				getName.lastIndexOf('/shaders/', 0) === 0 ||
+				getName.lastIndexOf('/css/', 0) === 0 ||
+				getName.lastIndexOf('/lib/', 0) === 0 ||
+				getName.lastIndexOf('/src/', 0) === 0) {
+			pathname = path.join(this.publicDirectory, getName);
+		}
+		// Then search in the various media folders
+		else {
+			// pathname: result of the search
+			pathname = null;
+			// walk through the list of folders
+			for (var f in global.mediaFolders) {
+				// Get the folder object
+				var folder = global.mediaFolders[f];
+				// Look for the folder url in the request
+				var pubdir = getName.split(folder.url);
+				if (pubdir.length === 2) {
+					// convert the URL into a path
+					var suburl = path.join('.', pubdir[1]);
+					pathname   = url.resolve(folder.path, suburl);
+					pathname   = decodeURIComponent(pathname);
+					break;
+				}
+			}
+			// if everything fails, look in the default public folder
+			if (!pathname) {
+				pathname = path.join(this.publicDirectory, getName);
+			}
 		}
 
+		////////////////////////
 		// Are we trying to session management
+		////////////////////////
 		if (global.__SESSION_ID) {
 			// if the request is for an HTML page (no security check otherwise)
 			//    and it is not session.html
