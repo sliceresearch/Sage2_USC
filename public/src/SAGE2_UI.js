@@ -234,28 +234,34 @@ function setupListeners() {
 		removeAllChildren(appList);
 
 		var i = 0;
+		var appname;
+		var fullpath;
 		while(i < data.length) {
 			var row = document.createElement('tr');
 			var appsPerRow = Math.min(data.length - i, 6);
 			for(var j=0; j<appsPerRow; j++) {
+				appname  = data[i+j].exif.FileName;
+				fullpath = data[i+j].id;
 				var col = document.createElement('td');
-				col.id = "available_app_row_" + data[i+j].exif.FileName;
-				col.setAttribute("application", data[i+j].exif.FileName);
+				col.id  = "available_app_row_" + appname;
+				col.setAttribute("application", appname);
+				col.setAttribute("appfullpath", fullpath);
 				col.style.verticalAlign = "top";
 				col.style.textAlign = "center";
 				col.style.width = size + "px";
 				col.style.paddingTop = "12px";
 				col.style.paddingBottom = "12px";
 				var appIcon = document.createElement('img');
-				appIcon.id = "available_app_icon_" + data[i+j].exif.FileName;
-				appIcon.setAttribute("application", data[i+j].exif.FileName);
-				//appIcon.src = data[i+j].exif.SAGE2thumbnail+"_128.jpg";
+				appIcon.id = "available_app_icon_" + appname;
+				appIcon.setAttribute("application", appname);
+				appIcon.setAttribute("appfullpath", fullpath);
 				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.jpg";
 				appIcon.width = parseInt(size * 0.8, 10);
 				appIcon.height = parseInt(size * 0.8, 10);
 				var appName = document.createElement('p');
-				appName.id = "available_app_name_" + data[i+j].exif.FileName;
-				appName.setAttribute("application", data[i+j].exif.FileName);
+				appName.id = "available_app_name_" + appname;
+				appName.setAttribute("application", appname);
+				appName.setAttribute("appfullpath", fullpath);
 				appName.textContent = data[i+j].exif.metadata.title;
 				col.appendChild(appIcon);
 				col.appendChild(appName);
@@ -274,9 +280,9 @@ function setupListeners() {
 		document.getElementById('videos-dir').checked   = false;
 		document.getElementById('sessions-dir').checked = false;
 
-		var images = document.getElementById('images');
-		var videos = document.getElementById('videos');
-		var pdfs = document.getElementById('pdfs');
+		var images   = document.getElementById('images');
+		var videos   = document.getElementById('videos');
+		var pdfs     = document.getElementById('pdfs');
 		var sessions = document.getElementById('sessions');
 
 		removeAllChildren(images);
@@ -402,7 +408,11 @@ function createFileList(list, type, parent) {
 		file.textContent = list[type][i].exif.FileName;
 		file.id          = "file_" + list[type][i].exif.FileName;
 		file.setAttribute("application", type2App[type]);
-		file.setAttribute("file", list[type][i].exif.FileName);
+
+		//file.setAttribute("file", list[type][i].exif.FileName);
+		// Use the file id that contains the complete path on the server
+		file.setAttribute("file", list[type][i].id);
+
 		file.setAttribute("thumbnail", list[type][i].exif.SAGE2thumbnail);
 		parent.appendChild(file);
 
@@ -812,7 +822,7 @@ function handleClick(element) {
 	// Application Selected
 	else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		var application_selected = element.getAttribute("application");
-
+		var application_path     = element.getAttribute("appfullpath");
 		if (selectedAppEntry !== null) selectedAppEntry.style.backgroundColor = "transparent";
 		selectedAppEntry = document.getElementById('available_app_row_' + application_selected);
 		selectedAppEntry.style.backgroundColor = "#6C6C6C";
@@ -1233,8 +1243,9 @@ function keyPress(event) {
 function loadSelectedApplication() {
 	if (selectedAppEntry !== null) {
 		var application = selectedAppEntry.getAttribute("application");
+		var app_path    = selectedAppEntry.getAttribute("appfullpath");
 
-		wsio.emit('loadApplication', {application: application, user: interactor.uniqueID});
+		wsio.emit('loadApplication', {application: app_path, user: interactor.uniqueID});
 	}
 }
 
@@ -1247,7 +1258,6 @@ function loadSelectedFile() {
 	if (selectedFileEntry !== null) {
 		var application = selectedFileEntry.getAttribute("application");
 		var file = selectedFileEntry.getAttribute("file");
-
 		wsio.emit('loadFileFromServer', {application: application, filename: file, user: interactor.uniqueID});
 	}
 }

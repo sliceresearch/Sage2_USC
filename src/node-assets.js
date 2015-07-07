@@ -23,6 +23,7 @@
 
 var fs        = require('fs');
 var path      = require('path');
+var url       = require('url');
 
 var color     = require('color');
 var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
@@ -72,6 +73,18 @@ Asset.prototype.setURL = function(aUrl) {
 Asset.prototype.setFilename = function(aFilename) {
     this.filename = path.resolve(aFilename);
     this.id       = this.filename;
+
+    // Calculate a SAGE2 URL based on the full pathname
+	this.sage2URL = "";
+	for (var f in global.mediaFolders) {
+		var folder = global.mediaFolders[f];
+		var up;
+		up = path.resolve(folder.path);
+		var pubdir = this.id.split(up);
+		if (pubdir.length === 2) {
+			this.sage2URL = sageutils.encodeReservedURL(url.format(folder.url + url.format(pubdir[1])));
+		}
+	}
 };
 
 /**
@@ -103,6 +116,7 @@ Asset.prototype.width = function() {
 Asset.prototype.height = function() {
     return this.exif.ImageHeight;
 };
+
 
 var AllAssets = null;
 
@@ -403,10 +417,10 @@ var deleteVideo = function(filename) {
 	);
 };
 
-var addURL = function(url, exif) {
+var addURL = function(aUrl, exif) {
 	// Add the asset in the array
 	var anAsset = new Asset();
-	anAsset.setURL(url);
+	anAsset.setURL(aUrl);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
 };
@@ -424,6 +438,14 @@ var getTag = function (id, tag) {
 	id = path.resolve(id);
 	if (id in AllAssets.list)
 		return AllAssets.list[id].exif[tag];
+	else
+		return null;
+};
+
+var getURL = function (id) {
+	id = path.resolve(id);
+	if (id in AllAssets.list)
+		return AllAssets.list[id].sage2URL;
 	else
 		return null;
 };
@@ -618,9 +640,9 @@ var initialize = function (root, relativePath) {
 		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
 		var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
 		var i;
-		var excludes = [ '.DS_Store' ];
+		var excludes = [ '.DS_Store', 'Thumbs.db' ];
 		var item;
-        // Start with the apps so we can register filetypes
+		// Start with the apps so we can register filetypes
 		for(i=0; i<uploadedApps.length; i++){
 			var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
 			if (fs.lstatSync(applicationDir).isDirectory()) {
@@ -633,7 +655,7 @@ var initialize = function (root, relativePath) {
 			}
 		}
 
-        for(i=0; i<uploadedImages.length; i++) {
+		for(i=0; i<uploadedImages.length; i++) {
 			if (excludes.indexOf(uploadedImages[i]) === -1) {
 				item = path.resolve(root, "images", uploadedImages[i]);
 				if (item in AllAssets.list) {
@@ -688,6 +710,112 @@ var initialize = function (root, relativePath) {
 	}
 };
 
+var addAssetFolder = function (root, relativePath) {
+	// Make sure the asset folder exists
+	var assetFolder = path.join(root, 'assets');
+	if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
+
+	// Make sure the asset/apps folder exists
+	var assetAppsFolder = path.join(assetFolder, 'apps');
+	if (!sageutils.fileExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
+
+	// Make sure unknownapp images exist
+	var unknownapp_256Img = path.resolve(AllAssets.root, '..', 'images', 'unknownapp_256.jpg');
+	var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.jpg');
+	if (!sageutils.fileExists(unknownapp_256)) fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
+	var unknownapp_512Img = path.resolve(AllAssets.root, '..', 'images', 'unknownapp_512.jpg');
+	var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
+	if (!sageutils.fileExists(unknownapp_512)) fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+	var unknownapp_128Img = path.resolve(AllAssets.root, '..', 'images', 'unknownapp_128.jpg');
+	var unknownapp_128 = path.join(assetAppsFolder, 'unknownapp_128.jpg');
+	if (!sageutils.fileExists(unknownapp_128)) fs.createReadStream(unknownapp_128Img).pipe(fs.createWriteStream(unknownapp_128));
+
+	// var assetFile = path.join(AllAssets.root, "assets", 'assets.json');
+	// if (sageutils.fileExists(assetFile)) {
+	// 	var data    = fs.readFileSync(assetFile);
+	// 	var oldList = JSON.parse(data);
+	// 	AllAssets.root = root;
+	// 	AllAssets.rel  = relativePath;
+	// 	AllAssets.list = oldList.list;
+	// 	// Flag all the assets for checking
+	// 	for (var it in AllAssets.list) AllAssets.list[it].Valid = false;
+	// }
+
+	var thelist = [];
+	var uploadedImages = fs.readdirSync(path.join(root, "images"));
+	var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
+	var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
+	var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
+	var i;
+	var excludes = [ '.DS_Store' ];
+	var item;
+    // Start with the apps so we can register filetypes
+	for(i=0; i<uploadedApps.length; i++){
+		var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
+		if (fs.lstatSync(applicationDir).isDirectory()) {
+			item = applicationDir;
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+
+    for(i=0; i<uploadedImages.length; i++) {
+		if (excludes.indexOf(uploadedImages[i]) === -1) {
+			item = path.resolve(root, "images", uploadedImages[i]);
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+	for(i=0; i<uploadedVideos.length; i++) {
+		if (excludes.indexOf(uploadedVideos[i]) === -1) {
+			item = path.resolve(root, "videos", uploadedVideos[i]);
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+	for(i=0; i<uploadedPdfs.length; i++) {
+		if (excludes.indexOf(uploadedPdfs[i]) === -1) {
+			item = path.resolve(root, "pdfs", uploadedPdfs[i]);
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+
+	// delete the elements which not there anymore
+	for (item in AllAssets.list) {
+		if (AllAssets.list[item].Valid === false) {
+			console.log(sageutils.header("Assets") + "Removing old item", item);
+			delete AllAssets.list[item];
+		} else {
+			// Just remove the Valid flag
+			delete AllAssets.list[item].Valid;
+		}
+	}
+
+	if (thelist.length > 0) {
+		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
+	}
+	exifAsync(thelist, function(err) {
+		if (err) {
+			console.log(sageutils.header("EXIF") + "Error:", err);
+		} else {
+			console.log(sageutils.header("EXIF") + "Done");
+		}
+	});
+};
+
 // regenrate all the assets thumbnails and EXIF data
 //    (needed with version upgrades)
 var regenerateAssets = function() {
@@ -708,7 +836,9 @@ var regenerateAssets = function() {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-exports.initialize = initialize;
+exports.initialize     = initialize;
+exports.addAssetFolder = addAssetFolder;
+
 exports.listAssets = listAssets;
 exports.saveAssets = saveAssets;
 exports.listImages = listImages;
@@ -730,5 +860,6 @@ exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
 exports.getExifData   = getExifData;
 exports.getTag        = getTag;
+exports.getURL        = getURL;
 
 exports.setupBinaries = setupBinaries;
