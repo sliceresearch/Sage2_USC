@@ -640,9 +640,9 @@ var initialize = function (root, relativePath) {
 		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
 		var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
 		var i;
-		var excludes = [ '.DS_Store' ];
+		var excludes = [ '.DS_Store', 'Thumbs.db' ];
 		var item;
-        // Start with the apps so we can register filetypes
+		// Start with the apps so we can register filetypes
 		for(i=0; i<uploadedApps.length; i++){
 			var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
 			if (fs.lstatSync(applicationDir).isDirectory()) {
@@ -655,7 +655,7 @@ var initialize = function (root, relativePath) {
 			}
 		}
 
-        for(i=0; i<uploadedImages.length; i++) {
+		for(i=0; i<uploadedImages.length; i++) {
 			if (excludes.indexOf(uploadedImages[i]) === -1) {
 				item = path.resolve(root, "images", uploadedImages[i]);
 				if (item in AllAssets.list) {
