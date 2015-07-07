@@ -774,21 +774,34 @@ function setupListeners() {
 			var ctrlParent = ctrl.parent();
 			if (/button/.test(ctrlId)){
 				ctrl = ctrlParent.select("svg");
+				var animationInfo = ctrlParent.data("animationInfo");
+				var state = animationInfo.state;
 				if (ctrl!== null && ctrl !== undefined){
-					ctrl = ctrlParent.select("circle") || ctrlParent.select("polygon");
-					if (ctrl !== null && ctrl !== undefined){
-						var fillVal = ctrl.attr("fill");
-						ctrl.animate({"fill":"rgba(230,230,230,1.0)"}, 400, mina.bounce, function(){
-							ctrl.animate({"fill":fillVal}, 400, mina.bounce);
-						});
+					if (state===null||state===undefined){
+						ctrl = ctrlParent.select("circle") || ctrlParent.select("polygon");
+						if (ctrl !== null && ctrl !== undefined){
+							var fillVal = ctrl.attr("fill");
+							ctrl.animate({"fill":"rgba(230,230,230,1.0)"}, 400, mina.bounce, function(){
+								ctrl.animate({"fill":fillVal}, 400, mina.bounce);
+							});
+						}
+					}
+					else if(state === 0){
+						ctrlParent.select("#cover2").attr("visibility", "visible");
+						ctrlParent.select("#cover").attr("visibility", "hidden");
+						animationInfo.state = 1;
+					}
+					else{
+						ctrlParent.select("#cover").attr("visibility", "visible");
+						ctrlParent.select("#cover2").attr("visibility", "hidden");
+						animationInfo.state = 0;
 					}
 				}
 				else{
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
-					var animationInfo = ctrlParent.data("animationInfo");
+					
 					if (animationInfo.textual === false && animationInfo.animation === true){
 						var delay = animationInfo.delay;
-						var state = animationInfo.state;
 						var fromPath = animationInfo.from;
 						var toPath = animationInfo.to;
 						var fromFill = animationInfo.fill;

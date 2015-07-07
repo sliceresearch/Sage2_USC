@@ -35,7 +35,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual = false;
 		this.animation = true;
 	},
-	"mute": function () {
+	/*"mute": function () {
 		this.from = "m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 6 0 l 0 4 m 1 -5 l 0 6";
 		this.to = "m -3 -2 l 2 0 l 3 -3 l 0 10 l -3 -3 l -2 0 z m 3 -3 l -2 10";
 		this.width=8;
@@ -61,7 +61,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual = false;
 		this.animation = true;
 	},
-	"play-stop": function (){
+	/*"play-stop": function (){
 		this.from = "m -3 -5 l 6 5 l -6 5 z";
 		this.to ="m -4 -4 l 0 8 l 8 0 l 0 -8 z";
 		this.width =10;
@@ -85,7 +85,7 @@ var SAGE2WidgetButtonTypes = {
 		this.delay = 400;
 		this.textual =false;
 		this.animation = false;
-	},
+	},*/
 	/*"next": function (){
 		this.state = null;
 		this.from = "m 0 -6 l 4 6 l -4 6";
@@ -192,7 +192,7 @@ var SAGE2WidgetButtonTypes = {
 		this.delay=600;
 		this.textual=false;
 		this.animation= true;
-	},*/
+	},
 	"duplicate": function (){
 		this.state= null;
 		this.from="m -4 -4 l 8 0 l 0 8 l -8 0 z";
@@ -218,7 +218,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual=false;
 		this.animation= true;
 	},
-	"closeBar": function () {
+	/*"closeBar": function () {
 		this.from ="m -4 -4 l 8 8 m -8 0 l 8 -8";
 		this.to = "m -4 -4 l 8 8 m -8 0 l 8 -8";
 		this.width =10;
@@ -230,7 +230,7 @@ var SAGE2WidgetButtonTypes = {
 		this.delay = 400;
 		this.textual =false;
 		this.animation = false;
-	},
+	},*/
 	/*"closeApp": function () {
 		this.state= null;
 		this.from="m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4";
@@ -246,6 +246,42 @@ var SAGE2WidgetButtonTypes = {
 	},*/
 	"remote":function(){
 		this.img = "images/ui/remote.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"stop":function(){
+		this.img = "images/appUi/stopBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"weather":function(){
+		this.img = "images/appUi/weatherBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"traffic":function(){
+		this.img = "images/appUi/trafficBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"closeBar":function(){
+		this.img = "images/appUi/closeMenuBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"new":function(){
+		this.img = "images/appUi/stickyBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"duplicate":function(){
+		this.img = "images/appUi/stickyCopyBtn.svg";
 		this.state = null;
 		this.textual=false;
 		this.animation=false;
@@ -289,6 +325,20 @@ var SAGE2WidgetButtonTypes = {
 	"fastforward":function(){
 		this.img = "images/appUi/endBtn.svg";
 		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"mute":function(){
+		this.img = "images/appUi/muteBtn.svg";
+		this.img2 = "images/appUi/soundBtn.svg";
+		this.state = 0;
+		this.textual=false;
+		this.animation=false;
+	},
+	"loop":function(){
+		this.img = "images/appUi/loopBtn.svg";
+		this.img2 = "images/appUi/dontLoopBtn.svg";
+		this.state = 0;
 		this.textual=false;
 		this.animation=false;
 	},

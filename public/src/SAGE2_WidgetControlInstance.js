@@ -303,13 +303,12 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	var button = this.controlSVG.group(buttonBack);
 	var instanceID = this.instanceID;
 
-	function buttonCoverReady(cover){
+	function buttonCoverReady(cover, use){
 		button.add(cover);
-		cover.data("call", buttonSpec.call);
 		cover.data("animationInfo", type);
 		cover.data("appId", buttonSpec.appId);
 		buttonBack.data("appId", buttonSpec.appId);
-		button.data("call", buttonSpec.call);
+		
 		button.data("appId", buttonSpec.appId);
 		button.data("instanceID", instanceID);
 		button.data("animationInfo", type);
@@ -336,7 +335,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		Snap.load(type.img, function(frag){
 			var gs = frag.select("svg");
 			gs.attr({
-				id: buttonSpec.id + "cover",
+				id: "cover",
 				x: (cx - buttonRad) + "px",
 				y: (cy - buttonRad) + "px",
 				width:buttonRad2x + "px",
@@ -344,6 +343,20 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			});
 			buttonCoverReady(gs);
 		});
+		if (type.img2!==undefined && type.img2 !==null){
+			Snap.load(type.img2, function(frag){
+				var gs = frag.select("svg");
+				gs.attr({
+					id: "cover2",
+					x: (cx - buttonRad) + "px",
+					y: (cy - buttonRad) + "px",
+					width:buttonRad2x + "px",
+					height:buttonRad2x + "px",
+					visibility: "hidden"
+				});
+				buttonCoverReady(gs);
+			});
+		}
 	}
 	else {
 
@@ -378,9 +391,11 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		Object.observe(type, function(changes) {
 			for(var i=0; i<changes.length; i++) {
 				if (changes[i].name==="state") {
-					var path = (type.state===0)? type.from: type.to;
-					var fill = (type.state===0)? type.fill: type.toFill;
-					buttonCover.animate({"path":path, "fill":fill}, type.delay, mina.bounce);
+					if (type.img2===null||type.img2===undefined){
+						var path = (type.state===0)? type.from: type.to;
+						var fill = (type.state===0)? type.fill: type.toFill;
+						buttonCover.animate({"path":path, "fill":fill}, type.delay, mina.bounce);
+					}
 				}
 			}
 		});
