@@ -21,6 +21,7 @@ var zoom = SAGE2_App.extend( {
 		this.position  = null;
 
 		this.element.id = "div" + data.id;
+		this.element.style.background = "black";
 		this.lastZoom  = data.date;
 		this.lastClick = data.date;
 		this.dragging  = false;
@@ -29,11 +30,17 @@ var zoom = SAGE2_App.extend( {
 
 		// create the image viewer with the right data and path
 		this.viewer = OpenSeadragon({
-			id: this.element.id,      // suppporting div
+			// suppporting div
+			id: this.element.id,
+			// icons for the library
 			prefixUrl:   this.resrcPath + "/images/",
+			// show the little overview window (auto-hides)
+			showNavigator: true,
+			// remove the navigation button bar
+			showNavigationControl: false,
+
 			// change tileSources for your dataset
-			tileSources: this.resrcPath + "chicago.dzi"
-			//tileSources: this.resrcPath + "halfdome.dzi"
+			tileSources: this.resrcPath + "enceladus.dzi"
 		});
 
 		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});

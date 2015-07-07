@@ -35,6 +35,7 @@ var whiteboard = SAGE2_App.extend( {
 	},
 
 	load: function(date) {
+		this.refresh(date);
 	},
 	
 	draw: function(date) {
@@ -95,5 +96,9 @@ var whiteboard = SAGE2_App.extend( {
 			}
 		}
 		this.refresh(date);
+	},
+
+	quit: function () {
+		console.log("Drawing quit");
 	}
 });

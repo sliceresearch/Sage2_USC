@@ -1,0 +1,30 @@
+#!/bin/sh
+
+tentakel pkill -HUP firefox
+
+server="iridium.evl.uic.edu"
+global_param="-no-remote --width 4098 --height 768"
+
+rm -fr $HOME/.mozilla/firefox
+for i in {0..5}
+do
+	node="orion-0"$i
+	firefox -CreateProfile $node
+done
+
+tentakel pkill -HUP firefox
+
+for i in {0..5}
+do
+	node="orion-0"$i
+	param="$global_param -P $node"
+	
+	ssh -fx orion-0"$i" env DISPLAY=:0.0 firefox $param "http://$server/display.html\?clientID=$i"
+done
+
+sleep 8
+
+tentakel xdotool mousemove --sync 100 100
+sleep 1
+tentakel xdotool search --name SAGE2 key F11
+

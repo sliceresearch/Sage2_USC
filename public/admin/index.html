@@ -150,6 +150,22 @@
 		consoleClient.appendChild(consoleClient_link);
 		experiments.appendChild(consoleClient);
 
+		var editorClient = document.createElement('p');
+		var editorClient_link = document.createElement('a');
+		editorClient_link.textContent = "Editor";
+		editorClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "admin/editor.html";
+		editorClient_link.target = "_blank";
+		editorClient.appendChild(editorClient_link);
+		experiments.appendChild(editorClient);
+
+		var filesClient = document.createElement('p');
+		var filesClient_link = document.createElement('a');
+		filesClient_link.textContent = "File lists";
+		filesClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "admin/files.html";
+		filesClient_link.target = "_blank";
+		filesClient.appendChild(filesClient_link);
+		experiments.appendChild(filesClient);
+
 		var apiHelp = document.createElement('p');
 		var apiHelp_link = document.createElement('a');
 		apiHelp_link.textContent = "API for programmers";
@@ -161,6 +177,20 @@
 </script>
 
 <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
+<style type="text/css">
+	a, a:visited {
+		font-family: Arimo, Helvetica, sans-serif;
+		text-decoration: none;
+		color: #FFFFFF;
+	}
+
+	a:hover {
+		font-family: Arimo, Helvetica, sans-serif;
+		text-decoration: underline;
+		color: #FFFFFF;
+	}
+</style>
 
 </head>
 

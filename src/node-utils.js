@@ -377,6 +377,16 @@ function deregisterSAGE2(config, callback) {
 }
 
 /**
+ * Return a home directory on every platform
+ *
+ * @method getHomeDirectory
+ * @return {String} string representing a folder path
+ */
+function getHomeDirectory() {
+	return process.env[ (process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+
+/**
  * Place a callback on a list of folders to monitor.
  *  callback triggered when a change is detected:
  *    this.root contains the monitored folder
@@ -424,21 +434,22 @@ function monitorFolders(folders, callback) {
 //
 
 
-module.exports.nodeVersion     = _NODE_VERSION;
-module.exports.getNodeVersion  = getNodeVersion;
-module.exports.getShortVersion = getShortVersion;
-module.exports.getFullVersion  = getFullVersion;
+module.exports.nodeVersion      = _NODE_VERSION;
+module.exports.getNodeVersion   = getNodeVersion;
+module.exports.getShortVersion  = getShortVersion;
+module.exports.getFullVersion   = getFullVersion;
 
-module.exports.secureContext   = secureContext;
-module.exports.fileExists      = fileExists;
-module.exports.header          = header;
-module.exports.compareString   = compareString;
-module.exports.compareFilename = compareFilename;
-module.exports.compareTitle    = compareTitle;
-module.exports.isTrue          = isTrue;
-module.exports.updateWithGIT   = updateWithGIT;
-module.exports.checkPackages   = checkPackages;
-module.exports.registerSAGE2   = registerSAGE2;
-module.exports.deregisterSAGE2 = deregisterSAGE2;
-module.exports.loadCABundle    = loadCABundle;
-module.exports.monitorFolders  = monitorFolders;
+module.exports.secureContext    = secureContext;
+module.exports.fileExists       = fileExists;
+module.exports.header           = header;
+module.exports.compareString    = compareString;
+module.exports.compareFilename  = compareFilename;
+module.exports.compareTitle     = compareTitle;
+module.exports.isTrue           = isTrue;
+module.exports.updateWithGIT    = updateWithGIT;
+module.exports.checkPackages    = checkPackages;
+module.exports.registerSAGE2    = registerSAGE2;
+module.exports.deregisterSAGE2  = deregisterSAGE2;
+module.exports.loadCABundle     = loadCABundle;
+module.exports.monitorFolders   = monitorFolders;
+module.exports.getHomeDirectory = getHomeDirectory;
