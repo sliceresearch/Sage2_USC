@@ -86,7 +86,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual =false;
 		this.animation = false;
 	},
-	"next": function (){
+	/*"next": function (){
 		this.state = null;
 		this.from = "m 0 -6 l 4 6 l -4 6";
 		this.to = "m -6 0 l 10 0 l -10 0";//"m -3 0 a 6 6 180 1 0 0 1 z";
@@ -99,7 +99,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual = false;
 		this.animation = true;
 	},
-	"prev": function (){
+	/*"prev": function (){
 		this.state= null;
 		this.from="m 0 -6 l -4 6 l 4 6";
 		this.to="m 6 0 l -10 0 l 10 0";
@@ -140,7 +140,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual=false;
 		this.animation= true;
 
-	},
+	},*/
 	"zoom-in": function (){
 		this.from = "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0 m -2 -2 l 0 4";
 		this.to =   "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0 m -2 -2 l 0 4";
@@ -167,7 +167,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual = false;
 		this.animation = false;
 	},
-	"rewind": function () {
+	/*"rewind": function () {
 		this.state= null;
 		this.from="m 0 -6 l -4 6 l 4 6 m 4 -12 l -4 6 l 4 6";
 		this.to="m 0 -6 l -4 6 l 4 6 m 6 -6 l -10 0 l 10 0";
@@ -192,7 +192,7 @@ var SAGE2WidgetButtonTypes = {
 		this.delay=600;
 		this.textual=false;
 		this.animation= true;
-	},
+	},*/
 	"duplicate": function (){
 		this.state= null;
 		this.from="m -4 -4 l 8 0 l 0 8 l -8 0 z";
@@ -231,7 +231,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual =false;
 		this.animation = false;
 	},
-	"closeApp": function () {
+	/*"closeApp": function () {
 		this.state= null;
 		this.from="m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4";
 		this.to= "m -4 -5 l 8 0 l 0 10 l -8 0 l 0 -10 m 0 2 l 8 0 m -6 2 l 4 4 m 0 -4 l -4 4";
@@ -243,16 +243,61 @@ var SAGE2WidgetButtonTypes = {
 		this.delay=600;
 		this.textual=false;
 		this.animation=false;
-	},
+	},*/
 	"remote":function(){
 		this.img = "images/ui/remote.svg";
+		this.state = null;
 		this.textual=false;
 		this.animation=false;
 	},
 	"shareScreen":function(){
 		this.img = "images/ui/sharescreen.svg";
+		this.state = null;
 		this.textual=false;
 		this.animation=false;
+	},
+	"prev":function(){
+		this.img = "images/appUi/arrowLeftBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"next":function(){
+		this.img = "images/appUi/arrowRightBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"up-arrow":function(){
+		this.img = "images/appUi/arrowUpBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"down-arrow":function(){
+		this.img = "images/appUi/arrowDownBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"rewind":function(){
+		this.img = "images/appUi/homeBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"fastforward":function(){
+		this.img = "images/appUi/endBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"closeApp":function(){
+		this.img = "images/appUi/closeAppBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+		this.shape = "hexagon";
 	},
 	"default": function (){
 		this.textual=true;

@@ -285,14 +285,20 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy, rad) {
 	var buttonRad = rad;
 	var buttonRad2x = 2*rad;
-	var buttonBack = this.controlSVG.circle(cx, cy, buttonRad);
+	var buttonBack;
+	var type = buttonSpec.type;
+	var buttonShape = type.shape;
+	if (buttonShape === null || buttonShape === undefined){
+		buttonShape = "circle";
+	}
+	buttonBack = createButtonShape(this.controlSVG, cx, cy, buttonRad, buttonShape);
 	buttonBack.attr({
 		id: buttonSpec.id + "bkgnd",
-		fill:"rgba(110,110,110,1.0)",
+		fill:"rgba(185,206,235,1.0)",
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
-	var type = buttonSpec.type;
+	
 
 	var button = this.controlSVG.group(buttonBack);
 	var instanceID = this.instanceID;
@@ -394,11 +400,11 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	var textInputOutline = this.controlSVG.path(outline);
 	textInputOutline.attr("class", "widgetBackground");
 	var textInputBarWidth = textInputOutline.getBBox().w;
-	var textInputCaption = null;
-	if (this.controlSpec.textInput.caption !== null) {
-		textInputCaption = this.controlSVG.text(x+ui.widgetControlSize, y, this.controlSpec.textInput.caption);
-		textInputCaption.attr({
-			id: this.controlSpec.textInput.id+ "caption",
+	var textInputLabel = null;
+	if (this.controlSpec.textInput.label !== null) {
+		textInputLabel = this.controlSVG.text(x+ui.widgetControlSize, y, this.controlSpec.textInput.label);
+		textInputLabel.attr({
+			id: this.controlSpec.textInput.id+ "label",
 			dy:(0.26 * ui.widgetControlSize) + "px",
 			class:"widgetText",
 			fontSize: (fontSize*0.8) + "em"
@@ -457,9 +463,9 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	textInput.data("tail", "");
 	textInput.data("blinkCallback", blink);
 
-	if (this.controlSpec.textInput.defaultText) {
-		for(var i=0; i<this.controlSpec.textInput.defaultText.length; i++) {
-			insertTextIntoTextInputWidget(textInput, this.controlSpec.textInput.defaultText.charCodeAt(i), true);
+	if (this.controlSpec.textInput.value) {
+		for(var i=0; i<this.controlSpec.textInput.value.length; i++) {
+			insertTextIntoTextInputWidget(textInput, this.controlSpec.textInput.value.charCodeAt(i), true);
 		}
 	}
 	var rectangle = {id:this.controlSpec.textInput.id, x:parseInt(textArea.attr("x")), y:parseInt(textArea.attr("y")), h:parseInt(textArea.attr("height")), w:parseInt(textArea.attr("width"))};

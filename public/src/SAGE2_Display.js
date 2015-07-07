@@ -773,26 +773,38 @@ function setupListeners() {
 			var action = "buttonPress";
 			var ctrlParent = ctrl.parent();
 			if (/button/.test(ctrlId)){
-				ctrl = ctrlParent.select("path") || ctrlParent.select("text") || ctrlParent.select("svg");
-				var animationInfo = ctrlParent.data("animationInfo");
-				if (animationInfo.textual === false && animationInfo.animation === true){
-					var delay = animationInfo.delay;
-					var state = animationInfo.state;
-					var fromPath = animationInfo.from;
-					var toPath = animationInfo.to;
-					var fromFill = animationInfo.fill;
-					var toFill = animationInfo.toFill;
-					if (toFill === null || toFill === undefined) toFill = fromFill;
-					if (state===null){
-						ctrl.animate({"path":toPath, "fill":toFill}, delay, mina.bounce, function(){
-							ctrl.animate({"path":fromPath, "fill":fromFill}, delay, mina.bounce);
+				ctrl = ctrlParent.select("svg");
+				if (ctrl!== null && ctrl !== undefined){
+					ctrl = ctrlParent.select("circle") || ctrlParent.select("polygon");
+					if (ctrl !== null && ctrl !== undefined){
+						var fillVal = ctrl.attr("fill");
+						ctrl.animate({"fill":"rgba(230,230,230,1.0)"}, 400, mina.bounce, function(){
+							ctrl.animate({"fill":fillVal}, 400, mina.bounce);
 						});
-
 					}
-					else{
-						animationInfo.state = 1 - animationInfo.state;
-						ctrl.data("animationInfo", animationInfo);
-						//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
+				}
+				else{
+					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
+					var animationInfo = ctrlParent.data("animationInfo");
+					if (animationInfo.textual === false && animationInfo.animation === true){
+						var delay = animationInfo.delay;
+						var state = animationInfo.state;
+						var fromPath = animationInfo.from;
+						var toPath = animationInfo.to;
+						var fromFill = animationInfo.fill;
+						var toFill = animationInfo.toFill;
+						if (toFill === null || toFill === undefined) toFill = fromFill;
+						if (state===null){
+							ctrl.animate({"path":toPath, "fill":toFill}, delay, mina.bounce, function(){
+								ctrl.animate({"path":fromPath, "fill":fromFill}, delay, mina.bounce);
+							});
+
+						}
+						else{
+							animationInfo.state = 1 - animationInfo.state;
+							ctrl.data("animationInfo", animationInfo);
+							//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
+						}
 					}
 				}
 				ctrlId = ctrlParent.attr("id").replace("button", "");

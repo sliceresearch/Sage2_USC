@@ -283,10 +283,9 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 		else
 			textInput.id = "textInput" + ((this.itemCount<10)? "0" : "") + this.itemCount;
 		textInput.appId = this.id;
-		textInput.caption = data.caption || null;
+		textInput.label = data.label || null;
 		textInput.width = 13.0*ui.widgetControlSize;
-		textInput.call = data.action || null;
-		textInput.defaultText = data.defaultText || "";
+		textInput.value = data.value || "";
 		this.textInput = textInput;
 		this.itemCount++;
 	}

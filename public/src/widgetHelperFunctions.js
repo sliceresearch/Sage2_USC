@@ -30,7 +30,7 @@ function drawSpokeForRadialLayout(instanceID, paper, center, point){
 function drawBackgroundForWidgetRadialDial(instanceID, paper, center, radius){
 	var backGroundFill = paper.circle(center.x, center.y, radius);
 	var backGroundStroke = paper.circle(center.x, center.y, radius);
-	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(190,190,190,0.7)-rgba(90,90,90,0.4)");
+	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(150,166,189,0.7)-rgba(150,166,189,0.4)");
 	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius*0.05, "rgba(220,220,220,0.8)", 4));
 	backGroundFill.attr({
 		id: instanceID + "backGround",
@@ -390,4 +390,25 @@ function makeSvgBackgroundForWidgetConnectors(width, height){
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
 	return backDrop;
+}
+
+function createButtonShape(paper, cx, cy, buttonRad, buttonShape){
+	var buttonBack;
+	switch(buttonShape){
+		case "hexagon":
+			var point;
+			var polygonPts = [];
+			for (var theta = 0; theta<=360; theta += 60){
+				point = polarToCartesian(buttonRad,theta+30,{x:cx,y:cy});
+				polygonPts.push(point.x);
+				polygonPts.push(point.y);
+			}
+			buttonBack = paper.polygon(polygonPts);
+			break;
+		case "circle":
+		default:
+			buttonBack = paper.circle(cx,cy,buttonRad);
+			break;
+	}
+	return buttonBack;
 }

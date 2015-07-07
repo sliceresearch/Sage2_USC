@@ -42,7 +42,7 @@ var googlemaps = SAGE2_App.extend( {
 		this.controls.addButton({label: "W", 		position: 3, identifier: "Weather"});
 		this.controls.addButton({type: "zoom-in",   position: 8, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out",  position: 9, identifier: "ZoomOut"});
-		this.controls.addTextInput({defaultText: "", caption:"Addr", identifier:"Address"});
+		this.controls.addTextInput({value: "", label:"Addr", identifier:"Address"});
 		this.controls.addSlider({
 			identifier: "Zoom",
 			minimum: 0,
