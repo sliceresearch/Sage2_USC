@@ -337,7 +337,7 @@ var radar = SAGE2_App.extend( {
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"});
+        this.controls.addButton({type:"next",position:3, identifier:"Next"});
 
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
@@ -347,7 +347,7 @@ var radar = SAGE2_App.extend( {
                 "fill":"rgba(250,250,250,1.0)",
                 "animation":false
             };
-            this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, id: loopIdxWithPrefix});
+            this.controls.addButton({type:siteButton, position:5+loopIdx, identifier: loopIdxWithPrefix});
 		}
         this.controls.finishedAddingControls(); // Important
 
@@ -400,11 +400,11 @@ var radar = SAGE2_App.extend( {
             this.refresh(date);
 		}
 		else if (eventType === "widgetEvent"){
-			if (data.ctrlId === "Next"){
+			if (data.identifier === "Next"){
 				this.nextStation();
 			}
 			else{
-				this.setStation(data.ctrlId);
+				this.setStation(data.identifier);
 			}
 			this.startup();
             this.refresh(date);

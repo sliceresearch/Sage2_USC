@@ -93,12 +93,18 @@ body {
 .widgetText {
 	text-anchor: middle;
 	font-family: Arimo, Helvetica, sans-serif;
+	fill: rgba(109,130,159,1.0);
+}
+
+.widgetLabel {
+	text-anchor: middle;
+	font-family: Arimo, Helvetica, sans-serif;
 	fill: rgba(250,250,250,1.0);
 }
 
 .textInput {
 	font-family: Arimo, Helvetica, sans-serif;
-	fill: rgba(250,250,250,1.0);
+	fill: rgba(59,80,109,1.0);
 	font-weight: lighter; 
 	font-style: normal;
 }

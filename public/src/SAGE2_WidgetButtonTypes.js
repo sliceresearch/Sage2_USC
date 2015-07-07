@@ -140,7 +140,7 @@ var SAGE2WidgetButtonTypes = {
 		this.textual=false;
 		this.animation= true;
 
-	},*/
+	},
 	"zoom-in": function (){
 		this.from = "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0 m -2 -2 l 0 4";
 		this.to =   "m 2 2 a 5 5 0 1 1 1 -1 l 3 3 l -1 1 l -3 -3 m -5 -4 l 4 0 m -2 -2 l 0 4";
@@ -288,6 +288,18 @@ var SAGE2WidgetButtonTypes = {
 	},
 	"fastforward":function(){
 		this.img = "images/appUi/endBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"zoom-in":function(){
+		this.img = "images/appUi/zoomInBtn.svg";
+		this.state = null;
+		this.textual=false;
+		this.animation=false;
+	},
+	"zoom-out":function(){
+		this.img = "images/appUi/zoomOutBtn.svg";
 		this.state = null;
 		this.textual=false;
 		this.animation=false;

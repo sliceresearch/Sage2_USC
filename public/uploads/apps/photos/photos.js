@@ -317,9 +317,6 @@ var photos = SAGE2_App.extend( {
 		this.resizeEvents = "continuous"; //onfinish
 		this.svg = null;
 
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-		this.enableControls = true;
-
 		this.canvasBackground = "black";
 
 		this.canvasWidth  = 800;
@@ -406,7 +403,7 @@ var photos = SAGE2_App.extend( {
 
 		// create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:1, id:"Next"});
+        this.controls.addButton({type:"next",position:1, identifier:"Next"});
 
         var _this = this;
 
@@ -421,7 +418,7 @@ var photos = SAGE2_App.extend( {
                     "animation":false
                 };
 
-                _this.controls.addButton({type:albumButton, sequenceNo:3+loopIdx,id: loopIdxWithPrefix});/* action:function(date){
+                _this.controls.addButton({type:albumButton, position:3+loopIdx,identifier: loopIdxWithPrefix});/* action:function(date){
                     this.setAlbum(loopIdxWithPrefix);
                 }.bind(_this) });*/
             }(loopIdxWithPrefix));
@@ -465,11 +462,11 @@ var photos = SAGE2_App.extend( {
             this.refresh(date);
         }
         else if (eventType === "widgetEvent"){
-			if (data.ctrlId === "Next"){
+			if (data.identifier === "Next"){
 				this.nextAlbum();
 			}
 			else{
-				this.setAlbum(data.ctrlId);
+				this.setAlbum(data.identifier);
 			}
 			this.refresh(date);
 		}

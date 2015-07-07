@@ -684,34 +684,14 @@ var USweather = SAGE2_App.extend( {
 
         this.draw_d3(data.date);
 
-        var tempButton = {
-            "textual":true,
-            "label":"Temp",
-            "fill":"rgba(250,250,250,1.0)",
-            "animation":false
-        };
-        var iconButton = {
-            "textual":true,
-            "label":"Icon",
-            "fill":"rgba(250,250,250,1.0)",
-            "animation":false
-        };
-        var colorButton = {
-            "textual":true,
-            "label":"Color",
-            "fill":"rgba(250,250,250,1.0)",
-            "animation":false
-        };
+        
         // create the widgets
         console.log("creating controls");
 
-        this.controls.addButtonType("temp", tempButton);
-        this.controls.addButtonType("icon", iconButton);
-        this.controls.addButtonType("color", colorButton);
-
-        this.controls.addButton({type:tempButton,sequenceNo:4, id:"Temperature"});
-        this.controls.addButton({type:iconButton,sequenceNo:6, id:"Icon"});
-        this.controls.addButton({type:colorButton,sequenceNo:8, id:"Color"});
+        
+        this.controls.addButton({label:"Temp",position:4, identifier:"Temperature"});
+        this.controls.addButton({label:"Icon",position:6, identifier:"Icon"});
+        this.controls.addButton({label:"Color",position:8, identifier:"Color"});
         this.controls.finishedAddingControls(); // Important
     },
 
@@ -748,7 +728,7 @@ var USweather = SAGE2_App.extend( {
             this.refresh(date);
         }
         else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "Temperature":
 					this.state.mode = 0;
             		this.convertToTemp();
@@ -765,7 +745,7 @@ var USweather = SAGE2_App.extend( {
             		this.refresh(date);
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 					return;
 			}
 		}

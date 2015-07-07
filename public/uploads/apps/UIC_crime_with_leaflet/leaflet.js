@@ -72,9 +72,6 @@ var leaflet = SAGE2_App.extend( {
 		this.resizeEvents = "continuous"; //"onfinish";
 		this.svg      = null;
 
-		// Need to set this to true in order to tell SAGE2 that you will be needing widget controls for this app
-    	this.enableControls = true;
-
 		// for SAGE2 interaction
 		this.lastZoom = null;
 		this.dragging = null;
@@ -155,22 +152,10 @@ var leaflet = SAGE2_App.extend( {
 				.attr("viewBox", box);
 		});
 
-		var viewButton = {
-            "textual":true,
-            "label":"view",
-            "fill":"rgba(250,250,250,1.0)",
-            "animation":false
-        };
-        var homeButton = {
-            "textual":true,
-            "label":"home",
-            "fill":"rgba(250,250,250,1.0)",
-            "animation":false
-        };
-        this.controls.addButton({type:homeButton,sequenceNo:2, id:"Home"});
-        this.controls.addButton({type:viewButton,sequenceNo:4, id:"View"});
-        this.controls.addButton({type:"fastforward",sequenceNo:6, id:"ZoomIn"});
-        this.controls.addButton({type:"rewind",sequenceNo:7, id:"ZoomOut"});
+        this.controls.addButton({label:"home",position:2, identifier:"Home"});
+        this.controls.addButton({label:"view",position:4, identifier:"View"});
+        this.controls.addButton({type:"fastforward",position:6, identifier:"ZoomIn"});
+        this.controls.addButton({type:"rewind",position:7, identifier:"ZoomOut"});
         this.controls.finishedAddingControls(); // Important
 	},
 
@@ -442,7 +427,7 @@ var leaflet = SAGE2_App.extend( {
 			this.changeMap();
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "Home":
 					this.resetMap();
 					break;
@@ -456,7 +441,7 @@ var leaflet = SAGE2_App.extend( {
 					this.zoomOut(date);
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 					return;
 			}
 		}

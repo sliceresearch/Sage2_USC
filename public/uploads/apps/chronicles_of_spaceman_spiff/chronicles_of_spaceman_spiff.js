@@ -320,8 +320,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend( {
 
 		this.update();
 		this.draw_d3(data.date);
-        this.controls.addButton({type:"next",sequenceNo:1, id:"Next"});
-        this.controls.addButton({type:"prev",sequenceNo:7, id:"Prev"});
+        this.controls.addButton({type:"next",position:1, identifier:"Next"});
+        this.controls.addButton({type:"prev",position:7, identifier:"Prev"});
         this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 
@@ -371,7 +371,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend( {
             this.refresh(date);
 		}
         else if (eventType === "widgetEvent"){
-            switch(data.ctrlId){
+            switch(data.identifier){
                 case "Next":
                     this.showNextPage();
                     break;
@@ -379,7 +379,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend( {
                     this.showPreviousPage();
                     break;
                 default:
-                    console.log("No handler for:", data.ctrlId);
+                    console.log("No handler for:", data.identifier);
             }
             this.refresh(date);
         }

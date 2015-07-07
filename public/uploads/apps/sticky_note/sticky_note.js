@@ -71,9 +71,9 @@ var sticky_note = SAGE2_App.extend( {
 		}
 
 		var text = "Enter note"; // use this.state for saving text entry
-		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
-		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
-		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
+		this.controls.addTextInput({value: text, identifier:"TextInput"});
+		this.controls.addButton({type:"duplicate",position:3, identifier:"DuplicateNote"});
+		this.controls.addButton({type:"new",position:5, identifier:"NewNote"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -133,10 +133,6 @@ var sticky_note = SAGE2_App.extend( {
 				
 		}
 		*/
-		this.controls.addTextInput({defaultText: text, id:"TextInput", action:this.wrapText.bind(this)});
-		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
-		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
-		this.controls.finishedAddingControls();
 	},
 
 	draw: function(date) {
@@ -177,7 +173,7 @@ var sticky_note = SAGE2_App.extend( {
 			}			
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "DuplicateNote":
 					this.requestForClone = true;
 					this.cloneData = this.text;
@@ -190,7 +186,7 @@ var sticky_note = SAGE2_App.extend( {
 					this.wrapText(data.text);
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 					break;
 			}
 		}

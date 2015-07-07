@@ -43,13 +43,13 @@ var zoom = SAGE2_App.extend( {
 			tileSources: this.resrcPath + "enceladus.dzi"
 		});
 
-		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
-		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
-		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
-		this.controls.addButton({type:"down-arrow",sequenceNo:10, id:"Down"});
+		this.controls.addButton({type:"prev",position:7, identifier:"Left"});
+		this.controls.addButton({type:"next",position:1, identifier:"Right"});
+		this.controls.addButton({type:"up-arrow",position:4, identifier:"Up"});
+		this.controls.addButton({type:"down-arrow",position:10, identifier:"Down"});
 				
-		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"ZoomIn"});
-		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"ZoomOut"});
+		this.controls.addButton({type:"zoom-in",position:8, identifier:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out",position:9, identifier:"ZoomOut"});
 		this.controls.finishedAddingControls();
 	},
 	
@@ -154,7 +154,7 @@ var zoom = SAGE2_App.extend( {
 			this.viewer.viewport.applyConstraints();
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "Up":
 					// up
 					this.viewer.viewport.panBy(new OpenSeadragon.Point(0, -0.01));
@@ -182,7 +182,7 @@ var zoom = SAGE2_App.extend( {
 					this.lastZoom = date;
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 					return;
 			}
 			this.viewer.viewport.applyConstraints();

@@ -174,7 +174,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		sliderLabel.attr({
 			id: this.controlSpec.slider.id+ "label",
 			dy:(0.26 * ui.widgetControlSize) + "px",
-			class:"widgetText",
+			class:"widgetLabel",
 			fontSize: (fontSize*0.8) + "em"
 		});
 	}
@@ -406,7 +406,7 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 		textInputLabel.attr({
 			id: this.controlSpec.textInput.id+ "label",
 			dy:(0.26 * ui.widgetControlSize) + "px",
-			class:"widgetText",
+			class:"widgetLabel",
 			fontSize: (fontSize*0.8) + "em"
 		});
 	}
@@ -414,7 +414,7 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	var textArea = this.controlSVG.rect(x, y-textInputAreaHeight/2.0, textInputBarWidth*0.80, textInputAreaHeight);
 	textArea.attr({
 		id: this.controlSpec.textInput.id + "Area",
-		fill:"rgba(100,100,100,1.0)",
+		fill:"rgba(185,206,235,1.0)",
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});

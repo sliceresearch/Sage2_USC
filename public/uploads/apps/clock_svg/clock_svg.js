@@ -126,7 +126,7 @@ var clock_svg = SAGE2_App.extend( {
 			"animation":false
 		};
 		// Instead of a string, the type field can be used to specify the button type data itself
-		this.controls.addButton({type:flipButton, sequenceNo:4, id:"Flip"});
+		this.controls.addButton({type:flipButton, position:4, identifier:"Flip"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -256,11 +256,11 @@ var clock_svg = SAGE2_App.extend( {
 				}
 			}
 			else if (eventType === "widgetEvent"){
-				if (data.ctrlId === "Flip"){
+				if (data.identifier === "Flip"){
 					this.flip(date);
 				}
 				else{
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 				}
 			}
 			
