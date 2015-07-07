@@ -377,6 +377,18 @@ function deregisterSAGE2(config, callback) {
 }
 
 /**
+ * Return a safe URL string: convert odd characters to HTML representations
+ *
+ * @method encodeReservedURL
+ * @param aUrl {String} URL to be sanitized
+ * @return {String} cleanup version of the URL
+ */
+function encodeReservedURL(aUrl) {
+	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B").replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D").replace(/\?/g, "%3F").replace(/\@/g, "%40");
+}
+
+
+/**
  * Return a home directory on every platform
  *
  * @method getHomeDirectory
@@ -434,22 +446,23 @@ function monitorFolders(folders, callback) {
 //
 
 
-module.exports.nodeVersion      = _NODE_VERSION;
-module.exports.getNodeVersion   = getNodeVersion;
-module.exports.getShortVersion  = getShortVersion;
-module.exports.getFullVersion   = getFullVersion;
+module.exports.nodeVersion       = _NODE_VERSION;
+module.exports.getNodeVersion    = getNodeVersion;
+module.exports.getShortVersion   = getShortVersion;
+module.exports.getFullVersion    = getFullVersion;
+module.exports.secureContext     = secureContext;
+module.exports.fileExists        = fileExists;
+module.exports.header            = header;
+module.exports.compareString     = compareString;
+module.exports.compareFilename   = compareFilename;
+module.exports.compareTitle      = compareTitle;
+module.exports.isTrue            = isTrue;
+module.exports.updateWithGIT     = updateWithGIT;
+module.exports.checkPackages     = checkPackages;
+module.exports.registerSAGE2     = registerSAGE2;
+module.exports.deregisterSAGE2   = deregisterSAGE2;
+module.exports.loadCABundle      = loadCABundle;
+module.exports.monitorFolders    = monitorFolders;
+module.exports.getHomeDirectory  = getHomeDirectory;
+module.exports.encodeReservedURL = encodeReservedURL;
 
-module.exports.secureContext    = secureContext;
-module.exports.fileExists       = fileExists;
-module.exports.header           = header;
-module.exports.compareString    = compareString;
-module.exports.compareFilename  = compareFilename;
-module.exports.compareTitle     = compareTitle;
-module.exports.isTrue           = isTrue;
-module.exports.updateWithGIT    = updateWithGIT;
-module.exports.checkPackages    = checkPackages;
-module.exports.registerSAGE2    = registerSAGE2;
-module.exports.deregisterSAGE2  = deregisterSAGE2;
-module.exports.loadCABundle     = loadCABundle;
-module.exports.monitorFolders   = monitorFolders;
-module.exports.getHomeDirectory = getHomeDirectory;
