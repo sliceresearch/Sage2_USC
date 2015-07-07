@@ -22,6 +22,7 @@
 // Don't make functions within a loop
 /* jshint -W083 */
 
+/*global mediaFolders */
 
 // require variables to be declared
 "use strict";
@@ -82,17 +83,64 @@ var apis               = {};
 var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
-var publicDirectory    = "public";
 var hostOrigin         = "";
-var uploadsDirectory   = path.join(publicDirectory, "uploads");
 var SAGE2Items         = {};
 var users              = null;
-var sessionDirectory   = path.join(__dirname, "sessions");
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
 var startTime          = Date.now();
 
+// Global variable for all media folders
+global.mediaFolders = {};
+// System folder, defined within SAGE2 installation
+mediaFolders.system =	{
+	name: "system",
+	path: "public/uploads/",
+	url:  "/uploads",
+	upload: true
+};
+// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
+mediaFolders.user =	{
+	name: "user",
+	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
+	url:  "/user",
+	upload: false
+};
+// Add extra folders defined in the configuration file
+if (config.folders) {
+	config.folders.forEach(function (f) {
+		// Add a new folder into the collection
+		mediaFolders[f.name] = {};
+		mediaFolders[f.name].name   = f.name;
+		mediaFolders[f.name].path   = f.path;
+		mediaFolders[f.name].url    = f.url;
+		mediaFolders[f.name].upload = sageutils.isTrue(f.upload);
+	});
+}
+// Validate all the media folders
+for (var folder in mediaFolders) {
+	var f = mediaFolders[folder];
+	console.log(sageutils.header('Folders') + f.name + " " + f.path + " " + f.url);
+	if (!sageutils.fileExists(f.path)) {
+		fs.mkdirSync(f.path);
+	}
+	if (mediaFolders[f.name].upload) {
+		mediaFolders.system.upload = false;
+	}
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
+	newdirs.forEach(function(d) {
+		var newsubdir = path.join(mediaFolders[f.name].path, d);
+		if (!sageutils.fileExists(newsubdir)) {
+			fs.mkdirSync(newsubdir);
+		}
+	});
+}
+
+
+var publicDirectory  = "public"; // mediaFolders.system.path; // "public";
+var uploadsDirectory = path.join(publicDirectory, "uploads");
+var sessionDirectory = path.join(__dirname, "sessions");
 
 console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
@@ -100,7 +148,6 @@ console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version
 
 // Initialize Server
 initializeSage2Server();
-
 
 
 function initializeSage2Server() {
@@ -233,7 +280,14 @@ function initializeSage2Server() {
 	);
 
 	// Initialize assets
+	// Main folder
 	assets.initialize(uploadsDirectory, 'uploads');
+	// Extra folders
+	for (var mf in mediaFolders) {
+		if (mf !== 'system') {
+			assets.addAssetFolder(mediaFolders[mf].path, 'uploads');
+		}
+	}
 
 	// Initialize app loader
 	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -1259,7 +1313,7 @@ function listSessions() {
 										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
 				// Make it look like an exif data structure
-				thelist.push( { exif: { FileName: file.slice(0, -5),  FileSize:stat.size, FileDate: strdate} } );
+				thelist.push( { id:filename, exif: { FileName: file.slice(0, -5),  FileSize:stat.size, FileDate: strdate} } );
 			}
 		}
 	}
@@ -1381,7 +1435,13 @@ function createAppFromDescription(app, callback) {
 function loadSession (filename) {
 	filename = filename || 'default.json';
 
-	var fullpath = path.join(sessionDirectory, filename);
+	var fullpath;
+	if (sageutils.fileExists(path.resolve(filename))) {
+		fullpath = filename;
+	} else {
+		fullpath = path.join(sessionDirectory, filename);
+	}
+
 	// if it doesn't end in .json, add it
 	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
 		fullpath += '.json';
@@ -2657,16 +2717,16 @@ function loadConfiguration() {
 	}
 
 	// If config.txt does not exist or does not specify any files, look for a config with the hostname
-	if(configFile === null){
-		var hn = os.hostname();
+	if (configFile === null) {
+		var hn  = os.hostname();
 		var dot = hn.indexOf(".");
-		if(dot >= 0) hn = hn.substring(0, dot);
+		if (dot >= 0) hn = hn.substring(0, dot);
 		configFile = path.join("config", hn + "-cfg.json");
-		if(sageutils.fileExists(configFile)){
+		if (sageutils.fileExists(configFile)) {
 			console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
 		}
-		else{
-			if(platform === "Windows")
+		else {
+			if (platform === "Windows")
 				configFile = path.join("config", "defaultWin-cfg.json");
 			else
 				configFile = path.join("config", "default-cfg.json");
@@ -2681,11 +2741,11 @@ function loadConfiguration() {
 		process.exit(1);
 	}
 
-	var json_str = fs.readFileSync(configFile, 'utf8');
+	var json_str   = fs.readFileSync(configFile, 'utf8');
 	var userConfig = json5.parse(json_str);
 	// compute extra dependent parameters
-	userConfig.totalWidth     = userConfig.resolution.width  * userConfig.layout.columns;
-	userConfig.totalHeight    = userConfig.resolution.height * userConfig.layout.rows;
+	userConfig.totalWidth  = userConfig.resolution.width  * userConfig.layout.columns;
+	userConfig.totalHeight = userConfig.resolution.height * userConfig.layout.rows;
 
 	var minDim = Math.min(userConfig.totalWidth, userConfig.totalHeight);
 	var maxDim = Math.max(userConfig.totalWidth, userConfig.totalHeight);
@@ -2728,10 +2788,10 @@ function loadConfiguration() {
 	else
 		userConfig.background.clip = true;
 
-
 	// Registration to EVL's server (sage.evl.uic.edu), true by default
-	if (userConfig.register_site === undefined)
+	if (userConfig.register_site === undefined) {
 		userConfig.register_site = true;
+	}
 	else {
 		// test for a true value: true, on, yes, 1, ...
 		if (sageutils.isTrue(userConfig.register_site))
@@ -2741,7 +2801,7 @@ function loadConfiguration() {
 	}
 
 
-	if(userConfig.apis !== undefined && userConfig.apis.twitter !== undefined){
+	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
 		apis.twitter = new Twit({
 			consumer_key:         userConfig.apis.twitter.consumerKey,
 			consumer_secret:      userConfig.apis.twitter.consumerSecret,
