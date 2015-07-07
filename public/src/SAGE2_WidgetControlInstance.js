@@ -195,7 +195,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		rx:(knobWidth/16) + "px",
 		ry:(knobHeight/8) + "px",
 		//style:"shape-rendering:crispEdges;",
-		fill:"rgba(110,110,110,1.0)",
+		fill:"rgba(185,206,235,1.0)",
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});

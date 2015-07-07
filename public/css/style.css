@@ -86,7 +86,7 @@ body {
 }
 
 .widgetBackground{
-	fill: rgba(140,140,140,1.0);
+	fill: rgba(150,166,189,0.7);
 	stroke: rgba(230,230,230,1.0);
 	stroke-width: 1;
 }
