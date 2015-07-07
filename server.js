@@ -5761,7 +5761,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID+"_menu"] === undefined) {
-		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
+		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config);
 		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
 

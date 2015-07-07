@@ -28,7 +28,7 @@ var thumbnailWindowDefaultSize = { x: 1224, y: 860 };
  * @class RadialMenu
  * @constructor
  */
-function RadialMenu(id, ptrID, ui) {
+function RadialMenu(id, ptrID, config) {
 	this.id = id;
 	this.pointerid = ptrID;
 	this.label = "";
@@ -40,7 +40,12 @@ function RadialMenu(id, ptrID, ui) {
 	this.thumbnailWindowOpen = false;
 
 	// Default
-	this.radialMenuScale = ui.widgetControlSize * 0.03;
+	this.radialMenuScale = config.ui.widgetControlSize * 0.03;
+
+	if( config.ui.enable_perceptual_scaling ) {
+		this.radialMenuScale = 1;
+	}
+
 	this.radialMenuSize = { x: radialMenuDefaultSize.x * this.radialMenuScale, y: radialMenuDefaultSize.y * this.radialMenuScale };
 	this.thumbnailWindowSize = { x: thumbnailWindowDefaultSize.x * this.radialMenuScale, y: thumbnailWindowDefaultSize.y * this.radialMenuScale };
 	this.activeEventIDs = [];
