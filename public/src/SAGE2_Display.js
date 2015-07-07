@@ -786,15 +786,15 @@ function setupListeners() {
 							});
 						}
 					}
-					else if(state === 0){
+					else if(state === 1){
 						ctrlParent.select("#cover2").attr("visibility", "visible");
 						ctrlParent.select("#cover").attr("visibility", "hidden");
-						animationInfo.state = 1;
+						animationInfo.state = 0;
 					}
 					else{
 						ctrlParent.select("#cover").attr("visibility", "visible");
 						ctrlParent.select("#cover2").attr("visibility", "hidden");
-						animationInfo.state = 0;
+						animationInfo.state = 1;
 					}
 				}
 				else{
