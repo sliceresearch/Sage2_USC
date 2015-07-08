@@ -123,7 +123,7 @@ for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
 	console.log(sageutils.header('Folders') + f.name + " " + f.path + " " + f.url);
 	if (!sageutils.fileExists(f.path)) {
-		fs.mkdirSync(f.path);
+		sageutils.mkdirParent(f.path);
 	}
 	if (mediaFolders[f.name].upload) {
 		mediaFolders.system.upload = false;
@@ -132,7 +132,7 @@ for (var folder in mediaFolders) {
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.fileExists(newsubdir)) {
-			fs.mkdirSync(newsubdir);
+			sageutils.mkdirParent(newsubdir);
 		}
 	});
 }
