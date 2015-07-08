@@ -398,6 +398,45 @@ function getHomeDirectory() {
 	return process.env[ (process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 }
 
+
+/**
+ * Creates recursively a series of folders if needed (synchronous function and throws error)
+ *
+ * @method mkdirParent
+ * @param dirPath {String} path to be created
+ * @return {String} null or directory created
+ */
+function mkdirParent(dirPath) {
+    var made = null;
+    dirPath = path.resolve(dirPath);
+	try {
+		fs.mkdirSync(dirPath);
+		made = dirPath;
+	}
+	catch (err0) {
+		switch (err0.code) {
+			case 'ENOENT' :
+				made = mkdirParent(path.dirname(dirPath));
+				made = mkdirParent(dirPath);
+			break;
+
+			default:
+				var stat;
+				try {
+					stat = fs.statSync(dirPath);
+				}
+				catch (err1) {
+					throw err0;
+				}
+				if (!stat.isDirectory()) throw err0;
+				made = dirPath;
+				break;
+		}
+    }
+    return made;
+}
+
+
 /**
  * Place a callback on a list of folders to monitor.
  *  callback triggered when a change is detected:
@@ -465,4 +504,5 @@ module.exports.loadCABundle      = loadCABundle;
 module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.encodeReservedURL = encodeReservedURL;
+module.exports.mkdirParent       = mkdirParent;
 
