@@ -170,8 +170,8 @@ SAGE2DisplayUI.prototype.resize = function() {
 	var menuScale = 1.0;
 	if (window.innerWidth < 856) menuScale = window.innerWidth / 856;
 
-	var freeWidth   = window.innerWidth  - 25; // window width minus padding
-	var freeHeight  = window.innerHeight - 20 - 3 - (86*menuScale); //  bottom margin, and bottom buttons
+	var freeWidth   = window.innerWidth  - 26; // window width minus padding
+	var freeHeight  = window.innerHeight - 24 - (86*menuScale); //  bottom margin, and bottom buttons
 	var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 
 	// Calculate new sizes
