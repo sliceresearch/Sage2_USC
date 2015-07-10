@@ -405,6 +405,16 @@ function createButtonShape(paper, cx, cy, buttonRad, buttonShape){
 			}
 			buttonBack = paper.polygon(polygonPts);
 			break;
+		case "octagon":
+			var point;
+			var polygonPts = [];
+			for (var theta = 0; theta<=360; theta += 45){
+				point = polarToCartesian(buttonRad,theta+22.5,{x:cx,y:cy});
+				polygonPts.push(point.x);
+				polygonPts.push(point.y);
+			}
+			buttonBack = paper.polygon(polygonPts);
+			break;
 		case "circle":
 		default:
 			buttonBack = paper.circle(cx,cy,buttonRad);

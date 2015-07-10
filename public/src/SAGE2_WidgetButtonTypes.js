@@ -366,7 +366,7 @@ var SAGE2WidgetButtonTypes = {
 		this.state = null;
 		this.textual=false;
 		this.animation=false;
-		this.shape = "hexagon";
+		this.shape = "octagon";
 	},
 	"default": function (){
 		this.textual=true;
