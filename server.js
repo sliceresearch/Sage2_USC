@@ -1415,11 +1415,11 @@ function createAppFromDescription(app, callback) {
 
 	if (appURL.hostname === config.host) {
 		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
-			appLoader.loadFileFromLocalStorage({application: app.application, filename: app.title}, cloneApp);
+			appLoader.loadFileFromLocalStorage({application: app.application, filename: appURL.path}, cloneApp);
 		}
 		else {
-			var appDirectory = appURL.pathname.substring(appURL.pathname.lastIndexOf("/")+1, appURL.pathname.length);
-			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: appDirectory}, cloneApp);
+			//var appDirectory = appURL.pathname.substring(appURL.pathname.lastIndexOf("/")+1, appURL.pathname.length);
+			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: appURL.path}, cloneApp);
 		}
 	}
 	else {
