@@ -52,11 +52,11 @@ if ( semver.gte(process.versions.node, '0.10.0') ) {
 }
 
 /**
- * Test if file is exists and readable
+ * Test if file is exists
  *
  * @method fileExists
  * @param filename {String} name of the file to be tested
- * @return {Bool} true if readable
+ * @return {Bool} true if exists
  */
 function fileExists(filename) {
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
@@ -64,8 +64,30 @@ function fileExists(filename) {
 	} else {
 		// Versions 1.x or above
 		try {
-			fs.accessSync(filename, fs.R_OK);
-			return true;
+			//fs.accessSync(filename, fs.R_OK);
+			var res = fs.statSync(filename);
+			return res.isFile();
+		} catch (err) {
+			return false;
+		}
+	}
+}
+
+/**
+ * Test if folder is exists
+ *
+ * @method folderExists
+ * @param directory {String} name of the folder to be tested
+ * @return {Bool} true if exists
+ */
+function folderExists(directory) {
+	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
+		return fs.existsSync(directory);
+	} else {
+		// Versions 1.x or above
+		try {
+			var res = fs.statSync(directory);
+			return res.isDirectory();
 		} catch (err) {
 			return false;
 		}
@@ -491,6 +513,7 @@ module.exports.getShortVersion   = getShortVersion;
 module.exports.getFullVersion    = getFullVersion;
 module.exports.secureContext     = secureContext;
 module.exports.fileExists        = fileExists;
+module.exports.folderExists      = folderExists;
 module.exports.header            = header;
 module.exports.compareString     = compareString;
 module.exports.compareFilename   = compareFilename;
