@@ -600,12 +600,12 @@ var initialize = function (root, relativePath) {
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
-		if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
+		if (!sageutils.folderExists(assetFolder)) fs.mkdirSync(assetFolder);
 		registry.initialize(assetFolder);
 
 		// Make sure the asset/apps folder exists
 		var assetAppsFolder = path.join(assetFolder, 'apps');
-		if (!sageutils.fileExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
+		if (!sageutils.folderExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
 
 		// Make sure unknownapp images exist
 		var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.jpg');
@@ -714,11 +714,11 @@ var initialize = function (root, relativePath) {
 var addAssetFolder = function (root, relativePath) {
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
-	if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
+	if (!sageutils.folderExists(assetFolder)) fs.mkdirSync(assetFolder);
 
 	// Make sure the asset/apps folder exists
 	var assetAppsFolder = path.join(assetFolder, 'apps');
-	if (!sageutils.fileExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
+	if (!sageutils.folderExists(assetAppsFolder)) fs.mkdirSync(assetAppsFolder);
 
 	// Make sure unknownapp images exist
 	var unknownapp_256Img = path.resolve(AllAssets.root, '..', 'images', 'unknownapp_256.jpg');
@@ -822,7 +822,7 @@ var addAssetFolder = function (root, relativePath) {
 var regenerateAssets = function() {
 	// Make sure the asset folder exists
 	var assetFolder = path.join(AllAssets.root, 'assets');
-	if (!sageutils.fileExists(assetFolder)) fs.mkdirSync(assetFolder);
+	if (!sageutils.folderExists(assetFolder)) fs.mkdirSync(assetFolder);
 	var assetFile = path.join(assetFolder, 'assets.json');
 	if (sageutils.fileExists(assetFile)) {
 		fs.unlinkSync(assetFile);

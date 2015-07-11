@@ -122,7 +122,7 @@ if (config.folders) {
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
 	console.log(sageutils.header('Folders') + f.name + " " + f.path + " " + f.url);
-	if (!sageutils.fileExists(f.path)) {
+	if (!sageutils.folderExists(f.path)) {
 		sageutils.mkdirParent(f.path);
 	}
 	if (mediaFolders[f.name].upload) {
@@ -131,7 +131,7 @@ for (var folder in mediaFolders) {
 	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
-		if (!sageutils.fileExists(newsubdir)) {
+		if (!sageutils.folderExists(newsubdir)) {
 			sageutils.mkdirParent(newsubdir);
 		}
 	});
@@ -200,7 +200,7 @@ function initializeSage2Server() {
 		users.session.start = Date.now();
 
 		setInterval(saveUserLog, 300000); // every 5 minutes
-		if (!sageutils.fileExists("logs")) {
+		if (!sageutils.folderExists("logs")) {
 			fs.mkdirSync("logs");
 		}
 	}
@@ -228,19 +228,19 @@ function initializeSage2Server() {
 	// Setup tmp directory for SAGE2 server
 	process.env.TMPDIR = path.join(__dirname, "tmp");
 	console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
-	if (!sageutils.fileExists(process.env.TMPDIR)) {
+	if (!sageutils.folderExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
 
 	// Setup tmp directory in uploads
 	var uploadTemp = path.join(__dirname, "public", "uploads", "tmp");
 	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + uploadTemp);
-	if (!sageutils.fileExists(uploadTemp)) {
+	if (!sageutils.folderExists(uploadTemp)) {
 		fs.mkdirSync(uploadTemp);
 	}
 
 	// Make sure sessions directory exists
-	if (!sageutils.fileExists(sessionDirectory)) {
+	if (!sageutils.folderExists(sessionDirectory)) {
 		fs.mkdirSync(sessionDirectory);
 	}
 
