@@ -23,7 +23,7 @@
 
 var fs        = require('fs');
 var path      = require('path');
-var url       = require('url');
+//var url       = require('url');
 
 var color     = require('color');
 var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
@@ -82,7 +82,8 @@ Asset.prototype.setFilename = function(aFilename) {
 		up = path.resolve(folder.path);
 		var pubdir = this.id.split(up);
 		if (pubdir.length === 2) {
-			this.sage2URL = sageutils.encodeReservedURL(url.format(folder.url + url.format(pubdir[1])));
+			//this.sage2URL = sageutils.encodeReservedURL(url.format(folder.url + url.format(pubdir[1])));
+			this.sage2URL = sageutils.encodeReservedURL(folder.url + pubdir[1]);
 		}
 	}
 };
