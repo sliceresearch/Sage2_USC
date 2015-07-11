@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 			}
 		},
 		jscs: {
-			src: "server.js",
+			src: ['server.js', 'src/*.js'],
 			options: {
 				"preset": "node-style-guide",
 				"requireCapitalizedComments": null,
@@ -113,7 +113,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-jscs');
 
 	// this would be run by typing "grunt test" on the command line
-	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
+	grunt.registerTask('all', ['eslint', 'jscs', 'yuidoc', 'uglify', 'mochacli']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);
