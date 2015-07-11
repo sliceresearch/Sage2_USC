@@ -20,7 +20,7 @@
 // Inspired by: https://github.com/nathanpeck/exiftool
 
 // require variables to be declared
-"use strict";
+'use strict';
 
 var ChildProcess = require('child_process');
 
@@ -38,29 +38,28 @@ function fileSpawn(filename, done) {
 	// The dash specifies to read data from stdin
 	var exif = ChildProcess.spawn('exiftool', ['-json', filename]);
 
-	//Check for error because of the child process not being found / launched
-	exif.on('error', function (err) {
+	// Check for error because of the child process not being found / launched
+	exif.on('error', function(err) {
 		done('Fatal Error: Unable to load exiftool. ' + err);
 	});
 
 	// Read the binary data back
 	var response = '';
 	var errorMessage = '';
-	exif.stdout.on("data", function (data) {
+	exif.stdout.on("data", function(data) {
 		response += data;
 	});
 
 	// Read an error response back and deal with it.
-	exif.stderr.on("data", function (data) {
+	exif.stderr.on("data", function(data) {
 		errorMessage += data.toString();
 	});
 
 	// Handle the response to the callback to hand the metadata back.
-	exif.on("close", function () {
+	exif.on("close", function() {
 		if (errorMessage) {
 			done(errorMessage);
-		}
-		else {
+		} else {
 			var metadata = JSON.parse(response);
 			done(null, metadata[0]);
 		}
@@ -75,11 +74,10 @@ function fileSpawn(filename, done) {
  * @param done {Function} executed when done, done(error, metadata)
  */
 function file(filename, done) {
-	ChildProcess.exec('exiftool -json \"' + filename + '\"', function (error, stdout, stderr) {
+	ChildProcess.exec('exiftool -json \"' + filename + '\"', function(error, stdout, stderr) {
 		if (error !== null) {
 			done(error);
-		}
-		else {
+		} else {
 			var metadata = JSON.parse(stdout);
 			done(null, metadata[0]);
 		}
@@ -100,13 +98,13 @@ function fileSync(filename) {
 	var result = spawnSync('exiftool', ['-json', filename]);
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
-		return {err:'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata:null};
+		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
 	} else {
-		if (result.stdout.length!==0) {
+		if (result.stdout.length !== 0) {
 			var metadata = JSON.parse(result.stdout);
-			return {err:null, metadata:metadata[0]};
+			return {err: null, metadata: metadata[0]};
 		} else {
-			return {err:result.stderr.toString(), metadata:null};
+			return {err: result.stderr.toString(), metadata: null};
 		}
 	}
 }
@@ -121,14 +119,14 @@ function fileSync(filename) {
 function bufferSync(source) {
 	var result = spawnSync('exiftool',
 							['-json', '-'],
-							{input: source, encoding:null});
+							{input: source, encoding: null});
 
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
-		return {err:'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata:null};
+		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
 	} else {
 		var metadata = JSON.parse(result.stdout);
-		return {err:null, metadata:metadata[0]};
+		return {err: null, metadata: metadata[0]};
 	}
 }
 
@@ -144,33 +142,32 @@ function buffer(source, callback) {
 	var exif = ChildProcess.spawn('exiftool', ['-json', '-'], {stdin: 'pipe'});
 
 	// Check for error because of the child process not being found / launched
-	exif.on('error', function (err) {
+	exif.on('error', function(err) {
 		callback('Fatal Error: Unable to load exiftool. ' + err);
 	});
 
 	// Read the binary data back
 	var response = '';
 	var errorMessage = '';
-	exif.stdout.on("data", function (data) {
+	exif.stdout.on("data", function(data) {
 		response += data;
 	});
 
 	// Read an error response back and deal with it.
-	exif.stderr.on("data", function (data) {
+	exif.stderr.on("data", function(data) {
 		errorMessage += data.toString();
 	});
 
-	exif.on("close", function () {
+	exif.on("close", function() {
 		if (errorMessage) {
 			callback(errorMessage);
-		}
-		else {
+		} else {
 			var metadata = JSON.parse(response);
 			callback(null, metadata[0]);
 		}
 	});
 
-	exif.stdin.on('error', function (err) {
+	exif.stdin.on('error', function(err) {
 		console.log('Error in stdin - IGNORED', err);
 	});
 
@@ -178,13 +175,16 @@ function buffer(source, callback) {
 	var done = false;
 	while (!done) {
 		// Give the source binary data to the process
-		var status = exif.stdin.write(source.slice(curr, Math.min(curr+16*1024, source.length)));
-		curr += 16*1024;
+		var status = exif.stdin.write(source.slice(curr, Math.min(curr + 16 * 1024, source.length)));
+		curr += 16 * 1024;
 		done  = status;
-		if (curr >= source.length) done = true;
+		if (curr >= source.length) {
+			done = true;
+		}
 	}
 
-	exif.stdin.end(function () { // nothing
+	exif.stdin.end(function() {
+		// nothing
 	});
 
 	return exif;
