@@ -161,7 +161,7 @@ AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
 			}
 		}
 
-		_this.loadVideoFromURL(url, "video/youtube", info.formats[video.index].url, info.title, function(appInstance, videohandle) {
+		_this.loadVideoFromURL(aUrl, "video/youtube", info.formats[video.index].url, info.title, function(appInstance, videohandle) {
 			appInstance.data.video_url  = info.formats[video.index].url;
 			appInstance.data.video_type = video.type;
 			appInstance.data.audio_url  = info.formats[audio.index].url;
@@ -482,8 +482,8 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 	var _this = this;
 	var zipFolder = file;
 
-	var instuctionsFile = path.join(zipFolder, "instructions.json");
-	fs.readFile(instuctionsFile, 'utf8', function(err, json_str) {
+	var instructionsFile = path.join(zipFolder, "instructions.json");
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if(err) throw err;
 
         var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
@@ -634,11 +634,35 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 };
 
+function getSAGE2Path(getName) {
+	// pathname: result of the search
+	var pathname = null;
+	// walk through the list of folders
+	for (var f in global.mediaFolders) {
+		// Get the folder object
+		var folder = global.mediaFolders[f];
+		// Look for the folder url in the request
+		var pubdir = getName.split(folder.url);
+		if (pubdir.length === 2) {
+			// convert the URL into a path
+			var suburl = path.join('.', pubdir[1]);
+			pathname   = url.resolve(folder.path, suburl);
+			pathname   = decodeURIComponent(pathname);
+			break;
+		}
+	}
+	// if everything fails, look in the default public folder
+	if (!pathname) {
+		pathname = getName;
+	}
+	return pathname;
+}
+
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
-	var a_url        = assets.getURL(file.filename);
+	var localPath = getSAGE2Path(file.filename);
+	var a_url     = assets.getURL(localPath);
+	var mime_type = mime.lookup(file.filename);
 	var external_url = url.resolve(this.hostOrigin, a_url);
-	var mime_type    = mime.lookup(file.filename);
-	var localPath    = file.filename;
 
 	this.loadApplication({location: "file", path: localPath, url: a_url, external_url: external_url, type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
 		callback(appInstance, handle);
