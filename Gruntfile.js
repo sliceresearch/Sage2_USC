@@ -21,6 +21,19 @@ module.exports = function(grunt) {
 				options: { config: "build/.eslint_client_rc" }
 			}
 		},
+		jscs: {
+			src: "server.js",
+			options: {
+				"preset": "node-style-guide",
+				"requireCapitalizedComments": null,
+				"requireCamelCaseOrUpperCaseIdentifiers": null,
+				"validateQuoteMarks": null,
+				"validateIndentation": "\t",
+				"disallowCommaBeforeLineBreak": null,
+				"requireTrailingComma": null,
+				"maximumLineLength": 130
+			}
+		},
 		yuidoc: {
 			options: {
 				quiet: true
@@ -97,6 +110,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');
 	grunt.loadNpmTasks('grunt-prompt');
+	grunt.loadNpmTasks('grunt-jscs');
 
 	// this would be run by typing "grunt test" on the command line
 	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
