@@ -60,7 +60,7 @@ InteractableManager.prototype.addLayer = function(id, zIndex) {
 * @param id {String} unique identifier for the layer
 */
 InteractableManager.prototype.removeLayer = function(id) {
-	if(this.layers.hasOwnProperty(id)) {
+	if (this.layers.hasOwnProperty(id)) {
 		delete this.layers[id];
 		delete this.interactableObjects[id];
 
@@ -93,13 +93,12 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 		zIndex:   zIndex,
 		data:     data
 	};
-	if(type === "circle") {
+	if (type === "circle") {
 		pkg.x1 = geometry.x - geometry.r;
 		pkg.y1 = geometry.y - geometry.r;
 		pkg.x2 = geometry.x + geometry.r;
 		pkg.y2 = geometry.y + geometry.r;
-	}
-	else {
+	} else {
 		pkg.x1 = geometry.x;
 		pkg.y1 = geometry.y;
 		pkg.x2 = geometry.x + geometry.w;
@@ -140,13 +139,12 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 
 	pkg.type = type;
 	pkg.geometry = geometry;
-	if(type === "circle") {
+	if (type === "circle") {
 		pkg.x1 = geometry.x - geometry.r;
 		pkg.y1 = geometry.y - geometry.r;
 		pkg.x2 = geometry.x + geometry.r;
 		pkg.y2 = geometry.y + geometry.r;
-	}
-	else {
+	} else {
 		pkg.x1 = geometry.x;
 		pkg.y1 = geometry.y;
 		pkg.x2 = geometry.x + geometry.w;
@@ -166,8 +164,9 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 InteractableManager.prototype.hasObjectWithId = function(id) {
 	var key;
 	for (key in this.interactableObjects) {
-		if (this.interactableObjects[key].hasOwnProperty(id))
+		if (this.interactableObjects[key].hasOwnProperty(id)) {
 			return true;
+		}
 	}
 	return false;
 };
@@ -213,12 +212,14 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLay
 	var maxZIndex = currZIndex;
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
-	for (i=0; i<allLayerIds.length; i++) {
+	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
 				var itemZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
 				if (itemZIndex > currZIndex) {
-					if (itemZIndex > maxZIndex) maxZIndex = itemZIndex;
+					if (itemZIndex > maxZIndex) {
+						maxZIndex = itemZIndex;
+					}
 					this.interactableObjects[allLayerIds[i]][key].zIndex--;
 				}
 			}
@@ -241,7 +242,7 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 	var zIndexList = {};
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
-	for (i=0; i<allLayerIds.length; i++) {
+	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
 				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = this.interactableObjects[allLayerIds[i]][key].zIndex;
@@ -277,17 +278,15 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {
 		results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
-	}
-	else {
+	} else {
 		var i;
 		var tmp;
 		results = [];
-		for(i=this.layerOrder.length-1; i>=0; i--) {
+		for (i = this.layerOrder.length - 1; i >= 0; i--) {
 			tmp = this.layers[this.layerOrder[i]].objects.search([point.x, point.y, point.x, point.y]);
-			if (i < this.layerOrder.length-1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i+1]].zIndex) {
-				results[results.length-1] = results[results.length-1].concat(tmp);
-			}
-			else {
+			if (i < this.layerOrder.length - 1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
+				results[results.length - 1] = results[results.length - 1].concat(tmp);
+			} else {
 				results.push(tmp);
 			}
 		}
@@ -308,25 +307,31 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 function findTopmostGeometry(point, geometryList, ignoreList) {
 	var i, j;
 	var topmost = null;
-	if (!(ignoreList instanceof Array)) ignoreList = [];
-	for(i=0; i<geometryList.length; i++) {
-		for(j=0; j<geometryList[i].length; j++) {
-			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) continue;
+	if (!(ignoreList instanceof Array)) {
+		ignoreList = [];
+	}
+	for (i = 0; i < geometryList.length; i++) {
+		for (j = 0; j < geometryList[i].length; j++) {
+			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) {
+				continue;
+			}
 			if (geometryList[i][j].type === "circle") {
 				var x = point.x - geometryList[i][j].geometry.x;
 				var y = point.y - geometryList[i][j].geometry.y;
 				var r = geometryList[i][j].geometry.r;
-				if ((x*x + y*y) < (r*r) && geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+				if ((x * x + y * y) < (r * r) && geometryList[i][j].visible === true &&
+					(topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
-			}
-			else {
+			} else {
 				if (geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
 			}
 		}
-		if(topmost !== null) return topmost;
+		if (topmost !== null) {
+			return topmost;
+		}
 	}
 	return null;
 }
