@@ -16,9 +16,9 @@
  * @class SAGE2_Files
  */
 
-/*global escape: true */
-/*global unescape: true */
+/* global SAGE2_init, escape, unescape */
 
+"use strict";
 
 /**
  * Entry point of the editor
@@ -52,13 +52,13 @@ function SAGE2_init() {
 	});
 
 	// Socket close event (ie server crashed)
-	wsio.on('close', function (evt) {
-		var refresh = setInterval(function () {
+	wsio.on('close', function() {
+		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
 			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200){
+				if (xhr.readyState === 4 && xhr.status === 200) {
 					console.log("server ready");
 					// when server ready, clear the interval callback
 					clearInterval(refresh);
@@ -81,7 +81,7 @@ function SAGE2_init() {
 function setupListeners(wsio) {
 
 	// Got a reply from the server
-	wsio.on('initialize', function(data) {
+	wsio.on('initialize', function() {
 		console.log('initialize');
 
 		wsio.emit('requestStoredFiles');
@@ -95,16 +95,17 @@ function setupListeners(wsio) {
 		var output, i, f;
 
 		output = [];
-		for (i = 0, f; f = data[i]; i++) {
+		for (i = 0, f; f = data[i]; i++) { // eslint-disable-line
 			output.push('<tr>',
 				'<td>&#8226;</td>',
-				'<td> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></td>',
+				'<td> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail) + '_128.jpg /></td>',
 				'<td>', unescape(f.exif.metadata.title), '</td>',
 				'<td>', f.exif.metadata.description, '</td>',
 				'<td>', f.exif.metadata.author, '</td>',
 				'</tr>');
 		}
-		document.getElementById('application_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' + output.join('') + '</table>';
+		document.getElementById('application_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' +
+				output.join('') + '</table>';
 	});
 
 	// Server the media files list
@@ -116,7 +117,7 @@ function setupListeners(wsio) {
 		document.getElementById('configuration_files').innerHTML = '<ul> <li>default-cfg.json</li> </ul>';
 
 		output = [];
-		for (i = 0, f; f = data.sessions[i]; i++) {
+		for (i = 0, f; f = data.sessions[i]; i++) { // eslint-disable-line
 			output.push('<tr>',
 				'<td>&#8226;</td>',
 				'<td>', escape(f.exif.FileName), '</td>',
@@ -124,43 +125,50 @@ function setupListeners(wsio) {
 				'<td>', f.exif.FileSize, ' bytes</td>',
 				'</tr>');
 		}
-		document.getElementById('session_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' + output.join('') + '</table>';
+		document.getElementById('session_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' +
+				output.join('') + '</table>';
 
 		output = [];
-		for (i = 0, f; f = data.images[i]; i++) {
+		for (i = 0, f; f = data.images[i]; i++) { // eslint-disable-line
 			output.push('<tr>',
 				'<td>&#8226;</td>',
-				'<td><a href=/uploads/images/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',
+				'<td><a href=/uploads/images/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/',
+						escape(f.exif.SAGE2thumbnail) + '_128.jpg /></a></td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileType, '</td>',
 				'<td>', f.exif.FileSize, '</td>',
 				'</tr>');
 		}
-		document.getElementById('image_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' + output.join('') + '</table>';
+		document.getElementById('image_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' +
+				output.join('') + '</table>';
 
 		output = [];
-		for (i = 0, f; f = data.pdfs[i]; i++) {
+		for (i = 0, f; f = data.pdfs[i]; i++) { // eslint-disable-line
 			output.push('<tr>',
 				'<td>&#8226;</td>',
-				'<td><a href=/uploads/pdfs/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',
+				'<td><a href=/uploads/pdfs/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/',
+						escape(f.exif.SAGE2thumbnail) + '_128.jpg /></a></td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileType, '</td>',
 				'<td>', f.exif.FileSize, '</td>',
 				'</tr>');
 		}
-		document.getElementById('pdf_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' + output.join('') + '</table>';
+		document.getElementById('pdf_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' +
+				output.join('') + '</table>';
 
 		output = [];
-		for (i = 0, f; f = data.videos[i]; i++) {
+		for (i = 0, f; f = data.videos[i]; i++) { // eslint-disable-line
 			output.push('<tr>',
 				'<td>&#8226;</td>',
-				'<td><a href=/uploads/videos/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/', escape(f.exif.SAGE2thumbnail)+'_128.jpg /></a></td>',
+				'<td><a href=/uploads/videos/', escape(f.exif.FileName), '> <img style=vertical-align:middle src=/',
+						escape(f.exif.SAGE2thumbnail) + '_128.jpg /></a></td>',
 				'<td>', escape(f.exif.FileName), '</td>',
 				'<td>', f.exif.FileType, '</td>',
 				'<td>', f.exif.FileSize, '</td>',
 				'</tr>');
 		}
-		document.getElementById('video_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' + output.join('') + '</table>';
+		document.getElementById('video_files').innerHTML = '<table style=\"border-spacing: 5px 5px;\">' +
+				output.join('') + '</table>';
 	});
 
 	// Server sends the SAGE2 version
@@ -169,12 +177,12 @@ function setupListeners(wsio) {
 	});
 
 	// Server sends the wall configuration
-	wsio.on('setupDisplayConfiguration', function(json_cfg) {
+	wsio.on('setupDisplayConfiguration', function() {
 		console.log('wall configuration');
 	});
 
 	// Server sends the animate loop event
-	wsio.on('animateCanvas', function(data) {
+	wsio.on('animateCanvas', function() {
 		console.log('animateCanvas');
 	});
 
