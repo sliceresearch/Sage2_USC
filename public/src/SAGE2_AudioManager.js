@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+"use strict";
+
 /**
  * SAGE2 Audio Manager, renders the audio streams for a given site
  *
@@ -40,26 +42,6 @@ function SAGE2_init() {
 
 		setupListeners();
 
-		/*
-		var clientDescription = {
-			clientType: "audioManager",
-			sendsPointerData: false,
-			sendsMediaStreamFrames: false,
-			requestsServerFiles: false,
-			sendsWebContentToLoad: false,
-			sendsVideoSynchonization: true,
-			sharesContentWithRemoteServer: false,
-			receivesDisplayConfiguration: true,
-			receivesClockTime: false,
-			requiresFullApps: true,
-			requiresAppPositionSizeTypeOnly: false,
-			receivesMediaStreamFrames: false,
-			receivesWindowModification: false,
-			receivesPointerData: false,
-			receivesInputEvents: true,
-			receivesRemoteServerInfo: false
-		};
-		*/
 		var clientDescription = {
 			clientType: "audioManager",
 			requests: {
@@ -73,13 +55,13 @@ function SAGE2_init() {
 	});
 
 	// Socket close event (ie server crashed)
-	wsio.on('close', function (evt) {
-		var refresh = setInterval(function () {
+	wsio.on('close', function(evt) {
+		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
 			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200){
+				if (xhr.readyState === 4 && xhr.status === 200) {
 					console.log("server ready");
 					// when server ready, clear the interval callback
 					clearInterval(refresh);
@@ -96,7 +78,7 @@ function setupListeners() {
 	wsio.on('initialize', function(data) {
 		// var serverTime = new Date(data.time);
 		// var clientTime = new Date();
-		//dt = clientTime - serverTime;
+		// dt = clientTime - serverTime;
 	});
 
 	wsio.on('setupDisplayConfiguration', function(json_cfg) {
@@ -108,7 +90,7 @@ function setupListeners() {
 		https_port = json_cfg.port === 443 ? "" : ":" + json_cfg.port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
 		hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
-		for(i=0; i<json_cfg.alternate_hosts.length; i++) {
+		for (i = 0; i < json_cfg.alternate_hosts.length; i++) {
 			hostAlias["http://"  + json_cfg.alternate_hosts[i] + http_port]  = window.location.origin;
 			hostAlias["https://" + json_cfg.alternate_hosts[i] + https_port] = window.location.origin;
 		}
@@ -124,7 +106,7 @@ function setupListeners() {
 	});
 
 	wsio.on('createAppWindow', function(data) {
-		if(data.application === "movie_player"){
+		if (data.application === "movie_player") {
 			var main = document.getElementById('main');
 			var videosTable = document.getElementById('videos');
 
@@ -134,22 +116,31 @@ function setupListeners() {
 			vid.style.display = "none";
 			vid.addEventListener('canplay', function() {
 				console.log("video can now play"); // Video is loaded and can be played
-				if (autoplay === true) playVideo(data.id);
+				if (autoplay === true) {
+					playVideo(data.id);
+				}
 			}, false);
 			vid.addEventListener('ended', function() {
 				console.log("video ended");
-				if(autoplay === true) vid.currentTime = 0;
+				if (autoplay === true) {
+					vid.currentTime = 0;
+				}
 			}, false);
 			vid.addEventListener('timeupdate', function() {
 				var vid_time = document.getElementById(data.id + "_time");
-				if (vid_time) vid_time.textContent = formatHHMMSS(vid.currentTime);
+				if (vid_time) {
+					vid_time.textContent = formatHHMMSS(vid.currentTime);
+				}
 			}, false);
 
 			var url    = cleanURL(data.data.audio_url);
 			var source = document.createElement('source');
 			var param  = url.indexOf('?');
-			if(param >= 0) source.src = url + "&clientID=audio";
-			else source.src = url + "?clientID=audio";
+			if (param >= 0) {
+				source.src = url + "&clientID=audio";
+			} else {
+				source.src = url + "?clientID=audio";
+			}
 			source.type = data.data.audio_type;
 			vid.appendChild(source);
 
@@ -202,41 +193,63 @@ function setupListeners() {
 	wsio.on('videoPlaying', function(data) {
 		var vid      = document.getElementById(data.id);
 		var vid_play = document.getElementById(data.id + "_play");
-		if(vid)      vid.play();
-		if(vid_play) vid_play.textContent = "Playing";
+		if (vid) {
+			vid.play();
+		}
+		if (vid_play) {
+			vid_play.textContent = "Playing";
+		}
 	});
 
 	wsio.on('videoPaused', function(data) {
 		var vid      = document.getElementById(data.id);
 		var vid_play = document.getElementById(data.id + "_play");
-		if(vid)      vid.pause();
-		if(vid_play) vid_play.textContent = "Paused";
+		if (vid) {
+			vid.pause();
+		}
+		if (vid_play) {
+			vid_play.textContent = "Paused";
+		}
 	});
 
 	wsio.on('videoEnded', function(data) {
 		var vid      = document.getElementById(data.id);
 		var vid_play = document.getElementById(data.id + "_play");
-		if(vid)      vid.pause();
-		if(vid_play) vid_play.textContent = "Paused";
+		if (vid) {
+			vid.pause();
+		}
+		if (vid_play) {
+			vid_play.textContent = "Paused";
+		}
 	});
 
 	wsio.on('videoMuted', function(data) {
 		var vid      = document.getElementById(data.id);
 		var vid_mute = document.getElementById(data.id + "_mute");
-		if(vid)      vid.muted = true;
-		if(vid_mute) vid_mute.innerHTML = "&#x2717;";
+		if (vid) {
+			vid.muted = true;
+		}
+		if (vid_mute) {
+			vid_mute.innerHTML = "&#x2717;";
+		}
 	});
 
 	wsio.on('videoUnmuted', function(data) {
 		var vid      = document.getElementById(data.id);
 		var vid_mute = document.getElementById(data.id + "_mute");
-		if(vid)      vid.muted = false;
-		if(vid_mute) vid_mute.innerHTML = "&#x2713;";
+		if (vid) {
+			vid.muted = false;
+		}
+		if (vid_mute) {
+			vid_mute.innerHTML = "&#x2713;";
+		}
 	});
 
 	wsio.on('updateVideoItemTime', function(data) {
 		var vid = document.getElementById(data.id);
-		if(vid) vid.currentTime = data.timestamp;
+		if (vid) {
+			vid.currentTime = data.timestamp;
+		}
 	});
 
 	wsio.on('deleteElement', function(elem_data) {
@@ -253,7 +266,7 @@ function setupListeners() {
  */
 function changeVolume(event) {
 	var vol     = document.getElementById(event.target.id).value / 10;
-	var videoId = event.target.id.substring(0, event.target.id.length-13);
+	var videoId = event.target.id.substring(0, event.target.id.length - 13);
 	changeVideoVolume(videoId, vol);
 }
 

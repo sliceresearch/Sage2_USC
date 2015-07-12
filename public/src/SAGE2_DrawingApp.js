@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+"use strict";
+
 /**
  * Client-side application for drawing, leverages Wacom plugin if present
  *
@@ -21,8 +23,8 @@ var wsio_global;
 
 var plugin;
 var canvas;
-var canvasPos    = {x:0.0, y:0.0};
-var canvasSize   = {width:1280, height:720};
+var canvasPos    = {x: 0.0, y: 0.0};
+var canvasSize   = {width: 1280, height: 720};
 var capturing    = false;
 var aSpline      = null;
 var layer        = null;
@@ -37,7 +39,9 @@ var drawingStage = null;
 
 // Explicitely close web socket when web broswer is closed
 window.onbeforeunload = function() {
-	if(wsio_global !== undefined) wsio_global.close();
+	if (wsio_global !== undefined) {
+		wsio_global.close();
+	}
 };
 
 
@@ -47,15 +51,15 @@ function findPos(obj) {
 	if (obj.offsetParent) {
 		curleft = obj.offsetLeft;
 		curtop  = obj.offsetTop;
-		while (obj = obj.offsetParent) { // jshint ignore:line
+		while (obj = obj.offsetParent) { // eslint-disable-line
 			curleft += obj.offsetLeft;
 			curtop  += obj.offsetTop;
 		}
 	}
-	return {x:curleft, y:curtop};
+	return {x: curleft, y: curtop};
 }
 
-function inCanvasBounds(posX, posY ) {
+function inCanvasBounds(posX, posY) {
 	var left   = 0;
 	var top    = 0;
 	var right  = canvasSize.width;
@@ -93,8 +97,8 @@ function SAGE2_init() {
 	});
 
 	// Socket close event (ie server crashed)
-	wsio_global.on('close', function (evt) {
-		var refresh = setInterval(function () {
+	wsio_global.on('close', function(evt) {
+		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
@@ -129,10 +133,11 @@ function setupListeners(wsio) {
 
 		// Show plugin version
 		var pluginVersion = document.getElementById('pluginVersion');
-		if (plugin.version)
+		if (plugin.version) {
 			pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
-		else
+		} else {
 			pluginVersion.innerHTML = "Plugin Version: n/a";
+		}
 
 		var pluginInformation = document.getElementById('pluginInformation');
 
@@ -171,8 +176,24 @@ function setupListeners(wsio) {
 		uigrp = new Kinetic.Group();
 		var xoffset = 15;
 		var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
-		for (var i=0; i<14; i++) {
-			var bgrp = new Kinetic.Group( {x: xoffset, y: 5});
+
+		function onMouseUp(evt) {
+			var id = evt.target.id();
+			if (id === 0) {
+				eraseMode = false;
+			} else if (id === 1) {
+				eraseMode = true;
+			} else if (id === 2) {
+				previousLayer();
+			} else if (id === 3) {
+				nextLayer();
+			} else if (id === 4) {
+				newLayer();
+			}
+		}
+
+		for (var i = 0; i < 14; i++) {
+			var bgrp = new Kinetic.Group({x: xoffset, y: 5});
 			var button = new Kinetic.Rect({
 				width: 80,
 				height: 40,
@@ -192,28 +213,15 @@ function setupListeners(wsio) {
 				fontFamily: 'Arial',
 				fontSize: 18,
 				padding: 5,
-				id: 'text_'+i,
-				fill: 'black', listening:false
+				id: 'text_' + i,
+				fill: 'black', listening: false
 			}));
 
 			xoffset += 90;
 			bgrp.add(buttonLabel);
 			uigrp.add(bgrp);
 
-			button.on('mouseup', function(evt) {
-				var id = evt.target.id();
-				if (id===0) {
-					eraseMode = false;
-				} else  if (id===1) {
-					eraseMode = true;
-				} else  if (id===2) {
-					previousLayer();
-				} else  if (id===3) {
-					nextLayer();
-				} else  if (id===4) {
-					newLayer();
-				}
-			});
+			button.on('mouseup', onMouseUp);
 		}
 		uilayer.add(uibg);
 		uilayer.add(uigrp);
@@ -273,8 +281,9 @@ function newLayer() {
 	// create a new layer
 	var nlayer = new Kinetic.Layer();
 	// hide all the other layers
-	for (var i=0; i<numLayers; i++)
+	for (var i = 0; i < numLayers; i++) {
 		allLayers[i].hide();
+	}
 	// put the new layer on display
 	drawingStage.add(nlayer);
 	nlayer.show();
@@ -286,7 +295,7 @@ function newLayer() {
 	layer = nlayer;
 	// Update the status window
 	var status = uigrp.find('#text_13');
-	status.text( (currentLayer+1) + '/' + numLayers);
+	status.text((currentLayer + 1) + '/' + numLayers);
 	uigrp.draw();
 
 	wsio_global.emit('pointerDraw', {command: 'newlayer'});
@@ -299,25 +308,28 @@ function newLayer() {
  */
 function nextLayer() {
 	var newidx = currentLayer + 1;
-	if (newidx >= numLayers) newidx = numLayers-1;
+	if (newidx >= numLayers) {
+		newidx = numLayers - 1;
+	}
 	if (newidx !== currentLayer) {
 		// set the new index
 		currentLayer = newidx;
 		// show/hide the layers
-		for (var i=0; i<numLayers; i++) {
-			if (i === currentLayer)
+		for (var i = 0; i < numLayers; i++) {
+			if (i === currentLayer) {
 				allLayers[i].show();
-			else
+			} else {
 				allLayers[i].hide();
+			}
 		}
 		// make it the active layer
 		layer = allLayers[currentLayer];
 		// Update the status window
 		var status = uigrp.find('#text_13');
-		status.text( (currentLayer+1) + '/' + numLayers);
+		status.text((currentLayer + 1) + '/' + numLayers);
 		uigrp.draw();
 
-		wsio_global.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+		wsio_global.emit('pointerDraw', {command: 'activelayer', value: currentLayer});
 	}
 }
 
@@ -327,25 +339,26 @@ function nextLayer() {
  * @method previousLayer
  */
 function previousLayer() {
-	var newidx = (currentLayer-1) % numLayers;
-	if (newidx >=0 && newidx !== currentLayer) {
+	var newidx = (currentLayer - 1) % numLayers;
+	if (newidx >= 0 && newidx !== currentLayer) {
 		// set the new index
 		currentLayer = newidx;
 		// show/hide the layers
-		for (var i=0; i<numLayers; i++) {
-			if (i === currentLayer)
+		for (var i = 0; i < numLayers; i++) {
+			if (i === currentLayer) {
 				allLayers[i].show();
-			else
+			} else {
 				allLayers[i].hide();
+			}
 		}
 		// make it the active layer
 		layer = allLayers[currentLayer];
 		// Update the status window
 		var status = uigrp.find('#text_13');
-		status.text( (currentLayer+1) + '/' + numLayers);
+		status.text((currentLayer + 1) + '/' + numLayers);
 		uigrp.draw();
 
-		wsio_global.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+		wsio_global.emit('pointerDraw', {command: 'activelayer', value: currentLayer});
 	}
 }
 
@@ -360,12 +373,12 @@ function mousedown(ev) {
 		// plugin.penAPI.pointerType: 0:out 1:pen 2:mouse/puck 3:eraser
 		if (plugin.penAPI.pointerType === 3) {
 			eraseMode = true;
-		} if (plugin.penAPI.pointerType === 1) {
+		} else if (plugin.penAPI.pointerType === 1) {
 			eraseMode = false;
 		}
 	}
 
-	canvas.onmousemove=mousemove;
+	canvas.onmousemove = mousemove;
 	pressures = [];
 
 	var pX = ev.pageX - canvasPos.x;
@@ -411,45 +424,48 @@ function mousedown(ev) {
 function mouseup(ev) {
 	capturing = false;
 	canvas.style.cursor = 'initial';
-	canvas.onmousemove=null;
+	canvas.onmousemove = null;
 	if (aSpline) {
 		var i;
 		var arr = aSpline.points();
 		var toprocess = [];
-		for (i=0; i<arr.length; i+=2) {
-			toprocess.push({x:arr[2*i], y:arr[2*i+1]});
+		for (i = 0; i < arr.length; i += 2) {
+			toprocess.push({x: arr[2 * i], y: arr[2 * i + 1]});
 		}
 		// Adding the mouseup position
 		var curX = ev.pageX - canvasPos.x;
 		var curY = ev.pageY - canvasPos.y;
-		toprocess.push({x:curX, y:curY});
+		toprocess.push({x: curX, y: curY});
 		// starting process
 		var processed;
-		if (aSpline.eraseMode)
+		if (aSpline.eraseMode) {
 			processed = simplify(toprocess, 0.2, true);
-		else
+		} else {
 			processed = simplify(toprocess, 2.0, true); // array, pixel size, high-quality: true
+		}
 		var newpoints = [];
-		for (i=0; i<processed.length; i++) {
+		for (i = 0; i < processed.length; i++) {
 			newpoints.push(processed[i].x, processed[i].y);
 		}
-		//console.log('Gain:', toprocess.length/newpoints.length);
 		aSpline.points(newpoints);
-		//console.log('Spline: ', aSpline.eraseMode);
-		if (aSpline.eraseMode===false)
-			aSpline.tension(0.5);  // more tension in the spline (smoother)
+		if (aSpline.eraseMode === false) {
+			// more tension in the spline (smoother)
+			aSpline.tension(0.5);
+		}
 		var avg = 0.0;
-		for (i=0; i<pressures.length; i++)
+		for (i = 0; i < pressures.length; i++) {
 			avg += pressures[i];
+		}
 		avg = avg / pressures.length;
-		//console.log('Avg>', avg, pressures.length);
-		if (avg===0)
+		if (avg === 0) {
 			aSpline.strokeWidth(3);
-		else
-			aSpline.strokeWidth(avg*8.0);
+		} else {
+			aSpline.strokeWidth(avg * 8.0);
+		}
+
 		layer.draw();
 
-		wsio_global.emit('pointerDraw', {command: 'draw', points: newpoints, pressure:avg, color:pencolor} );
+		wsio_global.emit('pointerDraw', {command: 'draw', points: newpoints, pressure: avg, color: pencolor});
 	}
 }
 
@@ -465,7 +481,6 @@ function mousemove(ev) {
 
 	if (penAPI) {
 		pressure  = penAPI.pressure;
-		//console.log('Eraser', isEraser);
 
 		// Get data values from Wacom plugin.
 		// var isEraser     = penAPI.isEraser;

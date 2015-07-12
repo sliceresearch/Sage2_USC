@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule image_viewer
@@ -18,7 +20,7 @@
  *
  * @class movie_player
  */
-var movie_player = SAGE2_BlockStreamingApp.extend( {
+var movie_player = SAGE2_BlockStreamingApp.extend({
 	/**
 	* Init method, creates an 'div' tag in the DOM
 	*
@@ -41,32 +43,32 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		var _this = this;
 
 		this.loopBtn = this.controls.addButton({
-			id:"Loop",
+			id: "Loop",
 			type: "loop",
 			sequenceNo: 6
 		});
 
 		this.muteBtn = this.controls.addButton({
-			id:"Mute",
+			id: "Mute",
 			type: "mute",
 			sequenceNo: 2
 		});
 
 		this.playPauseBtn = this.controls.addButton({
-			id:"PlayPause",
+			id: "PlayPause",
 			type: "play-pause",
 			sequenceNo: 3
 		});
 		this.stopBtn = this.controls.addButton({
-			id:"Stop",
+			id: "Stop",
 			type: "stop",
 			sequenceNo: 5
 		});
 
 		this.controls.addSlider({
-			id:"Seek",
+			id: "Seek",
 			begin: 0,
-			end: this.state.numframes-1,
+			end: this.state.numframes - 1,
 			increments: 1,
 			appHandle: this,
 			property: "state.frame",
@@ -91,7 +93,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 	* @method setVideoFrame
 	* @param frameIdx {Number} change the current frame number
 	*/
-    setVideoFrame: function(frameIdx) {
+	setVideoFrame: function(frameIdx) {
 		this.state.frame = frameIdx;
 		this.SAGE2Sync(false);
 	},
@@ -133,98 +135,109 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
 				if (this.state.paused === true) {
-					if (isMaster) wsio.emit('playVideo', {id: this.div.id});
+					if (isMaster) {
+						wsio.emit('playVideo', {id: this.div.id});
+					}
 					this.state.paused = false;
-				}
-				else {
-					if (isMaster) wsio.emit('pauseVideo', {id: this.div.id});
+				} else {
+					if (isMaster) {
+						wsio.emit('pauseVideo', {id: this.div.id});
+					}
 					this.state.paused = true;
 				}
 				this.refresh(date);
-			}
-			else if (data.character === "l") {
+			} else if (data.character === "l") {
 				if (this.state.looped === true) {
-					if (isMaster) wsio.emit('loopVideo', {id: this.div.id, loop: false});
+					if (isMaster) {
+						wsio.emit('loopVideo', {id: this.div.id, loop: false});
+					}
 					this.state.looped = false;
-				}
-				else {
-					if (isMaster) wsio.emit('loopVideo', {id: this.div.id, loop: true});
+				} else {
+					if (isMaster) {
+						wsio.emit('loopVideo', {id: this.div.id, loop: true});
+					}
 					this.state.looped = true;
 				}
-			}
-			else if (data.character === "m") {
+			} else if (data.character === "m") {
 				if (this.state.muted === true) {
-					if (isMaster) wsio.emit('unmuteVideo', {id: this.div.id});
+					if (isMaster) {
+						wsio.emit('unmuteVideo', {id: this.div.id});
+					}
 					this.state.muted = false;
-				}
-				else {
-					if (isMaster) wsio.emit('muteVideo', {id: this.div.id});
+				} else {
+					if (isMaster) {
+						wsio.emit('muteVideo', {id: this.div.id});
+					}
 					this.state.muted = true;
 				}
 			}
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+		} else if (eventType === "widgetEvent") {
+			switch (data.ctrlId){
 				case "Loop":
-					if(this.state.looped === true) {
-						console.log("no loop: " + this.div.id);
-						if(isMaster) wsio.emit('loopVideo', {id: this.div.id, loop: false});
+					if (this.state.looped === true) {
+						if (isMaster) {
+							wsio.emit('loopVideo', {id: this.div.id, loop: false});
+						}
 						this.state.looped = false;
-					}
-					else {
-						console.log("loop: " + this.div.id);
-						if(isMaster) wsio.emit('loopVideo', {id: this.div.id, loop: true});
+					} else {
+						if (isMaster) {
+							wsio.emit('loopVideo', {id: this.div.id, loop: true});
+						}
 						this.state.looped = true;
 					}
 					break;
 				case "Mute":
-					if(this.state.muted === true) {
-						console.log("unmute: " + this.div.id);
-						if(isMaster) wsio.emit('unmuteVideo', {id: this.div.id});
+					if (this.state.muted === true) {
+						if (isMaster) {
+							wsio.emit('unmuteVideo', {id: this.div.id});
+						}
 						this.state.muted = false;
-					}
-					else {
-						console.log("mute: " + this.div.id);
-						if(isMaster) wsio.emit('muteVideo', {id: this.div.id});
+					} else {
+						if (isMaster) {
+							wsio.emit('muteVideo', {id: this.div.id});
+						}
 						this.state.muted = true;
 					}
 					break;
 				case "PlayPause":
-					if(this.state.paused === true) {
-						console.log("play: " + this.div.id);
-						if(isMaster) wsio.emit('playVideo', {id: this.div.id});
+					if (this.state.paused === true) {
+						if (isMaster) {
+							wsio.emit('playVideo', {id: this.div.id});
+						}
 						this.state.paused = false;
-					}
-					else {
-						console.log("pause: " + this.div.id);
-						if(isMaster) wsio.emit('pauseVideo', {id: this.div.id});
+					} else {
+						if (isMaster) {
+							wsio.emit('pauseVideo', {id: this.div.id});
+						}
 						this.state.paused = true;
 					}
 					break;
 				case "Stop":
-					console.log("pause: " + this.div.id);
-					if(isMaster) wsio.emit('stopVideo', {id: this.div.id});
+					if (isMaster) {
+						wsio.emit('stopVideo', {id: this.div.id});
+					}
 					this.state.paused = true;
 					this.playPauseBtn.state = 0;
 					break;
 				case "Seek":
 					switch (data.action){
 						case "sliderLock":
-							if(this.state.paused === false) {
-								console.log("pause: " + this.div.id);
-								if(isMaster) {
+							if (this.state.paused === false) {
+								if (isMaster) {
 									wsio.emit('pauseVideo', {id: this.div.id});
 								}
-							}
-							else {
+							} else {
 								this.state.playAfterSeek = false;
 							}
 							break;
 						case "sliderUpdate":
 							break;
 						case "sliderRelease":
-							if(isMaster) {
-								wsio.emit('updateVideoTime', {id: this.div.id, timestamp: (this.state.frame / this.state.framerate), play: !this.state.paused});
+							if (isMaster) {
+								wsio.emit('updateVideoTime',
+									{id: this.div.id,
+									timestamp: (this.state.frame / this.state.framerate),
+									play: !this.state.paused});
 							}
 							break;
 					}

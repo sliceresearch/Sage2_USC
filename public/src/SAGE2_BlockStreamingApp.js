@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 
 /**
  * @module client
@@ -19,7 +21,7 @@
  *
  * @class SAGE2_BlockStreamingApp
  */
-var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
+var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 	/**
 	* Init method, creates an 'canvas' tag in the DOM and setups up WebGL
 	*
@@ -83,7 +85,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				_this.refresh(data.date);
 			});
 		}
-        this.setValidBlocksFalse();
+		this.setValidBlocksFalse();
 	},
 
 	/**
@@ -93,8 +95,12 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	*/
 	initGL: function() {
 		this.gl = this.canvas.getContext("webgl");
-		if (!this.gl) this.gl = this.canvas.getContext("experimental-webgl");
-		if (!this.gl) this.log("Unable to initialize WebGL. Your browser may not support it.");
+		if (!this.gl) {
+			this.gl = this.canvas.getContext("experimental-webgl");
+		}
+		if (!this.gl) {
+			this.log("Unable to initialize WebGL. Your browser may not support it.");
+		}
 	},
 
 	/**
@@ -102,10 +108,13 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	*
 	* @method setValidBlocksFalse
 	*/
-    setValidBlocksFalse: function() {
-		for (var i=0; i<this.receivedBlocks.length; i++) {
-			if (this.validBlocks.indexOf(i) >= 0) this.receivedBlocks[i] = false;
-			else                                  this.receivedBlocks[i] = true;
+	setValidBlocksFalse: function() {
+		for (var i = 0; i < this.receivedBlocks.length; i++) {
+			if (this.validBlocks.indexOf(i) >= 0) {
+				this.receivedBlocks[i] = false;
+			} else {
+				this.receivedBlocks[i] = true;
+			}
 		}
 	},
 
@@ -116,10 +125,11 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @param callback {Function} to be executed when shaders are loaded
 	*/
 	initShaders: function(callback) {
-		if (this.state.colorspace === "RGBA")
+		if (this.state.colorspace === "RGBA") {
 			this.initRGBAShaders(callback);
-		else if (this.state.colorspace === "YUV420p")
+		} else if (this.state.colorspace === "YUV420p") {
 			this.initYUV420pShaders(callback);
+		}
 	},
 
 	initRGBAShaders: function(callback) {
@@ -136,7 +146,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 			// If creating the shader program failed, alert
 			if (!_this.gl.getProgramParameter(_this.shaderProgram, _this.gl.LINK_STATUS)) {
-				//alert("Unable to initialize the shader program.");
 				throw new Error('Unable to initialize the shader program');
 			}
 
@@ -149,7 +158,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			_this.shaderProgram.textureCoordAttribute = _this.gl.getAttribLocation(_this.shaderProgram, "a_texCoord");
 			_this.gl.enableVertexAttribArray(_this.shaderProgram.textureCoordAttribute);
 
-			//set view matrix
+			// set view matrix
 			_this.shaderProgram.pMatrixUniform = _this.gl.getUniformLocation(_this.shaderProgram, "p_matrix");
 
 			// set image texture
@@ -173,7 +182,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 
 			// If creating the shader program failed, alert
 			if (!_this.gl.getProgramParameter(_this.shaderProgram, _this.gl.LINK_STATUS)) {
-				//alert("Unable to initialize the shader program.");
 				throw new Error('Unable to initialize the shader program');
 			}
 
@@ -186,7 +194,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 			_this.shaderProgram.textureCoordAttribute = _this.gl.getAttribLocation(_this.shaderProgram, "a_texCoord");
 			_this.gl.enableVertexAttribArray(_this.shaderProgram.textureCoordAttribute);
 
-			//set view matrix
+			// set view matrix
 			_this.shaderProgram.pMatrixUniform = _this.gl.getUniformLocation(_this.shaderProgram, "p_matrix");
 
 			// set image texture
@@ -216,7 +224,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		var fragReadComplete = false;
 
 		readFile(vertFile, function(err, text) {
-			if (err) this.log(err);
+			if (err) {
+				this.log(err);
+			}
 
 			vertShader = _this.gl.createShader(_this.gl.VERTEX_SHADER);
 
@@ -231,12 +241,16 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.log("An error occurred compiling the vertex shader: " + _this.gl.getShaderInfoLog(vertShader));
 			}
 
-			if(fragReadComplete) callback(vertShader, fragShader);
+			if (fragReadComplete) {
+				callback(vertShader, fragShader);
+			}
 
 			vertReadComplete = true;
 		});
 		readFile(fragFile, function(err, text) {
-			if (err) this.log(err);
+			if (err) {
+				this.log(err);
+			}
 
 			fragShader = _this.gl.createShader(_this.gl.FRAGMENT_SHADER);
 
@@ -251,7 +265,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.log("An error occurred compiling the fragment shader: " + _this.gl.getShaderInfoLog(fragShader));
 			}
 
-			if (vertReadComplete) callback(vertShader, fragShader);
+			if (vertReadComplete) {
+				callback(vertShader, fragShader);
+			}
 
 			fragReadComplete = true;
 		});
@@ -263,17 +279,17 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method initBuffers
 	*/
 	initBuffers: function() {
-		for (var i=0; i<this.verticalBlocks; i++) {
-			for (var j=0; j<this.horizontalBlocks; j++) {
-				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
-				var bX = j*this.maxSize;
-				var bY = i*this.maxSize;
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
+				var bX = j * this.maxSize;
+				var bY = i * this.maxSize;
 
-				var left   =  (bX         /this.state.width *2.0) - 1.0;
-				var right  = ((bX+bWidth) /this.state.width *2.0) - 1.0;
-				var bottom = -1 *  ((bY         /this.state.height*2.0) - 1.0);
-				var top    = -1 * (((bY+bHeight)/this.state.height*2.0) - 1.0);
+				var left   =  (bX         / this.state.width * 2.0) - 1.0;
+				var right  = ((bX + bWidth) / this.state.width * 2.0) - 1.0;
+				var bottom = -1 *  ((bY         / this.state.height * 2.0) - 1.0);
+				var top    = -1 * (((bY + bHeight) / this.state.height * 2.0) - 1.0);
 
 				// vertices
 				var squareVertexPositionBuffer = this.gl.createBuffer();
@@ -323,28 +339,29 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method initTextures
 	*/
 	initTextures: function() {
-		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
-		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
+		this.horizontalBlocks = Math.ceil(this.state.width / this.maxSize);
+		this.verticalBlocks   = Math.ceil(this.state.height / this.maxSize);
 
-        // Global settings for WebGL textures
-        this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT,    1);
-        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+		// Global settings for WebGL textures
+		this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT,    1);
+		this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
-        if (this.state.colorspace === "RGBA")
+		if (this.state.colorspace === "RGBA") {
 			this.initRGBATextures();
-        else if (this.state.colorspace === "YUV420p")
+		} else if (this.state.colorspace === "YUV420p") {
 			this.initYUV420pTextures();
-    },
+		}
+	},
 
-    initRGBATextures: function() {
-		for (var i=0; i<this.verticalBlocks; i++) {
-			for (var j=0; j<this.horizontalBlocks; j++) {
-				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
+	initRGBATextures: function() {
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
 
 				var rgbaTexture = this.gl.createTexture();
 
-				var rgbaBuffer = new Uint8Array(bWidth*bHeight*4);
+				var rgbaBuffer = new Uint8Array(bWidth * bHeight * 4);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbaTexture);
 				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, bWidth, bHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgbaBuffer);
@@ -359,24 +376,25 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.rgbaBuffer.push(rgbaBuffer);
 			}
 		}
-    },
+	},
 
-    initYUV420pTextures: function() {
-		for (var i=0; i<this.verticalBlocks; i++) {
-			for (var j=0; j<this.horizontalBlocks; j++) {
-				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
+	initYUV420pTextures: function() {
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
 
 				var yTexture = this.gl.createTexture();
 				var uTexture = this.gl.createTexture();
 				var vTexture = this.gl.createTexture();
 
-				var yBuffer = new Uint8Array(bWidth*bHeight);
-				var uBuffer = new Uint8Array(bWidth*bHeight/4);
-				var vBuffer = new Uint8Array(bWidth*bHeight/4);
+				var yBuffer = new Uint8Array(bWidth * bHeight);
+				var uBuffer = new Uint8Array(bWidth * bHeight / 4);
+				var vBuffer = new Uint8Array(bWidth * bHeight / 4);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, yTexture);
-				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth, bHeight, 0, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, yBuffer);
+				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth, bHeight, 0,
+							this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, yBuffer);
 
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -384,7 +402,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, uTexture);
-				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth/2, bHeight/2, 0, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, uBuffer);
+				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth / 2, bHeight / 2, 0,
+							this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, uBuffer);
 
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -392,7 +411,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, vTexture);
-				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth/2, bHeight/2, 0, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, vBuffer);
+				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.LUMINANCE, bWidth / 2, bHeight / 2, 0,
+							this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, vBuffer);
 
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -406,10 +426,10 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.vTexture.push(vTexture);
 
 
-				var yuvBuffer = new Uint8Array(bWidth*bHeight*1.5);
+				var yuvBuffer = new Uint8Array(bWidth * bHeight * 1.5);
 				yuvBuffer.set(yBuffer, 0);
-				yuvBuffer.set(uBuffer, bWidth*bHeight);
-				yuvBuffer.set(vBuffer, bWidth*bHeight + bWidth*bHeight/4);
+				yuvBuffer.set(uBuffer, bWidth * bHeight);
+				yuvBuffer.set(vBuffer, bWidth * bHeight + bWidth * bHeight / 4);
 
 				this.yuvBuffer.push(yuvBuffer);
 			}
@@ -424,10 +444,11 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @param yuvBuffer {Object} pixel data
 	*/
 	textureData: function(blockIdx, buffer) {
-		if (this.state.colorspace === "RGBA")
+		if (this.state.colorspace === "RGBA") {
 			this.textureDataRGBA(blockIdx, buffer);
-        else if (this.state.colorspace === "YUV420p")
+		} else if (this.state.colorspace === "YUV420p") {
 			this.textureDataYUV420p(blockIdx, buffer);
+		}
 	},
 
 	textureDataRGBA: function(blockIdx, rgbaBuffer) {
@@ -446,57 +467,61 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method updateTextures
 	*/
 	updateTextures: function() {
-		if (this.state.colorspace === "RGBA")
+		if (this.state.colorspace === "RGBA") {
 			this.updateTexturesRGBA();
-        else if (this.state.colorspace === "YUV420p")
+		} else if (this.state.colorspace === "YUV420p") {
 			this.updateTexturesYUV420p();
+		}
 	},
 
 	updateTexturesRGBA: function() {
-		for (var i=0; i<this.verticalBlocks; i++) {
-			for (var j=0; j<this.horizontalBlocks; j++) {
-				var blockIdx = i*this.horizontalBlocks+j;
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var blockIdx = i * this.horizontalBlocks + j;
 
-				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
+				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.rgbaBuffer[blockIdx]);
+				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGBA,
+							this.gl.UNSIGNED_BYTE, this.rgbaBuffer[blockIdx]);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 			}
 		}
 	},
 
 	updateTexturesYUV420p: function() {
-		for (var i=0; i<this.verticalBlocks; i++) {
-			for (var j=0; j<this.horizontalBlocks; j++) {
-				var blockIdx = i*this.horizontalBlocks+j;
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var blockIdx = i * this.horizontalBlocks + j;
 
-				var bWidth  = (j+1)*this.maxSize > this.state.width  ? this.state.width -(j*this.maxSize) : this.maxSize;
-				var bHeight = (i+1)*this.maxSize > this.state.height ? this.state.height-(i*this.maxSize) : this.maxSize;
+				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
 
-				var yEnd = bWidth*bHeight;
-				var uEnd = yEnd + bWidth*bHeight/4;
-				var vEnd = uEnd + bWidth*bHeight/4;
+				var yEnd = bWidth * bHeight;
+				var uEnd = yEnd + bWidth * bHeight / 4;
+				var vEnd = uEnd + bWidth * bHeight / 4;
 
 				var yBuffer = this.yuvBuffer[blockIdx].subarray(0,    yEnd);
 				var uBuffer = this.yuvBuffer[blockIdx].subarray(yEnd, uEnd);
 				var vBuffer = this.yuvBuffer[blockIdx].subarray(uEnd, vEnd);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, yBuffer);
+				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.LUMINANCE,
+							this.gl.UNSIGNED_BYTE, yBuffer);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.uTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth/2, bHeight/2, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, uBuffer);
+				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth / 2, bHeight / 2, this.gl.LUMINANCE,
+							this.gl.UNSIGNED_BYTE, uBuffer);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.vTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth/2, bHeight/2, this.gl.LUMINANCE, this.gl.UNSIGNED_BYTE, vBuffer);
+				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth / 2, bHeight / 2, this.gl.LUMINANCE,
+							this.gl.UNSIGNED_BYTE, vBuffer);
 
 				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 			}
-        }
-        //this.setValidBlocksFalse();
-    },
+		}
+	},
 
 	/**
 	* Loads the app from a previous state and initializes the buffers and textures
@@ -504,9 +529,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method firstLoad
 	*/
 	firstLoad: function() {
-		this.horizontalBlocks = Math.ceil(this.state.width /this.maxSize);
-		this.verticalBlocks   = Math.ceil(this.state.height/this.maxSize);
-		this.receivedBlocks   = initializeArray(this.horizontalBlocks*this.verticalBlocks, false);
+		this.horizontalBlocks = Math.ceil(this.state.width / this.maxSize);
+		this.verticalBlocks   = Math.ceil(this.state.height / this.maxSize);
+		this.receivedBlocks   = initializeArray(this.horizontalBlocks * this.verticalBlocks, false);
 
 		this.initBuffers();
 		this.initTextures();
@@ -519,16 +544,15 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @param date {Date} current time from the server
 	*/
 	draw: function(date) {
-		if(this.shaderProgram === undefined || this.shaderProgram === null){
+		if (this.shaderProgram === undefined || this.shaderProgram === null) {
 			this.log("waiting for shaders to load");
 			return;
 		}
 
-		if(this.state.colorspace === "RGBA" && (this.rgbaBuffer === undefined || this.rgbaBuffer === null)){
+		if (this.state.colorspace === "RGBA" && (this.rgbaBuffer === undefined || this.rgbaBuffer === null)) {
 			this.log("no texture loaded");
 			return;
-		}
-		else if(this.state.colorspace === "YUV420p" && (this.yuvBuffer === undefined || this.yuvBuffer === null)){
+		} else if (this.state.colorspace === "YUV420p" && (this.yuvBuffer === undefined || this.yuvBuffer === null)) {
 			this.log("no texture loaded");
 			return;
 		}
@@ -538,43 +562,49 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		this.updateTextures();
 
 
-		if (this.state.colorspace === "RGBA")
+		if (this.state.colorspace === "RGBA") {
 			this.drawRGBA();
-        else if (this.state.colorspace === "YUV420p")
+		} else if (this.state.colorspace === "YUV420p") {
 			this.drawYUV420p();
-    },
+		}
+	},
 
-    drawRGBA: function() {
-		for(var i=0; i<this.verticalBlocks; i++){
-			for(var j=0; j<this.horizontalBlocks; j++){
-				var blockIdx = i*this.horizontalBlocks+j;
+	drawRGBA: function() {
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var blockIdx = i * this.horizontalBlocks + j;
 
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute,
+						this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute, this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
+						this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
 				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
 				this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
 
 				this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
-				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems, this.gl.UNSIGNED_SHORT, 0);
+				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems,
+						this.gl.UNSIGNED_SHORT, 0);
 			}
 		}
-    },
+	},
 
-    drawYUV420p: function() {
-		for(var i=0; i<this.verticalBlocks; i++){
-			for(var j=0; j<this.horizontalBlocks; j++){
-				var blockIdx = i*this.horizontalBlocks+j;
+	drawYUV420p: function() {
+		for (var i = 0; i < this.verticalBlocks; i++) {
+			for (var j = 0; j < this.horizontalBlocks; j++) {
+				var blockIdx = i * this.horizontalBlocks + j;
 
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute,
+						this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute, this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
+						this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
 				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
@@ -589,7 +619,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 				this.gl.uniform1i(this.shaderProgram.samplerUniform3, 2);
 
 				this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
-				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems, this.gl.UNSIGNED_SHORT, 0);
+				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems,
+						this.gl.UNSIGNED_SHORT, 0);
 			}
 		}
 	},
@@ -600,7 +631,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 	* @method resizeCanvas
 	*/
 	resizeCanvas: function() {
-		if(this.shaderProgram === undefined || this.shaderProgram === null) return;
+		if (this.shaderProgram === undefined || this.shaderProgram === null) {
+			return;
+		}
 
 		var localX = this.sage2_x - ui.offsetX;
 		var localY = this.sage2_y - ui.offsetY;
@@ -614,22 +647,21 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend( {
 		var localHeight = viewBottom - viewY;
 
 		// completely off-screen
-		if(localWidth <= 0 || localHeight <= 0) {
+		if (localWidth <= 0 || localHeight <= 0) {
 			this.canvas.width  = 1;
 			this.canvas.height = 1;
 			this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-		}
-		else {
+		} else {
 			var parentTransform = getTransform(this.div.parentNode);
 			this.canvas.width  = localWidth / parentTransform.scale.x;
 			this.canvas.height = localHeight / parentTransform.scale.y;
-			this.canvas.style.left = ((viewX-localX) / parentTransform.scale.x) + "px";
-			this.canvas.style.top  = ((viewY-localY) / parentTransform.scale.y) + "px";
+			this.canvas.style.left = ((viewX - localX) / parentTransform.scale.x) + "px";
+			this.canvas.style.top  = ((viewY - localY) / parentTransform.scale.y) + "px";
 
-			var left   = ((viewX     -localX) / (localRight -localX) * 2.0) - 1.0;
-			var right  = ((viewRight -localX) / (localRight -localX) * 2.0) - 1.0;
-			var top    = ((1.0 - (viewY     -localY) / (localBottom-localY)) * 2.0) - 1.0;
-			var bottom = ((1.0 - (viewBottom-localY) / (localBottom-localY)) * 2.0) - 1.0;
+			var left   = ((viewX     - localX) / (localRight - localX) * 2.0) - 1.0;
+			var right  = ((viewRight - localX) / (localRight - localX) * 2.0) - 1.0;
+			var top    = ((1.0 - (viewY     - localY) / (localBottom - localY)) * 2.0) - 1.0;
+			var bottom = ((1.0 - (viewBottom - localY) / (localBottom - localY)) * 2.0) - 1.0;
 
 			mat4.ortho(left, right, bottom, top, -1, 1, this.pMatrix);
 			this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);

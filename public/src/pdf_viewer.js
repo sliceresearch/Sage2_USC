@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2014
 
+"use strict";
 
 /**
  * @module client
@@ -25,7 +26,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
  *
  * @class pdf_viewer
  */
- var pdf_viewer = SAGE2_App.extend( {
+ var pdf_viewer = SAGE2_App.extend({
 	/**
 	* Init method, creates an 'img' tag in the DOM and a few canvas contexts to handle multiple redraws
 	*
@@ -50,7 +51,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		this.old_doc_url = "";
 
 		// application specific 'init'
-		for(var i=0; i<this.numCtx; i++){
+		for (var i = 0; i < this.numCtx; i++) {
 			var canvas = document.createElement("canvas");
 			canvas.width  = this.element.width;
 			canvas.height = this.element.height;
@@ -92,8 +93,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				if (_this.gotresize) {
 					_this.refresh(date);
 					_this.gotresize = false;
-				}
-				else {
+				} else {
 					// Getting the size of the page
 					_this.pdfDoc.getPage(1).then(function(page) {
 						var viewport = page.getViewport(1.0);
@@ -101,17 +101,17 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 						var h = parseInt(viewport.height, 10);
 						_this.ratio = w / h;
 						// Depending on the aspect ratio, adjust one dimension
-						if (_this.ratio < 1)
-							_this.sendResize(_this.element.width, _this.element.width/_this.ratio);
-						else
-							_this.sendResize(_this.element.height*_this.ratio, _this.element.height);
+						if (_this.ratio < 1) {
+							_this.sendResize(_this.element.width, _this.element.width / _this.ratio);
+						} else {
+							_this.sendResize(_this.element.height * _this.ratio, _this.element.height);
+						}
 					});
 				}
 			});
 			this.old_doc_url = this.state.doc_url;
-		}
-		// load new state of same document
-		else {
+		} else {
+			// load new state of same document
 			this.refresh(date);
 		}
 	},
@@ -122,12 +122,13 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @method addWidgetControlsToPdfViewer
 	*/
 	addWidgetControlsToPdfViewer: function() {
-		if (this.pdfDoc.numPages>1){
+		if (this.pdfDoc.numPages > 1) {
 			this.controls.addButton({type: "fastforward", sequenceNo: 2, id: "LastPage"});
 			this.controls.addButton({type: "rewind",      sequenceNo: 6, id: "FirstPage"});
 			this.controls.addButton({type: "prev",        sequenceNo: 5, id: "PreviousPage"});
 			this.controls.addButton({type: "next",        sequenceNo: 3, id: "NextPage"});
-			this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1, appHandle: this, property: "state.page", caption: "Page", id: "Page"});
+			this.controls.addSlider({begin: 1, end: this.pdfDoc.numPages, increments: 1,
+						appHandle: this, property: "state.page", caption: "Page", id: "Page"});
 		}
 		this.controls.finishedAddingControls();
 	},
@@ -139,7 +140,9 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	draw: function(date) {
-		if(this.loaded === false) return;
+		if (this.loaded === false) {
+			return;
+		}
 
 		var _this = this;
 		var renderPage = this.state.page;
@@ -159,27 +162,29 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 					cont(); // nothing special right now
 				}
 			};
-			_this.currCtx = (_this.currCtx+1) % _this.numCtx;
+			_this.currCtx = (_this.currCtx + 1) % _this.numCtx;
 
 			pdfPage.render(renderContext).then(renderPdfPage);
 		};
 
 		var renderPdfPage = function() {
-			if(renderPage === _this.state.page){
+			if (renderPage === _this.state.page) {
 				var data = _this.canvas[renderCanvas].toDataURL().split(',');
 				var bin  = atob(data[1]);
 				var mime = data[0].split(':')[1].split(';')[0];
 
 				var buf  = new ArrayBuffer(bin.length);
 				var view = new Uint8Array(buf);
-				for(var i=0; i<view.length; i++) {
+				for (var i = 0; i < view.length; i++) {
 					view[i] = bin.charCodeAt(i);
 				}
 
 				var blob = new Blob([buf], {type: mime});
 				var source = window.URL.createObjectURL(blob);
 
-				if(_this.src!== null) window.URL.revokeObjectURL(_this.src);
+				if (_this.src !== null) {
+					window.URL.revokeObjectURL(_this.src);
+				}
 				_this.src = source;
 
 				_this.element.src = _this.src;
@@ -196,7 +201,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	*/
 	resize: function(date) {
 		console.log("resize pdf viewer");
-		for(var i=0; i<this.numCtx; i++){
+		for (var i = 0; i < this.numCtx; i++) {
 			this.canvas[i].width  = this.element.width;
 			this.canvas[i].height = this.element.height;
 		}
@@ -220,12 +225,15 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		// Right Click - go forward one page
 		if (eventType === "pointerPress") {
 			if (data.button === "left") {
-				if(this.state.page <= 1) return;
+				if (this.state.page <= 1) {
+					return;
+				}
 				this.state.page = this.state.page - 1;
 				this.refresh(date);
-			}
-			else if (data.button === "right") {
-				if (this.state.page >= this.pdfDoc.numPages) return;
+			} else if (data.button === "right") {
+				if (this.state.page >= this.pdfDoc.numPages) {
+					return;
+				}
 				this.state.page = this.state.page + 1;
 				this.refresh(date);
 			}
@@ -235,18 +243,20 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		// Right Arrow - go forward one page
 		if (eventType === "specialKey") {
 			if (data.code === 37 && data.state === "up") { // Left Arrow
-				if(this.state.page <= 1) return;
+				if (this.state.page <= 1) {
+					return;
+				}
 				this.state.page = this.state.page - 1;
 				this.refresh(date);
-			}
-			else if (data.code === 39 && data.state === "up") { // Right Arrow
-				if (this.state.page >= this.pdfDoc.numPages) return;
+			} else if (data.code === 39 && data.state === "up") { // Right Arrow
+				if (this.state.page >= this.pdfDoc.numPages) {
+					return;
+				}
 				this.state.page = this.state.page + 1;
 				this.refresh(date);
 			}
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+		} else if (eventType === "widgetEvent") {
+			switch (data.ctrlId){
 				case "LastPage":
 					this.state.page = this.pdfDoc.numPages;
 					break;
@@ -254,11 +264,15 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 					this.state.page = 1;
 					break;
 				case "PreviousPage":
-					if(this.state.page <= 1) return;
+					if (this.state.page <= 1) {
+						return;
+					}
 					this.state.page = this.state.page - 1;
 					break;
 				case "NextPage":
-					if (this.state.page >= this.pdfDoc.numPages) return;
+					if (this.state.page >= this.pdfDoc.numPages) {
+						return;
+					}
 					this.state.page = this.state.page + 1;
 					break;
 				case "Page":
@@ -266,18 +280,15 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 						case "sliderRelease":
 							break;
 						default:
-							//console.log("No handler for: "+ data.ctrlId + "->" + data.action);
 							return;
 					}
 					break;
 				default:
-					//console.log("No handler for:", data.ctrlId);
 					return;
 			}
 			this.refresh(date);
-		}
-		else if (eventType === "keyboard") {
-			if(data.character === "r" || data.character === "R"){
+		} else if (eventType === "keyboard") {
+			if (data.character === "r" || data.character === "R") {
 				this.refresh(date);
 			}
 		}
