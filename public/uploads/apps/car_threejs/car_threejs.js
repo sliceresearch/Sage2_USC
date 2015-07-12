@@ -8,21 +8,25 @@
 //
 // Copyright (c) 2014
 
+"use strict";
 
+/* global THREE */
 
-function addScriptForThreejs( url, callback ) {
-	var script = document.createElement( 'script' );
-	if( callback ) script.onload = callback;
+function addScriptForThreejs(url, callback) {
+	var script = document.createElement('script');
+	if (callback) {
+		script.onload = callback;
+	}
 	script.type = 'text/javascript';
-	script.src = url;
-	document.body.appendChild( script );  
+	script.src  = url;
+	document.body.appendChild(script);
 }
 
 
-var car_threejs = SAGE2_App.extend( {
+var car_threejs = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
-	
+
 		this.resizeEvents = "continuous";
 
 		this.renderer = null;
@@ -55,23 +59,23 @@ var car_threejs = SAGE2_App.extend( {
 			});
 		});
 
-		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
-		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
-		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
-		this.controls.addButton({type:"down-arrow",sequenceNo:10, id:"Down"});
-		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"ZoomIn"});
-		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"ZoomOut"});
-		this.controls.addButton({type:"loop",sequenceNo:6, id:"Loop"});
+		this.controls.addButton({type: "prev", sequenceNo: 7, id: "Left"});
+		this.controls.addButton({type: "next", sequenceNo: 1, id: "Right"});
+		this.controls.addButton({type: "up-arrow", sequenceNo: 4, id: "Up"});
+		this.controls.addButton({type: "down-arrow", sequenceNo: 10, id: "Down"});
+		this.controls.addButton({type: "zoom-in", sequenceNo: 8, id: "ZoomIn"});
+		this.controls.addButton({type: "zoom-out", sequenceNo: 9, id: "ZoomOut"});
+		this.controls.addButton({type: "loop", sequenceNo: 6, id: "Loop"});
 		this.controls.finishedAddingControls();
 	},
 
 	initialize: function(date) {
 		console.log("initialize ctm");
 		// CAMERA
-		this.camera = new THREE.PerspectiveCamera( 25, this.width / this.width, 1, 10000 );
-		this.camera.position.set( 185, 40, 170 );
+		this.camera = new THREE.PerspectiveCamera(25, this.width / this.width, 1, 10000);
+		this.camera.position.set(185, 40, 170);
 
-		this.orbitControls = new THREE.OrbitControls( this.camera, this.element );
+		this.orbitControls = new THREE.OrbitControls(this.camera, this.element);
 		this.orbitControls.maxPolarAngle = Math.PI / 2;
 		this.orbitControls.minDistance = 200;
 		this.orbitControls.maxDistance = 500;
@@ -84,126 +88,124 @@ var car_threejs = SAGE2_App.extend( {
 
 		// SKYBOX
 		this.sceneCube  = new THREE.Scene();
-		this.cameraCube = new THREE.PerspectiveCamera( 25, this.width / this.width, 1, 10000 );
-		this.sceneCube.add( this.cameraCube );
+		this.cameraCube = new THREE.PerspectiveCamera(25, this.width / this.width, 1, 10000);
+		this.sceneCube.add(this.cameraCube);
 
 		var r    = this.resrcPath + "textures/";
 		var urls = [ r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg" ];
-		var textureCube = THREE.ImageUtils.loadTextureCube( urls );
+		var textureCube = THREE.ImageUtils.loadTextureCube(urls);
 
-		var shader = THREE.ShaderLib[ "cube" ];
-		shader.uniforms[ "tCube" ].value = textureCube;
+		var shader = THREE.ShaderLib.cube;
+		shader.uniforms.tCube.value = textureCube;
 
-		var material = new THREE.ShaderMaterial( {
+		var material = new THREE.ShaderMaterial({
 			fragmentShader: shader.fragmentShader,
 			vertexShader:   shader.vertexShader,
 			uniforms:       shader.uniforms,
 			depthWrite:     false,
 			side:           THREE.BackSide
-		} );
+		});
 
-		var mesh = new THREE.Mesh( new THREE.BoxGeometry( 100, 100, 100 ), material );
-		this.sceneCube.add( mesh );
+		var mesh = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), material);
+		this.sceneCube.add(mesh);
 
 		// LIGHTS
 
-		var light = new THREE.PointLight( 0xffffff, 1 );
-		light.position.set( 2, 5, 1 );
-		light.position.multiplyScalar( 30 );
-		this.scene.add( light );
+		var light = new THREE.PointLight(0xffffff, 1);
+		light.position.set(2, 5, 1);
+		light.position.multiplyScalar(30);
+		this.scene.add(light);
 
-		var light = new THREE.PointLight( 0xffffff, 0.75 );
-		light.position.set( -12, 4.6, 2.4 );
-		light.position.multiplyScalar( 30 );
-		this.scene.add( light );
+		var light2 = new THREE.PointLight(0xffffff, 0.75);
+		light2.position.set(-12, 4.6, 2.4);
+		light2.position.multiplyScalar(30);
+		this.scene.add(light2);
 
-		this.scene.add( new THREE.AmbientLight( 0x050505 ) );
+		this.scene.add(new THREE.AmbientLight(0x050505));
 
 		// RENDERER
-		this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+		this.renderer = new THREE.WebGLRenderer({ antialias: true });
 		this.renderer.setSize(this.width, this.height);
 		this.renderer.autoClear = false;
 
 		this.element.appendChild(this.renderer.domElement);
-		
+
 		this.renderer.gammaInput  = true;
 		this.renderer.gammaOutput = true;
 
-		// LOADER
+		// Loader
 		var start = Date.now();
+		var loaderCTM = new THREE.CTMLoader(true);
 
-		loaderCTM = new THREE.CTMLoader( true );
-		//document.body.appendChild( loaderCTM.statusDomElement );
-
-		var position = new THREE.Vector3( -105, -78, -40 );
-		var scale    = new THREE.Vector3( 30, 30, 30 );
+		var position = new THREE.Vector3(-105, -78, -40);
+		var scale    = new THREE.Vector3(30, 30, 30);
 
 		var _this = this;
-		loaderCTM.loadParts( _this.resrcPath + "camaro/camaro.js", function( geometries, materials ) {
+		var m, mm, i;
+		loaderCTM.loadParts(_this.resrcPath + "camaro/camaro.js", function(geometries, materials) {
 			// hackMaterials
-			for ( var i = 0; i < materials.length; i ++ ) {
-				var m = materials[ i ];
-				if ( m.name.indexOf( "Body" ) !== -1 ) {
-					var mm = new THREE.MeshPhongMaterial( { map: m.map } );
+			for (i = 0; i < materials.length; i ++) {
+				m = materials[i];
+				if (m.name.indexOf("Body") !== -1) {
+					mm = new THREE.MeshPhongMaterial({ map: m.map });
 					mm.envMap  = textureCube;
 					mm.combine = THREE.MixOperation;
 					mm.reflectivity = 0.75;
-					materials[ i ] = mm;
-				} else if ( m.name.indexOf( "mirror" ) !== -1 ) {
-					var mm = new THREE.MeshPhongMaterial( { map: m.map } );
+					materials[i] = mm;
+				} else if (m.name.indexOf("mirror") !== -1) {
+					mm = new THREE.MeshPhongMaterial({ map: m.map });
 					mm.envMap  = textureCube;
 					mm.combine = THREE.MultiplyOperation;
-					materials[ i ] = mm;
-				} else if ( m.name.indexOf( "glass" ) !== -1 ) {
-					var mm = new THREE.MeshPhongMaterial( { map: m.map } );
+					materials[i] = mm;
+				} else if (m.name.indexOf("glass") !== -1) {
+					mm = new THREE.MeshPhongMaterial({ map: m.map });
 					mm.envMap = textureCube;
-					mm.color.copy( m.color );
+					mm.color.copy(m.color);
 					mm.combine = THREE.MixOperation;
 					mm.reflectivity = 0.25;
 					mm.opacity = m.opacity;
 					mm.transparent = true;
-					materials[ i ] = mm;
-				} else if ( m.name.indexOf( "Material.001" ) !== -1 ) {
-					var mm = new THREE.MeshPhongMaterial( { map: m.map } );
+					materials[i] = mm;
+				} else if (m.name.indexOf("Material.001") !== -1) {
+					mm = new THREE.MeshPhongMaterial({ map: m.map });
 					mm.shininess = 30;
-					mm.color.setHex( 0x404040 );
+					mm.color.setHex(0x404040);
 					mm.metal = true;
-					materials[ i ] = mm;
+					materials[i] = mm;
 				}
-				materials[ i ].side = THREE.DoubleSide;
+				materials[i].side = THREE.DoubleSide;
 			}
 
-			for ( var i = 0; i < geometries.length; i ++ ) {
-				var mesh = new THREE.Mesh( geometries[ i ], materials[ i ] );
-				mesh.position.copy( position );
-				mesh.scale.copy( scale );
-				_this.scene.add( mesh );
+			for (i = 0; i < geometries.length; i ++) {
+				var amesh = new THREE.Mesh(geometries[i], materials[i]);
+				amesh.position.copy(position);
+				amesh.scale.copy(scale);
+				_this.scene.add(amesh);
 			}
-
-			// loaderCTM.statusDomElement.style.display = "none";
 
 			var end = Date.now();
-			console.log( "load time:", end - start, "ms" );
+			console.log("load time:", end - start, "ms");
 
-		}, { useWorker: true } );
-		
+		}, { useWorker: true });
+
 		this.ready = true;
 
 		// draw!
 		this.resize(date);
 	},
-	
+
 	load: function(date) {
+		// nothing
 	},
 
 	draw: function(date) {
 		if (this.ready) {
 			this.orbitControls.update();
-			this.cameraCube.rotation.copy( this.camera.rotation );
+			this.cameraCube.rotation.copy(this.camera.rotation);
 
 			this.renderer.clear();
-			this.renderer.render( this.sceneCube, this.cameraCube );
-			this.renderer.render( this.scene, this.camera );
+			this.renderer.render(this.sceneCube, this.cameraCube);
+			this.renderer.render(this.scene, this.camera);
 		}
 	},
 
@@ -211,7 +213,7 @@ var car_threejs = SAGE2_App.extend( {
 		this.width  = this.element.clientWidth;
 		this.height = this.element.clientHeight;
 		this.renderer.setSize(this.width, this.height);
-		
+
 		this.camera.aspect = this.width / this.height;
 		this.camera.updateProjectionMatrix();
 
@@ -220,58 +222,52 @@ var car_threejs = SAGE2_App.extend( {
 
 		this.refresh(date);
 	},
-	
+
 	event: function(eventType, position, user_id, data, date) {
 		if (this.ready) {
 			if (eventType === "pointerPress" && (data.button === "left")) {
 				this.dragging = true;
-				this.orbitControls.mouseDown(position.x,position.y,0);
-			}
-			else if (eventType === "pointerMove" && this.dragging) {
+				this.orbitControls.mouseDown(position.x, position.y, 0);
+			} else if (eventType === "pointerMove" && this.dragging) {
 				this.orbitControls.mouseMove(position.x, position.y);
 				this.refresh(date);
-			}
-			else if (eventType === "pointerRelease" && (data.button === "left")) {
+			} else if (eventType === "pointerRelease" && (data.button === "left")) {
 				this.dragging = false;
 			}
 
 			if (eventType === "pointerScroll") {
-				this.orbitControls.scale( data.wheelDelta );
+				this.orbitControls.scale(data.wheelDelta);
 				this.refresh(date);
 			}
-			
+
 			if (eventType === "keyboard") {
-				if(data.character === " ") {
-					this.rotating = ! this.rotating;
+				if (data.character === " ") {
+					this.rotating = !this.rotating;
 					this.orbitControls.autoRotate = this.rotating;
 					this.refresh(date);
 				}
 			}
-			
+
 			if (eventType === "specialKey") {
 				if (data.code === 37 && data.state === "down") { // left
 					this.orbitControls.pan(this.orbitControls.keyPanSpeed, 0);
 					this.orbitControls.update();
 					this.refresh(date);
-				}
-				else if (data.code === 38 && data.state === "down") { // up
+				} else if (data.code === 38 && data.state === "down") { // up
 					this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);
 					this.orbitControls.update();
 					this.refresh(date);
-				}
-				else if (data.code === 39 && data.state === "down") { // right
-					this.orbitControls.pan(  - this.orbitControls.keyPanSpeed, 0);
+				} else if (data.code === 39 && data.state === "down") { // right
+					this.orbitControls.pan(-this.orbitControls.keyPanSpeed, 0);
+					this.orbitControls.update();
+					this.refresh(date);
+				} else if (data.code === 40 && data.state === "down") { // down
+					this.orbitControls.pan(0, -this.orbitControls.keyPanSpeed);
 					this.orbitControls.update();
 					this.refresh(date);
 				}
-				else if (data.code === 40 && data.state === "down") { // down
-					this.orbitControls.pan(0, - this.orbitControls.keyPanSpeed);
-					this.orbitControls.update();
-					this.refresh(date);
-				}				
-			}
-			else if (eventType === "widgetEvent"){
-				switch(data.ctrlId){
+			} else if (eventType === "widgetEvent") {
+				switch (data.ctrlId) {
 					case "Up":
 						// up
 						this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);
@@ -279,17 +275,17 @@ var car_threejs = SAGE2_App.extend( {
 						break;
 					case "Down":
 						// down
-						this.orbitControls.pan(0, - this.orbitControls.keyPanSpeed);
+						this.orbitControls.pan(0, -this.orbitControls.keyPanSpeed);
 						this.orbitControls.update();
 						break;
 					case "Left":
-						//Left
+						// left
 						this.orbitControls.pan(this.orbitControls.keyPanSpeed, 0);
 						this.orbitControls.update();
 						break;
 					case "Right":
 						// right
-						this.orbitControls.pan(- this.orbitControls.keyPanSpeed, 0);
+						this.orbitControls.pan(-this.orbitControls.keyPanSpeed, 0);
 						this.orbitControls.update();
 						break;
 					case "ZoomIn":
@@ -299,7 +295,7 @@ var car_threejs = SAGE2_App.extend( {
 						this.orbitControls.scale(-4);
 						break;
 					case "Loop":
-						this.rotating = ! this.rotating;
+						this.rotating = !this.rotating;
 						this.orbitControls.autoRotate = this.rotating;
 						break;
 					default:
