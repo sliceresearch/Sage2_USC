@@ -19,10 +19,54 @@ module.exports = function(grunt) {
 					src: ['public/src/*.js', 'public/admin/*.js']
 				},
 				options: { config: "build/.eslint_client_rc" }
+			},
+			appsFiles: {
+				files: {
+					src: [
+						"public/uploads/apps/car_threejs/car_threejs.js",
+						"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
+						"public/uploads/apps/clock_svg/clock_svg.js",
+						"public/uploads/apps/googlemaps/googlemaps.js",
+						"public/uploads/apps/notepad/notepad.js",
+						"public/uploads/apps/photos/photos.js",
+						"public/uploads/apps/radar/radar.js",
+						"public/uploads/apps/stereo_image/stereo_image.js",
+						"public/uploads/apps/sticky_note/sticky_note.js",
+						"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
+						"public/uploads/apps/US_weather/USweather.js",
+						"public/uploads/apps/web_earth/web_earth.js",
+						"public/uploads/apps/whiteboard/whiteboard.js",
+						"public/uploads/apps/zoom/zoom.js"
+					]
+				},
+				options: { config: "build/.eslint_client_rc" }
 			}
 		},
 		jscs: {
-			src: ['server.js', 'src/*.js'],
+			serverFiles: {
+				src: ['server.js', 'src/*.js'],
+			},
+			browserFiles: {
+				src: ['public/src/*.js', 'public/admin/*.js']
+			},
+			appsFiles: {
+				src: [ 
+					"public/uploads/apps/car_threejs/car_threejs.js",
+					"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
+					"public/uploads/apps/clock_svg/clock_svg.js",
+					"public/uploads/apps/googlemaps/googlemaps.js",
+					"public/uploads/apps/notepad/notepad.js",
+					"public/uploads/apps/photos/photos.js",
+					"public/uploads/apps/radar/radar.js",
+					"public/uploads/apps/stereo_image/stereo_image.js",
+					"public/uploads/apps/sticky_note/sticky_note.js",
+					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
+					"public/uploads/apps/US_weather/USweather.js",
+					"public/uploads/apps/web_earth/web_earth.js",
+					"public/uploads/apps/whiteboard/whiteboard.js",
+					"public/uploads/apps/zoom/zoom.js"
+				]
+			},
 			options: {
 				"preset": "node-style-guide",
 				"requireCapitalizedComments": null,
@@ -31,6 +75,7 @@ module.exports = function(grunt) {
 				"validateIndentation": "\t",
 				"disallowCommaBeforeLineBreak": null,
 				"requireTrailingComma": null,
+				"requireCurlyBraces" : ["if", "else", "for", "while", "do", "try", "catch"],
 				"maximumLineLength": 130
 			}
 		},
