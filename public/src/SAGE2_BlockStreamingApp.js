@@ -286,9 +286,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 				var bX = j * this.maxSize;
 				var bY = i * this.maxSize;
 
-				var left   =  (bX         / this.state.width * 2.0) - 1.0;
+				var left   =  (bX / this.state.width * 2.0) - 1.0;
 				var right  = ((bX + bWidth) / this.state.width * 2.0) - 1.0;
-				var bottom = -1 *  ((bY         / this.state.height * 2.0) - 1.0);
+				var bottom = -1 *  ((bY / this.state.height * 2.0) - 1.0);
 				var top    = -1 * (((bY + bHeight) / this.state.height * 2.0) - 1.0);
 
 				// vertices
@@ -478,14 +478,16 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		for (var i = 0; i < this.verticalBlocks; i++) {
 			for (var j = 0; j < this.horizontalBlocks; j++) {
 				var blockIdx = i * this.horizontalBlocks + j;
+				// Update only valid bocks
+				if (this.validBlocks.indexOf(blockIdx) >= 0) {
+					var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+					var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
 
-				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
-				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
-
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGBA,
-							this.gl.UNSIGNED_BYTE, this.rgbaBuffer[blockIdx]);
-				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
+					this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGBA,
+								this.gl.UNSIGNED_BYTE, this.rgbaBuffer[blockIdx]);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+				}
 			}
 		}
 	},
@@ -494,31 +496,33 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		for (var i = 0; i < this.verticalBlocks; i++) {
 			for (var j = 0; j < this.horizontalBlocks; j++) {
 				var blockIdx = i * this.horizontalBlocks + j;
+				// Update only valid bocks
+				if (this.validBlocks.indexOf(blockIdx) >= 0) {
+					var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
+					var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
 
-				var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width - (j * this.maxSize) : this.maxSize;
-				var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
+					var yEnd = bWidth * bHeight;
+					var uEnd = yEnd + bWidth * bHeight / 4;
+					var vEnd = uEnd + bWidth * bHeight / 4;
 
-				var yEnd = bWidth * bHeight;
-				var uEnd = yEnd + bWidth * bHeight / 4;
-				var vEnd = uEnd + bWidth * bHeight / 4;
+					var yBuffer = this.yuvBuffer[blockIdx].subarray(0,    yEnd);
+					var uBuffer = this.yuvBuffer[blockIdx].subarray(yEnd, uEnd);
+					var vBuffer = this.yuvBuffer[blockIdx].subarray(uEnd, vEnd);
 
-				var yBuffer = this.yuvBuffer[blockIdx].subarray(0,    yEnd);
-				var uBuffer = this.yuvBuffer[blockIdx].subarray(yEnd, uEnd);
-				var vBuffer = this.yuvBuffer[blockIdx].subarray(uEnd, vEnd);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
+					this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.LUMINANCE,
+								this.gl.UNSIGNED_BYTE, yBuffer);
 
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.LUMINANCE,
-							this.gl.UNSIGNED_BYTE, yBuffer);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.uTexture[blockIdx]);
+					this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth / 2, bHeight / 2, this.gl.LUMINANCE,
+								this.gl.UNSIGNED_BYTE, uBuffer);
 
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.uTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth / 2, bHeight / 2, this.gl.LUMINANCE,
-							this.gl.UNSIGNED_BYTE, uBuffer);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.vTexture[blockIdx]);
+					this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth / 2, bHeight / 2, this.gl.LUMINANCE,
+								this.gl.UNSIGNED_BYTE, vBuffer);
 
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.vTexture[blockIdx]);
-				this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth / 2, bHeight / 2, this.gl.LUMINANCE,
-							this.gl.UNSIGNED_BYTE, vBuffer);
-
-				this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+				}
 			}
 		}
 	},
@@ -573,22 +577,25 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		for (var i = 0; i < this.verticalBlocks; i++) {
 			for (var j = 0; j < this.horizontalBlocks; j++) {
 				var blockIdx = i * this.horizontalBlocks + j;
+				// Draw only valid bocks
+				if (this.validBlocks.indexOf(blockIdx) >= 0) {
 
-				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute,
-						this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+					this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
+					this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute,
+							this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
-				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
-						this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+					this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
+					this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
+							this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
-				this.gl.activeTexture(this.gl.TEXTURE0);
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
-				this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
+					this.gl.activeTexture(this.gl.TEXTURE0);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
+					this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
 
-				this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
-				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems,
-						this.gl.UNSIGNED_SHORT, 0);
+					this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
+					this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems,
+							this.gl.UNSIGNED_SHORT, 0);
+				}
 			}
 		}
 	},
@@ -597,30 +604,32 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		for (var i = 0; i < this.verticalBlocks; i++) {
 			for (var j = 0; j < this.horizontalBlocks; j++) {
 				var blockIdx = i * this.horizontalBlocks + j;
+				// Draw only valid bocks
+				if (this.validBlocks.indexOf(blockIdx) >= 0) {
+					this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
+					this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute,
+							this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
-				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute,
-						this.squareVertexPositionBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+					this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
+					this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
+							this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
-				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexTextureCoordBuffer[blockIdx]);
-				this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
-						this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
+					this.gl.activeTexture(this.gl.TEXTURE0);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
+					this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
 
-				this.gl.activeTexture(this.gl.TEXTURE0);
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.yTexture[blockIdx]);
-				this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
+					this.gl.activeTexture(this.gl.TEXTURE1);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.uTexture[blockIdx]);
+					this.gl.uniform1i(this.shaderProgram.samplerUniform2, 1);
 
-				this.gl.activeTexture(this.gl.TEXTURE1);
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.uTexture[blockIdx]);
-				this.gl.uniform1i(this.shaderProgram.samplerUniform2, 1);
+					this.gl.activeTexture(this.gl.TEXTURE2);
+					this.gl.bindTexture(this.gl.TEXTURE_2D, this.vTexture[blockIdx]);
+					this.gl.uniform1i(this.shaderProgram.samplerUniform3, 2);
 
-				this.gl.activeTexture(this.gl.TEXTURE2);
-				this.gl.bindTexture(this.gl.TEXTURE_2D, this.vTexture[blockIdx]);
-				this.gl.uniform1i(this.shaderProgram.samplerUniform3, 2);
-
-				this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
-				this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems,
-						this.gl.UNSIGNED_SHORT, 0);
+					this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.squareVertexIndexBuffer[blockIdx]);
+					this.gl.drawElements(this.gl.TRIANGLES, this.squareVertexIndexBuffer[blockIdx].numItems,
+							this.gl.UNSIGNED_SHORT, 0);
+				}
 			}
 		}
 	},
@@ -635,14 +644,23 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 			return;
 		}
 
+		var checkWidth  = this.config.resolution.width;
+		var checkHeight = this.config.resolution.height;
+		// Overview client covers all
+		if (clientID === -1) {
+			// set the resolution to be the whole display wall
+			checkWidth  *= this.config.layout.columns;
+			checkHeight *= this.config.layout.rows;
+		}
+
 		var localX = this.sage2_x - ui.offsetX;
 		var localY = this.sage2_y - ui.offsetY;
 		var localRight  = localX + this.sage2_width;
 		var localBottom = localY + this.sage2_height;
 		var viewX = Math.max(localX, 0);
 		var viewY = Math.max(localY, 0);
-		var viewRight  = Math.min(localRight,  ui.json_cfg.resolution.width);
-		var viewBottom = Math.min(localBottom, ui.json_cfg.resolution.height);
+		var viewRight   = Math.min(localRight,  checkWidth);
+		var viewBottom  = Math.min(localBottom, checkHeight);
 		var localWidth  = viewRight  - viewX;
 		var localHeight = viewBottom - viewY;
 
