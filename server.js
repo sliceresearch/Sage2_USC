@@ -2183,7 +2183,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + appInstance.id;
 			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for (i = 0; i < clients.length; i++) {
-				if (clients[i].clientType === "dislpay") {
+				if (clients[i].clientType === "display") {
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
