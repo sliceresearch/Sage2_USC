@@ -320,8 +320,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend( {
 
 		this.update();
 		this.draw_d3(data.date);
-        this.controls.addButton({type:"next",position:1, identifier:"Next"});
-        this.controls.addButton({type:"prev",position:7, identifier:"Prev"});
+        this.controls.addButton({type:"next",position:7, identifier:"Next"});
+        this.controls.addButton({type:"prev",position:1, identifier:"Prev"});
         this.controls.finishedAddingControls(); //Not adding controls but making the default buttons available
 	},
 

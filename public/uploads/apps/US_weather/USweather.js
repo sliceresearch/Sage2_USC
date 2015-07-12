@@ -690,8 +690,8 @@ var USweather = SAGE2_App.extend( {
 
         
         this.controls.addButton({label:"Temp",position:4, identifier:"Temperature"});
-        this.controls.addButton({label:"Icon",position:6, identifier:"Icon"});
-        this.controls.addButton({label:"Color",position:8, identifier:"Color"});
+        this.controls.addButton({label:"Icon",position:2, identifier:"Icon"});
+        this.controls.addButton({label:"Color",position:12, identifier:"Color"});
         this.controls.finishedAddingControls(); // Important
     },
 

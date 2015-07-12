@@ -152,10 +152,10 @@ var leaflet = SAGE2_App.extend( {
 				.attr("viewBox", box);
 		});
 
-        this.controls.addButton({label:"home",position:2, identifier:"Home"});
+        this.controls.addButton({label:"home",position:6, identifier:"Home"});
         this.controls.addButton({label:"view",position:4, identifier:"View"});
-        this.controls.addButton({type:"fastforward",position:6, identifier:"ZoomIn"});
-        this.controls.addButton({type:"rewind",position:7, identifier:"ZoomOut"});
+        this.controls.addButton({type:"zoom-in",position:12, identifier:"ZoomIn"});
+        this.controls.addButton({type:"zoom-out",position:11, identifier:"ZoomOut"});
         this.controls.finishedAddingControls(); // Important
 	},
 

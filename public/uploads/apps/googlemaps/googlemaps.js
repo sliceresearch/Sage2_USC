@@ -38,10 +38,10 @@ var googlemaps = SAGE2_App.extend( {
 		//var weatherLabel = {textual: true, label: "W",   fill: "rgba(250,250,250,1.0)", animation: false};
 
 		this.controls.addButton({label: "Map",     	position: 4, identifier: "Map"});
-		this.controls.addButton({type: "traffic", 	position: 5, identifier: "Traffic"});
-		this.controls.addButton({type: "weather", 	position: 3, identifier: "Weather"});
-		this.controls.addButton({type: "zoom-in",   position: 8, identifier: "ZoomIn"});
-		this.controls.addButton({type: "zoom-out",  position: 9, identifier: "ZoomOut"});
+		this.controls.addButton({type: "traffic", 	position: 3, identifier: "Traffic"});
+		this.controls.addButton({type: "weather", 	position: 5, identifier: "Weather"});
+		this.controls.addButton({type: "zoom-in",   position: 12, identifier: "ZoomIn"});
+		this.controls.addButton({type: "zoom-out",  position: 11, identifier: "ZoomOut"});
 		this.controls.addTextInput({value: "", label:"Addr", identifier:"Address"});
 		this.controls.addSlider({
 			identifier: "Zoom",

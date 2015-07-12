@@ -43,24 +43,24 @@ var movie_player = SAGE2_BlockStreamingApp.extend( {
 		this.loopBtn = this.controls.addButton({
 			identifier:"Loop",
 			type: "loop",
-			position: 6
+			position: 2
 		});
 
 		this.muteBtn = this.controls.addButton({
 			identifier:"Mute",
 			type: "mute",
-			position: 2
+			position: 6
 		});
 
 		this.playPauseBtn = this.controls.addButton({
 			identifier:"PlayPause",
 			type: "play-pause",
-			position: 3
+			position: 5
 		});
 		this.stopBtn = this.controls.addButton({
 			identifier:"Stop",
 			type: "stop",
-			position: 5
+			position: 3
 		});
 
 		this.controls.addSlider({

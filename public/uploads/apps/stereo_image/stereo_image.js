@@ -28,8 +28,8 @@ var stereo_image = SAGE2_App.extend( {
 		}, false);
 		this.stereoImg.src = this.state.file;
 
-		this.controls.addButton({type: "prev",position: 7, identifier: "PreviousStereoMode"});
-		this.controls.addButton({type: "next",position: 1, identifier: "NextStereoMode"});
+		this.controls.addButton({type: "prev",position: 1, identifier: "PreviousStereoMode"});
+		this.controls.addButton({type: "next",position: 7, identifier: "NextStereoMode"});
 		this.controls.addButton({label: "mode", position: 4, identifier: "ChangeAnaglyphMode"});
 		this.controls.finishedAddingControls();
 	},

@@ -47,8 +47,8 @@ function SAGE2WidgetControlInstance (instanceID, controlSpec) {
 
 	/*Compute Angle Range*/
 	var buttonCount = this.controlSpec.itemCount;
-	var startAngle = 0;
-	var endAngle = 360;
+	var startAngle = 180;
+	var endAngle = -180;
 	var sequenceMaximum = 32;
 	var innerSequence = 12;
 	var outerSequence = 20;

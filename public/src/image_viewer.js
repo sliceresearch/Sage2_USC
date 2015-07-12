@@ -203,7 +203,7 @@ var image_viewer = SAGE2_App.extend( {
 	},
 	addWidgetControlsToImageViewer: function(){
 		// UI stuff
-		this.controls.addButton({label:"info", position:1, identifier:"Info"});
+		this.controls.addButton({label:"info", position:7, identifier:"Info"});
 		this.controls.finishedAddingControls();
 	}
 

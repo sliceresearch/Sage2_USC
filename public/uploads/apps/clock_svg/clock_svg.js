@@ -126,7 +126,7 @@ var clock_svg = SAGE2_App.extend( {
 			"animation":false
 		};
 		// Instead of a string, the type field can be used to specify the button type data itself
-		this.controls.addButton({type:flipButton, position:4, identifier:"Flip"});
+		this.controls.addButton({type:flipButton, position:7, identifier:"Flip"});
 		this.controls.finishedAddingControls();
 	},
 

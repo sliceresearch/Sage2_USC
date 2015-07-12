@@ -72,8 +72,8 @@ var sticky_note = SAGE2_App.extend( {
 
 		var text = "Enter note"; // use this.state for saving text entry
 		this.controls.addTextInput({value: text, identifier:"TextInput"});
-		this.controls.addButton({type:"duplicate",position:3, identifier:"DuplicateNote"});
-		this.controls.addButton({type:"new",position:5, identifier:"NewNote"});
+		this.controls.addButton({type:"duplicate",position:5, identifier:"DuplicateNote"});
+		this.controls.addButton({type:"new",position:3, identifier:"NewNote"});
 		this.controls.finishedAddingControls();
 	},
 

@@ -403,25 +403,17 @@ var photos = SAGE2_App.extend( {
 
 		// create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",position:1, identifier:"Next"});
+        this.controls.addButton({type:"next",position:7, identifier:"Next"});
 
         var _this = this;
 
         for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
-            (function(loopIdxWithPrefix){
-
-            var albumButton = {
-                    "textual":true,
-                    "label":SAGE2_photoAlbums[loopIdx].name,
-                    "fill":"rgba(250,250,250,1.0)",
-                    "animation":false
-                };
-
-                _this.controls.addButton({type:albumButton, position:3+loopIdx,identifier: loopIdxWithPrefix});/* action:function(date){
-                    this.setAlbum(loopIdxWithPrefix);
-                }.bind(_this) });*/
-            }(loopIdxWithPrefix));
+            var pos = 5-loopIdx;
+        	if (pos < 1){
+        		pos = pos + 12;
+        	}
+            this.controls.addButton({label:SAGE2_photoAlbums[loopIdx].name, position:pos,identifier: loopIdxWithPrefix});
         }
 
         this.controls.finishedAddingControls(); // Important

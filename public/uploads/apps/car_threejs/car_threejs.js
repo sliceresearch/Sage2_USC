@@ -55,13 +55,13 @@ var car_threejs = SAGE2_App.extend( {
 			});
 		});
 
-		this.controls.addButton({type:"prev",position:7, identifier:"Left"});
-		this.controls.addButton({type:"next",position:1, identifier:"Right"});
+		this.controls.addButton({type:"prev",position:1, identifier:"Left"});
+		this.controls.addButton({type:"next",position:7, identifier:"Right"});
 		this.controls.addButton({type:"up-arrow",position:4, identifier:"Up"});
 		this.controls.addButton({type:"down-arrow",position:10, identifier:"Down"});
-		this.controls.addButton({type:"zoom-in",position:8, identifier:"ZoomIn"});
-		this.controls.addButton({type:"zoom-out",position:9, identifier:"ZoomOut"});
-		this.controls.addButton({type:"loop",position:6, identifier:"Loop"});
+		this.controls.addButton({type:"zoom-in",position:12, identifier:"ZoomIn"});
+		this.controls.addButton({type:"zoom-out",position:11, identifier:"ZoomOut"});
+		this.controls.addButton({type:"loop",position:2, identifier:"Loop"});
 		this.controls.finishedAddingControls();
 	},
 

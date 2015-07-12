@@ -337,17 +337,15 @@ var radar = SAGE2_App.extend( {
 
         // create the widgets
         console.log("creating controls");
-        this.controls.addButton({type:"next",position:3, identifier:"Next"});
+        this.controls.addButton({type:"next",position:5, identifier:"Next"});
 
         for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
             var loopIdxWithPrefix = "0" + loopIdx;
-            var siteButton = {
-                "textual":true,
-                "label":SAGE2_radarStations[loopIdx].name,
-                "fill":"rgba(250,250,250,1.0)",
-                "animation":false
-            };
-            this.controls.addButton({type:siteButton, position:5+loopIdx, identifier: loopIdxWithPrefix});
+            var pos = 3-loopIdx;
+        	if (pos < 1){
+        		pos = pos + 12;
+        	}
+            this.controls.addButton({label:SAGE2_radarStations[loopIdx].name, position:pos, identifier: loopIdxWithPrefix});
 		}
         this.controls.finishedAddingControls(); // Important
 
