@@ -36,7 +36,7 @@ var spawnSync    = ChildProcess.spawnSync; // || require('spawn-sync');
  */
 function fileSpawn(filename, done) {
 	// The dash specifies to read data from stdin
-	var exif = ChildProcess.spawn('exiftool', ['-json', filename]);
+	var exif = ChildProcess.spawn('exiftool', ['-json', '-filesize#', '-all', filename]);
 
 	// Check for error because of the child process not being found / launched
 	exif.on('error', function(err) {
@@ -74,7 +74,7 @@ function fileSpawn(filename, done) {
  * @param done {Function} executed when done, done(error, metadata)
  */
 function file(filename, done) {
-	ChildProcess.exec('exiftool -json \"' + filename + '\"', function(error, stdout, stderr) {
+	ChildProcess.exec('exiftool -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
 		if (error !== null) {
 			done(error);
 		} else {
@@ -95,7 +95,7 @@ function file(filename, done) {
  * @return {Object} return object as {err:String, metadata:Object)
  */
 function fileSync(filename) {
-	var result = spawnSync('exiftool', ['-json', filename]);
+	var result = spawnSync('exiftool', ['-json', '-filesize#', '-all', filename]);
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
@@ -118,7 +118,7 @@ function fileSync(filename) {
  */
 function bufferSync(source) {
 	var result = spawnSync('exiftool',
-							['-json', '-'],
+							['-json', '-filesize#', '-all', '-'],
 							{input: source, encoding: null});
 
 	// Note, status code will always equal 0 if using busy waiting fallback
@@ -139,7 +139,7 @@ function bufferSync(source) {
  */
 function buffer(source, callback) {
 	// The dash specifies to read data from stdin
-	var exif = ChildProcess.spawn('exiftool', ['-json', '-'], {stdin: 'pipe'});
+	var exif = ChildProcess.spawn('exiftool', ['-json', '-filesize#', '-all', '-'], {stdin: 'pipe'});
 
 	// Check for error because of the child process not being found / launched
 	exif.on('error', function(err) {
