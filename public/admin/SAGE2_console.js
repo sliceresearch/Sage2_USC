@@ -27,7 +27,7 @@
  */
 function SAGE2_init() {
 	// Connect to the server
-	wsio = new WebsocketIO();
+	var wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
 
