@@ -93,8 +93,19 @@ SAGE2Annotations.prototype.deleteWindow = function(){
 SAGE2Annotations.prototype.populateWindow = function(data){
 	//A for loop to add individual comments
 	//var arr = [];
+	var dataArray = [];
 	for (var key in data){
-		this.addNote(data[key]);
+		dataArray.push(data[key]);
+	}
+	var sortedArray = dataArray.sort(function(a,b){
+		if (a.createdOn=== null || a.createdOn===undefined)
+			return 1;
+		if (b.createdOn=== null || b.createdOn===undefined)
+			return 1;
+		return a.createdOn - b.createdOn;
+	});
+	for (var i=0; i<sortedArray.length; i++){
+		this.addNote(sortedArray[i]);
 	}
 	setTimeout(function(){
 		for (var key in data){
