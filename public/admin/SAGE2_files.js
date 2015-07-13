@@ -16,7 +16,7 @@
  * @class SAGE2_Files
  */
 
-/* global SAGE2_init, escape, unescape */
+/* global SAGE2_init, escape, unescape, webix, $$, moment */
 
 "use strict";
 
@@ -27,7 +27,7 @@
  */
 function SAGE2_init() {
 	// Connect to the server
-	wsio = new WebsocketIO();
+	var wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
 
@@ -112,8 +112,176 @@ function setupListeners(wsio) {
 	wsio.on('storedFileList', function(data) {
 		console.log('SAGE2: files', data);
 
-		var output, i, f;
 
+		// WEBIX
+		// ---------------------------------------------------
+		webix.ready(function() {
+
+			var data_with_icon = [
+				{id: "root", value: "Assets", icon: "home", open: true, data: [
+						{id: "Image", open: true, value: "Image", data: []},
+						{id: "Video", open: true, value: "Video", data: []},
+						{id: "PDF", open: true, value: "PDF", data: []}
+					]
+				}
+			];
+
+			webix.ui({
+				container: "testA",
+				id: "layout",
+				rows: [
+					{template: "File library", height: 55 },
+					{cols: [
+						{
+							id: "tree1",
+							view: "tree",
+							select: "multiselect",
+							navigation: true,
+							data: data_with_icon,
+							onContext: {} // required for context menu
+						},
+						{
+							id: "multiview1",
+							view: "multiview",
+							animate: false,
+							gravity: 2, // two times bigger
+							cells: [
+								{
+									// view:"datatable",
+									// columns:[
+									// 	{ id:"rank",	header:"", css:"rank",  		width:50},
+									// 	{ id:"title",	header:"Name",width:300},
+									// 	{ id:"year",	header:"Date" , width:180},
+									// 	{ id:"year",	header:"Type" , width:180},
+									// 	{ id:"votes",	header:"Size", 	width:100}
+									// ],
+									// autoheight:false,
+									// autowidth:false,
+									// data: [
+									// ]
+								}
+							]
+						}
+					]
+				}
+				]
+			}).show();
+
+			var multiview1 = $$("multiview1");
+			console.log('Multiview', multiview1);
+			multiview1.addView({
+				id: "image_table",
+				view: "datatable",
+				animate: false,
+				columns: [
+					{id: "rank", header: "", css: "rank", width: 50},
+					{id: "name", header: "Name", width: 300},
+					{id: "date", header: "Date", width: 170},
+					{id: "ago",  header: "Ago",  width: 135},
+					{id: "type", header: "Type", width: 80},
+					{id: "size", header: "Size", width: 80}
+				],
+				data: [
+				]
+			});
+			multiview1.addView({
+				id: "pdf_table",
+				view: "datatable",
+				animate: false,
+				columns: [
+					{id: "rank", header: "", css: "rank", width: 50},
+					{id: "name", header: "Name", width: 300},
+					{id: "date", header: "Date", width: 180},
+					{id: "type", header: "Type", width: 180},
+					{id: "size", header: "Size", width: 100}
+				],
+				data: [
+				]
+			});
+			multiview1.addView({
+				id: "video_table",
+				view: "datatable",
+				animate: false,
+				columns: [
+					{id: "rank",	header: "", css: "rank", width: 50},
+					{id: "name",	header: "Name", width: 300},
+					{id: "date",	header: "Date", width: 180},
+					{id: "type",	header: "Type", width: 180},
+					{id: "size",	header: "Size", width: 100}
+				],
+				data: [
+				]
+			});
+			var image_table = $$("image_table");
+			var pdf_table   = $$("pdf_table");
+			var video_table = $$("video_table");
+
+			var tree = $$("tree1");
+			for (i = 0, f; f = data.images[i]; i++) { // eslint-disable-line
+				tree.data.add({id: f.id, value: f.exif.FileName}, i, "Image");
+				var mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				image_table.data.add({id: f.id, rank: i + 1,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					// date: mm.format("MMMM Do YYYY, h:mm:ss a"),
+					ago:  mm.fromNow(),
+					type: f.exif.FileType,
+					size: f.exif.FileSize});
+			}
+			for (i = 0, f; f = data.videos[i]; i++) { // eslint-disable-line
+				tree.data.add({id: f.id, value: f.exif.FileName}, i, "Video");
+				video_table.data.add({id: f.id, rank: i + 1, name: f.exif.FileName, date: "today", type: "MOV", size: 444});
+			}
+			for (i = 0, f; f = data.pdfs[i]; i++) { // eslint-disable-line
+				tree.data.add({id: f.id, value: f.exif.FileName}, i, "PDF");
+				pdf_table.data.add({id: f.id, rank: i + 1, name: f.exif.FileName, date: "today", type: "PDF", size: 444});
+			}
+			tree.refresh();
+			image_table.refresh();
+			multiview1.setValue("image_table");
+			console.log('image_table');
+
+			// onItemClick onAfterSelect onBeforeSelect
+			tree.attachEvent("onSelectChange", function(evt) {
+				console.log('element selected', tree.getSelectedId());
+			});
+			tree.attachEvent("onItemClick", function(evt) {
+				console.log('element click', evt);
+				if (evt === "Image") {
+					multiview1.setValue("image_table");
+				} else if (evt === "PDF") {
+					multiview1.setValue("pdf_table");
+				} else if (evt === "Video") {
+					multiview1.setValue("video_table");
+				}
+			});
+
+			webix.ui({
+				view: "contextmenu",
+				id: "cmenu",
+				data: ["Add", "Rename", "Delete", { $template: "Separator" }, "Info"],
+				on: {
+					onItemClick: function(id) {
+						var context = this.getContext();
+						var list    = context.obj;
+						var listId  = context.id;
+						console.log("List item: ", id, list.getItem(listId).value);
+					}
+				}
+			});
+			$$("cmenu").attachTo($$("tree1"));
+
+		});
+		// ---------------------------------------------------
+
+
+
+
+
+
+
+
+		var output, i, f;
 		document.getElementById('configuration_files').innerHTML = '<ul> <li>default-cfg.json</li> </ul>';
 
 		output = [];

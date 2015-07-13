@@ -18,10 +18,39 @@
 
 <script type="text/javascript" src="../src/websocket.io.js"></script>
 <script type="text/javascript" src="../src/SAGE2_runtime.js"></script>
-
 <script type="text/javascript" src="SAGE2_files.js"></script>
+<script type="text/javascript" src="lib/moment.min.js"></script>
+<link rel="stylesheet" type="text/css" href="style.css" media="screen">
 
-<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+<!-- File manager UI -->
+<script type="text/javascript" src="lib/webix/webix.js"></script>
+<script type="text/javascript" src="lib/webix/treedata.js"></script>
+
+<link rel="stylesheet" type="text/css" href="lib/webix/webix.css">
+<link rel="stylesheet" type="text/css" href="lib/webix/samples.css">
+<link rel="stylesheet" type="text/css" href="lib/webix/skins/compact.css">
+
+
+<style type="text/css">
+.webix_tree_folder {
+    background-image: url("lib/webix/icons/folder.png");
+    background-position: 0px 4px;
+}
+.webix_tree_folder_open {
+    background-image: url("lib/webix/icons/folder_open.png");
+    background-position: 0px 4px;
+}
+.webix_tree_file {
+    background-image: url("lib/webix/icons/file.png");
+    background-position: 0px 4px;
+}
+.webix_tree_home {
+    background-image: url("lib/webix/icons/home.png");
+    background-position: 0px 4px;
+}
+</style>
+<!-- File manager UI -->
+
 
 </head>
 
@@ -32,6 +61,11 @@
 	</header>
 
 	<main>
+
+		<section class="siteType">
+			<h2>Webix</h2>
+			<div id="testA" style='width:97%; height:650px;'></div>
+		</section>
 
 		<section class="siteType">
 			<h2>Configuration files</h2>
