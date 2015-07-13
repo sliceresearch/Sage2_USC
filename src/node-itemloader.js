@@ -701,7 +701,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var dir = registry.getDirectory(file.name);
 
 	var _this = this;
-	if (!fs.folderExists(path.join(this.publicDir, "uploads", dir))) {
+	if (!sageutils.folderExists(path.join(this.publicDir, "uploads", dir))) {
 		fs.mkdirSync(path.join(this.publicDir, "uploads", dir));
 	}
 	var aUrl = "uploads/" + dir + "/" + file.name;
