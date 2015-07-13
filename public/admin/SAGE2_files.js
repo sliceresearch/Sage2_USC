@@ -71,6 +71,18 @@ function SAGE2_init() {
 	});
 }
 
+/**
+ * Convert a file size (number) to pretty string
+ *
+ * @method fileSizeIEC
+ * @param a {Number} file size to be converted
+ * @return {String} number with unit
+ */
+function fileSizeIEC(a, b, c, d, e) {
+	return (b = Math, c = b.log, d = 1024, e = c(a) / c(d) | 0,
+			a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
+}
+
 
 /**
  * Place callbacks on various messages from the server
@@ -90,8 +102,6 @@ function setupListeners(wsio) {
 
 	// Server sends the application list
 	wsio.on('availableApplications', function(data) {
-		console.log('SAGE2: applications', data);
-
 		var output, i, f;
 
 		output = [];
@@ -110,8 +120,6 @@ function setupListeners(wsio) {
 
 	// Server the media files list
 	wsio.on('storedFileList', function(data) {
-		console.log('SAGE2: files', data);
-
 
 		// WEBIX
 		// ---------------------------------------------------
@@ -126,19 +134,23 @@ function setupListeners(wsio) {
 				}
 			];
 
-			webix.ui({
+			var main = webix.ui({
 				container: "testA",
 				id: "layout",
 				rows: [
-					{template: "File library", height: 55 },
+					{template: "SAGE2 content browser", height: 55 },
 					{cols: [
 						{
 							id: "tree1",
 							view: "tree",
 							select: "multiselect",
 							navigation: true,
+							drag: true,
 							data: data_with_icon,
 							onContext: {} // required for context menu
+						},
+						{
+							view: "resizer"
 						},
 						{
 							id: "multiview1",
@@ -147,39 +159,88 @@ function setupListeners(wsio) {
 							gravity: 2, // two times bigger
 							cells: [
 								{
-									// view:"datatable",
-									// columns:[
-									// 	{ id:"rank",	header:"", css:"rank",  		width:50},
-									// 	{ id:"title",	header:"Name",width:300},
-									// 	{ id:"year",	header:"Date" , width:180},
-									// 	{ id:"year",	header:"Type" , width:180},
-									// 	{ id:"votes",	header:"Size", 	width:100}
-									// ],
-									// autoheight:false,
-									// autowidth:false,
-									// data: [
-									// ]
+								}
+							]
+						},
+						{
+							view: "resizer"
+						},
+						{
+							rows: [
+								{
+									view: "property",
+									id: "thumbnail",
+									width: 260,
+									elements: [
+										{label: "EXIF", type: "label"},
+										{label: "Width",     id: "width"},
+										{label: "Height",    id: "height"},
+										{label: "Author",    id: "author"},
+										{label: "Mime-type", id: "mime"}
+									]
+								},
+								{
+									view: "resizer"
+								},
+								{
+									width: 260,
+									id: "thumb",
+									template: function(obj) {
+											if (obj.image) {
+												return "<img src='" + obj.image + "_256.jpg'></img>";
+											} else {
+												return "";
+											}
+										}
 								}
 							]
 						}
 					]
 				}
 				]
-			}).show();
+			});
+			main.show();
+			// webix.event(window, "resize", function(){ main.adjust() });
+
+			var allFiles = {};
+			for (i = 0, f; f = data.images[i]; i++) { // eslint-disable-line
+				allFiles[f.id] = f;
+			}
+			for (i = 0, f; f = data.videos[i]; i++) { // eslint-disable-line
+				allFiles[f.id] = f;
+			}
+			for (i = 0, f; f = data.pdfs[i]; i++) { // eslint-disable-line
+				allFiles[f.id] = f;
+			}
+
+			function sortByDate(a, b) {
+				// fileds are 'moment' objects
+				a = allFiles[a.id].exif.FileModifyDate;
+				b = allFiles[b.id].exif.FileModifyDate;
+				return a > b ? 1 : (a < b ? -1 : 0);
+			}
+			function sortBySize(a, b) {
+				// File size in byte
+				a = allFiles[a.id].exif.FileSize;
+				b = allFiles[b.id].exif.FileSize;
+				return a > b ? 1 : (a < b ? -1 : 0);
+			}
 
 			var multiview1 = $$("multiview1");
-			console.log('Multiview', multiview1);
 			multiview1.addView({
 				id: "image_table",
 				view: "datatable",
+				autowidth: true,
 				animate: false,
+				drag: true,
+				select: "multiselect",
+				navigation: true,
 				columns: [
-					{id: "rank", header: "", css: "rank", width: 50},
-					{id: "name", header: "Name", width: 300},
-					{id: "date", header: "Date", width: 170},
-					{id: "ago",  header: "Ago",  width: 135},
-					{id: "type", header: "Type", width: 80},
-					{id: "size", header: "Size", width: 80}
+					{id: "name", header: "Name", width: 300, sort: "text"},
+					{id: "date", header: "Date", width: 170, sort: sortByDate},
+					{id: "ago",  header: "Modified", width: 135, sort: sortByDate},
+					{id: "type", header: "Type", width: 80,  sort: "text"},
+					{id: "size", header: "Size", width: 80,  sort: sortBySize}
 				],
 				data: [
 				]
@@ -187,27 +248,52 @@ function setupListeners(wsio) {
 			multiview1.addView({
 				id: "pdf_table",
 				view: "datatable",
+				autowidth: true,
 				animate: false,
+				drag: true,
+				select: "multiselect",
+				navigation: true,
 				columns: [
-					{id: "rank", header: "", css: "rank", width: 50},
-					{id: "name", header: "Name", width: 300},
-					{id: "date", header: "Date", width: 180},
-					{id: "type", header: "Type", width: 180},
-					{id: "size", header: "Size", width: 100}
-				],
-				data: [
+					{id: "name", header: "Name", width: 300, sort: "text"},
+					{id: "date", header: "Date", width: 170, sort: sortByDate},
+					{id: "ago",  header: "Modified", width: 135, sort: sortByDate},
+					{id: "type", header: "Type", width: 80,  sort: "text"},
+					{id: "size", header: "Size", width: 80,  sort: sortBySize}
 				]
 			});
 			multiview1.addView({
 				id: "video_table",
 				view: "datatable",
+				autowidth: true,
 				animate: false,
+				drag: true,
+				select: "multiselect",
+				navigation: true,
 				columns: [
-					{id: "rank",	header: "", css: "rank", width: 50},
-					{id: "name",	header: "Name", width: 300},
-					{id: "date",	header: "Date", width: 180},
-					{id: "type",	header: "Type", width: 180},
-					{id: "size",	header: "Size", width: 100}
+					{id: "name", header: "Name", width: 300, sort: "text"},
+					{id: "date", header: "Date", width: 170, sort: sortByDate},
+					{id: "ago",  header: "Modified", width: 135, sort: sortByDate},
+					{id: "type", header: "Type", width: 80,  sort: "text"},
+					{id: "size", header: "Size", width: 80,  sort: sortBySize}
+				],
+				data: [
+				]
+			});
+			multiview1.addView({
+				id: "all_table",
+				view: "datatable",
+				editable: true,
+				autowidth: true,
+				animate: false,
+				drag: true,
+				select: "multiselect",
+				navigation: true,
+				columns: [
+					{id: "name", header: "Name", width: 300, sort: "text"},
+					{id: "date", header: "Date", width: 170, sort: sortByDate},
+					{id: "ago",  header: "Modified", width: 135, sort: sortByDate},
+					{id: "type", header: "Type", width: 80,  sort: "text"},
+					{id: "size", header: "Size", width: 80,  sort: sortBySize}
 				],
 				data: [
 				]
@@ -215,31 +301,110 @@ function setupListeners(wsio) {
 			var image_table = $$("image_table");
 			var pdf_table   = $$("pdf_table");
 			var video_table = $$("video_table");
-
+			var all_table   = $$("all_table");
+			var mm;
 			var tree = $$("tree1");
 			for (i = 0, f; f = data.images[i]; i++) { // eslint-disable-line
 				tree.data.add({id: f.id, value: f.exif.FileName}, i, "Image");
-				var mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
-				image_table.data.add({id: f.id, rank: i + 1,
+				mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				f.exif.FileModifyDate = mm;
+				image_table.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					// date: mm.format("MMMM Do YYYY, h:mm:ss a"),
 					ago:  mm.fromNow(),
 					type: f.exif.FileType,
-					size: f.exif.FileSize});
+					size: fileSizeIEC(f.exif.FileSize)
+				});
 			}
+			image_table.markSorting("name", "asc");
+
 			for (i = 0, f; f = data.videos[i]; i++) { // eslint-disable-line
 				tree.data.add({id: f.id, value: f.exif.FileName}, i, "Video");
-				video_table.data.add({id: f.id, rank: i + 1, name: f.exif.FileName, date: "today", type: "MOV", size: 444});
+				mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				f.exif.FileModifyDate = mm;
+				video_table.data.add({id: f.id,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago:  mm.fromNow(),
+					type: f.exif.FileType,
+					size: fileSizeIEC(f.exif.FileSize)
+				});
 			}
 			for (i = 0, f; f = data.pdfs[i]; i++) { // eslint-disable-line
 				tree.data.add({id: f.id, value: f.exif.FileName}, i, "PDF");
-				pdf_table.data.add({id: f.id, rank: i + 1, name: f.exif.FileName, date: "today", type: "PDF", size: 444});
+				mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				f.exif.FileModifyDate = mm;
+				pdf_table.data.add({id: f.id,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago:  mm.fromNow(),
+					type: f.exif.FileType,
+					size: fileSizeIEC(f.exif.FileSize)
+				});
+			}
+			i = 0;
+			for (var a in allFiles) {
+				f = allFiles[a];
+				mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				f.exif.FileModifyDate = mm;
+				all_table.data.add({id: f.id,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago:  mm.fromNow(),
+					type: f.exif.FileType,
+					size: fileSizeIEC(f.exif.FileSize)
+				});
+				i++;
 			}
 			tree.refresh();
-			image_table.refresh();
-			multiview1.setValue("image_table");
-			console.log('image_table');
+			all_table.refresh();
+			multiview1.setValue("all_table");
+
+			all_table.attachEvent("onSelectChange", function(evt) {
+				var elt = all_table.getSelectedId();
+				console.log('all selected', elt.id);
+				var thumbnail = $$("thumbnail");
+				thumbnail.getItem("width").value  = allFiles[elt.id].exif.ImageWidth;
+				thumbnail.getItem("height").value = allFiles[elt.id].exif.ImageHeight;
+				thumbnail.getItem("author").value = allFiles[elt.id].exif.Creator;
+				thumbnail.getItem("mime").value   = allFiles[elt.id].exif.MIMEType;
+				thumbnail.refresh();
+				var thumb = $$("thumb");
+				console.log('Setting', allFiles[elt.id].exif.SAGE2thumbnail);
+				thumb.data = {image: allFiles[elt.id].exif.SAGE2thumbnail};
+				thumb.refresh();
+			});
+			all_table.attachEvent("onItemDblClick", function(id, e, node) {
+				var elt = id.row;
+				var url = allFiles[elt].sage2URL;
+				console.log('Double click', elt, url);
+
+				// Open the file
+				// window.open(url, '_blank');
+
+				// Download the file
+				var link = document.createElement('a');
+				link.href = url;
+				if (link.download !== undefined) {
+					// Set HTML5 download attribute. This will prevent file from opening if supported.
+					var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+					link.download = fileName;
+				}
+				// Dispatching click event
+				if (document.createEvent) {
+					var me = document.createEvent('MouseEvents');
+					me.initEvent('click', true, true);
+					link.dispatchEvent(me);
+					return true;
+				}
+
+			});
+
+			all_table.attachEvent("onAfterSort", function(by, dir, func) {
+				// console.log('Sorting done');
+			});
+			all_table.sort("name", "asc");
+
 
 			// onItemClick onAfterSelect onBeforeSelect
 			tree.attachEvent("onSelectChange", function(evt) {
@@ -253,8 +418,37 @@ function setupListeners(wsio) {
 					multiview1.setValue("pdf_table");
 				} else if (evt === "Video") {
 					multiview1.setValue("video_table");
+				} else if (evt === "root") {
+					multiview1.setValue("all_table");
 				}
 			});
+
+			// The drag-and-drop context can have the next properties:
+			// from - the source object
+			// to - the target object
+			// source - the id of the dragged item(s)
+			// target - the id of the drop target, null for drop on empty space
+			// start - the id from which DND was started
+			all_table.attachEvent("onBeforeDrag", function(context, ev) {
+				context.html = "<div style='padding:8px;'>";
+				for (var i = 0; i < context.source.length; i++) {
+					context.html += context.from.getItem(context.source[i]).name + "<br>";
+				}
+				context.html += "</div>";
+			});
+			tree.attachEvent("onBeforeDrop", function(context, ev) {
+				for (var i = 0; i < context.source.length; i++) {
+					console.log('onBeforeDrop', context.source[i], context.target);
+				}
+				return true;
+			});
+			tree.attachEvent("onAfterDrop", function(context, native_event) {
+				console.log('onAfterDrop', context.source, context.target);
+			});
+
+			tree.closeAll();
+			tree.open("root");
+
 
 			webix.ui({
 				view: "contextmenu",
@@ -265,17 +459,14 @@ function setupListeners(wsio) {
 						var context = this.getContext();
 						var list    = context.obj;
 						var listId  = context.id;
-						console.log("List item: ", id, list.getItem(listId).value);
+						console.log("List item: ", id, list.getItem(listId).id);
 					}
 				}
 			});
 			$$("cmenu").attachTo($$("tree1"));
-
+			$$("cmenu").attachTo($$("all_table"));
 		});
 		// ---------------------------------------------------
-
-
-
 
 
 
