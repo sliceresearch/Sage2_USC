@@ -169,14 +169,10 @@ function setupListeners(wsio) {
 							rows: [
 								{
 									view: "property",
-									id: "thumbnail",
+									id: "metadata",
+									editable: false,
 									width: 260,
 									elements: [
-										{label: "EXIF", type: "label"},
-										{label: "Width",     id: "width"},
-										{label: "Height",    id: "height"},
-										{label: "Author",    id: "author"},
-										{label: "Mime-type", id: "mime"}
 									]
 								},
 								{
@@ -184,6 +180,7 @@ function setupListeners(wsio) {
 								},
 								{
 									width: 260,
+									height: 260,
 									id: "thumb",
 									template: function(obj) {
 											if (obj.image) {
@@ -360,24 +357,63 @@ function setupListeners(wsio) {
 			all_table.refresh();
 			multiview1.setValue("all_table");
 
+			// User selection
 			all_table.attachEvent("onSelectChange", function(evt) {
 				var elt = all_table.getSelectedId();
-				console.log('all selected', elt.id);
-				var thumbnail = $$("thumbnail");
-				thumbnail.getItem("width").value  = allFiles[elt.id].exif.ImageWidth;
-				thumbnail.getItem("height").value = allFiles[elt.id].exif.ImageHeight;
-				thumbnail.getItem("author").value = allFiles[elt.id].exif.Creator;
-				thumbnail.getItem("mime").value   = allFiles[elt.id].exif.MIMEType;
-				thumbnail.refresh();
+				var metadata = $$("metadata");
+
+				// Rebuild the metadata panel
+				metadata.config.elements = [];
+				metadata.config.elements.push({label: "Metadata", type: "label"});
+				metadata.config.elements.push({label: "Width",
+						value: allFiles[elt.id].exif.ImageWidth || '-'});
+				metadata.config.elements.push({label: "Height",
+						value: allFiles[elt.id].exif.ImageHeight || '-'});
+				metadata.config.elements.push({label: "Author",
+						value: allFiles[elt.id].exif.Creator || '-'});
+				metadata.config.elements.push({label: "File",
+						value: allFiles[elt.id].exif.MIMEType || '-'});
+
+				// Add an EXIF panel for pictures
+				if (allFiles[elt.id].exif.MIMEType.indexOf('image') >= 0) {
+					metadata.config.elements.push({label: "EXIF", type: "label"});
+					var info;
+					info = allFiles[elt.id].exif.Make || '';
+					metadata.config.elements.push({label: "Make", value: info});
+					info = allFiles[elt.id].exif.Model || '';
+					metadata.config.elements.push({label: "Camera", value: info});
+					info = allFiles[elt.id].exif.LensID || allFiles[elt.id].exif.LensInfo || '';
+					metadata.config.elements.push({label: "Lens", value: info});
+					info = allFiles[elt.id].exif.ExposureTime || allFiles[elt.id].exif.ShutterSpeedValue ||
+								allFiles[elt.id].exif.ShutterSpeed || '';
+					metadata.config.elements.push({label: "Shutter speed", value: info});
+					info = allFiles[elt.id].exif.FNumber || allFiles[elt.id].exif.Aperture ||
+								allFiles[elt.id].exif.ApertureValue || '';
+					metadata.config.elements.push({label: "Aperture", value: info});
+					info = allFiles[elt.id].exif.ISO || '';
+					metadata.config.elements.push({label: "ISO", value: info});
+					info = allFiles[elt.id].exif.ExposureProgram || '';
+					metadata.config.elements.push({label: "Program", value: info});
+					info = allFiles[elt.id].exif.Flash || '';
+					metadata.config.elements.push({label: "Flash", value: info});
+					info = allFiles[elt.id].exif.Megapixels || '';
+					metadata.config.elements.push({label: "Megapixels", value: info});
+					info = allFiles[elt.id].exif.ColorSpace || '';
+					metadata.config.elements.push({label: "Color space", value: info});
+					info = allFiles[elt.id].exif.WhiteBalance || '';
+					metadata.config.elements.push({label: "White balance", value: info});
+				}
+				// Done updating metadata
+				metadata.refresh();
+
+				// Update the thumbnail
 				var thumb = $$("thumb");
-				console.log('Setting', allFiles[elt.id].exif.SAGE2thumbnail);
 				thumb.data = {image: allFiles[elt.id].exif.SAGE2thumbnail};
 				thumb.refresh();
 			});
 			all_table.attachEvent("onItemDblClick", function(id, e, node) {
 				var elt = id.row;
 				var url = allFiles[elt].sage2URL;
-				console.log('Double click', elt, url);
 
 				// Open the file
 				// window.open(url, '_blank');
@@ -403,15 +439,16 @@ function setupListeners(wsio) {
 			all_table.attachEvent("onAfterSort", function(by, dir, func) {
 				// console.log('Sorting done');
 			});
+			// Sort the table by name
 			all_table.sort("name", "asc");
 
 
 			// onItemClick onAfterSelect onBeforeSelect
 			tree.attachEvent("onSelectChange", function(evt) {
-				console.log('element selected', tree.getSelectedId());
+				// console.log('element selected', tree.getSelectedId());
 			});
 			tree.attachEvent("onItemClick", function(evt) {
-				console.log('element click', evt);
+				// console.log('element click', evt);
 				if (evt === "Image") {
 					multiview1.setValue("image_table");
 				} else if (evt === "PDF") {
@@ -437,13 +474,13 @@ function setupListeners(wsio) {
 				context.html += "</div>";
 			});
 			tree.attachEvent("onBeforeDrop", function(context, ev) {
-				for (var i = 0; i < context.source.length; i++) {
-					console.log('onBeforeDrop', context.source[i], context.target);
-				}
+				// for (var i = 0; i < context.source.length; i++) {
+				// 	console.log('onBeforeDrop', context.source[i], context.target);
+				// }
 				return true;
 			});
 			tree.attachEvent("onAfterDrop", function(context, native_event) {
-				console.log('onAfterDrop', context.source, context.target);
+				// console.log('onAfterDrop', context.source, context.target);
 			});
 
 			tree.closeAll();
@@ -538,11 +575,6 @@ function setupListeners(wsio) {
 	// Server sends the wall configuration
 	wsio.on('setupDisplayConfiguration', function() {
 		console.log('wall configuration');
-	});
-
-	// Server sends the animate loop event
-	wsio.on('animateCanvas', function() {
-		console.log('animateCanvas');
 	});
 
 }
