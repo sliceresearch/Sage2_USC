@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+"use strict";
+
 /**
  * Web user interface
  *
@@ -17,34 +19,37 @@
  */
 
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
-navigator.getUserMedia   = (navigator.getUserMedia  || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock  || document.webkitExitPointerLock;
+navigator.getUserMedia   = (navigator.getUserMedia  || navigator.webkitGetUserMedia ||
+							navigator.mozGetUserMedia || navigator.msGetUserMedia);
+document.exitPointerLock = document.exitPointerLock ||
+							document.mozExitPointerLock  ||
+							document.webkitExitPointerLock;
 
-/////////////////////////////////////////////////////////////////////////////
+//
 // Polyfill for 'bind' - needed for older version of iOS Safari mobile ;-(
-/////////////////////////////////////////////////////////////////////////////
+//
 /* eslint-disable */
 if (!Function.prototype.bind) {
-  Function.prototype.bind = function(oThis) {
-    if (typeof this !== 'function') {
-      // closest thing possible to the ECMAScript 5
-      // internal IsCallable function
-      throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
-    }
-    var aArgs   = Array.prototype.slice.call(arguments, 1),
-        fToBind = this,
-        fNOP    = function() {},
-        fBound  = function() {
-          return fToBind.apply(this instanceof fNOP && oThis ? this : oThis,
-                 aArgs.concat(Array.prototype.slice.call(arguments)));
-        };
-    fNOP.prototype = this.prototype;
-    fBound.prototype = new fNOP();
-    return fBound;
-  };
+	Function.prototype.bind = function(oThis) {
+		if (typeof this !== 'function') {
+			// closest thing possible to the ECMAScript 5
+			// internal IsCallable function
+			throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+		}
+		var aArgs   = Array.prototype.slice.call(arguments, 1);
+		var fToBind = this;
+		var FNOP    = function() {};
+		var fBound  = function() {
+			return fToBind.apply(this instanceof FNOP && oThis ? this : oThis,
+						aArgs.concat(Array.prototype.slice.call(arguments)));
+		};
+		FNOP.prototype = this.prototype;
+		fBound.prototype = new FNOP();
+		return fBound;
+	};
 }
 /* eslint-enable */
-/////////////////////////////////////////////////////////////////////////////
+//
 
 var wsio;
 var displayUI;
@@ -84,13 +89,16 @@ function SAGE2_init() {
 				var json_cfg = JSON.parse(xhr.responseText);
 
 				var https_port;
-				if (json_cfg.rproxy_port !== undefined)
+				if (json_cfg.rproxy_port !== undefined) {
 					https_port = ":" + json_cfg.rproxy_port.toString();
-				else
+				} else {
 					https_port = ":" + json_cfg.port.toString();
-				if (https_port === ":443") https_port = "";
+				}
+				if (https_port === ":443") {
+					https_port = "";
+				}
 
-				window.location.replace( "https://" + window.location.hostname + https_port + window.location.pathname);
+				window.location.replace("https://" + window.location.hostname + https_port + window.location.pathname);
 			}
 		};
 		xhr.send();
@@ -128,7 +136,7 @@ function SAGE2_init() {
 	});
 
 	// socket close event (i.e. server crashed)
-	wsio.on('close', function (evt) {
+	wsio.on('close', function(evt) {
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
 				clearInterval(refresh);
@@ -174,12 +182,14 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
-	window.addEventListener('message', function (event) {
-		if (event.origin !== window.location.origin) return;
-
+	window.addEventListener('message', function(event) {
+		if (event.origin !== window.location.origin) {
+			return;
+		}
 		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
-			if (interactor !== undefined && interactor !== null)
+			if (interactor !== undefined && interactor !== null) {
 				interactor.chromeDesktopCaptureEnabled = true;
+			}
 		}
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
@@ -202,7 +212,7 @@ function setupListeners() {
 
 		var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 		var screenMin = Math.min(screen.width, screen.height);
-		interactor.setPointerSensitivity(sage2Min/screenMin);
+		interactor.setPointerSensitivity(sage2Min / screenMin);
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
@@ -214,7 +224,6 @@ function setupListeners() {
 	});
 
 	wsio.on('updateItemOrder', function(data) {
-		//displayUI.updateItemOrder(data.idList);
 		displayUI.updateItemOrder(data);
 	});
 
@@ -236,12 +245,12 @@ function setupListeners() {
 		var i = 0;
 		var appname;
 		var fullpath;
-		while(i < data.length) {
+		while (i < data.length) {
 			var row = document.createElement('tr');
 			var appsPerRow = Math.min(data.length - i, 6);
-			for(var j=0; j<appsPerRow; j++) {
-				appname  = data[i+j].exif.FileName;
-				fullpath = data[i+j].id;
+			for (var j = 0; j < appsPerRow; j++) {
+				appname  = data[i + j].exif.FileName;
+				fullpath = data[i + j].id;
 				var col = document.createElement('td');
 				col.id  = "available_app_row_" + appname;
 				col.setAttribute("application", appname);
@@ -255,14 +264,14 @@ function setupListeners() {
 				appIcon.id = "available_app_icon_" + appname;
 				appIcon.setAttribute("application", appname);
 				appIcon.setAttribute("appfullpath", fullpath);
-				appIcon.src = data[i+j].exif.SAGE2thumbnail+"_256.jpg";
+				appIcon.src = data[i + j].exif.SAGE2thumbnail + "_256.jpg";
 				appIcon.width = parseInt(size * 0.8, 10);
 				appIcon.height = parseInt(size * 0.8, 10);
 				var appName = document.createElement('p');
 				appName.id = "available_app_name_" + appname;
 				appName.setAttribute("application", appname);
 				appName.setAttribute("appfullpath", fullpath);
-				appName.textContent = data[i+j].exif.metadata.title;
+				appName.textContent = data[i + j].exif.metadata.title;
 				col.appendChild(appIcon);
 				col.appendChild(appName);
 				row.appendChild(col);
@@ -296,7 +305,7 @@ function setupListeners() {
 		var longestSessionName = createFileList(data, "sessions", sessions);
 
 		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
-		document.getElementById('fileListElems').style.width = (longest+60).toString() + "px";
+		document.getElementById('fileListElems').style.width = (longest + 60).toString() + "px";
 
 		showDialog('mediaBrowserDialog');
 	});
@@ -306,7 +315,9 @@ function setupListeners() {
 	});
 
 	wsio.on('stopMediaCapture', function() {
-		if (interactor.mediaStream !== null) interactor.mediaStream.stop();
+		if (interactor.mediaStream !== null) {
+			interactor.mediaStream.stop();
+		}
 	});
 }
 
@@ -320,7 +331,9 @@ function SAGE2_resize() {
 	resizeMenuUI();
 	resizeDialogs();
 
-	if (displayUI) displayUI.resize();
+	if (displayUI) {
+		displayUI.resize();
+	}
 }
 
 /**
@@ -333,11 +346,13 @@ function resizeMenuUI() {
 	var menuUI        = document.getElementById('menuUI');
 
 	var menuScale = 1.0;
-	if (window.innerWidth < 856) menuScale = window.innerWidth / 856;
+	if (window.innerWidth < 856) {
+		menuScale = window.innerWidth / 856;
+	}
 	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
 	menuUI.style.mozTransform = "scale(" + menuScale + ")";
 	menuUI.style.transform = "scale(" + menuScale + ")";
-	menuContainer.style.height = parseInt(86*menuScale, 10) + "px";
+	menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
 }
 
 /**
@@ -348,13 +363,17 @@ function resizeMenuUI() {
  * @param selector {String} item to search
  */
 function getCSSProperty(cssFile, selector) {
-	for (var i=0; i<document.styleSheets.length; i++) {
+	for (var i = 0; i < document.styleSheets.length; i++) {
 		var sheet = document.styleSheets[i];
 		if (sheet.href && sheet.href.indexOf(cssFile) >= 0) {
 			var rules = sheet.cssRules ? sheet.cssRules : sheet.rules;
-			if (!rules || rules.length === 0) return null;
-			for (var j=0; j<rules.length; j++) {
-				if (rules[j].selectorText === selector) return rules[j];
+			if (!rules || rules.length === 0) {
+				return null;
+			}
+			for (var j = 0; j < rules.length; j++) {
+				if (rules[j].selectorText === selector) {
+					return rules[j];
+				}
 			}
 			break;
 		}
@@ -368,24 +387,23 @@ function getCSSProperty(cssFile, selector) {
  * @method resizeDialogs
  */
 function resizeDialogs() {
-	var windowAspect = window.innerWidth/window.innerHeight;
+	var windowAspect = window.innerWidth / window.innerHeight;
 	var appListContainer = document.getElementById('appListContainer');
-	appListContainer.style.width  = (window.innerWidth*0.7 - 24).toString() + "px";
-	appListContainer.style.height = (window.innerHeight*0.7 - 72).toString() + "px";
+	appListContainer.style.width  = (window.innerWidth * 0.7 - 24).toString() + "px";
+	appListContainer.style.height = (window.innerHeight * 0.7 - 72).toString() + "px";
 	var fileListContainer = document.getElementById('fileListContainer');
-	fileListContainer.style.width  = (window.innerWidth/2 *0.6 - 24).toString() + "px";
-	fileListContainer.style.height = (window.innerHeight/2 - 72).toString() + "px";
+	fileListContainer.style.width  = (window.innerWidth / 2 * 0.6 - 24).toString() + "px";
+	fileListContainer.style.height = (window.innerHeight / 2 - 72).toString() + "px";
 	var metadata = document.getElementById('metadata');
-	metadata.style.left   = (window.innerWidth/2 *0.6 - 13).toString() + "px";
-	metadata.style.width  = (window.innerWidth/2 *0.4).toString() + "px";
-	metadata.style.height = (window.innerHeight/2 - 72).toString() + "px";
+	metadata.style.left   = (window.innerWidth / 2 * 0.6 - 13).toString() + "px";
+	metadata.style.width  = (window.innerWidth / 2 * 0.4).toString() + "px";
+	metadata.style.height = (window.innerHeight / 2 - 72).toString() + "px";
 	var sage2pointerHelp  = document.getElementById('sage2pointerHelp');
-	var sage2pointerHelpAspect  = 1264.25/982.255;
+	var sage2pointerHelpAspect  = 1264.25 / 982.255;
 	if (sage2pointerHelpAspect <= windowAspect) {
 		sage2pointerHelp.height = window.innerHeight * 0.7;
 		sage2pointerHelp.width  = sage2pointerHelp.height * sage2pointerHelpAspect;
-	}
-	else {
+	} else {
 		sage2pointerHelp.width  = window.innerWidth * 0.7;
 		sage2pointerHelp.height = sage2pointerHelp.width / sage2pointerHelpAspect;
 	}
@@ -403,13 +421,12 @@ function resizeDialogs() {
 function createFileList(list, type, parent) {
 	var textWidthTest = document.getElementById('textWidthTest');
 	var longest = 0;
-	for (var i=0; i<list[type].length; i++) {
+	for (var i = 0; i < list[type].length; i++) {
 		var file = document.createElement('li');
 		file.textContent = list[type][i].exif.FileName;
 		file.id          = "file_" + list[type][i].exif.FileName;
 		file.setAttribute("application", type2App[type]);
 
-		//file.setAttribute("file", list[type][i].exif.FileName);
 		// Use the file id that contains the complete path on the server
 		file.setAttribute("file", list[type][i].id);
 
@@ -418,7 +435,9 @@ function createFileList(list, type, parent) {
 
 		textWidthTest.textContent = file.textContent;
 		var textWidth = (textWidthTest.clientWidth + 1);
-		if (textWidth > longest) longest = textWidth;
+		if (textWidth > longest) {
+			longest = textWidth;
+		}
 	}
 	textWidthTest.textContent = "";
 	return longest;
@@ -481,8 +500,7 @@ function fileDrop(event) {
 		displayUI.fileUpload = true;
 		displayUI.uploadPercent = 0;
 		interactor.uploadFiles(event.dataTransfer.files, x, y);
-	}
-	else {
+	} else {
 		interactor.uploadURL(event.dataTransfer.getData("Url"), x, y);
 	}
 }
@@ -540,16 +558,6 @@ function fileUploadFromUI() {
  * @param event {Event} event data
  */
 function pointerPress(event) {
-	/*if (event.target.className.length >= 9 && event.target.className.substring(0, 9) === "appWindow") {
-		var appId = event.target.id;
-		if (appId.indexOf("_title", appId.length - 6) >= 0)
-			appId = appId.substring(0, appId.length - 6);
-		else if (appId.indexOf("_area", appId.length - 5) >= 0)
-			appId = appId.substring(0, appId.length - 5);
-		else if (appId.indexOf("_icon", appId.length - 5) >= 0)
-			appId = appId.substring(0, appId.length - 5);
-	}*/
-
 	if (event.target.id === "sage2UI") {
 		// pointerDown used to detect the drag event
 		pointerDown = true;
@@ -592,13 +600,12 @@ function pointerMove(event) {
 	if (event.target.id === "sage2UI" && keyEvents === false) {
 		document.addEventListener('keydown',  keyDown,  false);
 		document.addEventListener('keyup',    keyUp,    false);
-        document.addEventListener('keypress', keyPress, false);
+		document.addEventListener('keypress', keyPress, false);
 		keyEvents = true;
-	}
-	else if (event.target.id !== "sage2UI" && keyEvents === true) {
+	} else if (event.target.id !== "sage2UI" && keyEvents === true) {
 		document.removeEventListener('keydown',  keyDown,  false);
 		document.removeEventListener('keyup',    keyUp,    false);
-        document.removeEventListener('keypress', keyPress, false);
+		document.removeEventListener('keypress', keyPress, false);
 		keyEvents = false;
 	}
 
@@ -612,8 +619,7 @@ function pointerMove(event) {
 		if (pointerDown) {
 			displayUI.pointerMove(pointerX, pointerY);
 		}
-	}
-	else {
+	} else {
 		// Loose focus
 		pointerDown = false;
 	}
@@ -628,9 +634,16 @@ function pointerMove(event) {
 function mouseCheck(event) {
 	var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 	var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-	if (!__SAGE2__.browser.isSafari && !__SAGE2__.browser.isIE && (movementX === 0 && movementY === 0 || (Date.now() - touchTime) < 1000)) return;
-	if (__SAGE2__.browser.isSafari  && __SAGE2__.browser.isIOS) return;
-	if (__SAGE2__.browser.isIE      && __SAGE2__.browser.isWinPhone) return;
+	if (!__SAGE2__.browser.isSafari && !__SAGE2__.browser.isIE && (movementX === 0 && movementY === 0 ||
+			(Date.now() - touchTime) < 1000)) {
+		return;
+	}
+	if (__SAGE2__.browser.isSafari && __SAGE2__.browser.isIOS) {
+		return;
+	}
+	if (__SAGE2__.browser.isIE && __SAGE2__.browser.isWinPhone) {
+		return;
+	}
 	hasMouse = true;
 	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
@@ -676,59 +689,43 @@ function handleClick(element) {
 	// Menu Buttons
 	if (element.id === "sage2pointer"      || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
-	}
-	else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
+	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
 		interactor.startScreenShare();
-	}
-	else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
+	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
-	}
-	else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
+	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
 		wsio.emit('requestStoredFiles');
-	}
-	else if (element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
+	} else if (element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
 		showDialog('arrangementDialog');
-	}
-	else if (element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
+	} else if (element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
 		showDialog('settingsDialog');
-	}
-	else if (element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
+	} else if (element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
 		showDialog('browserDialog');
-	}
-	else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
+	} else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
 		showDialog('infoDialog');
-	}
-
-	// App Launcher Dialog
-	else if (element.id === "appOpenBtn") {
+	} else if (element.id === "appOpenBtn") {
+		// App Launcher Dialog
 		loadSelectedApplication();
 		hideDialog('appLauncherDialog');
-	}
-	else if (element.id === "appCloseBtn") {
+	} else if (element.id === "appCloseBtn") {
 		selectedAppEntry = null;
 		hideDialog('appLauncherDialog');
-	}
-
-	// Mobile SAGE2 Pointer
-	else if (element.id === "closeMobileSAGE2Pointer") {
+	} else if (element.id === "closeMobileSAGE2Pointer") {
+		// Mobile SAGE2 Pointer
 		interactor.stopSAGE2Pointer();
-	}
-
-	// Media Browser Dialog
-	else if (element.id === "fileOpenBtn") {
+	} else if (element.id === "fileOpenBtn") {
+		// Media Browser Dialog
 		loadSelectedFile();
 		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
-	}
-	else if (element.id === "fileCloseBtn") {
+	} else if (element.id === "fileCloseBtn") {
 		selectedFileEntry = null;
 		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
 		hideDialog('mediaBrowserDialog');
-	}
-	// Upload files to SAGE2
-	else if (element.id === "fileUploadBtn") {
+	} else if (element.id === "fileUploadBtn") {
+		// Upload files to SAGE2
 		// clear the preview panel
 		selectedFileEntry = null;
 		document.getElementById('thumbnail').src = "images/blank.jpg";
@@ -737,36 +734,29 @@ function handleClick(element) {
 		hideDialog('mediaBrowserDialog');
 		// open the file uploader panel
 		showDialog('uploadDialog');
-	}
-	// upload files local to the user's device
-	else if (element.id === "localFilesBtn") {
+	} else if (element.id === "localFilesBtn") {
+		// upload files local to the user's device
 		// close the file uploader panel
 		hideDialog('uploadDialog');
 		// open the file library
 		//    delay to remove bounce evennt on Chrome/iOS
 		setTimeout(function() { showDialog('localfileDialog'); }, 200);
-	}
-	// upload from Dropbox
-	else if (element.id === "dropboxFilesBtn") {
+	} else if (element.id === "dropboxFilesBtn") {
+		// upload from Dropbox
 		// Not Yet Implemented
 		//   ...
 		// close the file uploader panel
 		hideDialog('uploadDialog');
-	}
-	else if (element.id === "cancelFilesBtn") {
+	} else if (element.id === "cancelFilesBtn") {
 		// close the file uploader panel
 		hideDialog('uploadDialog');
-	}
-	else if (element.id === "cancelFilesBtn2") {
+	} else if (element.id === "cancelFilesBtn2") {
 		// close the pic uploader panel
 		hideDialog('localfileDialog');
-	}
-	else if (element.id === "localfileUploadBtn") {
+	} else if (element.id === "localfileUploadBtn") {
 		// trigger the upload function
 		fileUploadFromUI();
-	}
-
-	else if (element.id === "fileDeleteBtn") {
+	} else if (element.id === "fileDeleteBtn") {
 		if (selectedFileEntry !== null && confirm("Are you sure you want to delete this file?")) {
 			var application = selectedFileEntry.getAttribute("application");
 			var file = selectedFileEntry.getAttribute("file");
@@ -777,61 +767,48 @@ function handleClick(element) {
 			selectedFileEntry = null;
 			hideDialog('mediaBrowserDialog');
 		}
-	}
-
-	// Arrangement Dialog
-	else if (element.id === "arrangementCloseBtn") {
+	} else if (element.id === "arrangementCloseBtn") {
+		// Arrangement Dialog
 		hideDialog('arrangementDialog');
-	}
-
-	// Info Dialog
-	else if (element.id === "infoCloseBtn") {
+	} else if (element.id === "infoCloseBtn") {
+		// Info Dialog
 		hideDialog('infoDialog');
-	}
-	else if (element.id === "helpcontent") {
+	} else if (element.id === "helpcontent") {
 		hideDialog('infoDialog');
 		var awin1 = window.open("help/index.html", '_blank');
 		awin1.focus();
-	}
-	else if (element.id === "admincontent") {
+	} else if (element.id === "admincontent") {
 		hideDialog('infoDialog');
 		var awin2 = window.open("admin/index.html", '_blank');
 		awin2.focus();
-	}
-	else if (element.id === "infocontent") {
+	} else if (element.id === "infocontent") {
 		hideDialog('infoDialog');
 		var awin3 = window.open("help/info.html", '_blank');
 		awin3.focus();
-	}
-
-	// Settings Dialog
-	else if (element.id === "settingsCloseBtn") {
+	} else if (element.id === "settingsCloseBtn") {
+		// Settings Dialog
 		hideDialog('settingsDialog');
-	}
-
-	// Browser Dialog
-	else if (element.id === "browserOpenBtn") {
+	} else if (element.id === "browserOpenBtn") {
+		// Browser Dialog
 		var url = document.getElementById("openWebpageUrl");
 		wsio.emit('openNewWebpage', {id: interactor.uniqueID, url: url.value});
 		hideDialog('browserDialog');
-	}
-	else if (element.id === "browserCloseBtn") {
+	} else if (element.id === "browserCloseBtn") {
 		hideDialog('browserDialog');
-	}
-
-	// Application Selected
-	else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
+	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
+		// Application Selected
 		var application_selected = element.getAttribute("application");
-		var application_path     = element.getAttribute("appfullpath");
-		if (selectedAppEntry !== null) selectedAppEntry.style.backgroundColor = "transparent";
+		if (selectedAppEntry !== null) {
+			selectedAppEntry.style.backgroundColor = "transparent";
+		}
 		selectedAppEntry = document.getElementById('available_app_row_' + application_selected);
 		selectedAppEntry.style.backgroundColor = "#6C6C6C";
-	}
-
-	// File Selected
-	else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
+	} else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
+		// File Selected
 		// highlight selection
-		if (selectedFileEntry !== null) selectedFileEntry.style.backgroundColor = "transparent";
+		if (selectedFileEntry !== null) {
+			selectedFileEntry.style.backgroundColor = "transparent";
+		}
 		selectedFileEntry = element;
 		selectedFileEntry.style.backgroundColor = "#6C6C6C";
 
@@ -839,38 +816,30 @@ function handleClick(element) {
 		var metadata = document.getElementById('metadata');
 		var size = Math.min(parseInt(metadata.style.width, 10), parseInt(metadata.style.height, 10)) * 0.9 - 32;
 		var thumbnail = document.getElementById('thumbnail');
-		//thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_128.jpg";
-		thumbnail.src = selectedFileEntry.getAttribute("thumbnail")+"_256.jpg";
+		thumbnail.src = selectedFileEntry.getAttribute("thumbnail") + "_256.jpg";
 		thumbnail.width = size;
 		thumbnail.height = size;
 		var metadata_text = document.getElementById('metadata_text');
 		metadata_text.textContent = selectedFileEntry.textContent;
-	}
-
-	// Arrangement Button Chosen
-	else if (element.id === "clearcontent") {
+	} else if (element.id === "clearcontent") {
+		// Arrangement Button Chosen
 		wsio.emit('clearDisplay');
 		hideDialog('arrangementDialog');
-	}
-	else if (element.id === "tilecontent") {
+	} else if (element.id === "tilecontent") {
 		wsio.emit('tileApplications');
 		hideDialog('arrangementDialog');
-	}
-	else if (element.id === "savesession") {
+	} else if (element.id === "savesession") {
 		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
 		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
 		if (filename !== null) {
 			wsio.emit('saveSesion', filename);
 			hideDialog('arrangementDialog');
 		}
-	}
-
-	// Firefox Share Screen Dialog
-	else if (element.id === "ffShareScreenBtn") {
+	} else if (element.id === "ffShareScreenBtn") {
+		// Firefox Share Screen Dialog
 		interactor.captureDesktop("screen");
 		hideDialog('ffShareScreenDialog');
-	}
-	else if (element.id === "ffShareWindowBtn") {
+	} else if (element.id === "ffShareWindowBtn") {
 		interactor.captureDesktop("window");
 		hideDialog('ffShareScreenDialog');
 	}
@@ -895,13 +864,13 @@ function pointerDblClick(event) {
 function handleDblClick(element) {
 	if (element.id === "sage2UI") {
 		displayUI.pointerDblClick();
-		if (event.preventDefault) event.preventDefault();
-	}
-	else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
+		if (event.preventDefault) {
+			event.preventDefault();
+		}
+	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		loadSelectedApplication();
 		hideDialog('appLauncherDialog');
-	}
-	else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
+	} else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
 		loadSelectedFile();
 		document.getElementById('thumbnail').src = "images/blank.jpg";
 		document.getElementById('metadata_text').textContent = "";
@@ -948,25 +917,23 @@ function touchStart(event) {
 				displayUI.keyUp(8);
 			}, 1500);
 			touchMode = "translate";
-		}
-		else if (event.touches.length === 2) {
+		} else if (event.touches.length === 2) {
 			rect    = event.target.getBoundingClientRect();
 			touch0X = event.touches[0].clientX - rect.left;
 			touch0Y = event.touches[0].clientY - rect.top;
 			touch1X = event.touches[1].clientX - rect.left;
 			touch1Y = event.touches[1].clientY - rect.top;
-			touchX  = parseInt((touch0X+touch1X)/2, 10);
-			touchY  = parseInt((touch0Y+touch1Y)/2, 10);
+			touchX  = parseInt((touch0X + touch1X) / 2, 10);
+			touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
 			displayUI.pointerRelease("left");
 			displayUI.pointerMove(touchX, touchY);
-			touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+			touchDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
 			if (touchHold !== null) {
 				clearTimeout(touchHold);
 				touchHold = null;
 			}
 			touchMode = "scale";
-		}
-		else {
+		} else {
 			if (touchHold !== null) {
 				clearTimeout(touchHold);
 				touchHold = null;
@@ -975,29 +942,27 @@ function touchStart(event) {
 		}
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileTrackpad") {
+	} else if (event.target.id === "sage2MobileTrackpad") {
 		var trackpadTouches = [];
-		for(var i=0; i<event.touches.length; i++) {
-			if (event.touches[i].target.id === "sage2MobileTrackpad")
+		for (var i = 0; i < event.touches.length; i++) {
+			if (event.touches[i].target.id === "sage2MobileTrackpad") {
 				trackpadTouches.push(event.touches[i]);
+			}
 		}
 		if (trackpadTouches.length === 1) {
 			touchStartX = trackpadTouches[0].clientX;
 			touchStartY = trackpadTouches[0].clientY;
-		}
-		else if (trackpadTouches.length === 2) {
+		} else if (trackpadTouches.length === 2) {
 			touch0X = trackpadTouches[0].clientX;
 			touch0Y = trackpadTouches[0].clientY;
 			touch1X = trackpadTouches[1].clientX;
 			touch1Y = trackpadTouches[1].clientY;
-			touchDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+			touchDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
 
 			interactor.pointerReleaseMethod({button: 0});
 			touchMode = "scale";
 		}
-	}
-	else if (event.target.id === "sage2MobileLeftButton") {
+	} else if (event.target.id === "sage2MobileLeftButton") {
 		interactor.pointerPressMethod({button: 0});
 		touchMode = "translate";
 		touchHold = setTimeout(function() {
@@ -1007,14 +972,12 @@ function touchStart(event) {
 
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileRightButton") {
+	} else if (event.target.id === "sage2MobileRightButton") {
 		interactor.pointerPressMethod({button: 2});
 
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else {
+	} else {
 		event.stopPropagation();
 	}
 }
@@ -1027,44 +990,44 @@ function touchStart(event) {
  */
 function touchEnd(event) {
 	var now = Date.now();
-	if ((now-touchTapTime) > 500) { touchTap = 0;                     }
-	if ((now-touchTime)    < 250) { touchTap++;   touchTapTime = now; }
-	else                         { touchTap = 0; touchTapTime = 0;   }
+	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
+	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
 
 	if (event.target.id === "sage2UI") {
 		if (touchMode === "translate") {
 			displayUI.pointerRelease("left");
-			if (touchTap === 2) displayUI.pointerDblClick();
+			if (touchTap === 2) {
+				displayUI.pointerDblClick();
+			}
 		}
 		touchMode = "";
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileTrackpad") {
-		if (touchMode === "scale") touchMode = "";
+	} else if (event.target.id === "sage2MobileTrackpad") {
+		if (touchMode === "scale") {
+			touchMode = "";
+		}
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileLeftButton") {
+	} else if (event.target.id === "sage2MobileLeftButton") {
 		if (touchMode === "translate") {
 			interactor.pointerReleaseMethod({button: 0});
-			if (touchTap === 2) interactor.pointerDblClickMethod({});
+			if (touchTap === 2) {
+				interactor.pointerDblClickMethod({});
+			}
 		}
 		touchMode = "";
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileRightButton") {
+	} else if (event.target.id === "sage2MobileRightButton") {
 		interactor.pointerReleaseMethod({button: 2});
 
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else {
+	} else {
 		if (touchTap === 1) {
 			handleClick(event.changedTouches[0].target);
-		}
-		else if (touchTap === 2) {
+		} else if (touchTap === 2) {
 			handleDblClick(event.changedTouches[0].target);
 		}
 		event.stopPropagation();
@@ -1093,40 +1056,39 @@ function touchMove(event) {
 			touchY = event.touches[0].clientY - rect.top;
 			displayUI.pointerMove(touchX, touchY);
 
-			var dist = (touchX-touchStartX)*(touchX-touchStartX) + (touchY-touchStartY)*(touchY-touchStartY);
+			var dist = (touchX - touchStartX) * (touchX - touchStartX) + (touchY - touchStartY) * (touchY - touchStartY);
 			if (touchHold !== null && dist > 25) {
 				clearTimeout(touchHold);
 				touchHold = null;
 			}
-		}
-		else if (touchMode === "scale") {
+		} else if (touchMode === "scale") {
 			rect    = event.target.getBoundingClientRect();
 			touch0X = event.touches[0].clientX - rect.left;
 			touch0Y = event.touches[0].clientY - rect.top;
 			touch1X = event.touches[1].clientX - rect.left;
 			touch1Y = event.touches[1].clientY - rect.top;
-			touchX  = parseInt((touch0X+touch1X)/2, 10);
-			touchY  = parseInt((touch0Y+touch1Y)/2, 10);
-			newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+			touchX  = parseInt((touch0X + touch1X) / 2, 10);
+			touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
+			newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
 			if (Math.abs(newDist - touchDist) > 25) {
-				wheelDelta = parseInt((touchDist-newDist)/256, 10);
+				wheelDelta = parseInt((touchDist - newDist) / 256, 10);
 				displayUI.pointerScroll(touchX, touchY, wheelDelta);
 				touchDist = newDist;
 			}
 		}
 		event.preventDefault();
-	}
-	else if (event.target.id === "sage2MobileTrackpad") {
+	} else if (event.target.id === "sage2MobileTrackpad") {
 		var trackpadTouches = [];
-		for (var i=0; i<event.touches.length; i++) {
-			if (event.touches[i].target.id === "sage2MobileTrackpad")
+		for (var i = 0; i < event.touches.length; i++) {
+			if (event.touches[i].target.id === "sage2MobileTrackpad") {
 				trackpadTouches.push(event.touches[i]);
+			}
 		}
 		if (touchMode === "translate" || touchMode === "") {
 			touchX = trackpadTouches[0].clientX;
 			touchY = trackpadTouches[0].clientY;
 
-			interactor.pointerMoveMethod({movementX: touchX-touchStartX, movementY: touchY-touchStartY});
+			interactor.pointerMoveMethod({movementX: touchX - touchStartX, movementY: touchY - touchStartY});
 
 			touchStartX = touchX;
 			touchStartY = touchY;
@@ -1135,15 +1097,14 @@ function touchMove(event) {
 				clearTimeout(touchHold);
 				touchHold = null;
 			}
-		}
-		else if (touchMode === "scale") {
+		} else if (touchMode === "scale") {
 			touch0X = trackpadTouches[0].clientX;
 			touch0Y = trackpadTouches[0].clientY;
 			touch1X = trackpadTouches[1].clientX;
 			touch1Y = trackpadTouches[1].clientY;
-			newDist = (touch1X-touch0X)*(touch1X-touch0X) + (touch1Y-touch0Y)*(touch1Y-touch0Y);
+			newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
 			if (Math.abs(newDist - touchDist) > 25) {
-				wheelDelta = parseInt((touchDist-newDist)/256, 10);
+				wheelDelta = parseInt((touchDist - newDist) / 256, 10);
 				interactor.pointerScrollMethod({deltaY: wheelDelta});
 				touchDist = newDist;
 			}
@@ -1151,13 +1112,11 @@ function touchMove(event) {
 
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileLeftButton") {
+	} else if (event.target.id === "sage2MobileLeftButton") {
 		// nothing
 		event.preventDefault();
 		event.stopPropagation();
-	}
-	else if (event.target.id === "sage2MobileRightButton") {
+	} else if (event.target.id === "sage2MobileRightButton") {
 		// nothing
 		event.preventDefault();
 		event.stopPropagation();
@@ -1242,9 +1201,7 @@ function keyPress(event) {
  */
 function loadSelectedApplication() {
 	if (selectedAppEntry !== null) {
-		var application = selectedAppEntry.getAttribute("application");
-		var app_path    = selectedAppEntry.getAttribute("appfullpath");
-
+		var app_path = selectedAppEntry.getAttribute("appfullpath");
 		wsio.emit('loadApplication', {application: app_path, user: interactor.uniqueID});
 	}
 }
@@ -1360,7 +1317,7 @@ function pad(n, width, z) {
  * @return {String} formatted string
  */
 function dateToYYYYMMDDHHMMSS(date) {
-	return date.getFullYear() + "_" + pad(date.getMonth()+1, 2) + "_" + pad(date.getDate(), 2) + "_" +
+	return date.getFullYear() + "_" + pad(date.getMonth() + 1, 2) + "_" + pad(date.getDate(), 2) + "_" +
 			pad(date.getHours(), 2) + "_" + pad(date.getMinutes(), 2) + "_" + pad(date.getSeconds(), 2);
 }
 

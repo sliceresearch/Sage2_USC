@@ -1,9 +1,22 @@
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2015
+
+"use strict";
+
 var DynamicImage = function(img) {
 	this.img = null;
-	if (img === undefined || img === null)
+	if (img === undefined || img === null) {
 		this.img = new Image();
-	else
+	} else {
 		this.img = img;
+	}
 	this.src = "";
 	this.width = 0;
 	this.height = 0;
@@ -14,7 +27,7 @@ var DynamicImage = function(img) {
 
 DynamicImage.prototype.propertyChanged = function(changes) {
 	var i;
-	for (i=0; i<changes.length; i++) {
+	for (i = 0; i < changes.length; i++) {
 		switch (changes[i].name) {
 			case "src":
 				this.srcChanged(changes[i].oldValue, changes[i].object[changes[i].name]);
@@ -32,10 +45,11 @@ DynamicImage.prototype.propertyChanged = function(changes) {
 };
 
 DynamicImage.prototype.srcChanged = function(oldval, newval) {
-	if (newval.length > 11 && newval.substring(0, 11) === "data:image/")
+	if (newval.length > 11 && newval.substring(0, 11) === "data:image/") {
 		this.updateSrcFromBase64String(newval);
-	else
+	} else {
 		this.updateSrcFromURL(newval);
+	}
 };
 
 DynamicImage.prototype.updateSrcFromBase64String = function(base64Img) {
@@ -46,7 +60,7 @@ DynamicImage.prototype.updateSrcFromBase64String = function(base64Img) {
 
 	var buf  = new ArrayBuffer(data.length);
 	var view = new Uint8Array(buf);
-	for (i=0; i<view.length; i++) {
+	for (i = 0; i < view.length; i++) {
 		view[i] = data.charCodeAt(i);
 	}
 
@@ -56,9 +70,9 @@ DynamicImage.prototype.updateSrcFromBase64String = function(base64Img) {
 DynamicImage.prototype.updateSrcFromURL = function(url) {
 	var _this = this;
 	var xhr = new XMLHttpRequest();
-	xhr.open( "GET", url, true );
+	xhr.open("GET", url, true);
 	xhr.responseType = "arraybuffer";
-	xhr.onload = function(e) {
+	xhr.onload = function() {
 		var type = this.getResponseHeader('content-type');
 		_this.updateImageSrc(type, this.response);
 	};
@@ -69,7 +83,9 @@ DynamicImage.prototype.updateImageSrc = function(type, binaryData) {
 	var blob = new Blob([binaryData], {type: type});
 	var source = window.URL.createObjectURL(blob);
 
-	if (this.objectURL !== null) window.URL.revokeObjectURL(this.objectURL);
+	if (this.objectURL !== null) {
+		window.URL.revokeObjectURL(this.objectURL);
+	}
 
 	this.objectURL = source;
 	this.img.src = this.objectURL;

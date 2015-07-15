@@ -7,6 +7,9 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
+
+"use strict";
+
 //
 // Ported to SAGE2 from http://www.3quarks.com/en/SVGClock/
 //    station-clock.svg
@@ -18,7 +21,7 @@
 //    Home:    http://www.3Quarks.com/
 //
 
-var clock_svg = SAGE2_App.extend( {
+var clock_svg = SAGE2_App.extend({
 	// Adds a parameter to the clock
 	addParameter: function(name, value) {
 		this[name] = value;
@@ -119,14 +122,8 @@ var clock_svg = SAGE2_App.extend( {
 
 		// Draw once per second
 		this.maxFPS = 2.0;
-		var flipButton = {
-			"textual":true,
-			"label":"Flip",
-			"fill":"rgba(250,250,250,1.0)",
-			"animation":false
-		};
-		// Instead of a string, the type field can be used to specify the button type data itself
-		this.controls.addButton({type:flipButton, position:7, identifier:"Flip"});
+
+		this.controls.addButton({label: "Flip", position: 7, identifier: "Flip"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -233,13 +230,15 @@ var clock_svg = SAGE2_App.extend( {
 	},
 
 	resize: function(date) {
-		//console.log("clock_svg> resize", this.element.width, this.element.height);
 		this.refresh(date);
 	},
 
 	flip: function(date) {
-		if (this.state.mode === 0) this.state.mode = 1;
-		else if (this.state.mode === 1) this.state.mode = 0;
+		if (this.state.mode === 0) {
+			this.state.mode = 1;
+		} else if (this.state.mode === 1) {
+			this.state.mode = 0;
+		}
 		this.setParameters();
 		this.updateClock();
 		this.refresh(date);
@@ -247,11 +246,10 @@ var clock_svg = SAGE2_App.extend( {
 
 	event: function(eventType, position, user_id, data, date) {
 		if (this.ready) {
-			if (eventType === "pointerRelease" && (data.button === "left") ) {
+			if (eventType === "pointerRelease" && (data.button === "left")) {
 				this.flip(date);
-			}
-			else if (eventType === "keyboard") {
-				if(data.character === " "){
+			} else if (eventType === "keyboard") {
+				if (data.character === " ") {
 					this.flip(date);
 				}
 			}
@@ -263,7 +261,6 @@ var clock_svg = SAGE2_App.extend( {
 					console.log("No handler for:", data.identifier);
 				}
 			}
-			
 		}
 	}
 });

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2015
 
+"use strict";
+
 /**
  * SAGE2 Session page code
  *
@@ -61,7 +63,7 @@ function SAGE2_init() {
 	}
 
 	// If everything good, redirect
-	if (foundPassword || foundHash ) {
+	if (foundPassword || foundHash) {
 		processAndRedirect(sessionParam, pageRedirect,  hashParam);
 	}
 }

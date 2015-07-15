@@ -46,20 +46,20 @@ function initializeCommandLineParameters(version, printFunction) {
 		} else {
 			console.log = function() {
 				args = Array.prototype.slice.call(arguments);
-				if ( args.length === 1 && typeof args[0] === 'string') {
+				if (args.length === 1 && typeof args[0] === 'string') {
 					aLine = args.toString() + '\n';
 					log_stdout.write(aLine);
 					printFunction(aLine);
-				}
-				else {
+				} else {
 					var i = 0;
 					var s = "";
 					args = [util.format.apply(util.format, Array.prototype.slice.call(arguments))];
 					while (i < args.length) {
-						if (i === 0)
+						if (i === 0) {
 							s = args[i];
-						else
+						} else {
 							s += " " + args[i];
+						}
 						i++;
 					}
 					aLine = s + '\n';
@@ -69,8 +69,7 @@ function initializeCommandLineParameters(version, printFunction) {
 				}
 			};
 		}
-	}
-	else if (commander.output === false) {
+	} else if (commander.output === false) {
 		commander.interactive = undefined;
 		console.log = function() {
 			// disable print

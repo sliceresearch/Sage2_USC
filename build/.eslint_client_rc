@@ -40,20 +40,14 @@
   rules: {
 	no-console: 0,
 	no-alert: 0,
-	strict: 0,
+	global-strict: [2, "always"],
 	no-caller: 0,
-	no-process-exit: 0,
-	no-loop-func: 0,
-	no-multi-spaces: 0,
 	quotes: 0,
+	no-multi-spaces: 0,
 	no-underscore-dangle: 0,
 	camelcase: 0,
-	curly: 0,
 	no-use-before-define: 0,
-	key-spacing: 0,
-	space-infix-ops: 0,
-        no-unused-vars: 0,
-	no-cond-assign: 0,
+	no-unused-vars: [2, {vars: "local", args: "none"}],
 	new-cap: 0
   }
 }

@@ -7,13 +7,18 @@
 // See full text, terms and conditions in the LICENSE.txt included file
 //
 // Copyright (c) 2014
-Array.prototype.diff = function(num){
-	return this.map(function(x){
+
+"use strict";
+
+/*eslint-disable */
+Array.prototype.diff = function(num) {
+	return this.map(function(x) {
 		return x - num;
 	});
-}
+};
+/*eslint-enable */
 
-var sticky_note = SAGE2_App.extend( {
+var sticky_note = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 
@@ -26,54 +31,50 @@ var sticky_note = SAGE2_App.extend( {
 		this.enableControls = true;
 		this.cloneable = true;
 
-
 		this.element.id = "div" + data.id;
 
 		// Set refresh once every 2 sec.
-		//this.maxFPS = 1/2;
-
-		var _myself = this;
+		// this.maxFPS = 1/2;
 
 		// Make the SVG element fill the app
-		this.svg = Snap("100%","100%");
+		this.svg = Snap("100%", "100%");
 		this.element.appendChild(this.svg.node);
-		this.vh = 1000*data.width/data.height;
+		this.vh = 1000 * data.width / data.height;
 		this.vw = 1000;
-		this.margin = 0.05*this.vw;
+		this.margin = 0.05 * this.vw;
 		this.svg.attr("viewBox", "0,0," + this.vw + "," + this.vh);
-		this.backColor = [175,175,200];
+		this.backColor = [175, 175, 200];
 
 		this.lineColor = this.backColor.diff(60);
-		//console.log(this.lineColor);
-		
+
 		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
 		rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
 
 		this.numberOfLines = 12;
-		this.lineHeight = this.vh/(this.numberOfLines+1);
+		this.lineHeight = this.vh / (this.numberOfLines + 1);
 
-		for (var i=1;i<=this.numberOfLines;i++){
-			var rule = this.svg.line(this.margin,i*this.lineHeight,this.vw-this.margin,i*this.lineHeight);
+		for (var i = 1; i <= this.numberOfLines; i++) {
+			var rule = this.svg.line(this.margin, i * this.lineHeight, this.vw - this.margin, i * this.lineHeight);
 			rule.attr({
-				stroke:"rgba(" + this.lineColor.join(",") + ",1.0)",
-				fill:"none",
-				strokeWidth:2
-				//style:"shape-rendering:crispEdges;"
+				stroke: "rgba(" + this.lineColor.join(",") + ",1.0)",
+				fill: "none",
+				strokeWidth: 2
 			});
 			var start = this.margin;
-			if (i === 1)
+			if (i === 1) {
 				start = this.margin * 3;
-			var lineText = this.svg.text(start,(i-0.2)*this.lineHeight,"");
+			}
+			var lineText = this.svg.text(start, (i - 0.2) * this.lineHeight, "");
 			lineText.attr({
-				style:"font-family: sans-serif; font-size: 3.2em;"
-			})
+				style: "font-family: sans-serif; font-size: 3.2em;"
+			});
 			this.textLines.push(lineText);
 		}
 
 		var text = "Enter note"; // use this.state for saving text entry
-		this.controls.addTextInput({value: text, identifier:"TextInput"});
-		this.controls.addButton({type:"duplicate",position:5, identifier:"DuplicateNote"});
-		this.controls.addButton({type:"new",position:3, identifier:"NewNote"});
+		this.controls.addTextInput({value: text, identifier: "TextInput"});
+		this.controls.addButton({type: "duplicate", position: 5, identifier: "DuplicateNote"});
+		this.controls.addButton({type: "new", position: 3, identifier: "NewNote"});
 		this.controls.finishedAddingControls();
 	},
 
@@ -82,62 +83,45 @@ var sticky_note = SAGE2_App.extend( {
 
 	},
 
-	wrapText: function(text){
+	wrapText: function(text) {
 		this.text = text;
-		//list.push(text.slice(0,n-4));
 		var regex = /\b/g;
 		var list = text.split(regex);
-		//var seperators = text.match(regex);
-		var rightEnd = this.vw-this.margin;
-
-		//list.push.apply(list,text.slice(n-4).match(regex));
+		var rightEnd = this.vw - this.margin;
 		var wordCount = 0;
 		var lineNumber = 0;
 		var right = 0;
-		str = "";
+		var str = "";
 
-		while(wordCount < list.length){
-			//console.log("Compare:",rightEnd,(this.textLines[lineNumber]).getBBox().x2);
-			this.textLines[lineNumber].attr("text",str+list[wordCount]);
+		while (wordCount < list.length) {
+			this.textLines[lineNumber].attr("text", str + list[wordCount]);
 			right = this.textLines[lineNumber].getBBox().x2;
-			if (right < rightEnd){
+			if (right < rightEnd) {
 				str = str + list[wordCount];
-			}
-			else{
-				this.textLines[lineNumber].attr("text",str);
+			} else {
+				this.textLines[lineNumber].attr("text", str);
 				lineNumber = lineNumber + 1;
-				if (lineNumber >= this.textLines.length)
+				if (lineNumber >= this.textLines.length) {
 					break;
+				}
 				right = this.textLines[lineNumber].attr("x");
 				str = list[wordCount];
 			}
 			wordCount = wordCount + 1;
 		}
-		lineNumber = lineNumber+1;
-		while(lineNumber < this.textLines.length){
-			this.textLines[lineNumber].attr("text","");
+		lineNumber = lineNumber + 1;
+		while (lineNumber < this.textLines.length) {
+			this.textLines[lineNumber].attr("text", "");
 			lineNumber = lineNumber + 1;
 		}
 	},
 
-	load: function(state, date) {
-		// data in this.state - shouldn't just be used as local var
-		var text = "Enter note";
-		/*
-		if (state){
-			state.loadData = state.loadData || "";
-			if (state.loadData.length > 0){
-				this.wrapText(state.loadData);
-				text = state.loadData;
-			}
-				
-		}
-		*/
+	load: function(date) {
 	},
 
 	draw: function(date) {
 		// Update the text: instead of storing a variable, querying the SVG graph to retrieve the element
-		//this.svg.select("#mytext").attr({ text: date});
+		// this.svg.select("#mytext").attr({ text: date});
 	},
 
 	resize: function(date) {
@@ -151,15 +135,19 @@ var sticky_note = SAGE2_App.extend( {
 			//this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
 		}
 		else if (eventType === "pointerRelease" && (data.button === "left")) {
+			//Release action code
 		}
 
 		else if (eventType === "keyboard") {
 			if(data.character === "m") {
+				//m
 			}
 			else if (data.character === "t") {
+				//t
 			}
 			else if (data.character === "w") {
-			}			
+				//w
+			}
 		}
 
 		else if (eventType === "specialKey") {
@@ -170,7 +158,7 @@ var sticky_note = SAGE2_App.extend( {
 			else if (data.code === 39 && data.state === "down") { // right arrow
 			}
 			else if (data.code === 40 && data.state === "down") { // down arrow
-			}			
+			}
 		}
 		else if (eventType === "widgetEvent"){
 			switch(data.identifier){
@@ -191,8 +179,9 @@ var sticky_note = SAGE2_App.extend( {
 			}
 		}
 	},
-	quit: function(){
-		
+
+	quit: function() {
+		// nothing to do
 	}
 
 });

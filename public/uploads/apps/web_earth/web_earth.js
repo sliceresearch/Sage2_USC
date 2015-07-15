@@ -8,7 +8,11 @@
 //
 // Copyright (c) 2015
 
-var web_earth = SAGE2_App.extend( {
+"use strict";
+
+/* global WE */
+
+var web_earth = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 
@@ -30,9 +34,9 @@ var web_earth = SAGE2_App.extend( {
 
 	updateMapFromState: function() {
 		console.log('Map> updateMapFromState');
-		this.map = new WE.map(this.element.id, {sky:true, atmosphere:true});
-		this.map.setView([this.state.center.lat,this.state.center.lng], this.state.zoomLevel);
-		WE.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+		this.map = new WE.map(this.element.id, {sky: true, atmosphere: true});
+		this.map.setView([this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		WE.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			attribution: '© OpenStreetMap contributors'
 		}).addTo(this.map);
 		this.ready = true;
@@ -61,9 +65,9 @@ var web_earth = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	updateCenter: function () {
-		//var c = this.map.getCenter();
-		//this.state.center = {lat:c.lat(), lng:c.lng()};
+	updateCenter: function() {
+		// var c = this.map.getCenter();
+		// this.state.center = {lat:c.lat(), lng:c.lng()};
 	},
 
 	quit: function() {
@@ -71,58 +75,36 @@ var web_earth = SAGE2_App.extend( {
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-		//console.log("Web earth event", eventType, position, user_id, data, date);
-		var z;
-
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			//this.refresh(date);
-		}
-		else if (eventType === "pointerMove" && this.dragging) {
-			//this.refresh(date);
-		}
-		else if (eventType === "pointerRelease" && (data.button === "left")) {
-			//this.refresh(date);
-		}
-
-		// Scroll events for zoom
-		else if (eventType === "pointerScroll") {
+			// this.refresh(date);
+		} else if (eventType === "pointerMove" && this.dragging) {
+			// this.refresh(date);
+		} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			// this.refresh(date);
+		} else if (eventType === "pointerScroll") {
+			// Scroll events for zoom
 			this.scrollAmount += data.wheelDelta;
 
 			if (this.scrollAmount >= 128) {
 				// zoom out
-			}
-			else if (this.scrollAmount <= -128) {
+			} else if (this.scrollAmount <= -128) {
 				// zoom in
 			}
-
 			this.refresh(date);
-		}
-
-		else if (eventType === "keyboard") {
-			if(data.character === "m") {
+		} else if (eventType === "keyboard") {
+			if (data.character === "m") {
+				// pressed m key
 			}
-			else if (data.character === "t") {
-			}
-			else if (data.character === "w") {
-			}
-
 			this.refresh(date);
-		}
-
-		else if (eventType === "specialKey") {
+		} else if (eventType === "specialKey") {
 			if (data.code === 18 && data.state === "down") {      // alt
 				// zoom in
-			}
-			else if (data.code === 17 && data.state === "down") { // control
+			} else if (data.code === 17 && data.state === "down") { // control
 				// zoom out
-			}
-			else if (data.code === 37 && data.state === "down") { // left
-			}
-			else if (data.code === 38 && data.state === "down") { // up
-			}
-			else if (data.code === 39 && data.state === "down") { // right
-			}
-			else if (data.code === 40 && data.state === "down") { // down
+			} else if (data.code === 37 && data.state === "down") { // left
+			} else if (data.code === 38 && data.state === "down") { // up
+			} else if (data.code === 39 && data.state === "down") { // right
+			} else if (data.code === 40 && data.state === "down") { // down
 			}
 			this.refresh(date);
 		}

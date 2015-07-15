@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule media_stream
@@ -18,7 +20,7 @@
  *
  * @class media_stream
  */
-var media_stream = SAGE2_App.extend( {
+var media_stream = SAGE2_App.extend({
 	/**
 	* Init method, creates a 'img' tag in the DOM
 	*
@@ -43,13 +45,13 @@ var media_stream = SAGE2_App.extend( {
 		this.img2.addEventListener('load', this.img2LoadedFunc, false);
 	},
 
-	img1Loaded: function(event) {
+	img1Loaded: function() {
 		this.bufferId = 0;
 		this.img1IsLoaded = true;
 		this.draw(this.date);
 	},
 
-	img2Loaded: function(event) {
+	img2Loaded: function() {
 		this.draw(this.date);
 		this.img2IsLoaded = true;
 		this.bufferId = 1;
@@ -66,13 +68,15 @@ var media_stream = SAGE2_App.extend( {
 		this.date = date;
 
 		var b64;
-		if (this.state.encoding === "binary") b64 = btoa(this.state.src);
-		else if (this.state.encoding === "base64") b64 = this.state.src;
+		if (this.state.encoding === "binary") {
+			b64 = btoa(this.state.src);
+		} else if (this.state.encoding === "base64") {
+			b64 = this.state.src;
+		}
 
 		if (this.bufferId === 0) {
 			this.img2.src = "data:" + this.state.type + ";base64," + b64;
-		}
-		else {
+		} else {
 			this.img1.src = "data:" + this.state.type + ";base64," + b64;
 		}
 
@@ -114,10 +118,8 @@ var media_stream = SAGE2_App.extend( {
 	*/
 	draw: function(date) {
 		if (this.bufferId === 0 && this.img1IsLoaded === true) {
-
 			this.ctx.drawImage(this.img1, 0, 0, this.element.width, this.element.height);
-		}
-		else if (this.bufferId === 1 && this.img2IsLoaded === true) {
+		} else if (this.bufferId === 1 && this.img2IsLoaded === true) {
 			this.ctx.drawImage(this.img2, 0, 0, this.element.width, this.element.height);
 		}
 	},

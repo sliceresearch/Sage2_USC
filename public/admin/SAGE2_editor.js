@@ -16,7 +16,9 @@
  * @class SAGE2_Editor
  */
 
-/*global ace: true */
+/* global SAGE2_init, ace */
+
+"use strict";
 
 var SAGE2_editor;
 
@@ -27,7 +29,7 @@ var SAGE2_editor;
  */
 function SAGE2_init() {
 	// Connect to the server
-	wsio = new WebsocketIO();
+	var wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
 
@@ -46,7 +48,7 @@ function SAGE2_init() {
 	SAGE2_editor.setHighlightActiveLine(false);
 	SAGE2_editor.setShowPrintMargin(false);
 	// remove line numbers
-	//SAGE2_editor.renderer.setShowGutter(false);
+	// SAGE2_editor.renderer.setShowGutter(false);
 	// scroll warning
 	SAGE2_editor.$blockScrolling = Infinity;
 	// set the text
@@ -54,16 +56,15 @@ function SAGE2_init() {
 	SAGE2_editor.gotoLine(0);
 	SAGE2_editor.resize();
 
-	SAGE2_editor.getSession().on("change", function(e) {
+	SAGE2_editor.getSession().on("change", function() {
 		console.log('Change', SAGE2_editor.session.getLength());
 	});
 
 	SAGE2_editor.commands.addCommand({
 		name: 'save',
 		bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
-		exec: function(editor) {
-			console.log('SAVE', this);
-			SAGE2_saveFile();
+		exec: function() {
+			sage2SaveFile();
 		}
 	});
 
@@ -78,9 +79,9 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "editor",
 			requests: {
-				config:  true,
+				config: true,
 				version: true,
-				time:    false,
+				time: false,
 				console: false
 			}
 		};
@@ -88,13 +89,13 @@ function SAGE2_init() {
 	});
 
 	// Socket close event (ie server crashed)
-	wsio.on('close', function (evt) {
-		var refresh = setInterval(function () {
+	wsio.on('close', function() {
+		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
 			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200){
+				if (xhr.readyState === 4 && xhr.status === 200) {
 					console.log("server ready");
 					// when server ready, clear the interval callback
 					clearInterval(refresh);
@@ -110,9 +111,9 @@ function SAGE2_init() {
 /**
  * Function to save content of the editor back to the server
  *
- * @method SAGE2_saveFile
+ * @method sage2SaveFile
  */
-function SAGE2_saveFile() {
+function sage2SaveFile() {
 	// Create a PUT request to the SAGE2 server
 	var xhr = new XMLHttpRequest();
 	// Specify the destination filename
@@ -136,7 +137,7 @@ function SAGE2_saveFile() {
 function setupListeners(wsio) {
 
 	// Got a reply from the server
-	wsio.on('initialize', function(init_data) {
+	wsio.on('initialize', function() {
 		console.log('initialize');
 
 		readFile("/config/default-cfg.json", function(error, data) {
@@ -155,12 +156,12 @@ function setupListeners(wsio) {
 	});
 
 	// Server sends the wall configuration
-	wsio.on('setupDisplayConfiguration', function(json_cfg) {
+	wsio.on('setupDisplayConfiguration', function() {
 		console.log('wall configuration');
 	});
 
 	// Server sends the animate loop event
-	wsio.on('animateCanvas', function(data) {
+	wsio.on('animateCanvas', function() {
 		console.log('animateCanvas');
 	});
 
