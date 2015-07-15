@@ -333,20 +333,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 				this.showNextPage();
 			}
 			this.refresh(date);
-		} else if (eventType === "widgetEvent") {
-			switch (data.ctrlId){
-				case "Next":
-					this.showNextPage();
-					break;
-				case "Prev":
-					this.showPreviousPage();
-					break;
-				default:
-					console.log("No handler for:", data.ctrlId);
-			}
-			this.refresh(date);
-		}
-        else if (eventType === "widgetEvent"){
+		} else if (eventType === "widgetEvent"){
             switch(data.identifier){
                 case "Next":
                     this.showNextPage();

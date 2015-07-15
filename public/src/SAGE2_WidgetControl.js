@@ -295,7 +295,7 @@ SAGE2WidgetControl.prototype.addSlider = function(data) {
 		slider.sliderVal = data.minimum;
 		slider.knobLabelFormatFunction = data.labelFormatFunction;
 		slider.width = 13.0 * ui.widgetControlSize;
-		if (slider.parts < 1) {
+		if (slider.steps < 1) {
 			return;
 		}
 
