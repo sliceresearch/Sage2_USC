@@ -87,9 +87,9 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "sageDrawing",
 			requests: {
-				config:  true,
+				config: true,
 				version: true,
-				time:    false,
+				time: false,
 				console: false
 			}
 		};
@@ -161,7 +161,7 @@ function setupListeners(wsio) {
 		// Toolbar
 		var uiStage = new Kinetic.Stage({
 			container: 'toolbar',
-			width:  1280,
+			width: 1280,
 			height: 50
 		});
 		var uilayer = new Kinetic.Layer();
@@ -230,7 +230,7 @@ function setupListeners(wsio) {
 		// Drawing
 		drawingStage = new Kinetic.Stage({
 			container: 'canvas',
-			width:  1280,
+			width: 1280,
 			height: 720
 		});
 		var layerbg = new Kinetic.Layer();

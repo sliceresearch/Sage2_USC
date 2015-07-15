@@ -1011,14 +1011,14 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	function loadApplication() {
 		var init = {
-			id:     data.id,
-			x:      data.left,
-			y:      data.top + titleBarHeight,
-			width:  data.width,
+			id: data.id,
+			x: data.left,
+			y: data.top + titleBarHeight,
+			width: data.width,
 			height: data.height,
-			resrc:  url,
-			state:  data.data,
-			date:   date
+			resrc: url,
+			state: data.data,
+			date: date
 		};
 
 		// load new app

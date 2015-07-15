@@ -42,9 +42,9 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "files",
 			requests: {
-				config:  true,
+				config: true,
 				version: true,
-				time:    false,
+				time: false,
 				console: false
 			}
 		};
@@ -308,7 +308,7 @@ function setupListeners(wsio) {
 				image_table.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					ago:  mm.fromNow(),
+					ago: mm.fromNow(),
 					type: f.exif.FileType,
 					size: fileSizeIEC(f.exif.FileSize)
 				});
@@ -322,7 +322,7 @@ function setupListeners(wsio) {
 				video_table.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					ago:  mm.fromNow(),
+					ago: mm.fromNow(),
 					type: f.exif.FileType,
 					size: fileSizeIEC(f.exif.FileSize)
 				});
@@ -334,7 +334,7 @@ function setupListeners(wsio) {
 				pdf_table.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					ago:  mm.fromNow(),
+					ago: mm.fromNow(),
 					type: f.exif.FileType,
 					size: fileSizeIEC(f.exif.FileSize)
 				});
@@ -347,7 +347,7 @@ function setupListeners(wsio) {
 				all_table.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					ago:  mm.fromNow(),
+					ago: mm.fromNow(),
 					type: f.exif.FileType,
 					size: fileSizeIEC(f.exif.FileSize)
 				});
