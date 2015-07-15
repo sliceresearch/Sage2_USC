@@ -298,7 +298,6 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		strokeWidth : 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
-	
 
 	var button = this.controlSVG.group(buttonBack);
 	var instanceID = this.instanceID;
@@ -308,7 +307,6 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		cover.data("animationInfo", type);
 		cover.data("appId", buttonSpec.appId);
 		buttonBack.data("appId", buttonSpec.appId);
-		
 		button.data("appId", buttonSpec.appId);
 		button.data("instanceID", instanceID);
 		button.data("animationInfo", type);

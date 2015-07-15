@@ -642,7 +642,6 @@ function initializeExistingControls(wsio){
 			wsio.emit('createControl', data);
 			zIndex = SAGE2Items.widgets.numItems;
 			var radialGeometry = {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2};
-			
 			if (data.hasSideBar === true) {
 				var shapeData = {
 					radial:{
@@ -661,8 +660,6 @@ function initializeExistingControls(wsio){
 			else{
 				interactMgr.addGeometry(data.id, "widgets", "circle", radialGeometry, true, zIndex, data);
 			}
-			
-			
 			/*interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, true, zIndex, data);
 			if (data.hasSideBar === true) {
 				interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, true, zIndex, data);
@@ -2686,7 +2683,7 @@ function wsAddNewControl(wsio, data) {
 
 	var zIndex = SAGE2Items.widgets.numItems;
 	var radialGeometry = {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2};
-			
+
 	if (data.hasSideBar === true) {
 		var shapeData = {
 			radial:{
@@ -3601,7 +3598,7 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 	var bottomMargin = config.totalHeight - ctrl.height;
 	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
 	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2;
-	var radialGeometry = {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2}
+	var radialGeometry = {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2};
 	if (ctrl.hasSideBar === true) {
 		var shapeData = {
 			radial:{
@@ -3620,7 +3617,7 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY){
 	else{
 		interactMgr.editGeometry(ctrl.id, "widgets", "circle", radialGeometry);
 	}
-			
+
 	/*interactMgr.editGeometry(ctrl.id+"_radial", "widgets", "circle", {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2});
 	if(ctrl.hasSideBar === true) {
 		interactMgr.editGeometry(ctrl.id+"_sidebar", "widgets", "rectangle", {x: ctrl.left+ctrl.height, y: ctrl.top+(ctrl.height/2)-(ctrl.barHeight/2), w: ctrl.width-ctrl.height, h: ctrl.barHeight});

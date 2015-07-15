@@ -799,7 +799,7 @@ function setupListeners() {
 				}
 				else{
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
-					
+
 					if (animationInfo.textual === false && animationInfo.animation === true){
 						var delay = animationInfo.delay;
 						var fromPath = animationInfo.from;

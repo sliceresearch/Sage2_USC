@@ -394,22 +394,21 @@ function makeSvgBackgroundForWidgetConnectors(width, height){
 
 function createButtonShape(paper, cx, cy, buttonRad, buttonShape){
 	var buttonBack;
+	var point;
+	var polygonPts = [];
+	var theta;
 	switch(buttonShape){
 		case "hexagon":
-			var point;
-			var polygonPts = [];
-			for (var theta = 0; theta<=360; theta += 60){
-				point = polarToCartesian(buttonRad,theta+30,{x:cx,y:cy});
+			for (theta = 0; theta<=360; theta += 60){
+				point = polarToCartesian(buttonRad, theta+30, {x:cx, y:cy});
 				polygonPts.push(point.x);
 				polygonPts.push(point.y);
 			}
 			buttonBack = paper.polygon(polygonPts);
 			break;
 		case "octagon":
-			var point;
-			var polygonPts = [];
-			for (var theta = 0; theta<=360; theta += 45){
-				point = polarToCartesian(buttonRad,theta+22.5,{x:cx,y:cy});
+			for (theta = 0; theta<=360; theta += 45){
+				point = polarToCartesian(buttonRad, theta+22.5, {x:cx, y:cy});
 				polygonPts.push(point.x);
 				polygonPts.push(point.y);
 			}
@@ -417,7 +416,7 @@ function createButtonShape(paper, cx, cy, buttonRad, buttonShape){
 			break;
 		case "circle":
 		default:
-			buttonBack = paper.circle(cx,cy,buttonRad);
+			buttonBack = paper.circle(cx, cy, buttonRad);
 			break;
 	}
 	return buttonBack;

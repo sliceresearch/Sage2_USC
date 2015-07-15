@@ -247,14 +247,14 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 			this.buttonSequence[data.position.toString()] = button;
 		}
 		else{
-			for (var pos=1;pos<=30;pos++){
+			for (var pos=1; pos<=30; pos++){
 				if (this.buttonSequence.hasOwnProperty(pos.toString()) === false){
 					this.buttonSequence[pos] = button;
 					break;
 				}
 			}
 		}
-		
+
 		this.itemCount++;
 	}
 	return type;
