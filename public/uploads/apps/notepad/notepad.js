@@ -154,14 +154,14 @@ var notepad = SAGE2_App.extend({
 						var mLines = this.textArr[i].match(re);
 						for (var ml = 0; ml < mLines.length; ml++) {
 							this.ctx.fillText(mLines[ml], this.space + this.lMargin, count * this.fontHeight);
-							count ++;
+							count++;
 						}
 
 					} else {
 						this.ctx.fillText(this.textArr[i], this.space + this.lMargin, count * this.fontHeight);
 					}
 				}
-				count ++;
+				count++;
 			}
 		}
 	},

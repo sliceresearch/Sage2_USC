@@ -100,10 +100,10 @@ var car_threejs = SAGE2_App.extend({
 
 		var material = new THREE.ShaderMaterial({
 			fragmentShader: shader.fragmentShader,
-			vertexShader:   shader.vertexShader,
-			uniforms:       shader.uniforms,
-			depthWrite:     false,
-			side:           THREE.BackSide
+			vertexShader: shader.vertexShader,
+			uniforms: shader.uniforms,
+			depthWrite: false,
+			side: THREE.BackSide
 		});
 
 		var mesh = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), material);
@@ -144,7 +144,7 @@ var car_threejs = SAGE2_App.extend({
 		var m, mm, i;
 		loaderCTM.loadParts(_this.resrcPath + "camaro/camaro.js", function(geometries, materials) {
 			// hackMaterials
-			for (i = 0; i < materials.length; i ++) {
+			for (i = 0; i < materials.length; i++) {
 				m = materials[i];
 				if (m.name.indexOf("Body") !== -1) {
 					mm = new THREE.MeshPhongMaterial({ map: m.map });
@@ -176,7 +176,7 @@ var car_threejs = SAGE2_App.extend({
 				materials[i].side = THREE.DoubleSide;
 			}
 
-			for (i = 0; i < geometries.length; i ++) {
+			for (i = 0; i < geometries.length; i++) {
 				var amesh = new THREE.Mesh(geometries[i], materials[i]);
 				amesh.position.copy(position);
 				amesh.scale.copy(scale);

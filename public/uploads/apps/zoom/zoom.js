@@ -37,7 +37,7 @@ var zoom = SAGE2_App.extend({
 			// suppporting div
 			id: this.element.id,
 			// icons for the library
-			prefixUrl:   this.resrcPath + "/images/",
+			prefixUrl: this.resrcPath + "/images/",
 			// show the little overview window (auto-hides)
 			showNavigator: true,
 			// remove the navigation button bar
