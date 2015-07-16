@@ -670,29 +670,32 @@ function initializeExistingControls(wsio) {
 			data = controlList[i];
 			wsio.emit('createControl', data);
 			zIndex = SAGE2Items.widgets.numItems;
-			var radialGeometry = {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2};
+			var radialGeometry = {
+				x: data.left + (data.height / 2),
+				y: data.top + (data.height / 2),
+				r: data.height / 2
+			};
 			if (data.hasSideBar === true) {
 				var shapeData = {
-					radial:{
-						type:"circle",
-						visible:true,
-						geometry:radialGeometry
+					radial: {
+						type: "circle",
+						visible: true,
+						geometry: radialGeometry
 					},
-					sidebar:{
-						type:"rectangle",
-						visible:true,
-						geometry: {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}
+					sidebar: {
+						type: "rectangle",
+						visible: true,
+						geometry: {
+							x: data.left + data.height,
+							y: data.top + (data.height / 2) - (data.barHeight / 2),
+							w: data.width - data.height, h: data.barHeight
+						}
 					}
 				};
 				interactMgr.addComplexGeometry(data.id, "widgets", shapeData, zIndex, data);
-			}
-			else{
+			} else {
 				interactMgr.addGeometry(data.id, "widgets", "circle", radialGeometry, true, zIndex, data);
 			}
-			/*interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, true, zIndex, data);
-			if (data.hasSideBar === true) {
-				interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, true, zIndex, data);
-			}*/
 			SAGE2Items.widgets.addItem(data);
 			uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
 			app = SAGE2Items.applications.list[data.appId];
@@ -2768,31 +2771,33 @@ function wsAddNewControl(wsio, data) {
 	broadcast('createControl', data);
 
 	var zIndex = SAGE2Items.widgets.numItems;
-	var radialGeometry = {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2};
+	var radialGeometry = {
+		x: data.left + (data.height / 2),
+		y: data.top + (data.height / 2),
+		r: data.height / 2
+	};
 
 	if (data.hasSideBar === true) {
 		var shapeData = {
-			radial:{
-				type:"circle",
-				visible:true,
-				geometry:radialGeometry
+			radial: {
+				type: "circle",
+				visible: true,
+				geometry: radialGeometry
 			},
-			sidebar:{
-				type:"rectangle",
-				visible:true,
-				geometry: {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}
+			sidebar: {
+				type: "rectangle",
+				visible: true,
+				geometry: {
+					x: data.left + data.height,
+					y: data.top + (data.height / 2) - (data.barHeight / 2),
+					w: data.width - data.height, h: data.barHeight
+				}
 			}
 		};
 		interactMgr.addComplexGeometry(data.id, "widgets", shapeData, zIndex, data);
-	}
-	else{
+	} else {
 		interactMgr.addGeometry(data.id, "widgets", "circle", radialGeometry, true, zIndex, data);
 	}
-	/*interactMgr.addGeometry(data.id+"_radial", "widgets", "circle", {x: data.left+(data.height/2), y: data.top+(data.height/2), r: data.height/2}, true, zIndex, data);
-	if (data.hasSideBar === true) {
-		interactMgr.addGeometry(data.id+"_sidebar", "widgets", "rectangle", {x: data.left+data.height, y: data.top+(data.height/2)-(data.barHeight/2), w: data.width-data.height, h: data.barHeight}, true, zIndex, data);
-	}*/
-
 	SAGE2Items.widgets.addItem(data);
 	var uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
 	var app = SAGE2Items.applications.list[data.appId];
@@ -3698,15 +3703,15 @@ function findRemoteSiteByConnection(wsio) {
 function hideControl(ctrl) {
 	if (ctrl.show === true) {
 		ctrl.show = false;
-		broadcast('hideControl', {id:ctrl.id, appId:ctrl.appId});
+		broadcast('hideControl', {id: ctrl.id, appId: ctrl.appId});
 		interactMgr.editVisibility(ctrl.id, "widgets", false);
 	}
 }
 
 function removeControlsForUser(uniqueID) {
 	var widgets = SAGE2Items.widgets.list;
-	for (var w in widgets){
-		if (widgets.hasOwnProperty(w) && widgets[w].id.indexOf(uniqueID) > -1){
+	for (var w in widgets) {
+		if (widgets.hasOwnProperty(w) && widgets[w].id.indexOf(uniqueID) > -1) {
 			interactMgr.removeGeometry(widgets[w].id, "widgets");
 			SAGE2Items.widgets.removeItem(widgets[w].id);
 		}
@@ -3728,32 +3733,35 @@ function moveControlToPointer(ctrl, uniqueID, pointerX, pointerY) {
 	var dt = new Date();
 	var rightMargin = config.totalWidth - ctrl.width;
 	var bottomMargin = config.totalHeight - ctrl.height;
-	ctrl.left = (pointerX > rightMargin)? rightMargin: pointerX-ctrl.height/2;
-	ctrl.top = (pointerY > bottomMargin)? bottomMargin: pointerY-ctrl.height/2;
-	var radialGeometry = {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2};
+	ctrl.left = (pointerX > rightMargin) ? rightMargin : pointerX - ctrl.height / 2;
+	ctrl.top = (pointerY > bottomMargin) ? bottomMargin : pointerY - ctrl.height / 2;
+	var radialGeometry = {
+		x: ctrl.left + (ctrl.height / 2),
+		y: ctrl.top + (ctrl.height / 2),
+		r: ctrl.height / 2
+	};
 	if (ctrl.hasSideBar === true) {
 		var shapeData = {
-			radial:{
-				type:"circle",
-				visible:true,
-				geometry:radialGeometry
+			radial: {
+				type: "circle",
+				visible: true,
+				geometry: radialGeometry
 			},
-			sidebar:{
-				type:"rectangle",
-				visible:true,
-				geometry: {x: ctrl.left+ctrl.height, y: ctrl.top+(ctrl.height/2)-(ctrl.barHeight/2), w: ctrl.width-ctrl.height, h: ctrl.barHeight}
+			sidebar: {
+				type: "rectangle",
+				visible: true,
+				geometry: {
+					x: ctrl.left + ctrl.height,
+					y: ctrl.top + (ctrl.height / 2) - (ctrl.barHeight / 2),
+					w: ctrl.width - ctrl.height, h: ctrl.barHeight
+				}
 			}
 		};
 		interactMgr.editComplexGeometry(ctrl.id, "widgets", shapeData);
-	}
-	else{
+	} else {
 		interactMgr.editGeometry(ctrl.id, "widgets", "circle", radialGeometry);
 	}
 
-	/*interactMgr.editGeometry(ctrl.id+"_radial", "widgets", "circle", {x: ctrl.left+(ctrl.height/2), y: ctrl.top+(ctrl.height/2), r: ctrl.height/2});
-	if(ctrl.hasSideBar === true) {
-		interactMgr.editGeometry(ctrl.id+"_sidebar", "widgets", "rectangle", {x: ctrl.left+ctrl.height, y: ctrl.top+(ctrl.height/2)-(ctrl.barHeight/2), w: ctrl.width-ctrl.height, h: ctrl.barHeight});
-	}*/
 	var app = SAGE2Items.applications.list[ctrl.appId];
 	var appPos = (app === null)? null : getAppPositionSize(app);
 	broadcast('setControlPosition', {date: dt, elemId: ctrl.id, elemLeft: ctrl.left, elemTop: ctrl.top,
@@ -4921,25 +4929,32 @@ function moveWidgetControls(uniqueID, moveControl) {
 	if (app) {
 		moveControl.appData = getAppPositionSize(app);
 		broadcast('setControlPosition', moveControl);
-		var radialGeometry =  {x: moveControl.elemLeft+(moveControl.elemHeight/2), y: moveControl.elemTop+(moveControl.elemHeight/2), r: moveControl.elemHeight/2};
-		var barGeometry = {x: moveControl.elemLeft+moveControl.elemHeight, y: moveControl.elemTop+(moveControl.elemHeight/2)-(moveControl.elemBarHeight/2), w: moveControl.elemWidth-moveControl.elemHeight, h: moveControl.elemBarHeight};
+		var radialGeometry =  {
+			x: moveControl.elemLeft + (moveControl.elemHeight / 2),
+			y: moveControl.elemTop + (moveControl.elemHeight / 2),
+			r: moveControl.elemHeight / 2
+		};
+		var barGeometry = {
+			x: moveControl.elemLeft + moveControl.elemHeight,
+			y: moveControl.elemTop + (moveControl.elemHeight / 2) - (moveControl.elemBarHeight / 2),
+			w: moveControl.elemWidth - moveControl.elemHeight, h: moveControl.elemBarHeight
+		};
 
 		if (moveControl.hasSideBar === true) {
 			var shapeData = {
-				radial:{
-					type:"circle",
-					visible:true,
-					geometry:radialGeometry
+				radial: {
+					type: "circle",
+					visible: true,
+					geometry: radialGeometry
 				},
-				sidebar:{
-					type:"rectangle",
-					visible:true,
+				sidebar: {
+					type: "rectangle",
+					visible: true,
 					geometry: barGeometry
 				}
 			};
 			interactMgr.editComplexGeometry(moveControl.elemId, "widgets", shapeData);
-		}
-		else{
+		} else {
 			interactMgr.editGeometry(moveControl.elemId, "widgets", "circle", radialGeometry);
 		}
 		/*interactMgr.editGeometry(moveControl.elemId+"_radial", "widgets", "circle", circle);
@@ -5966,8 +5981,8 @@ function deleteApplication(appId, portalId) {
 	var im = findInteractableManager(appId);
 	im.removeGeometry(appId, "applications");
 	var widgets = SAGE2Items.widgets.list;
-	for (var w in widgets){
-		if (widgets.hasOwnProperty(w) && widgets[w].appId === appId){
+	for (var w in widgets) {
+		if (widgets.hasOwnProperty(w) && widgets[w].appId === appId) {
 			im.removeGeometry(widgets[w].id, "widgets");
 			SAGE2Items.widgets.removeItem(widgets[w].id);
 		}

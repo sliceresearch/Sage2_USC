@@ -373,18 +373,17 @@ var photos = SAGE2_App.extend({
 			.attr("height", data.height);
 
 		// create the widgets
-        console.log("creating controls");
-        this.controls.addButton({type: "next", position: 7, identifier: "Next"});
+		console.log("creating controls");
+		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 
-
-        for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++){
-            var loopIdxWithPrefix = "0" + loopIdx;
-            var pos = 5 - loopIdx;
-			if (pos < 1){
+		for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++) {
+			var loopIdxWithPrefix = "0" + loopIdx;
+			var pos = 5 - loopIdx;
+			if (pos < 1) {
 				pos = pos + 12;
 			}
-            this.controls.addButton({label: SAGE2_photoAlbums[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
-        }
+			this.controls.addButton({label: SAGE2_photoAlbums[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
+		}
 		this.controls.finishedAddingControls(); // Important
 
 		this.initApp();

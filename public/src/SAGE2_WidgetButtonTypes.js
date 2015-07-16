@@ -25,43 +25,43 @@
  * @type {Object}
  */
 var SAGE2WidgetButtonTypes = {
-	"remote": function(){
+	remote: function() {
 		this.img = "images/ui/remote.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"stop": function(){
+	stop: function() {
 		this.img = "images/appUi/stopBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"weather": function(){
+	weather: function() {
 		this.img = "images/appUi/weatherBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"traffic": function(){
+	traffic: function() {
 		this.img = "images/appUi/trafficBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"closeBar": function(){
+	closeBar: function() {
 		this.img = "images/appUi/closeMenuBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"new": function(){
+	new: function() {
 		this.img = "images/appUi/stickyBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"duplicate": function(){
+	duplicate: function() {
 		this.img = "images/appUi/stickyCopyBtn.svg";
 		this.state = null;
 		this.textual = false;
@@ -73,76 +73,76 @@ var SAGE2WidgetButtonTypes = {
 		this.textual = false;
 		this.animation = false;
 	},
-	"prev": function(){
+	prev: function() {
 		this.img = "images/appUi/arrowLeftBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"next": function(){
+	next: function() {
 		this.img = "images/appUi/arrowRightBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"up-arrow": function(){
+	"up-arrow": function() {
 		this.img = "images/appUi/arrowUpBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"down-arrow": function(){
+	"down-arrow": function() {
 		this.img = "images/appUi/arrowDownBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"rewind": function(){
+	rewind: function() {
 		this.img = "images/appUi/homeBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"fastforward": function(){
+	fastforward: function() {
 		this.img = "images/appUi/endBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"mute": function(){
+	mute: function() {
 		this.img = "images/appUi/muteBtn.svg";
 		this.img2 = "images/appUi/soundBtn.svg";
 		this.state = 0;
 		this.textual = false;
 		this.animation = false;
 	},
-	"loop": function(){
+	loop: function() {
 		this.img = "images/appUi/loopBtn.svg";
 		this.img2 = "images/appUi/dontLoopBtn.svg";
 		this.state = 0;
 		this.textual = false;
 		this.animation = false;
 	},
-	"play-pause": function(){
+	"play-pause": function() {
 		this.img = "images/appUi/playBtn.svg";
 		this.img2 = "images/appUi/playBtn.svg";
 		this.state = 0;
 		this.textual = false;
 		this.animation = false;
 	},
-	"zoom-in": function(){
+	"zoom-in": function() {
 		this.img = "images/appUi/zoomInBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"zoom-out": function(){
+	"zoom-out": function() {
 		this.img = "images/appUi/zoomOutBtn.svg";
 		this.state = null;
 		this.textual = false;
 		this.animation = false;
 	},
-	"closeApp": function(){
+	closeApp: function() {
 		this.img = "images/appUi/closeAppBtn.svg";
 		this.state = null;
 		this.textual = false;

@@ -141,9 +141,8 @@ var zoom = SAGE2_App.extend({
 			// down
 			this.viewer.viewport.panBy(new OpenSeadragon.Point(0, 0.01));
 			this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.identifier){
+		} else if (eventType === "widgetEvent") {
+			switch (data.identifier) {
 				case "Up":
 					// up
 					this.viewer.viewport.panBy(new OpenSeadragon.Point(0, -0.01));

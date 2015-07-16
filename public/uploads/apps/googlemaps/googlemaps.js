@@ -35,11 +35,11 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	initializeWidgets: function() {
-		this.controls.addButton({label: "Map",     	position: 4, identifier: "Map"});
-		this.controls.addButton({type: "traffic", 	position: 3, identifier: "Traffic"});
-		this.controls.addButton({type: "weather", 	position: 5, identifier: "Weather"});
-		this.controls.addButton({type: "zoom-in",   position: 12, identifier: "ZoomIn"});
-		this.controls.addButton({type: "zoom-out",  position: 11, identifier: "ZoomOut"});
+		this.controls.addButton({label: "Map", position: 4, identifier: "Map"});
+		this.controls.addButton({type: "traffic", position: 3, identifier: "Traffic"});
+		this.controls.addButton({type: "weather", position: 5, identifier: "Weather"});
+		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
+		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
 		this.controls.addTextInput({value: "", label: "Addr", identifier: "Address"});
 
 		this.controls.addSlider({
@@ -221,9 +221,8 @@ var googlemaps = SAGE2_App.extend({
 			}
 
 			this.refresh(date);
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.identifier){
+		} else if (eventType === "widgetEvent") {
+			switch (data.identifier) {
 				case "Map":
 					this.changeMapType();
 					break;
@@ -241,7 +240,7 @@ var googlemaps = SAGE2_App.extend({
 					this.relativeZoom(-1);
 					break;
 				case "Zoom":
-					switch (data.action){
+					switch (data.action) {
 						case "sliderLock":
 							break;
 						case "sliderUpdate":

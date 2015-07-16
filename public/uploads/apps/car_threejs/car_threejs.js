@@ -266,9 +266,8 @@ var car_threejs = SAGE2_App.extend({
 					this.orbitControls.update();
 					this.refresh(date);
 				}
-			}
-			else if (eventType === "widgetEvent"){
-				switch(data.identifier){
+			} else if (eventType === "widgetEvent") {
+				switch (data.identifier) {
 					case "Up":
 						// up
 						this.orbitControls.pan(0, this.orbitControls.keyPanSpeed);

@@ -761,53 +761,49 @@ function setupListeners() {
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
 			var ctrlParent = ctrl.parent();
-			if (/button/.test(ctrlId)){
+			if (/button/.test(ctrlId)) {
 				ctrl = ctrlParent.select("svg");
 				var animationInfo = ctrlParent.data("animationInfo");
 				var state = animationInfo.state;
-				if (ctrl !== null && ctrl !== undefined){
-					if (state === null || state === undefined){
+				if (ctrl !== null && ctrl !== undefined) {
+					if (state === null || state === undefined) {
 						ctrl = ctrlParent.select("circle") || ctrlParent.select("polygon");
-						if (ctrl !== null && ctrl !== undefined){
+						if (ctrl !== null && ctrl !== undefined) {
 							var fillVal = ctrl.attr("fill");
-							ctrl.animate({"fill": "rgba(230,230,230,1.0)"}, 400, mina.bounce, function(){
-								ctrl.animate({"fill": fillVal}, 400, mina.bounce);
+							ctrl.animate({fill: "rgba(230,230,230,1.0)"}, 400, mina.bounce, function() {
+								ctrl.animate({fill: fillVal}, 400, mina.bounce);
 							});
 						}
-					}
-					else if(state === 1){
+					} else if (state === 1) {
 						ctrlParent.select("#cover2").attr("visibility", "visible");
 						ctrlParent.select("#cover").attr("visibility", "hidden");
 						animationInfo.state = 0;
-					}
-					else{
+					} else {
 						ctrlParent.select("#cover").attr("visibility", "visible");
 						ctrlParent.select("#cover2").attr("visibility", "hidden");
 						animationInfo.state = 1;
 					}
-				}
-				else{
+				} else {
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
 
-					if (animationInfo.textual === false && animationInfo.animation === true){
+					if (animationInfo.textual === false && animationInfo.animation === true) {
 						var delay = animationInfo.delay;
 						var fromPath = animationInfo.from;
 						var toPath = animationInfo.to;
 						var fromFill = animationInfo.fill;
 						var toFill = animationInfo.toFill;
-						if (toFill === null || toFill === undefined){
+						if (toFill === null || toFill === undefined) {
 							toFill = fromFill;
 						}
-						if (state === null){
-							ctrl.animate({"path": toPath, "fill": toFill}, delay, mina.bounce, function(){
-								ctrl.animate({"path": fromPath, "fill": fromFill}, delay, mina.bounce);
+						if (state === null) {
+							ctrl.animate({path: toPath, fill: toFill}, delay, mina.bounce, function() {
+								ctrl.animate({path: fromPath, fill: fromFill}, delay, mina.bounce);
 							});
 
-						}
-						else{
+						} else {
 							animationInfo.state = 1 - animationInfo.state;
 							ctrl.data("animationInfo", animationInfo);
-							//ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
+							// ctrl.animate({"path":path, "fill":fill}, delay, mina.bounce);
 						}
 					}
 				}
@@ -896,7 +892,8 @@ function setupListeners() {
 				var blinkControlHandle = textInput.data("blinkControlHandle");
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
-				app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, Date.now());
+				app.SAGE2Event("widgetEvent", null, data.user,
+					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, Date.now());
 			}
 		}
 	});
@@ -978,7 +975,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	var windowIcons = document.createElement("img");
-	//windowIcons.src = "images/layout3.webp";
+	// windowIcons.src = "images/layout3.webp";
 	windowIcons.src = "images/layout3.svg";
 	windowIcons.height = Math.round(titleBarHeight);
 	windowIcons.style.position = "absolute";

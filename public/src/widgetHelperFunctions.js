@@ -105,7 +105,7 @@ function mapMoveToSlider(sliderKnob, position) {
 	var left  = bound.x + knobWidth / 2.0;
 	var right = bound.x2 - knobWidth / 2.0;
 	var begin = slider.data('begin');
-	//var end   = slider.data('end');
+	// var end   = slider.data('end');
 	var steps = slider.data('steps');
 	var increments = slider.data('increments');
 
@@ -117,7 +117,7 @@ function mapMoveToSlider(sliderKnob, position) {
 
 	var deltaX = (right - left) / steps;
 	var n = Math.floor(0.5 + (position - left) / deltaX);
-	if (isNaN(n) === true){
+	if (isNaN(n) === true) {
 		n = 0;
 	}
 	return {sliderValue: begin + n * increments, newPosition: left + n * deltaX};
@@ -226,7 +226,7 @@ function getWidgetControlInstanceById(ctrl) {
 	return requestedSvgElement;
 }
 
-function getPropertyHandle(objectHandle, property){
+function getPropertyHandle(objectHandle, property) {
 	var names = property.split('.');
 	var handle  = objectHandle;
 	var i = 1;
@@ -402,14 +402,14 @@ function makeSvgBackgroundForWidgetConnectors(width, height) {
 	return backDrop;
 }
 
-function createButtonShape(paper, cx, cy, buttonRad, buttonShape){
+function createButtonShape(paper, cx, cy, buttonRad, buttonShape) {
 	var buttonBack;
 	var point;
 	var polygonPts = [];
 	var theta;
-	switch(buttonShape){
+	switch (buttonShape) {
 		case "hexagon":
-			for (theta = 0; theta <= 360; theta += 60){
+			for (theta = 0; theta <= 360; theta += 60) {
 				point = polarToCartesian(buttonRad, theta + 30, {x: cx, y: cy});
 				polygonPts.push(point.x);
 				polygonPts.push(point.y);
@@ -417,7 +417,7 @@ function createButtonShape(paper, cx, cy, buttonRad, buttonShape){
 			buttonBack = paper.polygon(polygonPts);
 			break;
 		case "octagon":
-			for (theta = 0; theta <= 360; theta += 45){
+			for (theta = 0; theta <= 360; theta += 45) {
 				point = polarToCartesian(buttonRad, theta + 22.5, {x: cx, y: cy});
 				polygonPts.push(point.x);
 				polygonPts.push(point.y);

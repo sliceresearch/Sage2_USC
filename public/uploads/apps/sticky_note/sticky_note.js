@@ -132,36 +132,29 @@ var sticky_note = SAGE2_App.extend({
 
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// Move the circle when I click
-			//this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
-		}
-		else if (eventType === "pointerRelease" && (data.button === "left")) {
-			//Release action code
-		}
-
-		else if (eventType === "keyboard") {
-			if(data.character === "m") {
-				//m
+			// this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
+		} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			// Release action code
+		} else if (eventType === "keyboard") {
+			if (data.character === "m") {
+				// m
+			} else if (data.character === "t") {
+				// t
+			} else if (data.character === "w") {
+				// w
 			}
-			else if (data.character === "t") {
-				//t
+		} else if (eventType === "specialKey") {
+			if (data.code === 37 && data.state === "down") {
+				// left arrow
+			} else if (data.code === 38 && data.state === "down") {
+				// up arrow
+			} else if (data.code === 39 && data.state === "down") {
+				// right arrow
+			} else if (data.code === 40 && data.state === "down") {
+				// down arrow
 			}
-			else if (data.character === "w") {
-				//w
-			}
-		}
-
-		else if (eventType === "specialKey") {
-			if (data.code === 37 && data.state === "down") { // left arrow
-			}
-			else if (data.code === 38 && data.state === "down") { // up arrow
-			}
-			else if (data.code === 39 && data.state === "down") { // right arrow
-			}
-			else if (data.code === 40 && data.state === "down") { // down arrow
-			}
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.identifier){
+		} else if (eventType === "widgetEvent") {
+			switch (data.identifier){
 				case "DuplicateNote":
 					this.requestForClone = true;
 					this.cloneData = this.text;

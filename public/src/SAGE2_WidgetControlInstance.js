@@ -52,7 +52,7 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 	/*Compute Angle Range*/
 	var startAngle = 180;
 	var endAngle = -180;
-	//var sequenceMaximum = 32;
+	// var sequenceMaximum = 32;
 	var innerSequence = 12;
 	var outerSequence = 20;
 
@@ -185,7 +185,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		id: this.controlSpec.slider.id + 'knob',
 		rx: (knobWidth / 16) + "px",
 		ry: (knobHeight / 8) + "px",
-		//style:"shape-rendering:crispEdges;",
+		// style:"shape-rendering:crispEdges;",
 		fill: "rgba(185,206,235,1.0)",
 		strokeWidth: 1,
 		stroke: "rgba(230,230,230,1.0)"
@@ -200,7 +200,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	});
 
 	var slider = this.controlSVG.group(sliderArea, sliderLine, sliderKnob, sliderKnobLabel);
-	if (sliderLabel !== null){
+	if (sliderLabel !== null) {
 		slider.add(sliderLabel);
 	}
 	sliderKnob.data("appId", this.controlSpec.slider.appId);
@@ -209,9 +209,6 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	slider.data("appId", this.controlSpec.slider.appId);
 	slider.data("instanceID", this.instanceID);
 	slider.data("label", this.controlSpec.slider.label);
-	//slider.data('call', this.controlSpec.slider.call);
-	//slider.data('lockCall', this.controlSpec.slider.lockCall);
-	//slider.data('updateCall', this.controlSpec.slider.updateCall);
 	slider.data('appProperty', this.controlSpec.slider.appProperty);
 	var app = getPropertyHandle(applications[this.controlSpec.slider.appId], this.controlSpec.slider.appProperty);
 	var begin = this.controlSpec.slider.begin;
@@ -279,7 +276,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	var buttonBack;
 	var type = buttonSpec.type;
 	var buttonShape = type.shape;
-	if (buttonShape === null || buttonShape === undefined){
+	if (buttonShape === null || buttonShape === undefined) {
 		buttonShape = "circle";
 	}
 	buttonBack = createButtonShape(this.controlSVG, cx, cy, buttonRad, buttonShape);
@@ -293,7 +290,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 	var button = this.controlSVG.group(buttonBack);
 	var instanceID = this.instanceID;
 
-	function buttonCoverReady(cover, use){
+	function buttonCoverReady(cover, use) {
 		button.add(cover);
 		cover.data("animationInfo", type);
 		cover.data("appId", buttonSpec.appId);
@@ -330,8 +327,8 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			});
 			buttonCoverReady(gs);
 		});
-		if (type.img2 !== undefined && type.img2 !== null){
-			Snap.load(type.img2, function(frag){
+		if (type.img2 !== undefined && type.img2 !== null) {
+			Snap.load(type.img2, function(frag) {
 				var gs = frag.select("svg");
 				gs.attr({
 					id: "cover2",
@@ -344,8 +341,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 				buttonCoverReady(gs);
 			});
 		}
-	}
-	else {
+	} else {
 		type.from = "M " + cx + " " + cy  + " " + type.from;
 		type.to = "M " + cx + " " + cy  + " " + type.to;
 		type.toFill = type.toFill || null;
@@ -374,12 +370,12 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 
 	if (type.state !== null && type.state !== undefined) {
 		Object.observe(type, function(changes) {
-			for(var i = 0; i < changes.length; i++) {
+			for (var i = 0; i < changes.length; i++) {
 				if (changes[i].name === "state") {
-					if (type.img2 === null || type.img2 === undefined){
+					if (type.img2 === null || type.img2 === undefined) {
 						var path = (type.state === 0) ? type.from : type.to;
 						var fill = (type.state === 0) ? type.fill : type.toFill;
-						buttonCover.animate({"path": path, "fill": fill}, type.delay, mina.bounce);
+						buttonCover.animate({path: path, fill: fill}, type.delay, mina.bounce);
 					}
 				}
 			}
@@ -464,7 +460,7 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	textInput.data("blinkCallback", blink);
 
 	if (this.controlSpec.textInput.value) {
-		for(var i = 0; i < this.controlSpec.textInput.value.length; i++) {
+		for (var i = 0; i < this.controlSpec.textInput.value.length; i++) {
 			insertTextIntoTextInputWidget(textInput, this.controlSpec.textInput.value.charCodeAt(i), true);
 		}
 	}

@@ -121,7 +121,7 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 */
 InteractableManager.prototype.addComplexGeometry = function(id, layerId, shapeData, zIndex, data) {
 	var complexPkg = {};
-	for (var key in shapeData){
+	for (var key in shapeData) {
 		var geometry = shapeData[key].geometry;
 		var type = shapeData[key].type;
 		var visible = shapeData[key].visible;
@@ -134,13 +134,12 @@ InteractableManager.prototype.addComplexGeometry = function(id, layerId, shapeDa
 			zIndex:   zIndex,
 			data:     data
 		};
-		if(type === "circle") {
+		if (type === "circle") {
 			pkg.x1 = geometry.x - geometry.r;
 			pkg.y1 = geometry.y - geometry.r;
 			pkg.x2 = geometry.x + geometry.r;
 			pkg.y2 = geometry.y + geometry.r;
-		}
-		else {
+		} else {
 			pkg.x1 = geometry.x;
 			pkg.y1 = geometry.y;
 			pkg.x2 = geometry.x + geometry.w;
@@ -162,11 +161,10 @@ InteractableManager.prototype.addComplexGeometry = function(id, layerId, shapeDa
 */
 InteractableManager.prototype.removeGeometry = function(id, layerId) {
 	var pkg = this.interactableObjects[layerId][id];
-	if (pkg.hasOwnProperty("layerId")){
+	if (pkg.hasOwnProperty("layerId")) {
 		this.layers[layerId].objects.remove(pkg);
-	}
-	else{
-		for (var key in pkg){
+	} else {
+		for (var key in pkg) {
 			this.layers[layerId].objects.remove(pkg[key]);
 		}
 	}
@@ -215,20 +213,19 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 */
 InteractableManager.prototype.editComplexGeometry = function(id, layerId, shapeData) {
 	var complexPkg = this.interactableObjects[layerId][id];
-	for (var key in complexPkg){
-		if (complexPkg.hasOwnProperty(key)){
+	for (var key in complexPkg) {
+		if (complexPkg.hasOwnProperty(key)) {
 			var pkg = complexPkg[key];
 			this.layers[layerId].objects.remove(pkg);
 			pkg.type = shapeData[key].type;
 			var geometry = shapeData[key].geometry;
 			pkg.geometry = geometry;
-			if(pkg.type === "circle") {
+			if (pkg.type === "circle") {
 				pkg.x1 = geometry.x - geometry.r;
 				pkg.y1 = geometry.y - geometry.r;
 				pkg.x2 = geometry.x + geometry.r;
 				pkg.y2 = geometry.y + geometry.r;
-			}
-			else {
+			} else {
 				pkg.x1 = geometry.x;
 				pkg.y1 = geometry.y;
 				pkg.x2 = geometry.x + geometry.w;
@@ -267,16 +264,14 @@ InteractableManager.prototype.hasObjectWithId = function(id) {
 */
 InteractableManager.prototype.editVisibility = function(id, layerId, visible, partId) {
 	var pkg = this.interactableObjects[layerId][id];
-	if (pkg.hasOwnProperty("visible")){
+	if (pkg.hasOwnProperty("visible")) {
 		pkg.visible = visible;
-	}
-	else{
-		if (partId!==undefined && partId!==null && pkg.hasOwnProperty(partId)){
+	} else {
+		if (partId !== undefined && partId !== null && pkg.hasOwnProperty(partId)) {
 			pkg[partId].visible = visible;
-		}
-		else{
-			for (var key in pkg){
-				if (pkg.hasOwnProperty(key)){
+		} else {
+			for (var key in pkg) {
+				if (pkg.hasOwnProperty(key)) {
 					pkg[key].visible = visible;
 				}
 			}
@@ -318,7 +313,9 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLay
 			for (key in this.interactableObjects[allLayerIds[i]]) {
 				var itemZIndex = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
 				if (itemZIndex > currZIndex) {
-					if (itemZIndex > maxZIndex) maxZIndex = itemZIndex;
+					if (itemZIndex > maxZIndex) {
+						maxZIndex = itemZIndex;
+					}
 					var decreasedIndex = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]) - 1;
 					setZIndexOfObj(this.interactableObjects[allLayerIds[i]][key], decreasedIndex);
 				}
@@ -442,13 +439,12 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 * @param obj {Object} pkg information of the geometric object
 */
 
-function getZIndexOfObj(obj){
-	if (obj.hasOwnProperty("zIndex")){
+function getZIndexOfObj(obj) {
+	if (obj.hasOwnProperty("zIndex")) {
 		return obj.zIndex;
-	}
-	else {
+	} else {
 		var lst = Object.getOwnPropertyNames(obj);
-		if (lst.length>0){
+		if (lst.length > 0) {
 			return obj[lst[0]].zIndex;
 		}
 		return null;
@@ -461,13 +457,12 @@ function getZIndexOfObj(obj){
 * @param zIndex {Integer} determines ordering of the geometries within a given layers
 */
 
-function setZIndexOfObj(obj, zIndex){
-	if (obj.hasOwnProperty("zIndex")){
+function setZIndexOfObj(obj, zIndex) {
+	if (obj.hasOwnProperty("zIndex")) {
 		obj.zIndex = zIndex;
-	}
-	else {
-		for(var key in obj){
-			if (obj.hasOwnProperty(key)){
+	} else {
+		for (var key in obj) {
+			if (obj.hasOwnProperty(key)) {
 				obj[key].zIndex = zIndex;
 			}
 		}

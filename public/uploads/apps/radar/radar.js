@@ -298,18 +298,17 @@ var radar = SAGE2_App.extend({
 
 
 		this.startup(); // refresh the URLs after the state load
+		// create the widgets
+		console.log("creating controls");
+		this.controls.addButton({type: "next", position: 5, identifier: "Next"});
 
-        // create the widgets
-        console.log("creating controls");
-        this.controls.addButton({type: "next", position: 5, identifier: "Next"});
-
-        for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
-            var loopIdxWithPrefix = "0" + loopIdx;
-            var pos = 3 - loopIdx;
-			if (pos < 1){
+		for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++) {
+			var loopIdxWithPrefix = "0" + loopIdx;
+			var pos = 3 - loopIdx;
+			if (pos < 1) {
 				pos = pos + 12;
 			}
-            this.controls.addButton({label: SAGE2_radarStations[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
+			this.controls.addButton({label: SAGE2_radarStations[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
 		}
 		this.controls.finishedAddingControls(); // Important
 

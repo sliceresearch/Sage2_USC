@@ -170,9 +170,8 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					this.state.muted = true;
 				}
 			}
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.identifier){
+		} else if (eventType === "widgetEvent") {
+			switch (data.identifier) {
 				case "Loop":
 					if (this.state.looped === true) {
 						if (isMaster) {
@@ -220,7 +219,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					this.playPauseBtn.state = 0;
 					break;
 				case "Seek":
-					switch (data.action){
+					switch (data.action) {
 						case "sliderLock":
 							if (this.state.paused === false) {
 								if (isMaster) {

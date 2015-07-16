@@ -159,31 +159,27 @@ SAGE2WidgetControl.prototype.setLayoutOptions = function(layoutOptions) {
 */
 SAGE2WidgetControl.prototype.addButton = function(data) {
 	var type = null;
-	if (this.itemCount <= 30){
+	if (this.itemCount <= 30) {
 		var button = new this.ButtonClass();
 		button.appId = this.id;
-		if (data.identifier !== undefined && data.identifier !== null){
+		if (data.identifier !== undefined && data.identifier !== null) {
 			button.id = "button" + data.identifier;
-		}
-		else{
+		} else {
 			button.id = "button" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
 		}
-		if (data.hasOwnProperty("label") && data.label !== undefined && data.label !== null){
+		if (data.hasOwnProperty("label") && data.label !== undefined && data.label !== null) {
 			type = new this.buttonType.default();
 			type.label = data.label;
-		}
-		else if (data.hasOwnProperty("type") && data.type !== undefined && data.type !== null){
-			if (typeof data.type === "string" ){
-				var typeVar = this.buttonType[data.type];
-				if (typeof typeVar === "function"){
-					type =  new typeVar();
+		} else if (data.hasOwnProperty("type") && data.type !== undefined && data.type !== null) {
+			if (typeof data.type === "string") {
+				var TypeVar = this.buttonType[data.type];
+				if (typeof TypeVar === "function") {
+					type =  new TypeVar();
 				}
-			}
-			else if (typeof data.type === "function"){
+			} else if (typeof data.type === "function") {
 				type = new data.type();
-			}
-			else if (typeof data.type === "object"){
-				var typeFunc = function (){
+			} else if (typeof data.type === "object") {
+				var TypeFunc = function() {
 					this.state = data.type.state;
 					this.from = data.type.from;
 					this.to =  data.type.to;
@@ -196,24 +192,23 @@ SAGE2WidgetControl.prototype.addButton = function(data) {
 					this.textual = data.type.textual;
 					this.animation = data.type.animation;
 				};
-				type = new typeFunc();
+				type = new TypeFunc();
 			}
 		}
 
-		if (type === null || type === undefined){
+		if (type === null || type === undefined) {
 			type = new this.buttonType.default();
 		}
-		if (data.initialState !== null && data.initialState !== undefined){
+		if (data.initialState !== null && data.initialState !== undefined) {
 			type.state = data.initialState % 2;  // Making sure initial state is 0 or 1
 		}
 		button.type = type;
 		button.width = 1.5 * ui.widgetControlSize;
-		if (data.hasOwnProperty("position") && data.position !== undefined && data.position !== null){
+		if (data.hasOwnProperty("position") && data.position !== undefined && data.position !== null) {
 			this.buttonSequence[data.position.toString()] = button;
-		}
-		else{
-			for (var pos = 1; pos <= 30; pos++){
-				if (this.buttonSequence.hasOwnProperty(pos.toString()) === false){
+		} else {
+			for (var pos = 1; pos <= 30; pos++) {
+				if (this.buttonSequence.hasOwnProperty(pos.toString()) === false) {
 					this.buttonSequence[pos] = button;
 					break;
 				}
@@ -243,10 +238,9 @@ SAGE2WidgetControl.prototype.addTextInput = function(data) {
 	if (this.hasTextInput === false && this.itemCount <= 30) {
 		this.hasTextInput = true;
 		var textInput = new this.TextInputClass();
-		if (data.identifier !== undefined && data.identifier !== null){
+		if (data.identifier !== undefined && data.identifier !== null) {
 			textInput.id = "textInput" + data.identifier;
-		}
-		else{
+		} else {
 			textInput.id = "textInput" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
 		}
 		textInput.appId = this.id;
@@ -273,20 +267,18 @@ SAGE2WidgetControl.prototype.addSlider = function(data) {
 	// begin,parts,end,action, property, appHandle
 	if (this.hasSlider === false && this.itemCount <= 30) {
 		var slider = new this.SliderClass();
-		if (data.identifier !== undefined && data.identifier !== null){
+		if (data.identifier !== undefined && data.identifier !== null) {
 			slider.id = "slider" + data.identifier;
-		}
-		else{
+		} else {
 			slider.id = "slider" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
 		}
 		slider.appId = this.id;
 		slider.begin = data.minimum;
 		slider.end = data.maximum;
-		if(data.increments){
+		if (data.increments) {
 			slider.increments = data.increments || 1;
 			slider.steps = (slider.end - slider.begin) / slider.increments;
-		}
-		else{
+		} else {
 			slider.steps = data.steps || 100;
 			slider.increments = (slider.end - slider.begin) / slider.steps;
 		}
@@ -370,7 +362,7 @@ SAGE2WidgetControl.prototype.computeSize = function() {
 */
 
 
-SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
+SAGE2WidgetControl.prototype.addDefaultButtons = function(data) {
 	this.addButton({type: "closeApp", identifier: "CloseApp", position: data.sequence.closeApp});
 	this.addButton({type: "closeBar", identifier: "CloseWidget", position: data.sequence.closeBar});
 };

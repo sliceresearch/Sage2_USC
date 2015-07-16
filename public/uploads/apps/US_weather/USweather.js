@@ -608,9 +608,9 @@ var USweather = SAGE2_App.extend({
 		this.draw_d3(data.date);
 
 		this.controls.addButton({label: "Temp", position: 4, identifier: "Temperature"});
-        this.controls.addButton({label: "Icon", position: 2, identifier: "Icon"});
-        this.controls.addButton({label: "Color", position: 12, identifier: "Color"});
-        this.controls.finishedAddingControls(); // Important
+		this.controls.addButton({label: "Icon", position: 2, identifier: "Icon"});
+		this.controls.addButton({label: "Color", position: 12, identifier: "Color"});
+		this.controls.finishedAddingControls(); // Important
 	},
 
 	load: function(date) {

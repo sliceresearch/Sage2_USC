@@ -142,11 +142,11 @@ var leaflet = SAGE2_App.extend({
 				.attr("viewBox", box);
 		});
 
-        this.controls.addButton({label: "home", position: 6, identifier: "Home"});
-        this.controls.addButton({label: "view", position: 4, identifier: "View"});
-        this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
-        this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
-        this.controls.finishedAddingControls(); // Important
+		this.controls.addButton({label: "home", position: 6, identifier: "Home"});
+		this.controls.addButton({label: "view", position: 4, identifier: "View"});
+		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
+		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
+		this.controls.finishedAddingControls(); // Important
 	},
 
 	resetMap: function() {
@@ -382,9 +382,8 @@ var leaflet = SAGE2_App.extend({
 			// m key down
 			// change map type
 			this.changeMap();
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.identifier){
+		} else if (eventType === "widgetEvent") {
+			switch (data.identifier) {
 				case "Home":
 					this.resetMap();
 					break;

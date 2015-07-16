@@ -252,12 +252,10 @@ var clock_svg = SAGE2_App.extend({
 				if (data.character === " ") {
 					this.flip(date);
 				}
-			}
-			else if (eventType === "widgetEvent"){
-				if (data.identifier === "Flip"){
+			} else if (eventType === "widgetEvent") {
+				if (data.identifier === "Flip") {
 					this.flip(date);
-				}
-				else{
+				} else {
 					console.log("No handler for:", data.identifier);
 				}
 			}
