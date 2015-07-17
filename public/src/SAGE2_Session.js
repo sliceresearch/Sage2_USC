@@ -18,6 +18,9 @@
  * @class SAGE2_Session
  */
 
+
+var pageRedirect  = null;
+
 /**
  * Entry point of the application
  *
@@ -31,7 +34,6 @@ function SAGE2_init() {
 
 	var foundPassword = false;
 	var foundHash     = false;
-	var pageRedirect  = null;
 	var sessionParam  = null;
 	var hashParam     = null;
 
@@ -72,7 +74,7 @@ function SAGE2_init() {
 function keyDownDKHandler(event) {
 	if (event.target === document.getElementById('sessionValue') &&
 		(event.keyCode === 13 || event.which === 13)) {
-		processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
+		processAndRedirect(document.getElementById('sessionValue').value, pageRedirect, null);
 	}
 }
 
@@ -85,5 +87,5 @@ function processAndRedirect(session, location, hash) {
 }
 
 function buttonSubmit() {
-	processAndRedirect(document.getElementById('sessionValue').value, "index.html", null);
+	processAndRedirect(document.getElementById('sessionValue').value, pageRedirect, null);
 }
