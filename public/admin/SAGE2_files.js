@@ -409,13 +409,13 @@ function setupListeners(wsio) {
 			$$("search_button").attachEvent("onItemClick", function() {
 				var filter = $$("search_text").getValue();
 				all_table.filter(function(obj) {
-					return obj.name.toString().indexOf(filter) !== -1;
+					return obj.name.search(new RegExp(filter, "i")) !== -1;
 				});
 			});
 			$$("search_text").attachEvent("onTimedKeyPress", function() {
 				var filter = $$("search_text").getValue();
 				all_table.filter(function(obj) {
-					return obj.name.toString().indexOf(filter) !== -1;
+					return obj.name.search(new RegExp(filter, "i")) !== -1;
 				});
 			});
 
