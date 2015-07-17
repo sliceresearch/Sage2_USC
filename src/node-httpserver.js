@@ -167,7 +167,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 				// If no match, go back to password page
 				if (!sessionMatch) {
-					this.redirect(res, "session.html");
+					this.redirect(res, "session.html?page=" + req.url.substring(1));
 				}
 			}
 		}
