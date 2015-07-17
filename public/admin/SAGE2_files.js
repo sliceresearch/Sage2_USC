@@ -91,6 +91,7 @@ function fileSizeIEC(a, b, c, d, e) {
  * @param wsio {Object} websocket
  */
 function setupListeners(wsio) {
+	var sage2Version;
 
 	// Got a reply from the server
 	wsio.on('initialize', function() {
@@ -134,12 +135,40 @@ function setupListeners(wsio) {
 				}
 			];
 
+			var menu_data = [ {id: "file_menu", value: "File", submenu: [
+					{id: "upload_menu", value: "Upload"},
+					{id: "folder_menu", value: "Create folder"}
+				]},
+				{ id: "edit_menu", value: "Edit", submenu: [
+					{id: "delete_menu", value: "Delete"},
+					{id: "download_menu", value: "Download"},
+					{id: "duplicate_menu", value: "Duplicate"} ]},
+				{ id: "mainhelp_menu", value: "Help", submenu: [
+					{id: "help_menu", value: "Help"},
+					{id: "about_menu", value: "About"}
+				] }
+			];
+			var mymenu = {
+				id: "mymenu",
+				view: "menu",
+				openAction: "click",
+				data: menu_data
+			};
+			var mytoolbar = {
+				id: "mytoolbar",
+				view: "toolbar", paddingY: 0,  borderless: true, elements: [
+					{ id: "search_text", view: "text", width: 250 },
+					{ id: "search_button", view: "button", label: "Search", width: 100 }
+				]
+			};
+
 			var main = webix.ui({
 				container: "testA",
 				id: "layout",
 				rows: [
-					{template: "SAGE2 content browser", height: 55 },
-					{cols: [
+					{ view: "toolbar", cols: [ mymenu, mytoolbar ]
+					},
+					{ cols: [
 						{
 							id: "tree1",
 							view: "tree",
@@ -357,9 +386,45 @@ function setupListeners(wsio) {
 			all_table.refresh();
 			multiview1.setValue("all_table");
 
+
+			$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
+				console.log('Menu event', evt);
+				if (evt === "about_menu") {
+					var versionText = "SAGE2 Version:<br>";
+					if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
+						versionText += "<b>v" + sage2Version.base + "-" + sage2Version.branch + "-" +
+							sage2Version.commit + "</b> " + sage2Version.date;
+					} else {
+						versionText += "<b>v" + sage2Version.base + "</b>";
+					}
+					webix.alert({
+						type: "alert-warning",
+						title: "SAGE2 (tm)",
+						ok: "OK",
+						text: versionText
+					});
+				}
+			});
+
+			$$("search_button").attachEvent("onItemClick", function() {
+				var filter = $$("search_text").getValue();
+				all_table.filter(function(obj) {
+					return obj.name.toString().indexOf(filter) !== -1;
+				});
+			});
+			$$("search_text").attachEvent("onTimedKeyPress", function() {
+				var filter = $$("search_text").getValue();
+				all_table.filter(function(obj) {
+					return obj.name.toString().indexOf(filter) !== -1;
+				});
+			});
+
 			// User selection
 			all_table.attachEvent("onSelectChange", function(evt) {
 				var elt = all_table.getSelectedId();
+				if (!elt || !elt.id) {
+					return;
+				}
 				var metadata = $$("metadata");
 
 				// Rebuild the metadata panel
@@ -375,9 +440,10 @@ function setupListeners(wsio) {
 						value: allFiles[elt.id].exif.MIMEType || '-'});
 
 				// Add an EXIF panel for pictures
+				var info;
 				if (allFiles[elt.id].exif.MIMEType.indexOf('image') >= 0) {
 					metadata.config.elements.push({label: "EXIF", type: "label"});
-					var info;
+
 					info = allFiles[elt.id].exif.Make || '';
 					metadata.config.elements.push({label: "Make", value: info});
 					info = allFiles[elt.id].exif.Model || '';
@@ -402,7 +468,56 @@ function setupListeners(wsio) {
 					metadata.config.elements.push({label: "Color space", value: info});
 					info = allFiles[elt.id].exif.WhiteBalance || '';
 					metadata.config.elements.push({label: "White balance", value: info});
+
+				} else if (allFiles[elt.id].exif.MIMEType.indexOf('video') >= 0) {
+					metadata.config.elements.push({label: "Video", type: "label"});
+
+					info = allFiles[elt.id].exif.Duration || '';
+					metadata.config.elements.push({label: "Duration", value: info});
+					info = allFiles[elt.id].exif.ImageSize || '';
+					metadata.config.elements.push({label: "ImageSize", value: info});
+					info = allFiles[elt.id].exif.VideoFrameRate || '';
+					metadata.config.elements.push({label: "Frame rate", value: info});
+					info = allFiles[elt.id].exif.AvgBitrate || '';
+					metadata.config.elements.push({label: "AvgBitrate", value: info});
+					info = allFiles[elt.id].exif.MajorBrand || '';
+					metadata.config.elements.push({label: "Type", value: info});
+					info = allFiles[elt.id].exif.CompressorName || '';
+					metadata.config.elements.push({label: "Video codec", value: info});
+					info = allFiles[elt.id].exif.AudioFormat || '';
+					metadata.config.elements.push({label: "Audio codec", value: info});
+					info = allFiles[elt.id].exif.AudioChannels || '';
+					metadata.config.elements.push({label: "Audio channels", value: info});
+					info = allFiles[elt.id].exif.AudioBitsPerSample || '';
+					metadata.config.elements.push({label: "Audio bps", value: info});
+					info = allFiles[elt.id].exif.AudioSampleRate || '';
+					metadata.config.elements.push({label: "Audio rate", value: info});
+					info = allFiles[elt.id].exif.Encoder || '';
+					metadata.config.elements.push({label: "Encoder", value: info});
+
+				} else if (allFiles[elt.id].exif.MIMEType.indexOf('application/pdf') >= 0) {
+					metadata.config.elements.push({label: "PDF", type: "label"});
+
+					info = allFiles[elt.id].exif.Title || '';
+					metadata.config.elements.push({label: "Title", value: info});
+					info = allFiles[elt.id].exif.PageCount || '';
+					metadata.config.elements.push({label: "Pages", value: info});
+					info = allFiles[elt.id].exif.Description || '';
+					metadata.config.elements.push({label: "Description", value: info});
+					info = allFiles[elt.id].exif.Creator || '';
+					metadata.config.elements.push({label: "Creator", value: info});
+					info = allFiles[elt.id].exif.Keywords || '';
+					metadata.config.elements.push({label: "Keywords", value: info});
+					info = allFiles[elt.id].exif.PDFVersion || '';
+					metadata.config.elements.push({label: "Version", value: info});
+					info = allFiles[elt.id].exif.CreatorTool || '';
+					metadata.config.elements.push({label: "CreatorTool", value: info});
+					info = allFiles[elt.id].exif.Producer || '';
+					metadata.config.elements.push({label: "Producer", value: info});
+					info = allFiles[elt.id].exif.Linearized || '';
+					metadata.config.elements.push({label: "Linearized", value: info});
 				}
+
 				// Done updating metadata
 				metadata.refresh();
 
@@ -490,7 +605,7 @@ function setupListeners(wsio) {
 			webix.ui({
 				view: "contextmenu",
 				id: "cmenu",
-				data: ["Add", "Rename", "Delete", { $template: "Separator" }, "Info"],
+				data: ["Add", "Rename", { $template: "Separator" }, "Delete"],
 				on: {
 					onItemClick: function(id) {
 						var context = this.getContext();
@@ -569,6 +684,7 @@ function setupListeners(wsio) {
 
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
+		sage2Version = data;
 		console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
 	});
 
