@@ -35,7 +35,7 @@ var os            = require('os');               // operating system access
 var path          = require('path');             // file path management
 var readline      = require('readline');         // to build an evaluation loop
 var url           = require('url');              // parses urls
-var util          = require('util');             // node util
+// var util          = require('util');             // node util
 
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
@@ -272,15 +272,20 @@ function initializeSage2Server() {
 		}
 	}
 
-	// Monitoring some folders (test)
-	sageutils.monitorFolders([
-		path.join(uploadsDirectory, "images"),
-		path.join(uploadsDirectory, "pdfs"),
-		path.join(uploadsDirectory, "videos")],
+	// Monitoring some folders
+	var listOfFolders = [];
+	for (var lf in mediaFolders) {
+		listOfFolders.push(mediaFolders[lf].path);
+	}
+	sageutils.monitorFolders(listOfFolders,
 		function(change) {
 			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+
+				assets.refresh(this.root, function() {
+					broadcast('storedFileList', getSavedFilesList());
+				});
 			}
 			if (change.modifiedFiles.length > 0) {
 				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
@@ -2035,26 +2040,29 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
+	assets.deleteAsset(data.filename);
+
 	if (data.application === "load_session") {
 		// if it's a session
 		deleteSession(data.filename);
-	} else if (data.application === 'custom_app') {
-		// an app
-		// NYI
-		return;
-	} else if (data.application === 'image_viewer') {
-		// an image
-		assets.deleteImage(data.filename);
-	} else if (data.application === 'movie_player') {
-		// a movie
-		assets.deleteVideo(data.filename);
-	} else if (data.application === 'pdf_viewer') {
-		// an pdf
-		assets.deletePDF(data.filename);
-	} else {
-		// I dont know
-		return;
 	}
+	// } else if (data.application === 'custom_app') {
+	// 	// an app
+	// 	// NYI
+	// 	return;
+	// } else if (data.application === 'image_viewer') {
+	// 	// an image
+	// 	assets.deleteImage(data.filename);
+	// } else if (data.application === 'movie_player') {
+	// 	// a movie
+	// 	assets.deleteVideo(data.filename);
+	// } else if (data.application === 'pdf_viewer') {
+	// 	// an pdf
+	// 	assets.deletePDF(data.filename);
+	// } else {
+	// 	// I dont know
+	// 	return;
+	// }
 }
 
 
@@ -3231,17 +3239,8 @@ function uploadForm(req, res) {
 	form.type          = 'multipart';
 	form.multiples     = true;
 
-	// var lastper = -1;
-	// form.on('progress', function(bytesReceived, bytesExpected) {
-	// 	var per = parseInt(100.0 * bytesReceived/ bytesExpected);
-	// 	if ((per % 10)===0 && lastper!==per) {
-	// 		console.log('Form> %d%', per);
-	// 		lastper = per;
-	// 	}
-	// });
-
 	form.on('fileBegin', function(name, file) {
-		console.log('Form> ', name, file.name, file.type);
+		// console.log('Form>	begin ', name, file.name, file.type);
 	});
 
 	form.on('field', function(field, value) {
@@ -3260,9 +3259,10 @@ function uploadForm(req, res) {
 			res.write(err + "\n\n");
 			res.end();
 		}
-		res.writeHead(200, {'content-type': 'text/plain'});
-		res.write('received upload:\n\n');
-		res.end(util.inspect({fields: fields, files: files}));
+		res.writeHead(200, {'Content-Type': 'application/json'});
+		// For webix uploader: status: server
+		res.end(JSON.stringify({status: 'server',
+			fields: fields, files: files}));
 	});
 
 	form.on('end', function() {
