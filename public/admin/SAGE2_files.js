@@ -94,10 +94,12 @@ function setupListeners(wsio) {
 	var sage2Version;
 	var allFiles = {};
 	var all_table, tree;
+	var uniqueID;
 
 	// Got a reply from the server
-	wsio.on('initialize', function() {
-		console.log('initialize');
+	wsio.on('initialize', function(data) {
+		uniqueID = data.UID;
+		console.log('initialize', uniqueID);
 
 		wsio.emit('requestStoredFiles');
 		wsio.emit('requestAvailableApplications');
@@ -594,11 +596,21 @@ function setupListeners(wsio) {
 								tbo.push(dItems[i].id);
 							}
 						}
+
 						tbo.map(function(tid) {
-							wsio.emit('loadFileFromServer',
-									{application: "image_viewer", // ???
-									filename: tid,
-									user: null});
+							var appType = getApplicationFromId(tid);
+							// Opening an app
+							if (appType === "application/custom") {
+								wsio.emit('loadApplication',
+										{application: tid,
+										user: uniqueID});
+							} else {
+								// Opening a file
+								wsio.emit('loadFileFromServer',
+										{application: appType,
+										filename: tid,
+										user: uniqueID});
+							}
 						});
 
 					} else if (id === "Delete") {
@@ -656,8 +668,10 @@ function setupListeners(wsio) {
 
 	// Server sends the application list
 	wsio.on('availableApplications', function(data) {
+		console.log('Apps', data.length);
 		var i, f, mm;
-		for (i = 0, f; f = data[i]; i++) { // eslint-disable-line
+		for (i = 0; i < data.length; i++) {
+			f = data[i];
 			allFiles[f.id] = f;
 
 			mm = moment();
@@ -671,11 +685,29 @@ function setupListeners(wsio) {
 				type: "APP",
 				size: fileSizeIEC(f.exif.FileSize)
 			});
-			i++;
 		}
 		all_table.refresh();
 
 	});
+
+	function getApplicationFromId(id) {
+		// default answer
+		var response = "application/custom";
+		// Lookup the asset
+		var elt = allFiles[id];
+		// if found
+		if (elt) {
+			if (elt.exif.MIMEType.indexOf('image') >= 0) {
+				response = "image_viewer";
+			} else if (elt.exif.MIMEType.indexOf('pdf') >= 0) {
+				response = "pdf_viewer";
+			} else if (elt.exif.MIMEType.indexOf('video') >= 0) {
+				response = "movie_player";
+			}
+		}
+		// send the result
+		return response;
+	}
 
 	function sortByDate(a, b) {
 		// fileds are 'moment' objects
@@ -753,13 +785,16 @@ function setupListeners(wsio) {
 		allFiles = {};
 		all_table.clearAll();
 
-		for (i = 0, f; f = data.images[i]; i++) { // eslint-disable-line
+		for (i = 0; i < data.images.length; i++) {
+			f = data.images[i];
 			allFiles[f.id] = f;
 		}
-		for (i = 0, f; f = data.videos[i]; i++) { // eslint-disable-line
+		for (i = 0; i < data.videos.length; i++) {
+			f = data.videos[i];
 			allFiles[f.id] = f;
 		}
-		for (i = 0, f; f = data.pdfs[i]; i++) { // eslint-disable-line
+		for (i = 0; i < data.pdfs.length; i++) {
+			f = data.pdfs[i];
 			allFiles[f.id] = f;
 		}
 
