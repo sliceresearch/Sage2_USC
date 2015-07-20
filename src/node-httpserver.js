@@ -246,6 +246,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
+			return;
 		}
 	} else if (req.method === "PUT") {
 		// Need some authentication / security here
