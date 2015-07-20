@@ -399,6 +399,7 @@ var addFile = function(filename, exif, callback) {
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		}
 	}
+	saveAssets();
 };
 
 var deletePDF = function(filename) {
@@ -410,6 +411,22 @@ var deletePDF = function(filename) {
 		console.log("Server> successfully deleted file:", filename);
 		// Delete the metadata
 		delete AllAssets.list[filepath];
+		saveAssets();
+	});
+};
+
+
+var deleteAsset = function(filename) {
+	var filepath = path.resolve(filename);
+	fs.unlink(filepath, function(err) {
+		if (err) {
+			console.log("Server> error removing file:", filename, err);
+		} else {
+			console.log("Server> successfully deleted file:", filename);
+			// Delete the metadata
+			delete AllAssets.list[filepath];
+			saveAssets();
+		}
 	});
 };
 
@@ -422,8 +439,8 @@ var deleteImage = function(filename) {
 		console.log("Server> successfully deleted file:", filename);
 		// Delete the metadata
 		delete AllAssets.list[filepath];
-	}
-);
+		saveAssets();
+	});
 };
 
 var deleteVideo = function(filename) {
@@ -435,6 +452,7 @@ var deleteVideo = function(filename) {
 		console.log("Server> successfully deleted file:", filename);
 		// Delete the metadata
 		delete AllAssets.list[filepath];
+		saveAssets();
 	}
 );
 };
@@ -643,6 +661,85 @@ var listApps = function() {
 	return result;
 };
 
+var refresh = function(root, callback) {
+	var thelist = [];
+	var uploadedImages = fs.readdirSync(path.join(root, "images"));
+	var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
+	var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
+	var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
+	var i;
+	var excludes = [ '.DS_Store', 'Thumbs.db' ];
+	var item;
+	// Start with the apps so we can register filetypes
+	for (i = 0; i < uploadedApps.length; i++) {
+		var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
+		if (fs.lstatSync(applicationDir).isDirectory()) {
+			item = applicationDir;
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+
+	for (i = 0; i < uploadedImages.length; i++) {
+		if (excludes.indexOf(uploadedImages[i]) === -1) {
+			item = path.resolve(root, "images", uploadedImages[i]);
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+	for (i = 0; i < uploadedVideos.length; i++) {
+		if (excludes.indexOf(uploadedVideos[i]) === -1) {
+			item = path.resolve(root, "videos", uploadedVideos[i]);
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+	for (i = 0; i < uploadedPdfs.length; i++) {
+		if (excludes.indexOf(uploadedPdfs[i]) === -1) {
+			item = path.resolve(root, "pdfs", uploadedPdfs[i]);
+			if (item in AllAssets.list) {
+				AllAssets.list[item].Valid = true;
+			} else {
+				thelist.push(item);
+			}
+		}
+	}
+
+	// delete the elements which not there anymore
+	for (item in AllAssets.list) {
+		if (AllAssets.list[item].Valid === false) {
+			console.log(sageutils.header("Assets") + "Removing old item", item);
+			delete AllAssets.list[item];
+		} else {
+			// Just remove the Valid flag
+			delete AllAssets.list[item].Valid;
+		}
+	}
+
+	if (thelist.length > 0) {
+		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
+	}
+	exifAsync(thelist, function(err) {
+		if (err) {
+			console.log(sageutils.header("EXIF") + "Error:", err);
+		} else {
+			console.log(sageutils.header("EXIF") + "Done");
+			if (callback) {
+				callback();
+			}
+		}
+	});
+};
+
 var initialize = function(root, relativePath) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
@@ -697,79 +794,7 @@ var initialize = function(root, relativePath) {
 			AllAssets.rel  = relativePath;
 		}
 
-		var thelist = [];
-		var uploadedImages = fs.readdirSync(path.join(root, "images"));
-		var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
-		var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
-		var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
-		var i;
-		var excludes = [ '.DS_Store', 'Thumbs.db' ];
-		var item;
-		// Start with the apps so we can register filetypes
-		for (i = 0; i < uploadedApps.length; i++) {
-			var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
-			if (fs.lstatSync(applicationDir).isDirectory()) {
-				item = applicationDir;
-				if (item in AllAssets.list) {
-					AllAssets.list[item].Valid = true;
-				} else {
-					thelist.push(item);
-				}
-			}
-		}
-
-		for (i = 0; i < uploadedImages.length; i++) {
-			if (excludes.indexOf(uploadedImages[i]) === -1) {
-				item = path.resolve(root, "images", uploadedImages[i]);
-				if (item in AllAssets.list) {
-					AllAssets.list[item].Valid = true;
-				} else {
-					thelist.push(item);
-				}
-			}
-		}
-		for (i = 0; i < uploadedVideos.length; i++) {
-			if (excludes.indexOf(uploadedVideos[i]) === -1) {
-				item = path.resolve(root, "videos", uploadedVideos[i]);
-				if (item in AllAssets.list) {
-					AllAssets.list[item].Valid = true;
-				} else {
-					thelist.push(item);
-				}
-			}
-		}
-		for (i = 0; i < uploadedPdfs.length; i++) {
-			if (excludes.indexOf(uploadedPdfs[i]) === -1) {
-				item = path.resolve(root, "pdfs", uploadedPdfs[i]);
-				if (item in AllAssets.list) {
-					AllAssets.list[item].Valid = true;
-				} else {
-					thelist.push(item);
-				}
-			}
-		}
-
-		// delete the elements which not there anymore
-		for (item in AllAssets.list) {
-			if (AllAssets.list[item].Valid === false) {
-				console.log(sageutils.header("Assets") + "Removing old item", item);
-				delete AllAssets.list[item];
-			} else {
-				// Just remove the Valid flag
-				delete AllAssets.list[item].Valid;
-			}
-		}
-
-		if (thelist.length > 0) {
-			console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
-		}
-		exifAsync(thelist, function(err) {
-			if (err) {
-				console.log(sageutils.header("EXIF") + "Error:", err);
-			} else {
-				console.log(sageutils.header("EXIF") + "Done");
-			}
-		});
+		refresh(root);
 	}
 };
 
@@ -910,6 +935,7 @@ var regenerateAssets = function() {
 
 
 exports.initialize     = initialize;
+exports.refresh        = refresh;
 exports.addAssetFolder = addAssetFolder;
 
 exports.listAssets = listAssets;
@@ -928,6 +954,7 @@ exports.exifAsync   = exifAsync;
 exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
 exports.deletePDF   = deletePDF;
+exports.deleteAsset = deleteAsset;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
