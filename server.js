@@ -286,9 +286,9 @@ function initializeSage2Server() {
 			if (change.addedFiles.length > 0) {
 				console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
-				assets.refresh(this.root, function() {
-					broadcast('storedFileList', getSavedFilesList());
-				});
+				//assets.refresh(this.root, function() {
+					//broadcast('storedFileList', getSavedFilesList());
+				//});
 			}
 			if (change.modifiedFiles.length > 0) {
 				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
