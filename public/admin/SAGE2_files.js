@@ -29,11 +29,11 @@ function SAGE2_init() {
 	// Connect to the server
 	var wsio = new WebsocketIO();
 
-	console.log("Connected to server: ", window.location.origin);
+	console.log("Connected to web server: ", window.location.origin);
 
 	// Callback when socket opens
 	wsio.open(function() {
-		console.log("open websocket");
+		console.log("Open websocket");
 
 		// Setup message callbacks
 		setupListeners(wsio);
@@ -99,10 +99,9 @@ function setupListeners(wsio) {
 	// Got a reply from the server
 	wsio.on('initialize', function(data) {
 		uniqueID = data.UID;
-		console.log('initialize', uniqueID);
+		console.log('Client ID', uniqueID);
 
 		wsio.emit('requestStoredFiles');
-		wsio.emit('requestAvailableApplications');
 	});
 
 	// WEBIX
@@ -110,7 +109,7 @@ function setupListeners(wsio) {
 	webix.ready(function() {
 
 		var data_with_icon = [
-			{id: "root", value: "Assets", icon: "home", open: true, data: [
+			{id: "treeroot", value: "Assets", icon: "home", open: true, data: [
 					{id: "Image", value: "Image", icon: "search", data: []},
 					{id: "Video", value: "Video", icon: "search", data: []},
 					{id: "PDF", value: "PDF", icon: "search", data: []},
@@ -163,13 +162,14 @@ function setupListeners(wsio) {
 						navigation: true,
 						drag: true,
 						minWidth: 120,
-						width: 160,
+						width: 180,
 						data: data_with_icon,
 						onContext: {} // required for context menu
 					},
 					{view: "resizer"},
 					{height: 160, rows: [
-					{type: "header", template: "Drop files below"},
+					{type: "header", id: "drop_header", template: "Drop files below"
+					},
 					{
 						view: "list", id: "uploadlist", type: "uploader",
 						scroll: true
@@ -242,6 +242,11 @@ function setupListeners(wsio) {
 			main.adjust();
 		});
 
+		// Clear the upload list when clicking the header
+		webix.event($$("drop_header").$view, "click", function(e) {
+			$$("uploadlist").clearAll();
+		});
+
 		$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
 			console.log('Menu event', evt);
 			if (evt === "about_menu") {
@@ -260,7 +265,6 @@ function setupListeners(wsio) {
 				});
 			} else if (evt === "refresh_menu") {
 				wsio.emit('requestStoredFiles');
-				wsio.emit('requestAvailableApplications');
 			} else {
 				// dunno
 			}
@@ -280,7 +284,7 @@ function setupListeners(wsio) {
 			}
 		});
 		$$("search_text").attachEvent("onTimedKeyPress", function() {
-			var sel = tree.getSelectedId() || "root";
+			var sel = tree.getSelectedId() || "treeroot";
 			var filter = $$("search_text").getValue();
 			updateSearch(sel);
 			if (filter) {
@@ -296,11 +300,13 @@ function setupListeners(wsio) {
 			view: "datatable",
 			editable: true,
 			columnWidth: 200,
+			resizeColumn: true,
 			animate: false,
 			drag: true,
 			select: "multiselect",
 			navigation: true,
 			columns: [
+				{id: "index", header: "", width: 40, minWidth: 25, sort: "int"},
 				{id: "name", header: "Name", minWidth: 180, sort: "text", fillspace: true},
 				{id: "date", header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
 				{id: "ago",  header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
@@ -308,9 +314,23 @@ function setupListeners(wsio) {
 				{id: "size", header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}}
 			],
 			data: [
-			]
+			],
+			scheme: {
+				// Generate an automatic index
+				$init: function(obj) { obj.index = this.count() + 1; }
+			},
+			on: {
+				// update index after sort or update
+				"data->onStoreUpdated": function() {
+					this.data.each(function(obj, i) {
+						obj.index = i + 1;
+					});
+					return true;
+				}
+			}
 		});
 		all_table = $$("all_table");
+
 
 		// User selection
 		all_table.attachEvent("onSelectChange", function(evt) {
@@ -456,16 +476,24 @@ function setupListeners(wsio) {
 			downloadItem(id.row);
 		});
 
-		all_table.attachEvent("onAfterSort", function(by, dir, func) {
-			// console.log('Sorting done');
-		});
-		// Sort the table by name
-		all_table.sort("name", "asc");
+		// all_table.attachEvent("onAfterSort", function(by, dir, func) {
+		// 	// console.log('Sorting done');
+		// });
 
 		// onItemClick onAfterSelect onBeforeSelect
 		tree.attachEvent("onSelectChange", function(evt) {
-			// console.log('element selected', tree.getSelectedId());
-			// console.log('element selected', evt);
+			var treeSelection = tree.getSelectedItem();
+			// If a media folder is selection
+			if (treeSelection) {
+				if (treeSelection.sage2URL) {
+					all_table.filter(function(obj) {
+						// trying to match the base URL
+						return allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
+					});
+					return;
+				}
+			}
+			// Otherwise, regular search
 			updateSearch(evt[0]);
 		});
 		// tree.attachEvent("onItemClick", function(evt) {
@@ -488,7 +516,8 @@ function setupListeners(wsio) {
 			// for (var i = 0; i < context.source.length; i++) {
 			// 	console.log('onBeforeDrop', context.source[i], context.target);
 			// }
-			return true;
+			// return true;
+			return false;
 		});
 		tree.attachEvent("onAfterDrop", function(context, native_event) {
 			// console.log('onAfterDrop', context.source, context.target);
@@ -552,9 +581,8 @@ function setupListeners(wsio) {
 					d.data.each(function(obj) {
 						// if all good, remove from list
 						if (obj.status === 'server') {
-							var it = d.getItem(obj.id);
+							var it = d.getItemNode(obj.id);
 							it.style.color = "green";
-							// d.remove(obj.id);
 						}
 					});
 				},
@@ -568,7 +596,7 @@ function setupListeners(wsio) {
 		$$("uploadAPI").addDropZone($$("uploadlist").$view);
 
 		tree.closeAll();
-		tree.open("root");
+		tree.open("treeroot");
 
 		webix.ui({
 			view: "contextmenu",
@@ -666,30 +694,6 @@ function setupListeners(wsio) {
 		main.adjust();
 	});
 
-	// Server sends the application list
-	wsio.on('availableApplications', function(data) {
-		console.log('Apps', data.length);
-		var i, f, mm;
-		for (i = 0; i < data.length; i++) {
-			f = data[i];
-			allFiles[f.id] = f;
-
-			mm = moment();
-			f.exif.FileModifyDate = mm;
-			f.exif.FileSize = 0;
-			f.exif.Creator = f.exif.metadata.author;
-			all_table.data.add({id: f.id,
-				name: f.exif.FileName,
-				date: mm.format("YYYY/MM/DD HH:mm:ss"),
-				ago: mm.fromNow(),
-				type: "APP",
-				size: fileSizeIEC(f.exif.FileSize)
-			});
-		}
-		all_table.refresh();
-
-	});
-
 	function getApplicationFromId(id) {
 		// default answer
 		var response = "application/custom";
@@ -771,8 +775,10 @@ function setupListeners(wsio) {
 			all_table.filter(function(obj) {
 				return false;
 			});
-		} else if (searchParam === "root") {
+		} else if (searchParam === "treeroot") {
 			all_table.filter();
+		} else {
+			console.log('Default search on:', searchParam);
 		}
 	}
 
@@ -780,11 +786,11 @@ function setupListeners(wsio) {
 	wsio.on('storedFileList', function(data) {
 		var i, f;
 
-		console.log('Got list of files from server');
-
+		// Clean the main data structures
 		allFiles = {};
 		all_table.clearAll();
 
+		// Add all the files in
 		for (i = 0; i < data.images.length; i++) {
 			f = data.images[i];
 			allFiles[f.id] = f;
@@ -797,33 +803,60 @@ function setupListeners(wsio) {
 			f = data.pdfs[i];
 			allFiles[f.id] = f;
 		}
+		for (i = 0; i < data.applications.length; i++) {
+			f = data.applications[i];
+			allFiles[f.id] = f;
+		}
 
 		var multiview1 = $$("multiview1");
 
 		i = 0;
-		var mm;
+		var mm, createDate;
 		for (var a in allFiles) {
 			f = allFiles[a];
-			mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
-			f.exif.FileModifyDate = mm;
-			all_table.data.add({id: f.id,
-				name: f.exif.FileName,
-				date: mm.format("YYYY/MM/DD HH:mm:ss"),
-				ago: mm.fromNow(),
-				type: f.exif.FileType,
-				size: fileSizeIEC(f.exif.FileSize)
-			});
+			// console.log('URL', f.sage2URL);
+			// if it's an app
+			if (f.exif.MIMEType.indexOf('application/custom') >= 0) {
+				mm = moment();
+				f.exif.FileModifyDate = mm;
+				f.exif.FileSize = 0;
+				f.exif.Creator = f.exif.metadata.author;
+				all_table.data.add({id: f.id,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago: mm.fromNow(),
+					type: "APP",
+					size: fileSizeIEC(f.exif.FileSize)
+				});
+			} else {
+				// Any other asset type
+				// Try to find creation
+				createDate = f.exif.CreateDate ||
+						f.exif.DateTimeOriginal ||
+						f.exif.ModifyDate ||
+						f.exif.FileModifyDate;
+				f.exif.FileModifyDate = createDate;
+				mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				f.exif.FileModifyDate = mm;
+				all_table.data.add({id: f.id,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago: mm.fromNow(),
+					type: f.exif.FileType,
+					size: fileSizeIEC(f.exif.FileSize)
+				});
+			}
 			i++;
 		}
+
 		tree.refresh();
 		all_table.refresh();
 		multiview1.setValue("all_table");
 
 		// Sort the table by name
 		all_table.sort("name", "asc");
-
+		all_table.markSorting("name", "asc");
 	});
-
 
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
@@ -832,8 +865,23 @@ function setupListeners(wsio) {
 	});
 
 	// Server sends the wall configuration
-	wsio.on('setupDisplayConfiguration', function() {
-		console.log('wall configuration');
+	wsio.on('setupDisplayConfiguration', function(data) {
+		console.log('wall configuration received', data);
+		// Add the media folders to the tree
+		var idx = 0;
+		for (var f in data.folders) {
+			var folder = data.folders[f];
+			// Build the tree item
+			//   folder Object {name: "system", path: "public/uploads/",
+			//                  url: "/uploads", upload: false}
+			var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
+					icon: "folder", sage2URL: folder.url, data: []};
+			// Add it at the top
+			tree.data.add(newElement, idx, "treeroot");
+			idx = idx + 1;
+		}
+		// refresh the tree
+		tree.refresh();
 	});
 
 }
