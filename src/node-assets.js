@@ -258,7 +258,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 			}
 			fs.unlink(tmpImg, function(err2) {
 				if (err2) {
-					//throw err2;
+					// throw err2;
 					console.log('Error', err2);
 				}
 			});
