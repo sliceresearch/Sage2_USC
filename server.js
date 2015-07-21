@@ -118,6 +118,7 @@ if (config.folders) {
 		mediaFolders[f.name].upload = sageutils.isTrue(f.upload);
 	});
 }
+
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -137,6 +138,8 @@ for (var folder in mediaFolders) {
 	});
 }
 
+// Add back all the media folders to the configuration structure
+config.folders = mediaFolders;
 
 var publicDirectory  = "public"; // mediaFolders.system.path; // "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
@@ -3039,6 +3042,7 @@ function getSavedFilesList() {
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
 	var savedSessions  = listSessions();
+	var uploadedApps   = getApplications();
 
 	// Sort independently of case
 	uploadedImages.sort(sageutils.compareFilename);
@@ -3046,7 +3050,8 @@ function getSavedFilesList() {
 	uploadedPdfs.sort(sageutils.compareFilename);
 	savedSessions.sort(sageutils.compareFilename);
 
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, sessions: savedSessions};
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
+				sessions: savedSessions, applications: uploadedApps};
 
 	return list;
 }
