@@ -39,24 +39,27 @@ var fsmonitor = require('fsmonitor');         // file system monitoring
  * @type {Number}
  */
 var _NODE_VERSION = 0;
-if ( semver.gte(process.versions.node, '0.10.0') ) {
+if (semver.gte(process.versions.node, '0.10.0')) {
 	_NODE_VERSION = 10;
-	if ( semver.gte(process.versions.node, '0.11.0') )
+	if (semver.gte(process.versions.node, '0.11.0')) {
 		_NODE_VERSION = 11;
-	if ( semver.gte(process.versions.node, '0.12.0') )
+	}
+	if (semver.gte(process.versions.node, '0.12.0')) {
 		_NODE_VERSION = 12;
-	if ( semver.gte(process.versions.node, '1.0.0') )
+	}
+	if (semver.gte(process.versions.node, '1.0.0')) {
 		_NODE_VERSION = 1;
+	}
 } else {
 	throw new Error(" SAGE2>\tOld version of Node.js. Please update");
 }
 
 /**
- * Test if file is exists and readable
+ * Test if file is exists
  *
  * @method fileExists
  * @param filename {String} name of the file to be tested
- * @return {Bool} true if readable
+ * @return {Bool} true if exists
  */
 function fileExists(filename) {
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
@@ -64,8 +67,30 @@ function fileExists(filename) {
 	} else {
 		// Versions 1.x or above
 		try {
-			fs.accessSync(filename, fs.R_OK);
-			return true;
+			// fs.accessSync(filename, fs.R_OK);
+			var res = fs.statSync(filename);
+			return res.isFile();
+		} catch (err) {
+			return false;
+		}
+	}
+}
+
+/**
+ * Test if folder is exists
+ *
+ * @method folderExists
+ * @param directory {String} name of the folder to be tested
+ * @return {Bool} true if exists
+ */
+function folderExists(directory) {
+	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
+		return fs.existsSync(directory);
+	} else {
+		// Versions 1.x or above
+		try {
+			var res = fs.statSync(directory);
+			return res.isDirectory();
 		} catch (err) {
 			return false;
 		}
@@ -105,17 +130,15 @@ function loadCABundle(filename) {
 	var certs_idx   = -1;
 	// Read the file
 	if (fileExists(filename)) {
-		var rawdata = fs.readFileSync(filename, {encoding:'utf8'});
+		var rawdata = fs.readFileSync(filename, {encoding: 'utf8'});
 		var lines   = rawdata.split('\n');
 		lines.forEach(function(line) {
 			if (line === "-----BEGIN CERTIFICATE-----") {
 				certs_idx = certs_idx + 1;
 				certs_array[certs_idx] = line + '\n';
-			}
-			else if (line === "-----END CERTIFICATE-----") {
+			} else if (line === "-----END CERTIFICATE-----") {
 				certs_array[certs_idx] += line;
-			}
-			else  {
+			} else {
 				certs_array[certs_idx] += line + '\n';
 			}
 		});
@@ -151,7 +174,8 @@ function getNodeVersion() {
  * Full version is processed from git information
  *
  * @method getFullVersion
- * @param callback {Function} function to be run when finished, parameter is an object containing base, branch, commit and date fields
+ * @param callback {Function} function to be run when finished, parameter is an object containing base, branch,
+ *        commit and date fields
  */
 function getFullVersion(callback) {
 	var fullVersion  = {base: "", branch: "", commit: "", date: ""};
@@ -162,9 +186,12 @@ function getFullVersion(callback) {
 	var dirroot = path.resolve(__dirname, '..');
 	var cmd1 = "git rev-parse --abbrev-ref HEAD";
 	exec(cmd1, { cwd: dirroot, timeout: 3000}, function(err1, stdout1, stderr1) {
-		if (err1) { callback(fullVersion); return; }
+		if (err1) {
+			callback(fullVersion);
+			return;
+		}
 
-		var branch = stdout1.substring(0, stdout1.length-1);
+		var branch = stdout1.substring(0, stdout1.length - 1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
 		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err2, stdout2, stderr2) {
 			if (err2) { callback(fullVersion); return; }
@@ -174,7 +201,7 @@ function getFullVersion(callback) {
 			var parse  = result.split("|");
 
 			// filling up the object
-			fullVersion.branch = branch; //branch.substring(1, branch.length-1);
+			fullVersion.branch = branch; // branch.substring(1, branch.length-1);
 			fullVersion.commit = parse[0];
 			fullVersion.date   = parse[1].replace(/-/g, "/");
 
@@ -197,10 +224,11 @@ function updateWithGIT(branch, callback) {
 	var cmd1 = "git pull origin " + branch;
 	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
 		// return the messages in the callback paramter
-		if (err)
+		if (err) {
 			callback(stderr, null);
-		else
+		} else {
 			callback(null, stdout);
+		}
 	});
 }
 
@@ -213,8 +241,11 @@ function updateWithGIT(branch, callback) {
  * @return header {String} formatted text
  */
 function header(h) {
-	if (h.length <= 6) return h + ">\t\t";
-	else               return h + ">\t";
+	if (h.length <= 6) {
+		return h + ">\t\t";
+	} else {
+		return h + ">\t";
+	}
 }
 
 
@@ -229,8 +260,11 @@ function header(h) {
 function compareString(a, b) {
 	var nA = a.toLowerCase();
 	var nB = b.toLowerCase();
-	if (nA < nB) return -1;
-	else if(nA > nB) return 1;
+	if (nA < nB) {
+		return -1;
+	} else if (nA > nB) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -245,8 +279,11 @@ function compareString(a, b) {
 function compareFilename(a, b) {
 	var nA = a.exif.FileName.toLowerCase();
 	var nB = b.exif.FileName.toLowerCase();
-	if (nA < nB) return -1;
-	else if(nA > nB) return 1;
+	if (nA < nB) {
+		return -1;
+	} else if (nA > nB) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -262,8 +299,11 @@ function compareFilename(a, b) {
 function compareTitle(a, b) {
 	var nA = a.exif.metadata.title.toLowerCase();
 	var nB = b.exif.metadata.title.toLowerCase();
-	if (nA < nB) return -1;
-	else if(nA > nB) return 1;
+	if (nA < nB) {
+		return -1;
+	} else if (nA > nB) {
+		return 1;
+	}
 	return 0;
 }
 
@@ -284,10 +324,12 @@ function isTrue(value) {
 		case 1:
 		case "1":
 		case "on":
-		case "yes":
+		case "yes": {
 			return true;
-		default:
+		}
+		default: {
 			return false;
+		}
 	}
 }
 
@@ -303,11 +345,14 @@ function checkPackages(inDevelopement) {
 	// check the commonly used NODE_ENV variable (development or production)
 	var indevel  = (process.env.NODE_ENV === 'development') || isTrue(inDevelopement);
 	var command  = "npm outdated --depth 0 --json  --production";
-	if (indevel) command = "npm outdated --depth 0 --json";
+	if (indevel) {
+		command = "npm outdated --depth 0 --json";
+	}
 	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
-		function (error, stdout, stderr) {
-			//if (error) return;
-			if (error) throw new Error("Error running npm");
+		function(error, stdout, stderr) {
+			if (error) {
+				throw new Error("Error running npm");
+			}
 
 			var key;
 			var output = stdout ? JSON.parse(stdout) : {};
@@ -315,9 +360,8 @@ function checkPackages(inDevelopement) {
 				// if not a valid version number
 				if (!semver.valid(output[key].current)) {
 					packages.missing.push(key);
-				}
-				// if the version is strictly lower than requested
-				else if (semver.lt(output[key].current, output[key].wanted)) {
+				} else if (semver.lt(output[key].current, output[key].wanted)) {
+					// if the version is strictly lower than requested
 					packages.outdated.push(key);
 				}
 			}
@@ -325,12 +369,15 @@ function checkPackages(inDevelopement) {
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
 				console.log("");
 				console.log(header("Packages") + "Warning - Packages not up to date");
-				if (packages.missing.length  > 0) console.log(header("Packages") + "  Missing:",  packages.missing);
-				if (packages.outdated.length > 0) console.log(header("Packages") + "  Outdated:", packages.outdated);
+				if (packages.missing.length  > 0) {
+					console.log(header("Packages") + "  Missing:",  packages.missing);
+				}
+				if (packages.outdated.length > 0) {
+					console.log(header("Packages") + "  Outdated:", packages.outdated);
+				}
 				console.log(header("Packages") + "To update, execute: npm run in");
 				console.log("");
-			}
-			else {
+			} else {
 				console.log(header("Packages") + "All packages up to date");
 			}
 		}
@@ -346,10 +393,10 @@ function checkPackages(inDevelopement) {
  */
 function registerSAGE2(config) {
 	request({
-		"rejectUnauthorized": false,
-		"url": 'https://sage.evl.uic.edu/register',
-		"form": config,
-		"method": "POST"},
+		rejectUnauthorized: false,
+		url: 'https://sage.evl.uic.edu/register',
+		form: config,
+		method: "POST"},
 		function(err, response, body) {
 			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
 		}
@@ -365,16 +412,84 @@ function registerSAGE2(config) {
  */
 function deregisterSAGE2(config, callback) {
 	request({
-		"rejectUnauthorized": false,
-		"url": 'https://sage.evl.uic.edu/unregister',
-		"form": config,
-		"method": "POST"},
-		function (err, response, body) {
+		rejectUnauthorized: false,
+		url: 'https://sage.evl.uic.edu/unregister',
+		form: config,
+		method: "POST"},
+		function(err, response, body) {
 			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
-			if (callback) callback();
+			if (callback) {
+				callback();
+			}
 		}
 	);
 }
+
+/**
+ * Return a safe URL string: convert odd characters to HTML representations
+ *
+ * @method encodeReservedURL
+ * @param aUrl {String} URL to be sanitized
+ * @return {String} cleanup version of the URL
+ */
+function encodeReservedURL(aUrl) {
+	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B")
+			.replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D")
+			.replace(/\?/g, "%3F").replace(/\@/g, "%40");
+}
+
+
+/**
+ * Return a home directory on every platform
+ *
+ * @method getHomeDirectory
+ * @return {String} string representing a folder path
+ */
+function getHomeDirectory() {
+	return process.env[ (process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+
+
+/**
+ * Creates recursively a series of folders if needed (synchronous function and throws error)
+ *
+ * @method mkdirParent
+ * @param dirPath {String} path to be created
+ * @return {String} null or directory created
+ */
+function mkdirParent(dirPath) {
+	var made = null;
+	dirPath = path.resolve(dirPath);
+	try {
+		fs.mkdirSync(dirPath);
+		made = dirPath;
+	}
+	catch (err0) {
+		switch (err0.code) {
+			case 'ENOENT' : {
+				made = mkdirParent(path.dirname(dirPath));
+				made = mkdirParent(dirPath);
+				break;
+			}
+			default: {
+				var stat;
+				try {
+					stat = fs.statSync(dirPath);
+				}
+				catch (err1) {
+					throw err0;
+				}
+				if (!stat.isDirectory()) {
+					throw err0;
+				}
+				made = dirPath;
+				break;
+			}
+		}
+	}
+	return made;
+}
+
 
 /**
  * Place a callback on a list of folders to monitor.
@@ -424,21 +539,25 @@ function monitorFolders(folders, callback) {
 //
 
 
-module.exports.nodeVersion     = _NODE_VERSION;
-module.exports.getNodeVersion  = getNodeVersion;
-module.exports.getShortVersion = getShortVersion;
-module.exports.getFullVersion  = getFullVersion;
+module.exports.nodeVersion       = _NODE_VERSION;
+module.exports.getNodeVersion    = getNodeVersion;
+module.exports.getShortVersion   = getShortVersion;
+module.exports.getFullVersion    = getFullVersion;
+module.exports.secureContext     = secureContext;
+module.exports.fileExists        = fileExists;
+module.exports.folderExists      = folderExists;
+module.exports.header            = header;
+module.exports.compareString     = compareString;
+module.exports.compareFilename   = compareFilename;
+module.exports.compareTitle      = compareTitle;
+module.exports.isTrue            = isTrue;
+module.exports.updateWithGIT     = updateWithGIT;
+module.exports.checkPackages     = checkPackages;
+module.exports.registerSAGE2     = registerSAGE2;
+module.exports.deregisterSAGE2   = deregisterSAGE2;
+module.exports.loadCABundle      = loadCABundle;
+module.exports.monitorFolders    = monitorFolders;
+module.exports.getHomeDirectory  = getHomeDirectory;
+module.exports.encodeReservedURL = encodeReservedURL;
+module.exports.mkdirParent       = mkdirParent;
 
-module.exports.secureContext   = secureContext;
-module.exports.fileExists      = fileExists;
-module.exports.header          = header;
-module.exports.compareString   = compareString;
-module.exports.compareFilename = compareFilename;
-module.exports.compareTitle    = compareTitle;
-module.exports.isTrue          = isTrue;
-module.exports.updateWithGIT   = updateWithGIT;
-module.exports.checkPackages   = checkPackages;
-module.exports.registerSAGE2   = registerSAGE2;
-module.exports.deregisterSAGE2 = deregisterSAGE2;
-module.exports.loadCABundle    = loadCABundle;
-module.exports.monitorFolders  = monitorFolders;

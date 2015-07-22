@@ -50,5 +50,21 @@
 			"port": 443,
 			"secure": true
 		}
-	]
+	],
+        // list of extra folders for assets and apps
+        //  sage2 and home directory are default
+        folders: [
+                {
+                        name: "another",
+                        url: "/another",
+                        path: "/Users/luc/Desktop/another/",
+                        upload: true
+                },
+                {
+                        name: "another1",
+                        url: "/another1",
+                        path: "/Users/luc/Desktop/another1/",
+                        upload: false
+                }
+        ]
 }

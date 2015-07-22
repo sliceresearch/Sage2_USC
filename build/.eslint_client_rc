@@ -21,7 +21,7 @@
 	addStyleElementForTitleColor: true, removeStyleElementForTitleColor: true,
 	removeWidgetToAppConnector: true, insertTextIntoTextInputWidget: true,
 	getTextFromTextInputWidget: true, getWidgetControlInstanceById: true,
-	getProperty: true, getWidgetControlInstanceUnderPointer: true,
+	getPropertyHandle: true, getWidgetControlInstanceUnderPointer: true,
 	polarToCartesian: true, createWidgetToAppConnector: true,
 	addStyleElementForTitleColor: true, removeStyleElementForTitleColor: true,
 	hideWidgetToAppConnectors: true, showWidgetToAppConnectors: true,
@@ -35,25 +35,19 @@
 	smallWhiteGIF: true, SAGE2_browser: true, __SAGE2__: true,
 	DynamicImage: true, makeSvgBackgroundForWidgetConnectors: true,
 	getTransform: true, DataSharing: true, dataSharingPortals: true,
-	md5: true
+	md5: true, applications: true, createButtonShape: true
   },
   rules: {
 	no-console: 0,
 	no-alert: 0,
-	strict: 0,
+	global-strict: [2, "always"],
 	no-caller: 0,
-	no-process-exit: 0,
-	no-loop-func: 0,
-	no-multi-spaces: 0,
 	quotes: 0,
+	no-multi-spaces: 0,
 	no-underscore-dangle: 0,
 	camelcase: 0,
-	curly: 0,
 	no-use-before-define: 0,
-	key-spacing: 0,
-	space-infix-ops: 0,
-        no-unused-vars: 0,
-	no-cond-assign: 0,
+	no-unused-vars: [2, {vars: "local", args: "none"}],
 	new-cap: 0
   }
 }

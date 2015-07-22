@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule image_viewer
@@ -18,7 +20,7 @@
  *
  * @class image_viewer
  */
-var image_viewer = SAGE2_App.extend( {
+var image_viewer = SAGE2_App.extend({
 	/**
 	* Init method, creates an 'img' tag in the DOM
 	*
@@ -73,17 +75,17 @@ var image_viewer = SAGE2_App.extend( {
 		var inv = 1.0 / ratio;
 		if (this.state.exif.Orientation === 'Rotate 90 CW') {
 			this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(90deg)";
-			if (!this.state.crct)
+			if (!this.state.crct) {
 				this.sendResize(this.element.height, this.element.width);
+			}
 			this.state.crct = true;
-		}
-		else if (this.state.exif.Orientation === 'Rotate 270 CW') {
+		} else if (this.state.exif.Orientation === 'Rotate 270 CW') {
 			this.element.style.webkitTransform = "scale(" + ratio + "," + inv + ") rotate(-90deg)";
-			if (!this.state.crct)
+			if (!this.state.crct) {
 				this.sendResize(this.element.height, this.element.width);
+			}
 			this.state.crct = true;
-		}
-		else if (this.state.exif.Orientation === 'Rotate 180') {
+		} else if (this.state.exif.Orientation === 'Rotate 180') {
 			this.element.style.webkitTransform = "rotate(180deg)";
 			this.state.crct = true;
 		} else {
@@ -99,10 +101,11 @@ var image_viewer = SAGE2_App.extend( {
 	* @param visibility {bool} became visible or hidden
 	*/
 	onVisible: function(visibility) {
-		if (visibility)
+		if (visibility) {
 			this.element.src = this.state.src;
-		else
+		} else {
 			this.element.src = smallWhiteGIF();
+		}
 	},
 
 	/**
@@ -147,21 +150,22 @@ var image_viewer = SAGE2_App.extend( {
 			json = JSON.stringify(json, undefined, 4);
 		}
 		json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-		return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-			var cls = 'color: darkorange;';
-			if (/^"/.test(match)) {
-				if (/:$/.test(match)) {
-					cls = 'color: CadetBlue;';
-				} else {
-					cls = 'color: green;';
+		return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+			function(match) {
+				var cls = 'color: darkorange;';
+				if (/^"/.test(match)) {
+					if (/:$/.test(match)) {
+						cls = 'color: CadetBlue;';
+					} else {
+						cls = 'color: green;';
+					}
+				} else if (/true|false/.test(match)) {
+					cls = 'color: blue;';
+				} else if (/null/.test(match)) {
+					cls = 'color: magenta;';
 				}
-			} else if (/true|false/.test(match)) {
-				cls = 'color: blue;';
-			} else if (/null/.test(match)) {
-				cls = 'color: magenta;';
-			}
-			return '<span style="' + cls + '">' + match + '</span>';
-		});
+				return '<span style="' + cls + '">' + match + '</span>';
+			});
 	},
 
 	/**
@@ -176,13 +180,12 @@ var image_viewer = SAGE2_App.extend( {
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
-		if ((eventType === "keyboard" && data.character==="i") || (eventType==="widgetEvent" && data.ctrlId === "Info")) {
+		if ((eventType === "keyboard" && data.character === "i") || (eventType === "widgetEvent" && data.identifier === "Info")) {
 			if (this.isLayerHidden()) {
 				this.state.top = 0;
 				this.state.showExif = true;
 				this.showLayer();
-			}
-			else {
+			} else {
 				this.state.showExif = false;
 				this.hideLayer();
 			}
@@ -194,17 +197,21 @@ var image_viewer = SAGE2_App.extend( {
 			var amount = -data.wheelDelta / 32;
 
 			this.state.top += ui.titleTextSize * amount;
-			if (this.state.top > 0) this.state.top = 0;
-			if (this.state.top < (-(this.layer.clientHeight-this.element.height))) this.state.top = -(this.layer.clientHeight-this.element.height);
+			if (this.state.top > 0) {
+				this.state.top = 0;
+			}
+			if (this.state.top < (-(this.layer.clientHeight - this.element.height))) {
+				this.state.top = -(this.layer.clientHeight - this.element.height);
+			}
 			this.layer.style.top = this.state.top + "px";
 
 			this.refresh(date);
 		}
 	},
-	addWidgetControlsToImageViewer: function(){
+
+	addWidgetControlsToImageViewer: function() {
 		// UI stuff
-		var infoLabel = { "textual":true, "label":"info", "fill":"rgba(250,250,250,1.0)", "animation":false};
-		this.controls.addButton({type:infoLabel, sequenceNo:1, id:"Info"});
+		this.controls.addButton({label: "info", position: 7, identifier: "Info"});
 		this.controls.finishedAddingControls();
 	}
 

@@ -40,25 +40,6 @@ function HttpServer(publicDirectory) {
 	this.onrequest = this.onreq.bind(this);
 }
 
-/**
- * Splits parameters off a URL
- *
- * @method parseURLQuery
- * @param query {String} the URL to parse
- * @return {Object} parsed elements (key, value)
- */
-// function parseURLQuery(query) {
-// 	if (!query) return {};
-// 	var p;
-// 	var paramList = query.split("&");
-// 	var params = {};
-// 	for(var i=0; i<paramList.length; i++) {
-// 		p = paramList[i].split("=");
-// 		if (p.length === 2) params[p[0]] = p[1];
-// 	}
-// 	return params;
-// }
-
 
 /**
  * Given a request, will attempt to detect all associated cookies.
@@ -68,20 +49,20 @@ function HttpServer(publicDirectory) {
  * @return {Object} containing the list of cookies in string format
  */
 function detectCookies(request) {
-    var cookieList = [];
-    var allCookies = request.headers.cookie;
+	var cookieList = [];
+	var allCookies = request.headers.cookie;
 
-    var i = 0;
-    if (allCookies != null) {
+	var i = 0;
+	if (allCookies != null) {
 		while (allCookies.indexOf(';') !== -1) {
-			cookieList.push(allCookies.substring( 0, allCookies.indexOf(';') ) );
+			cookieList.push(allCookies.substring(0, allCookies.indexOf(';')));
 			cookieList[i] = cookieList[i].trim();
-			allCookies    = allCookies.substring( allCookies.indexOf(';') + 1 );
+			allCookies    = allCookies.substring(allCookies.indexOf(';') + 1);
 			i++;
 		} // end while there is a ;
-		cookieList.push( allCookies.trim() );
+		cookieList.push(allCookies.trim());
 	}
-    return cookieList;
+	return cookieList;
 }
 
 /**
@@ -93,7 +74,7 @@ function detectCookies(request) {
  */
 HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
-	res.writeHead(302, {'Location': aurl});
+	res.writeHead(302, {Location: aurl});
 	res.end();
 };
 
@@ -125,15 +106,48 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Get the actual path of the file
 		var pathname;
 
+		// //////////////////////
 		// Routes
+		// //////////////////////
+
+		// API call: /config
 		if (getName.indexOf('/config/') === 0) {
 			// if trying to access config files, add the correct path
 			pathname = path.join(this.publicDirectory, '..', getName);
+		} else if (getName.lastIndexOf('/images/', 0) === 0 ||
+				getName.lastIndexOf('/shaders/', 0) === 0 ||
+				getName.lastIndexOf('/css/', 0) === 0 ||
+				getName.lastIndexOf('/lib/', 0) === 0 ||
+				getName.lastIndexOf('/src/', 0) === 0) {
+			// Sources folders: bypass the search
+			pathname = path.join(this.publicDirectory, getName);
 		} else {
-			pathname = this.publicDirectory + getName;
+			// Then search in the various media folders
+			// pathname: result of the search
+			pathname = null;
+			// walk through the list of folders
+			for (var f in global.mediaFolders) {
+				// Get the folder object
+				var folder = global.mediaFolders[f];
+				// Look for the folder url in the request
+				var pubdir = getName.split(folder.url);
+				if (pubdir.length === 2) {
+					// convert the URL into a path
+					var suburl = path.join('.', pubdir[1]);
+					pathname   = url.resolve(folder.path, suburl);
+					pathname   = decodeURIComponent(pathname);
+					break;
+				}
+			}
+			// if everything fails, look in the default public folder
+			if (!pathname) {
+				pathname = path.join(this.publicDirectory, getName);
+			}
 		}
 
+		// //////////////////////
 		// Are we trying to session management
+		// //////////////////////
 		if (global.__SESSION_ID) {
 			// if the request is for an HTML page (no security check otherwise)
 			//    and it is not session.html
@@ -143,7 +157,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				var cookieList = detectCookies(req);
 				// Go through the list of cookies
 				var sessionMatch = false;
-				for (i=0; i<cookieList.length; i++) {
+				for (i = 0; i < cookieList.length; i++) {
 					if (cookieList[i].indexOf("session=") !== -1) {
 						// We found it
 						if (cookieList[i].indexOf(global.__SESSION_ID) !== -1) {
@@ -153,7 +167,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 				// If no match, go back to password page
 				if (!sessionMatch) {
-					this.redirect(res, "session.html");
+					this.redirect(res, "session.html?page=" + req.url.substring(1));
 				}
 			}
 		}
@@ -162,7 +176,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		if (sageutils.fileExists(pathname)) {
 			var stats = fs.lstatSync(pathname);
 			if (stats.isDirectory()) {
-				this.redirect(res, getName+"/index.html");
+				this.redirect(res, getName + "/index.html");
 				return;
 			} else {
 				var header = {};
@@ -182,7 +196,8 @@ HttpServer.prototype.onreq = function(req, res) {
 				// s-maxage=[seconds] — similar to max-age, except that it only applies to shared (e.g., proxy) caches.
 				// public — marks authenticated responses as cacheable;
 				// private — allows caches that are specific to one user (e.g., in a browser) to store the response
-				// no-cache — forces caches to submit the request to the origin server for validation before releasing a cached copy, every time.
+				// no-cache — forces caches to submit the request to the origin server for validation before releasing
+				//  a cached copy, every time.
 				// no-store — instructs caches not to keep a copy of the representation under any conditions.
 				// must-revalidate — tells caches that they must obey any freshness information you give them about a representation.
 				// proxy-revalidate — similar to must-revalidate, except that it only applies to proxy caches.
@@ -200,8 +215,8 @@ HttpServer.prototype.onreq = function(req, res) {
 					var partialend   = parts[1];
 
 					var start = parseInt(partialstart, 10);
-					var end = partialend ? parseInt(partialend, 10) : total-1;
-					var chunksize = (end-start)+1;
+					var end = partialend ? parseInt(partialend, 10) : total - 1;
+					var chunksize = (end - start) + 1;
 
 					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
 					header["Accept-Ranges"]  = "bytes";
@@ -211,16 +226,14 @@ HttpServer.prototype.onreq = function(req, res) {
 
 					stream = fs.createReadStream(pathname, {start: start, end: end});
 					stream.pipe(res);
-				}
-				else {
+				} else {
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
 					stream = fs.createReadStream(pathname);
 					stream.pipe(res);
 				}
 			}
-		}
-		else {
+		} else {
 			// File not found: 404 HTTP error, with link to index page
 			res.writeHead(404, {"Content-Type": "text/html"});
 			res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
@@ -229,25 +242,26 @@ HttpServer.prototype.onreq = function(req, res) {
 			res.end();
 			return;
 		}
-	}
-	else if (req.method === "POST") {
+	} else if (req.method === "POST") {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
+			return;
 		}
-	}
-	else if (req.method === "PUT") {
+	} else if (req.method === "PUT") {
 		// Need some authentication / security here
 		//
 		var putName = decodeURIComponent(url.parse(req.url).pathname);
 		// Remove the first / if there
-		if (putName[0] === '/') putName = putName.slice(1);
+		if (putName[0] === '/') {
+			putName = putName.slice(1);
+		}
 
 		var fileLength = 0;
 		var filename   = path.join(this.publicDirectory, "uploads", "tmp", putName);
 		var wstream    = fs.createWriteStream(filename);
 
-		wstream.on('finish', function () {
+		wstream.on('finish', function() {
 			// stream closed
 			console.log('HTTP>		PUT file has been written', putName, fileLength, 'bytes');
 		});

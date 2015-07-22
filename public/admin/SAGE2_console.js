@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2015
 
+"use strict";
+
 /**
  * SAGE2 Web console
  *
@@ -16,6 +18,7 @@
  * @class SAGE2_Console
  */
 
+/*global SAGE2_init: true */
 
 /**
  * Entry point of the console application
@@ -24,7 +27,7 @@
  */
 function SAGE2_init() {
 	// Connect to the server
-	wsio = new WebsocketIO();
+	var wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
 
@@ -39,9 +42,9 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "consoleManager",
 			requests: {
-				config:  true,
+				config: true,
 				version: true,
-				time:    false,
+				time: false,
 				console: true
 			}
 		};
@@ -49,13 +52,13 @@ function SAGE2_init() {
 	});
 
 	// Socket close event (ie server crashed)
-	wsio.on('close', function (evt) {
-		var refresh = setInterval(function () {
+	wsio.on('close', function() {
+		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
 			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200){
+				if (xhr.readyState === 4 && xhr.status === 200) {
 					console.log("server ready");
 					// when server ready, clear the interval callback
 					clearInterval(refresh);
@@ -81,10 +84,10 @@ function setupListeners(wsio) {
 	var commandline = document.getElementById('command');
 
 	// Got a reply from the server
-	wsio.on('initialize', function(data) {
+	wsio.on('initialize', function() {
 		// Setup a callback from the textbox used as a prompt
 		commandline.addEventListener('keyup', function(evt) {
-			if (evt && evt.keyCode===13) {
+			if (evt && evt.keyCode === 13) {
 				// Send the command to the server after a 'return/enter' key
 				wsio.emit('command', commandline.value);
 				// Add the command to terminal
@@ -111,12 +114,12 @@ function setupListeners(wsio) {
 	});
 
 	// Server sends the wall configuration
-	wsio.on('setupDisplayConfiguration', function(json_cfg) {
+	wsio.on('setupDisplayConfiguration', function() {
 		console.log('wall configuration');
 	});
 
 	// Server sends the animate loop event
-	wsio.on('animateCanvas', function(data) {
+	wsio.on('animateCanvas', function() {
 		console.log('animateCanvas');
 	});
 

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule sagePointer
@@ -39,22 +41,28 @@ function sagePointer(wsio) {
 	this.windowManager         = document.getElementById('winMgr');
 	this.screenShareQualityIndicator = document.getElementById('screenShareQualityIndicator');
 
-	this.mediaVideo         = document.getElementById('mediaVideo');
-	this.mediaCanvas        = document.getElementById('mediaCanvas');
-	this.mediaCtx           = this.mediaCanvas.getContext('2d');
-	this.mediaResolution    = this.screenShareResolution.selectedIndex;
-	this.mediaQuality       = this.screenShareQuality.value;
-	this.broadcasting       = false;
-	this.desktopId          = null;
+	this.mediaVideo      = document.getElementById('mediaVideo');
+	this.mediaCanvas     = document.getElementById('mediaCanvas');
+	this.mediaCtx        = this.mediaCanvas.getContext('2d');
+	this.mediaResolution = this.screenShareResolution.selectedIndex;
+	this.mediaQuality    = this.screenShareQuality.value;
+	this.broadcasting    = false;
+	this.desktopId       = null;
 
 	this.desktopCaptureEnabled = false;
 
 	this.chunk = 32 * 1024; // 32 KB
-	this.maxUploadSize = 20 * (1024*1024*1024); // 20GB just as a precaution
+	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
 
-	if (localStorage.SAGE2_ptrName  === undefined || localStorage.SAGE2_ptrName  === null ||
-		localStorage.SAGE2_ptrName  === "Default") localStorage.SAGE2_ptrName  = "SAGE2_user";
-	if (localStorage.SAGE2_ptrColor === undefined || localStorage.SAGE2_ptrColor === null) localStorage.SAGE2_ptrColor = "#B4B4B4";
+	if (localStorage.SAGE2_ptrName  === undefined ||
+		localStorage.SAGE2_ptrName  === null ||
+		localStorage.SAGE2_ptrName  === "Default") {
+		localStorage.SAGE2_ptrName  = "SAGE2_user";
+	}
+	if (localStorage.SAGE2_ptrColor === undefined ||
+		localStorage.SAGE2_ptrColor === null) {
+		localStorage.SAGE2_ptrColor = "#B4B4B4";
+	}
 
 	this.sagePointerLabel.value = localStorage.SAGE2_ptrName;
 	this.sagePointerColor.value = localStorage.SAGE2_ptrColor;
@@ -62,12 +70,12 @@ function sagePointer(wsio) {
 	var _this = this;
 
 	// Capture the changes in the pointer name
-	this.sagePointerLabel.addEventListener('input', function(evt) {
-		localStorage.SAGE2_ptrName  = _this.sagePointerLabel.value;
+	this.sagePointerLabel.addEventListener('input', function() {
+		localStorage.SAGE2_ptrName = _this.sagePointerLabel.value;
 	});
 
 	// Capture the changes in the pointer color
-	this.sagePointerColor.addEventListener('change', function(evt) {
+	this.sagePointerColor.addEventListener('change', function() {
 		localStorage.SAGE2_ptrColor = _this.sagePointerColor.value;
 	});
 
@@ -97,7 +105,7 @@ function sagePointer(wsio) {
 	*
 	* @method startSagePointerMethod
 	*/
-	this.startSagePointerMethod = function(event) {
+	this.startSagePointerMethod = function() {
 		this.sagePointerBtn.requestPointerLock = this.sagePointerBtn.requestPointerLock      ||
 												this.sagePointerBtn.mozRequestPointerLock    ||
 												this.sagePointerBtn.webkitRequestPointerLock;
@@ -110,8 +118,9 @@ function sagePointer(wsio) {
 	* @method pointerLockChangeMethod
 	*/
 	this.pointerLockChangeMethod = function() {
-		if (document.pointerLockElement === this.sagePointerBtn ||  document.mozPointerLockElement === this.sagePointerBtn || document.webkitPointerLockElement === this.sagePointerBtn) {
-			//console.log("pointer lock enabled");
+		if (document.pointerLockElement === this.sagePointerBtn ||
+				document.mozPointerLockElement === this.sagePointerBtn ||
+				document.webkitPointerLockElement === this.sagePointerBtn) {
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 
 			document.addEventListener('mousedown',           this.pointerPress,     false);
@@ -127,9 +136,7 @@ function sagePointer(wsio) {
 			this.sagePointerBtn.removeEventListener('click', this.startSagePointer, false);
 
 			sagePointerEnabled();
-		}
-		else {
-			//console.log("pointer lock disabled");
+		} else {
 			this.wsio.emit('stopSagePointer');
 
 			document.removeEventListener('mousedown',        this.pointerPress,     false);
@@ -154,7 +161,7 @@ function sagePointer(wsio) {
 	*/
 	this.pointerPressMethod = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		this.wsio.emit('pointerPress', {button:btn});
+		this.wsio.emit('pointerPress', {button: btn});
 		event.preventDefault();
 	};
 
@@ -165,9 +172,7 @@ function sagePointer(wsio) {
 	this.pointerMoveMethod = function(event) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-		//this.wsio.emit('pointerMove', {deltaX: Math.round(movementX*this.sensitivity), deltaY: Math.round(movementY*this.sensitivity)});
-		this.wsio.emit('ptm', {dx: Math.round(movementX*this.sensitivity), dy: Math.round(movementY*this.sensitivity)});
+		this.wsio.emit('ptm', {dx: Math.round(movementX * this.sensitivity), dy: Math.round(movementY * this.sensitivity)});
 		event.preventDefault();
 	};
 
@@ -177,7 +182,7 @@ function sagePointer(wsio) {
 	*/
 	this.pointerReleaseMethod = function(event) {
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		this.wsio.emit('pointerRelease', {button:btn});
+		this.wsio.emit('pointerRelease', {button: btn});
 		event.preventDefault();
 	};
 
@@ -205,7 +210,7 @@ function sagePointer(wsio) {
 	* @method pointerScrollFFMethod
 	*/
 	this.pointerScrollFFMethod = function(event) {
-		var wheelDelta = -120*event.detail;
+		var wheelDelta = -120 * event.detail;
 		this.wsio.emit('pointerScrollStart');
 		this.wsio.emit('pointerScroll', {wheelDelta: wheelDelta});
 		event.preventDefault();
@@ -223,7 +228,8 @@ function sagePointer(wsio) {
 			this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 		}
 		// if a special key - prevent default (otherwise let continue to keyPress)
-		if (code  === 8 || code  === 9 || (code >= 16 && code <= 46 && code !== 32) ||  (code >=91 && code <= 93) || (code >= 112 && code <= 145)) {
+		if (code  === 8 || code  === 9 || (code >= 16 && code <= 46 && code !== 32) ||
+				(code >= 91 && code <= 93) || (code >= 112 && code <= 145)) {
 			event.preventDefault();
 		}
 	};
@@ -252,8 +258,8 @@ function sagePointer(wsio) {
 	*
 	* @method startScreenShareMethod
 	*/
-	this.startScreenShareMethod = function(event) {
-		if(this.desktopCaptureEnabled === false) {
+	this.startScreenShareMethod = function() {
+		if (this.desktopCaptureEnabled === false) {
 			alert("Cannot share screen: \"SAGE2 Screen Capture\" Extension not enabled.");
 			return;
 		}
@@ -288,7 +294,7 @@ function sagePointer(wsio) {
 	*
 	* @method streamFailMethod
 	*/
-	this.streamFailMethod = function(e) {
+	this.streamFailMethod = function() {
 		console.log("no access to media capture");
 	};
 
@@ -296,25 +302,25 @@ function sagePointer(wsio) {
 	*
 	* @method streamEndedMethod
 	*/
-	this.streamEndedMethod = function(e) {
+	this.streamEndedMethod = function() {
 		console.log("media stream ended");
 		this.broadcasting = false;
 		this.screenShareBtn.disabled = false;
-		this.wsio.emit('stopMediaStream', {id: this.uniqueID+"|0"});
+		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
 	};
 
 	/**
 	*
 	* @method streamMetaDataMethod
 	*/
-	this.streamMetaDataMethod = function(event) {
-		var widths = [Math.min( 852, this.mediaVideo.videoWidth),
+	this.streamMetaDataMethod = function() {
+		var widths = [Math.min(852, this.mediaVideo.videoWidth),
 					Math.min(1280, this.mediaVideo.videoWidth),
 					Math.min(1920, this.mediaVideo.videoWidth),
 					this.mediaVideo.videoWidth];
 
-		for(var i=0; i<4; i++){
-			var height = parseInt(widths[i] * this.mediaVideo.videoHeight/this.mediaVideo.videoWidth, 10);
+		for (var i = 0; i < 4; i++) {
+			var height = parseInt(widths[i] * this.mediaVideo.videoHeight / this.mediaVideo.videoWidth, 10);
 			this.screenShareResolution.options[i].value = widths[i] + "x" + height;
 		}
 
@@ -326,7 +332,11 @@ function sagePointer(wsio) {
 
 		var frame = this.captureMediaFrame();
 		var raw = this.base64ToString(frame.split(",")[1]);
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID+"|0", title: localStorage.SAGE2_ptrName+": Shared Screen", src: raw, type: "image/jpeg", encoding: "binary", width: this.mediaVideo.videoWidth, height: this.mediaVideo.videoHeight});
+		this.wsio.emit('startNewMediaStream', {id: this.uniqueID + "|0",
+				title: localStorage.SAGE2_ptrName + ": Shared Screen",
+				src: raw, type: "image/jpeg", encoding: "binary",
+				width: this.mediaVideo.videoWidth,
+				height: this.mediaVideo.videoHeight});
 
 		this.broadcasting = true;
 	};
@@ -338,7 +348,7 @@ function sagePointer(wsio) {
 	this.captureMediaFrame = function() {
 		this.mediaCtx.clearRect(0, 0, this.mediaWidth, this.mediaHeight);
 		this.mediaCtx.drawImage(this.mediaVideo, 0, 0, this.mediaWidth, this.mediaHeight);
-		return this.mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality/10));
+		return this.mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality / 10));
 	};
 
 	/**
@@ -346,28 +356,30 @@ function sagePointer(wsio) {
 	* @method sendMediaStreamFrame
 	*/
 	this.sendMediaStreamFrame = function() {
-		if(this.broadcasting){
+		if (this.broadcasting) {
 			var frame = this.captureMediaFrame();
 			var raw = this.base64ToString(frame.split(",")[1]);
 
-			if(raw.length > this.chunk){
+			if (raw.length > this.chunk) {
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
 				/*eslint-disable */
 				function updateMediaStreamChunk(index, msg_chunk) { // jshint ignore:line
 					setTimeout(function() {
-						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID+"|0", state: {src: msg_chunk, type:"image/jpeg", encoding: "binary"}, piece: index, total: nchunks});
+						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID + "|0",
+							state: {src: msg_chunk, type: "image/jpeg", encoding: "binary"},
+							piece: index, total: nchunks});
 					}, 4);
 				}
 				/*eslint-enable */
-				for(var i=0; i<nchunks; i++){
-					var start = i*this.chunk;
-					var end = (i+1)*this.chunk < raw.length ? (i+1)*this.chunk : raw.length;
+				for (var i = 0; i < nchunks; i++) {
+					var start = i * this.chunk;
+					var end = (i + 1) * this.chunk < raw.length ? (i + 1) * this.chunk : raw.length;
 					updateMediaStreamChunk(i, raw.substring(start, end));
 				}
-			}
-			else{
-				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID+"|0", state: {src: raw, type:"image/jpeg", encoding: "binary"}});
+			} else {
+				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state: {src: raw,
+					type: "image/jpeg", encoding: "binary"}});
 			}
 		}
 	};
@@ -376,9 +388,9 @@ function sagePointer(wsio) {
 	*
 	* @method changeScreenShareResolutionMethod
 	*/
-	this.changeScreenShareResolutionMethod = function(event) {
+	this.changeScreenShareResolutionMethod = function() {
 		this.mediaResolution = this.screenShareResolution.selectedIndex;
-		if(this.screenShareResolution.options[this.mediaResolution].value){
+		if (this.screenShareResolution.options[this.mediaResolution].value) {
 			var res = this.screenShareResolution.options[this.mediaResolution].value.split("x");
 			this.mediaHeight = parseInt(res[0], 10);
 			this.mediaWidth  = parseInt(res[1], 10);
@@ -392,7 +404,7 @@ function sagePointer(wsio) {
 	*
 	* @method changeScreenShareQualityMethod
 	*/
-	this.changeScreenShareQualityMethod = function(event) {
+	this.changeScreenShareQualityMethod = function() {
 		this.mediaQuality = this.screenShareQuality.value;
 		this.screenShareQualityIndicator.textContent = this.mediaQuality;
 	};
@@ -421,72 +433,90 @@ function sagePointer(wsio) {
 		var files = event.dataTransfer.files;
 		var url   = event.dataTransfer.getData("Url");
 		var text  = event.dataTransfer.getData("Text");
-		if (files.length > 0) {
-			var total  = {};
-			var loaded = {};
-			var pc     = 0;
 
-			for(var i=0; i<files.length; i++){
-				if(files[i].size <= this.maxUploadSize){
+		var total  = {};
+		var loaded = {};
+		var pc     = 0;
+
+		function onProgress(evt) {
+			if (!(evt.srcElement.id in total)) {
+				total[evt.srcElement.id] = evt.total;
+			}
+			loaded[evt.srcElement.id] = evt.loaded;
+
+			var totalSize = 0;
+			var uploaded = 0;
+			for (var key in total) { totalSize += total[key]; uploaded += loaded[key]; }
+			pc = Math.floor((uploaded / totalSize) * 100);
+			_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
+			// sagePointerApp has no progress bar
+			if (_this.fileDropProgress !== null) {
+				_this.fileDropProgress.value = pc;
+			}
+			if (pc === 100) {
+				setTimeout(function() {
+					if (pc === 100) {
+						_this.fileDropText.textContent = "Drop multimedia files here";
+						// sagePointerApp has no progress bar
+						if (_this.fileDropProgress !== null) {
+							_this.fileDropProgress.value = 0;
+						}
+					}
+				}, 500);
+			}
+		}
+
+		if (files.length > 0) {
+			for (var i = 0; i < files.length; i++) {
+				if (files[i].size <= this.maxUploadSize) {
 					var formdata = new FormData();
-					formdata.append("file"+i.toString(), files[i]);
+					formdata.append("file" + i.toString(), files[i]);
 					formdata.append("dropX", dropX);
 					formdata.append("dropY", dropY);
 
 					var xhr = new XMLHttpRequest();
 					xhr.open("POST", "upload", true);
-					xhr.upload.id = "file"+i.toString();
-					xhr.upload.addEventListener('progress', function(evt) {
-						if(!(evt.srcElement.id in total)){
-							total[evt.srcElement.id] = evt.total;
-						}
-						loaded[evt.srcElement.id] = evt.loaded;
-
-						var totalSize = 0;
-						var uploaded = 0;
-						for(var key in total){ totalSize += total[key]; uploaded += loaded[key]; }
-						pc = Math.floor((uploaded/totalSize) * 100);
-						_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
-						// sagePointerApp has no progress bar
-						if (_this.fileDropProgress !== null) _this.fileDropProgress.value = pc;
-						if (pc === 100) {
-							setTimeout(function() {
-								if (pc === 100) {
-									_this.fileDropText.textContent = "Drop multimedia files here";
-									// sagePointerApp has no progress bar
-									if (_this.fileDropProgress !== null) _this.fileDropProgress.value = 0;
-								}
-							}, 500);
-						}
-					}, false); // jshint ignore:line
+					xhr.upload.id = "file" + i.toString();
+					xhr.upload.addEventListener('progress', onProgress);
 					xhr.send(formdata);
-				}
-				else {
-					/*eslint-disable */
-					alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024*1024*1024)) + " GB)");
-					/*eslint-enable */
+				} else {
+					alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
 				}
 			}
-		}
-		else if(url !== null || text !== null){
+		} else if (url !== null || text !== null) {
 			var dataUrl;
-			if (url === null) dataUrl = text;
-			else if (text === null) dataUrl = url;
-			else dataUrl = (url.length > text.length) ? url : text;
+			if (url === null) {
+				dataUrl = text;
+			} else if (text === null) {
+				dataUrl = url;
+			} else {
+				dataUrl = (url.length > text.length) ? url : text;
+			}
 			var mimeType = "";
 			var youtube  = dataUrl.indexOf("www.youtube.com");
-			var ext      = dataUrl.substring(dataUrl.lastIndexOf('.')+1);
-			if(ext.length > 4) ext = ext.substring(0, 4);
+			var ext      = dataUrl.substring(dataUrl.lastIndexOf('.') + 1);
+			if (ext.length > 4) {
+				ext = ext.substring(0, 4);
+			}
 			ext = ext.toLowerCase();
-			if (youtube >= 0) mimeType = "video/youtube";
-			else if(ext === "jpg" || ext === "jpeg") mimeType = "image/jpeg";
-			else if(ext === "png") mimeType  = "image/png";
-			else if(ext === "mp4") mimeType  = "video/mp4";
-			else if(ext === "m4v") mimeType  = "video/mp4";
-			else if(ext === "webm") mimeType = "video/webm";
-			else if(ext === "pdf") mimeType  = "application/pdf";
-
-			if (mimeType !== "") this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl, position: [dropX, dropY]});
+			if (youtube >= 0) {
+				mimeType = "video/youtube";
+			} else if (ext === "jpg" || ext === "jpeg") {
+				mimeType = "image/jpeg";
+			} else if (ext === "png") {
+				mimeType  = "image/png";
+			} else if (ext === "mp4") {
+				mimeType  = "video/mp4";
+			} else if (ext === "m4v") {
+				mimeType  = "video/mp4";
+			} else if (ext === "webm") {
+				mimeType = "video/webm";
+			} else if (ext === "pdf") {
+				mimeType  = "application/pdf";
+			}
+			if (mimeType !== "") {
+				this.wsio.emit('addNewWebElement', {type: mimeType, url: dataUrl, position: [dropX, dropY]});
+			}
 		}
 	};
 
@@ -496,7 +526,6 @@ function sagePointer(wsio) {
 	* @method base64ToString
 	*/
 	this.base64ToString = function(base64) {
-		//return decodeURIComponent(escape(atob(base64)));
 		return atob(base64);
 	};
 

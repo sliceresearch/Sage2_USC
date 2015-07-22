@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule WebsocketIO
@@ -20,8 +22,12 @@
  * @constructor
  */
 function WebsocketIO(url) {
-	if (url !== undefined && url !== null) this.url = url;
-	else this.url = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host + "/" + window.location.pathname.split("/")[1];
+	if (url !== undefined && url !== null) {
+		this.url = url;
+	} else {
+		this.url = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host +
+					"/" + window.location.pathname.split("/")[1];
+	}
 
 	/**
 	 * websocket object handling the communication with the server
@@ -80,7 +86,6 @@ function WebsocketIO(url) {
 			if (typeof message.data === "string") {
 				var msg = JSON.parse(message.data);
 				fName = _this.localListeners[msg.f];
-				//console.log("WebsocketIO> received " + msg.f + "(" + fName + ")");
 				if (fName === undefined) {
 					console.log('WebsocketIO> No handler for message');
 				}
@@ -88,13 +93,10 @@ function WebsocketIO(url) {
 				if (fName === "#WSIO#addListener") {
 					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
-				}
-
-				else {
+				} else {
 					_this.messages[fName](msg.d);
 				}
-			}
-			else {
+			} else {
 				var uInt8 = new Uint8Array(message.data);
 				var func  = String.fromCharCode(uInt8[0]) +
 							String.fromCharCode(uInt8[1]) +
@@ -108,8 +110,9 @@ function WebsocketIO(url) {
 		// triggered by unexpected close event
 		this.ws.onclose = function(evt) {
 			console.log("WebsocketIO> socket closed");
-			if ('close' in _this.messages)
+			if ('close' in _this.messages) {
 				_this.messages.close(evt);
+			}
 		};
 	};
 
@@ -125,7 +128,9 @@ function WebsocketIO(url) {
 		this.localListeners[alias] = name;
 		this.messages[name] = callback;
 		this.aliasCount++;
-		if(name === "close") return;
+		if (name === "close") {
+			return;
+		}
 		this.emit('#WSIO#addListener', {listener: name, alias: alias});
 	};
 
@@ -145,14 +150,15 @@ function WebsocketIO(url) {
 		var _this = this;
 		var message;
 		var alias = this.remoteListeners[name];
-		if(alias === undefined) {
-			if(attempts === undefined) attempts = 16;
-			if(attempts >= 0) {
-				setTimeout(function() {
-					_this.emit(name, data, attempts-1);
-				}, 4);
+		if (alias === undefined) {
+			if (attempts === undefined) {
+				attempts = 16;
 			}
-			else {
+			if (attempts >= 0) {
+				setTimeout(function() {
+					_this.emit(name, data, attempts - 1);
+				}, 4);
+			} else {
 				console.log("Warning: not sending message, recipient has no listener (" + name + ")");
 			}
 			return;
@@ -173,9 +179,8 @@ function WebsocketIO(url) {
 			message.set(data, 4);
 			// send the message using websocket
 			this.ws.send(message.buffer);
-		}
-		// send data as JSON string
-		else {
+		} else {
+			// send data as JSON string
 			message = {f: alias, d: data};
 			this.ws.send(JSON.stringify(message));
 		}
@@ -188,9 +193,9 @@ function WebsocketIO(url) {
 	*/
 	this.close = function() {
 		// disable onclose handler first
-		this.ws.onclose = function () {};
+		this.ws.onclose = function() {};
 		// then close
 		this.ws.close();
-    };
+	};
 
 }
