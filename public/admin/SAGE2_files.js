@@ -355,7 +355,7 @@ function setupListeners(wsio) {
 			// Add an EXIF panel for pictures
 			var info;
 			if (allFiles[elt.id].exif.MIMEType.indexOf('image') >= 0) {
-				metadata.config.elements.push({label: "EXIF", type: "label"});
+				metadata.config.elements.push({label: "Image", type: "label"});
 
 				info = allFiles[elt.id].exif.Make || '';
 				metadata.config.elements.push({label: "Make", value: info});
