@@ -44,18 +44,8 @@ function RadialMenu(id, ptrID, config) {
 
 	if( config.ui.enable_perceptual_scaling ) {
 		this.radialMenuScale = 1;
-		console.log("node_radialmenu: enable_perceptual_scaling = true");
-		console.log("dimentions:");
-		console.log(config.dimensions.tile_width);
-		console.log(config.dimensions.tile_height);
-		console.log(config.dimensions.tile_borders);
-		console.log(config.dimensions.viewing_distance);
-		console.log("layout:");
-		console.log(config.layout.rows);
-		console.log(config.layout.columns);
 
 		var pixelsPerMeter = (config.dimensions.tile_width - config.dimensions.tile_borders[0] - config.dimensions.tile_borders[1]) / config.resolution.width;
-		console.log("pixelsPerMeter: " + pixelsPerMeter);
 
 		var thumbnailWindowDefaultHeightMeters = thumbnailWindowDefaultSize.y * pixelsPerMeter;
 
@@ -65,7 +55,11 @@ function RadialMenu(id, ptrID, config) {
 		var DRC = Math.sqrt(Math.pow(totalWallDimensionsMeters.w / totalWallDimensionsMeters.h, 2) + 1);
 		var calculatedIdealViewingDistance = wallDiagonal / ( DRC * thumbnailWindowDefaultSize.y * Math.tan(Math.PI / 180 / 60) );
 
-		this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * (config.dimensions.viewing_distance / thumbnailWindowDefaultHeightMeters ));
+		if( config.ui.use_calcuated_viewing_distance ) {
+			this.radialMenuScale = calculatedIdealViewingDistance * (0.03 * (calculatedIdealViewingDistance / thumbnailWindowDefaultHeightMeters ));
+		} else {
+			this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * (config.dimensions.viewing_distance / thumbnailWindowDefaultHeightMeters ));
+		}
 	}
 
 	this.radialMenuSize = {x: radialMenuDefaultSize.x * this.radialMenuScale,
