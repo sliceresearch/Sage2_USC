@@ -485,7 +485,7 @@ function setupListeners(wsio) {
 						{application: appType,
 						filename: tid,
 						user: uniqueID});
-			}		
+			}
 		}
 
 		all_table.attachEvent("onItemDblClick", function(id, e, node) {
