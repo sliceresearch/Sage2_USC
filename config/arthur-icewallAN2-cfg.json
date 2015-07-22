@@ -24,7 +24,7 @@
 		"tile_height": 1.093,  // in meter, pixel area
 		"tile_borders": [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
 		// prefered or common viewing distance to calculate UI sizes
-		"viewing_distance": 1.0668  // in meter
+		"viewing_distance": 4.49 //1.0668  // in meter
 	},
 	"layout": {
 		"rows": 1,

@@ -5454,22 +5454,21 @@ function pointerScroll(uniqueID, data) {
 			return;
 		}
 
-			// var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-			switch (obj.layerId) {
-				case "staticUI": {
-					break;
-				}
-				case "radialMenus": {
-					sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data);
-					break;
-				}
-				case "widgets": {
-					break;
-				}
-				case "applications": {
-					sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-					break;
-				}
+		// var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+		switch (obj.layerId) {
+			case "staticUI": {
+				break;
+			}
+			case "radialMenus": {
+				sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data);
+				break;
+			}
+			case "widgets": {
+				break;
+			}
+			case "applications": {
+				sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				break;
 			}
 		}
 	}
