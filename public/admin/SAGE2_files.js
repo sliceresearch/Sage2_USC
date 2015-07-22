@@ -472,12 +472,29 @@ function setupListeners(wsio) {
 			thumb.refresh();
 		});
 
+		function openItem(tid) {
+			var appType = getApplicationFromId(tid);
+			// Opening an app
+			if (appType === "application/custom") {
+				wsio.emit('loadApplication',
+						{application: tid,
+						user: uniqueID});
+			} else {
+				// Opening a file
+				wsio.emit('loadFileFromServer',
+						{application: appType,
+						filename: tid,
+						user: uniqueID});
+			}		
+		}
+
 		all_table.attachEvent("onItemDblClick", function(id, e, node) {
-			downloadItem(id.row);
+			// Open the selected content on the wall
+			openItem(id.row);
 		});
 
-		// all_table.attachEvent("onAfterSort", function(by, dir, func) {
-		// 	// console.log('Sorting done');
+		// all_table.attachEvent("onAfterSort", function(by, dir, func, obj) {
+		// 	console.log('Sorting done', by, dir, func);
 		// });
 
 		// onItemClick onAfterSelect onBeforeSelect
@@ -496,6 +513,7 @@ function setupListeners(wsio) {
 			// Otherwise, regular search
 			updateSearch(evt[0]);
 		});
+
 		// tree.attachEvent("onItemClick", function(evt) {
 		// });
 
@@ -624,21 +642,9 @@ function setupListeners(wsio) {
 								tbo.push(dItems[i].id);
 							}
 						}
-
+						// Open all the content one at a time
 						tbo.map(function(tid) {
-							var appType = getApplicationFromId(tid);
-							// Opening an app
-							if (appType === "application/custom") {
-								wsio.emit('loadApplication',
-										{application: tid,
-										user: uniqueID});
-							} else {
-								// Opening a file
-								wsio.emit('loadFileFromServer',
-										{application: appType,
-										filename: tid,
-										user: uniqueID});
-							}
+							openItem(tid);
 						});
 
 					} else if (id === "Delete") {
@@ -855,7 +861,6 @@ function setupListeners(wsio) {
 
 		// Sort the table by name
 		all_table.sort("name", "asc");
-		all_table.markSorting("name", "asc");
 	});
 
 	// Server sends the SAGE2 version
