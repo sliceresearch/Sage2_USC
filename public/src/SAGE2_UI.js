@@ -113,6 +113,11 @@ function SAGE2_init() {
 	wsio.open(function() {
 		console.log("Websocket opened");
 
+		// Show and hide elements once connect to server
+		document.getElementById('loadingUI').style.display = "none";
+		document.getElementById('displayUI').style.display = "block";
+		document.getElementById('menuContainer').style.display = "block";
+
 		// Start an initial resize of the UI once we get a connection
 		SAGE2_resize();
 
