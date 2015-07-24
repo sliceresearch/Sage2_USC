@@ -56,6 +56,7 @@ function RadialMenu(id, ptrID, config) {
 		var calculatedIdealViewingDistance = wallDiagonal / ( DRC * thumbnailWindowDefaultSize.y * Math.tan(Math.PI / 180 / 60) );
 
 		if( config.ui.use_calcuated_viewing_distance ) {
+			console.log("node-radialMenu: calculatedIdealViewingDistance = " + calculatedIdealViewingDistance);
 			this.radialMenuScale = calculatedIdealViewingDistance * (0.03 * (calculatedIdealViewingDistance / thumbnailWindowDefaultHeightMeters ));
 		} else {
 			this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * (config.dimensions.viewing_distance / thumbnailWindowDefaultHeightMeters ));
