@@ -281,6 +281,25 @@ function setupListeners() {
 	});
 
 	wsio.on('updateMediaStreamFrame', function(data) {
+                // NB: Cloned code
+                var data;
+                if (dataOrBuffer.id !== undefined) {
+                  console.log("display.UpdateMediaStreamFrame: parameter is record");
+                  data = dataOrBuffer;
+                } else {
+                  console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
+                  data = {}
+                  // buffer: id, state-type, state-encoding, state-src
+                  data.id = byteBufferToString(dataOrBuffer);
+                  var buf2 = dataOrBuffer.slice(data.id.length + 1, dataOrBuffer.length);
+                  data.state = {}
+                  data.state.type = byteBufferToString(buf2);
+                  var buf3 = buf2.subarray(data.state.type.length + 1);
+                  data.state.encoding = "base64";
+                  var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
+                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+                }
+
 		wsio.emit('receivedMediaStreamFrame', {id: data.id});
 
 		var app = applications[data.id];
