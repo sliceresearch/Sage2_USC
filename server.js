@@ -1075,7 +1075,7 @@ function wsStopMediaStream(wsio, data) {
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
-        console.log("ReceivedMediaStreamFrame");
+        //console.log("ReceivedMediaStreamFrame");
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
