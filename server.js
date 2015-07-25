@@ -284,26 +284,26 @@ function initializeSage2Server() {
 		function(change) {
 			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
 				// assets.refresh(this.root, function() {
 				// 	broadcast('storedFileList', getSavedFilesList());
 				// });
 			}
 			if (change.modifiedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+				// console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
 			}
 			if (change.removedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
+				// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
 			}
 			if (change.addedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
+				// console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
 			}
 			if (change.modifiedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
+				// console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
 			}
 			if (change.removedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
+				// console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
 			}
 		}
 	);
