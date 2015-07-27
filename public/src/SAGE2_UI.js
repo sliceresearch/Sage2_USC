@@ -77,6 +77,8 @@ var hasMouse;
 var pointerDown;
 var pointerX, pointerY;
 
+var sage2Version;
+
 /**
  * Entry point of the user interface
  *
@@ -130,7 +132,7 @@ function SAGE2_init() {
 			clientType: "sageUI",
 			requests: {
 				config: true,
-				version: false,
+				version: true,
 				time: false,
 				console: false
 			}
@@ -265,6 +267,12 @@ function setupListeners() {
 
 	wsio.on('setItemPositionAndSize', function(data) {
 		displayUI.setItemPositionAndSize(data);
+	});
+
+	// Server sends the SAGE2 version
+	wsio.on('setupSAGE2Version', function(data) {
+		sage2Version = data;
+		console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
 	});
 
 	wsio.on('availableApplications', function(data) {
