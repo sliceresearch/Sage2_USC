@@ -20,13 +20,14 @@
 
 "use strict";
 
+var sage2Version;
+
 /**
  * Entry point of the file manager
  *
  * @method SAGE2_FileManager
  */
 function SAGE2_FileManager() {
-	var sage2Version;
 	var fileManager;
 
 	// Connect to the server
@@ -748,7 +749,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		// send the result
 		return response;
-	}
+	};
 
 	function sortByDate(a, b) {
 		// fileds are 'moment' objects
@@ -844,8 +845,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			f = data.applications[i];
 			this.allFiles[f.id] = f;
 		}
-
-		var multiview1 = $$("multiview1");
 
 		i = 0;
 		var mm, createDate;
