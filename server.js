@@ -6333,21 +6333,7 @@ function hideRadialMenu(uniqueID) {
 }
 
 function updateRadialMenu(uniqueID) {
-	// Build lists of assets
-	var uploadedImages = assets.listImages();
-	var uploadedVideos = assets.listVideos();
-	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps   = getApplications();
-	var savedSessions  = listSessions();
-
-	// Sort independently of case
-	uploadedImages.sort(sageutils.compareFilename);
-	uploadedVideos.sort(sageutils.compareFilename);
-	uploadedPdfs.sort(sageutils.compareFilename);
-	savedSessions.sort(sageutils.compareFilename);
-
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
-				sessions: savedSessions, apps: uploadedApps};
+	var list = getSavedFilesList();
 
 	broadcast('updateRadialMenuDocs', {id: uniqueID, fileList: list});
 }
