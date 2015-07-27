@@ -284,26 +284,26 @@ function initializeSage2Server() {
 		function(change) {
 			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
 				// assets.refresh(this.root, function() {
 				// 	broadcast('storedFileList', getSavedFilesList());
 				// });
 			}
 			if (change.modifiedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+				// console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
 			}
 			if (change.removedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
+				// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
 			}
 			if (change.addedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
+				// console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
 			}
 			if (change.modifiedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
+				// console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
 			}
 			if (change.removedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
+				// console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
 			}
 		}
 	);
@@ -1845,6 +1845,22 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
+		// Get the drop position and convert it to wall coordinates
+		var position = data.position || [0, 0];
+		position[0] = Math.round(position[0] * config.totalWidth);
+		position[1] = Math.round(position[1] * config.totalHeight);
+		// Use the position from the drop location
+		if (position[0] !== 0 || position[1] !== 0) {
+			appInstance.left = position[0] - appInstance.width / 2;
+			if (appInstance.left < 0) {
+				appInstance.left = 0;
+			}
+			appInstance.top  = position[1] - appInstance.height / 2;
+			if (appInstance.top < 0) {
+				appInstance.top = 0;
+			}
+		}
+
 		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
@@ -1861,6 +1877,22 @@ function wsLoadFileFromServer(wsio, data) {
 			application: {id: null, type: "session"}}, time: Date.now()});
 	} else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
+			// Get the drop position and convert it to wall coordinates
+			var position = data.position || [0, 0];
+			position[0] = Math.round(position[0] * config.totalWidth);
+			position[1] = Math.round(position[1] * config.totalHeight);
+			// Use the position from the drop location
+			if (position[0] !== 0 || position[1] !== 0) {
+				appInstance.left = position[0] - appInstance.width / 2;
+				if (appInstance.left < 0) {
+					appInstance.left = 0;
+				}
+				appInstance.top  = position[1] - appInstance.height / 2;
+				if (appInstance.top < 0) {
+					appInstance.top = 0;
+				}
+			}
+
 			appInstance.id = getUniqueAppId();
 			handleNewApplication(appInstance, videohandle);
 
@@ -2077,8 +2109,8 @@ function wsAddNewWebElement(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
-		position[0] = parseInt(position[0] * config.totalWidth,  10);
-		position[1] = parseInt(position[1] * config.totalHeight, 10);
+		position[0] = Math.round(position[0] * config.totalWidth);
+		position[1] = Math.round(position[1] * config.totalHeight);
 
 		// Use the position from the drop location
 		if (position[0] !== 0 || position[1] !== 0) {

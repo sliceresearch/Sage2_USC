@@ -516,8 +516,16 @@ var exifAsync = function(cmds, cb) {
 	var execNext = function() {
 		var file = cmds.shift();
 		if (fs.lstatSync(file).isDirectory()) {
-			var instuctionsFile   = path.join(file, "instructions.json");
-			var instructions      = json5.parse(fs.readFileSync(instuctionsFile, 'utf8'));
+			var instuctionsFile, instructions;
+			instuctionsFile = path.join(file, "instructions.json");
+			if (!sageutils.fileExists(instuctionsFile)) {
+				if (cmds.length > 0) {
+					return execNext();
+				} else {
+					return cb(null);
+				}
+			}
+			instructions = json5.parse(fs.readFileSync(instuctionsFile, 'utf8'));
 			var appIcon = null;
 			if (instructions.icon) {
 				appIcon = path.join(file, instructions.icon);

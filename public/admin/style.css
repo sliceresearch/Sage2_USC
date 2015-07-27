@@ -77,10 +77,16 @@ footer {
 }
 
 
-p, tr, td {
+p {
 	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12pt;
 	text-indent: 25px;
+	color: #FFFFFF;
+}
+
+tr, td {
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 12pt;
 	color: #FFFFFF;
 }
 
