@@ -10,6 +10,8 @@
 
 "use strict";
 
+/* global FileManager, webix */
+
 /**
  * Web user interface
  *
@@ -54,6 +56,7 @@ if (!Function.prototype.bind) {
 var wsio;
 var displayUI;
 var interactor;
+var fileManager;
 var keyEvents;
 var touchMode;
 var touchDist;
@@ -134,9 +137,12 @@ function SAGE2_init() {
 		};
 		wsio.emit('addClient', clientDescription);
 
+		// Interaction object: file upload, desktop sharing, ...
 		interactor = new SAGE2_interaction(wsio);
 		interactor.setFileUploadProgressCallback(fileUploadProgress);
 		interactor.setFileUploadCompleteCallback(fileUploadComplete);
+
+		// Send message to desktop capture Chrome extension
 		window.postMessage('SAGE2_desktop_capture_enabled', "*");
 	});
 
@@ -208,6 +214,24 @@ function setupListeners() {
 		pointerDown = false;
 		pointerX    = 0;
 		pointerY    = 0;
+
+		// Build the file manager
+		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
+		webix.DragControl.addDrop("displayUI", {
+			$drop: function(source, target, event) {
+				var dnd = webix.DragControl.getContext();
+				// Calculate the position of the drop
+				var x = event.layerX / event.target.clientWidth;
+				var y = event.layerY / event.target.clientHeight;
+				// Open the files
+				for (var i = 0; i < dnd.source.length; i++) {
+					fileManager.openItem(dnd.source[i], [x, y]);
+				}
+			}
+		});
+
+		// First request the files
+		wsio.emit('requestStoredFiles');
 	});
 
 	wsio.on('setupDisplayConfiguration', function(config) {
@@ -218,6 +242,9 @@ function setupListeners() {
 		var sage2Min  = Math.min(config.totalWidth, config.totalHeight);
 		var screenMin = Math.min(screen.width, screen.height);
 		interactor.setPointerSensitivity(sage2Min / screenMin);
+
+		// Update the file manager
+		fileManager.serverConfiguration(config);
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
@@ -312,7 +339,8 @@ function setupListeners() {
 		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
 		document.getElementById('fileListElems').style.width = (longest + 60).toString() + "px";
 
-		showDialog('mediaBrowserDialog');
+		// showDialog('mediaBrowserDialog');
+		fileManager.updateFiles(data);
 	});
 
 	wsio.on('requestNextFrame', function(data) {
@@ -331,13 +359,26 @@ function setupListeners() {
  * Handler resizes
  *
  * @method SAGE2_resize
+ * @param ratio {Number} scale factor
  */
-function SAGE2_resize() {
-	resizeMenuUI();
+function SAGE2_resize(ratio) {
+	ratio = ratio || 1.0;
+
+	var fm = document.getElementById('fileManager');
+	if (fm.style.display === "block") {
+		ratio = 0.6;
+	}
+
+	resizeMenuUI(ratio);
 	resizeDialogs();
 
 	if (displayUI) {
-		displayUI.resize();
+		displayUI.resize(ratio);
+
+		var mainUI = document.getElementById('mainUI');
+		var newHeight = window.innerHeight - mainUI.clientHeight;
+		fileManager.main.config.height = newHeight - 10;
+		fileManager.main.adjust();
 	}
 }
 
@@ -345,19 +386,29 @@ function SAGE2_resize() {
  * Resize menus
  *
  * @method resizeMenuUI
+ * @param ratio {Number} scale factor
  */
-function resizeMenuUI() {
+function resizeMenuUI(ratio) {
 	var menuContainer = document.getElementById('menuContainer');
 	var menuUI        = document.getElementById('menuUI');
 
+	// Extra scaling factor
+	ratio = ratio || 1.0;
+
 	var menuScale = 1.0;
-	if (window.innerWidth < 856) {
-		menuScale = window.innerWidth / 856;
+	var freeWidth = window.innerWidth * ratio;
+	if (freeWidth < 856) {
+		menuScale = freeWidth / 856;
 	}
+
 	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
 	menuUI.style.mozTransform = "scale(" + menuScale + ")";
 	menuUI.style.transform = "scale(" + menuScale + ")";
 	menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
+
+	// Center the menu bar
+	var mw = menuUI.getBoundingClientRect().width;
+	menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 }
 
 /**
@@ -699,7 +750,19 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		wsio.emit('requestStoredFiles');
+		// wsio.emit('requestStoredFiles');
+		// Open the new file manager
+		// window.open("admin/files.html", "fileManager", "width=1280,height=720");
+		var fm = document.getElementById('fileManager');
+		if (fm.style.display === "none") {
+			fm.style.display = "block";
+			SAGE2_resize(0.6);
+			fileManager.refresh();
+		} else {
+			fm.style.display = "none";
+			SAGE2_resize(1.0);
+		}
+
 	} else if (element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
 		showDialog('arrangementDialog');
 	} else if (element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
