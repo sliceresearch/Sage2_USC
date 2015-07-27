@@ -16,11 +16,9 @@
  * @class SAGE2_Files
  */
 
-/* global SAGE2_init, escape, unescape, webix, $$, moment */
+/* global SAGE2_init, escape, unescape, webix, $$, moment, sage2Version */
 
 "use strict";
-
-var sage2Version;
 
 /**
  * Entry point of the file manager
@@ -38,12 +36,6 @@ function SAGE2_FileManager() {
 	// Callback when socket opens
 	wsio.open(function() {
 		console.log("Open websocket");
-
-		// Server sends the SAGE2 version
-		wsio.on('setupSAGE2Version', function(data) {
-			sage2Version = data;
-			console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
-		});
 
 		// Got a reply from the server
 		wsio.on('initialize', function(data) {
@@ -132,7 +124,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// ---------------------------------------------------
 
 	var data_with_icon = [
-		{id: "treeroot", value: "Assets", icon: "home", open: true, data: [
+		{id: "treeroot", value: "SAGE2", icon: "home", open: true, data: [
 				{id: "Image", value: "Image", icon: "search", data: []},
 				{id: "Video", value: "Video", icon: "search", data: []},
 				{id: "PDF", value: "PDF", icon: "search", data: []},
@@ -173,6 +165,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.main = webix.ui({
 		container: mydiv,
 		id: "layout",
+		css: { border: "solid 1px #565656;"},
 		rows: [
 			{ view: "toolbar", cols: [ mymenu, mytoolbar ]
 			},
@@ -185,6 +178,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					drag: true,
 					minWidth: 120,
 					width: 180,
+					// activeTitle: true, // close/open when selected
 					data: data_with_icon,
 					onContext: {} // required for context menu
 				},
@@ -816,7 +810,38 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (searchParam === "treeroot") {
 			_this.allTable.filter();
 		} else {
-			console.log('Default search on:', searchParam);
+			var query = searchParam.split(':');
+			if (query[0] === "Image") {
+				_this.allTable.filter(function(obj) {
+					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0) &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+				});
+			} else if (query[0] === "PDF") {
+				_this.allTable.filter(function(obj) {
+					return (obj.type.toString() === "PDF") &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+				});
+			} else if (query[0] === "Video") {
+				_this.allTable.filter(function(obj) {
+					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+				});
+			} else if (query[0] === "App") {
+				_this.allTable.filter(function(obj) {
+					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+				});
+			} else if (query[0] === "Session") {
+				_this.allTable.filter(function(obj) {
+					return false;
+				});
+			} else if (query[0] === "Config") {
+				_this.allTable.filter(function(obj) {
+					return false;
+				});
+			} else {
+				console.log('Default search on:', searchParam);
+			}
 		}
 	}
 
@@ -903,13 +928,23 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var idx = 0;
 		for (var f in data.folders) {
 			var folder = data.folders[f];
+			// Build the search icons: use the url in the id for search
+			var children = [
+				{id: "Image:" + folder.url, value: "Image", icon: "search", data: []},
+				{id: "Video:" + folder.url, value: "Video", icon: "search", data: []},
+				{id: "PDF:"   + folder.url, value: "PDF", icon: "search", data: []},
+				{id: "App:"   + folder.url, value: "Application", icon: "search", data: []},
+				{id: "Session:" + folder.url, value: "Session", icon: "search", data: []},
+				{id: "Config:"  + folder.url, value: "Configuration", icon: "search", data: []}
+			];
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
 			//                  url: "/uploads", upload: false}
 			var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
-					icon: "folder", sage2URL: folder.url, data: []};
-			// Add it at the top
-			this.tree.data.add(newElement, idx, "treeroot");
+					icon: "home", open: false, sage2URL: folder.url, data: children};
+			// Add it at the end (-1) and no parent (null)
+			// this.tree.data.add(newElement, -1, null);
+			this.tree.parse({ parent: null, data: newElement });
 			idx = idx + 1;
 		}
 		// refresh the tree
