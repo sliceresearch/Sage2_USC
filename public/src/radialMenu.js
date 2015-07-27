@@ -987,6 +987,7 @@ function RadialMenu() {
 			for (i = 0; i < appList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
+				console.log(appList[i].exif);
 				thumbnailButton.setData({application: "custom_app", filename: appList[i].exif.FileName, shortname: appList[i].exif.FileName, meta: appList[i].exif});
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
