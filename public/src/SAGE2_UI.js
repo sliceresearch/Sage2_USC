@@ -169,6 +169,11 @@ function SAGE2_init() {
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
 
+	if (webix) {
+		// disabling the webix touch managment for now
+		webix.Touch.disable();
+	}
+
 	document.addEventListener('mousemove',  mouseCheck,   false);
 	document.addEventListener('touchstart', touchStart,   false);
 	document.addEventListener('touchend',   touchEnd,     false);
@@ -348,7 +353,10 @@ function setupListeners() {
 		document.getElementById('fileListElems').style.width = (longest + 60).toString() + "px";
 
 		// showDialog('mediaBrowserDialog');
-		fileManager.updateFiles(data);
+		if (fileManager) {
+			// Update the filemanager with the new list
+			fileManager.updateFiles(data);
+		}
 	});
 
 	wsio.on('requestNextFrame', function(data) {
@@ -758,19 +766,21 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		// wsio.emit('requestStoredFiles');
-		// Open the new file manager
-		// window.open("admin/files.html", "fileManager", "width=1280,height=720");
-		var fm = document.getElementById('fileManager');
-		if (fm.style.display === "none") {
-			fm.style.display = "block";
-			SAGE2_resize(0.6);
-			fileManager.refresh();
+		if (!hasMouse) {
+			// wsio.emit('requestStoredFiles');
+			showDialog('mediaBrowserDialog');
 		} else {
-			fm.style.display = "none";
-			SAGE2_resize(1.0);
+			// Open the new file manager
+			var fm = document.getElementById('fileManager');
+			if (fm.style.display === "none") {
+				fm.style.display = "block";
+				SAGE2_resize(0.6);
+				fileManager.refresh();
+			} else {
+				fm.style.display = "none";
+				SAGE2_resize(1.0);
+			}
 		}
-
 	} else if (element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
 		showDialog('arrangementDialog');
 	} else if (element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
@@ -989,8 +999,8 @@ function touchStart(event) {
 			displayUI.pointerMove(touchStartX, touchStartY);
 			displayUI.pointerPress("left");
 			touchHold = setTimeout(function() {
-				displayUI.keyDown(8);
-				displayUI.keyUp(8);
+				displayUI.keyDown(touchStartX, touchStartY, 8);
+				displayUI.keyUp(touchStartX, touchStartY, 8);
 			}, 1500);
 			touchMode = "translate";
 		} else if (event.touches.length === 2) {
