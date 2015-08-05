@@ -25,12 +25,15 @@
 <script type="text/javascript" src="src/SAGE2_DisplayUI.js"></script>
 <script type="text/javascript" src="src/SAGE2_UI.js"></script>
 
-<!-- SAGE2 minified -->
-<!--
-<script type="text/javascript" src="min/ui.min.js"></script>
--->
-
 <link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
+
+<!-- File manager UI -->
+<script type="text/javascript" src="src/SAGE2_fileManager.js"></script>
+<script type="text/javascript" src="lib/moment.min.js"></script>
+<script type="text/javascript" src="lib/webix/webix.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/webix/webix.css">
+<link rel="stylesheet" type="text/css" href="lib/webix/skins/compact.css">
+<link rel="stylesheet" type="text/css" href="css/fileManager.css" media="screen">
 
 </head>
 
@@ -48,7 +51,7 @@
 		</div>
 
 		<div class="clear"></div>
-		<div id="menuContainer" style="display:none;">
+		<div id="menuContainer" style="display:none;width:auto;">
 			<table id="menuUI">
 				<tr>
 					<td id="sage2pointerContainer">
@@ -83,6 +86,12 @@
 			</table>
 		</div>
 	</div>
+
+	<div class="clear"></div>
+
+	<section class="siteType">
+		<div id="fileManager" style='display:none;margin: 0 auto;width:98%;'></div>
+	</section>
 
 	<div class="clear"></div>
 	
@@ -243,8 +252,8 @@
 							<select id="screenShareResolution">
 								<option>Low</option>
 								<option>Medium</option>
-								<option>High</option>
-								<option selected="selected">Full</option>
+								<option selected="selected">High</option>
+								<option>Full</option>
 							</select>
 						</td>
 					</tr>

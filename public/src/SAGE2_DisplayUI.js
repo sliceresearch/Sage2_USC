@@ -163,11 +163,15 @@ SAGE2DisplayUI.prototype.draw = function() {
  * Callback when the browser is resize, adjust the position of UI elements
  *
  * @method resize
+ * @param ratio {Number} scale factor
  */
-SAGE2DisplayUI.prototype.resize = function() {
+SAGE2DisplayUI.prototype.resize = function(ratio) {
 	var displayUI        = document.getElementById('displayUI');
 	var sage2UI          = document.getElementById('sage2UI');
 	var applicationsDiv  = document.getElementById('applicationsDiv');
+
+	// Extra scaling factor
+	ratio = ratio || 1.0;
 
 	var menuScale = 1.0;
 	if (window.innerWidth < 856) {
@@ -179,8 +183,8 @@ SAGE2DisplayUI.prototype.resize = function() {
 	var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 
 	// Calculate new sizes
-	var drawWidth  = Math.floor(freeWidth);
-	var drawHeight = Math.floor(freeWidth / sage2Aspect);
+	var drawWidth  = Math.floor(freeWidth * ratio);
+	var drawHeight = Math.floor(freeWidth * ratio / sage2Aspect);
 	// Check if it fits
 	if (drawHeight >= freeHeight) {
 		drawHeight = Math.floor(freeHeight);
@@ -197,7 +201,7 @@ SAGE2DisplayUI.prototype.resize = function() {
 	sage2UI.height = drawHeight;
 	applicationsDiv.style.width  = drawWidth + "px";
 	applicationsDiv.style.height = drawHeight + "px";
-	displayUI.style.height = (drawHeight + 10) + "px";
+	displayUI.style.height = (drawHeight + 5) + "px";
 
 	this.resizeAppWindows();
 

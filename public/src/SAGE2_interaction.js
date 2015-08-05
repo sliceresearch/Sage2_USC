@@ -228,7 +228,11 @@ function SAGE2_interaction(wsio) {
 										button.webkitRequestPointerLock;
 
 			// Ask the browser to lock the pointer
-			button.requestPointerLock();
+			if (button.requestPointerLock) {
+				button.requestPointerLock();
+			} else {
+				console.log("No PointerLock support");
+			}
 		} else {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
 
@@ -245,7 +249,11 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.stopSAGE2Pointer = function() {
 		if (hasMouse) {
-			document.exitPointerLock();
+			if (document.exitPointerLock) {
+				document.exitPointerLock();
+			} else {
+				console.log("No PointerLock support");
+			}
 		} else {
 			this.wsio.emit('stopSagePointer');
 			hideSAGE2PointerOverlayNoMouse();

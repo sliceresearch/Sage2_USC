@@ -284,26 +284,26 @@ function initializeSage2Server() {
 		function(change) {
 			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
 				// assets.refresh(this.root, function() {
 				// 	broadcast('storedFileList', getSavedFilesList());
 				// });
 			}
 			if (change.modifiedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+				// console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
 			}
 			if (change.removedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
+				// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
 			}
 			if (change.addedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
+				// console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
 			}
 			if (change.modifiedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
+				// console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
 			}
 			if (change.removedFolders.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
+				// console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
 			}
 		}
 	);
@@ -1859,6 +1859,22 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
+		// Get the drop position and convert it to wall coordinates
+		var position = data.position || [0, 0];
+		position[0] = Math.round(position[0] * config.totalWidth);
+		position[1] = Math.round(position[1] * config.totalHeight);
+		// Use the position from the drop location
+		if (position[0] !== 0 || position[1] !== 0) {
+			appInstance.left = position[0] - appInstance.width / 2;
+			if (appInstance.left < 0) {
+				appInstance.left = 0;
+			}
+			appInstance.top  = position[1] - appInstance.height / 2;
+			if (appInstance.top < 0) {
+				appInstance.top = 0;
+			}
+		}
+
 		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
@@ -1875,6 +1891,22 @@ function wsLoadFileFromServer(wsio, data) {
 			application: {id: null, type: "session"}}, time: Date.now()});
 	} else {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
+			// Get the drop position and convert it to wall coordinates
+			var position = data.position || [0, 0];
+			position[0] = Math.round(position[0] * config.totalWidth);
+			position[1] = Math.round(position[1] * config.totalHeight);
+			// Use the position from the drop location
+			if (position[0] !== 0 || position[1] !== 0) {
+				appInstance.left = position[0] - appInstance.width / 2;
+				if (appInstance.left < 0) {
+					appInstance.left = 0;
+				}
+				appInstance.top  = position[1] - appInstance.height / 2;
+				if (appInstance.top < 0) {
+					appInstance.top = 0;
+				}
+			}
+
 			appInstance.id = getUniqueAppId();
 			handleNewApplication(appInstance, videohandle);
 
@@ -2091,8 +2123,8 @@ function wsAddNewWebElement(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
-		position[0] = parseInt(position[0] * config.totalWidth,  10);
-		position[1] = parseInt(position[1] * config.totalHeight, 10);
+		position[0] = Math.round(position[0] * config.totalWidth);
+		position[1] = Math.round(position[1] * config.totalHeight);
 
 		// Use the position from the drop location
 		if (position[0] !== 0 || position[1] !== 0) {
@@ -4870,35 +4902,38 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(moveApp.elemId);
-	var backgroundObj = im.searchGeometry({x: moveApp.elemLeft - 1, y: moveApp.elemTop - 1});
-	if (backgroundObj !== null) {
-		if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
-			attachAppIfSticky(backgroundObj.data, moveApp.elemId);
+	if (im) {
+		var backgroundObj = im.searchGeometry({x: moveApp.elemLeft - 1, y: moveApp.elemTop - 1});
+		if (backgroundObj !== null) {
+			if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
+				attachAppIfSticky(backgroundObj.data, moveApp.elemId);
+			}
 		}
-	}
-	im.editGeometry(moveApp.elemId, "applications", "rectangle",
-		{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
-	broadcast('setItemPosition', moveApp);
-	if (SAGE2Items.renderSync.hasOwnProperty(moveApp.elemId)) {
-		calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
-		if (app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
-			handleNewVideoFrame(app.id);
+		im.editGeometry(moveApp.elemId, "applications", "rectangle",
+			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
+		broadcast('setItemPosition', moveApp);
+		if (SAGE2Items.renderSync.hasOwnProperty(moveApp.elemId)) {
+			calculateValidBlocks(app, mediaBlockSize, SAGE2Items.renderSync[app.id]);
+			if (app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
+				handleNewVideoFrame(app.id);
+			}
 		}
-	}
 
-	if (portalId !== undefined && portalId !== null) {
-		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-		remoteSharingSessions[portalId].wsio.emit('updateApplicationPosition',
-			{appPositionAndSize: moveApp, portalId: portalId, date: ts});
-	}
+		if (portalId !== undefined && portalId !== null) {
+			var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+			remoteSharingSessions[portalId].wsio.emit('updateApplicationPosition',
+				{appPositionAndSize: moveApp, portalId: portalId, date: ts});
+		}
 
-	var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(moveApp);
+		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(moveApp);
 
-	for (var idx = 0; idx < updatedStickyItems.length; idx++) {
-		var stickyItem = updatedStickyItems[idx];
-		im.editGeometry(stickyItem.elemId, "applications", "rectangle",
-			{x: stickyItem.elemLeft, y: stickyItem.elemTop, w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight});
-		broadcast('setItemPosition', updatedStickyItems[idx]);
+		for (var idx = 0; idx < updatedStickyItems.length; idx++) {
+			var stickyItem = updatedStickyItems[idx];
+			im.editGeometry(stickyItem.elemId, "applications", "rectangle",
+				{x: stickyItem.elemLeft, y: stickyItem.elemTop,
+				w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight});
+			broadcast('setItemPosition', updatedStickyItems[idx]);
+		}
 	}
 }
 
@@ -5208,15 +5243,19 @@ function dropSelectedItem(uniqueID, valid, portalId) {
 	if (remoteInteraction[uniqueID].selectedMoveItem !== null) {
 		list = (SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) ? "portals" : "applications";
 		item = SAGE2Items[list].list[remoteInteraction[uniqueID].selectedMoveItem.id];
-		position = {left: item.left, top: item.top, width: item.width, height: item.height};
-		dropMoveItem(uniqueID, item, valid, portalId);
-		return {application: item, previousPosition: position};
+		if (item) {
+			position = {left: item.left, top: item.top, width: item.width, height: item.height};
+			dropMoveItem(uniqueID, item, valid, portalId);
+			return {application: item, previousPosition: position};
+		}
 	} else if (remoteInteraction[uniqueID].selectedResizeItem !== null) {
 		list = (SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) ? "portals" : "applications";
 		item = SAGE2Items[list].list[remoteInteraction[uniqueID].selectedResizeItem.id];
-		position = {left: item.left, top: item.top, width: item.width, height: item.height};
-		dropResizeItem(uniqueID, item, portalId);
-		return {application: item, previousPosition: position};
+		if (item) {
+			position = {left: item.left, top: item.top, width: item.width, height: item.height};
+			dropResizeItem(uniqueID, item, portalId);
+			return {application: item, previousPosition: position};
+		}
 	}
 	return null;
 }
