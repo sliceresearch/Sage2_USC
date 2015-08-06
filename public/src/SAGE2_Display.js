@@ -280,7 +280,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('updateMediaStreamFrame', function(data) {
+	wsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
