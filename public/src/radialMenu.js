@@ -966,7 +966,7 @@ function RadialMenu() {
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				curList = videoList[i];
 				data = {application: "movie_player", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
-				thumbnailButton.setData();
+				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -995,7 +995,7 @@ function RadialMenu() {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				data = {application: "custom_app", filename: appList[i].filename, shortname: appList[i].exif.FileName, meta: appList[i].exif};
-				thumbnailButton.setData();
+				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
 
