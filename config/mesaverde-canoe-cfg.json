@@ -1,37 +1,42 @@
+/*
+	Configuration for Mesaverde
+*/
 {
-	name: "PhD",
-	host: "dante.evl.uic.edu",
+	name: "Green Table",
+	// hostname of the web server
+	host: "mesaverde.evl.uic.edu",
+	// port of the HTTPS server: 443 for default
 	port: 443,
+	// port of the HTTP public page
 	index_port: 80,
 	background: {
-		color: "#333333",
-        watermark: {
-			svg: "images/EVL-LAVA.svg",
-			color: "rgba(255, 255, 255, 0.5)"
+		image: {
+			url: "images/background/osx_hero_2x_cc.jpg",
+			style: "stretch"
 		},
 		clip: true
 	},
-    ui: {
+	ui: {
 		clock: 12,           // clock setting: 12-hour or 24-hour
 		show_version: true,  // shows SAGE2 version in menu bar
 		show_url: true,      // shows SAGE2 url in menu bar
 		enable_perceptual_scaling: true,
     },
 	resolution: {
-		width: 4080,
-		height: 768
+		width: 3840,
+		height: 2160
 	},
 	dimensions: {
 		// dimensions of one tile (can be overriden in displays section)
-		tile_width:  1.093,  // in meter, pixel area
-		tile_height: 0.646,  // in meter, pixel area
-		tile_borders: [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+		tile_width:  1.91,  // in meter, pixel area
+		tile_height: 1.12,  // in meter, pixel area
+		tile_borders: [ 0.0254, 0.0254, 0.0254, 0.0254 ], // mullions in meter, left, right, bottom, top
 		// prefered or common viewing distance to calculate UI sizes
-		viewing_distance: 2.5  // in meter
+		viewing_distance: 4.0  // in meter
 	},
 	layout: {
-		rows: 3,
-		columns: 1
+		rows: 1,
+		columns: 3
 	},
 	displays: [
 		{
@@ -39,21 +44,22 @@
 			column: 0
 		},
 		{
-			row: 1,
-			column: 0
+			row: 0,
+			column: 1
 		},
 		{
-			row: 2,
-			column: 0
-		}
+			row: 0,
+			column: 2
+		},
 	],
 	alternate_hosts: [
 		"localhost",
+		"131.193.183.173",
 		"127.0.0.1"
 	],
 	remote_sites: [
 		{
-			name: "Cyber-Commons",
+			name: "CyberCommons",
 			host: "iridium.evl.uic.edu",
 			port: 443,
 			secure: true
@@ -71,14 +77,16 @@
 			secure: true
 		},
 		{
-			name: "Green Room",
-			host: "mesaverde.evl.uic.edu",
+			name: "LAVA1",
+			host: "canoe-samoa.ics.hawaii.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA2",
+			host: "canoe-lava-2.manoa.hawaii.edu",
 			port: 443,
 			secure: true
 		}
-	],
-	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.9.0-Q16/",
-        FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
-	}
+	]
 }

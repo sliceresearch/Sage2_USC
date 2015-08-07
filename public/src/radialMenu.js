@@ -742,7 +742,7 @@ function RadialMenu() {
 
 					}
 					if (thumbButton.isPositionOver(user.id, thumbEventPos)) {
-						this.hoverOverText = thumbButton.getData().filename;
+						this.hoverOverText = thumbButton.getData().shortname;
 						this.hoverOverThumbnail = thumbButton.buttonImage;
 
 						if (thumbButton.buttonImage.lsrc) {
@@ -786,8 +786,6 @@ function RadialMenu() {
 				// Controls the content window scrolling.
 				// Note:Scrolling is +right, -left so offset should always be negative
 				if (this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false) {
-					var scrollDist = 0;
-
 					var nextScrollPos = this.thumbnailWindowScrollOffset;
 
 					nextScrollPos.x += (position.x - this.thumbnailWindowDragPosition.x) * thumbnailScrollScale;
@@ -800,24 +798,7 @@ function RadialMenu() {
 						nextScrollPos.y = 0;
 					}
 
-					if (this.thumbnailWindowScrollLock.x === false) {
-						this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
-						scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
-					}
-					if (this.thumbnailWindowScrollLock.y === false) {
-						this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
-						scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
-					}
-
-					if (scrollDist < 0) {
-						scrollDist *= -1;
-					}
-					if (scrollDist >= thumbnailDisableSelectionScrollDistance) {
-						this.scrollOpenContentLock = true;
-					}
-
-					this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString() + "px";
-
+					this.scrollThumbnailWindow(nextScrollPos);
 					this.thumbnailWindowDragPosition = position;
 				} else {
 					this.thumbnailWindowScrollOffset.x = 0;
@@ -832,7 +813,34 @@ function RadialMenu() {
 				this.dragThumbnailWindow = false;
 			}
 		}
+		else if( type === "pointerScroll" ) {
+			var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
+			this.scrollThumbnailWindow( {x: wheelDelta, y: 0 } );
+		}
+	};
 
+	this.scrollThumbnailWindow = function(nextScrollPos) {
+		var scrollDist = 0;
+		if( this.thumbnailWindowScrollLock.x === false ) {
+			this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
+			scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
+		}
+		if( this.thumbnailWindowScrollLock.y === false ) {
+			this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
+			scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
+		}
+
+		if( scrollDist < 0 ) {
+			scrollDist *= -1;
+		}
+		if( scrollDist >= thumbnailDisableSelectionScrollDistance ) {
+			this.scrollOpenContentLock = true;
+		}
+
+		if( this.thumbnailWindowScrollOffset.x > 0 ) {
+			this.thumbnailWindowScrollOffset.x = 0;
+		}
+		this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString() + "px";
 	};
 
 	/**
@@ -879,7 +887,7 @@ function RadialMenu() {
 		var imageList = serverFileList.images;
 		var pdfList = serverFileList.pdfs;
 		var videoList = serverFileList.videos;
-		var appList = serverFileList.apps;
+		var appList = serverFileList.applications;
 
 		var sessionList = serverFileList.sessions;
 		var i = 0;
@@ -893,7 +901,7 @@ function RadialMenu() {
 				if (imageList[i].filename.search("Thumbs.db") === -1) {
 					thumbnailButton = new ButtonWidget();
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-					thumbnailButton.setData({application: "image_viewer", filename: imageList[i].exif.FileName, meta: imageList[i].exif});
+					thumbnailButton.setData({application: "image_viewer", filename: imageList[i].exif.SourceFile, shortname: imageList[i].exif.FileName, meta: imageList[i].exif});
 					thumbnailButton.simpleTint = false;
 
 					thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -923,7 +931,7 @@ function RadialMenu() {
 			for (i = 0; i < pdfList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "pdf_viewer", filename: pdfList[i].exif.FileName, meta: pdfList[i].exif});
+				thumbnailButton.setData({application: "pdf_viewer", filename: pdfList[i].exif.SourceFile, shortname: pdfList[i].exif.FileName, meta: pdfList[i].exif});
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -951,7 +959,7 @@ function RadialMenu() {
 			for (i = 0; i < videoList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "movie_player", filename: videoList[i].exif.FileName, meta: videoList[i].exif});
+				thumbnailButton.setData({application: "movie_player", filename: videoList[i].exif.SourceFile, shortname: videoList[i].exif.FileName, meta: videoList[i].exif});
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -979,7 +987,8 @@ function RadialMenu() {
 			for (i = 0; i < appList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "custom_app", filename: appList[i].exif.FileName, meta: appList[i].exif});
+				console.log(appList[i].exif);
+				thumbnailButton.setData({application: "custom_app", filename: appList[i].exif.FileName, shortname: appList[i].exif.FileName, meta: appList[i].exif});
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
 
@@ -1007,7 +1016,7 @@ function RadialMenu() {
 			for (i = 0; i < sessionList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "load_session", filename: sessionList[i].exif.FileName, meta: sessionList[i].exif});
+				thumbnailButton.setData({application: "load_session", filename: sessionList[i].exif.SourceFile, shortname: sessionList[i].exif.FileName, meta: sessionList[i].exif});
 				thumbnailButton.setButtonImage(radialMenuIcons["images/ui/loadsession.svg"]);
 				thumbnailButton.simpleTint = false;
 
@@ -1340,6 +1349,17 @@ function ButtonWidget() {
 					// this.state = 6;
 				}
 			}
+			/*else if( this.state !== 2 ) {
+				if( this.state !== 1 ) {
+					this.state = 5;
+					if( this.useEventOverColor ) {
+						this.ctx.redraw = true;
+					}
+				}
+				else {
+					this.state = 1;
+				}
+			}*/
 			return 1;
 		} else {
 			if (this.isLit === false) {

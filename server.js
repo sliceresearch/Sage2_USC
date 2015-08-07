@@ -5487,31 +5487,40 @@ function pointerScroll(uniqueID, data) {
 	if (updatedResizeItem !== null) {
 		moveAndResizeApplicationWindow(updatedResizeItem);
 	} else {
-		if (remoteInteraction[uniqueID].appInteractionMode()) {
-			var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
-			if (obj === null) {
-				return;
+		if (obj === null) {
+			return;
+		}
+
+		// var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+		switch (obj.layerId) {
+			case "staticUI": {
+				break;
 			}
-
-			// var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-			switch (obj.layerId) {
-				case "staticUI": {
-					break;
-				}
-				case "radialMenus": {
-					break;
-				}
-				case "widgets": {
-					break;
-				}
-				case "applications": {
-					sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-					break;
-				}
+			case "radialMenus": {
+				sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data);
+				break;
+			}
+			case "widgets": {
+				break;
+			}
+			case "applications": {
+				sendPointerScrollToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				break;
 			}
 		}
 	}
+}
+
+function sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data) {
+	if ( obj.id.indexOf("menu_thumbnail") !== -1 ) {
+		// PointerMove on thumbnail window
+		//console.log("Pointer move on thumbnail window");
+		var event = { button: data.button, color: sagePointers[uniqueID].color, wheelDelta: data.wheelDelta };
+		radialMenuEvent({type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: event});
+	}
+	remoteInteraction[uniqueID].selectWheelDelta += data.wheelDelta;
 }
 
 function sendPointerScrollToApplication(uniqueID, app, pointerX, pointerY, data) {
@@ -6276,7 +6285,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] === undefined) {
-		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config.ui);
+		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config);
 		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
 
@@ -6363,21 +6372,7 @@ function hideRadialMenu(uniqueID) {
 }
 
 function updateRadialMenu(uniqueID) {
-	// Build lists of assets
-	var uploadedImages = assets.listImages();
-	var uploadedVideos = assets.listVideos();
-	var uploadedPdfs   = assets.listPDFs();
-	var uploadedApps   = getApplications();
-	var savedSessions  = listSessions();
-
-	// Sort independently of case
-	uploadedImages.sort(sageutils.compareFilename);
-	uploadedVideos.sort(sageutils.compareFilename);
-	uploadedPdfs.sort(sageutils.compareFilename);
-	savedSessions.sort(sageutils.compareFilename);
-
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
-				sessions: savedSessions, apps: uploadedApps};
+	var list = getSavedFilesList();
 
 	broadcast('updateRadialMenuDocs', {id: uniqueID, fileList: list});
 }
