@@ -901,7 +901,7 @@ function RadialMenu() {
 				if (imageList[i].filename.search("Thumbs.db") === -1) {
 					thumbnailButton = new ButtonWidget();
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-					thumbnailButton.setData({application: "image_viewer", filename: imageList[i].exif.SourceFile, shortname: imageList[i].exif.FileName, meta: imageList[i].exif});
+					thumbnailButton.setData({application: "image_viewer", filename: imageList[i].filename, shortname: imageList[i].exif.FileName, meta: imageList[i].exif});
 					thumbnailButton.simpleTint = false;
 
 					thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -931,7 +931,7 @@ function RadialMenu() {
 			for (i = 0; i < pdfList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "pdf_viewer", filename: pdfList[i].exif.SourceFile, shortname: pdfList[i].exif.FileName, meta: pdfList[i].exif});
+				thumbnailButton.setData({application: "pdf_viewer", filename: pdfList[i].filename, shortname: pdfList[i].exif.FileName, meta: pdfList[i].exif});
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -959,7 +959,7 @@ function RadialMenu() {
 			for (i = 0; i < videoList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "movie_player", filename: videoList[i].exif.SourceFile, shortname: videoList[i].exif.FileName, meta: videoList[i].exif});
+				thumbnailButton.setData({application: "movie_player", filename: videoList[i].filename, shortname: videoList[i].exif.FileName, meta: videoList[i].exif});
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -987,8 +987,8 @@ function RadialMenu() {
 			for (i = 0; i < appList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				console.log(appList[i].exif);
-				thumbnailButton.setData({application: "custom_app", filename: appList[i].exif.FileName, shortname: appList[i].exif.FileName, meta: appList[i].exif});
+
+				thumbnailButton.setData({application: "custom_app", filename: appList[i].filename, shortname: appList[i].exif.FileName, meta: appList[i].exif});
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
 
@@ -1016,7 +1016,7 @@ function RadialMenu() {
 			for (i = 0; i < sessionList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "load_session", filename: sessionList[i].exif.SourceFile, shortname: sessionList[i].exif.FileName, meta: sessionList[i].exif});
+				thumbnailButton.setData({application: "load_session", filename: sessionList[i].filename, shortname: sessionList[i].exif.FileName, meta: sessionList[i].exif});
 				thumbnailButton.setButtonImage(radialMenuIcons["images/ui/loadsession.svg"]);
 				thumbnailButton.simpleTint = false;
 
