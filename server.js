@@ -5514,9 +5514,7 @@ function pointerScroll(uniqueID, data) {
 }
 
 function sendPointerScrollToRadialMenu(uniqueID, obj, pointerX, pointerY, data) {
-	if ( obj.id.indexOf("menu_thumbnail") !== -1 ) {
-		// PointerMove on thumbnail window
-		//console.log("Pointer move on thumbnail window");
+	if (obj.id.indexOf("menu_thumbnail") !== -1) {
 		var event = { button: data.button, color: sagePointers[uniqueID].color, wheelDelta: data.wheelDelta };
 		radialMenuEvent({type: "pointerScroll", id: uniqueID, x: pointerX, y: pointerY, data: event});
 	}

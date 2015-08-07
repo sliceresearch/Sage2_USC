@@ -313,8 +313,8 @@ function RadialMenu() {
 	this.drawImage = function(ctx, image, position, size, color, rotation, centered) {
 		// this.ctx.save();
 		ctx.fillStyle = color;
-		// this.ctx.translate( position.x , position.y );
-		// this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180) );
+		// this.ctx.translate( position.x , position.y);
+		// this.ctx.rotate( (initAngle + angleSeparation * angleIncrement + 90) * (Math.PI/180));
 		if (centered) {
 			ctx.drawImage(image, position.x - size.x / 2, position.y - size.y / 2, size.x, size.y);
 		} else {
@@ -812,32 +812,31 @@ function RadialMenu() {
 			} else if (this.dragThumbnailWindow === true) {
 				this.dragThumbnailWindow = false;
 			}
-		}
-		else if( type === "pointerScroll" ) {
+		} else if (type === "pointerScroll") {
 			var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
-			this.scrollThumbnailWindow( {x: wheelDelta, y: 0 } );
+			this.scrollThumbnailWindow({x: wheelDelta, y: 0 });
 		}
 	};
 
 	this.scrollThumbnailWindow = function(nextScrollPos) {
 		var scrollDist = 0;
-		if( this.thumbnailWindowScrollLock.x === false ) {
+		if (this.thumbnailWindowScrollLock.x === false) {
 			this.thumbnailWindowScrollOffset.x = nextScrollPos.x;
 			scrollDist += this.thumbnailWindowInitialScrollOffset.x - this.thumbnailWindowScrollOffset.x;
 		}
-		if( this.thumbnailWindowScrollLock.y === false ) {
+		if (this.thumbnailWindowScrollLock.y === false) {
 			this.thumbnailWindowScrollOffset.y = nextScrollPos.y;
 			scrollDist += this.thumbnailWindowInitialScrollOffset.y - this.thumbnailWindowScrollOffset.y;
 		}
 
-		if( scrollDist < 0 ) {
+		if (scrollDist < 0) {
 			scrollDist *= -1;
 		}
-		if( scrollDist >= thumbnailDisableSelectionScrollDistance ) {
+		if (scrollDist >= thumbnailDisableSelectionScrollDistance) {
 			this.scrollOpenContentLock = true;
 		}
 
-		if( this.thumbnailWindowScrollOffset.x > 0 ) {
+		if (this.thumbnailWindowScrollOffset.x > 0) {
 			this.thumbnailWindowScrollOffset.x = 0;
 		}
 		this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString() + "px";
@@ -894,6 +893,8 @@ function RadialMenu() {
 		var thumbnailButton;
 		var customIcon;
 		var invalidFilenameRegex = "[:#$%^&@]";
+		var data;
+		var curList;
 
 		if (imageList !== null) {
 			var validImages = 0;
@@ -901,7 +902,9 @@ function RadialMenu() {
 				if (imageList[i].filename.search("Thumbs.db") === -1) {
 					thumbnailButton = new ButtonWidget();
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-					thumbnailButton.setData({application: "image_viewer", filename: imageList[i].filename, shortname: imageList[i].exif.FileName, meta: imageList[i].exif});
+					curList = imageList[i];
+					data = {application: "image_viewer", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+					thumbnailButton.setData(data);
 					thumbnailButton.simpleTint = false;
 
 					thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -931,7 +934,9 @@ function RadialMenu() {
 			for (i = 0; i < pdfList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "pdf_viewer", filename: pdfList[i].filename, shortname: pdfList[i].exif.FileName, meta: pdfList[i].exif});
+				curList = pdfList[i];
+				data = {application: "pdf_viewer", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -959,7 +964,9 @@ function RadialMenu() {
 			for (i = 0; i < videoList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "movie_player", filename: videoList[i].filename, shortname: videoList[i].exif.FileName, meta: videoList[i].exif});
+				curList = videoList[i];
+				data = {application: "movie_player", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				thumbnailButton.setData();
 				thumbnailButton.simpleTint = false;
 
 				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
@@ -987,8 +994,8 @@ function RadialMenu() {
 			for (i = 0; i < appList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-
-				thumbnailButton.setData({application: "custom_app", filename: appList[i].filename, shortname: appList[i].exif.FileName, meta: appList[i].exif});
+				data = {application: "custom_app", filename: appList[i].filename, shortname: appList[i].exif.FileName, meta: appList[i].exif};
+				thumbnailButton.setData();
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
 
@@ -1016,7 +1023,9 @@ function RadialMenu() {
 			for (i = 0; i < sessionList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				thumbnailButton.setData({application: "load_session", filename: sessionList[i].filename, shortname: sessionList[i].exif.FileName, meta: sessionList[i].exif});
+				curList = sessionList[i];
+				data = {application: "load_session", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				thumbnailButton.setData(data);
 				thumbnailButton.setButtonImage(radialMenuIcons["images/ui/loadsession.svg"]);
 				thumbnailButton.simpleTint = false;
 
@@ -1153,13 +1162,13 @@ function ButtonWidget() {
 	this.hitboxheight = imageThumbSize;
 
 	this.defaultColor = "rgba(210, 210, 210, 1.0)";
-	this.mouseOverColor = "rgba(210, 210, 10, 1.0 )";
-	this.clickedColor = "rgba(10, 210, 10, 1.0 )";
-	this.pressedColor = "rgba(10, 210, 210, 1.0 )";
+	this.mouseOverColor = "rgba(210, 210, 10, 1.0)";
+	this.clickedColor = "rgba(10, 210, 10, 1.0)";
+	this.pressedColor = "rgba(10, 210, 210, 1.0)";
 
-	this.releasedColor = "rgba(10, 10, 210, 1.0 )";
+	this.releasedColor = "rgba(10, 10, 210, 1.0)";
 
-	this.litColor = "rgba(10, 210, 210, 1.0 )";
+	this.litColor = "rgba(10, 210, 210, 1.0)";
 
 	this.buttonImage = null;
 	this.overlayImage = null;
@@ -1272,7 +1281,7 @@ function ButtonWidget() {
 
 		// Draw icon aligned centered
 		if (this.buttonImage !== null) {
-			// this.ctx.rotate( this.angle );
+			// this.ctx.rotate( this.angle);
 
 			// draw the original image
 			this.ctx.drawImage(this.buttonImage, offset.x, offset.y, this.width, this.height);
@@ -1349,10 +1358,10 @@ function ButtonWidget() {
 					// this.state = 6;
 				}
 			}
-			/*else if( this.state !== 2 ) {
-				if( this.state !== 1 ) {
+			/*else if (this.state !== 2) {
+				if (this.state !== 1) {
 					this.state = 5;
-					if( this.useEventOverColor ) {
+					if (this.useEventOverColor) {
 						this.ctx.redraw = true;
 					}
 				}
