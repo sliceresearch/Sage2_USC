@@ -1,0 +1,62 @@
+version: 1.0.{build}
+
+branches:
+  only:
+  - master
+
+clone_depth: 1
+
+configuration: Release
+
+platform: x64
+
+init:
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-20150806-git-9c0407e-win64-dev.7z
+  - 7z x ffmpeg-20150806-git-9c0407e-win64-dev.7z -o.
+  - mkdir C:\Dev\
+  - mkdir C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-20150806-git-9c0407e-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-20150806-git-9c0407e-win64-dev\include C:\Dev\ffmpeg-win64-dev
+  - del /Q *.7z
+  - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-dev
+  - dir C:\Dev
+  - dir C:\Dev\ffmpeg-win64-dev\include
+  - dir C:\Dev\ffmpeg-win64-dev\lib
+
+install:
+  - ps: Install-Product node 0.12.7 x64
+  - npm -v
+  - node -v
+  - npm install --production --msvs_version=2013
+
+build:
+  parallel: true
+  verbosity: minimal
+
+after_build:
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
+  - 7z x ffmpeg-20150806-git-9c0407e-win64-shared.7z -o.
+  - move ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
+  - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
+  - del /Q *.7z
+  - rmdir /Q /S .git
+  - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\
+
+test: off
+
+artifacts:
+  - path: sage2-$(APPVEYOR_BUILD_VERSION).zip
+    name: sage2-win64
+
+deploy:
+  - provider: FTP
+    host: ftp.evl.uic.edu
+    protocol: ftp
+    username: anonymous
+    password:
+      secure: l0HiJIV16DR1bWNu033KVw==
+    folder: pub/INcoming/luc/app
+    artifact: sage2-win64
+
+after_deploy:
+  - dir
