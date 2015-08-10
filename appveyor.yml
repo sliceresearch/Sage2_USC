@@ -36,10 +36,16 @@ install:
   - kthxbai
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
   - 7z x ffmpeg-20150806-git-9c0407e-win64-shared.7z -o.
-  - move ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.exe bin\
   - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
+  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-9.99.zip
+  - 7z x exiftool-9.99.zip
+  - move exiftool(-k).exe bin\exiftool.exe
   - del /Q *.7z
-  - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\
+  - del /Q *.zip
+  - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\ -x build
 
 build: off
 
