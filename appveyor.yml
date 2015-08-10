@@ -43,7 +43,7 @@ before_deploy:
   - move ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
   - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
   - del /Q *.7z
-  - rmdir /Q /S .git
+  # - rmdir /Q /S .git
   - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\
 
 artifacts:
