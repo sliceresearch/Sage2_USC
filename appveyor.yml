@@ -4,7 +4,8 @@ branches:
   only:
   - master
 
-clone_depth: 1
+# clone_depth: 1
+shallow_clone: true
 
 configuration: Release
 
@@ -29,9 +30,9 @@ install:
   - node -v
   - npm install --production --msvs_version=2013
 
-build:
-  parallel: true
-  verbosity: minimal
+build: off
+  # parallel: true
+  # verbosity: minimal
 
 after_build:
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
