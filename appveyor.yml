@@ -4,7 +4,10 @@ branches:
   only:
   - master
 
+# git clone of depth 1
 # clone_depth: 1
+
+# specific to github and bitbucket: get a ZIP file using REST API
 shallow_clone: true
 
 configuration: Release
@@ -31,10 +34,10 @@ install:
   - npm install --production --msvs_version=2013
 
 build: off
-  # parallel: true
-  # verbosity: minimal
 
-after_build:
+test: off
+
+before_deploy:
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
   - 7z x ffmpeg-20150806-git-9c0407e-win64-shared.7z -o.
   - move ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
@@ -42,8 +45,6 @@ after_build:
   - del /Q *.7z
   - rmdir /Q /S .git
   - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\
-
-test: off
 
 artifacts:
   - path: sage2-$(APPVEYOR_BUILD_VERSION).zip
