@@ -32,19 +32,18 @@ install:
   - npm -v
   - node -v
   - npm install --production --msvs_version=2013
-
-build: off
-
-test: off
-
-before_deploy:
+  - npm install -g kthxbai
+  - kthxbai
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
   - 7z x ffmpeg-20150806-git-9c0407e-win64-shared.7z -o.
   - move ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
   - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
   - del /Q *.7z
-  # - rmdir /Q /S .git
   - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\
+
+build: off
+
+test: off
 
 artifacts:
   - path: sage2-$(APPVEYOR_BUILD_VERSION).zip
@@ -68,4 +67,7 @@ notifications:
     auth_token:
       secure: zWPzLLrh/2HV3lXJd9q5XK+m2D1zn/bWBIQOzjQ2QkFSFL3ijB839EMqTRUrYZeA
     channel: appveyor
+    on_build_success: true
+    on_build_failure: true
+    on_build_status_changed: true
 
