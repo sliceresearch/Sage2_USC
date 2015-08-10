@@ -45,7 +45,7 @@ install:
   - move exiftool(-k).exe bin\exiftool.exe
   - del /Q *.7z
   - del /Q *.zip
-  - 7z a -tzip -xc:\projects\sage2\build sage2-%APPVEYOR_BUILD_VERSION%.zip c:\projects\sage2\
+  - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin config doc install_dependencies.js keys node_modules package.json public server.js sessions src
 
 build: off
 
