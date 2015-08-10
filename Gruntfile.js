@@ -150,7 +150,7 @@ module.exports = function(grunt) {
 	});
 
 	// Load the dependencies
-	grunt.loadNpmTasks('eslint-grunt');
+	grunt.loadNpmTasks('grunt-eslint');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');

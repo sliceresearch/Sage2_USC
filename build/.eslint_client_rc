@@ -40,7 +40,6 @@
   rules: {
 	no-console: 0,
 	no-alert: 0,
-	global-strict: [2, "always"],
 	no-caller: 0,
 	quotes: 0,
 	no-multi-spaces: 0,
