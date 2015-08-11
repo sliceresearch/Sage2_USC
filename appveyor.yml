@@ -29,8 +29,8 @@ init:
 
 install:
   - ps: Install-Product node 0.12.7 x64
-  - npm -v
   - node -v
+  - .\keys\GO-windows.bat
   - npm install --production --msvs_version=2013
   - npm install -g kthxbai
   - kthxbai
