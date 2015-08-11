@@ -36,7 +36,7 @@ install:
   - kthxbai
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
   - 7z x ffmpeg-20150806-git-9c0407e-win64-shared.7z -o.
-  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
   - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll bin\
   - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.exe bin\
   - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
