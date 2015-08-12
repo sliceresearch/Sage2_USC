@@ -5,9 +5,9 @@ branches:
   - master
 
 # git clone of depth 1
-clone_depth: 1
+#clone_depth: 1
 # specific to github and bitbucket: get a ZIP file using REST API
-#shallow_clone: true
+shallow_clone: true
 
 configuration: Release
 
