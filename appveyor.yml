@@ -45,6 +45,7 @@ install:
   - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-9.99.zip
   - 7z x exiftool-9.99.zip
   - move exiftool(-k).exe bin\exiftool.exe
+  - copy "C:\Program Files (x86)\Git\bin\git.exe" bin\git.exe
   - move bin\sage2.bat sage2.bat
   - del /Q *.7z
   - del /Q *.zip
