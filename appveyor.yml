@@ -46,6 +46,7 @@ install:
   - 7z x exiftool-9.99.zip
   - move exiftool(-k).exe bin\exiftool.exe
   - copy "C:\Program Files (x86)\Git\bin\git.exe" bin\git.exe
+  - copy "C:\Program Files (x86)\Git\bin\libiconv-2.dll" bin\libiconv-2.dll
   - move bin\sage2.bat sage2.bat
   - del /Q *.7z
   - del /Q *.zip
