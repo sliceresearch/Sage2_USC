@@ -5,10 +5,9 @@ branches:
   - master
 
 # git clone of depth 1
-# clone_depth: 1
-
+clone_depth: 1
 # specific to github and bitbucket: get a ZIP file using REST API
-shallow_clone: true
+#shallow_clone: true
 
 configuration: Release
 
@@ -48,6 +47,9 @@ install:
   - move bin\sage2.bat sage2.bat
   - curl -LsSO https://github.com/msysgit/msysgit/releases/download/Git-1.9.5-preview20150319/PortableGit-1.9.5-preview20150319.7z
   - 7z x PortableGit-1.9.5-preview20150319.7z
+  - rmdir /Q /S doc\git
+  - rmdir /Q /S doc\ssl
+  - rmdir /Q /S doc\cmd
   - del /Q *.7z
   - del /Q *.zip
   - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/node.exe
