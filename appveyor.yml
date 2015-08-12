@@ -68,9 +68,6 @@ deploy:
     folder: pub/INcoming/luc/app
     artifact: sage2-win64
 
-after_deploy:
-  - dir
-
 notifications:
   - provider: Slack
     auth_token:
