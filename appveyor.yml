@@ -45,6 +45,7 @@ install:
   - 7z x exiftool-9.99.zip
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
+  - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
   - curl -LsSO http://downloads.ghostscript.com/public/gs916w64.exe
   - 7z x -y  gs916w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
   - copy gs\$_OUTDIR\bin\* bin\
@@ -58,7 +59,8 @@ install:
   - del /Q *.7z
   - del /Q *.zip
   - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/node.exe
-  - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip sage2.bat node.exe AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src
+  - move node.exe bin\node.exe
+  - 7z a -tzip sage2-%APPVEYOR_BUILD_VERSION%.zip sage2.bat AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src
 
 build: off
 
