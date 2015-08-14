@@ -1,2 +1,3 @@
 @echo off
-"%~dp0\node.exe"  "%~dp0\server.js" %*
+set PATH=bin;%PATH%;
+start /D "%~dp0" node "%~dp0\server.js" %*
