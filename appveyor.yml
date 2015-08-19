@@ -33,6 +33,7 @@ install:
   - .\keys\GO-windows.bat
   - cd %APPVEYOR_BUILD_FOLDER%
   - npm install --production --msvs_version=2013
+  - npm install npm
   - npm install -g kthxbai
   - kthxbai
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
