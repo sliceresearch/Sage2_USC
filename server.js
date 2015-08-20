@@ -1368,12 +1368,18 @@ function listSessions() {
 			// doest it ends in .json
 			if (filename.indexOf(".json", filename.length - 5) >= 0) {
 				// use its change time (creation, update, ...)
-				var ad = new Date(stat.ctime);
+				var ad = new Date(stat.mtime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
 				// Make it look like an exif data structure
-				thelist.push({id: filename, exif: { FileName: file.slice(0, -5),  FileSize: stat.size, FileDate: strdate}});
+				thelist.push({id: filename,
+					exif: { FileName: file.slice(0, -5),
+							FileSize: stat.size,
+							FileDate: strdate,
+							MIMEType: 'sage2/session'
+						}
+				});
 			}
 		}
 	}

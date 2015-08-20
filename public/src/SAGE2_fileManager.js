@@ -464,6 +464,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.metadata.description || '';
 			metadata.config.elements.push({label: info, type: "label",
 					css: {height: "100px"}});
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
+			// Noting yet
 		}
 
 		// Done updating metadata
@@ -481,6 +483,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 		if (appType === "application/custom") {
 			wsio.emit('loadApplication',
 					{application: tid,
+					user: _this.uniqueID,
+					position: position});
+		} else if (appType === "sage2/session") {
+			wsio.emit('loadFileFromServer',
+					{application: 'load_session',
+					filename: tid,
 					user: _this.uniqueID,
 					position: position});
 		} else {
@@ -739,6 +747,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 				response = "pdf_viewer";
 			} else if (elt.exif.MIMEType.indexOf('video') >= 0) {
 				response = "movie_player";
+			} else if (elt.exif.MIMEType.indexOf('sage2/session') >= 0) {
+				response = "load_session";
 			}
 		}
 		// send the result
@@ -801,7 +811,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			});
 		} else if (searchParam === "Session") {
 			_this.allTable.filter(function(obj) {
-				return false;
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0;
 			});
 		} else if (searchParam === "Config") {
 			_this.allTable.filter(function(obj) {
@@ -833,7 +843,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 				});
 			} else if (query[0] === "Session") {
 				_this.allTable.filter(function(obj) {
-					return false;
+					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0) &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
 				});
 			} else if (query[0] === "Config") {
 				_this.allTable.filter(function(obj) {
@@ -870,6 +881,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			f = data.applications[i];
 			this.allFiles[f.id] = f;
 		}
+		for (i = 0; i < data.sessions.length; i++) {
+			f = data.sessions[i];
+			this.allFiles[f.id] = f;
+		}
 
 		i = 0;
 		var mm, createDate;
@@ -887,6 +902,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago: mm.fromNow(),
 					type: "APP",
+					size: fileSizeIEC(f.exif.FileSize)
+				});
+			} else if (f.exif.MIMEType.indexOf('sage2/session') >= 0) {
+				// It's a SAGE2 session
+				mm = moment(f.exif.FileDate, 'YYYY/MM/DD HH:mm:ss');
+				f.exif.FileModifyDate = mm;
+				this.allTable.data.add({id: f.id,
+					name: f.exif.FileName,
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago: mm.fromNow(),
+					type: "SESSION",
 					size: fileSizeIEC(f.exif.FileSize)
 				});
 			} else {
