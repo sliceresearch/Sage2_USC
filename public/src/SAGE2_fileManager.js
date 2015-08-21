@@ -129,8 +129,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{id: "Video", value: "Video", icon: "search", data: []},
 				{id: "PDF", value: "PDF", icon: "search", data: []},
 				{id: "App", value: "Application", icon: "search", data: []},
-				{id: "Session", value: "Session", icon: "search", data: []},
-				{id: "Config", value: "Configuration", icon: "search", data: []}
+				{id: "Session", value: "Session", icon: "search", data: []}
 			]
 		}
 	];
@@ -144,8 +143,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "delete_menu", value: "Delete"},
 			{id: "download_menu", value: "Download"},
 			{id: "duplicate_menu", value: "Duplicate"} ]},
+		{ id: "mainadmin_menu", value: "Admin", submenu: [
+			{id: "display_menu", value: "Display client 0"},
+			{id: "audio_menu", value: "Audio manager"},
+			{id: "drawing_menu", value: "Drawing application"},
+			{id: "console_menu", value: "Server console"}
+		] },
 		{ id: "mainhelp_menu", value: "Help", submenu: [
 			{id: "help_menu", value: "Help"},
+			{id: "info_menu", value: "Information"},
 			{id: "about_menu", value: "About"}
 		] }
 	];
@@ -265,7 +271,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 	});
 
 	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
-		console.log('Menu event', evt);
 		if (evt === "about_menu") {
 			var versionText = "SAGE2 Version:<br>";
 			if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
@@ -280,8 +285,20 @@ function FileManager(wsio, mydiv, uniqueID) {
 				ok: "OK",
 				text: versionText
 			});
+		} else if (evt === "info_menu") {
+			window.open("help/info.html", '_blank');
+		} else if (evt === "help_menu") {
+			window.open("help/index.html", '_blank');
 		} else if (evt === "refresh_menu") {
 			wsio.emit('requestStoredFiles');
+		} else if (evt === "display_menu") {
+			window.open("display.html?clientID=0", '_blank');
+		} else if (evt === "audio_menu") {
+			window.open("audioManager.html", '_blank');
+		} else if (evt === "drawing_menu") {
+			window.open("drawing.html", '_blank');
+		} else if (evt === "console_menu") {
+			window.open("admin/console.html", '_blank');
 		} else {
 			// dunno
 		}
@@ -960,8 +977,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{id: "Video:" + folder.url, value: "Video", icon: "search", data: []},
 				{id: "PDF:"   + folder.url, value: "PDF", icon: "search", data: []},
 				{id: "App:"   + folder.url, value: "Application", icon: "search", data: []},
-				{id: "Session:" + folder.url, value: "Session", icon: "search", data: []},
-				{id: "Config:"  + folder.url, value: "Configuration", icon: "search", data: []}
+				{id: "Session:" + folder.url, value: "Session", icon: "search", data: []}
 			];
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
