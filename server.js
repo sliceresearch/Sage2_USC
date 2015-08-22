@@ -3605,9 +3605,9 @@ function processInputCommand(line) {
 			// if argument provided, used as auto_hide delay in second
 			//   otherwise, it flips a switch
 			if (command[1] !== undefined) {
-				broadcast('hideui', {delay: parseInt(command[1], 10)}, 'requiresFullApps');
+				broadcast('hideui', {delay: parseInt(command[1], 10)});
 			} else {
-				broadcast('hideui', null, 'requiresFullApps');
+				broadcast('hideui', null);
 			}
 			break;
 		}
