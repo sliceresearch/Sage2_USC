@@ -1,7 +1,7 @@
 .PHONY: package
 
-#default: all
-default: local
+default: all
+#default: local
 
 all: download stage install binary package
 
@@ -15,6 +15,7 @@ package:
 download:
 	curl -LsSO https://bitbucket.org/sage2/sage2/get/master.zip
 	curl -LsSO https://nodejs.org/dist/v0.12.7/node-v0.12.7-darwin-x64.tar.gz
+	curl -LsSO https://bitbucket.org/sage2/sage2/downloads/mac-bin.zip
 
 stage:
 	unzip -q -u -d master master.zip
@@ -36,7 +37,6 @@ install:
 
 binary:
 	cp scripts/osx64/GO* sage2/
-	#cp scripts/osx64/RUN-FIRST sage2/
 	unzip -q -u -d sage2 mac-bin.zip 
 	tar xf node-v0.12.7-darwin-x64.tar.gz
 	mv node-v0.12.7-darwin-x64/bin/node sage2/local/bin
