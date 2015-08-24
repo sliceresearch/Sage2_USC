@@ -1,16 +1,17 @@
 .PHONY: package
 
+VERSION=0.4.1
+
 default: all
-#default: local
 
 all: download stage install binary package
 
 local: stage install binary package
 
 package:
-	/bin/rm -f dmg/SAGE2.dmg
+	/bin/rm -f dmg/*.dmg
 	npm install
-	./node_modules/.bin/appdmg dmg/app.json dmg/SAGE2.dmg
+	./node_modules/.bin/appdmg dmg/app.json dmg/SAGE2.v${VERSION}.dmg
 
 download:
 	curl -LsSO https://bitbucket.org/sage2/sage2/get/master.zip
@@ -37,6 +38,7 @@ install:
 
 binary:
 	cp scripts/osx64/GO* sage2/
+	cp scripts/osx64/VERSION.json sage2/
 	unzip -q -u -d sage2 mac-bin.zip 
 	tar xf node-v0.12.7-darwin-x64.tar.gz
 	mv node-v0.12.7-darwin-x64/bin/node sage2/local/bin
@@ -51,8 +53,9 @@ deps:
 	zip -r -9 --symlinks mac-bin.zip local -x "*.DS_Store"
 
 clean:
-	/bin/rm -fr SAGE2 dmg/SAGE2.dmg
+	/bin/rm -fr SAGE2 dmg/*.dmg
 veryclean:
-	/bin/rm -fr SAGE2 sage2.zip dmg/SAGE2.dmg
+	/bin/rm -fr SAGE2 sage2.zip dmg/*.dmg
+	/bin/rm -fr master.zip node-v0.12.7-darwin-x64.tar.gz mac-bin.zip
 
 
