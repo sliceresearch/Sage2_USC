@@ -1,0 +1,54 @@
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --window-size=200,300 --window-position=0,0 --app=http://google.com/1 &
+
+sleep 2
+
+osascript 	-e 'tell application "Google Chrome"' \
+-e 'set bounds of front window to {0, 0, 200,300}' \
+-e 'end tell'
+sleep 2
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --window-size=200,300 --window-position=200,0 --app=http://google.com/2 &
+
+sleep 2
+
+osascript 	-e 'tell application "Google Chrome"' \
+-e 'set bounds of front window to {200, 0, 400,300}' \
+-e 'end tell'
+sleep 2
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --window-size=200,300 --window-position=400,0 --app=http://google.com/3 &
+
+sleep 2
+
+osascript 	-e 'tell application "Google Chrome"' \
+-e 'set bounds of front window to {400, 0, 600,300}' \
+-e 'end tell'
+sleep 2
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --window-size=200,300 --window-position=0,300 --app=http://google.com/4 &
+
+sleep 2
+
+osascript 	-e 'tell application "Google Chrome"' \
+-e 'set bounds of front window to {0, 300, 200,600}' \
+-e 'end tell'
+sleep 2
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --window-size=200,300 --window-position=200,300 --app=http://google.com/5 &
+
+sleep 2
+
+osascript 	-e 'tell application "Google Chrome"' \
+-e 'set bounds of front window to {200, 300, 400,600}' \
+-e 'end tell'
+sleep 2
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --window-size=200,300 --window-position=400,300 --app=http://google.com/6 &
+
+sleep 2
+
+osascript 	-e 'tell application "Google Chrome"' \
+-e 'set bounds of front window to {400, 300, 600,600}' \
+-e 'end tell'
+sleep 2
+
