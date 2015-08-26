@@ -1,5 +1,7 @@
 .PHONY: package
 
+VERSION=0.4.1
+
 default: all
 
 all: download stage install binary package
@@ -7,38 +9,53 @@ all: download stage install binary package
 local: stage install binary package
 
 package:
-	/bin/rm -f dmg/SAGE2.dmg
+	/bin/rm -f dmg/*.dmg
 	npm install
-	./node_modules/.bin/appdmg dmg/app.json dmg/SAGE2.dmg
+	./node_modules/.bin/appdmg dmg/app.json dmg/SAGE2.v${VERSION}.dmg
 
 download:
-	git archive --format=zip --remote=ssh://git@bitbucket.org/sage2/sage2.git --prefix=sage2/ --output="sage2.zip" master
+	curl -LsSO https://bitbucket.org/sage2/sage2/get/master.zip
+	curl -LsSO https://nodejs.org/dist/v0.12.7/node-v0.12.7-darwin-x64.tar.gz
+	curl -LsSO https://bitbucket.org/sage2/sage2/downloads/mac-bin.zip
 
 stage:
-	unzip -q -u sage2.zip
+	unzip -q -u -d master master.zip
+	mv master/sage2* sage2
+	rm -fr master
 
 install:
 	cd sage2 && node install_dependencies.js --prod --mac --target=0.12.0
+	cd sage2 && install_name_tool -change /usr/local/lib/libavcodec.56.dylib local/lib/libavcodec.56.dylib node_modules/node-demux/build/Release/node_demux.node
+	cd sage2 && install_name_tool -change /usr/local/lib/libavutil.54.dylib local/lib/libavutil.54.dylib node_modules/node-demux/build/Release/node_demux.node
+	cd sage2 && install_name_tool -change /usr/local/lib/libavformat.56.dylib local/lib/libavformat.56.dylib  node_modules/node-demux/build/Release/node_demux.node
 	cd sage2 && npm install kthxbai
-	cd sage2 && npm install yuidocjs
+	cd sage2 && npm install yuidocjs grunt grunt-cli grunt-contrib-yuidoc
 	cd sage2 && npm run doc
-	cd sage2 && npm uninstall yuidocjs
+	cd sage2/keys && ./init_webserver.cmd localhost
+	cd sage2/keys && ./init_webserver.cmd 127.0.0.1
+	cd sage2 && npm uninstall yuidocjs grunt grunt-cli grunt-contrib-yuidoc
 	cd sage2 && node_modules/.bin/kthxbai
 
 binary:
 	cp scripts/osx64/GO* sage2/
-	cp scripts/osx64/RUN-FIRST sage2/
+	cp scripts/osx64/VERSION.json sage2/
 	unzip -q -u -d sage2 mac-bin.zip 
+	tar xf node-v0.12.7-darwin-x64.tar.gz
+	mv node-v0.12.7-darwin-x64/bin/node sage2/local/bin
+	mv node-v0.12.7-darwin-x64/lib/node_modules sage2/local/lib
+	cd sage2/local/bin && ln -s ../lib/node_modules/npm/bin/npm-cli.js npm
+	rm -fr node-v0.12.7-darwin-x64
 	cd sage2 && mv doc/api public
-	cd sage2 && rm -fr Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
+	cd sage2 && rm -fr appveyor* *.log Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
 	mv sage2 SAGE2
 
 deps:
 	zip -r -9 --symlinks mac-bin.zip local -x "*.DS_Store"
 
 clean:
-	/bin/rm -fr SAGE2 dmg/SAGE2.dmg
+	/bin/rm -fr SAGE2 dmg/*.dmg
 veryclean:
-	/bin/rm -fr SAGE2 sage2.zip dmg/SAGE2.dmg
+	/bin/rm -fr SAGE2 sage2.zip dmg/*.dmg
+	/bin/rm -fr master.zip node-v0.12.7-darwin-x64.tar.gz mac-bin.zip
 
 

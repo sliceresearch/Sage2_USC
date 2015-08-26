@@ -71,6 +71,10 @@ var car_threejs = SAGE2_App.extend({
 
 	initialize: function(date) {
 		console.log("initialize ctm");
+
+		// Allow cross-origin access, needed for wall to wall sharing
+		THREE.ImageUtils.crossOrigin = 'anonymous';
+
 		// CAMERA
 		this.camera = new THREE.PerspectiveCamera(25, this.width / this.width, 1, 10000);
 		this.camera.position.set(185, 40, 170);
@@ -90,9 +94,6 @@ var car_threejs = SAGE2_App.extend({
 		this.sceneCube  = new THREE.Scene();
 		this.cameraCube = new THREE.PerspectiveCamera(25, this.width / this.width, 1, 10000);
 		this.sceneCube.add(this.cameraCube);
-
-		// Allow cross-origin access, needed for wall to wall sharing
-		THREE.ImageUtils.crossOrigin = 'anonymous';
 
 		var r    = this.resrcPath + "textures/";
 		var urls = [ r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg" ];
@@ -139,6 +140,8 @@ var car_threejs = SAGE2_App.extend({
 		// Loader
 		var start = Date.now();
 		var loaderCTM = new THREE.CTMLoader(false);
+		// Allow cross origin loading
+		loaderCTM.crossOrigin = "anonymous";
 
 		var position = new THREE.Vector3(-105, -78, -40);
 		var scale    = new THREE.Vector3(30, 30, 30);
