@@ -35,7 +35,9 @@ function SAGE2_interaction(wsio) {
 	this.mediaQuality    = 5;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
-	this.chunk         = 32 * 1024; // 32 KB
+	this.videoTimer    = null;
+	this.pix           = null;
+	this.chunk         = 64 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
 
 	// Event filtering for mouseMove
@@ -350,10 +352,15 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.captureDesktop = function(data) {
 		if (__SAGE2__.browser.isChrome === true) {
-			var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: data, maxWidth: 3840, maxHeight: 2160};
+			console.log('captureDesktop');
+			var constraints = {chromeMediaSource: 'desktop',
+								chromeMediaSourceId: data,
+								maxWidth: 3840, maxHeight: 2160,
+								minFrameRate:3, maxFrameRate: 30};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		} else if (__SAGE2__.browser.isFirefox === true) {
-			navigator.getUserMedia({video: {mediaSource: data}, audio: false}, this.streamSuccess, this.streamFail);
+			navigator.getUserMedia({video: {mediaSource: data}, audio: false},
+				this.streamSuccess, this.streamFail);
 		}
 	};
 
@@ -364,7 +371,7 @@ function SAGE2_interaction(wsio) {
 	* @param stream {Object} media stream
 	*/
 	this.streamSuccessMethod = function(stream) {
-		console.log("media capture success!");
+		console.log("media capture success!", stream);
 
 		// TODO: must disable screen share button
 
@@ -405,6 +412,9 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamEndedMethod = function(event) {
 		this.broadcasting = false;
+		if (this.videoTimer) {
+			clearInterval(this.videoTimer);
+		}
 		// TODO: must re-enable screen share button
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
 	};
@@ -424,6 +434,7 @@ function SAGE2_interaction(wsio) {
 			setTimeout(this.streamCanPlay, 500, event);
 			return;
 		}
+		console.log('mediaVideo width height', mediaVideo.videoWidth, mediaVideo.videoHeight);
 
 		var widths = [	Math.min(852, mediaVideo.videoWidth),
 						Math.min(1280, mediaVideo.videoWidth),
@@ -438,8 +449,10 @@ function SAGE2_interaction(wsio) {
 		var res = screenShareResolution.options[this.mediaResolution].value.split("x");
 		mediaCanvas.width  = parseInt(res[0], 10);
 		mediaCanvas.height = parseInt(res[1], 10);
+		console.log('mediaCanvas width height', mediaCanvas.width, mediaCanvas.height);
 
 		var frame = this.captureMediaFrame();
+		this.pix  = frame;
 		var raw   = atob(frame.split(",")[1]); // base64 to string
 		this.wsio.emit('startNewMediaStream', {id: this.uniqueID + "|0",
 			title: localStorage.SAGE2_ptrName + ": Shared Screen",
@@ -448,6 +461,13 @@ function SAGE2_interaction(wsio) {
 			width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
 
 		this.broadcasting = true;
+		var _this = this;
+		this.videoTimer = setInterval(function() {
+			var mediaCtx = mediaCanvas.getContext('2d');
+			// mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
+			mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
+			_this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
+		}, 100);
 	};
 
 	/**
@@ -472,7 +492,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.sendMediaStreamFrame = function() {
 		if (this.broadcasting) {
-			var frame = this.captureMediaFrame();
+			// var frame = this.captureMediaFrame();
+			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
 			if (raw.length > this.chunk) {
