@@ -35,7 +35,7 @@ function SAGE2_interaction(wsio) {
 	this.mediaQuality    = 5;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
-	this.videoTimer    = null;
+	this.worker        = null;
 	this.pix           = null;
 	this.chunk         = 64 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
@@ -412,9 +412,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamEndedMethod = function(event) {
 		this.broadcasting = false;
-		if (this.videoTimer) {
-			clearInterval(this.videoTimer);
-		}
+		// Quit worker
+		this.worker.postMessage("quit");
 		// TODO: must re-enable screen share button
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
 	};
@@ -462,12 +461,25 @@ function SAGE2_interaction(wsio) {
 
 		this.broadcasting = true;
 		var _this = this;
-		this.videoTimer = setInterval(function() {
+
+		// create a web worker to do the job
+		this.worker = new Worker('src/SAGE2_Worker.js');
+		this.worker.onmessage = function(evt) {
 			var mediaCtx = mediaCanvas.getContext('2d');
-			// mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
 			mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
 			_this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
-		}, 100);
+		};
+		this.worker.onerror = function(evt) {
+			console.log('Got an error from worker', evt);
+		};
+		this.worker.postMessage("hello");
+
+		// this.videoTimer = setInterval(function() {
+		// 	var mediaCtx = mediaCanvas.getContext('2d');
+		// 	// mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
+		// 	mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
+		// 	_this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
+		// }, 100);
 	};
 
 	/**
