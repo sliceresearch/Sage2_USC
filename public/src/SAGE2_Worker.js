@@ -5,7 +5,7 @@ postMessage("I'm alive");
 
 videoTimer = setInterval(function() {
 	postMessage('work');
-}, 1000/15);
+}, 1000/10);
 
 
 self.addEventListener('message', function(e) {
