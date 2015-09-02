@@ -2980,6 +2980,19 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
+	// Check the borders settings
+	if (userConfig.resolution.borders === undefined) {
+		// set default values to 0
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+	} else {
+		// make sure the values are integers
+		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
+		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
+		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
+		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	}
+
+
 	// Set default values if missing
 	if (userConfig.port === undefined) {
 		userConfig.port = 443;
@@ -3010,7 +3023,6 @@ function loadConfiguration() {
 			userConfig.register_site = false;
 		}
 	}
-
 
 	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
 		apis.twitter = new Twit({
