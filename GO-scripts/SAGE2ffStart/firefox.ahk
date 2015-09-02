@@ -8,10 +8,11 @@ Send {LWin Up}
 IXE="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
 
 ; URL for SAGE2 display
-S2=http://canoe-lava-2.manoa.hawaii.edu/display.html?clientID=0
+S2root=http://localhost:9292/
+S2=%S2root%display.html?clientID=0
 
 ;Detect if a hash value is needed
-passwd = C:\0SageRecent\redo\sage2\keys\passwd.json
+passwd = C:\sage2\keys\passwd.json
 hash = blank
 
 ;see if the file exists
@@ -45,13 +46,13 @@ IfExist, %passwd%
 
 if hash != blank
 {
-	S2=http://canoe-lava-2.manoa.hawaii.edu/session.html?hash=%hash%?page=display.html?clientID=0
+	S2=%S2root%session.html?hash=%hash%?page=display.html?clientID=0
 }
 
-S2am = http://canoe-lava-2.manoa.hawaii.edu/audioManager.html
+S2am = %S2root%audioManager.html
 if hash != blank
 {
-	S2am = http://canoe-lava-2.manoa.hawaii.edu/session.html?hash=%hash%?page=audioManager.html
+	S2am = %S2root%session.html?hash=%hash%?page=audioManager.html
 }
 
 ; Window title to search
@@ -65,7 +66,7 @@ S2WIN=SAGE2: Display
 
 ; then the display since it will be full screen
 
-Run,%ixe% -P display1 %s2% %S2am%
+Run,%ixe% -P "SageDisplay" -profile "C:\SageFFDisplayProfile" %s2% %S2am%
 
 ; Wait for the window to open
 WinWait, %S2WIN%

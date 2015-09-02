@@ -322,7 +322,7 @@ function wsStartSage(wsio, data) {
 		console.log();
 		console.log();
 		console.log('Attempting to start sage');
-		sageServerExec = executeConsoleCommand('node server.js -f config/canoe-lava-2-FF-cfg.json');
+		sageServerExec = executeConsoleCommand('node server.js');
 		sageServerExec.on('close', function (code, signal) {
 			console.log('child triggered close event, signal:'+signal);
 			//sageServerExec.disconnect();
