@@ -171,7 +171,7 @@ var saveAssets = function(filename) {
 	catch (err) {
 		console.log(sageutils.header("Assets") + "error saving assets", err);
 	}
-	console.log(sageutils.header("Assets") + "saved assets file to " + fullpath);
+	// console.log(sageutils.header("Assets") + "saved assets file to " + fullpath);
 };
 
 var generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -723,17 +723,6 @@ var refresh = function(root, callback) {
 		}
 	}
 
-	// delete the elements which not there anymore
-	for (item in AllAssets.list) {
-		if (AllAssets.list[item].Valid === false) {
-			console.log(sageutils.header("Assets") + "Removing old item", item);
-			delete AllAssets.list[item];
-		} else {
-			// Just remove the Valid flag
-			delete AllAssets.list[item].Valid;
-		}
-	}
-
 	if (thelist.length > 0) {
 		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
 	}
@@ -741,7 +730,7 @@ var refresh = function(root, callback) {
 		if (err) {
 			console.log(sageutils.header("EXIF") + "Error:", err);
 		} else {
-			console.log(sageutils.header("EXIF") + "Done");
+			console.log(sageutils.header("EXIF") + "Done " + root);
 			if (callback) {
 				callback();
 			}
@@ -749,7 +738,7 @@ var refresh = function(root, callback) {
 	});
 };
 
-var initialize = function(root, relativePath) {
+var initialize = function(root, relativePath, mediaFolders) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
@@ -804,10 +793,30 @@ var initialize = function(root, relativePath) {
 		}
 
 		refresh(root);
+
+		// Extra folders
+		AllAssets.mediaFolders = mediaFolders;
+		for (var mf in mediaFolders) {
+			if (mf !== 'system') {
+				addAssetFolder(mediaFolders[mf].path);
+			}
+		}
+
+		// Finally, delete the elements which not there anymore
+		for (var item in AllAssets.list) {
+			if (AllAssets.list[item].Valid === false) {
+				console.log(sageutils.header("Assets") + "Removing old item", item);
+				delete AllAssets.list[item];
+			} else {
+				// Just remove the Valid flag
+				delete AllAssets.list[item].Valid;
+			}
+		}
+
 	}
 };
 
-var addAssetFolder = function(root, relativePath) {
+var addAssetFolder = function(root) {
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {
@@ -836,17 +845,6 @@ var addAssetFolder = function(root, relativePath) {
 	if (!sageutils.fileExists(unknownapp_128)) {
 		fs.createReadStream(unknownapp_128Img).pipe(fs.createWriteStream(unknownapp_128));
 	}
-
-	// var assetFile = path.join(AllAssets.root, "assets", 'assets.json');
-	// if (sageutils.fileExists(assetFile)) {
-	// 	var data    = fs.readFileSync(assetFile);
-	// 	var oldList = JSON.parse(data);
-	// 	AllAssets.root = root;
-	// 	AllAssets.rel  = relativePath;
-	// 	AllAssets.list = oldList.list;
-	// 	// Flag all the assets for checking
-	// 	for (var it in AllAssets.list) AllAssets.list[it].Valid = false;
-	// }
 
 	var thelist = [];
 	var uploadedImages = fs.readdirSync(path.join(root, "images"));
@@ -900,17 +898,6 @@ var addAssetFolder = function(root, relativePath) {
 		}
 	}
 
-	// delete the elements which not there anymore
-	for (item in AllAssets.list) {
-		if (AllAssets.list[item].Valid === false) {
-			console.log(sageutils.header("Assets") + "Removing old item", item);
-			delete AllAssets.list[item];
-		} else {
-			// Just remove the Valid flag
-			delete AllAssets.list[item].Valid;
-		}
-	}
-
 	if (thelist.length > 0) {
 		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
 	}
@@ -918,7 +905,7 @@ var addAssetFolder = function(root, relativePath) {
 		if (err) {
 			console.log(sageutils.header("EXIF") + "Error:", err);
 		} else {
-			console.log(sageutils.header("EXIF") + "Done");
+			console.log(sageutils.header("EXIF") + "Done " + root);
 		}
 	});
 };
@@ -938,8 +925,9 @@ var regenerateAssets = function() {
 	}
 	var rootdir = AllAssets.root;
 	var relativ = AllAssets.rel;
+	var mediaf  = AllAssets.mediaFolders;
 	AllAssets = null;
-	initialize(rootdir, relativ);
+	initialize(rootdir, relativ, mediaf);
 };
 
 

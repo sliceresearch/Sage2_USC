@@ -282,7 +282,7 @@ function initializeSage2Server() {
 	}
 	sageutils.monitorFolders(listOfFolders,
 		function(change) {
-			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
@@ -308,15 +308,8 @@ function initializeSage2Server() {
 		}
 	);
 
-	// Initialize assets
-	// Main folder
-	assets.initialize(uploadsDirectory, 'uploads');
-	// Extra folders
-	for (var mf in mediaFolders) {
-		if (mf !== 'system') {
-			assets.addAssetFolder(mediaFolders[mf].path, 'uploads');
-		}
-	}
+	// Initialize assets folders
+	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
 
 	// Initialize app loader
 	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
