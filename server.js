@@ -282,7 +282,7 @@ function initializeSage2Server() {
 	}
 	sageutils.monitorFolders(listOfFolders,
 		function(change) {
-			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
@@ -308,15 +308,8 @@ function initializeSage2Server() {
 		}
 	);
 
-	// Initialize assets
-	// Main folder
-	assets.initialize(uploadsDirectory, 'uploads');
-	// Extra folders
-	for (var mf in mediaFolders) {
-		if (mf !== 'system') {
-			assets.addAssetFolder(mediaFolders[mf].path, 'uploads');
-		}
-	}
+	// Initialize assets folders
+	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
 
 	// Initialize app loader
 	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -1368,12 +1361,18 @@ function listSessions() {
 			// doest it ends in .json
 			if (filename.indexOf(".json", filename.length - 5) >= 0) {
 				// use its change time (creation, update, ...)
-				var ad = new Date(stat.ctime);
+				var ad = new Date(stat.mtime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
 				// Make it look like an exif data structure
-				thelist.push({id: filename, exif: { FileName: file.slice(0, -5),  FileSize: stat.size, FileDate: strdate}});
+				thelist.push({id: filename,
+					exif: { FileName: file.slice(0, -5),
+							FileSize: stat.size,
+							FileDate: strdate,
+							MIMEType: 'sage2/session'
+						}
+				});
 			}
 		}
 	}
@@ -2974,6 +2973,19 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
+	// Check the borders settings
+	if (userConfig.resolution.borders === undefined) {
+		// set default values to 0
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+	} else {
+		// make sure the values are integers
+		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
+		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
+		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
+		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	}
+
+
 	// Set default values if missing
 	if (userConfig.port === undefined) {
 		userConfig.port = 443;
@@ -3004,7 +3016,6 @@ function loadConfiguration() {
 			userConfig.register_site = false;
 		}
 	}
-
 
 	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
 		apis.twitter = new Twit({
@@ -3599,9 +3610,9 @@ function processInputCommand(line) {
 			// if argument provided, used as auto_hide delay in second
 			//   otherwise, it flips a switch
 			if (command[1] !== undefined) {
-				broadcast('hideui', {delay: parseInt(command[1], 10)}, 'requiresFullApps');
+				broadcast('hideui', {delay: parseInt(command[1], 10)});
 			} else {
-				broadcast('hideui', null, 'requiresFullApps');
+				broadcast('hideui', null);
 			}
 			break;
 		}

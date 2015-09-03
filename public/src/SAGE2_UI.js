@@ -251,7 +251,9 @@ function setupListeners() {
 		interactor.setPointerSensitivity(sage2Min / screenMin);
 
 		// Update the file manager
-		fileManager.serverConfiguration(config);
+		if (fileManager) {
+			fileManager.serverConfiguration(config);
+		}
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {

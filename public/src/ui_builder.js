@@ -252,8 +252,15 @@ function UIBuilder(json_cfg, clientID) {
 			this.pointerOffsetX = Math.round(0.27917 * this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.24614 * this.pointerHeight);
 		} else {
-			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
-			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
+			// Position of the tile
+			var x = this.json_cfg.displays[this.clientID].column;
+			var y = this.json_cfg.displays[this.clientID].row;
+			// Calculate offsets for borders
+			var borderx  = (x + 1) * this.json_cfg.resolution.borders.left + x * this.json_cfg.resolution.borders.right;
+			var bordery  = (y + 1) * this.json_cfg.resolution.borders.top  + y * this.json_cfg.resolution.borders.bottom;
+			// Position offsets plus borders offsets
+			this.offsetX = x * this.json_cfg.resolution.width + borderx;
+			this.offsetY = y * this.json_cfg.resolution.height + bordery;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize * 3;

@@ -186,7 +186,7 @@ function setupListeners() {
 				clearTimeout(uiTimer);
 				uiTimer = null;
 				ui.showInterface();
-			}		else {
+			} else {
 				ui.hideInterface();
 			}
 	});
@@ -973,6 +973,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	if (ui.noDropShadow === true) {
 		windowTitle.style.boxShadow = "none";
 	}
+	if (ui.uiHidden === true) {
+		windowTitle.style.display   = "none";
+	}
 
 	var windowIcons = document.createElement("img");
 	// windowIcons.src = "images/layout3.webp";
@@ -1002,6 +1005,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowItem.style.zIndex   = (itemCount + 1).toString();
 	if (ui.noDropShadow === true) {
 		windowItem.style.boxShadow = "none";
+	}
+	if (ui.uiHidden === true) {
+		windowItem.classList.toggle("windowItemNoBorder");
 	}
 
 	var cornerSize = Math.min(data.width, data.height) / 5;
