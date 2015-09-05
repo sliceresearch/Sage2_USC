@@ -1,0 +1,179 @@
+
+
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
+
+    <title>Admin Panel</title>
+
+    <script type="text/javascript" src="src/websocket.io.js"></script>
+    <script type="text/javascript" src="src/wc-pacSetup.js"></script>
+
+    <style> 
+
+    
+    .showExpand {
+        display: visible;
+        transition: 'all 2s';
+    }
+
+    .hideExpand {
+        display: none;
+        transition: 'all 2s';
+    }
+
+    html *
+    {
+       font-family: Arial;
+    }
+
+
+    </style>
+
+</head>
+
+<body onload="initialize()">
+
+
+
+<div style="text-align:center; background-color:lightblue">
+
+    <div onclick="startSage()">
+        <h1 style='background-color:green'>Start Sage</h1>
+    </div>
+    <div id='expSageStart' class='hideExpand'>
+        Sage should have started
+    </div>
+
+    <div onclick="stopSage()">
+        <h1 style='background-color:red'>Stop Sage</h1>
+    </div>
+    <div id='expSageStop' class='hideExpand'>
+        Sage stop command sent.
+    </div>
+
+    <div onclick="toggleDivView('expSetPassword')">
+        <h1 style='background-color:gray'>Set Password</h1>
+    </div>
+    <div id='expSetPassword' class='hideExpand'>
+        Will take effect on next Sage startup.
+        <br>
+        <input type="text" id="setPasswordValue">
+        <br>
+        <button onclick="setPasswordToServer()"> Set Password </button>
+        <br><br><br>
+        Test current password:
+        <br>
+        <input type="text" id="checkPasswordValue">
+        <br>
+        <button onclick="checkPasswordToServer()"> Check Password </button>
+        <br>
+        <div id='checkPasswordResult'> </div>
+    </div>
+
+    <hr>
+
+    <div onclick="toggleDivView('expConfiguration')">
+        <h1 style='background-color:gray'>Configuration</h1>
+    </div>
+    <div id='expConfiguration' class='hideExpand'>
+
+        Required Configuration Settings<br><br><br><br>
+
+
+
+        Host name / ip: <input type="text" id="cfgHost"> (⍰)
+        <br>
+        Port: <input type="text" id="cfgPortDefault"> (Default: 80 )
+        <br>
+        HTTPS Port: <input type="text" id="cfgPortSecure"> (Default: 443 )
+        <br>
+        Resolution:
+        <br>
+        --Width <input type="text" id="cfgRwidth">
+        <br>
+        --Height <input type="text" id="cfgRheight">
+        <br>
+        Layout:
+        <br>
+        --Columns <input type="text" id="cfgLcolumns"> (Width)
+        <br>
+        --Rows <input type="text" id="cfgLrows"> (Height)
+        <br>
+        Alternate Hosts:
+        <br>
+            <div id='cfgAH'>
+                <input type='text' id='cfgAH1'>
+            </div>
+            <button onclick="removeAlternativeHostEntry()"> Remove </button>
+            <button onclick="addAlternativeHostEntry()"> Add </button>
+        <br>
+        Remote Sites:
+        <br>
+            <div id='cfgRS'>
+                Site 1:<br>
+                Name:<input type='text' id='cfgRS1name'>
+                <br>
+                Host:<input type='text' id='cfgRS1host'>
+                <br>
+                Port:<input type='text' id='cfgRS1port'>
+                <br>
+                Secure:<input type='text' id='cfgRS1secure'>
+                <br>
+            </div>
+            <button onclick="removeRemoteSiteEntry()"> Remove </button>
+            <button onclick="addRemoteSiteEntry()"> Add </button>
+        <br>
+        Dependency Location:
+        <br>
+        ImageMagick:<input type='text' id='cfgDependencyIM'>
+        <br>
+        FFMpeg:<input type='text' id='cfgDependencyFFM'>
+        <br>
+        <br>
+
+        <button onclick="sendConfigFileData()"> Save </button>
+
+
+        <div onclick="toggleDivView('expConfiguration1')">
+            <h2 style='background-color:gray'>Show Config 1</h2>
+        </div>
+        <div id='expConfiguration1' class='hideExpand'>
+            Expanded sub configuration area 1
+        </div>
+
+        <div onclick="toggleDivView('expConfiguration2')">
+            <h2 style='background-color:gray'>Show Config 2</h2>
+        </div>
+        <div id='expConfiguration2' class='hideExpand'>
+            Expanded sub configuration area 2
+        </div>
+    </div>
+
+
+    <div>
+        <br>
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

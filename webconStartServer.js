@@ -53,7 +53,15 @@ if( utils.fileExists(pwdFileLocation) ) {
 	jsonString = fs.readFileSync( pwdFileLocation, "utf8" );
 	jsonString = json5.parse(jsonString);
 }
-else {  jsonString = { pwd: -1 }; console.log('--WARNING--');console.log('webcon password has not been setup correctly'); console.log(); }
+else {
+	console.log('webcon password has not been setup, launching the first time config.');
+	console.log();
+
+
+	jsonString = { pwd: -1 }; 
+
+
+}
 global.webconID = jsonString.pwd;
 
 console.log('The webcon hash is:' + global.webconID);
@@ -108,7 +116,6 @@ function wsAddClient(wsio, data) {
 	setupListeners(wsio);
 
 	wsio.emit('serverAccepted', {} );
-	wsio.emit('packNoExist');
 }
 
 /*
@@ -116,7 +123,6 @@ When receiving a packet of the named type, call the function.
 */
 function setupListeners(wsio) {
 	
-	wsio.on('ping',            		wsPing);
 	wsio.on('consoleLog',      		wsConsoleLog);
 	wsio.on('convertTomd5',      	wsConvertTomd5);
 	wsio.on('newConfigSettings',    wsNewConfigSettings);
@@ -182,11 +188,6 @@ function executeScriptFile( file ) {
 
 //---------------------------------------------------------------------------websocket listener functions
 
-
-function wsPing(wsio, data) {
-	console.log('---wsPing:' + data.time);
-	wsio.emit('serverPingBack', data);
-} //end class
 
 
 function wsConsoleLog(wsio, data) {
