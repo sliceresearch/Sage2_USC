@@ -367,7 +367,9 @@ function setupListeners() {
 
 	wsio.on('stopMediaCapture', function() {
 		if (interactor.mediaStream !== null) {
-			interactor.mediaStream.stop();
+			// interactor.mediaStream.stop();
+			var track = interactor.mediaStream.getTracks()[0];
+			track.stop();
 		}
 	});
 }
