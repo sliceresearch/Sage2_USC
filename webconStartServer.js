@@ -54,17 +54,27 @@ if( utils.fileExists(pwdFileLocation) ) {
 	jsonString = json5.parse(jsonString);
 }
 else {
-	console.log('webcon password has not been setup, launching the first time config.');
-	console.log();
-
-
+	console.log('Webcon password has not been setup, it will not be possible to access.');
 	jsonString = { pwd: -1 }; 
-
-
 }
 global.webconID = jsonString.pwd;
+pwdFileLocation = "keys/configPasswd.json";
+if( utils.fileExists(pwdFileLocation) ) {
+	jsonString = fs.readFileSync( pwdFileLocation, "utf8" );
+	jsonString = json5.parse(jsonString);
+}
+else {
+	console.log('Admin Panel password has not been setup, launching the first time config.');
+	console.log();
+	jsonString = { pwd: -1 }; 
 
-console.log('The webcon hash is:' + global.webconID);
+	//should launch a browser on windows pointed at the config location.
+}
+global.adminPanelId = jsonString.pwd;
+
+
+console.log('The webconID hash is:' + global.webconID);
+console.log('The adminPanelId hash is:' + global.adminPanelId);
 
 //Test to create something that happens at an interval
 setInterval( function () {
@@ -131,10 +141,13 @@ function setupListeners(wsio) {
 	//should be functions to keep
 	wsio.on('giveClientConfiguration',		wsGiveClientConfiguration);
 	wsio.on('giveServerConfiguration',		wsGiveServerConfiguration);
-	wsio.on('setPassword',					wsSetPassword);
-	wsio.on('checkPassword',				wsCheckPassword);
+	wsio.on('setMeetingId',					wsSetMeetingId);
 	wsio.on('startSage',					wsStartSage);
 	wsio.on('stopSage',						wsStopSage);
+
+	//unique for admin panel
+	wsio.on('setWebControllerPwd',			wsSetWebControllerPwd);
+	wsio.on('setConfigurationPagePwd',		wsSetConfigurationPagePwd);
 
 
 } //end setupListeners
@@ -225,6 +238,22 @@ function wsGiveClientConfiguration(wsio, data) {
 	confContents = json5.parse(confContents);
 
 	wsio.emit( 'giveClientConfiguration', confContents );
+
+	//check if password files exist.
+
+	var pwdFileLocation = "keys/passwd.json";
+	if( ! utils.fileExists(pwdFileLocation) ) { wsio.emit('noWebId', {}); }
+	pwdFileLocation = "keys/webconPasswd.json";
+	if( ! utils.fileExists(pwdFileLocation) ) { wsio.emit('noWebconPwd', {}); }
+	pwdFileLocation = "keys/configPasswd.json";
+	if( ! utils.fileExists(pwdFileLocation) ) {
+		wsio.emit('noConfigPwd', {
+			message: 'This page is accessible due to 1st time config. To revisit a password is needed, entry is at the bottom. If revisiting bookmarking this page is recommended.'
+		});
+		wsSetConfigurationPagePwd(wsio, { password: 'unobtainiumpasswordbecausemd5hashingcantmatchthis', silent:'shh' });
+	}
+
+
 } //wsGiveClientConfiguration
 
 function wsGiveServerConfiguration(wsio, data) {
@@ -278,45 +307,46 @@ function wsGiveServerConfiguration(wsio, data) {
 
 } //wsGiveServerConfiguration
 
-function wsSetPassword(wsio, data) {
+function wsSetMeetingId(wsio, data) {
 	//var conversion = md5.getHash( data.password );
 	var jsonString = { "pwd": data.password};
 	//jsonString = json5.stringify(jsonString);
 	jsonString = '{ "pwd" : "' + data.password +'" }';
 	var pwdFileLocation = "keys/passwd.json";
-	console.log('Pasword save double checking:' + jsonString);
+	console.log('meetingID save double checking:' + jsonString);
 	fs.writeFileSync( pwdFileLocation, jsonString);
 	console.log();
-	wsio.emit('displayOverlayMessage', { message: 'The meetingID has been set' });
-} //wsSetPassword
+	wsio.emit('alertClient', { message: 'The meetingID has been set' });
+} //wsSetMeetingId
 
-
-function wsCheckPassword(wsio, data) {
-	var conversion = md5.getHash( data.password );
-
-
-
-	var pwdFileLocation = "keys/passwd.json";
-	var jsonString;
-	if( utils.fileExists(pwdFileLocation) ) {
-		jsonString = fs.readFileSync( pwdFileLocation, "utf8" );
-		jsonString = json5.parse(jsonString);
-	}
-	else {  jsonString = { pwd: -1 };  }
-
+function wsSetWebControllerPwd(wsio, data) {
+	//var conversion = md5.getHash( data.password );
+	var jsonString = { "pwd": data.password};
+	//jsonString = json5.stringify(jsonString);
+	jsonString = '{ "pwd" : "' + data.password +'" }';
+	var pwdFileLocation = "keys/webconPasswd.json";
+	console.log('webcontroller pwd save double checking:' + jsonString);
+	fs.writeFileSync( pwdFileLocation, jsonString);
 	console.log();
-	console.log('process version?' + process.version + "   and type of" + typeof process.version);
-	console.log('Checking ' + data.password + ' which has a hash of');
-	console.log(conversion + ' against ');
-	console.log( jsonString.pwd );
+	wsio.emit('alertClient', { message: 'The webcontroller password has been set' });
 
+	global.webconID = data.password;
+} //wsSetWebControllerPwd
 
+function wsSetConfigurationPagePwd(wsio, data) {
+	//var conversion = md5.getHash( data.password );
+	var jsonString = { "pwd": data.password};
+	//jsonString = json5.stringify(jsonString);
+	jsonString = '{ "pwd" : "' + data.password +'" }';
+	var pwdFileLocation = "keys/configPasswd.json";
+	console.log('setConfigurationPagePwd save double checking:' + jsonString);
+	fs.writeFileSync( pwdFileLocation, jsonString);
+	console.log();
+	if(data.silent !== 'shh') { wsio.emit('alertClient', { message: 'The configuration page password has been set' }); }
 
-	if( jsonString.pwd === conversion) { wsio.emit('passwordCheckResult', { result: true } ); }
-	else { wsio.emit('passwordCheckResult', { result: false } ); }
+	global.adminPanelId = data.password;
+} //wsSetConfigurationPagePwd
 
-
-} //wsCheckPassword
 
 function wsStartSage(wsio, data) {
 	if(sageServerExec == null ) {

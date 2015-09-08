@@ -399,17 +399,9 @@ function setPasswordToServer() {
     console.log('Setting    ' + typedValue + '    as the new password.');
     console.log('Packet contains hash:    ' + packet.password );
 
-    wsio.emit('setPassword', packet);
+    wsio.emit('setMeetingId', packet);
 }
 
-function checkPasswordToServer() {
-    var workingDiv = document.getElementById('checkPasswordValue');
-    var packet = {};
-    packet.password = workingDiv.value.trim();
-
-    console.log('Sending    ' + packet.password + '    to check against the password.');
-    wsio.emit('checkPassword', packet);
-}
 
 function startSage() {
     

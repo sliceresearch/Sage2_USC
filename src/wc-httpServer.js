@@ -34,13 +34,13 @@ function HttpServer(publicDirectory, debug) {
  */
 HttpServer.prototype.onreq = function(req, res) {
 
-	global.printTimeCounter(req);
+	//global.printTimeCounter(req);
 
 	if (req.method === "GET") {
 		var reqURL = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
 
-		if(this.debug) { console.log("Request for:" + getName); }
+		//if(this.debug) { console.log("Request for:" + getName); }
 
 		// redirect root path to index.html
 		if (getName === "/") {
@@ -49,7 +49,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		}
 
 		var requestPath = this.publicDirectory + getName;
-		if(this.debug) { console.log("full request path:" + requestPath); }
+		//if(this.debug) { console.log("full request path:" + requestPath); }
 		var stats = null;
 		try{
 			stats = fs.lstatSync(requestPath);
@@ -61,6 +61,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			//get cookies and see if it matches the webcon password
 			var cookieList = detectCookies(req);
 			var webconMatch = false;
+			var wcApMatch = false;
 			for (var i = 0; i < cookieList.length; i++) {
 				if (cookieList[i].indexOf("webcon=") !== -1) {
 					// We found it
@@ -68,8 +69,15 @@ HttpServer.prototype.onreq = function(req, res) {
 						webconMatch = true;
 					}
 				}
+				if (cookieList[i].indexOf("wcApLogin=") !== -1) {
+					// We found it
+					if (cookieList[i].indexOf(global.adminPanelId) !== -1) {
+						wcApMatch = true;
+					}
+				}
 			}
-			if(global.webconID === -1) { console.log('http - Warning webconID hasnt been setup'); console.log(); }
+			if(global.webconID === -1) { console.log('http - Warning webconID hasnt been setup'); }
+			if(global.adminPanelId === -1) { console.log('http - Warning adminPanelId hasnt been setup'); wcApMatch = true; }
 
 			
 			if( stats.isDirectory() ) {//force the page to webcon.html if a directory
@@ -78,15 +86,24 @@ HttpServer.prototype.onreq = function(req, res) {
 				return;
 			}
 			//if requesting a webpage that is not webcon or login force to webcon.html
-			else if( requestPath.indexOf('htm') >= 0 && requestPath.indexOf('webcon') < 0 && requestPath.indexOf('wcLogin') < 0 ) { //&&  requestPath.indexOf('config') < 0 ) {
+			else if(
+				requestPath.indexOf('htm') >= 0
+				&& requestPath.indexOf('webcon') < 0
+				&& requestPath.indexOf('wcAdminPanel') < 0
+				&& requestPath.indexOf('Login') < 0
+				) {
 				console.log('http - preventing access to:' + requestPath + ', redirecting to webcon');
 				this.redirect(res, "webcon.html");
 				return;
 			}
 			//if bad credential and requesting a webpage that is not login
-			else if(!webconMatch && requestPath.indexOf('htm') > 0 && requestPath.indexOf('wcLogin') < 0 ) {
+			else if(!webconMatch && requestPath.indexOf('webcon') > 0 ) {
 				console.log('http - credential mismatch, redirecting to login');
 				this.redirect(res, "wcLogin.html");
+			}
+			else if(!wcApMatch && requestPath.indexOf('wcAdminPanel') > 0 ) {
+				console.log('http - credential mismatch, redirecting to login');
+				this.redirect(res, "wcApLogin.html");
 			}
 			else {
 

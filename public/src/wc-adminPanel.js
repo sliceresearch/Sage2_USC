@@ -82,13 +82,22 @@ function setupListeners() {
 	wsio.on('giveClientConfiguration', 		wsGiveClientConfiguration );
 	wsio.on('passwordSet', 					function(data) { console.log('The password has been confirmed to be set by server'); });
 	wsio.on('configurationSet', 			function(data) { console.log('The configuration file has been confirmed to be updated by server'); });
-	wsio.on('passwordCheckResult', 			wsPasswordCheckResult );
 
+	wsio.on('noWebId', 						function(data) { document.getElementById('warnMid').style.visibility='visible'; });
+	wsio.on('noWebconPwd', 					function(data) { document.getElementById('warnWebcon').style.visibility='visible'; });
+	wsio.on('noConfigPwd', 					function(data) { alert(data.message); document.getElementById('warnConfig').style.visibility='visible'; });
+
+
+	wsio.on('alertClient', 					function(data) { alert(data.message); }); //temp messaging for server > client
 }
 
 
 
 function wsGiveClientConfiguration(data) {
+	if(debug) {
+		console.log('Received configuration settings from server. Will insert values into form.');
+		console.dir(data);
+	}
 	var workingDiv;
 
 	workingDiv = document.getElementById('cfgHost');
@@ -111,7 +120,6 @@ function wsGiveClientConfiguration(data) {
 
 	workingDiv = document.getElementById('cfgLcolumns');
 	workingDiv.value = data.layout.columns;
-
 
 
 	for(var i = 0; i < data.alternate_hosts.length; i++) {
@@ -150,18 +158,6 @@ function wsGiveClientConfiguration(data) {
 
 } //end wsGiveClientConfiguration
 
-
-
-function wsPasswordCheckResult(data) {	
-	var workingDiv;
-	workingDiv = document.getElementById('checkPasswordResult');
-	if(data.result === true) {
-		workingDiv.innerHTML = "Result: True";
-	}
-	else {
-		workingDiv.innerHTML = "Result: False";
-	}
-} //end wsPasswordCheckResult
 
 
 
@@ -236,34 +232,24 @@ function removeRemoteSiteEntry() {
 
 function sendNewMeetingId() {
 	var workingDiv = document.getElementById('meetingIdInput');
-	if(debug) {
-		alert( 'Md5 of ' + workingDiv.value + ' is:' +  md5(workingDiv.value) );
-	}
 	console.log('Sending request for new meeting ID as: ' + md5(workingDiv.value) );
 
-	alert('incomplete');
+	wsio.emit('setMeetingId', {password: md5(workingDiv.value) });
 } //sendNewMeetingId
 
 function sendNewWebControllerPwd() {
 	var workingDiv = document.getElementById('webControllerPwdInput');
-	if(debug) {
-		alert( 'Md5 of ' + workingDiv.value + ' is:' +  md5(workingDiv.value) );
-	}
 	console.log('Sending request for new webcontroller pwd as: ' + md5(workingDiv.value) );
 
-	alert('incomplete');
+	wsio.emit('setWebControllerPwd', {password: md5(workingDiv.value) });
 } //
 
 function sendNewConfigurationPagePwd() {
 	var workingDiv = document.getElementById('configurationPagePwdInput');
-	if(debug) {
-		alert( 'Md5 of ' + workingDiv.value + ' is:' +  md5(workingDiv.value) );
-	}
 	console.log('Sending request for new configuration page pwd as: ' + md5(workingDiv.value) );
 
-	alert('incomplete');
+	wsio.emit('setConfigurationPagePwd', {password: md5(workingDiv.value) });
 } // sendNewConfigurationPagePwd
-
 
 
 //used to mark places in code that need to be filled out

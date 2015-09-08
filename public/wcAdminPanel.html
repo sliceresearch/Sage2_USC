@@ -105,13 +105,13 @@
 
     <hr>
 
-    <input type='text' id='meetingIdInput'> Meeting ID <br>
+    <input type='text' id='meetingIdInput'> Meeting ID <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span> <br>
     <button onclick="sendNewMeetingId()"> Save </button>
     <hr>
-    <input type='text' id='webControllerPwdInput'> Password for Web Controller <br>
+    <input type='text' id='webControllerPwdInput'> Password for Web Controller  <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span> <br>
     <button onclick="sendNewWebControllerPwd()"> Save </button>
     <hr>
-    <input type='text' id='configurationPagePwdInput'> Password for Configuration Page(this page) <br>
+    <input type='text' id='configurationPagePwdInput'> Password for Configuration Page(this page)  <span id='warnConfig' style='color:red;visibility:hidden'> A password should be set for this page. </span> <br>
     <button onclick="sendNewConfigurationPagePwd()"> Save </button>
     <hr>
 
