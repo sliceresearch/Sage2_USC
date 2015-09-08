@@ -477,12 +477,12 @@ function SAGE2_interaction(wsio) {
 		// };
 		// this.worker.postMessage("hello");
 
-		var _this = this;
-		this.videoTimer = setInterval(function() {
-			var mediaCtx = mediaCanvas.getContext('2d');
-			mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-			_this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
-		}, 100);
+		// var _this = this;
+		// this.videoTimer = setInterval(function() {
+			// var mediaCtx = mediaCanvas.getContext('2d');
+			// mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
+			// _this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
+		// }, 100);
 	};
 
 	/**
@@ -507,8 +507,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.sendMediaStreamFrame = function() {
 		if (this.broadcasting) {
-			// var frame = this.captureMediaFrame();
-			var frame = this.pix;
+			var frame = this.captureMediaFrame();
+			// var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
 			if (raw.length > this.chunk) {
