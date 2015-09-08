@@ -7,10 +7,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
 
-    <title>Admin Panel</title>
+    <title>Configuration Page</title>
 
     <script type="text/javascript" src="src/websocket.io.js"></script>
-    <script type="text/javascript" src="src/wc-pacSetup.js"></script>
+    <script type="text/javascript" src="src/md5.js"></script>
+    <script type="text/javascript" src="src/wc-adminPanel.js"></script>
 
     <style> 
 
@@ -35,128 +36,86 @@
 
 </head>
 
-<body onload="initialize()">
+<body onload="initialize()" style='background-color:lightblue'>
+
+<img id='sageLogo' src="images/sage2_logo.png" alt="SAGE2">
+<div style='margin-left:5%;margin-right:5%'>
+
+	<h1 style='text-align:center'>Configuration Page</h1>
+	<hr><hr>
+
+
+    <input type="text" id="cfgHost"> Hostname / IP to display as SAGE2 address<span>(⍰)</span>
+    <br> <br><br>
+    Alternate Hostnames / IPs that can be used to connect to SAGE2 (Optional)
+    <br>
+        <div id='cfgAH'>
+            <input type='text' id='cfgAH1'>
+        </div>
+        <button onclick="removeAlternativeHostEntry()"> Remove </button>
+        <button onclick="addAlternativeHostEntry()"> Add </button>
+    <br>
+    
+    <hr>
+    <input type="text" id="cfgPortDefault"> Port (Default: 80 )
+    <br>
+    <input type="text" id="cfgPortSecure"> HTTPS Port (Default: 443 )
+    <hr>
+    Resolution of a single screene:
+    <br>
+    <input type="text" id="cfgRwidth"> Width
+    <br>
+    <input type="text" id="cfgRheight"> Height
+    <hr>
+    Layout:
+    <br>
+    <input type="text" id="cfgLcolumns"> Columns (Width)
+    <br>
+    <input type="text" id="cfgLrows"> Rows (Height)
+    <hr>
+    Remote Sites:
+    <br>
+        <div id='cfgRS'>
+            Site 1:<br>
+            <input type='text' id='cfgRS1name'> Name
+            <br>
+            <input type='text' id='cfgRS1host'> Host
+            <br>
+            <input type='text' id='cfgRS1port'> Port
+            <br>
+            <input type='text' id='cfgRS1secure'> Secure
+            <br>
+        </div>
+        <button onclick="removeRemoteSiteEntry()"> Remove </button>
+        <button onclick="addRemoteSiteEntry()"> Add </button>
+    <hr>
+    Dependency Location:
+    <br>
+    <input type='text' id='cfgDependencyIM' size='40'> ImageMagick
+    <br>
+    <input type='text' id='cfgDependencyFFM' size='40'> FFMpeg
+    <br>
+    <hr>
+
+  	<button onclick="sendConfigFileData()" style='font-size:30px'> Save </button>
 
 
 
-<div style="text-align:center; background-color:lightblue">
-
-    <div onclick="startSage()">
-        <h1 style='background-color:green'>Start Sage</h1>
-    </div>
-    <div id='expSageStart' class='hideExpand'>
-        Sage should have started
-    </div>
-
-    <div onclick="stopSage()">
-        <h1 style='background-color:red'>Stop Sage</h1>
-    </div>
-    <div id='expSageStop' class='hideExpand'>
-        Sage stop command sent.
-    </div>
-
-    <div onclick="toggleDivView('expSetPassword')">
-        <h1 style='background-color:gray'>Set Password</h1>
-    </div>
-    <div id='expSetPassword' class='hideExpand'>
-        Will take effect on next Sage startup.
-        <br>
-        <input type="text" id="setPasswordValue">
-        <br>
-        <button onclick="setPasswordToServer()"> Set Password </button>
-        <br><br><br>
-        Test current password:
-        <br>
-        <input type="text" id="checkPasswordValue">
-        <br>
-        <button onclick="checkPasswordToServer()"> Check Password </button>
-        <br>
-        <div id='checkPasswordResult'> </div>
-    </div>
+    <br><br>
 
     <hr>
 
-    <div onclick="toggleDivView('expConfiguration')">
-        <h1 style='background-color:gray'>Configuration</h1>
-    </div>
-    <div id='expConfiguration' class='hideExpand'>
-
-        Required Configuration Settings<br><br><br><br>
-
-
-
-        Host name / ip: <input type="text" id="cfgHost"> (⍰)
-        <br>
-        Port: <input type="text" id="cfgPortDefault"> (Default: 80 )
-        <br>
-        HTTPS Port: <input type="text" id="cfgPortSecure"> (Default: 443 )
-        <br>
-        Resolution:
-        <br>
-        --Width <input type="text" id="cfgRwidth">
-        <br>
-        --Height <input type="text" id="cfgRheight">
-        <br>
-        Layout:
-        <br>
-        --Columns <input type="text" id="cfgLcolumns"> (Width)
-        <br>
-        --Rows <input type="text" id="cfgLrows"> (Height)
-        <br>
-        Alternate Hosts:
-        <br>
-            <div id='cfgAH'>
-                <input type='text' id='cfgAH1'>
-            </div>
-            <button onclick="removeAlternativeHostEntry()"> Remove </button>
-            <button onclick="addAlternativeHostEntry()"> Add </button>
-        <br>
-        Remote Sites:
-        <br>
-            <div id='cfgRS'>
-                Site 1:<br>
-                Name:<input type='text' id='cfgRS1name'>
-                <br>
-                Host:<input type='text' id='cfgRS1host'>
-                <br>
-                Port:<input type='text' id='cfgRS1port'>
-                <br>
-                Secure:<input type='text' id='cfgRS1secure'>
-                <br>
-            </div>
-            <button onclick="removeRemoteSiteEntry()"> Remove </button>
-            <button onclick="addRemoteSiteEntry()"> Add </button>
-        <br>
-        Dependency Location:
-        <br>
-        ImageMagick:<input type='text' id='cfgDependencyIM'>
-        <br>
-        FFMpeg:<input type='text' id='cfgDependencyFFM'>
-        <br>
-        <br>
-
-        <button onclick="sendConfigFileData()"> Save </button>
+    <input type='text' id='meetingIdInput'> Meeting ID <br>
+    <button onclick="sendNewMeetingId()"> Save </button>
+    <hr>
+    <input type='text' id='webControllerPwdInput'> Password for Web Controller <br>
+    <button onclick="sendNewWebControllerPwd()"> Save </button>
+    <hr>
+    <input type='text' id='configurationPagePwdInput'> Password for Configuration Page(this page) <br>
+    <button onclick="sendNewConfigurationPagePwd()"> Save </button>
+    <hr>
 
 
-        <div onclick="toggleDivView('expConfiguration1')">
-            <h2 style='background-color:gray'>Show Config 1</h2>
-        </div>
-        <div id='expConfiguration1' class='hideExpand'>
-            Expanded sub configuration area 1
-        </div>
-
-        <div onclick="toggleDivView('expConfiguration2')">
-            <h2 style='background-color:gray'>Show Config 2</h2>
-        </div>
-        <div id='expConfiguration2' class='hideExpand'>
-            Expanded sub configuration area 2
-        </div>
-    </div>
-
-
-    <div>
-        <br>
-    </div>
 
 
 </div>
@@ -164,7 +123,6 @@
 </body>
 
 </html>
-
 
 
 
