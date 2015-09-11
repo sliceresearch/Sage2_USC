@@ -479,9 +479,9 @@ function SAGE2_interaction(wsio) {
 
 		// var _this = this;
 		// this.videoTimer = setInterval(function() {
-			// var mediaCtx = mediaCanvas.getContext('2d');
-			// mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-			// _this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
+		// var mediaCtx = mediaCanvas.getContext('2d');
+		// mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
+		// _this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
 		// }, 100);
 	};
 
