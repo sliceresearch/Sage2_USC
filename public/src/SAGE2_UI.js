@@ -159,12 +159,11 @@ function SAGE2_init() {
 
 	var sage2UI = document.getElementById('sage2UI');
 
-	window.addEventListener('dragover', preventDefault, false);
-	window.addEventListener('dragend',  preventDefault, false);
-	window.addEventListener('drop',     preventDefault, false);
+	// window.addEventListener('dragover', preventDefault, false);
+	// window.addEventListener('dragend',  preventDefault, false);
+	// window.addEventListener('drop',     preventDefault, false);
 
 	sage2UI.addEventListener('dragover',  preventDefault, false);
-	sage2UI.addEventListener('dragend',   preventDefault, false);
 	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
@@ -526,7 +525,14 @@ function createFileList(list, type, parent) {
  * @param event {Event} event data
  */
 function preventDefault(event) {
-	event.preventDefault();
+	if (event.preventDefault) {
+		// required by FF + Safari
+		event.preventDefault();
+	}
+	// tells the browser what drop effect is allowed here
+	event.dataTransfer.dropEffect = 'copy';
+	// required by IE
+	return false;
 }
 
 /**
@@ -536,6 +542,8 @@ function preventDefault(event) {
  * @param event {Event} event data
  */
 function fileDragEnter(event) {
+	event.preventDefault();
+
 	var sage2UI = document.getElementById('sage2UI');
 	sage2UI.style.borderStyle = "dashed";
 	displayUI.fileDrop = true;
@@ -549,6 +557,8 @@ function fileDragEnter(event) {
  * @param event {Event} event data
  */
 function fileDragLeave(event) {
+	event.preventDefault();
+
 	var sage2UI = document.getElementById('sage2UI');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
@@ -562,8 +572,11 @@ function fileDragLeave(event) {
  * @param event {Event} event data
  */
 function fileDrop(event) {
-	event.preventDefault();
+	if (event.preventDefault) {
+		event.preventDefault();
+	}
 
+	// Update the UI
 	var sage2UI = document.getElementById('sage2UI');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
@@ -573,12 +586,35 @@ function fileDrop(event) {
 	var x = event.layerX / event.target.clientWidth;
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
+		// upload a file
 		displayUI.fileUpload = true;
 		displayUI.uploadPercent = 0;
 		interactor.uploadFiles(event.dataTransfer.files, x, y);
 	} else {
-		interactor.uploadURL(event.dataTransfer.getData("Url"), x, y);
+		// URLs and text and ...
+		if (event.dataTransfer.types) {
+			// types: text/uri-list  text/plain text/html ...
+
+			// var type, i;
+			// for (i = 0; i < event.dataTransfer.types.length; i++) {
+			// 	type = event.dataTransfer.types[i];
+			// 	console.log('drop> content ', type, event.dataTransfer.getData(type));
+			// }
+			var content;
+			if (event.dataTransfer.types.indexOf('text/uri-list') >= 0) {
+				// choose uri as first choice
+				content = event.dataTransfer.getData('text/uri-list');
+			} else {
+				// default to text
+				content = event.dataTransfer.getData('text/plain');
+			}
+			interactor.uploadURL(content, x, y);
+			return false;
+		} else {
+			console.log("Your browser does not support the types property: drop aborted");
+		}
 	}
+	return false;
 }
 
 /**
