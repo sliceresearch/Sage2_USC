@@ -657,6 +657,8 @@ function setupListeners(wsio) {
 
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
+
+	wsio.on('createFolder',                         wsCreateFolder);
 }
 
 function initializeExistingControls(wsio) {
@@ -2137,6 +2139,18 @@ function wsAddNewWebElement(wsio, data) {
 		}
 	});
 }
+
+// **************  Folder management     *****************
+
+function wsCreateFolder(wsio, data) {
+	// Create a folder as needed
+	console.log(sageutils.header('Folder') + 'create ' + data.path);
+	if (!sageutils.folderExists(data.path)) {
+		sageutils.mkdirParent(data.path);
+		console.log(sageutils.header('Folder') + '	done.');
+	}
+}
+
 
 // **************  Command line          *****************
 
