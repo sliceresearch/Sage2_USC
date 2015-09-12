@@ -172,14 +172,20 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 
 	// Extra scaling factor
 	ratio = ratio || 1.0;
-
 	var menuScale = 1.0;
-	if (window.innerWidth < 856) {
-		menuScale = window.innerWidth / 856;
-	}
+	// var winWidth = window.innerWidth * ratio;
+	// if (window.innerWidth < 856) {
+	// 	menuScale = window.innerWidth / 856;
+	// }
 
-	var freeWidth   = window.innerWidth  - 26; // window width minus padding
-	var freeHeight  = window.innerHeight - 24 - (86 * menuScale); //  bottom margin, and bottom buttons
+ 	// window width minus padding
+	var freeWidth   = window.innerWidth  - 26;
+	//  bottom margin, and bottom buttons
+	//  height scaled by ratio (like half the screen height)
+	var freeHeight  = (window.innerHeight * ratio) - 24 - (86 * menuScale);
+	if (freeHeight < 100) {
+		freeHeight = 100;
+	}
 	var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 
 	// Calculate new sizes
