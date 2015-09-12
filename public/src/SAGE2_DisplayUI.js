@@ -178,7 +178,7 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 	// 	menuScale = window.innerWidth / 856;
 	// }
 
- 	// window width minus padding
+	// window width minus padding
 	var freeWidth   = window.innerWidth  - 26;
 	//  bottom margin, and bottom buttons
 	//  height scaled by ratio (like half the screen height)
