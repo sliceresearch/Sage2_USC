@@ -143,6 +143,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "delete_menu", value: "Delete"},
 			{id: "download_menu", value: "Download"},
 			{id: "duplicate_menu", value: "Duplicate"} ]},
+		{ id: "view_menu", value: "View", submenu: [
+			{id: "hideui_menu", value: "Show/Hide UI"},
+			{id: "hidefm_menu", value: "Hide file manager"}
+		]},
 		{ id: "mainadmin_menu", value: "Admin", submenu: [
 			{id: "display_menu", value: "Display client 0"},
 			{id: "audio_menu", value: "Audio manager"},
@@ -271,6 +275,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	});
 
 	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
+		var mainUI = document.getElementById('mainUI');
 		if (evt === "about_menu") {
 			var versionText = "SAGE2 Version:<br>";
 			if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
@@ -293,6 +298,22 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('requestStoredFiles');
 		} else if (evt === "display_menu") {
 			window.open("display.html?clientID=0", '_blank');
+		} else if (evt === "hidefm_menu") {
+			document.getElementById('fileManager').style.display = "none";
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+			}
+			SAGE2_resize();
+		} else if (evt === "hideui_menu") {
+			// Show and hide the main ui
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+				SAGE2_resize();
+			} else {
+				mainUI.style.display = "none";
+				_this.main.config.height = window.innerHeight;
+			}
+			_this.main.adjust();
 		} else if (evt === "audio_menu") {
 			window.open("audioManager.html", '_blank');
 		} else if (evt === "drawing_menu") {
