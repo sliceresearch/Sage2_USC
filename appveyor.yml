@@ -53,14 +53,14 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y gs\$_OUTDIR\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.2-0-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.2-0-portable-Q16-x64.zip -oim
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.2-1-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.2-1-portable-Q16-x64.zip -oim
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
   - del /Q *.7z
   - del /Q *.zip
-  - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/node.exe
+  - curl -LsSO https://nodejs.org/dist/latest/x64/node.exe
   - move node.exe bin\node.exe
   - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
   - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%.zip VERSION.json sage2.bat AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src

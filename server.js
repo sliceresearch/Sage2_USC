@@ -282,7 +282,7 @@ function initializeSage2Server() {
 	}
 	sageutils.monitorFolders(listOfFolders,
 		function(change) {
-			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
@@ -308,15 +308,8 @@ function initializeSage2Server() {
 		}
 	);
 
-	// Initialize assets
-	// Main folder
-	assets.initialize(uploadsDirectory, 'uploads');
-	// Extra folders
-	for (var mf in mediaFolders) {
-		if (mf !== 'system') {
-			assets.addAssetFolder(mediaFolders[mf].path, 'uploads');
-		}
-	}
+	// Initialize assets folders
+	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
 
 	// Initialize app loader
 	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -664,6 +657,8 @@ function setupListeners(wsio) {
 
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
+
+	wsio.on('createFolder',                         wsCreateFolder);
 }
 
 function initializeExistingControls(wsio) {
@@ -2145,6 +2140,18 @@ function wsAddNewWebElement(wsio, data) {
 	});
 }
 
+// **************  Folder management     *****************
+
+function wsCreateFolder(wsio, data) {
+	// Create a folder as needed
+	console.log(sageutils.header('Folder') + 'create ' + data.path);
+	if (!sageutils.folderExists(data.path)) {
+		sageutils.mkdirParent(data.path);
+		console.log(sageutils.header('Folder') + '	done.');
+	}
+}
+
+
 // **************  Command line          *****************
 
 function wsCommand(wsio, data) {
@@ -2980,6 +2987,19 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
+	// Check the borders settings
+	if (userConfig.resolution.borders === undefined) {
+		// set default values to 0
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+	} else {
+		// make sure the values are integers
+		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
+		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
+		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
+		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	}
+
+
 	// Set default values if missing
 	if (userConfig.port === undefined) {
 		userConfig.port = 443;
@@ -3010,7 +3030,6 @@ function loadConfiguration() {
 			userConfig.register_site = false;
 		}
 	}
-
 
 	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
 		apis.twitter = new Twit({
