@@ -36,16 +36,19 @@
 
 </head>
 
-<body onload="initialize()" style='background-color:lightblue'>
+<body onload="initialize()" style=''>
 
 <img id='sageLogo' src="images/sage2_logo.png" alt="SAGE2">
 <div style='margin-left:5%;margin-right:5%'>
 
 	<h1 style='text-align:center'>Configuration Page</h1>
-	<hr><hr>
+    <br><br>
 
+    <div id='alertClientText' style='text-align:center;color:red;visibility:hidden'>  </div>
 
-    <input type="text" id="cfgHost"> Hostname / IP to display as SAGE2 address<span>(⍰)</span>
+    <hr><hr>
+
+    <input type="text" id="cfgHost"> Hostname / IP to display as SAGE2 address
     <br> <br><br>
     Alternate Hostnames / IPs that can be used to connect to SAGE2 (Optional)
     <br>
@@ -57,11 +60,11 @@
     <br>
     
     <hr>
-    <input type="text" id="cfgPortDefault"> Port (Default: 80 )
+    <input type="text" id="cfgPortDefault"> Port Number (Default: 9292) To remove the need to enter the port number in the url, use port 80.
     <br>
-    <input type="text" id="cfgPortSecure"> HTTPS Port (Default: 443 )
+    <input type="text" id="cfgPortSecure"> Secure Port Number (Default: 9090) To remove the need to enter the port number in the url, use port 443.
     <hr>
-    Resolution of a single screene:
+    Resolution of a single screen:
     <br>
     <input type="text" id="cfgRwidth"> Width
     <br>
@@ -69,51 +72,58 @@
     <hr>
     Layout:
     <br>
-    <input type="text" id="cfgLcolumns"> Columns (Width)
+    <input type="text" id="cfgLcolumns"> Columns
     <br>
-    <input type="text" id="cfgLrows"> Rows (Height)
+    <input type="text" id="cfgLrows"> Rows
     <hr>
     Remote Sites:
     <br>
         <div id='cfgRS'>
             Site 1:<br>
-            <input type='text' id='cfgRS1name'> Name
+            <input type='text' id='cfgRS1name'> Label
             <br>
-            <input type='text' id='cfgRS1host'> Host
+            <input type='text' id='cfgRS1host'> Hostname / IP address
             <br>
-            <input type='text' id='cfgRS1port'> Port
+            <input type='text' id='cfgRS1port'> Port Number
             <br>
-            <input type='text' id='cfgRS1secure'> Secure
+            <input type='text' id='cfgRS1secure'> Secure Port Number
             <br>
         </div>
         <button onclick="removeRemoteSiteEntry()"> Remove </button>
         <button onclick="addRemoteSiteEntry()"> Add </button>
     <hr>
-    Dependency Location:
+    Dependency Location on host computer:
     <br>
     <input type='text' id='cfgDependencyIM' size='40'> ImageMagick
     <br>
     <input type='text' id='cfgDependencyFFM' size='40'> FFMpeg
     <br>
+
+    <hr>
+    <hr>
     <hr>
 
-  	<button onclick="sendConfigFileData()" style='font-size:30px'> Save </button>
+    <input type='password' value='badAdminPanelDefault' id='meetingIdInput'> Meeting ID <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span> <br>
+    <input type='password' value='badAdminPanelDefault' id='meetingIdInputConfirm'> Confirm <span id='warnMidConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <hr>
+    <input type='password' value='badAdminPanelDefault' id='webControllerPwdInput'> Password for Web Controller  <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span>
+    <br>
+    <input type='password' value='badAdminPanelDefault' id='webControllerPwdInputConfirm'> Confirm <span id='warnWebconConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <hr>
+    <input type='password' value='badAdminPanelDefault' id='configurationPagePwdInput'> Password for Configuration Page (this page)  <span id='warnConfig' style='color:red;visibility:hidden'> A password should be set for this page. </span>
+    <br>
+    <input type='password' value='badAdminPanelDefault' id='configurationPagePwdInputConfirm'> Confirm <span id='warnConfigConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <hr>
 
-
+    <hr>
 
     <br><br>
+    <button onclick="sendConfigFileData()" style='font-size:30px'> Save </button>
+    <span id='warnPasswordMismatch' style='color:red;visibility:hidden'> One of the passwords do not match the confirmation. </span> 
 
-    <hr>
+    <br><br>
+    <br><br>
 
-    <input type='text' id='meetingIdInput'> Meeting ID <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span> <br>
-    <button onclick="sendNewMeetingId()"> Save </button>
-    <hr>
-    <input type='text' id='webControllerPwdInput'> Password for Web Controller  <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span> <br>
-    <button onclick="sendNewWebControllerPwd()"> Save </button>
-    <hr>
-    <input type='text' id='configurationPagePwdInput'> Password for Configuration Page(this page)  <span id='warnConfig' style='color:red;visibility:hidden'> A password should be set for this page. </span> <br>
-    <button onclick="sendNewConfigurationPagePwd()"> Save </button>
-    <hr>
 
 
 

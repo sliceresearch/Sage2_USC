@@ -85,10 +85,19 @@ function setupListeners() {
 
 	wsio.on('noWebId', 						function(data) { document.getElementById('warnMid').style.visibility='visible'; });
 	wsio.on('noWebconPwd', 					function(data) { document.getElementById('warnWebcon').style.visibility='visible'; });
-	wsio.on('noConfigPwd', 					function(data) { alert(data.message); document.getElementById('warnConfig').style.visibility='visible'; });
+	wsio.on('noConfigPwd', 					function(data) {
+												var workingDiv = document.getElementById('alertClientText');
+												workingDiv.innerHTML = data.message;
+												workingDiv.style.visibility = 'visible';
+												document.getElementById('warnConfig').style.visibility='visible';
+											 }); //temp messaging for server > client
 
 
-	wsio.on('alertClient', 					function(data) { alert(data.message); }); //temp messaging for server > client
+	wsio.on('alertClient', 					function(data) {
+												var workingDiv = document.getElementById('alertClientText');
+												workingDiv.innerHTML = data.message;
+												workingDiv.style.visibility = 'visible';
+											 }); //temp messaging for server > client
 }
 
 
@@ -205,10 +214,10 @@ function addRemoteSiteEntry() {
     for(var i = 2; i < 10; i++) {
         if( workingDiv.innerHTML.indexOf('Site ' + i + ':<br>') < 0 ) {
             workingDiv.innerHTML += 'Site ' + i + ':<br>';
-            workingDiv.innerHTML += "Name:<input type='text' id='cfgRS"+i+"name'><br>";
-            workingDiv.innerHTML += "Host:<input type='text' id='cfgRS"+i+"host'><br>";
-            workingDiv.innerHTML += "Port:<input type='text' id='cfgRS"+i+"port'><br>";
-            workingDiv.innerHTML += "Secure:<input type='text' id='cfgRS"+i+"secure'><br>";
+            workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"name'> Label<br>";
+            workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"host'> Hostname / IP address<br>";
+            workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"port'> Port Number <br>";
+            workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"secure'> Secure Port Number <br>";
             break;
         }
     }
@@ -230,26 +239,39 @@ function removeRemoteSiteEntry() {
 
 
 
-function sendNewMeetingId() {
+
+
+
+
+function sendConfigFileData() {
+
+	//1st double check password validity
+	var passwordMismatch = false;
+
 	var workingDiv = document.getElementById('meetingIdInput');
-	console.log('Sending request for new meeting ID as: ' + md5(workingDiv.value) );
+	var workingDiv2 = document.getElementById('meetingIdInputConfirm');
+	if(workingDiv.value !== workingDiv2.value){ document.getElementById('warnMidConfirm').style.visibility = 'visible'; passwordMismatch = true;}
+	else {  document.getElementById('warnMidConfirm').style.visibility = 'hidden';  }
+	workingDiv = document.getElementById('webControllerPwdInput');
+	workingDiv2 = document.getElementById('webControllerPwdInputConfirm');
+	if(workingDiv.value !== workingDiv2.value){ document.getElementById('warnWebconConfirm').style.visibility = 'visible'; passwordMismatch = true;}
+	else {  document.getElementById('warnWebconConfirm').style.visibility = 'hidden';  }
+	workingDiv = document.getElementById('configurationPagePwdInput');
+	workingDiv2 = document.getElementById('configurationPagePwdInputConfirm');
+	if(workingDiv.value !== workingDiv2.value){ document.getElementById('warnConfigConfirm').style.visibility = 'visible'; passwordMismatch = true;}
+	else {  document.getElementById('warnConfigConfirm').style.visibility = 'hidden';  }
 
-	wsio.emit('setMeetingId', {password: md5(workingDiv.value) });
-} //sendNewMeetingId
+	if(passwordMismatch) { document.getElementById('warnPasswordMismatch').style.visibility = 'visible';  return; }
+	else { document.getElementById('warnPasswordMismatch').style.visibility = 'hidden';  }
 
-function sendNewWebControllerPwd() {
-	var workingDiv = document.getElementById('webControllerPwdInput');
-	console.log('Sending request for new webcontroller pwd as: ' + md5(workingDiv.value) );
 
-	wsio.emit('setWebControllerPwd', {password: md5(workingDiv.value) });
-} //
+} //end sendConfigFileData
 
-function sendNewConfigurationPagePwd() {
-	var workingDiv = document.getElementById('configurationPagePwdInput');
-	console.log('Sending request for new configuration page pwd as: ' + md5(workingDiv.value) );
 
-	wsio.emit('setConfigurationPagePwd', {password: md5(workingDiv.value) });
-} // sendNewConfigurationPagePwd
+
+
+
+
 
 
 //used to mark places in code that need to be filled out
