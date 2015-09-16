@@ -103,6 +103,29 @@
     <br>
 
     <hr>
+    Background:
+    <br>
+    #<input type='text' id='bgColor' size='6'> CSS hex color value to use as the background.
+    <br>
+    <input type='checkbox' id='bgClip'> Checking this off will clip the display at the exact resolution  
+    <br>
+    Image. Optional, leave blank if you do not want to use one.
+    <br>
+    <input type='text' id='bgImage' size='40'> Path to an image from the public directory.
+    <br>
+    <select id='bgImageDisplayType'>
+        <option value="fit">fit</option> 
+        <option value="stretch">stretch</option> 
+        <option value="tile">tile</option> 
+    </select>
+    <br>
+    Watermark. Optional, leave blank if you do not want to use one.
+    <br>
+    <input type='text' id='bgWatermark' size='40'> Path to a monochrome SVG from the public directory.
+    <br>
+    #<input type='text' id='bgColor' size='6'> CSS Color for the watermark.
+    <br>
+
     <hr>
     <hr>
 
@@ -117,7 +140,7 @@
     <br>
     <input type='password' value='' id='configurationPagePwdInputConfirm'> Confirm <span id='warnConfigConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
     <hr>
-
+    Leaving any of the password fields blank will not remove current password.
     <hr>
 
     <br><br>
