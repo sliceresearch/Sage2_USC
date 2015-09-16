@@ -154,8 +154,8 @@ function wsGiveClientConfiguration(data) {
 		workingDiv.value = data.remote_sites[i].host; 
 		workingDiv = document.getElementById('cfgRS' + (i+1) + 'port');
 		workingDiv.value = data.remote_sites[i].port; 
-		workingDiv = document.getElementById('cfgRS' + (i+1) + 'secure');
-		workingDiv.value = data.remote_sites[i].secure; 
+		//workingDiv = document.getElementById('cfgRS' + (i+1) + 'secure');
+		//workingDiv.value = data.remote_sites[i].secure; 
 	}
 
 
@@ -217,7 +217,7 @@ function addRemoteSiteEntry() {
             workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"name'> Label<br>";
             workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"host'> Hostname / IP address<br>";
             workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"port'> Port Number <br>";
-            workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"secure'> Secure Port Number <br>";
+            //workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"secure'> Secure Port Number <br>";
             break;
         }
     }
@@ -243,29 +243,122 @@ function removeRemoteSiteEntry() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function sendConfigFileData() {
 
 	//1st double check password validity
 	var passwordMismatch = false;
+	var data;
 
+	//checks if the values do not match, if show show error, then only if there is a value, send it as the new password
 	var workingDiv = document.getElementById('meetingIdInput');
 	var workingDiv2 = document.getElementById('meetingIdInputConfirm');
 	if(workingDiv.value !== workingDiv2.value){ document.getElementById('warnMidConfirm').style.visibility = 'visible'; passwordMismatch = true;}
-	else {  document.getElementById('warnMidConfirm').style.visibility = 'hidden';  }
+	else if( workingDiv.value.length > 0 ) {
+		data = {};
+		data.password = md5(workingDiv.value);
+		wsio.emit( 'setMeetingId', data );
+		document.getElementById('warnMidConfirm').style.visibility = 'hidden';
+	} else {  document.getElementById('warnMidConfirm').style.visibility = 'hidden'; }
+
 	workingDiv = document.getElementById('webControllerPwdInput');
 	workingDiv2 = document.getElementById('webControllerPwdInputConfirm');
 	if(workingDiv.value !== workingDiv2.value){ document.getElementById('warnWebconConfirm').style.visibility = 'visible'; passwordMismatch = true;}
-	else {  document.getElementById('warnWebconConfirm').style.visibility = 'hidden';  }
+	else if( workingDiv.value.length > 0 ) {
+		data = {};
+		data.password = md5(workingDiv.value);
+		wsio.emit( 'setWebControllerPwd', data );
+		document.getElementById('warnWebconConfirm').style.visibility = 'hidden';
+	} else {  document.getElementById('warnWebconConfirm').style.visibility = 'hidden'; }
+
 	workingDiv = document.getElementById('configurationPagePwdInput');
 	workingDiv2 = document.getElementById('configurationPagePwdInputConfirm');
 	if(workingDiv.value !== workingDiv2.value){ document.getElementById('warnConfigConfirm').style.visibility = 'visible'; passwordMismatch = true;}
-	else {  document.getElementById('warnConfigConfirm').style.visibility = 'hidden';  }
+	else if( workingDiv.value.length > 0 ) {
+		data = {};
+		data.password = md5(workingDiv.value);
+		wsio.emit( 'setConfigurationPagePwd', data );
+		document.getElementById('warnConfigConfirm').style.visibility = 'hidden';
+	} else {  document.getElementById('warnConfigConfirm').style.visibility = 'hidden';  }
 
 	if(passwordMismatch) { document.getElementById('warnPasswordMismatch').style.visibility = 'visible';  return; }
 	else { document.getElementById('warnPasswordMismatch').style.visibility = 'hidden';  }
 
+	//at this point the password checking has been passed.
+
+
+	data 		= {};
+	data.host 		= document.getElementById('cfgHost').value;
+	data.port 		= document.getElementById('cfgPortDefault').value;//secure port
+	data.index_port = document.getElementById('cfgPortSecure').value; //non-secure
+
+	data.resolution 		= {};
+	data.resolution.width 	= document.getElementById('cfgRwidth').value
+	data.resolution.height 	= document.getElementById('cfgRheight').value
+
+	data.layout 			= {};
+	data.layout.rows 		= document.getElementById('cfgLrows').value;
+	data.layout.columns 	= document.getElementById('cfgLcolumns').value;
+
+
+	//alternate hosts is an array of strings  [ 'string', 'string', string ]
+	data.alternate_hosts = [];
+	var ahi = 1;
+	workingDiv = document.getElementById('cfgAH'+ahi);
+	while(workingDiv !== null) {
+		//only take if non-blankspace
+		if(workingDiv.value.trim().length > 0) { data.alternate_hosts.push( workingDiv.value ); }
+		ahi++;
+		workingDiv = document.getElementById('cfgAH'+ahi);
+	}
+
+	data.remote_sites = [];
+	var rsi = 1;
+	workingDiv = document.getElementById('cfgRS'+rsi+'name');
+	var rsobj;
+	while(workingDiv !== null) {
+		rsobj 		= {};
+		rsobj.name 	= workingDiv.value.trim();
+		rsobj.host 	= document.getElementById('cfgRS'+rsi+'host').value.trim();
+		rsobj.port 	= document.getElementById('cfgRS'+rsi+'port').value.trim();
+		rsobj.secure = true;
+		rsi++;
+		workingDiv = document.getElementById('cfgRS'+rsi+'name');
+		data.remote_sites.push( rsobj );
+	}
+
+
+	data.dependencies = {};
+	workingDiv = document.getElementById('cfgDependencyIM');
+	if( workingDiv.value.trim().length > 0 ) { data.dependencies.ImageMagick = workingDiv.value.trim(); }
+	workingDiv = document.getElementById('cfgDependencyFFM');
+	if( workingDiv.value.trim().length > 0 ) { data.dependencies.FFMpeg = workingDiv.value.trim(); }
+
+	console.dir(data);
+
+	wsio.emit('giveServerConfiguration', data);
 
 } //end sendConfigFileData
+
+
+
+
+
+
+
 
 
 

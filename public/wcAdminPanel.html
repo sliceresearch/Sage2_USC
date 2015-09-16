@@ -84,10 +84,13 @@
             <br>
             <input type='text' id='cfgRS1host'> Hostname / IP address
             <br>
-            <input type='text' id='cfgRS1port'> Port Number
+            <input type='text' id='cfgRS1port'> Secure Port Number
             <br>
-            <input type='text' id='cfgRS1secure'> Secure Port Number
+            <!--
+            Currently cannot determine if this is optional as sage requires a secure port to work.
+            <input type='checkbox' id='cfgRS1secure'> Secure Port Number
             <br>
+            -->
         </div>
         <button onclick="removeRemoteSiteEntry()"> Remove </button>
         <button onclick="addRemoteSiteEntry()"> Add </button>
@@ -103,16 +106,16 @@
     <hr>
     <hr>
 
-    <input type='password' value='badAdminPanelDefault' id='meetingIdInput'> Meeting ID <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span> <br>
-    <input type='password' value='badAdminPanelDefault' id='meetingIdInputConfirm'> Confirm <span id='warnMidConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <input type='password' value='' id='meetingIdInput'> Meeting ID <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span> <br>
+    <input type='password' value='' id='meetingIdInputConfirm'> Confirm <span id='warnMidConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
     <hr>
-    <input type='password' value='badAdminPanelDefault' id='webControllerPwdInput'> Password for Web Controller  <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span>
+    <input type='password' value='' id='webControllerPwdInput'> Password for Web Controller  <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span>
     <br>
-    <input type='password' value='badAdminPanelDefault' id='webControllerPwdInputConfirm'> Confirm <span id='warnWebconConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <input type='password' value='' id='webControllerPwdInputConfirm'> Confirm <span id='warnWebconConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
     <hr>
-    <input type='password' value='badAdminPanelDefault' id='configurationPagePwdInput'> Password for Configuration Page (this page)  <span id='warnConfig' style='color:red;visibility:hidden'> A password should be set for this page. </span>
+    <input type='password' value='' id='configurationPagePwdInput'> Password for Configuration Page (this page)  <span id='warnConfig' style='color:red;visibility:hidden'> A password should be set for this page. </span>
     <br>
-    <input type='password' value='badAdminPanelDefault' id='configurationPagePwdInputConfirm'> Confirm <span id='warnConfigConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <input type='password' value='' id='configurationPagePwdInputConfirm'> Confirm <span id='warnConfigConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
     <hr>
 
     <hr>

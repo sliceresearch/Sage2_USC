@@ -139,13 +139,15 @@ function setupListeners(wsio) {
 
 
 	//should be functions to keep
-	wsio.on('giveClientConfiguration',		wsGiveClientConfiguration);
-	wsio.on('giveServerConfiguration',		wsGiveServerConfiguration);
-	wsio.on('setMeetingId',					wsSetMeetingId);
 	wsio.on('startSage',					wsStartSage);
 	wsio.on('stopSage',						wsStopSage);
 
+	//Shared
+	wsio.on('setMeetingId',					wsSetMeetingId);
+
 	//unique for admin panel
+	wsio.on('giveClientConfiguration',		wsGiveClientConfiguration);
+	wsio.on('giveServerConfiguration',		wsGiveServerConfiguration);
 	wsio.on('setWebControllerPwd',			wsSetWebControllerPwd);
 	wsio.on('setConfigurationPagePwd',		wsSetConfigurationPagePwd);
 
@@ -274,7 +276,7 @@ function wsGiveServerConfiguration(wsio, data) {
 	confContents.resolution.height = data.resolution.height;
 
 	//if the layout changed.
-	if(  (confContents.layout.rows != data.layout.rows)  ||  (confContents.layout.columns = data.layout.columns)  ) {
+	if(  (confContents.layout.rows != data.layout.rows)  ||  (confContents.layout.columns != data.layout.columns)  ) {
 		confContents.layout.rows = data.layout.rows;
 		confContents.layout.columns = data.layout.columns;
 		
