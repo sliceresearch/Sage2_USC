@@ -437,6 +437,9 @@ function closeWebSocketClient(wsio) {
 	} else if (wsio.clientType === "display") {
 		for (key in SAGE2Items.renderSync) {
 			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+				// If the application had an animation timer, clear it
+				clearTimeout(SAGE2Items.renderSync[key].clients[wsio.id].animateTimer);
+				// Remove the object from the list
 				delete SAGE2Items.renderSync[key].clients[wsio.id];
 			}
 		}
@@ -1241,11 +1244,12 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			SAGE2Items.renderSync[data.id].date = now;
 			broadcast('animateCanvas', {id: data.id, date: now});
 		} else {
-			setTimeout(function() {
+			var aTimer = setTimeout(function() {
 				now = Date.now();
 				SAGE2Items.renderSync[data.id].date = now;
 				broadcast('animateCanvas', {id: data.id, date: now});
 			}, ticks - elapsed);
+			SAGE2Items.renderSync[data.id].clients[wsio.id].animateTimer = aTimer;
 		}
 	}
 }
@@ -1369,6 +1373,7 @@ function listSessions() {
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
 				// Make it look like an exif data structure
 				thelist.push({id: filename,
+					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
 							FileSize: stat.size,
 							FileDate: strdate,
@@ -2144,10 +2149,17 @@ function wsAddNewWebElement(wsio, data) {
 
 function wsCreateFolder(wsio, data) {
 	// Create a folder as needed
-	console.log(sageutils.header('Folder') + 'create ' + data.path);
-	if (!sageutils.folderExists(data.path)) {
-		sageutils.mkdirParent(data.path);
-		console.log(sageutils.header('Folder') + '	done.');
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		// if it starts with the sage root
+		if (data.root.indexOf(f.url) === 0) {
+			var subdir = data.root.split(f.url)[1];
+			var toCreate = path.join(f.path, subdir, data.path);
+			if (!sageutils.folderExists(toCreate)) {
+				sageutils.mkdirParent(toCreate);
+				console.log(sageutils.header('Folder') + toCreate + ' created');
+			}
+		}
 	}
 }
 
