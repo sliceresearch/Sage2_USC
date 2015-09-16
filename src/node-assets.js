@@ -670,56 +670,44 @@ var listApps = function() {
 	return result;
 };
 
-var refresh = function(root, callback) {
-	var thelist = [];
-	var uploadedImages = fs.readdirSync(path.join(root, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
-	var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
-	var i;
-	var excludes = [ '.DS_Store', 'Thumbs.db' ];
-	var item;
-	// Start with the apps so we can register filetypes
-	for (i = 0; i < uploadedApps.length; i++) {
-		var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
-		if (fs.lstatSync(applicationDir).isDirectory()) {
-			item = applicationDir;
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
+var recursiveReaddirSync = function(aPath) {
+	var list     = [];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'tmp' ];
+	var files, stats;
 
-	for (i = 0; i < uploadedImages.length; i++) {
-		if (excludes.indexOf(uploadedImages[i]) === -1) {
-			item = path.resolve(root, "images", uploadedImages[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
+	files = fs.readdirSync(aPath);
+	if (files.indexOf('instructions.json') >= 0) {
+		// it's an application folder
+		list.push(aPath);
+	} else {
+		files.forEach(function(file) {
+			if (excludes.indexOf(file) === -1) {
+				stats = fs.lstatSync(path.join(aPath, file));
+				if (stats.isDirectory()) {
+					list = list.concat(recursiveReaddirSync(path.join(aPath, file)));
+				} else {
+					list.push(path.join(aPath, file));
+				}
 			}
-		}
+		});
 	}
-	for (i = 0; i < uploadedVideos.length; i++) {
-		if (excludes.indexOf(uploadedVideos[i]) === -1) {
-			item = path.resolve(root, "videos", uploadedVideos[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedPdfs.length; i++) {
-		if (excludes.indexOf(uploadedPdfs[i]) === -1) {
-			item = path.resolve(root, "pdfs", uploadedPdfs[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
+	return list;
+}
+
+var refresh = function(root, callback) {
+	var uploaded = recursiveReaddirSync(root);
+	console.log('Refresh', uploaded);
+
+	var thelist = [];
+	var i;
+	var item;
+
+	for (i = 0; i < uploaded.length; i++) {
+		item = path.resolve(uploaded[i]);
+		if (item in AllAssets.list) {
+			AllAssets.list[item].Valid = true;
+		} else {
+			thelist.push(item);
 		}
 	}
 
@@ -846,55 +834,19 @@ var addAssetFolder = function(root) {
 		fs.createReadStream(unknownapp_128Img).pipe(fs.createWriteStream(unknownapp_128));
 	}
 
-	var thelist = [];
-	var uploadedImages = fs.readdirSync(path.join(root, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
-	var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
-	var i;
-	var excludes = [ '.DS_Store' ];
-	var item;
-	// Start with the apps so we can register filetypes
-	for (i = 0; i < uploadedApps.length; i++) {
-		var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
-		if (fs.lstatSync(applicationDir).isDirectory()) {
-			item = applicationDir;
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
+	var uploaded = recursiveReaddirSync(root);
+	console.log('Refresh', uploaded);
 
-	for (i = 0; i < uploadedImages.length; i++) {
-		if (excludes.indexOf(uploadedImages[i]) === -1) {
-			item = path.resolve(root, "images", uploadedImages[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedVideos.length; i++) {
-		if (excludes.indexOf(uploadedVideos[i]) === -1) {
-			item = path.resolve(root, "videos", uploadedVideos[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedPdfs.length; i++) {
-		if (excludes.indexOf(uploadedPdfs[i]) === -1) {
-			item = path.resolve(root, "pdfs", uploadedPdfs[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
+	var thelist = [];
+	var i;
+	var item;
+
+	for (i = 0; i < uploaded.length; i++) {
+		item = path.resolve(uploaded[i]);
+		if (item in AllAssets.list) {
+			AllAssets.list[item].Valid = true;
+		} else {
+			thelist.push(item);
 		}
 	}
 
