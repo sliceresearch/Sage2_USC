@@ -46,6 +46,7 @@ var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
 
 var Twit          = require('twit');             // twitter api
+var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
 // custom node modules
 var assets              = require('./src/node-assets');           // manages the list of files
@@ -64,7 +65,6 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
 
 
 // Globals

@@ -18,6 +18,7 @@
 "use strict";
 
 var fs      = require('fs');
+var http    = require('http');
 var https   = require('https');
 var os      = require('os');
 var path    = require('path');
@@ -48,14 +49,19 @@ else target = process.versions.node;
 // Parsing node version numbers
 var nums = target.split('.').map(function(n) { return parseInt(n, 10); });
 // Node v0.10.36 and above
-if (nums[0]===0 && nums[1]===10 && nums[2]>=36) {
+if (nums[0] === 0 && nums[1] === 10 && nums[2] >= 36) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.36+.");
 	target = "0.10.36";
 }
-// Nove v0.12.0 and above
-if (nums[0]===0 && nums[1]===12 && nums[2]>=0) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.0+.");
-	target = "0.12.0";
+// Node v0.12.0 and above
+if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  0) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.7+.");
+	target = "0.12.7";
+}
+// Node v4.0.0 and above
+if (nums[0] === 4 && nums[1] ===  4 && nums[2] >=  0) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 4.0.0+.");
+	target = "4.0.0";
 }
 
 console.log("Installing for " + platformFull + ", Node v" + target);
@@ -69,7 +75,7 @@ fs.mkdirSync("node_modules");
 var suffix = "_"+platform+"_"+target+".tar.gz";
 var packages = [
 	"node-demux",
-	"ws"
+	"websocketio"
 ];
 
 var downloaded = {};
@@ -78,7 +84,8 @@ for(var i=0; i<packages.length; i++){
 }
 
 packages.forEach(function(element, index, array) {
-	request({host: "bitbucket.org", path: "/sage2/sage2/downloads/"+element+suffix}, function(res) {
+	//request({host: "bitbucket.org", path: "/sage2/sage2/downloads/"+element+suffix}, true, function(res) {
+	request({host: "sage2.sagecommons.org", path: "/binaries/"+element+suffix}, false, function(res) {
 		if(res.statusCode === 200) {
 			console.log("found binary package: " + element+suffix);
 			var writestream = fs.createWriteStream(path.join("node_modules", element+suffix));
@@ -179,8 +186,8 @@ function unzipModule(keys, idx) {
 	}
 }
 
-function request(options, callback) {
-	var req = https.get(options, function(res) {
+function request(options, secure, callback) {
+	var responseCallback = function(res) {
 		if (res.statusCode > 300 && res.statusCode < 400 && res.headers.location) {
 			var location = url.parse(res.headers.location);
 			if(location.hostname) {
@@ -193,7 +200,11 @@ function request(options, callback) {
 		else {
 			callback(res);
 		}
-	});
+	};
+
+	var req;
+	if (secure) req = https.get(options, responseCallback);
+	else        req = http.get(options, responseCallback);
 	req.on('error', function(e) {
 		console.log('problem with request: ' + e.message);
 	});

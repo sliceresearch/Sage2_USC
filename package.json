@@ -57,7 +57,7 @@
 		"sprint": "^0.3.1",
 		"twit": "latest",
 		"mv": "latest",
-		"ws": "latest",
+		"websocketio": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
 		"ytdl-core": "latest"
