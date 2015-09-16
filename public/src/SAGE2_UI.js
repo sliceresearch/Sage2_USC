@@ -385,7 +385,7 @@ function SAGE2_resize(ratio) {
 
 	var fm = document.getElementById('fileManager');
 	if (fm.style.display === "block") {
-		ratio = 0.4;
+		ratio = 0.5;
 	}
 
 	resizeMenuUI(ratio);
