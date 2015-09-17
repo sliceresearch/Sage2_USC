@@ -53,8 +53,8 @@ if (nums[0] === 0 && nums[1] === 10 && nums[2] >= 36) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.36+.");
 	target = "0.10.36";
 }
-// Node v0.12.0 and above
-if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  0) {
+// Node v0.12.7 and above
+if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  7) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.7+.");
 	target = "0.12.7";
 }
