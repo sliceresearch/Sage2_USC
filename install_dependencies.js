@@ -59,7 +59,7 @@ if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  0) {
 	target = "0.12.7";
 }
 // Node v4.0.0 and above
-if (nums[0] === 4 && nums[1] ===  4 && nums[2] >=  0) {
+if (nums[0] === 4 && nums[1] ===  0 && nums[2] >=  0) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 4.0.0+.");
 	target = "4.0.0";
 }
@@ -74,34 +74,38 @@ fs.mkdirSync("node_modules");
 
 var suffix = "_"+platform+"_"+target+".tar.gz";
 var packages = [
-	"node-demux",
-	"websocketio"
+	{name: "node-demux", url: "https://bitbucket.org/tmarrinan/binary-modules/downloads"},
+	{name: "websocketio", url: "https://bitbucket.org/tmarrinan/binary-modules/downloads"}
 ];
 
 var downloaded = {};
 for(var i=0; i<packages.length; i++){
-	downloaded[packages[i]] = false;
+	downloaded[packages[i].name] = false;
 }
 
 packages.forEach(function(element, index, array) {
-	//request({host: "bitbucket.org", path: "/sage2/sage2/downloads/"+element+suffix}, true, function(res) {
-	request({host: "sage2.sagecommons.org", path: "/binaries/"+element+suffix}, false, function(res) {
+	var isSecure;
+	var packageURL = url.parse(element.url);
+	if (packageURL.protocol === "http:") isSecure = false;
+	else isSecure = true;
+
+	request({host: packageURL.host, path: packageURL.pathname+"/"+element.name+suffix}, isSecure, function(res) {
 		if(res.statusCode === 200) {
-			console.log("found binary package: " + element+suffix);
-			var writestream = fs.createWriteStream(path.join("node_modules", element+suffix));
+			console.log("found binary package: " + element.name+suffix);
+			var writestream = fs.createWriteStream(path.join("node_modules", element.name+suffix));
 			writestream.on('error', function(err) {
 				console.log(err);
 			});
 
 			res.on('end', function () {
-				downloaded[element] = true;
+				downloaded[element.name] = true;
 				if(allTrueDict(downloaded)) unzipModules();
 			});
 			res.pipe(writestream);
 		}
 		else {
-			console.log("could not find binary package " + element+suffix + ". compiling instead.");
-			delete downloaded[element];
+			console.log("could not find binary package " + element.name+suffix + ". compiling instead.");
+			delete downloaded[element.name];
 			if(allTrueDict(downloaded)) unzipModules();
 		}
 	});
@@ -189,13 +193,14 @@ function unzipModule(keys, idx) {
 function request(options, secure, callback) {
 	var responseCallback = function(res) {
 		if (res.statusCode > 300 && res.statusCode < 400 && res.headers.location) {
+			var isSecure;
 			var location = url.parse(res.headers.location);
-			if(location.hostname) {
-				request(res.headers.location, callback);
-			}
-			else {
-				request(options.host + res.headers.location, callback);
-			}
+
+			if (!location.hostname) location = url.parse(options.host + res.headers.location);
+
+			if (location.protocol === "http:") isSecure = false;
+			else isSecure = true;
+			request({host: location.host, path: location.pathname+location.search}, isSecure, callback);
 		}
 		else {
 			callback(res);
