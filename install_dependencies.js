@@ -13,7 +13,7 @@
 // --mac              : force Mac OS X installation
 // --lnx              : force Linux installation
 // --target <version> : force installation for specified version of Node.js
-// --prod             : production mode, no devel packages
+// --dev              : developer mode, install dev packages
 
 "use strict";
 
@@ -117,13 +117,13 @@ function install() {
 		process.stdout.write(".");
 	}, 667);
 
-	// Test if an argument requests production installation (no dev dependencies installed)
+	// Test if an argument requests developer installation (dev dependencies installed)
 	var installCommand;
 
-	if (process.argv.indexOf('--prod') > 0)
-		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn --production";
-	else
+	if (process.argv.indexOf('--dev') > 0)
 		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn";
+	else
+		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn --production";
 
 	// Run the command
 	exec(installCommand, {encoding: "utf8", timeout: 0, maxBuffer: 1024*1024},
