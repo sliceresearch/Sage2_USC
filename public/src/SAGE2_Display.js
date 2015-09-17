@@ -48,6 +48,110 @@ window.onbeforeunload = function() {
 	}
 };
 
+window.addEventListener("focus", function(evt) {
+	log('window show');
+	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+		log('	it is iOS');
+		location.reload();
+	}
+}, false);
+window.addEventListener("blur", function(evt) {
+	log('window hide');
+	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+		log('	it is iOS');
+		if (wsio !== undefined) {
+			log('	closing websocket');
+			setTimeout(function() {
+				wsio.close();
+			}, 200);
+			document.getElementById('background').style.display = 'none';
+		}
+	}
+}, false);
+
+
+// Get Browser-Specifc Prefix
+function getBrowserPrefix() {
+	// Check for the unprefixed property.
+	if ('hidden' in document) {
+		return null;
+	}
+	// All the possible prefixes.
+	var browserPrefixes = ['moz', 'ms', 'o', 'webkit'];
+
+	for (var i = 0; i < browserPrefixes.length; i++) {
+		var prefix = browserPrefixes[i] + 'Hidden';
+		if (prefix in document) {
+			return browserPrefixes[i];
+		}
+	}
+	// The API is not supported in browser.
+	return null;
+}
+
+// Get Browser Specific Hidden Property
+function hiddenProperty(prefix) {
+	if (prefix) {
+		return prefix + 'Hidden';
+	} else {
+		return 'hidden';
+	}
+}
+
+// Get Browser Specific Visibility State
+function visibilityState(prefix) {
+	if (prefix) {
+		return prefix + 'VisibilityState';
+	} else {
+		return 'visibilityState';
+	}
+}
+
+// Get Browser Specific Event
+function visibilityEvent(prefix) {
+	if (prefix) {
+		return prefix + 'visibilitychange';
+	} else {
+		return 'visibilitychange';
+	}
+}
+
+// Get Browser Prefix
+var prefix = getBrowserPrefix();
+var hidden = hiddenProperty(prefix);
+var visibilityState = visibilityState(prefix);
+var visibilityEvent = visibilityEvent(prefix);
+
+document.addEventListener(visibilityEvent, function(event) {
+	log('vis:' + document.visibilityState);
+	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+		if (document[hidden]) {
+			log('	closing websocket');
+			setTimeout(function() {
+				wsio.close();
+			}, 200);
+			document.getElementById('background').style.display = 'none';
+		} else {
+			location.reload();
+		}
+	}
+});
+
+/*
+document.addEventListener('visibilitychange', function() {
+	if (window.__SAGE2__ && __SAGE2__.browser.isIOS) {
+		if (document.hidden || document.visibilityState !== 'visible') {
+				console.log('	closing websocket');
+				wsio.close();
+				document.getElementById('background').style.display = 'none';
+		} else {
+			location.reload();
+		}
+	}
+}, false);
+*/
+
+
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
  *
@@ -91,9 +195,11 @@ function SAGE2_init() {
 				version: true,
 				time: true,
 				console: false
-			}
+			},
+			isMobile: __SAGE2__.browser.isMobile
 		};
 		wsio.emit('addClient', clientDescription);
+		// log(JSON.stringify(__SAGE2__.browser));
 	});
 
 	// Socket close event (ie server crashed)
