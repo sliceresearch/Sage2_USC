@@ -262,13 +262,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		evt.preventDefault();
 	});
 
-	// webix.event(window, "resize", function(evt) {
-	// 	console.log('Resize', evt.target);
-	// 	var newHeight = Math.round(evt.target.innerHeight * 0.80);
-	// 	_this.main.config.height = newHeight;
-	// 	_this.main.adjust();
-	// });
-
 	// Clear the upload list when clicking the header
 	webix.event($$("drop_header").$view, "click", function(e) {
 		$$("uploadlist").clearAll();
@@ -578,10 +571,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		_this.openItem(id.row);
 	});
 
-	// this.allTable.attachEvent("onAfterSort", function(by, dir, func, obj) {
-	// 	console.log('Sorting done', by, dir, func);
-	// });
-
 	// onItemClick onAfterSelect onBeforeSelect
 	this.tree.attachEvent("onSelectChange", function(evt) {
 		var treeSelection = _this.tree.getSelectedItem();
@@ -624,7 +613,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		context.html += "</div>";
 	});
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
-		console.log('onBeforeDrop', ev);
 		// No DnD
 		return false;
 	});
@@ -643,7 +631,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 	});
 
 	webix.event(this.allTable.$view, "drag", function(e) {
-		console.log('drag');
 		e.preventDefault();
 	});
 
@@ -927,9 +914,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	}
 
+	this.createSubFolderForFile = function(myFile) {
+		var df, folder;
+		// Look into the media folders for needed sub-folders
+		for (df in this.mediaFolders) {
+			folder = this.mediaFolders[df];
+			if (myFile.sage2URL.startsWith(folder.url)) {
+				// Create a subfolder if needed
+				var filepath = myFile.sage2URL.split('/');
+				// Remove the fist two elements (root) and the last (filename)
+				var subdir = filepath.slice(2, -1).join('/');
+				// Build the tree item
+				var newid = folder.url + '/' + subdir;
+				// if it doesnt already exist
+				if (!this.tree.getItem(newid)) {
+					var newElement = {id: newid, value: subdir,
+							icon: "folder", open: true, sage2URL: newid,
+							data: [], onContext: {}
+					};
+					// Add to the tree
+					this.tree.parse({ parent: folder.name, data: newElement });
+				}
+			}
+		}
+	}
+
 	// Server sends the media files list
 	this.updateFiles = function(data) {
-		var i, f, df, folder;
+		var i, f;
 
 		// Clean the main data structures
 		this.allFiles = {};
@@ -939,52 +951,22 @@ function FileManager(wsio, mydiv, uniqueID) {
 		for (i = 0; i < data.images.length; i++) {
 			f = data.images[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.videos.length; i++) {
 			f = data.videos[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.pdfs.length; i++) {
 			f = data.pdfs[i];
 			this.allFiles[f.id] = f;
-			// Look into the media folders
-			for (df in this.mediaFolders) {
-				folder = this.mediaFolders[df];
-				if (f.sage2URL.startsWith(folder.url)) {
-					console.log('Into', folder.url, folder.name);
-					// Create a subfolder if needed
-					var filepath = f.sage2URL.split('/');
-					// Remove the fist two elements (root) and the last (filename)
-					var subdir = filepath.slice(2, -1).join('/');
-					console.log('	URL', f.sage2URL, subdir);
-
-					// Build the tree item
-					var newid = folder.name + '/' + subdir;
-					console.log('	newid', newid);
-					// if it doesnt already exist
-					if (!this.tree.getItem(newid)) {
-						var newElement = {id: newid, value: subdir,
-								icon: "folder", open: true, sage2URL: newid,
-								data: [], onContext: {}
-						};
-						// Add to the tree
-						var parent = this.tree.getItem(folder.name);
-						console.log('   parent', parent);
-						this.tree.parse({ parent: folder.name, data: newElement });
-					}
-				}
-			}
-
-			// var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
-			// 		icon: "home", open: true, sage2URL: folder.url, data: [],
-			// 		onContext: {}
-			// };
-			// this.tree.parse({ parent: null, data: newElement });
-
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.applications.length; i++) {
 			f = data.applications[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.sessions.length; i++) {
 			f = data.sessions[i];
