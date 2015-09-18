@@ -49,18 +49,13 @@ window.onbeforeunload = function() {
 };
 
 window.addEventListener("focus", function(evt) {
-	log('window show');
 	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
-		log('	it is iOS');
 		location.reload();
 	}
 }, false);
 window.addEventListener("blur", function(evt) {
-	log('window hide');
 	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
-		log('	it is iOS');
 		if (wsio !== undefined) {
-			log('	closing websocket');
 			setTimeout(function() {
 				wsio.close();
 			}, 200);
@@ -123,10 +118,8 @@ var visibilityState = visibilityState(prefix);
 var visibilityEvent = visibilityEvent(prefix);
 
 document.addEventListener(visibilityEvent, function(event) {
-	log('vis:' + document.visibilityState);
 	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
 		if (document[hidden]) {
-			log('	closing websocket');
 			setTimeout(function() {
 				wsio.close();
 			}, 200);
@@ -136,20 +129,6 @@ document.addEventListener(visibilityEvent, function(event) {
 		}
 	}
 });
-
-/*
-document.addEventListener('visibilitychange', function() {
-	if (window.__SAGE2__ && __SAGE2__.browser.isIOS) {
-		if (document.hidden || document.visibilityState !== 'visible') {
-				console.log('	closing websocket');
-				wsio.close();
-				document.getElementById('background').style.display = 'none';
-		} else {
-			location.reload();
-		}
-	}
-}, false);
-*/
 
 
 /**
