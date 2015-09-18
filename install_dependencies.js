@@ -59,7 +59,7 @@ if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  7) {
 	target = "0.12.7";
 }
 // Node v4.0.0 and above
-if (nums[0] === 4 && nums[1] ===  0 && nums[2] >=  0) {
+if (nums[0] === 4 && nums[1] >=  0 && nums[2] >=  0) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 4.0.0+.");
 	target = "4.0.0";
 }
