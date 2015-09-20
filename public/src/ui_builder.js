@@ -234,13 +234,6 @@ function UIBuilder(json_cfg, clientID) {
 
 		var head = document.getElementsByTagName("head")[0];
 
-		// Load CSS style sheet
-		var fileref = document.createElement("link");
-		fileref.setAttribute("rel",   "stylesheet");
-		fileref.setAttribute("type",  "text/css");
-		fileref.setAttribute("media", "screen");
-		fileref.setAttribute("href",  this.csssheet);
-
 		if (this.clientID === -1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
@@ -516,7 +509,6 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.appendChild(dataSharingCancel);
 		this.main.appendChild(dataSharingWaitDialog);
 
-		head.appendChild(fileref);
 		this.uiHidden = false;
 		this.showInterface();
 	};
