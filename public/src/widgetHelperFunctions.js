@@ -272,18 +272,12 @@ function addStyleElementForTitleColor(caption, color) {
 		dynamicStyleSheets[caption] = caption;
 		var sheet = document.createElement('style');
 		sheet.id = "title" + caption;
-		var percent = 10;
 		if (typeof color !== 'string'  && !(color instanceof String)) {
 			color = '#666666';
 		}
 		sheet.innerHTML = ".title" + caption +
-			" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;" +
-			"background-image: -webkit-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: -moz-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: -ms-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: -o-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); }";
+			" { position:absolute;	border: solid 1px #000000; overflow: hidden; " +
+			"background-image: linear-gradient(to right," + color + " 10%, #666666 100%); }";
 		document.body.appendChild(sheet);
 	}
 }
