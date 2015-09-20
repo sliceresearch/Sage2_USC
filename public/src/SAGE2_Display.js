@@ -48,22 +48,6 @@ window.onbeforeunload = function() {
 	}
 };
 
-window.addEventListener("focus", function(evt) {
-	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
-		location.reload();
-	}
-}, false);
-window.addEventListener("blur", function(evt) {
-	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
-		if (wsio !== undefined) {
-			setTimeout(function() {
-				wsio.close();
-			}, 200);
-			document.getElementById('background').style.display = 'none';
-		}
-	}
-}, false);
-
 
 // Get Browser-Specifc Prefix
 function getBrowserPrefix() {
@@ -111,24 +95,47 @@ function visibilityEvent(prefix) {
 	}
 }
 
-// Get Browser Prefix
-var prefix = getBrowserPrefix();
-var hidden = hiddenProperty(prefix);
-var visibilityState = visibilityState(prefix);
-var visibilityEvent = visibilityEvent(prefix);
-
-document.addEventListener(visibilityEvent, function(event) {
-	if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
-		if (document[hidden]) {
-			setTimeout(function() {
-				wsio.close();
-			}, 200);
-			document.getElementById('background').style.display = 'none';
-		} else {
+/**
+ * setupFocusHandlers
+ *
+ * @method setupFocusHandlers
+ */
+function setupFocusHandlers() {
+	window.addEventListener("focus", function(evt) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
 			location.reload();
 		}
-	}
-});
+	}, false);
+	window.addEventListener("blur", function(evt) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			if (wsio !== undefined) {
+				setTimeout(function() {
+					wsio.close();
+				}, 200);
+				document.getElementById('background').style.display = 'none';
+			}
+		}
+	}, false);
+
+	// Get Browser Prefix
+	var prefix = getBrowserPrefix();
+	var hidden = hiddenProperty(prefix);
+	var visibilityState = window.visibilityState(prefix);
+	var visibilityEvent = window.visibilityEvent(prefix);
+
+	document.addEventListener(visibilityEvent, function(event) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			if (document[hidden]) {
+				setTimeout(function() {
+					wsio.close();
+				}, 200);
+				document.getElementById('background').style.display = 'none';
+			} else {
+				location.reload();
+			}
+		}
+	});
+}
 
 
 /**
@@ -158,6 +165,9 @@ function SAGE2_init() {
 
 	// Detect the current browser
 	SAGE2_browser();
+
+	// Setup focus events
+	setupFocusHandlers();
 
 	isMaster = false;
 
