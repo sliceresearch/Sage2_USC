@@ -438,7 +438,9 @@ function closeWebSocketClient(wsio) {
 		for (key in SAGE2Items.renderSync) {
 			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
 				// If the application had an animation timer, clear it
-				clearTimeout(SAGE2Items.renderSync[key].clients[wsio.id].animateTimer);
+				if (SAGE2Items.renderSync[key].clients[wsio.id].animateTimer) {
+					clearTimeout(SAGE2Items.renderSync[key].clients[wsio.id].animateTimer);
+				}
 				// Remove the object from the list
 				delete SAGE2Items.renderSync[key].clients[wsio.id];
 			}
