@@ -176,7 +176,7 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
-						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
+						_this.bg.style.backgroundRepeat   = "repeat";
 						_this.bg.style.backgroundSize     = bgImg.naturalWidth + "px " + bgImg.naturalHeight + "px";
 
 						_this.main.style.top    = (-1 * top).toString()  + "px";
