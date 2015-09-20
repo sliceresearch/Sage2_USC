@@ -232,8 +232,6 @@ function UIBuilder(json_cfg, clientID) {
 		this.logoLoadedFunc = this.logoLoaded.bind(this);
 		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
 
-		var head = document.getElementsByTagName("head")[0];
-
 		if (this.clientID === -1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
