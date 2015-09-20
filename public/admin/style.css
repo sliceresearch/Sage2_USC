@@ -141,6 +141,17 @@ main {
 	z-index:10;
 }
 
+a, a:visited {
+	text-decoration: none;
+	color: #FFFFFF;
+}
+
+a:hover {
+	text-decoration: underline;
+	color: #FFFFFF;
+}
+
+
 .siteType {
 	margin-bottom: 5px;
 }
