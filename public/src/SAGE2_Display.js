@@ -118,12 +118,12 @@ function setupFocusHandlers() {
 	}, false);
 
 	// Get Browser Prefix
-	var prefix = getBrowserPrefix();
-	var hidden = hiddenProperty(prefix);
-	var visibilityState = window.visibilityState(prefix);
-	var visibilityEvent = window.visibilityEvent(prefix);
+	var prefix   = getBrowserPrefix();
+	var hidden   = hiddenProperty(prefix);
+	// var visState = visibilityState(prefix);
+	var visEvent = visibilityEvent(prefix);
 
-	document.addEventListener(visibilityEvent, function(event) {
+	document.addEventListener(visEvent, function(event) {
 		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
 			if (document[hidden]) {
 				setTimeout(function() {
