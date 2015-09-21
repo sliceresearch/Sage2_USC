@@ -23,6 +23,13 @@ var wsio;
 var autoplay;
 var hostAlias = {};
 
+// Explicitely close web socket when web browser is closed
+window.onbeforeunload = function() {
+	if (wsio !== undefined) {
+		wsio.close();
+	}
+};
+
 /**
  * Entry point of the application
  *
@@ -31,6 +38,9 @@ var hostAlias = {};
 function SAGE2_init() {
 	// Just a given number
 	clientID = -2;
+
+	// Detect which browser is being used
+	SAGE2_browser();
 
 	autoplay = false;
 	wsio = new WebsocketIO();
@@ -56,6 +66,22 @@ function SAGE2_init() {
 
 	// Socket close event (ie server crashed)
 	wsio.on('close', function(evt) {
+		var i, tracks;
+		// Pause all video tracks
+		tracks = document.getElementsByTagName('video'); 
+		for (i = 0; i < tracks.length; i++) {
+			if (tracks[i].parentNode) {
+				tracks[i].parentNode.removeChild(tracks[i]);
+			}
+		}
+		// Pause all audio tracks
+		tracks = document.getElementsByTagName('audio'); 
+		for (var i = 0; i < tracks.length; i++) {
+			if (tracks[i].parentNode) {
+				tracks[i].parentNode.removeChild(tracks[i]);
+			}
+		}
+		// Try to reload
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
@@ -66,7 +92,15 @@ function SAGE2_init() {
 					// when server ready, clear the interval callback
 					clearInterval(refresh);
 					// and reload the page
-					window.location.reload();
+					if (__SAGE2__.browser.isFirefox) {
+						var main = document.getElementById('main');
+						while (main.firstChild) {
+							main.removeChild(main.firstChild);
+						}
+						window.open(window.location, '_blank');
+					} else {
+						window.location.reload();
+					}
 				}
 			};
 			xhr.send();
@@ -76,9 +110,6 @@ function SAGE2_init() {
 
 function setupListeners() {
 	wsio.on('initialize', function(data) {
-		// var serverTime = new Date(data.time);
-		// var clientTime = new Date();
-		// dt = clientTime - serverTime;
 	});
 
 	wsio.on('setupDisplayConfiguration', function(json_cfg) {
@@ -110,18 +141,28 @@ function setupListeners() {
 			var main = document.getElementById('main');
 			var videosTable = document.getElementById('videos');
 
-			var vid    = document.createElement('audio');
-			vid.id     = data.id;
+			var vid;
+			if (__SAGE2__.browser.isFirefox) {
+				// Firefox seems to crash with audio elements
+				vid = document.createElement('video');
+			} else {
+				vid = document.createElement('audio');				
+			}
+			vid.id  = data.id;
 			vid.volume = 0.8;
+			vid.firstPlay = true;
 			vid.style.display = "none";
-			vid.addEventListener('canplay', function() {
-				console.log("video can now play"); // Video is loaded and can be played
+			vid.addEventListener('canplaythrough', function() {
+				// Video is loaded and can be played
+				if (vid.firstPlay && vid.sessionTime) {
+					vid.currentTime = vid.sessionTime;
+				}
+				vid.firstPlay = false;
 				if (autoplay === true) {
 					playVideo(data.id);
 				}
 			}, false);
 			vid.addEventListener('ended', function() {
-				console.log("video ended");
 				if (autoplay === true) {
 					vid.currentTime = 0;
 				}
@@ -191,11 +232,11 @@ function setupListeners() {
 	});
 
 	wsio.on('videoPlaying', function(data) {
-		var vid      = document.getElementById(data.id);
-		var vid_play = document.getElementById(data.id + "_play");
+		var vid = document.getElementById(data.id);
 		if (vid) {
 			vid.play();
 		}
+		var vid_play = document.getElementById(data.id + "_play");
 		if (vid_play) {
 			vid_play.textContent = "Playing";
 		}
@@ -248,7 +289,12 @@ function setupListeners() {
 	wsio.on('updateVideoItemTime', function(data) {
 		var vid = document.getElementById(data.id);
 		if (vid) {
-			vid.currentTime = data.timestamp;
+				if (vid.firstPlay) {
+					// if not fully loaded, just store the time
+					vid.sessionTime = data.timestamp;					
+				} else {
+					vid.currentTime = data.timestamp;
+				}
 		}
 	});
 
