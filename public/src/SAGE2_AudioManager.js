@@ -68,14 +68,14 @@ function SAGE2_init() {
 	wsio.on('close', function(evt) {
 		var i, tracks;
 		// Pause all video tracks
-		tracks = document.getElementsByTagName('video'); 
+		tracks = document.getElementsByTagName('video');
 		for (i = 0; i < tracks.length; i++) {
 			if (tracks[i].parentNode) {
 				tracks[i].parentNode.removeChild(tracks[i]);
 			}
 		}
 		// Pause all audio tracks
-		tracks = document.getElementsByTagName('audio'); 
+		tracks = document.getElementsByTagName('audio');
 		for (var i = 0; i < tracks.length; i++) {
 			if (tracks[i].parentNode) {
 				tracks[i].parentNode.removeChild(tracks[i]);
@@ -146,7 +146,7 @@ function setupListeners() {
 				// Firefox seems to crash with audio elements
 				vid = document.createElement('video');
 			} else {
-				vid = document.createElement('audio');				
+				vid = document.createElement('audio');
 			}
 			vid.id  = data.id;
 			vid.volume = 0.8;
@@ -289,12 +289,12 @@ function setupListeners() {
 	wsio.on('updateVideoItemTime', function(data) {
 		var vid = document.getElementById(data.id);
 		if (vid) {
-				if (vid.firstPlay) {
-					// if not fully loaded, just store the time
-					vid.sessionTime = data.timestamp;					
-				} else {
-					vid.currentTime = data.timestamp;
-				}
+			if (vid.firstPlay) {
+				// if not fully loaded, just store the time
+				vid.sessionTime = data.timestamp;
+			} else {
+				vid.currentTime = data.timestamp;
+			}
 		}
 	});
 
