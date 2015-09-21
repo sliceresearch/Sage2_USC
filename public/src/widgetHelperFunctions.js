@@ -33,12 +33,12 @@ function drawBackgroundForWidgetRadialDial(instanceID, paper, center, radius) {
 	var backGroundFill = paper.circle(center.x, center.y, radius);
 	var backGroundStroke = paper.circle(center.x, center.y, radius);
 	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(150,166,189,0.7)-rgba(150,166,189,0.4)");
-	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius * 0.05, "rgba(220,220,220,0.8)", 4));
 	backGroundFill.attr({
 		id: instanceID + "backGround",
 		fill: grad,
 		stroke: "none"
 	});
+	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius * 0.03, "rgb(220,220,220)", 1));
 	backGroundStroke.attr({
 		id: instanceID + "backGroundEdge",
 		fill: "none",
@@ -259,7 +259,7 @@ function polarToCartesian(radius, theta, center) {
 function createWidgetToAppConnector(instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
 	var connector = paper.line(0, 0, 0, 0);
-	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 10, "rgba(220,220,220,0.8)", 4));
+	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 8, "rgb(220,220,220)", 1));
 	connector.attr({
 		id: instanceID + "link",
 		strokeWidth: ui.widgetControlSize * 0.18,
@@ -388,8 +388,8 @@ function showWidgetToAppConnectors(data) {
 function makeSvgBackgroundForWidgetConnectors(width, height) {
 	var backDrop = new Snap(parseInt(width), parseInt(height));
 	backDrop.node.style.zIndex = "0";
-	backDrop.node.style.left = "0px";
-	backDrop.node.style.top = "0px";
+	backDrop.node.style.left = "0";
+	backDrop.node.style.top = "0";
 	backDrop.node.style.position = "absolute";
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
