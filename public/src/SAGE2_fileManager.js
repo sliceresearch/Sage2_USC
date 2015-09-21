@@ -21,78 +21,6 @@
 "use strict";
 
 /**
- * Entry point of the file manager
- *
- * @method SAGE2_FileManager
- */
-function SAGE2_FileManager() {
-	var fileManager;
-
-	// Connect to the server
-	var wsio = new WebsocketIO();
-
-	console.log("Connected to web server: ", window.location.origin);
-
-	// Callback when socket opens
-	wsio.open(function() {
-		console.log("Open websocket");
-
-		// Got a reply from the server
-		wsio.on('initialize', function(data) {
-			var uniqueID = data.UID;
-			console.log('Client ID', uniqueID);
-
-			// Setup the file manager
-			fileManager = new FileManager(wsio, "testA", uniqueID);
-
-			// First request the files
-			wsio.emit('requestStoredFiles');
-		});
-
-		wsio.on('storedFileList', function(data) {
-			fileManager.updateFiles(data);
-		});
-
-		// Server sends the wall configuration
-		wsio.on('setupDisplayConfiguration', function(data) {
-			console.log('wall configuration received', data);
-			fileManager.serverConfiguration(data);
-		});
-
-		// Register to the server as a console
-		var clientDescription = {
-			clientType: "files",
-			requests: {
-				config: true,
-				version: true,
-				time: false,
-				console: false
-			}
-		};
-		wsio.emit('addClient', clientDescription);
-	});
-
-	// Socket close event (ie server crashed)
-	wsio.on('close', function() {
-		var refresh = setInterval(function() {
-			// make a dummy request to test the server every 2 sec
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/", true);
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200) {
-					console.log("server ready");
-					// when server ready, clear the interval callback
-					clearInterval(refresh);
-					// and reload the page
-					window.location.reload();
-				}
-			};
-			xhr.send();
-		}, 2000);
-	});
-}
-
-/**
  * Convert a file size (number) to pretty string
  *
  * @method fileSizeIEC
@@ -324,7 +252,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}).show();
 			$$('folder_name').focus();
 		} else if (evt === "display_menu") {
-			window.open("display.html?clientID=0", '_blank');
+			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
+			// var displayUrl = "display.html?clientID=0";
+			window.open(displayUrl, '_blank');
 		} else if (evt === "hidefm_menu") {
 			document.getElementById('fileManager').style.display = "none";
 			if (mainUI.style.display === "none") {
@@ -342,7 +272,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			_this.main.adjust();
 		} else if (evt === "audio_menu") {
-			window.open("audioManager.html", '_blank');
+			var audioUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/audioManager.html";
+			// var audioUrl = "audioManager.html";
+			window.open(audioUrl, '_blank');
 		} else if (evt === "drawing_menu") {
 			window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
@@ -1120,6 +1052,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.serverConfiguration = function(data) {
 		// Add the media folders to the tree
 		var f, folder;
+		this.json_cfg = data;
 		this.mediaFolders = data.folders;
 		for (f in data.folders) {
 			folder = data.folders[f];
