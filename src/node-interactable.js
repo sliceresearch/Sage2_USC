@@ -374,7 +374,10 @@ InteractableManager.prototype.getObject = function(id, layerId) {
 InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreList) {
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {
-		results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
+		// just in case
+		if (this.layers[layerId]) {
+			results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
+		}
 	} else {
 		var i;
 		var tmp;
