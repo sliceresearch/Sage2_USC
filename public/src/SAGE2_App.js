@@ -404,15 +404,16 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
-	* Support for the Tweet application
+	* Support for the RPC call to the server
 	*
-	* @method searchTweets
+	* @method applicationRPC
+	* @param rpc {String} RPC function name on the server
 	* @param funcName {String} function name for broadcast or emit
 	* @param query {Object} search info for tweet API
 	* @param broadcast {Boolean} wether or not doing a return broadcast or emit
 	*/
-	searchTweets: function(funcName, query, broadcast) {
-		searchTweets({app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	applicationRPC: function(rpc, funcName, query, broadcast) {
+		wsio.emit('applicationRPC', {function: rpc, app: this.div.id, func: funcName, query: query, broadcast: broadcast});
 	},
 
 	/**

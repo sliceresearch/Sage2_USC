@@ -596,7 +596,7 @@ function setupListeners(wsio) {
 	wsio.on('updateAppState',                       wsUpdateAppState);
 	wsio.on('appResize',                            wsAppResize);
 	wsio.on('broadcast',                            wsBroadcast);
-	wsio.on('searchTweets',                         wsSearchTweets);
+	wsio.on('applicationRPC',                       wsApplicationRPC);
 
 	wsio.on('requestAvailableApplications',         wsRequestAvailableApplications);
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
@@ -1306,27 +1306,32 @@ function wsBroadcast(wsio, data) {
 }
 
 //
-// Search tweets using Twitter API
+// RPC call from apps
 //
-function wsSearchTweets(wsio, data) {
-	if (apis.twitter === null) {
-		if (data.broadcast === true) {
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
-				err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
-		} else {
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
-				err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+function wsApplicationRPC(wsio, data) {
+	if (data.function === "searchTweets") {
+		console.log(sageutils.header('RPC') + 'searchTweets');
+		if (apis.twitter === null) {
+			if (data.broadcast === true) {
+				broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
+					err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+			} else {
+				wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
+					err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+			}
+			return;
 		}
-		return;
-	}
 
-	apis.twitter.get('search/tweets', data.query, function(err, info, response) {
-		if (data.broadcast === true) {
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
-		} else {
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
-		}
-	});
+		apis.twitter.get('search/tweets', data.query, function(err, info, response) {
+			if (data.broadcast === true) {
+				broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
+			} else {
+				wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
+			}
+		});
+	} else {
+		console.log(sageutils.header('RPC') + 'call not found ' + data.function);
+	}
 }
 
 
