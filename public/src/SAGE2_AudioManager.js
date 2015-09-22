@@ -71,14 +71,16 @@ function SAGE2_init() {
 		tracks = document.getElementsByTagName('video');
 		for (i = 0; i < tracks.length; i++) {
 			if (tracks[i].parentNode) {
-				tracks[i].parentNode.removeChild(tracks[i]);
+				tracks[i].pause();
+				// tracks[i].parentNode.removeChild(tracks[i]);
 			}
 		}
 		// Pause all audio tracks
 		tracks = document.getElementsByTagName('audio');
-		for (var i = 0; i < tracks.length; i++) {
+		for (i = 0; i < tracks.length; i++) {
 			if (tracks[i].parentNode) {
-				tracks[i].parentNode.removeChild(tracks[i]);
+				tracks[i].pause();
+				// tracks[i].parentNode.removeChild(tracks[i]);
 			}
 		}
 		// Try to reload
@@ -151,10 +153,12 @@ function setupListeners() {
 			vid.id  = data.id;
 			vid.volume = 0.8;
 			vid.firstPlay = true;
+			vid.startPaused = data.data.paused;
 			vid.style.display = "none";
 			vid.addEventListener('canplaythrough', function() {
 				// Video is loaded and can be played
 				if (vid.firstPlay && vid.sessionTime) {
+					// Update the local time
 					vid.currentTime = vid.sessionTime;
 				}
 				vid.firstPlay = false;
@@ -335,4 +339,14 @@ function changeVideoVolume(videoId, volume) {
  */
 function playVideo(videoId) {
 	wsio.emit('playVideo', {id: videoId});
+}
+
+/**
+ * Uptime video time
+ *
+ * @method updateVideotime
+ * @param videoId {String} id of the video
+ */
+function updateVideotime(videoId, timestamp, play) {
+	wsio.emit('updateVideoTime', {id: videoId, timestamp: timestamp, play: play});
 }
