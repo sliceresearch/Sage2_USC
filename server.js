@@ -45,7 +45,6 @@ var json5         = require('json5');            // Relaxed JSON format
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
 
-var Twit          = require('twit');             // twitter api
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
 // custom node modules
@@ -1310,7 +1309,20 @@ function wsBroadcast(wsio, data) {
 //
 function wsApplicationRPC(wsio, data) {
 	if (data.function === "searchTweets") {
-		console.log(sageutils.header('RPC') + 'searchTweets');
+		if (config.apis !== undefined &&
+				config.apis.twitter !== undefined &&
+				apis.twitter === undefined) {
+			// twitter api
+			var Twit = require('twit');
+			console.log(sageutils.header('RPC') + 'building twitter object');
+			apis.twitter = new Twit({
+				consumer_key:         config.apis.twitter.consumerKey,
+				consumer_secret:      config.apis.twitter.consumerSecret,
+				access_token:         config.apis.twitter.accessToken,
+				access_token_secret:  config.apis.twitter.accessSecret
+			});
+		}
+
 		if (apis.twitter === null) {
 			if (data.broadcast === true) {
 				broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
@@ -1322,6 +1334,7 @@ function wsApplicationRPC(wsio, data) {
 			return;
 		}
 
+		console.log(sageutils.header('RPC') + 'searchTweets');
 		apis.twitter.get('search/tweets', data.query, function(err, info, response) {
 			if (data.broadcast === true) {
 				broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
@@ -3049,15 +3062,6 @@ function loadConfiguration() {
 		} else {
 			userConfig.register_site = false;
 		}
-	}
-
-	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
-		apis.twitter = new Twit({
-			consumer_key:         userConfig.apis.twitter.consumerKey,
-			consumer_secret:      userConfig.apis.twitter.consumerSecret,
-			access_token:         userConfig.apis.twitter.accessToken,
-			access_token_secret:  userConfig.apis.twitter.accessSecret
-		});
 	}
 
 	return userConfig;
