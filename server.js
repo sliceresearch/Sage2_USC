@@ -78,7 +78,7 @@ var wsioServerS        = null;
 var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-var apis               = {};
+// var apis               = {};
 var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
@@ -1309,39 +1309,16 @@ function wsBroadcast(wsio, data) {
 //
 function wsApplicationRPC(wsio, data) {
 	if (data.function === "searchTweets") {
-		if (config.apis !== undefined &&
-				config.apis.twitter !== undefined &&
-				apis.twitter === undefined) {
-			// twitter api
-			var Twit = require('twit');
-			console.log(sageutils.header('RPC') + 'building twitter object');
-			apis.twitter = new Twit({
-				consumer_key:         config.apis.twitter.consumerKey,
-				consumer_secret:      config.apis.twitter.consumerSecret,
-				access_token:         config.apis.twitter.accessToken,
-				access_token_secret:  config.apis.twitter.accessSecret
-			});
+		try {
+			var mod = require('./public/uploads/apps/tweetcloud2/plugin.js');
+			mod(wsio, data, config);
 		}
-
-		if (apis.twitter === null) {
-			if (data.broadcast === true) {
-				broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
-					err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
-			} else {
-				wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
-					err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
-			}
-			return;
+		catch (e) {
+			console.log("----------------------------");
+			console.log(sageutils.header('RPC') + 'error in tweetcloud module');
+			console.log(e);
+			console.log("----------------------------");
 		}
-
-		console.log(sageutils.header('RPC') + 'searchTweets');
-		apis.twitter.get('search/tweets', data.query, function(err, info, response) {
-			if (data.broadcast === true) {
-				broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
-			} else {
-				wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
-			}
-		});
 	} else {
 		console.log(sageutils.header('RPC') + 'call not found ' + data.function);
 	}
