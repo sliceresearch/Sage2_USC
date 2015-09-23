@@ -32,7 +32,7 @@ function drawSpokeForRadialLayout(instanceID, paper, center, point) {
 function drawBackgroundForWidgetRadialDial(instanceID, paper, center, radius) {
 	var backGroundFill = paper.circle(center.x, center.y, radius);
 	var backGroundStroke = paper.circle(center.x, center.y, radius);
-	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(150,166,189,0.7)-rgba(150,166,189,0.4)");
+	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(150,166,189,0.8)-rgba(150,166,189,0.67)");
 	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius * 0.05, "rgba(220,220,220,0.8)", 4));
 	backGroundFill.attr({
 		id: instanceID + "backGround",
