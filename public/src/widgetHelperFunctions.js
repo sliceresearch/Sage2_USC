@@ -33,12 +33,12 @@ function drawBackgroundForWidgetRadialDial(instanceID, paper, center, radius) {
 	var backGroundFill = paper.circle(center.x, center.y, radius);
 	var backGroundStroke = paper.circle(center.x, center.y, radius);
 	var grad = paper.gradient("r(0.5, 0.5, 0.40)rgba(150,166,189,0.8)-rgba(150,166,189,0.67)");
-	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius * 0.05, "rgba(220,220,220,0.8)", 4));
 	backGroundFill.attr({
 		id: instanceID + "backGround",
 		fill: grad,
 		stroke: "none"
 	});
+	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, radius * 0.03, "rgb(220,220,220)", 1));
 	backGroundStroke.attr({
 		id: instanceID + "backGroundEdge",
 		fill: "none",
@@ -259,7 +259,7 @@ function polarToCartesian(radius, theta, center) {
 function createWidgetToAppConnector(instanceID) {
 	var paper = svgBackgroundForWidgetConnectors;
 	var connector = paper.line(0, 0, 0, 0);
-	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 10, "rgba(220,220,220,0.8)", 4));
+	var shadow = svgBackgroundForWidgetConnectors.filter(Snap.filter.shadow(0, 0, 8, "rgb(220,220,220)", 1));
 	connector.attr({
 		id: instanceID + "link",
 		strokeWidth: ui.widgetControlSize * 0.18,
@@ -272,18 +272,12 @@ function addStyleElementForTitleColor(caption, color) {
 		dynamicStyleSheets[caption] = caption;
 		var sheet = document.createElement('style');
 		sheet.id = "title" + caption;
-		var percent = 10;
 		if (typeof color !== 'string'  && !(color instanceof String)) {
 			color = '#666666';
 		}
 		sheet.innerHTML = ".title" + caption +
-			" { position:absolute;	border: solid 1px #000000; overflow: hidden; box-shadow: 8px 0px 15px #222222;" +
-			"background-image: -webkit-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: -moz-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: -ms-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: -o-linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); background-image: linear-gradient(left," +
-			color + " " + percent + "%, #666666 100%); }";
+			" { position:absolute;	border: solid 1px #000000; overflow: hidden; " +
+			"background-image: linear-gradient(to right," + color + " 10%, #666666 100%); }";
 		document.body.appendChild(sheet);
 	}
 }
@@ -394,8 +388,8 @@ function showWidgetToAppConnectors(data) {
 function makeSvgBackgroundForWidgetConnectors(width, height) {
 	var backDrop = new Snap(parseInt(width), parseInt(height));
 	backDrop.node.style.zIndex = "0";
-	backDrop.node.style.left = "0px";
-	backDrop.node.style.top = "0px";
+	backDrop.node.style.left = "0";
+	backDrop.node.style.top = "0";
 	backDrop.node.style.position = "absolute";
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;

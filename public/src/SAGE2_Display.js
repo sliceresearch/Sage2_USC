@@ -48,6 +48,96 @@ window.onbeforeunload = function() {
 	}
 };
 
+
+// Get Browser-Specifc Prefix
+function getBrowserPrefix() {
+	// Check for the unprefixed property.
+	if ('hidden' in document) {
+		return null;
+	}
+	// All the possible prefixes.
+	var browserPrefixes = ['moz', 'ms', 'o', 'webkit'];
+
+	for (var i = 0; i < browserPrefixes.length; i++) {
+		var prefix = browserPrefixes[i] + 'Hidden';
+		if (prefix in document) {
+			return browserPrefixes[i];
+		}
+	}
+	// The API is not supported in browser.
+	return null;
+}
+
+// Get Browser Specific Hidden Property
+function hiddenProperty(prefix) {
+	if (prefix) {
+		return prefix + 'Hidden';
+	} else {
+		return 'hidden';
+	}
+}
+
+// Get Browser Specific Visibility State
+function visibilityState(prefix) {
+	if (prefix) {
+		return prefix + 'VisibilityState';
+	} else {
+		return 'visibilityState';
+	}
+}
+
+// Get Browser Specific Event
+function visibilityEvent(prefix) {
+	if (prefix) {
+		return prefix + 'visibilitychange';
+	} else {
+		return 'visibilitychange';
+	}
+}
+
+/**
+ * setupFocusHandlers
+ *
+ * @method setupFocusHandlers
+ */
+function setupFocusHandlers() {
+	window.addEventListener("focus", function(evt) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			location.reload();
+		}
+	}, false);
+	window.addEventListener("blur", function(evt) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			if (wsio !== undefined) {
+				setTimeout(function() {
+					wsio.close();
+				}, 200);
+				document.getElementById('background').style.display = 'none';
+			}
+		}
+	}, false);
+
+	// Get Browser Prefix
+	var prefix   = getBrowserPrefix();
+	var hidden   = hiddenProperty(prefix);
+	// var visState = visibilityState(prefix);
+	var visEvent = visibilityEvent(prefix);
+
+	document.addEventListener(visEvent, function(event) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			if (document[hidden]) {
+				setTimeout(function() {
+					wsio.close();
+				}, 200);
+				document.getElementById('background').style.display = 'none';
+			} else {
+				location.reload();
+			}
+		}
+	});
+}
+
+
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
  *
@@ -76,6 +166,9 @@ function SAGE2_init() {
 	// Detect the current browser
 	SAGE2_browser();
 
+	// Setup focus events
+	setupFocusHandlers();
+
 	isMaster = false;
 
 	wsio.open(function() {
@@ -91,9 +184,11 @@ function SAGE2_init() {
 				version: true,
 				time: true,
 				console: false
-			}
+			},
+			isMobile: __SAGE2__.browser.isMobile
 		};
 		wsio.emit('addClient', clientDescription);
+		// log(JSON.stringify(__SAGE2__.browser));
 	});
 
 	// Socket close event (ie server crashed)
@@ -186,7 +281,7 @@ function setupListeners() {
 				clearTimeout(uiTimer);
 				uiTimer = null;
 				ui.showInterface();
-			}		else {
+			} else {
 				ui.hideInterface();
 			}
 	});
@@ -973,6 +1068,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	if (ui.noDropShadow === true) {
 		windowTitle.style.boxShadow = "none";
 	}
+	if (ui.uiHidden === true) {
+		windowTitle.style.display   = "none";
+	}
 
 	var windowIcons = document.createElement("img");
 	// windowIcons.src = "images/layout3.webp";
@@ -1002,6 +1100,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowItem.style.zIndex   = (itemCount + 1).toString();
 	if (ui.noDropShadow === true) {
 		windowItem.style.boxShadow = "none";
+	}
+	if (ui.uiHidden === true) {
+		windowItem.classList.toggle("windowItemNoBorder");
 	}
 
 	var cornerSize = Math.min(data.width, data.height) / 5;

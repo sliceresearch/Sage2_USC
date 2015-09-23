@@ -135,7 +135,12 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			if (data.character === " ") {
 				if (this.state.paused === true) {
 					if (isMaster) {
-						wsio.emit('playVideo', {id: this.div.id});
+						// Trying to sync
+						wsio.emit('updateVideoTime',
+							{id: this.div.id,
+							timestamp: (this.state.frame / this.state.framerate),
+							play: true});
+						// wsio.emit('playVideo', {id: this.div.id});
 					}
 					this.state.paused = false;
 				} else {
@@ -201,7 +206,11 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				case "PlayPause":
 					if (this.state.paused === true) {
 						if (isMaster) {
-							wsio.emit('playVideo', {id: this.div.id});
+							wsio.emit('updateVideoTime',
+								{id: this.div.id,
+								timestamp: (this.state.frame / this.state.framerate),
+								play: true});
+							// wsio.emit('playVideo', {id: this.div.id});
 						}
 						this.state.paused = false;
 					} else {

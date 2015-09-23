@@ -23,24 +23,73 @@
 <script type="text/javascript" src="src/SAGE2_runtime.js"></script>
 <script type="text/javascript" src="src/SAGE2_Session.js"></script>
 
-<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
-	
+<link rel="stylesheet" type="text/css" href="admin/style.css" media="screen">
+
+<style>
+h2 {
+	color:  #DDDDDD;
+}
+
+/* Press button */
+.button_session {
+	padding: 4px 4px 4px 4px;
+	margin: 10px;
+	width: 20%;
+	border-radius: 5px;
+	border: solid 2px #ADD8E6;
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 1em;
+	color: #FFFFFF;
+	background-color: #333333;
+	vertical-align: baseline;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+.button_session:hover {
+	background-color: #444444;
+	outline: none;
+}
+/* Password box */
+input {
+	padding: 4px 4px 4px 4px;
+	margin: 5px 5px 5px 12px;
+	font-size: 1em;
+	text-indent: 3px;
+	color: #666666;
+}
+input:focus {
+	outline: #ADD8E6 solid;
+}
+</style>
+
 </head>
 
 <body onload="SAGE2_init()">
 
-	<h1 style="text-align:center">The meeting held at this SAGE2 wall is currently locked.
-	</h1>
+	<header>
+		<h1>SAGE2 Session</h1>
+	</header>
 
-	<br>
-	
-	<h3 style="text-align:center">
-		Enter the meeting password:<br>
-		<input type="text" id="sessionValue" size="40" style="font-size: 1em;" tabindex="1">
-    <br>
+	<main>
 
-    <button class="button_session" type="button" id="enterButton" onclick="buttonSubmit()"> Enter </button>
-	</h3>
+		<section class="siteType">
+			<h2>The meeting held at this SAGE2 wall is currently locked.</h2>
+		</section>
+
+		<section class="siteType">
+			<h2>Enter the meeting password:</h2>
+			<input type="password" id="sessionValue" size="40" tabindex="1">
+			<button class="button_session" type="button" id="enterButton" onclick="buttonSubmit()">
+				Enter
+			</button>
+		</section>
+
+		<section>
+			&nbsp;
+		</section>
+	</main>
+
 
 </body>
 </html>

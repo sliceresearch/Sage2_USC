@@ -351,7 +351,8 @@ function checkPackages(inDevelopement) {
 	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
 		function(error, stdout, stderr) {
 			if (error) {
-				throw new Error("Error running npm");
+				console.log("NPM>	Error running update");
+				return;
 			}
 
 			var key;

@@ -683,8 +683,12 @@ function getSAGE2Path(getName) {
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var localPath = getSAGE2Path(file.filename);
-	var a_url     = assets.getURL(localPath);
 	var mime_type = mime.lookup(file.filename);
+	var a_url     = assets.getURL(localPath);
+	if (typeof a_url !== "string") {
+		console.log("AppLoader>	Cannot load app for file:", file);
+		return;
+	}
 	var external_url = url.resolve(this.hostOrigin, a_url);
 
 	this.loadApplication({location: "file", path: localPath, url: a_url, external_url: external_url,

@@ -16,6 +16,10 @@
 @import url('/css/fonts.css');
 
 * {
+	font-family: Arimo, Helvetica, sans-serif;
+	font-weight: normal;
+	font-style: normal;
+	font-size: 12pt;
 	margin: 0;
 	padding: 0;
 }
@@ -25,43 +29,27 @@ header, section, footer, aside, nav, main, article, figure {
 }
 
 h1 {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 18pt;
-	font-weight: normal;
-	font-style: normal;
 	color: #FFFFFF;
 }
 
 h2 {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 14pt;
-	font-weight: normal;
-	font-style: normal;
 	color:  #ADD8E6;
 	margin: 10px;
 }
 
 h3 {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12pt;
-	font-weight: normal;
-	font-style: normal;
 	color: #FFFFFF;
 }
 
 h4 {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 11pt;
-	font-weight: normal;
-	font-style: normal;
 	color: #FFFFFF;
 }
 
 header {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 14pt;
-	font-weight: normal;
-	font-style: normal;
 	color: #FFFFFF;
 	margin: 10px;
 }
@@ -77,10 +65,12 @@ footer {
 }
 
 
-p, tr, td {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12pt;
+p {
 	text-indent: 25px;
+	color: #FFFFFF;
+}
+
+tr, td {
 	color: #FFFFFF;
 }
 
@@ -95,7 +85,7 @@ p, tr, td {
   overflow-x: hidden;
 }
 .commandline {
-	border: #000 solid 0px;
+	border: #000 solid 0;
 	background: #333333;
 	margin: 2px 0 2px 0;
 	width:100%;
@@ -111,10 +101,7 @@ input[type=text]:focus, textarea:focus {
 }
 
 footer li {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 10pt;
-	font-weight: normal;
-	font-style: normal;
 	width: 800px;
 	overflow: hidden;
 	list-style: none outside none;
@@ -131,10 +118,6 @@ section ol {
 
 
 section li {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12pt;
-	font-weight: normal;
-	font-style: normal;
 	text-indent: 5px;
 	margin-left: 25px;
 	color: #FFFFFF;
@@ -147,7 +130,6 @@ body {
 	height: 100%;
 	text-align: center;
 	min-width:500px;
-	/*zoom:1.2;*/
 }
 
 main {
@@ -158,6 +140,17 @@ main {
 	display: inline-block;
 	z-index:10;
 }
+
+a, a:visited {
+	text-decoration: none;
+	color: #FFFFFF;
+}
+
+a:hover {
+	text-decoration: underline;
+	color: #FFFFFF;
+}
+
 
 .siteType {
 	margin-bottom: 5px;
@@ -171,7 +164,7 @@ main {
 	color:#ffffff;
 	padding:9px 23px;
 	text-decoration:none;
-	text-shadow:0px 1px 0px #5b8a3c;
+	text-shadow:0 1px 0 #5b8a3c;
 }
 .myButton:hover {
 	background-color:#72b352;

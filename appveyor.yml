@@ -1,0 +1,99 @@
+version: 0.4.{build}
+
+branches:
+  only:
+  - master
+
+# git clone of depth 1
+#clone_depth: 1
+# specific to github and bitbucket: get a ZIP file using REST API
+shallow_clone: true
+
+configuration: Release
+
+platform: x64
+
+init:
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-20150806-git-9c0407e-win64-dev.7z
+  - 7z x ffmpeg-20150806-git-9c0407e-win64-dev.7z -o.
+  - mkdir C:\Dev\
+  - mkdir C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-20150806-git-9c0407e-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-20150806-git-9c0407e-win64-dev\include C:\Dev\ffmpeg-win64-dev
+  - del /Q *.7z
+  - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-dev
+  - dir C:\Dev
+  - dir C:\Dev\ffmpeg-win64-dev\include
+  - dir C:\Dev\ffmpeg-win64-dev\lib
+
+install:
+  - ps: Install-Product node 0.12.7 x64
+  - node -v
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - .\keys\GO-windows.bat
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - npm install --production --msvs_version=2013
+  - npm install npm
+  - npm install -g kthxbai
+  - kthxbai
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20150806-git-9c0407e-win64-shared.7z
+  - 7z x ffmpeg-20150806-git-9c0407e-win64-shared.7z -o.
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.exe bin\
+  - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
+  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-9.99.zip
+  - 7z x exiftool-9.99.zip
+  - move exiftool(-k).exe bin\exiftool.exe
+  - move bin\sage2.bat sage2.bat
+  - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
+  - curl -LsSO http://downloads.ghostscript.com/public/gs916w64.exe
+  - 7z x -y  gs916w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
+  - copy gs\$_OUTDIR\bin\* bin\
+  - copy bin\gswin64c.exe bin\gswin32c.exe
+  - xcopy /S /I /Y gs\$_OUTDIR\lib lib
+  - rmdir /Q /S gs
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.2-3-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.2-3-portable-Q16-x64.zip -oim
+  - rmdir /Q /S im\www im\images
+  - copy im\* bin
+  - rmdir /Q /S im
+  - del /Q *.7z
+  - del /Q *.zip
+  - cd bin
+  - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/node.exe
+  - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/node.exp
+  - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/node.lib
+  - curl -LsSO https://nodejs.org/dist/v0.12.7/x64/openssl-cli.exe
+  - cd ..
+  - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
+  - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%.zip VERSION.json sage2.bat AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src
+
+
+build: off
+
+test: off
+
+artifacts:
+  - path: sage2-win64-$(APPVEYOR_BUILD_VERSION).zip
+    name: sage2-win64
+
+deploy:
+  - provider: FTP
+    host: ftp.sagecommons.org
+    protocol: ftp
+    username: upload@sagecommons.org
+    password:
+      secure: L4I4NkKN7mrQww7GgwPLrA==
+    folder: /
+    artifact: sage2-win64
+
+notifications:
+  - provider: Slack
+    auth_token:
+      secure: zWPzLLrh/2HV3lXJd9q5XK+m2D1zn/bWBIQOzjQ2QkFSFL3ijB839EMqTRUrYZeA
+    channel: appveyor
+    on_build_success: true
+    on_build_failure: true
+    on_build_status_changed: true
+

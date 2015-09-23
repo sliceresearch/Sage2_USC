@@ -26,6 +26,9 @@ module.exports = function(grunt) {
 						"public/uploads/apps/car_threejs/car_threejs.js",
 						"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
 						"public/uploads/apps/clock_svg/clock_svg.js",
+						"public/uploads/apps/flow/flow.js",
+						"public/uploads/apps/flow/app.js",
+						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
 						"public/uploads/apps/photos/photos.js",
@@ -54,6 +57,8 @@ module.exports = function(grunt) {
 					"public/uploads/apps/car_threejs/car_threejs.js",
 					"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
 					"public/uploads/apps/clock_svg/clock_svg.js",
+					"public/uploads/apps/flow/flow.js",
+					"public/uploads/apps/flow/shared.js",
 					"public/uploads/apps/googlemaps/googlemaps.js",
 					"public/uploads/apps/notepad/notepad.js",
 					"public/uploads/apps/photos/photos.js",
@@ -150,7 +155,7 @@ module.exports = function(grunt) {
 	});
 
 	// Load the dependencies
-	grunt.loadNpmTasks('eslint-grunt');
+	grunt.loadNpmTasks('grunt-eslint');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');

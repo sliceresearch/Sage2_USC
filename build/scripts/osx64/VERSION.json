@@ -1,0 +1,11 @@
+{
+	"version": "0.4.1",
+	"build": "1",
+	"commit": "",
+	"arch": "OSXx64",
+	"tag_name": "x64_0.4.1",
+	"target_commitish": "master",
+	"name": "SAGE2 v0.4.62 for OSX x64 devices",
+	"body": "Release of SAGE2 app v0.4.1",
+	"prerelease": true
+} 

@@ -167,7 +167,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 				// If no match, go back to password page
 				if (!sessionMatch) {
-					this.redirect(res, "session.html");
+					this.redirect(res, "session.html?page=" + req.url.substring(1));
 				}
 			}
 		}
@@ -246,6 +246,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
+			return;
 		}
 	} else if (req.method === "PUT") {
 		// Need some authentication / security here

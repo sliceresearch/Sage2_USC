@@ -28,7 +28,7 @@ var thumbnailWindowDefaultSize = { x: 1224, y: 860 };
  * @class RadialMenu
  * @constructor
  */
-function RadialMenu(id, ptrID, ui) {
+function RadialMenu(id, ptrID, config) {
 	this.id = id;
 	this.pointerid = ptrID;
 	this.label = "";
@@ -40,7 +40,36 @@ function RadialMenu(id, ptrID, ui) {
 	this.thumbnailWindowOpen = false;
 
 	// Default
-	this.radialMenuScale = ui.widgetControlSize * 0.03;
+	this.radialMenuScale = config.ui.widgetControlSize * 0.03;
+
+	if (config.ui.enable_perceptual_scaling) {
+		this.radialMenuScale = 1;
+		var tileBorders = config.dimensions.tile_borders;
+		var pixelsPerMeter = (config.dimensions.tile_width - tileBorders[0] - tileBorders[1]) / config.resolution.width;
+
+		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y * pixelsPerMeter;
+
+		// https://en.wikipedia.org/wiki/Optimum_HDTV_viewing_distance#Human_visual_system_limitation
+
+		var width = config.layout.columns * (config.dimensions.tile_width + tileBorders[0] + tileBorders[1]);
+		var height = config.layout.rows * (config.dimensions.tile_height + tileBorders[2] + [3]);
+		var totalWallDimensionsMeters = { w: width, h: height };
+		var wallDiagonal = Math.sqrt(Math.pow(totalWallDimensionsMeters.w, 2) + Math.pow(totalWallDimensionsMeters.h, 2));
+		var DRC = Math.sqrt(Math.pow(totalWallDimensionsMeters.w / totalWallDimensionsMeters.h, 2) + 1);
+		var calculatedIdealViewingDistance = wallDiagonal / (DRC * thumbnailWindowDefaultSize.y * Math.tan(Math.PI / 180 / 60));
+
+		var viewDistRatio = config.layout.rows * (config.dimensions.tile_height + tileBorders[2] + tileBorders[3]);
+
+		if (config.ui.use_calcuated_viewing_distance) {
+			console.log("node-radialMenu: calculatedIdealViewingDistance = " + calculatedIdealViewingDistance);
+
+			this.radialMenuScale = calculatedIdealViewingDistance * (0.03 * viewDistRatio);
+		} else {
+			viewDistRatio = config.dimensions.viewing_distance / windowDefaultHeightMeters;
+			this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * viewDistRatio);
+		}
+	}
+
 	this.radialMenuSize = {x: radialMenuDefaultSize.x * this.radialMenuScale,
 							y: radialMenuDefaultSize.y * this.radialMenuScale };
 	this.thumbnailWindowSize = {x: thumbnailWindowDefaultSize.x * this.radialMenuScale,

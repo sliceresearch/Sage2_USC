@@ -18,6 +18,11 @@
 	// Copyright (c) 2014
 </script>
 
+<!-- Style sheets -->
+<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
+<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
+
+
 <!-- SAGE2 code -->
 <script type="text/javascript" src="src/websocket.io.js"></script>
 <script type="text/javascript" src="src/SAGE2_runtime.js"></script>
@@ -25,25 +30,31 @@
 <script type="text/javascript" src="src/SAGE2_DisplayUI.js"></script>
 <script type="text/javascript" src="src/SAGE2_UI.js"></script>
 
-<!-- SAGE2 minified -->
-<!--
-<script type="text/javascript" src="min/ui.min.js"></script>
--->
-
-<link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
+<!-- File manager UI -->
+<script type="text/javascript" src="src/SAGE2_fileManager.js"></script>
+<script type="text/javascript" src="lib/moment.min.js"></script>
+<script type="text/javascript" src="lib/webix/webix.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/webix/webix.css">
+<link rel="stylesheet" type="text/css" href="lib/webix/skins/compact.css">
+<link rel="stylesheet" type="text/css" href="css/fileManager.css" media="screen">
 
 </head>
 
 <body onload="SAGE2_init()" onresize="SAGE2_resize()">
 	<div id="mainUI">
 
-		<div id="displayUI">
+		<!-- Loading panel -->
+		<div id="loadingUI" style="display:block;">
+			<h1 style="margin-top:40px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
+		</div>
+
+		<div id="displayUI" style="display:none;">
 			<div id="applicationsDiv"></div>
 			<canvas id="sage2UI"></canvas>
 		</div>
 
 		<div class="clear"></div>
-		<div id="menuContainer">
+		<div id="menuContainer" style="display:none;width:auto;">
 			<table id="menuUI">
 				<tr>
 					<td id="sage2pointerContainer">
@@ -78,6 +89,12 @@
 			</table>
 		</div>
 	</div>
+
+	<div class="clear"></div>
+
+	<section class="siteType">
+		<div id="fileManager" style="display:none;margin: 0 auto;width:98%;"></div>
+	</section>
 
 	<div class="clear"></div>
 	
@@ -130,7 +147,7 @@
 			</div>
 		</div>
 		<div id="metadata">
-			<img alt="thumbnail" id="thumbnail" src="images/blank.png"/>
+			<img alt="thumbnail" name="thumbnail" id="thumbnail" src="images/blank.png"/>
 			<label id="metadata_text"></label>
 		</div>
 		<div id="fileButtons">
@@ -237,9 +254,9 @@
 						<td>
 							<select id="screenShareResolution">
 								<option>Low</option>
-								<option>Medium</option>
+								<option selected="selected">Medium</option>
 								<option>High</option>
-								<option selected="selected">Full</option>
+								<option>Full</option>
 							</select>
 						</td>
 					</tr>
@@ -248,8 +265,8 @@
 							<label class="sageLabel">Frame Quality:</label>
 						</td>
 						<td>
-							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="5">
-							<span id="screenShareQualityIndicator">5</span>
+							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="7">
+							<span id="screenShareQualityIndicator">7</span>
 						</td>
 					</tr>
 				</table>
@@ -273,7 +290,7 @@
 			</form>
 			<span id="cancelFilesBtn2" class="button">Close</span>
 			<p>&nbsp; &nbsp; &nbsp;</p>
-			<p style="text-align:center;"><b>Take or select a picture and upload it</b></p>
+			<p style="text-align:center;"><strong>Take or select a picture and upload it</strong></p>
 		</div>
 	</div>
 
