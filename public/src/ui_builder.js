@@ -162,7 +162,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.style.width  = this.json_cfg.resolution.width  + "px";
 			this.main.style.height = this.json_cfg.resolution.height + "px";
 
-			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
+			if (this.json_cfg.background.image !== undefined &&
+				this.json_cfg.background.image.url !== undefined &&
+				!__SAGE2__.browser.isMobile) {
 				var bgImg = new Image();
 				bgImg.addEventListener('load', function() {
 					if (_this.json_cfg.background.image.style === "tile") {
