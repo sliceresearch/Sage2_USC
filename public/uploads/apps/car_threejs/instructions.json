@@ -1,6 +1,6 @@
 {
 	"main_script": "car_threejs.js",
-	"icon": "car_threejs.webp",
+	"icon": "car_threejs.png",
 	"width": 800,
 	"height": 500,
 	"animation": true,

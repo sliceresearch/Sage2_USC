@@ -1073,7 +1073,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	var windowIcons = document.createElement("img");
-	// windowIcons.src = "images/layout3.webp";
 	windowIcons.src = "images/layout3.svg";
 	windowIcons.height = Math.round(titleBarHeight);
 	windowIcons.style.position = "absolute";

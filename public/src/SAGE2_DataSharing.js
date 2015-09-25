@@ -87,7 +87,7 @@ var DataSharing = function(data) {
 	sharingArea.style.borderColor = borderColor;
 
 	var sharingTitleIcons = document.createElement("img");
-	sharingTitleIcons.src = "images/layout3.webp";
+	sharingTitleIcons.src = "images/layout3.svg";
 	sharingTitleIcons.height = Math.round(ui.titleBarHeight - 4);
 	sharingTitleIcons.style.position = "absolute";
 	sharingTitleIcons.style.right    = "0px";
