@@ -25,10 +25,10 @@
 
 
 SAGE2_photoAlbums = [];
-SAGE2_photoAlbums[0] = {list:"http://lyra.evl.uic.edu:9000/sagewalls/photos.txt",
-        location:"http://lyra.evl.uic.edu:9000/sagewalls/",
+SAGE2_photoAlbums[0] = {list:"https://lyra.evl.uic.edu:9000/sagewalls/photos.txt",
+        location:"https://lyra.evl.uic.edu:9000/sagewalls/",
         name:"sage"};
-SAGE2_photoAlbums[1] = {list:"http://lyra.evl.uic.edu:9000/webcam3.txt",
+SAGE2_photoAlbums[1] = {list:"https://lyra.evl.uic.edu:9000/webcam3.txt",
         location:"http://cdn.abclocal.go.com/three/wls/webcam/",
         name:"chi"};
 

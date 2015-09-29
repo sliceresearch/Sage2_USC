@@ -1,6 +1,6 @@
 {
 	"main_script": "clock_svg.js",
-	"icon": "clock_svg.webp",
+	"icon": "clock_svg.png",
 	"width": 600,
 	"height": 600,
 	"animation": true,
