@@ -6,7 +6,11 @@
 	"animation": true,
 	"resize": "free",
 	"dependencies": [
-		"scripts/three.min.js"
+		"scripts/three.min.js",
+		"scripts/OrbitControls.js",
+		"scripts/ctm/lzma.js",
+		"scripts/ctm/ctm.js",
+		"scripts/ctm/CTMLoader.js"
 	],
 	"title": "Car in Three.js",
 	"version": "1.0.0",
