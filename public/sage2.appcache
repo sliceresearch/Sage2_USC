@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# SAGE@start Tue Sep 29 2015 11:38:17 GMT-0500 (CDT)
+# SAGE@start Tue Sep 29 2015 14:30:10 GMT-0500 (CDT)
 
 
 # Explicitly cached 'master entries'.
@@ -53,6 +53,29 @@ CACHE:
 /images/ui/savesession.svg
 /images/ui/tilecontent.svg
 /images/ui/videos.svg
+/images/appUi/arrowDownBtn.svg
+/images/appUi/arrowLeftBtn.svg
+/images/appUi/arrowRightBtn.svg
+/images/appUi/arrowUpBtn.svg
+/images/appUi/closeAppBtn.svg
+/images/appUi/closeMenuBtn.svg
+/images/appUi/directionsBtn.svg
+/images/appUi/dontLoopBtn.svg
+/images/appUi/endBtn.svg
+/images/appUi/homeBtn.svg
+/images/appUi/loopBtn.svg
+/images/appUi/muteBtn.svg
+/images/appUi/nextBtn.svg
+/images/appUi/playBtn.svg
+/images/appUi/previousBtn.svg
+/images/appUi/soundBtn.svg
+/images/appUi/stickyBtn.svg
+/images/appUi/stickyCopyBtn.svg
+/images/appUi/stopBtn.svg
+/images/appUi/trafficBtn.svg
+/images/appUi/weatherBtn.svg
+/images/appUi/zoomInBtn.svg
+/images/appUi/zoomOutBtn.svg
 
 NETWORK:
 *
