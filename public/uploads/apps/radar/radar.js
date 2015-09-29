@@ -102,11 +102,11 @@ var radar = SAGE2_App.extend({
 	load1FailCallback: function() {
 		this.OK1 = 0;
 
-		setTimeout(function(){
+		setTimeout(function() {
 			this.image1.src = this.URL1 + '?' + Math.floor(Math.random() * 10000000);
 			this.image1.onload = this.load1SuccessCallbackFunc;
 			this.image1.onerror = this.load1FailCallbackFunc;
-		    }, 2000);
+		}, 2000);
 	},
 	load2SuccessCallback: function() {
 		this.OK2 = 1;
@@ -115,11 +115,11 @@ var radar = SAGE2_App.extend({
 	load2FailCallback: function() {
 		this.OK2 = 0;
 
-		setTimeout(function(){
+		setTimeout(function() {
 			this.image2.src = this.URL2 + '?' + Math.floor(Math.random() * 10000000);
 			this.image2.onload = this.load2SuccessCallbackFunc;
 			this.image2.onerror = this.load2FailCallbackFunc;
-		    }, 2000);
+		}, 2000);
 	},
 	load3SuccessCallback: function() {
 		this.OK3 = 1;
@@ -128,11 +128,11 @@ var radar = SAGE2_App.extend({
 	load3FailCallback: function() {
 		this.OK3 = 0;
 
-		setTimeout(function(){
+		setTimeout(function() {
 			this.image3.src = this.URL3 + '?' + Math.floor(Math.random() * 10000000);
 			this.image3.onload = this.load3SuccessCallbackFunc;
 			this.image3.onerror = this.load3FailCallbackFunc;
-		    }, 2000);
+		}, 2000);
 	},
 	load4SuccessCallback: function() {
 		this.OK4 = 1;
@@ -141,11 +141,11 @@ var radar = SAGE2_App.extend({
 	load4FailCallback: function() {
 		this.OK4 = 0;
 
-		setTimeout(function(){
+		setTimeout(function() {
 			this.image4.src = this.URL4 + '?' + Math.floor(Math.random() * 10000000);
 			this.image4.onload = this.load4SuccessCallbackFunc;
 			this.image4.onerror = this.load4FailCallbackFunc;
-		    }, 2000);
+		}, 2000);
 	},
 	load5SuccessCallback: function() {
 		this.OK5 = 1;
@@ -154,11 +154,11 @@ var radar = SAGE2_App.extend({
 	load5FailCallback: function() {
 		this.OK5 = 0;
 
-		setTimeout(function(){
+		setTimeout(function() {
 			this.image5.src     = this.URL5 + '?' + Math.floor(Math.random() * 10000000);
 			this.image5.onload  = this.load5SuccessCallbackFunc;
 			this.image5.onerror = this.load5FailCallbackFunc;
-		    }, 2000);
+		}, 2000);
 	},
 	load6SuccessCallback: function() {
 		this.OK6 = 1;
@@ -167,11 +167,11 @@ var radar = SAGE2_App.extend({
 	load6FailCallback: function() {
 		this.OK6 = 0;
 
-		setTimeout(function(){
+		setTimeout(function() {
 			this.image6.src     = this.URL6 + '?' + Math.floor(Math.random() * 10000000);
 			this.image6.onload  = this.load6SuccessCallbackFunc;
 			this.image6.onerror = this.load6FailCallbackFunc;
-		    }, 2000);
+		}, 2000);
 	},
 
 	nextStation: function() {
