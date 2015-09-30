@@ -182,12 +182,65 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 	var buttonStates = {};
 	var action;
 	var otherButtonName;
+	
+	if( buttonType === "pointerPress" ) {
+		// Process based on button type
+		if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
 
-	if (pointerID in this.radialButtons[buttonName].pointers) {
-		// console.log("Existing pointer event: "+pointerID + " on button " + buttonName);
+			// Set thumbnail window and button lit state
+			if (this.thumbnailWindowState === this.radialButtons[buttonName].window) {
+				this.thumbnailWindowState = "closed"; // Mark the content window to be closed
+				this.radialButtons[buttonName].state = 0; // Dim the current button
+			} else {
+				this.thumbnailWindowState = this.radialButtons[buttonName].window;
+				this.radialButtons[buttonName].state = 5; // Highlight the current button
+			}
+
+			// Clear button lit state for other buttonState
+			for (otherButtonName in this.radialButtons) {
+				if (otherButtonName !== buttonName) {
+					console.log("Clear button state for "+ otherButtonName);
+					delete this.radialButtons[otherButtonName].pointers[pointerID];
+					if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
+						if (this.radialButtons[otherButtonName].state !== 0 &&
+							this.thumbnailWindowState !== this.radialButtons[otherButtonName].window) {
+							this.radialButtons[otherButtonName].state = 0;
+						}
+					}
+					buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
+				}
+			}
+
+			// Set the visibility of the content window
+			this.interactMgr.editVisibility(this.id + "_menu_thumbnail", "radialMenus", this.thumbnailWindowState !== "closed");
+
+			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].window};
+		} else if (this.radialButtons[buttonName].action === "toggleRadial") { // Actions with parameters
+			// Radial submenus
+			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
+		} else { // All no parameter actions
+			action = {type: this.radialButtons[buttonName].action};
+				// Close button
+				if (action.type === "close") {
+					this.hide();
+				}
+				// Save session button
+				if (action.type === "saveSession") {
+					// NOTE: This action is handled by the server
+				}
+		}
+	}
+	
+	// Update the menu state
+	buttonStates[buttonName] = this.radialButtons[buttonName].state;
+	return {action: action, buttonState: buttonStates, color: color};
+/*
+	if (pointerID in this.radialButtons[buttonName].pointers || buttonType === "pointerPress" ) {
+		console.log("Existing pointer event: "+pointerID + " on button " + buttonName +" buttonType: "+buttonType);
 		if (buttonType === "pointerPress") {
 			this.radialButtons[buttonName].state = 2;
-
+			//console.log("RadialMenu PointerPress by pointerID : "+pointerID + " on button " + buttonName);
+			
 			// Process the button click
 			if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
 
@@ -202,6 +255,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 				// Clear button lit state for other buttonState
 				for (otherButtonName in this.radialButtons) {
 					if (otherButtonName !== buttonName) {
+						console.log("Clear button state for "+ otherButtonName);
 						delete this.radialButtons[otherButtonName].pointers[pointerID];
 						if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
 							if (this.radialButtons[otherButtonName].state !== 0 &&
@@ -259,6 +313,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 		delete this.pointersOnMenu[pointerID];
 		return {buttonState: buttonStates};
 	}
+	*/
 };
 
 /**

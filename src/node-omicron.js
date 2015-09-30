@@ -226,7 +226,7 @@ OmicronManager.prototype.runTracker = function() {
 	var udp = dgram.createSocket("udp4");
 	var dstart = Date.now();
 	var emit   = 0;
-	this.nonCriticalEventDelay = 20;
+	this.nonCriticalEventDelay = 50;
 
 	// array to hold all the button values (1 - down, 0 = up)
 	// var buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -572,27 +572,6 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		initY *= omicronManager.totalHeight;
 	}
 
-	// if (e.type === 3)
-	// {
-	// 	// update (Used only by classic SAGE pointer)
-	// 	if( e.sourceId in ptrs )
-	// 		return;
-	// 	colorpt = [Math.floor(e.posx*255.0), Math.floor(e.posy*255.0), Math.floor(e.posz*255.0)];
-	// 	if (offset < msg.length)
-	// 	{
-	// 		if (e.extraDataType == 4 && e.extraDataItems > 0)
-	// 		{
-	// 			console.log("create touch pointer");
-	// 			e.extraString = msg.toString("utf-8", offset, offset+e.extraDataItems);
-	// 			ptrinfo = e.extraString.split(" ");
-	// 			offset += e.extraDataItems;
-	// 			ptrs[e.sourceId] = {id:e.sourceId, label:ptrinfo[0], ip:ptrinfo[1], mouse:[0,0,0],
-	// 				color:colorpt, zoom:0, position:[0,0], mode:0};
-	// 			sio.sockets.emit('createPointer', {type: 'ptr', id: e.sourceId, label: ptrinfo[0],
-	// 				color: colorpt, zoom:0, position:[0,0], src: "resources/mouse-pointer-hi.png" });
-	// 		}
-	// }
-	// else
 	var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
 
 	if (e.type === 4 ) {

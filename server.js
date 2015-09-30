@@ -4206,10 +4206,10 @@ function showRequestDialog(flag) {
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color) {
 	var existingRadialMenu = obj.data;
-	// console.log("pointer press on radial menu");
+
 	if (obj.id.indexOf("menu_radial_button") !== -1) {
 		// Pressing on radial menu button
-		// console.log("Pressed radial button: " + obj.id);
+		//console.log("Pressed radial button: " + obj.id);
 		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress", color);
 		if (menuStateChange !== undefined) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });

@@ -60,6 +60,8 @@
 			host: "131.193.76.121",
 			dataPort: 30005,
 			
+			debug: false,
+			
 			// Touch gestures
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
