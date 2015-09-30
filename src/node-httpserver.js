@@ -194,12 +194,19 @@ HttpServer.prototype.onreq = function(req, res) {
 				header["Content-Type"] = mime.lookup(pathname);
 				header["Access-Control-Allow-Headers" ] = "Range";
 				header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
-
 				if (req.headers.origin !== undefined) {
 					header['Access-Control-Allow-Origin' ]     = req.headers.origin;
 					header['Access-Control-Allow-Methods']     = "GET";
 					header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
 					header['Access-Control-Allow-Credentials'] = true;
+				}
+
+				if (getName.match(/^\/(src|lib|images|css)\/.+/)) {
+					// cache for 1 week for SAGE2 core files
+					header['Cache-Control'] = 'public, max-age=604800';
+				} else {
+					// console.log('No caching for', pathname, getName);
+					header['Cache-Control'] = 'no-cache';
 				}
 
 				// Useful Cache-Control response headers include:
@@ -216,7 +223,6 @@ HttpServer.prototype.onreq = function(req, res) {
 				// For example:
 				// Cache-Control: max-age=3600, must-revalidate
 				//
-				// header["Cache-Control"] = "no-cache";
 
 				// Get the file size from the 'stat' system call
 				var total = stats.size;
