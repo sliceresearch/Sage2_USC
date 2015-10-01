@@ -53,7 +53,7 @@ h2 {
 	overflow: hidden;
 }
 
-#displayUI {
+#displayUIDiv {
 	position: relative;
 	float: left;
 	margin: 10px 10px 0 10px;
@@ -67,7 +67,7 @@ h2 {
 	margin: 2px 0 0 2px;
 }
 
-#sage2UI {
+#sage2UICanvas {
 	position: absolute;
 	border: solid 2px #565656;
 	-webkit-box-sizing: border-box;
