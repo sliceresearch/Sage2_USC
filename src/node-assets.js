@@ -171,7 +171,7 @@ var saveAssets = function(filename) {
 	catch (err) {
 		console.log(sageutils.header("Assets") + "error saving assets", err);
 	}
-	console.log(sageutils.header("Assets") + "saved assets file to " + fullpath);
+	// console.log(sageutils.header("Assets") + "saved assets file to " + fullpath);
 };
 
 var generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -670,67 +670,44 @@ var listApps = function() {
 	return result;
 };
 
+var recursiveReaddirSync = function(aPath) {
+	var list     = [];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'tmp' ];
+	var files, stats;
+
+	files = fs.readdirSync(aPath);
+	if (files.indexOf('instructions.json') >= 0) {
+		// it's an application folder
+		list.push(aPath);
+	} else {
+		files.forEach(function(file) {
+			if (excludes.indexOf(file) === -1) {
+				stats = fs.lstatSync(path.join(aPath, file));
+				if (stats.isDirectory()) {
+					list = list.concat(recursiveReaddirSync(path.join(aPath, file)));
+				} else {
+					list.push(path.join(aPath, file));
+				}
+			}
+		});
+	}
+	return list;
+}
+
 var refresh = function(root, callback) {
+	var uploaded = recursiveReaddirSync(root);
+	console.log('Refresh', uploaded);
+
 	var thelist = [];
-	var uploadedImages = fs.readdirSync(path.join(root, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
-	var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
 	var i;
-	var excludes = [ '.DS_Store', 'Thumbs.db' ];
 	var item;
-	// Start with the apps so we can register filetypes
-	for (i = 0; i < uploadedApps.length; i++) {
-		var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
-		if (fs.lstatSync(applicationDir).isDirectory()) {
-			item = applicationDir;
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
 
-	for (i = 0; i < uploadedImages.length; i++) {
-		if (excludes.indexOf(uploadedImages[i]) === -1) {
-			item = path.resolve(root, "images", uploadedImages[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedVideos.length; i++) {
-		if (excludes.indexOf(uploadedVideos[i]) === -1) {
-			item = path.resolve(root, "videos", uploadedVideos[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedPdfs.length; i++) {
-		if (excludes.indexOf(uploadedPdfs[i]) === -1) {
-			item = path.resolve(root, "pdfs", uploadedPdfs[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-
-	// delete the elements which not there anymore
-	for (item in AllAssets.list) {
-		if (AllAssets.list[item].Valid === false) {
-			console.log(sageutils.header("Assets") + "Removing old item", item);
-			delete AllAssets.list[item];
+	for (i = 0; i < uploaded.length; i++) {
+		item = path.resolve(uploaded[i]);
+		if (item in AllAssets.list) {
+			AllAssets.list[item].Valid = true;
 		} else {
-			// Just remove the Valid flag
-			delete AllAssets.list[item].Valid;
+			thelist.push(item);
 		}
 	}
 
@@ -741,7 +718,7 @@ var refresh = function(root, callback) {
 		if (err) {
 			console.log(sageutils.header("EXIF") + "Error:", err);
 		} else {
-			console.log(sageutils.header("EXIF") + "Done");
+			console.log(sageutils.header("EXIF") + "Done " + root);
 			if (callback) {
 				callback();
 			}
@@ -749,7 +726,7 @@ var refresh = function(root, callback) {
 	});
 };
 
-var initialize = function(root, relativePath) {
+var initialize = function(root, relativePath, mediaFolders) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
@@ -804,10 +781,30 @@ var initialize = function(root, relativePath) {
 		}
 
 		refresh(root);
+
+		// Extra folders
+		AllAssets.mediaFolders = mediaFolders;
+		for (var mf in mediaFolders) {
+			if (mf !== 'system') {
+				addAssetFolder(mediaFolders[mf].path);
+			}
+		}
+
+		// Finally, delete the elements which not there anymore
+		for (var item in AllAssets.list) {
+			if (AllAssets.list[item].Valid === false) {
+				console.log(sageutils.header("Assets") + "Removing old item", item);
+				delete AllAssets.list[item];
+			} else {
+				// Just remove the Valid flag
+				delete AllAssets.list[item].Valid;
+			}
+		}
+
 	}
 };
 
-var addAssetFolder = function(root, relativePath) {
+var addAssetFolder = function(root) {
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {
@@ -837,77 +834,19 @@ var addAssetFolder = function(root, relativePath) {
 		fs.createReadStream(unknownapp_128Img).pipe(fs.createWriteStream(unknownapp_128));
 	}
 
-	// var assetFile = path.join(AllAssets.root, "assets", 'assets.json');
-	// if (sageutils.fileExists(assetFile)) {
-	// 	var data    = fs.readFileSync(assetFile);
-	// 	var oldList = JSON.parse(data);
-	// 	AllAssets.root = root;
-	// 	AllAssets.rel  = relativePath;
-	// 	AllAssets.list = oldList.list;
-	// 	// Flag all the assets for checking
-	// 	for (var it in AllAssets.list) AllAssets.list[it].Valid = false;
-	// }
+	var uploaded = recursiveReaddirSync(root);
+	console.log('Refresh', uploaded);
 
 	var thelist = [];
-	var uploadedImages = fs.readdirSync(path.join(root, "images"));
-	var uploadedVideos = fs.readdirSync(path.join(root, "videos"));
-	var uploadedPdfs   = fs.readdirSync(path.join(root, "pdfs"));
-	var uploadedApps   = fs.readdirSync(path.join(root, "apps"));
 	var i;
-	var excludes = [ '.DS_Store' ];
 	var item;
-	// Start with the apps so we can register filetypes
-	for (i = 0; i < uploadedApps.length; i++) {
-		var applicationDir = path.resolve(root, "apps", uploadedApps[i]);
-		if (fs.lstatSync(applicationDir).isDirectory()) {
-			item = applicationDir;
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
 
-	for (i = 0; i < uploadedImages.length; i++) {
-		if (excludes.indexOf(uploadedImages[i]) === -1) {
-			item = path.resolve(root, "images", uploadedImages[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedVideos.length; i++) {
-		if (excludes.indexOf(uploadedVideos[i]) === -1) {
-			item = path.resolve(root, "videos", uploadedVideos[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-	for (i = 0; i < uploadedPdfs.length; i++) {
-		if (excludes.indexOf(uploadedPdfs[i]) === -1) {
-			item = path.resolve(root, "pdfs", uploadedPdfs[i]);
-			if (item in AllAssets.list) {
-				AllAssets.list[item].Valid = true;
-			} else {
-				thelist.push(item);
-			}
-		}
-	}
-
-	// delete the elements which not there anymore
-	for (item in AllAssets.list) {
-		if (AllAssets.list[item].Valid === false) {
-			console.log(sageutils.header("Assets") + "Removing old item", item);
-			delete AllAssets.list[item];
+	for (i = 0; i < uploaded.length; i++) {
+		item = path.resolve(uploaded[i]);
+		if (item in AllAssets.list) {
+			AllAssets.list[item].Valid = true;
 		} else {
-			// Just remove the Valid flag
-			delete AllAssets.list[item].Valid;
+			thelist.push(item);
 		}
 	}
 
@@ -918,7 +857,7 @@ var addAssetFolder = function(root, relativePath) {
 		if (err) {
 			console.log(sageutils.header("EXIF") + "Error:", err);
 		} else {
-			console.log(sageutils.header("EXIF") + "Done");
+			console.log(sageutils.header("EXIF") + "Done " + root);
 		}
 	});
 };
@@ -938,8 +877,9 @@ var regenerateAssets = function() {
 	}
 	var rootdir = AllAssets.root;
 	var relativ = AllAssets.rel;
+	var mediaf  = AllAssets.mediaFolders;
 	AllAssets = null;
-	initialize(rootdir, relativ);
+	initialize(rootdir, relativ, mediaf);
 };
 
 

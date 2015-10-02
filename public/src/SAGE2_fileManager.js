@@ -21,78 +21,6 @@
 "use strict";
 
 /**
- * Entry point of the file manager
- *
- * @method SAGE2_FileManager
- */
-function SAGE2_FileManager() {
-	var fileManager;
-
-	// Connect to the server
-	var wsio = new WebsocketIO();
-
-	console.log("Connected to web server: ", window.location.origin);
-
-	// Callback when socket opens
-	wsio.open(function() {
-		console.log("Open websocket");
-
-		// Got a reply from the server
-		wsio.on('initialize', function(data) {
-			var uniqueID = data.UID;
-			console.log('Client ID', uniqueID);
-
-			// Setup the file manager
-			fileManager = new FileManager(wsio, "testA", uniqueID);
-
-			// First request the files
-			wsio.emit('requestStoredFiles');
-		});
-
-		wsio.on('storedFileList', function(data) {
-			fileManager.updateFiles(data);
-		});
-
-		// Server sends the wall configuration
-		wsio.on('setupDisplayConfiguration', function(data) {
-			console.log('wall configuration received', data);
-			fileManager.serverConfiguration(data);
-		});
-
-		// Register to the server as a console
-		var clientDescription = {
-			clientType: "files",
-			requests: {
-				config: true,
-				version: true,
-				time: false,
-				console: false
-			}
-		};
-		wsio.emit('addClient', clientDescription);
-	});
-
-	// Socket close event (ie server crashed)
-	wsio.on('close', function() {
-		var refresh = setInterval(function() {
-			// make a dummy request to test the server every 2 sec
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "/", true);
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200) {
-					console.log("server ready");
-					// when server ready, clear the interval callback
-					clearInterval(refresh);
-					// and reload the page
-					window.location.reload();
-				}
-			};
-			xhr.send();
-		}, 2000);
-	});
-}
-
-/**
  * Convert a file size (number) to pretty string
  *
  * @method fileSizeIEC
@@ -125,11 +53,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	var data_with_icon = [
 		{id: "treeroot", value: "SAGE2", icon: "home", open: true, data: [
-				{id: "Image", value: "Image", icon: "search", data: []},
-				{id: "Video", value: "Video", icon: "search", data: []},
-				{id: "PDF", value: "PDF", icon: "search", data: []},
-				{id: "App", value: "Application", icon: "search", data: []},
-				{id: "Session", value: "Session", icon: "search", data: []}
+				{id: "Image:/", value: "Image", icon: "search", data: []},
+				{id: "Video:/", value: "Video", icon: "search", data: []},
+				{id: "PDF:/", value: "PDF", icon: "search", data: []},
+				{id: "App:/", value: "Application", icon: "search", data: []},
+				{id: "Session:/", value: "Session", icon: "search", data: []}
 			]
 		}
 	];
@@ -143,6 +71,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "delete_menu", value: "Delete"},
 			{id: "download_menu", value: "Download"},
 			{id: "duplicate_menu", value: "Duplicate"} ]},
+		{ id: "view_menu", value: "View", submenu: [
+			{id: "hideui_menu", value: "Show/Hide UI"},
+			{id: "hidefm_menu", value: "Hide file manager"}
+		]},
 		{ id: "mainadmin_menu", value: "Admin", submenu: [
 			{id: "display_menu", value: "Display client 0"},
 			{id: "audio_menu", value: "Audio manager"},
@@ -258,19 +190,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 		evt.preventDefault();
 	});
 
-	// webix.event(window, "resize", function(evt) {
-	// 	console.log('Resize', evt.target);
-	// 	var newHeight = Math.round(evt.target.innerHeight * 0.80);
-	// 	_this.main.config.height = newHeight;
-	// 	_this.main.adjust();
-	// });
-
 	// Clear the upload list when clicking the header
 	webix.event($$("drop_header").$view, "click", function(e) {
 		$$("uploadlist").clearAll();
 	});
 
 	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
+		var mainUI = document.getElementById('mainUI');
 		if (evt === "about_menu") {
 			var versionText = "SAGE2 Version:<br>";
 			if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
@@ -291,10 +217,64 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("help/index.html", '_blank');
 		} else if (evt === "refresh_menu") {
 			wsio.emit('requestStoredFiles');
+		} else if (evt === "folder_menu") {
+			webix.ui({
+				view: "window",
+				id: "folder_form",
+				position: "center",
+				modal: true,
+				head: "Create folder",
+				body: {
+					view: "form",
+					width: 400,
+					borderless: false,
+					elements: [
+						{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
+						{margin: 5, cols: [
+							{view: "button", value: "Cancel", click: function() {
+									this.getTopParentView().hide();
+								}
+							},
+							{view: "button", value: "Create", type: "form", click: function() {
+									var values = this.getFormView().getValues();
+									if (values.folder) {
+										wsio.emit('createFolder', {path: values.folder});
+									}
+									this.getTopParentView().hide();
+								}
+							}
+						]}
+					],
+					elementsConfig: {
+						labelPosition: "top",
+					}
+				}
+			}).show();
+			$$('folder_name').focus();
 		} else if (evt === "display_menu") {
-			window.open("display.html?clientID=0", '_blank');
+			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
+			// var displayUrl = "display.html?clientID=0";
+			window.open(displayUrl, '_blank');
+		} else if (evt === "hidefm_menu") {
+			document.getElementById('fileManager').style.display = "none";
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+			}
+			SAGE2_resize();
+		} else if (evt === "hideui_menu") {
+			// Show and hide the main ui
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+				SAGE2_resize();
+			} else {
+				mainUI.style.display = "none";
+				_this.main.config.height = window.innerHeight;
+			}
+			_this.main.adjust();
 		} else if (evt === "audio_menu") {
-			window.open("audioManager.html", '_blank');
+			var audioUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/audioManager.html";
+			// var audioUrl = "audioManager.html";
+			window.open(audioUrl, '_blank');
 		} else if (evt === "drawing_menu") {
 			window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
@@ -523,10 +503,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		_this.openItem(id.row);
 	});
 
-	// this.allTable.attachEvent("onAfterSort", function(by, dir, func, obj) {
-	// 	console.log('Sorting done', by, dir, func);
-	// });
-
 	// onItemClick onAfterSelect onBeforeSelect
 	this.tree.attachEvent("onSelectChange", function(evt) {
 		var treeSelection = _this.tree.getSelectedItem();
@@ -569,7 +545,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		context.html += "</div>";
 	});
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
-		console.log('onBeforeDrop', ev);
 		// No DnD
 		return false;
 	});
@@ -588,7 +563,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 	});
 
 	webix.event(this.allTable.$view, "drag", function(e) {
-		console.log('drag');
 		e.preventDefault();
 	});
 
@@ -744,7 +718,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	});
 	$$("cmenu").attachTo($$("all_table"));
-	// $$("cmenu").attachTo($$("tree1"));
 
 	this.main.config.height = Math.round(window.innerHeight * 0.80);
 	this.main.show();
@@ -810,27 +783,27 @@ function FileManager(wsio, mydiv, uniqueID) {
 	}
 
 	function updateSearch(searchParam) {
-		if (searchParam === "Image") {
+		if (searchParam === "Image:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0;
 			});
-		} else if (searchParam === "PDF") {
+		} else if (searchParam === "PDF:/") {
 			_this.allTable.filter(function(obj) {
 				return obj.type.toString() === "PDF";
 			});
-		} else if (searchParam === "Video") {
+		} else if (searchParam === "Video:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0;
 			});
-		} else if (searchParam === "App") {
+		} else if (searchParam === "App:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0;
 			});
-		} else if (searchParam === "Session") {
+		} else if (searchParam === "Session:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0;
 			});
-		} else if (searchParam === "Config") {
+		} else if (searchParam === "Config:/") {
 			_this.allTable.filter(function(obj) {
 				return false;
 			});
@@ -873,6 +846,31 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	}
 
+	this.createSubFolderForFile = function(myFile) {
+		var df, folder;
+		// Look into the media folders for needed sub-folders
+		for (df in this.mediaFolders) {
+			folder = this.mediaFolders[df];
+			if (myFile.sage2URL.startsWith(folder.url)) {
+				// Create a subfolder if needed
+				var filepath = myFile.sage2URL.split('/');
+				// Remove the fist two elements (root) and the last (filename)
+				var subdir = filepath.slice(2, -1).join('/');
+				// Build the tree item
+				var newid = folder.url + '/' + subdir;
+				// if it doesnt already exist
+				if (!this.tree.getItem(newid)) {
+					var newElement = {id: newid, value: subdir,
+							icon: "folder", open: true, sage2URL: newid,
+							data: [], onContext: {}
+					};
+					// Add to the tree
+					this.tree.parse({ parent: folder.name, data: newElement });
+				}
+			}
+		}
+	}
+
 	// Server sends the media files list
 	this.updateFiles = function(data) {
 		var i, f;
@@ -885,18 +883,22 @@ function FileManager(wsio, mydiv, uniqueID) {
 		for (i = 0; i < data.images.length; i++) {
 			f = data.images[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.videos.length; i++) {
 			f = data.videos[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.pdfs.length; i++) {
 			f = data.pdfs[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.applications.length; i++) {
 			f = data.applications[i];
 			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
 		}
 		for (i = 0; i < data.sessions.length; i++) {
 			f = data.sessions[i];
@@ -907,7 +909,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var mm, createDate;
 		for (var a in this.allFiles) {
 			f = this.allFiles[a];
-			// console.log('URL', f.sage2URL);
 			// if it's an app
 			if (f.exif.MIMEType.indexOf('application/custom') >= 0) {
 				mm = moment();
@@ -965,32 +966,132 @@ function FileManager(wsio, mydiv, uniqueID) {
 		this.main.adjust();
 	};
 
+	function createFolder(context, values) {
+		var list   = context.obj;
+		var listId = context.id;
+		var item   = list.getItem(listId);
+		if (values.folder) {
+			// Send order to the server
+			wsio.emit('createFolder', {root: item.sage2URL,
+				path: values.folder});
+			// Build the tree item
+			var newid = item.sage2URL + '/' + values.folder;
+			var newElement = {id: newid, value: values.folder,
+					icon: "folder", open: true, sage2URL: newid,
+					data: [], onContext: {}
+			};
+			// Add to the tree
+			$$("tree1").parse({ parent: item.id, data: newElement });
+		}
+	}
+
+	var tmenu = webix.ui({
+		view: "contextmenu",
+		id: "tmenu",
+		data: ["Refresh", { $template: "Separator" }, "New folder" ],
+		on: {
+			onItemClick: function(id) {
+				var context = this.getContext();
+				var list    = context.obj;
+				var listId  = context.id;
+
+				if (id === "New folder") {
+					console.log('Create folder', list.getItem(listId).sage2URL,
+							list.getItem(listId).id, list.getItem(listId).value);
+					webix.ui({
+						view: "window",
+						id: "folder_form",
+						position: "center",
+						modal: true,
+						zIndex: 9999,
+						head: "Create folder in " + list.getItem(listId).sage2URL,
+						body: {
+							view: "form",
+							width: 400,
+							borderless: false,
+							elements: [
+								{view: "text", id: "folder_name", label: "Folder name", name: "folder"
+								},
+								{margin: 5, cols: [
+									{view: "button", value: "Cancel", click: function() {
+											this.getTopParentView().hide();
+										}
+									},
+									{view: "button", value: "Create", type: "form", click: function() {
+											createFolder(context, this.getFormView().getValues());
+											this.getTopParentView().hide();
+										}
+									}
+								]}
+							],
+							elementsConfig: {
+								labelPosition: "top",
+							}
+						}
+					}).show();
+					$$("folder_name").attachEvent("onKeyPress", function(code, e) {
+						// ESC closes
+						if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+							this.getTopParentView().hide();
+							return false;
+						}
+						// ENTER activates
+						if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+							createFolder(context, this.getFormView().getValues());
+							this.getTopParentView().hide();
+							return false;
+						}
+					});
+					$$('folder_name').focus();
+				}
+			}
+		}
+	});
+
 	// Server sends the wall configuration
 	this.serverConfiguration = function(data) {
 		// Add the media folders to the tree
-		var idx = 0;
-		for (var f in data.folders) {
-			var folder = data.folders[f];
+		var f, folder;
+		this.json_cfg = data;
+		this.mediaFolders = data.folders;
+		for (f in data.folders) {
+			folder = data.folders[f];
 			// Build the search icons: use the url in the id for search
-			var children = [
-				{id: "Image:" + folder.url, value: "Image", icon: "search", data: []},
-				{id: "Video:" + folder.url, value: "Video", icon: "search", data: []},
-				{id: "PDF:"   + folder.url, value: "PDF", icon: "search", data: []},
-				{id: "App:"   + folder.url, value: "Application", icon: "search", data: []},
-				{id: "Session:" + folder.url, value: "Session", icon: "search", data: []}
-			];
+			// var children = [
+			// 	{id: "Image:" + folder.url, value: "Image", icon: "search", data: []},
+			// 	{id: "Video:" + folder.url, value: "Video", icon: "search", data: []},
+			// 	{id: "PDF:"   + folder.url, value: "PDF", icon: "search", data: []},
+			// 	{id: "App:"   + folder.url, value: "Application", icon: "search", data: []},
+			// 	{id: "Session:" + folder.url, value: "Session", icon: "search", data: []}
+			// ];
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
 			//                  url: "/uploads", upload: false}
 			var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
-					icon: "home", open: false, sage2URL: folder.url, data: children};
-			// Add it at the end (-1) and no parent (null)
-			// this.tree.data.add(newElement, -1, null);
+					icon: "home", open: true, sage2URL: folder.url, data: [],
+					onContext: {}
+			};
 			this.tree.parse({ parent: null, data: newElement });
-			idx = idx + 1;
 		}
 		// refresh the tree
 		this.tree.refresh();
+		// Add context menu
+		tmenu.attachTo(this.tree);
+		// Hidding the 'create folder' on the root folder
+		this.tree.attachEvent('onBeforeContextMenu', function(id, e, node) {
+			if (id === 'treeroot' ||
+				(id.indexOf('Image:/') >= 0) ||
+				(id.indexOf('Video:/') >= 0) ||
+				(id.indexOf('PDF:/') >= 0) ||
+				(id.indexOf('App:/') >= 0) ||
+				(id.indexOf('Session:/') >= 0)
+				) {
+				tmenu.hideItem('New folder');
+			} else {
+				tmenu.showItem('New folder');
+			}
+			return true;
+		});
 	};
 
 }

@@ -1,6 +1,6 @@
 {
 	"main_script": "web_earth.js",
-	"icon": "web_earth.webp",
+	"icon": "web_earth.png",
 	"width":  800,
 	"height": 600,
 	"resize": "free",

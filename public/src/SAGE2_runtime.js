@@ -57,11 +57,16 @@ function SAGE2_browser() {
 	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
 	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
 	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
-	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0);
+	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipad") >= 0 ||
+			userAgent.indexOf("ipod") >= 0);
 	browser.isAndroid  = userAgent.indexOf("android") >= 0;
 	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 	browser.isLinux    = userAgent.indexOf("linux") >= 0;
+	// Mobile clients
+	browser.isMobile   = browser.isWinPhone || browser.isIOS || browser.isAndroid;
+	// Keep a copy of the UA
+	browser.userAgent  = userAgent;
 	// Copy into the global object
 	__SAGE2__.browser   = browser;
 }

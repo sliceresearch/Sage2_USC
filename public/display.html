@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html manifest="sage2.appcache">
 <head lang="en">
 <meta charset="utf-8">
+<meta name=viewport content="width=device-width, initial-scale=1">
 <title>SAGE2: Display</title>
 
 <script type="text/javascript">
@@ -16,34 +17,39 @@
 	// Copyright (c) 2014
 </script>
 
+<!-- CSS style -->
+<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
+<link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
+
 <!-- External dependencies -->
-<script type="text/javascript" src="lib/pdf.js"></script>
-<script type="text/javascript" src="lib/snap.svg-min.js"></script>
-<script type="text/javascript" src="lib/d3.min.js"></script>
-<script type="text/javascript" src="lib/glMatrix-0.9.5.min.js"></script>
-<script type="text/javascript" src="lib/observe.poly.js"></script>
+<script async src="lib/pdf.js"></script>
+<script async src="lib/snap.svg-min.js"></script>
+<script async src="lib/d3.min.js"></script>
+<script async src="lib/glMatrix-0.9.5.min.js"></script>
+<script async src="lib/observe.poly.js"></script>
 
 <!-- SAGE2 code -->
-<script type="text/javascript" src="src/websocket.io.js"></script>
-<script type="text/javascript" src="src/DynamicImage.js"></script>
-<script type="text/javascript" src="src/Class.js"></script>
-<script type="text/javascript" src="src/SAGE2_App.js"></script>
-<script type="text/javascript" src="src/SAGE2_BlockStreamingApp.js"></script>
-<script type="text/javascript" src="src/SAGE2_runtime.js"></script>
-<script type="text/javascript" src="src/image_viewer.js"></script>
-<script type="text/javascript" src="src/movie_player.js"></script>
-<script type="text/javascript" src="src/pdf_viewer.js"></script>
-<script type="text/javascript" src="src/media_stream.js"></script>
-<script type="text/javascript" src="src/media_block_stream.js"></script>
-<script type="text/javascript" src="src/ui_builder.js"></script>
-<script type="text/javascript" src="src/pointer.js"></script>
-<script type="text/javascript" src="src/SAGE2_WidgetButtonTypes.js"></script>
-<script type="text/javascript" src="src/SAGE2_WidgetControl.js"></script>
-<script type="text/javascript" src="src/SAGE2_WidgetControlInstance.js"></script>
-<script type="text/javascript" src="src/widgetHelperFunctions.js"></script>
-<script type="text/javascript" src="src/radialMenu.js"></script>
-<script type="text/javascript" src="src/SAGE2_DataSharing.js"></script>
-<script type="text/javascript" src="src/SAGE2_Display.js"></script>
+<script src="src/websocket.io.js"></script>
+<script src="src/SAGE2_runtime.js"></script>
+<script src="src/DynamicImage.js"></script>
+<script src="src/Class.js"></script>
+<script src="src/SAGE2_App.js"></script>
+<script src="src/SAGE2_BlockStreamingApp.js"></script>
+
+<script async src="src/image_viewer.js"></script>
+<script async src="src/movie_player.js"></script>
+<script async src="src/pdf_viewer.js"></script>
+<script async src="src/media_stream.js"></script>
+<script async src="src/media_block_stream.js"></script>
+<script async src="src/ui_builder.js"></script>
+<script async src="src/pointer.js"></script>
+<script async src="src/SAGE2_WidgetButtonTypes.js"></script>
+<script async src="src/SAGE2_WidgetControl.js"></script>
+<script async src="src/SAGE2_WidgetControlInstance.js"></script>
+<script async src="src/widgetHelperFunctions.js"></script>
+<script async src="src/radialMenu.js"></script>
+<script async src="src/SAGE2_DataSharing.js"></script>
+<script async src="src/SAGE2_Display.js"></script>
 
 <!-- SAGE2 minified -->
 <!--

@@ -1,6 +1,6 @@
 {
 	"main_script": "notepad.js",
-	"icon": "notepad.webp",
+	"icon": "notepad.png",
 	"type": "canvas",
 	"width": 600,
 	"height": 720,

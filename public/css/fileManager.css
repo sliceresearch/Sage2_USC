@@ -15,24 +15,19 @@
 
 .webix_tree_folder {
     background-image: url("../lib/webix/icons/folder.png");
-    background-position: 0px 4px;
+    background-position: 0 4px;
 }
 .webix_tree_folder_open {
     background-image: url("../lib/webix/icons/folder_open.png");
-    background-position: 0px 4px;
+    background-position: 0 4px;
 }
-/*.webix_tree_file {
-    background-image: url("lib/webix/icons/file.png");
-    background-position: 0px 4px;
-}
-*/
 .webix_tree_search {
     background-image: url("../lib/webix/icons/rss.png");
-    background-position: 0px 4px;
+    background-position: 0 4px;
 }
 .webix_tree_home {
     background-image: url("../lib/webix/icons/home.png");
-    background-position: 0px 4px;
+    background-position: 0 4px;
 }
 .webix_property_label_line {
 	background: #d3e3ef;

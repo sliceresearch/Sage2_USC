@@ -46,6 +46,7 @@ var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
 
 var Twit          = require('twit');             // twitter api
+var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
 // custom node modules
 var assets              = require('./src/node-assets');           // manages the list of files
@@ -64,7 +65,6 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
 
 
 // Globals
@@ -282,7 +282,7 @@ function initializeSage2Server() {
 	}
 	sageutils.monitorFolders(listOfFolders,
 		function(change) {
-			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
 
@@ -308,15 +308,8 @@ function initializeSage2Server() {
 		}
 	);
 
-	// Initialize assets
-	// Main folder
-	assets.initialize(uploadsDirectory, 'uploads');
-	// Extra folders
-	for (var mf in mediaFolders) {
-		if (mf !== 'system') {
-			assets.addAssetFolder(mediaFolders[mf].path, 'uploads');
-		}
-	}
+	// Initialize assets folders
+	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
 
 	// Initialize app loader
 	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -444,6 +437,12 @@ function closeWebSocketClient(wsio) {
 	} else if (wsio.clientType === "display") {
 		for (key in SAGE2Items.renderSync) {
 			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+				// If the application had an animation timer, clear it
+				if (SAGE2Items.renderSync[key].clients[wsio.id] &&
+					SAGE2Items.renderSync[key].clients[wsio.id].animateTimer) {
+					clearTimeout(SAGE2Items.renderSync[key].clients[wsio.id].animateTimer);
+				}
+				// Remove the object from the list
 				delete SAGE2Items.renderSync[key].clients[wsio.id];
 			}
 		}
@@ -664,6 +663,8 @@ function setupListeners(wsio) {
 
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
+
+	wsio.on('createFolder',                         wsCreateFolder);
 }
 
 function initializeExistingControls(wsio) {
@@ -1246,11 +1247,12 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			SAGE2Items.renderSync[data.id].date = now;
 			broadcast('animateCanvas', {id: data.id, date: now});
 		} else {
-			setTimeout(function() {
+			var aTimer = setTimeout(function() {
 				now = Date.now();
 				SAGE2Items.renderSync[data.id].date = now;
 				broadcast('animateCanvas', {id: data.id, date: now});
 			}, ticks - elapsed);
+			SAGE2Items.renderSync[data.id].clients[wsio.id].animateTimer = aTimer;
 		}
 	}
 }
@@ -1374,6 +1376,7 @@ function listSessions() {
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
 				// Make it look like an exif data structure
 				thelist.push({id: filename,
+					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
 							FileSize: stat.size,
 							FileDate: strdate,
@@ -2144,6 +2147,25 @@ function wsAddNewWebElement(wsio, data) {
 		}
 	});
 }
+
+// **************  Folder management     *****************
+
+function wsCreateFolder(wsio, data) {
+	// Create a folder as needed
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		// if it starts with the sage root
+		if (data.root.indexOf(f.url) === 0) {
+			var subdir = data.root.split(f.url)[1];
+			var toCreate = path.join(f.path, subdir, data.path);
+			if (!sageutils.folderExists(toCreate)) {
+				sageutils.mkdirParent(toCreate);
+				console.log(sageutils.header('Folder') + toCreate + ' created');
+			}
+		}
+	}
+}
+
 
 // **************  Command line          *****************
 
@@ -2980,6 +3002,19 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
+	// Check the borders settings
+	if (userConfig.resolution.borders === undefined) {
+		// set default values to 0
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+	} else {
+		// make sure the values are integers
+		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
+		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
+		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
+		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	}
+
+
 	// Set default values if missing
 	if (userConfig.port === undefined) {
 		userConfig.port = 443;
@@ -3010,7 +3045,6 @@ function loadConfiguration() {
 			userConfig.register_site = false;
 		}
 	}
-
 
 	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
 		apis.twitter = new Twit({

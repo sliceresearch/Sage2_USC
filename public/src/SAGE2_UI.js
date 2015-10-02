@@ -119,8 +119,8 @@ function SAGE2_init() {
 		console.log("Websocket opened");
 
 		// Show and hide elements once connect to server
-		document.getElementById('loadingUI').style.display = "none";
-		document.getElementById('displayUI').style.display = "block";
+		document.getElementById('loadingUI').style.display     = "none";
+		document.getElementById('displayUIDiv').style.display  = "block";
 		document.getElementById('menuContainer').style.display = "block";
 
 		// Start an initial resize of the UI once we get a connection
@@ -157,14 +157,13 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 
-	window.addEventListener('dragover', preventDefault, false);
-	window.addEventListener('dragend',  preventDefault, false);
-	window.addEventListener('drop',     preventDefault, false);
+	// window.addEventListener('dragover', preventDefault, false);
+	// window.addEventListener('dragend',  preventDefault, false);
+	// window.addEventListener('drop',     preventDefault, false);
 
 	sage2UI.addEventListener('dragover',  preventDefault, false);
-	sage2UI.addEventListener('dragend',   preventDefault, false);
 	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
@@ -224,7 +223,7 @@ function setupListeners() {
 
 		// Build the file manager
 		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
-		webix.DragControl.addDrop("displayUI", {
+		webix.DragControl.addDrop("displayUIDiv", {
 			$drop: function(source, target, event) {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
@@ -251,7 +250,9 @@ function setupListeners() {
 		interactor.setPointerSensitivity(sage2Min / screenMin);
 
 		// Update the file manager
-		fileManager.serverConfiguration(config);
+		if (fileManager) {
+			fileManager.serverConfiguration(config);
+		}
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
@@ -365,7 +366,9 @@ function setupListeners() {
 
 	wsio.on('stopMediaCapture', function() {
 		if (interactor.mediaStream !== null) {
-			interactor.mediaStream.stop();
+			// interactor.mediaStream.stop();
+			var track = interactor.mediaStream.getTracks()[0];
+			track.stop();
 		}
 	});
 }
@@ -382,7 +385,7 @@ function SAGE2_resize(ratio) {
 
 	var fm = document.getElementById('fileManager');
 	if (fm.style.display === "block") {
-		ratio = 0.6;
+		ratio = 0.5;
 	}
 
 	resizeMenuUI(ratio);
@@ -522,7 +525,14 @@ function createFileList(list, type, parent) {
  * @param event {Event} event data
  */
 function preventDefault(event) {
-	event.preventDefault();
+	if (event.preventDefault) {
+		// required by FF + Safari
+		event.preventDefault();
+	}
+	// tells the browser what drop effect is allowed here
+	event.dataTransfer.dropEffect = 'copy';
+	// required by IE
+	return false;
 }
 
 /**
@@ -532,7 +542,9 @@ function preventDefault(event) {
  * @param event {Event} event data
  */
 function fileDragEnter(event) {
-	var sage2UI = document.getElementById('sage2UI');
+	event.preventDefault();
+
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "dashed";
 	displayUI.fileDrop = true;
 	displayUI.draw();
@@ -545,7 +557,9 @@ function fileDragEnter(event) {
  * @param event {Event} event data
  */
 function fileDragLeave(event) {
-	var sage2UI = document.getElementById('sage2UI');
+	event.preventDefault();
+
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -558,9 +572,12 @@ function fileDragLeave(event) {
  * @param event {Event} event data
  */
 function fileDrop(event) {
-	event.preventDefault();
+	if (event.preventDefault) {
+		event.preventDefault();
+	}
 
-	var sage2UI = document.getElementById('sage2UI');
+	// Update the UI
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -569,12 +586,35 @@ function fileDrop(event) {
 	var x = event.layerX / event.target.clientWidth;
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
+		// upload a file
 		displayUI.fileUpload = true;
 		displayUI.uploadPercent = 0;
 		interactor.uploadFiles(event.dataTransfer.files, x, y);
 	} else {
-		interactor.uploadURL(event.dataTransfer.getData("Url"), x, y);
+		// URLs and text and ...
+		if (event.dataTransfer.types) {
+			// types: text/uri-list  text/plain text/html ...
+
+			// var type, i;
+			// for (i = 0; i < event.dataTransfer.types.length; i++) {
+			// 	type = event.dataTransfer.types[i];
+			// 	console.log('drop> content ', type, event.dataTransfer.getData(type));
+			// }
+			var content;
+			if (event.dataTransfer.types.indexOf('text/uri-list') >= 0) {
+				// choose uri as first choice
+				content = event.dataTransfer.getData('text/uri-list');
+			} else {
+				// default to text
+				content = event.dataTransfer.getData('text/plain');
+			}
+			interactor.uploadURL(content, x, y);
+			return false;
+		} else {
+			console.log("Your browser does not support the types property: drop aborted");
+		}
 	}
+	return false;
 }
 
 /**
@@ -610,7 +650,7 @@ function fileUploadFromUI() {
 	hideDialog('localfileDialog');
 
 	// Setup the progress bar
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -630,7 +670,7 @@ function fileUploadFromUI() {
  * @param event {Event} event data
  */
 function pointerPress(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
@@ -649,7 +689,7 @@ function pointerPress(event) {
  * @param event {Event} event data
  */
 function pointerRelease(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
@@ -669,19 +709,19 @@ function pointerRelease(event) {
  */
 function pointerMove(event) {
 	// listen for keyboard events if mouse moved over sage2UI
-	if (event.target.id === "sage2UI" && keyEvents === false) {
+	if (event.target.id === "sage2UICanvas" && keyEvents === false) {
 		document.addEventListener('keydown',  keyDown,  false);
 		document.addEventListener('keyup',    keyUp,    false);
 		document.addEventListener('keypress', keyPress, false);
 		keyEvents = true;
-	} else if (event.target.id !== "sage2UI" && keyEvents === true) {
+	} else if (event.target.id !== "sage2UICanvas" && keyEvents === true) {
 		document.removeEventListener('keydown',  keyDown,  false);
 		document.removeEventListener('keyup',    keyUp,    false);
 		document.removeEventListener('keypress', keyPress, false);
 		keyEvents = false;
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		var rect   = event.target.getBoundingClientRect();
 		var mouseX = event.clientX - rect.left;
 		var mouseY = event.clientY - rect.top;
@@ -948,7 +988,7 @@ function pointerDblClick(event) {
  * @param element {Element} DOM element triggering the double click
  */
 function handleDblClick(element) {
-	if (element.id === "sage2UI") {
+	if (element.id === "sage2UICanvas") {
 		displayUI.pointerDblClick();
 		if (event.preventDefault) {
 			event.preventDefault();
@@ -971,7 +1011,7 @@ function handleDblClick(element) {
  * @param event {Event} event data
  */
 function pointerScroll(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		displayUI.pointerScroll(pointerX, pointerY, event.deltaY);
 		event.preventDefault();
 	}
@@ -991,7 +1031,7 @@ function touchStart(event) {
 		touchTime = Date.now();
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (event.touches.length === 1) {
 			rect        = event.target.getBoundingClientRect();
 			touchStartX = event.touches[0].clientX - rect.left;
@@ -1079,7 +1119,7 @@ function touchEnd(event) {
 	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
 	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			displayUI.pointerRelease("left");
 			if (touchTap === 2) {
@@ -1135,7 +1175,7 @@ function touchMove(event) {
 	var rect, touchX, touchY, newDist, wheelDelta;
 	var touch0X, touch0Y, touch1X, touch1Y;
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			rect   = event.target.getBoundingClientRect();
 			touchX = event.touches[0].clientX - rect.left;
