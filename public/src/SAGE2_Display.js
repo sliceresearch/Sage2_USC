@@ -336,7 +336,9 @@ function setupListeners() {
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
-		ui.updateSagePointerPosition(pointer_data);
+		if (ui) {
+			ui.updateSagePointerPosition(pointer_data);
+		}
 		resetIdle();
 	});
 
