@@ -221,7 +221,7 @@ function getFullVersion(callback) {
 function updateWithGIT(branch, callback) {
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
-	var cmd1 = "git pull origin " + branch;
+	var cmd1 = "git pull --depth=1 origin " + branch;
 	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
 		// return the messages in the callback paramter
 		if (err) {
