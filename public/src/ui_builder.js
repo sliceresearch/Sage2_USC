@@ -162,7 +162,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.style.width  = this.json_cfg.resolution.width  + "px";
 			this.main.style.height = this.json_cfg.resolution.height + "px";
 
-			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
+			if (this.json_cfg.background.image !== undefined &&
+				this.json_cfg.background.image.url !== undefined &&
+				!__SAGE2__.browser.isMobile) {
 				var bgImg = new Image();
 				bgImg.addEventListener('load', function() {
 					if (_this.json_cfg.background.image.style === "tile") {
@@ -176,7 +178,7 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
-						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
+						_this.bg.style.backgroundRepeat   = "repeat";
 						_this.bg.style.backgroundSize     = bgImg.naturalWidth + "px " + bgImg.naturalHeight + "px";
 
 						_this.main.style.top    = (-1 * top).toString()  + "px";
@@ -231,15 +233,6 @@ function UIBuilder(json_cfg, clientID) {
 
 		this.logoLoadedFunc = this.logoLoaded.bind(this);
 		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
-
-		var head = document.getElementsByTagName("head")[0];
-
-		// Load CSS style sheet
-		var fileref = document.createElement("link");
-		fileref.setAttribute("rel",   "stylesheet");
-		fileref.setAttribute("type",  "text/css");
-		fileref.setAttribute("media", "screen");
-		fileref.setAttribute("href",  this.csssheet);
 
 		if (this.clientID === -1) {
 			this.offsetX = 0;
@@ -516,7 +509,6 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.appendChild(dataSharingCancel);
 		this.main.appendChild(dataSharingWaitDialog);
 
-		head.appendChild(fileref);
 		this.uiHidden = false;
 		this.showInterface();
 	};

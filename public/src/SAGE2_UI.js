@@ -119,8 +119,8 @@ function SAGE2_init() {
 		console.log("Websocket opened");
 
 		// Show and hide elements once connect to server
-		document.getElementById('loadingUI').style.display = "none";
-		document.getElementById('displayUI').style.display = "block";
+		document.getElementById('loadingUI').style.display     = "none";
+		document.getElementById('displayUIDiv').style.display  = "block";
 		document.getElementById('menuContainer').style.display = "block";
 
 		// Start an initial resize of the UI once we get a connection
@@ -157,7 +157,7 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 
 	// window.addEventListener('dragover', preventDefault, false);
 	// window.addEventListener('dragend',  preventDefault, false);
@@ -223,7 +223,7 @@ function setupListeners() {
 
 		// Build the file manager
 		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
-		webix.DragControl.addDrop("displayUI", {
+		webix.DragControl.addDrop("displayUIDiv", {
 			$drop: function(source, target, event) {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
@@ -544,7 +544,7 @@ function preventDefault(event) {
 function fileDragEnter(event) {
 	event.preventDefault();
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "dashed";
 	displayUI.fileDrop = true;
 	displayUI.draw();
@@ -559,7 +559,7 @@ function fileDragEnter(event) {
 function fileDragLeave(event) {
 	event.preventDefault();
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -577,7 +577,7 @@ function fileDrop(event) {
 	}
 
 	// Update the UI
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -650,7 +650,7 @@ function fileUploadFromUI() {
 	hideDialog('localfileDialog');
 
 	// Setup the progress bar
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -670,7 +670,7 @@ function fileUploadFromUI() {
  * @param event {Event} event data
  */
 function pointerPress(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
@@ -689,7 +689,7 @@ function pointerPress(event) {
  * @param event {Event} event data
  */
 function pointerRelease(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
@@ -709,19 +709,19 @@ function pointerRelease(event) {
  */
 function pointerMove(event) {
 	// listen for keyboard events if mouse moved over sage2UI
-	if (event.target.id === "sage2UI" && keyEvents === false) {
+	if (event.target.id === "sage2UICanvas" && keyEvents === false) {
 		document.addEventListener('keydown',  keyDown,  false);
 		document.addEventListener('keyup',    keyUp,    false);
 		document.addEventListener('keypress', keyPress, false);
 		keyEvents = true;
-	} else if (event.target.id !== "sage2UI" && keyEvents === true) {
+	} else if (event.target.id !== "sage2UICanvas" && keyEvents === true) {
 		document.removeEventListener('keydown',  keyDown,  false);
 		document.removeEventListener('keyup',    keyUp,    false);
 		document.removeEventListener('keypress', keyPress, false);
 		keyEvents = false;
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		var rect   = event.target.getBoundingClientRect();
 		var mouseX = event.clientX - rect.left;
 		var mouseY = event.clientY - rect.top;
@@ -988,7 +988,7 @@ function pointerDblClick(event) {
  * @param element {Element} DOM element triggering the double click
  */
 function handleDblClick(element) {
-	if (element.id === "sage2UI") {
+	if (element.id === "sage2UICanvas") {
 		displayUI.pointerDblClick();
 		if (event.preventDefault) {
 			event.preventDefault();
@@ -1011,7 +1011,7 @@ function handleDblClick(element) {
  * @param event {Event} event data
  */
 function pointerScroll(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		displayUI.pointerScroll(pointerX, pointerY, event.deltaY);
 		event.preventDefault();
 	}
@@ -1031,7 +1031,7 @@ function touchStart(event) {
 		touchTime = Date.now();
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (event.touches.length === 1) {
 			rect        = event.target.getBoundingClientRect();
 			touchStartX = event.touches[0].clientX - rect.left;
@@ -1119,7 +1119,7 @@ function touchEnd(event) {
 	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
 	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			displayUI.pointerRelease("left");
 			if (touchTap === 2) {
@@ -1175,7 +1175,7 @@ function touchMove(event) {
 	var rect, touchX, touchY, newDist, wheelDelta;
 	var touch0X, touch0Y, touch1X, touch1Y;
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			rect   = event.target.getBoundingClientRect();
 			touchX = event.touches[0].clientX - rect.left;

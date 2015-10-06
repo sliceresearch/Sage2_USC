@@ -33,7 +33,11 @@
 	},
 	resolution: {
 		width: 1920,
-		height: 1080
+		height: 1080,
+		borders: {
+			left: 8, right: 8,
+			top: 0, bottom:0
+		}
 	},
 	layout: {
 		rows: 1,
