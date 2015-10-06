@@ -179,19 +179,30 @@ function wsGiveClientConfiguration(data) {
 
 function addAlternativeHostEntry() {
     var workingDiv;
+    var tempStorage = [];
+    tempStorage.push( document.getElementById('cfgAH1').value );
     for(var i = 2; i < 10; i++) {
         workingDiv = document.getElementById('cfgAH' + i);
         if(workingDiv == null) {
             workingDiv = document.getElementById('cfgAH');
             workingDiv.innerHTML += " <br> <input type='text' id='cfgAH" + i + "'>";
+            for(var a = 1; a <= tempStorage.length; a++){
+            	workingDiv = document.getElementById('cfgAH' + a);
+            	workingDiv.value = tempStorage[a-1];
+            }
             break;
+        }
+        else{
+        	tempStorage.push(workingDiv.value);
         }
     }
 } //end addAlternativeHostEntry
 
 function removeAlternativeHostEntry() {
     var workingDiv;
-    for(var i = 2; i < 10; i++) {
+    var tempStorage = [];
+    tempStorage.push( document.getElementById('cfgAH1').value );
+    for(var i = 2; i < 15; i++) {
         workingDiv = document.getElementById('cfgAH' + i);
         if(workingDiv == null) {
 
@@ -202,8 +213,16 @@ function removeAlternativeHostEntry() {
 
                 workingDiv.innerHTML = workingDiv.innerHTML.substring( 
                     0, workingDiv.innerHTML.lastIndexOf('<br>')   ); 
+	            
+	            for(var a = 1; a <= tempStorage.length; a++){
+	            	workingDiv = document.getElementById('cfgAH' + a);
+	            	workingDiv.value = tempStorage[a-1];
+	            }
             }
             break;
+        }
+        else{
+        	tempStorage.push(workingDiv.value);
         }
     }
 } //end addAlternativeHostEntry
@@ -211,6 +230,11 @@ function removeAlternativeHostEntry() {
 
 function addRemoteSiteEntry() {
     var workingDiv = document.getElementById('cfgRS');
+    var tempStorage = [[],[],[]];
+    tempStorage[0].push(document.getElementById('cfgRS'+1+'name').value);
+    tempStorage[1].push(document.getElementById('cfgRS'+1+'host').value);
+    tempStorage[2].push(document.getElementById('cfgRS'+1+'port').value);
+
     for(var i = 2; i < 10; i++) {
         if( workingDiv.innerHTML.indexOf('Site ' + i + ':<br>') < 0 ) {
             workingDiv.innerHTML += 'Site ' + i + ':<br>';
@@ -218,21 +242,48 @@ function addRemoteSiteEntry() {
             workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"host'> Hostname / IP address<br>";
             workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"port'> Port Number <br>";
             //workingDiv.innerHTML += "<input type='text' id='cfgRS"+i+"secure'> Secure Port Number <br>";
+
+            for(var a = 1; a < i; a++) {
+            	document.getElementById('cfgRS'+a+'name').value = tempStorage[0][a-1];
+		    	document.getElementById('cfgRS'+a+'host').value = tempStorage[1][a-1];
+		    	document.getElementById('cfgRS'+a+'port').value = tempStorage[2][a-1];
+            }
+
             break;
+        }
+        else {
+		    tempStorage[0].push(document.getElementById('cfgRS'+i+'name').value);
+		    tempStorage[1].push(document.getElementById('cfgRS'+i+'host').value);
+		    tempStorage[2].push(document.getElementById('cfgRS'+i+'port').value);
         }
     }
 } //end addRemoteSiteEntry
 
 function removeRemoteSiteEntry() {
     var workingDiv;
-    for(var i = 2; i < 10; i++) {
+    var tempStorage = [[],[],[]];
+    tempStorage[0].push(document.getElementById('cfgRS'+1+'name').value);
+    tempStorage[1].push(document.getElementById('cfgRS'+1+'host').value);
+    tempStorage[2].push(document.getElementById('cfgRS'+1+'port').value);
+
+    for(var i = 2; i < 15; i++) {
         workingDiv = document.getElementById('cfgRS' + i + 'name');
         if(workingDiv == null) {
             if( i > 2 ) {
                 workingDiv = document.getElementById('cfgRS');
                 workingDiv.innerHTML = workingDiv.innerHTML.substring(0, workingDiv.innerHTML.indexOf('Site ' + (i-1) + ':<br>') );
             }
+            for(var a = 1; a < i; a++) {
+            	document.getElementById('cfgRS'+a+'name').value = tempStorage[0][a-1];
+		    	document.getElementById('cfgRS'+a+'host').value = tempStorage[1][a-1];
+		    	document.getElementById('cfgRS'+a+'port').value = tempStorage[2][a-1];
+            }
             break;
+        }
+        else {
+		    tempStorage[0].push(document.getElementById('cfgRS'+i+'name').value);
+		    tempStorage[1].push(document.getElementById('cfgRS'+i+'host').value);
+		    tempStorage[2].push(document.getElementById('cfgRS'+i+'port').value);
         }
     }
 } //end addRemoteSiteEntry
@@ -346,6 +397,45 @@ function sendConfigFileData() {
 	if( workingDiv.value.trim().length > 0 ) { data.dependencies.ImageMagick = workingDiv.value.trim(); }
 	workingDiv = document.getElementById('cfgDependencyFFM');
 	if( workingDiv.value.trim().length > 0 ) { data.dependencies.FFMpeg = workingDiv.value.trim(); }
+
+
+	data.background = {};
+	data.background.used = false;
+	workingDiv = document.getElementById('bgColor');
+	if(workingDiv.value.trim().length > 0) {
+		data.background.color = workingDiv.value.trim();
+
+		data.background.used = true;
+	}
+	workingDiv = document.getElementById('bgClip');
+	data.background.clip = workingDiv.checked;
+	workingDiv = document.getElementById('bgImage');
+	if(workingDiv.value.trim().length > 0) {
+		data.background.image = {};
+		data.background.image.url = workingDiv.value.trim();
+		workingDiv2 = document.getElementById('bgImageDisplayType');
+		data.background.image.style = workingDiv2.options[workingDiv2.selectedIndex].value;
+
+		data.background.used = true;
+	}
+	workingDiv = document.getElementById('bgWatermark');
+	if(workingDiv.value.trim().length > 0) {
+		data.background.watermark = {};
+		data.background.watermark.svg = workingDiv.value.trim();
+		data.background.watermark.color =
+			"rgba("
+			+ document.getElementById('bgWmR').value
+			+ " , "
+			+ document.getElementById('bgWmG').value
+			+ " , "
+			+ document.getElementById('bgWmB').value
+			+ " , "
+			+ document.getElementById('bgWmA').value
+			+ " )";
+
+		data.background.used = true;
+	}
+
 
 	console.dir(data);
 

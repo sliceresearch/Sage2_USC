@@ -41,7 +41,7 @@
 <img id='sageLogo' src="images/sage2_logo.png" alt="SAGE2">
 <div style='margin-left:5%;margin-right:5%'>
 
-	<h1 style='text-align:center'>Configuration Page</h1>
+    <h1 style='text-align:center'>Configuration Page</h1>
     <br><br>
 
     <div id='alertClientText' style='text-align:center;color:red;visibility:hidden'>  </div>
@@ -109,36 +109,52 @@
     <br>
     <input type='checkbox' id='bgClip'> Checking this off will clip the display at the exact resolution  
     <br>
-    Image. Optional, leave blank if you do not want to use one.
     <br>
-    <input type='text' id='bgImage' size='40'> Path to an image from the public directory.
+    <input type='text' id='bgImage' size='40'> (Optional) Path to an image from the public directory to use as background.
     <br>
     <select id='bgImageDisplayType'>
         <option value="fit">fit</option> 
         <option value="stretch">stretch</option> 
         <option value="tile">tile</option> 
-    </select>
+    </select> If using an image, select how it should be placed.
     <br>
-    Watermark. Optional, leave blank if you do not want to use one.
     <br>
-    <input type='text' id='bgWatermark' size='40'> Path to a monochrome SVG from the public directory.
+    <input type='text' id='bgWatermark' size='40'> (Optional) Path to a monochrome SVG from the public directory to use as watermark.
     <br>
-    #<input type='text' id='bgColor' size='6'> CSS Color for the watermark.
+    R<input type='text' id='bgWmR' size='3'> G<input type='text' id='bgWmG' size='3'>  B<input type='text' id='bgWmB' size='3'>  A<input type='text' id='bgWmA' size='3'>     Color for the watermark. (R,G,B 0-255 | A 0-1)
     <br>
 
     <hr>
     <hr>
 
-    <input type='password' value='' id='meetingIdInput'> Meeting ID <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span> <br>
-    <input type='password' value='' id='meetingIdInputConfirm'> Confirm <span id='warnMidConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <input type='password' value='' id='meetingIdInput'> Meeting ID
+       <span id='warnMid' style='color:red;visibility:hidden'> Has not been set </span>
+       <br>
+    <input type='password' value='' id='meetingIdInputConfirm'> Confirm
+       <span id='warnMidConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <br>
+        <!--
+       <input type='checkbox' id='meetingIdInputUseOldOrNoSet'> Use current / don't set a Meeting ID
+         -->
     <hr>
-    <input type='password' value='' id='webControllerPwdInput'> Password for Web Controller  <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span>
+
+    <input type='password' value='' id='webControllerPwdInput'> Password for Web Controller
+       <span id='warnWebcon' style='color:red;visibility:hidden'> A password needs to be set in order to use the web controller. </span>
     <br>
     <input type='password' value='' id='webControllerPwdInputConfirm'> Confirm <span id='warnWebconConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+    <br>
+        <!--
+    <input type='checkbox' id='webControllerPwdInputUseOldOrNoSet'> Use current / don't set a password for Web Controller. If a password is not set it cannot be used.
+
+         -->
     <hr>
+
     <input type='password' value='' id='configurationPagePwdInput'> Password for Configuration Page (this page)  <span id='warnConfig' style='color:red;visibility:hidden'> A password should be set for this page. </span>
     <br>
     <input type='password' value='' id='configurationPagePwdInputConfirm'> Confirm <span id='warnConfigConfirm' style='color:red;visibility:hidden'> Entry doesn't match. </span> 
+        
+    <br>
+
     <hr>
     Leaving any of the password fields blank will not remove current password.
     <hr>
