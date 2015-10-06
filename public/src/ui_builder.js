@@ -386,6 +386,10 @@ function UIBuilder(json_cfg, clientID) {
 				}
 				url += window.location.pathname;
 			}
+			// if a URL was specified, just use it
+			if (this.json_cfg.url) {
+				url = this.json_cfg.url;
+			}
 			// If the SAGE2 session is password protected, add a lock symbol
 			if (this.json_cfg.passordProtected) {
 				// not portable: machine.innerHTML = url + " &#128274;";
