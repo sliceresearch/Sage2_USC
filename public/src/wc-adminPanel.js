@@ -81,7 +81,10 @@ function setupListeners() {
 
 	wsio.on('giveClientConfiguration', 		wsGiveClientConfiguration );
 	wsio.on('passwordSet', 					function(data) { console.log('The password has been confirmed to be set by server'); });
-	wsio.on('configurationSet', 			function(data) { console.log('The configuration file has been confirmed to be updated by server'); });
+	wsio.on('configurationSet', 			function(data) {
+												console.log('The configuration file has been confirmed to be updated by server');
+												setTimeout(function(){ window.location.href = 'index.html'; }, 1000);
+												});
 
 	wsio.on('noWebId', 						function(data) { document.getElementById('warnMid').style.visibility='visible'; });
 	wsio.on('noWebconPwd', 					function(data) { document.getElementById('warnWebcon').style.visibility='visible'; });
@@ -159,11 +162,49 @@ function wsGiveClientConfiguration(data) {
 	}
 
 
-	workingDiv = document.getElementById('cfgDependencyIM');
-	workingDiv.value = data.dependencies.ImageMagick;
+	//background values
+	if(data.background.color) {
+		workingDiv = document.getElementById('bgColor');
+		workingDiv.value = data.background.color;
+	}
+	if(data.background.clip) {
+		workingDiv = document.getElementById('bgClip');
+		workingDiv.checked = true;
+	}
+	if(data.background.watermark) {
+		if(data.background.watermark.svg) {
+			workingDiv = document.getElementById('bgWatermark');
+			workingDiv.value = data.background.watermark.svg;
+		}
+		if(data.background.watermark.color) {
+			workingDiv = document.getElementById('bgWmColor');
+			workingDiv.value = data.background.watermark.color;
+		}
+	}
+	if(data.background.image) {
+		if(data.background.image.url) {
+			workingDiv = document.getElementById('bgImage');
+			workingDiv.value = data.background.image.url;
+		}
+		if(data.background.image.style) {
+			workingDiv = document.getElementById('bgImageDisplayType');
+			if( data.background.image.style === workingDiv.options[0].value ) { workingDiv.selectedIndex = 0; }
+			if( data.background.image.style === workingDiv.options[1].value ) { workingDiv.selectedIndex = 1; }
+			if( data.background.image.style === workingDiv.options[2].value ) { workingDiv.selectedIndex = 2; }
+		}
+	}
 
-	workingDiv = document.getElementById('cfgDependencyFFM');
-	workingDiv.value = data.dependencies.FFMpeg;
+	
+	//dependencies
+	if(data.dependencies.ImageMagick) {
+		workingDiv = document.getElementById('cfgDependencyIM');
+		workingDiv.value = data.dependencies.ImageMagick;
+	}
+	if(data.dependencies.FFMpeg) {
+		workingDiv = document.getElementById('cfgDependencyFFM');
+		workingDiv.value = data.dependencies.FFMpeg;
+	}
+	
 
 } //end wsGiveClientConfiguration
 
@@ -422,7 +463,8 @@ function sendConfigFileData() {
 	if(workingDiv.value.trim().length > 0) {
 		data.background.watermark = {};
 		data.background.watermark.svg = workingDiv.value.trim();
-		data.background.watermark.color =
+		data.background.watermark.color = document.getElementById('bgWmColor').value;
+			/*
 			"rgba("
 			+ document.getElementById('bgWmR').value
 			+ " , "
@@ -431,7 +473,7 @@ function sendConfigFileData() {
 			+ document.getElementById('bgWmB').value
 			+ " , "
 			+ document.getElementById('bgWmA').value
-			+ " )";
+			+ " )"; //*/
 
 		data.background.used = true;
 	}

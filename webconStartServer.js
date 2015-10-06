@@ -173,8 +173,8 @@ function setupListeners(wsio) {
 function executeConsoleCommand( cmd ) {
 	var child;
 	child = exec(cmd, function (error, stdout, stderr) {
-		sys.print('stdout: ' + stdout);
-		sys.print('stderr: ' + stderr);
+		console.log('stdout: ' + stdout);
+		console.log('stderr: ' + stderr);
 		if (error !== null) {
 			console.log('Command> exec error: ' + error);
 		}
@@ -335,6 +335,7 @@ function wsGiveServerConfiguration(wsio, data) {
 
 	wsio.emit('configurationSet');
 
+
 	if(needToGenerateCerts) {
 		console.log();
 		console.log();
@@ -342,9 +343,9 @@ function wsGiveServerConfiguration(wsio, data) {
 
 		confContents = "REM Must be run as administrator\n";
 		confContents += "pushd %~dp0\n";
-		confContents += "call init_webserver.bat " + confContents.host + "\n";
-		for(var i = 0; i < confContents.alternate_hosts.length; i++) {
-			confContents += "call init_webserver.bat " + confContents.alternate_hosts[i] + "\n";
+		confContents += "call init_webserver.bat " + data.host + "\n"; //using the data object because cc just got stringified.
+		for(var i = 0; i < data.alternate_hosts.length; i++) {
+			confContents += "call init_webserver.bat " + data.alternate_hosts[i] + "\n";
 		}
 		fs.writeFileSync( wcPathToWindowsCertMaker, confContents );
 		executeConsoleCommand( wcPathToWindowsCertMaker );
