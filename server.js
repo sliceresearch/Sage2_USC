@@ -4224,7 +4224,6 @@ function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, local
 
 	if (obj.id.indexOf("menu_radial_button") !== -1) {
 		// Pressing on radial menu button
-		//console.log("Pressed radial button: " + obj.id);
 		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress", color);
 		if (menuStateChange !== undefined) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });

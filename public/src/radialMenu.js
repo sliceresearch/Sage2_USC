@@ -717,6 +717,7 @@ function RadialMenu() {
 				currentThumbnailButtons = this.sessionThumbnailButtons;
 			}
 
+			var thumbUpdated = false;
 			for (i = 0; i < currentThumbnailButtons.length; i++) {
 				var thumbButton = currentThumbnailButtons[i];
 
@@ -752,9 +753,13 @@ function RadialMenu() {
 					}
 					// Only occurs on first pointerMove event over button
 					if (thumbButton.isFirstOver()) {
-						this.redraw();
+						thumbUpdated = true;
 					}
 				}
+			}
+
+			if (thumbUpdated) {
+				//this.redraw();
 			}
 		}
 

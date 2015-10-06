@@ -42,7 +42,7 @@ function RadialMenu(id, ptrID, config) {
 	// Default
 	this.radialMenuScale = config.ui.widgetControlSize * 0.03;
 
-	if (config.ui.enable_perceptual_scaling) {
+	if (config.ui.auto_ui_scaling) {
 		this.radialMenuScale = 1;
 		var tileBorders = config.dimensions.tile_borders;
 		var pixelsPerMeter = (config.dimensions.tile_width - tileBorders[0] - tileBorders[1]) / config.resolution.width;
@@ -182,8 +182,8 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 	var buttonStates = {};
 	var action;
 	var otherButtonName;
-	
-	if( buttonType === "pointerPress" ) {
+
+	if (buttonType === "pointerPress") {
 		// Process based on button type
 		if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
 
@@ -199,7 +199,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 			// Clear button lit state for other buttonState
 			for (otherButtonName in this.radialButtons) {
 				if (otherButtonName !== buttonName) {
-					console.log("Clear button state for "+ otherButtonName);
+					console.log("Clear button state for " + otherButtonName);
 					delete this.radialButtons[otherButtonName].pointers[pointerID];
 					if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
 						if (this.radialButtons[otherButtonName].state !== 0 &&
@@ -220,27 +220,27 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
 		} else { // All no parameter actions
 			action = {type: this.radialButtons[buttonName].action};
-				// Close button
-				if (action.type === "close") {
-					this.hide();
-				}
-				// Save session button
-				if (action.type === "saveSession") {
-					// NOTE: This action is handled by the server
-				}
+			// Close button
+			if (action.type === "close") {
+				this.hide();
+			}
+			// Save session button
+			if (action.type === "saveSession") {
+				// NOTE: This action is handled by the server
+			}
 		}
 	}
-	
+
 	// Update the menu state
 	buttonStates[buttonName] = this.radialButtons[buttonName].state;
 	return {action: action, buttonState: buttonStates, color: color};
-/*
+	/*
 	if (pointerID in this.radialButtons[buttonName].pointers || buttonType === "pointerPress" ) {
 		console.log("Existing pointer event: "+pointerID + " on button " + buttonName +" buttonType: "+buttonType);
 		if (buttonType === "pointerPress") {
 			this.radialButtons[buttonName].state = 2;
 			//console.log("RadialMenu PointerPress by pointerID : "+pointerID + " on button " + buttonName);
-			
+
 			// Process the button click
 			if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
 

@@ -404,7 +404,7 @@ OmicronManager.prototype.runTracker = function() {
 			} else {
 				posX = omicronManager.lastPosX;
 				posY = omicronManager.lastPosY;
-					if (!omicronManager.pointerOffscreen && omicronManager.showPointerToggle) {
+				if (!omicronManager.pointerOffscreen && omicronManager.showPointerToggle) {
 					omicronManager.hidePointer(omicronManager.config.inputServerIP);
 					omicronManager.pointerOffscreen = true;
 				}
@@ -574,9 +574,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 
 	var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
 
-	if (e.type === 4 ) {
-		
-		if( timeSinceLastNonCritEvent > omicronManager.nonCriticalEventDelay ) {
+	if (e.type === 4) {
+		if (timeSinceLastNonCritEvent > omicronManager.nonCriticalEventDelay) {
 			// move
 			if (e.flags === FLAG_SINGLE_TOUCH) {
 				if (omicronManager.gestureDebug) {
