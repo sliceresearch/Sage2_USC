@@ -106,7 +106,7 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 				console.log("request error", err1);
 				throw err1;
 			}
-			var localPath = path.join(_this.publicDir, "uploads", "images", name);
+			var localPath = path.join(_this.publicDir, "images", name);
 			fs.writeFile(localPath, body, function(err2) {
 				if (err2) {
 					console.log("Error saving image:", aUrl, localPath);
@@ -181,7 +181,7 @@ AppLoader.prototype.loadVideoFromURL = function(aUrl, mime_type, source_url, nam
 
 AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
 	var local_url = "uploads/pdfs/" + name;
-	var localPath = path.join(this.publicDir, "uploads", "pdfs", name);
+	var localPath = path.join(this.publicDir, "pdfs", name);
 	var _this = this;
 
 	var tmp = fs.createWriteStream(localPath);
@@ -328,7 +328,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			console.log("File not recognized:", file, mime_type, aUrl);
 		}
 	} else {
-		var localPath = path.join(this.publicDir, "uploads", "tmp", name) + ".png";
+		var localPath = path.join(this.publicDir, "tmp", name) + ".png";
 
 		imageMagick(file + "[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function(err, buffer) {
 			if (err) {
@@ -467,7 +467,7 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app!!
 	var appName = registry.getDefaultApp(file);
-	var instructionsFile = path.join(this.publicDir, "uploads", "apps", appName, "instructions.json");
+	var instructionsFile = path.join(this.publicDir, "apps", appName, "instructions.json");
 
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
@@ -476,7 +476,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 		}
 
 		var appUrl = "uploads/apps/" + appName;
-		var appPath = path.join(_this.publicDir, "uploads", "apps", appName);
+		var appPath = path.join(_this.publicDir, "apps", appName);
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
 		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
 		appInstance.data.file = aUrl;
@@ -705,12 +705,12 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var dir = registry.getDirectory(file.name);
 
 	var _this = this;
-	if (!sageutils.folderExists(path.join(this.publicDir, "uploads", dir))) {
-		fs.mkdirSync(path.join(this.publicDir, "uploads", dir));
+	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
+		fs.mkdirSync(path.join(this.publicDir, dir));
 	}
 	var aUrl = "uploads/" + dir + "/" + file.name;
 	var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
-	var localPath = path.join(this.publicDir, "uploads", dir, file.name);
+	var localPath = path.join(this.publicDir, dir, file.name);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
@@ -722,7 +722,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		// Regenerate path and url
 		aUrl = "uploads/" + dir + "/" + newfilename;
 		external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
-		localPath    = path.join(this.publicDir, "uploads", dir, newfilename);
+		localPath    = path.join(this.publicDir, dir, newfilename);
 	}
 
 	mv(file.path, localPath, function(err1) {

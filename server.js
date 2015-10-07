@@ -98,14 +98,14 @@ mediaFolders.system =	{
 	name: "system",
 	path: "public/uploads/",
 	url:  "/uploads",
-	upload: true
+	upload: false
 };
 // Home directory, defined as ~/Documents/SAGE2_Media or equivalent
 mediaFolders.user =	{
 	name: "user",
 	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
 	url:  "/user",
-	upload: false
+	upload: true
 };
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -119,6 +119,11 @@ if (config.folders) {
 	});
 }
 
+var mainFolder       = mediaFolders.system;
+var publicDirectory  = "public";
+var uploadsDirectory = path.join(publicDirectory, "uploads");
+var sessionDirectory = path.join(__dirname, "sessions");
+
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -128,6 +133,10 @@ for (var folder in mediaFolders) {
 	}
 	if (mediaFolders[f.name].upload) {
 		mediaFolders.system.upload = false;
+		// Update the main upload folder
+		uploadsDirectory = f.path;
+		mainFolder = f;
+		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
 	newdirs.forEach(function(d) {
@@ -140,10 +149,6 @@ for (var folder in mediaFolders) {
 
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
-
-var publicDirectory  = "public"; // mediaFolders.system.path; // "public";
-var uploadsDirectory = path.join(publicDirectory, "uploads");
-var sessionDirectory = path.join(__dirname, "sessions");
 
 console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
@@ -309,10 +314,10 @@ function initializeSage2Server() {
 	);
 
 	// Initialize assets folders
-	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
+	assets.initialize(mainFolder, mediaFolders);
 
 	// Initialize app loader
-	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
+	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 
 	// Initialize interactable manager and layers
 	interactMgr.addLayer("staticUI",     3);

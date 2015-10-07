@@ -696,7 +696,6 @@ var recursiveReaddirSync = function(aPath) {
 
 var refresh = function(root, callback) {
 	var uploaded = recursiveReaddirSync(root);
-	console.log('Refresh', uploaded);
 
 	var thelist = [];
 	var i;
@@ -726,10 +725,15 @@ var refresh = function(root, callback) {
 	});
 };
 
-var initialize = function(root, relativePath, mediaFolders) {
+var initialize = function(mainFolder, mediaFolders) {
 	if (AllAssets === null) {
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
+
+		var root = mainFolder.path;
+		var relativePath = mainFolder.url;
+
+		console.log(sageutils.header("Assets") + 'Main asset folder: ' + root);
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
@@ -785,8 +789,10 @@ var initialize = function(root, relativePath, mediaFolders) {
 		// Extra folders
 		AllAssets.mediaFolders = mediaFolders;
 		for (var mf in mediaFolders) {
-			if (mf !== 'system') {
-				addAssetFolder(mediaFolders[mf].path);
+			var f = mediaFolders[mf];
+			if (root !== f.path) {
+				// Adding all the other folders (except the main one)
+				addAssetFolder(f.path);
 			}
 		}
 
@@ -805,6 +811,7 @@ var initialize = function(root, relativePath, mediaFolders) {
 };
 
 var addAssetFolder = function(root) {
+	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + root);
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {
@@ -835,7 +842,6 @@ var addAssetFolder = function(root) {
 	}
 
 	var uploaded = recursiveReaddirSync(root);
-	console.log('Refresh', uploaded);
 
 	var thelist = [];
 	var i;
