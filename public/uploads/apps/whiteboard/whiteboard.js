@@ -19,7 +19,7 @@ var whiteboard = SAGE2_App.extend({
 		this.element.style.backgroundColor    = "rgba(0,0,0,1)";
 		this.element.style.backgroundPosition = "top left";
 		// this.element.style.backgroundColor    = 'rgba(42,42,42,1)';
-		// this.element.style.backgroundImage    = "url(" + this.resrcPath + "images/dbgrid.webp)";
+		// this.element.style.backgroundImage    = "url(" + this.resrcPath + "images/dbgrid.png)";
 		// this.element.style.backgroundRepeat   = "repeat-x repeat-y";
 
 		this.width  = this.element.clientWidth;

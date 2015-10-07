@@ -41,7 +41,7 @@ var leaflet = SAGE2_App.extend({
 
 		if (isMaster) {
 
-			var query = "http://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
+			var query = "https://data.cityofchicago.org/resource/x2n5-8w5q.json?beat=".concat(beat);
 
 			d3.json(query, function(collection) {
 				meSelf.currentBeats++;

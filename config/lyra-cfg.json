@@ -6,6 +6,7 @@
 	host: "lyra.evl.uic.edu",
 	port: 443,
 	index_port: 80,
+	url: "http://bit.do/cave2",
 	background: {
 		color: "#333333",
 		image: {
@@ -25,6 +26,8 @@
                 noDropShadow:    true,
 		minWindowWidth:  500,
 		minWindowHeight: 500,
+		auto_hide_ui: true,
+		auto_hide_delay: 60,
 	},
 	resolution: {
 		width: 1366,
@@ -36,8 +39,8 @@
 		{
 			// Standard 'SAGE' connection
 			// SAGE listens for a sageinputserver to stream events
-			enable: true,
-			dataPort: 20015,
+			enable: false,
+			dataPort: 30015,
 			
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events

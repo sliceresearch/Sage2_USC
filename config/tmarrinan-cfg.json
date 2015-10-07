@@ -1,6 +1,6 @@
 {
 	name: "Tommy",
-	host: "marrinan.evl.uic.edu",
+	host: "localhost",
 	port: 9090,
 	index_port: 9292,
 	background: {
@@ -27,34 +27,23 @@
 		}
 	},
 	resolution: {
-		width: 840,
+		width: 1680,
 		height: 840
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
-		"localhost",
 		"127.0.0.1"
 	],
 	remote_sites: [
-		{
-			name: "Desk",
-			host: "thor.evl.uic.edu",
-			port: 7070,
-			secure: true
-		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
@@ -63,7 +52,7 @@
 		},
 		{
 			name: "Cyber-Commons",
-			host: "iridium.evl.uic.edu",
+			host: "inferno.evl.uic.edu",
 			port: 443,
 			secure: true
 		},

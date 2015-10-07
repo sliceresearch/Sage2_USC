@@ -1,6 +1,6 @@
 {
 	"main_script": "zoom.js",
-	"icon": "zoom.webp",
+	"icon": "zoom.png",
 	"width": 800,
 	"height": 400,
 	"resize": "free",
