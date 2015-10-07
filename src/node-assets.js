@@ -749,16 +749,16 @@ var initialize = function(mainFolder, mediaFolders) {
 		}
 
 		// Make sure unknownapp images exist
-		// var unknownapp_256Img = path.resolve(root, '..', 'images', 'unknownapp_256.jpg');
-		// var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.jpg');
-		// if (!sageutils.fileExists(unknownapp_256)) {
-		// 	fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
-		// }
-		// var unknownapp_512Img = path.resolve(root, '..', 'images', 'unknownapp_512.jpg');
-		// var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
-		// if (!sageutils.fileExists(unknownapp_512)) {
-		// 	fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
-		// }
+		var unknownapp_256Img = path.resolve('public', 'images', 'unknownapp_256.jpg');
+		var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.jpg');
+		if (!sageutils.fileExists(unknownapp_256)) {
+			fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
+		}
+		var unknownapp_512Img = path.resolve('public', 'images', 'unknownapp_512.jpg');
+		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
+		if (!sageutils.fileExists(unknownapp_512)) {
+			fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+		}
 
 		AllAssets = {};
 		AllAssets.mainFolder = mainFolder;
@@ -821,16 +821,16 @@ var addAssetFolder = function(root) {
 	}
 
 	// Make sure unknownapp images exist
-	// var unknownapp_256Img = path.resolve(AllAssets.root, '..', 'images', 'unknownapp_256.jpg');
-	// var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.jpg');
-	// if (!sageutils.fileExists(unknownapp_256)) {
-	// 	fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
-	// }
-	// var unknownapp_512Img = path.resolve(AllAssets.root, '..', 'images', 'unknownapp_512.jpg');
-	// var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
-	// if (!sageutils.fileExists(unknownapp_512)) {
-	// 	fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
-	// }
+	var unknownapp_256Img = path.resolve('public', 'images', 'unknownapp_256.jpg');
+	var unknownapp_256 = path.join(assetAppsFolder, 'unknownapp_256.jpg');
+	if (!sageutils.fileExists(unknownapp_256)) {
+		fs.createReadStream(unknownapp_256Img).pipe(fs.createWriteStream(unknownapp_256));
+	}
+	var unknownapp_512Img = path.resolve('public', 'images', 'unknownapp_512.jpg');
+	var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
+	if (!sageutils.fileExists(unknownapp_512)) {
+		fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+	}
 
 	var uploaded = recursiveReaddirSync(root);
 
