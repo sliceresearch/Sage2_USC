@@ -872,8 +872,8 @@ var regenerateAssets = function() {
 		fs.unlinkSync(assetFile);
 		console.log(sageutils.header("Assets") + "successfully deleted", assetFile);
 	}
-	var rootdir = AllAssets.root;
-	var relativ = AllAssets.rel;
+	// var rootdir = AllAssets.root;
+	// var relativ = AllAssets.rel;
 	var mediaf  = AllAssets.mediaFolders;
 	var mainf   = AllAssets.mainFolder;
 	AllAssets = null;
