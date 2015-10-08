@@ -759,7 +759,7 @@ function RadialMenu() {
 			}
 
 			if (thumbUpdated) {
-				//this.redraw();
+				this.redraw();
 			}
 		}
 
@@ -1207,6 +1207,7 @@ function ButtonWidget() {
 		this.resrcPath = resrc;
 
 		this.tintImage = document.createElement("canvas");
+		this.tintImageCtx = this.tintImage.getContext("2d");
 	};
 
 	this.setPosition = function(x, y) {
@@ -1315,16 +1316,16 @@ function ButtonWidget() {
 		// create offscreen buffer,
 		this.tintImage.width = width;
 		this.tintImage.height = height;
-		var bx = this.tintImage.getContext("2d");
+
 
 		// fill offscreen buffer with the tint color
-		bx.fillStyle = color;
-		bx.fillRect(0, 0, this.tintImage.width, this.tintImage.height);
+		this.tintImageCtx.fillStyle = color;
+		this.tintImageCtx.fillRect(0, 0, this.tintImage.width, this.tintImage.height);
 
 		// destination atop makes a result with an alpha channel identical to fg,
 		//   but with all pixels retaining their original color *as far as I can tell*
-		bx.globalCompositeOperation = "destination-atop";
-		bx.drawImage(image, 0, 0, width, height);
+		this.tintImageCtx.globalCompositeOperation = "destination-in";
+		this.tintImageCtx.drawImage(image, 0, 0, width, height);
 
 		// then set the global alpha to the amound that you want to tint it,
 		//   and draw the buffer directly on top of it.
