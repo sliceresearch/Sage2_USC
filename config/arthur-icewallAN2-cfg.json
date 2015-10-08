@@ -11,7 +11,7 @@
 		"show_url": true,
 		"show_version": true,
 		"widgetControlSize": 20,
-		"enable_perceptual_scaling": true,
+		"auto_ui_scaling": true,
 		"use_calcuated_viewing_distance": true
 	},
 	"resolution": {
@@ -25,7 +25,7 @@
 		"tile_height": 1.093,  // in meter, pixel area
 		"tile_borders": [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
 		// prefered or common viewing distance to calculate UI sizes
-		"viewing_distance": 1.0668  // in meter
+		"viewing_distance": 1.0668	// in meter
 	},
 	"layout": {
 		"rows": 1,
@@ -48,7 +48,25 @@
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
-    },
+	},
+	experimental: {
+		omicron: {
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			dataPort: 30005,
+
+			// Touch gestures
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			useOinputserver: false,
+			inputServerIP: "127.0.0.1",
+			msgPort: 28000
+		}
+	},
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",

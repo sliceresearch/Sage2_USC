@@ -21,7 +21,7 @@
 		maxWindowWidth : 8196,
 		maxWindowHeight : 8196,
         noDropShadow: true,
-        enable_perceptual_scaling: true,
+        auto_ui_scaling: true,
 	},
 	resolution: {
 		width: 4098,

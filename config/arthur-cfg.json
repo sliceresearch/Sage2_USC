@@ -17,13 +17,22 @@
 		clock: 12,
 		show_version: true,
 		show_url: true,
-		widgetControlSize: 20
+		widgetControlSize: 20,
+		auto_ui_scaling: true,
+		use_calcuated_viewing_distance: false
 	},
 	resolution: {
-		//width: 2560,
-		//height: 1600
-		width: 1280,
-		height: 800
+		width: 2560,
+		height: 1600
+
+	},
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width:  0.68,  // in meter, pixel area
+		tile_height: 0.485,  // in meter, pixel area
+		tile_borders: [ 0.023, 0.023, 0.05, 0.05 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 3.5	// in meter
 	},
 	layout: {
 		rows: 1,
@@ -51,6 +60,8 @@
 			host: "131.193.76.121",
 			dataPort: 30005,
 			
+			debug: false,
+			
 			// Touch gestures
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
@@ -58,7 +69,7 @@
 			// Note if the following is enabled the server will attempt
 			// to connect to the specified Omicron oinputserver
 			// (By default the server listens for an Omicron sageinputserver to connect to it)
-			useOinputserver: true,
+			useOinputserver: false,
 			inputServerIP: "131.193.76.121",
 			msgPort: 28000
 		}
