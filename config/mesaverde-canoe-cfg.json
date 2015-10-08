@@ -20,7 +20,7 @@
 		clock: 12,           // clock setting: 12-hour or 24-hour
 		show_version: true,  // shows SAGE2 version in menu bar
 		show_url: true,      // shows SAGE2 url in menu bar
-		auto_ui_scaling: true,
+		auto_scale_ui: true,
     },
 	resolution: {
 		width: 3840,
