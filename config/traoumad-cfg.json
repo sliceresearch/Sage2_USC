@@ -37,11 +37,7 @@
 	},
 	resolution: {
 		width: 1920,
-		height: 1080,
-		borders: {
-			left: 8, right: 8,
-			top: 0, bottom:0
-		}
+		height: 1080
 	},
 	dimensions: {
 		// dimensions of one tile (can be overriden in displays section)
