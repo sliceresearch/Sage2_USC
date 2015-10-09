@@ -87,7 +87,7 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
  * @method draw
  */
 SAGE2DisplayUI.prototype.draw = function() {
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	var ctx = sage2UI.getContext('2d');
 
 	ctx.clearRect(0, 0, sage2UI.width, sage2UI.height);
@@ -166,8 +166,8 @@ SAGE2DisplayUI.prototype.draw = function() {
  * @param ratio {Number} scale factor
  */
 SAGE2DisplayUI.prototype.resize = function(ratio) {
-	var displayUI        = document.getElementById('displayUI');
-	var sage2UI          = document.getElementById('sage2UI');
+	var displayUI        = document.getElementById('displayUIDiv');
+	var sage2UI          = document.getElementById('sage2UICanvas');
 	var applicationsDiv  = document.getElementById('applicationsDiv');
 
 	// Extra scaling factor

@@ -97,14 +97,14 @@ mediaFolders.system =	{
 	name: "system",
 	path: "public/uploads/",
 	url:  "/uploads",
-	upload: true
+	upload: false
 };
 // Home directory, defined as ~/Documents/SAGE2_Media or equivalent
 mediaFolders.user =	{
 	name: "user",
 	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
 	url:  "/user",
-	upload: false
+	upload: true
 };
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -118,6 +118,11 @@ if (config.folders) {
 	});
 }
 
+var mainFolder       = mediaFolders.system;
+var publicDirectory  = "public";
+var uploadsDirectory = path.join(publicDirectory, "uploads");
+var sessionDirectory = path.join(__dirname, "sessions");
+
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -127,6 +132,10 @@ for (var folder in mediaFolders) {
 	}
 	if (mediaFolders[f.name].upload) {
 		mediaFolders.system.upload = false;
+		// Update the main upload folder
+		uploadsDirectory = f.path;
+		mainFolder = f;
+		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
 	newdirs.forEach(function(d) {
@@ -139,10 +148,6 @@ for (var folder in mediaFolders) {
 
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
-
-var publicDirectory  = "public"; // mediaFolders.system.path; // "public";
-var uploadsDirectory = path.join(publicDirectory, "uploads");
-var sessionDirectory = path.join(__dirname, "sessions");
 
 console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
@@ -308,10 +313,10 @@ function initializeSage2Server() {
 	);
 
 	// Initialize assets folders
-	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
+	assets.initialize(mainFolder, mediaFolders);
 
 	// Initialize app loader
-	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
+	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 
 	// Initialize interactable manager and layers
 	interactMgr.addLayer("staticUI",     3);
@@ -2942,8 +2947,11 @@ function loadConfiguration() {
 		process.exit(1);
 	}
 
+	// Read the specified configuration file
 	var json_str   = fs.readFileSync(configFile, 'utf8');
+	// Parse it using JSON5 syntax (more lax than strict JSON)
 	var userConfig = json5.parse(json_str);
+
 	// compute extra dependent parameters
 	userConfig.totalWidth  = userConfig.resolution.width  * userConfig.layout.columns;
 	userConfig.totalHeight = userConfig.resolution.height * userConfig.layout.rows;
@@ -2997,18 +3005,33 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
-	// Check the borders settings
-	if (userConfig.resolution.borders === undefined) {
-		// set default values to 0
-		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
-	} else {
-		// make sure the values are integers
-		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
-		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
-		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
-		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	// Check the borders settings (for hidding the borders)
+	if (userConfig.dimensions === undefined) {
+		userConfig.dimensions = {};
 	}
-
+	if (userConfig.dimensions.tile_borders === undefined) {
+		// set default values to 0
+		// first for pixel sizes
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+		// then for dimensions
+		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
+	} else {
+		var borderLeft, borderRight, borderBottom, borderTop, tileWidth;
+		// make sure the values are valid floats
+		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
+		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
+		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
+		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
+		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		// calculate pixel density (ppm) based on width
+		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
+		// calculate values in pixel now
+		userConfig.resolution.borders = {};
+		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
+		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
+		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
+		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
 
 	// Set default values if missing
 	if (userConfig.port === undefined) {
@@ -4207,10 +4230,9 @@ function showRequestDialog(flag) {
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color) {
 	var existingRadialMenu = obj.data;
-	// console.log("pointer press on radial menu");
+
 	if (obj.id.indexOf("menu_radial_button") !== -1) {
 		// Pressing on radial menu button
-		// console.log("Pressed radial button: " + obj.id);
 		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress", color);
 		if (menuStateChange !== undefined) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });

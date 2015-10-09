@@ -12,16 +12,6 @@
 
 /* global THREE */
 
-function addScriptForThreejs(url, callback) {
-	var script = document.createElement('script');
-	if (callback) {
-		script.onload = callback;
-	}
-	script.type = 'text/javascript';
-	script.src  = url;
-	document.body.appendChild(script);
-}
-
 
 var car_threejs = SAGE2_App.extend({
 	init: function(data) {
@@ -48,16 +38,8 @@ var car_threejs = SAGE2_App.extend({
 		this.ready    = false;
 		this.rotating = false;
 
-		var _this = this;
-		addScriptForThreejs(_this.resrcPath + "scripts/OrbitControls.js", function() {
-			addScriptForThreejs(_this.resrcPath + "scripts/ctm/lzma.js", function() {
-				addScriptForThreejs(_this.resrcPath + "scripts/ctm/ctm.js", function() {
-					addScriptForThreejs(_this.resrcPath + "scripts/ctm/CTMLoader.js", function() {
-						_this.initialize(data.date);
-					});
-				});
-			});
-		});
+		// build the app
+		this.initialize(data.date);
 
 		this.controls.addButton({type: "prev", position: 1, identifier: "Left"});
 		this.controls.addButton({type: "next", position: 7, identifier: "Right"});

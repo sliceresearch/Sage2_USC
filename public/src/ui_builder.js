@@ -162,7 +162,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.style.width  = this.json_cfg.resolution.width  + "px";
 			this.main.style.height = this.json_cfg.resolution.height + "px";
 
-			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
+			if (this.json_cfg.background.image !== undefined &&
+				this.json_cfg.background.image.url !== undefined &&
+				!__SAGE2__.browser.isMobile) {
 				var bgImg = new Image();
 				bgImg.addEventListener('load', function() {
 					if (_this.json_cfg.background.image.style === "tile") {
@@ -383,6 +385,10 @@ function UIBuilder(json_cfg, clientID) {
 					url += ":" + iport;
 				}
 				url += window.location.pathname;
+			}
+			// if a URL was specified, just use it
+			if (this.json_cfg.url) {
+				url = this.json_cfg.url;
 			}
 			// If the SAGE2 session is password protected, add a lock symbol
 			if (this.json_cfg.passordProtected) {

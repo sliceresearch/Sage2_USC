@@ -336,7 +336,9 @@ function setupListeners() {
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
-		ui.updateSagePointerPosition(pointer_data);
+		if (ui) {
+			ui.updateSagePointerPosition(pointer_data);
+		}
 		resetIdle();
 	});
 
@@ -1073,7 +1075,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	var windowIcons = document.createElement("img");
-	// windowIcons.src = "images/layout3.webp";
 	windowIcons.src = "images/layout3.svg";
 	windowIcons.height = Math.round(titleBarHeight);
 	windowIcons.style.position = "absolute";
@@ -1162,9 +1163,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 					wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
 			}, false);
-			js.type = "text/javascript";
+			js.type  = "text/javascript";
+			js.async = false;
 			js.src = url + "/" + data.application + ".js";
-			console.log(url + "/" + data.application + ".js");
+			console.log(data.id, url + "/" + data.application + ".js");
 			document.head.appendChild(js);
 		} else {
 			// load existing app
@@ -1193,7 +1195,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				if ((idx + 1) < data.resrc.length) {
 					loadResource(idx + 1);
 				} else {
-					console.log("all resources loaded");
+					console.log("all resources loaded", data.id);
 					loadApplication();
 				}
 
@@ -1213,11 +1215,12 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				if ((idx + 1) < data.resrc.length) {
 					loadResource(idx + 1);
 				} else {
-					console.log("all resources loaded");
+					console.log("all resources loaded", data.id);
 					loadApplication();
 				}
 			});
-			js.type = "text/javascript";
+			js.type  = "text/javascript";
+			js.async = false;
 			if (data.resrc[idx].indexOf("http://") === 0 || data.resrc[idx].indexOf("https://") === 0) {
 				js.src = data.resrc[idx];
 			} else {

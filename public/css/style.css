@@ -85,14 +85,14 @@ body {
 }
 
 .widgetBackground{
-	fill: rgba(150,166,189,0.7);
+	fill: rgba(150,166,189,0.8);
 	stroke: rgba(230,230,230,1.0);
 	stroke-width: 1;
 }
 .widgetText {
 	text-anchor: middle;
 	font-family: Arimo, Helvetica, sans-serif;
-	fill: rgba(109,130,159,1.0);
+	fill: #495587;
 }
 
 .widgetLabel {

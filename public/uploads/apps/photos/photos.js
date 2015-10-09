@@ -15,15 +15,16 @@
 // Written by Andy Johnson - 2014
 //
 
-/* global d3, SAGE2_photoAlbumLoadTimer, SAGE2_photoAlbums, SAGE2_photoAlbumFadeCount, SAGE2_photoAlbumCanvasBackground */
+/* global d3 */
+
 
 var photos = SAGE2_App.extend({
 
 	// choose a specific image library from those loaded to cycle through
 
 	chooseImagery: function(selection) {
-		this.listFileNamePhotos = SAGE2_photoAlbums[selection].list;
-		this.listFileNameLibrary = SAGE2_photoAlbums[selection].location;
+		this.listFileNamePhotos = this.photoAlbums[selection].list;
+		this.listFileNameLibrary = this.photoAlbums[selection].location;
 	},
 
 	initApp: function() {
@@ -191,7 +192,7 @@ var photos = SAGE2_App.extend({
 	nextAlbum: function() {
 		this.bigList = null;
 		this.state.imageSet += 1;
-		if (this.state.imageSet >= SAGE2_photoAlbums.length) {
+		if (this.state.imageSet >= this.photoAlbums.length) {
 			this.state.imageSet = 0;
 		}
 		this.chooseImagery(this.state.imageSet);
@@ -289,23 +290,31 @@ var photos = SAGE2_App.extend({
 		this.canvasWidth  = 800;
 		this.canvasHeight = 600;
 
-		this.loadTimer = 15; // default value to be replaced from photo_scrapbooks.js
+		this.loadTimer = 15;   // default value to be replaced from photo_scrapbooks.js
 		this.fadeCount = 10.0; // default value to be replaced from photo_scrapbooks.js
 
-		if (SAGE2_photoAlbumLoadTimer !== null) {
-			this.loadTimer = SAGE2_photoAlbumLoadTimer;
+		// Load the settings from the scrapbook file
+		var settings = photoAlbums();
+
+		this.photoAlbums = [];
+		if (settings.albums !== null) {
+			this.photoAlbums = settings.albums;
 		}
 
-		if (SAGE2_photoAlbumFadeCount !== null) {
-			this.fadeCount = SAGE2_photoAlbumFadeCount;
+		if (settings.loadTimer !== null) {
+			this.loadTimer = settings.loadTimer;
+		}
+
+		if (settings.fadeCount !== null) {
+			this.fadeCount = settings.fadeCount;
 		}
 
 		if (this.fadeCount === 0) {
 			this.fadeCount = 1; // avoid divide by zero later on
 		}
 
-		if (SAGE2_photoAlbumCanvasBackground !== null) {
-			this.canvasBackground = SAGE2_photoAlbumCanvasBackground;
+		if (settings.background !== null) {
+			this.canvasBackground = settings.background;
 		}
 
 		this.URL1  = "";
@@ -376,13 +385,13 @@ var photos = SAGE2_App.extend({
 		console.log("creating controls");
 		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 
-		for (var loopIdx = 0; loopIdx < SAGE2_photoAlbums.length; loopIdx++) {
+		for (var loopIdx = 0; loopIdx < this.photoAlbums.length; loopIdx++) {
 			var loopIdxWithPrefix = "0" + loopIdx;
 			var pos = 5 - loopIdx;
 			if (pos < 1) {
 				pos = pos + 12;
 			}
-			this.controls.addButton({label: SAGE2_photoAlbums[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
+			this.controls.addButton({label: this.photoAlbums[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
 		}
 		this.controls.finishedAddingControls(); // Important
 
