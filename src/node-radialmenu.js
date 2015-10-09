@@ -33,10 +33,10 @@ function RadialMenu(id, ptrID, config) {
 	this.pointerid = ptrID;
 	this.label = "";
 	this.color = [255, 255, 255];
-	this.left = 0; // left/top is the center of the radial menu, NOT the upper left
-	this.top = 0;
+	this.left  = 0; // left/top is the center of the radial menu, NOT the upper left
+	this.top   = 0;
 	this.visible = true;
-	this.wsio = undefined;
+	this.wsio    = undefined;
 	this.thumbnailWindowOpen = false;
 
 	// Default
@@ -44,26 +44,37 @@ function RadialMenu(id, ptrID, config) {
 
 	if (config.ui.auto_scale_ui) {
 		this.radialMenuScale = 1;
-		var tileBorders = config.dimensions.tile_borders;
-		var pixelsPerMeter = (config.dimensions.tile_width - tileBorders[0] - tileBorders[1]) / config.resolution.width;
 
+		var borderLeft, borderRight, borderBottom, borderTop;
+		var tileBorders = config.dimensions.tile_borders;
+		if (tileBorders) {
+			borderLeft   = parseFloat(tileBorders.left)   || 0.0;
+			borderRight  = parseFloat(tileBorders.right)  || 0.0;
+			borderBottom = parseFloat(tileBorders.bottom) || 0.0;
+			borderTop    = parseFloat(tileBorders.top)    || 0.0;
+		} else {
+			borderLeft   = 0.0;
+			borderRight  = 0.0;
+			borderBottom = 0.0;
+			borderTop    = 0.0;
+		}
+		var pixelsPerMeter = (config.dimensions.tile_width - borderLeft - borderRight) / config.resolution.width;
 		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y * pixelsPerMeter;
 
 		// https://en.wikipedia.org/wiki/Optimum_HDTV_viewing_distance#Human_visual_system_limitation
 
-		var width = config.layout.columns * (config.dimensions.tile_width + tileBorders[0] + tileBorders[1]);
-		var height = config.layout.rows * (config.dimensions.tile_height + tileBorders[2] + [3]);
+		var width  = config.layout.columns * (config.dimensions.tile_width + borderLeft + borderRight);
+		var height = config.layout.rows * (config.dimensions.tile_height + borderBottom + borderTop);
 		var totalWallDimensionsMeters = { w: width, h: height };
 		var wallDiagonal = Math.sqrt(Math.pow(totalWallDimensionsMeters.w, 2) + Math.pow(totalWallDimensionsMeters.h, 2));
 		var DRC = Math.sqrt(Math.pow(totalWallDimensionsMeters.w / totalWallDimensionsMeters.h, 2) + 1);
 		var calculatedIdealViewingDistance = wallDiagonal / (DRC * thumbnailWindowDefaultSize.y * Math.tan(Math.PI / 180 / 60));
 
-		var viewDistRatio = config.layout.rows * (config.dimensions.tile_height + tileBorders[2] + tileBorders[3]);
+		var viewDistRatio = config.layout.rows * (config.dimensions.tile_height + borderBottom + borderTop);
 
 		if (config.ui.calculate_viewing_distance) {
 			viewDistRatio = calculatedIdealViewingDistance / windowDefaultHeightMeters;
 			console.log("node-radialMenu: calculatedIdealViewingDistance = " + calculatedIdealViewingDistance);
-
 			this.radialMenuScale = calculatedIdealViewingDistance * (0.03 * viewDistRatio);
 		} else {
 			viewDistRatio = config.dimensions.viewing_distance / windowDefaultHeightMeters;

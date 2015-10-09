@@ -32,7 +32,7 @@
 		// dimensions of one tile (can be overriden in displays section)
 		tile_width:  1.093  // in meter, pixel area
 		tile_height: 0.646  // in meter, pixel area
-		tile_borders: [ 0.002, 0.002, 0.002, 0.002 ] // mullions in meter, left, right, bottom, top
+		tile_borders: { left: 0.002, right: 0.002, bottom: 0.002, top: 0.002 }, // mullions in meter
 		// prefered or common viewing distance to calculate UI sizes
 		viewing_distance: 3.5  // in meter
 	},
