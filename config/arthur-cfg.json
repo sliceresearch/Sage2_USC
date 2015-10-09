@@ -63,6 +63,7 @@
 			debug: false,
 			
 			// Touch gestures
+			touchOffset: [ 0, -60 ], // in pixels
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
 			
