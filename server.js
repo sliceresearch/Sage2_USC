@@ -380,6 +380,9 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
+// Export the function to sub modules
+exports.broadcast = broadcast;
+
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) {
 		return;
@@ -1321,6 +1324,17 @@ function wsApplicationRPC(wsio, data) {
 		catch (e) {
 			console.log("----------------------------");
 			console.log(sageutils.header('RPC') + 'error in tweetcloud module');
+			console.log(e);
+			console.log("----------------------------");
+		}
+	} else if (data.function === "welcomePicture") {
+		try {
+			var mod = require('./public/uploads/apps/welcome/plugin.js');
+			mod(wsio, data, config);
+		}
+		catch (e) {
+			console.log("----------------------------");
+			console.log(sageutils.header('RPC') + 'error in welcome module');
 			console.log(e);
 			console.log("----------------------------");
 		}
