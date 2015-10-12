@@ -9,11 +9,14 @@ var fs 				= require('fs');
 var json5        	= require('json5');            // format that allows comments
 var exec 			= require('child_process').exec;
 var spawn 			= require('child_process').spawn;
+var os 				= require('os'); //used to determine if needs to auto shutdown.
+
 
 var md5				= require('./src/md5');                   // return standard md5 hash of given param
 var httpServer   	= require('./src/wc-httpServer');
 var WebSocketIO		= require('./src/wc-wsio');
 var utils			= require('./src/wc-utils');
+var sageutils 		= require('./src/node-utils');
 
 //---------------------------------------------------------------------------Variable setup
 var hostAddress		= "127.0.0.1";
@@ -26,18 +29,41 @@ var sageServerExec	= null;
 var sageServerChromeBrowsers = [];
 var isWindows		= true;
 
-var wcPathToConfigFile 			= 'config/default-cfg.json';
-var wcPathToWebconPwdFile 		= 'keys/webconPasswd.json';
-var wcPathToAdminPanelPwdFile 	= 'keys/adminPanelPasswd.json';
-var wcPathToSageUiPwdFile 		= 'keys/passwd.json';
-var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
-var wcCommandNodeServer 		= 'node server.js';
+//setup locatio of config and keys to use
+
+var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
+var wcPathToConfigFile 			= userDocPath + 'webconGenerated-cfg.json';
+var wcPathToWebconPwdFile 		= userDocPath + 'webconPasswd.json';
+var wcPathToAdminPanelPwdFile 	= userDocPath + 'adminPanelPasswd.json';
+var wcPathToSageUiPwdFile 		= userDocPath + 'passwd.json';
+var wcCommandNodeServer 		= 'node server.js -f ' + wcPathToConfigFile;
 var wcCommandWinStart			= 'wcWinStart.bat';
+var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
+
+
+console.log("Detected user doc path as:" + userDocPath);
+console.log("cfg path:" + wcPathToConfigFile);
+console.log("web path:" + wcPathToWebconPwdFile);
+console.log("adm path:" + wcPathToAdminPanelPwdFile);
+console.log("passwd path:" + wcPathToSageUiPwdFile);
+console.log("start command:" + wcCommandNodeServer);
+
 
 //node.js has a special variable called "global" which is visible throughout the other files.
 
 
 //---------------------------------------------------------------------------Code start
+
+
+//Detect if this is a windows machine. Cancel out on non-windows machines. Support so far only for windows.
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+
+if(platform !== "Windows") {
+	console.log("Sorry, currenly the web controller only works with Windows.");
+	console.log("Shutting down...");
+	//process.exit(1);
+}
+
 
 //create http listener
 
@@ -54,7 +80,7 @@ wsioServer.onconnection(openWebSocketClient);
 global.timeCounter = 0;
 
 
-
+//Check if a password for the webcontroller exists.
 var jsonString;
 if( utils.fileExists(wcPathToWebconPwdFile) ) {
 	jsonString = fs.readFileSync( wcPathToWebconPwdFile, "utf8" );
@@ -64,7 +90,10 @@ else {
 	console.log('Webcon password has not been setup, it will not be possible to access.');
 	jsonString = { pwd: -1 }; 
 }
-global.webconID = jsonString.pwd;
+global.webconID = jsonString.pwd; //either way set the value, as it can be edited later.
+
+
+//This is slightly more important as it will check if the admin panel password exists. If not, allow 1 time access.
 if( utils.fileExists(wcPathToAdminPanelPwdFile) ) {
 	jsonString = fs.readFileSync( wcPathToAdminPanelPwdFile, "utf8" );
 	jsonString = json5.parse(jsonString);
@@ -72,13 +101,19 @@ if( utils.fileExists(wcPathToAdminPanelPwdFile) ) {
 else {
 	console.log('Admin Panel password has not been setup, launching the first time config.');
 	console.log();
+	
+	//now check if the config file doesn't exist.
+	if( ! utils.fileExists(wcPathToConfigFile) ) {
+		console.log('Config file not detected. Created a default.');
+		//no exist means grab the existing default win and copy over.
+		var tcc = fs.readFileSync( 'config/defaultWin-cfg.json', "utf8" );
+		fs.writeFileSync( wcPathToConfigFile, tcc);
+	}
+
 	jsonString = { pwd: -1 }; 
-
 	executeConsoleCommand( 'C:\\Program Files (x86)\\Google\\Chrome\\Application localhost:9001/wcAdminPanel.html'  );
-
-
 }
-global.adminPanelId = jsonString.pwd;
+global.adminPanelId = jsonString.pwd; //set the password
 
 
 console.log('The webconID hash is:' + global.webconID);
