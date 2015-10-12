@@ -10,11 +10,11 @@ var json5        	= require('json5');            // format that allows comments
 var exec 			= require('child_process').exec;
 var spawn 			= require('child_process').spawn;
 var os 				= require('os'); //used to determine if needs to auto shutdown.
+var WebSocketIO		= require('websocketio');
 
 
 var md5				= require('./src/md5');                   // return standard md5 hash of given param
 var httpServer   	= require('./src/wc-httpServer');
-var WebSocketIO		= require('./src/wc-wsio');
 var utils			= require('./src/wc-utils');
 var sageutils 		= require('./src/node-utils');
 
@@ -41,16 +41,7 @@ var wcCommandWinStart			= 'wcWinStart.bat';
 var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
 
 
-console.log("Detected user doc path as:" + userDocPath);
-console.log("cfg path:" + wcPathToConfigFile);
-console.log("web path:" + wcPathToWebconPwdFile);
-console.log("adm path:" + wcPathToAdminPanelPwdFile);
-console.log("passwd path:" + wcPathToSageUiPwdFile);
-console.log("start command:" + wcCommandNodeServer);
-
-
 //node.js has a special variable called "global" which is visible throughout the other files.
-
 
 //---------------------------------------------------------------------------Code start
 
@@ -61,7 +52,7 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 if(platform !== "Windows") {
 	console.log("Sorry, currenly the web controller only works with Windows.");
 	console.log("Shutting down...");
-	//process.exit(1);
+	process.exit(1);
 }
 
 
@@ -111,13 +102,21 @@ else {
 	}
 
 	jsonString = { pwd: -1 }; 
-	executeConsoleCommand( 'C:\\Program Files (x86)\\Google\\Chrome\\Application localhost:9001/wcAdminPanel.html'  );
+	executeConsoleCommand( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" http://localhost:9001/wcAdminPanel.html'  );
 }
 global.adminPanelId = jsonString.pwd; //set the password
 
 
 console.log('The webconID hash is:' + global.webconID);
 console.log('The adminPanelId hash is:' + global.adminPanelId);
+console.log();
+console.log();
+console.log('=====================================================================');
+console.log('Closing this window prevents access to the web controller for SAGE2');
+console.log('=====================================================================');
+console.log();
+console.log();
+
 
 //Test to create something that happens at an interval
 setInterval( function () {
@@ -383,7 +382,7 @@ function wsGiveServerConfiguration(wsio, data) {
 			confContents += "call init_webserver.bat " + data.alternate_hosts[i] + "\n";
 		}
 		fs.writeFileSync( wcPathToWindowsCertMaker, confContents );
-		executeConsoleCommand( wcPathToWindowsCertMaker );
+		executeConsoleCommand(  '"' + wcPathToWindowsCertMaker + '"' );
 	}
 
 
@@ -411,6 +410,16 @@ function wsSetWebControllerPwd(wsio, data) {
 	wsio.emit('alertClient', { message: 'The webcontroller password has been set' });
 
 	global.webconID = data.password;
+
+
+	//write the startup file.
+	//C:\Users\Kiyoji\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+
+	var startFilePath = 'C:/Users/Kiyoji/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/startWebCon.bat';
+	var sfpContents = 'cd "' + __dirname + '"\n';
+	sfpContents += 'node webconStartServer.js';
+	fs.writeFileSync( startFilePath, sfpContents );
+
 } //wsSetWebControllerPwd
 
 function wsSetConfigurationPagePwd(wsio, data) {
