@@ -1,13 +1,22 @@
-
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2015
 
 
 'use strict';
 
-var url 	= require('url');
-var fs 		= require('fs');
-var mime 	= require('mime');
+var url		= require('url');
+var fs		= require('fs');
+var mime	= require('mime');
 
-var utils 	= require('../src/wc-utils');    // provides utility functions
+// provides utility functions
+// var utils 	= require('../src/wc-utils');
 
 /**
  * SAGE HTTP request handlers for GET and POST
@@ -21,8 +30,11 @@ function HttpServer(publicDirectory, debug) {
 	this.getFuncs  = {};
 	this.postFuncs = {};
 	this.onrequest = this.onreq.bind(this);
-	if(debug != null) { this.debug = debug }
-	else { this.debug = true; }
+	if (debug != null) {
+		this.debug = debug
+	} else {
+		this.debug = true;
+	}
 }
 
 /**
@@ -34,13 +46,13 @@ function HttpServer(publicDirectory, debug) {
  */
 HttpServer.prototype.onreq = function(req, res) {
 
-	//global.printTimeCounter(req);
+	// global.printTimeCounter(req);
 
 	if (req.method === "GET") {
 		var reqURL = url.parse(req.url);
 		var getName = decodeURIComponent(reqURL.pathname);
 
-		//if(this.debug) { console.log("Request for:" + getName); }
+		// if(this.debug) { console.log("Request for:" + getName); }
 
 		// redirect root path to index.html
 		if (getName === "/") {
@@ -49,16 +61,16 @@ HttpServer.prototype.onreq = function(req, res) {
 		}
 
 		var requestPath = this.publicDirectory + getName;
-		//if(this.debug) { console.log("full request path:" + requestPath); }
+		// if(this.debug) { console.log("full request path:" + requestPath); }
 		var stats = null;
-		try{
+		try {
 			stats = fs.lstatSync(requestPath);
-		} catch(e) {
+		} catch (e) {
 			console.log('Error handling a web request:' + e);
 		}
-		if(stats != null) {
+		if (stats != null) {
 
-			//get cookies and see if it matches the webcon password
+			// get cookies and see if it matches the webcon password
 			var cookieList = detectCookies(req);
 			var webconMatch = false;
 			var wcApMatch = false;
@@ -76,17 +88,20 @@ HttpServer.prototype.onreq = function(req, res) {
 					}
 				}
 			}
-			if(global.webconID === -1) { console.log('http - Warning webconID hasnt been setup'); }
-			if(global.adminPanelId === -1) { console.log('http - Warning adminPanelId hasnt been setup'); wcApMatch = true; }
+			if (global.webconID === -1) {
+				console.log('http - Warning webconID hasnt been setup');
+			}
+			if (global.adminPanelId === -1) {
+				console.log('http - Warning adminPanelId hasnt been setup'); wcApMatch = true;
+			}
 
-			
-			if( stats.isDirectory() ) {//force the page to webcon.html if a directory
+			if (stats.isDirectory()) {
+				// force the page to webcon.html if a directory
 				console.log('http - preventing folder access, redirecting to webcon');
 				this.redirect(res, "webcon.html");
 				return;
-			}
-			//if requesting a webpage that is not webcon or login force to webcon.html
-			else if(
+			} else if (
+				// if requesting a webpage that is not webcon or login force to webcon.html
 				requestPath.indexOf('htm') >= 0
 				&& requestPath.indexOf('webcon') < 0
 				&& requestPath.indexOf('wcAdminPanel') < 0
@@ -95,18 +110,14 @@ HttpServer.prototype.onreq = function(req, res) {
 				console.log('http - preventing access to:' + requestPath + ', redirecting to webcon');
 				this.redirect(res, "webcon.html");
 				return;
-			}
-			//if bad credential and requesting a webpage that is not login
-			else if(!webconMatch && requestPath.indexOf('webcon') > 0 ) {
+			} else if (!webconMatch && requestPath.indexOf('webcon') > 0) {
+				// if bad credential and requesting a webpage that is not login
 				console.log('http - credential mismatch, redirecting to login');
 				this.redirect(res, "wcLogin.html");
-			}
-			else if(!wcApMatch && requestPath.indexOf('wcAdminPanel') > 0 ) {
+			} else if (!wcApMatch && requestPath.indexOf('wcAdminPanel') > 0) {
 				console.log('http - credential mismatch, redirecting to login');
 				this.redirect(res, "wcApLogin.html");
-			}
-			else {
-
+			} else {
 				var header = {};
 				header["Content-Type"] = mime.lookup(requestPath);
 				header["Access-Control-Allow-Headers" ] = "Range";
@@ -128,8 +139,8 @@ HttpServer.prototype.onreq = function(req, res) {
 					var partialend   = parts[1];
 
 					var start = parseInt(partialstart, 10);
-					var end = partialend ? parseInt(partialend, 10) : total-1;
-					var chunksize = (end-start)+1;
+					var end = partialend ? parseInt(partialend, 10) : total - 1;
+					var chunksize = (end - start) + 1;
 
 					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
 					header["Accept-Ranges"]  = "bytes";
@@ -139,15 +150,14 @@ HttpServer.prototype.onreq = function(req, res) {
 
 					stream = fs.createReadStream(requestPath, {start: start, end: end});
 					stream.pipe(res);
-				}
-				else {
+				} else {
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
 					stream = fs.createReadStream(requestPath);
 					stream.pipe(res);
 				}
-			} //end else must be a directory
-		} //end if has stats
+			} // end else must be a directory
+		} // end if has stats
 		else {
 			// File not found: 404 HTTP error, with link to index page
 			res.writeHead(404, {"Content-Type": "text/html"});
@@ -155,7 +165,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			res.end();
 			return;
 		}
-	}//end if req.method == get
+	} // end if req.method == get
 	else {
 		// File not found: 404 HTTP error, with link to index page
 		res.writeHead(404, {"Content-Type": "text/html"});
@@ -176,7 +186,7 @@ HttpServer.prototype.onreq = function(req, res) {
  */
 HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
-	res.writeHead(302, {'Location': aurl});
+	res.writeHead(302, {Location: aurl});
 	res.end();
 };
 

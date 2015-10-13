@@ -1,16 +1,26 @@
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2015
+
+"use strict";
 
 
 
+// ---------------------------------------------------------------------------Variable setup
+var wsio = null;
 
-//---------------------------------------------------------------------------Variable setup
-var wsio	= null;
-
-var debug 	= true;
-//---------------------------------------------------------------------------Code start
-
+var debug = true;
+// ---------------------------------------------------------------------------Code start
 
 
-//---------------------------------------------------------------------------functions
+
+// ---------------------------------------------------------------------------functions
 
 
 /**
@@ -18,14 +28,16 @@ Setup of websockets.
  */
 function initialize() {
 
-	if(debug){console.log("Initializing client");}
+	if (debug) {
+		console.log("Initializing client");
+	}
 
-	//fix the image size since it requires pixels.
+	// fix the image size since it requires pixels.
 	setSageLogoSize();
 
 	// Create a connection to server
 	wsio = new WebsocketIO();
-	if(debug){console.log("Websocket status:" + wsio);}
+	if (debug) {console.log("Websocket status:" + wsio);}
 	wsio.open(function() {
 		console.log("Websocket opened");
 
@@ -43,16 +55,17 @@ function initialize() {
 		wsio.emit('addClient', clientDescription);
 	});
 
-	wsio.on('close', function (evt) {
+	wsio.on('close', function(evt) {
 
 	});
 
-	//might want this to create listeners.
+	// might want this to create listeners.
 	// var sage2UI = document.getElementById('sage2UI');
 	// window.addEventListener('drop',     preventDefault, false);
 	// sage2UI.addEventListener('drop',      fileDrop,       false);
 	// document.addEventListener('keydown',    noBackspace,  false);
-} //end initialize
+
+} // end initialize
 
 
 function setSageLogoSize() {
@@ -61,24 +74,22 @@ function setSageLogoSize() {
 	var logoHeight = 257;
 	var width = window.innerWidth;
 	var height = window.innerHeight;
-	width = width/2; //50%
-	height = height * .1; //10%
+	width = width / 2;    // 50%
+	height = height * .1; // 10%
 
 	var ratio = width / logoWidth;
-	if( (ratio * logoHeight) <= height) {
+	if ((ratio * logoHeight) <= height) {
 		height = ratio * logoHeight;
-	}
-	else {
+	} else {
 		ratio = height / logoHeight;
 		width = ratio * logoWidth;
 	}
 
-	workingDiv.style.left = ( window.innerWidth/2 - width/2) + 'px';
-	workingDiv.style.top = window.innerHeight * .05 + 'px';
+	workingDiv.style.left = (window.innerWidth / 2 - width / 2) + 'px';
+	workingDiv.style.top  = window.innerHeight * .05 + 'px';
 	workingDiv.style.position = 'absolute';
-	workingDiv.width = width;
+	workingDiv.width  = width;
 	workingDiv.height = height;
-
 }
 
 
@@ -95,32 +106,28 @@ function setupListeners() {
 		console.dir(data);
 	});
 
-
 	wsio.on('convertedMd5' , wsConvertedMd5) ;
 	wsio.on('configContents' , wsConfigContents) ;
 
-
-
-
-
-
-	wsio.on('giveClientConfiguration', 		wsGiveClientConfiguration );
-	wsio.on('passwordSet', 					function(data) { console.log('The password has been confirmed to be set by server'); });
-	wsio.on('configurationSet', 			function(data) { console.log('The configuration file has been confirmed to be updated by server'); });
-	wsio.on('passwordCheckResult', 			wsPasswordCheckResult );
-
-	wsio.on('displayOverlayMessage', 		wsDisplayOverlayMessage);
-
+	wsio.on('giveClientConfiguration', wsGiveClientConfiguration);
+	wsio.on('passwordCheckResult',     wsPasswordCheckResult);
+	wsio.on('displayOverlayMessage',   wsDisplayOverlayMessage);
+	wsio.on('passwordSet', function(data) {
+		console.log('The password has been confirmed to be set by server');
+	});
+	wsio.on('configurationSet', function(data) {
+		console.log('The configuration file has been confirmed to be updated by server');
+	});
 }
 
-function wsConvertedMd5 (data) {
+function wsConvertedMd5(data) {
 	var resultDiv = document.getElementById('md5result');
 
 	resultDiv.innerHTML = 'Result: ' + data.md5;
 }
 
 
-function wsConfigContents (data) {
+function wsConfigContents(data) {
 	var workingDiv = document.getElementById('confPort');
 	workingDiv.value = data.port;
 	workingDiv = document.getElementById('confResolutionWidth');
@@ -159,33 +166,40 @@ function wsGiveClientConfiguration(data) {
 
 
 
-	for(var i = 0; i < data.alternate_hosts.length; i++) {
-		workingDiv = document.getElementById('cfgAH' + (i+1) );
-		if(workingDiv == null) { addAlternativeHostEntry(); }
+	for (var i = 0; i < data.alternate_hosts.length; i++) {
+		workingDiv = document.getElementById('cfgAH' + (i + 1));
+		if (workingDiv == null) { addAlternativeHostEntry(); }
 	}
-	for(var i = 0; i < data.alternate_hosts.length; i++) {
-		workingDiv = document.getElementById('cfgAH' + (i+1) );
-		if(workingDiv == null) { console.log('error adding alternate_hosts'); }
-		else { workingDiv.value = data.alternate_hosts[i]; }
-	}
-
-
-	for(var i = 0; i < data.remote_sites.length; i++) {
-		workingDiv = document.getElementById('cfgRS' + (i+1) + 'name');
-		if(workingDiv == null) { addRemoteSiteEntry(); }
-	}
-	for(var i = 0; i < data.remote_sites.length; i++) {
-		workingDiv = document.getElementById('cfgRS' + (i+1) + 'name');
-		if(workingDiv == null) { console.log('error adding alternate_hosts'); }
-		else { workingDiv.value = data.remote_sites[i].name; }
-		workingDiv = document.getElementById('cfgRS' + (i+1) + 'host');
-		workingDiv.value = data.remote_sites[i].host; 
-		workingDiv = document.getElementById('cfgRS' + (i+1) + 'port');
-		workingDiv.value = data.remote_sites[i].port; 
-		workingDiv = document.getElementById('cfgRS' + (i+1) + 'secure');
-		workingDiv.value = data.remote_sites[i].secure; 
+	for (var i = 0; i < data.alternate_hosts.length; i++) {
+		workingDiv = document.getElementById('cfgAH' + (i + 1));
+		if (workingDiv == null) {
+			console.log('error adding alternate_hosts');
+		} else {
+			workingDiv.value = data.alternate_hosts[i];
+		}
 	}
 
+
+	for (var i = 0; i < data.remote_sites.length; i++) {
+		workingDiv = document.getElementById('cfgRS' + (i + 1) + 'name');
+		if (workingDiv == null) {
+			addRemoteSiteEntry();
+		}
+	}
+	for (var i = 0; i < data.remote_sites.length; i++) {
+		workingDiv = document.getElementById('cfgRS' + (i + 1) + 'name');
+		if (workingDiv == null) {
+			console.log('error adding alternate_hosts');
+		} else {
+			workingDiv.value = data.remote_sites[i].name;
+		}
+		workingDiv = document.getElementById('cfgRS' + (i + 1) + 'host');
+		workingDiv.value = data.remote_sites[i].host;
+		workingDiv = document.getElementById('cfgRS' + (i + 1) + 'port');
+		workingDiv.value = data.remote_sites[i].port;
+		workingDiv = document.getElementById('cfgRS' + (i + 1) + 'secure');
+		workingDiv.value = data.remote_sites[i].secure;
+	}
 
 	workingDiv = document.getElementById('cfgDependencyIM');
 	workingDiv.value = data.dependencies.ImageMagick;
@@ -193,24 +207,23 @@ function wsGiveClientConfiguration(data) {
 	workingDiv = document.getElementById('cfgDependencyFFM');
 	workingDiv.value = data.dependencies.FFMpeg;
 
-} //end wsGiveClientConfiguration
+} // end wsGiveClientConfiguration
 
 
 
-function wsPasswordCheckResult(data) {	
+function wsPasswordCheckResult(data) {
 	var workingDiv;
 	workingDiv = document.getElementById('checkPasswordResult');
-	if(data.result === true) {
+	if (data.result === true) {
 		workingDiv.innerHTML = "Result: True";
-	}
-	else {
+	} else {
 		workingDiv.innerHTML = "Result: False";
 	}
-} //end wsPasswordCheckResult
+} // end wsPasswordCheckResult
 
 
-function wsDisplayOverlayMessage(data) {	
-	console.log( 'Displaying message from server:' + data.message );
+function wsDisplayOverlayMessage(data) {
+	console.log('Displaying message from server:' + data.message);
 	var workingDiv;
 	workingDiv = document.getElementById('overlayDiv');
 	workingDiv.className = 'showExpand';
@@ -218,13 +231,6 @@ function wsDisplayOverlayMessage(data) {
 	workingDiv = document.getElementById('overlayMessage');
 	workingDiv.innerHTML = data.message;
 
-} //end wsDisplayOverlayMessage
-
-
-
-
-
-
-
+} // end wsDisplayOverlayMessage
 
 

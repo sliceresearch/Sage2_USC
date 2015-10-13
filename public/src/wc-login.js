@@ -61,7 +61,8 @@ function SAGE2_init() {
 
 	// If no page specified, go the UI
 	if (pageRedirect == null) {
-		pageRedirect = "index.html"; //goes to index because webcon auto redirects to webcon.
+		// goes to index because webcon auto redirects to webcon.
+		pageRedirect = "index.html";
 	}
 
 	// If everything good, redirect
