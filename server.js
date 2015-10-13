@@ -122,7 +122,7 @@ if (config.folders) {
 var mainFolder       = mediaFolders.system;
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
-var sessionDirectory = path.join(__dirname, "sessions");
+var sessionDirectory = path.join(publicDirectory, "sessions");
 
 // Validate all the media folders
 for (var folder in mediaFolders) {
@@ -136,6 +136,10 @@ for (var folder in mediaFolders) {
 		// Update the main upload folder
 		uploadsDirectory = f.path;
 		mainFolder = f;
+		sessionDirectory = path.join(uploadsDirectory, "sessions");
+		if (!sageutils.folderExists(sessionDirectory)) {
+			sageutils.mkdirParent(sessionDirectory);
+		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
