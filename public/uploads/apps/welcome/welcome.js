@@ -162,11 +162,11 @@ var welcome = SAGE2_App.extend({
 		this.textTime.attr({text: now.format('h:mm')});
 		var greetString;
 		var h = now.hours();
-		if (h > 19) {
+		if (h >= 19) {
 			greetString = "Good evening";
-		} else if (h > 12) {
+		} else if (h >= 12) {
 			greetString = "Good afternoon";
-		} else if (h > 6) {
+		} else if (h >= 6) {
 			greetString = "Good morning";
 		} else {
 			greetString = "Good night";
