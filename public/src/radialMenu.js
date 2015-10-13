@@ -717,6 +717,7 @@ function RadialMenu() {
 				currentThumbnailButtons = this.sessionThumbnailButtons;
 			}
 
+			var thumbUpdated = false;
 			for (i = 0; i < currentThumbnailButtons.length; i++) {
 				var thumbButton = currentThumbnailButtons[i];
 
@@ -752,9 +753,13 @@ function RadialMenu() {
 					}
 					// Only occurs on first pointerMove event over button
 					if (thumbButton.isFirstOver()) {
-						this.redraw();
+						thumbUpdated = true;
 					}
 				}
+			}
+
+			if (thumbUpdated) {
+				this.redraw();
 			}
 		}
 
@@ -913,8 +918,8 @@ function RadialMenu() {
 					// Thumbnail image
 					if (imageList[i].exif.SAGE2thumbnail !== null) {
 						customIcon = new Image();
-						customIcon.lsrc = imageList[i].exif.SAGE2thumbnail + "_256.jpg";
-						customIcon.src = imageList[i].exif.SAGE2thumbnail + "_128.jpg";
+						customIcon.lsrc = imageList[i].exif.SAGE2thumbnail + "_512.jpg";
+						customIcon.src = imageList[i].exif.SAGE2thumbnail + "_256.jpg";
 						thumbnailButton.setButtonImage(customIcon);
 					} else {
 						thumbnailButton.setButtonImage(radialMenuIcons["images/ui/images.svg"]);
@@ -945,8 +950,8 @@ function RadialMenu() {
 				// Thumbnail image
 				if (pdfList[i].exif.SAGE2thumbnail !== null) {
 					customIcon = new Image();
-					customIcon.lsrc = pdfList[i].exif.SAGE2thumbnail + "_256.jpg";
-					customIcon.src = pdfList[i].exif.SAGE2thumbnail + "_128.jpg";
+					customIcon.lsrc = pdfList[i].exif.SAGE2thumbnail + "_512.jpg";
+					customIcon.src = pdfList[i].exif.SAGE2thumbnail + "_256.jpg";
 					thumbnailButton.setButtonImage(customIcon);
 				} else {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/pdfs.svg"]);
@@ -975,8 +980,8 @@ function RadialMenu() {
 				// Thumbnail image
 				if (videoList[i].exif.SAGE2thumbnail !== null) {
 					customIcon = new Image();
-					customIcon.lsrc = videoList[i].exif.SAGE2thumbnail + "_256.jpg";
-					customIcon.src  = videoList[i].exif.SAGE2thumbnail + "_128.jpg";
+					customIcon.lsrc = videoList[i].exif.SAGE2thumbnail + "_512.jpg";
+					customIcon.src  = videoList[i].exif.SAGE2thumbnail + "_256.jpg";
 					thumbnailButton.setButtonImage(customIcon);
 				} else {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/videos.svg"]);
@@ -1004,8 +1009,8 @@ function RadialMenu() {
 
 				if (appList[i].exif.SAGE2thumbnail !== null) {
 					customIcon = new Image();
-					customIcon.lsrc = appList[i].exif.SAGE2thumbnail + "_256.jpg";
-					customIcon.src = appList[i].exif.SAGE2thumbnail + "_128.jpg";
+					customIcon.lsrc = appList[i].exif.SAGE2thumbnail + "_512.jpg";
+					customIcon.src = appList[i].exif.SAGE2thumbnail + "_256.jpg";
 					thumbnailButton.setButtonImage(customIcon);
 				} else {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/applauncher.svg"]);
@@ -1202,6 +1207,7 @@ function ButtonWidget() {
 		this.resrcPath = resrc;
 
 		this.tintImage = document.createElement("canvas");
+		this.tintImageCtx = this.tintImage.getContext("2d");
 	};
 
 	this.setPosition = function(x, y) {
@@ -1310,16 +1316,16 @@ function ButtonWidget() {
 		// create offscreen buffer,
 		this.tintImage.width = width;
 		this.tintImage.height = height;
-		var bx = this.tintImage.getContext("2d");
+
 
 		// fill offscreen buffer with the tint color
-		bx.fillStyle = color;
-		bx.fillRect(0, 0, this.tintImage.width, this.tintImage.height);
+		this.tintImageCtx.fillStyle = color;
+		this.tintImageCtx.fillRect(0, 0, this.tintImage.width, this.tintImage.height);
 
 		// destination atop makes a result with an alpha channel identical to fg,
 		//   but with all pixels retaining their original color *as far as I can tell*
-		bx.globalCompositeOperation = "destination-atop";
-		bx.drawImage(image, 0, 0, width, height);
+		this.tintImageCtx.globalCompositeOperation = "destination-in";
+		this.tintImageCtx.drawImage(image, 0, 0, width, height);
 
 		// then set the global alpha to the amound that you want to tint it,
 		//   and draw the buffer directly on top of it.

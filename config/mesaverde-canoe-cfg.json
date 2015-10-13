@@ -20,7 +20,7 @@
 		clock: 12,           // clock setting: 12-hour or 24-hour
 		show_version: true,  // shows SAGE2 version in menu bar
 		show_url: true,      // shows SAGE2 url in menu bar
-		enable_perceptual_scaling: true,
+		auto_scale_ui: true,
     },
 	resolution: {
 		width: 3840,
@@ -30,7 +30,7 @@
 		// dimensions of one tile (can be overriden in displays section)
 		tile_width:  1.91,  // in meter, pixel area
 		tile_height: 1.12,  // in meter, pixel area
-		tile_borders: [ 0.0254, 0.0254, 0.0254, 0.0254 ], // mullions in meter, left, right, bottom, top
+		tile_borders: { left: 0.0254, right: 0.0254, bottom: 0.0254, top: 0.0254 }, // mullions in meter
 		// prefered or common viewing distance to calculate UI sizes
 		viewing_distance: 4.0  // in meter
 	},
