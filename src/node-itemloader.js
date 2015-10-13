@@ -496,7 +496,7 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 		}
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
-		// _this.scaleAppToFitDisplay(appInstance);
+		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
 	});
 };
@@ -872,7 +872,8 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		resizeMode = instructions.resize;
 	}
 
-	var exif = assets.getExifData(file);
+	var exif  = assets.getExifData(file);
+	var s2url = assets.getURL(file);
 
 	return {
 		id: null,
@@ -899,6 +900,9 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		metadata: exif.metadata,
 		resizeMode: resizeMode,
 		sticky: instructions.sticky,
+		plugin: instructions.plugin,
+		file: file,
+		sage2URL: s2url,
 		date: new Date()
 	};
 };

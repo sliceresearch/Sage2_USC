@@ -10,6 +10,7 @@
 	"load": {
 		"imageID": "1003"
 	},
+	"plugin": "plugin.js",
 	"title": "welcome",
 	"version": "1.0.0",
 	"description": "SAGE2 welcome app with pretty picture, time/date and weather",

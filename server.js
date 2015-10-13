@@ -78,7 +78,6 @@ var wsioServerS        = null;
 var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-// var apis               = {};
 var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
@@ -1316,9 +1315,16 @@ function wsBroadcast(wsio, data) {
 // RPC call from apps
 //
 function wsApplicationRPC(wsio, data) {
+	var app = SAGE2Items.applications.list[data.app];
+	var pluginFile;
+	if (app && app.plugin) {
+		pluginFile = path.resolve(app.file, app.plugin);
+		// console.log("Plugin> ", app.id, app.application, pluginFile);
+	}
+
 	if (data.function === "searchTweets") {
 		try {
-			var mod = require('./public/uploads/apps/tweetcloud2/plugin.js');
+			var mod = require(pluginFile);
 			mod(wsio, data, config);
 		}
 		catch (e) {
@@ -1329,7 +1335,7 @@ function wsApplicationRPC(wsio, data) {
 		}
 	} else if (data.function === "welcomePicture") {
 		try {
-			var mod = require('./public/uploads/apps/welcome/plugin.js');
+			var mod = require(pluginFile);
 			mod(wsio, data, config);
 		}
 		catch (e) {

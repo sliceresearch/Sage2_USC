@@ -8,6 +8,7 @@
 	"dependencies": [
 		"scripts/d3.layout.cloud.js"
 	],
+	"plugin": "plugin.js",
 	"title": "Tweet Cloud",
 	"version": "2.0.0",
 	"description": "Uses Twitter API to create word cloud of hashtags and usernames",

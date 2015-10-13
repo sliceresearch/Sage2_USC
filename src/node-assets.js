@@ -454,8 +454,7 @@ var deleteVideo = function(filename) {
 		// Delete the metadata
 		delete AllAssets.list[filepath];
 		saveAssets();
-	}
-);
+	});
 };
 
 var addURL = function(aUrl, exif) {
