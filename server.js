@@ -1316,37 +1316,27 @@ function wsBroadcast(wsio, data) {
 //
 function wsApplicationRPC(wsio, data) {
 	var app = SAGE2Items.applications.list[data.app];
-	var pluginFile;
 	if (app && app.plugin) {
-		pluginFile = path.resolve(app.file, app.plugin);
-		// console.log("Plugin> ", app.id, app.application, pluginFile);
-	}
+		// Find the path to the app plugin
+		var pluginFile = path.resolve(app.file, app.plugin);
 
-	if (data.function === "searchTweets") {
 		try {
-			var mod = require(pluginFile);
-			mod(wsio, data, config);
+			// Loading the plugin using builtin require function
+			var rpcFunction = require(pluginFile);
+			// Start the function inside the plugin
+			rpcFunction(wsio, data, config);
 		}
 		catch (e) {
+			// If something fails
 			console.log("----------------------------");
-			console.log(sageutils.header('RPC') + 'error in tweetcloud module');
-			console.log(e);
-			console.log("----------------------------");
-		}
-	} else if (data.function === "welcomePicture") {
-		try {
-			var mod = require(pluginFile);
-			mod(wsio, data, config);
-		}
-		catch (e) {
-			console.log("----------------------------");
-			console.log(sageutils.header('RPC') + 'error in welcome module');
+			console.log(sageutils.header('RPC') + 'error in plugin ' + pluginFile);
 			console.log(e);
 			console.log("----------------------------");
 		}
 	} else {
-		console.log(sageutils.header('RPC') + 'call not found ' + data.function);
+		console.log(sageutils.header('RPC') + 'error no plugin found for ' + app.file);
 	}
+
 }
 
 
