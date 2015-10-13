@@ -583,6 +583,12 @@ h2 {
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 	box-sizing:border-box;
+
+	background: url('../images/trackpad.svg') no-repeat;
+    background-position: 50% 60%;
+    background-size: 50%;
+    background-origin: content-box;
+    padding: 5px;
 }
 
 #sage2MobileButtons {
