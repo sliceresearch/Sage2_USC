@@ -39,13 +39,13 @@ IfExist, %configFilePath%
 		if pos >= 0
 		{
 			;take everything from after port
-			line:=SubStr(line,pos)
+			line:=SubStr(line,pos + 1)
 			line:=Trim(line)
-			comma:=","
-			StringGetPos, pos, line, %comma%
+			StringGetPos, pos, line, `,
 			if pos >= 0
 			{
 				;remove after the comma
+				;MsgBox, commapos:%pos%. %line%
 				line:=SubStr(line, 1, pos)
 				StringGetPos, pos, line, :
 				line:=SubStr(line, pos + 2)
@@ -67,7 +67,7 @@ else
 	ExitApp
 }
 
-
+;MsgBox, port:%line%
 ; at this point line should contain the port number
 S2root=%S2root%:%line%/
 

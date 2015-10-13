@@ -36,7 +36,7 @@ var wcPathToConfigFile 			= userDocPath + 'webconGenerated-cfg.json';
 var wcPathToWebconPwdFile 		= userDocPath + 'webconPasswd.json';
 var wcPathToAdminPanelPwdFile 	= userDocPath + 'adminPanelPasswd.json';
 var wcPathToSageUiPwdFile 		= userDocPath + 'passwd.json';
-var wcCommandNodeServer 		= 'node server.js -f ' + wcPathToConfigFile;
+var wcCommandNodeServer 		= 'wcStartBinary.bat ' + wcPathToConfigFile;
 var wcCommandStartDisplay			= 'wcDisplayLaunch.bat';
 var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
 

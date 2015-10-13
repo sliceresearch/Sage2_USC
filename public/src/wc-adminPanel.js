@@ -394,8 +394,8 @@ function sendConfigFileData() {
 
 	data 		= {};
 	data.host 		= document.getElementById('cfgHost').value;
-	data.port 		= parseInt( document.getElementById('cfgPortDefault').value );//secure port
-	data.index_port = parseInt( document.getElementById('cfgPortSecure').value ); //non-secure
+	data.index_port	= parseInt( document.getElementById('cfgPortDefault').value );//secure port
+	data.port 		= parseInt( document.getElementById('cfgPortSecure').value ); //non-secure
 
 	data.resolution 		= {};
 	data.resolution.width 	= parseInt( document.getElementById('cfgRwidth').value );
@@ -429,7 +429,10 @@ function sendConfigFileData() {
 		rsobj.secure = true;
 		rsi++;
 		workingDiv = document.getElementById('cfgRS'+rsi+'name');
-		data.remote_sites.push( rsobj );
+
+		if( rsobj.name.length > 0 && rsobj.host.length > 0 && rsobj.port.length > 0 ) {
+			data.remote_sites.push( rsobj );
+		}
 	}
 
 
