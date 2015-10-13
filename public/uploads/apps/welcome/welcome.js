@@ -46,7 +46,8 @@ var welcome = SAGE2_App.extend({
 		this.iconWeather = this.svg.image(smallTansparentGIF(), 90, 0, 10, 10);
 
 		// resize callback
-		this.resizeEvents = "continuous";
+		// this.resizeEvents = "continuous";
+		this.resizeEvents = "onfinish";
 
 		// SAGE2 Application Settings
 		//
