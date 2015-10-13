@@ -37,7 +37,7 @@ var wcPathToWebconPwdFile 		= userDocPath + 'webconPasswd.json';
 var wcPathToAdminPanelPwdFile 	= userDocPath + 'adminPanelPasswd.json';
 var wcPathToSageUiPwdFile 		= userDocPath + 'passwd.json';
 var wcCommandNodeServer 		= 'node server.js -f ' + wcPathToConfigFile;
-var wcCommandWinStart			= 'wcWinStart.bat';
+var wcCommandStartDisplay			= 'wcDisplayLaunch.bat';
 var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
 
 
@@ -50,10 +50,11 @@ var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 
 if(platform !== "Windows") {
-	console.log("Sorry, currenly the web controller only works with Windows.");
+	console.log("Sorry, currently the web controller only works with Windows.");
 	console.log("Shutting down...");
 	process.exit(1);
 }
+
 
 
 //create http listener
@@ -415,7 +416,9 @@ function wsSetWebControllerPwd(wsio, data) {
 	//write the startup file.
 	//C:\Users\Kiyoji\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 
-	var startFilePath = 'C:/Users/Kiyoji/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/startWebCon.bat';
+	var startFilePath = sageutils.getHomeDirectory() + "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/startWebCon.bat";
+	console.log("Startup script doesn't exist, adding to:" + startFilePath);
+
 	var sfpContents = 'cd "' + __dirname + '"\n';
 	sfpContents += 'node webconStartServer.js';
 	fs.writeFileSync( startFilePath, sfpContents );
@@ -456,7 +459,7 @@ function wsStartSage(wsio, data) {
 		//if(isWindows) { windowsStartChromeBrowsers(); }
 		//else { macStartChromeBrowsers(); }
 		
-		executeConsoleCommand(wcCommandWinStart);
+		executeConsoleCommand(wcCommandStartDisplay);
 
 		wsio.emit( 'displayOverlayMessage', {message: 'SAGE2 is starting'} );
 	}

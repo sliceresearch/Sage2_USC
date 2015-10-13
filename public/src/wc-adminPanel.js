@@ -394,16 +394,16 @@ function sendConfigFileData() {
 
 	data 		= {};
 	data.host 		= document.getElementById('cfgHost').value;
-	data.port 		= document.getElementById('cfgPortDefault').value;//secure port
-	data.index_port = document.getElementById('cfgPortSecure').value; //non-secure
+	data.port 		= parseInt( document.getElementById('cfgPortDefault').value );//secure port
+	data.index_port = parseInt( document.getElementById('cfgPortSecure').value ); //non-secure
 
 	data.resolution 		= {};
-	data.resolution.width 	= document.getElementById('cfgRwidth').value
-	data.resolution.height 	= document.getElementById('cfgRheight').value
+	data.resolution.width 	= parseInt( document.getElementById('cfgRwidth').value );
+	data.resolution.height 	= parseInt( document.getElementById('cfgRheight').value );
 
 	data.layout 			= {};
-	data.layout.rows 		= document.getElementById('cfgLrows').value;
-	data.layout.columns 	= document.getElementById('cfgLcolumns').value;
+	data.layout.rows 		= parseInt( document.getElementById('cfgLrows').value );
+	data.layout.columns 	= parseInt( document.getElementById('cfgLcolumns').value );
 
 
 	//alternate hosts is an array of strings  [ 'string', 'string', string ]
