@@ -60,8 +60,8 @@ function RadialMenu(id, ptrID, config) {
 			borderBottom = 0.0;
 			borderTop    = 0.0;
 		}
-		var pixelsPerMeter = (config.dimensions.tile_width - borderLeft - borderRight) / config.resolution.width;
-		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y * pixelsPerMeter;
+		var pixelsPerMeter = config.resolution.width / (config.dimensions.tile_width - borderLeft - borderRight);
+		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y / pixelsPerMeter;
 
 		// https://en.wikipedia.org/wiki/Optimum_HDTV_viewing_distance#Human_visual_system_limitation
 
@@ -82,24 +82,24 @@ function RadialMenu(id, ptrID, config) {
 			viewDistRatio = config.dimensions.viewing_distance / windowDefaultHeightMeters;
 			this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * viewDistRatio);
 		}
-		var radialMenuRadiusMeters = radialMenuDefaultSize.x * this.radialMenuScale * pixelsPerMeter;
+		var radialMenuRadiusMeters = radialMenuDefaultSize.x * this.radialMenuScale / pixelsPerMeter;
 
 		// Set radial menu radius bounds
 		if (radialMenuRadiusMeters < (2 * this.minimumMenuRadiusMeters)) { // lower
-			this.radialMenuScale = 2 * this.minimumMenuRadiusMeters / radialMenuDefaultSize.x / pixelsPerMeter;
+			this.radialMenuScale = 2 * this.minimumMenuRadiusMeters / radialMenuDefaultSize.x * pixelsPerMeter;
 		}
-		var totalContentWindowSize = { w: (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * this.radialMenuScale * pixelsPerMeter, h: thumbnailWindowDefaultSize.y * this.radialMenuScale * pixelsPerMeter };
+		var totalContentWindowSize = { w: (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * this.radialMenuScale / pixelsPerMeter, h: thumbnailWindowDefaultSize.y * this.radialMenuScale / pixelsPerMeter };
 		
 		// Radial menu + thumbnail window can never be more than 90% of the display width or height
 		if (totalContentWindowSize.w > totalWallDimensionsMeters.w) {
-			this.radialMenuScale = totalWallDimensionsMeters.w * 0.9 / (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) / pixelsPerMeter;
+			this.radialMenuScale = totalWallDimensionsMeters.w * 0.9 / (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * pixelsPerMeter;
 		}
 
 		// Recalculate size
-		totalContentWindowSize = { w: (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * this.radialMenuScale * pixelsPerMeter, h: (thumbnailWindowDefaultSize.y+100) * this.radialMenuScale * pixelsPerMeter };
+		totalContentWindowSize = { w: (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * this.radialMenuScale / pixelsPerMeter, h: (thumbnailWindowDefaultSize.y+100) * this.radialMenuScale / pixelsPerMeter };
 
 		if (totalContentWindowSize.h > totalWallDimensionsMeters.h) {
-			this.radialMenuScale = totalWallDimensionsMeters.h * 0.9 / thumbnailWindowDefaultSize.y / pixelsPerMeter;
+			this.radialMenuScale = totalWallDimensionsMeters.h * 0.9 / thumbnailWindowDefaultSize.y * pixelsPerMeter;
 		}
 		console.log("node-radialMenu: this.radialMenuScale = " + this.radialMenuScale);
 	}
