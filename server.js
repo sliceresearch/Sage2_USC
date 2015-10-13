@@ -122,7 +122,7 @@ if (config.folders) {
 var mainFolder       = mediaFolders.system;
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
-var sessionDirectory = path.join(__dirname, "sessions");
+var sessionDirectory = path.join(publicDirectory, "sessions");
 
 // Validate all the media folders
 for (var folder in mediaFolders) {
@@ -136,6 +136,10 @@ for (var folder in mediaFolders) {
 		// Update the main upload folder
 		uploadsDirectory = f.path;
 		mainFolder = f;
+		sessionDirectory = path.join(uploadsDirectory, "sessions");
+		if (!sageutils.folderExists(sessionDirectory)) {
+			sageutils.mkdirParent(sessionDirectory);
+		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
@@ -2952,8 +2956,11 @@ function loadConfiguration() {
 		process.exit(1);
 	}
 
+	// Read the specified configuration file
 	var json_str   = fs.readFileSync(configFile, 'utf8');
+	// Parse it using JSON5 syntax (more lax than strict JSON)
 	var userConfig = json5.parse(json_str);
+
 	// compute extra dependent parameters
 	userConfig.totalWidth  = userConfig.resolution.width  * userConfig.layout.columns;
 	userConfig.totalHeight = userConfig.resolution.height * userConfig.layout.rows;
@@ -3007,18 +3014,33 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
-	// Check the borders settings
-	if (userConfig.resolution.borders === undefined) {
-		// set default values to 0
-		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
-	} else {
-		// make sure the values are integers
-		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
-		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
-		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
-		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	// Check the borders settings (for hidding the borders)
+	if (userConfig.dimensions === undefined) {
+		userConfig.dimensions = {};
 	}
-
+	if (userConfig.dimensions.tile_borders === undefined) {
+		// set default values to 0
+		// first for pixel sizes
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+		// then for dimensions
+		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
+	} else {
+		var borderLeft, borderRight, borderBottom, borderTop, tileWidth;
+		// make sure the values are valid floats
+		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
+		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
+		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
+		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
+		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		// calculate pixel density (ppm) based on width
+		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
+		// calculate values in pixel now
+		userConfig.resolution.borders = {};
+		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
+		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
+		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
+		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
 
 	// Set default values if missing
 	if (userConfig.port === undefined) {

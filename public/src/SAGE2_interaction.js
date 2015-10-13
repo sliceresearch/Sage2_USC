@@ -31,8 +31,8 @@ function SAGE2_interaction(wsio) {
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
 	this.mediaVideo  = null;
-	this.mediaResolution = 3;
-	this.mediaQuality    = 5;
+	this.mediaResolution = 1;
+	this.mediaQuality    = 7;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
 	this.videoTimer    = null;
