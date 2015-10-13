@@ -638,6 +638,7 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 			var i;
 			var onDelete = false;
 			var onDeleteOK = false;
+			var onDeleteCancel = false;
 			var onToggleNote = false;
 			var markedForDeletion = -1;
 			for (i=this.textAreas.length-1;i>=0;i--){
@@ -648,10 +649,11 @@ SAGE2Annotations.prototype.event = function(eventType, position, user, data, dat
 				}
 				else if(this.textAreas[i].deleteConfirm=== true){
 					onDeleteOK = this.textAreas[i].onDeleteOKButton(position);
+					onDeleteCancel = this.textAreas[i].onDeleteCancelButton(position);
 					if (onDeleteOK){
 						markedForDeletion = i;
 					}
-					else {
+					else if (onDeleteCancel){
 						this.textAreas[i].clearDeletionConfirm(user);
 					}
 					break;
@@ -892,7 +894,7 @@ TextArea.prototype.init = function(div, data){
 
 	this.deletionConfirmationAlertWindow = document.createElement("span");
 	this.deletionConfirmationAlertWindow.id = data.id+"deleteConfirm";
-	this.deletionConfirmationAlertWindow.style.background = "#EE8888";
+	this.deletionConfirmationAlertWindow.style.background = "#778899";
 	this.deletionConfirmationAlertWindow.style.position = "absolute";
 	this.deletionConfirmationAlertWindow.style.left = parseInt(data.left) + "px";
 	this.deletionConfirmationAlertWindow.style.top = parseInt(data.top) + "px";
@@ -911,12 +913,12 @@ TextArea.prototype.init = function(div, data){
 	this.alertText.style.overflow = "hidden";
 	this.alertText.style.display = "block";
 	this.alertText.style.margin = parseInt(ui.titleBarHeight) + "px";
-	this.alertText.innerText = "Click OK to confirm note deletion!";
+	this.alertText.innerText = "Click OK to confirm!";
 	this.deletionConfirmationAlertWindow.appendChild(this.alertText);
 	this.deletionConfirmationButton =  document.createElement("span");
 	this.deletionConfirmationButton.style.background = "#EE6666";
 	this.deletionConfirmationButton.style.position = "absolute";
-	this.deletionConfirmationButton.style.left = (parseInt(data.width)/2 - ui.titleBarHeight) + "px";
+	this.deletionConfirmationButton.style.left = (parseInt(data.width)/3.0 - ui.titleBarHeight) + "px";
 	this.deletionConfirmationButton.style.bottom = parseInt(ui.titleBarHeight) + "px";
 	this.deletionConfirmationButton.style.width = parseInt(2*ui.titleBarHeight) +"px";
 	this.deletionConfirmationButton.style.height = parseInt(ui.titleBarHeight) + "px";
@@ -930,6 +932,23 @@ TextArea.prototype.init = function(div, data){
 	this.deletionConfirmationButton.style.color = 'white';
 	this.deletionConfirmationButton.innerText = "OK";
 	this.deletionConfirmationAlertWindow.appendChild(this.deletionConfirmationButton);
+	this.deletionCancellationButton =  document.createElement("span");
+	this.deletionCancellationButton.style.background = "#EE6666";
+	this.deletionCancellationButton.style.position = "absolute";
+	this.deletionCancellationButton.style.left = (2.0*parseInt(data.width)/3.0 - ui.titleBarHeight) + "px";
+	this.deletionCancellationButton.style.bottom = parseInt(ui.titleBarHeight) + "px";
+	this.deletionCancellationButton.style.width = parseInt(2*ui.titleBarHeight) +"px";
+	this.deletionCancellationButton.style.height = parseInt(ui.titleBarHeight) + "px";
+	this.deletionCancellationButton.style.border = "solid 1px black";
+	this.deletionCancellationButton.style.display = "block";
+	this.deletionCancellationButton.style.textAlign = "center";
+	this.deletionCancellationButton.style.lineHeight = parseInt(ui.titleBarHeight) + "px";
+	this.deletionCancellationButton.style.fontSize = parseInt(ui.titleBarHeight*0.6) + "px";
+	this.deletionCancellationButton.style.fontFamily = 'arial';
+	this.deletionCancellationButton.style.verticalAlign = "middle";
+	this.deletionCancellationButton.style.color = 'white';
+	this.deletionCancellationButton.innerText = "Cancel";
+	this.deletionConfirmationAlertWindow.appendChild(this.deletionCancellationButton);
 	this.div = div;
 	this.setCredentialBarFontSize(data.height/6.0);
 	this.setFontSize(ui.titleTextSize*0.8);
@@ -956,6 +975,9 @@ TextArea.prototype.setCredentialBarFontSize = function(credBarHeight){
 	this.dateBox.style.fontFamily = 'arial';
 	this.deletionConfirmationButton.style.fontSize = parseInt(parseInt(credBarTextSize)*1.2) + "px";
 	this.deletionConfirmationButton.style.fontFamily = 'arial';
+	this.deletionCancellationButton.style.fontSize = parseInt(parseInt(credBarTextSize)*1.2) + "px";
+	this.deletionCancellationButton.style.fontFamily = 'arial';
+	
 	this.alertText.style.fontSize = parseInt(parseInt(credBarTextSize)*1.2) + "px";
 	this.alertText.style.fontFamily = 'arial';
 };
@@ -1071,6 +1093,20 @@ TextArea.prototype.onDeleteOKButton = function(position){
 		var width = parseInt(this.deletionConfirmationButton.style.width);
 		var x = parseInt(position.x - parseInt(this.deletionConfirmationAlertWindow.style.left) - parseInt(this.deletionConfirmationButton.style.left));
 		var top = parseInt(this.element.style.top) + (parseInt(this.element.style.height) - parseInt(this.deletionConfirmationButton.style.bottom) - height);
+		var y = parseInt(position.y - top);
+		//console.log(x,y, width,height);
+		if (y >= 0 && y <= height && x >= 0 && x <= width){
+			return true;
+		}	
+	}
+	return false;
+}
+TextArea.prototype.onDeleteCancelButton = function(position){
+	if (this.deletionConfirmationAlertWindow.parentNode === this.div){
+		var height = parseInt(this.deletionCancellationButton.style.height);
+		var width = parseInt(this.deletionCancellationButton.style.width);
+		var x = parseInt(position.x - parseInt(this.deletionConfirmationAlertWindow.style.left) - parseInt(this.deletionCancellationButton.style.left));
+		var top = parseInt(this.element.style.top) + (parseInt(this.element.style.height) - parseInt(this.deletionCancellationButton.style.bottom) - height);
 		var y = parseInt(position.y - top);
 		//console.log(x,y, width,height);
 		if (y >= 0 && y <= height && x >= 0 && x <= width){

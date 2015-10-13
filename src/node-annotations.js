@@ -152,7 +152,7 @@ annotationSystem.prototype.loadAnnotations = function(appInstance, config){
         },
         addSummaryNoteButton: {
             id:appInstance.id + "_addSummaryNote",
-            left: 12 + config.ui.titleBarHeight*3,
+            left: 12 + config.ui.titleBarHeight*2,
             top:6,
             width:config.ui.titleBarHeight*2,
             height:config.ui.titleBarHeight*0.6,
