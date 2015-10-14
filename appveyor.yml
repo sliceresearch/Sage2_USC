@@ -42,13 +42,13 @@ install:
   - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.dll bin\
   - copy ffmpeg-20150806-git-9c0407e-win64-shared\bin\*.exe bin\
   - rmdir /Q /S ffmpeg-20150806-git-9c0407e-win64-shared
-  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-9.99.zip
-  - 7z x exiftool-9.99.zip
+  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.02.zip
+  - 7z x exiftool-10.02.zip
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
-  - curl -LsSO http://downloads.ghostscript.com/public/gs916w64.exe
-  - 7z x -y  gs916w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
+  - curl -LsSO http://downloads.ghostscript.com/public/gs918w64.exe
+  - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
   - copy gs\$_OUTDIR\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y gs\$_OUTDIR\lib lib
