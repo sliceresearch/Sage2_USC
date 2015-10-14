@@ -681,6 +681,24 @@ function getSAGE2Path(getName) {
 	return pathname;
 }
 
+function getSAGE2URL(getName) {
+	var filename = path.resolve(getName);
+	// Calculate a SAGE2 URL based on the full pathname
+	var sage2URL = "";
+	for (var f in global.mediaFolders) {
+		var folder = global.mediaFolders[f];
+		var up;
+		up = path.resolve(folder.path);
+		var pubdir = filename.split(up);
+		if (pubdir.length === 2) {
+			sage2URL = sageutils.encodeReservedURL(folder.url + pubdir[1]);
+			return sage2URL;
+		}
+	}
+	return sage2URL;
+}
+
+
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var localPath = getSAGE2Path(file.filename);
 	var mime_type = mime.lookup(file.filename);
@@ -698,19 +716,20 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 };
 
 AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
-	var mime_type = mime.lookup(file.name);
+	// Check if there is a matching application
 	var app = registry.getDefaultApp(file.name);
-	if (app === undefined || app === "") { callback(null); return; }
-
+	if (app === undefined || app === "") {
+		callback(null); return;
+	}
+	var mime_type = mime.lookup(file.name);
 	var dir = registry.getDirectory(file.name);
-
-	var _this = this;
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
 		fs.mkdirSync(path.join(this.publicDir, dir));
 	}
-	var aUrl = "uploads/" + dir + "/" + file.name;
-	var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
-	var localPath = path.join(this.publicDir, dir, file.name);
+
+	// Use the defautl folder plus type as destination:
+	//    SAGE2_Media/pdf/ for instance
+	var localPath   = this.publicDir + dir + "/" + file.name;
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
@@ -719,11 +738,10 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		var splits = filen.split('.');
 		var extension   = splits.pop();
 		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
-		// Regenerate path and url
-		aUrl = "uploads/" + dir + "/" + newfilename;
-		external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
-		localPath    = path.join(this.publicDir, dir, newfilename);
+		localPath  = path.join(this.publicDir, dir, newfilename);
 	}
+
+	var _this = this;
 
 	mv(file.path, localPath, function(err1) {
 		if (err1) {
@@ -737,6 +755,11 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				} else {
 					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data, function() {
+						// get a valid URL for it
+						var aUrl = assets.getURL(data.SourceFile);
+						// calculate a complete URL with hostname
+						var external_url = url.resolve(_this.hostOrigin, aUrl);
+
 						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
 								type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
 							callback(appInstance, handle);
@@ -745,6 +768,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				}
 			});
 		} else {
+			// get a valid URL for it
+			var aUrl = assets.getURL(localPath);
+			var external_url = null;
 			_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
 					type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
 				callback(appInstance, handle);
@@ -777,8 +803,11 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
-				var aUrl = "uploads/" + dir + "/" + name;
+				var futurePath = this.publicDir + dir + "/" + name;
+				var localPath = getSAGE2Path(futurePath);
+				var aUrl = getSAGE2URL(localPath);
 				var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
+
 				this.loadZipAppFromFile(appData.path, appData.type, aUrl, external_url, name,
 						function(appInstance) {
 					callback(appInstance, null);

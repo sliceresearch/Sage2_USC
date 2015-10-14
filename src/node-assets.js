@@ -80,7 +80,7 @@ Asset.prototype.setFilename = function(aFilename) {
 		up = path.resolve(folder.path);
 		var pubdir = this.id.split(up);
 		if (pubdir.length === 2) {
-			this.sage2URL = sageutils.encodeReservedURL(folder.url + pubdir[1]);
+			this.sage2URL = sageutils.encodeReservedPath(folder.url + pubdir[1]);
 		}
 	}
 };
@@ -671,7 +671,7 @@ var listApps = function() {
 
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'tmp' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'sessions', 'tmp' ];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
