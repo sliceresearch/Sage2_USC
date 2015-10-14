@@ -853,8 +853,10 @@ function RadialMenu() {
 				this.dragThumbnailWindow = false;
 			}
 		} else if (type === "pointerScroll") {
-			var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
-			this.scrollThumbnailWindow({x: wheelDelta, y: 0 });
+			if(this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false) {
+				var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
+				this.scrollThumbnailWindow({x: wheelDelta, y: 0 });
+			}
 		}
 	};
 
