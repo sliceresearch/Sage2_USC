@@ -439,6 +439,17 @@ function encodeReservedURL(aUrl) {
 			.replace(/\?/g, "%3F").replace(/\@/g, "%40");
 }
 
+/**
+ * Return a safe URL string: make Windows path to URL
+ *
+ * @method encodeReservedPath
+ * @param aUrl {String} URL to be sanitized
+ * @return {String} cleanup version of the URL
+ */
+function encodeReservedPath(aPath) {
+	return encodeReservedURL(aPath.replace(/\\/g, "/"));
+}
+
 
 /**
  * Return a home directory on every platform
@@ -561,4 +572,6 @@ module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.encodeReservedURL = encodeReservedURL;
 module.exports.mkdirParent       = mkdirParent;
+
+module.exports.encodeReservedPath = encodeReservedPath;
 

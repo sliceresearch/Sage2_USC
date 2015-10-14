@@ -80,7 +80,7 @@ Asset.prototype.setFilename = function(aFilename) {
 		up = path.resolve(folder.path);
 		var pubdir = this.id.split(up);
 		if (pubdir.length === 2) {
-			this.sage2URL = sageutils.encodeReservedURL(folder.url + pubdir[1]);
+			this.sage2URL = sageutils.encodeReservedPath(folder.url + pubdir[1]);
 		}
 	}
 };
