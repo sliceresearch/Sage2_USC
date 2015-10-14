@@ -1145,11 +1145,15 @@ function RadialMenu() {
 
 		// Special thumbnail size for custom apps
 		if (this.currentMenuState === "applauncherThumbnailWindow") {
-			maxRows = Math.floor((this.thumbnailWindowSize.y - this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
-			maxCols = Math.floor((this.thumbnailWindowSize.x - this.thumbnailWindowPosition.x) / (this.imageThumbSize * 2 + thumbSpacer));
-			neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows);
+			maxRows = Math.floor((thumbWindowSize.y - this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
+			maxCols = Math.floor((thumbWindowSize.x - this.thumbnailWindowPosition.x) / (this.imageThumbSize * 2 + thumbSpacer));
+			neededColumns = maxRows;
+			if (this.appThumbnailButtons.length > (maxRows * maxCols)) {
+				neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows);
+			}
 		}
-
+		
+		// console.log("Radial Menu: updateThumbnailPositions max r: " + maxRows + " max c: " + maxCols + " needed c:" + neededColumns);
 		this.thumbnailGridSize = { x: maxRows, y: maxCols };
 		if (neededColumns > maxRows) {
 			this.notEnoughThumbnailsToScroll = false;
