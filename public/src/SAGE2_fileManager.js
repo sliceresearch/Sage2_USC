@@ -544,72 +544,40 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		context.html += "</div>";
 	});
+
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
 		// No DnD
 		return false;
 	});
 
+	// Before the drop, test if it is a valid operation
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
-		// for (var i = 0; i < context.source.length; i++) {
-		// 	console.log('onBeforeDrop', context.source[i], context.target);
-		// }
-		// return true;
-
-		// No DnD
-		return false;
+		if (context.target.startsWith("Image:")   ||
+			context.target.startsWith("PDF:")     ||
+			context.target.startsWith("Video:")   ||
+			context.target.startsWith("App:")     ||
+			context.target.startsWith("Session:") ||
+			context.target.startsWith("Config:")) {
+			// No DnD on search icons
+			return false;
+		} else {
+			// Move each file selected one by one
+			context.source.map(function(elt) {
+				wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
+			});
+			// Dont do a real DnD, stop there
+			return false;
+		}
 	});
+
+	// Now, do the transfer
 	this.tree.attachEvent("onAfterDrop", function(context, native_event) {
-		// console.log('onAfterDrop', context.source, context.target);
+		// done in before drop for now
 	});
 
 	webix.event(this.allTable.$view, "drag", function(e) {
 		e.preventDefault();
 	});
-
-	// HTML5 drag and drop
-	// var popup;
-	// webix.event(main.$view, "dragenter", function(e) {
-	// 	e.preventDefault();
-	// 	if (!popup) {
-	// 		popup = webix.ui({
-	// 			view: "window",
-	// 			id: "my_upload",
-	// 			head: "Uploading",
-	// 			position: "center",
-	// 			width: Math.round(window.innerWidth*0.50),
-	// 			height: Math.round(window.innerHeight*0.50),
-	// 			body: {
-	// 				template: "&nbsp;<br>&nbsp;<br>" +
-	// 					"<h1 style=\"color:black\">drop files to upload</h1>"
-	// 			}
-	// 		})
-	// 		popup.show();
-	// 	}
-	// });
-	// webix.event(main.$view, "dragleave", function(e) {
-	// 	console.log('drag leave');
-	// 	e.preventDefault();
-	// 	if (popup) {
-	// 		popup.close();
-	// 		popup = null;
-	// 	}
-	// });
-	// webix.event(main.$view, "dragover", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drag over');
-	// });
-	// webix.event(main.$view, "drag", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drag');
-	// });
-	// webix.event(main.$view, "drop", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drop',e);
-	// 	popup.close();
-	// 	var mymain = $$(e);
-	// 	var id = mymain.locate(e);
-	// 	console.log('Drop', e, id);
-	// });
 
 	webix.ui({
 		id: "uploadAPI",
