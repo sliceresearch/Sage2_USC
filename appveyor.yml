@@ -14,14 +14,14 @@ configuration: Release
 platform: x64
 
 init:
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-20151013-git-d59bfcd-win64-dev.7z
-  - 7z x ffmpeg-20151013-git-d59bfcd-win64-dev.7z -o.
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-2.8-win64-dev.7z
+  - 7z x ffmpeg-2.8-win64-dev.7z -o.
   - mkdir C:\Dev\
   - mkdir C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-20151013-git-d59bfcd-win64-dev.7z\lib C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-20151013-git-d59bfcd-win64-dev.7z\include C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-2.8-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-2.8-win64-dev\include C:\Dev\ffmpeg-win64-dev
   - del /Q *.7z
-  - rmdir /Q /S ffmpeg-20151013-git-d59bfcd-win64-dev.7z
+  - rmdir /Q /S ffmpeg-2.8-win64-dev.7z
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
   - dir C:\Dev\ffmpeg-win64-dev\lib
@@ -36,12 +36,12 @@ install:
   - npm install npm
   - npm install -g kthxbai
   - kthxbai
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-20151013-git-d59bfcd-win64-shared.7z
-  - 7z x ffmpeg-20151013-git-d59bfcd-win64-shared.7z -o.
-  - copy ffmpeg-20151013-git-d59bfcd-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
-  - copy ffmpeg-20151013-git-d59bfcd-win64-shared\bin\*.dll bin\
-  - copy ffmpeg-20151013-git-d59bfcd-win64-shared\bin\*.exe bin\
-  - rmdir /Q /S ffmpeg-20151013-git-d59bfcd-win64-shared
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-2.8-win64-shared.7z
+  - 7z x ffmpeg-2.8-win64-shared.7z -o.
+  - copy ffmpeg-2.8-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
+  - copy ffmpeg-2.8-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-2.8-win64-shared\bin\*.exe bin\
+  - rmdir /Q /S ffmpeg-2.8-win64-shared
   - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.02.zip
   - 7z x exiftool-10.02.zip
   - move exiftool(-k).exe bin\exiftool.exe
