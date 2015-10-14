@@ -585,7 +585,7 @@ function RadialMenu() {
 
 				var newTagSpacing = 28;
 				var sameTagSpacing = 20;
-				
+
 				for (i = 0; i < metadataTags.length; i++) {
 					if (metadataTags[i] !== undefined && metadataTags[i].tag) {
 						var labelLength = this.ctx.measureText(metadataTags[i].longLabel).width;
@@ -609,7 +609,7 @@ function RadialMenu() {
 								else
 								{
 									this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
-									testLine = "";
+									testLine = textWords[j] + " ";
 									line += 1;
 									//metadataLine++;
 									//this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
@@ -619,7 +619,9 @@ function RadialMenu() {
 								}
 							}
 							this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
-							
+							if( line > 0 ) {
+								metadataLine++;
+							}
 						}
 						metadataLine++;
 					}
@@ -929,8 +931,8 @@ function RadialMenu() {
 		var pdfList = serverFileList.pdfs;
 		var videoList = serverFileList.videos;
 		var appList = serverFileList.applications;
-
 		var sessionList = serverFileList.sessions;
+
 		var i = 0;
 		var thumbnailButton;
 		var customIcon;
