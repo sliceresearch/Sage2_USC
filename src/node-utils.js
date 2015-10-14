@@ -225,7 +225,7 @@ function updateWithGIT(branch, callback) {
 	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
 		// return the messages in the callback paramter
 		if (err) {
-			callback(stderr, null);
+			callback(stdout + ' : ' + stderr, null);
 		} else {
 			callback(null, stdout);
 		}

@@ -3632,9 +3632,9 @@ function processInputCommand(line) {
 			if (SAGE2_version.branch.length > 0) {
 				sageutils.updateWithGIT(SAGE2_version.branch, function(error, success) {
 					if (error) {
-						console.log(sageutils.header('GIT') + 'Update: error', error);
+						console.log(sageutils.header('GIT') + 'Update error - ' + error);
 					} else {
-						console.log(sageutils.header('GIT') + 'Update: success', success);
+						console.log(sageutils.header('GIT') + 'Update success - ' + success);
 					}
 				});
 			} else {
