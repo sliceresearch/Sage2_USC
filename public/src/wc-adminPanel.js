@@ -418,7 +418,7 @@ function sendConfigFileData() {
 	data.resolution.height	= parseInt(document.getElementById('cfgRheight').value);
 
 	data.layout			= {};
-	data.layout.row		= parseInt(document.getElementById('cfgLrows').value);
+	data.layout.rows	= parseInt(document.getElementById('cfgLrows').value);
 	data.layout.columns	= parseInt(document.getElementById('cfgLcolumns').value);
 
 	// alternate hosts is an array of strings  [ 'string', 'string', string ]

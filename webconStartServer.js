@@ -93,19 +93,19 @@ if( utils.fileExists(wcPathToAdminPanelPwdFile) ) {
 else {
 	console.log('Admin Panel password has not been setup, launching the first time config.');
 	console.log();
-	
-	//now check if the config file doesn't exist.
-	if( ! utils.fileExists(wcPathToConfigFile) ) {
-		console.log('Config file not detected. Created a default.');
-		//no exist means grab the existing default win and copy over.
-		var tcc = fs.readFileSync( 'config/defaultWin-cfg.json', "utf8" );
-		fs.writeFileSync( wcPathToConfigFile, tcc);
-	}
-
 	jsonString = { pwd: -1 }; 
 	executeConsoleCommand( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" http://localhost:9001/wcAdminPanel.html'  );
 }
 global.adminPanelId = jsonString.pwd; //set the password
+
+	
+//now check if the config file doesn't exist.
+if( ! utils.fileExists(wcPathToConfigFile) ) {
+	console.log('Config file not detected. Created a default.');
+	//no exist means grab the existing default win and copy over.
+	var tcc = fs.readFileSync( 'config/defaultWin-cfg.json', "utf8" );
+	fs.writeFileSync( wcPathToConfigFile, tcc);
+}
 
 
 console.log('The webconID hash is:' + global.webconID);
