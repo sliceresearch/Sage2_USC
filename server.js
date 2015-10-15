@@ -60,7 +60,7 @@ var HttpServer          = require('./src/node-httpserver');       // creates web
 var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
 var Interaction         = require('./src/node-interaction');      // handles sage interaction (move, resize, etc.)
 var Loader              = require('./src/node-itemloader');       // handles sage item creation
-var Omicron             = require('./src/node-omicron'); 
+var Omicron             = require('./src/node-omicron');
 var Drawing             = require('./src/node-drawing');          // handles Omicron input events
 var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
@@ -352,6 +352,14 @@ function initializeSage2Server() {
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
 	drawingManager = new Drawing();
+	drawingManager.setCallbacks(
+								drawingInit
+								);
+}
+
+function drawingInit() {
+	console.log("toBroadcast");
+	broadcast("drawingInit",null);
 }
 
 function setUpDialogsAsInteractableObjects() {
@@ -519,6 +527,7 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
+	drawingManager.init();
 }
 
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {

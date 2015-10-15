@@ -308,6 +308,11 @@ function setupListeners() {
 		}
 	});
 
+	wsio.on('drawingInit',function(data){
+		
+		ui.drawingInit(data);
+	});
+
 	wsio.on('createSagePointer', function(pointer_data) {
 		if (window.ui) {
 			ui.createSagePointer(pointer_data);
