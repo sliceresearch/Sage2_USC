@@ -180,13 +180,14 @@ OmicronManager.prototype.disconnect = function() {
 		this.oinputserverSocket.write(sendbuf);
 	}
 };
+var drawingManager ;
  /**
  * Links the drawing manager to the omicron server
  *
  * @method linkDrawingManager
  */
 OmicronManager.prototype.linkDrawingManager = function(dManager) {
-	var drawingManager = dManager;
+	drawingManager = dManager;
 }
  /**
  * Receives server pointer functions
