@@ -22,7 +22,7 @@
 		calculate_viewing_distance: false
 	},
 	resolution: {
-		width: 8160,
+		width: 4080,
 		height: 2304
 
 	},
