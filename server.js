@@ -6302,7 +6302,7 @@ function findApplicationPortal(app) {
 var omicronRunning = false;
 if (config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true) {
 	var omicronManager = new Omicron(config);
-
+	omicronManager.linkDrawingManager(drawingManager);
 
 	var closeGestureDelay = 1500;
 
