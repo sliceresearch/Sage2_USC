@@ -60,7 +60,8 @@ var HttpServer          = require('./src/node-httpserver');       // creates web
 var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
 var Interaction         = require('./src/node-interaction');      // handles sage interaction (move, resize, etc.)
 var Loader              = require('./src/node-itemloader');       // handles sage item creation
-var Omicron             = require('./src/node-omicron');          // handles Omicron input events
+var Omicron             = require('./src/node-omicron'); 
+var Drawing             = require('./src/node-drawing');          // handles Omicron input events
 var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
@@ -349,6 +350,7 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+	var drawingManager = new Drawing();
 }
 
 function setUpDialogsAsInteractableObjects() {
@@ -6300,6 +6302,7 @@ function findApplicationPortal(app) {
 var omicronRunning = false;
 if (config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true) {
 	var omicronManager = new Omicron(config);
+
 
 	var closeGestureDelay = 1500;
 

@@ -180,7 +180,14 @@ OmicronManager.prototype.disconnect = function() {
 		this.oinputserverSocket.write(sendbuf);
 	}
 };
-
+ /**
+ * Links the drawing manager to the omicron server
+ *
+ * @method linkDrawingManager
+ */
+OmicronManager.prototype.linkDrawingManager = function(dManager) {
+	var drawingManager = dManager;
+}
  /**
  * Receives server pointer functions
  *
@@ -548,6 +555,10 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		console.log("ServiceTypePointer> source ", e.sourceId);
 		console.log("ServiceTypePointer> serviceID ", e.serviceId);
 		console.log("pointer width/height ", touchWidth, touchHeight);
+	}
+
+	if(address.substring(0,address.indexOf(":")) == this.config.inputServerIP){
+		drawingManager.pointerEvent(e,sourceID,posX,posY);
 	}
 
 	// TouchGestureManager Flags:
