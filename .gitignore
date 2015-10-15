@@ -22,6 +22,7 @@ build/Release
 
 # Custom app types
 config/custom.types
+config/whiteboard-cfg.json
 
 # generated content
 doc/api
