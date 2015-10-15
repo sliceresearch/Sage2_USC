@@ -91,6 +91,7 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
 var startTime          = Date.now();
+var drawingManager;
 
 // Global variable for all media folders
 global.mediaFolders = {};
@@ -350,7 +351,7 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
-	var drawingManager = new Drawing();
+	drawingManager = new Drawing();
 }
 
 function setUpDialogsAsInteractableObjects() {
