@@ -651,15 +651,11 @@ function UIBuilder(json_cfg, clientID) {
 	this.drawingInit = function(data) {
 		console.log("toCreateSVG")
 		if (!this.drawingSvg) {
-			this.drawingSvg = document.createElement('svg');
-			this.drawingSvg.id = "drawingSVG";
-			this.drawingSvg.style.zIndex = 1000;
-			this.drawingSvg.style.height = this.main.style.height;
-			this.drawingSvg.style.position = "absolute"
-			this.drawingSvg.style.width = this.main.style.width;
-			this.main.appendChild(this.drawingSvg);
+			this.drawingSvg = d3.select("#main").append("svg").attr("id","drawingSVG");
+			this.drawingSvg.attr("height",parseInt(this.main.style.height));
+			this.drawingSvg.attr("width",parseInt(this.main.style.width));
 		}
-		for (d in data){
+		for (var d in data){
 			var drawing = data[d];
 			this.drawObject(drawing);
 		}
@@ -676,15 +672,40 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.drawingSvg) {
 			if (drawingObject.type == "path") {
 				newDraw = d3.select("#drawingSVG").append("path").attr("id",drawingObject.id);
-				for (s in drawingObject.style) {
+				for (var s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
 				var lineFunction = d3.svg.line()
                          .x(function(d) { return d.x; })
                          .y(function(d) { return d.y; })
-                         .interpolate("linear");
+                         .interpolate("basis");
 
-                newDraw.attr("d", lineFunction(lineData))
+                newDraw.attr("d", lineFunction(drawingObject.options.points));
+
+			}
+		}
+	}
+
+	/**
+	* update a drawing object already drawn in the drawingSvg
+	*
+	* @method updateObject
+	* @param drawingObject {object} drawing object
+	*/
+	this.updateObject = function(drawingObject) {
+		var toUpdate;
+		if (this.drawingSvg) {
+			if (drawingObject.type == "path") {
+				toUpdate = d3.select("#"+drawingObject.id);
+				for (var s in drawingObject.style) {
+					toUpdate.style(s, drawingObject.style[s]);
+				}
+				var lineFunction = d3.svg.line()
+                         .x(function(d) { return d.x; })
+                         .y(function(d) { return d.y; })
+                         .interpolate("basis");
+
+                toUpdate.attr("d", lineFunction(drawingObject.options.points));
 
 			}
 		}
