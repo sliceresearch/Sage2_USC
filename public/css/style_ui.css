@@ -459,12 +459,11 @@ h2 {
 	height: 25px;
 }
 
-#screenShareQuality {
+#screenShareResolution {
 	width: 100px;
 }
-
-#screenShareQualityIndicator {
-	margin-left: 4px;
+#screenShareQuality {
+	width: 100px;
 }
 
 #settingsCloseBtn {

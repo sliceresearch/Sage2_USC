@@ -741,8 +741,7 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} key event
 	*/
 	this.changeScreenShareQualityMethod = function(event) {
-		this.mediaQuality = event.target.value;
-		document.getElementById('screenShareQualityIndicator').textContent = this.mediaQuality;
+		this.mediaQuality = parseInt(event.target.value, 10);
 	};
 
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
