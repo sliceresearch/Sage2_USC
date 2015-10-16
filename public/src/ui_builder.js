@@ -53,6 +53,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.browserRatio   = null;
 	this.ratio          = "fit";
 
+	this.drawingSvg = null;
 	this.pointerItems   = {};
 	this.radialMenus    = {};
 
@@ -649,16 +650,44 @@ function UIBuilder(json_cfg, clientID) {
 
 	this.drawingInit = function(data) {
 		console.log("toCreateSVG")
-		var svg = document.createElement('svg');
-		svg.id = "drawingSVG";
+		if (!this.drawingSvg) {
+			this.drawingSvg = document.createElement('svg');
+			this.drawingSvg.id = "drawingSVG";
+			this.drawingSvg.style.zIndex = 1000;
+			this.drawingSvg.style.height = this.main.style.height;
+			this.drawingSvg.style.position = "absolute"
+			this.drawingSvg.style.width = this.main.style.width;
+			this.main.appendChild(this.drawingSvg);
+		}
+		for (d in data){
+			var drawing = data[d];
+			this.drawObject(drawing);
+		}
+	}
 
-		svg.style.zIndex = 1000;
-		svg.style.height = this.main.style.height;
-		svg.style.position = "absolute"
-		svg.style.width = this.main.style.width;
-		this.main.appendChild(svg);
+	/**
+	* Draws a drawing object gotten from the server to the tile's drawingSvg
+	*
+	* @method drawObject
+	* @param drawingObject {object} drawing object
+	*/
+	this.drawObject = function(drawingObject) {
+		var newDraw;
+		if (this.drawingSvg) {
+			if (drawingObject.type == "path") {
+				newDraw = d3.select("#drawingSVG").append("path").attr("id",drawingObject.id);
+				for (s in drawingObject.style) {
+					newDraw.style(s, drawingObject.style[s]);
+				}
+				var lineFunction = d3.svg.line()
+                         .x(function(d) { return d.x; })
+                         .y(function(d) { return d.y; })
+                         .interpolate("linear");
 
-		
+                newDraw.attr("d", lineFunction(lineData))
+
+			}
+		}
 	}
 
 	/**
