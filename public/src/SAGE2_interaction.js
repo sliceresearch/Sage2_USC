@@ -567,8 +567,10 @@ function SAGE2_interaction(wsio) {
 		this.cnt++;
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
-			var px  = this.deltaX * this.sensitivity;
-			var py  = this.deltaY * this.sensitivity;
+			// increase the speed for touch devices
+			var scale = (hasMouse ? this.sensitivity : 3 * this.sensitivity);
+			var px  = this.deltaX * scale;
+			var py  = this.deltaY * scale;
 			// Send the event
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
