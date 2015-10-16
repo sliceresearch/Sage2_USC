@@ -567,8 +567,10 @@ function SAGE2_interaction(wsio) {
 		this.cnt++;
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
-			var px  = this.deltaX * this.sensitivity;
-			var py  = this.deltaY * this.sensitivity;
+			// increase the speed for touch devices
+			var scale = (hasMouse ? this.sensitivity : 3 * this.sensitivity);
+			var px  = this.deltaX * scale;
+			var py  = this.deltaY * scale;
 			// Send the event
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
@@ -741,8 +743,7 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} key event
 	*/
 	this.changeScreenShareQualityMethod = function(event) {
-		this.mediaQuality = event.target.value;
-		document.getElementById('screenShareQualityIndicator').textContent = this.mediaQuality;
+		this.mediaQuality = parseInt(event.target.value, 10);
 	};
 
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);

@@ -28,6 +28,7 @@ var color     = require('color');
 var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
 var gm        = require('gm');                // imagesmagick
 var json5     = require('json5');
+var mv        = require('mv');
 
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
@@ -80,7 +81,7 @@ Asset.prototype.setFilename = function(aFilename) {
 		up = path.resolve(folder.path);
 		var pubdir = this.id.split(up);
 		if (pubdir.length === 2) {
-			this.sage2URL = sageutils.encodeReservedURL(folder.url + pubdir[1]);
+			this.sage2URL = sageutils.encodeReservedPath(folder.url + pubdir[1]);
 		}
 	}
 };
@@ -171,7 +172,6 @@ var saveAssets = function(filename) {
 	catch (err) {
 		console.log(sageutils.header("Assets") + "error saving assets", err);
 	}
-	// console.log(sageutils.header("Assets") + "saved assets file to " + fullpath);
 };
 
 var generateImageThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -880,6 +880,25 @@ var regenerateAssets = function() {
 	initialize(mainf, mediaf);
 };
 
+// Move an asset
+//  and process the new location
+var moveAsset = function(source, destination, callback) {
+	// Move the file
+	mv(source, destination, function(err) {
+		if (err) {
+			callback(err);
+		} else {
+			// Reprocess the new asset
+			exifAsync([destination], function() {
+				// if all good, delete the source
+				delete AllAssets.list[source];
+				saveAssets();
+				callback(null);
+			});
+		}
+	});
+};
+
 
 exports.initialize     = initialize;
 exports.refresh        = refresh;
@@ -902,6 +921,7 @@ exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
 exports.deletePDF   = deletePDF;
 exports.deleteAsset = deleteAsset;
+exports.moveAsset   = moveAsset;
 
 exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;

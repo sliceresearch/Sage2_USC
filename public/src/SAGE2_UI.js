@@ -948,10 +948,11 @@ function handleClick(element) {
 		var metadata_text = document.getElementById('metadata_text');
 		metadata_text.textContent = selectedFileEntry.textContent;
 	} else if (element.id === "clearcontent") {
-		// Arrangement Button Chosen
+		// Remove all the running applications
 		wsio.emit('clearDisplay');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "tilecontent") {
+		// Layout the applications
 		wsio.emit('tileApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "savesession") {

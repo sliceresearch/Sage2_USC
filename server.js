@@ -624,6 +624,7 @@ function setupListeners(wsio) {
 	wsio.on('loadApplication',                      wsLoadApplication);
 	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
+	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -2130,6 +2131,33 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 	// }
 }
 
+function wsMoveElementFromStoredFiles(wsio, data) {
+	var destinationURL = data.url;
+	var destinationFile;
+
+	// calculate the new destination filename
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		if (destinationURL.indexOf(f.url) === 0) {
+			var splits = destinationURL.split(f.url);
+			var subdir = splits[1];
+			destinationFile = path.join(f.path, subdir, path.basename(data.filename));
+		}
+	}
+
+	// Do the move and reprocess the asset
+	if (destinationFile) {
+		console.log('Have to move', data.filename, destinationFile);
+		assets.moveAsset(data.filename, destinationFile, function(err) {
+			if (err) {
+				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
+			} else {
+				// if all good, send the new list of files
+				wsRequestStoredFiles(wsio);
+			}
+		});
+	}
+}
 
 
 // **************  Adding Web Content (URL) *****************
@@ -3644,9 +3672,9 @@ function processInputCommand(line) {
 			if (SAGE2_version.branch.length > 0) {
 				sageutils.updateWithGIT(SAGE2_version.branch, function(error, success) {
 					if (error) {
-						console.log(sageutils.header('GIT') + 'Update: error', error);
+						console.log(sageutils.header('GIT') + 'Update error - ' + error);
 					} else {
-						console.log(sageutils.header('GIT') + 'Update: success', success);
+						console.log(sageutils.header('GIT') + 'Update success - ' + success);
 					}
 				});
 			} else {
