@@ -657,7 +657,6 @@ function UIBuilder(json_cfg, clientID) {
 		svg.style.position = "absolute"
 		svg.style.width = this.main.style.width;
 		this.main.appendChild(svg);
-
 		
 	}
 

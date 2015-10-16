@@ -353,13 +353,19 @@ function initializeSage2Server() {
 	wsioServerS.onconnection(openWebSocketClient);
 	drawingManager = new Drawing();
 	drawingManager.setCallbacks(
-								drawingInit
+								drawingInit,
+								drawingUpdate
 								);
 }
 
-function drawingInit() {
+function drawingInit(clientWebSocket, drawState) {
 	console.log("toBroadcast");
-	broadcast("drawingInit",null);
+	clientWebSocket.emit("drawingInit", drawState);
+}
+
+function drawingUpdate(drawState) {
+	console.log("toBroadcast");
+	broadcast("drawingUpdate", drawState);
 }
 
 function setUpDialogsAsInteractableObjects() {
@@ -527,7 +533,7 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
-	drawingManager.init();
+	drawingManager.init(wsio);
 }
 
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {

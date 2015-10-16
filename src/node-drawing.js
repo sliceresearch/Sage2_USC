@@ -1,11 +1,11 @@
 "use strict"
 
-
-
 function DrawingManager() {
 	console.log("Created DrawingManager");
 	this.idPrequel = "drawing_"
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 10,y: 20}, {x: 20,y: 30}] }}];
+
+
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -17,8 +17,12 @@ function DrawingManager() {
 
 }
 
-DrawingManager.prototype.init = function() {
-	this.drawingInit();
+DrawingManager.prototype.init = function(wsio) {
+	this.drawingInit(wsio, this.drawState);
+}
+
+DrawingManager.prototype.update = function(clientID) {
+	this.drawingUpdate(clientID, this.drawState);
 }
 
 DrawingManager.prototype.pointerEvent = function(e,sourceID,posX,posY) {
@@ -30,8 +34,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceID,posX,posY) {
 }
 
 DrawingManager.prototype.setCallbacks = function(
-		drawingInitCB
+		drawingInitCB,
+		drawingUpdateCB
 	) {
 	this.drawingInit = drawingInitCB;
+	this.drawingUpdateCB = drawingUpdateCB;
 };
 module.exports = DrawingManager;
