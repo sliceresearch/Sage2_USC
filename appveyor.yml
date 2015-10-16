@@ -49,6 +49,7 @@ install:
   - move bin\sage2.bat sage2.bat
   - move bin\wcDisplayLaunch.bat wcDisplayLaunch.bat
   - move bin\wcStartBinary.bat wcStartBinary.bat
+  - move bin\StartHere.bat StartHere.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
   - curl -LsSO http://downloads.ghostscript.com/public/gs916w64.exe
   - 7z x -y  gs916w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs

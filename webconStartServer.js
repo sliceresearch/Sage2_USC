@@ -36,8 +36,8 @@ var wcPathToConfigFile 			= userDocPath + 'webconGenerated-cfg.json';
 var wcPathToWebconPwdFile 		= userDocPath + 'webconPasswd.json';
 var wcPathToAdminPanelPwdFile 	= userDocPath + 'adminPanelPasswd.json';
 var wcPathToSageUiPwdFile 		= userDocPath + 'passwd.json';
-var wcCommandNodeServer 		= 'wcStartBinary.bat ' + wcPathToConfigFile;
-var wcCommandStartDisplay			= 'wcDisplayLaunch.bat';
+var wcCommandNodeServer 		= 'StartHere.bat ' + wcPathToConfigFile;
+var wcCommandStartDisplay			= 'StartHere.bat displayLaunch';
 var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
 
 
@@ -443,7 +443,7 @@ function wsStartSage(wsio, data) {
 	if(sageServerExec == null ) {
 		console.log();
 		console.log();
-		console.log('Attempting to start sage');
+		console.log('Attempting to start sage with command:' + wcCommandNodeServer);
 		sageServerExec = executeConsoleCommand(wcCommandNodeServer);
 		sageServerExec.on('close', function (code, signal) {
 			console.log('child triggered close event, signal:'+signal);
@@ -479,9 +479,7 @@ function wsStopSage(wsio, data) {
 		var killval = sageServerExec.kill();
 		console.log('kill value:' + killval);
 		console.log('pid:' + sageServerExec.pid);
-		if(killval === true) {
-			sageServerExec = null;
-		}
+		sageServerExec = null; //This might cause problems later. Not really sure
 	}
 	
 	if(!isWindows) {
