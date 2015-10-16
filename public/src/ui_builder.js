@@ -651,11 +651,11 @@ function UIBuilder(json_cfg, clientID) {
 		console.log("toCreateSVG")
 		var svg = document.createElement('svg');
 		svg.id = "drawingSVG";
+
 		svg.style.zIndex = 1000;
 		svg.style.height = this.main.style.height;
 		svg.style.position = "absolute"
 		svg.style.width = this.main.style.width;
-		svg.viewBox = " 0 0 1000 1000"
 		this.main.appendChild(svg);
 	}
 
