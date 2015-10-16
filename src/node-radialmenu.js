@@ -231,7 +231,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 			// Clear button lit state for other buttonState
 			for (otherButtonName in this.radialButtons) {
 				if (otherButtonName !== buttonName) {
-					console.log("Clear button state for " + otherButtonName);
+					// console.log("Clear button state for " + otherButtonName);
 					delete this.radialButtons[otherButtonName].pointers[pointerID];
 					if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
 						if (this.radialButtons[otherButtonName].state !== 0 &&
