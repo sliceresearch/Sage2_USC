@@ -315,7 +315,7 @@ function setupListeners() {
 		ui.drawingInit(data);
 	});
 
-	wsion.on('drawingUpdate', function(data)) {
+	wsio.on('drawingUpdate', function(data) {
 		ui.updateObject(data);
 	});
 

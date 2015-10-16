@@ -491,6 +491,8 @@ function closeWebSocketClient(wsio) {
 	}
 
 	removeElement(clients, wsio);
+
+	
 }
 
 function wsAddClient(wsio, data) {

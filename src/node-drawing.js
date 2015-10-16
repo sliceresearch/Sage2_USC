@@ -5,6 +5,8 @@ function DrawingManager() {
 	this.idPrequel = "drawing_"
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 10,y: 20}, {x: 20,y: 30}] }}];
 	this.clientIDandSockets = {}; 
+	this.newDrawingObject = {};
+	this.style = {fill: "none", stroke: "white", stroke-width: "5px"};
 
 	// An object drawing is defined as follows:
 	// {
@@ -21,13 +23,18 @@ DrawingManager.prototype.init = function(wsio) {
 
 	var clientID = wsio.clientID;
 
-	if (clientID in clientIDandSocket) {
-		clientIDandSocket["clientID"].append(wsio);
+	if (clientID in clientIDandSockets) {
+		clientIDandSockets[clientID].push(wsio);
 	} else {
-		clientIDandSocket["clientID"] = [wsio];
+		clientIDandSockets[clientID] = [wsio];
 	}
 
 	this.drawingInit(wsio, this.drawState);
+}
+
+DrawingManager.prototype.removeWebSocket = function(wsio) {
+
+
 }
 
 DrawingManager.prototype.update = function(drawingObject) {
@@ -36,31 +43,30 @@ DrawingManager.prototype.update = function(drawingObject) {
 
 }
 
-DrawingManager.prototype.pointerEvent = function(e,sourceID,posX,posY) {
+DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 	console.log("pointer event received");
 	console.log(e);
 
-	{id: "drawing_1",type: "path", options: { points: [{x: 10,y: 20}, {x: 20,y: 30}] }}
-
 	if (e.type == 5) {
 
-		this.newDrawingObject[e.sourceID] = {};
-		this.newDrawingObject[e.sourceID]["id"] = this.idPrequel + e.sourceID;
-		this.newDrawingObject[e.sourceID]["type"] = "path";
-		this.newDrawingObject[e.sourceID]["options"] = { points: [ {x: posX,y: posY}] };
+		this.newDrawingObject[e.sourceId] = {};
+		this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
+		this.newDrawingObject[e.sourceId]["type"] = "path";
+		this.newDrawingObject[e.sourceId]["options"] = { points: [ {x: posX,y: posY}] };
+		this.newDrawingObject[e.sourceId]["style"] = this.style;
 
-		drawState.push(this.newDrawingObject[e.sourceID]);
+		this.drawState.push(this.newDrawingObject[e.sourceId]);
 	}
 
 	
 
 	if (e.type == 4) {
 
-		this.newDrawingObject[e.sourceID]["options"]["points"].push( {x: posX,y: posY} );
+		this.newDrawingObject[e.sourceId]["options"]["points"].push( {x: posX,y: posY} );
 
 	}
 
-	this.update(this.newDrawingObject[e.sourceID]);
+	this.update(this.newDrawingObject[e.sourceId]);
 
 	// e.type=5 --> pointer down
 	// e.type=4 --> pointer move

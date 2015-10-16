@@ -694,20 +694,24 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.updateObject = function(drawingObject) {
 		var toUpdate;
-		if (this.drawingSvg) {
-			if (drawingObject.type == "path") {
-				toUpdate = d3.select("#"+drawingObject.id);
-				for (var s in drawingObject.style) {
-					toUpdate.style(s, drawingObject.style[s]);
+		if (!d3.select("#"+drawingObject.id).empty()){
+			if (this.drawingSvg) {
+				if (drawingObject.type == "path") {
+					toUpdate = d3.select("#"+drawingObject.id);
+					for (var s in drawingObject.style) {
+						toUpdate.style(s, drawingObject.style[s]);
+					}
+					var lineFunction = d3.svg.line()
+	                         .x(function(d) { return d.x; })
+	                         .y(function(d) { return d.y; })
+	                         .interpolate("basis");
+
+	                toUpdate.attr("d", lineFunction(drawingObject.options.points));
+
 				}
-				var lineFunction = d3.svg.line()
-                         .x(function(d) { return d.x; })
-                         .y(function(d) { return d.y; })
-                         .interpolate("basis");
-
-                toUpdate.attr("d", lineFunction(drawingObject.options.points));
-
 			}
+		}else{
+			this.drawingSvg.append(drawingObject.type).attr("id",drawingObject.id);
 		}
 	}
 
