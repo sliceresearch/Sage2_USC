@@ -363,9 +363,9 @@ function drawingInit(clientWebSocket, drawState) {
 	clientWebSocket.emit("drawingInit", drawState);
 }
 
-function drawingUpdate(drawState) {
+function drawingUpdate(drawingObject) {
 	console.log("toBroadcast");
-	broadcast("drawingUpdate", drawState);
+	broadcast("drawingUpdate", drawingObject);
 }
 
 function setUpDialogsAsInteractableObjects() {
