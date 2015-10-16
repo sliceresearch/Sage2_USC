@@ -62,30 +62,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	];
 
-	var menu_data = [ {id: "file_menu", value: "File", submenu: [
-			{id: "upload_menu", value: "Upload"},
+	var menu_data = [
+		{id: "file_menu", value: "File", submenu: [
 			{id: "refresh_menu", value: "Refresh"},
-			{id: "folder_menu", value: "Create folder"}
-		]},
-		{ id: "edit_menu", value: "Edit", submenu: [
-			{id: "delete_menu", value: "Delete"},
-			{id: "download_menu", value: "Download"},
-			{id: "duplicate_menu", value: "Duplicate"} ]},
-		{ id: "view_menu", value: "View", submenu: [
+			{id: "folder_menu",  value: "Create folder"}
+			]},
+		{id: "edit_menu", value: "Edit", submenu: [
+			{id: "delete_menu",   value: "Delete"},
+			{id: "download_menu", value: "Download"}
+			]},
+		{id: "view_menu", value: "View", submenu: [
 			{id: "hideui_menu", value: "Show/Hide UI"},
-			{id: "hidefm_menu", value: "Hide file manager"}
-		]},
-		{ id: "mainadmin_menu", value: "Admin", submenu: [
-			{id: "display_menu", value: "Display client 0"},
-			{id: "audio_menu", value: "Audio manager"},
-			{id: "drawing_menu", value: "Drawing application"},
-			{id: "console_menu", value: "Server console"}
-		] },
-		{ id: "mainhelp_menu", value: "Help", submenu: [
-			{id: "help_menu", value: "Help"},
-			{id: "info_menu", value: "Information"},
+			{id: "hidefm_menu", value: "Hide file manager"},
+			{$template: "Separator"},
+			{id: "tile_menu",   value: "Tile content"},
+			{id: "clear_menu",  value: "Clear display"}
+			]},
+		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
+			{id: "display_menu",  value: "Display client 0"},
+			{id: "overview_menu", value: "Display overview client"},
+			{id: "audio_menu",    value: "Audio manager"},
+			{id: "drawing_menu",  value: "Drawing application"},
+			{id: "console_menu",  value: "Server console"}
+			]},
+		{id: "mainhelp_menu",  value: "Help", submenu: [
+			{id: "help_menu",  value: "Help"},
+			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
-		] }
+			]}
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -253,8 +257,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			$$('folder_name').focus();
 		} else if (evt === "display_menu") {
 			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
-			// var displayUrl = "display.html?clientID=0";
 			window.open(displayUrl, '_blank');
+		} else if (evt === "overview_menu") {
+			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=-1";
+			window.open(displayUrl, '_blank');
+		} else if (evt === "clear_menu") {
+			wsio.emit('clearDisplay');
+		} else if (evt === "tile_menu") {
+			wsio.emit('tileApplications');
 		} else if (evt === "hidefm_menu") {
 			document.getElementById('fileManager').style.display = "none";
 			if (mainUI.style.display === "none") {
