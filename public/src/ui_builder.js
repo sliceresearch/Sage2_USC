@@ -655,6 +655,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.drawingSvg.attr("height",parseInt(this.main.style.height));
 			this.drawingSvg.attr("width",parseInt(this.main.style.width));
 		}
+		this.drawingSvg.selectAll("*").remove();
 		for (var d in data){
 			var drawing = data[d];
 			this.drawObject(drawing);
@@ -696,11 +697,13 @@ function UIBuilder(json_cfg, clientID) {
 		var toUpdate;
 		if (!d3.select("#"+drawingObject.id).empty()){
 			if (this.drawingSvg) {
+
+				toUpdate = d3.select("#"+drawingObject.id);
+				for (var s in drawingObject.style) {
+					toUpdate.style(s, drawingObject.style[s]);
+				}
+
 				if (drawingObject.type == "path") {
-					toUpdate = d3.select("#"+drawingObject.id);
-					for (var s in drawingObject.style) {
-						toUpdate.style(s, drawingObject.style[s]);
-					}
 					var lineFunction = d3.svg.line()
 	                         .x(function(d) { return d.x; })
 	                         .y(function(d) { return d.y; })
@@ -711,7 +714,7 @@ function UIBuilder(json_cfg, clientID) {
 				}
 			}
 		}else{
-			this.drawingSvg.append(drawingObject.type).attr("id",drawingObject.id);
+			this.drawObject(drawingObject);
 		}
 	}
 

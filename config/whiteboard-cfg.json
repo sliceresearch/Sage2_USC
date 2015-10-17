@@ -54,7 +54,7 @@
 	remote_sites: [
 	],
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		ImageMagick: "C:/Program Files/ImageMagick-6.9.2-Q16/",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
     },
 	// for experimental features: true/false

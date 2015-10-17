@@ -491,8 +491,6 @@ function closeWebSocketClient(wsio) {
 	}
 
 	removeElement(clients, wsio);
-
-	
 }
 
 function wsAddClient(wsio, data) {
@@ -643,6 +641,14 @@ function setupListeners(wsio) {
 	wsio.on('removeRadialMenu',                     wsRemoveRadialMenu);
 	wsio.on('radialMenuWindowToggle',               wsRadialMenuThumbnailWindow);
 
+	// DrawingState messages, should they have their own section?
+	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
+	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
+	wsio.on('changeStyle',							wsChangeStyle);
+	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
+	wsio.on('redoDrawing',							wsRedoDrawing);
+
+
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
 	wsio.on('openNewWebpage',                       wsOpenNewWebpage);
@@ -787,6 +793,29 @@ function initializeRemoteServerInfo(wsio) {
 		wsio.emit('addRemoteSite', site);
 	}
 }
+
+// **************  Drawing Functions *****************
+function wsEnableDrawingMode(wsio, data) {
+	drawingManager.enableDrawingMode();
+}
+
+function wsClearDrawingCanvas(wsio,data) {
+	drawingManager.clearDrawingCanvas();
+}
+
+function wsChangeStyle(wsio,data) {
+	drawingManager.changeStyle(data);
+}
+
+function wsUndoLastDrawing(wsio,data) {
+	drawingManager.undoLastDrawing();
+}
+
+function wsRedoDrawing(wsio,data) {
+	drawingManager.redoDrawing();
+}
+
+
 
 // **************  Sage Pointer Functions *****************
 

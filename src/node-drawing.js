@@ -1,13 +1,15 @@
 "use strict"
+// Function to copy an obj, useful for assigning this.style to a drawingObject so that it doesnt change when this.style is changed
+
 
 function DrawingManager() {
-	console.log("Created DrawingManager");
 	this.idPrequel = "drawing_"
-	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 10,y: 20}, {x: 20,y: 30}] }}];
-	this.clientIDandSockets = {}; 
+	this.clientIDandSockets = {};
 	this.newDrawingObject = {};
-	this.style = {fill: "none", stroke: "white", stroke-width: "5px"};
-
+	this.style = {fill: "none", stroke: "white", "stroke-width": "5px"};
+	this.drawingMode = false;
+	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 10,y: 20}, {x: 20,y: 30}] }, style: this.style}];
+	this.drawingsUndone = [];
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -23,13 +25,23 @@ DrawingManager.prototype.init = function(wsio) {
 
 	var clientID = wsio.clientID;
 
-	if (clientID in clientIDandSockets) {
-		clientIDandSockets[clientID].push(wsio);
+	if (clientID in this.clientIDandSockets) {
+		this.clientIDandSockets[clientID].push(wsio);
 	} else {
-		clientIDandSockets[clientID] = [wsio];
+		this.clientIDandSockets[clientID] = [wsio];
 	}
 
 	this.drawingInit(wsio, this.drawState);
+}
+
+DrawingManager.prototype.initAll = function() {
+
+	for (var clientID in this.clientIDandSockets) {
+		for (var i in this.clientIDandSockets[clientID]) {
+			var wsio = this.clientIDandSockets[clientID][i];
+			this.drawingInit(wsio, this.drawState);
+		}
+	}
 }
 
 DrawingManager.prototype.removeWebSocket = function(wsio) {
@@ -37,17 +49,45 @@ DrawingManager.prototype.removeWebSocket = function(wsio) {
 
 }
 
+DrawingManager.prototype.clearDrawingCanvas = function() {
+	this.drawState = [];
+	this.initAll();
+}
+
+DrawingManager.prototype.undoLastDrawing = function() {
+	var undone = this.drawState.pop();
+	if (undone) {
+		this.drawingsUndone.push(undone);
+		this.initAll();
+	}
+}
+
+DrawingManager.prototype.redoDrawing = function() {
+	var reDone = this.drawingsUndone.pop();
+	if (reDone) {
+		this.drawState.push(reDone);
+		this.update(reDone);
+	}
+}
+
+DrawingManager.prototype.changeStyle = function(data) {
+	this.style[data.name] = data.value;
+	console.log(this.style);
+}
+
+DrawingManager.prototype.enableDrawingMode = function() {
+	console.log("Drawing mode enabled");
+	this.drawingMode = true;
+}
+
 DrawingManager.prototype.update = function(drawingObject) {
-
 	this.drawingUpdate(drawingObject);
-
 }
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
-	console.log("pointer event received");
-	console.log(e);
 
 	if (e.type == 5) {
+		this.drawingsUndone = {};
 
 		this.newDrawingObject[e.sourceId] = {};
 		this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
@@ -58,11 +98,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 		this.drawState.push(this.newDrawingObject[e.sourceId]);
 	}
 
-	
-
 	if (e.type == 4) {
 
-		this.newDrawingObject[e.sourceId]["options"]["points"].push( {x: posX,y: posY} );
+		this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
 
 	}
 
