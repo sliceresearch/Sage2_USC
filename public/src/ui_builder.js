@@ -656,7 +656,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.drawingSvg.attr("width",parseInt(this.main.style.width));
 		}
 		this.drawingSvg.selectAll("*").remove();
-		for (var d in data){
+		for (var d in data) {
 			var drawing = data[d];
 			this.drawObject(drawing);
 		}
@@ -680,8 +680,7 @@ function UIBuilder(json_cfg, clientID) {
                          .x(function(d) { return d.x; })
                          .y(function(d) { return d.y; })
                          .interpolate("basis");
-
-                newDraw.attr("d", lineFunction(drawingObject.options.points));
+				newDraw.attr("d", lineFunction(drawingObject.options.points));
 
 			}
 		}
@@ -695,25 +694,25 @@ function UIBuilder(json_cfg, clientID) {
 	*/
 	this.updateObject = function(drawingObject) {
 		var toUpdate;
-		if (!d3.select("#"+drawingObject.id).empty()){
+		if (!d3.select("#" + drawingObject.id).empty()) {
 			if (this.drawingSvg) {
 
-				toUpdate = d3.select("#"+drawingObject.id);
+				toUpdate = d3.select("#" + drawingObject.id);
 				for (var s in drawingObject.style) {
 					toUpdate.style(s, drawingObject.style[s]);
 				}
 
 				if (drawingObject.type == "path") {
 					var lineFunction = d3.svg.line()
-	                         .x(function(d) { return d.x; })
-	                         .y(function(d) { return d.y; })
-	                         .interpolate("basis");
+										.x(function(d) { return d.x; })
+										.y(function(d) { return d.y; })
+										.interpolate("basis");
 
-	                toUpdate.attr("d", lineFunction(drawingObject.options.points));
+					toUpdate.attr("d", lineFunction(drawingObject.options.points));
 
 				}
 			}
-		}else{
+		}else {
 			this.drawObject(drawingObject);
 		}
 	}
