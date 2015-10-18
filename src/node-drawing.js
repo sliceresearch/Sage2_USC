@@ -42,10 +42,20 @@ DrawingManager.prototype.initAll = function() {
 			this.drawingInit(wsio, this.drawState);
 		}
 	}
+
 }
 
 DrawingManager.prototype.removeWebSocket = function(wsio) {
 
+	//Detecting the position of the socket into the corresponding socket array
+	var clientID = wsio.clientID;
+	var position = this.clientIDandSockets[clientID].indexOf(wsio);
+	if (position > -1) {
+		this.clientIDandSockets[clientID].splice(wsio, 1);
+		console.log("Socket removed from drawingManager");
+	} else {
+		console.log("Attempt to remove a socket from drawingManager, but not present");
+	}
 
 }
 
