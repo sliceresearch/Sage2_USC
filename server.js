@@ -351,7 +351,7 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
-	drawingManager = new Drawing();
+	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
 								drawingInit,
 								drawingUpdate
@@ -359,13 +359,12 @@ function initializeSage2Server() {
 }
 
 function drawingInit(clientWebSocket, drawState) {
-	console.log("toBroadcast");
 	clientWebSocket.emit("drawingInit", drawState);
 }
 
-function drawingUpdate(drawingObject) {
-	console.log("toBroadcast");
-	broadcast("drawingUpdate", drawingObject);
+function drawingUpdate(clientWebSocket, drawingObject) {
+	clientWebSocket.emit("drawingUpdate", drawingObject);
+	//broadcast("drawingUpdate", drawingObject);
 }
 
 function setUpDialogsAsInteractableObjects() {
