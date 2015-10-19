@@ -1,8 +1,8 @@
 "use strict"
 // Function to copy an obj, useful for assigning this.style to a drawingObject so that it doesnt change when this.style is changed
 
-
 function DrawingManager(config) {
+
 	this.idPrequel = "drawing_"
 	this.clientIDandSockets = {};
 	this.newDrawingObject = {};
@@ -244,7 +244,6 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 	return -1;
 
 }
-
 
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
