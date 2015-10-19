@@ -175,7 +175,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 		this.updateDrawingObject(e, posX, posY);
 		
 	} else if (e.type == 6) {
+		
 		//pointer release
+		return;
+		
 	}
 
 	var involvedClient = this.checkInvolvedClient(posX, posY);
