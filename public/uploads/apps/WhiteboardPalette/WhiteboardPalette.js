@@ -13,9 +13,8 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("div", data);
-		
+
 		this.svg = d3.select(this.element).append("svg").attr("id","paletteSVG");
-		
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -29,12 +28,10 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		this.sendStyleToServer("stroke",this.strokeColor);
 		this.sendStyleToServer("stroke-width",this.strokeWidth);
 
+		this.palette = this.svg.style("position","absolute").style("left",0).attr("id","Palette").attr("width",this.element.clientWidth).attr("height",this.element.clientHeight);
 
-		this.palette = this.svg.style("position","absolute").style("left",0).attr("id","Palette").attr("width",this.element.clientWidth).attr("height",this.element.clientHeight)
-	
-		this.createPalette()
-
-
+		this.createPalette();
+		this.updatePalettePosition();
 
 		// SAGE2 Application Settings
 		//
@@ -43,6 +40,13 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		// Not adding controls but making the default buttons available
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
+	},
+	updatePalettePosition: function(){
+		var x = this.palette[0][0].x.baseVal.value;
+		var y =  this.palette[0][0].y.baseVal.value;
+		var width =  this.palette[0][0].width.baseVal.value;
+		var height =  this.palette[0][0].height.baseVal.value;
+		wsio.emit("updatePalettePosition", {width: width, height: height, x: x, y: y});
 	},
 	sendStyleToServer: function(name,value){
 		wsio.emit("changeStyle", { name : name, value : value });
@@ -135,9 +139,11 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		this.refresh(date);
 		this.palette.attr("width",this.element.clientWidth).attr("height",this.element.clientHeight);
 		this.createPalette();
+		this.updatePalettePosition();
 	},
 	move: function(date) {
 		this.refresh(date);
+		this.updatePalettePosition();
 	},
 
 	quit: function() {

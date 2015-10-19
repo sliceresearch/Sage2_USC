@@ -644,6 +644,7 @@ function setupListeners(wsio) {
 	wsio.on('radialMenuWindowToggle',               wsRadialMenuThumbnailWindow);
 
 	// DrawingState messages, should they have their own section?
+	wsio.on('updatePalettePosition',				wsUpdatePalettePosition);
 	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
@@ -797,6 +798,10 @@ function initializeRemoteServerInfo(wsio) {
 }
 
 // **************  Drawing Functions *****************
+function wsUpdatePalettePosition(wsio, data) {
+	drawingManager.updatePalettePosition(data);
+}
+
 function wsEnableDrawingMode(wsio, data) {
 	drawingManager.enableDrawingMode();
 }

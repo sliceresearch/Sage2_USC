@@ -11,6 +11,7 @@ function DrawingManager(config) {
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 1000,y: 2000}, {x: 2000,y: 3000}] }, style: this.style}];
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
+	this.palettePosition = {};
 	this.calculateTileDimensions(config);
 	// An object drawing is defined as follows:
 	// {
@@ -187,6 +188,10 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 
+	if (this.isOnPalette(posX, posY)) {
+		return;
+	}
+
 	if (e.type == 5) {
 
 		//pointer down
@@ -211,7 +216,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 	this.update(manipulatedObject, involvedClient);
 }
 
-
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
 
 	//Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
@@ -229,6 +233,29 @@ DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clien
 	}
 
 	return manipulatedObject;
+
+}
+
+DrawingManager.prototype.isOnPalette = function(posX, posY) {
+
+	if (this.palettePosition.startX <= posX &
+		this.palettePosition.endX >= posX &
+		this.palettePosition.startY <= posY &
+		this.palettePosition.endY >= posY) {
+
+			return true;
+
+		}
+
+	return false;
+}
+
+DrawingManager.prototype.updatePalettePosition = function(data) {
+
+	this.palettePosition.startX = data.x;
+	this.palettePosition.startY = data.y;
+	this.palettePosition.endX = data.x + data.width;
+	this.palettePosition.endY = data.y + data.height;
 
 }
 
