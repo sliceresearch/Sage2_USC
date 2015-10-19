@@ -1,5 +1,9 @@
 
 
+set "PATH=%CD%\bin;%PATH%;"
+rem set GIT_SSL_CAINFO=%CD%\bin\ca-bundle.crt
+
+
 rem ////////////////////////////////////////////////////////////////////////variables to track required Files
 
 SET missingProgram=no
@@ -42,8 +46,6 @@ start firefox.ahk
 goto END
 )
 IF not "%1" == "" (
-	set "PATH=%CD%\bin;%PATH%;"
-	rem set GIT_SSL_CAINFO=%CD%\bin\ca-bundle.crt
 	start "sage2server" /D "%~dp0" node "%~dp0\server.js" -f %1
 	goto END
 )
