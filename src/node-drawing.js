@@ -137,7 +137,9 @@ DrawingManager.prototype.redoDrawing = function() {
 	var reDone = this.drawingsUndone.pop();
 	if (reDone) {
 		this.drawState.push(reDone);
-		this.update(reDone);
+		var involvedClient = this.checkInvolvedClient(reDone.options.points[0].x, reDone.options.points[0].y);
+		var manipulatedObject = this.manipulateDrawingObject(reDone, involvedClient);
+		this.update(manipulatedObject, involvedClient);
 	}
 }
 
@@ -152,22 +154,44 @@ DrawingManager.prototype.enableDrawingMode = function() {
 }
 
 DrawingManager.prototype.update = function(drawingObject, clientID) {
-
-	for (ws in this.clientIDandSockets[clientID]) {
-		this.drawingUpdate(ws, drawingObject);
+		
+	for (var ws in this.clientIDandSockets[clientID]) {
+		
+		this.drawingUpdate(this.clientIDandSockets[clientID][ws], drawingObject);
 	}
 
 	//Send the object also to client -1, but not manipulated. Maybe create another udpate.
 
 }
+DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
+
+	//Create new Drawing object
+	this.newDrawingObject[e.sourceId] = {};
+	this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
+	this.newDrawingObject[e.sourceId]["type"] = "circle";
+	this.newDrawingObject[e.sourceId]["options"] = { points: [ {x: posX,y: posY}] };
+	this.newDrawingObject[e.sourceId]["style"] = this.style;
+
+	this.drawState.push(this.newDrawingObject[e.sourceId]);
+
+}
+
+DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
+	if (!this.newDrawingObject[e.sourceId]) {
+		this.newDrawingObjectFunc(e, posX, posY);
+	}
+	this.newDrawingObject[e.sourceId]["type"] = "path";
+	this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
+}
+
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 
 	if (e.type == 5) {
 
 		//pointer down
-		this.drawingsUndone = {};
-		this.newDrawingObject(e, posX, posY);		
+		this.drawingsUndone = [];
+		this.newDrawingObjectFunc(e, posX, posY);
 
 	} else if (e.type == 4) {
 
@@ -182,40 +206,25 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 	}
 
 	var involvedClient = this.checkInvolvedClient(posX, posY);
-	var manipulatedObject = manipulateDrawingObject(this.newDrawingObject[e.sourceId], involvedClient);
+	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[e.sourceId], involvedClient);
 
 	this.update(manipulatedObject, involvedClient);
 }
 
-DrawingManager.prototype.newDrawingObject = function(e,posX,posY) {
-
-	//Create new Drawing object
-	this.newDrawingObject[e.sourceId] = {};
-	this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
-	this.newDrawingObject[e.sourceId]["type"] = "path";
-	this.newDrawingObject[e.sourceId]["options"] = { points: [ {x: posX,y: posY}] };
-	this.newDrawingObject[e.sourceId]["style"] = this.style;
-
-	this.drawState.push(this.newDrawingObject[e.sourceId]);
-
-}
-
-DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
-	this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
-}
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
 
 	//Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
 	var manipulatedObject = JSON.parse(JSON.stringify(drawingObject));
 
-	var offsetX = this.tilesPosition.startX;
-	var offsetY = this.tilesPosition.startY;
-
-	for(var point in manipulatedObject.options.points) {
-
-		point.x = point.x - offsetX;
-		point.x = point.x - offsetY;
+	var offsetX = this.tilesPosition[clientID].startX;
+	var offsetY = this.tilesPosition[clientID].startY;
+	
+	for(var i in manipulatedObject.options.points) {
+		var point = manipulatedObject.options.points[i]
+		
+		manipulatedObject.options.points[i].x = point.x - offsetX;
+		manipulatedObject.options.points[i].y = point.y - offsetY;
 
 	}
 
@@ -226,12 +235,12 @@ DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clien
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 	
 	//Probably this method is inconsistent if the object start from a display and terminates in another
-
-	for(var client in this.tilesPosition) {
-
-		if (client.startX <= posX &&
-			client.endX >= posX &&
-			client.startY <= posY &&
+	
+	for(var i in this.tilesPosition) {
+		var client = this.tilesPosition[i];
+		if (client.startX <= posX &
+			client.endX >= posX &
+			client.startY <= posY &
 			client.endY >= posY) {
 
 			return client.clientID;
