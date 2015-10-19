@@ -27,7 +27,8 @@ var gm           = require('gm');
 var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
-var Videodemuxer = require('node-demux');
+var Videodemuxer = (process.arch !== 'arm') ? require('node-demux') : null;
+// require('node-demux');
 var mv           = require('mv');
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
@@ -355,61 +356,64 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 
 
 AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
-	var _this = this;
-	var video = new Videodemuxer();
-	video.on('metadata', function(data) {
-		var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2",
-						author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
-		var exif = assets.getExifData(file);
+	// load video module, except on ARM processor (raspberry pi)
+	if (process.arch !== 'arm') {
+		var _this = this;
+		var video = new Videodemuxer();
+		video.on('metadata', function(data) {
+			var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2",
+							author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
+			var exif = assets.getExifData(file);
 
-		var stretch = data.display_aspect_ratio / (data.width / data.height);
-		var native_width  = data.width * stretch;
-		var native_height = data.height;
+			var stretch = data.display_aspect_ratio / (data.width / data.height);
+			var native_width  = data.width * stretch;
+			var native_height = data.height;
 
-		var appInstance = {
-			id: null,
-			title: exif ? exif.FileName : name,
-			application: "movie_player",
-			icon: exif ? exif.SAGE2thumbnail : null,
-			type: mime_type,
-			url: external_url,
-			data: {
-				width: data.width,
+			var appInstance = {
+				id: null,
+				title: exif ? exif.FileName : name,
+				application: "movie_player",
+				icon: exif ? exif.SAGE2thumbnail : null,
+				type: mime_type,
+				url: external_url,
+				data: {
+					width: data.width,
+					height: data.height,
+					colorspace: "YUV420p",
+					video_url: external_url,
+					video_type: mime_type,
+					audio_url: external_url,
+					audio_type: mime_type,
+					paused: true,
+					frame: 0,
+					numframes: data.num_frames,
+					framerate: data.frame_rate,
+					display_aspect_ratio: data.display_aspect_ratio,
+					muted: false,
+					looped: false
+				},
+				resrc: null,
+				left:  _this.titleBarHeight,
+				top:   1.5 * _this.titleBarHeight,
+				width:  data.width,
 				height: data.height,
-				colorspace: "YUV420p",
-				video_url: external_url,
-				video_type: mime_type,
-				audio_url: external_url,
-				audio_type: mime_type,
-				paused: true,
-				frame: 0,
-				numframes: data.num_frames,
-				framerate: data.frame_rate,
-				display_aspect_ratio: data.display_aspect_ratio,
-				muted: false,
-				looped: false
-			},
-			resrc: null,
-			left:  _this.titleBarHeight,
-			top:   1.5 * _this.titleBarHeight,
-			width:  data.width,
-			height: data.height,
-			native_width:    native_width,
-			native_height:   native_height,
-			previous_left:   null,
-			previous_top:    null,
-			previous_width:  null,
-			previous_height: null,
-			maximized:       false,
-			aspect:          native_width / native_height,
-			animation:       false,
-			metadata:        metadata,
-			date:            new Date()
-		};
-		_this.scaleAppToFitDisplay(appInstance);
-		callback(appInstance, video);
-	});
-	video.load(file, {decodeFirstFrame: true});
+				native_width:    native_width,
+				native_height:   native_height,
+				previous_left:   null,
+				previous_top:    null,
+				previous_width:  null,
+				previous_height: null,
+				maximized:       false,
+				aspect:          native_width / native_height,
+				animation:       false,
+				metadata:        metadata,
+				date:            new Date()
+			};
+			_this.scaleAppToFitDisplay(appInstance);
+			callback(appInstance, video);
+		});
+		video.load(file, {decodeFirstFrame: true});
+	}
 };
 
 

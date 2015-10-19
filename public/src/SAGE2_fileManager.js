@@ -62,30 +62,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	];
 
-	var menu_data = [ {id: "file_menu", value: "File", submenu: [
-			{id: "upload_menu", value: "Upload"},
+	var menu_data = [
+		{id: "file_menu", value: "File", submenu: [
 			{id: "refresh_menu", value: "Refresh"},
-			{id: "folder_menu", value: "Create folder"}
-		]},
-		{ id: "edit_menu", value: "Edit", submenu: [
-			{id: "delete_menu", value: "Delete"},
-			{id: "download_menu", value: "Download"},
-			{id: "duplicate_menu", value: "Duplicate"} ]},
-		{ id: "view_menu", value: "View", submenu: [
+			{id: "folder_menu",  value: "Create folder"}
+			]},
+		{id: "edit_menu", value: "Edit", submenu: [
+			{id: "delete_menu",   value: "Delete"},
+			{id: "download_menu", value: "Download"}
+			]},
+		{id: "view_menu", value: "View", submenu: [
 			{id: "hideui_menu", value: "Show/Hide UI"},
-			{id: "hidefm_menu", value: "Hide file manager"}
-		]},
-		{ id: "mainadmin_menu", value: "Admin", submenu: [
-			{id: "display_menu", value: "Display client 0"},
-			{id: "audio_menu", value: "Audio manager"},
-			{id: "drawing_menu", value: "Drawing application"},
-			{id: "console_menu", value: "Server console"}
-		] },
-		{ id: "mainhelp_menu", value: "Help", submenu: [
-			{id: "help_menu", value: "Help"},
-			{id: "info_menu", value: "Information"},
+			{id: "hidefm_menu", value: "Hide file manager"},
+			{$template: "Separator"},
+			{id: "tile_menu",   value: "Tile content"},
+			{id: "clear_menu",  value: "Clear display"}
+			]},
+		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
+			{id: "display_menu",  value: "Display client 0"},
+			{id: "overview_menu", value: "Display overview client"},
+			{id: "audio_menu",    value: "Audio manager"},
+			{id: "drawing_menu",  value: "Drawing application"},
+			{id: "console_menu",  value: "Server console"}
+			]},
+		{id: "mainhelp_menu",  value: "Help", submenu: [
+			{id: "help_menu",  value: "Help"},
+			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
-		] }
+			]}
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -253,8 +257,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			$$('folder_name').focus();
 		} else if (evt === "display_menu") {
 			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
-			// var displayUrl = "display.html?clientID=0";
 			window.open(displayUrl, '_blank');
+		} else if (evt === "overview_menu") {
+			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=-1";
+			window.open(displayUrl, '_blank');
+		} else if (evt === "clear_menu") {
+			wsio.emit('clearDisplay');
+		} else if (evt === "tile_menu") {
+			wsio.emit('tileApplications');
 		} else if (evt === "hidefm_menu") {
 			document.getElementById('fileManager').style.display = "none";
 			if (mainUI.style.display === "none") {
@@ -544,72 +554,40 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		context.html += "</div>";
 	});
+
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
 		// No DnD
 		return false;
 	});
 
+	// Before the drop, test if it is a valid operation
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
-		// for (var i = 0; i < context.source.length; i++) {
-		// 	console.log('onBeforeDrop', context.source[i], context.target);
-		// }
-		// return true;
-
-		// No DnD
-		return false;
+		if (context.target.startsWith("Image:")   ||
+			context.target.startsWith("PDF:")     ||
+			context.target.startsWith("Video:")   ||
+			context.target.startsWith("App:")     ||
+			context.target.startsWith("Session:") ||
+			context.target.startsWith("Config:")) {
+			// No DnD on search icons
+			return false;
+		} else {
+			// Move each file selected one by one
+			context.source.map(function(elt) {
+				wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
+			});
+			// Dont do a real DnD, stop there
+			return false;
+		}
 	});
+
+	// Now, do the transfer
 	this.tree.attachEvent("onAfterDrop", function(context, native_event) {
-		// console.log('onAfterDrop', context.source, context.target);
+		// done in before drop for now
 	});
 
 	webix.event(this.allTable.$view, "drag", function(e) {
 		e.preventDefault();
 	});
-
-	// HTML5 drag and drop
-	// var popup;
-	// webix.event(main.$view, "dragenter", function(e) {
-	// 	e.preventDefault();
-	// 	if (!popup) {
-	// 		popup = webix.ui({
-	// 			view: "window",
-	// 			id: "my_upload",
-	// 			head: "Uploading",
-	// 			position: "center",
-	// 			width: Math.round(window.innerWidth*0.50),
-	// 			height: Math.round(window.innerHeight*0.50),
-	// 			body: {
-	// 				template: "&nbsp;<br>&nbsp;<br>" +
-	// 					"<h1 style=\"color:black\">drop files to upload</h1>"
-	// 			}
-	// 		})
-	// 		popup.show();
-	// 	}
-	// });
-	// webix.event(main.$view, "dragleave", function(e) {
-	// 	console.log('drag leave');
-	// 	e.preventDefault();
-	// 	if (popup) {
-	// 		popup.close();
-	// 		popup = null;
-	// 	}
-	// });
-	// webix.event(main.$view, "dragover", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drag over');
-	// });
-	// webix.event(main.$view, "drag", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drag');
-	// });
-	// webix.event(main.$view, "drop", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drop',e);
-	// 	popup.close();
-	// 	var mymain = $$(e);
-	// 	var id = mymain.locate(e);
-	// 	console.log('Drop', e, id);
-	// });
 
 	webix.ui({
 		id: "uploadAPI",
@@ -620,6 +598,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				console.log('uploaded file', item.name);
 			},
 			onUploadComplete: function(item) {
+				console.log('upload complete');
 				var d = $$("uploadlist");
 				d.data.each(function(obj) {
 					// if all good, remove from list

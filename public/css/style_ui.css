@@ -459,12 +459,11 @@ h2 {
 	height: 25px;
 }
 
-#screenShareQuality {
+#screenShareResolution {
 	width: 100px;
 }
-
-#screenShareQualityIndicator {
-	margin-left: 4px;
+#screenShareQuality {
+	width: 100px;
 }
 
 #settingsCloseBtn {
@@ -585,10 +584,10 @@ h2 {
 	box-sizing:border-box;
 
 	background: url('../images/trackpad.svg') no-repeat;
-    background-position: 50% 60%;
-    background-size: 50%;
+    background-position: 50% 70%;
+    background-size: 55vh;
     background-origin: content-box;
-    padding: 5px;
+    padding: 10px;
 }
 
 #sage2MobileButtons {
