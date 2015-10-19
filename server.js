@@ -35,7 +35,7 @@ var os            = require('os');               // operating system access
 var path          = require('path');             // file path management
 var readline      = require('readline');         // to build an evaluation loop
 var url           = require('url');              // parses urls
-// var util          = require('util');             // node util
+// var util          = require('util');          // node util
 
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
@@ -65,6 +65,7 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
+var registry            = require('./src/node-registry');        // Registry Manager
 
 
 // Globals
@@ -172,7 +173,11 @@ function initializeSage2Server() {
 	}
 
 	// Check for missing packages
-	sageutils.checkPackages(); // pass parameter `true` for devel packages also
+	//     pass parameter `true` for devel packages also
+	if (process.arch !== 'arm') {
+		// seems very slow to do on ARM processor (Raspberry PI)
+		sageutils.checkPackages();
+	}
 
 	// Setup binaries path
 	if (config.dependencies !== undefined) {
@@ -3372,7 +3377,7 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		// console.log('Form>	begin ', name, file.name, file.type);
+		console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
 	});
 
 	form.on('field', function(field, value) {
@@ -3391,8 +3396,20 @@ function uploadForm(req, res) {
 			res.write(err + "\n\n");
 			res.end();
 		}
+		// build the reply to the upload
 		res.writeHead(200, {'Content-Type': 'application/json'});
 		// For webix uploader: status: server
+		fields.done = true;
+
+		// Get the file (only one even if multiple drops, it comes one by one)
+		var file = files[ Object.keys(files)[0] ];
+		var app = registry.getDefaultApp(file.name);
+		if (app === undefined || app === "") {
+			fields.good = false;
+		} else {
+			fields.good = true;
+		}
+		// Send the reply
 		res.end(JSON.stringify({status: 'server',
 			fields: fields, files: files}));
 	});
@@ -3410,7 +3427,7 @@ function manageUploadedFiles(files, position) {
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
 
 			if (appInstance === null) {
-				console.log("Form> unrecognized file type: ", file.name, file.type);
+				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
 
@@ -5018,6 +5035,11 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 }
 
 function moveAndResizeApplicationWindow(resizeApp, portalId) {
+	// Shift position up and left by one pixel to take border into account
+	//    visible in hide-ui mode
+	resizeApp.elemLeft = resizeApp.elemLeft - 1;
+	resizeApp.elemTop  = resizeApp.elemTop  - 1;
+
 	var app = SAGE2Items.applications.list[resizeApp.elemId];
 
 	var titleBarHeight = config.ui.titleBarHeight;

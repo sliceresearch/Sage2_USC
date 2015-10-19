@@ -598,6 +598,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				console.log('uploaded file', item.name);
 			},
 			onUploadComplete: function(item) {
+				console.log('upload complete');
 				var d = $$("uploadlist");
 				d.data.each(function(obj) {
 					// if all good, remove from list
