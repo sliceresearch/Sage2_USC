@@ -683,6 +683,18 @@ function UIBuilder(json_cfg, clientID) {
 				newDraw.attr("d", lineFunction(drawingObject.options.points));
 
 			}
+
+			if (drawingObject.type == "circle") {
+				newDraw = d3.select("#drawingSVG").append("circle").attr("id",drawingObject.id);
+				for (var s in drawingObject.style) {
+					newDraw.style(s, drawingObject.style[s]);
+				}
+				var point = drawingObject.options.points[0];
+				var r = parseInt(drawingObject.style["stroke-width"]) / 2 + "px" || "3px";
+				var fill = drawingObject.style["stroke"] || "white";
+				newDraw.attr("cx",point.x).attr("cy",point.y).attr("r",r).attr("fill",fill);
+			}
+
 		}
 	}
 
@@ -702,7 +714,15 @@ function UIBuilder(json_cfg, clientID) {
 					toUpdate.style(s, drawingObject.style[s]);
 				}
 
+				// If drawing changed type redraw it
+				if (drawingObject.type != toUpdate.node().tagName.toLowerCase()) {
+					toUpdate.remove();
+					this.drawObject(drawingObject);
+					return;
+				}
+
 				if (drawingObject.type == "path") {
+
 					var lineFunction = d3.svg.line()
 										.x(function(d) { return d.x; })
 										.y(function(d) { return d.y; })

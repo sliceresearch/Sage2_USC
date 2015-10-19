@@ -2,6 +2,7 @@
 // Function to copy an obj, useful for assigning this.style to a drawingObject so that it doesnt change when this.style is changed
 
 
+
 function DrawingManager() {
 	this.idPrequel = "drawing_"
 	this.clientIDandSockets = {};
@@ -91,7 +92,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 
 		this.newDrawingObject[e.sourceId] = {};
 		this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
-		this.newDrawingObject[e.sourceId]["type"] = "path";
+		this.newDrawingObject[e.sourceId]["type"] = "circle";
 		this.newDrawingObject[e.sourceId]["options"] = { points: [ {x: posX,y: posY}] };
 		this.newDrawingObject[e.sourceId]["style"] = this.style;
 
@@ -99,7 +100,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 	}
 
 	if (e.type == 4) {
-
+		this.newDrawingObject[e.sourceId]["type"] = "path";
 		this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
 
 	}
