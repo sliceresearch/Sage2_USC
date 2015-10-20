@@ -50,6 +50,17 @@ if (!Function.prototype.bind) {
 		return fBound;
 	};
 }
+
+
+//
+// Polyfill for 'startsWith'
+//
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position) {
+		position = position || 0;
+		return this.indexOf(searchString, position) === position;
+	};
+}
 /* eslint-enable */
 //
 
@@ -150,6 +161,9 @@ function SAGE2_init() {
 
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
+		// show a popup for a long time
+		showMessage("Server offline", 2147483647);
+		// try to reload every few seconds
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
 				clearInterval(refresh);
@@ -214,6 +228,19 @@ function SAGE2_init() {
 	});
 }
 
+// Show error message for 2 seconds (or time given as parameter)
+function showMessage(message, delay) {
+	var aMessage = webix.alert({
+		type:  "alert-warning",
+		title: "SAGE2 Error",
+		ok:    "OK",
+		text:  message
+	});
+	setTimeout(function() {
+		webix.modalbox.hide(aMessage);
+	}, delay ? delay : 2000);
+}
+
 function setupListeners() {
 	wsio.on('initialize', function(data) {
 		interactor.setInteractionId(data.UID);
@@ -239,6 +266,9 @@ function setupListeners() {
 		// First request the files
 		wsio.emit('requestStoredFiles');
 	});
+
+	// Open a popup on message sent from server
+	wsio.on('errorMessage', showMessage);
 
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
@@ -594,12 +624,6 @@ function fileDrop(event) {
 		// URLs and text and ...
 		if (event.dataTransfer.types) {
 			// types: text/uri-list  text/plain text/html ...
-
-			// var type, i;
-			// for (i = 0; i < event.dataTransfer.types.length; i++) {
-			// 	type = event.dataTransfer.types[i];
-			// 	console.log('drop> content ', type, event.dataTransfer.getData(type));
-			// }
 			var content;
 			if (event.dataTransfer.types.indexOf('text/uri-list') >= 0) {
 				// choose uri as first choice

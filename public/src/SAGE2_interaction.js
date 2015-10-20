@@ -142,6 +142,18 @@ function SAGE2_interaction(wsio) {
 			var name = sn.substring(0, sn.indexOf("\n") - 2);
 			var type = st.substring(0, st.indexOf("\n") - 2);
 
+			// Parse the reply into JSON
+			var msgFromServer = JSON.parse(event.target.response);
+
+			// Check the return values for success/error
+			Object.keys(msgFromServer.files).map(function(k) {
+				name = msgFromServer.files[k].name;
+				type = msgFromServer.files[k].type;
+				if (!msgFromServer.fields.good) {
+					showMessage('unrecognized file type: ' + name + ' ' + type);
+				}
+			});
+
 			filesFinished++;
 			if (_this.fileUploadComplete && filesFinished === files.length) {
 				_this.fileUploadComplete();
@@ -163,7 +175,9 @@ function SAGE2_interaction(wsio) {
 				xhr.addEventListener('load', loadCallback, false);
 				xhr.send(formdata);
 			} else {
-				alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
+				// show message for 4 seconds
+				showMessage("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)",
+					4000);
 			}
 		}
 	};

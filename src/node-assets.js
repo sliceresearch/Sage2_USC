@@ -588,7 +588,7 @@ var exifAsync = function(cmds, cb) {
 					console.log("internal error for file", file);
 					cb(err);
 				} else {
-					console.log(sageutils.header("EXIF") + "Adding " + data.FileName);
+					console.log(sageutils.header("EXIF") + "Adding1 " + data.FileName);
 					addFile(data.SourceFile, data, function() {
 						if (cmds.length > 0) {
 							execNext();
@@ -711,17 +711,23 @@ var refresh = function(root, callback) {
 
 	if (thelist.length > 0) {
 		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
-	}
-	exifAsync(thelist, function(err) {
-		if (err) {
-			console.log(sageutils.header("EXIF") + "Error:", err);
-		} else {
-			console.log(sageutils.header("EXIF") + "Done " + root);
-			if (callback) {
-				callback();
+
+		exifAsync(thelist, function(err) {
+			if (err) {
+				console.log(sageutils.header("EXIF") + "Error:", err);
+			} else {
+				console.log(sageutils.header("EXIF") + "Done " + root);
+				if (callback) {
+					callback(thelist.length);
+				}
 			}
+		});
+	} else {
+		if (callback) {
+			callback(0);
 		}
-	});
+	}
+
 };
 
 var initialize = function(mainFolder, mediaFolders) {

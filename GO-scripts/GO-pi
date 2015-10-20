@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# turn off screen blanking
+xset s off
+xset -dpms
+xset s noblank
+
+# stop firefox
+killall -9 iceweasel
+rm -fr ~/.mozilla/firefox/*.wall
+iceweasel -CreateProfile wall
+
+# start client 0
+iceweasel -P wall http://localhost/display.html?clientID=0 &
+
+# go fullscreen
+sleep 30
+xte "key F11" -x:0
+
+# epiphany seems good but crashes all the time
+#
+#epiphany-browser -a --profile ~/.config/full http://10.0.1.15/display.html?clientID=0
+

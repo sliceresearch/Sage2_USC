@@ -515,7 +515,7 @@ function mkdirParent(dirPath) {
  * @param folders {Array} list of folders
  * @param callback {Function} to be called when a change is detected
  */
-function monitorFolders(folders, callback) {
+function monitorFolders(folders, excludes, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -529,7 +529,10 @@ function monitorFolders(folders, callback) {
 				// only matching: all true for now
 				matches:  function(relpath) {return true; },
 				// and excluding: nothing for now
-				excludes: function(relpath) {return false; }
+				excludes: function(relpath) {
+					return (excludes.indexOf(relpath) !== -1);
+					// return false;
+				}
 			});
 			// place the callback the change event
 			monitor.on('change', callback);
