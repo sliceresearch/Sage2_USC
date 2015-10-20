@@ -401,8 +401,8 @@ function sendStyleToPalette(paletteID,style) {
 	broadcast('eventInItem', event);
 }
 
-function movePaletteTo(paletteID,x,y) {
-
+function movePaletteTo(paletteID,x,y, w, h) {
+	interactMgr.editGeometry(paletteID, "applications", "rectangle", {x: x,y: y: x, w: w, h:h});
 }
 
 
