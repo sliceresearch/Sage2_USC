@@ -354,7 +354,8 @@ function initializeSage2Server() {
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
 								drawingInit,
-								drawingUpdate
+								drawingUpdate,
+								sendTouchToPalette
 								);
 }
 
@@ -364,7 +365,22 @@ function drawingInit(clientWebSocket, drawState) {
 
 function drawingUpdate(clientWebSocket, drawingObject) {
 	clientWebSocket.emit("drawingUpdate", drawingObject);
-	//broadcast("drawingUpdate", drawingObject);
+}
+
+function sendTouchToPalette(paletteID,x,y) {
+	var ePosition = {x: x , y: y};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "pointerPress",
+		position: ePosition,
+		user: eUser,
+		data: {button: "left"},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
 }
 
 function setUpDialogsAsInteractableObjects() {
@@ -491,7 +507,7 @@ function closeWebSocketClient(wsio) {
 
 	removeElement(clients, wsio);
 
-	//Unregistering the client from the drawingManager
+	// Unregistering the client from the drawingManager
 	drawingManager.removeWebSocket(wsio);
 }
 
@@ -800,11 +816,15 @@ function initializeRemoteServerInfo(wsio) {
 // **************  Drawing Functions *****************
 function wsUpdatePalettePosition(wsio, data) {
 	var whiteboardApp = interactMgr.getObject(drawingManager.paletteID, "applications");
-	drawingManager.updatePalettePosition({startX: whiteboardApp.x1, endX: whiteboardApp.x2, startY: whiteboardApp.y1, endY: whiteboardApp.y2});
+	drawingManager.updatePalettePosition({
+		startX: whiteboardApp.x1,
+		endX: whiteboardApp.x2,
+		startY: whiteboardApp.y1,
+		endY: whiteboardApp.y2});
 }
 
 function wsEnableDrawingMode(wsio, data) {
-	drawingManager.enableDrawingMode();
+	drawingManager.enableDrawingMode(data);
 }
 
 function wsClearDrawingCanvas(wsio,data) {

@@ -18,7 +18,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
 		this.moveEvents   = "continuous";
-		wsio.emit("enableDrawingMode",null);
+		wsio.emit("enableDrawingMode",{id: this.id});
 
 		// init the server active style
 		this.strokeColor = "white";
