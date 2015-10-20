@@ -294,13 +294,15 @@ function initializeSage2Server() {
 	for (var lf in mediaFolders) {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
-	sageutils.monitorFolders(listOfFolders,
+	// try to exclude some folders from the monitoring
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp' ];
+	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
-
-				// assets.refresh(this.root, function() {
+				// broadcast the new file list
+				// assets.refresh(this.root, function(count) {
 				// 	broadcast('storedFileList', getSavedFilesList());
 				// });
 			}
@@ -3377,7 +3379,7 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+		// console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
 	});
 
 	form.on('field', function(field, value) {
@@ -3454,6 +3456,9 @@ function manageUploadedFiles(files, position) {
 				}
 			}
 			handleNewApplication(appInstance, videohandle);
+
+			// send the update file list
+			broadcast('storedFileList', getSavedFilesList());
 		});
 	});
 }

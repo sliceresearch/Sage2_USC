@@ -515,6 +515,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// onItemClick onAfterSelect onBeforeSelect
 	this.tree.attachEvent("onSelectChange", function(evt) {
+		// Clear the search box
+		$$("search_text").setValue("");
+		// Get the selection
 		var treeSelection = _this.tree.getSelectedItem();
 		// If a media folder is selection
 		if (treeSelection) {
@@ -933,9 +936,29 @@ function FileManager(wsio, mydiv, uniqueID) {
 			i++;
 		}
 
+		// Clear the search box
+		$$("search_text").setValue("");
+
 		this.refresh();
 		// Sort the table by name
 		this.allTable.sort("name", "asc");
+
+
+		// Get the existing selection
+		var treeSelection = _this.tree.getSelectedItem();
+		// If a media folder is selection
+		if (treeSelection) {
+			if (treeSelection.sage2URL) {
+				_this.allTable.filter(function(obj) {
+					// trying to match the base URL
+					return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
+				});
+				return;
+			} else {
+				updateSearch(treeSelection.id);
+			}
+		}
+
 	};
 
 	this.refresh = function() {
