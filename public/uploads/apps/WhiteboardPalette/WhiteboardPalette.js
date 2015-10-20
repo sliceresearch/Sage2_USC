@@ -8,7 +8,6 @@
 
 
 
-
 var WhiteboardPalette = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
@@ -42,11 +41,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		this.enableControls = true;
 	},
 	updatePalettePosition: function(){
-		var x = this.palette[0][0].x.baseVal.value;
-		var y =  this.palette[0][0].y.baseVal.value;
-		var width =  this.palette[0][0].width.baseVal.value;
-		var height =  this.palette[0][0].height.baseVal.value;
-		wsio.emit("updatePalettePosition", {width: width, height: height, x: x, y: y});
+		wsio.emit("updatePalettePosition", null);
 	},
 	sendStyleToServer: function(name,value){
 		wsio.emit("changeStyle", { name : name, value : value });

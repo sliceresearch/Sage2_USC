@@ -799,7 +799,8 @@ function initializeRemoteServerInfo(wsio) {
 
 // **************  Drawing Functions *****************
 function wsUpdatePalettePosition(wsio, data) {
-	drawingManager.updatePalettePosition(data);
+	var whiteboardApp = interactMgr.getObject(drawingManager.paletteID, "applications");
+	drawingManager.updatePalettePosition({startX: whiteboardApp.x1, endX: whiteboardApp.x2, startY: whiteboardApp.y1, endY: whiteboardApp.y2});
 }
 
 function wsEnableDrawingMode(wsio, data) {

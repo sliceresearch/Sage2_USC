@@ -51,38 +51,6 @@ DrawingManager.prototype.calculateTileDimensions = function(config) {
 
 }
 
-/*
-
-function calculateTileDimensions (config) {
-
-	var rows = config.layout.rows;
-	var columns = config.layout.columns;
-	var width = config.resolution.width;
-	var height = config.resolution.height;
-
-	for (var i = 0; i < rows; i++) {
-		
-		var startX = width * i;
-		var endX = startX + width;
-		
-
-		for (var j = 0; j < columns; j++) {
-			
-			var startY = height * j;
-			var endY = startY + height;
-
-			var position = {"startX": startX, "endX": endX, "startY": startY, "endY": endY};
-
-			this.tilesPosition.push(position);
-		};
-
-	};
-
-
-}
-
-*/
-
 DrawingManager.prototype.init = function(wsio) {
 
 	var clientID = wsio.clientID;
@@ -252,10 +220,10 @@ DrawingManager.prototype.isOnPalette = function(posX, posY) {
 
 DrawingManager.prototype.updatePalettePosition = function(data) {
 
-	this.palettePosition.startX = data.x;
-	this.palettePosition.startY = data.y;
-	this.palettePosition.endX = data.x + data.width;
-	this.palettePosition.endY = data.y + data.height;
+	this.palettePosition.startX = data.startX;
+	this.palettePosition.startY = data.startY;
+	this.palettePosition.endX = data.endX;
+	this.palettePosition.endY = data.endY;
 
 }
 
