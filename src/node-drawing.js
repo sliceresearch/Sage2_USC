@@ -1,14 +1,13 @@
 "use strict"
-// Function to copy an obj, useful for assigning this.style to a drawingObject so that it doesnt change when this.style is changed
 
 function DrawingManager(config) {
 
-	this.idPrequel = "drawing_"
+	this.idPrequel = "drawing_";
 	this.clientIDandSockets = {};
 	this.newDrawingObject = {};
 	this.style = {fill: "none", stroke: "white", "stroke-width": "5px"};
 	this.drawingMode = false;
-	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 1000,y: 2000}, {x: 2000,y: 3000}] }, style: this.style}];
+	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
 	this.palettePosition = {};
@@ -27,23 +26,23 @@ function DrawingManager(config) {
 
 DrawingManager.prototype.calculateTileDimensions = function(config) {
 
-	//This method crashes if config.displays is less than product of rows and columns
-	//Check if the clientID corresponds to the actual clientID
+	// This method crashes if config.displays is less than product of rows and columns
+	// Check if the clientID corresponds to the actual clientID
 	var clients = config.layout.rows * config.layout.columns;
 	var width = config.resolution.width;
 	var height = config.resolution.height;
 
 	for (var i = 0; i < clients; i++) {
-		
+
 		var display = config.displays[i];
 
 		var startX = width * display.column;
 		var endX = startX + width - 1;
-		
+
 		var startY = height * display.row;
 		var endY = startY + height - 1;
 
-		var position = {"startX": startX, "endX": endX, "startY": startY, "endY": endY, "clientID": i};
+		var position = {startX: startX, endX: endX, startY: startY, endY: endY, clientID: i};
 
 		this.tilesPosition.push(position);
 
@@ -61,13 +60,12 @@ function calculateTileDimensions (config) {
 	var height = config.resolution.height;
 
 	for (var i = 0; i < rows; i++) {
-		
 		var startX = width * i;
 		var endX = startX + width;
-		
+
 
 		for (var j = 0; j < columns; j++) {
-			
+
 			var startY = height * j;
 			var endY = startY + height;
 
@@ -109,7 +107,7 @@ DrawingManager.prototype.initAll = function() {
 
 DrawingManager.prototype.removeWebSocket = function(wsio) {
 
-	//Detecting the position of the socket into the corresponding socket array
+	// Detecting the position of the socket into the corresponding socket array
 	var clientID = wsio.clientID;
 	var position = this.clientIDandSockets[clientID].indexOf(wsio);
 	if (position > -1) {
@@ -146,27 +144,28 @@ DrawingManager.prototype.redoDrawing = function() {
 
 DrawingManager.prototype.changeStyle = function(data) {
 	this.style[data.name] = data.value;
-	console.log(this.style);
 }
 
-DrawingManager.prototype.enableDrawingMode = function() {
+DrawingManager.prototype.enableDrawingMode = function(data) {
 	console.log("Drawing mode enabled");
 	this.drawingMode = true;
+	this.paletteID = data.id;
+
 }
 
 DrawingManager.prototype.update = function(drawingObject, clientID) {
-		
+
 	for (var ws in this.clientIDandSockets[clientID]) {
-		
+
 		this.drawingUpdate(this.clientIDandSockets[clientID][ws], drawingObject);
 	}
 
-	//Send the object also to client -1, but not manipulated. Maybe create another udpate.
+	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
 
 }
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
-	//Create new Drawing object
+	// Create new Drawing object
 	this.newDrawingObject[e.sourceId] = {};
 	this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
 	this.newDrawingObject[e.sourceId]["type"] = "circle";
@@ -184,30 +183,32 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	this.newDrawingObject[e.sourceId]["type"] = "path";
 	this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
 }
+DrawingManager.prototype.touchInsidePalette = function(x,y) {
+	return ((x >= this.palettePosition.startX) && (x <= this.palettePosition.endX) &&
+			(y >= this.palettePosition.startY) && (y <= this.palettePosition.endY));
+}
 
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 
-	if (this.isOnPalette(posX, posY)) {
-		return;
-	}
-
 	if (e.type == 5) {
 
-		//pointer down
-		this.drawingsUndone = [];
-		this.newDrawingObjectFunc(e, posX, posY);
-
+		// pointer down
+		if (this.touchInsidePalette(posX,posY)) {
+			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX ,posY - this.palettePosition.startY);
+		}else {
+			this.drawingsUndone = [];
+			this.newDrawingObjectFunc(e, posX, posY);
+		}
 	} else if (e.type == 4) {
 
-		//pointer move
+		// pointer move
 		this.updateDrawingObject(e, posX, posY);
-		
+
 	} else if (e.type == 6) {
-		
-		//pointer release
+
+		// pointer release
 		return;
-		
 	}
 
 	var involvedClient = this.checkInvolvedClient(posX, posY);
@@ -218,15 +219,15 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
 
-	//Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
+	// Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
 	var manipulatedObject = JSON.parse(JSON.stringify(drawingObject));
 
 	var offsetX = this.tilesPosition[clientID].startX;
 	var offsetY = this.tilesPosition[clientID].startY;
-	
-	for(var i in manipulatedObject.options.points) {
+
+	for (var i in manipulatedObject.options.points) {
 		var point = manipulatedObject.options.points[i]
-		
+
 		manipulatedObject.options.points[i].x = point.x - offsetX;
 		manipulatedObject.options.points[i].y = point.y - offsetY;
 
@@ -243,9 +244,9 @@ DrawingManager.prototype.isOnPalette = function(posX, posY) {
 		this.palettePosition.startY <= posY &
 		this.palettePosition.endY >= posY) {
 
-			return true;
+		return true;
 
-		}
+	}
 
 	return false;
 }
@@ -260,10 +261,10 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 }
 
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
-	
-	//Probably this method is inconsistent if the object start from a display and terminates in another
-	
-	for(var i in this.tilesPosition) {
+
+	// Probably this method is inconsistent if the object start from a display and terminates in another
+
+	for (var i in this.tilesPosition) {
 		var client = this.tilesPosition[i];
 		if (client.startX <= posX &
 			client.endX >= posX &
@@ -283,9 +284,11 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
-		drawingUpdateCB
+		drawingUpdateCB,
+		sendTouchToPaletteCB
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
+	this.sendTouchToPalette = sendTouchToPaletteCB;
 };
 module.exports = DrawingManager;
