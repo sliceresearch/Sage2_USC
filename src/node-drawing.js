@@ -166,11 +166,16 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 		// pointer down
 		if (this.touchInsidePalette(posX,posY)) {
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX ,posY - this.palettePosition.startY);
+			return;
 		}else {
 			this.drawingsUndone = [];
 			this.newDrawingObjectFunc(e, posX, posY);
 		}
 	} else if (e.type == 4) {
+
+		if (this.touchInsidePalette(posX,posY)) {
+			return;
+		}
 
 		// pointer move
 		this.updateDrawingObject(e, posX, posY);
@@ -223,9 +228,9 @@ DrawingManager.prototype.isOnPalette = function(posX, posY) {
 
 DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.startX = data.startX;
-	this.palettePosition.startY = data.startY;
+	this.palettePosition.startY = data.startY + 58;
 	this.palettePosition.endX = data.endX;
-	this.palettePosition.endY = data.endY;
+	this.palettePosition.endY = data.endY + 58;
 }
 
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
