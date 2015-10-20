@@ -12,6 +12,8 @@ function DrawingManager(config) {
 	this.tilesPosition = [];
 	this.palettePosition = {};
 	this.calculateTileDimensions(config);
+	this.actualAction = "drawing"
+	this.possibleActions = ["drawing", "movingPalette"];
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -157,12 +159,19 @@ DrawingManager.prototype.touchInsidePalette = function(x,y) {
 	return ((x >= this.palettePosition.startX) && (x <= this.palettePosition.endX) &&
 			(y >= this.palettePosition.startY) && (y <= this.palettePosition.endY));
 }
+DrawingManager.prototype.touchInsidePaletteTitleBar = function(x,y) {
+	return ((x >= this.palettePosition.startX) && (x <= this.palettePosition.endX) &&
+			(y >= this.palettePosition.startY-58) && (y < this.palettePosition.startY));
+}
 
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 
 	if (e.type == 5) {
-
+		if (this.touchInsidePaletteTitleBar(posX,posY)) {
+			this.actualAction = "movingPalette"
+			return;
+		}
 		// pointer down
 		if (this.touchInsidePalette(posX,posY)) {
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX ,posY - this.palettePosition.startY);
@@ -172,16 +181,24 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 			this.newDrawingObjectFunc(e, posX, posY);
 		}
 	} else if (e.type == 4) {
+		if (this.actualAction == "movingPalette"){
+			this.movePaletteTo(this.paletteID, posX,posY, this.palettePosition.endX - this.palettePosition.startX, this.palettePosition.endY - this.palettePosition.startY);
+			return;
+		}
+
 
 		if (this.touchInsidePalette(posX,posY)) {
 			return;
 		}
 
+
 		// pointer move
 		this.updateDrawingObject(e, posX, posY);
 
 	} else if (e.type == 6) {
-
+		if (this.actualAction == "movingPalette"){
+			this.actualAction = "drawing";
+		}
 		// pointer release
 		return;
 	}
@@ -233,6 +250,7 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.endY = data.endY + 58;
 }
 
+
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 
 	// Probably this method is inconsistent if the object start from a display and terminates in another
@@ -259,11 +277,13 @@ DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
 		drawingUpdateCB,
 		sendTouchToPaletteCB,
-		sendStyleToPaletteCB
+		sendStyleToPaletteCB,
+		movePaletteToCB
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
 	this.sendTouchToPalette = sendTouchToPaletteCB;
 	this.sendStyleToPalette = sendStyleToPaletteCB;
+	this.movePaletteTo = movePaletteToCB;
 };
 module.exports = DrawingManager;

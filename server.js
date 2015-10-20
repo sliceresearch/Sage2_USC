@@ -356,7 +356,8 @@ function initializeSage2Server() {
 								drawingInit,
 								drawingUpdate,
 								sendTouchToPalette,
-								sendStyleToPalette
+								sendStyleToPalette,
+								movePaletteTo
 								);
 }
 
@@ -398,6 +399,10 @@ function sendStyleToPalette(paletteID,style) {
 	};
 
 	broadcast('eventInItem', event);
+}
+
+function movePaletteTo(paletteID,x,y) {
+
 }
 
 
