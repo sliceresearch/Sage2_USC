@@ -161,7 +161,7 @@ DrawingManager.prototype.touchInsidePalette = function(x,y) {
 }
 DrawingManager.prototype.touchInsidePaletteTitleBar = function(x,y) {
 	return ((x >= this.palettePosition.startX) && (x <= this.palettePosition.endX) &&
-			(y >= this.palettePosition.startY-58) && (y < this.palettePosition.startY));
+			(y >= this.palettePosition.startY - 58) && (y < this.palettePosition.startY));
 }
 
 
@@ -170,6 +170,8 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 	if (e.type == 5) {
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
 			this.actualAction = "movingPalette"
+			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
+			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY;
 			return;
 		}
 		// pointer down
@@ -181,8 +183,12 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 			this.newDrawingObjectFunc(e, posX, posY);
 		}
 	} else if (e.type == 4) {
-		if (this.actualAction == "movingPalette"){
-			this.movePaletteTo(this.paletteID, posX,posY, this.palettePosition.endX - this.palettePosition.startX, this.palettePosition.endY - this.palettePosition.startY);
+		if (this.actualAction == "movingPalette") {
+			this.movePaletteTo(this.paletteID
+								, posX - this.touchOnPaletteOffsetX
+								, posY - this.touchOnPaletteOffsetY
+								, this.palettePosition.endX - this.palettePosition.startX
+								, this.palettePosition.endY - this.palettePosition.startY);
 			return;
 		}
 
@@ -196,7 +202,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 		this.updateDrawingObject(e, posX, posY);
 
 	} else if (e.type == 6) {
-		if (this.actualAction == "movingPalette"){
+		if (this.actualAction == "movingPalette") {
 			this.actualAction = "drawing";
 		}
 		// pointer release

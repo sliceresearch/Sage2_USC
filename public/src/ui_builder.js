@@ -705,7 +705,6 @@ function UIBuilder(json_cfg, clientID) {
 	* @param drawingObject {object} drawing object
 	*/
 	this.updateObject = function(drawingObject) {
-		
 		var toUpdate;
 		if (!d3.select("#" + drawingObject.id).empty()) {
 			if (this.drawingSvg) {
