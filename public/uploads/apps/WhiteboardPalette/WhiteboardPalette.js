@@ -18,18 +18,12 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
 		this.moveEvents   = "continuous";
-		wsio.emit("enableDrawingMode",{id: this.id});
 
-		// init the server active style
-		this.strokeColor = "white";
-		this.strokeWidth = 6;
 
-		this.sendStyleToServer("stroke",this.strokeColor);
-		this.sendStyleToServer("stroke-width",this.strokeWidth);
 
 		this.palette = this.svg.style("position","absolute").style("left",0).attr("id","Palette").attr("width",this.element.clientWidth).attr("height",this.element.clientHeight);
 
-		this.createPalette();
+		wsio.emit("enableDrawingMode",{id: this.id});
 		this.updatePalettePosition();
 
 		// SAGE2 Application Settings
@@ -104,13 +98,13 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			this.parent.strokeWidth =1;
 		}
 		this.parent.sendStyleToServer("stroke-width",this.parent.strokeWidth);
-		this.parent.createPalette();
+		
 	},
 	changeColor: function() {
 		this.parent.strokeColor = this.backgroundColor;
 		this.parent.sendStyleToServer("stroke",this.parent.strokeColor);
 		
-		this.parent.createPalette();
+		
 	},
 	clearCanvas: function() {
 		wsio.emit("clearDrawingCanvas",null);
@@ -158,6 +152,11 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			this.handlePaletteTouch(position.x,position.y);
+		}
+		else if (eventType === "styleChange") {
+			this.strokeColor = data.style.stroke;
+			this.strokeWidth = parseInt(data.style["stroke-width"]);
+			this.createPalette();
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
 		}

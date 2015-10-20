@@ -355,7 +355,8 @@ function initializeSage2Server() {
 	drawingManager.setCallbacks(
 								drawingInit,
 								drawingUpdate,
-								sendTouchToPalette
+								sendTouchToPalette,
+								sendStyleToPalette
 								);
 }
 
@@ -382,6 +383,23 @@ function sendTouchToPalette(paletteID,x,y) {
 
 	broadcast('eventInItem', event);
 }
+
+function sendStyleToPalette(paletteID,style) {
+	var ePosition = {x: 0 , y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "styleChange",
+		position: ePosition,
+		user: eUser,
+		data: {style: style},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
 
 function setUpDialogsAsInteractableObjects() {
 	var dialogGeometry = {

@@ -113,13 +113,14 @@ DrawingManager.prototype.redoDrawing = function() {
 
 DrawingManager.prototype.changeStyle = function(data) {
 	this.style[data.name] = data.value;
+	this.sendStyleToPalette(this.paletteID,this.style);
 }
 
 DrawingManager.prototype.enableDrawingMode = function(data) {
 	console.log("Drawing mode enabled");
 	this.drawingMode = true;
 	this.paletteID = data.id;
-
+	this.sendStyleToPalette(this.paletteID,this.style);
 }
 
 DrawingManager.prototype.update = function(drawingObject, clientID) {
@@ -221,12 +222,10 @@ DrawingManager.prototype.isOnPalette = function(posX, posY) {
 }
 
 DrawingManager.prototype.updatePalettePosition = function(data) {
-
 	this.palettePosition.startX = data.startX;
 	this.palettePosition.startY = data.startY;
 	this.palettePosition.endX = data.endX;
 	this.palettePosition.endY = data.endY;
-
 }
 
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
@@ -254,10 +253,12 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
 		drawingUpdateCB,
-		sendTouchToPaletteCB
+		sendTouchToPaletteCB,
+		sendStyleToPaletteCB
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
 	this.sendTouchToPalette = sendTouchToPaletteCB;
+	this.sendStyleToPalette = sendStyleToPaletteCB;
 };
 module.exports = DrawingManager;
