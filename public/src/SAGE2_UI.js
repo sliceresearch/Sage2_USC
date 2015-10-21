@@ -135,7 +135,8 @@ function SAGE2_init() {
 				version: true,
 				time: false,
 				console: false
-			}
+			},
+			browser: __SAGE2__.browser
 		};
 		wsio.emit('addClient', clientDescription);
 
@@ -221,14 +222,24 @@ function setupListeners() {
 		pointerX    = 0;
 		pointerY    = 0;
 
+		var sage2UI = document.getElementById('sage2UICanvas');
+
 		// Build the file manager
 		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
 		webix.DragControl.addDrop("displayUIDiv", {
 			$drop: function(source, target, event) {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
-				var x = event.layerX / event.target.clientWidth;
-				var y = event.layerY / event.target.clientHeight;
+				var x, y;
+				if (target === sage2UI) {
+					// Desktop
+					x = event.layerX / event.target.clientWidth;
+					y = event.layerY / event.target.clientHeight;
+				} else {
+					// on Mobile: not correct, but close enough (i.e. pageX)
+					x = event.pageX / sage2UI.clientWidth;
+					y = event.pageY / sage2UI.clientHeight;
+				}
 				// Open the files
 				for (var i = 0; i < dnd.source.length; i++) {
 					fileManager.openItem(dnd.source[i], [x, y]);
@@ -806,7 +817,7 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse) {
+		if (!hasMouse && !__SAGE2__.browser.isIPad) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
