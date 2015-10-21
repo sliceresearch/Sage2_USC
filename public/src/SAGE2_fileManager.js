@@ -46,6 +46,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree = null;
 	this.main = null;
 	this.uniqueID = uniqueID;
+	this.selectedItem = null;
 	var _this = this;
 
 	// WEBIX
@@ -130,7 +131,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				},
 				{
 					view: "list", id: "uploadlist", type: "uploader",
-					scroll: true
+					scroll: 'y'
 				}]}
 				]
 				},
@@ -140,12 +141,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{
 					id: "multiview1",
 					view: "multiview",
-					animate: false,
+					scroll: 'y',
 					gravity: 2, // two times bigger
-					cells: [
-						{
-						}
-					]
+					animate: false,
+					cells: [ { } ]
 				},
 				{
 					view: "resizer"
@@ -309,10 +308,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 	multiview1.addView({
 		id: "all_table",
 		view: "datatable",
-		editable: true,
+		// editable: true,
 		columnWidth: 200,
 		resizeColumn: true,
-		animate: false,
+		// animate: false,
+		scroll: 'y',
 		drag: true,
 		select: "multiselect",
 		navigation: true,
@@ -345,7 +345,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// User selection
 	this.allTable.attachEvent("onSelectChange", function(evt) {
 		var elt = _this.allTable.getSelectedId();
+		// remember the selected item (for drag-drop)
+		_this.selectedItem = elt;
 		if (!elt || !elt.id) {
+			// if nothing selected, done
 			return;
 		}
 		var metadata = $$("metadata");
@@ -540,19 +543,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// target - the id of the drop target, null for drop on empty space
 	// start - the id from which DND was started
 	this.allTable.attachEvent("onBeforeDrag", function(context, ev) {
-		var elt;
-		context.html = "<div style='padding:8px;background:#d3e3ef'>";
-		if (context.source.length === 1) {
-			elt = _this.allFiles[context.start];
-			context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
-			context.html += '<br>' + elt.exif.FileName;
-		} else {
-			for (var i = 0; i < Math.min(context.source.length, 35); i++) {
-				elt = _this.allFiles[context.source[i]];
-				context.html += elt.exif.FileName + "<br>";
+		// Only drag-drop if multiple selected items,
+		//    or the source element is the same as the selected one (select and drag)
+		if (context.source.length > 1 || context.start === _this.selectedItem.id) {
+			var elt;
+			context.html = "<div style='padding:8px;background:#d3e3ef'>";
+			if (context.source.length === 1) {
+				elt = _this.allFiles[context.start];
+				context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
+				context.html += '<br>' + elt.exif.FileName;
+			} else {
+				for (var i = 0; i < Math.min(context.source.length, 35); i++) {
+					elt = _this.allFiles[context.source[i]];
+					context.html += elt.exif.FileName + "<br>";
+				}
 			}
+			context.html += "</div>";
+			return true;
+		} else {
+			return false;
 		}
-		context.html += "</div>";
 	});
 
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
