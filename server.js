@@ -402,7 +402,8 @@ function sendStyleToPalette(paletteID,style) {
 }
 
 function movePaletteTo(paletteID,x,y, w, h) {
-
+	SAGE2Items.applications.list[paletteID].left = x;
+	SAGE2Items.applications.list[paletteID].top = y;
 	var moveApp = {
 		elemId: paletteID,
 		elemLeft: x,
