@@ -1274,7 +1274,7 @@ function ButtonWidget() {
 	};
 
 	this.setHitboxSize = function(w, h) {
-		this.hitboxWidth = w;
+		this.hitboxWidth  = w;
 		this.hitboxheight = h;
 	};
 
@@ -1348,11 +1348,21 @@ function ButtonWidget() {
 	};
 
 	this.drawTintImage = function(image, offset, width, height, color, alpha) {
+		var im;
+
 		// Tint the image (Part 1)
 		// create offscreen buffer,
-		this.tintImage.width = width;
+		this.tintImage.width  = width;
 		this.tintImage.height = height;
 
+		// Firefox doesnt seem to deal with blending SVG onto canvas
+		if (__SAGE2__.browser.isFirefox) {
+			// Render the SVG into an image
+			this.tintImageCtx.drawImage(image, 0, 0, width, height);
+			// and make an image
+			im = new Image();
+			im.src = this.tintImage.toDataURL();
+		}
 
 		// fill offscreen buffer with the tint color
 		this.tintImageCtx.fillStyle = color;
@@ -1361,7 +1371,12 @@ function ButtonWidget() {
 		// destination atop makes a result with an alpha channel identical to fg,
 		//   but with all pixels retaining their original color *as far as I can tell*
 		this.tintImageCtx.globalCompositeOperation = "destination-in";
-		this.tintImageCtx.drawImage(image, 0, 0, width, height);
+		if (__SAGE2__.browser.isFirefox) {
+			this.tintImageCtx.drawImage(im, 0, 0, width, height);
+			im = null;
+		} else {
+			this.tintImageCtx.drawImage(image, 0, 0, width, height);
+		}
 
 		// then set the global alpha to the amound that you want to tint it,
 		//   and draw the buffer directly on top of it.

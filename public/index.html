@@ -2,7 +2,7 @@
 <html manifest="sage2.appcache">
 <head lang="en">
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
 <title>SAGE2 UI - Mobile</title>
 
@@ -262,12 +262,15 @@
 					</tr>
 					<tr>
 						<td style="padding-right:4px;">
-							<label class="sageLabel">Frame Quality:</label>
+							<label class="sageLabel">Quality:</label>
 						</td>
 						<td>
-							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="7">
-							<span id="screenShareQualityIndicator">7</span>
-						</td>
+							<select id="screenShareQuality">
+								<option value="3">Low</option>
+								<option value="7" selected="selected">Medium</option>
+								<option value="9">High</option>
+							</select>
+ 						</td>
 					</tr>
 				</table>
 			</div>
@@ -301,7 +304,7 @@
 	
 	<div id="sage2MobileContainer">
 		<div id="sage2MobileTrackpad">
-			<div style="font-size:32pt;padding-top:125px;text-align:center;">Trackpad</div>
+			<div style="font-size:xx-large;text-align:center;">Trackpad</div>
 		</div>
 		<div id="sage2MobileButtons">
 			<div id="sage2MobileLeftButton">Left button</div>

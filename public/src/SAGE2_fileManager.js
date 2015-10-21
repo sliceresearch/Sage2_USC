@@ -46,6 +46,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree = null;
 	this.main = null;
 	this.uniqueID = uniqueID;
+	this.selectedItem = null;
 	var _this = this;
 
 	// WEBIX
@@ -62,30 +63,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	];
 
-	var menu_data = [ {id: "file_menu", value: "File", submenu: [
-			{id: "upload_menu", value: "Upload"},
+	var menu_data = [
+		{id: "file_menu", value: "File", submenu: [
 			{id: "refresh_menu", value: "Refresh"},
-			{id: "folder_menu", value: "Create folder"}
-		]},
-		{ id: "edit_menu", value: "Edit", submenu: [
-			{id: "delete_menu", value: "Delete"},
-			{id: "download_menu", value: "Download"},
-			{id: "duplicate_menu", value: "Duplicate"} ]},
-		{ id: "view_menu", value: "View", submenu: [
+			{id: "folder_menu",  value: "Create folder"}
+			]},
+		{id: "edit_menu", value: "Edit", submenu: [
+			{id: "delete_menu",   value: "Delete"},
+			{id: "download_menu", value: "Download"}
+			]},
+		{id: "view_menu", value: "View", submenu: [
 			{id: "hideui_menu", value: "Show/Hide UI"},
-			{id: "hidefm_menu", value: "Hide file manager"}
-		]},
-		{ id: "mainadmin_menu", value: "Admin", submenu: [
-			{id: "display_menu", value: "Display client 0"},
-			{id: "audio_menu", value: "Audio manager"},
-			{id: "drawing_menu", value: "Drawing application"},
-			{id: "console_menu", value: "Server console"}
-		] },
-		{ id: "mainhelp_menu", value: "Help", submenu: [
-			{id: "help_menu", value: "Help"},
-			{id: "info_menu", value: "Information"},
+			{id: "hidefm_menu", value: "Hide file manager"},
+			{$template: "Separator"},
+			{id: "tile_menu",   value: "Tile content"},
+			{id: "clear_menu",  value: "Clear display"}
+			]},
+		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
+			{id: "display_menu",  value: "Display client 0"},
+			{id: "overview_menu", value: "Display overview client"},
+			{id: "audio_menu",    value: "Audio manager"},
+			{id: "drawing_menu",  value: "Drawing application"},
+			{id: "console_menu",  value: "Server console"}
+			]},
+		{id: "mainhelp_menu",  value: "Help", submenu: [
+			{id: "help_menu",  value: "Help"},
+			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
-		] }
+			]}
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -126,7 +131,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				},
 				{
 					view: "list", id: "uploadlist", type: "uploader",
-					scroll: true
+					scroll: 'y'
 				}]}
 				]
 				},
@@ -136,12 +141,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{
 					id: "multiview1",
 					view: "multiview",
-					animate: false,
+					scroll: 'y',
 					gravity: 2, // two times bigger
-					cells: [
-						{
-						}
-					]
+					animate: false,
+					cells: [ { } ]
 				},
 				{
 					view: "resizer"
@@ -253,8 +256,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			$$('folder_name').focus();
 		} else if (evt === "display_menu") {
 			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
-			// var displayUrl = "display.html?clientID=0";
 			window.open(displayUrl, '_blank');
+		} else if (evt === "overview_menu") {
+			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=-1";
+			window.open(displayUrl, '_blank');
+		} else if (evt === "clear_menu") {
+			wsio.emit('clearDisplay');
+		} else if (evt === "tile_menu") {
+			wsio.emit('tileApplications');
 		} else if (evt === "hidefm_menu") {
 			document.getElementById('fileManager').style.display = "none";
 			if (mainUI.style.display === "none") {
@@ -299,10 +308,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 	multiview1.addView({
 		id: "all_table",
 		view: "datatable",
-		editable: true,
+		// editable: true,
 		columnWidth: 200,
 		resizeColumn: true,
-		animate: false,
+		// animate: false,
+		scroll: 'y',
 		drag: true,
 		select: "multiselect",
 		navigation: true,
@@ -335,7 +345,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// User selection
 	this.allTable.attachEvent("onSelectChange", function(evt) {
 		var elt = _this.allTable.getSelectedId();
+		// remember the selected item (for drag-drop)
+		_this.selectedItem = elt;
 		if (!elt || !elt.id) {
+			// if nothing selected, done
 			return;
 		}
 		var metadata = $$("metadata");
@@ -505,6 +518,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// onItemClick onAfterSelect onBeforeSelect
 	this.tree.attachEvent("onSelectChange", function(evt) {
+		// Clear the search box
+		$$("search_text").setValue("");
+		// Get the selection
 		var treeSelection = _this.tree.getSelectedItem();
 		// If a media folder is selection
 		if (treeSelection) {
@@ -530,86 +546,61 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// target - the id of the drop target, null for drop on empty space
 	// start - the id from which DND was started
 	this.allTable.attachEvent("onBeforeDrag", function(context, ev) {
-		var elt;
-		context.html = "<div style='padding:8px;background:#d3e3ef'>";
-		if (context.source.length === 1) {
-			elt = _this.allFiles[context.start];
-			context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
-			context.html += '<br>' + elt.exif.FileName;
-		} else {
-			for (var i = 0; i < Math.min(context.source.length, 35); i++) {
-				elt = _this.allFiles[context.source[i]];
-				context.html += elt.exif.FileName + "<br>";
+		// Only drag-drop if multiple selected items,
+		//    or the source element is the same as the selected one (select and drag)
+		if (context.source.length > 1 || context.start === _this.selectedItem.id) {
+			var elt;
+			context.html = "<div style='padding:8px;background:#d3e3ef'>";
+			if (context.source.length === 1) {
+				elt = _this.allFiles[context.start];
+				context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
+				context.html += '<br>' + elt.exif.FileName;
+			} else {
+				for (var i = 0; i < Math.min(context.source.length, 35); i++) {
+					elt = _this.allFiles[context.source[i]];
+					context.html += elt.exif.FileName + "<br>";
+				}
 			}
+			context.html += "</div>";
+			return true;
+		} else {
+			return false;
 		}
-		context.html += "</div>";
 	});
+
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
 		// No DnD
 		return false;
 	});
 
+	// Before the drop, test if it is a valid operation
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
-		// for (var i = 0; i < context.source.length; i++) {
-		// 	console.log('onBeforeDrop', context.source[i], context.target);
-		// }
-		// return true;
-
-		// No DnD
-		return false;
+		if (context.target.startsWith("Image:")   ||
+			context.target.startsWith("PDF:")     ||
+			context.target.startsWith("Video:")   ||
+			context.target.startsWith("App:")     ||
+			context.target.startsWith("Session:") ||
+			context.target.startsWith("Config:")) {
+			// No DnD on search icons
+			return false;
+		} else {
+			// Move each file selected one by one
+			context.source.map(function(elt) {
+				wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
+			});
+			// Dont do a real DnD, stop there
+			return false;
+		}
 	});
+
+	// Now, do the transfer
 	this.tree.attachEvent("onAfterDrop", function(context, native_event) {
-		// console.log('onAfterDrop', context.source, context.target);
+		// done in before drop for now
 	});
 
 	webix.event(this.allTable.$view, "drag", function(e) {
 		e.preventDefault();
 	});
-
-	// HTML5 drag and drop
-	// var popup;
-	// webix.event(main.$view, "dragenter", function(e) {
-	// 	e.preventDefault();
-	// 	if (!popup) {
-	// 		popup = webix.ui({
-	// 			view: "window",
-	// 			id: "my_upload",
-	// 			head: "Uploading",
-	// 			position: "center",
-	// 			width: Math.round(window.innerWidth*0.50),
-	// 			height: Math.round(window.innerHeight*0.50),
-	// 			body: {
-	// 				template: "&nbsp;<br>&nbsp;<br>" +
-	// 					"<h1 style=\"color:black\">drop files to upload</h1>"
-	// 			}
-	// 		})
-	// 		popup.show();
-	// 	}
-	// });
-	// webix.event(main.$view, "dragleave", function(e) {
-	// 	console.log('drag leave');
-	// 	e.preventDefault();
-	// 	if (popup) {
-	// 		popup.close();
-	// 		popup = null;
-	// 	}
-	// });
-	// webix.event(main.$view, "dragover", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drag over');
-	// });
-	// webix.event(main.$view, "drag", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drag');
-	// });
-	// webix.event(main.$view, "drop", function(e) {
-	// 	e.preventDefault();
-	// 	console.log('drop',e);
-	// 	popup.close();
-	// 	var mymain = $$(e);
-	// 	var id = mymain.locate(e);
-	// 	console.log('Drop', e, id);
-	// });
 
 	webix.ui({
 		id: "uploadAPI",
@@ -620,6 +611,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				console.log('uploaded file', item.name);
 			},
 			onUploadComplete: function(item) {
+				console.log('upload complete');
 				var d = $$("uploadlist");
 				d.data.each(function(obj) {
 					// if all good, remove from list
@@ -954,9 +946,29 @@ function FileManager(wsio, mydiv, uniqueID) {
 			i++;
 		}
 
+		// Clear the search box
+		$$("search_text").setValue("");
+
 		this.refresh();
 		// Sort the table by name
 		this.allTable.sort("name", "asc");
+
+
+		// Get the existing selection
+		var treeSelection = _this.tree.getSelectedItem();
+		// If a media folder is selection
+		if (treeSelection) {
+			if (treeSelection.sage2URL) {
+				_this.allTable.filter(function(obj) {
+					// trying to match the base URL
+					return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
+				});
+				return;
+			} else {
+				updateSearch(treeSelection.id);
+			}
+		}
+
 	};
 
 	this.refresh = function() {

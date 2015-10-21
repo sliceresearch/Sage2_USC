@@ -61,7 +61,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		});
 		this.stopBtn = this.controls.addButton({
 			identifier: "Stop",
-			type: "stop",
+			type: "rewind",
 			position: 3
 		});
 

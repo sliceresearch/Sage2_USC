@@ -57,8 +57,10 @@ function SAGE2_browser() {
 	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
 	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
 	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
-	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipad") >= 0 ||
-			userAgent.indexOf("ipod") >= 0);
+	browser.isIPhone   = userAgent.indexOf("iphone") >= 0;
+	browser.isIPad     = userAgent.indexOf("ipad") >= 0;
+	browser.isIPod     = userAgent.indexOf("ipod") >= 0;
+	browser.isIOS      = !browser.isWinPhone && (browser.isIPhone || browser.isIPad || browser.isIPod);
 	browser.isAndroid  = userAgent.indexOf("android") >= 0;
 	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);

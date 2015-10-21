@@ -35,7 +35,7 @@ var os            = require('os');               // operating system access
 var path          = require('path');             // file path management
 var readline      = require('readline');         // to build an evaluation loop
 var url           = require('url');              // parses urls
-// var util          = require('util');             // node util
+// var util          = require('util');          // node util
 
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
@@ -65,6 +65,7 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
+var registry            = require('./src/node-registry');        // Registry Manager
 
 
 // Globals
@@ -172,7 +173,11 @@ function initializeSage2Server() {
 	}
 
 	// Check for missing packages
-	sageutils.checkPackages(); // pass parameter `true` for devel packages also
+	//     pass parameter `true` for devel packages also
+	if (process.arch !== 'arm') {
+		// seems very slow to do on ARM processor (Raspberry PI)
+		sageutils.checkPackages();
+	}
 
 	// Setup binaries path
 	if (config.dependencies !== undefined) {
@@ -289,13 +294,15 @@ function initializeSage2Server() {
 	for (var lf in mediaFolders) {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
-	sageutils.monitorFolders(listOfFolders,
+	// try to exclude some folders from the monitoring
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp' ];
+	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
-
-				// assets.refresh(this.root, function() {
+				// broadcast the new file list
+				// assets.refresh(this.root, function(count) {
 				// 	broadcast('storedFileList', getSavedFilesList());
 				// });
 			}
@@ -612,6 +619,7 @@ function setupListeners(wsio) {
 	wsio.on('loadApplication',                      wsLoadApplication);
 	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
+	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -2118,6 +2126,33 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 	// }
 }
 
+function wsMoveElementFromStoredFiles(wsio, data) {
+	var destinationURL = data.url;
+	var destinationFile;
+
+	// calculate the new destination filename
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		if (destinationURL.indexOf(f.url) === 0) {
+			var splits = destinationURL.split(f.url);
+			var subdir = splits[1];
+			destinationFile = path.join(f.path, subdir, path.basename(data.filename));
+		}
+	}
+
+	// Do the move and reprocess the asset
+	if (destinationFile) {
+		console.log('Have to move', data.filename, destinationFile);
+		assets.moveAsset(data.filename, destinationFile, function(err) {
+			if (err) {
+				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
+			} else {
+				// if all good, send the new list of files
+				wsRequestStoredFiles(wsio);
+			}
+		});
+	}
+}
 
 
 // **************  Adding Web Content (URL) *****************
@@ -3344,7 +3379,7 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		// console.log('Form>	begin ', name, file.name, file.type);
+		// console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
 	});
 
 	form.on('field', function(field, value) {
@@ -3363,8 +3398,20 @@ function uploadForm(req, res) {
 			res.write(err + "\n\n");
 			res.end();
 		}
+		// build the reply to the upload
 		res.writeHead(200, {'Content-Type': 'application/json'});
 		// For webix uploader: status: server
+		fields.done = true;
+
+		// Get the file (only one even if multiple drops, it comes one by one)
+		var file = files[ Object.keys(files)[0] ];
+		var app = registry.getDefaultApp(file.name);
+		if (app === undefined || app === "") {
+			fields.good = false;
+		} else {
+			fields.good = true;
+		}
+		// Send the reply
 		res.end(JSON.stringify({status: 'server',
 			fields: fields, files: files}));
 	});
@@ -3382,7 +3429,7 @@ function manageUploadedFiles(files, position) {
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
 
 			if (appInstance === null) {
-				console.log("Form> unrecognized file type: ", file.name, file.type);
+				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
 
@@ -3409,6 +3456,9 @@ function manageUploadedFiles(files, position) {
 				}
 			}
 			handleNewApplication(appInstance, videohandle);
+
+			// send the update file list
+			broadcast('storedFileList', getSavedFilesList());
 		});
 	});
 }
@@ -3632,9 +3682,9 @@ function processInputCommand(line) {
 			if (SAGE2_version.branch.length > 0) {
 				sageutils.updateWithGIT(SAGE2_version.branch, function(error, success) {
 					if (error) {
-						console.log(sageutils.header('GIT') + 'Update: error', error);
+						console.log(sageutils.header('GIT') + 'Update error - ' + error);
 					} else {
-						console.log(sageutils.header('GIT') + 'Update: success', success);
+						console.log(sageutils.header('GIT') + 'Update success - ' + success);
 					}
 				});
 			} else {
@@ -4990,6 +5040,11 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 }
 
 function moveAndResizeApplicationWindow(resizeApp, portalId) {
+	// Shift position up and left by one pixel to take border into account
+	//    visible in hide-ui mode
+	resizeApp.elemLeft = resizeApp.elemLeft - 1;
+	resizeApp.elemTop  = resizeApp.elemTop  - 1;
+
 	var app = SAGE2Items.applications.list[resizeApp.elemId];
 
 	var titleBarHeight = config.ui.titleBarHeight;

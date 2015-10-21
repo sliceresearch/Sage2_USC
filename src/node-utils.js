@@ -225,7 +225,7 @@ function updateWithGIT(branch, callback) {
 	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
 		// return the messages in the callback paramter
 		if (err) {
-			callback(stderr, null);
+			callback(stdout + ' : ' + stderr, null);
 		} else {
 			callback(null, stdout);
 		}
@@ -439,6 +439,17 @@ function encodeReservedURL(aUrl) {
 			.replace(/\?/g, "%3F").replace(/\@/g, "%40");
 }
 
+/**
+ * Return a safe URL string: make Windows path to URL
+ *
+ * @method encodeReservedPath
+ * @param aUrl {String} URL to be sanitized
+ * @return {String} cleanup version of the URL
+ */
+function encodeReservedPath(aPath) {
+	return encodeReservedURL(aPath.replace(/\\/g, "/"));
+}
+
 
 /**
  * Return a home directory on every platform
@@ -504,7 +515,7 @@ function mkdirParent(dirPath) {
  * @param folders {Array} list of folders
  * @param callback {Function} to be called when a change is detected
  */
-function monitorFolders(folders, callback) {
+function monitorFolders(folders, excludes, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -518,7 +529,10 @@ function monitorFolders(folders, callback) {
 				// only matching: all true for now
 				matches:  function(relpath) {return true; },
 				// and excluding: nothing for now
-				excludes: function(relpath) {return false; }
+				excludes: function(relpath) {
+					return (excludes.indexOf(relpath) !== -1);
+					// return false;
+				}
 			});
 			// place the callback the change event
 			monitor.on('change', callback);
@@ -561,4 +575,6 @@ module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.encodeReservedURL = encodeReservedURL;
 module.exports.mkdirParent       = mkdirParent;
+
+module.exports.encodeReservedPath = encodeReservedPath;
 
