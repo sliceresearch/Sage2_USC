@@ -188,7 +188,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 								, posX - this.touchOnPaletteOffsetX
 								, posY - this.touchOnPaletteOffsetY
 								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+								, this.palettePosition.endY - this.palettePosition.startY - 58);
 			return;
 		}
 
