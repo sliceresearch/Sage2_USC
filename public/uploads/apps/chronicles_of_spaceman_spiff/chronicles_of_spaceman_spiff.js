@@ -215,8 +215,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 			return;
 		}
 
-		this.image1.src = data.comicFileName;
-		this.image1.onload = this.loadSuccessCallbackFunc;
+		this.image1.src     = data.comicFileName;
+		this.image1.onload  = this.loadSuccessCallbackFunc;
 		this.image1.onerror = this.loadFailCallbackFunc;
 	},
 
@@ -249,8 +249,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 		this.canvasBackground = "black";
 
-		this.canvasWidth = 600;
-		this.canvasHeight = 190;
+		this.canvasWidth = 1200;
+		this.canvasHeight = 380;
 
 		this.sampleSVG = null;
 
@@ -262,10 +262,6 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.today = "";
 
 		this.maxFPS = 0.0003; // update once per hour
-
-		// Get width height from the supporting div
-		// var divWidth  = this.element.clientWidth;
-		// var divHeight = this.element.clientHeight;
 
 		this.element.id = "div" + data.id;
 
@@ -288,6 +284,23 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 		this.controls.addButton({type: "prev", position: 1, identifier: "Prev"});
 		this.controls.finishedAddingControls(); // Not adding controls but making the default buttons available
+
+		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2015/10/19/'
+		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/19/'
+		var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/13/'
+		if (isMaster) {
+			this.applicationRPC("calvinPicture", "gotPicture", {url: aURL}, true);
+		}
+	},
+
+	gotPicture: function(data) {
+		if (data.err && data.err !== null) {
+			console.log('Welcome> error');
+			return;
+		}
+		// Set the picture URL
+		console.log('Got pic', data.url, "-", data.image.length, "bytes");
+		this.image1.src = "data:image/gif;base64," + data.image;
 	},
 
 	load: function(date) {
