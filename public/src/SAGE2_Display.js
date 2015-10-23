@@ -193,6 +193,9 @@ function SAGE2_init() {
 
 	// Socket close event (ie server crashed)
 	wsio.on('close', function(evt) {
+		if (ui) {
+			ui.showError();
+		}
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
