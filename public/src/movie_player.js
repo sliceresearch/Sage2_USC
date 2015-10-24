@@ -130,9 +130,9 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
-		// Space Bar - toggle play/pause
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
+				// Space Bar - toggle play/pause
 				if (this.state.paused === true) {
 					if (isMaster) {
 						// Trying to sync
@@ -151,6 +151,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				}
 				this.refresh(date);
 			} else if (data.character === "l") {
+				// l loop
 				if (this.state.looped === true) {
 					if (isMaster) {
 						wsio.emit('loopVideo', {id: this.div.id, loop: false});
@@ -163,6 +164,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					this.state.looped = true;
 				}
 			} else if (data.character === "m") {
+				// m mute
 				if (this.state.muted === true) {
 					if (isMaster) {
 						wsio.emit('unmuteVideo', {id: this.div.id});
@@ -174,6 +176,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					}
 					this.state.muted = true;
 				}
+			} else if (data.character === "1") {
+				// 1 start of video
+				if (isMaster) {
+					wsio.emit('stopVideo', {id: this.div.id});
+				}
+				this.state.paused = true;
+				this.playPauseBtn.state = 0;
 			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
