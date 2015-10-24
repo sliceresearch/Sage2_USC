@@ -5,7 +5,7 @@ function DrawingManager(config) {
 	this.idPrequel = "drawing_";
 	this.clientIDandSockets = {};
 	this.newDrawingObject = {};
-	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap"="round"};
+	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap": "round"};
 	this.drawingMode = true;
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
