@@ -232,7 +232,7 @@ function SAGE2_init() {
 // Show error message for 2 seconds (or time given as parameter)
 function showMessage(message, delay) {
 	var aMessage = webix.alert({
-		type:  "alert-warning",
+		type:  "alert-error",
 		title: "SAGE2 Error",
 		ok:    "OK",
 		text:  message
