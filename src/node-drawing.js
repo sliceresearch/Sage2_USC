@@ -5,8 +5,8 @@ function DrawingManager(config) {
 	this.idPrequel = "drawing_";
 	this.clientIDandSockets = {};
 	this.newDrawingObject = {};
-	this.style = {fill: "none", stroke: "white", "stroke-width": "5px"};
-	this.drawingMode = false;
+	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap"="round"};
+	this.drawingMode = true;
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
@@ -135,6 +135,11 @@ DrawingManager.prototype.update = function(drawingObject, clientID) {
 	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
 
 }
+
+
+DrawingManager.prototype.distance = function(p1,p2) {
+	return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
+}
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	// Create new Drawing object
@@ -152,8 +157,12 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	if (!this.newDrawingObject[e.sourceId]) {
 		this.newDrawingObjectFunc(e, posX, posY);
 	}
-	this.newDrawingObject[e.sourceId]["type"] = "path";
-	this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
+	var lastPoint = this.newDrawingObject[e.sourceId]["options"]["points"]
+					[this.newDrawingObject[e.sourceId]["options"]["points"].length - 1];
+	if (distance(lastPoint, {x: posX, y: posY}) > 0.5) {
+		this.newDrawingObject[e.sourceId]["type"] = "path";
+		this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
+	}
 }
 DrawingManager.prototype.touchInsidePalette = function(x,y) {
 	return ((x >= this.palettePosition.startX) && (x <= this.palettePosition.endX) &&
@@ -171,7 +180,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
 			this.actualAction = "movingPalette"
 			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
-			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY;
+			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY + 58; // Title bar height
 			return;
 		}
 		// pointer down
