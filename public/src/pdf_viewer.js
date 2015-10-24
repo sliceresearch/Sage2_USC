@@ -229,18 +229,40 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	event: function(eventType, position, user, data, date) {
 		// Left Click  - go back one page
 		// Right Click - go forward one page
-		if (eventType === "pointerPress") {
-			if (data.button === "left") {
-				if (this.state.page <= 1) {
-					return;
-				}
-				this.state.page = this.state.page - 1;
-				this.refresh(date);
-			} else if (data.button === "right") {
+		// if (eventType === "pointerPress") {
+		// 	if (data.button === "left") {
+		// 		if (this.state.page <= 1) {
+		// 			return;
+		// 		}
+		// 		this.state.page = this.state.page - 1;
+		// 		this.refresh(date);
+		// 	} else if (data.button === "right") {
+		// 		if (this.state.page >= this.pdfDoc.numPages) {
+		// 			return;
+		// 		}
+		// 		this.state.page = this.state.page + 1;
+		// 		this.refresh(date);
+		// 	}
+		// }
+
+		// Keyboard:
+		//   spacebar - next
+		//   1 - first
+		//   0 - last
+		if (eventType === "keyboard") {
+			if (data.character === " ") {
 				if (this.state.page >= this.pdfDoc.numPages) {
 					return;
 				}
 				this.state.page = this.state.page + 1;
+				this.refresh(date);
+			}
+			if (data.character === "1") {
+				this.state.page = 1;
+				this.refresh(date);
+			}
+			if (data.character === "0") {
+				this.state.page = this.pdfDoc.numPages;
 				this.refresh(date);
 			}
 		}
