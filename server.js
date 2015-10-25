@@ -2146,7 +2146,6 @@ function wsMoveElementFromStoredFiles(wsio, data) {
 
 	// Do the move and reprocess the asset
 	if (destinationFile) {
-		console.log('Have to move', data.filename, destinationFile);
 		assets.moveAsset(data.filename, destinationFile, function(err) {
 			if (err) {
 				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
