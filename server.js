@@ -2814,12 +2814,15 @@ function wsFinishApplicationResize(wsio, data) {
 }
 
 function wsDeleteApplication(wsio, data) {
-	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
-		SAGE2Items.applications.removeItem(data.appId);
-		var im = findInteractableManager(data.appId);
-		im.removeGeometry(data.appId, "applications");
-		broadcast('deleteElement', {elemId: data.appId});
-	}
+	deleteApplication(data.appId);
+
+	// Is that diffent ?
+	// if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+	// 	SAGE2Items.applications.removeItem(data.appId);
+	// 	var im = findInteractableManager(data.appId);
+	// 	im.removeGeometry(data.appId, "applications");
+	// 	broadcast('deleteElement', {elemId: data.appId});
+	// }
 }
 
 function wsUpdateApplicationState(wsio, data) {
@@ -5862,19 +5865,32 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			if (remoteInteraction[uniqueID].windowManagementMode()) {
-				if (data.code === 8 || data.code === 46) { // backspace or delete
-					deleteApplication(obj.data.id);
+			// if (remoteInteraction[uniqueID].windowManagementMode()) {
+			// 	if (data.code === 8 || data.code === 46) { // backspace or delete
+			// 		deleteApplication(obj.data.id);
 
-					var eLogData = {
-						application: {
-							id: obj.data.id,
-							type: obj.data.application
-						}
-					};
-					addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-				}
-			} else if (remoteInteraction[uniqueID].appInteractionMode()) {
+			// 		var eLogData = {
+			// 			application: {
+			// 				id: obj.data.id,
+			// 				type: obj.data.application
+			// 			}
+			// 		};
+			// 		addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
+			// 	}
+			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
+			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			// }
+			if (data.code === 8 || data.code === 46) { // backspace or delete
+				deleteApplication(obj.data.id);
+
+				var eLogData = {
+					application: {
+						id: obj.data.id,
+						type: obj.data.application
+					}
+				};
+				addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
+			} else {
 				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			}
 			break;
