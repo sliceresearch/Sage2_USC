@@ -183,6 +183,11 @@ function SAGE2_init() {
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
 
+	// Force click for Safari, events:
+	//   webkitmouseforcewillbegin webkitmouseforcechanged
+	//   webkitmouseforcedown webkitmouseforceup
+	sage2UI.addEventListener("webkitmouseforceup", forceClick, false);
+
 	if (webix) {
 		// disabling the webix touch managment for now
 		webix.Touch.disable();
@@ -259,13 +264,13 @@ function setupListeners() {
 				// Calculate the position of the drop
 				var x, y;
 				if (target === sage2UI) {
-					// Desktop
-					x = event.layerX / event.target.clientWidth;
-					y = event.layerY / event.target.clientHeight;
-				} else {
 					// on Mobile: not correct, but close enough (i.e. pageX)
 					x = event.pageX / sage2UI.clientWidth;
 					y = event.pageY / sage2UI.clientHeight;
+				} else {
+					// Desktop
+					x = event.layerX / event.target.clientWidth;
+					y = event.layerY / event.target.clientHeight;
 				}
 				// Open the files
 				for (var i = 0; i < dnd.source.length; i++) {
@@ -1054,6 +1059,38 @@ function pointerScroll(event) {
 }
 
 /**
+ * Handler for force click event (safari)
+ *
+ * @method forceClick
+ * @param event {Event} event data
+ */
+function forceClick(event) {
+	// Check to see if the event has a force property
+	if ("webkitForce" in event) {
+		// Retrieve the force level
+		var forceLevel = event["webkitForce"];
+
+		// Retrieve the force thresholds for click and force click
+		var clickForce      = MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN;
+		var forceClickForce = MouseEvent.WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN;
+
+		// Check for force level within the range of a normal click
+		if (forceLevel >= clickForce && forceLevel < forceClickForce) {
+			// Perform operations in response to a normal click
+			// Check for force level within the range of a force click
+		} else if (forceLevel >= forceClickForce) {
+			// Perform operations in response to a force click
+			var rect        = event.target.getBoundingClientRect();
+			var touchStartX = event.clientX - rect.left;
+			var touchStartY = event.clientY - rect.top;
+			// simulate backspace
+			displayUI.keyDown(touchStartX, touchStartY, 8);
+			displayUI.keyUp(touchStartX, touchStartY, 8);
+		}
+	}
+}
+
+/**
  * Handler for touch start event
  *
  * @method touchStart
@@ -1075,6 +1112,7 @@ function touchStart(event) {
 			displayUI.pointerMove(touchStartX, touchStartY);
 			displayUI.pointerPress("left");
 			touchHold = setTimeout(function() {
+				// simulate backspace
 				displayUI.keyDown(touchStartX, touchStartY, 8);
 				displayUI.keyUp(touchStartX, touchStartY, 8);
 			}, 1500);
