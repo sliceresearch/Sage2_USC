@@ -536,13 +536,15 @@ function setupListeners() {
 
 	wsio.on('hoverOverItemCorner', function(elem_data) {
 		var selectedElem = document.getElementById(elem_data.elemId);
-		var dragCorner   = selectedElem.getElementsByClassName("dragCorner");
-		if (elem_data.flag) {
-			dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.7)";
-			dragCorner[0].style.border = "2px solid #333333";
-		} else {
-			dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.0)";
-			dragCorner[0].style.border = "none";
+		if (selectedElem) {
+			var dragCorner   = selectedElem.getElementsByClassName("dragCorner");
+			if (elem_data.flag) {
+				dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.7)";
+				dragCorner[0].style.border = "2px solid #333333";
+			} else {
+				dragCorner[0].style.backgroundColor = "rgba(255,255,255,0.0)";
+				dragCorner[0].style.border = "none";
+			}
 		}
 	});
 
