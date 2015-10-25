@@ -143,7 +143,13 @@ var media_stream = SAGE2_App.extend({
 	* @param data {Object} object containing extra data about the event,
 	* @param date {Date} current time from the server
 	*/
-	event: function(type, position, user, data, date) {
+	event: function(eventType, position, user_id, data, date) {
+		if (eventType === "keyboard") {
+			if (data.character === 'x') {
+				// Press 'x' to close itself
+				this.close();
+			}
+		}
 	}
 
 });

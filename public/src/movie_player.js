@@ -183,6 +183,9 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				}
 				this.state.paused = true;
 				this.playPauseBtn.state = 0;
+			} else if (data.character === 'x') {
+				// Press 'x' to close itself
+				this.close();
 			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {

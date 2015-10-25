@@ -375,6 +375,16 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Close the application itself
+	*
+	* @method close
+	*/
+	close: function() {
+		// send the message to server
+		wsio.emit('deleteApplication', {appId: this.id});
+	},
+
+	/**
 	* Application request for a new size
 	*
 	* @method sendResize

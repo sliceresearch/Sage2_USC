@@ -265,6 +265,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				this.state.page = this.pdfDoc.numPages;
 				this.refresh(date);
 			}
+			// Press 'x' to close itself
+			if (data.character === 'x') {
+				this.close();
+			}
 		}
 
 		// Left Arrow  - go back one page
