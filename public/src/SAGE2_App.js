@@ -395,11 +395,25 @@ var SAGE2_App = Class.extend({
 		var msgObject = {};
 		// Add the display node ID to the message
 		msgObject.node   = clientID;
-		msgObject.id     = this.div.id;
+		msgObject.id     = this.id;
 		msgObject.width  = newWidth;
 		msgObject.height = newHeight;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
+	},
+
+	/**
+	* Request fullscreen
+	*
+	* @method sendFullscreen
+	*/
+	sendFullscreen: function() {
+		var msgObject = {};
+		// Add the display node ID to the message
+		msgObject.node = clientID;
+		msgObject.id   = this.id;
+		// send the message to server
+		wsio.emit('appFullscreen', msgObject);
 	},
 
 	/**
