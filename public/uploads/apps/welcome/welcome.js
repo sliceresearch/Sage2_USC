@@ -45,23 +45,34 @@ var welcome = SAGE2_App.extend({
 
 		this.iconWeather = this.svg.image(smallTansparentGIF(), 90, 0, 10, 10);
 
+		// last request
+		this.lastRequest = -10000;
+
 		// resize callback
-		// this.resizeEvents = "continuous";
 		this.resizeEvents = "onfinish";
 
 		// SAGE2 Application Settings
 		//
 		// Control the frame rate for an animation application
 		this.maxFPS = 1.0 / 60.0;
+
 		// Not adding controls but making the default buttons available
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
 
-		// Generate a new random ID
-		this.state.imageID = this.getNewImageID();
-		var aUrl = 'https://www.gstatic.com/prettyearth/assets/data/' + this.state.imageID + '.json';
-		if (isMaster) {
+		// request it fullscreen
+		this.sendFullscreen();
+	},
+
+	requestPicture: function() {
+		// Get a new image every 15min
+		if (isMaster && ((this.t - this.lastRequest) > 900)) {
+			// Generate a new random ID
+			this.state.imageID = this.getNewImageID();
+			var aUrl = 'https://www.gstatic.com/prettyearth/assets/data/' + this.state.imageID + '.json';
 			this.applicationRPC({image: true, url: aUrl}, "gotPicture", true);
+			// update the time
+			this.lastRequest = this.t;
 		}
 	},
 
@@ -175,28 +186,13 @@ var welcome = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
+		this.requestPicture();
 		this.updateTime(date);
 	},
 
 	resize: function(date) {
 		this.svg.attr('width',  this.element.clientWidth  + "px");
 		this.svg.attr('height', this.element.clientHeight + "px");
-
-
-		// var box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
-
-		// this.svg.attr("width", this.element.clientWidth)
-		// 	.attr("height", this.element.clientHeight)
-		// 	.attr("viewBox", box)
-		// 	.attr("preserveAspectRatio", "xMinYMin meet");
-
-		// this.svg.select("#myimage")
-		// 	.attr("width",  this.sage2_width)
-		// 	.attr("height", this.sage2_height);
-
-		this.refresh(date);
-	},
-	move: function(date) {
 		this.refresh(date);
 	},
 
