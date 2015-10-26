@@ -612,6 +612,7 @@ function setupListeners(wsio) {
 	wsio.on('finishedRenderingAppFrame',            wsFinishedRenderingAppFrame);
 	wsio.on('updateAppState',                       wsUpdateAppState);
 	wsio.on('appResize',                            wsAppResize);
+	wsio.on('appFullscreen',                        wsFullscreen);
 	wsio.on('broadcast',                            wsBroadcast);
 	wsio.on('applicationRPC',                       wsApplicationRPC);
 
@@ -1319,6 +1320,62 @@ function wsAppResize(wsio, data) {
 		moveAndResizeApplicationWindow(updateItem);
 	}
 }
+
+//
+// Application request fullscreen
+//
+function wsFullscreen(wsio, data) {
+	var id = data.id;
+	if (SAGE2Items.applications.list.hasOwnProperty(id)) {
+		var item = SAGE2Items.applications.list[id];
+
+		var wallRatio = config.totalWidth  / config.totalHeight;
+		var iCenterX  = config.totalWidth  / 2.0;
+		var iCenterY  = config.totalHeight / 2.0;
+		var iWidth    = 1;
+		var iHeight   = 1;
+		var titleBar = config.ui.titleBarHeight;
+		if (config.ui.auto_hide_ui === true) {
+			titleBar = 0;
+		}
+
+		if (item.aspect > wallRatio) {
+			// Image wider than wall
+			iWidth  = config.totalWidth;
+			iHeight = iWidth / item.aspect;
+		} else {
+			// Wall wider than image
+			iHeight = config.totalHeight - (2 * titleBar);
+			iWidth  = iHeight * item.aspect;
+		}
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		// calculate new values
+		item.left   = iCenterX - (iWidth / 2);
+		item.top    = iCenterY - (iHeight / 2);
+		item.width  = iWidth;
+		item.height = iHeight;
+
+		// Shift by 'titleBarHeight' if no auto-hide
+		if (config.ui.auto_hide_ui === true) {
+			item.top = item.top - config.ui.titleBarHeight;
+		}
+
+		item.maximized = true;
+
+		// build the object to be sent
+		var updateItem = {elemId: item.id, elemLeft: item.left, elemTop: item.top,
+				elemWidth: item.width, elemHeight: item.height, force: true,
+				date: new Date()};
+
+		moveAndResizeApplicationWindow(updateItem);
+	}
+}
+
 
 //
 // Broadcast data to all clients who need apps
@@ -3664,6 +3721,7 @@ function processInputCommand(line) {
 			console.log('streams\t\tlist media streams');
 			console.log('clear\t\tclose all running applications');
 			console.log('tile\t\tlayout all running applications');
+			console.log('fullscreen\t\tmaximize one application');
 			console.log('save\t\tsave state of running applications into a session');
 			console.log('load\t\tload a session and restore applications');
 			console.log('assets\t\tlist the assets in the file library');
@@ -3729,6 +3787,12 @@ function processInputCommand(line) {
 		case 'kill': {
 			if (command.length > 1 && typeof command[1] === "string") {
 				deleteApplication(command[1]);
+			}
+			break;
+		}
+		case 'fullscreen': {
+			if (command.length > 1 && typeof command[1] === "string") {
+				wsFullscreen(null, {id: command[1]});
 			}
 			break;
 		}
