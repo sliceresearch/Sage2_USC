@@ -588,7 +588,7 @@ var exifAsync = function(cmds, cb) {
 					console.log("internal error for file", file);
 					cb(err);
 				} else {
-					console.log(sageutils.header("EXIF") + "Adding1 " + data.FileName);
+					console.log(sageutils.header("EXIF") + "Adding " + data.FileName);
 					addFile(data.SourceFile, data, function() {
 						if (cmds.length > 0) {
 							execNext();
