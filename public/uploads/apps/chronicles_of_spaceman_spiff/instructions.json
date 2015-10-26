@@ -1,8 +1,8 @@
 {
 	"main_script": "chronicles_of_spaceman_spiff.js",
 	"icon": "calvin.png",
-	"width": 1200,
-	"height": 410,
+	"width": 842,
+	"height": 318,
 	"animation": true,
 	"dependencies": [
 	],

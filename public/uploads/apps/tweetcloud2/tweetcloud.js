@@ -77,7 +77,8 @@ var tweetcloud = SAGE2_App.extend({
 		queryDiv.style.width = (queryText.clientWidth + (data.width * 0.03)).toString() + "px";
 
 		if (isMaster) {
-			this.applicationRPC("searchTweets", "tweetResults", {q: this.query, language: "en", count: 100}, false);
+			this.applicationRPC({q: this.query, language: "en", count: 100},
+				"tweetResults", false);
 		}
 
 		this.tweets = [];
@@ -329,7 +330,8 @@ var tweetcloud = SAGE2_App.extend({
 			if (data.character === " ") {
 				this.clear();
 				if (isMaster) {
-					this.applicationRPC("searchTweets", "tweetResults", {q: this.query, language: "en", count: 100}, false);
+					this.applicationRPC({q: this.query, language: "en", count: 100},
+						"tweetResults", false);
 				}
 			}
 		} else if (eventType === "widgetEvent" && data.identifier === "Search") {
@@ -339,7 +341,8 @@ var tweetcloud = SAGE2_App.extend({
 			this.queryText.textContent = this.query;
 			this.queryDiv.style.width = (this.queryText.clientWidth + (width * 0.03)).toString() + "px";
 			if (isMaster) {
-				this.applicationRPC("searchTweets", "tweetResults", {q: this.query, language: "en", count: 100}, false);
+				this.applicationRPC({q: this.query, language: "en", count: 100},
+					"tweetResults", false);
 			}
 		}
 	}

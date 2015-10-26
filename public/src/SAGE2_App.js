@@ -417,13 +417,12 @@ var SAGE2_App = Class.extend({
 	* Support for the RPC call to the server
 	*
 	* @method applicationRPC
-	* @param rpc {String} RPC function name on the server
-	* @param funcName {String} function name for broadcast or emit
-	* @param query {Object} search info for tweet API
+	* @param query {Object} parameter for RPC function on server
+	* @param funcName {String} return function name for broadcast or emit
 	* @param broadcast {Boolean} wether or not doing a return broadcast or emit
 	*/
-	applicationRPC: function(rpc, funcName, query, broadcast) {
-		wsio.emit('applicationRPC', {function: rpc, app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	applicationRPC: function(query, funcName, broadcast) {
+		wsio.emit('applicationRPC', {app: this.div.id, func: funcName, query: query, broadcast: broadcast});
 	},
 
 	/**

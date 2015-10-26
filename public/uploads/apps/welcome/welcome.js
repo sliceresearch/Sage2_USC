@@ -61,7 +61,7 @@ var welcome = SAGE2_App.extend({
 		this.state.imageID = this.getNewImageID();
 		var aUrl = 'https://www.gstatic.com/prettyearth/assets/data/' + this.state.imageID + '.json';
 		if (isMaster) {
-			this.applicationRPC("welcomePicture", "gotPicture", {image: true, url: aUrl}, true);
+			this.applicationRPC({image: true, url: aUrl}, "gotPicture", true);
 		}
 	},
 
@@ -110,7 +110,7 @@ var welcome = SAGE2_App.extend({
 				if (geojson.country) {
 					loc += "," + geojson.country;
 				}
-				this.applicationRPC("welcomePicture", "gotWeather", {weather: true, place: loc}, true);
+				this.applicationRPC({weather: true, place: loc}, "gotWeather", true);
 			}
 		}
 	},
@@ -148,7 +148,7 @@ var welcome = SAGE2_App.extend({
 
 		if (isMaster) {
 			// now get the location of the wall
-			this.applicationRPC("welcomePicture", "gotLocation", {location: true}, true);
+			this.applicationRPC({location: true}, "gotLocation", true);
 		}
 	},
 
