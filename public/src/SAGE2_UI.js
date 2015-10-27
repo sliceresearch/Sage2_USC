@@ -119,8 +119,8 @@ function SAGE2_init() {
 		console.log("Websocket opened");
 
 		// Show and hide elements once connect to server
-		document.getElementById('loadingUI').style.display = "none";
-		document.getElementById('displayUI').style.display = "block";
+		document.getElementById('loadingUI').style.display     = "none";
+		document.getElementById('displayUIDiv').style.display  = "block";
 		document.getElementById('menuContainer').style.display = "block";
 
 		// Start an initial resize of the UI once we get a connection
@@ -150,6 +150,9 @@ function SAGE2_init() {
 
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
+		// show a popup for a long time
+		showMessage("Server offline", 2147483647);
+		// try to reload every few seconds
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
 				clearInterval(refresh);
@@ -157,7 +160,7 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 
 	// window.addEventListener('dragover', preventDefault, false);
 	// window.addEventListener('dragend',  preventDefault, false);
@@ -214,6 +217,19 @@ function SAGE2_init() {
 	});
 }
 
+// Show error message for 2 seconds (or time given as parameter)
+function showMessage(message, delay) {
+	var aMessage = webix.alert({
+		type:  "alert-warning",
+		title: "SAGE2 Error",
+		ok:    "OK",
+		text:  message
+	});
+	setTimeout(function() {
+		webix.modalbox.hide(aMessage);
+	}, delay ? delay : 2000);
+}
+
 function setupListeners() {
 	wsio.on('initialize', function(data) {
 		interactor.setInteractionId(data.UID);
@@ -223,7 +239,7 @@ function setupListeners() {
 
 		// Build the file manager
 		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
-		webix.DragControl.addDrop("displayUI", {
+		webix.DragControl.addDrop("displayUIDiv", {
 			$drop: function(source, target, event) {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
@@ -239,6 +255,9 @@ function setupListeners() {
 		// First request the files
 		wsio.emit('requestStoredFiles');
 	});
+
+	// Open a popup on message sent from server
+	wsio.on('errorMessage', showMessage);
 
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
@@ -544,7 +563,7 @@ function preventDefault(event) {
 function fileDragEnter(event) {
 	event.preventDefault();
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "dashed";
 	displayUI.fileDrop = true;
 	displayUI.draw();
@@ -559,7 +578,7 @@ function fileDragEnter(event) {
 function fileDragLeave(event) {
 	event.preventDefault();
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -577,7 +596,7 @@ function fileDrop(event) {
 	}
 
 	// Update the UI
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -594,12 +613,6 @@ function fileDrop(event) {
 		// URLs and text and ...
 		if (event.dataTransfer.types) {
 			// types: text/uri-list  text/plain text/html ...
-
-			// var type, i;
-			// for (i = 0; i < event.dataTransfer.types.length; i++) {
-			// 	type = event.dataTransfer.types[i];
-			// 	console.log('drop> content ', type, event.dataTransfer.getData(type));
-			// }
 			var content;
 			if (event.dataTransfer.types.indexOf('text/uri-list') >= 0) {
 				// choose uri as first choice
@@ -650,7 +663,7 @@ function fileUploadFromUI() {
 	hideDialog('localfileDialog');
 
 	// Setup the progress bar
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -670,7 +683,7 @@ function fileUploadFromUI() {
  * @param event {Event} event data
  */
 function pointerPress(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
@@ -689,7 +702,7 @@ function pointerPress(event) {
  * @param event {Event} event data
  */
 function pointerRelease(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
@@ -709,19 +722,19 @@ function pointerRelease(event) {
  */
 function pointerMove(event) {
 	// listen for keyboard events if mouse moved over sage2UI
-	if (event.target.id === "sage2UI" && keyEvents === false) {
+	if (event.target.id === "sage2UICanvas" && keyEvents === false) {
 		document.addEventListener('keydown',  keyDown,  false);
 		document.addEventListener('keyup',    keyUp,    false);
 		document.addEventListener('keypress', keyPress, false);
 		keyEvents = true;
-	} else if (event.target.id !== "sage2UI" && keyEvents === true) {
+	} else if (event.target.id !== "sage2UICanvas" && keyEvents === true) {
 		document.removeEventListener('keydown',  keyDown,  false);
 		document.removeEventListener('keyup',    keyUp,    false);
 		document.removeEventListener('keypress', keyPress, false);
 		keyEvents = false;
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		var rect   = event.target.getBoundingClientRect();
 		var mouseX = event.clientX - rect.left;
 		var mouseY = event.clientY - rect.top;
@@ -948,10 +961,11 @@ function handleClick(element) {
 		var metadata_text = document.getElementById('metadata_text');
 		metadata_text.textContent = selectedFileEntry.textContent;
 	} else if (element.id === "clearcontent") {
-		// Arrangement Button Chosen
+		// Remove all the running applications
 		wsio.emit('clearDisplay');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "tilecontent") {
+		// Layout the applications
 		wsio.emit('tileApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "savesession") {
@@ -988,7 +1002,7 @@ function pointerDblClick(event) {
  * @param element {Element} DOM element triggering the double click
  */
 function handleDblClick(element) {
-	if (element.id === "sage2UI") {
+	if (element.id === "sage2UICanvas") {
 		displayUI.pointerDblClick();
 		if (event.preventDefault) {
 			event.preventDefault();
@@ -1011,7 +1025,7 @@ function handleDblClick(element) {
  * @param event {Event} event data
  */
 function pointerScroll(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		displayUI.pointerScroll(pointerX, pointerY, event.deltaY);
 		event.preventDefault();
 	}
@@ -1031,7 +1045,7 @@ function touchStart(event) {
 		touchTime = Date.now();
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (event.touches.length === 1) {
 			rect        = event.target.getBoundingClientRect();
 			touchStartX = event.touches[0].clientX - rect.left;
@@ -1119,7 +1133,7 @@ function touchEnd(event) {
 	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
 	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			displayUI.pointerRelease("left");
 			if (touchTap === 2) {
@@ -1175,7 +1189,7 @@ function touchMove(event) {
 	var rect, touchX, touchY, newDist, wheelDelta;
 	var touch0X, touch0Y, touch1X, touch1Y;
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			rect   = event.target.getBoundingClientRect();
 			touchX = event.touches[0].clientX - rect.left;

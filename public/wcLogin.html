@@ -32,9 +32,7 @@
 	<br>
 <br>
     <img id='sageLogo' src="images/sage2_logo.png" alt="SAGE2">
-	<br><br>
-	<br><br>
-	<br>
+    <div id='passwordPromptDiv'>
 	<h1 style="text-align:center">The SAGE2 web controller is locked.
 	</h1>
 
@@ -50,6 +48,8 @@
 
     <button class="button_session" type="button" id="enterButton" onclick="buttonSubmit()" style='font-size:1.5em'> Enter </button>
 	</h3>
+
+	</div>
 
 </body>
 </html>
@@ -88,6 +88,12 @@
 		workingDiv.style.position = 'absolute';
 		workingDiv.width = width;
 		workingDiv.height = height;
+
+
+		var wd2 = document.getElementById('passwordPromptDiv');
+		wd2.style.top = (height + window.innerHeight * 0.1) + "px";
+		wd2.style.position = 'absolute';
+		wd2.style.width = window.innerWidth+"px";
 
 	}
 

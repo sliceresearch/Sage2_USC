@@ -4,10 +4,10 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 width="80px" height="80px" viewBox="0 0 80 80" enable-background="new 0 0 80 80" xml:space="preserve">
 <g>
-	<path fill="none" stroke="#6D829F" stroke-width="4" stroke-miterlimit="10" d="M51.268,55.172
-		c-3.315,2.648-7.522,4.234-12.103,4.234c-10.717,0-19.405-8.689-19.405-19.405c0-10.718,8.688-19.407,19.405-19.407
+	<path fill="none" stroke="#485E88" stroke-width="4" stroke-miterlimit="10" d="M51.268,55.172
+		c-3.314,2.648-7.521,4.234-12.103,4.234c-10.717,0-19.405-8.689-19.405-19.405c0-10.718,8.688-19.407,19.405-19.407
 		c5.608,0,10.661,2.378,14.204,6.182"/>
-	<polygon fill="#D2D3D4" stroke="#6D829F" stroke-width="3" stroke-miterlimit="10" points="59.695,37.855 60.24,23.021 
+	<polygon fill="#D2D3D4" stroke="#485E88" stroke-width="3" stroke-miterlimit="10" points="59.695,37.855 60.24,23.021 
 		52.926,27.152 53.787,26.663 46.498,30.835 59.521,37.955 	"/>
 </g>
 <line fill="none" stroke="#FFFFFF" stroke-width="4" stroke-miterlimit="10" x1="64.323" y1="16.249" x2="15.678" y2="63.751"/>

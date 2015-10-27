@@ -33,41 +33,54 @@ function RadialMenu(id, ptrID, config) {
 	this.pointerid = ptrID;
 	this.label = "";
 	this.color = [255, 255, 255];
-	this.left = 0; // left/top is the center of the radial menu, NOT the upper left
-	this.top = 0;
+	this.left  = 0; // left/top is the center of the radial menu, NOT the upper left
+	this.top   = 0;
 	this.visible = true;
-	this.wsio = undefined;
+	this.wsio    = undefined;
 	this.thumbnailWindowOpen = false;
 
 	// Default
 	this.radialMenuScale = config.ui.widgetControlSize * 0.03;
 
-	if (config.ui.enable_perceptual_scaling) {
+	if (config.ui.auto_scale_ui) {
 		this.radialMenuScale = 1;
-		var tileBorders = config.dimensions.tile_borders;
-		var pixelsPerMeter = (config.dimensions.tile_width - tileBorders[0] - tileBorders[1]) / config.resolution.width;
 
+		var borderLeft, borderRight, borderBottom, borderTop;
+		var tileBorders = config.dimensions.tile_borders;
+		if (tileBorders) {
+			borderLeft   = parseFloat(tileBorders.left)   || 0.0;
+			borderRight  = parseFloat(tileBorders.right)  || 0.0;
+			borderBottom = parseFloat(tileBorders.bottom) || 0.0;
+			borderTop    = parseFloat(tileBorders.top)    || 0.0;
+		} else {
+			borderLeft   = 0.0;
+			borderRight  = 0.0;
+			borderBottom = 0.0;
+			borderTop    = 0.0;
+		}
+		var pixelsPerMeter = (config.dimensions.tile_width - borderLeft - borderRight) / config.resolution.width;
 		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y * pixelsPerMeter;
 
 		// https://en.wikipedia.org/wiki/Optimum_HDTV_viewing_distance#Human_visual_system_limitation
 
-		var width = config.layout.columns * (config.dimensions.tile_width + tileBorders[0] + tileBorders[1]);
-		var height = config.layout.rows * (config.dimensions.tile_height + tileBorders[2] + [3]);
+		var width  = config.layout.columns * (config.dimensions.tile_width + borderLeft + borderRight);
+		var height = config.layout.rows * (config.dimensions.tile_height + borderBottom + borderTop);
 		var totalWallDimensionsMeters = { w: width, h: height };
 		var wallDiagonal = Math.sqrt(Math.pow(totalWallDimensionsMeters.w, 2) + Math.pow(totalWallDimensionsMeters.h, 2));
 		var DRC = Math.sqrt(Math.pow(totalWallDimensionsMeters.w / totalWallDimensionsMeters.h, 2) + 1);
 		var calculatedIdealViewingDistance = wallDiagonal / (DRC * thumbnailWindowDefaultSize.y * Math.tan(Math.PI / 180 / 60));
 
-		var viewDistRatio = config.layout.rows * (config.dimensions.tile_height + tileBorders[2] + tileBorders[3]);
+		var viewDistRatio = config.layout.rows * (config.dimensions.tile_height + borderBottom + borderTop);
 
-		if (config.ui.use_calcuated_viewing_distance) {
+		if (config.ui.calculate_viewing_distance) {
+			viewDistRatio = calculatedIdealViewingDistance / windowDefaultHeightMeters;
 			console.log("node-radialMenu: calculatedIdealViewingDistance = " + calculatedIdealViewingDistance);
-
 			this.radialMenuScale = calculatedIdealViewingDistance * (0.03 * viewDistRatio);
 		} else {
 			viewDistRatio = config.dimensions.viewing_distance / windowDefaultHeightMeters;
 			this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * viewDistRatio);
 		}
+		console.log("node-radialMenu: this.radialMenuScale = " + this.radialMenuScale);
 	}
 
 	this.radialMenuSize = {x: radialMenuDefaultSize.x * this.radialMenuScale,
@@ -181,10 +194,63 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 	var action;
 	var otherButtonName;
 
-	if (pointerID in this.radialButtons[buttonName].pointers) {
-		// console.log("Existing pointer event: "+pointerID + " on button " + buttonName);
+	if (buttonType === "pointerPress") {
+		// Process based on button type
+		if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
+
+			// Set thumbnail window and button lit state
+			if (this.thumbnailWindowState === this.radialButtons[buttonName].window) {
+				this.thumbnailWindowState = "closed"; // Mark the content window to be closed
+				this.radialButtons[buttonName].state = 0; // Dim the current button
+			} else {
+				this.thumbnailWindowState = this.radialButtons[buttonName].window;
+				this.radialButtons[buttonName].state = 5; // Highlight the current button
+			}
+
+			// Clear button lit state for other buttonState
+			for (otherButtonName in this.radialButtons) {
+				if (otherButtonName !== buttonName) {
+					// console.log("Clear button state for " + otherButtonName);
+					delete this.radialButtons[otherButtonName].pointers[pointerID];
+					if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
+						if (this.radialButtons[otherButtonName].state !== 0 &&
+							this.thumbnailWindowState !== this.radialButtons[otherButtonName].window) {
+							this.radialButtons[otherButtonName].state = 0;
+						}
+					}
+					buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
+				}
+			}
+
+			// Set the visibility of the content window
+			this.interactMgr.editVisibility(this.id + "_menu_thumbnail", "radialMenus", this.thumbnailWindowState !== "closed");
+
+			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].window};
+		} else if (this.radialButtons[buttonName].action === "toggleRadial") { // Actions with parameters
+			// Radial submenus
+			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
+		} else { // All no parameter actions
+			action = {type: this.radialButtons[buttonName].action};
+			// Close button
+			if (action.type === "close") {
+				this.hide();
+			}
+			// Save session button
+			if (action.type === "saveSession") {
+				// NOTE: This action is handled by the server
+			}
+		}
+	}
+
+	// Update the menu state
+	buttonStates[buttonName] = this.radialButtons[buttonName].state;
+	return {action: action, buttonState: buttonStates, color: color};
+	/*
+	if (pointerID in this.radialButtons[buttonName].pointers || buttonType === "pointerPress" ) {
+		console.log("Existing pointer event: "+pointerID + " on button " + buttonName +" buttonType: "+buttonType);
 		if (buttonType === "pointerPress") {
 			this.radialButtons[buttonName].state = 2;
+			//console.log("RadialMenu PointerPress by pointerID : "+pointerID + " on button " + buttonName);
 
 			// Process the button click
 			if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
@@ -200,6 +266,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 				// Clear button lit state for other buttonState
 				for (otherButtonName in this.radialButtons) {
 					if (otherButtonName !== buttonName) {
+						console.log("Clear button state for "+ otherButtonName);
 						delete this.radialButtons[otherButtonName].pointers[pointerID];
 						if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
 							if (this.radialButtons[otherButtonName].state !== 0 &&
@@ -257,6 +324,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 		delete this.pointersOnMenu[pointerID];
 		return {buttonState: buttonStates};
 	}
+	*/
 };
 
 /**

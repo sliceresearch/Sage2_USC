@@ -35,7 +35,7 @@ var os            = require('os');               // operating system access
 var path          = require('path');             // file path management
 var readline      = require('readline');         // to build an evaluation loop
 var url           = require('url');              // parses urls
-// var util          = require('util');             // node util
+// var util          = require('util');          // node util
 
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
@@ -46,6 +46,7 @@ var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
 
 var Twit          = require('twit');             // twitter api
+var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
 // custom node modules
 var assets              = require('./src/node-assets');           // manages the list of files
@@ -64,7 +65,7 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var WebsocketIO         = require('./src/node-websocket.io');     // creates WebSocket server and clients
+var registry            = require('./src/node-registry');        // Registry Manager
 
 
 // Globals
@@ -98,14 +99,14 @@ mediaFolders.system =	{
 	name: "system",
 	path: "public/uploads/",
 	url:  "/uploads",
-	upload: true
+	upload: false
 };
 // Home directory, defined as ~/Documents/SAGE2_Media or equivalent
 mediaFolders.user =	{
 	name: "user",
 	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
 	url:  "/user",
-	upload: false
+	upload: true
 };
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -119,6 +120,11 @@ if (config.folders) {
 	});
 }
 
+var mainFolder       = mediaFolders.system;
+var publicDirectory  = "public";
+var uploadsDirectory = path.join(publicDirectory, "uploads");
+var sessionDirectory = path.join(publicDirectory, "sessions");
+
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -128,6 +134,14 @@ for (var folder in mediaFolders) {
 	}
 	if (mediaFolders[f.name].upload) {
 		mediaFolders.system.upload = false;
+		// Update the main upload folder
+		uploadsDirectory = f.path;
+		mainFolder = f;
+		sessionDirectory = path.join(uploadsDirectory, "sessions");
+		if (!sageutils.folderExists(sessionDirectory)) {
+			sageutils.mkdirParent(sessionDirectory);
+		}
+		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
 	newdirs.forEach(function(d) {
@@ -140,10 +154,6 @@ for (var folder in mediaFolders) {
 
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
-
-var publicDirectory  = "public"; // mediaFolders.system.path; // "public";
-var uploadsDirectory = path.join(publicDirectory, "uploads");
-var sessionDirectory = path.join(__dirname, "sessions");
 
 console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
@@ -163,7 +173,11 @@ function initializeSage2Server() {
 	}
 
 	// Check for missing packages
-	sageutils.checkPackages(); // pass parameter `true` for devel packages also
+	//     pass parameter `true` for devel packages also
+	if (process.arch !== 'arm') {
+		// seems very slow to do on ARM processor (Raspberry PI)
+		sageutils.checkPackages();
+	}
 
 	// Setup binaries path
 	if (config.dependencies !== undefined) {
@@ -309,10 +323,10 @@ function initializeSage2Server() {
 	);
 
 	// Initialize assets folders
-	assets.initialize(uploadsDirectory, 'uploads', mediaFolders);
+	assets.initialize(mainFolder, mediaFolders);
 
 	// Initialize app loader
-	appLoader = new Loader(publicDirectory, hostOrigin, config, imageMagickOptions, ffmpegOptions);
+	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 
 	// Initialize interactable manager and layers
 	interactMgr.addLayer("staticUI",     3);
@@ -437,6 +451,12 @@ function closeWebSocketClient(wsio) {
 	} else if (wsio.clientType === "display") {
 		for (key in SAGE2Items.renderSync) {
 			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+				// If the application had an animation timer, clear it
+				if (SAGE2Items.renderSync[key].clients[wsio.id] &&
+					SAGE2Items.renderSync[key].clients[wsio.id].animateTimer) {
+					clearTimeout(SAGE2Items.renderSync[key].clients[wsio.id].animateTimer);
+				}
+				// Remove the object from the list
 				delete SAGE2Items.renderSync[key].clients[wsio.id];
 			}
 		}
@@ -597,6 +617,7 @@ function setupListeners(wsio) {
 	wsio.on('loadApplication',                      wsLoadApplication);
 	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
+	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -1241,11 +1262,12 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 			SAGE2Items.renderSync[data.id].date = now;
 			broadcast('animateCanvas', {id: data.id, date: now});
 		} else {
-			setTimeout(function() {
+			var aTimer = setTimeout(function() {
 				now = Date.now();
 				SAGE2Items.renderSync[data.id].date = now;
 				broadcast('animateCanvas', {id: data.id, date: now});
 			}, ticks - elapsed);
+			SAGE2Items.renderSync[data.id].clients[wsio.id].animateTimer = aTimer;
 		}
 	}
 }
@@ -1369,6 +1391,7 @@ function listSessions() {
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
 				// Make it look like an exif data structure
 				thelist.push({id: filename,
+					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
 							FileSize: stat.size,
 							FileDate: strdate,
@@ -2101,6 +2124,33 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 	// }
 }
 
+function wsMoveElementFromStoredFiles(wsio, data) {
+	var destinationURL = data.url;
+	var destinationFile;
+
+	// calculate the new destination filename
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		if (destinationURL.indexOf(f.url) === 0) {
+			var splits = destinationURL.split(f.url);
+			var subdir = splits[1];
+			destinationFile = path.join(f.path, subdir, path.basename(data.filename));
+		}
+	}
+
+	// Do the move and reprocess the asset
+	if (destinationFile) {
+		console.log('Have to move', data.filename, destinationFile);
+		assets.moveAsset(data.filename, destinationFile, function(err) {
+			if (err) {
+				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
+			} else {
+				// if all good, send the new list of files
+				wsRequestStoredFiles(wsio);
+			}
+		});
+	}
+}
 
 
 // **************  Adding Web Content (URL) *****************
@@ -2144,10 +2194,17 @@ function wsAddNewWebElement(wsio, data) {
 
 function wsCreateFolder(wsio, data) {
 	// Create a folder as needed
-	console.log(sageutils.header('Folder') + 'create ' + data.path);
-	if (!sageutils.folderExists(data.path)) {
-		sageutils.mkdirParent(data.path);
-		console.log(sageutils.header('Folder') + '	done.');
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		// if it starts with the sage root
+		if (data.root.indexOf(f.url) === 0) {
+			var subdir = data.root.split(f.url)[1];
+			var toCreate = path.join(f.path, subdir, data.path);
+			if (!sageutils.folderExists(toCreate)) {
+				sageutils.mkdirParent(toCreate);
+				console.log(sageutils.header('Folder') + toCreate + ' created');
+			}
+		}
 	}
 }
 
@@ -2932,8 +2989,11 @@ function loadConfiguration() {
 		process.exit(1);
 	}
 
+	// Read the specified configuration file
 	var json_str   = fs.readFileSync(configFile, 'utf8');
+	// Parse it using JSON5 syntax (more lax than strict JSON)
 	var userConfig = json5.parse(json_str);
+
 	// compute extra dependent parameters
 	userConfig.totalWidth  = userConfig.resolution.width  * userConfig.layout.columns;
 	userConfig.totalHeight = userConfig.resolution.height * userConfig.layout.rows;
@@ -2987,18 +3047,33 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
 	}
 
-	// Check the borders settings
-	if (userConfig.resolution.borders === undefined) {
-		// set default values to 0
-		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
-	} else {
-		// make sure the values are integers
-		userConfig.resolution.borders.left   = parseInt(userConfig.resolution.borders.left, 10)   || 0;
-		userConfig.resolution.borders.right  = parseInt(userConfig.resolution.borders.right, 10)  || 0;
-		userConfig.resolution.borders.bottom = parseInt(userConfig.resolution.borders.bottom, 10) || 0;
-		userConfig.resolution.borders.top    = parseInt(userConfig.resolution.borders.top, 10)    || 0;
+	// Check the borders settings (for hidding the borders)
+	if (userConfig.dimensions === undefined) {
+		userConfig.dimensions = {};
 	}
-
+	if (userConfig.dimensions.tile_borders === undefined) {
+		// set default values to 0
+		// first for pixel sizes
+		userConfig.resolution.borders = { left: 0, right: 0, bottom: 0, top: 0};
+		// then for dimensions
+		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
+	} else {
+		var borderLeft, borderRight, borderBottom, borderTop, tileWidth;
+		// make sure the values are valid floats
+		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
+		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
+		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
+		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
+		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		// calculate pixel density (ppm) based on width
+		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
+		// calculate values in pixel now
+		userConfig.resolution.borders = {};
+		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
+		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
+		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
+		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
 
 	// Set default values if missing
 	if (userConfig.port === undefined) {
@@ -3302,7 +3377,7 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		// console.log('Form>	begin ', name, file.name, file.type);
+		console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
 	});
 
 	form.on('field', function(field, value) {
@@ -3321,8 +3396,20 @@ function uploadForm(req, res) {
 			res.write(err + "\n\n");
 			res.end();
 		}
+		// build the reply to the upload
 		res.writeHead(200, {'Content-Type': 'application/json'});
 		// For webix uploader: status: server
+		fields.done = true;
+
+		// Get the file (only one even if multiple drops, it comes one by one)
+		var file = files[ Object.keys(files)[0] ];
+		var app = registry.getDefaultApp(file.name);
+		if (app === undefined || app === "") {
+			fields.good = false;
+		} else {
+			fields.good = true;
+		}
+		// Send the reply
 		res.end(JSON.stringify({status: 'server',
 			fields: fields, files: files}));
 	});
@@ -3340,7 +3427,7 @@ function manageUploadedFiles(files, position) {
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
 
 			if (appInstance === null) {
-				console.log("Form> unrecognized file type: ", file.name, file.type);
+				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
 
@@ -3590,9 +3677,9 @@ function processInputCommand(line) {
 			if (SAGE2_version.branch.length > 0) {
 				sageutils.updateWithGIT(SAGE2_version.branch, function(error, success) {
 					if (error) {
-						console.log(sageutils.header('GIT') + 'Update: error', error);
+						console.log(sageutils.header('GIT') + 'Update error - ' + error);
 					} else {
-						console.log(sageutils.header('GIT') + 'Update: success', success);
+						console.log(sageutils.header('GIT') + 'Update success - ' + success);
 					}
 				});
 			} else {
@@ -4206,10 +4293,9 @@ function showRequestDialog(flag) {
 
 function pointerPressOnRadialMenu(uniqueID, pointerX, pointerY, data, obj, localPt, color) {
 	var existingRadialMenu = obj.data;
-	// console.log("pointer press on radial menu");
+
 	if (obj.id.indexOf("menu_radial_button") !== -1) {
 		// Pressing on radial menu button
-		// console.log("Pressed radial button: " + obj.id);
 		var menuStateChange = existingRadialMenu.onButtonEvent(obj.id, uniqueID, "pointerPress", color);
 		if (menuStateChange !== undefined) {
 			radialMenuEvent({type: "stateChange", menuID: existingRadialMenu.id, menuState: menuStateChange });
@@ -4949,6 +5035,11 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 }
 
 function moveAndResizeApplicationWindow(resizeApp, portalId) {
+	// Shift position up and left by one pixel to take border into account
+	//    visible in hide-ui mode
+	resizeApp.elemLeft = resizeApp.elemLeft - 1;
+	resizeApp.elemTop  = resizeApp.elemTop  - 1;
+
 	var app = SAGE2Items.applications.list[resizeApp.elemId];
 
 	var titleBarHeight = config.ui.titleBarHeight;

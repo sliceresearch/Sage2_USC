@@ -101,11 +101,13 @@ var image_viewer = SAGE2_App.extend({
 	* @param visibility {bool} became visible or hidden
 	*/
 	onVisible: function(visibility) {
+		/*
 		if (visibility) {
 			this.element.src = this.state.src;
 		} else {
 			this.element.src = smallWhiteGIF();
 		}
+		*/
 	},
 
 	/**

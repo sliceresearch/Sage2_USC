@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="sage2.appcache">
 <head lang="en">
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
@@ -18,19 +18,22 @@
 	// Copyright (c) 2014
 </script>
 
-<!-- SAGE2 code -->
-<script type="text/javascript" src="src/websocket.io.js"></script>
-<script type="text/javascript" src="src/SAGE2_runtime.js"></script>
-<script type="text/javascript" src="src/SAGE2_interaction.js"></script>
-<script type="text/javascript" src="src/SAGE2_DisplayUI.js"></script>
-<script type="text/javascript" src="src/SAGE2_UI.js"></script>
-
+<!-- Style sheets -->
+<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
 <link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
 
+
+<!-- SAGE2 code -->
+<script async src="src/websocket.io.js"></script>
+<script async src="src/SAGE2_runtime.js"></script>
+<script async src="src/SAGE2_interaction.js"></script>
+<script async src="src/SAGE2_DisplayUI.js"></script>
+<script async src="src/SAGE2_UI.js"></script>
+
 <!-- File manager UI -->
-<script type="text/javascript" src="src/SAGE2_fileManager.js"></script>
-<script type="text/javascript" src="lib/moment.min.js"></script>
-<script type="text/javascript" src="lib/webix/webix.js"></script>
+<script async src="src/SAGE2_fileManager.js"></script>
+<script async src="lib/moment.min.js"></script>
+<script async src="lib/webix/webix.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/webix/webix.css">
 <link rel="stylesheet" type="text/css" href="lib/webix/skins/compact.css">
 <link rel="stylesheet" type="text/css" href="css/fileManager.css" media="screen">
@@ -45,9 +48,9 @@
 			<h1 style="margin-top:40px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
 		</div>
 
-		<div id="displayUI" style="display:none;">
+		<div id="displayUIDiv" style="display:none;">
 			<div id="applicationsDiv"></div>
-			<canvas id="sage2UI"></canvas>
+			<canvas id="sage2UICanvas"></canvas>
 		</div>
 
 		<div class="clear"></div>
@@ -90,7 +93,7 @@
 	<div class="clear"></div>
 
 	<section class="siteType">
-		<div id="fileManager" style='display:none;margin: 0 auto;width:98%;'></div>
+		<div id="fileManager" style="display:none;margin: 0 auto;width:98%;"></div>
 	</section>
 
 	<div class="clear"></div>
@@ -144,7 +147,7 @@
 			</div>
 		</div>
 		<div id="metadata">
-			<img alt="thumbnail" id="thumbnail" src="images/blank.png"/>
+			<img alt="thumbnail" name="thumbnail" id="thumbnail" src="images/blank.png"/>
 			<label id="metadata_text"></label>
 		</div>
 		<div id="fileButtons">
@@ -259,12 +262,15 @@
 					</tr>
 					<tr>
 						<td style="padding-right:4px;">
-							<label class="sageLabel">Frame Quality:</label>
+							<label class="sageLabel">Quality:</label>
 						</td>
 						<td>
-							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="7">
-							<span id="screenShareQualityIndicator">7</span>
-						</td>
+							<select id="screenShareQuality">
+								<option value="3">Low</option>
+								<option value="7" selected="selected">Medium</option>
+								<option value="9">High</option>
+							</select>
+ 						</td>
 					</tr>
 				</table>
 			</div>
@@ -287,7 +293,7 @@
 			</form>
 			<span id="cancelFilesBtn2" class="button">Close</span>
 			<p>&nbsp; &nbsp; &nbsp;</p>
-			<p style="text-align:center;"><b>Take or select a picture and upload it</b></p>
+			<p style="text-align:center;"><strong>Take or select a picture and upload it</strong></p>
 		</div>
 	</div>
 
@@ -297,10 +303,12 @@
 	</div>
 	
 	<div id="sage2MobileContainer">
-		<div id="sage2MobileTrackpad"></div>
+		<div id="sage2MobileTrackpad">
+			<div style="font-size:xx-large;text-align:center;">Trackpad</div>
+		</div>
 		<div id="sage2MobileButtons">
-			<div id="sage2MobileLeftButton"></div>
-			<div id="sage2MobileRightButton"></div>
+			<div id="sage2MobileLeftButton">Left button</div>
+			<div id="sage2MobileRightButton">Right button</divbutton>
 		</div>
 		<img alt="closeMobileSAGE2Pointer" id="closeMobileSAGE2Pointer" src="images/closemobilepointer.svg" width="32" height="32" style="position:absolute; left:6px; top:6px;"/>
 	</div>

@@ -48,6 +48,96 @@ window.onbeforeunload = function() {
 	}
 };
 
+
+// Get Browser-Specifc Prefix
+function getBrowserPrefix() {
+	// Check for the unprefixed property.
+	if ('hidden' in document) {
+		return null;
+	}
+	// All the possible prefixes.
+	var browserPrefixes = ['moz', 'ms', 'o', 'webkit'];
+
+	for (var i = 0; i < browserPrefixes.length; i++) {
+		var prefix = browserPrefixes[i] + 'Hidden';
+		if (prefix in document) {
+			return browserPrefixes[i];
+		}
+	}
+	// The API is not supported in browser.
+	return null;
+}
+
+// Get Browser Specific Hidden Property
+function hiddenProperty(prefix) {
+	if (prefix) {
+		return prefix + 'Hidden';
+	} else {
+		return 'hidden';
+	}
+}
+
+// Get Browser Specific Visibility State
+function visibilityState(prefix) {
+	if (prefix) {
+		return prefix + 'VisibilityState';
+	} else {
+		return 'visibilityState';
+	}
+}
+
+// Get Browser Specific Event
+function visibilityEvent(prefix) {
+	if (prefix) {
+		return prefix + 'visibilitychange';
+	} else {
+		return 'visibilitychange';
+	}
+}
+
+/**
+ * setupFocusHandlers
+ *
+ * @method setupFocusHandlers
+ */
+function setupFocusHandlers() {
+	window.addEventListener("focus", function(evt) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			location.reload();
+		}
+	}, false);
+	window.addEventListener("blur", function(evt) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			if (wsio !== undefined) {
+				setTimeout(function() {
+					wsio.close();
+				}, 200);
+				document.getElementById('background').style.display = 'none';
+			}
+		}
+	}, false);
+
+	// Get Browser Prefix
+	var prefix   = getBrowserPrefix();
+	var hidden   = hiddenProperty(prefix);
+	// var visState = visibilityState(prefix);
+	var visEvent = visibilityEvent(prefix);
+
+	document.addEventListener(visEvent, function(event) {
+		if (window.__SAGE2__ && __SAGE2__.browser.isMobile) {
+			if (document[hidden]) {
+				setTimeout(function() {
+					wsio.close();
+				}, 200);
+				document.getElementById('background').style.display = 'none';
+			} else {
+				location.reload();
+			}
+		}
+	});
+}
+
+
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
  *
@@ -76,6 +166,9 @@ function SAGE2_init() {
 	// Detect the current browser
 	SAGE2_browser();
 
+	// Setup focus events
+	setupFocusHandlers();
+
 	isMaster = false;
 
 	wsio.open(function() {
@@ -91,9 +184,11 @@ function SAGE2_init() {
 				version: true,
 				time: true,
 				console: false
-			}
+			},
+			isMobile: __SAGE2__.browser.isMobile
 		};
 		wsio.emit('addClient', clientDescription);
+		// log(JSON.stringify(__SAGE2__.browser));
 	});
 
 	// Socket close event (ie server crashed)
@@ -241,7 +336,9 @@ function setupListeners() {
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
-		ui.updateSagePointerPosition(pointer_data);
+		if (ui) {
+			ui.updateSagePointerPosition(pointer_data);
+		}
 		resetIdle();
 	});
 
@@ -978,7 +1075,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	var windowIcons = document.createElement("img");
-	// windowIcons.src = "images/layout3.webp";
 	windowIcons.src = "images/layout3.svg";
 	windowIcons.height = Math.round(titleBarHeight);
 	windowIcons.style.position = "absolute";
@@ -1067,9 +1163,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 					wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
 			}, false);
-			js.type = "text/javascript";
+			js.type  = "text/javascript";
+			js.async = false;
 			js.src = url + "/" + data.application + ".js";
-			console.log(url + "/" + data.application + ".js");
+			console.log(data.id, url + "/" + data.application + ".js");
 			document.head.appendChild(js);
 		} else {
 			// load existing app
@@ -1098,7 +1195,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				if ((idx + 1) < data.resrc.length) {
 					loadResource(idx + 1);
 				} else {
-					console.log("all resources loaded");
+					console.log("all resources loaded", data.id);
 					loadApplication();
 				}
 
@@ -1118,11 +1215,12 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				if ((idx + 1) < data.resrc.length) {
 					loadResource(idx + 1);
 				} else {
-					console.log("all resources loaded");
+					console.log("all resources loaded", data.id);
 					loadApplication();
 				}
 			});
-			js.type = "text/javascript";
+			js.type  = "text/javascript";
+			js.async = false;
 			if (data.resrc[idx].indexOf("http://") === 0 || data.resrc[idx].indexOf("https://") === 0) {
 				js.src = data.resrc[idx];
 			} else {
