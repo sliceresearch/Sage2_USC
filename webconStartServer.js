@@ -9,11 +9,14 @@ var fs 				= require('fs');
 var json5        	= require('json5');            // format that allows comments
 var exec 			= require('child_process').exec;
 var spawn 			= require('child_process').spawn;
+var os 				= require('os'); //used to determine if needs to auto shutdown.
+var WebSocketIO		= require('websocketio');
+
 
 var md5				= require('./src/md5');                   // return standard md5 hash of given param
 var httpServer   	= require('./src/wc-httpServer');
-var WebSocketIO		= require('./src/wc-wsio');
 var utils			= require('./src/wc-utils');
+var sageutils 		= require('./src/node-utils');
 
 //---------------------------------------------------------------------------Variable setup
 var hostAddress		= "127.0.0.1";
@@ -26,10 +29,33 @@ var sageServerExec	= null;
 var sageServerChromeBrowsers = [];
 var isWindows		= true;
 
+//setup locatio of config and keys to use
+
+var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
+var wcPathToConfigFile 			= userDocPath + 'webconGenerated-cfg.json';
+var wcPathToWebconPwdFile 		= userDocPath + 'webconPasswd.json';
+var wcPathToAdminPanelPwdFile 	= userDocPath + 'adminPanelPasswd.json';
+var wcPathToSageUiPwdFile 		= userDocPath + 'passwd.json';
+var wcCommandNodeServer 		= 'StartHere.bat ' + wcPathToConfigFile;
+var wcCommandStartDisplay			= 'StartHere.bat displayLaunch';
+var wcPathToWindowsCertMaker	= 'keys/GO-windows.bat';
+
+
 //node.js has a special variable called "global" which is visible throughout the other files.
 
-
 //---------------------------------------------------------------------------Code start
+
+
+//Detect if this is a windows machine. Cancel out on non-windows machines. Support so far only for windows.
+var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+
+if(platform !== "Windows") {
+	console.log("Sorry, currently the web controller only works with Windows.");
+	console.log("Shutting down...");
+	process.exit(1);
+}
+
+
 
 //create http listener
 
@@ -46,35 +72,52 @@ wsioServer.onconnection(openWebSocketClient);
 global.timeCounter = 0;
 
 
-
-var pwdFileLocation = "keys/webconPasswd.json";
+//Check if a password for the webcontroller exists.
 var jsonString;
-if( utils.fileExists(pwdFileLocation) ) {
-	jsonString = fs.readFileSync( pwdFileLocation, "utf8" );
+if( utils.fileExists(wcPathToWebconPwdFile) ) {
+	jsonString = fs.readFileSync( wcPathToWebconPwdFile, "utf8" );
 	jsonString = json5.parse(jsonString);
 }
 else {
 	console.log('Webcon password has not been setup, it will not be possible to access.');
 	jsonString = { pwd: -1 }; 
 }
-global.webconID = jsonString.pwd;
-pwdFileLocation = "keys/configPasswd.json";
-if( utils.fileExists(pwdFileLocation) ) {
-	jsonString = fs.readFileSync( pwdFileLocation, "utf8" );
+global.webconID = jsonString.pwd; //either way set the value, as it can be edited later.
+
+
+//This is slightly more important as it will check if the admin panel password exists. If not, allow 1 time access.
+if( utils.fileExists(wcPathToAdminPanelPwdFile) ) {
+	jsonString = fs.readFileSync( wcPathToAdminPanelPwdFile, "utf8" );
 	jsonString = json5.parse(jsonString);
 }
 else {
 	console.log('Admin Panel password has not been setup, launching the first time config.');
 	console.log();
 	jsonString = { pwd: -1 }; 
-
-	//should launch a browser on windows pointed at the config location.
+	executeConsoleCommand( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" http://localhost:9001/wcAdminPanel.html'  );
 }
-global.adminPanelId = jsonString.pwd;
+global.adminPanelId = jsonString.pwd; //set the password
+
+	
+//now check if the config file doesn't exist.
+if( ! utils.fileExists(wcPathToConfigFile) ) {
+	console.log('Config file not detected. Created a default.');
+	//no exist means grab the existing default win and copy over.
+	var tcc = fs.readFileSync( 'config/defaultWin-cfg.json', "utf8" );
+	fs.writeFileSync( wcPathToConfigFile, tcc);
+}
 
 
 console.log('The webconID hash is:' + global.webconID);
 console.log('The adminPanelId hash is:' + global.adminPanelId);
+console.log();
+console.log();
+console.log('=====================================================================');
+console.log('Closing this window prevents access to the web controller for SAGE2');
+console.log('=====================================================================');
+console.log();
+console.log();
+
 
 //Test to create something that happens at an interval
 setInterval( function () {
@@ -84,10 +127,18 @@ setInterval( function () {
 	, 5000);
 
 
-//testing file read
-// var confContents = fs.readFileSync( "config/default-cfg.json", "utf8" );
-// console.log("Read file:");
-// console.log(confContents);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -135,10 +186,8 @@ function setupListeners(wsio) {
 	
 	wsio.on('consoleLog',      		wsConsoleLog);
 	wsio.on('convertTomd5',      	wsConvertTomd5);
-	wsio.on('newConfigSettings',    wsNewConfigSettings);
 
-
-	//should be functions to keep
+	//Exclusive to the webcon
 	wsio.on('startSage',					wsStartSage);
 	wsio.on('stopSage',						wsStopSage);
 
@@ -159,8 +208,8 @@ function setupListeners(wsio) {
 function executeConsoleCommand( cmd ) {
 	var child;
 	child = exec(cmd, function (error, stdout, stderr) {
-		sys.print('stdout: ' + stdout);
-		sys.print('stderr: ' + stderr);
+		console.log('stdout: ' + stdout);
+		console.log('stderr: ' + stderr);
 		if (error !== null) {
 			console.log('Command> exec error: ' + error);
 		}
@@ -211,7 +260,7 @@ function wsConsoleLog(wsio, data) {
 	
 	//executeConsoleCommand( "open -a TextEdit.app" );
 
-	executeScriptFile( "script/testScript" );
+	//executeScriptFile( "script/testScript" );
 } //end class
 
 function wsConvertTomd5(wsio, data) {
@@ -221,34 +270,19 @@ function wsConvertTomd5(wsio, data) {
 
 
 
-function wsNewConfigSettings(wsio, data) {
-	var jsonString = json5.stringify(data);
-	var confLocation = "config/default-cfg.json";
-	var jsonString = json5.stringify(data);
-	var confLocation = "config/default-cfg.json";
-	fs.writeFileSync( confLocation, jsonString);
-	fs.writeFileSync( confLocation, jsonString);
-
-} //end class
-
-
 
 function wsGiveClientConfiguration(wsio, data) {
 
-	var confLocation = "config/default-cfg.json";
-	var confContents = fs.readFileSync( confLocation, "utf8" );
+	var confContents = fs.readFileSync( wcPathToConfigFile, "utf8" );
 	confContents = json5.parse(confContents);
 
 	wsio.emit( 'giveClientConfiguration', confContents );
 
 	//check if password files exist.
 
-	var pwdFileLocation = "keys/passwd.json";
-	if( ! utils.fileExists(pwdFileLocation) ) { wsio.emit('noWebId', {}); }
-	pwdFileLocation = "keys/webconPasswd.json";
-	if( ! utils.fileExists(pwdFileLocation) ) { wsio.emit('noWebconPwd', {}); }
-	pwdFileLocation = "keys/configPasswd.json";
-	if( ! utils.fileExists(pwdFileLocation) ) {
+	if( ! utils.fileExists(wcPathToSageUiPwdFile) ) { wsio.emit('noWebId', {}); }
+	if( ! utils.fileExists(wcPathToWebconPwdFile) ) { wsio.emit('noWebconPwd', {}); }
+	if( ! utils.fileExists(wcPathToAdminPanelPwdFile) ) {
 		wsio.emit('noConfigPwd', {
 			message: 'This page is accessible due to 1st time config. To revisit a password is needed, entry is at the bottom. If revisiting bookmarking this page is recommended.'
 		});
@@ -262,15 +296,37 @@ function wsGiveServerConfiguration(wsio, data) {
 	//!!!! ASSUMPTION !!!!
 	//the numberical values being sent are already correctly type casted.
 
+	var needToGenerateCerts = false;
+
 	//first grab original configuration
 	//reasoning is to maintain fields.
-	var confLocation = "config/default-cfg.json";
-	var confContents = fs.readFileSync( confLocation, "utf8" );
+	var confContents = fs.readFileSync( wcPathToConfigFile, "utf8" );
 	confContents = json5.parse(confContents);
 
+	if(confContents.host != data.host) { needToGenerateCerts = true; }
 	confContents.host = data.host;
 	confContents.port = data.port;
 	confContents.index_port = data.index_port;
+
+	//background setting
+	if(data.background.used) {
+		confContents.background = {};
+		confContents.background.clip = data.background.clip;
+		if(data.background.color) { confContents.background.color = data.background.color; }
+		if(data.background.image) {
+			confContents.background.image = {};
+			confContents.background.image.url = data.background.image.url;
+			confContents.background.image.style = data.background.image.style;
+		}
+		if(data.background.watermark) {
+			confContents.background.watermark = {};
+			confContents.background.watermark.svg = data.background.watermark.svg;
+			confContents.background.watermark.color = data.background.watermark.color;
+		}
+		 
+	}
+
+
 	//confContents.register_site = true;
 	confContents.resolution.width = data.resolution.width;
 	confContents.resolution.height = data.resolution.height;
@@ -293,7 +349,14 @@ function wsGiveServerConfiguration(wsio, data) {
 
 	} //end if the layout changed
 
-
+	if( confContents.alternate_hosts.length !== data.alternate_hosts.length ) { needToGenerateCerts = true; }
+	else {
+		for(var i = 0; (i < confContents.alternate_hosts.length) && (i < data.alternate_hosts.length) ; i++) {
+			if( confContents.alternate_hosts[i] != data.alternate_hosts[i] ) {
+				needToGenerateCerts = true;
+			}
+		}
+	}
 	confContents.alternate_hosts = data.alternate_hosts; //translation of dependencies.
 	confContents.remote_sites = data.remote_sites; 
 	if(data.dependencies.ImageMagick != null) { confContents.dependencies.ImageMagick = data.dependencies.ImageMagick;  } 
@@ -302,10 +365,27 @@ function wsGiveServerConfiguration(wsio, data) {
 
 
 	confContents = json5.stringify(confContents);
-	fs.writeFileSync( confLocation, confContents);
+	fs.writeFileSync( wcPathToConfigFile, confContents);
 
 
 	wsio.emit('configurationSet');
+
+
+	if(needToGenerateCerts) {
+		console.log();
+		console.log();
+		console.log('---There is a difference between host names / alternate_hosts need to generate new certs--');
+
+		confContents = "REM Must be run as administrator\n";
+		confContents += "pushd %~dp0\n";
+		confContents += "call init_webserver.bat " + data.host + "\n"; //using the data object because cc just got stringified.
+		for(var i = 0; i < data.alternate_hosts.length; i++) {
+			confContents += "call init_webserver.bat " + data.alternate_hosts[i] + "\n";
+		}
+		fs.writeFileSync( wcPathToWindowsCertMaker, confContents );
+		executeConsoleCommand(  '"' + wcPathToWindowsCertMaker + '"' );
+	}
+
 
 } //wsGiveServerConfiguration
 
@@ -314,9 +394,8 @@ function wsSetMeetingId(wsio, data) {
 	var jsonString = { "pwd": data.password};
 	//jsonString = json5.stringify(jsonString);
 	jsonString = '{ "pwd" : "' + data.password +'" }';
-	var pwdFileLocation = "keys/passwd.json";
 	console.log('meetingID save double checking:' + jsonString);
-	fs.writeFileSync( pwdFileLocation, jsonString);
+	fs.writeFileSync( wcPathToSageUiPwdFile, jsonString);
 	console.log();
 	wsio.emit('alertClient', { message: 'The meetingID has been set' });
 } //wsSetMeetingId
@@ -326,13 +405,24 @@ function wsSetWebControllerPwd(wsio, data) {
 	var jsonString = { "pwd": data.password};
 	//jsonString = json5.stringify(jsonString);
 	jsonString = '{ "pwd" : "' + data.password +'" }';
-	var pwdFileLocation = "keys/webconPasswd.json";
 	console.log('webcontroller pwd save double checking:' + jsonString);
-	fs.writeFileSync( pwdFileLocation, jsonString);
+	fs.writeFileSync( wcPathToWebconPwdFile, jsonString);
 	console.log();
 	wsio.emit('alertClient', { message: 'The webcontroller password has been set' });
 
 	global.webconID = data.password;
+
+
+	//write the startup file.
+	//C:\Users\Kiyoji\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+
+	var startFilePath = sageutils.getHomeDirectory() + "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/startWebCon.bat";
+	console.log("Startup script doesn't exist, adding to:" + startFilePath);
+
+	var sfpContents = 'cd "' + __dirname + '"\n';
+	sfpContents += 'node webconStartServer.js';
+	fs.writeFileSync( startFilePath, sfpContents );
+
 } //wsSetWebControllerPwd
 
 function wsSetConfigurationPagePwd(wsio, data) {
@@ -340,9 +430,8 @@ function wsSetConfigurationPagePwd(wsio, data) {
 	var jsonString = { "pwd": data.password};
 	//jsonString = json5.stringify(jsonString);
 	jsonString = '{ "pwd" : "' + data.password +'" }';
-	var pwdFileLocation = "keys/configPasswd.json";
 	console.log('setConfigurationPagePwd save double checking:' + jsonString);
-	fs.writeFileSync( pwdFileLocation, jsonString);
+	fs.writeFileSync( wcPathToAdminPanelPwdFile, jsonString);
 	console.log();
 	if(data.silent !== 'shh') { wsio.emit('alertClient', { message: 'The configuration page password has been set' }); }
 
@@ -354,8 +443,8 @@ function wsStartSage(wsio, data) {
 	if(sageServerExec == null ) {
 		console.log();
 		console.log();
-		console.log('Attempting to start sage');
-		sageServerExec = executeConsoleCommand('node server.js');
+		console.log('Attempting to start sage with command:' + wcCommandNodeServer);
+		sageServerExec = executeConsoleCommand(wcCommandNodeServer);
 		sageServerExec.on('close', function (code, signal) {
 			console.log('child triggered close event, signal:'+signal);
 			//sageServerExec.disconnect();
@@ -370,7 +459,7 @@ function wsStartSage(wsio, data) {
 		//if(isWindows) { windowsStartChromeBrowsers(); }
 		//else { macStartChromeBrowsers(); }
 		
-		executeConsoleCommand('wcWinStart.bat');
+		executeConsoleCommand(wcCommandStartDisplay);
 
 		wsio.emit( 'displayOverlayMessage', {message: 'SAGE2 is starting'} );
 	}
@@ -383,6 +472,58 @@ function wsStartSage(wsio, data) {
 		wsio.emit( 'displayOverlayMessage', {message: 'SAGE2 is already running.'} );
 	}
 }
+
+
+function wsStopSage(wsio, data) {
+	if(sageServerExec !== null) {
+		var killval = sageServerExec.kill();
+		console.log('kill value:' + killval);
+		console.log('pid:' + sageServerExec.pid);
+		sageServerExec = null; //This might cause problems later. Not really sure
+	}
+	
+	if(!isWindows) {
+		while(sageServerChromeBrowsers.length > 0) {
+			if( sageServerChromeBrowsers.shift().kill() === false) {
+				console.log('Tried to kill browser, but failed');
+			}
+		}
+		executeConsoleCommand('pkill Chrome');
+	}
+	else { //is windows
+		//executeConsoleCommand('taskkill /im chrome.exe');
+		executeConsoleCommand('taskkill /im firefox* /t' );
+	}
+
+	wsio.emit( 'displayOverlayMessage', { message: 'SAGE2 stop command sent' } );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function windowsStartChromeBrowsers() {
 	//open the config file to determine how to start the browsers.
@@ -397,12 +538,11 @@ function windowsStartChromeBrowsers() {
 	wWidth = confContents.resolution.width;
 	wHeight = confContents.resolution.height;
 
-	var pwdFileLocation = "keys/passwd.json";
 	var jsonString
 	var hasPassword = false;
 	
-	if( utils.fileExists(pwdFileLocation) ) {
-		jsonString = fs.readFileSync( pwdFileLocation, "utf8" );
+	if( utils.fileExists(wcPathToSageUiPwdFile) ) {
+		jsonString = fs.readFileSync( wcPathToSageUiPwdFile, "utf8" );
 		jsonString = json5.parse(jsonString);
 	}
 	else {  jsonString = { pwd: null };  }
@@ -522,32 +662,6 @@ function macStartChromeBrowsers() {
 
 
 } //end macStartChromeBrowsers
-
-function wsStopSage(wsio, data) {
-	if(sageServerExec !== null) {
-		var killval = sageServerExec.kill();
-		console.log('kill value:' + killval);
-		console.log('pid:' + sageServerExec.pid);
-		if(killval === true) {
-			sageServerExec = null;
-		}
-	}
-	
-	if(!isWindows) {
-		while(sageServerChromeBrowsers.length > 0) {
-			if( sageServerChromeBrowsers.shift().kill() === false) {
-				console.log('Tried to kill browser, but failed');
-			}
-		}
-		executeConsoleCommand('pkill Chrome');
-	}
-	else { //is windows
-		//executeConsoleCommand('taskkill /im chrome.exe');
-		executeConsoleCommand('taskkill /im firefox* /t' );
-	}
-
-	wsio.emit( 'displayOverlayMessage', { message: 'SAGE2 stop command sent' } );
-}
 
 
 //---------------------------------------------------------------------------Utility functions
