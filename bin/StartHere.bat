@@ -1,7 +1,7 @@
 
 
-set "PATH=%CD%\bin;%PATH%;"
-rem set GIT_SSL_CAINFO=%CD%\bin\ca-bundle.crt
+set "PATH=%CD%\sysfiles\bin;%PATH%;"
+rem set GIT_SSL_CAINFO=%CD%\sysfiles\bin\ca-bundle.crt
 
 
 rem ////////////////////////////////////////////////////////////////////////variables to track required Files
@@ -39,6 +39,7 @@ if "%missingProgram%"=="yes" (
 rem ////////////////////////////////////////////////////////////////////////Everything is installed check for param
 
 if "%1" == "displayLaunch" (
+cd sysfiles
 cd GO-scripts
 cd SAGE2ffStart
 start firefox.ahk	
@@ -46,7 +47,7 @@ start firefox.ahk
 goto END
 )
 IF not "%1" == "" (
-	start "sage2server" /D "%~dp0" node "%~dp0\server.js" -f %1
+	start "sage2server" /D "%~dp0\sysfiles" node "%~dp0\sysfiles\server.js" -f %1
 	goto END
 )
 
@@ -89,7 +90,7 @@ IF EXIST %UserProfile%\Documents\SAGE2_Media (
 )
 
 :launchWebStarter
-start "webStarter" /D "%~dp0" node "%~dp0\webconStartServer.js"
+start "webStarter" /D "%~dp0\sysfiles" node "%~dp0\sysfiles\webconStartServer.js"
 
 
 :END
