@@ -1177,6 +1177,17 @@ function touchStart(event) {
 
 		event.preventDefault();
 		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// toggle the pointer between app and window mode
+		interactor.togglePointerMode();
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
+		// Send play commad, spacebar for PDF and movies
+		console.log('Send play')
+		interactor.sendPlay();
+		event.preventDefault();
+		event.stopPropagation();
 	} else {
 		event.stopPropagation();
 	}
@@ -1313,6 +1324,14 @@ function touchMove(event) {
 		event.preventDefault();
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileLeftButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// nothing
 		event.preventDefault();
 		event.stopPropagation();
