@@ -357,7 +357,8 @@ function initializeSage2Server() {
 								drawingUpdate,
 								sendTouchToPalette,
 								sendStyleToPalette,
-								movePaletteTo
+								movePaletteTo,
+								saveDrawingSession
 								);
 }
 
@@ -1524,6 +1525,25 @@ function deleteSession(filename) {
 			}
 			console.log("Sessions> Successfully deleted session", filename);
 		});
+	}
+}
+
+function saveDrawingSession(data) {
+	var now = new Date();
+	var filename = "drawingSession" + now.toTimeString();
+
+	var fullpath = path.join(sessionDirectory, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	try {
+		fs.writeFileSync(fullpath, JSON.stringify(data, null, 4));
+		console.log(sageutils.header("Session") + "saved drawing session file to " + fullpath);
+	}
+	catch (err) {
+		console.log(sageutils.header("Session") + "error saving", err);
 	}
 }
 

@@ -288,17 +288,23 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 
 }
 
+DrawingManager.prototype.saveDrawings = function() {
+	this.saveSession(this.drawState);
+}
+
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
 		drawingUpdateCB,
 		sendTouchToPaletteCB,
 		sendStyleToPaletteCB,
-		movePaletteToCB
+		movePaletteToCB,
+		saveSessionCB
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
 	this.sendTouchToPalette = sendTouchToPaletteCB;
 	this.sendStyleToPalette = sendStyleToPaletteCB;
 	this.movePaletteTo = movePaletteToCB;
+	this.saveSession = saveSessionCB;
 };
 module.exports = DrawingManager;
