@@ -251,7 +251,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		//   0 - last
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
-				this.state.page = (this.state.page + 1) % this.pdfDoc.numPages;
+				this.state.page = (this.state.page % this.pdfDoc.numPages) + 1;
 				this.refresh(date);
 			}
 			if (data.character === "1") {
@@ -278,7 +278,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				this.state.page = this.state.page - 1;
 				this.refresh(date);
 			} else if (data.code === 39 && data.state === "up") { // Right Arrow
-				this.state.page = (this.state.page + 1) % this.pdfDoc.numPages;
+				this.state.page = (this.state.page % this.pdfDoc.numPages) + 1;
 				this.refresh(date);
 			}
 		} else if (eventType === "widgetEvent") {
