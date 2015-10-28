@@ -91,6 +91,7 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
 var startTime          = Date.now();
+var pressingAlt        = true;
 
 // Global variable for all media folders
 global.mediaFolders = {};
@@ -4664,6 +4665,17 @@ function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Trick: press ALT key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		pressingAlt = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		pressingAlt = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
