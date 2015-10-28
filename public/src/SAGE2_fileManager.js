@@ -66,6 +66,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var menu_data = [
 		{id: "file_menu", value: "File", submenu: [
 			{id: "folder_menu",  value: "New folder"},
+			{id: "upload_menu",  value: "Upload file"},
 			{id: "refresh_menu", value: "Refresh"}
 			]},
 		{id: "edit_menu", value: "Edit", submenu: [
@@ -220,6 +221,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("help/index.html", '_blank');
 		} else if (evt === "refresh_menu") {
 			wsio.emit('requestStoredFiles');
+		} else if (evt === "upload_menu") {
+			// open the file uploader panel
+			showDialog('uploadDialog');
 		} else if (evt === "folder_menu") {
 			var item = _this.tree.getSelectedItem();
 			if (item && item.sage2URL) {
