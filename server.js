@@ -89,6 +89,7 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
 var startTime          = Date.now();
+var pressingAlt        = true;
 
 // Global variable for all media folders
 global.mediaFolders = {};
@@ -4177,6 +4178,12 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 
+	// Middle click changes interaction mode
+	if (data.button === "middle") {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+	}
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
@@ -4221,6 +4228,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	if (data.button === "right") {
+		// Right click opens the radial menu
 		createRadialMenu(uniqueID, pointerX, pointerY);
 	}
 }
@@ -4717,6 +4725,17 @@ function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Trick: press ALT key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		pressingAlt = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		pressingAlt = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);

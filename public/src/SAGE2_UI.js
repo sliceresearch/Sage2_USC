@@ -263,14 +263,14 @@ function setupListeners() {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
 				var x, y;
-				if (target === sage2UI) {
-					// on Mobile: not correct, but close enough (i.e. pageX)
-					x = event.pageX / sage2UI.clientWidth;
-					y = event.pageY / sage2UI.clientHeight;
-				} else {
+				if (hasMouse) {
 					// Desktop
 					x = event.layerX / event.target.clientWidth;
 					y = event.layerY / event.target.clientHeight;
+				} else {
+					// on Mobile: not correct, but close enough (i.e. pageX)
+					x = event.pageX / sage2UI.clientWidth;
+					y = event.pageY / sage2UI.clientHeight;
 				}
 				// Open the files
 				for (var i = 0; i < dnd.source.length; i++) {
@@ -715,9 +715,13 @@ function pointerPress(event) {
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the click
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerPress(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the click
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerPress(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -734,9 +738,13 @@ function pointerRelease(event) {
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the pointer release
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerRelease(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the pointer release
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerRelease(btn);
+		}
+
 		event.preventDefault();
 	}
 }
