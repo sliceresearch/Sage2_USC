@@ -4117,6 +4117,12 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 
+	// Middle click changes interaction mode
+	if (data.button === "middle") {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+	}
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
@@ -4161,6 +4167,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	if (data.button === "right") {
+		// Right click opens the radial menu
 		createRadialMenu(uniqueID, pointerX, pointerY);
 	}
 }
