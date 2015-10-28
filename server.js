@@ -701,7 +701,7 @@ function setupListeners(wsio) {
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
 	wsio.on('redoDrawing',							wsRedoDrawing);
-
+	wsio.on('saveDrawings',							wsSaveDrawings);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -876,6 +876,10 @@ function wsUndoLastDrawing(wsio,data) {
 
 function wsRedoDrawing(wsio,data) {
 	drawingManager.redoDrawing();
+}
+
+function wsSaveDrawings(wsio, data) {
+	drawingManager.saveDrawings();
 }
 
 
