@@ -733,7 +733,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 	// Use the defautl folder plus type as destination:
 	//    SAGE2_Media/pdf/ for instance
-	var localPath   = this.publicDir + dir + "/" + file.name;
+	var localPath   = path.join(this.publicDir, dir, file.name);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {

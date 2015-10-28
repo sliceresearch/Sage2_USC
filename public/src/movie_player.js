@@ -61,7 +61,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		});
 		this.stopBtn = this.controls.addButton({
 			identifier: "Stop",
-			type: "stop",
+			type: "rewind",
 			position: 3
 		});
 
@@ -144,6 +144,12 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
 	},
 
+	/**
+	* Toggle between mute and unmute
+	*
+	* @method toggleMute
+	*
+	*/
 	toggleMute: function(date){
 		if (this.state.muted === true) {
 			if (isMaster) {
@@ -159,6 +165,12 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.muteBtn.state = 1 - this.muteBtn.state;
 	},
 
+	/**
+	* Toggle between looping and not looping
+	*
+	* @method toggleLoop
+	*
+	*/
 	toggleLoop: function(date){
 		if (this.state.looped === true) {
 			if (isMaster) {
@@ -193,7 +205,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
-		// Space Bar - toggle play/pause
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
 				this.togglePlayPause(date);
@@ -201,6 +212,12 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				this.toggleLoop(date);
 			} else if (data.character === "m") {
 				this.toggleMute(date);
+			} else if (data.character === "1") {
+				// 1 start of video
+				this.stopVideo();
+			} else if (data.character === 'x') {
+				// Press 'x' to close itself
+				this.close();
 			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {

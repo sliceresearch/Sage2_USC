@@ -14,6 +14,7 @@ CACHE:
 /css/Arimo-Italic.woff2
 /css/Arimo-Regular.woff
 /css/Arimo-Regular.woff2
+/images/blank.png
 /images/EVL-LAVA.svg
 /images/SAGE2%20Application%20Interaction.svg
 /images/SAGE2%20Pointer%20Arrow.svg
@@ -22,7 +23,8 @@ CACHE:
 /images/mouse-left.svg
 /images/mouse-right.svg
 /images/trackpad.svg
-/images/blank.png
+/images/spacebar.svg
+/images/switch.svg
 /images/closemobilepointer.svg
 /images/radialMenu/drag-ring.svg
 /images/radialMenu/icon_radial_button_circle.svg
@@ -81,4 +83,5 @@ CACHE:
 /images/appUi/zoomOutBtn.svg
 
 NETWORK:
+sage2.appcache
 *

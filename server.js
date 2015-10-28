@@ -91,6 +91,7 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 128;
 var startTime          = Date.now();
+var pressingAlt        = true;
 
 // Global variable for all media folders
 global.mediaFolders = {};
@@ -523,6 +524,12 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
+
+	// Check if there's a new pointer for a mobile client
+	if (data.browser && data.browser.isMobile && remoteInteraction[wsio.id]) {
+		// for mobile clients, default to window interaction mode
+		remoteInteraction[wsio.id].previousMode = 0;
+	}
 }
 
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
@@ -736,6 +743,7 @@ function initializeExistingSagePointers(wsio) {
 	for (var key in sagePointers) {
 		if (sagePointers.hasOwnProperty(key)) {
 			wsio.emit('createSagePointer', sagePointers[key]);
+			wsio.emit('changeSagePointerMode', {id: sagePointers[key].id, mode: remoteInteraction[key].interactionMode});
 		}
 	}
 }
@@ -816,6 +824,10 @@ function wsRegisterInteractionClient(wsio, data) {
 }
 
 function wsStartSagePointer(wsio, data) {
+	// Switch interaction from window mode (on web) to app mode (wall)
+	remoteInteraction[wsio.id].interactionMode = remoteInteraction[wsio.id].getPreviousMode();
+	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].getPreviousMode()});
+
 	showPointer(wsio.id, data);
 
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerStart", data: null, time: Date.now()});
@@ -825,9 +837,10 @@ function wsStopSagePointer(wsio, data) {
 	hidePointer(wsio.id);
 
 	// return to window interaction mode after stopping pointer
+	remoteInteraction[wsio.id].saveMode();
 	if (remoteInteraction[wsio.id].appInteractionMode()) {
 		remoteInteraction[wsio.id].toggleModes();
-		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode });
+		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode});
 	}
 
 	var key;
@@ -836,7 +849,6 @@ function wsStopSagePointer(wsio, data) {
 	}
 
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
-	// addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
 }
 
 function wsPointerPress(wsio, data) {
@@ -2142,7 +2154,6 @@ function wsMoveElementFromStoredFiles(wsio, data) {
 
 	// Do the move and reprocess the asset
 	if (destinationFile) {
-		console.log('Have to move', data.filename, destinationFile);
 		assets.moveAsset(data.filename, destinationFile, function(err) {
 			if (err) {
 				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
@@ -2484,7 +2495,7 @@ function wsCreateRemoteSagePointer(wsio, data) {
 
 function wsStartRemoteSagePointer(wsio, data) {
 	sagePointers[data.id].left = data.left;
-	sagePointers[data.id].top = data.top;
+	sagePointers[data.id].top  = data.top;
 
 	showPointer(data.id, data);
 }
@@ -2811,12 +2822,15 @@ function wsFinishApplicationResize(wsio, data) {
 }
 
 function wsDeleteApplication(wsio, data) {
-	if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
-		SAGE2Items.applications.removeItem(data.appId);
-		var im = findInteractableManager(data.appId);
-		im.removeGeometry(data.appId, "applications");
-		broadcast('deleteElement', {elemId: data.appId});
-	}
+	deleteApplication(data.appId);
+
+	// Is that diffent ?
+	// if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
+	// 	SAGE2Items.applications.removeItem(data.appId);
+	// 	var im = findInteractableManager(data.appId);
+	// 	im.removeGeometry(data.appId, "applications");
+	// 	broadcast('deleteElement', {elemId: data.appId});
+	// }
 }
 
 function wsUpdateApplicationState(wsio, data) {
@@ -4059,7 +4073,6 @@ function showPointer(uniqueID, data) {
 		return;
 	}
 
-	// From startSagePointer
 	console.log(sageutils.header("Pointer") + "starting: " + uniqueID);
 
 	if (data.sourceType === undefined) {
@@ -4075,7 +4088,6 @@ function hidePointer(uniqueID) {
 		return;
 	}
 
-	// From stopSagePointer
 	console.log(sageutils.header("Pointer") + "stopping: " + uniqueID);
 
 	sagePointers[uniqueID].stop();
@@ -4104,6 +4116,12 @@ function globalToLocal(globalX, globalY, type, geometry) {
 function pointerPress(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Middle click changes interaction mode
+	if (data.button === "middle") {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 	}
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
@@ -4150,6 +4168,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	if (data.button === "right") {
+		// Right click opens the radial menu
 		createRadialMenu(uniqueID, pointerX, pointerY);
 	}
 }
@@ -4414,10 +4433,8 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	// pointer press on app window
 	if (btn === null) {
-		if (remoteInteraction[uniqueID].windowManagementMode()) {
-			if (data.button === "left") {
-				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
-			} else {
+		if (remoteInteraction[uniqueID].appInteractionMode()) {
+			if (data.button === "right") {
 				var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
 				if (!elemCtrl) {
 					broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
@@ -4429,9 +4446,11 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 				} else {
 					moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
 				}
+			} else {
+				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 			}
-		} else if (remoteInteraction[uniqueID].appInteractionMode()) {
-			sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+		} else {
+			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 		}
 		return;
 	}
@@ -4442,11 +4461,8 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			break;
 		}
 		case "dragCorner": {
-			if (remoteInteraction[uniqueID].windowManagementMode()) {
-				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			} else if (remoteInteraction[uniqueID].appInteractionMode()) {
-				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-			}
+			// Corner always active
+			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		}
 		case "fullscreenButton": {
@@ -4649,6 +4665,17 @@ function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Trick: press ALT key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		pressingAlt = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+		pressingAlt = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
@@ -4865,32 +4892,28 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			break;
 		}
 		case "dragCorner": {
-			if (remoteInteraction[uniqueID].windowManagementMode()) {
-				if (remoteInteraction[uniqueID].hoverCornerItem === null) {
-					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
-					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-					if (portalId !== undefined && portalId !== null) {
-						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-							{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
-					}
-				} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
-					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
-					if (portalId !== undefined && portalId !== null) {
-						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-							{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, date: ts});
-					}
-					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
-					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-					if (portalId !== undefined && portalId !== null) {
-						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-							{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
-					}
+			if (remoteInteraction[uniqueID].hoverCornerItem === null) {
+				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+				if (portalId !== undefined && portalId !== null) {
+					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+						{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
 				}
-			} else if (remoteInteraction[uniqueID].appInteractionMode()) {
-				sendPointerMoveToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+				broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+				if (portalId !== undefined && portalId !== null) {
+					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+						{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, date: ts});
+				}
+				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+				if (portalId !== undefined && portalId !== null) {
+					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+						{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+				}
 			}
 			break;
 		}
@@ -5868,19 +5891,32 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			if (remoteInteraction[uniqueID].windowManagementMode()) {
-				if (data.code === 8 || data.code === 46) { // backspace or delete
-					deleteApplication(obj.data.id);
+			// if (remoteInteraction[uniqueID].windowManagementMode()) {
+			// 	if (data.code === 8 || data.code === 46) { // backspace or delete
+			// 		deleteApplication(obj.data.id);
 
-					var eLogData = {
-						application: {
-							id: obj.data.id,
-							type: obj.data.application
-						}
-					};
-					addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-				}
-			} else if (remoteInteraction[uniqueID].appInteractionMode()) {
+			// 		var eLogData = {
+			// 			application: {
+			// 				id: obj.data.id,
+			// 				type: obj.data.application
+			// 			}
+			// 		};
+			// 		addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
+			// 	}
+			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
+			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			// }
+			if (data.code === 8 || data.code === 46) { // backspace or delete
+				deleteApplication(obj.data.id);
+
+				var eLogData = {
+					application: {
+						id: obj.data.id,
+						type: obj.data.application
+					}
+				};
+				addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
+			} else {
 				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			}
 			break;
@@ -5964,11 +6000,6 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		// shift + tab
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-
-		// if (remoteInteraction[uniqueID].interactionMode === 0)
-		// addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "windowManagement"}, time: Date.now()});
-		// else
-		// addEventToUserLog(uniqueID, {type: "SAGE2PointerMode", data: {mode: "applicationInteraction"}, time: Date.now()});
 
 		if (remoteInteraction[uniqueID].modeChange !== undefined) {
 			clearTimeout(remoteInteraction[uniqueID].modeChange);

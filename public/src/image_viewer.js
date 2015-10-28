@@ -194,6 +194,12 @@ var image_viewer = SAGE2_App.extend({
 
 			this.refresh(date);
 		}
+
+		// Press 'x' to close itself
+		if ((eventType === "keyboard") && data.character === 'x') {
+			this.close();
+		}
+
 		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {
 			var amount = -data.wheelDelta / 32;

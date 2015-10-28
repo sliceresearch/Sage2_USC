@@ -46,6 +46,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree = null;
 	this.main = null;
 	this.uniqueID = uniqueID;
+	this.selectedItem = null;
 	var _this = this;
 
 	// WEBIX
@@ -64,8 +65,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	var menu_data = [
 		{id: "file_menu", value: "File", submenu: [
-			{id: "refresh_menu", value: "Refresh"},
-			{id: "folder_menu",  value: "Create folder"}
+			{id: "folder_menu",  value: "New folder"},
+			{id: "upload_menu",  value: "Upload file"},
+			{id: "refresh_menu", value: "Refresh"}
 			]},
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
@@ -130,7 +132,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				},
 				{
 					view: "list", id: "uploadlist", type: "uploader",
-					scroll: true
+					scroll: 'y'
 				}]}
 				]
 				},
@@ -140,12 +142,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{
 					id: "multiview1",
 					view: "multiview",
-					animate: false,
+					scroll: 'y',
 					gravity: 2, // two times bigger
-					cells: [
-						{
-						}
-					]
+					animate: false,
+					cells: [ { } ]
 				},
 				{
 					view: "resizer"
@@ -221,40 +221,64 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("help/index.html", '_blank');
 		} else if (evt === "refresh_menu") {
 			wsio.emit('requestStoredFiles');
+		} else if (evt === "upload_menu") {
+			// open the file uploader panel
+			showDialog('uploadDialog');
 		} else if (evt === "folder_menu") {
-			webix.ui({
-				view: "window",
-				id: "folder_form",
-				position: "center",
-				modal: true,
-				head: "Create folder",
-				body: {
-					view: "form",
-					width: 400,
-					borderless: false,
-					elements: [
-						{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
-						{margin: 5, cols: [
-							{view: "button", value: "Cancel", click: function() {
-									this.getTopParentView().hide();
-								}
-							},
-							{view: "button", value: "Create", type: "form", click: function() {
-									var values = this.getFormView().getValues();
-									if (values.folder) {
-										wsio.emit('createFolder', {path: values.folder});
+			var item = _this.tree.getSelectedItem();
+			if (item && item.sage2URL) {
+				webix.ui({
+					view: "window",
+					id: "folder_form",
+					position: "center",
+					modal: true,
+					head: "New folder in " + item.sage2URL,
+					body: {
+						view: "form",
+						width: 400,
+						borderless: false,
+						elements: [
+							{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
+							{margin: 5, cols: [
+								{view: "button", value: "Cancel", click: function() {
+										this.getTopParentView().hide();
 									}
-									this.getTopParentView().hide();
+								},
+								{view: "button", value: "Create", type: "form", click: function() {
+										createFolder(item, this.getFormView().getValues());
+										this.getTopParentView().hide();
+									}
 								}
-							}
-						]}
-					],
-					elementsConfig: {
-						labelPosition: "top",
+							]}
+						],
+						elementsConfig: {
+							labelPosition: "top",
+						}
 					}
-				}
-			}).show();
-			$$('folder_name').focus();
+				}).show();
+				// Attach handlers for keyboard
+				$$("folder_name").attachEvent("onKeyPress", function(code, e) {
+					// ESC closes
+					if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+						this.getTopParentView().hide();
+						return false;
+					}
+					// ENTER activates
+					if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+						createFolder(item, this.getFormView().getValues());
+						this.getTopParentView().hide();
+						return false;
+					}
+				});
+				$$('folder_name').focus();
+			} else {
+				webix.alert({
+					type: "alert-warning",
+					title: "SAGE2",
+					ok: "OK",
+					text: "Select a parent folder first"
+				});
+			}
 		} else if (evt === "display_menu") {
 			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
@@ -309,10 +333,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 	multiview1.addView({
 		id: "all_table",
 		view: "datatable",
-		editable: true,
+		// editable: true,
 		columnWidth: 200,
 		resizeColumn: true,
-		animate: false,
+		// animate: false,
+		scroll: 'y',
 		drag: true,
 		select: "multiselect",
 		navigation: true,
@@ -345,7 +370,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// User selection
 	this.allTable.attachEvent("onSelectChange", function(evt) {
 		var elt = _this.allTable.getSelectedId();
+		// remember the selected item (for drag-drop)
+		_this.selectedItem = elt;
 		if (!elt || !elt.id) {
+			// if nothing selected, done
 			return;
 		}
 		var metadata = $$("metadata");
@@ -543,19 +571,27 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// target - the id of the drop target, null for drop on empty space
 	// start - the id from which DND was started
 	this.allTable.attachEvent("onBeforeDrag", function(context, ev) {
-		var elt;
-		context.html = "<div style='padding:8px;background:#d3e3ef'>";
-		if (context.source.length === 1) {
-			elt = _this.allFiles[context.start];
-			context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
-			context.html += '<br>' + elt.exif.FileName;
-		} else {
-			for (var i = 0; i < Math.min(context.source.length, 35); i++) {
-				elt = _this.allFiles[context.source[i]];
-				context.html += elt.exif.FileName + "<br>";
+		// Only drag-drop if multiple selected items,
+		//    or the source element is the same as the selected one (select and drag)
+		if (context.source.length > 1 ||
+			(_this.selectedItem && context.start === _this.selectedItem.id)) {
+			var elt;
+			context.html = "<div style='padding:8px;background:#d3e3ef'>";
+			if (context.source.length === 1) {
+				elt = _this.allFiles[context.start];
+				context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
+				context.html += '<br>' + elt.exif.FileName;
+			} else {
+				for (var i = 0; i < Math.min(context.source.length, 35); i++) {
+					elt = _this.allFiles[context.source[i]];
+					context.html += elt.exif.FileName + "<br>";
+				}
 			}
+			context.html += "</div>";
+			return true;
+		} else {
+			return false;
 		}
-		context.html += "</div>";
 	});
 
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
@@ -968,11 +1004,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 		this.main.adjust();
 	};
 
-	function createFolder(context, values) {
-		var list   = context.obj;
-		var listId = context.id;
-		var item   = list.getItem(listId);
-		if (values.folder) {
+	function createFolder(item, values) {
+		if (item && values.folder) {
 			// Send order to the server
 			wsio.emit('createFolder', {root: item.sage2URL,
 				path: values.folder});
@@ -990,7 +1023,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var tmenu = webix.ui({
 		view: "contextmenu",
 		id: "tmenu",
-		data: ["Refresh", { $template: "Separator" }, "New folder" ],
+		data: ["New folder", { $template: "Separator" }, "Refresh" ],
 		on: {
 			onItemClick: function(id) {
 				var context = this.getContext();
@@ -998,15 +1031,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 				var listId  = context.id;
 
 				if (id === "New folder") {
-					console.log('Create folder', list.getItem(listId).sage2URL,
-							list.getItem(listId).id, list.getItem(listId).value);
 					webix.ui({
 						view: "window",
 						id: "folder_form",
 						position: "center",
 						modal: true,
 						zIndex: 9999,
-						head: "Create folder in " + list.getItem(listId).sage2URL,
+						head: "New folder in " + list.getItem(listId).sage2URL,
 						body: {
 							view: "form",
 							width: 400,
@@ -1020,7 +1051,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 										}
 									},
 									{view: "button", value: "Create", type: "form", click: function() {
-											createFolder(context, this.getFormView().getValues());
+											createFolder(list.getItem(listId), this.getFormView().getValues());
 											this.getTopParentView().hide();
 										}
 									}
@@ -1031,6 +1062,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 							}
 						}
 					}).show();
+					// Attach handlers for keyboard
 					$$("folder_name").attachEvent("onKeyPress", function(code, e) {
 						// ESC closes
 						if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
@@ -1039,7 +1071,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 						}
 						// ENTER activates
 						if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-							createFolder(context, this.getFormView().getValues());
+							createFolder(list.getItem(listId), this.getFormView().getValues());
 							this.getTopParentView().hide();
 							return false;
 						}
