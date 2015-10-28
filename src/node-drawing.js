@@ -135,7 +135,9 @@ DrawingManager.prototype.update = function(drawingObject, clientID) {
 	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
 
 }
-
+DrawingManager.prototype.copy = function(a) {
+	 return JSON.parse(JSON.stringify(a));
+}
 
 DrawingManager.prototype.distance = function(p1,p2) {
 	return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
@@ -147,7 +149,7 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 	this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
 	this.newDrawingObject[e.sourceId]["type"] = "circle";
 	this.newDrawingObject[e.sourceId]["options"] = { points: [ {x: posX,y: posY}] };
-	this.newDrawingObject[e.sourceId]["style"] = this.style;
+	this.newDrawingObject[e.sourceId]["style"] = this.copy(this.style);
 
 	this.drawState.push(this.newDrawingObject[e.sourceId]);
 
@@ -159,7 +161,7 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	}
 	var lastPoint = this.newDrawingObject[e.sourceId]["options"]["points"]
 					[this.newDrawingObject[e.sourceId]["options"]["points"].length - 1];
-	if (distance(lastPoint, {x: posX, y: posY}) > 0.5) {
+	if (this.distance(lastPoint, {x: posX, y: posY}) > 0.5) {
 		this.newDrawingObject[e.sourceId]["type"] = "path";
 		this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
 	}
@@ -293,7 +295,11 @@ DrawingManager.prototype.saveDrawings = function() {
 }
 
 DrawingManager.prototype.loadDrawings = function(data) {
-	this.drawState = this.loadSession(data) || [];
+	this.loadSession(data);
+}
+
+DrawingManager.prototype.loadOldState = function(data) {
+	this.drawState = data || [];
 	this.initAll();
 }
 

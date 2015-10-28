@@ -1579,8 +1579,8 @@ function loadDrawingSession(filename) {
 			console.log("Error reading DrawingState: ", err);
 		} else {
 			console.log("Reading DrawingState from " + fullpath);
-
-			return JSON.parse(data);
+			var j = JSON.parse(data);
+			drawingManager.loadOldState(j);
 		}
 	});
 
