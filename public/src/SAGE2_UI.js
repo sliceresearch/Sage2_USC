@@ -715,9 +715,13 @@ function pointerPress(event) {
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the click
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerPress(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the click
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerPress(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -734,9 +738,13 @@ function pointerRelease(event) {
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the pointer release
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerRelease(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the pointer release
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerRelease(btn);
+		}
+
 		event.preventDefault();
 	}
 }
