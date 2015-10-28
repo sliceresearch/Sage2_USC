@@ -292,13 +292,19 @@ DrawingManager.prototype.saveDrawings = function() {
 	this.saveSession(this.drawState);
 }
 
+DrawingManager.prototype.loadDrawings = function(data) {
+	this.drawState = this.loadSession(data) || [];
+	this.initAll();
+}
+
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
 		drawingUpdateCB,
 		sendTouchToPaletteCB,
 		sendStyleToPaletteCB,
 		movePaletteToCB,
-		saveSessionCB
+		saveSessionCB,
+		loadSessionCB
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
@@ -306,5 +312,6 @@ DrawingManager.prototype.setCallbacks = function(
 	this.sendStyleToPalette = sendStyleToPaletteCB;
 	this.movePaletteTo = movePaletteToCB;
 	this.saveSession = saveSessionCB;
+	this.loadSession = loadSessionCB;
 };
 module.exports = DrawingManager;

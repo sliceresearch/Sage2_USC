@@ -358,7 +358,8 @@ function initializeSage2Server() {
 								sendTouchToPalette,
 								sendStyleToPalette,
 								movePaletteTo,
-								saveDrawingSession
+								saveDrawingSession,
+								loadDrawingSession
 								);
 }
 
@@ -701,6 +702,7 @@ function setupListeners(wsio) {
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
 	wsio.on('redoDrawing',							wsRedoDrawing);
+	wsio.on('loadDrawings',							wsLoadDrawings);
 
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
@@ -878,7 +880,9 @@ function wsRedoDrawing(wsio,data) {
 	drawingManager.redoDrawing();
 }
 
-
+function wsLoadDrawings(wsio,data) {
+	drawingManager.loadDrawings(data);
+}
 
 // **************  Sage Pointer Functions *****************
 
@@ -1529,8 +1533,8 @@ function deleteSession(filename) {
 }
 
 function saveDrawingSession(data) {
-	var now = new Date();
-	var filename = "drawingSession" + now.toTimeString();
+	// var now = new Date();
+	var filename = "drawingSession";
 
 	var fullpath = path.join(sessionDirectory, filename);
 	// if it doesn't end in .json, add it
@@ -1545,6 +1549,37 @@ function saveDrawingSession(data) {
 	catch (err) {
 		console.log(sageutils.header("Session") + "error saving", err);
 	}
+}
+
+function loadDrawingSession(filename) {
+
+	if (filename == null) {
+		console.log("Filename does not exist");
+		filename = "drawingSession";
+	}
+
+	var fullpath;
+	if (sageutils.fileExists(path.resolve(filename))) {
+		fullpath = filename;
+	} else {
+		fullpath = path.join(sessionDirectory, filename);
+	}
+
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	fs.readFile(fullpath, function(err, data) {
+		if (err) {
+			console.log("Error reading DrawingState: ", err);
+		} else {
+			console.log("Reading DrawingState from " + fullpath);
+
+			return JSON.parse(data);
+		}
+	});
+
 }
 
 function saveSession(filename) {
