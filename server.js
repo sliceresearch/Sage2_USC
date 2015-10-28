@@ -703,7 +703,7 @@ function setupListeners(wsio) {
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
 	wsio.on('redoDrawing',							wsRedoDrawing);
 	wsio.on('loadDrawings',							wsLoadDrawings);
-
+	wsio.on('saveDrawings',							wsSaveDrawings);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -882,6 +882,10 @@ function wsRedoDrawing(wsio,data) {
 
 function wsLoadDrawings(wsio,data) {
 	drawingManager.loadDrawings(data);
+}
+
+function wsSaveDrawings(wsio, data) {
+	drawingManager.saveDrawings();
 }
 
 // **************  Sage Pointer Functions *****************
