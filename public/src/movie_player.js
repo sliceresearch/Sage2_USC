@@ -45,13 +45,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.loopBtn = this.controls.addButton({
 			identifier: "Loop",
 			type: "loop",
-			position: 2
+			position: 11
 		});
 
 		this.muteBtn = this.controls.addButton({
 			identifier: "Mute",
 			type: "mute",
-			position: 6
+			position: 9
 		});
 
 		this.playPauseBtn = this.controls.addButton({
@@ -104,9 +104,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	*/
 	videoEnded: function() {
 		if (this.state.looped === false) {
-			this.state.paused = true;
-			// must change play-pause button (should show 'play' icon)
-			this.playPauseBtn.state = 1;
+			this.stopVideo();
 		}
 	},
 
@@ -119,6 +117,71 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	load: function(date) {
 	},
 
+	/**
+	* Toggle between play and pause
+	*
+	* @method togglePlayPause
+	*
+	*/
+	togglePlayPause: function(date){
+		if (this.state.paused === true) {
+			if (isMaster) {
+				// Trying to sync
+				wsio.emit('updateVideoTime',
+					{id: this.div.id,
+					timestamp: (this.state.frame / this.state.framerate),
+					play: true});
+				// wsio.emit('playVideo', {id: this.div.id});
+			}
+			this.state.paused = false;
+		} else {
+			if (isMaster) {
+				wsio.emit('pauseVideo', {id: this.div.id});
+			}
+			this.state.paused = true;
+		}
+		this.refresh(date);
+		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
+	},
+
+	toggleMute: function(date){
+		if (this.state.muted === true) {
+			if (isMaster) {
+				wsio.emit('unmuteVideo', {id: this.div.id});
+			}
+			this.state.muted = false;
+		} else {
+			if (isMaster) {
+				wsio.emit('muteVideo', {id: this.div.id});
+			}
+			this.state.muted = true;
+		}
+		this.muteBtn.state = 1 - this.muteBtn.state;
+	},
+
+	toggleLoop: function(date){
+		if (this.state.looped === true) {
+			if (isMaster) {
+				wsio.emit('loopVideo', {id: this.div.id, loop: false});
+			}
+			this.state.looped = false;
+		} else {
+			if (isMaster) {
+				wsio.emit('loopVideo', {id: this.div.id, loop: true});
+			}
+			this.state.looped = true;
+		}
+		this.loopBtn.state = 1 - this.loopBtn.state;
+	},
+
+	stopVideo: function(){
+		if (isMaster) {
+			wsio.emit('stopVideo', {id: this.div.id});
+		}
+		this.state.paused = true;
+		// must change play-pause button (should show 'play' icon)
+		this.playPauseBtn.state = 0;
+	},
 	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
@@ -133,99 +196,25 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		// Space Bar - toggle play/pause
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
-				if (this.state.paused === true) {
-					if (isMaster) {
-						// Trying to sync
-						wsio.emit('updateVideoTime',
-							{id: this.div.id,
-							timestamp: (this.state.frame / this.state.framerate),
-							play: true});
-						// wsio.emit('playVideo', {id: this.div.id});
-					}
-					this.state.paused = false;
-				} else {
-					if (isMaster) {
-						wsio.emit('pauseVideo', {id: this.div.id});
-					}
-					this.state.paused = true;
-				}
-				this.refresh(date);
+				this.togglePlayPause(date);
 			} else if (data.character === "l") {
-				if (this.state.looped === true) {
-					if (isMaster) {
-						wsio.emit('loopVideo', {id: this.div.id, loop: false});
-					}
-					this.state.looped = false;
-				} else {
-					if (isMaster) {
-						wsio.emit('loopVideo', {id: this.div.id, loop: true});
-					}
-					this.state.looped = true;
-				}
+				this.toggleLoop(date);
 			} else if (data.character === "m") {
-				if (this.state.muted === true) {
-					if (isMaster) {
-						wsio.emit('unmuteVideo', {id: this.div.id});
-					}
-					this.state.muted = false;
-				} else {
-					if (isMaster) {
-						wsio.emit('muteVideo', {id: this.div.id});
-					}
-					this.state.muted = true;
-				}
+				this.toggleMute(date);
 			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "Loop":
-					if (this.state.looped === true) {
-						if (isMaster) {
-							wsio.emit('loopVideo', {id: this.div.id, loop: false});
-						}
-						this.state.looped = false;
-					} else {
-						if (isMaster) {
-							wsio.emit('loopVideo', {id: this.div.id, loop: true});
-						}
-						this.state.looped = true;
-					}
+					this.toggleLoop(date);
 					break;
 				case "Mute":
-					if (this.state.muted === true) {
-						if (isMaster) {
-							wsio.emit('unmuteVideo', {id: this.div.id});
-						}
-						this.state.muted = false;
-					} else {
-						if (isMaster) {
-							wsio.emit('muteVideo', {id: this.div.id});
-						}
-						this.state.muted = true;
-					}
+					this.toggleMute(date);
 					break;
 				case "PlayPause":
-					if (this.state.paused === true) {
-						if (isMaster) {
-							wsio.emit('updateVideoTime',
-								{id: this.div.id,
-								timestamp: (this.state.frame / this.state.framerate),
-								play: true});
-							// wsio.emit('playVideo', {id: this.div.id});
-						}
-						this.state.paused = false;
-					} else {
-						if (isMaster) {
-							wsio.emit('pauseVideo', {id: this.div.id});
-						}
-						this.state.paused = true;
-					}
+					this.togglePlayPause(date);
 					break;
 				case "Stop":
-					if (isMaster) {
-						wsio.emit('stopVideo', {id: this.div.id});
-					}
-					this.state.paused = true;
-					this.playPauseBtn.state = 0;
+					this.stopVideo();
 					break;
 				case "Seek":
 					switch (data.action) {
@@ -251,7 +240,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					}
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 			}
 		}
 	}
