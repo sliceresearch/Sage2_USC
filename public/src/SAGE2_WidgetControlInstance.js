@@ -379,7 +379,6 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 						buttonCover.animate({path: path, fill: fill}, type.delay, mina.bounce);
 					}
 					else if (type.state === 1) {
-						console.log("reaching");
 						button.select("#cover2").attr("visibility", "visible");
 						button.select("#cover").attr("visibility", "hidden");
 					} else {
