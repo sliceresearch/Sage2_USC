@@ -2,6 +2,8 @@
 
 function DrawingManager(config) {
 
+	this.lastId = 0;
+	this.dictionaryId = {};
 	this.idPrequel = "drawing_";
 	this.clientIDandSockets = {};
 	this.newDrawingObject = {};
@@ -152,28 +154,46 @@ DrawingManager.prototype.copy = function(a) {
 DrawingManager.prototype.distance = function(p1,p2) {
 	return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
 }
+
+DrawingManager.prototype.getNewId = function(e) {
+	this.lastId++;
+	var newId = this.idPrequel + this.lastId;
+	this.dictionaryId[e.sourceId] = newId;
+	return newId;
+}
+
+DrawingManager.prototype.realeaseId = function(e) {
+	delete this.dictionaryId[e.sourceId];
+}
+
+DrawingManager.prototype.existsId = function(e) {
+	return e.sourceId in his.dictionaryId
+}
+
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	// Create new Drawing object
-	this.newDrawingObject[e.sourceId] = {};
-	this.newDrawingObject[e.sourceId]["id"] = this.idPrequel + e.sourceId;
-	this.newDrawingObject[e.sourceId]["type"] = "circle";
-	this.newDrawingObject[e.sourceId]["options"] = { points: [ {x: posX,y: posY}] };
-	this.newDrawingObject[e.sourceId]["style"] = this.copy(this.style);
+	var drawingId = getNewId(e);
+	this.newDrawingObject[drawingId] = {};
+	this.newDrawingObject[drawingId]["id"] = drawingId;
+	this.newDrawingObject[drawingId]["type"] = "circle";
+	this.newDrawingObject[drawingId]["options"] = { points: [ {x: posX,y: posY}] };
+	this.newDrawingObject[drawingId]["style"] = this.copy(this.style);
 
-	this.drawState.push(this.newDrawingObject[e.sourceId]);
+	this.drawState.push(this.newDrawingObject[drawingId]);
 
 }
 
 DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
-	if (!this.newDrawingObject[e.sourceId]) {
+	if (!existsId(e.sourceId)) {
 		this.newDrawingObjectFunc(e, posX, posY);
 	}
-	var lastPoint = this.newDrawingObject[e.sourceId]["options"]["points"]
-					[this.newDrawingObject[e.sourceId]["options"]["points"].length - 1];
+	var drawingId = this.dictionaryId[e.sourceId];
+	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"]
+					[this.newDrawingObject[drawingId]["options"]["points"].length - 1];
 	if (this.distance(lastPoint, {x: posX, y: posY}) > 0.5) {
-		this.newDrawingObject[e.sourceId]["type"] = "path";
-		this.newDrawingObject[e.sourceId]["options"]["points"].push({x: posX,y: posY});
+		this.newDrawingObject[drawingId]["type"] = "path";
+		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 }
 DrawingManager.prototype.touchInsidePalette = function(x,y) {
@@ -187,6 +207,7 @@ DrawingManager.prototype.touchInsidePaletteTitleBar = function(x,y) {
 
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
+
 	if (this.paintingMode) {
 		this.style["stroke-width"] = Math.max(w,h)
 	}
@@ -230,11 +251,13 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.actualAction = "drawing";
 		}
 		// pointer release
+		this.realeaseId(e);
 		return;
 	}
 
+	var drawingId = this.dictionaryId[e.sourceId];
 	var involvedClient = this.checkInvolvedClient(posX, posY);
-	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[e.sourceId], involvedClient);
+	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
 	this.update(manipulatedObject, involvedClient);
 }
