@@ -60,7 +60,8 @@ var WhiteboardPalette = SAGE2_App.extend( {
 							  {name: "Stroke",action: null,parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
 							  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
 							  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
-							  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3}];
+							  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
+							  {name: "enablePaint",action: this.enablePaintingMode,parent: this,icon: path+"/clear.png",r: 6,c: 7,cSpan: 3,rSpan: 3}];
 		
 		var w=parseInt(this.palette.style("width"));
 		var h=parseInt(this.palette.style("height"));
@@ -122,6 +123,9 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	},
 	loadDrawings: function() {
 		wsio.emit("loadDrawings",null);
+	},
+	enablePaintingMode: function() {
+		wsio.emit("enablePaintingMode",null);
 	},
 	load: function(date) {
 		console.log('WhiteboardPalette> Load with state value', this.state.value);

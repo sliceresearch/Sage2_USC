@@ -14,6 +14,7 @@ function DrawingManager(config) {
 	this.calculateTileDimensions(config);
 	this.actualAction = "drawing"
 	this.possibleActions = ["drawing", "movingPalette"];
+	this.paintingMode = false;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -76,6 +77,15 @@ DrawingManager.prototype.initAll = function() {
 
 }
 
+DrawingManager.prototype.enablePaintingMode = function() {
+	this.paintingMode = true;
+}
+
+DrawingManager.prototype.disablePaintingMode = function() {
+	this.paintingMode = false;
+}
+
+
 DrawingManager.prototype.removeWebSocket = function(wsio) {
 
 	// Detecting the position of the socket into the corresponding socket array
@@ -136,7 +146,7 @@ DrawingManager.prototype.update = function(drawingObject, clientID) {
 
 }
 DrawingManager.prototype.copy = function(a) {
-	 return JSON.parse(JSON.stringify(a));
+	return JSON.parse(JSON.stringify(a));
 }
 
 DrawingManager.prototype.distance = function(p1,p2) {
@@ -176,7 +186,10 @@ DrawingManager.prototype.touchInsidePaletteTitleBar = function(x,y) {
 }
 
 
-DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY) {
+DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
+	if (this.paintingMode) {
+		this.style["stroke-width"] = Math.max(w,h)
+	}
 
 	if (e.type == 5) {
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {

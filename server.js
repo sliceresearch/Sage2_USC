@@ -704,6 +704,8 @@ function setupListeners(wsio) {
 	wsio.on('redoDrawing',							wsRedoDrawing);
 	wsio.on('loadDrawings',							wsLoadDrawings);
 	wsio.on('saveDrawings',							wsSaveDrawings);
+	wsio.on('enablePaintingMode',					wsEnablePaintingMode);
+	wsio.on('disablePaintingMode',					wsDisablePaintingMode);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -886,6 +888,14 @@ function wsLoadDrawings(wsio,data) {
 
 function wsSaveDrawings(wsio, data) {
 	drawingManager.saveDrawings();
+}
+
+function wsEnablePaintingMode(wsio, data) {
+	drawingManager.enablePaintingMode();
+}
+
+function wsDisablePaintingMode(wsio, data) {
+	drawingManager.disablePaintingMode();
 }
 
 // **************  Sage Pointer Functions *****************

@@ -550,6 +550,9 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		touchHeight = msg.readFloatLE(offset); offset += 4;
 	}
 
+	touchWidth *=  omicronManager.totalWidth;
+	touchHeight *= omicronManager.totalHeight;
+
 	if (omicronManager.eventDebug) {
 		console.log("pointer ID " + sourceID + " event! type: " + e.type);
 		console.log("pointer event! type: " + e.type);
@@ -559,7 +562,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	}
 
 	if (address.substring(0,address.indexOf(":")) == this.config.inputServerIP) {
-		drawingManager.pointerEvent(e,sourceID,posX,posY);
+		drawingManager.pointerEvent(e,sourceID,posX,posY,touchWidth,touchHeight);
 	}
 
 	// TouchGestureManager Flags:
