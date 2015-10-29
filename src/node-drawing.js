@@ -155,25 +155,25 @@ DrawingManager.prototype.distance = function(p1,p2) {
 	return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
 }
 
-DrawingManager.prototype.getNewId = function(e) {
+DrawingManager.prototype.getNewId = function(sourceId) {
 	this.lastId++;
 	var newId = this.idPrequel + this.lastId;
-	this.dictionaryId[e.sourceId] = newId;
+	this.dictionaryId[sourceId] = newId;
 	return newId;
 }
 
-DrawingManager.prototype.realeaseId = function(e) {
-	delete this.dictionaryId[e.sourceId];
+DrawingManager.prototype.realeaseId = function(sourceId) {
+	delete this.dictionaryId[sourceId];
 }
 
-DrawingManager.prototype.existsId = function(e) {
-	return e.sourceId in his.dictionaryId
+DrawingManager.prototype.existsId = function(sourceId) {
+	return sourceId in this.dictionaryId
 }
 
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	// Create new Drawing object
-	var drawingId = getNewId(e);
+	var drawingId = this.getNewId(e.sourceId);
 	this.newDrawingObject[drawingId] = {};
 	this.newDrawingObject[drawingId]["id"] = drawingId;
 	this.newDrawingObject[drawingId]["type"] = "circle";
@@ -185,7 +185,7 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 }
 
 DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
-	if (!existsId(e.sourceId)) {
+	if (!this.existsId(e.sourceId)) {
 		this.newDrawingObjectFunc(e, posX, posY);
 	}
 	var drawingId = this.dictionaryId[e.sourceId];
@@ -251,11 +251,13 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.actualAction = "drawing";
 		}
 		// pointer release
-		this.realeaseId(e);
+		this.realeaseId(e.sourceId);
 		return;
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
+	console.log(drawingId)
+	console.log(e.sourceId)
 	var involvedClient = this.checkInvolvedClient(posX, posY);
 	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
