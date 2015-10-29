@@ -25,7 +25,6 @@ function DrawingManager(config) {
 	// style: {} Current style of the object to be drawn
 	// }
 
-
 }
 
 
@@ -140,7 +139,6 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 DrawingManager.prototype.update = function(drawingObject, clientID) {
 
 	for (var ws in this.clientIDandSockets[clientID]) {
-
 		this.drawingUpdate(this.clientIDandSockets[clientID][ws], drawingObject);
 	}
 
@@ -168,6 +166,21 @@ DrawingManager.prototype.realeaseId = function(sourceId) {
 
 DrawingManager.prototype.existsId = function(sourceId) {
 	return sourceId in this.dictionaryId
+}
+
+DrawingManager.prototype.findMaxId = function() {
+	var max = parseInt(this.drawState[0].substring(idPrequel.length - 1, this.drawState[0].length));
+
+	for (var drawingObj in this.drawState) {
+		var idx = this.drawState[drawingObj][id];
+		idx = parseInt(idx.substring(idPrequel.length - 1, idx.length));
+
+		if (idx > max) {
+			max = idx;
+		}
+	}
+
+	return max;
 }
 
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
@@ -334,6 +347,7 @@ DrawingManager.prototype.saveDrawings = function() {
 
 DrawingManager.prototype.loadDrawings = function(data) {
 	this.loadSession(data);
+	this.lastId = this.findMaxId() + 1;
 }
 
 DrawingManager.prototype.loadOldState = function(data) {
