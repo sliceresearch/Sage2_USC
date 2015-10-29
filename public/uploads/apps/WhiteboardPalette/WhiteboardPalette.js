@@ -6,6 +6,74 @@
 //
 // Color picker at http://jsfiddle.net/cessor/NnH5Q/
 
+(function (exports) {
+    function urlsToAbsolute(nodeList) {
+        if (!nodeList.length) {
+            return [];
+        }
+        var attrName = 'href';
+        if (nodeList[0].__proto__ === HTMLImageElement.prototype 
+        || nodeList[0].__proto__ === HTMLScriptElement.prototype) {
+            attrName = 'src';
+        }
+        nodeList = [].map.call(nodeList, function (el, i) {
+            var attr = el.getAttribute(attrName);
+            if (!attr) {
+                return;
+            }
+            var absURL = /^(https?|data):/i.test(attr);
+            if (absURL) {
+                return el;
+            } else {
+                return el;
+            }
+        });
+        return nodeList;
+    }
+
+    function screenshotPage() {
+        urlsToAbsolute(document.images);
+        urlsToAbsolute(document.querySelectorAll("link[rel='stylesheet']"));
+        var screenshot = document.documentElement.cloneNode(true);
+        var b = document.createElement('base');
+        b.href = document.location.protocol + '//' + location.host;
+        var head = screenshot.querySelector('head');
+        head.insertBefore(b, head.firstChild);
+        screenshot.style.pointerEvents = 'none';
+        screenshot.style.overflow = 'hidden';
+        screenshot.style.webkitUserSelect = 'none';
+        screenshot.style.mozUserSelect = 'none';
+        screenshot.style.msUserSelect = 'none';
+        screenshot.style.oUserSelect = 'none';
+        screenshot.style.userSelect = 'none';
+        screenshot.dataset.scrollX = window.scrollX;
+        screenshot.dataset.scrollY = window.scrollY;
+        var script = document.createElement('script');
+        script.textContent = '(' + addOnPageLoad_.toString() + ')();';
+        screenshot.querySelector('body').appendChild(script);
+        var blob = new Blob([screenshot.outerHTML], {
+            type: 'text/html'
+        });
+        return blob;
+    }
+
+    function addOnPageLoad_() {
+        window.addEventListener('DOMContentLoaded', function (e) {
+            var scrollX = document.documentElement.dataset.scrollX || 0;
+            var scrollY = document.documentElement.dataset.scrollY || 0;
+            window.scrollTo(scrollX, scrollY);
+        });
+    }
+
+    function generate() {
+        window.URL = window.URL || window.webkitURL;
+        window.open(window.URL.createObjectURL(screenshotPage()));
+    }
+    exports.screenshotPage = screenshotPage;
+    exports.generate = generate;
+})(window);
+
+
 
 
 var WhiteboardPalette = SAGE2_App.extend( {
@@ -51,6 +119,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		this.paletteButtons= [{name: "Clear",action: this.clearCanvas,icon: path+"/clear.png",parent: this,r: 0,c: 0,cSpan: 3,rSpan: 3},
 							  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
 							  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
+							  {name: "screenshot",action: this.takeScreenshot,icon: path+"/save.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 1},
 							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "green",r: 4,c: 3,cSpan: 2,rSpan: 2},
 							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
 							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "blue",r: 6,c: 3,cSpan: 2,rSpan: 2},
@@ -94,6 +163,9 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				this.palette.append("circle").attr("r",this.strokeWidth).attr("cx",x+buttW/2).attr("cy",y+buttH/2).attr("fill",this.strokeColor)
 			}
 		}
+	},
+	takeScreenshot: function(){
+		generate();
 	},
 	changeStroke: function() {
 		this.parent.strokeWidth += this.increment;
