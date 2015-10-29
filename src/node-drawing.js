@@ -169,12 +169,11 @@ DrawingManager.prototype.existsId = function(sourceId) {
 }
 
 DrawingManager.prototype.findMaxId = function() {
-	var max = parseInt(this.drawState[0].substring(idPrequel.length - 1, this.drawState[0].length));
+	var max = -1;
 
 	for (var drawingObj in this.drawState) {
-		var idx = this.drawState[drawingObj][id];
-		idx = parseInt(idx.substring(idPrequel.length - 1, idx.length));
-
+		var idx = this.drawState[drawingObj]['id'];
+		idx = parseInt(idx.substring(this.idPrequel.length, idx.length));
 		if (idx > max) {
 			max = idx;
 		}
@@ -269,8 +268,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
-	console.log(drawingId)
-	console.log(e.sourceId)
 	var involvedClient = this.checkInvolvedClient(posX, posY);
 	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
@@ -346,12 +343,13 @@ DrawingManager.prototype.saveDrawings = function() {
 }
 
 DrawingManager.prototype.loadDrawings = function(data) {
+	// asynchronous
 	this.loadSession(data);
-	this.lastId = this.findMaxId() + 1;
 }
 
 DrawingManager.prototype.loadOldState = function(data) {
 	this.drawState = data || [];
+	this.lastId = this.findMaxId() + 1;
 	this.initAll();
 }
 
