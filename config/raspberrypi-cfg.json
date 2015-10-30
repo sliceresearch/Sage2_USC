@@ -1,0 +1,44 @@
+{
+	name: "Raspberry",
+	host: "localhost",
+	port: 443,
+	index_port: 80,
+	url: "SAGE2_PI",
+	background: {
+		color: "#585757",
+		image: {
+			url: "images/background/dbgrid.png",
+			style: "tile"
+		}
+	},
+	ui: {
+		clock: 24,
+		show_version: false,
+		show_url: true,
+		show_version: false,
+		noDropShadow: true,
+		auto_hide_ui: true,
+		auto_hide_delay: 10,
+		maxWindowWidth : 4096,
+		maxWindowHeight : 4096
+	},
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	]
+}

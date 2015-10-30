@@ -591,31 +591,28 @@ function RadialMenu() {
 						var labelLength = this.ctx.measureText(metadataTags[i].longLabel).width;
 						var tagLength = this.ctx.measureText(metadataTags[i].tag).width;
 						var maxTextWidth = this.element.width * previewWindowWidth;
-						
 
-						if( labelLength + tagLength <= maxTextWidth ) {
-							this.ctx.fillText(metadataTags[i].longLabel + metadataTags[i].tag, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
-						}
-						else {
+						if (labelLength + tagLength <= maxTextWidth) {
+							this.ctx.fillText(metadataTags[i].longLabel + metadataTags[i].tag,
+								metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
+						} else {
 							var textWords = (metadataTags[i].longLabel + metadataTags[i].tag).split(' ');
 							var testLine = "";
 							var j = 0;
 							var line = 0;
-							for(j = 0; j < textWords.length; j++) {
+							for (j = 0; j < textWords.length; j++) {
 								var nextTestLine = testLine + textWords[j] + " ";
-								if( this.ctx.measureText(nextTestLine).width <= maxTextWidth ) {
+								if (this.ctx.measureText(nextTestLine).width <= maxTextWidth) {
 									testLine = nextTestLine;
-								}
-								else
-								{
+								} else {
 									this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
 									testLine = textWords[j] + " ";
 									line += 1;
-									//metadataLine++;
-									//this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
-									//testLine = "";
-									//testLine = "[Too long, Clanky. Too long.]"
-									//this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing * 2);
+									// metadataLine++;
+									// this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
+									// testLine = "";
+									// testLine = "[Too long, Clanky. Too long.]"
+									// this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing * 2);
 								}
 							}
 							this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
@@ -1156,7 +1153,7 @@ function RadialMenu() {
 				neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows);
 			}
 		}
-		
+
 		// console.log("Radial Menu: updateThumbnailPositions max r: " + maxRows + " max c: " + maxCols + " needed c:" + neededColumns);
 		this.thumbnailGridSize = { x: maxRows, y: maxCols };
 		if (neededColumns > maxRows) {
@@ -1281,7 +1278,7 @@ function ButtonWidget() {
 	};
 
 	this.setHitboxSize = function(w, h) {
-		this.hitboxWidth = w;
+		this.hitboxWidth  = w;
 		this.hitboxheight = h;
 	};
 
@@ -1355,11 +1352,21 @@ function ButtonWidget() {
 	};
 
 	this.drawTintImage = function(image, offset, width, height, color, alpha) {
+		var im;
+
 		// Tint the image (Part 1)
 		// create offscreen buffer,
-		this.tintImage.width = width;
+		this.tintImage.width  = width;
 		this.tintImage.height = height;
 
+		// Firefox doesnt seem to deal with blending SVG onto canvas
+		if (__SAGE2__.browser.isFirefox) {
+			// Render the SVG into an image
+			this.tintImageCtx.drawImage(image, 0, 0, width, height);
+			// and make an image
+			im = new Image();
+			im.src = this.tintImage.toDataURL();
+		}
 
 		// fill offscreen buffer with the tint color
 		this.tintImageCtx.fillStyle = color;
@@ -1368,7 +1375,12 @@ function ButtonWidget() {
 		// destination atop makes a result with an alpha channel identical to fg,
 		//   but with all pixels retaining their original color *as far as I can tell*
 		this.tintImageCtx.globalCompositeOperation = "destination-in";
-		this.tintImageCtx.drawImage(image, 0, 0, width, height);
+		if (__SAGE2__.browser.isFirefox) {
+			this.tintImageCtx.drawImage(im, 0, 0, width, height);
+			im = null;
+		} else {
+			this.tintImageCtx.drawImage(image, 0, 0, width, height);
+		}
 
 		// then set the global alpha to the amound that you want to tint it,
 		//   and draw the buffer directly on top of it.
