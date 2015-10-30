@@ -859,7 +859,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					return false;
 				});
 			} else {
-				console.log('Default search on:', searchParam);
+				// console.log('Default search on:', searchParam);
 			}
 		}
 	}
@@ -873,18 +873,24 @@ function FileManager(wsio, mydiv, uniqueID) {
 				// Create a subfolder if needed
 				var filepath = myFile.sage2URL.split('/');
 				// Remove the fist two elements (root) and the last (filename)
-				var subdir = filepath.slice(2, -1).join('/');
-				// Build the tree item
-				var newid = folder.url + '/' + subdir;
-				// if it doesnt already exist
-				if (!this.tree.getItem(newid)) {
-					var newElement = {id: newid, value: subdir,
-							icon: "folder", open: true, sage2URL: newid,
-							data: [], onContext: {}
-					};
-					// Add to the tree
-					this.tree.parse({ parent: folder.name, data: newElement });
-				}
+				var subdirArray = filepath.slice(2, -1);
+				var parent = folder.url;
+				subdirArray.forEach(function(sub) {
+					// Build the tree item
+					var newid = parent + '/' + sub;
+					// if it doesnt already exist
+					if (!_this.tree.getItem(newid)) {
+						var newElement = {id: newid, value: sub,
+								icon: "folder", open: true, sage2URL: newid,
+								data: [], onContext: {}
+						};
+						// Add to the tree
+						// _this.tree.parse({ parent: folder.name, data: newElement});
+						_this.tree.parse({ parent: parent, data: newElement});
+					}
+					parent = newid;
+				});
+
 			}
 		}
 	}
@@ -1101,7 +1107,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
 			//                  url: "/uploads", upload: false}
-			var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
+			var newElement = {id: folder.url, value: folder.name + ":" + folder.url,
 					icon: "home", open: true, sage2URL: folder.url, data: [],
 					onContext: {}
 			};
