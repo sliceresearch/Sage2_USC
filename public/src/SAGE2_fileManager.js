@@ -967,7 +967,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				mm = moment(createDate, 'YYYY:MM:DD HH:mm:ssZZ');
 				if (!mm.isValid()) {
 					// sometimes a value is not valid
-					mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');					
+					mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
 				}
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
