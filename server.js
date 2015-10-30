@@ -358,6 +358,7 @@ function initializeSage2Server() {
 								drawingUpdate,
 								sendTouchToPalette,
 								sendStyleToPalette,
+								sendChangeToPalette,
 								movePaletteTo,
 								saveDrawingSession,
 								loadDrawingSession
@@ -398,6 +399,22 @@ function sendStyleToPalette(paletteID,style) {
 		position: ePosition,
 		user: eUser,
 		data: {style: style},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function sendChangeToPalette(paletteID,data) {
+	var ePosition = {x: 0 , y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "modeChange",
+		position: ePosition,
+		user: eUser,
+		data: data,
 		date: Date.now()
 	};
 

@@ -82,7 +82,10 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
 								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
 								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
-								  {name: "enablePaint",action: this.enablePaintingMode,parent: this,icon: path+"/brush.png",r: 6,c: 7,cSpan: 3,rSpan: 3}];
+								  {name: "enablePaint",
+								  			action: this.paintingMode? this.disablePaintingMode: this.enablePaintingMode,
+								  			parent: this,icon: this.paintingMode? path + "/paintActive.png": path + "/paintNonActive.png",
+								  			r: 6,c: 7,cSpan: 3,rSpan: 3}];
 			var padding = 4
 		} else if(this.paletteMode == "colorPicker"){
 			var nRows = 15;
@@ -136,7 +139,9 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				this.palette.append("image").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).attr("xlink:href",butt.icon)
 			}
 			if(butt.content=="circle") {
-				this.palette.append("circle").attr("r",this.strokeWidth).attr("cx",x+buttW/2).attr("cy",y+buttH/2).attr("fill",this.strokeColor)
+				this.palette.append("circle")
+					.attr("r",this.paintingMode? Math.min(buttH,buttW) / 2 - padding: this.strokeWidth)
+					.attr("cx",x+buttW/2).attr("cy",y+buttH/2).attr("fill",this.strokeColor)
 			}
 		}
 	},
@@ -208,6 +213,9 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	enablePaintingMode: function() {
 		wsio.emit("enablePaintingMode",null);
 	},
+	disablePaintingMode: function() {
+		wsio.emit("disablePaintingMode",null);
+	},
 	load: function(date) {
 		console.log('WhiteboardPalette> Load with state value', this.state.value);
 		this.refresh(date);
@@ -250,6 +258,10 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			this.strokeColor = data.style.stroke;
 			this.paletteMode = "default";
 			this.strokeWidth = parseInt(data.style["stroke-width"]);
+			this.createPalette();
+		}
+		else if (eventType === "modeChange") {
+			this.paintingMode = data.paintingMode;
 			this.createPalette();
 		}
 		else if (eventType === "pointerMove" && this.dragging) {

@@ -81,10 +81,17 @@ DrawingManager.prototype.initAll = function() {
 
 DrawingManager.prototype.enablePaintingMode = function() {
 	this.paintingMode = true;
+	this.sendModesToPalette();
 }
 
 DrawingManager.prototype.disablePaintingMode = function() {
 	this.paintingMode = false;
+	this.sendModesToPalette();
+}
+
+DrawingManager.prototype.sendModesToPalette = function() {
+	var data = {drawingMode: this.drawingMode, paintingMode: this.paintingMode};
+	this.sendChangeToPalette(this.paletteID,data);
 }
 
 
@@ -365,6 +372,7 @@ DrawingManager.prototype.setCallbacks = function(
 		drawingUpdateCB,
 		sendTouchToPaletteCB,
 		sendStyleToPaletteCB,
+		sendChangeToPaletteCB,
 		movePaletteToCB,
 		saveSessionCB,
 		loadSessionCB
@@ -373,6 +381,7 @@ DrawingManager.prototype.setCallbacks = function(
 	this.drawingUpdate = drawingUpdateCB;
 	this.sendTouchToPalette = sendTouchToPaletteCB;
 	this.sendStyleToPalette = sendStyleToPaletteCB;
+	this.sendChangeToPalette = sendChangeToPaletteCB;
 	this.movePaletteTo = movePaletteToCB;
 	this.saveSession = saveSessionCB;
 	this.loadSession = loadSessionCB;
