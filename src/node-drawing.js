@@ -13,6 +13,7 @@ function DrawingManager(config) {
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
 	this.palettePosition = {};
+	this.idMovingPalette = -1;
 	this.calculateTileDimensions(config);
 	this.actualAction = "drawing"
 	this.possibleActions = ["drawing", "movingPalette"];
@@ -226,7 +227,8 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	if (e.type == 5) {
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
-			this.actualAction = "movingPalette"
+			this.actualAction = "movingPalette";
+			this.idMovingPalette = e.sourceId;
 			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
 			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY + 58; // Title bar height
 			return;
@@ -240,7 +242,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.newDrawingObjectFunc(e, posX, posY);
 		}
 	} else if (e.type == 4) {
-		if (this.actualAction == "movingPalette") {
+		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.movePaletteTo(this.paletteID
 								, posX - this.touchOnPaletteOffsetX
 								, posY - this.touchOnPaletteOffsetY
@@ -261,6 +263,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	} else if (e.type == 6) {
 		if (this.actualAction == "movingPalette") {
 			this.actualAction = "drawing";
+			this.idMovingPalette = -1;
 		}
 		// pointer release
 		this.realeaseId(e.sourceId);
