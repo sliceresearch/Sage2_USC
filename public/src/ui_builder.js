@@ -713,6 +713,7 @@ function UIBuilder(json_cfg, clientID) {
 
 				toUpdate = d3.select("#" + drawingObject.id);
 
+
 				// If drawing changed type redraw it
 				if (drawingObject.type != toUpdate.node().tagName.toLowerCase()) {
 					toUpdate.remove();

@@ -6,75 +6,16 @@
 //
 // Color picker at http://jsfiddle.net/cessor/NnH5Q/
 
-(function (exports) {
-    function urlsToAbsolute(nodeList) {
-        if (!nodeList.length) {
-            return [];
-        }
-        var attrName = 'href';
-        if (nodeList[0].__proto__ === HTMLImageElement.prototype 
-        || nodeList[0].__proto__ === HTMLScriptElement.prototype) {
-            attrName = 'src';
-        }
-        nodeList = [].map.call(nodeList, function (el, i) {
-            var attr = el.getAttribute(attrName);
-            if (!attr) {
-                return;
-            }
-            var absURL = /^(https?|data):/i.test(attr);
-            if (absURL) {
-                return el;
-            } else {
-                return el;
-            }
-        });
-        return nodeList;
-    }
-
-    function screenshotPage() {
-        urlsToAbsolute(document.images);
-        urlsToAbsolute(document.querySelectorAll("link[rel='stylesheet']"));
-        var screenshot = document.documentElement.cloneNode(true);
-        var b = document.createElement('base');
-        b.href = document.location.protocol + '//' + location.host;
-        var head = screenshot.querySelector('head');
-        head.insertBefore(b, head.firstChild);
-        screenshot.style.pointerEvents = 'none';
-        screenshot.style.overflow = 'hidden';
-        screenshot.style.webkitUserSelect = 'none';
-        screenshot.style.mozUserSelect = 'none';
-        screenshot.style.msUserSelect = 'none';
-        screenshot.style.oUserSelect = 'none';
-        screenshot.style.userSelect = 'none';
-        screenshot.dataset.scrollX = window.scrollX;
-        screenshot.dataset.scrollY = window.scrollY;
-        var script = document.createElement('script');
-        script.textContent = '(' + addOnPageLoad_.toString() + ')();';
-        screenshot.querySelector('body').appendChild(script);
-        var blob = new Blob([screenshot.outerHTML], {
-            type: 'text/html'
-        });
-        return blob;
-    }
-
-    function addOnPageLoad_() {
-        window.addEventListener('DOMContentLoaded', function (e) {
-            var scrollX = document.documentElement.dataset.scrollX || 0;
-            var scrollY = document.documentElement.dataset.scrollY || 0;
-            window.scrollTo(scrollX, scrollY);
-        });
-    }
-
-    function generate() {
-        window.URL = window.URL || window.webkitURL;
-        window.open(window.URL.createObjectURL(screenshotPage()));
-    }
-    exports.screenshotPage = screenshotPage;
-    exports.generate = generate;
-})(window);
-
-
-
+function outerHTML(el) {
+  var outer = document.createElement('div');
+  outer.appendChild(el.cloneNode(true));
+  return outer.innerHTML;
+}
+function svgImage(xml) {
+  var image = new Image();
+  image.src = 'data:image/svg+xml;base64,' + window.btoa(xml);
+  return image;
+}
 
 var WhiteboardPalette = SAGE2_App.extend( {
 	init: function(data) {
@@ -120,17 +61,17 @@ var WhiteboardPalette = SAGE2_App.extend( {
 							  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
 							  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
 							  {name: "screenshot",action: this.takeScreenshot,icon: path+"/save.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 1},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "green",r: 4,c: 3,cSpan: 2,rSpan: 2},
+							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#77DD77",r: 4,c: 3,cSpan: 2,rSpan: 2},
 							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "blue",r: 6,c: 3,cSpan: 2,rSpan: 2},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "red",r: 6,c: 5,cSpan: 2,rSpan: 2},
+							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#779ECB",r: 6,c: 3,cSpan: 2,rSpan: 2},
+							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#C23B22",r: 6,c: 5,cSpan: 2,rSpan: 2},
 							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "white",r: 8,c: 3,cSpan: 4,rSpan: 1},
 							  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/up.png",r: 3,c: 5,cSpan: 2},
 							  {name: "Stroke",action: null,parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
 							  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
 							  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
 							  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
-							  {name: "enablePaint",action: this.enablePaintingMode,parent: this,icon: path+"/clear.png",r: 6,c: 7,cSpan: 3,rSpan: 3}];
+							  {name: "enablePaint",action: this.enablePaintingMode,parent: this,icon: path+"/brush.png",r: 6,c: 7,cSpan: 3,rSpan: 3}];
 		
 		var w=parseInt(this.palette.style("width"));
 		var h=parseInt(this.palette.style("height"));
@@ -165,7 +106,24 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		}
 	},
 	takeScreenshot: function(){
-		generate();
+		d3.select("#drawingSVG")
+        	.attr("version", 1.1)
+        	.attr("xmlns", "http://www.w3.org/2000/svg")
+		var html = outerHTML(document.getElementById("drawingSVG"));
+		var image = svgImage(html)
+		d3.select("body").append("canvas").attr("id",'screenshotCanvas').style("display","none");
+		var canvas = document.getElementById('screenshotCanvas');
+		canvas.width = image.width;
+		canvas.height = image.height;
+		var context = canvas.getContext('2d');
+		image.onload = function() {
+			context.drawImage(image, 0, 0);
+			data = {screenshot : canvas.toDataURL("image/png")};
+			wsio.emit("saveScreenshot",data);
+			d3.select("#screenshotCanvas").remove();
+		};
+
+ 
 	},
 	changeStroke: function() {
 		this.parent.strokeWidth += this.increment;

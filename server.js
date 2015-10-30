@@ -125,7 +125,7 @@ var mainFolder       = mediaFolders.system;
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
 var sessionDirectory = path.join(publicDirectory, "sessions");
-
+var whiteboardDirectory = sessionDirectory;
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -139,12 +139,13 @@ for (var folder in mediaFolders) {
 		uploadsDirectory = f.path;
 		mainFolder = f;
 		sessionDirectory = path.join(uploadsDirectory, "sessions");
+		whiteboardDirectory = path.join(uploadsDirectory, "whiteboard");
 		if (!sageutils.folderExists(sessionDirectory)) {
 			sageutils.mkdirParent(sessionDirectory);
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos","whiteboard"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -706,6 +707,7 @@ function setupListeners(wsio) {
 	wsio.on('saveDrawings',							wsSaveDrawings);
 	wsio.on('enablePaintingMode',					wsEnablePaintingMode);
 	wsio.on('disablePaintingMode',					wsDisablePaintingMode);
+	wsio.on('saveScreenshot',						wsSaveScreenshot);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -896,6 +898,9 @@ function wsEnablePaintingMode(wsio, data) {
 
 function wsDisablePaintingMode(wsio, data) {
 	drawingManager.disablePaintingMode();
+}
+function wsSaveScreenshot(wsio, data) {
+	saveScreenshot(data["screenshot"]);
 }
 
 // **************  Sage Pointer Functions *****************
@@ -1594,6 +1599,22 @@ function loadDrawingSession(filename) {
 		}
 	});
 
+}
+
+function saveScreenshot(data) {
+	var now = new Date();
+	// Assign a unique name
+	var filename = "screenshot" + now.getTime() + '.png';
+	var img = data.replace("data:image/png;base64,", "");
+	var fullpath = path.join(whiteboardDirectory, filename);
+	var buf = new Buffer(img, 'base64');
+	try {
+		fs.writeFile(fullpath, buf);
+		console.log(sageutils.header("Session") + "saved screenshot file to " + fullpath);
+	}
+	catch (err) {
+		console.log(sageutils.header("Session") + "error saving", err);
+	}
 }
 
 function saveSession(filename) {
