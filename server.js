@@ -4350,6 +4350,9 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 }
 
 function requestNewDataSharingSession(remote) {
+	// Disabling data sharing portal for now
+	return;
+
 	if (remote.connected) {
 		console.log("Requesting data-sharing session with " + remote.name);
 
