@@ -261,7 +261,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		this.updateDrawingObject(e, posX, posY);
 
 	} else if (e.type == 6) {
-		if (this.actualAction == "movingPalette") {
+		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
 			this.idMovingPalette = -1;
 		}
