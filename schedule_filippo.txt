@@ -1,0 +1,7 @@
+Implement a fake selection (dashed rectangle) -- Tue 11/03 by 6pm (estimate: 4hrs)
+Implement movement of selected objects -- Thu 11/05 by 6pm (estimate: 16hrs)
+Implement shrink/enhance of selected objects -- Tue 11/12 by 6pm (estimate: 16hrs)
+Writing with stroke variation on the same line -- Tue 11/19 by 6pm (estimate: 16hrs)
+Gesture to recall palette -- Tue 11/24 by 6pm (estimate: 12hrs)
+Erasing with the whole hand (in stroke dependent from object modality) -- Tue 11/26 by 6pm (estimate: 12hrs)
+Improve writing (sampling, reducing memorized information, ...) -- Tue 11/28 by 11am (estimate: 4hr)

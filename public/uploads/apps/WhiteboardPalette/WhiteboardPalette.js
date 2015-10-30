@@ -17,12 +17,21 @@ function svgImage(xml) {
   return image;
 }
 
+function hsvFromValues(h,s,v) {
+	return "hsl("+h+","+s+"%,"+v+"%)";
+}
+
 var WhiteboardPalette = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("div", data);
-
+		this.paletteMode = "colorPicker"
 		this.svg = d3.select(this.element).append("svg").attr("id","paletteSVG");
+
+		// Variables for the color picker
+		this.hue = 150;
+		this.s = 50;
+		this.v = 50;
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -52,39 +61,65 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	,
 	createPalette: function() {
 		this.palette.selectAll("*").remove();
-		var path = this.resrcPath + "/images/"
+		var path = this.resrcPath + "/images/";
+		if (this.paletteMode == "default") {
 
-		var nRows = 10;
-		var nCols = 10;
+			var nRows = 10;
+			var nCols = 10;
 
-		this.paletteButtons= [{name: "Clear",action: this.clearCanvas,icon: path+"/clear.png",parent: this,r: 0,c: 0,cSpan: 3,rSpan: 3},
-							  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
-							  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
-							  {name: "screenshot",action: this.takeScreenshot,icon: path+"/save.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 1},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#77DD77",r: 4,c: 3,cSpan: 2,rSpan: 2},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#779ECB",r: 6,c: 3,cSpan: 2,rSpan: 2},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#C23B22",r: 6,c: 5,cSpan: 2,rSpan: 2},
-							  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "white",r: 8,c: 3,cSpan: 4,rSpan: 1},
-							  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/up.png",r: 3,c: 5,cSpan: 2},
-							  {name: "Stroke",action: null,parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
-							  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
-							  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
-							  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
-							  {name: "enablePaint",action: this.enablePaintingMode,parent: this,icon: path+"/brush.png",r: 6,c: 7,cSpan: 3,rSpan: 3}];
-		
+			this.paletteButtons= [{name: "Clear",action: this.clearCanvas,icon: path+"/clear.png",parent: this,r: 0,c: 0,cSpan: 3,rSpan: 3},
+								  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
+								  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
+								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/save.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 1},
+								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#77DD77",r: 4,c: 3,cSpan: 2,rSpan: 2},
+								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
+								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#779ECB",r: 6,c: 3,cSpan: 2,rSpan: 2},
+								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#C23B22",r: 6,c: 5,cSpan: 2,rSpan: 2},
+								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "white",r: 8,c: 3,cSpan: 4,rSpan: 1},
+								  {name: "Color",action: this.colorPicker,parent: this,icon: path+"/brush.png",r: 9,c: 3,cSpan: 4,rSpan: 1},
+								  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/up.png",r: 3,c: 5,cSpan: 2},
+								  {name: "Stroke",action: null,parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
+								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
+								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
+								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
+								  {name: "enablePaint",action: this.enablePaintingMode,parent: this,icon: path+"/brush.png",r: 6,c: 7,cSpan: 3,rSpan: 3}];
+			var padding = 4
+		} else if(this.paletteMode == "colorPicker"){
+			var nRows = 15;
+			var nCols = 100;
+			var padding = 0;
+
+			this.paletteButtons=[];
+			for (var i=2; i<nCols-2; i++) {
+				var hue = 360 / (nCols -4) * (i-2);
+				var s = 100 / (nCols -4) * (i-2);
+				var v = 100 / (nCols -4) * (i-2);
+				this.paletteButtons.push({parent: this,action: this.changeHue,r: 1,c: i,rSpan: 2,hue: hue,
+											backgroundColor: hsvFromValues(hue,this.s,this.v),stroke: "transparent"});
+				this.paletteButtons.push({parent: this,action: this.changeSaturation,r: 4,c: i,rSpan: 2,s: s,
+											backgroundColor: hsvFromValues(this.hue,s,this.v),stroke: "transparent"}); 
+				this.paletteButtons.push({parent: this,action: this.changeLuminance,r: 7,c: i,rSpan: 2,v: v,
+											backgroundColor: hsvFromValues(this.hue,this.s,v),stroke: "transparent"}); 
+			}
+
+			this.paletteButtons.push({parent: this,action: this.changeColor,r: 10,c: 20,cSpan: 60,rSpan: 4,v: v,
+											backgroundColor: hsvFromValues(this.hue,this.s,this.v)});
+
+		}
 		var w=parseInt(this.palette.style("width"));
 		var h=parseInt(this.palette.style("height"));
-		var padding = 4
+		
 		var colW = (w - ((nCols+ 2) * padding) )/ nCols
 		var rowH = (h - ((nRows+ 2) * padding) )/ nRows
 		
 		var defaultBg = "gray"
+		var defaultStroke = "black"
 		for (i in this.paletteButtons) {
 			var butt = this.paletteButtons[i]
 			var rSpan = butt.rSpan || 1;
 			var cSpan = butt.cSpan || 1;
 			var bg = butt.backgroundColor || defaultBg;
+			var stroke = butt.stroke || defaultStroke;
 			
 			var x = butt.c * (colW + padding) + padding;
 			var y = butt.r * (rowH + padding) + padding;
@@ -96,7 +131,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			butt.x = x;
 			butt.w = buttW;
 
-			var rect=this.palette.append("rect").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).style("stroke","black");
+			var rect=this.palette.append("rect").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).style("stroke",stroke);
 			if (butt.icon) {
 				this.palette.append("image").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).attr("xlink:href",butt.icon)
 			}
@@ -105,7 +140,23 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			}
 		}
 	},
-	takeScreenshot: function(){
+	colorPicker : function() {
+		this.parent.paletteMode = "colorPicker";
+		this.parent.createPalette();
+	},
+	changeHue : function() {
+		this.parent.hue = this.hue;
+		this.parent.createPalette();
+	},
+	changeSaturation : function() {
+		this.parent.s = this.s;
+		this.parent.createPalette();
+	},
+	changeLuminance : function() {
+		this.parent.v = this.v;
+		this.parent.createPalette();
+	},
+	takeScreenshot: function() {
 		d3.select("#drawingSVG")
         	.attr("version", 1.1)
         	.attr("xmlns", "http://www.w3.org/2000/svg")
@@ -197,6 +248,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		}
 		else if (eventType === "styleChange") {
 			this.strokeColor = data.style.stroke;
+			this.paletteMode = "default";
 			this.strokeWidth = parseInt(data.style["stroke-width"]);
 			this.createPalette();
 		}
