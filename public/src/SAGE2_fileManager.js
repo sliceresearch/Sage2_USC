@@ -65,8 +65,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	var menu_data = [
 		{id: "file_menu", value: "File", submenu: [
-			{id: "refresh_menu", value: "Refresh"},
-			{id: "folder_menu",  value: "Create folder"}
+			{id: "folder_menu",  value: "New folder"},
+			{id: "upload_menu",  value: "Upload file"},
+			{id: "refresh_menu", value: "Refresh"}
 			]},
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
@@ -220,40 +221,64 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("help/index.html", '_blank');
 		} else if (evt === "refresh_menu") {
 			wsio.emit('requestStoredFiles');
+		} else if (evt === "upload_menu") {
+			// open the file uploader panel
+			showDialog('uploadDialog');
 		} else if (evt === "folder_menu") {
-			webix.ui({
-				view: "window",
-				id: "folder_form",
-				position: "center",
-				modal: true,
-				head: "Create folder",
-				body: {
-					view: "form",
-					width: 400,
-					borderless: false,
-					elements: [
-						{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
-						{margin: 5, cols: [
-							{view: "button", value: "Cancel", click: function() {
-									this.getTopParentView().hide();
-								}
-							},
-							{view: "button", value: "Create", type: "form", click: function() {
-									var values = this.getFormView().getValues();
-									if (values.folder) {
-										wsio.emit('createFolder', {path: values.folder});
+			var item = _this.tree.getSelectedItem();
+			if (item && item.sage2URL) {
+				webix.ui({
+					view: "window",
+					id: "folder_form",
+					position: "center",
+					modal: true,
+					head: "New folder in " + item.sage2URL,
+					body: {
+						view: "form",
+						width: 400,
+						borderless: false,
+						elements: [
+							{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
+							{margin: 5, cols: [
+								{view: "button", value: "Cancel", click: function() {
+										this.getTopParentView().hide();
 									}
-									this.getTopParentView().hide();
+								},
+								{view: "button", value: "Create", type: "form", click: function() {
+										createFolder(item, this.getFormView().getValues());
+										this.getTopParentView().hide();
+									}
 								}
-							}
-						]}
-					],
-					elementsConfig: {
-						labelPosition: "top",
+							]}
+						],
+						elementsConfig: {
+							labelPosition: "top",
+						}
 					}
-				}
-			}).show();
-			$$('folder_name').focus();
+				}).show();
+				// Attach handlers for keyboard
+				$$("folder_name").attachEvent("onKeyPress", function(code, e) {
+					// ESC closes
+					if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+						this.getTopParentView().hide();
+						return false;
+					}
+					// ENTER activates
+					if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+						createFolder(item, this.getFormView().getValues());
+						this.getTopParentView().hide();
+						return false;
+					}
+				});
+				$$('folder_name').focus();
+			} else {
+				webix.alert({
+					type: "alert-warning",
+					title: "SAGE2",
+					ok: "OK",
+					text: "Select a parent folder first"
+				});
+			}
 		} else if (evt === "display_menu") {
 			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
@@ -548,7 +573,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.allTable.attachEvent("onBeforeDrag", function(context, ev) {
 		// Only drag-drop if multiple selected items,
 		//    or the source element is the same as the selected one (select and drag)
-		if (context.source.length > 1 || context.start === _this.selectedItem.id) {
+		if (context.source.length > 1 ||
+			(_this.selectedItem && context.start === _this.selectedItem.id)) {
 			var elt;
 			context.html = "<div style='padding:8px;background:#d3e3ef'>";
 			if (context.source.length === 1) {
@@ -833,7 +859,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					return false;
 				});
 			} else {
-				console.log('Default search on:', searchParam);
+				// console.log('Default search on:', searchParam);
 			}
 		}
 	}
@@ -847,18 +873,24 @@ function FileManager(wsio, mydiv, uniqueID) {
 				// Create a subfolder if needed
 				var filepath = myFile.sage2URL.split('/');
 				// Remove the fist two elements (root) and the last (filename)
-				var subdir = filepath.slice(2, -1).join('/');
-				// Build the tree item
-				var newid = folder.url + '/' + subdir;
-				// if it doesnt already exist
-				if (!this.tree.getItem(newid)) {
-					var newElement = {id: newid, value: subdir,
-							icon: "folder", open: true, sage2URL: newid,
-							data: [], onContext: {}
-					};
-					// Add to the tree
-					this.tree.parse({ parent: folder.name, data: newElement });
-				}
+				var subdirArray = filepath.slice(2, -1);
+				var parent = folder.url;
+				subdirArray.forEach(function(sub) {
+					// Build the tree item
+					var newid = parent + '/' + sub;
+					// if it doesnt already exist
+					if (!_this.tree.getItem(newid)) {
+						var newElement = {id: newid, value: sub,
+								icon: "folder", open: true, sage2URL: newid,
+								data: [], onContext: {}
+						};
+						// Add to the tree
+						// _this.tree.parse({ parent: folder.name, data: newElement});
+						_this.tree.parse({ parent: parent, data: newElement});
+					}
+					parent = newid;
+				});
+
 			}
 		}
 	}
@@ -978,11 +1010,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 		this.main.adjust();
 	};
 
-	function createFolder(context, values) {
-		var list   = context.obj;
-		var listId = context.id;
-		var item   = list.getItem(listId);
-		if (values.folder) {
+	function createFolder(item, values) {
+		if (item && values.folder) {
 			// Send order to the server
 			wsio.emit('createFolder', {root: item.sage2URL,
 				path: values.folder});
@@ -1000,7 +1029,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var tmenu = webix.ui({
 		view: "contextmenu",
 		id: "tmenu",
-		data: ["Refresh", { $template: "Separator" }, "New folder" ],
+		data: ["New folder", { $template: "Separator" }, "Refresh" ],
 		on: {
 			onItemClick: function(id) {
 				var context = this.getContext();
@@ -1008,15 +1037,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 				var listId  = context.id;
 
 				if (id === "New folder") {
-					console.log('Create folder', list.getItem(listId).sage2URL,
-							list.getItem(listId).id, list.getItem(listId).value);
 					webix.ui({
 						view: "window",
 						id: "folder_form",
 						position: "center",
 						modal: true,
 						zIndex: 9999,
-						head: "Create folder in " + list.getItem(listId).sage2URL,
+						head: "New folder in " + list.getItem(listId).sage2URL,
 						body: {
 							view: "form",
 							width: 400,
@@ -1030,7 +1057,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 										}
 									},
 									{view: "button", value: "Create", type: "form", click: function() {
-											createFolder(context, this.getFormView().getValues());
+											createFolder(list.getItem(listId), this.getFormView().getValues());
 											this.getTopParentView().hide();
 										}
 									}
@@ -1041,6 +1068,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 							}
 						}
 					}).show();
+					// Attach handlers for keyboard
 					$$("folder_name").attachEvent("onKeyPress", function(code, e) {
 						// ESC closes
 						if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
@@ -1049,7 +1077,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 						}
 						// ENTER activates
 						if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-							createFolder(context, this.getFormView().getValues());
+							createFolder(list.getItem(listId), this.getFormView().getValues());
 							this.getTopParentView().hide();
 							return false;
 						}
@@ -1079,7 +1107,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
 			//                  url: "/uploads", upload: false}
-			var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
+			var newElement = {id: folder.url, value: folder.name + ":" + folder.url,
 					icon: "home", open: true, sage2URL: folder.url, data: [],
 					onContext: {}
 			};

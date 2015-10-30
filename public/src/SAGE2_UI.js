@@ -183,6 +183,11 @@ function SAGE2_init() {
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
 
+	// Force click for Safari, events:
+	//   webkitmouseforcewillbegin webkitmouseforcechanged
+	//   webkitmouseforcedown webkitmouseforceup
+	sage2UI.addEventListener("webkitmouseforceup", forceClick, false);
+
 	if (webix) {
 		// disabling the webix touch managment for now
 		webix.Touch.disable();
@@ -232,7 +237,7 @@ function SAGE2_init() {
 // Show error message for 2 seconds (or time given as parameter)
 function showMessage(message, delay) {
 	var aMessage = webix.alert({
-		type:  "alert-warning",
+		type:  "alert-error",
 		title: "SAGE2 Error",
 		ok:    "OK",
 		text:  message
@@ -258,7 +263,7 @@ function setupListeners() {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
 				var x, y;
-				if (target === sage2UI) {
+				if (hasMouse) {
 					// Desktop
 					x = event.layerX / event.target.clientWidth;
 					y = event.layerY / event.target.clientHeight;
@@ -710,9 +715,13 @@ function pointerPress(event) {
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the click
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerPress(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the click
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerPress(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -729,9 +738,13 @@ function pointerRelease(event) {
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the pointer release
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerRelease(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the pointer release
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerRelease(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -1054,6 +1067,38 @@ function pointerScroll(event) {
 }
 
 /**
+ * Handler for force click event (safari)
+ *
+ * @method forceClick
+ * @param event {Event} event data
+ */
+function forceClick(event) {
+	// Check to see if the event has a force property
+	if ("webkitForce" in event) {
+		// Retrieve the force level
+		var forceLevel = event["webkitForce"];
+
+		// Retrieve the force thresholds for click and force click
+		var clickForce      = MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN;
+		var forceClickForce = MouseEvent.WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN;
+
+		// Check for force level within the range of a normal click
+		if (forceLevel >= clickForce && forceLevel < forceClickForce) {
+			// Perform operations in response to a normal click
+			// Check for force level within the range of a force click
+		} else if (forceLevel >= forceClickForce) {
+			// Perform operations in response to a force click
+			var rect        = event.target.getBoundingClientRect();
+			var touchStartX = event.clientX - rect.left;
+			var touchStartY = event.clientY - rect.top;
+			// simulate backspace
+			displayUI.keyDown(touchStartX, touchStartY, 8);
+			displayUI.keyUp(touchStartX, touchStartY, 8);
+		}
+	}
+}
+
+/**
  * Handler for touch start event
  *
  * @method touchStart
@@ -1075,6 +1120,7 @@ function touchStart(event) {
 			displayUI.pointerMove(touchStartX, touchStartY);
 			displayUI.pointerPress("left");
 			touchHold = setTimeout(function() {
+				// simulate backspace
 				displayUI.keyDown(touchStartX, touchStartY, 8);
 				displayUI.keyUp(touchStartX, touchStartY, 8);
 			}, 1500);
@@ -1137,6 +1183,17 @@ function touchStart(event) {
 	} else if (event.target.id === "sage2MobileRightButton") {
 		interactor.pointerPressMethod({button: 2});
 
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// toggle the pointer between app and window mode
+		interactor.togglePointerMode();
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
+		// Send play commad, spacebar for PDF and movies
+		console.log('Send play')
+		interactor.sendPlay();
 		event.preventDefault();
 		event.stopPropagation();
 	} else {
@@ -1275,6 +1332,14 @@ function touchMove(event) {
 		event.preventDefault();
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileLeftButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// nothing
 		event.preventDefault();
 		event.stopPropagation();

@@ -513,6 +513,53 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.appendChild(dataSharingCancel);
 		this.main.appendChild(dataSharingWaitDialog);
 
+
+		var serverStatusDialog = document.createElement("div");
+		serverStatusDialog.id = "serverStatusDialog";
+		serverStatusDialog.style.position = "absolute";
+		serverStatusDialog.style.top  = (-this.offsetY + (2 * this.titleBarHeight)).toString() + "px";
+		serverStatusDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth / 2 -
+			13 * this.titleBarHeight)).toString() + "px";
+		serverStatusDialog.style.width  = (26 * this.titleBarHeight).toString() + "px";
+		serverStatusDialog.style.height = (8 * this.titleBarHeight).toString() + "px";
+		serverStatusDialog.style.webkitBoxSizing = "border-box";
+		serverStatusDialog.style.mozBoxSizing = "border-box";
+		serverStatusDialog.style.boxSizing = "border-box";
+		serverStatusDialog.style.backgroundColor =  "#666666";
+		serverStatusDialog.style.border  =  "2px solid #000000";
+		serverStatusDialog.style.padding = (this.titleBarHeight / 4).toString() + "px";
+		serverStatusDialog.style.zIndex  = 8999;
+		serverStatusDialog.style.display = "none";
+		var serverStatusWaitText = document.createElement("p");
+		serverStatusWaitText.id = "serverStatusDialog_text";
+		serverStatusWaitText.textContent = "SAGE2 message";
+		serverStatusWaitText.style.fontSize = Math.round(1.8 * this.titleTextSize) + "px";
+		serverStatusWaitText.style.color = "#FFFFFF";
+		serverStatusWaitText.style.marginBottom = (this.titleBarHeight / 4).toString() + "px";
+		var serverStatusCancel = document.createElement("div");
+		serverStatusCancel.id = "serverStatusDialog_cancel";
+		serverStatusCancel.style.position = "absolute";
+		serverStatusCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		serverStatusCancel.style.bottom = (this.titleBarHeight).toString() + "px";
+		serverStatusCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		serverStatusCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
+		serverStatusCancel.style.webkitBoxSizing = "border-box";
+		serverStatusCancel.style.mozBoxSizing    = "border-box";
+		serverStatusCancel.style.boxSizing       = "border-box";
+		serverStatusCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		serverStatusCancel.style.border =  "2px solid #000000";
+		serverStatusCancel.style.textAlign = "center";
+		serverStatusCancel.style.lineHeight = (3 * this.titleBarHeight).toString() + "px";
+		var serverStatusCancelText = document.createElement("p");
+		serverStatusCancelText.id = "serverStatusDialog_cancelText";
+		serverStatusCancelText.textContent = "Server offline";
+		serverStatusCancelText.style.fontSize = Math.round(2 * this.titleTextSize) + "px";
+		serverStatusCancelText.style.color = "#FFFFFF";
+		serverStatusCancel.appendChild(serverStatusCancelText);
+		serverStatusDialog.appendChild(serverStatusWaitText);
+		serverStatusDialog.appendChild(serverStatusCancel);
+		this.main.appendChild(serverStatusDialog);
+
 		this.uiHidden = false;
 		this.showInterface();
 	};
@@ -532,6 +579,16 @@ function UIBuilder(json_cfg, clientID) {
 			now = format24Hr(val);
 		}
 		this.clock.textContent = now;
+	};
+
+	/**
+	* Show a dialog on the wall when there is an error
+	*
+	* @method showError
+	*/
+	this.showError = function() {
+		// show the div supporting the dialog
+		document.getElementById('serverStatusDialog').style.display = "block";
 	};
 
 	/**
