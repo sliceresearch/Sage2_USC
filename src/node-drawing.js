@@ -276,6 +276,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
 
+	if (clientID == null) {
+		return
+	}
+
 	// Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
 	var manipulatedObject = JSON.parse(JSON.stringify(drawingObject));
 
@@ -334,7 +338,7 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 	}
 
 	console.log("No single client involved")
-	return -1;
+	return null;
 
 }
 
