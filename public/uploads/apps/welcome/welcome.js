@@ -61,7 +61,13 @@ var welcome = SAGE2_App.extend({
 		this.enableControls = true;
 
 		// request it fullscreen
-		this.sendFullscreen();
+		if (this.state.goFullscreen) {
+			this.sendFullscreen();
+			// only go fullscreen at creation time, not reload nor session
+			this.state.goFullscreen = false;
+			// Manual sync of the state since changed outside event handler
+			this.SAGE2Sync();
+		}
 	},
 
 	requestPicture: function() {

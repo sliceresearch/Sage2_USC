@@ -8,7 +8,8 @@
 	"dependencies": [
 	],
 	"load": {
-		"imageID": "1003"
+		"imageID": "1003",
+		"goFullscreen": true
 	},
 	"plugin": "plugin.js",
 	"title": "welcome",
