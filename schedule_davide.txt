@@ -1,0 +1,7 @@
+Saving/Loading state -- Tue 11/03 by 6pm (estimate: 4hrs)
+Erase entire line -- Thu 11/05 by 6pm (estimate: 12hrs)
+Study how to erase only touched part -- Tue 11/12 by 6pm (estimate: 16hrs)
+Implement erasing only touched part -- Tue 11/19 by 6pm (estimate: 16hrs)
+All colors available -- Tue 11/24 by 6pm (estimate: 12hrs)
+Saving/Loading state contextual menu -- Tue 11/26 by 6pm (estimate: 12hrs)
+Fix palette abnormal movement -- Tue 11/28 by 11am (estimate: 2hrs)
