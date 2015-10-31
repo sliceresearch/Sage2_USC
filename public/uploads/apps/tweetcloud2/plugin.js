@@ -12,6 +12,12 @@
 
 var sageutils = require('../../../../src/node-utils');            // provides the current version number
 
+// built-in path module
+var path = require('path');
+// load modules from the server's folder
+var Twit = require(path.join(module.parent.exports.dirname, 'twit')); // twitter api
+
+// global object
 var twitter;
 
 var api = {
@@ -23,8 +29,6 @@ var api = {
 
 function processRequest(wsio, data, config) {
 	if (twitter === undefined) {
-		// twitter api
-		var Twit = require('twit');
 		console.log(sageutils.header('RPC') + 'building twitter object');
 		twitter = new Twit({
 			consumer_key:         api.consumerKey,

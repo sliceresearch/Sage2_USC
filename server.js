@@ -393,6 +393,7 @@ function broadcast(name, data) {
 
 // Export the function to sub modules
 exports.broadcast = broadcast;
+exports.dirname   = path.join(__dirname, "node_modules");
 
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) {

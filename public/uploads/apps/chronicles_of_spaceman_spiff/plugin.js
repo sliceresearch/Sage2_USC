@@ -10,8 +10,12 @@
 
 "use strict";
 
-var request = require('request');  // HTTP client request
-var $       = require('cheerio');  // HTML parsing, jquery style
+// built-in path module
+var path    = require('path');
+// load modules from the server's folder
+var request = require(path.join(module.parent.exports.dirname, 'request'));  // HTTP client request
+var $       = require(path.join(module.parent.exports.dirname, 'cheerio'));  // HTML parsing, jquery style
+
 
 function processRequest(wsio, data, config) {
 	var aURL = data.query.url;

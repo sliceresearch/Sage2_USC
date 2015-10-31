@@ -10,7 +10,11 @@
 
 "use strict";
 
-var request   = require('request');  // HTTP client request
+// built-in path module
+var path    = require('path');
+// load modules from the server's folder
+var request = require(path.join(module.parent.exports.dirname, 'request'));  // HTTP client request
+
 
 var quotes = [];
 
