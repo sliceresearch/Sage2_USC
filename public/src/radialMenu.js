@@ -536,7 +536,7 @@ function RadialMenu() {
 
 				// Generic
 				metadataTags[0] = { tag: metadata.FileName, longLabel: "File Name: " };
-				metadataTags[1] = { tag: metadata.FileSize, longLabel: "File Size: " };
+				metadataTags[1] = { tag: this.bytesToReadableString(metadata.FileSize), longLabel: "File Size: " };
 				metadataTags[2] = { tag: metadata.FileDate, longLabel: "File Date: " };
 
 				// Image
@@ -625,6 +625,24 @@ function RadialMenu() {
 				}
 			}
 		}
+	};
+
+	/**
+	 * Converts bytes to human readable string
+	 *
+	 * @method bytesToReadableString
+	 */
+	this.bytesToReadableString = function(bytes) {
+		var bytesInt = parseInt(bytes);
+		
+		if( bytesInt > Math.pow(1024, 3) ) {
+			return (bytesInt/Math.pow(1024, 3)).toFixed(2) + " GB"
+		} else if( bytesInt > Math.pow(1024, 2) ) {
+			return (bytesInt/Math.pow(1024, 2)).toFixed(2) + " MB"
+		} else if( bytesInt > Math.pow(1024, 1) ) {
+			return Math.round(bytesInt/Math.pow(1024, 1)) + " KB"
+		}
+		return bytes + " bytes"
 	};
 
 	/**
