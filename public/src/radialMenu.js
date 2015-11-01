@@ -1065,7 +1065,7 @@ function RadialMenu() {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				curList = sessionList[i];
-				data = {application: "load_session", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				data = {application: "load_session", filename: curList.id, shortname: curList.exif.FileName, meta: curList.exif};
 				thumbnailButton.setData(data);
 				thumbnailButton.setButtonImage(radialMenuIcons["images/ui/loadsession.svg"]);
 				thumbnailButton.simpleTint = false;
