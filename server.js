@@ -1311,11 +1311,61 @@ function wsAppResize(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 		// Update the width height and aspect ratio
-		app.width  = data.width;
-		app.height = data.height;
-		app.aspect = app.width / app.height;
-		app.native_width  = data.width;
-		app.native_height = data.height;
+		if (sageutils.isTrue(data.keepRatio)) {
+			// we use the width as leading the calculation
+			app.width  = data.width;
+			app.height = data.width / app.aspect;
+		} else {
+			app.width  = data.width;
+			app.height = data.height;
+			app.aspect = app.width / app.height;
+			app.native_width  = data.width;
+			app.native_height = data.height;
+		}
+		// build the object to be sent
+		var updateItem = {
+			elemId: app.id,
+			elemLeft: app.left,
+			elemTop: app.top,
+			elemWidth: app.width,
+			elemHeight: app.height,
+			force: true,
+			date: Date.now()
+		};
+		moveAndResizeApplicationWindow(updateItem);
+	}
+}
+
+//
+// Move the application relative to its position
+//
+function wsAppMoveBy(wsio, data) {
+	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var app = SAGE2Items.applications.list[data.id];
+		app.left += data.dx;
+		app.top  += data.dy;
+		// build the object to be sent
+		var updateItem = {
+			elemId: app.id,
+			elemLeft: app.left,
+			elemTop: app.top,
+			elemWidth: app.width,
+			elemHeight: app.height,
+			force: true,
+			date: Date.now()
+		};
+		moveAndResizeApplicationWindow(updateItem);
+	}
+}
+
+//
+// Move the application relative to its position
+//
+function wsAppMoveTo(wsio, data) {
+	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		var app = SAGE2Items.applications.list[data.id];
+		app.left = data.x;
+		app.top  = data.y;
 		// build the object to be sent
 		var updateItem = {
 			elemId: app.id,
@@ -1948,14 +1998,27 @@ function wsLoadApplication(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
-		position[0] = Math.round(position[0] * config.totalWidth);
-		position[1] = Math.round(position[1] * config.totalHeight);
-		// Use the position from the drop location
-		if (position[0] !== 0 || position[1] !== 0) {
+		// Get the drop position and convert it to wall coordinates
+		var position = data.position || [0, 0];
+		if (position[0] > 1) {
+			// value in pixels, used as origin
+			appInstance.left = position[0];
+		} else {
+			// value in percent
+			position[0] = Math.round(position[0] * config.totalWidth);
+			// Use the position as center of drop location
 			appInstance.left = position[0] - appInstance.width / 2;
 			if (appInstance.left < 0) {
 				appInstance.left = 0;
 			}
+		}
+		if (position[1] > 1) {
+			// value in pixels, used as origin
+			appInstance.top = position[1];
+		} else {
+			// value in percent
+			position[1] = Math.round(position[1] * config.totalHeight);
+			// Use the position as center of drop location
 			appInstance.top  = position[1] - appInstance.height / 2;
 			if (appInstance.top < 0) {
 				appInstance.top = 0;
@@ -1980,14 +2043,25 @@ function wsLoadFileFromServer(wsio, data) {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			// Get the drop position and convert it to wall coordinates
 			var position = data.position || [0, 0];
-			position[0] = Math.round(position[0] * config.totalWidth);
-			position[1] = Math.round(position[1] * config.totalHeight);
-			// Use the position from the drop location
-			if (position[0] !== 0 || position[1] !== 0) {
+			if (position[0] > 1) {
+				// value in pixels, used as origin
+				appInstance.left = position[0];
+			} else {
+				// value in percent
+				position[0] = Math.round(position[0] * config.totalWidth);
+				// Use the position as center of drop location
 				appInstance.left = position[0] - appInstance.width / 2;
 				if (appInstance.left < 0) {
 					appInstance.left = 0;
 				}
+			}
+			if (position[1] > 1) {
+				// value in pixels, used as origin
+				appInstance.top = position[1];
+			} else {
+				// value in percent
+				position[1] = Math.round(position[1] * config.totalHeight);
+				// Use the position as center of drop location
 				appInstance.top  = position[1] - appInstance.height / 2;
 				if (appInstance.top < 0) {
 					appInstance.top = 0;
@@ -3715,8 +3789,34 @@ if (program.session) {
 	}, 1000);
 }
 
+function getSAGE2Path(getName) {
+	// pathname: result of the search
+	var pathname = null;
+	// walk through the list of folders
+	for (var f in mediaFolders) {
+		// Get the folder object
+		var folder = mediaFolders[f];
+		// Look for the folder url in the request
+		var pubdir = getName.split(folder.url);
+		if (pubdir.length === 2) {
+			// convert the URL into a path
+			var suburl = path.join('.', pubdir[1]);
+			pathname   = url.resolve(folder.path, suburl);
+			pathname   = decodeURIComponent(pathname);
+			break;
+		}
+	}
+	// if everything fails, look in the default public folder
+	if (!pathname) {
+		pathname = getName;
+	}
+	return pathname;
+}
+
+
 function processInputCommand(line) {
-	var command = line.trim().split(' ');
+	// split the command line at whitespace(s)
+	var command = line.trim().split(/[\s]+/);
 	switch (command[0]) {
 		case '': {
 			// ignore
@@ -3724,15 +3824,19 @@ function processInputCommand(line) {
 		}
 		case 'help': {
 			console.log('help\t\tlist commands');
-			console.log('kill\t\tclose application: arg0: id - kill app_0');
+			console.log('kill\t\tclose application: appid');
 			console.log('apps\t\tlist running applications');
 			console.log('clients\t\tlist connected clients');
 			console.log('streams\t\tlist media streams');
 			console.log('clear\t\tclose all running applications');
 			console.log('tile\t\tlayout all running applications');
-			console.log('fullscreen\t\tmaximize one application');
+			console.log('fullscreen\tmaximize one application: appid');
 			console.log('save\t\tsave state of running applications into a session');
 			console.log('load\t\tload a session and restore applications');
+			console.log('open\t\topen a file: open file_url [0.5, 0.5]');
+			console.log('resize\t\tresize a window: appid width height');
+			console.log('moveby\t\tshift a window: appid dx dy');
+			console.log('moveto\t\tmove a window: appid x y');
 			console.log('assets\t\tlist the assets in the file library');
 			console.log('regenerate\tregenerates the assets');
 			console.log('hideui\t\thide/show/delay the user interface');
@@ -3777,8 +3881,72 @@ function processInputCommand(line) {
 			}
 			break;
 		}
+		case 'open': {
+			if (command[1] !== undefined) {
+				var pos  = [0.0, 0.0];
+				var file = command[1];
+				if (command.length === 4) {
+					pos = [parseFloat(command[2]), parseFloat(command[3])];
+				}
+				var mt = assets.getMimeType(getSAGE2Path(file));
+				if (mt === "application/custom") {
+					wsLoadApplication(null,
+						{application: file,
+						user: "127.0.0.1:42",
+						position: pos});
+				} else {
+					wsLoadFileFromServer(null, {application: "something",
+						filename: file,
+						user: "127.0.0.1:42",
+						position: pos});
+				}
+			} else {
+				console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
+			}
+			break;
+		}
 		case 'sessions': {
 			printListSessions();
+			break;
+		}
+		case 'moveby': {
+			// command: moveby appid dx dy (relative, in pixels)
+			if (command.length === 4) {
+				var dx = parseInt(command[2], 10);
+				var dy = parseInt(command[3], 10);
+				wsAppMoveBy(null, {id: command[1], dx: dx, dy: dy});
+			} else {
+				console.log(sageutils.header("Command") + "should be: moveby app_0 10 10");
+			}
+			break;
+		}
+		case 'moveto': {
+			// command: moveti appid x y (absolute, in pixels)
+			if (command.length === 4) {
+				var xx = parseInt(command[2], 10);
+				var yy = parseInt(command[3], 10);
+				wsAppMoveTo(null, {id: command[1], x: xx, y: yy});
+			} else {
+				console.log(sageutils.header("Command") + "should be: moveto app_0 100 100");
+			}
+			break;
+		}
+		case 'resize': {
+			var ww, hh;
+			// command: resize appid width height (force exact resize)
+			// command: resize appid width  (keep aspect ratio)
+			if (command.length === 4) {
+				ww = parseInt(command[2], 10);
+				hh = parseInt(command[3], 10);
+				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: false});
+				console.log(sageutils.header("Command") + "resizing exactly to " + ww + "x" + hh);
+			} else if (command.length === 3) {
+				ww = parseInt(command[2], 10);
+				hh = 0;
+				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: true});
+			} else {
+				console.log(sageutils.header("Command") + "should be: resize app_0 800 600");
+			}
 			break;
 		}
 		case 'hideui': {
@@ -3802,6 +3970,8 @@ function processInputCommand(line) {
 		case 'fullscreen': {
 			if (command.length > 1 && typeof command[1] === "string") {
 				wsFullscreen(null, {id: command[1]});
+			} else {
+				console.log(sageutils.header("Command") + "should be: fullscreen app_0");
 			}
 			break;
 		}
