@@ -47,6 +47,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.main = null;
 	this.uniqueID = uniqueID;
 	this.selectedItem = null;
+	this.dragPosition = null;
 	var _this = this;
 
 	// WEBIX
@@ -593,6 +594,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			return false;
 		}
 	});
+	// Track the position of the dragged item
+	this.allTable.$dragPos = function(pos, event, node) {
+		// dragPosition used in drop function
+		_this.dragPosition = pos;
+	};
 
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
 		// No DnD
