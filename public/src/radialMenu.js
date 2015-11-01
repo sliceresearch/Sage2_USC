@@ -137,7 +137,7 @@ function RadialMenu() {
 			this.level1Buttons.push(button);
 		} else if (radialLevel === 2) {
 			button = this.createRadialButton(radialButtonIcon, false, dim.buttonSize, dim.hitboxSize,
-					alignment, dim.shape, radialAnglePos, menuRadius);
+					alignment, dim.shape, radialAnglePos, menuRadius * 1.6);
 			button.setOverlayImage(icon, iconScale);
 			button.isLit = true; // Button will stay lit regardless of hover-over
 			this.level2Buttons.push(button);
@@ -404,6 +404,9 @@ function RadialMenu() {
 			}
 			for (i = 0; i < this.level1Buttons.length; i++) {
 				this.level1Buttons[i].draw();
+			}
+			for (i = 0; i < this.level2Buttons.length; i++) {
+				this.level2Buttons[i].draw();
 			}
 		}
 
@@ -686,6 +689,16 @@ function RadialMenu() {
 			this.draw();
 			return false;
 		}
+	};
+
+	/**
+	 * Toggles a subradial menu
+	 *
+	 * @method setToggleMenu
+	 */
+	this.toggleSubRadialMenu = function(type) {
+		console.log("radialMenu: toggleSubRadialMenu");
+		console.log(type);
 	};
 
 	/**
