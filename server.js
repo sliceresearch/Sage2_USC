@@ -45,7 +45,6 @@ var json5         = require('json5');            // Relaxed JSON format
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
 
-var Twit          = require('twit');             // twitter api
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
 // custom node modules
@@ -80,7 +79,6 @@ var wsioServerS        = null;
 var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-var apis               = {};
 var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
@@ -393,6 +391,10 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
+// Export the function to sub modules
+exports.broadcast = broadcast;
+exports.dirname   = path.join(__dirname, "node_modules");
+
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) {
 		return;
@@ -618,8 +620,9 @@ function setupListeners(wsio) {
 	wsio.on('finishedRenderingAppFrame',            wsFinishedRenderingAppFrame);
 	wsio.on('updateAppState',                       wsUpdateAppState);
 	wsio.on('appResize',                            wsAppResize);
+	wsio.on('appFullscreen',                        wsFullscreen);
 	wsio.on('broadcast',                            wsBroadcast);
-	wsio.on('searchTweets',                         wsSearchTweets);
+	wsio.on('applicationRPC',                       wsApplicationRPC);
 
 	wsio.on('requestAvailableApplications',         wsRequestAvailableApplications);
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
@@ -1328,6 +1331,62 @@ function wsAppResize(wsio, data) {
 }
 
 //
+// Application request fullscreen
+//
+function wsFullscreen(wsio, data) {
+	var id = data.id;
+	if (SAGE2Items.applications.list.hasOwnProperty(id)) {
+		var item = SAGE2Items.applications.list[id];
+
+		var wallRatio = config.totalWidth  / config.totalHeight;
+		var iCenterX  = config.totalWidth  / 2.0;
+		var iCenterY  = config.totalHeight / 2.0;
+		var iWidth    = 1;
+		var iHeight   = 1;
+		var titleBar = config.ui.titleBarHeight;
+		if (config.ui.auto_hide_ui === true) {
+			titleBar = 0;
+		}
+
+		if (item.aspect > wallRatio) {
+			// Image wider than wall
+			iWidth  = config.totalWidth;
+			iHeight = iWidth / item.aspect;
+		} else {
+			// Wall wider than image
+			iHeight = config.totalHeight - (2 * titleBar);
+			iWidth  = iHeight * item.aspect;
+		}
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		// calculate new values
+		item.left   = iCenterX - (iWidth / 2);
+		item.top    = iCenterY - (iHeight / 2);
+		item.width  = iWidth;
+		item.height = iHeight;
+
+		// Shift by 'titleBarHeight' if no auto-hide
+		if (config.ui.auto_hide_ui === true) {
+			item.top = item.top - config.ui.titleBarHeight;
+		}
+
+		item.maximized = true;
+
+		// build the object to be sent
+		var updateItem = {elemId: item.id, elemLeft: item.left, elemTop: item.top,
+				elemWidth: item.width, elemHeight: item.height, force: true,
+				date: new Date()};
+
+		moveAndResizeApplicationWindow(updateItem);
+	}
+}
+
+
+//
 // Broadcast data to all clients who need apps
 //
 function wsBroadcast(wsio, data) {
@@ -1335,27 +1394,31 @@ function wsBroadcast(wsio, data) {
 }
 
 //
-// Search tweets using Twitter API
+// RPC call from apps
 //
-function wsSearchTweets(wsio, data) {
-	if (apis.twitter === null) {
-		if (data.broadcast === true) {
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
-				err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
-		} else {
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: null,
-				err: {message: "Twitter API not enabled in SAGE2 configuration"}}});
+function wsApplicationRPC(wsio, data) {
+	var app = SAGE2Items.applications.list[data.app];
+	if (app && app.plugin) {
+		// Find the path to the app plugin
+		var pluginFile = path.resolve(app.file, app.plugin);
+
+		try {
+			// Loading the plugin using builtin require function
+			var rpcFunction = require(pluginFile);
+			// Start the function inside the plugin
+			rpcFunction(wsio, data, config);
 		}
-		return;
+		catch (e) {
+			// If something fails
+			console.log("----------------------------");
+			console.log(sageutils.header('RPC') + 'error in plugin ' + pluginFile);
+			console.log(e);
+			console.log("----------------------------");
+		}
+	} else {
+		console.log(sageutils.header('RPC') + 'error no plugin found for ' + app.file);
 	}
 
-	apis.twitter.get('search/tweets', data.query, function(err, info, response) {
-		if (data.broadcast === true) {
-			broadcast('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
-		} else {
-			wsio.emit('broadcast', {app: data.app, func: data.func, data: {query: data.query, result: info, err: err}});
-		}
-	});
 }
 
 
@@ -3122,15 +3185,6 @@ function loadConfiguration() {
 		}
 	}
 
-	if (userConfig.apis !== undefined && userConfig.apis.twitter !== undefined) {
-		apis.twitter = new Twit({
-			consumer_key:         userConfig.apis.twitter.consumerKey,
-			consumer_secret:      userConfig.apis.twitter.consumerSecret,
-			access_token:         userConfig.apis.twitter.accessToken,
-			access_token_secret:  userConfig.apis.twitter.accessSecret
-		});
-	}
-
 	return userConfig;
 }
 
@@ -3676,6 +3730,7 @@ function processInputCommand(line) {
 			console.log('streams\t\tlist media streams');
 			console.log('clear\t\tclose all running applications');
 			console.log('tile\t\tlayout all running applications');
+			console.log('fullscreen\t\tmaximize one application');
 			console.log('save\t\tsave state of running applications into a session');
 			console.log('load\t\tload a session and restore applications');
 			console.log('assets\t\tlist the assets in the file library');
@@ -3741,6 +3796,12 @@ function processInputCommand(line) {
 		case 'kill': {
 			if (command.length > 1 && typeof command[1] === "string") {
 				deleteApplication(command[1]);
+			}
+			break;
+		}
+		case 'fullscreen': {
+			if (command.length > 1 && typeof command[1] === "string") {
+				wsFullscreen(null, {id: command[1]});
 			}
 			break;
 		}

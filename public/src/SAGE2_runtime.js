@@ -274,16 +274,6 @@ function broadcast(dataObject) {
 }
 
 /**
- * Send the message to server to perform a tweet search
- *
- * @method searchTweets
- * @param tweetObject {Object} data to perform the search
- */
-function searchTweets(tweetObject) {
-	wsio.emit('searchTweets', tweetObject);
-}
-
-/**
  * Pretty print a date object into string
  *
  * @method formatAMPM

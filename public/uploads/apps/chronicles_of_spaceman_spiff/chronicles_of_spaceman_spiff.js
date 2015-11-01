@@ -27,9 +27,12 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.loadSuccessCallbackFunc = this.loadSuccessCallback.bind(this);
 	},
 
-	createURLs: function(timeMachine)	{
-		var URL1a = "http://images.ucomics.com/comics/ch/";
-		var URL1b = ".gif";
+	createURL: function(timeMachine)	{
+		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2015/10/19/'
+		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/19/'
+		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/13/'
+
+		var baseURL = "http://www.gocomics.com/calvinandhobbes/";
 
 		if (timeMachine > 0) {
 			timeMachine = 0;
@@ -41,8 +44,6 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		var todayMonth = (today.getMonth() + 1).toString(); // months are 0 - 11
 		var todayYear  = today.getFullYear().toString();    // year is correct
 
-		this.today = todayMonth + "/" + todayDay + "/" + todayYear;
-
 		if (todayDay.length < 2) {
 			todayDay = "0" + todayDay;
 		}
@@ -51,13 +52,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 			todayMonth = "0" + todayMonth;
 		}
 
-		var todayYear2 = todayYear.substr(todayYear.length - 2);
-
-		var todaysComic = todayYear + "/ch" + todayYear2 + todayMonth + todayDay;
-		// sample "2014/ch140619"
-		// no comics on sunday
-
-		this.URL1 = URL1a + todaysComic + URL1b;
+		this.today = todayYear + '/' + todayMonth + '/' + todayDay;
+		return (baseURL + this.today);
 	},
 
 	drawText: function(textLocX, textLocY, theText, textFontSize)	{
@@ -160,6 +156,13 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 	},
 
 	loadSuccessCallback: function()	{
+		// update the canvas with the image aspect ratio
+		var newratio = this.image1.width / this.image1.height;
+		this.canvasHeight = this.canvasWidth / newratio;
+		// ask for a resize
+		this.sendResize(this.sage2_width,
+						this.sage2_width / (this.image1.width / (this.image1.height + 20)));
+		// and draw
 		this.drawEverything(1);
 	},
 
@@ -175,7 +178,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 				.attr("opacity", 1)
 				.attr("x", 0)
 				.attr("y", 0)
-				.attr("width", this.canvasWidth)
+				.attr("width",  this.canvasWidth)
 				.attr("height", this.canvasHeight);
 		} else {
 			this.drawBox(0, 0, this.canvasHeight, this.canvasWidth, "#ffffff", 1.0);
@@ -198,33 +201,33 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 	update: function()	{
 		// get new image
-		this.createURLs(this.state.timeDiff);
-
-		this.updateSlim();
+		var newurl = this.createURL(this.state.timeDiff);
+		if (newurl !== this.URL) {
+			this.URL = newurl;
+			this.updateSlim();
+		}
 	},
 
 	updateSlim: function() {
-		if (isMaster) {
-			var comicFileName = this.URL1 + '?' + Math.floor(Math.random() * 10000000);
-			this.broadcast("updateSlimNode", {comicFileName: comicFileName});
+		// Send the call to the master (i.e. plugin.js)
+		if (isMaster && this.URL) {
+			this.applicationRPC({url: this.URL}, "gotPicture", true);
 		}
 	},
 
 	updateSlimNode: function(data) {
-		if (data.comicFileName === null) {
-			return;
+		if (data) {
+			this.image1.src     = data;
+			this.image1.onload  = this.loadSuccessCallbackFunc;
+			this.image1.onerror = this.loadFailCallbackFunc;
 		}
-
-		this.image1.src = data.comicFileName;
-		this.image1.onload = this.loadSuccessCallbackFunc;
-		this.image1.onerror = this.loadFailCallbackFunc;
 	},
 
 	updateWindow: function() {
 		var x = this.element.clientWidth;
 		var y = this.element.clientHeight;
 
-		var newWidth = this.canvasWidth;
+		var newWidth  = this.canvasWidth;
 		var newHeight = this.canvasHeight + 30;
 
 		// set background color for areas around my app (in case of non-proportional scaling)
@@ -242,34 +245,26 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 
-		console.log(this.state);
-
 		this.resizeEvents = "continuous"; // onfinish
 		this.svg = null;
 
 		this.canvasBackground = "black";
 
-		this.canvasWidth = 600;
-		this.canvasHeight = 190;
+		this.canvasWidth = 1200;
+		this.canvasHeight = 380;
 
 		this.sampleSVG = null;
 
 		this.image1 = new Image();
 
-		this.URL1  = "";
-		this.URL1a = "";
-		this.URL1b = "";
+		this.URL   = "";
 		this.today = "";
 
 		this.maxFPS = 0.0003; // update once per hour
 
-		// Get width height from the supporting div
-		// var divWidth  = this.element.clientWidth;
-		// var divHeight = this.element.clientHeight;
-
 		this.element.id = "div" + data.id;
 
-		var newWidth = this.canvasWidth;
+		var newWidth  = this.canvasWidth;
 		var newHeight = this.canvasHeight + 30;
 
 		// attach the SVG into the this.element node provided to us
@@ -283,11 +278,25 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 		this.initApp();
 
-		this.update();
+		// this.update();
 		this.draw_d3(data.date);
 		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 		this.controls.addButton({type: "prev", position: 1, identifier: "Prev"});
 		this.controls.finishedAddingControls(); // Not adding controls but making the default buttons available
+
+		// Send the call to the master (i.e. plugin.js)
+		if (isMaster) {
+			this.applicationRPC({url: this.URL}, "gotPicture", true);
+		}
+	},
+
+	gotPicture: function(data) {
+		if (data.err && data.err !== null) {
+			console.log('Welcome> error');
+			return;
+		}
+		// Set the picture URL
+		this.updateSlimNode("data:image/gif;base64," + data.image);
 	},
 
 	load: function(date) {
@@ -306,8 +315,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.svg.attr('width',  this.element.clientWidth  + "px");
 		this.svg.attr('height', this.element.clientHeight + "px");
 
-		this.updateWindow();
-		this.refresh(date);
+		// this.updateWindow();
+		// this.refresh(date);
 	},
 
 	showNextPage: function() {
