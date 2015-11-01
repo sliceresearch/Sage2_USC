@@ -1310,6 +1310,15 @@ function wsUpdateAppState(wsio, data) {
 function wsAppResize(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
+
+		// Values in percent if smaller than 1
+		if (data.width > 0 && data.width < 1) {
+			data.width = Math.round(data.width * config.totalWidth);
+		}
+		if (data.height > 0 && data.height < 1) {
+			data.height = Math.round(data.height * config.totalHeight);
+		}
+
 		// Update the width height and aspect ratio
 		if (sageutils.isTrue(data.keepRatio)) {
 			// we use the width as leading the calculation
@@ -1342,6 +1351,13 @@ function wsAppResize(wsio, data) {
 function wsAppMoveBy(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
+		// Values in percent if smaller than 1
+		if (data.dx > 0 && data.dx < 1) {
+			data.dx = Math.round(data.dx * config.totalWidth);
+		}
+		if (data.dy > 0 && data.dy < 1) {
+			data.dy = Math.round(data.dy * config.totalHeight);
+		}
 		app.left += data.dx;
 		app.top  += data.dy;
 		// build the object to be sent
@@ -1364,6 +1380,13 @@ function wsAppMoveBy(wsio, data) {
 function wsAppMoveTo(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
+		// Values in percent if smaller than 1
+		if (data.x > 0 && data.x < 1) {
+			data.x = Math.round(data.x * config.totalWidth);
+		}
+		if (data.y > 0 && data.y < 1) {
+			data.y = Math.round(data.y * config.totalHeight);
+		}
 		app.left = data.x;
 		app.top  = data.y;
 		// build the object to be sent
@@ -1996,8 +2019,6 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
-		// Get the drop position and convert it to wall coordinates
-		var position = data.position || [0, 0];
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
 		if (position[0] > 1) {
@@ -3912,8 +3933,8 @@ function processInputCommand(line) {
 		case 'moveby': {
 			// command: moveby appid dx dy (relative, in pixels)
 			if (command.length === 4) {
-				var dx = parseInt(command[2], 10);
-				var dy = parseInt(command[3], 10);
+				var dx = parseFloat(command[2]);
+				var dy = parseFloat(command[3]);
 				wsAppMoveBy(null, {id: command[1], dx: dx, dy: dy});
 			} else {
 				console.log(sageutils.header("Command") + "should be: moveby app_0 10 10");
@@ -3923,8 +3944,8 @@ function processInputCommand(line) {
 		case 'moveto': {
 			// command: moveti appid x y (absolute, in pixels)
 			if (command.length === 4) {
-				var xx = parseInt(command[2], 10);
-				var yy = parseInt(command[3], 10);
+				var xx = parseFloat(command[2]);
+				var yy = parseFloat(command[3]);
 				wsAppMoveTo(null, {id: command[1], x: xx, y: yy});
 			} else {
 				console.log(sageutils.header("Command") + "should be: moveto app_0 100 100");
@@ -3936,12 +3957,12 @@ function processInputCommand(line) {
 			// command: resize appid width height (force exact resize)
 			// command: resize appid width  (keep aspect ratio)
 			if (command.length === 4) {
-				ww = parseInt(command[2], 10);
-				hh = parseInt(command[3], 10);
+				ww = parseFloat(command[2]);
+				hh = parseFloat(command[3]);
 				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: false});
 				console.log(sageutils.header("Command") + "resizing exactly to " + ww + "x" + hh);
 			} else if (command.length === 3) {
-				ww = parseInt(command[2], 10);
+				ww = parseFloat(command[2]);
 				hh = 0;
 				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: true});
 			} else {
