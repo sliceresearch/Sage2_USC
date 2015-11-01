@@ -28,7 +28,8 @@ var json5       = require('json5');               // JSON5 parsing
 var request     = require('request');             // external http requests
 
 // custom node modules
-var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
+var websocketIO = require('websocketio');   // creates WebSocket server and clients
+
 var connection;
 var imageFilename;
 var wssURL;

@@ -27,7 +27,7 @@ var json5       = require('json5');               // JSON5 parsing
 var readline    = require('readline');            // to build an evaluation loop
 
 // custom node modules
-var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
+var websocketIO = require('websocketio');   // creates WebSocket server and clients
 var connection;
 var command;
 var wssURL;

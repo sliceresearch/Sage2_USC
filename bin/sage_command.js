@@ -26,7 +26,8 @@ var path        = require('path');                // file path extraction and cr
 var json5       = require('json5');               // JSON5 parsing
 
 // custom node modules
-var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
+var websocketIO = require('websocketio');   // creates WebSocket server and clients
+
 var connection;
 var command;
 var wssURL;
