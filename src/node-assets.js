@@ -145,13 +145,18 @@ var setupBinaries = function(imOptions, ffmpegOptions) {
 
 
 var listAssets = function() {
-	var idx = 0;
+	var idx, keys, one;
+	idx = 0;
 	// Sort by name
-	var keys = Object.keys(AllAssets.list).sort();
+	keys = Object.keys(AllAssets.list).sort();
 	// Print
 	for (var f in keys) {
-		var one = AllAssets.list[keys[f]];
-		console.log(sageutils.header("Assets"), idx, one.exif.FileName, one.exif.FileSize, one.exif.MIMEType);
+		one = AllAssets.list[keys[f]];
+		if (one.exif.FileSize) {
+			console.log(sageutils.header("Assets"), idx, one.exif.FileName, one.exif.MIMEType, one.sage2URL, one.exif.FileSize);
+		} else {
+			console.log(sageutils.header("Assets"), idx, one.exif.FileName, one.exif.MIMEType, one.sage2URL);
+		}
 		idx++;
 	}
 };
