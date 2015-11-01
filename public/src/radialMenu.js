@@ -539,56 +539,69 @@ function RadialMenu() {
 
 				// Generic
 				metadataTags[0] = { tag: metadata.FileName, longLabel: "File Name: " };
-				metadataTags[1] = { tag: this.bytesToReadableString(metadata.FileSize), longLabel: "File Size: " };
+				if( metadata.FileSize !== undefined ) {
+					metadataTags[1] = { tag: this.bytesToReadableString(metadata.FileSize), longLabel: "File Size: " };
+				}
 				metadataTags[2] = { tag: metadata.FileDate, longLabel: "File Date: " };
 
 				// Image
-				metadataTags[2] = { tag: metadata.ImageSize, longLabel: "Resolution: " };
-				metadataTags[3] = { tag: metadata.DateCreated, longLabel: "Date Created: " };
-				metadataTags[4] = { tag: metadata.Copyright, longLabel: "Copyright: " };
+				metadataTags[3] = { tag: metadata.ImageSize, longLabel: "Resolution: " };
+				metadataTags[4] = { tag: metadata.DateCreated, longLabel: "Date Created: " };
+				metadataTags[5] = { tag: metadata.Copyright, longLabel: "Copyright: " };
 
 				// Photo
-				metadataTags[5] = { tag: metadata.Artist, longLabel: "Artist: " };
-				metadataTags[6] = { tag: metadata.Aperture, longLabel: "Aperture: " };
-				metadataTags[7] = { tag: metadata.Exposure, longLabel: "Exposure: " };
-				metadataTags[8] = { tag: metadata.Flash, longLabel: "Flash: " };
-				metadataTags[9] = { tag: metadata.ExposureTime, longLabel: "Exposure Time: " };
-				metadataTags[10] = { tag: metadata.FOV, longLabel: "FOV: " };
-				metadataTags[11] = { tag: metadata.FocalLength, longLabel: "Focal Length: " };
-				metadataTags[12] = { tag: metadata.Model, longLabel: "Model: " };
-				metadataTags[13] = { tag: metadata.LensModel, longLabel: "Lens Model: " };
-				metadataTags[14] = { tag: metadata.ISO, longLabel: "ISO: " };
-				metadataTags[15] = { tag: metadata.ShutterSpeed, longLabel: "Shutter Speed: " };
+				metadataTags[6] = { tag: metadata.Artist, longLabel: "Artist: " };
+				metadataTags[7] = { tag: metadata.Aperture, longLabel: "Aperture: " };
+				metadataTags[8] = { tag: metadata.Exposure, longLabel: "Exposure: " };
+				metadataTags[9] = { tag: metadata.Flash, longLabel: "Flash: " };
+				metadataTags[10] = { tag: metadata.ExposureTime, longLabel: "Exposure Time: " };
+				metadataTags[11] = { tag: metadata.FOV, longLabel: "FOV: " };
+				metadataTags[12] = { tag: metadata.FocalLength, longLabel: "Focal Length: " };
+				metadataTags[13] = { tag: metadata.Model, longLabel: "Model: " };
+				metadataTags[14] = { tag: metadata.LensModel, longLabel: "Lens Model: " };
+				metadataTags[15] = { tag: metadata.ISO, longLabel: "ISO: " };
+				metadataTags[16] = { tag: metadata.ShutterSpeed, longLabel: "Shutter Speed: " };
 
 				// GPS
-				metadataTags[16] = { tag: metadata.GPSAltitude, longLabel: "GPS Altitude: " };
-				metadataTags[17] = { tag: metadata.GPSLatitude, longLabel: "GPS Latitude: " };
-				metadataTags[18] = { tag: metadata.GPSTimeStamp, longLabel: "GPS TimeStamp: " };
+				metadataTags[17] = { tag: metadata.GPSAltitude, longLabel: "GPS Altitude: " };
+				metadataTags[18] = { tag: metadata.GPSLatitude, longLabel: "GPS Latitude: " };
+				metadataTags[19] = { tag: metadata.GPSTimeStamp, longLabel: "GPS TimeStamp: " };
 
 				// Video
-				metadataTags[19] = { tag: metadata.Duration, longLabel: "Duration: " };
-				metadataTags[20] = { tag: metadata.CompressorID, longLabel: "Compressor: " };
-				metadataTags[21] = { tag: metadata.AvgBitrate, longLabel: "Avg. Bitrate: " };
-				metadataTags[22] = { tag: metadata.AudioFormat, longLabel: "Audio Format: " };
-				metadataTags[23] = { tag: metadata.AudioChannels, longLabel: "Audio Channels: " };
-				metadataTags[24] = { tag: metadata.AudioSampleRate, longLabel: "Audio Sample Rate: " };
+				metadataTags[20] = { tag: metadata.Duration, longLabel: "Duration: " };
+				metadataTags[21] = { tag: metadata.CompressorID, longLabel: "Compressor: " };
+				metadataTags[22] = { tag: metadata.AvgBitrate, longLabel: "Avg. Bitrate: " };
+				metadataTags[23] = { tag: metadata.AudioFormat, longLabel: "Audio Format: " };
+				metadataTags[24] = { tag: metadata.AudioChannels, longLabel: "Audio Channels: " };
+				metadataTags[25] = { tag: metadata.AudioSampleRate, longLabel: "Audio Sample Rate: " };
 
 				// Apps
 				if (metadata.metadata !== undefined) {
-					metadataTags[25] = { tag: metadata.metadata.title, longLabel: "Title: " };
-					metadataTags[26] = { tag: metadata.metadata.version, longLabel: "Version: " };
-					metadataTags[27] = { tag: metadata.metadata.author, longLabel: "Author: " };
-					metadataTags[28] = { tag: metadata.metadata.license, longLabel: "License: " };
-					metadataTags[29] = { tag: metadata.metadata.keywords, longLabel: "Keywords: " };
-					metadataTags[30] = { tag: metadata.metadata.description, longLabel: "Description: " };
+					metadataTags[26] = { tag: metadata.metadata.title, longLabel: "Title: " };
+					metadataTags[27] = { tag: metadata.metadata.version, longLabel: "Version: " };
+					metadataTags[28] = { tag: metadata.metadata.author, longLabel: "Author: " };
+					metadataTags[29] = { tag: metadata.metadata.license, longLabel: "License: " };
+					metadataTags[30] = { tag: metadata.metadata.keywords, longLabel: "Keywords: " };
+					metadataTags[31] = { tag: metadata.metadata.description, longLabel: "Description: " };
 				}
 
 				// Sessions
-				metadataTags[31] = { tag: metadata.numapps, longLabel: "Applications: " };
+				metadataTags[32] = { tag: metadata.numapps, longLabel: "Applications: " };
 
 				var newTagSpacing = 28;
 				var sameTagSpacing = 20;
 
+				/*
+				// No word wrap (Debugging purposes only now)
+				for (i = 0; i < metadataTags.length; i++) {
+					if (metadataTags[i] !== undefined && metadataTags[i].tag) {
+						this.ctx.fillText(metadataTags[i].longLabel + metadataTags[i].tag,
+							metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
+						metadataLine++;
+					}
+				}
+				*/
+				// Word Wrap
 				for (i = 0; i < metadataTags.length; i++) {
 					if (metadataTags[i] !== undefined && metadataTags[i].tag) {
 						var labelLength = this.ctx.measureText(metadataTags[i].longLabel).width;
@@ -611,11 +624,6 @@ function RadialMenu() {
 									this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
 									testLine = textWords[j] + " ";
 									line += 1;
-									// metadataLine++;
-									// this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing);
-									// testLine = "";
-									// testLine = "[Too long, Clanky. Too long.]"
-									// this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing * 2);
 								}
 							}
 							this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
@@ -645,6 +653,7 @@ function RadialMenu() {
 		} else if( bytesInt > Math.pow(1024, 1) ) {
 			return Math.round(bytesInt/Math.pow(1024, 1)) + " KB"
 		}
+
 		return bytes + " bytes"
 	};
 
