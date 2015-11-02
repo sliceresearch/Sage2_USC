@@ -51,7 +51,7 @@ install:
   - move bin\wcStartBinary.bat wcStartBinary.bat
   - move bin\StartHere.bat StartHere.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
-  - curl -LsSO http://downloads.ghostscript.com/public/gs918w64.exe
+  - curl -LsSO http://downloads.ghostscript.com/public/gs916w64.exe
   - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
   - copy gs\$_OUTDIR\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
@@ -70,30 +70,8 @@ install:
   - curl -LsSO https://nodejs.org/dist/v4.2.1/win-x64/node.exe
   - curl -LsSO https://nodejs.org/dist/v4.2.1/win-x64/node.lib
   - cd ..
-  - mkdir sysfiles
-  - move VERSION.json  sysfiles\VERSION.json 
-  - move .git  sysfiles\.git 
-  - move sage2.bat  sysfiles\sage2.bat 
-  - move wcDisplayLaunch.bat  sysfiles\wcDisplayLaunch.bat 
-  - move wcStartBinary.bat  sysfiles\wcStartBinary.bat 
-  - move AUTHORS  sysfiles\AUTHORS 
-  - move GO-scripts  sysfiles\GO-scripts 
-  - move Gruntfile.js  sysfiles\Gruntfile.js 
-  - move LICENSE.txt  sysfiles\LICENSE.txt 
-  - move README.md  sysfiles\README.md 
-  - move bin  sysfiles\bin 
-  - move lib  sysfiles\lib 
-  - move config  sysfiles\config 
-  - move doc  sysfiles\doc 
-  - move keys  sysfiles\keys 
-  - move node_modules  sysfiles\node_modules 
-  - move package.json  sysfiles\package.json 
-  - move public  sysfiles\public 
-  - move server.js  sysfiles\server.js 
-  - move src  sysfiles\src 
-  - move webconStartServer.js  sysfiles\webconStartServer.js 
   - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
-  - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip StartHere.bat sysfiles
+  - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip VERSION.json .git sage2.bat wcDisplayLaunch.bat wcStartBinary.bat AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src webconStartServer.js StartHere.bat
 
 
 build: off
