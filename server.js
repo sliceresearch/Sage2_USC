@@ -1684,7 +1684,7 @@ function loadSession(filename) {
 		if (err) {
 			console.log(sageutils.header("SAGE2") + "error reading session", err);
 		} else {
-			console.log(sageutils.header("SAGE2") + "reading sessions from " + fullpath);
+			console.log(sageutils.header("SAGE2") + "reading session from " + fullpath);
 
 			var session = JSON.parse(data);
 			console.log(sageutils.header("Session") + "number of applications", session.numapps);
@@ -1730,7 +1730,7 @@ function listClients() {
 
 function listMediaStreams() {
 	var i, c, key;
-	console.log("Streams (%d)\n------------", Object.keys(mediaBlockStreams).length);
+	console.log("Block streams (%d)\n------------", Object.keys(mediaBlockStreams).length);
 	i = 0;
 	for (key in mediaBlockStreams) {
 		var numclients = Object.keys(mediaBlockStreams[key].clients).length;
@@ -1741,6 +1741,16 @@ function listMediaStreams() {
 		}
 		console.log("\t", cstr);
 		i++;
+	}
+
+	console.log("Media streams\n------------");
+	for (key in SAGE2Items.applications.list) {
+		var app = SAGE2Items.applications.list[key];
+		if (app.application === "media_stream") {
+			console.log(sprint("%2d: %s %s %s",
+				i, app.id, app.application, app.title));
+			i++;
+		}
 	}
 }
 
