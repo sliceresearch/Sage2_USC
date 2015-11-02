@@ -41,6 +41,8 @@ function RadialMenu(id, ptrID, config) {
 
 	// Default
 	this.radialMenuScale = config.ui.widgetControlSize * 0.03;
+	this.minimumMenuRadiusMeters = 0.1; // 5 cm
+	this.maximumMenuRadiusMeters;
 
 	if (config.ui.auto_scale_ui) {
 		this.radialMenuScale = 1;
@@ -58,8 +60,8 @@ function RadialMenu(id, ptrID, config) {
 			borderBottom = 0.0;
 			borderTop    = 0.0;
 		}
-		var pixelsPerMeter = (config.dimensions.tile_width - borderLeft - borderRight) / config.resolution.width;
-		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y * pixelsPerMeter;
+		var pixelsPerMeter = config.resolution.width / (config.dimensions.tile_width - borderLeft - borderRight);
+		var windowDefaultHeightMeters = thumbnailWindowDefaultSize.y / pixelsPerMeter;
 
 		// https://en.wikipedia.org/wiki/Optimum_HDTV_viewing_distance#Human_visual_system_limitation
 
@@ -79,6 +81,30 @@ function RadialMenu(id, ptrID, config) {
 		} else {
 			viewDistRatio = config.dimensions.viewing_distance / windowDefaultHeightMeters;
 			this.radialMenuScale = config.dimensions.viewing_distance * (0.03 * viewDistRatio);
+		}
+		var radialMenuRadiusMeters = radialMenuDefaultSize.x * this.radialMenuScale / pixelsPerMeter;
+
+		// Set radial menu radius bounds
+		if (radialMenuRadiusMeters < (2 * this.minimumMenuRadiusMeters)) { // lower
+			this.radialMenuScale = 2 * this.minimumMenuRadiusMeters / radialMenuDefaultSize.x * pixelsPerMeter;
+		}
+		var totalContentWindowSize = {
+			w: (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * this.radialMenuScale / pixelsPerMeter,
+			h: thumbnailWindowDefaultSize.y * this.radialMenuScale / pixelsPerMeter };
+
+		// Radial menu + thumbnail window can never be more than 90% of the display width or height
+		if (totalContentWindowSize.w > totalWallDimensionsMeters.w) {
+			this.radialMenuScale = totalWallDimensionsMeters.w * 0.9 / (radialMenuDefaultSize.x +
+				thumbnailWindowDefaultSize.x) * pixelsPerMeter;
+		}
+
+		// Recalculate size
+		totalContentWindowSize = {
+			w: (radialMenuDefaultSize.x + thumbnailWindowDefaultSize.x) * this.radialMenuScale / pixelsPerMeter,
+			h: (thumbnailWindowDefaultSize.y + 100) * this.radialMenuScale / pixelsPerMeter };
+
+		if (totalContentWindowSize.h > totalWallDimensionsMeters.h) {
+			this.radialMenuScale = totalWallDimensionsMeters.h * 0.9 / thumbnailWindowDefaultSize.y * pixelsPerMeter;
 		}
 		console.log("node-radialMenu: this.radialMenuScale = " + this.radialMenuScale);
 	}
@@ -110,6 +136,9 @@ function RadialMenu(id, ptrID, config) {
 	// id - unique button id
 	// icon - button icon
 	// radialPosition - 0 = top of menu, 1 = buttonAngle degrees clockwise, 2 = buttonAngle*2 degrees clockwise, etc.
+	this.radialButtons.closeMenu = {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel: 0,
+		group: "radialMenu", action: "close", window: "radialMenu", state: 0, pointers: {} };
+
 	this.radialButtons.images = {id: 0, icon: "images/ui/images.svg", radialPosition: 0, radialLevel: 1,
 		group: "radialMenu", action: "contentWindow", window: "image", state: 0, pointers: {} };
 	this.radialButtons.pdfs = {id: 1, icon: "images/ui/pdfs.svg", radialPosition: 1, radialLevel: 1,
@@ -120,16 +149,17 @@ function RadialMenu(id, ptrID, config) {
 		group: "radialMenu", action: "contentWindow", window: "applauncher", state: 0, pointers: {} };
 	this.radialButtons.loadSession = {id: 4, icon: "images/ui/loadsession.svg", radialPosition: 4, radialLevel: 1,
 		group: "radialMenu", action: "contentWindow", window: "session", state: 0, pointers: {} };
-	this.radialButtons.saveSession = {id: 5, icon: "images/ui/savesession.svg", radialPosition: 5, radialLevel: 1,
-		group: "radialMenu", action: "saveSession", state: 0, pointers: {} };
-	// this.radialButtons.settings = {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel: 1,
-	// group: "radialMenu", action: "toggleRadial", radial: "settingsMenu", state: 0, pointers: {} };
-	this.radialButtons.closeMenu = {id: 7, icon: "images/ui/close.svg", radialPosition: 7.5, radialLevel: 0,
-		group: "radialMenu", action: "close", window: "radialMenu", state: 0, pointers: {} };
-	// this.radialButtons.tileContent = {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 7.175, radialLevel: 2,
-	// group: "settingsMenu", action: "tileContent", state: 0, pointers: {} };
-	// this.radialButtons.clearContent = {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.875, radialLevel: 2,
-	// group: "settingsMenu", action: "clearAllContent", state: 0, pointers: {} };
+
+	// Arrangement submenu
+	this.radialButtons.settings = {id: 6, icon: "images/ui/arrangement.svg", radialPosition: 6.5, radialLevel: 1,
+		group: "radialMenu", action: "toggleSubRadial", radial: "settingsMenu", state: 0, pointers: {} };
+
+	this.radialButtons.tileContent = {id: 8, icon: "images/ui/tilecontent.svg", radialPosition: 6.5, radialLevel: 2,
+		group: "settingsMenu", action: "tileContent", state: 0, pointers: {} };
+	this.radialButtons.clearContent = {id: 9, icon: "images/ui/clearcontent.svg", radialPosition: 7.1, radialLevel: 2,
+		group: "settingsMenu", action: "clearAllContent", state: 0, pointers: {} };
+	this.radialButtons.saveSession = {id: 5, icon: "images/ui/savesession.svg", radialPosition: 5.9, radialLevel: 2,
+		group: "settingsMenu", action: "saveSession", state: 0, pointers: {} };
 }
 
 /**
@@ -152,16 +182,22 @@ RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 		var buttonInfo = this.radialButtons[buttonName];
 
 		var buttonRadius = 25 * this.radialMenuScale;
+		var buttonRadialDistance = this.menuRadius;
+
+		if( buttonInfo.radialLevel == 2 ) {
+			buttonRadialDistance = this.menuRadius * 1.6;
+		}
+
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI / 180);
-		var position = {x: this.left - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - (buttonRadialDistance - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
+						y: this.top - (buttonRadialDistance - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
 		var visible = true;
 
 		if (buttonInfo.radialLevel === 0) {
 			position = {x: this.left - (0 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
 						y: this.top - (0 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
 		} else if (buttonInfo.radialLevel !== 1) {
-			visible = false;
+			//visible = false;
 		}
 
 		this.interactMgr.addGeometry(this.id + "_menu_radial_button_" + buttonName, "radialMenus", "circle",
@@ -196,6 +232,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 
 	if (buttonType === "pointerPress") {
 		// Process based on button type
+		//console.log("node-radialMenu: button press on " + buttonName);
 		if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
 
 			// Set thumbnail window and button lit state
@@ -226,7 +263,7 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 			this.interactMgr.editVisibility(this.id + "_menu_thumbnail", "radialMenus", this.thumbnailWindowState !== "closed");
 
 			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].window};
-		} else if (this.radialButtons[buttonName].action === "toggleRadial") { // Actions with parameters
+		} else if (this.radialButtons[buttonName].action === "toggleSubRadial") { // Actions with parameters
 			// Radial submenus
 			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
 		} else { // All no parameter actions
@@ -237,7 +274,15 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 			}
 			// Save session button
 			if (action.type === "saveSession") {
-				// NOTE: This action is handled by the server
+				// NOTE: This action is handled by the server radialMenuEvent()
+			}
+			// Tile content
+			if (action.type === "tileContent") {
+				// NOTE: This action is handled by the server radialMenuEvent()
+			}
+			// Clear all content button
+			if (action.type === "clearAllContent") {
+				// NOTE: This action is handled by the server radialMenuEvent()
 			}
 		}
 	}
@@ -442,6 +487,10 @@ RadialMenu.prototype.setPosition = function(data) {
 		if (buttonInfo.radialLevel === 0) {
 			position = {x: this.left - (0 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
 						y: this.top - (0 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		}
+		else if (buttonInfo.radialLevel === 2) {
+			position = {x: this.left - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
+						y: this.top - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
 		}
 
 		// console.log("setPosition: " + buttonName + " " +menuRadius * Math.cos(angle) + " " + menuRadius * Math.sin(angle) );

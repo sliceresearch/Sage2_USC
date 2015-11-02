@@ -6794,6 +6794,12 @@ function radialMenuEvent(data) {
 							ad.getHours(), ad.getMinutes(), ad.getSeconds());
 			saveSession(sname);
 		}
+		else if (data.menuState.action !== undefined && data.menuState.action.type === "tileContent") {
+			tileApplications();
+		}
+		else if (data.menuState.action !== undefined && data.menuState.action.type === "clearAllContent") {
+			clearDisplay();
+		}
 	} else {
 		broadcast('radialMenuEvent', data);
 	}
