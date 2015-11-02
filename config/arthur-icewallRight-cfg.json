@@ -1,18 +1,31 @@
 {
-	"host": "thor.evl.uic.edu",
-	"port": 8090,
-	"index_port": 8292,
+	"name": "Endeavour",
+	"host": "nishimoto.evl.uic.edu",
+	"port": 9090,
+	"index_port": 9292,
 	"background": {
-		"color": "#333333"
+		"color": "#333333",
 	},
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"show_version": true
+		"show_version": true,
+		"widgetControlSize": 20,
+		"auto_scale_ui": true,
+		"calculate_viewing_distance": false
 	},
 	"resolution": {
 		"width": 1536,
-		"height": 1366
+		"height": 1360
+	},
+	// NEW ATTRIBUTES
+	"dimensions": {
+		// dimensions of one tile (can be overriden in displays section)
+		"tile_width":  0.646,  // in meter, pixel area
+		"tile_height": 1.093,  // in meter, pixel area
+		"tile_borders": [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		"viewing_distance": 1.0668	// in meter
 	},
 	"layout": {
 		"rows": 1,
@@ -63,5 +76,9 @@
 			"inputServerIP": "cave2tracker.evl.uic.edu",
 			"msgPort": 28000
 		}
-	}
+	},
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+    }
 }

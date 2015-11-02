@@ -943,6 +943,8 @@ function UIBuilder(json_cfg, clientID) {
 					this.radialMenus[data.menuID + "_menu"].setToggleMenu(data.menuState.action.window + "ThumbnailWindow");
 				} else if (data.menuState.action.type === "close") {
 					this.radialMenus[data.menuID + "_menu"].closeMenu();
+				} else if (data.menuState.action.type === "toggleSubRadial") {
+					this.radialMenus[data.menuID + "_menu"].toggleSubRadialMenu(data.menuState.action.window);
 				}
 			}
 		} else {
