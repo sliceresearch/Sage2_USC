@@ -200,6 +200,7 @@ function RadialMenu() {
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
+		this.maxThumbnailScrollDistance = 0;
 
 		this.radialMenuDiv = document.getElementById(this.id + "_menu");
 		this.thumbnailWindowDiv = document.getElementById(this.id + "_menuDiv");
@@ -877,8 +878,14 @@ function RadialMenu() {
 						nextScrollPos.y = 0;
 					}
 
-					this.scrollThumbnailWindow(nextScrollPos);
-					this.thumbnailWindowDragPosition = position;
+					if (-nextScrollPos.x < this.maxThumbnailScrollDistance) {
+						this.scrollThumbnailWindow(nextScrollPos);
+						this.thumbnailWindowDragPosition = position;
+					} else {
+						nextScrollPos.x = -this.maxThumbnailScrollDistance;
+						this.scrollThumbnailWindow(nextScrollPos);
+						this.thumbnailWindowDragPosition = position;
+					}
 				} else {
 					this.thumbnailWindowScrollOffset.x = 0;
 				}
@@ -892,9 +899,11 @@ function RadialMenu() {
 				this.dragThumbnailWindow = false;
 			}
 		} else if (type === "pointerScroll") {
-			if(this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false) {
+			if (this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false) {
 				var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
-				this.scrollThumbnailWindow({x: wheelDelta, y: 0 });
+				if (-wheelDelta < this.maxThumbnailScrollDistance) {
+					this.scrollThumbnailWindow({x: wheelDelta, y: 0 });
+				}
 			}
 		}
 	};
@@ -920,6 +929,7 @@ function RadialMenu() {
 		if (this.thumbnailWindowScrollOffset.x > 0) {
 			this.thumbnailWindowScrollOffset.x = 0;
 		}
+
 		this.thumbnailScrollWindowElement.style.left = (this.thumbnailWindowScrollOffset.x).toString() + "px";
 	};
 
@@ -1183,7 +1193,7 @@ function RadialMenu() {
 				neededColumns = Math.ceil(this.sessionThumbnailButtons.length / maxRows);
 			}
 		}
-
+		this.maxThumbnailScrollDistance = (neededColumns - maxCols)  * (this.imageThumbSize * 1 + thumbSpacer);
 		// Special thumbnail size for custom apps
 		if (this.currentMenuState === "applauncherThumbnailWindow") {
 			maxRows = Math.floor((thumbWindowSize.y - this.thumbnailWindowPosition.y) / (this.imageThumbSize * 2 + thumbSpacer));
@@ -1192,6 +1202,7 @@ function RadialMenu() {
 			if (this.appThumbnailButtons.length > (maxRows * maxCols)) {
 				neededColumns = Math.ceil(this.appThumbnailButtons.length / maxRows);
 			}
+			this.maxThumbnailScrollDistance = (neededColumns - maxCols) * (this.imageThumbSize * 2 + thumbSpacer);
 		}
 
 		// console.log("Radial Menu: updateThumbnailPositions max r: " + maxRows + " max c: " + maxCols + " needed c:" + neededColumns);
