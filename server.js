@@ -725,6 +725,7 @@ function setupListeners(wsio) {
 	wsio.on('enablePaintingMode',					wsEnablePaintingMode);
 	wsio.on('disablePaintingMode',					wsDisablePaintingMode);
 	wsio.on('saveScreenshot',						wsSaveScreenshot);
+	wsio.on('selectionModeOnOff',					wsSelectionModeOnOff);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -918,6 +919,10 @@ function wsDisablePaintingMode(wsio, data) {
 }
 function wsSaveScreenshot(wsio, data) {
 	saveScreenshot(data["screenshot"]);
+}
+
+function wsSelectionModeOnOff(wsio, data) {
+	drawingManager.selectionModeOnOff();
 }
 
 // **************  Sage Pointer Functions *****************

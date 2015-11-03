@@ -82,10 +82,12 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
 								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
 								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
+								  {name: "selectionModeButton",action: this.selectionModeOnOff,parent: this,icon: path+"/load.png",r: 9,c: 7,cSpan: 3,rSpan: 1},
 								  {name: "enablePaint",
 								  			action: this.paintingMode? this.disablePaintingMode: this.enablePaintingMode,
 								  			parent: this,icon: this.paintingMode? path + "/paintActive.png": path + "/paintNonActive.png",
-								  			r: 6,c: 7,cSpan: 3,rSpan: 3}];
+								  			r: 6,c: 7,cSpan: 3,rSpan: 3}
+								  ];
 			var padding = 4
 		} else if(this.paletteMode == "colorPicker"){
 			var nRows = 15;
@@ -216,6 +218,9 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	disablePaintingMode: function() {
 		wsio.emit("disablePaintingMode",null);
 	},
+	selectionModeOnOff: function() {
+		wsio.emit("selectionModeOnOff",null);
+	},
 	load: function(date) {
 		console.log('WhiteboardPalette> Load with state value', this.state.value);
 		this.refresh(date);
@@ -243,7 +248,6 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		for (i in this.paletteButtons){
 			var butt = this.paletteButtons[i]
 			if (y>=butt.y & y<=butt.y+butt.h & x>=butt.x & x<=butt.x+butt.w){
-				console.log("clicked");
 				butt.action(x-butt.x,y-butt.y);
 			}
 		}

@@ -18,6 +18,12 @@ function DrawingManager(config) {
 	this.actualAction = "drawing"
 	this.possibleActions = ["drawing", "movingPalette"];
 	this.paintingMode = false;
+	this.selectionMode = false;
+	this.selectionStart = {};
+	this.selectionEnd = {};
+	this.selectionTouchId = -1;
+	this.selectedDrawingObject = [];
+	this.selectionMovementStart = [];
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -87,6 +93,10 @@ DrawingManager.prototype.enablePaintingMode = function() {
 DrawingManager.prototype.disablePaintingMode = function() {
 	this.paintingMode = false;
 	this.sendModesToPalette();
+}
+
+DrawingManager.prototype.selectionModeOnOff = function() {
+	this.selectionMode = !this.selectionMode;
 }
 
 DrawingManager.prototype.sendModesToPalette = function() {
@@ -225,6 +235,44 @@ DrawingManager.prototype.touchInsidePaletteTitleBar = function(x,y) {
 			(y >= this.palettePosition.startY - 58) && (y < this.palettePosition.startY));
 }
 
+DrawingManager.prototype.touchInsideSelection = function(x, y) {
+
+	if (x >= this.selectionStart['x'] &&
+		y >= this.selectionStart['y'] &&
+		x <= this.selectionEnd['x'] &&
+		y <= this.selectionEnd['y']) {
+		return true;
+	}
+	return false;
+
+}
+
+DrawingManager.prototype.selectDrawingObjects = function(x, y) {
+
+	for (var drawingObj in this.drawState) {
+		var points = this.drawState[drawingObj]['options'];
+		for (var i in points) {
+			if (this.touchInsideSelection(points[i]['x'], points[i]['y'])) {
+				this.selectedDrawingObject.push(this.drawState[drawingObj]);
+				break;
+			}
+		}
+	}
+
+}
+
+DrawingManager.prototype.selectionMove = function(x, y) {
+
+	for (var drawingObj in this.selectedDrawingObject) {
+		var points = this.selectedDrawingObject[drawingObj]['options'];
+		for (var i in points) {
+			points[i]['x'] += x;
+			points[i]['y'] += y;
+		}
+	}
+
+	this.initAll();
+}
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
@@ -233,22 +281,35 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	}
 
 	if (e.type == 5) {
+		// touch down
+
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
 			this.actualAction = "movingPalette";
 			this.idMovingPalette = e.sourceId;
 			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
 			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY + 58; // Title bar height
 			return;
-		}
-		// pointer down
-		if (this.touchInsidePalette(posX,posY)) {
-			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX ,posY - this.palettePosition.startY);
+		} else if (this.touchInsidePalette(posX,posY)) {
+			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
 			return;
-		}else {
-			this.drawingsUndone = [];
-			this.newDrawingObjectFunc(e, posX, posY);
+		} else if (this.selectionMode) {
+
+			if (this.selectedDrawingObject.length == 0) {
+				this.selectionStart = {x: posX, y: posY};
+				this.selectionTouchId = e.sourceId;
+			} else if (this.touchInsideSelection(posX, posY)) {
+				this.selectionMovementStart = {x: posX, y: posY};
+				this.selectionTouchId = e.sourceId;
+			}
+
 		}
+
+		this.drawingsUndone = [];
+		this.newDrawingObjectFunc(e, posX, posY);
+
 	} else if (e.type == 4) {
+		// touch move
+
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.movePaletteTo(this.paletteID
 								, posX - this.touchOnPaletteOffsetX
@@ -258,21 +319,36 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		}
 
-
 		if (this.touchInsidePalette(posX,posY)) {
 			return;
 		}
 
+		if ((this.selectionMode) && (this.selectionTouchId == e.sourceId) && (this.selectedDrawingObject.length > 0)) {
+			// this.selectionMove(posX, posY);
+			return;
+		}
 
-		// pointer move
 		this.updateDrawingObject(e, posX, posY);
 
 	} else if (e.type == 6) {
+		// touch release
+
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
 			this.idMovingPalette = -1;
+		} else if ((this.selectionMode) && (this.selectionTouchId == e.sourceId)) {
+
+			if (this.selectedDrawingObject.length == 0) {
+				this.selectionEnd = {x: posX, y: posY};
+				this.selectionTouchId = -1;
+				this.selectDrawingObjects(posX, posY);
+			} else {
+				this.selectionMove(posX - this.selectionMovementStart['x'], posY - this.selectionMovementStart['y']);
+			}
+
+			return;
 		}
-		// pointer release
+
 		this.realeaseId(e.sourceId);
 		return;
 	}
