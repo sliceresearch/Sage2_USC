@@ -375,6 +375,16 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Close the application itself
+	*
+	* @method close
+	*/
+	close: function() {
+		// send the message to server
+		wsio.emit('deleteApplication', {appId: this.id});
+	},
+
+	/**
 	* Application request for a new size
 	*
 	* @method sendResize
@@ -385,11 +395,25 @@ var SAGE2_App = Class.extend({
 		var msgObject = {};
 		// Add the display node ID to the message
 		msgObject.node   = clientID;
-		msgObject.id     = this.div.id;
+		msgObject.id     = this.id;
 		msgObject.width  = newWidth;
 		msgObject.height = newHeight;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
+	},
+
+	/**
+	* Request fullscreen
+	*
+	* @method sendFullscreen
+	*/
+	sendFullscreen: function() {
+		var msgObject = {};
+		// Add the display node ID to the message
+		msgObject.node = clientID;
+		msgObject.id   = this.id;
+		// send the message to server
+		wsio.emit('appFullscreen', msgObject);
 	},
 
 	/**
@@ -404,15 +428,15 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
-	* Support for the Tweet application
+	* Support for the RPC call to the server
 	*
-	* @method searchTweets
-	* @param funcName {String} function name for broadcast or emit
-	* @param query {Object} search info for tweet API
+	* @method applicationRPC
+	* @param query {Object} parameter for RPC function on server
+	* @param funcName {String} return function name for broadcast or emit
 	* @param broadcast {Boolean} wether or not doing a return broadcast or emit
 	*/
-	searchTweets: function(funcName, query, broadcast) {
-		searchTweets({app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	applicationRPC: function(query, funcName, broadcast) {
+		wsio.emit('applicationRPC', {app: this.div.id, func: funcName, query: query, broadcast: broadcast});
 	},
 
 	/**

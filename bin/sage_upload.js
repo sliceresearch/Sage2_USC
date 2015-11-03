@@ -28,7 +28,8 @@ var json5       = require('json5');               // JSON5 parsing
 var request     = require('request');             // external http requests
 
 // custom node modules
-var websocketIO = require( path.join(__dirname, '/../src/node-websocket.io'));   // creates WebSocket server and clients
+var websocketIO = require('websocketio');   // creates WebSocket server and clients
+
 var connection;
 var imageFilename;
 var wssURL;
@@ -148,7 +149,6 @@ if (process.argv.length >= 3) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('https', 'wss');
 	} else {
-		console.log('Client> adding to wss:// protocol');
 		wssURL = 'wss://' + wssURL;
 	}
 }

@@ -1,6 +1,6 @@
 /*
 @license
-webix UI v.3.0.4
+webix UI v.3.0.8
 This software is allowed to use under GPL or you need to obtain Commercial License 
  to use it in non-GPL project. Please contact sales@webix.com for details
 */
@@ -62,6 +62,7 @@ x\:ui{display:none}
 .webix_resize_handle_y{cursor:n-resize;height:1px;width:100%;position:absolute;z-index:2;left:0}
 .webix_resize_handle_y .webix_handle_content{border-width:1px 0}
 .webix_resize_origin_y{cursor:n-resize;height:3px;width:100%;position:absolute;z-index:2;left:0}
+.webix_resizer.webix_disabled_view{cursor:default}
 .webix_resizer_vy{cursor:n-resize;margin-top:0!important;border:0!important;padding:0!important;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAADAQMAAABCowZuAAAABlBMVEUAAACkvtSA7tmIAAAAAXRSTlMAQObYZgAAAA9JREFUCB1jXMUABoxAGgAJaAFXPIkJqAAAAABJRU5ErkJggg==) center center no-repeat}
 .webix_resizer_vx{cursor:e-resize;margin-left:0!important;border:0!important;padding:0!important;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAXAQMAAAD0oWdxAAAABlBMVEUAAACkvtSA7tmIAAAAAXRSTlMAQObYZgAAAA5JREFUeF5jWMDAQDwGAKyuB4FpGQdzAAAAAElFTkSuQmCC) center center no-repeat}
 .webix_resizer_y{cursor:n-resize;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAADAQMAAABCowZuAAAABlBMVEUAAACkvtSA7tmIAAAAAXRSTlMAQObYZgAAAA9JREFUCB1jXMUABoxAGgAJaAFXPIkJqAAAAABJRU5ErkJggg==) center center no-repeat #fff}

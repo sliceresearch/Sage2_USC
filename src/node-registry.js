@@ -129,9 +129,8 @@ RegistryManager.prototype.push = function(key, value, overwrite) {
 	try {
 		this.db.push(key, value, overwrite);
 	} catch (error) {
-		console.error(error);
+		console.error(sageutils.header("Registry") + error);
 	}
-
 };
 
 RegistryManager.prototype.getDefaultApp = function(file) {
@@ -140,7 +139,7 @@ RegistryManager.prototype.getDefaultApp = function(file) {
 	try {
 		defaultApp = this.db.getData(type + '/default');
 	} catch (error) {
-		console.error("No default app for " + file);
+		console.error(sageutils.header("Registry") + "No default app for " + file);
 	}
 	return defaultApp;
 };
@@ -150,7 +149,7 @@ RegistryManager.prototype.getDefaultAppFromMime = function(type) {
 	try {
 		defaultApp = this.db.getData('/' + type + '/default');
 	} catch (error) {
-		console.error("No default app for " + type);
+		console.error(sageutils.header("Registry") + "No default app for " + type);
 	}
 	return defaultApp;
 };
@@ -161,7 +160,7 @@ RegistryManager.prototype.getDirectory = function(file) {
 	try {
 		dir = this.db.getData(type + '/directory');
 	} catch (error) {
-		console.error("No directory for " + file);
+		console.error(sageutils.header("Registry") + "No directory for " + file);
 	}
 	return dir;
 
