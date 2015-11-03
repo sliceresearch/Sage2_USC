@@ -247,10 +247,10 @@ DrawingManager.prototype.touchInsideSelection = function(x, y) {
 
 }
 
-DrawingManager.prototype.selectDrawingObjects = function(x, y) {
+DrawingManager.prototype.selectDrawingObjects = function() {
 
 	for (var drawingObj in this.drawState) {
-		var points = this.drawState[drawingObj]['options'];
+		var points = this.drawState[drawingObj]['options']['points'];
 		for (var i in points) {
 			if (this.touchInsideSelection(points[i]['x'], points[i]['y'])) {
 				this.selectedDrawingObject.push(this.drawState[drawingObj]);
@@ -264,7 +264,7 @@ DrawingManager.prototype.selectDrawingObjects = function(x, y) {
 DrawingManager.prototype.selectionMove = function(x, y) {
 
 	for (var drawingObj in this.selectedDrawingObject) {
-		var points = this.selectedDrawingObject[drawingObj]['options'];
+		var points = this.selectedDrawingObject[drawingObj]['options']['points'];
 		for (var i in points) {
 			points[i]['x'] += x;
 			points[i]['y'] += y;
@@ -302,6 +302,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.selectionTouchId = e.sourceId;
 			}
 
+			return;
 		}
 
 		this.drawingsUndone = [];
@@ -341,7 +342,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			if (this.selectedDrawingObject.length == 0) {
 				this.selectionEnd = {x: posX, y: posY};
 				this.selectionTouchId = -1;
-				this.selectDrawingObjects(posX, posY);
+				this.selectDrawingObjects();
 			} else {
 				this.selectionMove(posX - this.selectionMovementStart['x'], posY - this.selectionMovementStart['y']);
 			}
