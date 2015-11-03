@@ -200,6 +200,19 @@ DrawingManager.prototype.findMaxId = function() {
 	return max;
 }
 
+DrawingManager.prototype.newSelectionBox = function(e,posX,posY) {
+
+	// Create new Selection box
+	var drawingId = this.getNewId(e.sourceId);
+	this.newDrawingObject[drawingId] = {};
+	this.newDrawingObject[drawingId]["id"] = drawingId;
+	this.newDrawingObject[drawingId]["type"] = "rectangle";
+	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
+	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
+
+	this.drawState.push(this.newDrawingObject[drawingId]);
+}
+
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	// Create new Drawing object
@@ -302,11 +315,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.selectionTouchId = e.sourceId;
 			}
 
-			return;
+		} else {
+			this.drawingsUndone = [];
+			this.newDrawingObjectFunc(e, posX, posY);
 		}
-
-		this.drawingsUndone = [];
-		this.newDrawingObjectFunc(e, posX, posY);
 
 	} else if (e.type == 4) {
 		// touch move
@@ -340,18 +352,31 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		} else if ((this.selectionMode) && (this.selectionTouchId == e.sourceId)) {
 
 			if (this.selectedDrawingObject.length == 0) {
-				this.selectionEnd = {x: posX, y: posY};
+
+				if (this.selectionStart['x'] > posX) {
+					this.selectionEnd['x'] = this.selectionStart['x'];
+					this.selectionStart['x'] = posX;
+				} else {
+					this.selectionEnd['x'] = posX;
+				}
+
+				if (this.selectionStart['y'] > posY) {
+					this.selectionEnd['y'] = this.selectionStart['y'];
+					this.selectionStart['y'] = posY;
+				} else {
+					this.selectionEnd['y'] = posY;
+				}
+
 				this.selectionTouchId = -1;
 				this.selectDrawingObjects();
+				this.newSelectionBox();
 			} else {
 				this.selectionMove(posX - this.selectionMovementStart['x'], posY - this.selectionMovementStart['y']);
 			}
 
-			return;
 		}
 
 		this.realeaseId(e.sourceId);
-		return;
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
