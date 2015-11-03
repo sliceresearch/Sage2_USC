@@ -753,6 +753,17 @@ function UIBuilder(json_cfg, clientID) {
 				var fill = drawingObject.style["stroke"] || "white";
 				newDraw.attr("cx",point.x).attr("cy",point.y).attr("r",r).style("fill",fill);
 			}
+			if (drawingObject.type == "rect") {
+				newDraw = d3.select("#drawingSVG").append("rect").attr("id",drawingObject.id);
+				for (var s in drawingObject.style) {
+					newDraw.style(s, drawingObject.style[s]);
+				}
+				var start = drawingObject.options.points[0];
+				var end = drawingObject.options.points[1];
+				var w = end.x - start.x;
+				var h = end.y - start.y;
+				newDraw.attr("x",start.x).attr("y",start.y).attr("width",w).attr("height",h);
+			}
 
 		}
 	}
@@ -786,7 +797,11 @@ function UIBuilder(json_cfg, clientID) {
 										.interpolate("basis");
 
 					toUpdate.attr("d", lineFunction(drawingObject.options.points));
+				}
+				if (drawingObject.type == "rect") {
 
+					toUpdate.remove();
+					this.drawObject(drawingObject);
 				}
 			}
 		}else {
