@@ -39,7 +39,6 @@ if "%missingProgram%"=="yes" (
 rem ////////////////////////////////////////////////////////////////////////Everything is installed check for param
 
 if "%1" == "displayLaunch" (
-cd sysfiles
 cd GO-scripts
 cd SAGE2ffStart
 start firefox.ahk	
@@ -47,7 +46,7 @@ start firefox.ahk
 goto END
 )
 IF not "%1" == "" (
-	start "sage2server" /D "%~dp0\sysfiles" node "%~dp0\sysfiles\server.js" -f %1
+	start "sage2server" /D "%~dp0\" node "%~dp0\server.js" -f %1
 	goto END
 )
 

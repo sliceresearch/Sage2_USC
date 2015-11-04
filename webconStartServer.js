@@ -94,7 +94,7 @@ else {
 	console.log('Admin Panel password has not been setup, launching the first time config.');
 	console.log();
 	jsonString = { pwd: -1 }; 
-	executeConsoleCommand( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" http://localhost:9001/wcAdminPanel.html'  );
+	executeConsoleCommand( '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary) http://localhost:9001/wcAdminPanel.html'  );
 }
 global.adminPanelId = jsonString.pwd; //set the password
 
