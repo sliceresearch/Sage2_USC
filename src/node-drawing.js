@@ -97,7 +97,7 @@ DrawingManager.prototype.disablePaintingMode = function() {
 }
 
 DrawingManager.prototype.selectionModeOnOff = function() {
-	this.selectionMode = !this.selectionMode;
+	this.actualAction = "creatingSelection"
 }
 
 DrawingManager.prototype.sendModesToPalette = function() {
@@ -201,13 +201,13 @@ DrawingManager.prototype.findMaxId = function() {
 	return max;
 }
 
-DrawingManager.prototype.newSelectionBox = function(e,posX,posY) {
+DrawingManager.prototype.newSelectionBox = function(e) {
 
 	// Create new Selection box
 	var drawingId = this.getNewId(e.sourceId);
 	this.newDrawingObject[drawingId] = {};
 	this.newDrawingObject[drawingId]["id"] = drawingId;
-	this.newDrawingObject[drawingId]["type"] = "rectangle";
+	this.newDrawingObject[drawingId]["type"] = "rect";
 	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
 	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
 
@@ -306,16 +306,14 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		} else if (this.touchInsidePalette(posX,posY)) {
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
 			return;
-		} else if (this.selectionMode) {
-
-			if (this.selectedDrawingObject.length == 0) {
-				this.selectionStart = {x: posX, y: posY};
-				this.selectionTouchId = e.sourceId;
-			} else if (this.touchInsideSelection(posX, posY)) {
-				this.selectionMovementStart = {x: posX, y: posY};
-				this.selectionTouchId = e.sourceId;
-			}
-
+		} else if (this.actualAction == "creatingSelection") {
+			this.selectionStart = {x: posX, y: posY};
+			this.selectionTouchId = e.sourceId;
+			return;
+		} else if (this.touchInsideSelection(posX, posY)) {
+			this.selectionMovementStart = {x: posX, y: posY};
+			this.selectionTouchId = e.sourceId;
+			this.actualAction == "movingSelection";
 		} else {
 			this.drawingsUndone = [];
 			this.newDrawingObjectFunc(e, posX, posY);
@@ -337,10 +335,15 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		}
 
-		if ((this.selectionMode) && (this.selectionTouchId == e.sourceId) && (this.selectedDrawingObject.length > 0)) {
-			// this.selectionMove(posX, posY);
+		if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
+
 			return;
 		}
+
+		if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
+
+			return;
+		} 
 
 		this.updateDrawingObject(e, posX, posY);
 
@@ -350,7 +353,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
 			this.idMovingPalette = -1;
-		} else if ((this.selectionMode) && (this.selectionTouchId == e.sourceId)) {
+		} else if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
+
+			var drawn = false;
 
 			if (this.selectedDrawingObject.length == 0) {
 
@@ -370,14 +375,19 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 				this.selectionTouchId = -1;
 				this.selectDrawingObjects();
-				this.newSelectionBox();
-			} else {
-				this.selectionMove(posX - this.selectionMovementStart['x'], posY - this.selectionMovementStart['y']);
+				this.newSelectionBox(e);
+				drawn = true;
+				return;
 			}
 
+		} else if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
+			this.selectionMove(posX - this.selectionMovementStart['x'], posY - this.selectionMovementStart['y']);
 		}
 
-		this.realeaseId(e.sourceId);
+		if (!drawn) {
+			this.realeaseId(e.sourceId);
+			return;
+		}
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
