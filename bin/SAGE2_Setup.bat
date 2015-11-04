@@ -8,6 +8,7 @@ rem ////////////////////////////////////////////////////////////////////////vari
 
 SET missingProgram=no
 SET programMessage="pm: "
+SET hasChrome=no
 
 
 rem ////////////////////////////////////////////////////////////////////////first check if chrome exists
@@ -17,6 +18,7 @@ if not exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
 	SET "programMessage=%programMessage% Chrome needs to be installed."
 ) else (
 	rem ////////////////////////////////////////////////////////////////////////SET "programMessage=%programMessage% Chrome needs to be installed."
+	SET hasChrome=yes
 )
 if not exist "C:\Program Files (x86)\Mozilla Firefox\firefox.exe" (
 	SET missingProgram=yes
@@ -32,6 +34,11 @@ if not exist "C:\Program Files\AutoHotkey\AutoHotkey.exe" (
 )
 
 if "%missingProgram%"=="yes" (
+
+	if "%hasChrome%"=="yes" (
+		"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary)
+	)
+	SET "programMessage=%programMessage% For more information visit the binary support page at https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary)"
 	msg %username% %programMessage%
 	goto END
 )
