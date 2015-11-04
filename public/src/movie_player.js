@@ -176,7 +176,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					}
 					this.state.muted = true;
 				}
-			} else if (data.character === "1") {
+			} else if (data.character === "1" || data.character === "r") {
 				// 1 start of video
 				if (isMaster) {
 					wsio.emit('stopVideo', {id: this.div.id});
