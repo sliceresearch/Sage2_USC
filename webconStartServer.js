@@ -420,6 +420,7 @@ function wsSetWebControllerPwd(wsio, data) {
 	console.log("Startup script doesn't exist, adding to:" + startFilePath);
 
 	var sfpContents = 'cd "' + __dirname + '"\n';
+	sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
 	sfpContents += 'node webconStartServer.js';
 	fs.writeFileSync( startFilePath, sfpContents );
 
