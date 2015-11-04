@@ -500,7 +500,7 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 		}
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
-		// _this.scaleAppToFitDisplay(appInstance);
+		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
 	});
 };
@@ -733,7 +733,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 	// Use the defautl folder plus type as destination:
 	//    SAGE2_Media/pdf/ for instance
-	var localPath   = this.publicDir + dir + "/" + file.name;
+	var localPath   = path.join(this.publicDir, dir, file.name);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
@@ -757,7 +757,6 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				if (err2) {
 					console.log("internal error", err2);
 				} else {
-					console.log("EXIF> Adding", data.FileName);
 					assets.addFile(data.SourceFile, data, function() {
 						// get a valid URL for it
 						var aUrl = assets.getURL(data.SourceFile);
@@ -905,7 +904,8 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		resizeMode = instructions.resize;
 	}
 
-	var exif = assets.getExifData(file);
+	var exif  = assets.getExifData(file);
+	var s2url = assets.getURL(file);
 
 	return {
 		id: null,
@@ -932,6 +932,9 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		metadata: exif.metadata,
 		resizeMode: resizeMode,
 		sticky: instructions.sticky,
+		plugin: instructions.plugin,
+		file: file,
+		sage2URL: s2url,
 		date: new Date()
 	};
 };

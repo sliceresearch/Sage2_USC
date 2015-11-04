@@ -254,7 +254,7 @@ function Pointer() {
 			// window manipulation
 			if (this.mode === 0) {
 				if (this.winModeIconLoaded) {
-					this.winModeIcon.attr({display: "none"});
+					this.winModeIcon.attr({display: ""});
 				}
 				if (this.appModeIconLoaded) {
 					this.appModeIcon.attr({display: "none"});
@@ -265,9 +265,10 @@ function Pointer() {
 					this.winModeIcon.attr({display: "none"});
 				}
 				if (this.appModeIconLoaded) {
-					this.appModeIcon.attr({display: ""});
+					this.appModeIcon.attr({display: "none"});
 				}
 			}
+
 		}
 	};
 

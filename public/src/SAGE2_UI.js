@@ -50,6 +50,17 @@ if (!Function.prototype.bind) {
 		return fBound;
 	};
 }
+
+
+//
+// Polyfill for 'startsWith'
+//
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position) {
+		position = position || 0;
+		return this.indexOf(searchString, position) === position;
+	};
+}
 /* eslint-enable */
 //
 
@@ -135,7 +146,8 @@ function SAGE2_init() {
 				version: true,
 				time: false,
 				console: false
-			}
+			},
+			browser: __SAGE2__.browser
 		};
 		wsio.emit('addClient', clientDescription);
 
@@ -170,6 +182,11 @@ function SAGE2_init() {
 	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
+
+	// Force click for Safari, events:
+	//   webkitmouseforcewillbegin webkitmouseforcechanged
+	//   webkitmouseforcedown webkitmouseforceup
+	sage2UI.addEventListener("webkitmouseforceup", forceClick, false);
 
 	if (webix) {
 		// disabling the webix touch managment for now
@@ -220,7 +237,7 @@ function SAGE2_init() {
 // Show error message for 2 seconds (or time given as parameter)
 function showMessage(message, delay) {
 	var aMessage = webix.alert({
-		type:  "alert-warning",
+		type:  "alert-error",
 		title: "SAGE2 Error",
 		ok:    "OK",
 		text:  message
@@ -237,14 +254,25 @@ function setupListeners() {
 		pointerX    = 0;
 		pointerY    = 0;
 
+		var sage2UI = document.getElementById('sage2UICanvas');
+
 		// Build the file manager
 		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
 		webix.DragControl.addDrop("displayUIDiv", {
 			$drop: function(source, target, event) {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
-				var x = event.layerX / event.target.clientWidth;
-				var y = event.layerY / event.target.clientHeight;
+				var x, y;
+				if (hasMouse) {
+					// Desktop
+					x = event.layerX / event.target.clientWidth;
+					y = event.layerY / event.target.clientHeight;
+				} else {
+					// Mobile: convert from touch screen coordinate to element
+					var bbox = sage2UI.getBoundingClientRect();
+					x = (fileManager.dragPosition.x - bbox.left) / sage2UI.clientWidth;
+					y = (fileManager.dragPosition.y - bbox.top)  / sage2UI.clientHeight;
+				}
 				// Open the files
 				for (var i = 0; i < dnd.source.length; i++) {
 					fileManager.openItem(dnd.source[i], [x, y]);
@@ -688,9 +716,13 @@ function pointerPress(event) {
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the click
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerPress(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the click
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerPress(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -707,9 +739,13 @@ function pointerRelease(event) {
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the pointer release
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerRelease(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the pointer release
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerRelease(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -819,7 +855,8 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse) {
+		if (!hasMouse && !__SAGE2__.browser.isIPad &&
+			!__SAGE2__.browser.isAndroidTablet) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
@@ -1032,6 +1069,38 @@ function pointerScroll(event) {
 }
 
 /**
+ * Handler for force click event (safari)
+ *
+ * @method forceClick
+ * @param event {Event} event data
+ */
+function forceClick(event) {
+	// Check to see if the event has a force property
+	if ("webkitForce" in event) {
+		// Retrieve the force level
+		var forceLevel = event["webkitForce"];
+
+		// Retrieve the force thresholds for click and force click
+		var clickForce      = MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN;
+		var forceClickForce = MouseEvent.WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN;
+
+		// Check for force level within the range of a normal click
+		if (forceLevel >= clickForce && forceLevel < forceClickForce) {
+			// Perform operations in response to a normal click
+			// Check for force level within the range of a force click
+		} else if (forceLevel >= forceClickForce) {
+			// Perform operations in response to a force click
+			var rect        = event.target.getBoundingClientRect();
+			var touchStartX = event.clientX - rect.left;
+			var touchStartY = event.clientY - rect.top;
+			// simulate backspace
+			displayUI.keyDown(touchStartX, touchStartY, 8);
+			displayUI.keyUp(touchStartX, touchStartY, 8);
+		}
+	}
+}
+
+/**
  * Handler for touch start event
  *
  * @method touchStart
@@ -1053,6 +1122,7 @@ function touchStart(event) {
 			displayUI.pointerMove(touchStartX, touchStartY);
 			displayUI.pointerPress("left");
 			touchHold = setTimeout(function() {
+				// simulate backspace
 				displayUI.keyDown(touchStartX, touchStartY, 8);
 				displayUI.keyUp(touchStartX, touchStartY, 8);
 			}, 1500);
@@ -1115,6 +1185,17 @@ function touchStart(event) {
 	} else if (event.target.id === "sage2MobileRightButton") {
 		interactor.pointerPressMethod({button: 2});
 
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// toggle the pointer between app and window mode
+		interactor.togglePointerMode();
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
+		// Send play commad, spacebar for PDF and movies
+		console.log('Send play')
+		interactor.sendPlay();
 		event.preventDefault();
 		event.stopPropagation();
 	} else {
@@ -1253,6 +1334,14 @@ function touchMove(event) {
 		event.preventDefault();
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileLeftButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// nothing
 		event.preventDefault();
 		event.stopPropagation();

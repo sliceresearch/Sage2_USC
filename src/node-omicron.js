@@ -45,6 +45,7 @@ function OmicronManager(sysConfig) {
 	this.wandLabel = "wandTracker";
 	this.wandColor = "rgba(250, 5, 5, 1.0)";
 
+	this.touchOffset = [ 0, 0 ];
 	this.wandScaleDelta = 250;
 	this.acceleratedDragScale = 0;
 
@@ -96,6 +97,11 @@ function OmicronManager(sysConfig) {
 	} else {
 		this.omicronDataPort =  this.config.dataPort;
 		console.log('Omicron: Listening for input server on port: ', this.omicronDataPort);
+	}
+
+	if (this.config.touchOffset) {
+		this.touchOffset =  this.config.touchOffset;
+		console.log('Omicron: Touch points offset by: ', this.touchOffset);
 	}
 
 	if (sysConfig.resolution) {
@@ -307,6 +313,9 @@ OmicronManager.prototype.runTracker = function() {
 
 		var posX = e.posx * omicronManager.totalWidth;
 		var posY = e.posy * omicronManager.totalHeight;
+		posX += omicronManager.touchOffset[0];
+		posY += omicronManager.touchOffset[1];
+
 		var sourceID = e.sourceId;
 
 		// serviceType:

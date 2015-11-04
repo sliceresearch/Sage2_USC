@@ -54,7 +54,12 @@ function SAGE2_interaction(wsio) {
 	if (localStorage.SAGE2_ptrName  === undefined ||
 		localStorage.SAGE2_ptrName  === null ||
 		localStorage.SAGE2_ptrName  === "Default") {
-		localStorage.SAGE2_ptrName  = "SAGE2_user";
+		if (hasMouse) {
+			localStorage.SAGE2_ptrName  = "SAGE2_user";
+		} else {
+			localStorage.SAGE2_ptrName  = "SAGE2_mobile";
+
+		}
 	}
 	if (localStorage.SAGE2_ptrColor === undefined ||
 		localStorage.SAGE2_ptrColor === null) {
@@ -711,6 +716,27 @@ function SAGE2_interaction(wsio) {
 		if (event.preventDefault) {
 			event.preventDefault();
 		}
+	};
+
+	/**
+	* Simalute Shift-Tab with keys
+	*
+	* @method togglePointerMode
+	*/
+	this.togglePointerMode = function() {
+		this.wsio.emit('keyDown', {code: 16});
+		this.wsio.emit('keyPress', {code: 9, character: String.fromCharCode(9)});
+		this.wsio.emit('keyUp', {code: 16});
+	};
+
+	/**
+	* Send a spacebar key, for playing PDF and movies mostly
+	*
+	* @method sendPlay
+	*/
+	this.sendPlay = function() {
+		// send spacebar code 32
+		this.wsio.emit('keyPress', {code: 32, character: String.fromCharCode(32)});
 	};
 
 	/**

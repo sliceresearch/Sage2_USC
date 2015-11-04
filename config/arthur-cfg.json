@@ -15,8 +15,8 @@
 	},
 	ui: {
 		clock: 12,
-		show_version: true,
-		show_url: true,
+		show_version: false,
+		show_url: false,
 		widgetControlSize: 20,
 		auto_scale_ui: true,
 		calculate_viewing_distance: false
@@ -24,6 +24,8 @@
 	resolution: {
 		width: 2560,
 		height: 1600
+		//width: 1366,
+		//height: 768
 
 	},
 	dimensions: {
@@ -48,6 +50,18 @@
 		"127.0.0.1"
 	],
 	remote_sites: [
+		{
+			"name": "Cyber-Commons",
+			"host": "orion.evlrn.uic.edu",
+			"port": 443,
+			"secure": true
+		},
+		{
+			"name": "CAVE2",
+			"host": "lyra.evl.uic.edu",
+			"port": 443,
+			"secure": true
+		}
 	],
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
@@ -63,6 +77,7 @@
 			debug: false,
 			
 			// Touch gestures
+			touchOffset: [ 0, -60 ], // in pixels
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
 			
@@ -72,14 +87,6 @@
 			useOinputserver: false,
 			inputServerIP: "131.193.76.121",
 			msgPort: 28000
-		}
-	},
-    apis: {
-		twitter: {
-			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
-			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
-			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
-			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
 		}
 	}
 }
