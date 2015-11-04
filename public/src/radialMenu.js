@@ -539,7 +539,7 @@ function RadialMenu() {
 
 				// Generic
 				metadataTags[0] = { tag: metadata.FileName, longLabel: "File Name: " };
-				if( metadata.FileSize !== undefined ) {
+				if (metadata.FileSize !== undefined) {
 					metadataTags[1] = { tag: this.bytesToReadableString(metadata.FileSize), longLabel: "File Size: " };
 				}
 				metadataTags[2] = { tag: metadata.FileDate, longLabel: "File Date: " };
@@ -627,7 +627,7 @@ function RadialMenu() {
 								}
 							}
 							this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
-							if( line > 0 ) {
+							if (line > 0) {
 								metadataLine++;
 							}
 						}
@@ -645,13 +645,13 @@ function RadialMenu() {
 	 */
 	this.bytesToReadableString = function(bytes) {
 		var bytesInt = parseInt(bytes);
-		
-		if( bytesInt > Math.pow(1024, 3) ) {
-			return (bytesInt/Math.pow(1024, 3)).toFixed(2) + " GB"
-		} else if( bytesInt > Math.pow(1024, 2) ) {
-			return (bytesInt/Math.pow(1024, 2)).toFixed(2) + " MB"
-		} else if( bytesInt > Math.pow(1024, 1) ) {
-			return Math.round(bytesInt/Math.pow(1024, 1)) + " KB"
+
+		if (bytesInt > Math.pow(1024, 3)) {
+			return (bytesInt / Math.pow(1024, 3)).toFixed(2) + " GB"
+		} else if (bytesInt > Math.pow(1024, 2)) {
+			return (bytesInt / Math.pow(1024, 2)).toFixed(2) + " MB"
+		} else if (bytesInt > Math.pow(1024, 1)) {
+			return Math.round(bytesInt / Math.pow(1024, 1)) + " KB"
 		}
 
 		return bytes + " bytes"
@@ -892,7 +892,7 @@ function RadialMenu() {
 				this.dragThumbnailWindow = false;
 			}
 		} else if (type === "pointerScroll") {
-			if(this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false) {
+			if (this.thumbnailWindowScrollOffset.x <= 0 && this.notEnoughThumbnailsToScroll === false) {
 				var wheelDelta = this.thumbnailWindowScrollOffset.x + data.wheelDelta;
 				this.scrollThumbnailWindow({x: wheelDelta, y: 0 });
 			}
