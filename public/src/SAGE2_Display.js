@@ -876,7 +876,7 @@ function setupListeners() {
 								ctrl.animate({fill: fillVal}, 400, mina.bounce);
 							});
 						}
-					} else if (state === 1) {
+					}/* else if (state === 1) {
 						ctrlParent.select("#cover2").attr("visibility", "visible");
 						ctrlParent.select("#cover").attr("visibility", "hidden");
 						animationInfo.state = 0;
@@ -884,7 +884,7 @@ function setupListeners() {
 						ctrlParent.select("#cover").attr("visibility", "visible");
 						ctrlParent.select("#cover2").attr("visibility", "hidden");
 						animationInfo.state = 1;
-					}
+					}*/
 				} else {
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
 
