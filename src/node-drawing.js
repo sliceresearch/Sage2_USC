@@ -25,6 +25,7 @@ function DrawingManager(config) {
 	this.selectionTouchId = -1;
 	this.selectedDrawingObject = [];
 	this.selectionMovementStart = [];
+	this.selectionBox = null;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -211,7 +212,33 @@ DrawingManager.prototype.newSelectionBox = function(e) {
 	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
 	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
 
+	this.selectionBox = this.newDrawingObject[drawingId];
+
 	this.drawState.push(this.newDrawingObject[drawingId]);
+}
+
+DrawingManager.prototype.moveSelectionBox = function() {
+
+	if (this.selectionBox) {
+		this.selectionBox["options"]["points"] = [this.selectionStart, this.selectionEnd];
+	}
+	
+}
+
+DrawingManager.prototype.deleteSelectionBox = function() {
+
+	if (this.selectionBox) {
+		for (var drawingObj in this.drawState) {
+			var idx = this.drawState[drawingObj]['id'];
+			if (idx == this.selectionBox["id"]) {
+				this.drawState.splice(drawingObj, 1);
+				break;
+			}
+		}
+	}
+
+	this.initAll();
+	
 }
 
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
@@ -313,7 +340,12 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		} else if (this.touchInsideSelection(posX, posY)) {
 			this.selectionMovementStart = {x: posX, y: posY};
 			this.selectionTouchId = e.sourceId;
-			this.actualAction == "movingSelection";
+			this.actualAction = "movingSelection";
+			return;
+		} else if (this.actualAction == "movingSelection") {
+			this.actualAction = "drawing";
+			this.deleteSelectionBox();
+			return;
 		} else {
 			this.drawingsUndone = [];
 			this.newDrawingObjectFunc(e, posX, posY);
@@ -357,31 +389,35 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 			var drawn = false;
 
-			if (this.selectedDrawingObject.length == 0) {
-
-				if (this.selectionStart['x'] > posX) {
-					this.selectionEnd['x'] = this.selectionStart['x'];
-					this.selectionStart['x'] = posX;
-				} else {
-					this.selectionEnd['x'] = posX;
-				}
-
-				if (this.selectionStart['y'] > posY) {
-					this.selectionEnd['y'] = this.selectionStart['y'];
-					this.selectionStart['y'] = posY;
-				} else {
-					this.selectionEnd['y'] = posY;
-				}
-
-				this.selectionTouchId = -1;
-				this.selectDrawingObjects();
-				this.newSelectionBox(e);
-				drawn = true;
-				return;
+			if (this.selectionStart['x'] > posX) {
+				this.selectionEnd['x'] = this.selectionStart['x'];
+				this.selectionStart['x'] = posX;
+			} else {
+				this.selectionEnd['x'] = posX;
 			}
 
+			if (this.selectionStart['y'] > posY) {
+				this.selectionEnd['y'] = this.selectionStart['y'];
+				this.selectionStart['y'] = posY;
+			} else {
+				this.selectionEnd['y'] = posY;
+			}
+
+			this.selectionTouchId = -1;
+			this.selectDrawingObjects();
+			this.newSelectionBox(e);
+			drawn = true;
+			this.actualAction = "drawing";
+
 		} else if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
-			this.selectionMove(posX - this.selectionMovementStart['x'], posY - this.selectionMovementStart['y']);
+			var dx = posX - this.selectionMovementStart['x'];
+			var dy = posY - this.selectionMovementStart['y'];
+			this.selectionStart.x += dx;
+			this.selectionStart.y += dy;
+			this.selectionEnd.x += dx;
+			this.selectionEnd.y += dy;
+			this.moveSelectionBox();
+			this.selectionMove(dx, dy);
 		}
 
 		if (!drawn) {
