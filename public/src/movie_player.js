@@ -205,17 +205,27 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
+		/*if (data.code === 17){
+			if (data.state === "down"){
+				this.ctrlDown = true;
+			}
+			else if (data.state === "up"){
+				this.ctrlDown = false;
+			}
+
+		}*/
 		if (eventType === "keyboard") {
+
 			if (data.character === " ") {
 				this.togglePlayPause(date);
 			} else if (data.character === "l") {
 				this.toggleLoop(date);
 			} else if (data.character === "m") {
 				this.toggleMute(date);
-			} else if (data.character === "1") {
+			} else if (data.character === "r") {
 				// 1 start of video
 				this.stopVideo();
-			} else if (data.character === 'x') {
+			} else if (data.character === 'q') {
 				// Press 'x' to close itself
 				this.close();
 			}
