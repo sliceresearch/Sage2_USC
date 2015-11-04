@@ -471,7 +471,8 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app!!
 	var appName = registry.getDefaultApp(file);
-	var instructionsFile = path.join(this.publicDir, "apps", appName, "instructions.json");
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
 
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
@@ -479,8 +480,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 			throw err;
 		}
 
-		var appUrl = "uploads/apps/" + appName;
-		var appPath = path.join(_this.publicDir, "apps", appName);
+		var appUrl = getSAGE2URL(localPath);
+		var appPath = appName;
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
 		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
 		appInstance.data.file = aUrl;
@@ -500,7 +501,7 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 		}
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
-		// _this.scaleAppToFitDisplay(appInstance);
+		_this.scaleAppToFitDisplay(appInstance);
 		callback(appInstance);
 	});
 };
@@ -821,7 +822,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 					callback(appInstance, null);
 				});
 			}
-		}		else {
+		} else {
 			this.loadAppFromFileFromRegistry(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
 				callback(appInstance);
@@ -904,7 +905,8 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		resizeMode = instructions.resize;
 	}
 
-	var exif = assets.getExifData(file);
+	var exif  = assets.getExifData(file);
+	var s2url = assets.getURL(file);
 
 	return {
 		id: null,
@@ -931,6 +933,9 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		metadata: exif.metadata,
 		resizeMode: resizeMode,
 		sticky: instructions.sticky,
+		plugin: instructions.plugin,
+		file: file,
+		sage2URL: s2url,
 		date: new Date()
 	};
 };

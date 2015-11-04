@@ -549,7 +549,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 	*/
 	draw: function(date) {
 		if (this.shaderProgram === undefined || this.shaderProgram === null) {
-			this.log("waiting for shaders to load");
+			// this.log("waiting for shaders to load");
 			return;
 		}
 

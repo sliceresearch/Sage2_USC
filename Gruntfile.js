@@ -10,7 +10,12 @@ module.exports = function(grunt) {
 			},
 			nodeFiles: {
 				files: {
-					src: ['server.js', 'src/*.js']
+					src: [
+						"server.js",
+						"src/*.js",
+						"public/uploads/apps/welcome/plugin.js",
+						"public/uploads/apps/tweetcloud2/plugin.js",
+						]
 				},
 				options: { config: "build/.eslintrc" }
 			},
@@ -39,6 +44,8 @@ module.exports = function(grunt) {
 						"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
 						"public/uploads/apps/US_weather/USweather.js",
 						"public/uploads/apps/web_earth/web_earth.js",
+						"public/uploads/apps/welcome/welcome.js",
+						"public/uploads/apps/tweetcloud2/tweetcloud.js",
 						"public/uploads/apps/whiteboard/whiteboard.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
@@ -48,7 +55,12 @@ module.exports = function(grunt) {
 		},
 		jscs: {
 			serverFiles: {
-				src: ['server.js', 'src/*.js'],
+				src: [
+					"server.js",
+					"src/*.js",
+					"public/uploads/apps/welcome/plugin.js",
+					"public/uploads/apps/tweetcloud2/plugin.js",
+					],
 			},
 			browserFiles: {
 				src: ['public/src/*.js', 'public/admin/*.js']
@@ -69,6 +81,8 @@ module.exports = function(grunt) {
 					"public/uploads/apps/sticky_note/sticky_note.js",
 					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
 					"public/uploads/apps/US_weather/USweather.js",
+					"public/uploads/apps/welcome/welcome.js",
+					"public/uploads/apps/tweetcloud2/tweetcloud.js",
 					"public/uploads/apps/web_earth/web_earth.js",
 					"public/uploads/apps/whiteboard/whiteboard.js",
 					"public/uploads/apps/zoom/zoom.js"

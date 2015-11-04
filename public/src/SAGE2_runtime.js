@@ -62,6 +62,7 @@ function SAGE2_browser() {
 	browser.isIPod     = userAgent.indexOf("ipod") >= 0;
 	browser.isIOS      = !browser.isWinPhone && (browser.isIPhone || browser.isIPad || browser.isIPod);
 	browser.isAndroid  = userAgent.indexOf("android") >= 0;
+	browser.isAndroidTablet = (userAgent.indexOf("android") >= 0) && !(userAgent.indexOf("mobile") >= 0);
 	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 	browser.isLinux    = userAgent.indexOf("linux") >= 0;
@@ -270,16 +271,6 @@ function sage2Log(msgObject) {
  */
 function broadcast(dataObject) {
 	wsio.emit('broadcast', dataObject);
-}
-
-/**
- * Send the message to server to perform a tweet search
- *
- * @method searchTweets
- * @param tweetObject {Object} data to perform the search
- */
-function searchTweets(tweetObject) {
-	wsio.emit('searchTweets', tweetObject);
 }
 
 /**

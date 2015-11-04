@@ -60,6 +60,7 @@
 		"websocketio": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
+		"cheerio": "latest",
 		"ytdl-core": "latest"
 	},
 	"devDependencies": {
