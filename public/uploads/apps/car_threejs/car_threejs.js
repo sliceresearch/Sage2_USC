@@ -6,18 +6,33 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2015
+
+//
+// original SAGE implementation: Luc Renambot
+// contributed by Garry Keltie
+//     garry.keltie@gmail.com
+//
+
 
 "use strict";
 
 /* global THREE */
 
 
-var car_threejs = SAGE2_App.extend({
-	init: function(data) {
-		this.SAGE2Init("div", data);
+/**
+ * WebGL 3D application, inherits from SAGE2_WebGLApp
+ *
+ * @class car_threejs
+ */
+var car_threejs = SAGE2_WebGLApp.extend({
 
-		this.resizeEvents = "continuous";
+	init: function(data) {
+		// Create a canvas into the DOM
+		this.WebGLAppInit('canvas', data);
+
+		// Set the background to black
+		this.element.style.backgroundColor = 'black';
 
 		this.renderer = null;
 		this.camera   = null;
@@ -28,7 +43,6 @@ var car_threejs = SAGE2_App.extend({
 		this.sceneCube  = null;
 		this.dragging   = null;
 		this.rotating   = null;
-
 
 		this.element.id = "div" + data.id;
 		this.frame  = 0;
@@ -49,16 +63,15 @@ var car_threejs = SAGE2_App.extend({
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
 		this.controls.addButton({type: "loop", position: 2, identifier: "Loop"});
 		this.controls.finishedAddingControls();
+
+		this.resizeCanvas();
+		this.refresh(data.date);
 	},
 
 	initialize: function(date) {
 		console.log("initialize ctm");
-
-		// Allow cross-origin access, needed for wall to wall sharing
-		THREE.ImageUtils.crossOrigin = 'anonymous';
-
 		// CAMERA
-		this.camera = new THREE.PerspectiveCamera(25, this.width / this.width, 1, 10000);
+		this.camera = new THREE.PerspectiveCamera(25, this.width / this.height, 1, 10000);
 		this.camera.position.set(185, 40, 170);
 
 		this.orbitControls = new THREE.OrbitControls(this.camera, this.element);
@@ -74,9 +87,10 @@ var car_threejs = SAGE2_App.extend({
 
 		// SKYBOX
 		this.sceneCube  = new THREE.Scene();
-		this.cameraCube = new THREE.PerspectiveCamera(25, this.width / this.width, 1, 10000);
+		this.cameraCube = new THREE.PerspectiveCamera(25, this.width / this.height, 1, 10000);
 		this.sceneCube.add(this.cameraCube);
 
+		// Allow cross-origin access, needed for wall to wall sharing
 		var r    = this.resrcPath + "textures/";
 		var urls = [ r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg" ];
 		var textureCube = THREE.ImageUtils.loadTextureCube(urls);
@@ -96,7 +110,6 @@ var car_threejs = SAGE2_App.extend({
 		this.sceneCube.add(mesh);
 
 		// LIGHTS
-
 		var light = new THREE.PointLight(0xffffff, 1);
 		light.position.set(2, 5, 1);
 		light.position.multiplyScalar(30);
@@ -110,20 +123,20 @@ var car_threejs = SAGE2_App.extend({
 		this.scene.add(new THREE.AmbientLight(0x050505));
 
 		// RENDERER
-		this.renderer = new THREE.WebGLRenderer({ antialias: true });
-		this.renderer.setSize(this.width, this.height);
-		this.renderer.autoClear = false;
+		if (this.renderer == null) {
+			this.renderer = new THREE.WebGLRenderer({
+				canvas: this.canvas,
+				antialias: true
+			});
+			this.renderer.setSize(this.width, this.height);
+			this.renderer.autoClear = false;
 
-		this.element.appendChild(this.renderer.domElement);
-
-		this.renderer.gammaInput  = true;
-		this.renderer.gammaOutput = true;
-
+			this.renderer.gammaInput  = true;
+			this.renderer.gammaOutput = true;
+		}
 		// Loader
 		var start = Date.now();
-		var loaderCTM = new THREE.CTMLoader(false);
-		// Allow cross origin loading
-		loaderCTM.crossOrigin = "anonymous";
+		var loaderCTM = new THREE.CTMLoader(true);
 
 		var position = new THREE.Vector3(-105, -78, -40);
 		var scale    = new THREE.Vector3(30, 30, 30);
@@ -197,18 +210,18 @@ var car_threejs = SAGE2_App.extend({
 		}
 	},
 
-	resize: function(date) {
-		this.width  = this.element.clientWidth;
-		this.height = this.element.clientHeight;
-		this.renderer.setSize(this.width, this.height);
+	// Local Threejs specific resize calls.
+	resizeApp: function(resizeData) {
+		if (this.renderer != null && this.camera != null) {
+			this.renderer.setSize(this.canvas.width, this.canvas.height);
 
-		this.camera.aspect = this.width / this.height;
-		this.camera.updateProjectionMatrix();
-
-		this.cameraCube.aspect = this.width / this.height;
-		this.cameraCube.updateProjectionMatrix();
-
-		this.refresh(date);
+			this.camera.setViewOffset(this.sage2_width, this.sage2_height,
+									resizeData.leftViewOffset, resizeData.topViewOffset,
+									resizeData.localWidth, resizeData.localHeight);
+			this.cameraCube.setViewOffset(this.sage2_width, this.sage2_height,
+									resizeData.leftViewOffset, resizeData.topViewOffset,
+									resizeData.localWidth, resizeData.localHeight);
+		}
 	},
 
 	event: function(eventType, position, user_id, data, date) {
