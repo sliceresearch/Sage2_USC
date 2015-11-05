@@ -107,7 +107,7 @@ module.exports = function(grunt) {
 			compile: {
 				name: 'SAGE2',
 				description: 'A New Approach for Data Intensive Collaboration Using Scalable Resolution Shared Displays',
-				version: '0.3.0',
+				version: '1.0.0',
 				url: 'http://sage2.sagecommons.org',
 				options: {
 					linkNatives: "true",

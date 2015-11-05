@@ -26,7 +26,7 @@
  * @type {Object}
  */
 var __SAGE2__ = {};
-__SAGE2__.version = "0.3.0";
+__SAGE2__.version = "1.0.0";
 
 
 /**
