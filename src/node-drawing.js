@@ -12,7 +12,7 @@ function DrawingManager(config) {
 	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap": "round"};
 	this.selectionBoxStyle = {fill: "none", stroke: "white", "stroke-width": "5px","stroke-dasharray": "10,10"};
 	this.drawingMode = true;
-	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style, scaleX: 3,scaleY:3}];
+	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
 	this.palettePosition = {};
@@ -38,6 +38,13 @@ function DrawingManager(config) {
 
 }
 
+DrawingManager.prototype.scalePoint = function(point,origin,scaleX,scaleY) {
+	var dx = point.x - origin.x; 
+	var dy = point.y - origin.y;
+	var newDX = dx * scaleX;
+	var newDY = dy * scaleY;
+	return {x: origin.x + newDX, y: origin.y + newDY} 
+}
 
 DrawingManager.prototype.calculateTileDimensions = function(config) {
 
@@ -213,8 +220,6 @@ DrawingManager.prototype.newSelectionBox = function(e) {
 	this.newDrawingObject[drawingId]["type"] = "rect";
 	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
 	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
-	this.newDrawingObject[drawingId]["scaleX"] = 1;
-	this.newDrawingObject[drawingId]["scaleY"] = 1;
 
 	this.selectionBox = this.newDrawingObject[drawingId];
 
@@ -254,8 +259,6 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 	this.newDrawingObject[drawingId]["type"] = "circle";
 	this.newDrawingObject[drawingId]["options"] = { points: [ {x: posX,y: posY}] };
 	this.newDrawingObject[drawingId]["style"] = this.copy(this.style);
-	this.newDrawingObject[drawingId]["scaleX"] = 1;
-	this.newDrawingObject[drawingId]["scaleY"] = 1;
 
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
@@ -338,8 +341,11 @@ DrawingManager.prototype.selectionMove = function(x, y) {
 DrawingManager.prototype.selectionZoom = function(sx, sy) {
 
 	for (var drawingObj in this.selectedDrawingObject) {
-		this.selectedDrawingObject[drawingObj].scaleX = sx;
-		this.selectedDrawingObject[drawingObj].scaleY = sy;
+		var points = this.selectedDrawingObject[drawingObj]["points"];
+		for (i in points) {
+			var p = points[i];
+			points[i] = this.scalePoint(p,this.selectionStart,sx,sy);
+		}
 	}
 
 	this.initAll();
