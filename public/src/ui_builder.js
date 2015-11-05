@@ -52,6 +52,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.wallRatio      = null;
 	this.browserRatio   = null;
 	this.ratio          = "fit";
+	this.scale          = 1;
 
 	this.pointerItems   = {};
 	this.radialMenus    = {};
@@ -121,6 +122,12 @@ function UIBuilder(json_cfg, clientID) {
 					_this.bg.style.webkitTransform = "scale(" + (newr) + ")";
 					_this.bg.style.mozTransform    = "scale(" + (newr) + ")";
 					_this.bg.style.transform       = "scale(" + (newr) + ")";
+					_this.scale = newr;
+					// Rescale the box around the pointers
+					for (var key in _this.pointerItems) {
+						var ptr = _this.pointerItems[key];
+						ptr.updateBox(_this.scale);
+					}
 				}
 			};
 			window.onkeydown = function(event) {
@@ -131,6 +138,7 @@ function UIBuilder(json_cfg, clientID) {
 						_this.bg.style.mozTransform = "scale(1)";
 						_this.bg.style.transform = "scale(1)";
 						_this.ratio = "full";
+						_this.scale = 1;
 					} else if (_this.ratio === "full") {
 						var newr;
 						if (_this.wallRatio >= _this.browserRatio) {
@@ -138,10 +146,16 @@ function UIBuilder(json_cfg, clientID) {
 						} else {
 							newr = document.documentElement.clientHeight / wallHeight;
 						}
-						_this.bg.style.webkitTransform = "scale(" + (newr) + ")";
-						_this.bg.style.mozTransform    = "scale(" + (newr) + ")";
-						_this.bg.style.transform       = "scale(" + (newr) + ")";
+						_this.scale = newr;
+						_this.bg.style.webkitTransform = "scale(" + _this.scale + ")";
+						_this.bg.style.mozTransform    = "scale(" + _this.scale + ")";
+						_this.bg.style.transform       = "scale(" + _this.scale + ")";
 						_this.ratio = "fit";
+					}
+					// Rescale the box around the pointers
+					for (var key in _this.pointerItems) {
+						var ptr = _this.pointerItems[key];
+						ptr.updateBox(_this.scale);
 					}
 					// This somehow forces a reflow of the div and show the scrollbars as needed
 					// Needed with chrome v36
@@ -151,6 +165,8 @@ function UIBuilder(json_cfg, clientID) {
 			};
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
+			// Trigger an initial resize
+			window.onresize();
 		} else {
 			document.body.style.backgroundColor = "#000000";
 			this.bg.style.backgroundColor = this.json_cfg.background.color || "#333333";
@@ -770,6 +786,8 @@ function UIBuilder(json_cfg, clientID) {
 		this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 		this.pointerItems[pointerElem.id].setColor(pointer_data.color);
 		this.pointerItems[pointerElem.id].setSourceType(pointer_data.sourceType);
+		// Rescale the box around the pointer
+		this.pointerItems[pointerElem.id].updateBox(this.scale);
 
 		this.pointerItems[pointerElem.id].isShown = true;
 	};
@@ -987,7 +1005,6 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Object} data
 	*/
 	this.updateRadialMenuApps = function(data) {
-		console.log("updateRadialMenuApps");
 		var menuElem = document.getElementById(data.id + "_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateAppFileList(data.fileList);
