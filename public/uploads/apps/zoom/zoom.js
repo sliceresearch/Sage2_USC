@@ -161,12 +161,12 @@ var zoom = SAGE2_App.extend({
 					break;
 				case "ZoomIn":
 					// zoom in
-					this.viewer.viewport.zoomBy(0.8);
+					this.viewer.viewport.zoomBy(1.2);
 					this.lastZoom = date;
 					break;
 				case "ZoomOut":
 					// zoom out
-					this.viewer.viewport.zoomBy(1.2);
+					this.viewer.viewport.zoomBy(0.8);
 					this.lastZoom = date;
 					break;
 				default:
