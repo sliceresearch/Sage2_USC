@@ -481,10 +481,10 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 		}
 
 		var appUrl = getSAGE2URL(localPath);
-		var appPath = appName;
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
-		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
-		appInstance.data.file = aUrl;
+
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
 		callback(appInstance);
 	});
 };
@@ -752,34 +752,35 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		if (err1) {
 			throw err1;
 		}
+		// try to process all the files with exiftool
+		exiftool.file(localPath, function(err2, data) {
+			if (err2) {
+				console.log("internal error", err2);
+			} else {
+				assets.addFile(data.SourceFile, data, function() {
+					// get a valid URL for it
+					var aUrl = assets.getURL(data.SourceFile);
+					// calculate a complete URL with hostname
+					var external_url = url.resolve(_this.hostOrigin, aUrl);
 
-		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
-			exiftool.file(localPath, function(err2, data) {
-				if (err2) {
-					console.log("internal error", err2);
-				} else {
-					assets.addFile(data.SourceFile, data, function() {
-						// get a valid URL for it
-						var aUrl = assets.getURL(data.SourceFile);
-						// calculate a complete URL with hostname
-						var external_url = url.resolve(_this.hostOrigin, aUrl);
-
-						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-								type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-							callback(appInstance, handle);
-						});
+					_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+							type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+						callback(appInstance, handle);
 					});
-				}
-			});
-		} else {
-			// get a valid URL for it
-			var aUrl = assets.getURL(localPath);
-			var external_url = null;
-			_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-					type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-				callback(appInstance, handle);
-			});
-		}
+				});
+			}
+		});
+		// if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
+		// } else {
+		// 	// get a valid URL for it
+		// 	var aUrl = assets.getURL(localPath);
+		// 	var external_url = null;
+		// 	console.log('Load', localPath, aUrl, mime_type, file.name, external_url)
+		// 	_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+		// 			type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+		// 		callback(appInstance, handle);
+		// 	});
+		// }
 	});
 };
 
