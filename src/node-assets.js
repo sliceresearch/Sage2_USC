@@ -642,13 +642,17 @@ var exifAsync = function(cmds, cb) {
 					instructions.directory !== null && instructions.directory !== "") {
 				metadata.fileTypes = instructions.fileTypes;
 				metadata.directory = instructions.directory;
-				registry.register(app, instructions.fileTypes, instructions.directory, false);
 			} else {
 				metadata.fileTypes = [];
 			}
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
 			addFile(file, exif, function() {
+				if (metadata.fileTypes.length > 0) {
+					var s2url = getURL(file);
+					registry.register(s2url, instructions.fileTypes, instructions.directory, false);
+				}
+
 				if (cmds.length > 0) {
 					execNext();
 				} else {
