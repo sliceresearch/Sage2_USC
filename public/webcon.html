@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
+
+    <title>Sage Web Controller</title>
+
+    <script type="text/javascript" src="src/websocket.io.js"></script>
+    <script type="text/javascript" src="src/md5.js"></script>
+    <script type="text/javascript" src="src/wc-pacSetup.js"></script>
+
+    <style> 
+
+    
+    .showExpand {
+        display: visible;
+        transition: 'all 2s';
+    }
+
+    .hideExpand {
+        display: none;
+        transition: 'all 2s';
+    }
+
+    html *
+    {
+       font-family: Arial;
+    }
+
+
+    </style>
+
+</head>
+
+<body onload="initialize()">
+
+    <img id='sageLogo' src="images/sage2_logo.png" alt="SAGE2">
+
+    <div onclick="startSage()" 
+        style='
+        background-color:#779242;
+        color:white;
+        position:absolute;
+        text-align:center;
+        width:50%;
+        height:12%;
+        top:20%;
+        left:25%
+        '>
+        <h1 >Start</h1>
+    </div>
+
+    <div onclick="stopSage()"
+        style='
+        background-color:#933837;
+        color:white;
+        position:absolute;
+        text-align:center;
+        width:50%;
+        height:12%;
+        top:32%;
+        left:25%
+        '>
+        <h1>Stop</h1>
+    </div>
+    <div onclick="toggleDivView('expSetPassword')"
+        style='
+        background-color:#604B7A;
+        color:white;
+        position:absolute;
+        text-align:center;
+        width:50%;
+        height:12%;
+        top:44%;
+        left:25%
+        '>
+        <h1>Set Meeting ID</h1>
+    </div>
+    <div id='expSetPassword' class='hideExpand'
+        style='
+        background-color:#604B7A;
+        color:white;
+        position:absolute;
+        text-align:center;
+        width:50%;
+        top:56%;
+        left:25%;
+        '>
+        <br>
+        Will take effect on next SAGE2 startup.
+        <br><br>
+        <input type="text" id="setPasswordValue">
+        <br><br>
+        <button onclick="setPasswordToServer()" >Set ID</button>
+        <br><br>
+
+        <div style='
+            position:absolute;
+            width:102%;
+            height:1%;
+            background-color:#FFFFFF;
+            top:0px;
+            left:-1%;
+            '>
+        </div>
+    </div>
+
+<div id='overlayDiv' style='
+            width:100%;
+            height:100%'
+            class='hideExpand'> 
+    <div id='overlayBack' 
+        style=' position:absolute;
+                width:100%;
+                height:100%;
+                background-color: gray;
+                opacity:0.4 ' >
+
+        
+    </div>
+    <div    id='overlayMessage' 
+            style=' border-radius:25px;
+                    border: 10px solid black;
+                    padding: 2%;
+                    width: 30%;
+                    height: 10%;
+                    text-align:center;
+                    position:absolute;
+                    left: 35%;
+                    top: 30%;
+                    background-color:white;
+                    opacity: 1'
+    >
+    longer message
+    </div>
+
+    <button onclick="hideOverlayMessage()"
+            style=' width: 5%;
+                    height: 4%;
+                    text-align:center;
+                    position:absolute;
+                    left: 50%;
+                    top: 40%;
+                    background-color:white;
+                    opacity: 1'> OK </button>
+
+</div>
+
+
+</body>
+
+
+<script type="text/javascript">
+
+function sendConsoleLog() {
+    wsio.emit('consoleLog', { comment: 'button was pressed' } );
+}
+
+function sendConvertTomd5() {
+    var inputPhrase = document.getElementById('phraseValue').value;
+    wsio.emit('convertTomd5', { phrase: inputPhrase })
+}
+
+function sendRequestForConfig() {
+    wsio.emit( 'requestForConfig' );
+    console.log('sent request for config');
+}
+
+function sendNewConfigSettings() {
+    var configData = {
+            port: document.getElementById('confPort').value,
+            resolution: { width: document.getElementById('confResolutionWidth').value, height: document.getElementById('confResolutionHeight').value},
+            layout: { rows: document.getElementById('confLayoutRows').value, columns: document.getElementById('confLayoutColumns').value }
+    };
+
+
+    wsio.emit( 'newConfigSettings', configData );
+}
+
+
+function toggleDivView(divID) {
+    var workingDiv = document.getElementById(divID);
+
+    //workingDiv.style.transition = "all 2s";
+
+    if(workingDiv.className.indexOf('showExpand') < 0) { workingDiv.className = 'showExpand'; }
+    else { workingDiv.className = 'hideExpand'; }
+
+    // if(workingDiv.style.display === 'block') { workingDiv.style.display = 'none'; }
+    // else { workingDiv.style.display = 'block'; } 
+
+
+    if (divID ==="expConfiguration") {
+
+        getServerConfigFileData();
+
+
+    } //end 
+
+} //end toggle
+
+
+function addAlternativeHostEntry() {
+    var workingDiv;
+    for(var i = 2; i < 10; i++) {
+        workingDiv = document.getElementById('cfgAH' + i);
+        if(workingDiv == null) {
+            workingDiv = document.getElementById('cfgAH');
+            workingDiv.innerHTML += " <br> <input type='text' id='cfgAH" + i + "'>";
+            break;
+        }
+    }
+} //end addAlternativeHostEntry
+
+function removeAlternativeHostEntry() {
+    var workingDiv;
+    for(var i = 2; i < 10; i++) {
+        workingDiv = document.getElementById('cfgAH' + i);
+        if(workingDiv == null) {
+
+            //if null on 2 then, there was only 1. the alternative host should by default be 127.0.0.1
+            //basically min of 1 alternative host.
+            if( i > 2) {
+                workingDiv = document.getElementById('cfgAH');
+
+                workingDiv.innerHTML = workingDiv.innerHTML.substring( 
+                    0, workingDiv.innerHTML.lastIndexOf('<br>')   ); 
+            }
+            break;
+        }
+    }
+} //end addAlternativeHostEntry
+
+function addRemoteSiteEntry() {
+    var workingDiv = document.getElementById('cfgRS');
+    for(var i = 2; i < 10; i++) {
+        if( workingDiv.innerHTML.indexOf('Site ' + i + ':<br>') < 0 ) {
+            workingDiv.innerHTML += 'Site ' + i + ':<br>';
+            workingDiv.innerHTML += "Name:<input type='text' id='cfgRS"+i+"name'><br>";
+            workingDiv.innerHTML += "Host:<input type='text' id='cfgRS"+i+"host'><br>";
+            workingDiv.innerHTML += "Port:<input type='text' id='cfgRS"+i+"port'><br>";
+            workingDiv.innerHTML += "Secure:<input type='text' id='cfgRS"+i+"secure'><br>";
+            break;
+        }
+    }
+} //end addRemoteSiteEntry
+
+function removeRemoteSiteEntry() {
+    var workingDiv;
+    for(var i = 2; i < 10; i++) {
+        workingDiv = document.getElementById('cfgRS' + i + 'name');
+        if(workingDiv == null) {
+            if( i > 2 ) {
+                workingDiv = document.getElementById('cfgRS');
+                workingDiv.innerHTML = workingDiv.innerHTML.substring(0, workingDiv.innerHTML.indexOf('Site ' + (i-1) + ':<br>') );
+            }
+            break;
+        }
+    }
+} //end addRemoteSiteEntry
+
+
+
+function getServerConfigFileData() {
+    console.log('getServerConfigFileData function called');
+    wsio.emit('giveClientConfiguration');
+} //end getServerConfigFileData
+
+
+function sendConfigFileData() {
+    console.log('sendConfigFileData function called');
+
+
+    var packet = {};
+    var workingDiv;
+
+
+    workingDiv = document.getElementById('cfgHost');
+    if( workingDiv == null || workingDiv.value.trim().length <= 0 ) {
+        console.log("Missing Host, not sending packet");
+        return;
+    }
+    packet.host = workingDiv.value.trim();
+
+
+
+    workingDiv = document.getElementById('cfgPortDefault');
+    if( workingDiv == null || isNaN( workingDiv.value.trim() ) ) {
+        console.log("Missing Port default, not sending packet");
+        return;
+    }
+    packet.index_port = parseInt(workingDiv.value.trim());
+
+
+
+    workingDiv = document.getElementById('cfgPortSecure');
+    if( workingDiv == null || isNaN( workingDiv.value.trim() ) ) {
+        console.log("Missing Port secure, not sending packet");
+        return;
+    }
+    packet.port = parseInt(workingDiv.value.trim());
+
+
+
+
+    workingDiv = document.getElementById('cfgRwidth');
+    if( workingDiv == null || isNaN( workingDiv.value.trim() ) ) {
+        console.log("Missing Resolution Width, not sending packet");
+        return;
+    }
+    workingDiv = document.getElementById('cfgRheight');
+    if( workingDiv == null || isNaN( workingDiv.value.trim() ) ) {
+        console.log("Missing Resolution height, not sending packet");
+        return;
+    }
+    packet.resolution = {};
+    packet.resolution.height = parseInt( workingDiv.value.trim() );
+    workingDiv = document.getElementById('cfgRwidth');
+    packet.resolution.width = parseInt( workingDiv.value.trim() );
+
+
+    workingDiv = document.getElementById('cfgLrows');
+    if( workingDiv == null || isNaN( workingDiv.value.trim() ) ) {
+        console.log("Missing Layout rows, not sending packet");
+        return;
+    }
+    workingDiv = document.getElementById('cfgLcolumns');
+    if( workingDiv == null || isNaN( workingDiv.value.trim() ) ) {
+        console.log("Missing Layout columns, not sending packet");
+        return;
+    }
+    packet.layout = {};
+    packet.layout.columns = parseInt( workingDiv.value.trim() );
+    workingDiv = document.getElementById('cfgLrows');
+    packet.layout.rows = parseInt( workingDiv.value.trim() );
+
+
+    packet.alternate_hosts = [];
+    var x;
+    for (x = 1; x < 100; x++) {
+        workingDiv = document.getElementById('cfgAH' + x);
+        if(workingDiv == null) {
+            break;
+        }
+        if(workingDiv.value.trim().length > 0) { packet.alternate_hosts.push( workingDiv.value.trim() ); }
+    }
+
+    packet.remote_sites = [];
+    var remoteSite = {};
+    for (x = 1; x < 100; x++) {
+        workingDiv = document.getElementById('cfgRS' + x + 'name');
+
+        if(workingDiv == null) {
+            break;
+        }
+        if(workingDiv.value.trim().length > 0) { remoteSite.name =  workingDiv.value.trim(); }
+        else { continue; }
+        workingDiv = document.getElementById('cfgRS' + x + 'host');
+        if(workingDiv.value.trim().length > 0) { remoteSite.host =  workingDiv.value.trim(); }
+        else { continue; }
+        workingDiv = document.getElementById('cfgRS' + x + 'port');
+        if(workingDiv.value.trim().length > 0) { remoteSite.port =  workingDiv.value.trim(); }
+        else { continue; }
+        workingDiv = document.getElementById('cfgRS' + x + 'secure');
+        if(workingDiv.value.trim().length > 0) { remoteSite.secure =  workingDiv.value.trim(); }
+        else { continue; }
+        packet.remote_sites.push( remoteSite );
+    }
+
+    packet.dependencies = {};
+
+    workingDiv = document.getElementById('cfgDependencyIM');
+    if( workingDiv == null || workingDiv.value.trim().length <= 0 ) { }
+    else { packet.ImageMagick = workingDiv.value.trim(); }
+
+
+    workingDiv = document.getElementById('cfgDependencyFFM');
+    if( workingDiv == null || workingDiv.value.trim().length <= 0 ) { }
+    else { packet.FFMpeg = workingDiv.value.trim(); }
+
+
+    console.log('Ready to send config to server, contents:');
+    console.dir( packet );
+
+    wsio.emit('giveServerConfiguration', packet);
+
+} //end sendConfigFileData
+
+function setPasswordToServer() {
+    var workingDiv = document.getElementById('setPasswordValue');
+    var packet = {};
+    var typedValue = workingDiv.value.trim();
+    packet.password = md5(typedValue);
+
+    console.log('Setting    ' + typedValue + '    as the new password.');
+    console.log('Packet contains hash:    ' + packet.password );
+
+    wsio.emit('setMeetingId', packet);
+}
+
+
+function startSage() {
+    
+    var workingDiv = document.getElementById('expSageStart');
+    wsio.emit('startSage');
+    // if(workingDiv.className.indexOf('showExpand') < 0) {
+    //     wsio.emit('startSage');
+    //     workingDiv.className = 'showExpand';
+    // }
+
+
+} //end startSage
+
+function stopSage() {
+    
+    var workingDiv = document.getElementById('expSageStop');
+    wsio.emit('stopSage');
+    // if(workingDiv.className.indexOf('showExpand') < 0) {
+    //     wsio.emit('stopSage');
+    //     workingDiv.className = 'showExpand';
+    // }
+
+} //end stopSage
+
+function hideOverlayMessage() {
+    var workingDiv = document.getElementById('overlayDiv');
+    workingDiv.className = 'hideExpand';
+}
+
+
+</script>
+
+
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -264,7 +264,8 @@ function initializeSage2Server() {
 	//   not protected by default
 	config.passordProtected = false;
 	// Check for the session password file
-	var passwordFile = path.join("keys", "passwd.json");
+	var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
+	var passwordFile = userDocPath + 'passwd.json';
 	if (typeof program.password  === "string" && program.password.length > 0) {
 		// Creating a new hash from the password
 		global.__SESSION_ID = md5.getHash(program.password);
