@@ -1,5 +1,7 @@
 "use strict"
 
+// Put a Tutorial, maybe an overlay text to say that drawing is enabled
+
 function DrawingManager(config) {
 
 	this.lastId = 0;
@@ -10,7 +12,7 @@ function DrawingManager(config) {
 	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap": "round"};
 	this.selectionBoxStyle = {fill: "none", stroke: "white", "stroke-width": "5px","stroke-dasharray": "10,10"};
 	this.drawingMode = true;
-	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
+	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style, scaleX: 3,scaleY:3}];
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
 	this.palettePosition = {};
@@ -211,6 +213,8 @@ DrawingManager.prototype.newSelectionBox = function(e) {
 	this.newDrawingObject[drawingId]["type"] = "rect";
 	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
 	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
+	this.newDrawingObject[drawingId]["scaleX"] = 1;
+	this.newDrawingObject[drawingId]["scaleY"] = 1;
 
 	this.selectionBox = this.newDrawingObject[drawingId];
 
@@ -250,6 +254,8 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 	this.newDrawingObject[drawingId]["type"] = "circle";
 	this.newDrawingObject[drawingId]["options"] = { points: [ {x: posX,y: posY}] };
 	this.newDrawingObject[drawingId]["style"] = this.copy(this.style);
+	this.newDrawingObject[drawingId]["scaleX"] = 1;
+	this.newDrawingObject[drawingId]["scaleY"] = 1;
 
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
@@ -288,6 +294,20 @@ DrawingManager.prototype.touchInsideSelection = function(x, y) {
 
 }
 
+DrawingManager.prototype.touchInsideSelectionZoomBox = function(x, y) {
+	var w = this.selectionEnd['x'] - this.selectionStart['x'];
+	var h = this.selectionEnd['y'] - this.selectionStart['y'];
+
+	if (x >= this.selectionStart['x'] + 0.9 * w &&
+		y >= this.selectionStart['y'] + 0.9 * h &&
+		x <= this.selectionEnd['x'] &&
+		y <= this.selectionEnd['y']) {
+		return true;
+	}
+	return false;
+
+}
+
 DrawingManager.prototype.selectDrawingObjects = function() {
 
 	for (var drawingObj in this.drawState) {
@@ -315,6 +335,16 @@ DrawingManager.prototype.selectionMove = function(x, y) {
 	this.initAll();
 }
 
+DrawingManager.prototype.selectionZoom = function(sx, sy) {
+
+	for (var drawingObj in this.selectedDrawingObject) {
+		this.selectedDrawingObject[drawingObj].scaleX = sx;
+		this.selectedDrawingObject[drawingObj].scaleY = sy;
+	}
+
+	this.initAll();
+}
+
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	if (this.paintingMode) {
@@ -335,12 +365,18 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		} else if (this.actualAction == "creatingSelection") {
 			this.selectionStart = {x: posX, y: posY};
+			this.selectionEnd = {x: posX, y: posY};
 			this.selectionTouchId = e.sourceId;
+			this.newSelectionBox(e);
 			return;
 		} else if (this.touchInsideSelection(posX, posY)) {
 			this.selectionMovementStart = {x: posX, y: posY};
 			this.selectionTouchId = e.sourceId;
-			this.actualAction = "movingSelection";
+			if (this.touchInsideSelectionZoomBox(posX,posY)) {
+				this.actualAction = "zoomingSelection";
+			} else {
+				this.actualAction = "movingSelection";
+			}
 			return;
 		} else if (this.actualAction == "movingSelection") {
 			this.actualAction = "drawing";
@@ -368,12 +404,52 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
+			var dx = posX - this.selectionMovementStart['x'];
+			var dy = posY - this.selectionMovementStart['y'];
+			this.selectionMovementStart = {x: posX, y: posY};
+			this.selectionStart.x += dx;
+			this.selectionStart.y += dy;
+			this.selectionEnd.x += dx;
+			this.selectionEnd.y += dy;
+			this.moveSelectionBox();
+			this.selectionMove(dx, dy);
+			return;
+		}
 
+		if ((this.actualAction == "zoomingSelection") && (this.selectionTouchId == e.sourceId)) {
+			var dx = posX - this.selectionMovementStart['x'];
+			var dy = posY - this.selectionMovementStart['y'];
+			var oldW = this.selectionEnd.x - this.selectionStart.x;
+			var oldH = this.selectionEnd.y - this.selectionStart.y;
+			var newW = oldW + dx;
+			var newH = oldH + dy;
+			var sx = newW / oldW;
+			var sy = newH / oldH;
+			this.selectionMovementStart = {x: posX, y: posY};
+			this.selectionStart.x += dx;
+			this.selectionStart.y += dy;
+			this.selectionEnd.x += dx;
+			this.selectionEnd.y += dy;
+			this.moveSelectionBox();
+			this.selectionZoom(sx, sy);
 			return;
 		}
 
 		if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
+			if (this.selectionStart['x'] > posX) {
+				this.selectionEnd['x'] = this.selectionStart['x'];
+				this.selectionStart['x'] = posX;
+			} else {
+				this.selectionEnd['x'] = posX;
+			}
 
+			if (this.selectionStart['y'] > posY) {
+				this.selectionEnd['y'] = this.selectionStart['y'];
+				this.selectionStart['y'] = posY;
+			} else {
+				this.selectionEnd['y'] = posY;
+			}
+			this.moveSelectionBox()
 			return;
 		} 
 
@@ -405,7 +481,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 			this.selectionTouchId = -1;
 			this.selectDrawingObjects();
-			this.newSelectionBox(e);
+			this.moveSelectionBox();
 			drawn = true;
 			this.actualAction = "drawing";
 

@@ -765,6 +765,8 @@ function UIBuilder(json_cfg, clientID) {
 				newDraw.attr("x",start.x).attr("y",start.y).attr("width",w).attr("height",h);
 			}
 
+			newDraw.attr("transform", "scale("+ drawingObject.scaleX +" "+ drawingObject.scaleY +")")
+
 		}
 	}
 
@@ -797,6 +799,7 @@ function UIBuilder(json_cfg, clientID) {
 										.interpolate("basis");
 
 					toUpdate.attr("d", lineFunction(drawingObject.options.points));
+					toUpdate.attr("transform", "scale("+ drawingObject.scaleX +" "+ drawingObject.scaleY +")");
 				}
 				if (drawingObject.type == "rect") {
 
