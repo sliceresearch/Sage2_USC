@@ -246,6 +246,7 @@ DrawingManager.prototype.deleteSelectionBox = function() {
 		}
 	}
 
+	this.selectedDrawingObject = [];
 	this.initAll();
 	
 }
@@ -287,10 +288,10 @@ DrawingManager.prototype.touchInsidePaletteTitleBar = function(x,y) {
 
 DrawingManager.prototype.touchInsideSelection = function(x, y) {
 
-	if (x >= this.selectionStart['x'] &&
-		y >= this.selectionStart['y'] &&
-		x <= this.selectionEnd['x'] &&
-		y <= this.selectionEnd['y']) {
+	if (x > this.selectionStart['x'] &&
+		y > this.selectionStart['y'] &&
+		x < this.selectionEnd['x'] &&
+		y < this.selectionEnd['y']) {
 		return true;
 	}
 	return false;
@@ -384,7 +385,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.actualAction = "movingSelection";
 			}
 			return;
-		} else if (this.actualAction == "movingSelection") {
+		} else if (this.actualAction == "movingSelection" || this.actualAction == "zoomingSelection") {
 			this.actualAction = "drawing";
 			this.deleteSelectionBox();
 			return;
@@ -417,7 +418,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionStart.y += dy;
 			this.selectionEnd.x += dx;
 			this.selectionEnd.y += dy;
-			this.moveSelectionBox();
 			this.selectionMove(dx, dy);
 			return;
 		}
@@ -429,11 +429,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			var oldH = this.selectionEnd.y - this.selectionStart.y;
 			var newW = oldW + dx;
 			var newH = oldH + dy;
-			var sx = newW / oldW;
-			var sy = newH / oldH;
+			var sx = parseFloat(newW) / oldW;
+			var sy =parseFloat(newH) / oldH;
 			this.selectionMovementStart = {x: posX, y: posY};
-			this.selectionStart.x += dx;
-			this.selectionStart.y += dy;
 			this.selectionEnd.x += dx;
 			this.selectionEnd.y += dy;
 			this.moveSelectionBox();
@@ -455,8 +453,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			} else {
 				this.selectionEnd['y'] = posY;
 			}
-			this.moveSelectionBox()
-			return;
+			this.moveSelectionBox();
 		} 
 
 		this.updateDrawingObject(e, posX, posY);
