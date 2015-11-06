@@ -1110,13 +1110,32 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		windowTitle.style.display   = "none";
 	}
 
-	var windowIcons = document.createElement("img");
-	// windowIcons.src = "images/layout3.webp";
-	windowIcons.src = "images/layout3.svg";
-	windowIcons.height = Math.round(titleBarHeight);
-	windowIcons.style.position = "absolute";
-	windowIcons.style.right    = "0px";
-	windowTitle.appendChild(windowIcons);
+	var iconWidth = Math.round(titleBarHeight) * (300/235);
+	var iconSpace = 0.1*iconWidth;
+	var windowIconSync = document.createElement("img");
+	windowIconSync.id  = data.id + "_iconSync";
+	windowIconSync.src = "images/window-sync.svg";
+	windowIconSync.height = Math.round(titleBarHeight);
+	windowIconSync.style.position = "absolute";
+	windowIconSync.style.right    = Math.round(2*(iconWidth + iconSpace)) + "px";
+	windowIconSync.style.display  = "none";
+	windowTitle.appendChild(windowIconSync);
+
+	var windowIconFullscreen = document.createElement("img");
+	windowIconFullscreen.id  = data.id + "_iconFullscreen";
+	windowIconFullscreen.src = "images/window-fullscreen.svg";
+	windowIconFullscreen.height = Math.round(titleBarHeight);
+	windowIconFullscreen.style.position = "absolute";
+	windowIconFullscreen.style.right    = Math.round(1*(iconWidth + iconSpace)) + "px";
+	windowTitle.appendChild(windowIconFullscreen);
+
+	var windowIconClose = document.createElement("img");
+	windowIconClose.id  = data.id + "_iconClose";
+	windowIconClose.src = "images/window-close.svg";
+	windowIconClose.height = Math.round(titleBarHeight);
+	windowIconClose.style.position = "absolute";
+	windowIconClose.style.right    = "0px";
+	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
