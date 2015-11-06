@@ -39,11 +39,11 @@ function DrawingManager(config) {
 }
 
 DrawingManager.prototype.scalePoint = function(point,origin,scaleX,scaleY) {
-	var dx = point.x - origin.x; 
+	var dx = point.x - origin.x;
 	var dy = point.y - origin.y;
 	var newDX = dx * scaleX;
 	var newDY = dy * scaleY;
-	return {x: origin.x + newDX, y: origin.y + newDY} 
+	return {x: origin.x + newDX, y: origin.y + newDY}
 }
 
 DrawingManager.prototype.calculateTileDimensions = function(config) {
@@ -231,7 +231,7 @@ DrawingManager.prototype.moveSelectionBox = function() {
 	if (this.selectionBox) {
 		this.selectionBox["options"]["points"] = [this.selectionStart, this.selectionEnd];
 	}
-	
+
 }
 
 DrawingManager.prototype.deleteSelectionBox = function() {
@@ -342,8 +342,8 @@ DrawingManager.prototype.selectionMove = function(x, y) {
 DrawingManager.prototype.selectionZoom = function(sx, sy) {
 
 	for (var drawingObj in this.selectedDrawingObject) {
-		var points = this.selectedDrawingObject[drawingObj]["points"];
-		for (i in points) {
+		var points = this.selectedDrawingObject[drawingObj]['options']["points"];
+		for (var i in points) {
 			var p = points[i];
 			points[i] = this.scalePoint(p,this.selectionStart,sx,sy);
 		}
@@ -360,17 +360,19 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	if (e.type == 5) {
 		// touch down
-
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
+			this.deleteSelectionBox();
 			this.actualAction = "movingPalette";
 			this.idMovingPalette = e.sourceId;
 			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
 			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY + 58; // Title bar height
 			return;
 		} else if (this.touchInsidePalette(posX,posY)) {
+			this.deleteSelectionBox();
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
 			return;
 		} else if (this.actualAction == "creatingSelection") {
+			this.deleteSelectionBox();
 			this.selectionStart = {x: posX, y: posY};
 			this.selectionEnd = {x: posX, y: posY};
 			this.selectionTouchId = e.sourceId;
@@ -430,7 +432,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			var newW = oldW + dx;
 			var newH = oldH + dy;
 			var sx = parseFloat(newW) / oldW;
-			var sy =parseFloat(newH) / oldH;
+			var sy = parseFloat(newH) / oldH;
 			this.selectionMovementStart = {x: posX, y: posY};
 			this.selectionEnd.x += dx;
 			this.selectionEnd.y += dy;
@@ -454,7 +456,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.selectionEnd['y'] = posY;
 			}
 			this.moveSelectionBox();
-		} 
+		}
 
 		this.updateDrawingObject(e, posX, posY);
 
