@@ -64,25 +64,25 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		var path = this.resrcPath + "/images/";
 		if (this.paletteMode == "default") {
 
-			var nRows = 10;
+			var nRows = 12;
 			var nCols = 10;
 
 			this.paletteButtons= [{name: "Clear",action: this.clearCanvas,icon: path+"/clear.png",parent: this,r: 0,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
-								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/save.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 1},
+								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/screenshot.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#77DD77",r: 4,c: 3,cSpan: 2,rSpan: 2},
 								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
 								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#779ECB",r: 6,c: 3,cSpan: 2,rSpan: 2},
 								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#C23B22",r: 6,c: 5,cSpan: 2,rSpan: 2},
 								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "white",r: 8,c: 3,cSpan: 4,rSpan: 1},
-								  {name: "Color",action: this.colorPicker,parent: this,icon: path+"/brush.png",r: 9,c: 3,cSpan: 4,rSpan: 1},
+								  {name: "Color",action: this.colorPicker,parent: this,icon: path+"/color-picker.png",r: 9,c: 3,cSpan: 4,rSpan: 3},
 								  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/up.png",r: 3,c: 5,cSpan: 2},
 								  {name: "Stroke",action: null,parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
 								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
 								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
 								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
-								  {name: "selectionModeButton",action: this.selectionModeOnOff,parent: this,icon: path+"/load.png",r: 9,c: 7,cSpan: 3,rSpan: 1},
+								  {name: "selectionModeButton",action: this.selectionModeOnOff,parent: this,icon: path+"/selection.png",r: 9,c: 7,cSpan: 3,rSpan: 3},
 								  {name: "enablePaint",
 								  			action: this.paintingMode? this.disablePaintingMode: this.enablePaintingMode,
 								  			parent: this,icon: this.paintingMode? path + "/paintActive.png": path + "/paintNonActive.png",
