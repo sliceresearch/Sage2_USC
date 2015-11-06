@@ -108,11 +108,10 @@ DrawingManager.prototype.updateWithGroupDrawingObject = function(group) {
 	}
 }
 
-DrawingManager.prototype.removeDrawingObject = function(obj) {
+DrawingManager.prototype.removeDrawingObject = function(group) {
 	for (var clientID in this.tilesPosition) {
 		var clientID = this.tilesPosition[clientID].clientID;
-		var manipulatedObject = this.manipulateDrawingObject(obj, clientID);
-		this.remove(manipulatedObject, clientID);
+		this.remove(group, clientID);
 	}
 
 }
@@ -198,10 +197,10 @@ DrawingManager.prototype.update = function(drawingObject, clientID) {
 
 }
 
-DrawingManager.prototype.remove = function(drawingObject, clientID) {
+DrawingManager.prototype.remove = function(group, clientID) {
 
 	for (var ws in this.clientIDandSockets[clientID]) {
-		this.drawingRemove(this.clientIDandSockets[clientID][ws], drawingObject);
+		this.drawingRemove(this.clientIDandSockets[clientID][ws], group);
 	}
 
 	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
@@ -255,6 +254,7 @@ DrawingManager.prototype.newEraserBox = function(x,y,w,h) {
 DrawingManager.prototype.erase = function() {
 	// Erases all the elements intersecting with the erase box
 	var i = 0;
+	var groupToDelete = [];
 	while(i < this.drawState.length) {
 		var draw = this.drawState[i]["options"]["points"];
 		var inside = false;
@@ -269,13 +269,14 @@ DrawingManager.prototype.erase = function() {
 			}
 		}
 		if (inside) {
-			this.removeDrawingObject(this.drawState[i]);
+			groupToDelete.push(this.drawState[i]);
 			this.drawState.splice(i,1)
 		} else {
 			i += 1;
 		}
 	}
 
+	this.removeDrawingObject(groupToDelete);
 }
 
 
