@@ -132,10 +132,12 @@ DrawingManager.prototype.removeWebSocket = function(wsio) {
 
 DrawingManager.prototype.clearDrawingCanvas = function() {
 	this.drawState = [];
+	this.deleteSelectionBox();
 	this.initAll();
 }
 
 DrawingManager.prototype.undoLastDrawing = function() {
+	this.deleteSelectionBox();
 	var undone = this.drawState.pop();
 	if (undone) {
 		this.drawingsUndone.push(undone);
@@ -392,6 +394,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.deleteSelectionBox();
 			return;
 		} else {
+			this.deleteSelectionBox();
 			this.drawingsUndone = [];
 			this.newDrawingObjectFunc(e, posX, posY);
 		}
