@@ -182,6 +182,7 @@ function RadialMenu() {
 		this.currentMenuState = "radialMenu";
 		this.currentRadialState = "radialMenu";
 
+		this.showArrangementSubmenu = false;
 		this.settingMenuOpen = false;
 
 		this.timer = 0;
@@ -395,7 +396,29 @@ function RadialMenu() {
 				this.ctx.stroke();
 			}
 		}
+		/*
+		for (i = 0; i < this.level2Buttons.length; i++) {
+			if (this.level2Buttons[i].isHidden() === false) {
+				this.ctx.beginPath();
 
+				// We are adding -Math.PI/2 since angle also accounts for the initial orientation of the button image
+				var centerButton = this.level1Buttons[i];
+				this.ctx.moveTo(centerButton.posX + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.cos(this.level2Buttons[i].angle - Math.PI / 2),
+					centerButton.posY + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.sin(this.level2Buttons[i].angle - Math.PI / 2));
+
+				this.ctx.lineTo(this.level2Buttons[i].posX + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.cos(this.level2Buttons[i].angle + Math.PI / 2),
+					this.level2Buttons[i].posY + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.sin(this.level2Buttons[i].angle + Math.PI / 2));
+
+				this.ctx.strokeStyle = "#ffffff";
+				this.ctx.lineWidth = 5 * this.radialMenuScale;
+				this.ctx.stroke();
+			}
+		}
+		*/
 		if (this.level0Buttons.length === 0) {
 			this.radialCenterButton.draw();
 		}
@@ -406,8 +429,10 @@ function RadialMenu() {
 			for (i = 0; i < this.level1Buttons.length; i++) {
 				this.level1Buttons[i].draw();
 			}
-			for (i = 0; i < this.level2Buttons.length; i++) {
-				this.level2Buttons[i].draw();
+			if (this.showArrangementSubmenu ) {
+				for (i = 0; i < this.level2Buttons.length; i++) {
+					this.level2Buttons[i].draw();
+				}
 			}
 		}
 
@@ -707,8 +732,8 @@ function RadialMenu() {
 	 * @method setToggleMenu
 	 */
 	this.toggleSubRadialMenu = function(type) {
-		console.log("radialMenu: toggleSubRadialMenu");
-		console.log(type);
+		this.showArrangementSubmenu = !this.showArrangementSubmenu;
+		// console.log("radialMenu: toggleSubRadialMenu - " + this.showArrangementSubmenu);
 	};
 
 	/**
