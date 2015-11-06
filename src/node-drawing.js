@@ -96,6 +96,17 @@ DrawingManager.prototype.initAll = function() {
 
 }
 
+// TODO: manage the check involved client
+DrawingManager.prototype.updateWithGroupDrawingObject = function(group) {
+	for (var drawingObject in group) {
+		for (var clientID in this.tilesPosition) {
+			var clientID = this.tilesPosition[clientID].clientID;
+			var manipulatedObject = this.manipulateDrawingObject(group[drawingObject], clientID);
+			this.update(manipulatedObject, clientID);
+		}
+	}
+}
+
 DrawingManager.prototype.enablePaintingMode = function() {
 	this.paintingMode = true;
 	this.sendModesToPalette();
@@ -244,11 +255,9 @@ DrawingManager.prototype.deleteSelectionBox = function() {
 				break;
 			}
 		}
+		this.selectedDrawingObject = [];
+		this.initAll();
 	}
-
-	this.selectedDrawingObject = [];
-	this.initAll();
-	
 }
 
 DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
@@ -336,7 +345,7 @@ DrawingManager.prototype.selectionMove = function(x, y) {
 		}
 	}
 
-	this.initAll();
+	this.updateWithGroupDrawingObject(this.selectedDrawingObject);
 }
 
 DrawingManager.prototype.selectionZoom = function(sx, sy) {
@@ -349,7 +358,7 @@ DrawingManager.prototype.selectionZoom = function(sx, sy) {
 		}
 	}
 
-	this.initAll();
+	this.updateWithGroupDrawingObject(this.selectedDrawingObject);
 }
 
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
