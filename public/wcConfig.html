@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html>
 
@@ -7,30 +5,36 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
 
+ 	<script type="text/javascript">
+		// SAGE2 is available for use under the SAGE2 Software License
+		//
+		// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+		// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+		// Applications (LAVA)
+		//
+		// See full text, terms and conditions in the LICENSE.txt included file
+		//
+		// Copyright (c) 2015
+	</script>
+
     <title>Test page for ping and console</title>
 
-    <script type="text/javascript" src="src/websocket.io.js"></script>
-    <script type="text/javascript" src="src/wc-pacSetup.js"></script>
+    <script src="src/websocket.io.js"></script>
+    <script src="src/wc-pacSetup.js"></script>
 
-    <style> 
-
-    
+    <style>
     .showExpand {
         display: visible;
         transition: 'all 2s';
     }
-
     .hideExpand {
         display: none;
         transition: 'all 2s';
     }
-
     html *
     {
        font-family: Arial;
     }
-
-
     </style>
 
 </head>
@@ -42,24 +46,24 @@
 <div style="text-align:center; background-color:lightblue">
 
     <div onclick="startSage()">
-        <h1 style='background-color:green'>Start Sage</h1>
+        <h1 style='background-color:green'>Start SAGE2</h1>
     </div>
     <div id='expSageStart' class='hideExpand'>
-        Sage should have started
+        SAGE2 should have started
     </div>
 
     <div onclick="stopSage()">
-        <h1 style='background-color:red'>Stop Sage</h1>
+        <h1 style='background-color:red'>Stop SAGE2</h1>
     </div>
     <div id='expSageStop' class='hideExpand'>
-        Sage stop command sent.
+        SAGE2 stop command sent.
     </div>
 
     <div onclick="toggleDivView('expSetPassword')">
         <h1 style='background-color:gray'>Set Password</h1>
     </div>
     <div id='expSetPassword' class='hideExpand'>
-        Will take effect on next Sage startup.
+        Will take effect on next SAGE2 startup.
         <br>
         <input type="text" id="setPasswordValue">
         <br>

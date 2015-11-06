@@ -1,37 +1,41 @@
-
-
 <!DOCTYPE html>
 <html>
-
 <head lang="en">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
 
-    <title>Sage Web Controller</title>
+    <title>SAGE2 Web Controller</title>
 
-    <script type="text/javascript" src="src/websocket.io.js"></script>
-    <script type="text/javascript" src="src/md5.js"></script>
-    <script type="text/javascript" src="src/wc-pacSetup.js"></script>
+	<script type="text/javascript">
+		// SAGE2 is available for use under the SAGE2 Software License
+		//
+		// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+		// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+		// Applications (LAVA)
+		//
+		// See full text, terms and conditions in the LICENSE.txt included file
+		//
+		// Copyright (c) 2015
+	</script>
 
-    <style> 
 
-    
+    <script src="src/websocket.io.js"></script>
+    <script src="src/md5.js"></script>
+    <script src="src/wc-pacSetup.js"></script>
+
+    <style>
     .showExpand {
         display: visible;
         transition: 'all 2s';
     }
-
     .hideExpand {
         display: none;
         transition: 'all 2s';
     }
-
     html *
     {
        font-family: Arial;
     }
-
-
     </style>
 
 </head>
@@ -114,13 +118,11 @@
             height:100%'
             class='hideExpand'> 
     <div id='overlayBack' 
-        style=' position:absolute;
-                width:100%;
-                height:100%;
-                background-color: gray;
-                opacity:0.4 ' >
-
-        
+        style='position:absolute;
+               width:100%;
+               height:100%;
+               background-color: gray;
+               opacity:0.4'>
     </div>
     <div    id='overlayMessage' 
             style=' border-radius:25px;
@@ -133,8 +135,7 @@
                     left: 35%;
                     top: 30%;
                     background-color:white;
-                    opacity: 1'
-    >
+                    opacity: 1'>
     longer message
     </div>
 
@@ -146,10 +147,9 @@
                     left: 50%;
                     top: 40%;
                     background-color:white;
-                    opacity: 1'> OK </button>
+                    opacity: 1'>OK</button>
 
 </div>
-
 
 </body>
 
