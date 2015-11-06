@@ -133,6 +133,8 @@ function RadialMenu(id, ptrID, config) {
 
 	this.pointersOnMenu = {}; // Stores the pointerIDs that are on the menu, but not on a button
 
+	this.showArrangementSubmenu = false;
+
 	// id - unique button id
 	// icon - button icon
 	// radialPosition - 0 = top of menu, 1 = buttonAngle degrees clockwise, 2 = buttonAngle*2 degrees clockwise, etc.
@@ -266,23 +268,30 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 		} else if (this.radialButtons[buttonName].action === "toggleSubRadial") { // Actions with parameters
 			// Radial submenus
 			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
+			this.showArrangementSubmenu = !this.showArrangementSubmenu;
 		} else { // All no parameter actions
 			action = {type: this.radialButtons[buttonName].action};
 			// Close button
 			if (action.type === "close") {
 				this.hide();
 			}
-			// Save session button
-			if (action.type === "saveSession") {
-				// NOTE: This action is handled by the server radialMenuEvent()
-			}
-			// Tile content
-			if (action.type === "tileContent") {
-				// NOTE: This action is handled by the server radialMenuEvent()
-			}
-			// Clear all content button
-			if (action.type === "clearAllContent") {
-				// NOTE: This action is handled by the server radialMenuEvent()
+
+			if (this.showArrangementSubmenu === false) {
+				// Save session button
+				if (action.type === "saveSession") {
+					// NOTE: This action is handled by the server radialMenuEvent()
+					action.type = "none";
+				}
+				// Tile content
+				if (action.type === "tileContent") {
+					// NOTE: This action is handled by the server radialMenuEvent()
+					action.type = "none";
+				}
+				// Clear all content button
+				if (action.type === "clearAllContent") {
+					// NOTE: This action is handled by the server radialMenuEvent()
+					action.type = "none";
+				}
 			}
 		}
 	}
