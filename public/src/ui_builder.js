@@ -810,6 +810,9 @@ function UIBuilder(json_cfg, clientID) {
 		}
 	}
 
+	this.removeObject = function(drawingObject) {
+		d3.select("#" + drawingObject.id).remove();
+	}
 	/**
 	* Create a pointer
 	*

@@ -362,6 +362,7 @@ function initializeSage2Server() {
 	drawingManager.setCallbacks(
 								drawingInit,
 								drawingUpdate,
+								drawingRemove,
 								sendTouchToPalette,
 								sendStyleToPalette,
 								sendChangeToPalette,
@@ -377,6 +378,10 @@ function drawingInit(clientWebSocket, drawState) {
 
 function drawingUpdate(clientWebSocket, drawingObject) {
 	clientWebSocket.emit("drawingUpdate", drawingObject);
+}
+
+function drawingRemove(clientWebSocket, drawingObject) {
+	clientWebSocket.emit("drawingRemove", drawingObject);
 }
 
 function sendTouchToPalette(paletteID,x,y) {

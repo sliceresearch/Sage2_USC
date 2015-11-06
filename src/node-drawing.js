@@ -108,6 +108,15 @@ DrawingManager.prototype.updateWithGroupDrawingObject = function(group) {
 	}
 }
 
+DrawingManager.prototype.removeDrawingObject = function(obj) {
+	for (var clientID in this.tilesPosition) {
+		var clientID = this.tilesPosition[clientID].clientID;
+		var manipulatedObject = this.manipulateDrawingObject(obj, clientID);
+		this.remove(manipulatedObject, clientID);
+	}
+
+}
+
 DrawingManager.prototype.enablePaintingMode = function() {
 	this.paintingMode = true;
 	this.sendModesToPalette();
@@ -188,6 +197,17 @@ DrawingManager.prototype.update = function(drawingObject, clientID) {
 	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
 
 }
+
+DrawingManager.prototype.remove = function(drawingObject, clientID) {
+
+	for (var ws in this.clientIDandSockets[clientID]) {
+		this.drawingRemove(this.clientIDandSockets[clientID][ws], drawingObject);
+	}
+
+	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
+
+}
+
 DrawingManager.prototype.copy = function(a) {
 	return JSON.parse(JSON.stringify(a));
 }
@@ -249,13 +269,13 @@ DrawingManager.prototype.erase = function() {
 			}
 		}
 		if (inside) {
+			this.removeDrawingObject(this.drawState[i]);
 			this.drawState.splice(i,1)
 		} else {
 			i += 1;
 		}
 	}
 
-	this.initAll();
 }
 
 
@@ -451,6 +471,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 4) {
 		// touch move
+		if (this.paintingMode == false && Math.max(w,h) > 50) {
+			this.actualAction = "erasing";
+		}
 
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.movePaletteTo(this.paletteID
@@ -691,6 +714,7 @@ DrawingManager.prototype.setCallbacks = function(
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
+	this.drawingRemove = drawingRemoveCB;
 	this.sendTouchToPalette = sendTouchToPaletteCB;
 	this.sendStyleToPalette = sendStyleToPaletteCB;
 	this.sendChangeToPalette = sendChangeToPaletteCB;

@@ -321,6 +321,10 @@ function setupListeners() {
 		ui.updateObject(data);
 	});
 
+	wsio.on('drawingRemove', function(data) {
+		ui.removeObject(data);
+	});
+
 	wsio.on('createSagePointer', function(pointer_data) {
 		if (window.ui) {
 			ui.createSagePointer(pointer_data);
