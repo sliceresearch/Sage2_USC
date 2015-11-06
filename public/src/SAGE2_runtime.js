@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * Generic functions used by all SAGE2 applications
  *
@@ -47,18 +49,24 @@ function SAGE2_browser() {
 	var browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
 	browser.isOpera    = userAgent.indexOf("opera") >= 0;
-	browser.isChrome   = userAgent.indexOf("chrome") >= 0;
+	browser.isIE       = !browser.isOpera && (userAgent.indexOf("edge") >= 0 || userAgent.indexOf("msie") >= 0 ||
+			userAgent.indexOf("trident") >= 0);
+	browser.isChrome   = !browser.isIE && userAgent.indexOf("chrome") >= 0;
 	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
-	browser.isSafari   = !browser.isChrome && userAgent.indexOf("safari") >= 0;
-	browser.isIE       = !browser.isOpera && (userAgent.indexOf("msie") >= 0 || userAgent.indexOf("trident") >= 0);
+	browser.isSafari   = !browser.isChrome && !browser.isIE && userAgent.indexOf("safari") >= 0;
 	browser.isGecko    = !browser.isWebKit && userAgent.indexOf("gecko") >= 0;
 	browser.isFirefox  = browser.isGecko && userAgent.indexOf("firefox") >= 0;
 	browser.isWinPhone = userAgent.indexOf("windows phone") >= 0;
-	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipod") >= 0);
+	browser.isIOS      = !browser.isWinPhone && (userAgent.indexOf("iphone") >= 0 || userAgent.indexOf("ipad") >= 0 ||
+			userAgent.indexOf("ipod") >= 0);
 	browser.isAndroid  = userAgent.indexOf("android") >= 0;
 	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 	browser.isLinux    = userAgent.indexOf("linux") >= 0;
+	// Mobile clients
+	browser.isMobile   = browser.isWinPhone || browser.isIOS || browser.isAndroid;
+	// Keep a copy of the UA
+	browser.userAgent  = userAgent;
 	// Copy into the global object
 	__SAGE2__.browser   = browser;
 }
@@ -71,12 +79,15 @@ function SAGE2_browser() {
  * @param obj {Object} data to be printed
  */
 function log(obj) {
-	if (arguments.length === 0) return;
+	if (arguments.length === 0) {
+		return;
+	}
 	var args;
-	if (arguments.length > 1)
+	if (arguments.length > 1) {
 		args = Array.prototype.slice.call(arguments);
-	else
+	} else {
 		args = obj;
+	}
 	// send a log message to the server
 	sage2Log({app: "client", message: args});
 }
@@ -116,7 +127,7 @@ function createDrawingElement(id, className, posx, posy, width, height, depth) {
 var SAGE2types = {};
 function _LatLng(lat, lng) {
 	this.description = "Depicts a geolocation";
-	this.value   = {lat:lat, lng:lng};
+	this.value   = {lat: lat, lng: lng};
 	this.jsonstr = JSON.stringify(this.value);
 }
 SAGE2types.LatLng = _LatLng;
@@ -151,30 +162,33 @@ SAGE2types.Boolean = _Boolean;
 
 function _Object(obj) {
 	this.description = "Depicts a javascript object";
-	if (_typeOf(obj) === 'object')
+	if (_typeOf(obj) === 'object') {
 		this.value = obj;
-	else
+	} else {
 		this.value = {value: obj};
+	}
 	this.jsonstr = JSON.stringify(this.value);
 }
 SAGE2types.Object = _Object;
 
 function _Array(obj) {
 	this.description = "Depicts a javascript array";
-	if (_typeOf(obj) === 'array')
+	if (_typeOf(obj) === 'array') {
 		this.value = obj;
-	else
+	} else {
 		this.value = [obj];
+	}
 	this.jsonstr = JSON.stringify(this.value);
 }
 SAGE2types.Array = _Array;
 
 function _Date(obj) {
 	this.description = "Depicts a javascript date";
-	if (_typeOf(obj) === 'date')
+	if (_typeOf(obj) === 'date') {
 		this.value = obj;
-	else
+	} else {
 		this.value = new Date(obj);
+	}
 	this.jsonstr = JSON.stringify(this.value);
 }
 SAGE2types.Date = _Date;
@@ -189,25 +203,23 @@ SAGE2types.isaDate   = function(obj) { return obj instanceof SAGE2types.Date; };
 
 SAGE2types.create    = function(val) {
 	if (_typeOf(val) === 'object') {
-		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng'))
+		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng')) {
 			return new SAGE2types.LatLng(val.lat, val.lng);
-		else
+		} else {
 			return new SAGE2types.Object(val);
-	}
-	else if (_typeOf(val) === 'array') {
+		}
+	} else if (_typeOf(val) === 'array') {
 		return new SAGE2types.Array(val);
-	}
-	else if (_typeOf(val) === 'number') {
+	} else if (_typeOf(val) === 'number') {
 		var v = parseInt(val);
-		if (v === val)
+		if (v === val) {
 			return new SAGE2types.Int(val);
-		else
+		} else {
 			return new SAGE2types.Float(val);
-	}
-	else if (_typeOf(val) === 'string') {
+		}
+	} else if (_typeOf(val) === 'string') {
 		return new SAGE2types.String(val);
-	}
-	else if (_typeOf(val) === 'date') {
+	} else if (_typeOf(val) === 'date') {
 		return new SAGE2types.Date(val);
 	}
 	return null;
@@ -280,7 +292,9 @@ function formatAMPM(date) {
 	var minutes = date.getMinutes();
 	var ampm    = hours >= 12 ? "pm" : "am";
 	hours       = hours % 12;
-	if (hours === 0) hours = 12;
+	if (hours === 0) {
+		hours = 12;
+	}
 	var hh = hours.toString();
 	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
 	return (hh + ":" + mm + ampm);
@@ -309,15 +323,15 @@ function format24Hr(date) {
  * @return {String} formatted duration
  */
 function formatHHMMSS(duration) {
-	var ss = parseInt((duration/1000)%60,         10);
-	var mm = parseInt((duration/(1000*60))%60,    10);
-	var hh = parseInt((duration/(1000*60*60))%24, 10);
+	var ss = parseInt((duration / 1000) % 60,         10);
+	var mm = parseInt((duration / (1000 * 60)) % 60,    10);
+	var hh = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
 	hh = (hh < 10) ? "0" + hh : hh;
 	mm = (mm < 10) ? "0" + mm : mm;
 	ss = (ss < 10) ? "0" + ss : ss;
 
-    return (hh + ":" + mm + ":" + ss);
+	return (hh + ":" + mm + ":" + ss);
 }
 
 /**
@@ -328,7 +342,6 @@ function formatHHMMSS(duration) {
  * @return {String} string content
  */
 function base64ToString(base64) {
-	//return decodeURIComponent(escape(atob(base64)));
 	return atob(base64);
 }
 
@@ -340,7 +353,6 @@ function base64ToString(base64) {
  * @return {String} base64 content
  */
 function stringToBase64(string) {
-	//return btoa(unescape(encodeURIComponent(string)));
 	return btoa(string);
 }
 
@@ -373,11 +385,11 @@ function smallWhiteGIF() {
  * @return {TypedArray} resulting array
  */
 function stringToUint8Array(string) {
-    var uint8Array = new Uint8Array(new ArrayBuffer(string.length));
-    for (var i = 0; i < string.length; i++) {
-        uint8Array[i] = string.charCodeAt(i);
-    }
-    return uint8Array;
+	var uint8Array = new Uint8Array(new ArrayBuffer(string.length));
+	for (var i = 0; i < string.length; i++) {
+		uint8Array[i] = string.charCodeAt(i);
+	}
+	return uint8Array;
 }
 
 /**
@@ -389,12 +401,12 @@ function stringToUint8Array(string) {
  */
 function base64ToUint8Array(base64) {
 	// This is a native function that decodes a base64-encoded string
-    var raw = atob(base64);
-    var uint8Array = new Uint8Array(new ArrayBuffer(raw.length));
-    for (var i = 0; i < raw.length; i++) {
-        uint8Array[i] = raw.charCodeAt(i);
-    }
-    return uint8Array;
+	var raw = atob(base64);
+	var uint8Array = new Uint8Array(new ArrayBuffer(raw.length));
+	for (var i = 0; i < raw.length; i++) {
+		uint8Array[i] = raw.charCodeAt(i);
+	}
+	return uint8Array;
 }
 
 /**
@@ -413,13 +425,18 @@ function readFile(filename, callback, type) {
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState === 4) {
 			if (xhr.status === 200) {
-				if      (dataType === "TEXT") callback(null, xhr.responseText);
-				else if (dataType === "JSON") callback(null, JSON.parse(xhr.responseText));
-				else if (dataType === "CSV")  callback(null, csvToArray(xhr.responseText));
-				else if (dataType === "SVG")  callback(null, xhr.responseXML.getElementsByTagName('svg')[0]);
-				else                          callback(null, xhr.responseText);
-			}
-			else {
+				if (dataType === "TEXT") {
+					callback(null, xhr.responseText);
+				} else if (dataType === "JSON") {
+					callback(null, JSON.parse(xhr.responseText));
+				} else if (dataType === "CSV") {
+					callback(null, csvToArray(xhr.responseText));
+				} else if (dataType === "SVG") {
+					callback(null, xhr.responseXML.getElementsByTagName('svg')[0]);
+				} else {
+					callback(null, xhr.responseText);
+				}
+			} else {
 				callback("Error: File Not Found", null);
 			}
 		}
@@ -441,7 +458,9 @@ function csvToArray(strData, strDelimiter) {
 	strDelimiter = strDelimiter || ",";
 
 	// Create a regular expression to parse the CSV values.
-	var objPattern = new RegExp(("(\\" + strDelimiter + "|\\r?\\n|\\r|^)" + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" + "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+	var objPattern = new RegExp(("(\\" + strDelimiter +
+		"|\\r?\\n|\\r|^)" + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" + "([^\"\\" +
+		strDelimiter + "\\r\\n]*))"), "gi");
 
 	// Create an array to hold our data. Give the array
 	// a default empty first row.
@@ -453,7 +472,7 @@ function csvToArray(strData, strDelimiter) {
 
 	// Keep looping over the regular expression matches
 	// until we can no longer find a match.
-	while (arrMatches = objPattern.exec( strData )) {  // jshint ignore:line
+	while (arrMatches = objPattern.exec(strData)) {  // eslint-disable-line
 
 		// Get the delimiter that was found.
 		var strMatchedDelimiter = arrMatches[ 1 ];
@@ -462,7 +481,7 @@ function csvToArray(strData, strDelimiter) {
 		// (is not the start of string) and if it matches
 		// field delimiter. If id does not, then we know
 		// that this delimiter is a row delimiter.
-		if(strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter){
+		if (strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter) {
 			// Since we have reached a new row of data,
 			// add an empty row to our data array.
 			arrData.push([]);
@@ -476,9 +495,8 @@ function csvToArray(strData, strDelimiter) {
 		if (arrMatches[2]) {
 			// We found a quoted value. When we capture
 			// this value, unescape any double quotes.
-			strMatchedValue = arrMatches[2].replace(new RegExp( "\"\"", "g" ), "\"");
-		}
-		else {
+			strMatchedValue = arrMatches[2].replace(new RegExp("\"\"", "g"), "\"");
+		} else {
 			// We found a non-quoted value.
 			strMatchedValue = arrMatches[3];
 
@@ -502,9 +520,11 @@ function csvToArray(strData, strDelimiter) {
  */
 function average(arr) {
 	var l = arr.length;
-	if (l === 0) return 0;
+	if (l === 0) {
+		return 0;
+	}
 	var sum = 0;
-	for(var i=0; i<l; i++){
+	for (var i = 0; i < l; i++) {
 		sum += arr[i];
 	}
 	return sum / l;
@@ -520,7 +540,9 @@ function average(arr) {
 function allTrueDict(dict) {
 	var key;
 	for (key in dict) {
-		if (dict[key] !== true) return false;
+		if (dict[key] !== true) {
+			return false;
+		}
 	}
 	return true;
 }
@@ -534,8 +556,8 @@ function allTrueDict(dict) {
  */
 function getParameterByName(name) {
 	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]"); // jshint ignore:line
-	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-	results = regex.exec(location.search);
+	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+	var results = regex.exec(location.search);
 	return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
@@ -550,8 +572,7 @@ function playPauseVideo(elemId) {
 	if (videoElem.paused === true) {
 		videoElem.play();
 		console.log("play");
-	}
-	else {
+	} else {
 		videoElem.pause();
 		console.log("pause");
 	}
@@ -579,8 +600,9 @@ function moveItemToFront(elem) {
  */
 function deleteElement(id) {
 	var elem = document.getElementById(id);
-	if (elem !== undefined && elem !== null)
+	if (elem !== undefined && elem !== null) {
 		elem.parentNode.removeChild(elem);
+	}
 }
 
 
@@ -592,13 +614,16 @@ function deleteElement(id) {
  * @return {Strinf} new URL
  */
 function cleanURL(url) {
-	if (url === null) return url;
+	if (url === null) {
+		return url;
+	}
 	var a = document.createElement('a');
 	a.href = url;
 	var clean = url;
 
-	if(hostAlias[a.origin] !== undefined)
+	if (hostAlias[a.origin] !== undefined) {
 		clean = url.replace(a.origin, hostAlias[a.origin]);
+	}
 
 	return clean;
 }
@@ -646,18 +671,26 @@ function isTrue(element, index, array) {
  */
 function isEmpty(obj) {
 	// undefined and null are "empty"
-	if (obj === undefined || obj === null) return true;
+	if (obj === undefined || obj === null) {
+		return true;
+	}
 
 	// Assume if it has a length property with a non-zero value
 	// that that property is correct.
-	if (obj.length > 0)    return false;
-	if (obj.length === 0)  return true;
+	if (obj.length > 0) {
+		return false;
+	}
+	if (obj.length === 0) {
+		return true;
+	}
 
 	// Otherwise, does it have any properties of its own?
 	// Note that this doesn't handle
 	// toString and valueOf enumeration bugs in IE < 9
 	for (var key in obj) {
-		if (hasOwnProperty.call(obj, key)) return false;
+		if (hasOwnProperty.call(obj, key)) {
+			return false;
+		}
 	}
 	return true;
 }
@@ -672,7 +705,7 @@ function isEmpty(obj) {
  */
 function initializeArray(size, value) {
 	var arr = new Array(size);
-	for(var i=0; i<size; i++){
+	for (var i = 0; i < size; i++) {
 		arr[i] = value;
 	}
 	return arr;
@@ -687,7 +720,7 @@ function initializeArray(size, value) {
  */
 function byteBufferToInt(buf) {
 	var value = 0;
-	for (var i=buf.length-1; i>=0; i--) {
+	for (var i = buf.length - 1; i >= 0; i--) {
 		value = (value * 256) + buf[i];
 	}
 	return value;
@@ -722,7 +755,7 @@ Math.seed = function(s) {
 		var a = 25214903917;
 		var c = 11;
 		var m = 281474976710656;
-		s = (a*s+c) % m;
+		s = (a * s + c) % m;
 		return s / m;
 	};
 };

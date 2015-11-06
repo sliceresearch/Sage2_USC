@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+"use strict";
+
 /**
  * Client-side application for drawing, leverages Wacom plugin if present
  *
@@ -17,12 +19,12 @@
  */
 
 
-var wsio;
+var wsio_global;
 
 var plugin;
 var canvas;
-var canvasPos    = {x:0.0, y:0.0};
-var canvasSize   = {width:1280, height:720};
+var canvasPos    = {x: 0.0, y: 0.0};
+var canvasSize   = {width: 1280, height: 720};
 var capturing    = false;
 var aSpline      = null;
 var layer        = null;
@@ -37,7 +39,9 @@ var drawingStage = null;
 
 // Explicitely close web socket when web broswer is closed
 window.onbeforeunload = function() {
-	if(wsio !== undefined) wsio.close();
+	if (wsio_global !== undefined) {
+		wsio_global.close();
+	}
 };
 
 
@@ -47,15 +51,15 @@ function findPos(obj) {
 	if (obj.offsetParent) {
 		curleft = obj.offsetLeft;
 		curtop  = obj.offsetTop;
-		while (obj = obj.offsetParent) { // jshint ignore:line
+		while (obj = obj.offsetParent) { // eslint-disable-line
 			curleft += obj.offsetLeft;
 			curtop  += obj.offsetTop;
 		}
 	}
-	return {x:curleft, y:curtop};
+	return {x: curleft, y: curtop};
 }
 
-function inCanvasBounds(posX, posY ) {
+function inCanvasBounds(posX, posY) {
 	var left   = 0;
 	var top    = 0;
 	var right  = canvasSize.width;
@@ -72,23 +76,29 @@ function inCanvasBounds(posX, posY ) {
  */
 function SAGE2_init() {
 	// SAGE2 stuff
-	wsio = new WebsocketIO();
+	wsio_global = new WebsocketIO();
 
-	wsio.open(function() {
+	wsio_global.open(function() {
 		console.log("Websocket opened");
+
+		// Setup message callbacks
+		setupListeners(wsio_global);
+
 		var clientDescription = {
-			clientType: "sageAnnotation",
-			sendsPointerData: true,
-			receivesDisplayConfiguration: true,
-			requiresAppPositionSizeTypeOnly: true,
-			receivesWindowModification: true
+			clientType: "sageDrawing",
+			requests: {
+				config: true,
+				version: true,
+				time: false,
+				console: false
+			}
 		};
-		wsio.emit('addClient', clientDescription);
+		wsio_global.emit('addClient', clientDescription);
 	});
 
 	// Socket close event (ie server crashed)
-	wsio.on('close', function (evt) {
-		var refresh = setInterval(function () {
+	wsio_global.on('close', function(evt) {
+		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", "/", true);
@@ -104,141 +114,162 @@ function SAGE2_init() {
 			xhr.send();
 		}, 2000);
 	});
+}
 
-	wsio.on('setupDisplayConfiguration', function(config) {
-		var ratio = config.totalWidth / config.totalHeight;
-		console.log('Wall> ratio', ratio);
-	});
+/**
+ * Place callbacks on various messages from the server
+ *
+ * @method setupListeners
+ * @param wsio {Object} websocket
+ */
+function setupListeners(wsio) {
+
+	// Got a reply from the server
 	wsio.on('initialize', function(data) {
 		console.log('My ID>', data.UID);
-	});
 
-	// Plugin stuff
-	plugin = document.getElementById('wtPlugin');
+		// Plugin stuff
+		plugin = document.getElementById('wtPlugin');
 
-	// Show plugin version
-	var pluginVersion = document.getElementById('pluginVersion');
-	if (plugin.version)
-		pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
-	else
-		pluginVersion.innerHTML = "Plugin Version: n/a";
+		// Show plugin version
+		var pluginVersion = document.getElementById('pluginVersion');
+		if (plugin.version) {
+			pluginVersion.innerHTML = "Plugin Version: " + plugin.version;
+		} else {
+			pluginVersion.innerHTML = "Plugin Version: n/a";
+		}
 
-	var pluginInformation = document.getElementById('pluginInformation');
+		var pluginInformation = document.getElementById('pluginInformation');
 
-	var isWacom, version, tabletModel, info;
-	if (plugin.penAPI) {
-		isWacom      = plugin.penAPI.isWacom;
-		version      = plugin.penAPI.version;
-		tabletModel  = plugin.penAPI.tabletModel;
-		info  = "Plugin information: isWacom:" + isWacom;
-		info += " version:" + version;
-		info += " tabletModel:" + tabletModel;
-		pluginInformation.innerHTML = info;
-	} else {
-		isWacom      = false;
-		version      = 0;
-		tabletModel  = "n/a";
-		info  = "Plugin information n/a";
-		pluginInformation.innerHTML = info;
-	}
+		var isWacom, version, tabletModel, info;
+		if (plugin.penAPI) {
+			isWacom      = plugin.penAPI.isWacom;
+			version      = plugin.penAPI.version;
+			tabletModel  = plugin.penAPI.tabletModel;
+			info  = "Plugin information: isWacom:" + isWacom;
+			info += " version:" + version;
+			info += " tabletModel:" + tabletModel;
+			pluginInformation.innerHTML = info;
+		} else {
+			isWacom      = false;
+			version      = 0;
+			tabletModel  = "n/a";
+			info  = "Plugin information n/a";
+			pluginInformation.innerHTML = info;
+		}
 
-	// Toolbar
-	var uiStage = new Kinetic.Stage({
-		container: 'toolbar',
-		width:  1280,
-		height: 50
-	});
-	var uilayer = new Kinetic.Layer();
-	uiStage.add(uilayer);
-	var uibg = new Kinetic.Rect({
-		width: 1280,
-		height: 720,
-		fill: '#CCCCCC',
-		stroke: 'black',
-		strokeWidth: 2
-	});
-	uigrp = new Kinetic.Group();
-	var xoffset = 15;
-	var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
-	for (var i=0; i<14; i++) {
-		var bgrp = new Kinetic.Group( {x: xoffset, y: 5});
-		var button = new Kinetic.Rect({
-			width: 80,
-			height: 40,
-			fill: '#DDDDDD',
+		// Toolbar
+		var uiStage = new Kinetic.Stage({
+			container: 'toolbar',
+			width: 1280,
+			height: 50
+		});
+		var uilayer = new Kinetic.Layer();
+		uiStage.add(uilayer);
+		var uibg = new Kinetic.Rect({
+			width: 1280,
+			height: 720,
+			fill: '#CCCCCC',
 			stroke: 'black',
-			strokeWidth: 0,
-			id: i
+			strokeWidth: 2
 		});
-		bgrp.add(button);
+		uigrp = new Kinetic.Group();
+		var xoffset = 15;
+		var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
 
-		var buttonLabel = new Kinetic.Label({
-			x: 0, y: 0, opacity: 1, listening: false
-		});
-		buttonLabel.add(new Kinetic.Tag({listening: false}));
-		buttonLabel.add(new Kinetic.Text({
-			text: labels[i],
-			fontFamily: 'Arial',
-			fontSize: 18,
-			padding: 5,
-			id: 'text_'+i,
-			fill: 'black', listening:false
-		}));
-
-		xoffset += 90;
-		bgrp.add(buttonLabel);
-		uigrp.add(bgrp);
-
-		button.on('mouseup', function(evt) {
+		function onMouseUp(evt) {
 			var id = evt.target.id();
-			if (id===0) {
+			if (id === 0) {
 				eraseMode = false;
-			} else  if (id===1) {
+			} else if (id === 1) {
 				eraseMode = true;
-			} else  if (id===2) {
+			} else if (id === 2) {
 				previousLayer();
-			} else  if (id===3) {
+			} else if (id === 3) {
 				nextLayer();
-			} else  if (id===4) {
+			} else if (id === 4) {
 				newLayer();
 			}
+		}
+
+		for (var i = 0; i < 14; i++) {
+			var bgrp = new Kinetic.Group({x: xoffset, y: 5});
+			var button = new Kinetic.Rect({
+				width: 80,
+				height: 40,
+				fill: '#DDDDDD',
+				stroke: 'black',
+				strokeWidth: 0,
+				id: i
+			});
+			bgrp.add(button);
+
+			var buttonLabel = new Kinetic.Label({
+				x: 0, y: 0, opacity: 1, listening: false
+			});
+			buttonLabel.add(new Kinetic.Tag({listening: false}));
+			buttonLabel.add(new Kinetic.Text({
+				text: labels[i],
+				fontFamily: 'Arial',
+				fontSize: 18,
+				padding: 5,
+				id: 'text_' + i,
+				fill: 'black', listening: false
+			}));
+
+			xoffset += 90;
+			bgrp.add(buttonLabel);
+			uigrp.add(bgrp);
+
+			button.on('mouseup', onMouseUp);
+		}
+		uilayer.add(uibg);
+		uilayer.add(uigrp);
+		uilayer.draw();
+
+		// Drawing
+		drawingStage = new Kinetic.Stage({
+			container: 'canvas',
+			width: 1280,
+			height: 720
 		});
-	}
-	uilayer.add(uibg);
-	uilayer.add(uigrp);
-	uilayer.draw();
+		var layerbg = new Kinetic.Layer();
+		drawingStage.add(layerbg);
 
-	// Drawing
-	drawingStage = new Kinetic.Stage({
-		container: 'canvas',
-		width:  1280,
-		height: 720
+		var rectbg = new Kinetic.Rect({
+			width: 1280,
+			height: 720,
+			fill: 'black',
+			stroke: 'black',
+			strokeWidth: 1
+		});
+		layerbg.add(rectbg);
+		layerbg.draw();
+
+		layer = new Kinetic.Layer();
+		drawingStage.add(layer);
+		allLayers[numLayers] = layer;
+		numLayers++;
+		currentLayer = 0;
+
+		canvas    = document.getElementById('canvas');
+		canvasPos = findPos(canvas);
+		eraseMode = false;
+
+		canvas.addEventListener("mouseup",   mouseup,   true);
+		canvas.addEventListener("mousedown", mousedown, true);
 	});
-	var layerbg = new Kinetic.Layer();
-	drawingStage.add(layerbg);
 
-	var rectbg = new Kinetic.Rect({
-		width: 1280,
-		height: 720,
-		fill: 'black',
-		stroke: 'black',
-		strokeWidth: 1
+	// Server sends the SAGE2 version
+	wsio.on('setupSAGE2Version', function(data) {
+		console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
 	});
-	layerbg.add(rectbg);
-	layerbg.draw();
 
-	layer = new Kinetic.Layer();
-	drawingStage.add(layer);
-	allLayers[numLayers] = layer;
-	numLayers++;
-	currentLayer = 0;
-
-	canvas    = document.getElementById('canvas');
-	canvasPos = findPos(canvas);
-	eraseMode = false;
-
-	canvas.addEventListener("mouseup",   mouseup,   true);
-	canvas.addEventListener("mousedown", mousedown, true);
+	// Server sends the wall configuration
+	wsio.on('setupDisplayConfiguration', function(json_cfg) {
+		var ratio = json_cfg.totalWidth / json_cfg.totalHeight;
+		console.log('Wall> ratio', ratio);
+	});
 }
 
 /**
@@ -250,8 +281,9 @@ function newLayer() {
 	// create a new layer
 	var nlayer = new Kinetic.Layer();
 	// hide all the other layers
-	for (var i=0; i<numLayers; i++)
+	for (var i = 0; i < numLayers; i++) {
 		allLayers[i].hide();
+	}
 	// put the new layer on display
 	drawingStage.add(nlayer);
 	nlayer.show();
@@ -263,10 +295,10 @@ function newLayer() {
 	layer = nlayer;
 	// Update the status window
 	var status = uigrp.find('#text_13');
-	status.text( (currentLayer+1) + '/' + numLayers);
+	status.text((currentLayer + 1) + '/' + numLayers);
 	uigrp.draw();
 
-	wsio.emit('pointerDraw', {command: 'newlayer'});
+	wsio_global.emit('pointerDraw', {command: 'newlayer'});
 }
 
 /**
@@ -276,24 +308,28 @@ function newLayer() {
  */
 function nextLayer() {
 	var newidx = currentLayer + 1;
-	if (newidx >= numLayers) newidx = numLayers-1;
+	if (newidx >= numLayers) {
+		newidx = numLayers - 1;
+	}
 	if (newidx !== currentLayer) {
 		// set the new index
 		currentLayer = newidx;
 		// show/hide the layers
-		for (var i=0; i<numLayers; i++) {
-			if (i === currentLayer)
+		for (var i = 0; i < numLayers; i++) {
+			if (i === currentLayer) {
 				allLayers[i].show();
-			else
+			} else {
 				allLayers[i].hide();
+			}
 		}
 		// make it the active layer
 		layer = allLayers[currentLayer];
 		// Update the status window
 		var status = uigrp.find('#text_13');
-		status.text( (currentLayer+1) + '/' + numLayers);
+		status.text((currentLayer + 1) + '/' + numLayers);
 		uigrp.draw();
-		wsio.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+
+		wsio_global.emit('pointerDraw', {command: 'activelayer', value: currentLayer});
 	}
 }
 
@@ -303,24 +339,26 @@ function nextLayer() {
  * @method previousLayer
  */
 function previousLayer() {
-	var newidx = (currentLayer-1) % numLayers;
-	if (newidx >=0 && newidx !== currentLayer) {
+	var newidx = (currentLayer - 1) % numLayers;
+	if (newidx >= 0 && newidx !== currentLayer) {
 		// set the new index
 		currentLayer = newidx;
 		// show/hide the layers
-		for (var i=0; i<numLayers; i++) {
-			if (i === currentLayer)
+		for (var i = 0; i < numLayers; i++) {
+			if (i === currentLayer) {
 				allLayers[i].show();
-			else
+			} else {
 				allLayers[i].hide();
+			}
 		}
 		// make it the active layer
 		layer = allLayers[currentLayer];
 		// Update the status window
 		var status = uigrp.find('#text_13');
-		status.text( (currentLayer+1) + '/' + numLayers);
+		status.text((currentLayer + 1) + '/' + numLayers);
 		uigrp.draw();
-		wsio.emit('pointerDraw', {command: 'activelayer', value:currentLayer});
+
+		wsio_global.emit('pointerDraw', {command: 'activelayer', value: currentLayer});
 	}
 }
 
@@ -335,12 +373,12 @@ function mousedown(ev) {
 		// plugin.penAPI.pointerType: 0:out 1:pen 2:mouse/puck 3:eraser
 		if (plugin.penAPI.pointerType === 3) {
 			eraseMode = true;
-		} if (plugin.penAPI.pointerType === 1) {
+		} else if (plugin.penAPI.pointerType === 1) {
 			eraseMode = false;
 		}
 	}
 
-	canvas.onmousemove=mousemove;
+	canvas.onmousemove = mousemove;
 	pressures = [];
 
 	var pX = ev.pageX - canvasPos.x;
@@ -386,45 +424,48 @@ function mousedown(ev) {
 function mouseup(ev) {
 	capturing = false;
 	canvas.style.cursor = 'initial';
-	canvas.onmousemove=null;
+	canvas.onmousemove = null;
 	if (aSpline) {
 		var i;
 		var arr = aSpline.points();
 		var toprocess = [];
-		for (i=0; i<arr.length; i+=2) {
-			toprocess.push({x:arr[2*i], y:arr[2*i+1]});
+		for (i = 0; i < arr.length; i += 2) {
+			toprocess.push({x: arr[2 * i], y: arr[2 * i + 1]});
 		}
 		// Adding the mouseup position
 		var curX = ev.pageX - canvasPos.x;
 		var curY = ev.pageY - canvasPos.y;
-		toprocess.push({x:curX, y:curY});
+		toprocess.push({x: curX, y: curY});
 		// starting process
 		var processed;
-		if (aSpline.eraseMode)
+		if (aSpline.eraseMode) {
 			processed = simplify(toprocess, 0.2, true);
-		else
+		} else {
 			processed = simplify(toprocess, 2.0, true); // array, pixel size, high-quality: true
+		}
 		var newpoints = [];
-		for (i=0; i<processed.length; i++) {
+		for (i = 0; i < processed.length; i++) {
 			newpoints.push(processed[i].x, processed[i].y);
 		}
-		//console.log('Gain:', toprocess.length/newpoints.length);
 		aSpline.points(newpoints);
-		console.log('Spline: ', aSpline.eraseMode);
-		if (aSpline.eraseMode===false)
-			aSpline.tension(0.5);  // more tension in the spline (smoother)
+		if (aSpline.eraseMode === false) {
+			// more tension in the spline (smoother)
+			aSpline.tension(0.5);
+		}
 		var avg = 0.0;
-		for (i=0; i<pressures.length; i++)
+		for (i = 0; i < pressures.length; i++) {
 			avg += pressures[i];
+		}
 		avg = avg / pressures.length;
-		//console.log('Avg>', avg, pressures.length);
-		if (avg===0)
+		if (avg === 0) {
 			aSpline.strokeWidth(3);
-		else
-			aSpline.strokeWidth(avg*8.0);
+		} else {
+			aSpline.strokeWidth(avg * 8.0);
+		}
+
 		layer.draw();
 
-		wsio.emit('pointerDraw', {command: 'draw', points: newpoints, pressure:avg, color:pencolor} );
+		wsio_global.emit('pointerDraw', {command: 'draw', points: newpoints, pressure: avg, color: pencolor});
 	}
 }
 
@@ -440,7 +481,6 @@ function mousemove(ev) {
 
 	if (penAPI) {
 		pressure  = penAPI.pressure;
-		//console.log('Eraser', isEraser);
 
 		// Get data values from Wacom plugin.
 		// var isEraser     = penAPI.isEraser;
@@ -463,7 +503,6 @@ function mousemove(ev) {
 
 	if (eraseMode) {
 		canvas.style.cursor = '-webkit-grab'; // grab doesn't work
-		console.log('style', canvas.style.cursor);
 		pressure = 2.5;
 	} else {
 		canvas.style.cursor = 'crosshair';

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * Text input widget for application UI
  *
@@ -110,9 +112,9 @@ function text() {
 	this.computeMetrics = function() {
 		this.height       = this.element.height;
 		this.fontHeight   = getHeightOfText(this.bold, this.font, this.fontSize);
-		this.linesVisible = Math.floor(this.element.height/this.fontHeight);
+		this.linesVisible = Math.floor(this.element.height / this.fontHeight);
 		this.space        = this.ctx.measureText(" ").width;
-		this.columns      = Math.floor(this.element.width/this.space);
+		this.columns      = Math.floor(this.element.width / this.space);
 	};
 
 	/**
@@ -149,7 +151,7 @@ function text() {
 	*
 	* @method init
 	*/
-	this.init = function(id, date, resrc, file) {
+	this.init = function(id, date, resrc) {
 		this.element = document.getElementById(id);
 		this.ctx     = this.element.getContext("2d");
 		this.resrcPath = resrc;
@@ -167,24 +169,24 @@ function text() {
 		for (var parts = 0; parts < this.range.length; parts++) {
 			var start = this.range[parts][0];
 			var end   = this.range[parts][1];
-			for (var i=start; i<=end; i++) {
+			for (var i = start; i <= end; i++) {
 
-				this.ctx.font= "16px " + this.font;
-				this.ctx.fillText(('000' + i).slice(-3), 5, count*this.fontHeight);
-				this.ctx.font= this.fontSize + "px " + this.font;
+				this.ctx.font = "16px " + this.font;
+				this.ctx.fillText(('000' + i).slice(-3), 5, count * this.fontHeight);
+				this.ctx.font = this.fontSize + "px " + this.font;
 				if (i in this.textArr) {
-					var wrSpc = this.element.width - (2*this.space+this.lMargin);
+					var wrSpc = this.element.width - (2 * this.space + this.lMargin);
 					if (this.ctx.measureText(this.textArr[i]).width > wrSpc) {
-						var cut = Math.floor(wrSpc/this.ctx.measureText(this.textArr[i]).width * this.textArr[i].length);
+						var cut = Math.floor(wrSpc / this.ctx.measureText(this.textArr[i]).width * this.textArr[i].length);
 						var re  = new RegExp(".{1," + cut + "}", "g");
 						var mLines = this.textArr[i].match(re);
-						for (var ml=0; ml<mLines.length; ml++) {
-							this.ctx.fillText(mLines[ml], this.space + this.lMargin, count*this.fontHeight);
+						for (var ml = 0; ml < mLines.length; ml++) {
+							this.ctx.fillText(mLines[ml], this.space + this.lMargin, count * this.fontHeight);
 							count++;
 						}
+					} else {
+						this.ctx.fillText(this.textArr[i], this.space + this.lMargin, count * this.fontHeight);
 					}
-					else
-						this.ctx.fillText(this.textArr[i], this.space + this.lMargin, count*this.fontHeight);
 				}
 				count++;
 			}
@@ -200,14 +202,14 @@ function text() {
 		// clear canvas
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
 
-        this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 		this.ctx.fillStyle = "rgba(150, 150, 150, 1.0)";
 		this.ctx.fillRect(0, 0, this.lMargin, this.element.height);
 		this.ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
-		this.ctx.fillRect(this.element.width-30, 0, 30, this.element.height);
+		this.ctx.fillRect(this.element.width - 30, 0, 30, this.element.height);
 
-		this.ctx.strokeStyle = 	"rgba(0, 0, 0, 1.0)";
+		this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.space = this.ctx.measureText(" ").width;
@@ -241,14 +243,12 @@ function text() {
 		if (curL in this.textArr) {
 			var nl = this.textArr[curL].substring(curC, this.textArr[curL].length);
 			this.textArr[curL] = this.textArr[curL].substring(0, curC);
-			if (curL+1 in this.textArr) {
+			if (curL + 1 in this.textArr) {
 				this.textArr.splice(curL + 1, 0, nl);
+			} else {
+				this.textArr[curL + 1] = nl;
 			}
-			else {
-				this.textArr[curL+1] = nl;
-			}
-		}
-		else {
+		} else {
 			this.textArr[curL] = "";
 		}
 		this.blinkerArr[userId].moveLC(curL + 1, 0);
@@ -266,84 +266,76 @@ function text() {
 		var post;
 		var t;
 
-        user_color = user_color || [255, 0, 0];
+		user_color = user_color || [255, 0, 0];
 
 		if (type === "pointerPress") {
 			if (data.button === "left") {
-				if ( !(userId in this.blinkerArr)) {
+				if (!(userId in this.blinkerArr)) {
 					console.log(user_color);
 					var bkr = new Blinker(userId, this.ctx, date, user_color);
 					this.blinkerArr[userId] = bkr;
-				}
-				else {
+				} else {
 					this.blinkerArr[userId].color = user_color;
 				}
-				var lno    = Math.ceil(y/this.fontHeight);
+				var lno    = Math.ceil(y / this.fontHeight);
 				var tArIdx = lno;
 				if (tArIdx in this.textArr) {
 					var len = this.ctx.measureText(this.textArr[tArIdx]).width;
 					if (x >= len) {
 						this.blinkerArr[userId].moveLC(lno, this.textArr[tArIdx].length);
-					}
-					else {
+					} else {
 						var c;
-						for (c=0; c<this.textArr[tArIdx].length; c++) {
-							if (this.ctx.measureText(this.textArr[tArIdx].substring(0, c)).width > x)
+						for (c = 0; c < this.textArr[tArIdx].length; c++) {
+							if (this.ctx.measureText(this.textArr[tArIdx].substring(0, c)).width > x) {
 								break;
+							}
 						}
-						this.blinkerArr[userId].moveLC(lno, c-1);
+						this.blinkerArr[userId].moveLC(lno, c - 1);
 					}
-				}
-				else {
+				} else {
 					this.blinkerArr[userId].moveLC(lno, 0);
 				}
-			}
-			else if (data.button === "right") {
-				//not implemented yet
+			} else if (data.button === "right") {
+				// not implemented yet
 				console.log('Text> NYI');
 			}
-		}
-		else if (type === "pointerRelease") {
+		} else if (type === "pointerRelease") {
 			if (data.button === "left") {
-				//not implemented yet
+				// not implemented yet
+				console.log('Text> NYI');
+			} else if (data.button === "right") {
+				// not implemented yet
 				console.log('Text> NYI');
 			}
-			else if (data.button === "right") {
-				//not implemented yet
-				console.log('Text> NYI');
-			}
-		}
-		else if (type === "pointerMove") { //x and y hold current pointer positions
-			//not implemented yet
+		} else if (type === "pointerMove") { // x and y hold current pointer positions
+			// not implemented yet
 			console.log('Text> NYI');
-		}
-		else if (type === "pointerDoubleClick") {
-			//not implemented yet
+		} else if (type === "pointerDoubleClick") {
+			// not implemented yet
 			console.log('Text> NYI');
-		}
-		else if (type === "keyboard") {
+		} else if (type === "keyboard") {
 			// the key character is stored in ascii in data.code
 			// all other keys will come in as typed:  'a', 'A', '1', '!' etc
 			// tabs and new lines ought to be coming in too
-            var theAsciiCode = data.code;
+			var theAsciiCode = data.code;
 			// Bad code. need to remove once the event handler has been modified.
-			if ((userId in this.blinkerArr) === false) return;
+			if ((userId in this.blinkerArr) === false) {
+				return;
+			}
 			curL = this.blinkerArr[userId].blinkerL;
 			curC = this.blinkerArr[userId].blinkerC;
-			if (theAsciiCode === 13){
+			if (theAsciiCode === 13) {
 				this.enterKey(curL, curC, userId);
-			}
-            else {
+			} else {
 				if (curL in this.textArr) {
-					this.textArr[curL] = this.textArr[curL].substring(0, curC) +  String.fromCharCode(theAsciiCode) + this.textArr[curL].substring(curC, this.textArr[curL].length);
-				}
-				else {
+					this.textArr[curL] = this.textArr[curL].substring(0, curC) +  String.fromCharCode(theAsciiCode) +
+							this.textArr[curL].substring(curC, this.textArr[curL].length);
+				} else {
 					this.textArr[curL] = String.fromCharCode(theAsciiCode);
 				}
-				this.blinkerArr[userId].moveLC(curL, curC+1);
+				this.blinkerArr[userId].moveLC(curL, curC + 1);
 			}
-		}
-		else if (type === "specialKey" && data.state === "down") {
+		} else if (type === "specialKey" && data.state === "down") {
 			// anything not printed
 			// alt, command, up arrow
 			// comes in as javascript key code
@@ -351,99 +343,89 @@ function text() {
 			curL = userId && this.blinkerArr[userId].blinkerL;
 			curC = this.blinkerArr[userId].blinkerC;
 			if (theJavascriptCode === 8) {
-				if (curL in this.textArr ) {
+				if (curL in this.textArr) {
 
-					pre = this.textArr[curL].substring(0, curC-1);
+					pre = this.textArr[curL].substring(0, curC - 1);
 					post = this.textArr[curL].substring(curC, this.textArr[curL].length);
-					if (curC > 0 ) {
+					if (curC > 0) {
 						this.textArr[curL] = pre + post;
-						this.blinkerArr[userId].moveLC(curL, curC-1);
+						this.blinkerArr[userId].moveLC(curL, curC - 1);
 
-					}
-					else if (curL > 1) {
+					} else if (curL > 1) {
 						t = "";
-						if (curL-1 in this.textArr) {
-							t =  this.textArr[curL-1];
+						if (curL - 1 in this.textArr) {
+							t =  this.textArr[curL - 1];
 						}
-						this.textArr[curL-1] = t + post;
+						this.textArr[curL - 1] = t + post;
 						this.textArr.splice(curL, 1);
-						this.blinkerArr[userId].moveLC(curL-1, t.length);
+						this.blinkerArr[userId].moveLC(curL - 1, t.length);
 					}
-				}
-				else if (curL-1 in this.textArr) {
+				} else if (curL - 1 in this.textArr) {
 
-					this.blinkerArr[userId].moveLC(curL-1, this.textArr[curL-1].length);
+					this.blinkerArr[userId].moveLC(curL - 1, this.textArr[curL - 1].length);
+				} else if (curL > 1) {
+					this.blinkerArr[userId].moveLC(curL - 1, 0);
 				}
-				else if (curL > 1) {
-					this.blinkerArr[userId].moveLC(curL-1, 0);
-				}
-			}
-			else if (theJavascriptCode === 46) {
+			} else if (theJavascriptCode === 46) {
 				pre  = this.textArr[curL].substring(0, curC);
-				post = this.textArr[curL].substring(curC+1, this.textArr[curL].length);
+				post = this.textArr[curL].substring(curC + 1, this.textArr[curL].length);
 
-				if ((curL in this.textArr ) === false) return;
+				if ((curL in this.textArr) === false) {
+					return;
+				}
 
 				if (curC < this.textArr[curL].length) {
 					this.textArr[curL] = pre + post;
-				}
-				else {
+				} else {
 					t = "";
-					if (curL+1 in this.textArr) {
-						t = this.textArr[curL+1];
-						this.textArr.splice(curL+1, 1);
+					if (curL + 1 in this.textArr) {
+						t = this.textArr[curL + 1];
+						this.textArr.splice(curL + 1, 1);
 					}
 					this.textArr[curL] = this.textArr[curL]  + t;
 				}
-			}
-			else if (theJavascriptCode === 37) {
-				if (curC > 0)
+			} else if (theJavascriptCode === 37) {
+				if (curC > 0) {
 					curC--;
-				else{
-					curL = curL-1 || curL;
-					curC = (curL in this.textArr)? this.textArr[curL].length : 0;
+				} else {
+					curL = curL - 1 || curL;
+					curC = (curL in this.textArr) ? this.textArr[curL].length : 0;
 				}
 				this.blinkerArr[userId].moveLC(curL, curC);
 
-			}
-			else if (theJavascriptCode === 39) {
-				if (curL in this.textArr && curC < this.textArr[curL].length)
+			} else if (theJavascriptCode === 39) {
+				if (curL in this.textArr && curC < this.textArr[curL].length) {
 					curC++;
-				else {
+				} else {
 					curL++;
 					curC = 0;
 				}
 				this.blinkerArr[userId].moveLC(curL, curC);
-			}
-			else if (theJavascriptCode === 38) {
-				if (curL-1 in this.textArr) {
-					curC = Math.min(curC, this.textArr[curL-1].length);
+			} else if (theJavascriptCode === 38) {
+				if (curL - 1 in this.textArr) {
+					curC = Math.min(curC, this.textArr[curL - 1].length);
 					curL--;
-				}
-				else if (curL-1 > 0) {
+				} else if (curL - 1 > 0) {
 					curL--;
 					curC = 0;
 				}
 				this.blinkerArr[userId].moveLC(curL, curC);
-			}
-			else if (theJavascriptCode === 40) {
-				if (curL+1 in this.textArr) {
-					curC = Math.min(curC, this.textArr[curL+1].length);
+			} else if (theJavascriptCode === 40) {
+				if (curL + 1 in this.textArr) {
+					curC = Math.min(curC, this.textArr[curL + 1].length);
 					curL++;
-				}
-				else {
+				} else {
 					curL++;
 					curC = 0;
 				}
 				this.blinkerArr[userId].moveLC(curL, curC);
 			}
-		}
-		else if (type === "pointerScroll") {
-			//not implemented yet
+		} else if (type === "pointerScroll") {
+			// not implemented yet
 			console.log('Text> NYI');
 		}
 
-		//redraw
-        this.draw( date );
+		// redraw
+		this.draw(date);
 	};
 }

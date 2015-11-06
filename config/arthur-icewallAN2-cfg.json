@@ -1,4 +1,5 @@
 {
+	"name": "Endeavour",
 	"host": "nishimoto.evl.uic.edu",
 	"port": 9090,
 	"index_port": 9292,
@@ -8,11 +9,23 @@
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"show_version": true
+		"show_version": true,
+		"widgetControlSize": 20,
+		"enable_perceptual_scaling": true,
+		"use_calcuated_viewing_distance": true
 	},
 	"resolution": {
 		"width": 768,
 		"height": 1360
+	},
+	// NEW ATTRIBUTES
+	"dimensions": {
+		// dimensions of one tile (can be overriden in displays section)
+		"tile_width":  0.646,  // in meter, pixel area
+		"tile_height": 1.093,  // in meter, pixel area
+		"tile_borders": [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		"viewing_distance": 1.0668  // in meter
 	},
 	"layout": {
 		"rows": 1,
@@ -32,6 +45,10 @@
 		"localhost",
 		"127.0.0.1"
 	],
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+    },
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",

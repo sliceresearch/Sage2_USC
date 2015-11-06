@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule Pointer
@@ -73,7 +75,7 @@ function Pointer() {
 		var labelBGHeight = Math.round(height * 0.275);
 		var labelTextX    = Math.round(height * 0.5425);
 		var labelTextY    = Math.round(height * 0.8475);
-		var labelTextSize = Math.round(0.17*height);
+		var labelTextSize = Math.round(0.17 * height);
 
 		var _this = this;
 
@@ -92,8 +94,9 @@ function Pointer() {
 			// mark it as loaded
 			_this.pointerIconLoaded = true;
 			// if both icons loaded, update colors
-			if(_this.winModeIconLoaded === true && _this.appModeIconLoaded)
+			if (_this.winModeIconLoaded === true && _this.appModeIconLoaded) {
 				_this.updateIconColors();
+			}
 		});
 
 		Snap.load("images/SAGE2 Window Manipulation.svg", function(f) {
@@ -111,8 +114,9 @@ function Pointer() {
 			// mark it as loaded
 			_this.winModeIconLoaded = true;
 			// if both icons loaded, update colors
-			if (_this.pointerIconLoaded === true && _this.appModeIconLoaded === true)
+			if (_this.pointerIconLoaded === true && _this.appModeIconLoaded === true) {
 				_this.updateIconColors();
+			}
 		});
 
 		Snap.load("images/SAGE2 Application Interaction.svg", function(f) {
@@ -129,12 +133,13 @@ function Pointer() {
 			_this.snap.prepend(_this.appModeIcon);
 
 			_this.appModeIconLoaded = true;
-			if(_this.pointerIconLoaded === true && _this.winModeIconLoaded === true)
+			if (_this.pointerIconLoaded === true && _this.winModeIconLoaded === true) {
 				_this.updateIconColors();
+			}
 		});
 
 		// Black background, transparent
-		this.labelBG = this.snap.rect(labelBGX, labelBGY, labelBGWidth, labelBGHeight, labelBGHeight/2, labelBGHeight/2);
+		this.labelBG = this.snap.rect(labelBGX, labelBGY, labelBGWidth, labelBGHeight, labelBGHeight / 2, labelBGHeight / 2);
 		this.labelBG.attr({
 			fill: "rgba(0, 0, 0, 0.6)"
 		});
@@ -201,40 +206,67 @@ function Pointer() {
 	* @method updateIconColors
 	*/
 	this.updateIconColors = function() {
-		if( this.sourceType === "Touch" ) {
-			if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
-			if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
-			if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
+		if (this.sourceType === "Touch") {
+			if (this.pointerIconLoaded) {
+				this.colorSVG(this.pointerIcon, "#000000", this.color);
+			}
+			if (this.winModeIconLoaded) {
+				this.colorSVG(this.winModeIcon, "#000000", this.color);
+			}
+			if (this.appModeIconLoaded) {
+				this.colorSVG(this.appModeIcon, "#000000", this.color);
+			}
 
 			// window manipulation
 			if (this.mode === 0) {
-				if (this.pointerIconLoaded) this.pointerIcon.attr({display: "none"});
-				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
-				if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+				if (this.pointerIconLoaded) {
+					this.pointerIcon.attr({display: "none"});
+				}
+				if (this.winModeIconLoaded) {
+					this.winModeIcon.attr({display: "none"});
+				}
+				if (this.appModeIconLoaded) {
+					this.appModeIcon.attr({display: ""});
+				}
 
 				this.labelText.attr({display: "none"});
 				this.labelBG.attr({display: "none"});
+			} else if (this.mode === 1) {
+				// application interaction
+				if (this.winModeIconLoaded) {
+					this.winModeIcon.attr({display: "none"});
+				}
+				if (this.appModeIconLoaded) {
+					this.appModeIcon.attr({display: ""});
+				}
 			}
-			// application interaction
-			else if(this.mode === 1) {
-				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
-				if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+		} else {
+			if (this.pointerIconLoaded) {
+				this.colorSVG(this.pointerIcon, "#000000", this.color);
 			}
-		}
-		else {
-			if (this.pointerIconLoaded) this.colorSVG(this.pointerIcon, "#000000", this.color);
-			if (this.winModeIconLoaded) this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
-			if (this.appModeIconLoaded) this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
+			if (this.winModeIconLoaded) {
+				this.colorSVG(this.winModeIcon, "#000000", "#FFFFFF");
+			}
+			if (this.appModeIconLoaded) {
+				this.colorSVG(this.appModeIcon, "#000000", "#FFFFFF");
+			}
 
 			// window manipulation
 			if (this.mode === 0) {
-				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
-				if (this.appModeIconLoaded) this.appModeIcon.attr({display: "none"});
-			}
-			// application interaction
-			else if(this.mode === 1) {
-				if (this.winModeIconLoaded) this.winModeIcon.attr({display: "none"});
-				if (this.appModeIconLoaded) this.appModeIcon.attr({display: ""});
+				if (this.winModeIconLoaded) {
+					this.winModeIcon.attr({display: "none"});
+				}
+				if (this.appModeIconLoaded) {
+					this.appModeIcon.attr({display: "none"});
+				}
+			} else if (this.mode === 1) {
+				// application interaction
+				if (this.winModeIconLoaded) {
+					this.winModeIcon.attr({display: "none"});
+				}
+				if (this.appModeIconLoaded) {
+					this.appModeIcon.attr({display: ""});
+				}
 			}
 		}
 	};
@@ -248,16 +280,26 @@ function Pointer() {
 	* @param fill {Object} fill color
 	*/
 	this.colorSVG = function(svg, stroke, fill) {
-		var rects    = svg.selectAll("rect");
-		if (rects) rects.attr({fill: fill, stroke: stroke});
-		var circles  = svg.selectAll("circle");
-		if (circles) circles.attr({fill: fill, stroke: stroke});
+		var rects = svg.selectAll("rect");
+		if (rects) {
+			rects.attr({fill: fill, stroke: stroke});
+		}
+		var circles = svg.selectAll("circle");
+		if (circles) {
+			circles.attr({fill: fill, stroke: stroke});
+		}
 		var ellipses = svg.selectAll("ellipse");
-		if (ellipses) ellipses.attr({fill: fill, stroke: stroke});
+		if (ellipses) {
+			ellipses.attr({fill: fill, stroke: stroke});
+		}
 		var polygons = svg.selectAll("polygon");
-		if (polygons) polygons.attr({fill: fill, stroke: stroke});
-		var paths    = svg.selectAll("path");
-		if (paths) paths.attr({fill: fill, stroke: stroke});
+		if (polygons) {
+			polygons.attr({fill: fill, stroke: stroke});
+		}
+		var paths = svg.selectAll("path");
+		if (paths) {
+			paths.attr({fill: fill, stroke: stroke});
+		}
 	};
 
 }

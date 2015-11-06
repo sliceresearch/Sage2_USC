@@ -2,7 +2,7 @@
 	"main_script": "zoom.js",
 	"icon": "zoom.webp",
 	"width": 800,
-	"height": 224,
+	"height": 400,
 	"resize": "free",
 	"dependencies": [
 		  "openseadragon.min.js"

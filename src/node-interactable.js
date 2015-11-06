@@ -60,7 +60,7 @@ InteractableManager.prototype.addLayer = function(id, zIndex) {
 * @param id {String} unique identifier for the layer
 */
 InteractableManager.prototype.removeLayer = function(id) {
-	if(this.layers.hasOwnProperty(id)) {
+	if (this.layers.hasOwnProperty(id)) {
 		delete this.layers[id];
 		delete this.interactableObjects[id];
 
@@ -93,13 +93,12 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 		zIndex:   zIndex,
 		data:     data
 	};
-	if(type === "circle") {
+	if (type === "circle") {
 		pkg.x1 = geometry.x - geometry.r;
 		pkg.y1 = geometry.y - geometry.r;
 		pkg.x2 = geometry.x + geometry.r;
 		pkg.y2 = geometry.y + geometry.r;
-	}
-	else {
+	} else {
 		pkg.x1 = geometry.x;
 		pkg.y1 = geometry.y;
 		pkg.x2 = geometry.x + geometry.w;
@@ -111,6 +110,49 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 };
 
 /**
+* Add new object (with complex geomtry - comprising of rectangles and circles) to a layer
+*
+* @method addComplexGeometry
+* @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
+* @param shapeData {Object} containing type, geometry, and visibiility of each of the comprising elements
+* @param zIndex {Integer} determines ordering of the geometries within a given layers
+* @param data {Object} data to store along with given geometry
+*/
+InteractableManager.prototype.addComplexGeometry = function(id, layerId, shapeData, zIndex, data) {
+	var complexPkg = {};
+	for (var key in shapeData) {
+		var geometry = shapeData[key].geometry;
+		var type = shapeData[key].type;
+		var visible = shapeData[key].visible;
+		var pkg = {
+			id:       id + key,
+			layerId:  layerId,
+			type:     type,
+			geometry: geometry,
+			visible:  visible,
+			zIndex:   zIndex,
+			data:     data
+		};
+		if (type === "circle") {
+			pkg.x1 = geometry.x - geometry.r;
+			pkg.y1 = geometry.y - geometry.r;
+			pkg.x2 = geometry.x + geometry.r;
+			pkg.y2 = geometry.y + geometry.r;
+		} else {
+			pkg.x1 = geometry.x;
+			pkg.y1 = geometry.y;
+			pkg.x2 = geometry.x + geometry.w;
+			pkg.y2 = geometry.y + geometry.h;
+		}
+		this.layers[layerId].objects.insert(pkg);
+		complexPkg[key] = pkg;
+	}
+
+	this.interactableObjects[layerId][id] = complexPkg;
+};
+
+/**
 * Remove geometric object from a layer
 *
 * @method removeGeometry
@@ -119,7 +161,13 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 */
 InteractableManager.prototype.removeGeometry = function(id, layerId) {
 	var pkg = this.interactableObjects[layerId][id];
-	this.layers[layerId].objects.remove(pkg);
+	if (pkg.hasOwnProperty("layerId")) {
+		this.layers[layerId].objects.remove(pkg);
+	} else {
+		for (var key in pkg) {
+			this.layers[layerId].objects.remove(pkg[key]);
+		}
+	}
 
 	delete this.interactableObjects[layerId][id];
 };
@@ -140,13 +188,12 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 
 	pkg.type = type;
 	pkg.geometry = geometry;
-	if(type === "circle") {
+	if (type === "circle") {
 		pkg.x1 = geometry.x - geometry.r;
 		pkg.y1 = geometry.y - geometry.r;
 		pkg.x2 = geometry.x + geometry.r;
 		pkg.y2 = geometry.y + geometry.r;
-	}
-	else {
+	} else {
 		pkg.x1 = geometry.x;
 		pkg.y1 = geometry.y;
 		pkg.x2 = geometry.x + geometry.w;
@@ -159,6 +206,39 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 /**
 * Edit geometric object position / size / type
 *
+* @method editComplexGeometry
+* @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
+* @param shapeData {Object} containing type, geometry, and visibiility of each of the comprising elements
+*/
+InteractableManager.prototype.editComplexGeometry = function(id, layerId, shapeData) {
+	var complexPkg = this.interactableObjects[layerId][id];
+	for (var key in complexPkg) {
+		if (complexPkg.hasOwnProperty(key)) {
+			var pkg = complexPkg[key];
+			this.layers[layerId].objects.remove(pkg);
+			pkg.type = shapeData[key].type;
+			var geometry = shapeData[key].geometry;
+			pkg.geometry = geometry;
+			if (pkg.type === "circle") {
+				pkg.x1 = geometry.x - geometry.r;
+				pkg.y1 = geometry.y - geometry.r;
+				pkg.x2 = geometry.x + geometry.r;
+				pkg.y2 = geometry.y + geometry.r;
+			} else {
+				pkg.x1 = geometry.x;
+				pkg.y1 = geometry.y;
+				pkg.x2 = geometry.x + geometry.w;
+				pkg.y2 = geometry.y + geometry.h;
+			}
+			this.layers[layerId].objects.insert(pkg);
+		}
+	}
+};
+
+/**
+* Edit geometric object position / size / type
+*
 * @method editGeometry
 * @param id {String} unique identifier for the geometric object
 * @return hasObject {Boolean} whether or not an object with the given id exists
@@ -166,8 +246,9 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 InteractableManager.prototype.hasObjectWithId = function(id) {
 	var key;
 	for (key in this.interactableObjects) {
-		if (this.interactableObjects[key].hasOwnProperty(id))
+		if (this.interactableObjects[key].hasOwnProperty(id)) {
 			return true;
+		}
 	}
 	return false;
 };
@@ -179,11 +260,25 @@ InteractableManager.prototype.hasObjectWithId = function(id) {
 * @param id {String} unique identifier for the geometric object
 * @param layerId {String} unique identifier for the layer
 * @param visible {Boolean} whether or not the geometric object is currently visible
+* @param partId {String} id of the part of the complex geometry for which visiblity is being edited
 */
-InteractableManager.prototype.editVisibility = function(id, layerId, visible) {
+InteractableManager.prototype.editVisibility = function(id, layerId, visible, partId) {
 	var pkg = this.interactableObjects[layerId][id];
-	pkg.visible = visible;
+	if (pkg.hasOwnProperty("visible")) {
+		pkg.visible = visible;
+	} else {
+		if (partId !== undefined && partId !== null && pkg.hasOwnProperty(partId)) {
+			pkg[partId].visible = visible;
+		} else {
+			for (var key in pkg) {
+				if (pkg.hasOwnProperty(key)) {
+					pkg[key].visible = visible;
+				}
+			}
+		}
+	}
 };
+
 
 /**
 * Edit zIndex of geometric object
@@ -195,7 +290,7 @@ InteractableManager.prototype.editVisibility = function(id, layerId, visible) {
 */
 InteractableManager.prototype.editZIndex = function(id, layerId, zIndex) {
 	var pkg = this.interactableObjects[layerId][id];
-	pkg.zIndex = zIndex;
+	setZIndexOfObj(pkg, zIndex);
 };
 
 /**
@@ -209,22 +304,25 @@ InteractableManager.prototype.editZIndex = function(id, layerId, zIndex) {
 InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLayerIds) {
 	var i;
 	var key;
-	var currZIndex = this.interactableObjects[layerId][id].zIndex;
+	var currZIndex = getZIndexOfObj(this.interactableObjects[layerId][id]);
 	var maxZIndex = currZIndex;
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
-	for (i=0; i<allLayerIds.length; i++) {
+	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
-				var itemZIndex = this.interactableObjects[allLayerIds[i]][key].zIndex;
+				var itemZIndex = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
 				if (itemZIndex > currZIndex) {
-					if (itemZIndex > maxZIndex) maxZIndex = itemZIndex;
-					this.interactableObjects[allLayerIds[i]][key].zIndex--;
+					if (itemZIndex > maxZIndex) {
+						maxZIndex = itemZIndex;
+					}
+					var decreasedIndex = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]) - 1;
+					setZIndexOfObj(this.interactableObjects[allLayerIds[i]][key], decreasedIndex);
 				}
 			}
 		}
 	}
-	this.interactableObjects[layerId][id].zIndex = maxZIndex;
+	setZIndexOfObj(this.interactableObjects[layerId][id], maxZIndex);
 };
 
 /**
@@ -241,10 +339,10 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 	var zIndexList = {};
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
-	for (i=0; i<allLayerIds.length; i++) {
+	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
-				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = this.interactableObjects[allLayerIds[i]][key].zIndex;
+				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
 			}
 		}
 	}
@@ -277,17 +375,15 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {
 		results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
-	}
-	else {
+	} else {
 		var i;
 		var tmp;
 		results = [];
-		for(i=this.layerOrder.length-1; i>=0; i--) {
+		for (i = this.layerOrder.length - 1; i >= 0; i--) {
 			tmp = this.layers[this.layerOrder[i]].objects.search([point.x, point.y, point.x, point.y]);
-			if (i < this.layerOrder.length-1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i+1]].zIndex) {
-				results[results.length-1] = results[results.length-1].concat(tmp);
-			}
-			else {
+			if (i < this.layerOrder.length - 1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
+				results[results.length - 1] = results[results.length - 1].concat(tmp);
+			} else {
 				results.push(tmp);
 			}
 		}
@@ -308,27 +404,69 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 function findTopmostGeometry(point, geometryList, ignoreList) {
 	var i, j;
 	var topmost = null;
-	if (!(ignoreList instanceof Array)) ignoreList = [];
-	for(i=0; i<geometryList.length; i++) {
-		for(j=0; j<geometryList[i].length; j++) {
-			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) continue;
+	if (!(ignoreList instanceof Array)) {
+		ignoreList = [];
+	}
+	for (i = 0; i < geometryList.length; i++) {
+		for (j = 0; j < geometryList[i].length; j++) {
+			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) {
+				continue;
+			}
 			if (geometryList[i][j].type === "circle") {
 				var x = point.x - geometryList[i][j].geometry.x;
 				var y = point.y - geometryList[i][j].geometry.y;
 				var r = geometryList[i][j].geometry.r;
-				if ((x*x + y*y) < (r*r) && geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
+				if ((x * x + y * y) < (r * r) && geometryList[i][j].visible === true &&
+					(topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
-			}
-			else {
+			} else {
 				if (geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)) {
 					topmost = geometryList[i][j];
 				}
 			}
 		}
-		if(topmost !== null) return topmost;
+		if (topmost !== null) {
+			return topmost;
+		}
 	}
 	return null;
+}
+
+/**
+* Get method for the zIndex of an Object
+* @method getZIndexOfObj
+* @param obj {Object} pkg information of the geometric object
+*/
+
+function getZIndexOfObj(obj) {
+	if (obj.hasOwnProperty("zIndex")) {
+		return obj.zIndex;
+	} else {
+		var lst = Object.getOwnPropertyNames(obj);
+		if (lst.length > 0) {
+			return obj[lst[0]].zIndex;
+		}
+		return null;
+	}
+}
+/**
+* Set method for the zIndex of an Object
+* @method setZIndexOfObj
+* @param obj {Object} pkg information of the geometric object
+* @param zIndex {Integer} determines ordering of the geometries within a given layers
+*/
+
+function setZIndexOfObj(obj, zIndex) {
+	if (obj.hasOwnProperty("zIndex")) {
+		obj.zIndex = zIndex;
+	} else {
+		for (var key in obj) {
+			if (obj.hasOwnProperty(key)) {
+				obj[key].zIndex = zIndex;
+			}
+		}
+	}
 }
 
 

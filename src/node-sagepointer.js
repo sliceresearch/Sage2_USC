@@ -65,15 +65,31 @@ SagePointer.prototype.stop = function() {
 };
 
 SagePointer.prototype.updatePointerPosition = function(data, maxW, maxH) {
-	if (data.pointerX !== undefined) this.left = data.pointerX;
-	if (data.pointerY !== undefined) this.top = data.pointerY;
-	if (data.dx !== undefined) this.left += data.dx;
-	if (data.dy !== undefined) this.top  += data.dy;
+	if (data.pointerX !== undefined) {
+		this.left = data.pointerX;
+	}
+	if (data.pointerY !== undefined) {
+		this.top = data.pointerY;
+	}
+	if (data.dx !== undefined) {
+		this.left += data.dx;
+	}
+	if (data.dy !== undefined) {
+		this.top  += data.dy;
+	}
 
-	if (this.left < 0)    this.left = 0;
-	if (this.left > maxW) this.left = maxW;
-	if (this.top < 0)     this.top = 0;
-	if (this.top > maxH)  this.top = maxH;
+	if (this.left < 0) {
+		this.left = 0;
+	}
+	if (this.left > maxW) {
+		this.left = maxW;
+	}
+	if (this.top < 0) {
+		this.top = 0;
+	}
+	if (this.top > maxH) {
+		this.top = maxH;
+	}
 };
 
 

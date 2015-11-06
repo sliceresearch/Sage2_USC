@@ -8,13 +8,13 @@
 //
 // Copyright (c) 2014
 
+"use strict";
 
-var whiteboard = SAGE2_App.extend( {
+var whiteboard = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "onfinish";
-		
 		this.element.id = "div" + data.id;
 		this.element.style.backgroundColor    = "rgba(0,0,0,1)";
 		this.element.style.backgroundPosition = "top left";
@@ -35,23 +35,23 @@ var whiteboard = SAGE2_App.extend( {
 	},
 
 	load: function(date) {
+		this.refresh(date);
 	},
-	
+
 	draw: function(date) {
 		this.stage.draw();
 	},
-	
+
 	startResize: function(date) {
-	
 	},
-	
+
 	resize: function(date) {
-        this.stage.setSize({
-			width  : this.element.clientWidth,
-   			height : this.element.clientHeight
+		this.stage.setSize({
+			width: this.element.clientWidth,
+			height: this.element.clientHeight
 		});
-        var val = this.element.clientWidth/this.width;
-		this.stage.setScale({x:val, y:val});
+		var val = this.element.clientWidth / this.width;
+		this.stage.setScale({x: val, y: val});
 		this.refresh(date);
 	},
 
@@ -59,10 +59,11 @@ var whiteboard = SAGE2_App.extend( {
 		if (type === 'pointerDraw') {
 			if (data.command === 'draw') {
 				var lineWidth = data.pressure;
-				if (lineWidth===0)
+				if (lineWidth === 0) {
 					lineWidth = 3;
-				else
-					lineWidth = lineWidth*8.0;
+				} else {
+					lineWidth = lineWidth * 8.0;
+				}
 				var aSpline = new Kinetic.Line({
 					points: data.points,
 					stroke: data.color,
@@ -75,8 +76,9 @@ var whiteboard = SAGE2_App.extend( {
 			if (data.command === 'newlayer') {
 				var nlayer = new Kinetic.Layer();
 				// hide all the layers
-				for (var i=0;i<this.allLayers.length;i++)
+				for (var i = 0; i < this.allLayers.length; i++) {
 					this.allLayers[i].hide();
+				}
 				// put the new layer on display
 				this.stage.add(nlayer);
 				nlayer.show();
@@ -87,13 +89,18 @@ var whiteboard = SAGE2_App.extend( {
 			}
 			if (data.command === 'activelayer') {
 				// hide all the layers
-				for (var i=0;i<this.allLayers.length;i++)
-					this.allLayers[i].hide();
+				for (var j = 0; j < this.allLayers.length; j++) {
+					this.allLayers[j].hide();
+				}
 				// make it the active layer
 				this.layer = this.allLayers[data.value];
 				this.layer.show();
 			}
 		}
 		this.refresh(date);
+	},
+
+	quit: function() {
+		console.log("Drawing quit");
 	}
 });

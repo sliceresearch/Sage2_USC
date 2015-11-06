@@ -15,10 +15,19 @@
 		clock: 12,           // clock setting: 12-hour or 24-hour
 		show_version: true,  // shows SAGE2 version in menu bar
 		show_url: true,      // shows SAGE2 url in menu bar
+		enable_perceptual_scaling: true,
     },
 	resolution: {
 		width: 4080,
 		height: 768
+	},
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width:  1.093,  // in meter, pixel area
+		tile_height: 0.646,  // in meter, pixel area
+		tile_borders: [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 2.5  // in meter
 	},
 	layout: {
 		rows: 3,

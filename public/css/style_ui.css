@@ -67,13 +67,14 @@ h3 {
 
 #mainUI {
 	margin: 0px;
-	overflow: auto;
+	overflow: hidden;
 }
 
 #displayUI {
 	position: relative;
 	float: left;
 	margin: 10px 10px 0px 10px;
+	cursor: nw-resize;
 }
 
 #applicationsDiv {
@@ -627,20 +628,6 @@ h3 {
 .button {
 	padding: 10px 12px 10px 12px;
 	border-radius: 12px;
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
-	color: #FFFFFF;
-	background-color: #787878;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	user-select: none;
-}
-
-.button_session {
-	padding: 10px 12px 10px 12px;
-	margin: 10px;
-	width: 20%;
-	border-radius: 1px;
 	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 12px;
 	color: #FFFFFF;

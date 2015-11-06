@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2014
 
+"use strict";
 
 // simple radar image app
 // written by andy johnson - summer 2014
@@ -21,11 +22,11 @@
     ];
 */
 
-var radar = SAGE2_App.extend( {
-	////////////////////////////////////////
+/* global d3, SAGE2_radarStations */
 
-	initApp: function()
-	{
+var radar = SAGE2_App.extend({
+
+	initApp: function() {
 		this.load1SuccessCallbackFunc = this.load1SuccessCallback.bind(this);
 		this.load1FailCallbackFunc    = this.load1FailCallback.bind(this);
 		this.load2SuccessCallbackFunc = this.load2SuccessCallback.bind(this);
@@ -40,10 +41,7 @@ var radar = SAGE2_App.extend( {
 		this.load6FailCallbackFunc    = this.load6FailCallback.bind(this);
 	},
 
-	////////////////////////////////////////
-
-	createURLs: function ()
-	{
+	createURLs: function() {
 		var URL1a = "http://radar.weather.gov/ridge/Overlays/Topo/Short/";
 		var URL2a = "http://radar.weather.gov/ridge/Overlays/County/Short/";
 		var URL3a = "http://radar.weather.gov/ridge/RadarImg/N0R/";
@@ -60,185 +58,152 @@ var radar = SAGE2_App.extend( {
 
 		console.log("creating URLs for  " + this.state.currentStation);
 
-		this.URL1 = URL1a+SAGE2_radarStations[this.state.currentStation].code+URL1b;
-		this.URL2 = URL2a+SAGE2_radarStations[this.state.currentStation].code+URL2b;
-		this.URL3 = URL3a+SAGE2_radarStations[this.state.currentStation].code+URL3b;
-		this.URL4 = URL4a+SAGE2_radarStations[this.state.currentStation].code+URL4b;
-		this.URL5 = URL5a+SAGE2_radarStations[this.state.currentStation].code+URL5b;
-		this.URL6 = URL6a+SAGE2_radarStations[this.state.currentStation].code+URL6b;
+		this.URL1 = URL1a + SAGE2_radarStations[this.state.currentStation].code + URL1b;
+		this.URL2 = URL2a + SAGE2_radarStations[this.state.currentStation].code + URL2b;
+		this.URL3 = URL3a + SAGE2_radarStations[this.state.currentStation].code + URL3b;
+		this.URL4 = URL4a + SAGE2_radarStations[this.state.currentStation].code + URL4b;
+		this.URL5 = URL5a + SAGE2_radarStations[this.state.currentStation].code + URL5b;
+		this.URL6 = URL6a + SAGE2_radarStations[this.state.currentStation].code + URL6b;
 	},
 
-	////////////////////////////////////////
-
-	drawImage: function (theImage)
-	{
+	drawImage: function(theImage) {
 		this.sampleSVG.append("image")
 		.attr("xlink:href", theImage)
 		.attr("opacity", 1)
 		.attr("x", 0)
 		.attr("y", 0)
 		.attr("width", this.canvasWidth)
-		.attr("height", this.canvasHeight); 
+		.attr("height", this.canvasHeight);
 	},
 
-	////////////////////////////////////////
 
-	drawEverything: function ()
-	{
+	drawEverything: function() {
 		var sum = this.OK1 + this.OK2 + this.OK3 + this.OK4 + this.OK5 + this.OK6;
 
-		if (sum >= 6)
-			{
+		if (sum >= 6) {
 			this.sampleSVG.selectAll("*").remove();
 
-			this.drawImage(this.image1.src); //TOPO
-			this.drawImage(this.image2.src); //Counties
-		
-			this.drawImage(this.image3.src); //Radar
-			this.drawImage(this.image4.src); //Warnings
+			this.drawImage(this.image1.src); // TOPO
+			this.drawImage(this.image2.src); // Counties
 
-			this.drawImage(this.image6.src); //Cities
+			this.drawImage(this.image3.src); // Radar
+			this.drawImage(this.image4.src); // Warnings
 
-			this.drawImage(this.image5.src); //Legend
+			this.drawImage(this.image6.src); // Cities
+
+			this.drawImage(this.image5.src); // Legend
 		}
 	},
 
-	////////////////////////////////////////
-
-	load1SuccessCallback: function()
-	{
+	load1SuccessCallback: function() {
 		this.OK1 = 1;
 		this.drawEverything();
 	},
-	load1FailCallback: function()
-	{
+	load1FailCallback: function() {
 		this.OK1 = 0;
 
-		this.image1.src = this.URL1+ '?' + Math.floor(Math.random() * 10000000);
+		this.image1.src = this.URL1 + '?' + Math.floor(Math.random() * 10000000);
 		this.image1.onload = this.load1SuccessCallbackFunc;
-		this.image1.onerror = this.load1FailCallbackFunc; 
+		this.image1.onerror = this.load1FailCallbackFunc;
 	},
-	load2SuccessCallback: function()
-	{
+	load2SuccessCallback: function() {
 		this.OK2 = 1;
 		this.drawEverything();
 	},
-	load2FailCallback: function()
-	{
+	load2FailCallback: function() {
 		this.OK2 = 0;
 
-		this.image2.src = this.URL2+ '?' + Math.floor(Math.random() * 10000000);
+		this.image2.src = this.URL2 + '?' + Math.floor(Math.random() * 10000000);
 		this.image2.onload = this.load2SuccessCallbackFunc;
-		this.image2.onerror = this.load2FailCallbackFunc; 
+		this.image2.onerror = this.load2FailCallbackFunc;
 	},
-	load3SuccessCallback: function()
-	{
+	load3SuccessCallback: function() {
 		this.OK3 = 1;
 		this.drawEverything();
 	},
-	load3FailCallback: function()
-	{
+	load3FailCallback: function() {
 		this.OK3 = 0;
 
-		this.image3.src = this.URL3+ '?' + Math.floor(Math.random() * 10000000);
+		this.image3.src = this.URL3 + '?' + Math.floor(Math.random() * 10000000);
 		this.image3.onload = this.load3SuccessCallbackFunc;
-		this.image3.onerror = this.load3FailCallbackFunc; 
+		this.image3.onerror = this.load3FailCallbackFunc;
 	},
-	load4SuccessCallback: function()
-	{
+	load4SuccessCallback: function() {
 		this.OK4 = 1;
 		this.drawEverything();
 	},
-	load4FailCallback: function()
-	{
+	load4FailCallback: function() {
 		this.OK4 = 0;
 
-		this.image4.src = this.URL4+ '?' + Math.floor(Math.random() * 10000000);
+		this.image4.src = this.URL4 + '?' + Math.floor(Math.random() * 10000000);
 		this.image4.onload = this.load4SuccessCallbackFunc;
-		this.image4.onerror = this.load4FailCallbackFunc; 
+		this.image4.onerror = this.load4FailCallbackFunc;
 	},
-	load5SuccessCallback: function()
-	{
+	load5SuccessCallback: function() {
 		this.OK5 = 1;
 		this.drawEverything();
 	},
-	load5FailCallback: function()
-	{
+	load5FailCallback: function() {
 		this.OK5 = 0;
 
-		this.image5.src = this.URL5+ '?' + Math.floor(Math.random() * 10000000);
-		this.image5.onload = this.load5SuccessCallbackFunc;
-		this.image5.onerror = this.load5FailCallbackFunc; 
+		this.image5.src     = this.URL5 + '?' + Math.floor(Math.random() * 10000000);
+		this.image5.onload  = this.load5SuccessCallbackFunc;
+		this.image5.onerror = this.load5FailCallbackFunc;
 	},
-	load6SuccessCallback: function()
-	{
+	load6SuccessCallback: function() {
 		this.OK6 = 1;
 		this.drawEverything();
 	},
-	load6FailCallback: function()
-	{
+	load6FailCallback: function() {
 		this.OK6 = 0;
 
-		this.image6.src = this.URL6+ '?' + Math.floor(Math.random() * 10000000);
-		this.image6.onload = this.load6SuccessCallbackFunc;
-		this.image6.onerror = this.load6FailCallbackFunc; 
+		this.image6.src     = this.URL6 + '?' + Math.floor(Math.random() * 10000000);
+		this.image6.onload  = this.load6SuccessCallbackFunc;
+		this.image6.onerror = this.load6FailCallbackFunc;
 	},
 
-	////////////////////////////////////////
-
-	nextStation: function()
-	{
+	nextStation: function() {
 		this.state.currentStation += 1;
-		if (this.state.currentStation >= SAGE2_radarStations.length)
-			{
+		if (this.state.currentStation >= SAGE2_radarStations.length) {
 			this.state.currentStation = 0;
-			}
+		}
 
 		console.log("moving to next location " + this.state.currentStation);
 	},
 
-	////////////////////////////////////////
-
-	setStation: function(newStation)
-	{
+	setStation: function(newStation) {
 		this.state.currentStation = +newStation;
 
 		console.log("setting location to " + this.state.currentStation);
 	},
 
-	////////////////////////////////////////
-
-	update: function ()
-	{
+	update: function() {
 		// get new imagery for the radar, warnings, overlay (time)
 
-		if(isMaster){
+		if (isMaster) {
 			var commonRandom = Math.floor(Math.random() * 10000000);
-			this.broadcast("updateNode", {commonRandom:commonRandom});
+			this.broadcast("updateNode", {commonRandom: commonRandom});
 		}
 	},
 
 
-	updateNode: function(data)
-		{
+	updateNode: function(data) {
 		var localRandom = data.commonRandom;
 
-		this.image3.src = this.URL3+ '?' + localRandom;
-		this.image3.onload = this.load3SuccessCallbackFunc;
-		this.image3.onerror = this.load3FailCallbackFunc; 
+		this.image3.src     = this.URL3 + '?' + localRandom;
+		this.image3.onload  = this.load3SuccessCallbackFunc;
+		this.image3.onerror = this.load3FailCallbackFunc;
 
-		this.image4.src = this.URL4+ '?' + localRandom;
-		this.image4.onload = this.load4SuccessCallbackFunc;
-		this.image4.onerror = this.load4FailCallbackFunc; 
+		this.image4.src     = this.URL4 + '?' + localRandom;
+		this.image4.onload  = this.load4SuccessCallbackFunc;
+		this.image4.onerror = this.load4FailCallbackFunc;
 
-		this.image5.src = this.URL5+ '?' + localRandom;
-		this.image5.onload = this.load5SuccessCallbackFunc;
+		this.image5.src     = this.URL5 + '?' + localRandom;
+		this.image5.onload  = this.load5SuccessCallbackFunc;
 		this.image5.onerror = this.load5FailCallbackFunc;
 	},
 
-	////////////////////////////////////////
-
-	startup: function (){
+	startup: function() {
 		// set up the area to render into
 
 		// load in the background images and the legend once
@@ -248,30 +213,29 @@ var radar = SAGE2_App.extend( {
 
 		// the master generates one random number and sends it to everyone for the load
 
-		if(isMaster){
+		if (isMaster) {
 			var commonRandom = Math.floor(Math.random() * 10000000);
-			this.broadcast("startupNode", {commonRandom:commonRandom});
+			this.broadcast("startupNode", {commonRandom: commonRandom});
 		}
 	},
 
-	startupNode: function(data)
-		{
+	startupNode: function(data) {
 		var localRandom = data.commonRandom;
 
 		// TOPO
-		this.image1.src = this.URL1+ '?' + localRandom;
-		this.image1.onload = this.load1SuccessCallbackFunc;
-		this.image1.onerror = this.load1FailCallbackFunc; 
+		this.image1.src     = this.URL1 + '?' + localRandom;
+		this.image1.onload  = this.load1SuccessCallbackFunc;
+		this.image1.onerror = this.load1FailCallbackFunc;
 
 		// Counties
-		this.image2.src = this.URL2+ '?' + localRandom;
-		this.image2.onload = this.load2SuccessCallbackFunc;
-		this.image2.onerror = this.load2FailCallbackFunc; 
+		this.image2.src     = this.URL2 + '?' + localRandom;
+		this.image2.onload  = this.load2SuccessCallbackFunc;
+		this.image2.onerror = this.load2FailCallbackFunc;
 
 		// Cities
-		this.image6.src = this.URL6+ '?' + localRandom;
-		this.image6.onload = this.load6SuccessCallbackFunc;
-		this.image6.onerror = this.load6FailCallbackFunc; 
+		this.image6.src     = this.URL6 + '?' + localRandom;
+		this.image6.onload  = this.load6SuccessCallbackFunc;
+		this.image6.onerror = this.load6FailCallbackFunc;
 	},
 
 
@@ -290,7 +254,7 @@ var radar = SAGE2_App.extend( {
 		this.image2 = new Image();
 		this.image3 = new Image();
 		this.image4 = new Image();
-		this.image5 = new Image(); 
+		this.image5 = new Image();
 		this.image6 = new Image();
 
 		this.image3a = new Image();
@@ -311,104 +275,97 @@ var radar = SAGE2_App.extend( {
 		this.OK5 = 0;
 		this.OK6 = 0;
 
-        this.maxFPS = 0.01;
+		this.maxFPS = 0.01;
 
-        console.log("initalizing location to  " + this.state.currentStation);
+		console.log("initalizing location to  " + this.state.currentStation);
 
-        // Get width height from the supporting div     
-        var divWidth  = this.element.clientWidth;
-        var divHeight = this.element.clientHeight;
+		// Get width height from the supporting div
+		var divWidth  = this.element.clientWidth;
+		var divHeight = this.element.clientHeight;
 
-        this.element.id = "div" + data.id;
+		this.element.id = "div" + data.id;
 
-        // set background color for areas around my app (in case of non-proportional scaling)
-        this.element.style.backgroundColor = "black";
+		// set background color for areas around my app (in case of non-proportional scaling)
+		this.element.style.backgroundColor = "black";
 
-        // attach the SVG into the this.element node provided to us
-        var box="0,0,"+data.width+","+data.height;
-        this.svg = d3.select(this.element).append("svg:svg")
-            .attr("width",   divWidth)
-            .attr("height",  divHeight)
-            .attr("viewBox", box);
-        this.sampleSVG = this.svg;
+		// attach the SVG into the this.element node provided to us
+		var box = "0,0," + data.width + "," + data.height;
+		this.svg = d3.select(this.element).append("svg:svg")
+						.attr("width",   divWidth)
+						.attr("height",  divHeight)
+						.attr("viewBox", box);
+		this.sampleSVG = this.svg;
 
 
-        this.startup(); // refresh the URLs after the state load
+		this.startup(); // refresh the URLs after the state load
+		// create the widgets
+		console.log("creating controls");
+		this.controls.addButton({type: "next", position: 5, identifier: "Next"});
 
-        // create the widgets
-        console.log("creating controls");
-        this.controls.addButton({type:"next",sequenceNo:3, id:"Next"});
-
-        for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++){
-            var loopIdxWithPrefix = "0" + loopIdx;
-            var siteButton = {
-                "textual":true,
-                "label":SAGE2_radarStations[loopIdx].name,
-                "fill":"rgba(250,250,250,1.0)",
-                "animation":false
-            };
-            this.controls.addButton({type:siteButton, sequenceNo:5+loopIdx, id: loopIdxWithPrefix});
+		for (var loopIdx = 0; loopIdx < SAGE2_radarStations.length; loopIdx++) {
+			var loopIdxWithPrefix = "0" + loopIdx;
+			var pos = 3 - loopIdx;
+			if (pos < 1) {
+				pos = pos + 12;
+			}
+			this.controls.addButton({label: SAGE2_radarStations[loopIdx].name, position: pos, identifier: loopIdxWithPrefix});
 		}
-        this.controls.finishedAddingControls(); // Important
+		this.controls.finishedAddingControls(); // Important
 
 		this.update();
 		this.draw_d3(data.date);
 	},
 
 	load: function(date) {
-        this.refresh(date);
-	},
-
-	draw_d3: function(date) {
-		// Get width height from the supporting div		
-		var x = this.element.clientWidth;
-		var y = this.element.clientHeight;
-
-        this.canvasWidth = x;
-        this.canvasHeight = y;
-
-	    this.sampleSVG.append("svg:rect")
-	    .style("stroke", "black")
-	    .style("fill", "black")
-	    .style("fill-opacity", 1)
-	    .attr("x", 0)
-	    .attr("y", 0)
-	    .attr("height", y)
-	    .attr("width", x);
-	},
-	
-	draw: function(date) {
-	    this.update();
-	},
-
-	resize: function(date) {
-		this.svg.attr('width' ,  this.element.clientWidth  +"px");
-		this.svg.attr('height' , this.element.clientHeight  +"px");
 		this.refresh(date);
 	},
 
-    event: function(eventType, pos, user, data, date) {
-	//event: function(eventType, userId, x, y, data, date) {
+	draw_d3: function(date) {
+		// Get width height from the supporting div
+		var x = this.element.clientWidth;
+		var y = this.element.clientHeight;
 
-		if (eventType === "pointerPress" && (data.button === "left") ) {
-		}
-		else if (eventType === "pointerMove" ) {
-		}
-		else if (eventType === "pointerRelease" && (data.button === "left") ) {
-            this.nextStation();
-            this.startup();
-            this.refresh(date);
-		}
-		else if (eventType === "widgetEvent"){
-			if (data.ctrlId === "Next"){
+		this.canvasWidth  = x;
+		this.canvasHeight = y;
+
+		this.sampleSVG.append("svg:rect")
+				.style("stroke", "black")
+				.style("fill", "black")
+				.style("fill-opacity", 1)
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("height", y)
+				.attr("width", x);
+	},
+
+	draw: function(date) {
+		this.update();
+	},
+
+	resize: function(date) {
+		this.svg.attr('width',  this.element.clientWidth  + "px");
+		this.svg.attr('height', this.element.clientHeight  + "px");
+		this.refresh(date);
+	},
+
+	event: function(eventType, pos, user, data, date) {
+		if (eventType === "pointerPress" && (data.button === "left")) {
+			// pointer press
+		} else if (eventType === "pointerMove") {
+			// pointer move
+		} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			this.nextStation();
+			this.startup();
+			this.refresh(date);
+		} else if (eventType === "widgetEvent") {
+			if (data.ctrlId === "Next") {
 				this.nextStation();
-			}
-			else{
-				this.setStation(data.ctrlId);
+			} else {
+				this.setStation(data.identifier);
 			}
 			this.startup();
-            this.refresh(date);
+			this.refresh(date);
 		}
 	}
-	
+
 });

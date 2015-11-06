@@ -8,6 +8,9 @@
 //
 // Copyright (c) 2014-2015
 
+// we use arguments and callee to build inheritance
+/*eslint-disable use-strict, strict, global-strict */
+
 /**
  * @module client
  * @submodule SAGE2_App
@@ -18,7 +21,7 @@
  *
  * @class SAGE2_App
  */
-var SAGE2_App = Class.extend( {
+var SAGE2_App = Class.extend({
 
 	/**
 	* Constructor for SAGE2 applications
@@ -58,7 +61,7 @@ var SAGE2_App = Class.extend( {
 		// "was visible" state
 		this.vis = null;
 
-		//File Handling
+		// File Handling
 		this.id = null;
 		this.filePath = null;
 		this.fileDataBuffer = null;
@@ -80,7 +83,7 @@ var SAGE2_App = Class.extend( {
 	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
 	SAGE2Init: function(type, data) {
-		//App ID
+		// Application ID
 		this.id = data.id;
 
 		this.div = document.getElementById(data.id);
@@ -104,10 +107,10 @@ var SAGE2_App = Class.extend( {
 
 		var parentTransform = getTransform(this.div.parentNode);
 		var border = parseInt(this.div.parentNode.style.borderWidth || 0, 10);
-		this.sage2_x      = (data.x+border+1)*parentTransform.scale.x + parentTransform.translate.x;
-		this.sage2_y      = (data.y+border)*parentTransform.scale.y + parentTransform.translate.y;
-		this.sage2_width  = data.width*parentTransform.scale.x;
-		this.sage2_height = data.height*parentTransform.scale.y;
+		this.sage2_x      = (data.x + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+		this.sage2_y      = (data.y + border) * parentTransform.scale.y + parentTransform.translate.y;
+		this.sage2_width  = data.width * parentTransform.scale.x;
+		this.sage2_height = data.height * parentTransform.scale.y;
 
 		this.sage2_x      = data.x;
 		this.sage2_y      = data.y;
@@ -134,7 +137,7 @@ var SAGE2_App = Class.extend( {
 		// Top layer
 		this.layer     = null;
 
-		//File Handling
+		// File Handling
 		this.fileName       = "";
 		this.fileDataBuffer = null;
 		this.fileRead       = false;
@@ -506,7 +509,7 @@ var SAGE2_App = Class.extend( {
 		this.layer.style.color    = "#FFFFFF";
 		this.layer.style.display  = "none";
 		this.layer.style.overflow = "visible";
-		this.layer.style.zIndex   = parseInt(this.div.zIndex)+1;
+		this.layer.style.zIndex   = parseInt(this.div.zIndex) + 1;
 		this.layer.style.fontSize = Math.round(this.config.ui.titleTextSize) + "px";
 
 		this.div.appendChild(this.layer);
@@ -532,7 +535,7 @@ var SAGE2_App = Class.extend( {
 	*
 	* @method hideLayer
 	*/
-	hideLayer: function () {
+	hideLayer: function() {
 		if (this.layer) {
 			this.layer.style.display = "none";
 		}
@@ -543,10 +546,13 @@ var SAGE2_App = Class.extend( {
 	*
 	* @method showHideLayer
 	*/
-	showHideLayer: function () {
+	showHideLayer: function() {
 		if (this.layer) {
-			if (this.isLayerHidden()) this.showLayer();
-			else this.hideLayer();
+			if (this.isLayerHidden()) {
+				this.showLayer();
+			} else {
+				this.hideLayer();
+			}
 		}
 	},
 
@@ -556,9 +562,12 @@ var SAGE2_App = Class.extend( {
 	* @method isLayerHidden
 	* @return {Bool} true if layer is hidden
 	*/
-	isLayerHidden: function () {
-		if (this.layer)	return (this.layer.style.display === "none");
-		else return false;
+	isLayerHidden: function() {
+		if (this.layer) {
+			return (this.layer.style.display === "none");
+		} else {
+			return false;
+		}
 	},
 
 	/**
@@ -570,7 +579,7 @@ var SAGE2_App = Class.extend( {
 	isHidden: function() {
 		var checkWidth  = this.config.resolution.width;
 		var checkHeight = this.config.resolution.height;
-		if (clientID===-1) {
+		if (clientID === -1) {
 			// set the resolution to be the whole display wall
 			checkWidth  *= this.config.layout.columns;
 			checkHeight *= this.config.layout.rows;
@@ -605,7 +614,7 @@ var SAGE2_App = Class.extend( {
 
 		// Frame rate control
 		this.timer += this.dt;
-		if (this.timer > (1.0/this.maxFPS)) {
+		if (this.timer > (1.0 / this.maxFPS)) {
 			this.timer  = 0.0;
 		}
 
@@ -613,13 +622,17 @@ var SAGE2_App = Class.extend( {
 		var visible = this.isVisible();
 		if (!visible && this.vis) {
 			// trigger the app visibility callback, if there's one
-			if (this.onVisible) this.onVisible(false);
+			if (this.onVisible) {
+				this.onVisible(false);
+			}
 			// app became hidden
 			this.vis = false;
 		}
 		if (visible && !this.vis) {
 			// trigger the visibility callback, if there's one
-			if (this.onVisible) this.onVisible(true);
+			if (this.onVisible) {
+				this.onVisible(true);
+			}
 			// app became visible
 			this.vis = true;
 		}
@@ -646,7 +659,7 @@ var SAGE2_App = Class.extend( {
 	* @method refresh
 	* @param date {Date} current time from the server
 	*/
-	refresh: function (date) {
+	refresh: function(date) {
 		if (this.SAGE2UserModification === true) {
 			this.SAGE2Sync(true);
 		}
@@ -654,7 +667,7 @@ var SAGE2_App = Class.extend( {
 		// update time
 		this.preDraw(date);
 		// measure actual frame rate
-		if( this.sec >= 1.0){
+		if (this.sec >= 1.0) {
 			this.fps       = this.frame_sec / this.sec;
 			this.frame_sec = 0;
 			this.sec       = 0;
@@ -671,8 +684,8 @@ var SAGE2_App = Class.extend( {
 	*
 	* @method terminate
 	*/
-	terminate: function () {
-		if (typeof this.quit === 'function' ) {
+	terminate: function() {
+		if (typeof this.quit === 'function') {
 			this.quit();
 		}
 	},
@@ -684,7 +697,7 @@ var SAGE2_App = Class.extend( {
 	* @param newWidth {Number} desired width
 	* @param newHeight {Number} desired height
 	*/
-	sendResize: function (newWidth, newHeight) {
+	sendResize: function(newWidth, newHeight) {
 		var msgObject = {};
 		// Add the display node ID to the message
 		msgObject.node   = clientID;
@@ -702,7 +715,7 @@ var SAGE2_App = Class.extend( {
 	* @param funcName {String} name of the function to be called in each client
 	* @param data {Object} parameters to the function call
 	*/
-	broadcast: function (funcName, data) {
+	broadcast: function(funcName, data) {
 		broadcast({app: this.div.id, func: funcName, data: data});
 	},
 
@@ -726,12 +739,15 @@ var SAGE2_App = Class.extend( {
 	* @param msg {Object} list of arguments to be printed
 	*/
 	log: function(msg) {
-		if (arguments.length===0) return;
+		if (arguments.length === 0) {
+			return;
+		}
 		var args;
-		if (arguments.length > 1)
+		if (arguments.length > 1) {
 			args = Array.prototype.slice.call(arguments);
-		else
+		} else {
 			args = msg;
+		}
 		sage2Log({app: this.div.id, message: args});
 	}
 });

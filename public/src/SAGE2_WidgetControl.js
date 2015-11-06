@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * Provides widget controls and helper functionality for custom application user interface
  *
@@ -24,7 +26,7 @@
  * @return {Object} an object representing a widget control bar
 */
 function SAGE2WidgetControl(id) {
-	this.ButtonClass = function () {
+	this.ButtonClass = function() {
 		this.appId = null;
 		this.id    = null;
 		this.type  = null;
@@ -54,7 +56,7 @@ function SAGE2WidgetControl(id) {
 		this.width  = null;
 		this.appProperty = null;
 	};
-	this.ColorPaletteClass = function(){
+	this.ColorPaletteClass = function() {
 		this.id = null;
 		this.appId = null;
 		this.colorList = [];
@@ -70,25 +72,25 @@ function SAGE2WidgetControl(id) {
 	this.separatorList = [];
 	this.buttonType = SAGE2WidgetButtonTypes;
 	this.layoutOptions = {
-		"drawGroupBoundaries":false,
-		"drawBackground": true,
-		"shape": "radial",
-		"drawSpokes": true,
-		"drawSquareButtons":false
+		drawGroupBoundaries: false,
+		drawBackground: true,
+		shape: "radial",
+		drawSpokes: true,
+		drawSquareButtons: false
 	};
 }
 
 /*
 *	Ensures everything got added to the controls specification properly
 */
-SAGE2WidgetControl.prototype.finishedAddingControls = function(){
+SAGE2WidgetControl.prototype.finishedAddingControls = function() {
 	this.specReady = true;
 };
 
 /*
 *	Check whether control specification is ready (used before creating widget elements from specification)
 */
-SAGE2WidgetControl.prototype.controlsReady = function(){
+SAGE2WidgetControl.prototype.controlsReady = function() {
 	return this.specReady;
 };
 
@@ -99,9 +101,9 @@ SAGE2WidgetControl.prototype.controlsReady = function(){
 *	Lets the user add a custom cover for buttons
 * 	Added cover is available only to that instance of that app.
 */
-SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData){
+SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData) {
 	if (this.buttonType[type] === undefined || this.buttonType[type] === null) {
-		this.buttonType[type] = function () {
+		this.buttonType[type] = function() {
 			this.state   = buttonData.state;
 			this.from    = buttonData.from;
 			this.to      =  buttonData.to;
@@ -127,14 +129,22 @@ SAGE2WidgetControl.prototype.addButtonType = function(type, buttonData){
 		.drawSpokes - true/false (if set to true, displays the spokes from center to each widget element)
 		.drawSquareButton - true/false (Not yet implemented)
 */
-SAGE2WidgetControl.prototype.setLayoutOptions = function(layoutOptions){
-	if (layoutOptions.drawBackground) this.layoutOptions.drawBackground = layoutOptions.drawBackground;
+SAGE2WidgetControl.prototype.setLayoutOptions = function(layoutOptions) {
+	if (layoutOptions.drawBackground) {
+		this.layoutOptions.drawBackground = layoutOptions.drawBackground;
+	}
 	if ((layoutOptions.drawGroupBoundaries === true) && (layoutOptions.drawBackground === false)) {
 		this.layoutOptions.drawGroupBoundaries = layoutOptions.drawGroupBoundaries;
 	}
-	if (layoutOptions.shape) this.layoutOptions.shape = layoutOptions.shape;
-	if (layoutOptions.drawSpokes) this.layoutOptions.drawSpokes = layoutOptions.drawSpokes;
-	if (layoutOptions.drawSquareButtons) this.layoutOptions.drawSquareButtons = layoutOptions.drawSquareButtons;
+	if (layoutOptions.shape) {
+		this.layoutOptions.shape = layoutOptions.shape;
+	}
+	if (layoutOptions.drawSpokes) {
+		this.layoutOptions.drawSpokes = layoutOptions.drawSpokes;
+	}
+	if (layoutOptions.drawSquareButtons) {
+		this.layoutOptions.drawSquareButtons = layoutOptions.drawSquareButtons;
+	}
 };
 
 /*
@@ -149,47 +159,62 @@ SAGE2WidgetControl.prototype.setLayoutOptions = function(layoutOptions){
 */
 SAGE2WidgetControl.prototype.addButton = function(data) {
 	var type = null;
-	if (this.itemCount <= 30){
+	if (this.itemCount <= 30) {
 		var button = new this.ButtonClass();
 		button.appId = this.id;
-		if (data.id !== undefined && data.id!== null)
-			button.id = "button" + data.id;
-		else
-			button.id = "button" + ((this.itemCount<10)? "0" : "") + this.itemCount;
-		if (typeof data.type === "string" ){
-			var typeVar = this.buttonType[data.type];
-			if (typeof typeVar === "function")
-				type =  new typeVar();
+		if (data.identifier !== undefined && data.identifier !== null) {
+			button.id = "button" + data.identifier;
+		} else {
+			button.id = "button" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
 		}
-		else if (typeof data.type === "function"){
-			type = new data.type();
-		}
-		else if (typeof data.type === "object"){
-			var typeFunc = function (){
-				this.state= data.type.state;
-				this.from= data.type.from;
-				this.to=  data.type.to;
-				this.width= data.type.width;
-				this.height= data.type.height;
-				this.fill= data.type.fill;
-				this.label = data.type.label;
-				this.strokeWidth= data.type.strokeWidth;
-				this.delay= data.type.delay;
-				this.textual= data.type.textual;
-				this.animation= data.type.animation;
-			};
-			type = new typeFunc();
+		if (data.hasOwnProperty("label") && data.label !== undefined && data.label !== null) {
+			type = new this.buttonType.default();
+			type.label = data.label;
+		} else if (data.hasOwnProperty("type") && data.type !== undefined && data.type !== null) {
+			if (typeof data.type === "string") {
+				var TypeVar = this.buttonType[data.type];
+				if (typeof TypeVar === "function") {
+					type =  new TypeVar();
+				}
+			} else if (typeof data.type === "function") {
+				type = new data.type();
+			} else if (typeof data.type === "object") {
+				var TypeFunc = function() {
+					this.state = data.type.state;
+					this.from = data.type.from;
+					this.to =  data.type.to;
+					this.width = data.type.width;
+					this.height = data.type.height;
+					this.fill = data.type.fill;
+					this.label = data.type.label;
+					this.strokeWidth = data.type.strokeWidth;
+					this.delay = data.type.delay;
+					this.textual = data.type.textual;
+					this.animation = data.type.animation;
+				};
+				type = new TypeFunc();
+			}
 		}
 
-		if (type === null || type === undefined){
+		if (type === null || type === undefined) {
 			type = new this.buttonType.default();
 		}
-		if (data.initialState !== null && data.initialState !== undefined)
+		if (data.initialState !== null && data.initialState !== undefined) {
 			type.state = data.initialState % 2;  // Making sure initial state is 0 or 1
-		button.type=type;
-		button.call = data.action || null;
-		button.width = 1.5*ui.widgetControlSize;
-		this.buttonSequence[data.sequenceNo.toString()] = button;
+		}
+		button.type = type;
+		button.width = 1.5 * ui.widgetControlSize;
+		if (data.hasOwnProperty("position") && data.position !== undefined && data.position !== null) {
+			this.buttonSequence[data.position.toString()] = button;
+		} else {
+			for (var pos = 1; pos <= 30; pos++) {
+				if (this.buttonSequence.hasOwnProperty(pos.toString()) === false) {
+					this.buttonSequence[pos] = button;
+					break;
+				}
+			}
+		}
+
 		this.itemCount++;
 	}
 	return type;
@@ -209,19 +234,19 @@ SAGE2WidgetControl.prototype.addSeparatorAfterButtons = function(firstSeparator,
 *		// use the appHandle to send text to the app
 *	}
 */
-SAGE2WidgetControl.prototype.addTextInput = function (data) {
-	if (this.hasTextInput === false && this.itemCount <= 30){
+SAGE2WidgetControl.prototype.addTextInput = function(data) {
+	if (this.hasTextInput === false && this.itemCount <= 30) {
 		this.hasTextInput = true;
 		var textInput = new this.TextInputClass();
-		if (data.id !== undefined && data.id!== null)
-			textInput.id = "textInput" + data.id;
-		else
-			textInput.id = "textInput" + ((this.itemCount<10)? "0" : "") + this.itemCount;
+		if (data.identifier !== undefined && data.identifier !== null) {
+			textInput.id = "textInput" + data.identifier;
+		} else {
+			textInput.id = "textInput" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
+		}
 		textInput.appId = this.id;
-		textInput.caption = data.caption || null;
-		textInput.width = 13.0*ui.widgetControlSize;
-		textInput.call = data.action || null;
-		textInput.defaultText = data.defaultText || "";
+		textInput.label = data.label || null;
+		textInput.width = 13.0 * ui.widgetControlSize;
+		textInput.value = data.value || "";
 		this.textInput = textInput;
 		this.itemCount++;
 	}
@@ -237,44 +262,34 @@ SAGE2WidgetControl.prototype.addTextInput = function (data) {
 *		.end - the maximum value the property will take
 *		.increments - step value for the proerty
 *		alternatively, you can specify .parts - number of increments/step values between .begin and .end
-*		.action - callback function to specify action after the slider has been moved
-*	action callback looks like this:
-*	function (appHandle, date){
-*		// The bound property will already have been updated by the slider
-*		// use this cal back to perform additional functions like refreshing the app
-*	}
 */
-SAGE2WidgetControl.prototype.addSlider = function(data){
-	//begin,parts,end,action, property, appHandle
-	if (this.hasSlider === false && this.itemCount <= 30){
-
+SAGE2WidgetControl.prototype.addSlider = function(data) {
+	// begin,parts,end,action, property, appHandle
+	if (this.hasSlider === false && this.itemCount <= 30) {
 		var slider = new this.SliderClass();
-		if (data.id !== undefined && data.id!== null)
-			slider.id = "slider" + data.id;
-		else
-			slider.id = "slider" + ((this.itemCount<10)? "0" : "") + this.itemCount;
+		if (data.identifier !== undefined && data.identifier !== null) {
+			slider.id = "slider" + data.identifier;
+		} else {
+			slider.id = "slider" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
+		}
 		slider.appId = this.id;
-		slider.begin = data.begin;
-		slider.end = data.end;
-		if(data.increments){
+		slider.begin = data.minimum;
+		slider.end = data.maximum;
+		if (data.increments) {
 			slider.increments = data.increments || 1;
-			slider.parts = (slider.end - slider.begin)/slider.increments;
+			slider.steps = (slider.end - slider.begin) / slider.increments;
+		} else {
+			slider.steps = data.steps || 100;
+			slider.increments = (slider.end - slider.begin) / slider.steps;
 		}
-		else if(data.parts){
-			slider.parts = data.parts || 1;
-			slider.increments = (slider.end - slider.begin)/slider.parts;
-		}
-		slider.caption = data.caption || null;
-		slider.call = data.action || null;
-		slider.lockCall = data.lockAction || null;
-		slider.updateCall = data.updateAction || null;
+		slider.label = data.label || null;
 		slider.appProperty = data.property;
-		slider.appHandle = data.appHandle;
-		slider.sliderVal = data.begin;
+		slider.sliderVal = data.minimum;
 		slider.knobLabelFormatFunction = data.labelFormatFunction;
-		slider.width = 13.0*ui.widgetControlSize;
-		if (slider.parts < 1)
+		slider.width = 13.0 * ui.widgetControlSize;
+		if (slider.steps < 1) {
 			return;
+		}
 
 		this.hasSlider = true;
 		this.slider = slider;
@@ -285,18 +300,19 @@ SAGE2WidgetControl.prototype.addSlider = function(data){
 /*
 *	Adds a color palette
 */
-SAGE2WidgetControl.prototype.addColorPalette = function(data){
-	if (this.hasColorPalette === false && this.itemCount <= 12){
+SAGE2WidgetControl.prototype.addColorPalette = function(data) {
+	if (this.hasColorPalette === false && this.itemCount <= 12) {
 
 		var colorPalette = new this.ColorPaletteClass();
 		colorPalette.id = "colorPalette" + this.itemCount;
 		colorPalette.appId = this.id;
 		colorPalette.call = data.action || null;
 
-		if (data.colorList === null || data.colorList === undefined)
+		if (data.colorList === null || data.colorList === undefined) {
 			return;
-		else if (data.colorList.length === 0)
+		} else if (data.colorList.length === 0) {
 			return;
+		}
 
 		this.hasColorPalette = true;
 		this.colorPalette = colorPalette;
@@ -308,34 +324,32 @@ SAGE2WidgetControl.prototype.addColorPalette = function(data){
 /*
 *	Computes the dimensions of the widget control bar
 */
-SAGE2WidgetControl.prototype.computeSize = function(){
+SAGE2WidgetControl.prototype.computeSize = function() {
 	var size = {
-		width:0,
-		height:0
+		width: 0,
+		height: 0
 	};
 	var dimensions = {};
 	dimensions.buttonRadius = 0.8 * ui.widgetControlSize;
 	dimensions.radius = dimensions.buttonRadius * 5.027; // tan(78.5): angle subtended at the center is 22.5
-	dimensions.firstRadius = dimensions.radius *0.75;
+	dimensions.firstRadius = dimensions.radius * 0.75;
 
-	dimensions.innerR = dimensions.radius - dimensions.buttonRadius -3; // for the pie slice
+	dimensions.innerR = dimensions.radius - dimensions.buttonRadius - 3; // for the pie slice
 	dimensions.outerR = ui.widgetControlSize * 6.0;
-	dimensions.secondRadius = dimensions.firstRadius + dimensions.buttonRadius*2.5;
+	dimensions.secondRadius = dimensions.firstRadius + dimensions.buttonRadius * 2.5;
 
-	size.height = dimensions.outerR * 2.4; //10% extra on all sides
+	size.height = dimensions.outerR * 2.4; // 10% extra on all sides
 	size.width = size.height;
-	size.barHeight = dimensions.buttonRadius*4;
+	size.barHeight = dimensions.buttonRadius * 4;
 	size.hasSideBar = false;
 
-	if (this.hasSlider === true){
+	if (this.hasSlider === true) {
 		size.width = size.width  + this.slider.width + dimensions.buttonRadius;
 		size.hasSideBar = true;
-	}
-	else if ( this.hasTextInput === true){
+	} else if (this.hasTextInput === true) {
 		size.width = size.width  + this.textInput.width + dimensions.buttonRadius;
 		size.hasSideBar = true;
-	}
-	else if ( this.hasColorPalette === true){
+	} else if (this.hasColorPalette === true) {
 		size.width = size.width  + this.colorPalette.width + dimensions.buttonRadius;
 		size.hasSideBar = true;
 	}
@@ -346,12 +360,9 @@ SAGE2WidgetControl.prototype.computeSize = function(){
 /*
 *	Creates default close and radial menu buttons
 */
-
-
-SAGE2WidgetControl.prototype.addDefaultButtons = function(data){
-	this.addButton({type: "closeApp", id: "CloseApp",    sequenceNo: data.sequence.closeApp});
-	this.addButton({type: "closeBar", id: "CloseWidget", sequenceNo: data.sequence.closeBar});
-	this.addButton({type: "remote",   id: "ShareApp",    sequenceNo: data.sequence.shareApp});
+SAGE2WidgetControl.prototype.addDefaultButtons = function(data) {
+	this.addButton({type: "closeApp", identifier: "CloseApp", position: data.sequence.closeApp});
+	this.addButton({type: "closeBar", identifier: "CloseWidget", position: data.sequence.closeBar});
 };
 
 
