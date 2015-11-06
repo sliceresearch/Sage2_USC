@@ -455,17 +455,27 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 		if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
 			if (this.selectionStart['x'] > posX) {
-				this.selectionEnd['x'] = this.selectionStart['x'];
 				this.selectionStart['x'] = posX;
-			} else {
+			} else if(this.selectionEnd['x'] < posX){
 				this.selectionEnd['x'] = posX;
+			}else {
+				if (this.distance({x:posX,y:this.selectionStart.y},this.selectionStart) < this.distance({x:posX,y:this.selectionEnd.y},this.selectionEnd)) {
+					this.selectionStart['x'] = posX;
+				} else {
+					this.selectionEnd['x'] = posX;
+				}
 			}
 
 			if (this.selectionStart['y'] > posY) {
-				this.selectionEnd['y'] = this.selectionStart['y'];
 				this.selectionStart['y'] = posY;
-			} else {
+			} else if(this.selectionEnd['y'] < posY){
 				this.selectionEnd['y'] = posY;
+			}else {
+				if (this.distance({x:this.selectionStart.x,y:posY},this.selectionStart) < this.distance({x:this.selectionStart.x,y:posY},this.selectionEnd)) {
+					this.selectionStart['y'] = posY;
+				} else {
+					this.selectionEnd['y'] = posY;
+				}
 			}
 			this.moveSelectionBox();
 			return;
