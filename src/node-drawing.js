@@ -486,6 +486,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if (this.actualAction == "erasing") {
+			this.realeaseId(e.sourceId);
 			this.newEraserBox(posX,posY,w,h);
 			this.erase();
 			return;
