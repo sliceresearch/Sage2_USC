@@ -417,7 +417,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 								, posX - this.touchOnPaletteOffsetX
 								, posY - this.touchOnPaletteOffsetY
 								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY - 58);
+								, this.palettePosition.endY - this.palettePosition.startY);
 			return;
 		}
 
@@ -435,6 +435,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionEnd.y += dy;
 			this.moveSelectionBox();
 			this.selectionMove(dx, dy);
+			return;
 		}
 
 		if ((this.actualAction == "zoomingSelection") && (this.selectionTouchId == e.sourceId)) {
@@ -451,6 +452,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionEnd.y += dy;
 			this.moveSelectionBox();
 			this.selectionZoom(sx, sy);
+			return;
 		}
 
 		if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
@@ -471,7 +473,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			} else if(this.selectionEnd['y'] < posY){
 				this.selectionEnd['y'] = posY;
 			}else {
-				if (this.distance({x:this.selectionStart.x,y:posY},this.selectionStart) < this.distance({x:this.selectionStart.x,y:posY},this.selectionEnd)) {
+				if (this.distance({x:this.selectionStart.x,y:posY},this.selectionStart) < this.distance({x:this.selectionEnd.x,y:posY},this.selectionEnd)) {
 					this.selectionStart['y'] = posY;
 				} else {
 					this.selectionEnd['y'] = posY;
@@ -494,17 +496,27 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			var drawn = false;
 
 			if (this.selectionStart['x'] > posX) {
-				this.selectionEnd['x'] = this.selectionStart['x'];
 				this.selectionStart['x'] = posX;
-			} else {
+			} else if(this.selectionEnd['x'] < posX){
 				this.selectionEnd['x'] = posX;
+			}else {
+				if (this.distance({x:posX,y:this.selectionStart.y},this.selectionStart) < this.distance({x:posX,y:this.selectionEnd.y},this.selectionEnd)) {
+					this.selectionStart['x'] = posX;
+				} else {
+					this.selectionEnd['x'] = posX;
+				}
 			}
 
 			if (this.selectionStart['y'] > posY) {
-				this.selectionEnd['y'] = this.selectionStart['y'];
 				this.selectionStart['y'] = posY;
-			} else {
+			} else if(this.selectionEnd['y'] < posY){
 				this.selectionEnd['y'] = posY;
+			}else {
+				if (this.distance({x:this.selectionStart.x,y:posY},this.selectionStart) < this.distance({x:this.selectionEnd.x,y:posY},this.selectionEnd)) {
+					this.selectionStart['y'] = posY;
+				} else {
+					this.selectionEnd['y'] = posY;
+				}
 			}
 
 			this.selectionTouchId = -1;
@@ -579,7 +591,7 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.startX = data.startX;
 	this.palettePosition.startY = data.startY + 58;
 	this.palettePosition.endX = data.endX;
-	this.palettePosition.endY = data.endY + 58;
+	this.palettePosition.endY = data.endY;
 }
 
 
