@@ -28,6 +28,7 @@ function DrawingManager(config) {
 	this.selectedDrawingObject = [];
 	this.selectionMovementStart = [];
 	this.selectionBox = null;
+	this.eraserBox = null;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -224,6 +225,40 @@ DrawingManager.prototype.findMaxId = function() {
 	return max;
 }
 
+DrawingManager.prototype.newEraserBox = function(x,y,w,h) {
+
+	// Create new Eraser box
+	this.eraserBox = {x:x - w/2,y:y - h/2,w:w,h:h};
+
+}
+
+DrawingManager.prototype.erase = function() {
+	// Erases all the elements intersecting with the erase box
+	var i = 0;
+	while(i < this.drawState.length) {
+		var draw = this.drawState[i]["options"]["points"];
+		var inside = false;
+		for (var j in draw) {
+			var p = draw[j];
+			if (p.x > this.eraserBox.x &&
+				p.x < this.eraserBox.x + this.eraserBox.w  &&
+				p.y > this.eraserBox.y &&
+				p.y < this.eraserBox.y + this.eraserBox.h) {
+					inside = true;
+					break;
+			}
+		}
+		if (inside) {
+			this.drawState.splice(i,1)
+		} else {
+			i += 1;
+		}
+	}
+
+	this.initAll();
+}
+
+
 DrawingManager.prototype.newSelectionBox = function(e) {
 
 	// Create new Selection box
@@ -403,6 +438,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.actualAction = "drawing";
 			this.deleteSelectionBox();
 			return;
+		} else if (this.paintingMode == false && Math.max(w,h) > 50) {
+			this.actualAction = "erasing";
+			this.newEraserBox(posX,posY,w,h);
+			this.erase();
+			return;
 		} else {
 			this.deleteSelectionBox();
 			this.drawingsUndone = [];
@@ -418,6 +458,12 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 								, posY - this.touchOnPaletteOffsetY
 								, this.palettePosition.endX - this.palettePosition.startX
 								, this.palettePosition.endY - this.palettePosition.startY);
+			return;
+		}
+
+		if (this.actualAction == "erasing") {
+			this.newEraserBox(posX,posY,w,h);
+			this.erase();
 			return;
 		}
 
@@ -487,8 +533,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 6) {
 		// touch release
-
-		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
+		if (this.actualAction == "erasing") {
+			this.actualAction = "drawing";
+		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
 			this.idMovingPalette = -1;
 		} else if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
