@@ -707,6 +707,7 @@ DrawingManager.prototype.loadOldState = function(data) {
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
 		drawingUpdateCB,
+		drawingRemoveCB,
 		sendTouchToPaletteCB,
 		sendStyleToPaletteCB,
 		sendChangeToPaletteCB,
