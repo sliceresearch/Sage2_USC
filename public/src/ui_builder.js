@@ -919,11 +919,13 @@ function UIBuilder(json_cfg, clientID) {
 
 		if (menuElem !== null) {
 			var menu = this.radialMenus[menuElem.id];
+			menu.setState(data);
 
 			menuElem.style.display = "block";
 			menu.thumbnailScrollWindowElement.style.display = "block";
-			if (menu.currentMenuState !== 'radialMenu') {
+			if (data.thumbnailWindowState  !== 'closed') {
 				menu.thumbnailWindowDiv.style.display = "block";
+				menu.draw();
 			} else {
 				menu.thumbnailWindowDiv.style.display = "none";
 				menu.draw();
@@ -948,6 +950,7 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Event} event
 	*/
 	this.radialMenuEvent = function(data) {
+		
 		if (data.type === "stateChange") {
 			// Update the button state
 			var menuState = data.menuState;
