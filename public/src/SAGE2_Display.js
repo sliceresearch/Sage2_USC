@@ -366,9 +366,28 @@ function setupListeners() {
 	});
 
 	wsio.on('loadApplicationOptions', function(data) {
+		var fullSync = true;
+		var windowTitle = document.getElementById(data.id + "_title");
+		var windowIconSync = document.getElementById(data.id + "_iconSync");
+		var windowIconUnSync = document.getElementById(data.id + "_iconUnSync");
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2LoadOptions(data.options);
+
+			if (fullSync === true) {
+				if (data.options[Object.keys(data.options)[0]]._sync === true) {
+					windowTitle.style.backgroundColor = "#39C4A6";
+					windowIconSync.style.display = "block";
+					windowIconUnSync.style.display = "none";
+					console.log("sycned!");
+				}
+				else {
+					windowTitle.style.backgroundColor = "#666666";
+					windowIconSync.style.display = "none";
+					windowIconUnSync.style.display = "block";
+					console.log("unsycned :(");
+				}
+			}
 		}
 	});
 
@@ -1072,23 +1091,48 @@ function setupListeners() {
 	});
 
 	wsio.on('toggleSyncOptions', function(data) {
+		var fullSync = true;
+		var key;
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");
 		var windowIconUnSync = document.getElementById(data.id + "_iconUnSync");
 		var windowState = document.getElementById(data.id + "_state");
-		if (applications[data.id].SAGE2StateSyncOptions.visible === false) {
-			applications[data.id].SAGE2StateSyncOptions.visible = true;
-			windowTitle.style.backgroundColor = "#666666";
-			windowIconSync.style.display = "none";
-			windowIconUnSync.style.display = "block";
-			windowState.style.display = "block";
+		if (fullSync === true) {
+			if (windowIconSync.style.display === "block") {
+				windowTitle.style.backgroundColor = "#666666";
+				windowIconSync.style.display = "none";
+				windowIconUnSync.style.display = "block";
+
+				for (key in applications[data.id].SAGE2StateOptions) {
+					applications[data.id].SAGE2StateSyncChildren(applications[data.id].SAGE2StateOptions[key]._name, applications[data.id].SAGE2StateOptions, false);
+				}
+			}
+			else {
+				windowTitle.style.backgroundColor = "#39C4A6";
+				windowIconSync.style.display = "block";
+				windowIconUnSync.style.display = "none";
+
+				for (key in applications[data.id].SAGE2StateOptions) {
+					applications[data.id].SAGE2StateSyncChildren(applications[data.id].SAGE2StateOptions[key]._name, applications[data.id].SAGE2StateOptions, true);
+				}
+			}
+
+			if (isMaster) {
+				var stateOp = ignoreFields(applications[data.id].SAGE2StateOptions, ["_name", "_value"]);
+				wsio.emit('updateStateOptions', {id: data.id, options: stateOp});
+			}
 		}
 		else {
-			applications[data.id].SAGE2StateSyncOptions.visible = false;
-			windowTitle.style.backgroundColor = "#39C4A6";
-			windowIconSync.style.display = "block";
-			windowIconUnSync.style.display = "none";
-			windowState.style.display = "none";
+			if (applications[data.id].SAGE2StateSyncOptions.visible === false) {
+				applications[data.id].SAGE2StateSyncOptions.visible = true;
+				windowTitle.style.backgroundColor = "#666666";
+				windowState.style.display = "block";
+			}
+			else {
+				applications[data.id].SAGE2StateSyncOptions.visible = false;
+				windowTitle.style.backgroundColor = "#39C4A6";
+				windowState.style.display = "none";
+			}
 		}
 	});
 }
