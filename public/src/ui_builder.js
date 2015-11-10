@@ -878,6 +878,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			var menu = new RadialMenu();
 			menu.init(data, menuElem2, menuElem3);
+			menu.setState(data);
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
@@ -905,6 +906,7 @@ function UIBuilder(json_cfg, clientID) {
 				menuElem1.style.display = "block";
 				this.radialMenus[menuElem1.id].draw();
 			}
+
 		}
 	};
 
@@ -915,7 +917,6 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Object} menu data
 	*/
 	this.updateRadialMenu = function(data) {
-		console.log("updateRadialMenu");
 		var menuElem = document.getElementById(data.id + "_menu");
 
 		if (menuElem !== null) {
@@ -1017,7 +1018,7 @@ function UIBuilder(json_cfg, clientID) {
 		var menuElem = document.getElementById(data.id + "_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
-			this.radialMenus[menuElem.id].draw();
+			this.radialMenus[menuElem.id].redraw();
 		}
 	};
 
@@ -1031,7 +1032,7 @@ function UIBuilder(json_cfg, clientID) {
 		var menuElem = document.getElementById(data.id + "_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateAppFileList(data.fileList);
-			this.radialMenus[menuElem.id].draw();
+			this.radialMenus[menuElem.id].redraw();
 		}
 	};
 

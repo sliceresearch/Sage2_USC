@@ -732,6 +732,7 @@ function RadialMenu() {
 	 */
 	this.setMenu = function(type) {
 		if (this.currentMenuState !== "radialMenu") {
+			console.log("radialMenu: setMenu " + type);
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
 			this.currentMenuState = type;
@@ -743,6 +744,7 @@ function RadialMenu() {
 			this.updateThumbnailPositions();
 			this.draw();
 		} else {
+			console.log("radialMenu: setMenu " + type);
 			this.currentMenuState = "radialMenu";
 			this.element.width = this.radialMenuSize.x;
 			this.element.height = this.radialMenuSize.y;
@@ -1276,6 +1278,7 @@ function RadialMenu() {
 	 * @param stateData {} node-radialMenu.js getInfo()
 	 */
 	this.setState = function(stateData) {
+		console.log("radialMenu: setState " + stateData.thumbnailWindowState);
 		// {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
 		//	thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
 		//	visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState }
