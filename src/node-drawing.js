@@ -4,7 +4,7 @@
 
 function DrawingManager(config) {
 
-	this.lastId = 0;
+	this.lastId = 1;
 	this.dictionaryId = {};
 	this.idPrequel = "drawing_";
 	this.clientIDandSockets = {};
@@ -315,7 +315,10 @@ DrawingManager.prototype.deleteSelectionBox = function() {
 			}
 		}
 		this.selectedDrawingObject = [];
+		this.selectionStart = {};
+		this.selectionEnd = {};
 		this.selectionBox = null;
+		this.selectionTouchId = -1;
 		this.initAll();
 	}
 }
@@ -430,17 +433,15 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	if (e.type == 5) {
 		// touch down
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
-			this.deleteSelectionBox();
 			this.actualAction = "movingPalette";
 			this.idMovingPalette = e.sourceId;
 			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
 			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY + 58; // Title bar height
 			return;
 		} else if (this.touchInsidePalette(posX,posY)) {
-			this.deleteSelectionBox();
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
 			return;
-		} else if (this.actualAction == "creatingSelection") {
+		} else if (this.actualAction == "creatingSelection" && this.selectionTouchId == -1) {
 			this.deleteSelectionBox();
 			this.selectionStart = {x: posX, y: posY};
 			this.selectionEnd = {x: posX, y: posY};
@@ -456,24 +457,23 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.actualAction = "movingSelection";
 			}
 			return;
-		} else if (this.actualAction == "movingSelection" || this.actualAction == "zoomingSelection") {
-			this.actualAction = "drawing";
+		} else if (this.paintingMode == false && Math.max(w,h) > 200) {
 			this.deleteSelectionBox();
-			return;
-		} else if (this.paintingMode == false && Math.max(w,h) > 50) {
 			this.actualAction = "erasing";
 			this.newEraserBox(posX,posY,w,h);
 			this.erase();
 			return;
 		} else {
-			this.deleteSelectionBox();
+			if (this.actualAction == "drawing") {
+				this.deleteSelectionBox();
+			}
 			this.drawingsUndone = [];
 			this.newDrawingObjectFunc(e, posX, posY);
 		}
 
 	} else if (e.type == 4) {
 		// touch move
-		if (this.paintingMode == false && Math.max(w,h) > 50) {
+		if (this.paintingMode == false && Math.max(w,h) > 200) {
 			this.actualAction = "erasing";
 		}
 
@@ -607,6 +607,8 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionEnd.y += dy;
 			this.moveSelectionBox();
 			this.selectionMove(dx, dy);
+			this.selectionTouchId = -1;
+			this.actualAction = "drawing";
 		}
 
 		if (!drawn) {
