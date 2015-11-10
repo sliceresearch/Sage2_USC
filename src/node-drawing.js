@@ -314,6 +314,7 @@ DrawingManager.prototype.deleteSelectionBox = function() {
 			}
 		}
 		this.selectedDrawingObject = [];
+		this.selectionBox = null;
 		this.initAll();
 	}
 }
@@ -705,6 +706,7 @@ DrawingManager.prototype.loadOldState = function(data) {
 DrawingManager.prototype.setCallbacks = function(
 		drawingInitCB,
 		drawingUpdateCB,
+		drawingRemoveCB,
 		sendTouchToPaletteCB,
 		sendStyleToPaletteCB,
 		sendChangeToPaletteCB,

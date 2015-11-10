@@ -790,6 +790,11 @@ function UIBuilder(json_cfg, clientID) {
 					return;
 				}
 
+				if (drawingObject.type == "circle") {
+
+					toUpdate.attr("cx",point.x).attr("cy",point.y).attr("r",r)
+				}
+
 				if (drawingObject.type == "path") {
 
 					var lineFunction = d3.svg.line()
