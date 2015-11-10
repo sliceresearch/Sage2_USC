@@ -760,9 +760,9 @@ function initializeExistingWallUI(wsio) {
 		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 		broadcast('createRadialMenu', menuInfo);
 		broadcast('updateRadialMenu', menuInfo);
-		//setRadialMenuPosition(menuInfo.id, menuInfo.x, menuInfo.y);
 		updateWallUIMediaBrowser(menuInfo.id);
 	}
+
 }
 
 function initializeExistingApps(wsio) {

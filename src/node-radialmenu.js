@@ -229,7 +229,6 @@ RadialMenu.prototype.getInfo = function() {
 */
 RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, color) {
 	var buttonName = buttonID.substring((this.id + "_menu_radial_button_").length, buttonID.length);
-	//var buttonStates = {};
 	var action;
 	var otherButtonName;
 
@@ -472,7 +471,7 @@ RadialMenu.prototype.isEventOnMenu = function(data) {
 				(data.y > this.top - this.radialMenuSize.y / 2) &&
 				(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
 			// Else if over thumbnail window bounding box
-			if ( isThumbnailWindowOpen() ) {
+			if (isThumbnailWindowOpen()) {
 				return true;
 			}
 		}
@@ -510,7 +509,7 @@ RadialMenu.prototype.onEvent = function(data) {
 			}
 
 			return true;
-		} else if ( isThumbnailWindowOpen() &&
+		} else if (isThumbnailWindowOpen() &&
 				(data.x > this.left + this.radialMenuSize.x / 2) &&
 				(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
 				(data.y > this.top - this.radialMenuSize.y / 2) &&

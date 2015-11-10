@@ -107,6 +107,13 @@ function RadialMenu() {
 	this.radialMenuButtons = {};
 	this.thumbnailWindows = {};
 
+	this.thumbnailButtons = [];
+	this.imageThumbnailButtons = [];
+	this.videoThumbnailButtons = [];
+	this.pdfThumbnailButtons = [];
+	this.appThumbnailButtons = [];
+	this.sessionThumbnailButtons = [];
+
 	/**
 	 * Helper function for creating radial menu buttons
 	 *
@@ -703,6 +710,7 @@ function RadialMenu() {
 	 * @method setToggleMenu
 	 */
 	this.setToggleMenu = function(type) {
+		// console.log("radialMenu: setToggleMenu " + type);
 		if (this.currentMenuState !== type) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
@@ -731,7 +739,7 @@ function RadialMenu() {
 	 * @method setMenu
 	 */
 	this.setMenu = function(type) {
-		if (this.currentMenuState !== "radialMenu") {
+		if (type !== "radialMenu") {
 			console.log("radialMenu: setMenu " + type);
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
@@ -1001,6 +1009,7 @@ function RadialMenu() {
 	 * @param serverFileList {} Server file list
 	 */
 	this.updateFileList = function(serverFileList) {
+
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
 		this.videoThumbnailButtons = [];
@@ -1278,7 +1287,7 @@ function RadialMenu() {
 	 * @param stateData {} node-radialMenu.js getInfo()
 	 */
 	this.setState = function(stateData) {
-		console.log("radialMenu: setState " + stateData.thumbnailWindowState);
+		// console.log("radialMenu: setState " + stateData.thumbnailWindowState);
 		// {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
 		//	thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
 		//	visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState }
@@ -1297,7 +1306,7 @@ function RadialMenu() {
 			this.setMenu("sessionThumbnailWindow");
 		}  else if (stateData.thumbnailWindowState === "closed") {
 			this.setMenu("radialMenu");
-		} 
+		}
 	}
 }
 
