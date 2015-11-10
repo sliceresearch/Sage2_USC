@@ -6714,6 +6714,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] === undefined) {
+		// Create a new radial menu
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config);
 		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
@@ -6723,6 +6724,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 		// Open a 'media' radial menu
 		broadcast('createRadialMenu', newRadialMenu.getInfo());
 	} else if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] !== undefined) {
+		// Radial menu already exists for this pointer, move to new location instead
 		setRadialMenuPosition(uniqueID, pointerX, pointerY);
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}

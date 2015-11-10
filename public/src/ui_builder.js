@@ -930,6 +930,7 @@ function UIBuilder(json_cfg, clientID) {
 			} else {
 				menu.thumbnailWindowDiv.style.display = "none";
 			}
+			menu.redraw();
 			menu.visible = true;
 
 			var rect = menuElem.getBoundingClientRect();
