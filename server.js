@@ -560,6 +560,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeExistingSagePointers(wsio);
 		initializeExistingApps(wsio);
 		initializeRemoteServerInfo(wsio);
+		initializeExistingWallUI(wsio);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
@@ -750,6 +751,18 @@ function initializeExistingSagePointers(wsio) {
 			wsio.emit('changeSagePointerMode', {id: sagePointers[key].id, mode: remoteInteraction[key].interactionMode});
 		}
 	}
+}
+
+function initializeExistingWallUI(wsio) {
+	var key;
+
+	for (key in SAGE2Items.radialMenus.list) {
+		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+		broadcast('createRadialMenu', menuInfo);
+		broadcast('updateRadialMenu', menuInfo);
+		updateWallUIMediaBrowser(menuInfo.id);
+	}
+
 }
 
 function initializeExistingApps(wsio) {
@@ -6701,6 +6714,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] === undefined) {
+		// Create a new radial menu
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config);
 		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
@@ -6710,10 +6724,11 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 		// Open a 'media' radial menu
 		broadcast('createRadialMenu', newRadialMenu.getInfo());
 	} else if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] !== undefined) {
+		// Radial menu already exists for this pointer, move to new location instead
 		setRadialMenuPosition(uniqueID, pointerX, pointerY);
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
-	updateRadialMenu(uniqueID);
+	updateWallUIMediaBrowser(uniqueID);
 }
 
 /**
@@ -6732,7 +6747,7 @@ function moveRadialMenu(uniqueID, pointerX, pointerY) {
 		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
 		existingRadialMenu.visible = true;
 
-		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+		broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
 	}
 }
 
@@ -6755,7 +6770,7 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY) {
 			{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
 	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
-	broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+	broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
 }
 
 /**
@@ -6770,7 +6785,7 @@ function showRadialMenu(uniqueID) {
 	if (radialMenu !== undefined) {
 		radialMenu.visible = true;
 		interactMgr.editVisibility(uniqueID + "_menu_radial", "radialMenus", true);
-		interactMgr.editVisibility(uniqueID + "_menu_thumbnail", "radialMenus", false);
+		interactMgr.editVisibility(uniqueID + "_menu_thumbnail", "radialMenus", radialMenu.isThumbnailWindowOpen());
 	}
 }
 
@@ -6787,7 +6802,7 @@ function hideRadialMenu(uniqueID) {
 	}
 }
 
-function updateRadialMenu(uniqueID) {
+function updateWallUIMediaBrowser(uniqueID) {
 	var list = getSavedFilesList();
 
 	broadcast('updateRadialMenuDocs', {id: uniqueID, fileList: list});

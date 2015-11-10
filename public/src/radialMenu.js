@@ -107,6 +107,13 @@ function RadialMenu() {
 	this.radialMenuButtons = {};
 	this.thumbnailWindows = {};
 
+	this.thumbnailButtons = [];
+	this.imageThumbnailButtons = [];
+	this.videoThumbnailButtons = [];
+	this.pdfThumbnailButtons = [];
+	this.appThumbnailButtons = [];
+	this.sessionThumbnailButtons = [];
+
 	/**
 	 * Helper function for creating radial menu buttons
 	 *
@@ -695,7 +702,6 @@ function RadialMenu() {
 		this.thumbnailWindowDiv.style.display = "none";
 
 		this.currentMenuState = "radialMenu";
-		this.resetRadialButtonLitState();
 	};
 
 	/**
@@ -704,6 +710,7 @@ function RadialMenu() {
 	 * @method setToggleMenu
 	 */
 	this.setToggleMenu = function(type) {
+		// console.log("radialMenu: setToggleMenu " + type);
 		if (this.currentMenuState !== type) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
@@ -727,30 +734,41 @@ function RadialMenu() {
 	};
 
 	/**
+	 * Sets the content window
+	 *
+	 * @method setMenu
+	 */
+	this.setMenu = function(type) {
+		if (type !== "radialMenu") {
+			console.log("radialMenu: setMenu " + type);
+			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
+
+			this.currentMenuState = type;
+			this.element.width = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
+			this.element.height = this.thumbnailWindowSize.y;
+			this.thumbnailScrollWindowElement.style.display = "block";
+			this.thumbnailWindowDiv.style.display = "block";
+			this.thumbScrollWindowctx.redraw = true;
+			this.updateThumbnailPositions();
+			this.draw();
+		} else {
+			console.log("radialMenu: setMenu " + type);
+			this.currentMenuState = "radialMenu";
+			this.element.width = this.radialMenuSize.x;
+			this.element.height = this.radialMenuSize.y;
+			this.thumbnailWindowDiv.style.display = "none";
+			this.draw();
+		}
+	};
+
+	/**
 	 * Toggles a subradial menu
 	 *
-	 * @method setToggleMenu
+	 * @method toggleSubRadialMenu
 	 */
 	this.toggleSubRadialMenu = function(type) {
 		this.showArrangementSubmenu = !this.showArrangementSubmenu;
 		// console.log("radialMenu: toggleSubRadialMenu - " + this.showArrangementSubmenu);
-	};
-
-	/**
-	 * Helper function to quickly reset the radial menu button lit state
-	 *
-	 * @method resetRadialButtonLitState
-	 */
-	this.resetRadialButtonLitState = function() {
-		// this.radialRemoteSitesButton.isLit = false;
-		// this.radialImageButton.isLit = false;
-		// this.radialPDFButton.isLit = false;
-		// this.radialVideoButton.isLit = false;
-		// this.radialAppButton.isLit = false;
-		// this.radialSessionButton.isLit = false;
-		// this.radialSaveSessionButton.isLit = false;
-		// this.radialCloseButton.isLit = false;
-		// this.radialSessionButton.isLit = false;
 	};
 
 	/**
@@ -991,6 +1009,7 @@ function RadialMenu() {
 	 * @param serverFileList {} Server file list
 	 */
 	this.updateFileList = function(serverFileList) {
+
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
 		this.videoThumbnailButtons = [];
@@ -1261,6 +1280,34 @@ function RadialMenu() {
 		}
 	};
 
+	/**
+	 * Sets the state of the radial menu: buttons, content windows
+	 *
+	 * @method setState
+	 * @param stateData {} node-radialMenu.js getInfo()
+	 */
+	this.setState = function(stateData) {
+		// console.log("radialMenu: setState " + stateData.thumbnailWindowState);
+		// {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
+		//	thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
+		//	visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState }
+		//console.log(stateData);
+		this.showArrangementSubmenu = stateData.arrangementMenuState;
+
+		if (stateData.thumbnailWindowState === "image") {
+			this.setMenu("imageThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "pdf") {
+			this.setMenu("pdfThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "video") {
+			this.setMenu("videoThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "applauncher") {
+			this.setMenu("applauncherThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "session") {
+			this.setMenu("sessionThumbnailWindow");
+		}  else if (stateData.thumbnailWindowState === "closed") {
+			this.setMenu("radialMenu");
+		}
+	}
 }
 
 /**

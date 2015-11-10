@@ -70,6 +70,7 @@
 	// for experimental features: true/false
 	experimental: {
 		omicron: { // enable omicron input module
+			// Default SAGE2 input connection
 			enable: true,
 			host: "131.193.76.121",
 			dataPort: 30005,
@@ -77,10 +78,11 @@
 			debug: false,
 			
 			// Touch gestures
-			touchOffset: [ 0, -60 ], // in pixels
+			touchOffset: [ 0, 0 ], // in pixels
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
 			
+			// Alternate input connection
 			// Note if the following is enabled the server will attempt
 			// to connect to the specified Omicron oinputserver
 			// (By default the server listens for an Omicron sageinputserver to connect to it)
