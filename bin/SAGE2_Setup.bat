@@ -34,14 +34,21 @@ if not exist "C:\Program Files\AutoHotkey\AutoHotkey.exe" (
 )
 
 if "%missingProgram%"=="yes" (
-
-	if "%hasChrome%"=="yes" (
-		"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary)
-	)
-	SET "programMessage=%programMessage% For more information visit the binary support page at https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary)"
-	msg %username% %programMessage%
-	goto END
+	goto SHOWMISSING
+) else (
+	goto PARAMCHECK
 )
+
+:SHOWMISSING
+
+if "%hasChrome%"=="yes" (
+	"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary)
+)
+SET "programMessage=%programMessage% For more information visit the binary support page at https://bitbucket.org/sage2/sage2/wiki/Install%20(Windows%20Binary)"
+msg %username% %programMessage%
+goto END
+
+:PARAMCHECK
 
 rem ////////////////////////////////////////////////////////////////////////Everything is installed check for param
 

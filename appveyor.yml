@@ -48,9 +48,7 @@ install:
   - 7z x exiftool-10.04.zip
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
-  - move bin\wcDisplayLaunch.bat wcDisplayLaunch.bat
-  - move bin\wcStartBinary.bat wcStartBinary.bat
-  - move bin\SAGE2_Setup.bat SAGE2_Setup.bat
+  - move bin\SAGE2_Setup.bat SAGE2_Windows_Setup.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
   - curl -LsSO http://downloads.ghostscript.com/public/gs918w64.exe
   - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
@@ -73,8 +71,6 @@ install:
   - cd ..
   - mkdir sysfiles
   - move sage2.bat  sysfiles\sage2.bat 
-  - move wcDisplayLaunch.bat  sysfiles\wcDisplayLaunch.bat 
-  - move wcStartBinary.bat  sysfiles\wcStartBinary.bat 
   - move AUTHORS  sysfiles\AUTHORS 
   - move GO-scripts  sysfiles\GO-scripts 
   - move Gruntfile.js  sysfiles\Gruntfile.js 
@@ -91,10 +87,10 @@ install:
   - move server.js  sysfiles\server.js 
   - move src  sysfiles\src 
   - move webconStartServer.js  sysfiles\webconStartServer.js 
-  - copy SAGE2_Setup.bat sysfiles\StartHere.bat
+  - copy SAGE2_Windows_Setup.bat sysfiles\wcss.bat
   - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
   - move VERSION.json  sysfiles\VERSION.json 
-  - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip SAGE2_Setup.bat sysfiles
+  - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip SAGE2_Windows_Setup.bat sysfiles
 
 
 build: off
