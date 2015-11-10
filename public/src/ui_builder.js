@@ -915,6 +915,7 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Object} menu data
 	*/
 	this.updateRadialMenu = function(data) {
+		console.log("updateRadialMenu");
 		var menuElem = document.getElementById(data.id + "_menu");
 
 		if (menuElem !== null) {
@@ -925,10 +926,8 @@ function UIBuilder(json_cfg, clientID) {
 			menu.thumbnailScrollWindowElement.style.display = "block";
 			if (data.thumbnailWindowState  !== 'closed') {
 				menu.thumbnailWindowDiv.style.display = "block";
-				menu.draw();
 			} else {
 				menu.thumbnailWindowDiv.style.display = "none";
-				menu.draw();
 			}
 			menu.visible = true;
 
@@ -942,7 +941,28 @@ function UIBuilder(json_cfg, clientID) {
 			this.createRadialMenu(data);
 		}
 	};
+	
+	/**
+	* Update the radial menu position
+	*
+	* @method updateRadialMenuPosition
+	* @param data {Object} menu data
+	*/
+	this.updateRadialMenuPosition = function(data) {
 
+		var menuElem = document.getElementById(data.id + "_menu");
+
+		if (menuElem !== null) {
+			var menu = this.radialMenus[menuElem.id];
+
+			var rect = menuElem.getBoundingClientRect();
+			menu.moveMenu({x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY});
+
+			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
+		}
+	};
+	
 	/**
 	* Deal with event in radial menu
 	*
