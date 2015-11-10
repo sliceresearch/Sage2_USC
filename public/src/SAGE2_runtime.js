@@ -632,13 +632,14 @@ function ignoreFields(obj, fields) {
 		if (fields.indexOf(key) < 0) {
 			if (obj[key] === null || obj[key] instanceof Array || typeof obj[key] !== "object") {
 				result[key] = obj[key];
-			}
-			else {
+			} else {
 				result[key] = ignoreFields(obj[key], fields);
 			}
 		}
 	}
-	if (isEmpty(result)) return undefined;
+	if (isEmpty(result)) {
+		return undefined;
+	}
 	return result;
 }
 

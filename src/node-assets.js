@@ -316,7 +316,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
-	if(index >= sizes.length) {
+	if (index >= sizes.length) {
 		callback();
 		return;
 	}
@@ -324,35 +324,43 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	var connected = "#379982";
 	var disconnected = "#AD2A2A";
 
-	if (config.ui.menubar && config.ui.menubar.remoteConnectedColor && config.ui.menubar.remoteConnectedColor[0] === "#")
+	if (config.ui.menubar &&
+		config.ui.menubar.remoteConnectedColor &&
+		config.ui.menubar.remoteConnectedColor[0] === "#") {
 		connected = config.ui.menubar.remoteConnectedColor;
-	if (config.ui.menubar && config.ui.menubar.remoteDisconnectedColor && config.ui.menubar.remoteDisconnectedColor[0] === "#")
+	}
+	if (config.ui.menubar &&
+		config.ui.menubar.remoteDisconnectedColor &&
+		config.ui.menubar.remoteDisconnectedColor[0] === "#") {
 		disconnected = config.ui.menubar.remoteDisconnectedColor;
+	}
 
 	var font = "Helvetica.ttf";
-	var fontSize = parseInt(0.1*sizes[index], 10);
+	var fontSize = parseInt(0.1 * sizes[index], 10);
 	var finishedC = false;
 	var finishedD = false;
-	imageMagick(sizes[index], sizes[index], connected).fill("#FFFFFF").font(font, fontSize).drawText(0, 0, infile, "Center").write(outfile+'_'+sizes[index]+'.jpg', function(err) {
+	imageMagick(sizes[index], sizes[index], connected).fill("#FFFFFF").font(font, fontSize)
+		.drawText(0, 0, infile, "Center").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
 			return;
 		}
 		finishedC = true;
 		if (finishedD === true) {
 			// recursive call to generate the next size
-			generateRemoteSiteThumbnails(infile, outfile, sizes, index+1, callback);
+			generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 		}
 	});
-	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).drawText(0, 0, infile, "Center").write(outfile+'_disconnected_'+sizes[index]+'.jpg', function(err) {
+	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
+		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
 		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
 			return;
 		}
 		finishedD = true;
 		if (finishedC === true) {
 			// recursive call to generate the next size
-			generateRemoteSiteThumbnails(infile, outfile, sizes, index+1, callback);
+			generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 		}
 	});
 };
@@ -834,7 +842,9 @@ var initialize = function(mainFolder, mediaFolders) {
 
 		// Make sure the asset/remote folder exists
 		var assetRemoteFolder = path.join(assetFolder, 'remote');
-		if (!sageutils.folderExists(assetRemoteFolder)) fs.mkdirSync(assetRemoteFolder);
+		if (!sageutils.folderExists(assetRemoteFolder)) {
+			fs.mkdirSync(assetRemoteFolder);
+		}
 
 		AllAssets = {};
 		AllAssets.mainFolder = mainFolder;
@@ -867,11 +877,10 @@ var initialize = function(mainFolder, mediaFolders) {
 				addAssetFolder(f.path);
 			}
 		}
-		for(i=0; i<config.remote_sites.length; i++) {
+		for (i = 0; i < config.remote_sites.length; i++) {
 			if (config.remote_sites[i].name in AllAssets.list) {
 				AllAssets.list[config.remote_sites[i].name].Valid = true;
-			}
-			else {
+			} else {
 				thelist.push(config.remote_sites[i].name);
 			}
 		}

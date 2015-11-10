@@ -123,7 +123,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @method togglePlayPause
 	*
 	*/
-	togglePlayPause: function(date){
+	togglePlayPause: function(date) {
 		if (this.state.paused === true) {
 			if (isMaster) {
 				// Trying to sync
@@ -150,7 +150,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @method toggleMute
 	*
 	*/
-	toggleMute: function(date){
+	toggleMute: function(date) {
 		if (this.state.muted === true) {
 			if (isMaster) {
 				wsio.emit('unmuteVideo', {id: this.div.id});
@@ -171,7 +171,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @method toggleLoop
 	*
 	*/
-	toggleLoop: function(date){
+	toggleLoop: function(date) {
 		if (this.state.looped === true) {
 			if (isMaster) {
 				wsio.emit('loopVideo', {id: this.div.id, loop: false});
@@ -186,7 +186,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.loopBtn.state = 1 - this.loopBtn.state;
 	},
 
-	stopVideo: function(){
+	stopVideo: function() {
 		if (isMaster) {
 			wsio.emit('stopVideo', {id: this.div.id});
 		}
