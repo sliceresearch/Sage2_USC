@@ -21,7 +21,7 @@ init:
   - mkdir C:\Dev\ffmpeg-win64-dev
   - move ffmpeg-2.8-win64-dev\lib C:\Dev\ffmpeg-win64-dev
   - move ffmpeg-2.8-win64-dev\include C:\Dev\ffmpeg-win64-dev
-  - del /Q *.7z nul
+  - del /Q *.7z
   - rmdir /Q /S ffmpeg-2.8-win64-dev
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
@@ -62,7 +62,7 @@ install:
   - rmdir /Q /S im
   - curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
   - 7z x -y git-win64-bin.zip > nul
-  - del /Q *.7z nul
+  - del /Q *.7z
   - del /Q *.zip
   - cd bin
   - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.exe
