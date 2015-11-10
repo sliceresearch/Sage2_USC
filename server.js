@@ -296,7 +296,7 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp', 'config' ];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
@@ -512,7 +512,6 @@ function wsAddClient(wsio, data) {
 		data.requests.console = false;
 	}
 
-	console.log("client:", data.host, data.port);
 	wsio.updateRemoteAddress(data.host, data.port); // overwrite host and port if defined
 	wsio.clientType = data.clientType;
 
