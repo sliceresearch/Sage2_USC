@@ -921,23 +921,28 @@ function UIBuilder(json_cfg, clientID) {
 
 		if (menuElem !== null) {
 			var menu = this.radialMenus[menuElem.id];
-			menu.setState(data);
 
-			menuElem.style.display = "block";
-			menu.thumbnailScrollWindowElement.style.display = "block";
-			if (data.thumbnailWindowState  !== 'closed') {
-				menu.thumbnailWindowDiv.style.display = "block";
+			if (data.visible === false) {
+				menu.closeMenu();
 			} else {
-				menu.thumbnailWindowDiv.style.display = "none";
+				menu.setState(data);
+
+				menuElem.style.display = "block";
+				menu.thumbnailScrollWindowElement.style.display = "block";
+				if (data.thumbnailWindowState  !== 'closed') {
+					menu.thumbnailWindowDiv.style.display = "block";
+				} else {
+					menu.thumbnailWindowDiv.style.display = "none";
+				}
+				menu.redraw();
+				menu.visible = true;
+
+				var rect = menuElem.getBoundingClientRect();
+				menu.moveMenu({x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY});
+
+				menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+				menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 			}
-			menu.redraw();
-			menu.visible = true;
-
-			var rect = menuElem.getBoundingClientRect();
-			menu.moveMenu({x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY});
-
-			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
-			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 		} else {
 			// Show was called on non-existant menu (display client was likely reset)
 			this.createRadialMenu(data);

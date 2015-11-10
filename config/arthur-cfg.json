@@ -5,7 +5,7 @@
 	name: "Arthur",
 	host: "nishimoto.evl.uic.edu",
 	port: 9090,
-	index_port: 9292,
+	index_port: 9293,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -19,7 +19,8 @@
 		show_url: false,
 		widgetControlSize: 20,
 		auto_scale_ui: true,
-		calculate_viewing_distance: false
+		calculate_viewing_distance: false,
+		reload_wallui_on_refresh: false
 	},
 	resolution: {
 		width: 2560,

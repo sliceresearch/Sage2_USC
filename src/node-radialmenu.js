@@ -214,7 +214,7 @@ RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 RadialMenu.prototype.getInfo = function() {
 	return {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
 			thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
-			visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState,
+			visible: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState,
 			arrangementMenuState: this.showArrangementSubmenu
 			};
 };

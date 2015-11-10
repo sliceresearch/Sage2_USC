@@ -754,8 +754,17 @@ function initializeExistingSagePointers(wsio) {
 }
 
 function initializeExistingWallUI(wsio) {
-	var key;
 
+	if (config.ui.reload_wallui_on_refresh === false) {
+		// console.log("WallUI reload on display client refresh: Disabled");
+		for (key in SAGE2Items.radialMenus.list) {
+			var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+			hideRadialMenu(menuInfo.id);
+		}
+		return;
+	}
+	// console.log("WallUI reload on display client refresh: Enabled (default)");
+	var key;
 	for (key in SAGE2Items.radialMenus.list) {
 		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 		broadcast('createRadialMenu', menuInfo);
@@ -6800,6 +6809,7 @@ function hideRadialMenu(uniqueID) {
 	if (radialMenu !== undefined) {
 		radialMenu.hide();
 	}
+	broadcast('updateRadialMenu', radialMenu.getInfo());
 }
 
 function updateWallUIMediaBrowser(uniqueID) {

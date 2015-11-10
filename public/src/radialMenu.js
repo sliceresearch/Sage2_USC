@@ -696,6 +696,7 @@ function RadialMenu() {
 	 * @method closeMenu
 	 */
 	this.closeMenu = function() {
+		console.log("radialMenu: closeMenu");
 		this.visible = false;
 
 		this.radialMenuDiv.style.display = "none";
