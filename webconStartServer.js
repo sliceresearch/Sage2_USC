@@ -120,6 +120,8 @@ if (!utils.fileExists(wcPathToConfigFile)) {
 	fs.writeFileSync(wcPathToConfigFile, tcc);
 }
 
+var ccfaddress = fs.readFileSync(wcPathToConfigFile, "utf8");
+ccfaddress = json5.parse(ccfaddress);
 
 console.log('The webconID hash is:' + global.webconID);
 console.log('The adminPanelId hash is:' + global.adminPanelId);
@@ -128,6 +130,12 @@ console.log();
 console.log('=====================================================================');
 console.log('Closing this window prevents access to the web controller for SAGE2');
 console.log('=====================================================================');
+console.log('|To Access the web controller from a browser on this computer:');
+console.log('|     localhost:9001');
+console.log('|');
+console.log('|');
+console.log('|To Access from another computer use address:');
+console.log('|     '+ccfaddress.host+':9001');
 console.log();
 console.log();
 
@@ -393,6 +401,7 @@ function wsSetMeetingId(wsio, data) {
 	fs.writeFileSync(wcPathToSageUiPwdFile, jsonString);
 	console.log();
 	wsio.emit('alertClient', { message: 'The meetingID has been set' });
+	wsio.emit('displayOverlayMessage', { message: 'The meetingID has been set' });
 }
 
 function wsSetWebControllerPwd(wsio, data) {
