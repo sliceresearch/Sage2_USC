@@ -1,0 +1,305 @@
+{
+    "global": {
+        "security" : "false",
+        "server_port" : "9000"
+    },
+    "main": {
+        "header" : "<h1>CAVE2 Enhanced Experience</h1>",
+        "footer" : "<h4>CAVE2 Enhanced Experience</h4>",
+        "image" : "images/cave2_logo.gif",
+        "image_style" : "width=\"90%\" style=\"max-width:420px;align:center;margin: 0 auto;\"",
+        "pages" : [ "Admin", "Demos", "SAGE", "Electro", "OmegaLib", "CalVR", "Audio", "Cluster", "Tracker"]
+    },
+    "actions": {
+        "displays-on":    {  "serial": "op A1 display.power = 1\r", "baud":"19200", "port":"/dev/ttyS0" },
+        "displays-off":   {  "serial": "op A1 display.power = 0\r", "baud":"19200", "port":"/dev/ttyS0" },
+        "xinerama-on":  {  "script": "scripts/XineramaOn" },
+        "xinerama-off": {  "script": "scripts/XineramaOff" },
+        "reset-x":      {  "command" : "xterm -e sudo /usr/local/bin/ResetX" },
+        "sage-on":      {  "script": "scripts/SAGEOn" },
+        "sage-off":     {  "script": "scripts/SAGEOff" },
+        "tracker-on":   {  "script": "scripts/TrackerOn" },
+        "tracker-off":  {  "script": "scripts/TrackerOff" },
+        "mars-on":      {  "script": "scripts/MarsOn" },
+        "mars-off":     {  "script": "scripts/MarsOff" },
+        "vortex-on":    {  "script": "scripts/VortexOn" },
+        "vortex-off":   {  "script": "scripts/VortexOff" },
+        "calvr-on":     {  "script": "scripts/CalVROn" },
+        "calvr-off":    {  "script": "scripts/CalVROff" },
+
+        "omegalib_molecule-on":   {  "script": "scripts/OmegalibMolecule" },
+        "omegalib_enterprise-on": {  "script": "scripts/OmegalibEnterprise" },
+        "omegalib_calit2-on":     {  "script": "scripts/OmegalibCalit2" },
+        "omegalib_baybridge-on":  {  "script": "scripts/OmegalibBaybridge" },
+        "omegalib_brain2-on":     {  "script": "scripts/OmegalibBrain2" },
+        "omegalib_surganim-on":   {  "script": "scripts/OmegalibSurganim" },
+        "omegalib_meshviewer-on": {  "script": "scripts/OmegalibMeshViewer" },
+        "omegalib_mars-on": 	  {  "script": "scripts/OmegalibMars" },
+        "omegalib-off":           {  "script": "scripts/OmegalibOff" },
+
+        "processors": {  "script": "scripts/cluster-processors", "return": "process" },
+        "gpus":       {  "script": "scripts/cluster-gpus",       "return": "process"  },
+        "disks":      {  "script": "scripts/cluster-disks",      "return": "process"  },
+        "memory":     {  "script": "scripts/cluster-memory",     "return": "process"  },
+        "netcards":   {  "script": "scripts/cluster-netcards",   "return": "process"  },
+        "ips":        {  "script": "scripts/cluster-ips",        "return": "process"  },
+        "pci":        {  "script": "scripts/cluster-pci",        "return": "process"  },
+        "uptime":     {  "script": "scripts/cluster-uptime",     "return": "process"  },
+
+        "audio-reboot-on":      { "script": "scripts/Reboot",   "server": "xenakis.evl.uic.edu:19999" },
+        "audio-shutdown-on":    { "script": "scripts/Shutdown", "server": "xenakis.evl.uic.edu:19999" },
+        "audio-sc-on":          { "script": "scripts/ScOn",     "server": "xenakis.evl.uic.edu:19999" },
+        "audio-sc-off":         { "script": "scripts/ScOff",    "server": "xenakis.evl.uic.edu:19999" },
+        "sc-playback-stereo":   { "oscmessage" : "/playLyraStereoLocal", "server": "xenakis.evl.uic.edu:3131" },
+        "sc-playback-mute-on":  { "oscmessage" : "/mute",       "server": "xenakis.evl.uic.edu:3131" },
+        "sc-playback-mute-off": { "oscmessage" : "/unMute",     "server": "xenakis.evl.uic.edu:3131" },
+        "sc-mic-mute-on":       { "oscmessage" : "/killMics",  "server": "xenakis.evl.uic.edu:3131" },
+        "sc-mic-mute-off":      { "oscmessage" : "/routeMics",  "server": "xenakis.evl.uic.edu:3131" },
+        "sc-playback-volume":   { "oscmessage" : "/serverVol",  "server": "xenakis.evl.uic.edu:3131" },
+        
+        "omegalib-quit":  { "command" : "/data/evl/omegalib/build/bin/mcsend 'oexit()'" },
+        "panoptic-on":    { "command" : "/data/evl/omegalib/build/bin/mcsend 'overridePanopticStereo(False)'" },
+        "panoptic-off":   { "command" : "/data/evl/omegalib/build/bin/mcsend 'overridePanopticStereo(True)'" },
+        "omegalib_stereo-toggle":   { "command" : "/data/evl/omegalib/build/bin/mcsend 'toggleStereo()'" }
+    },
+
+    "macros": {
+        "SAGE"  : [ "displays-on", "sc-playback-stereo", "sage-on" ],
+        "Mars"  : [ "displays-on", "tracker-on", "sc-playback-stereo", "mars-on" ],
+        "Brain" : [ "displays-on",  "sc-playback-stereo", "omegalib_brain2-on" ],
+        "CalVR" : [ "displays-on", "xinerama-off", "sc-playback-stereo", "calvr-on" ],
+        "Clear" : [ "audio-sc-off", "tracker-off", "sage-off", "omegalib-quit", "calvr-off", "mars-off", "xinerama-on", "audio-sc-on" ],
+        "Done"  : [ "audio-sc-off", "displays-off", "sage-off", "omegalib-off", "calvr-off", "mars-off", "xinerama-on", "audio-sc-on" ]
+    },
+
+
+
+    "Admin" : {
+        "title" : "Administration",
+        "groups" : [ "displays", "x11server"],
+        "displays" : { 
+            "title": "Displays",
+            "image": "images/planar_small.jpg",
+            "actions": [
+                {"title": "Displays ON", "action": "displays-on"},
+                {"title": "Displays OFF", "action": "displays-off"}
+            ]
+        },
+        "x11server" : {
+            "title": "X11 server",
+            "image": "images/x11_small.png",
+            "actions": [
+                {"title": "With Xinerama mode (one server)", "action": "xinerama-on"},
+                {"title": "No Xinerama mode (two servers)", "action": "xinerama-off"},
+                {"title": "Hard reset (omega-13)", "action": "reset-x", "theme":"e"}
+            ]
+        }
+    },
+ 
+    "Demos" : {
+        "title" : "Demos",
+        "groups" : [ "demos", "volume"],
+        "demos" : { 
+            "title": "Demos",
+            "image": "images/demo_small.png",
+            "description": "<p>Start the main demos of CAVE2. It will take care of every aspects of starting every demo (turns on the screens, setup the displays, start the demo, ...). Just make sure to run <b>'Clear'</b> after <b>each</b> run.</p> <p>Press 'Done' when the tour is over.</p>",
+            "actions": [
+                {"title": "SAGE: a large multimedia workspace", "macro": "SAGE"},
+                {"title": "Mars: fly around the planet Mars", "macro": "Mars"},
+                {"title": "Brain: 3D brain reonstruction", "macro": "Brain"},
+                {"title": "CalVR: cave-cam, 3d models, ...", "macro": "CalVR"},
+                {"title": "Clear: reset after every demo", "macro": "Clear",  "theme":"e"},
+                {"title": "Done: the tour is over, next!", "macro": "Done",  "theme":"c"}
+            ]
+        },
+        "volume" : { 
+            "title": "Volume",
+            "image": "images/volume_small.png",
+            "description": "Basic playback volume control",
+            "actions": [
+                {"title": "Volume",  "action": "sc-playback-volume",  "role": "range", "minvalue": "-40", "maxvalue": "8" , "theme": "a"}
+            ]
+        }
+    },
+
+
+    "SAGE" : {
+        "title" : "SAGE",
+        "groups" : [ "usesage" ],
+        "usesage" : { 
+            "title": "Use SAGE",
+            "image": "images/sage_small.jpg",
+            "actions": [
+                {"title": "Setup X11 server", "action": "xinerama-on"},
+                {"title": "Start SAGE", "action": "sage-on"},
+                {"title": "Stop SAGE", "action": "sage-off", "theme": "a"}
+            ]
+        }
+    },
+    "Electro" : {
+        "title" : "Electro applications",
+        "groups" : [ "setup", "mars", "vortex" ],
+        "setup" : { 
+            "title": "Setup",
+            "image": "images/tracker_small.jpg",
+            "description": "Before starting Electro applications, make sure to reset the X11 server (click 'Setup X server') and to start the tracker (click 'Start traker').",
+            "actions": [
+                {"title": "Start traker", "action": "tracker-on"},
+                {"title": "Stop tracker", "action": "tracker-off"},
+                {"title": "Enable audio",    "action": "sc-playback-stereo"},
+               {"title": "Setup X server", "action": "xinerama-on"}
+            ]
+        },
+        "mars" : { 
+            "title": "Mars",
+            "image": "images/mars_small.jpg",
+            "description": "Explore mars from space",
+            "actions": [
+                {"title": "Enable audio",    "action": "sc-playback-stereo"},
+                {"title": "Start", "action": "mars-on"},
+                {"title": "Stop",  "action": "mars-off"}
+            ]
+        },
+        "vortex" : { 
+            "title": "Vortex",
+            "image": "images/vortex_small.jpg",
+            "description": "Explore stars and constellations",
+            "actions": [
+                {"title": "Enable audio",    "action": "sc-playback-stereo"},
+                {"title": "Start", "action": "vortex-on"},
+                {"title": "Stop",  "action": "vortex-off"}
+            ]
+        }
+    },
+    "OmegaLib" : {
+        "title" : "OmegaLib applications",
+        "groups" : [ "setup" ,  "apps", "vr" ],
+        "setup" : { 
+            "title": "Setup",
+            "image": "images/x11_small.png",
+            "description": "Before starting OmegaLib applications, make sure to reset the X11 server (click 'Setup X server') and verify that the Omicron tracker is running on the Windows PC.",
+            "actions": [
+                {"title": "Enable audio",    "action": "sc-playback-stereo"},
+                {"title": "Setup X server", "action": "xinerama-on"},
+                {"title": "Clean up OmegaLib", "action": "omegalib-off"}
+            ]
+        },
+        "vr" : { 
+            "title": "VR modes",
+            "image": "images/panopticon_small.png",
+            "description": "Enable panoptic stereo (stereo will be 'correct' for all users, the default) or disable it (stereo will be correct for a single user).",
+            "actions": [
+                {"title": "Single-user VR", "action": "panoptic-off"},
+                {"title": "Multi-user VR", "action": "panoptic-on"},
+                {"title": "Toggle stereo/mono", "action": "omegalib_stereo-toggle"}
+            ]
+        },
+        "apps" : { 
+            "title": "Standalone applications",
+            "image": "images/omegalib_small.png",
+            "description": "Launch specific OmegaLib applications",
+            "actions": [
+                {"title": "Molecule Vis", "action": "omegalib_molecule-on"},
+                {"title": "Star Trek: Enterprise", "action": "omegalib_enterprise-on"},
+                {"title": "Calit2 Building", "action": "omegalib_calit2-on"},
+                {"title": "Bay Bridge", "action": "omegalib_baybridge-on"},
+                {"title": "Brain", "action": "omegalib_brain2-on"},
+                {"title": "Surgery Animation", "action": "omegalib_surganim-on"},
+                {"title": "Mesh Viewer", "action": "omegalib_meshviewer-on"},
+                {"title": "Mars 3D Panorama", "action": "omegalib_mars-on"},
+                {"title": "Stop", "action": "omegalib-quit", "theme": "c"}
+            ]
+        }
+    },
+    "CalVR" : {
+        "title" : "CalVR",
+        "groups" : [ "calvr" ],
+        "calvr" : { 
+            "title": "CalVR",
+            "image": "images/calvr_small.jpg",
+            "description": "Before starting CalVR, make sure to disable 'xinerama' mode: click 'Setup'.",
+            "actions": [
+                {"title": "Enable audio",    "action": "sc-playback-stereo"},
+                {"title": "Setup", "action": "xinerama-off"},
+                {"title": "Start", "action": "calvr-on"},
+                {"title": "Stop",  "action": "calvr-off"}
+            ]
+        }
+    },
+    "Audio" : {
+        "title" : "Audio system",
+        "groups" : [ "volume", "microphone", "supercollider", "admin" ],
+        "volume" : { 
+            "title": "Volume",
+            "image": "images/volume_small.png",
+            "description": "Basic playback volume control",
+            "actions": [
+                {"title": "Volume",  "action": "sc-playback-volume",  "role": "range", "minvalue": "-40", "maxvalue": "8" , "theme": "a"},
+                {"title": "Enable stereo",    "action": "sc-playback-stereo"},
+                {"title": "Mute",    "action": "sc-playback-mute-on"},
+                {"title": "unMute",  "action": "sc-playback-mute-off"}
+            ]
+        },
+        "microphone" : { 
+            "title": "Volume",
+            "image": "images/microphone_small.png",
+            "description": "Basic microphone level control",
+            "actions": [
+                {"title": "Mics On",    "action": "sc-mic-mute-off"},
+                {"title": "Mics Off",   "action": "sc-mic-mute-on"}
+           ]
+        },
+        "admin" : { 
+            "title": "Administration",
+            "image": "images/shutdown2.png",
+            "description": "Sound server management (MacPro)",
+            "actions": [
+                {"title": "Reboot the machine", "action": "audio-reboot-on"},
+                {"title": "Shutdown the machine",  "action": "audio-shutdown-on"}
+            ]
+        },
+        "supercollider" : { 
+            "title": "SuperCollider",
+            "image": "images/supercollider.png",
+            "description": "Manage SuperCollider",
+            "actions": [
+                {"title": "Start SuperCollider", "action": "audio-sc-on"},
+                {"title": "Stop SuperCollider",  "action": "audio-sc-off"}
+            ]
+        }
+    },
+    "Cluster" : {
+        "title" : "Cluster administration",
+        "groups": [ "cluster"],
+        "cluster": {
+            "title": "Cluster information",
+            "image": "images/cluster_small.jpg",
+            "description": "Open each tab to gather information",
+            "actions": [
+                {"title": "Uptime",        "action": "uptime",     "role": "collapsible", "theme":"b"},
+                {"title": "IP addresses",  "action": "ips",        "role": "collapsible", "theme":"b"},
+                {"title": "Processors",    "action": "processors", "role": "collapsible", "theme":"b"},
+                {"title": "Memory",        "action": "memory",     "role": "collapsible", "theme":"b"},
+                {"title": "GPUs",          "action": "gpus",       "role": "collapsible", "theme":"b"},
+                {"title": "Disks",         "action": "disks",      "role": "collapsible", "theme":"b"},
+                {"title": "Network cards", "action": "netcards",   "role": "collapsible", "theme":"b"},
+                {"title": "PCI devices",   "action": "pci",        "role": "collapsible", "theme":"b"}
+            ]
+        }
+    },
+    "Tracker" : {
+        "title" : "Tracking system",
+        "groups": [ "tracking"],
+        "tracking": {
+            "title": "Tracking",
+            "image": "images/tracker_small.jpg",
+            "description": "CAVE2 tracking values",
+            "actions": [
+                {"title": "Head",  "action": "head",  "role": "collapsible", "theme":"b"},
+                {"title": "Wand",  "action": "wand",  "role": "collapsible", "theme":"b", "collapsed":"false"},
+                {"title": "Wand2", "action": "wand2", "role": "collapsible", "theme":"b", "collapsed":"false"}
+            ]
+        }
+    }
+
+}

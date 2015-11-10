@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "/",
+  "type": "object",
+  "properties": {
+    "name": {
+      "id": "name",
+      "type": "string",
+      "default": "My_office",
+      "description": "a string describing the wall"
+    },
+    "host": {
+      "id": "host",
+      "type": "string",
+      "default": "sage.example.edu"
+    },
+    "port": {
+      "id": "port",
+      "type": "integer",
+      "default": 443
+    },
+    "index_port": {
+      "id": "index_port",
+      "type": "integer",
+      "default": 80
+    },
+    "url": {
+      "id": "url",
+      "type": "string",
+      "default": "http://bit.do/mysite"
+    },
+    "background": {
+      "id": "background",
+      "type": "object",
+      "properties": {
+        "color": {
+          "id": "color",
+          "type": "string",
+          "default": "#585757"
+        },
+        "image": {
+          "id": "image",
+          "type": "object",
+          "properties": {
+            "url": {
+              "id": "url",
+              "type": "string",
+              "default": "images/background/dbgrid.png"
+            },
+            "style": {
+              "id": "style",
+              "type": "string",
+              "default": "tile"
+            }
+          }
+        },
+        "watermark": {
+          "id": "watermark",
+          "type": "object",
+          "properties": {
+            "svg": {
+              "id": "svg",
+              "type": "string",
+              "default": "images/EVL-LAVA.svg"
+            },
+            "color": {
+              "id": "color",
+              "type": "string",
+              "default": "rgba(255, 255, 255, 0.25)"
+            }
+          }
+        }
+      }
+    },
+    "ui": {
+      "id": "ui",
+      "type": "object",
+      "properties": {
+        "clock": {
+          "id": "clock",
+          "type": "integer",
+          "default": 12
+        },
+        "show_url": {
+          "id": "show_url",
+          "type": "boolean",
+          "default": true
+        },
+        "show_version": {
+          "id": "show_version",
+          "type": "boolean",
+          "default": true
+        },
+        "noDropShadow": {
+          "id": "noDropShadow",
+          "type": "boolean",
+          "default": true
+        },
+        "auto_hide_ui": {
+          "id": "auto_hide_ui",
+          "type": "boolean",
+          "default": false
+        },
+        "auto_hide_delay": {
+          "id": "auto_hide_delay",
+          "type": "integer",
+          "default": 30
+        },
+        "maxWindowWidth": {
+          "id": "maxWindowWidth",
+          "type": "integer",
+          "default": 4096
+        },
+        "maxWindowHeight": {
+          "id": "maxWindowHeight",
+          "type": "integer",
+          "default": 4096
+        },
+        "auto_scale_ui": {
+          "id": "auto_scale_ui",
+          "type": "boolean",
+          "default": true
+        },
+        "calculate_viewing_distance": {
+          "id": "calculate_viewing_distance",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "resolution": {
+      "id": "resolution",
+      "type": "object",
+      "properties": {
+        "width": {
+          "id": "width",
+          "type": "integer",
+          "default": 1920
+        },
+        "height": {
+          "id": "height",
+          "type": "integer",
+          "default": 1080
+        }
+      }
+    },
+    "dimensions": {
+      "id": "dimensions",
+      "type": "object",
+      "properties": {
+        "tile_width": {
+          "id": "tile_width",
+          "type": "number",
+          "default": 1.205
+        },
+        "tile_height": {
+          "id": "tile_height",
+          "type": "number",
+          "default": 0.68
+        },
+        "tile_borders": {
+          "id": "tile_borders",
+          "type": "object",
+          "properties": {
+            "left": {
+              "id": "left",
+              "type": "number",
+              "default": 0
+            },
+            "right": {
+              "id": "right",
+              "type": "number",
+              "default": 0
+            },
+            "bottom": {
+              "id": "bottom",
+              "type": "integer",
+              "default": 0
+            },
+            "top": {
+              "id": "top",
+              "type": "integer",
+              "default": 0
+            }
+          }
+        },
+        "viewing_distance": {
+          "id": "viewing_distance",
+          "type": "integer",
+          "default": 1
+        }
+      }
+    },
+    "layout": {
+      "id": "layout",
+      "type": "object",
+      "properties": {
+        "rows": {
+          "id": "rows",
+          "type": "integer",
+          "default": 1
+        },
+        "columns": {
+          "id": "columns",
+          "type": "integer",
+          "default": 2
+        }
+      }
+    },
+    "displays": {
+      "id": "displays",
+      "type": "array",
+      "items": [
+        {
+          "id": "0",
+          "type": "object",
+          "properties": {
+            "row": {
+              "id": "row",
+              "type": "integer",
+              "default": 0
+            },
+            "column": {
+              "id": "column",
+              "type": "integer",
+              "default": 0
+            }
+          }
+        },
+        {
+          "id": "1",
+          "type": "object",
+          "properties": {
+            "row": {
+              "id": "row",
+              "type": "integer",
+              "default": 0
+            },
+            "column": {
+              "id": "column",
+              "type": "integer",
+              "default": 1
+            }
+          }
+        }
+      ]
+    },
+    "alternate_hosts": {
+      "id": "alternate_hosts",
+      "type": "array",
+      "items": [
+        {
+          "id": "0",
+          "type": "string",
+          "default": "localhost"
+        },
+        {
+          "id": "1",
+          "type": "string",
+          "default": "127.0.0.1"
+        }
+      ]
+    },
+    "remote_sites": {
+      "id": "remote_sites",
+      "type": "array",
+      "items": [
+        {
+          "id": "0",
+          "type": "object",
+          "properties": {
+            "name": {
+              "id": "name",
+              "type": "string",
+              "default": "CAVE2"
+            },
+            "host": {
+              "id": "host",
+              "type": "string",
+              "default": "lyra.evl.uic.edu"
+            },
+            "port": {
+              "id": "port",
+              "type": "integer",
+              "default": 443
+            },
+            "secure": {
+              "id": "secure",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "host",
+    "port",
+    "index_port",
+    "background",
+    "ui",
+    "resolution",
+    "dimensions",
+    "layout",
+    "displays"
+  ]
+}

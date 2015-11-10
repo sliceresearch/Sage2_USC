@@ -1,0 +1,7 @@
+#!/bin/sh
+
+./node_modules/forever/bin/forever list
+./node_modules/forever/bin/forever stopall
+./node_modules/forever/bin/forever list
+
+

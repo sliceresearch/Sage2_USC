@@ -102,6 +102,18 @@ SAGE2ItemList.prototype.editButtonOnItem = function(id, buttonId, type, geometry
 };
 
 /**
+* Edit visibility for an interactable button for an item in the list
+*
+* @method editButtonVisibilityOnItem
+* @param id {String} id of item
+* @param buttonId {String} id of button
+* @param visible {Boolean} whether or not the button is visible
+*/
+SAGE2ItemList.prototype.editButtonVisibilityOnItem = function(id, buttonId, visible) {
+	this.interactable.editVisibility(buttonId, id, visible);
+};
+
+/**
 * Test to see which button is under a given point
 *
 * @method findButtonByPoint

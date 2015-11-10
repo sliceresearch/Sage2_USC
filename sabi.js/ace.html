@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <title>SABI.js Editor</title> 
+    
+    <!--check and see what the local dims of the device are-->
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1,
+        minimum-scale=1, width=device-width, height=device-height" />
+
+    <style type="text/css" media="screen">
+        h1 {
+            font-size: 18pt;
+            color: #FFFFFF;
+            font-family: Helvetica, sans-serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            background: #444444;
+            min-width:500px;
+        }
+        .siteType {
+            margin-bottom: 5px;
+        }
+
+        .myButton1 {
+            font-family: Helvetica, sans-serif;
+            margin-top: 5px;
+            display:inline-block;
+            background-color:#fe5757;
+            border:3px solid #f9423a;
+            cursor:pointer;
+            color:#ffffff;
+            padding:9px 23px;
+            text-decoration:none;
+            text-shadow:0 1px 0 #5b8a3c;
+        }
+        .myButton1:hover {
+            background-color:#cb2424;
+        }
+        .myButton1:active {
+            background-color:#fe5757;
+        }
+        .myButton2 {
+            font-family: Helvetica, sans-serif;
+            margin-top: 5px;
+            position: absolute;
+            right: 9px;
+            background-color:#49ab81;
+            border:3px solid #398564;
+            display:inline-block;
+            cursor:pointer;
+            color:#ffffff;
+            padding:9px 23px;
+            text-decoration:none;
+            text-shadow:0 1px 0 #5b8a3c;
+        }
+        .myButton2:hover {
+            background-color:#317256;
+        }
+        .myButton2:active {
+            background-color:#49ab81;
+        }
+    </style>
+</head>
+
+<script src="lib/ace/ace.js"></script>
+
+<body>
+
+        <h1 id="title">Editor:</h1>
+
+        <section class="siteType" stle="height:90%;">
+            <div id="editor">
+            </div>
+        </section>
+
+        <section class="siteType">
+            <a onclick="Editor_cancel()" class="myButton1">Cancel</a>
+            <a onclick="Editor_save()" class="myButton2">Save</a>
+        </section>
+
+
+<script>
+    function Editor_cancel() {
+        // Go back to main page
+        //   window.open("/", "_parent");
+        history.back();
+        return false;
+    }
+    function Editor_save() {
+        console.log('saving...');
+
+        // Create a PUT request to the SAGE2 server
+        var xhr = new XMLHttpRequest();
+        // Specify the destination filename
+        xhr.open("PUT", "/upload?action=" + action, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                // All done
+                console.log("   File sent");
+                // Go back to main page
+                history.back();
+            }
+        };
+        // Send the content of the editor
+        xhr.send(SAGE2_editor.getValue());
+
+        return false;
+    }
+
+    function getUrlVars() {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+        function(m, key, value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
+
+    var parameters = getUrlVars();
+    // Get the file content in base64
+    var content    = atob(parameters.file);
+
+    // Update filename
+    var filename = parameters.name;
+    var action   = parameters.action;
+    console.log('Loading', filename, action);
+    document.getElementById('title').innerText = 'Editor: ' + filename;
+
+    var elt = document.getElementById('editor');
+    elt.style.width    = '100%';
+    elt.style.height   = (window.innerHeight - 120) + 'px';
+    elt.style.fontSize = '18px';
+
+    SAGE2_editor = ace.edit(elt);
+    SAGE2_editor.setTheme("ace/theme/monokai");
+    SAGE2_editor.getSession().setMode("ace/mode/json");
+    SAGE2_editor.getSession().setTabSize(4);
+    SAGE2_editor.setHighlightActiveLine(false);
+    SAGE2_editor.setShowPrintMargin(false);
+    // scroll warning
+    SAGE2_editor.$blockScrolling = Infinity;
+    // var session = SAGE2_editor.session
+    // session.setNewLineMode("unix");
+    // set the text
+    SAGE2_editor.setValue(content, -1);
+    SAGE2_editor.gotoLine(0);
+
+    SAGE2_editor.getSession().on("change", function() {
+        // console.log('Change', SAGE2_editor.session.getLength());
+    });
+
+    // SAGE2_editor.commands.addCommand({
+    //     name: 'save',
+    //     bindKey: {win: 'Ctrl-S',  mac: 'Ctrl-S'},
+    //     exec: function(editor, line) {
+    //         // sage2SaveFile();
+    //         console.log('Saving...');
+    //         return false;
+    //     },
+    //     readOnly: true
+    // });
+
+    var resize = function() {
+        elt.style.height = (window.innerHeight - 120) + 'px';
+        SAGE2_editor.resize();
+    };
+    window.onresize = resize;
+    resize();
+
+</script>
+
+</body>
+</html>
+

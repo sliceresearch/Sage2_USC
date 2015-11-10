@@ -71,6 +71,8 @@ var SAGE2_App = Class.extend({
 
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
+		// Modify state sync options
+		this.SAGE2StateSyncOptions = {visible: false, hover: null, press: {name: null, value: null}, scroll: 0};
 	},
 
 	/**
@@ -143,17 +145,153 @@ var SAGE2_App = Class.extend({
 		this.fileReceived   = false;
 
 		this.SAGE2CopyState(data.state);
+		this.SAGE2InitializeAppOptionsFromState();
 	},
 
 	SAGE2Load: function(state, date) {
 		this.SAGE2CopyState(state);
+		this.SAGE2UpdateAppOptionsFromState();
+
 		this.load(date);
 	},
 
+	SAGE2LoadOptions: function(optionFlags) {
+		this.SAGE2LoadOptionsHelper(this.SAGE2StateOptions, optionFlags);
+		this.SAGE2UpdateOptionsAfterLoad(this.SAGE2StateOptions);
+	},
+
+	SAGE2LoadOptionsHelper: function(options, optionFlags) {
+		var key;
+		for (key in optionFlags) {
+			if (key === "_sync") {
+				options._sync = optionFlags._sync;
+			}
+			else {
+				this.SAGE2LoadOptionsHelper(options[key], optionFlags[key]);
+			}
+		}
+	},
+
+	SAGE2UpdateOptionsAfterLoad: function(parent) {
+		var key;
+		for (key in parent) {
+			if (parent.hasOwnProperty(key) && key[0] !== "_") {
+				if (parent[key]._sync) {
+					parent[key]._name.setAttribute("state", "idle");
+					parent[key]._name.setAttribute("synced", true);
+					parent[key]._value.setAttribute("synced", true);
+					this.SAGE2UpdateOptionsAfterLoad(parent[key]);
+				}
+				else {
+					parent[key]._name.setAttribute("state", "unsynced");
+					parent[key]._name.setAttribute("synced", false);
+					parent[key]._value.setAttribute("synced", false);
+					this.SAGE2UpdateOptionsAfterLoad(parent[key]);
+				}
+			}
+		}
+	},
+
 	SAGE2Event: function(eventType, position, user_id, data, date) {
-		this.SAGE2UserModification = true;
-		this.event(eventType, position, user_id, data, date);
-		this.SAGE2UserModification = false;
+		if (this.SAGE2StateSyncOptions.visible === true && (eventType === "pointerPress" || eventType === "pointerMove" || eventType === "pointerRelease" || eventType === "pointerScroll" || eventType === "keyboard" || eventType === "specialKey")) {
+			var itemIdx = parseInt((position.y-this.SAGE2StateSyncOptions.scroll) / Math.round(1.5*this.config.ui.titleTextSize), 10);
+			var children = document.getElementById(this.id + "_statecontainer").childNodes;
+			var hoverChild = null;
+			var syncedPrev;
+			var synced;
+			if (itemIdx < children.length) {
+				hoverChild = children[itemIdx];
+			}
+			switch (eventType) {
+				case "pointerPress":
+					if (hoverChild !== null) {
+						this.SAGE2StateSyncOptions.press.name = hoverChild;
+						this.SAGE2StateSyncOptions.press.value = hoverChild.childNodes[1];
+					}
+					else {
+						this.SAGE2StateSyncOptions.press.name = null;
+						this.SAGE2StateSyncOptions.press.value = null;
+					}
+					break;
+				case "pointerMove":
+					if (hoverChild !== null) {
+						if (this.SAGE2StateSyncOptions.hover !== hoverChild) {
+							if (this.SAGE2StateSyncOptions.hover !== null) {
+								syncedPrev = this.SAGE2StateSyncOptions.hover.getAttribute("synced");
+								synced = (syncedPrev === true || syncedPrev === "true") ? true : false;
+								if (synced === true)
+									this.SAGE2StateSyncOptions.hover.setAttribute("state", "idle");
+								else {
+									this.SAGE2StateSyncOptions.hover.setAttribute("state", "unsynced");
+								}
+							}
+							hoverChild.setAttribute("state", "hover");
+							this.SAGE2StateSyncOptions.hover = hoverChild;
+						}
+					}
+					else if (this.SAGE2StateSyncOptions.hover !== null) {
+						syncedPrev = this.SAGE2StateSyncOptions.hover.getAttribute("synced");
+						synced = (syncedPrev === true || syncedPrev === "true") ? true : false;
+						if (synced === true)
+							this.SAGE2StateSyncOptions.hover.setAttribute("state", "idle");
+						else {
+							this.SAGE2StateSyncOptions.hover.setAttribute("state", "unsynced");
+						}
+						this.SAGE2StateSyncOptions.hover = null;
+					}
+					break;
+				case "pointerRelease":
+					if (hoverChild === this.SAGE2StateSyncOptions.press.name) {
+						syncedPrev = this.SAGE2StateSyncOptions.press.name.getAttribute("synced");
+						synced = (syncedPrev === true || syncedPrev === "true") ? false : true;
+						this.SAGE2StateSyncOptions.press.name.setAttribute("synced", synced);
+						if (synced === true) {
+							this.SAGE2StateSyncOptions.press.name.setAttribute("state", "idle");
+							this.SAGE2StateSyncOptions.press.value.setAttribute("synced", true);
+							this.SAGE2StateSyncParent(this.SAGE2StateSyncOptions.press.name, this.SAGE2StateOptions);
+							this.SAGE2StateSyncChildren(this.SAGE2StateSyncOptions.press.name, this.SAGE2StateOptions, true);
+						}
+						else {
+							this.SAGE2StateSyncOptions.press.name.setAttribute("state", "unsynced");
+							this.SAGE2StateSyncOptions.press.value.setAttribute("synced", false);
+							this.SAGE2StateSyncChildren(this.SAGE2StateSyncOptions.press.name, this.SAGE2StateOptions, false);
+						}
+
+						if (isMaster) {
+							var stateOp = ignoreFields(this.SAGE2StateOptions, ["_name", "_value"]);
+							wsio.emit('updateStateOptions', {id: this.id, options: stateOp});
+						}
+					}
+					this.SAGE2StateSyncOptions.press.name = null;
+					this.SAGE2StateSyncOptions.press.value = null;
+					break;
+				case "pointerScroll":
+					var windowStateContatiner = document.getElementById(this.id + "_statecontainer");
+					this.SAGE2StateSyncOptions.scroll -= data.wheelDelta;
+					var minY = Math.min(this.sage2_height - windowStateContatiner.clientHeight, 0);
+					if (this.SAGE2StateSyncOptions.scroll < minY)
+						this.SAGE2StateSyncOptions.scroll = minY;
+					if (this.SAGE2StateSyncOptions.scroll > 0)
+						this.SAGE2StateSyncOptions.scroll = 0;
+
+					var newTransform = "translate(0px," + this.SAGE2StateSyncOptions.scroll + "px)";
+					windowStateContatiner.style.webkitTransform = newTransform;
+					windowStateContatiner.style.mozTransform = newTransform;
+					windowStateContatiner.style.transform = newTransform;
+					break;
+				case "keyboard":
+					break;
+				case "specialKey":
+					break;
+				default:
+					break;
+			}
+		}
+		else {
+			this.SAGE2UserModification = true;
+			this.event(eventType, position, user_id, data, date);
+			this.SAGE2UserModification = false;
+		}
 	},
 
 	/**
@@ -169,10 +307,188 @@ var SAGE2_App = Class.extend({
 		}
 	},
 
-	SAGE2Sync: function(updateRemote) {
-		if (isMaster) {
-			wsio.emit('updateAppState', {id: this.id, state: this.state, updateRemote: updateRemote});
+	SAGE2InitializeAppOptionsFromState: function() {
+		this.SAGE2StateOptions = {};
+
+		var key;
+		for (key in this.state) {
+			this.SAGE2AddAppOption(key, this.state, 0, this.SAGE2StateOptions);
 		}
+	},
+
+	SAGE2AddAppOption: function(name, parent, level, save) {
+		var windowStateContatiner = document.getElementById(this.id + "_statecontainer");
+
+		var p = document.createElement('p');
+		p.style.whiteSpace = "noWrap";
+		p.style.fontSize = Math.round(this.config.ui.titleTextSize) + "px";
+		p.style.fontFamily = "\"Lucida Console\", Monaco, monospace";
+		p.style.marginLeft = Math.round(2*(level+1)*this.config.ui.titleTextSize - this.config.ui.titleTextSize) + "px";
+		p.className = "stateObject";
+		p.setAttribute("synced", true);
+		p.setAttribute("state", "idle");
+		p.textContent = name + ": ";
+
+		var s = document.createElement('span');
+		s.style.fontSize = Math.round(this.config.ui.titleTextSize) + "px";
+		s.style.fontFamily = "\"Lucida Console\", Monaco, monospace";
+
+		p.appendChild(s);
+		windowStateContatiner.appendChild(p);
+
+		save[name] = {_name: p, _value: s, _sync: true};
+
+		if (typeof parent[name] === "number") {
+			s.className = "stateNumber";
+			s.setAttribute("synced", true);
+			s.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "boolean") {
+			s.className = "stateBoolean";
+			s.setAttribute("synced", true);
+			s.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "string") {
+			s.className = "stateString";
+			s.setAttribute("synced", true);
+			if (parent[name].length <= 260) s.textContent = parent[name];
+			else                            s.textContent = parent[name].substring(0, 257) + "...";
+		}
+		else if (parent[name] === null) {
+			s.className = "stateNull";
+			s.setAttribute("synced", true);
+			s.textContent = "null";
+		}
+		else if (parent[name] instanceof Array) {
+			s.className = "stateArray";
+			s.setAttribute("synced", true);
+			var joined = parent[name].join(", ");
+			if (joined.length <= 258) s.textContent = "[" + joined + "]";
+			else                      s.textContent = "[" + joined.substring(0, 255) + "...]";
+		}
+		else if (typeof parent[name] === "object") {
+			var key;
+			for (key in parent[name]) {
+				this.SAGE2AddAppOption(key, parent[name], level+1, save[name]);
+			}
+		}
+	},
+
+	SAGE2UpdateAppOptionsFromState: function() {
+		var key;
+		for (key in this.state) {
+			this.SAGE2UpdateAppOption(key, this.state, this.SAGE2StateOptions);
+		}
+	},
+
+	SAGE2UpdateAppOption: function(name, parent, save) {
+		if (typeof parent[name] === "number") {
+			save[name]._value.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "boolean") {
+			save[name]._value.textContent = parent[name].toString();
+		}
+		else if (typeof parent[name] === "string") {
+			if (parent[name].length <= 260) save[name]._value.textContent = parent[name];
+			else                            save[name]._value.textContent = parent[name].substring(0, 257) + "...";
+		}
+		else if (parent[name] === null) {
+			save[name]._value.textContent = "null";
+		}
+		else if (parent[name] instanceof Array) {
+			var joined = parent[name].join(", ");
+			if (joined.length <= 258) save[name]._value.textContent = "[" + joined + "]";
+			else                      save[name]._value.textContent = "[" + joined.substring(0, 255) + "...]";
+		}
+		else if (typeof parent[name] === "object") {
+			var key;
+			for (key in parent[name]) {
+				this.SAGE2UpdateAppOption(key, parent[name], save[name]);
+			}
+		}
+	},
+
+	SAGE2StateSyncParent: function(node, parent) {
+		var key;
+		for (key in parent) {
+			if (parent.hasOwnProperty(key) && key[0] !== "_") {
+				if (parent[key]._name === node) {
+					parent[key]._sync = true;
+					if (parent !== this.SAGE2StateOptions) {
+						parent._name.setAttribute("state", "idle");
+						parent._name.setAttribute("synced", true);
+						parent._value.setAttribute("synced", true);
+						parent._sync = true;
+						this.SAGE2StateSyncParent(parent._name, this.SAGE2StateOptions);
+					}
+					break;
+				}
+				else {
+					this.SAGE2StateSyncParent(node, parent[key]);
+				}
+			}
+		}
+	},
+
+	SAGE2StateSyncChildren: function(node, parent, flag) {
+		var key;
+		for (key in parent) {
+			if (parent.hasOwnProperty(key) && key[0] !== "_") {
+				if (parent[key]._name === node) {
+					parent[key]._sync = flag;
+					this.SAGE2StateSyncChildrenHelper(parent[key], flag);
+					break;
+				}
+				else {
+					this.SAGE2StateSyncChildren(node, parent[key], flag);
+				}
+			}
+		}
+	},
+
+	SAGE2StateSyncChildrenHelper: function(parent, flag) {
+		if (flag === true) {
+			parent._name.setAttribute("state", "idle");
+		}
+		else {
+			parent._name.setAttribute("state", "unsynced");
+		}
+		parent._name.setAttribute("synced", flag);
+		parent._value.setAttribute("synced", flag);
+		parent._sync = flag;
+
+		var key;
+		for (key in parent) {
+			if (parent.hasOwnProperty(key) && key[0] !== "_") {
+				this.SAGE2StateSyncChildrenHelper(parent[key], flag);
+			}
+		}
+	},
+
+	SAGE2Sync: function(updateRemote) {
+		this.SAGE2UpdateAppOptionsFromState();
+
+		if(isMaster) {
+			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
+			wsio.emit('updateAppState', {id: this.id, localState: this.state, remoteState: syncedState, updateRemote: updateRemote});
+		}
+	},
+
+	SAGE2CopySyncedState: function(state, syncOptions) {
+		var key;
+		var copy = {};
+		for (key in state) {
+			if (syncOptions[key]._sync === true) {
+				if (state[key] === null || state[key] instanceof Array || typeof state[key] !== "object") {
+					copy[key] = state[key];
+				}
+				else {
+					copy[key] = this.SAGE2CopySyncedState(state[key], syncOptions[key]);
+				}
+			}
+		}
+		if (isEmpty(copy)) return undefined;
+		return copy;
 	},
 
 	/**

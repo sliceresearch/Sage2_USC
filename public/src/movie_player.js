@@ -271,6 +271,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				default:
 					console.log("No handler for:", data.identifier);
 			}
+			this.refresh(date);
 		}
 	}
 });

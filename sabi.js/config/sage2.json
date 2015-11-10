@@ -1,0 +1,51 @@
+{
+	"global": {
+		"security"    : "true",
+		"server_port" : "10000", 
+		"tcp_port"    : "11000"
+	},
+	"main": {
+		"header" : "<h4>SAGE2 Control Interface</h4>",
+		"footer" : "<h4>SAGE2 Control Interface</h4>",
+		"image" : "images/sage2.jpg",
+		"image_style" : "width=\"90%\" style=\"max-width:450px;margin: 0 auto;\"",
+		"pages" : [ "Page1" ]
+	},
+	"actions": {
+		"audio-main-volume": { "oscmessage" : "/level",  "server": "127.0.0.1:16003" },
+		"notepad-on":        { "command": "start notepad" },
+		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
+		"firefox-on":        { "command": "start firefox" },
+		"firefox-off":       { "command": "Taskkill /IM firefox.exe /F" },
+		"edit-config":       { "editor":  "/Users/luc/Documents/SAGE2_Media/config/default-cfg.json" },
+		"edit-config2":       { "editor":  "/Users/luc/Documents/SAGE2_Media/config/default2-cfg.json" },
+		"edit-config1":      { "editor":  "\\Users\\luc\\Documents\\SAGE2_Media\\config\\default-cfg.json" },
+		"MyBAT-on":          { "script":  "scripts/mybat.bat" },
+		"MyBAT-off":         { "script":  "scripts\\mybat_off.bat" }
+	},
+
+	"Page1" : {
+		"title" : "Page1 setup",
+		"navbar" : "true",
+		"groups" : [ "group1", "group2"],
+		"group1" : { 
+			"title": "Launch SAGE2",
+			"image": "images/display.png",
+			"actions": [
+				{"title": "Start meeting",  "action": "notepad-on" },
+				{"title": "Close meeting", "action": "notepad-off", "theme":"a"}
+			]
+		},
+
+		"group2" : {
+			"title": "Configure SAGE2",
+			"image": "images/settings.png",
+			"actions": [
+				{"title": "Wall configuration",   "action": "edit-config2", "theme":"a" },
+				{"title": "Meeting access",   "action": "MyBAT-on", "theme":"a" },
+				{"title": "Admin password",  "action": "MyBAT-off", "theme":"a"}
+			]
+		}
+
+	}
+}

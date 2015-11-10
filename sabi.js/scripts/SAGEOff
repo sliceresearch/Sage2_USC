@@ -1,0 +1,7 @@
+#!/bin/sh
+
+killall -9 python 
+
+killall -9  fsManager sageDisplayManager imageviewer mplayer bplay-noglut VNCViewer render atlantis atlantis-mpi checker pdfviewer image3d images3d
+tentakel killall -9  fsManager sageDisplayManager imageviewer mplayer bplay-noglut VNCViewer render atlantis atlantis-mpi checker pdfviewer image3d images3d
+

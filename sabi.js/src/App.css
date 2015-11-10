@@ -1,0 +1,15 @@
+/*! App.css */
+
+#slider {
+	display: none
+}
+
+.ui-slider {
+	width: 71% !important;
+	margin: 0 3% 0 3% !important
+}
+
+.ui-header .ui-title {
+	margin: 0 10%;
+	text-overflow: clip;
+}

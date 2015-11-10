@@ -98,6 +98,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	updateMapFromState: function() {
+		//console.log(this.state);
 		var city = new google.maps.LatLng(this.state.center.lat, this.state.center.lng);
 		var mapOptions = {
 			center: city,
@@ -132,8 +133,10 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-		this.updateMapFromState();
-		this.refresh(date);
+		if (this.map !== undefined && this.map !== null) {
+			this.updateMapFromState();
+			this.refresh(date);
+		}
 	},
 
 	draw: function(date) {
@@ -262,8 +265,10 @@ var googlemaps = SAGE2_App.extend({
 				default:
 					console.log("No handler for:", data.identifier);
 			}
-		} else if (eventType === "keyboard") {
-			if (data.character === "m") {
+			this.refresh(date);
+		}
+		else if (eventType === "keyboard") {
+			if(data.character === "m") {
 				// change map type
 				this.changeMapType();
 			} else if (data.character === "t") {

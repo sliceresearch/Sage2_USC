@@ -1,0 +1,141 @@
+{
+    "global": {
+	"security" : "false",
+    "server_port" : "10000",
+    "tcp_port"    : "11000"
+    },
+    "main": {
+        "header" : "<h1>Cybercommons - EVL / UIC</h1>",
+        "footer" : "<h4>sabi.js control interface</h4>",
+        "image" : "images/sabi_coffee_400.jpg",
+        "image_style" : "width=\"90%\" style=\"max-width:420px;align:center;margin: 0 auto;\"",
+        "pages" : [ "Setup", "SAGE", "Audio" ]
+    },
+    "actions": {
+        "displays-on":    {  "serial": "op A1 display.power = 1\r", "baud":"19200", "port":"/dev/ttyUSB1" },
+        "displays-off":   {  "serial": "op A1 display.power = 0\r", "baud":"19200", "port":"/dev/ttyUSB1" },
+        "displays-orion": {  "serial": "op A1 slot.recall (8) \r", "baud":"19200", "port":"/dev/ttyUSB1" },
+        "displays-sage":  {  "serial": "op A1 slot.recall (0) \r", "baud":"19200", "port":"/dev/ttyUSB1" },
+        "displays-center":{  "serial": "op A1 slot.recall (1) \r", "baud":"19200", "port":"/dev/ttyUSB1" },
+        "displays-split": {  "serial": "op A1 slot.recall (2) \r", "baud":"19200", "port":"/dev/ttyUSB1" },
+        "xinerama-on":    {  "command": "ssh bigdaddy sudo /usr/local/bin/goXinerama" },
+        "xinerama-off":   {  "command": "ssh bigdaddy sudo /usr/local/bin/noXinerama" },
+
+        "sage-on":      {  "command": "xterm -e ssh bigdaddy ./GO-sage" },
+        "sage-off":     {  "command": "ssh bigdaddy ./KILL_ALL" },
+        "sage-ui":      {  "script": "/home/sage/UI" },
+        "touch-on":     {  "command": "xterm -e ssh wasp.evl.uic.edu ./Dev/pqlabs/GO" },
+        "touch-off":    {  "command": "ssh wasp.evl.uic.edu ./Dev/pqlabs/GO" },
+
+        "capture-laptop1":    {  "script": "/home/sage/HD-720p-SDI"},
+        "capture-laptop2":    {  "script": "/home/sage/HD-720p-SDI2"},
+        "capture-laptop3":    {  "script": "/home/sage/HD-1080p-SDI"},
+        "capture-stop":    {  "script": "/home/sage/STOP"},
+
+        "audio-reset":         { "oscmessage" : "/as/cues", "parameters" : "1",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-main-mute-on":  { "oscmessage" : "/as/vGroups/1/mute", "parameters" : "1",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-main-mute-off": { "oscmessage" : "/as/vGroups/1/mute", "parameters" : "0",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-main-volume":   { "oscmessage" : "/as/vGroups/1/level",  "server": "lynch.evl.uic.edu:16003" },
+
+        "audio-wall-on":        { "oscmessage" : "/as/cues", "parameters" : "33",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-wall-off":       { "oscmessage" : "/as/cues", "parameters" : "-1",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-wall-mute-on":  { "oscmessage" : "/as/vGroups/9/mute", "parameters" : "1",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-wall-mute-off": { "oscmessage" : "/as/vGroups/9/mute", "parameters" : "0",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-wall-volume":    { "oscmessage" : "/as/vGroups/9/level",  "server": "lynch.evl.uic.edu:16003" },
+
+        "audio-laptop-on":        { "oscmessage" : "/as/cues", "parameters" : "29",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-laptop-off":       { "oscmessage" : "/as/cues", "parameters" : "-1",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-laptop-mute-on":  { "oscmessage" : "/as/vGroups/10/mute", "parameters" : "1",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-laptop-mute-off": { "oscmessage" : "/as/vGroups/10/mute", "parameters" : "0",      "server": "lynch.evl.uic.edu:16003" },
+        "audio-laptop-volume":    { "oscmessage" : "/as/vGroups/10/level",  "server": "lynch.evl.uic.edu:16003" }
+    },
+
+
+    "Setup" : {
+        "title" : "Wall setup",
+        "groups" : [ "displays", "x11server"],
+        "displays" : { 
+            "title": "Displays",
+            "image": "images/planar_small.jpg",
+            "actions": [
+                {"title": "Displays ON", "action": "displays-on"},
+                {"title": "Displays OFF", "action": "displays-off"},
+                {"title": "SAGE mode", "action": "displays-sage", "theme":"b"},
+                {"title": "Cluster mode", "action": "displays-orion", "theme":"e"},
+                {"title": "Laptop mode", "action": "displays-center", "theme":"c"}
+            ]
+        },
+        "x11server" : {
+            "title": "X11 server",
+            "image": "images/x11_small.png",
+            "actions": [
+                {"title": "With Xinerama mode (large desktop)", "action": "xinerama-on"},
+                {"title": "No Xinerama mode (many servers)", "action": "xinerama-off"}
+            ]
+        }
+    },
+    "SAGE" : {
+        "title" : "SAGE",
+        "groups" : [ "usesage", "capture" ],
+        "usesage" : { 
+            "title": "Use SAGE",
+            "image": "images/sage_small.jpg",
+            "actions": [
+                {"title": "Setup X11 server", "action": "xinerama-off"},
+                {"title": "Show SAGE", "action": "displays-sage"},
+                {"title": "Start SAGE", "action": "sage-on", "theme": "b"},
+                {"title": "Stop SAGE", "action": "sage-off", "theme": "b"},
+                {"title": "Start Touch", "action": "touch-on", "theme": "c"},
+                {"title": "Stop Touch", "action": "touch-off", "theme": "c"},
+                {"title": "SAGE UI", "action": "sage-ui", "theme": "e"}
+            ]
+        },
+        "capture" : { 
+            "title": "Use the capture card",
+            "image": "images/capture_small.png",
+            "actions": [
+                {"title": "Laptop-1 720p 60Hz", "action": "capture-laptop1"},
+                {"title": "Laptop-2 720p 60Hz", "action": "capture-laptop2"},
+                {"title": "Laptop-1 1080p 30Hz", "action": "capture-laptop3"},
+                {"title": "Capture Stop", "action": "capture-stop", "theme":"e"}
+            ]
+        }
+    },
+    "Audio" : {
+        "title" : "Audio system",
+        "groups" : [ "volume", "wall", "laptop" ],
+        "volume" : { 
+            "title": "Volume",
+            "image": "images/volume_small.png",
+            "description": "Main controls",
+            "actions": [
+                {"title": "Volume",  "action": "audio-main-volume",  "role": "range", "minvalue": "-40", "maxvalue": "0" },
+                {"title": "Mute",    "action": "audio-main-mute-on" , "theme": "b"},
+                {"title": "unMute",  "action": "audio-main-mute-off" , "theme": "b"},
+                {"title": "Reset audio server",  "action": "audio-reset"}
+            ]
+        },
+        "wall" : { 
+            "title": "Wall audio",
+            "image": "images/sage_small.jpg",
+            "description": "Manage the audio from the wall (SAGE)",
+            "actions": [
+                {"title": "Volume",  "action": "audio-wall-volume",  "role": "range", "minvalue": "-40", "maxvalue": "0" },
+                {"title": "Activate","action": "audio-wall-on"},
+                {"title": "Mute",    "action": "audio-wall-mute-on" , "theme": "b"},
+                {"title": "unMute",  "action": "audio-wall-mute-off" , "theme": "b"}
+            ]
+        },
+        "laptop" : { 
+            "title": "Laptop audio",
+            "image": "images/volume_small.png",
+            "description": "Manage the audio from laptop",
+            "actions": [
+                {"title": "Volume",  "action": "audio-laptop-volume",  "role": "range", "minvalue": "-40", "maxvalue": "0" },
+                {"title": "Activate","action": "audio-laptop-on"},
+                {"title": "Mute",    "action": "audio-laptop-mute-on" , "theme": "b"},
+                {"title": "unMute",  "action": "audio-laptop-mute-off" , "theme": "b"}
+            ]
+        }
+    }
+}

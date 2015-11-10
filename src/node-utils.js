@@ -62,6 +62,7 @@ if (semver.gte(process.versions.node, '0.10.0')) {
  * @return {Bool} true if exists
  */
 function fileExists(filename) {
+
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
 		return fs.existsSync(filename);
 	} else {

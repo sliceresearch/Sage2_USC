@@ -1,0 +1,4 @@
+#!/bin/sh
+
+./node_modules/forever/bin/forever start server.js &
+
