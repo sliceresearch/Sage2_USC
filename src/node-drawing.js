@@ -4,7 +4,7 @@
 
 function DrawingManager(config) {
 
-	this.lastId = 0;
+	this.lastId = 1;
 	this.dictionaryId = {};
 	this.idPrequel = "drawing_";
 	this.clientIDandSockets = {};
@@ -315,6 +315,8 @@ DrawingManager.prototype.deleteSelectionBox = function() {
 			}
 		}
 		this.selectedDrawingObject = [];
+		this.selectionStart = {};
+		this.selectionEnd = {};
 		this.selectionBox = null;
 		this.initAll();
 	}
