@@ -400,6 +400,15 @@ function sendConfigFileData() {
 		document.getElementById('warnConfigConfirm').style.visibility = 'hidden';
 	}
 
+	workingDiv  = document.getElementById('bgImage');
+	if(workingDiv.value.indexOf("C:") !== -1) {
+		document.getElementById('warnImageSVGpath').style.visibility = 'visible';  return;
+	}
+	workingDiv  = document.getElementById('bgWatermark');
+	if(workingDiv.value.indexOf("C:") !== -1) {
+		document.getElementById('warnImageSVGpath').style.visibility = 'visible';  return;
+	}
+
 	if (passwordMismatch) {
 		document.getElementById('warnPasswordMismatch').style.visibility = 'visible';  return;
 	} else {
@@ -472,6 +481,9 @@ function sendConfigFileData() {
 	if (workingDiv.value.trim().length > 0) {
 		data.background.image = {};
 		data.background.image.url = workingDiv.value.trim();
+		while(data.background.image.url.indexOf('\\') >= 0) {
+			data.background.image.url = data.background.image.url.replace(/\\/, '/');
+		}
 		workingDiv2 = document.getElementById('bgImageDisplayType');
 		data.background.image.style = workingDiv2.options[workingDiv2.selectedIndex].value;
 
@@ -481,6 +493,9 @@ function sendConfigFileData() {
 	if (workingDiv.value.trim().length > 0) {
 		data.background.watermark = {};
 		data.background.watermark.svg = workingDiv.value.trim();
+		while(data.background.watermark.svg.indexOf('\\') >= 0) {
+			data.background.watermark.svg = data.background.watermark.svg.replace(/\\/, '/');
+		}
 		data.background.watermark.color = document.getElementById('bgWmColor').value;
 		/*
 		"rgba("
