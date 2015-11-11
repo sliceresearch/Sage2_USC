@@ -349,6 +349,18 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 }
+DrawingManager.prototype.touchNearBottom = function(x,y) {
+	var c = this.checkInvolvedClient(x,y);
+	if (c) {
+		var startY = this.tilesPosition[c].startY;
+		var endY = this.tilesPosition[c].endY;
+		var w = endY-startY;
+		var activeArea = w * 0.05;
+		return y >= endY - activeArea;
+	}
+	return false;
+}
+
 DrawingManager.prototype.touchInsidePalette = function(x,y) {
 	return ((x >= this.palettePosition.startX) && (x <= this.palettePosition.endX) &&
 			(y >= this.palettePosition.startY) && (y <= this.palettePosition.endY));
@@ -441,6 +453,13 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		} else if (this.touchInsidePalette(posX,posY)) {
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
 			return;
+		else if (this.touchNearBottom(posX,posY)) {
+			this.movePaletteTo(this.paletteID
+								, posX 
+								, this.palettePosition.startY
+								, this.palettePosition.endX - this.palettePosition.startX
+								, this.palettePosition.endY - this.palettePosition.startY);
+			return;
 		} else if (this.actualAction == "creatingSelection" && this.selectionTouchId == -1) {
 			this.deleteSelectionBox();
 			this.selectionStart = {x: posX, y: posY};
@@ -448,7 +467,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionTouchId = e.sourceId;
 			this.newSelectionBox(e);
 			return;
-		} else if (this.touchInsideSelection(posX, posY)) {
+		} else if (this.touchInsideSelection(posX, posY) && this.selectionTouchId == -1) {
 			this.selectionMovementStart = {x: posX, y: posY};
 			this.selectionTouchId = e.sourceId;
 			if (this.touchInsideSelectionZoomBox(posX,posY)) {
