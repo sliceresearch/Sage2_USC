@@ -791,7 +791,7 @@ function UIBuilder(json_cfg, clientID) {
 				}
 
 				if (drawingObject.type == "circle") {
-
+					var point = drawingObject.options.points[0];
 					toUpdate.attr("cx",point.x).attr("cy",point.y).attr("r",r)
 				}
 
