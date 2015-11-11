@@ -948,7 +948,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.createRadialMenu(data);
 		}
 	};
-	
+
 	/**
 	* Update the radial menu position
 	*
@@ -969,7 +969,7 @@ function UIBuilder(json_cfg, clientID) {
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 		}
 	};
-	
+
 	/**
 	* Deal with event in radial menu
 	*
@@ -977,7 +977,6 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Event} event
 	*/
 	this.radialMenuEvent = function(data) {
-		
 		if (data.type === "stateChange") {
 			// Update the button state
 			var menuState = data.menuState;

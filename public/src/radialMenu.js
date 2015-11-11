@@ -434,7 +434,7 @@ function RadialMenu() {
 			for (i = 0; i < this.level1Buttons.length; i++) {
 				this.level1Buttons[i].draw();
 			}
-			if (this.showArrangementSubmenu ) {
+			if (this.showArrangementSubmenu) {
 				for (i = 0; i < this.level2Buttons.length; i++) {
 					this.level2Buttons[i].draw();
 				}
@@ -1286,14 +1286,11 @@ function RadialMenu() {
 	 * @param stateData {} node-radialMenu.js getInfo()
 	 */
 	this.setState = function(stateData) {
-<<<<<<< HEAD
-=======
 		// console.log("radialMenu: setState " + stateData.thumbnailWindowState);
->>>>>>> TouchUI
 		// {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
-		//	thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
-		//	visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState }
-		//console.log(stateData);
+		// 	thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
+		// 	visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState }
+		// console.log(stateData);
 		this.showArrangementSubmenu = stateData.arrangementMenuState;
 
 		if (stateData.thumbnailWindowState === "image") {
@@ -1308,11 +1305,7 @@ function RadialMenu() {
 			this.setMenu("sessionThumbnailWindow");
 		}  else if (stateData.thumbnailWindowState === "closed") {
 			this.setMenu("radialMenu");
-<<<<<<< HEAD
-		} 
-=======
 		}
->>>>>>> TouchUI
 	}
 }
 
