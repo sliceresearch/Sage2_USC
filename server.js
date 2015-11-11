@@ -3259,10 +3259,19 @@ function loadConfiguration() {
 		if (sageutils.fileExists(configFile)) {
 			console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
 		} else {
+			// Check in ~/Document/SAGE2_Media/config
 			if (platform === "Windows") {
 				configFile = path.join(mainFolder.path, "config", "defaultWin-cfg.json");
 			} else {
 				configFile = path.join(mainFolder.path, "config", "default-cfg.json");
+			}
+			// finally check in the internal folder
+			if (!sageutils.fileExists(configFile)) {
+				if (platform === "Windows") {
+					configFile = path.join("config", "defaultWin-cfg.json");
+				} else {
+					configFile = path.join("config", "default-cfg.json");
+				}
 			}
 			console.log(sageutils.header("SAGE2") + "Using default configuration file: " + configFile);
 		}
