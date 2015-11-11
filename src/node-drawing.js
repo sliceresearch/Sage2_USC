@@ -350,13 +350,13 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 }
-DrawingManager.prototype.touchNearBottom = function(x,y) {
+DrawingManager.prototype.touchNearBottom = function(x,y) 		{
 	var c = this.checkInvolvedClient(x,y);
-	if (c) {
+	if (c > -1) {
 		var startY = this.tilesPosition[c].startY;
 		var endY = this.tilesPosition[c].endY;
 		var w = endY-startY;
-		var activeArea = w * 0.05;
+		var activeArea = w * 0.1;
 		return y >= endY - activeArea;
 	}
 	return false;
@@ -454,10 +454,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		} else if (this.touchInsidePalette(posX,posY)) {
 			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
 			return;
-		else if (this.touchNearBottom(posX,posY)) {
+		} else if (this.touchNearBottom(posX,posY)) {
 			this.movePaletteTo(this.paletteID
 								, posX 
-								, this.palettePosition.startY
+								, this.palettePosition.startY-58
 								, this.palettePosition.endX - this.palettePosition.startX
 								, this.palettePosition.endY - this.palettePosition.startY);
 			return;
