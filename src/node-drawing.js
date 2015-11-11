@@ -272,7 +272,7 @@ DrawingManager.prototype.erase = function() {
 		if (inside) {
 			groupToDelete.push(this.drawState[i]);
 			for (var x in this.dictionaryId) {
-				if (this.drawState[i].id == this.dictionaryId) {
+				if (this.drawState[i].id == this.dictionaryId[x]) {
 					this.realeaseId(x);
 				}
 			}
@@ -501,7 +501,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		// touch move
 		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.actualAction = "erasing";
-			this.eraserTouchId == e.sourceId;
+			this.eraserTouchId = e.sourceId;
 		}
 
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
