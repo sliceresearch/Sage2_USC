@@ -1,6 +1,6 @@
 @rem off
 
-start /D ../.. sage2.bat
+start /D ..\.. sage2.bat
 
 timeout 2
 
