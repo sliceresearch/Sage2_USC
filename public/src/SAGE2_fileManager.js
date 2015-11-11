@@ -85,7 +85,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
-			{id: "drawing_menu",  value: "Drawing application"},
+			// {id: "drawing_menu",  value: "Drawing application"},
 			{id: "console_menu",  value: "Server console"}
 			]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
@@ -311,7 +311,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// var audioUrl = "audioManager.html";
 			window.open(audioUrl, '_blank');
 		} else if (evt === "drawing_menu") {
-			window.open("drawing.html", '_blank');
+			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
 			window.open("admin/console.html", '_blank');
 		} else {

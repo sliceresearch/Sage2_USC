@@ -59,15 +59,15 @@
 		var sageUI_link = document.createElement('a');
 		sageUI_link.textContent = "SAGE UI";
 		sageUI_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","");
-
 		sageUI_link.target = "_blank";
 		sageUI.appendChild(sageUI_link);
-		var sagePointer = document.createElement('p');
-		var sagePointer_link = document.createElement('a');
-		sagePointer_link.textContent = "SAGE Pointer";
-		sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "sagePointer.html";
-		sagePointer_link.target = "_blank";
-		sagePointer.appendChild(sagePointer_link);
+
+		// var sagePointer = document.createElement('p');
+		// var sagePointer_link = document.createElement('a');
+		// sagePointer_link.textContent = "SAGE Pointer";
+		// sagePointer_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "sagePointer.html";
+		// sagePointer_link.target = "_blank";
+		// sagePointer.appendChild(sagePointer_link);
 		
 		userInteraction.appendChild(sageUI);
 		userInteraction.appendChild(sagePointer);
@@ -134,13 +134,13 @@
 		};
 		remotesites.appendChild(remotes);
 
-		var drawingClient = document.createElement('p');
-		var drawingClient_link = document.createElement('a');
-		drawingClient_link.textContent = "Drawing application";
-		drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "drawing.html";
-		drawingClient_link.target = "_blank";
-		drawingClient.appendChild(drawingClient_link);
-		experiments.appendChild(drawingClient);
+		// var drawingClient = document.createElement('p');
+		// var drawingClient_link = document.createElement('a');
+		// drawingClient_link.textContent = "Drawing application";
+		// drawingClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "drawing.html";
+		// drawingClient_link.target = "_blank";
+		// drawingClient.appendChild(drawingClient_link);
+		// experiments.appendChild(drawingClient);
 
 		var consoleClient = document.createElement('p');
 		var consoleClient_link = document.createElement('a');
@@ -150,13 +150,13 @@
 		consoleClient.appendChild(consoleClient_link);
 		experiments.appendChild(consoleClient);
 
-		var editorClient = document.createElement('p');
-		var editorClient_link = document.createElement('a');
-		editorClient_link.textContent = "Editor";
-		editorClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "admin/editor.html";
-		editorClient_link.target = "_blank";
-		editorClient.appendChild(editorClient_link);
-		experiments.appendChild(editorClient);
+		// var editorClient = document.createElement('p');
+		// var editorClient_link = document.createElement('a');
+		// editorClient_link.textContent = "Editor";
+		// editorClient_link.href = "https://" + window.location.hostname + https_port + window.location.pathname.replace("admin/index.html","") + "admin/editor.html";
+		// editorClient_link.target = "_blank";
+		// editorClient.appendChild(editorClient_link);
+		// experiments.appendChild(editorClient);
 
 		var apiHelp = document.createElement('p');
 		var apiHelp_link = document.createElement('a');
