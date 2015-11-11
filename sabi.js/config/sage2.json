@@ -13,8 +13,8 @@
 	},
 	"actions": {
 		"sage2-on":          { "script":  "scripts\\sage2_on.bat" },
-		"sage2-off":         { "command": "Taskkill /IF \"WindowTitle eq npm\" /F" },
-		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/default-cfg.json" },
+		"sage2-off":         { "command": "Taskkill /FI \"WindowTitle eq npm\" /F" },
+		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/defaultWin-cfg.json" },
 		"edit-form":         { "openurl":  "form.html?action=edit-config" },
 
 		"access":        { "command": "start notepad" },
