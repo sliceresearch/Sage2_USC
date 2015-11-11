@@ -472,8 +472,9 @@ function process_request(cfg, req, res) {
 		if (putName === "/upload") {
 			var params     = querystring.parse(parsed.query);
 			var action     = params.action;
-			var filename   = cfg.actions[action].editor;
 			var fileLength = 0;
+			var filename   = cfg.actions[action].editor;
+			filename = path.resolve(untildify(filename));
 			var wstream    = fs.createWriteStream(filename);
 
 			wstream.on('finish', function() {
@@ -688,15 +689,47 @@ function processMacro(data) {
 	}
 }
 
+// Github: sindresorhus/os-homedir
+function homedir() {
+	var env  = process.env;
+	var home = env.HOME;
+	var user = env.LOGNAME || env.USER || env.LNAME || env.USERNAME;
+
+	if (process.platform === 'win32') {
+		return env.USERPROFILE || env.HOMEDRIVE + env.HOMEPATH || home || null;
+	}
+
+	if (process.platform === 'darwin') {
+		return home || (user ? '/Users/' + user : null);
+	}
+
+	if (process.platform === 'linux') {
+		return home || (process.getuid() === 0 ? '/root' : (user ? '/home/' + user : null));
+	}
+
+	return home || null;
+}
+
+// Github: sindresorhus/untildify
+function untildify(str) {
+	var home = homedir();
+	if (typeof str !== 'string') {
+		throw new TypeError('Expected a string');
+	}
+
+	return home ? str.replace(/^~($|\/|\\)/, home + '$1') : str;
+}
+
 function processEditor(data, socket) {
 	console.log("Editor for:", data);
 	try {
-		var filename =  data.value;
+		var filename = path.resolve(untildify(data.value));
 		var shortname = path.basename(filename);
 
 		// Test if file exists
 		fs.access(filename, fs.F_OK, function (err) {
 			if (err) {
+				console.log('Sending empty new file (file not found)');
 				socket.emit('file', {action: data.action, name: shortname, data: "{\n}"});
 			} else {
 				// If exists, is it readable/writable

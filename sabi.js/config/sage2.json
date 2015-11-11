@@ -17,9 +17,7 @@
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
 		"firefox-on":        { "command": "start firefox" },
 		"firefox-off":       { "command": "Taskkill /IM firefox.exe /F" },
-		"edit-config":       { "editor":  "/Users/luc/Documents/SAGE2_Media/config/default-cfg.json" },
-		"edit-config2":       { "editor":  "/Users/luc/Documents/SAGE2_Media/config/default2-cfg.json" },
-		"edit-config1":      { "editor":  "\\Users\\luc\\Documents\\SAGE2_Media\\config\\default-cfg.json" },
+		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/default-cfg.json" },
 		"MyBAT-on":          { "script":  "scripts/mybat.bat" },
 		"MyBAT-off":         { "script":  "scripts\\mybat_off.bat" }
 	},
@@ -32,7 +30,7 @@
 			"title": "Launch SAGE2",
 			"image": "images/display.png",
 			"actions": [
-				{"title": "Start meeting",  "action": "notepad-on" },
+				{"title": "Start meeting", "action": "notepad-on" },
 				{"title": "Close meeting", "action": "notepad-off", "theme":"a"}
 			]
 		},
@@ -41,9 +39,9 @@
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
 			"actions": [
-				{"title": "Wall configuration",   "action": "edit-config2", "theme":"a" },
-				{"title": "Meeting access",   "action": "MyBAT-on", "theme":"a" },
-				{"title": "Admin password",  "action": "MyBAT-off", "theme":"a"}
+				{"title": "Wall configuration", "action": "edit-config", "theme":"a" },
+				{"title": "Meeting access",     "action": "MyBAT-on", "theme":"a" },
+				{"title": "Admin password",     "action": "MyBAT-off", "theme":"a"}
 			]
 		}
 
