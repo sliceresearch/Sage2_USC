@@ -357,7 +357,11 @@ function setupListeners() {
 	wsio.on('updateRadialMenu', function(menu_data) {
 		ui.updateRadialMenu(menu_data);
 	});
-
+	
+	wsio.on('updateRadialMenuPosition', function(menu_data) {
+		ui.updateRadialMenuPosition(menu_data);
+	});
+	
 	wsio.on('radialMenuEvent', function(menu_data) {
 		ui.radialMenuEvent(menu_data);
 		resetIdle();

@@ -81,7 +81,7 @@ build: off
 test: off
 
 artifacts:
-  - path: sage2-win64-$(APPVEYOR_BUILD_VERSION).zip
+  - path: sage2-win64-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH).zip
     name: sage2-win64
 
 deploy:

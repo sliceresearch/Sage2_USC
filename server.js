@@ -266,7 +266,8 @@ function initializeSage2Server() {
 	//   not protected by default
 	config.passordProtected = false;
 	// Check for the session password file
-	var passwordFile = path.join("keys", "passwd.json");
+	var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
+	var passwordFile = userDocPath + 'passwd.json';
 	if (typeof program.password  === "string" && program.password.length > 0) {
 		// Creating a new hash from the password
 		global.__SESSION_ID = md5.getHash(program.password);
@@ -758,13 +759,20 @@ function initializeExistingSagePointers(wsio) {
 }
 
 function initializeExistingWallUI(wsio) {
+	if (config.ui.reload_wallui_on_refresh === false) {
+		// console.log("WallUI reload on display client refresh: Disabled");
+		for (key in SAGE2Items.radialMenus.list) {
+			var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+			hideRadialMenu(menuInfo.id);
+		}
+		return;
+	}
+	// console.log("WallUI reload on display client refresh: Enabled (default)");
 	var key;
-
 	for (key in SAGE2Items.radialMenus.list) {
 		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 		broadcast('createRadialMenu', menuInfo);
 		broadcast('updateRadialMenu', menuInfo);
-		setRadialMenuPosition(menuInfo.id, menuInfo.x, menuInfo.y);
 		updateWallUIMediaBrowser(menuInfo.id);
 	}
 }
@@ -6862,6 +6870,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] === undefined) {
+		// Create a new radial menu
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config);
 		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
@@ -6871,6 +6880,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 		// Open a 'media' radial menu
 		broadcast('createRadialMenu', newRadialMenu.getInfo());
 	} else if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] !== undefined) {
+		// Radial menu already exists for this pointer, move to new location instead
 		setRadialMenuPosition(uniqueID, pointerX, pointerY);
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
@@ -6893,7 +6903,7 @@ function moveRadialMenu(uniqueID, pointerX, pointerY) {
 		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
 		existingRadialMenu.visible = true;
 
-		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+		broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
 	}
 }
 
@@ -6916,7 +6926,7 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY) {
 			{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
 	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
-	broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+	broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
 }
 
 /**
@@ -6931,7 +6941,7 @@ function showRadialMenu(uniqueID) {
 	if (radialMenu !== undefined) {
 		radialMenu.visible = true;
 		interactMgr.editVisibility(uniqueID + "_menu_radial", "radialMenus", true);
-		interactMgr.editVisibility(uniqueID + "_menu_thumbnail", "radialMenus", false);
+		interactMgr.editVisibility(uniqueID + "_menu_thumbnail", "radialMenus", radialMenu.isThumbnailWindowOpen());
 	}
 }
 
@@ -6946,6 +6956,7 @@ function hideRadialMenu(uniqueID) {
 	if (radialMenu !== undefined) {
 		radialMenu.hide();
 	}
+	broadcast('updateRadialMenu', radialMenu.getInfo());
 }
 
 function updateWallUIMediaBrowser(uniqueID) {

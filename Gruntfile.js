@@ -12,6 +12,7 @@ module.exports = function(grunt) {
 				files: {
 					src: [
 						"server.js",
+						"webconStartServer.js",
 						"src/*.js",
 						"public/uploads/apps/welcome/plugin.js",
 						"public/uploads/apps/tweetcloud2/plugin.js",
@@ -57,6 +58,7 @@ module.exports = function(grunt) {
 			serverFiles: {
 				src: [
 					"server.js",
+					"webconStartServer.js",
 					"src/*.js",
 					"public/uploads/apps/welcome/plugin.js",
 					"public/uploads/apps/tweetcloud2/plugin.js",
