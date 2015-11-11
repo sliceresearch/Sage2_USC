@@ -475,7 +475,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 4) {
 		// touch move
-		if (this.paintingMode == false && Math.max(w,h) > 200) {
+		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.actualAction = "erasing";
 		}
 
@@ -488,7 +488,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		}
 
-		if (this.actualAction == "erasing" && this.eraserTouchId == e.sourceId) {
+		if (this.eraserTouchId == e.sourceId) {
 			this.realeaseId(e.sourceId);
 			this.newEraserBox(posX,posY,w,h);
 			this.erase();
@@ -561,7 +561,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 6) {
 		// touch release
-		if (this.actualAction == "erasing" && this.eraserTouchId == e.sourceId) {
+		if (this.eraserTouchId == e.sourceId) {
 			this.actualAction = "drawing";
 			this.eraserTouchId == -1;
 		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
