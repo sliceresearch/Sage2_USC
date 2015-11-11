@@ -29,6 +29,7 @@ function DrawingManager(config) {
 	this.selectionMovementStart = [];
 	this.selectionBox = null;
 	this.eraserBox = null;
+	this.eraserTouchId = -1;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -476,10 +477,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.actualAction = "movingSelection";
 			}
 			return;
-		} else if (this.paintingMode == false && Math.max(w,h) > 200) {
+		} else if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.deleteSelectionBox();
 			this.actualAction = "erasing";
 			this.newEraserBox(posX,posY,w,h);
+			this.eraserTouchId = e.sourceId;
 			this.erase();
 			return;
 		} else {
@@ -505,7 +507,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		}
 
-		if (this.actualAction == "erasing") {
+		if (this.actualAction == "erasing" && this.eraserTouchId == e.sourceId) {
 			this.realeaseId(e.sourceId);
 			this.newEraserBox(posX,posY,w,h);
 			this.erase();
@@ -578,8 +580,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 6) {
 		// touch release
-		if (this.actualAction == "erasing") {
+		if (this.actualAction == "erasing" && this.eraserTouchId == e.sourceId) {
 			this.actualAction = "drawing";
+			this.eraserTouchId == -1;
 		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
 			this.idMovingPalette = -1;
