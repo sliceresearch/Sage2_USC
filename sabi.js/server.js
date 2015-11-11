@@ -135,13 +135,14 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	});
 
 	// Copy a default configuration file
-	var configInput;
-	var configOuput = path.join(media, "config", "default-cfg.json");
+	var configInput, configOuput;
 	if (!fileExists(configOuput)) {
 		if (platform === "Windows") {
 			configInput = path.join("scripts", "defaultWin-cfg.json");
+			configOuput = path.join(media, "config", "defaultWin-cfg.json");
 		} else {
 			configInput = path.join("scripts", "default-cfg.json");
+			configOuput = path.join(media, "config", "default-cfg.json");
 		}
 		// do the actual copy
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
@@ -564,6 +565,31 @@ function buildaPage(cfg, name) {
 function process_request(cfg, req, res) {
 	if (req.method === "GET") {
 		var apath = url.parse(req.url).pathname;
+		if (apath.indexOf('/action/') === 0) {
+			var args = apath.split('/');
+			var act  = args[args.length - 1];
+			var filename = cfg.actions[act].editor;
+			filename = path.resolve(untildify(filename));
+			// If exists, is it readable/writable
+			fs.access(filename, fs.R_OK, function (err) {
+				if (err) {
+					console.log('Error with file, need read/write access', filename);
+					res.writeHead(404);
+					res.end();
+				} else {
+					var content = fs.readFileSync(filename, 'utf8');
+					try {
+						res.writeHead(200, {'Content-Type': 'text/html'});
+						res.write(content, 'utf8');
+						res.end();
+					} catch(e) {
+						console.log('Error with file, need read/write access', filename);
+						res.writeHead(404);
+						res.end();
+					}
+				}
+			});
+		}
 		if (apath == '/') {
 			// Open the header template
 			apath = '/src/header';

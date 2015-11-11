@@ -17,7 +17,7 @@
 		"firefox-on":        { "command": "start firefox" },
 		"firefox-off":       { "command": "Taskkill /IM firefox.exe /F" },
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/default-cfg.json" },
-		"edit-form":         { "openurl":  "form.html" },
+		"edit-form":         { "openurl":  "form.html?action=edit-config" },
 		"MyBAT-on":          { "script":  "scripts/mybat.bat" },
 		"MyBAT-off":         { "script":  "scripts\\mybat_off.bat" }
 	},
@@ -40,7 +40,7 @@
 			"image": "images/settings.png",
 			"actions": [
 				{"title": "Wall configuration - basic", "action": "edit-form", "theme":"a" },
-				{"title": "Edit configuration - advanced", "action": "edit-config", "theme":"a" },
+				{"title": "Wall configuration - expert", "action": "edit-config", "theme":"a" },
 				{"title": "Meeting access",     "action": "MyBAT-on", "theme":"a" },
 				{"title": "Admin password",     "action": "MyBAT-off", "theme":"a"}
 			]

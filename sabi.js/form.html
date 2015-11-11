@@ -37,6 +37,46 @@
 	<script>
 	var config;
 
+	// tooltip labels
+	var helpLabels = {};
+	helpLabels.name = "Name of your site, unique identifier for this wall";
+	helpLabels.host = "Hostname of your server (fully qualified domain name)";
+	helpLabels.port = "Secure port for your server (i.e. 443 for HTTPS), used by UI clients";
+	helpLabels.index_port = "Non-secure port for your server (i.e. 80 for HTTPS), used by display clients";
+	helpLabels["background/color"] = "Background color of the wall (any valid HTML color string)";
+	helpLabels["background/watermark/svg"] = "Filename of SVG logo file to display in center of the wall";
+	helpLabels["background/watermark/color"] = "Color to dim the logo (any valid HTML color string)";
+	helpLabels["ui/clock"] = "Clock mode, 12-hour or 24-hour display";
+	helpLabels["ui/show_version"] = "Display or not the SAGE2 version, in the top left menubar on the wall";
+	helpLabels["ui/show_url"] = "Display or not the URL to access the wall, in the top right menubar on the wall";
+	helpLabels["ui/maxWindowWidth"] = "Maximum window width allowed when resizing an application, in pixel";
+	helpLabels["ui/maxWindowHeight"] = "Maximum window height allowed when resizing an application, in pixel";
+	helpLabels["ui/noDropShadow"] = "Show or not a drop shadow around appplication window on the wall";
+	helpLabels["resolution/width"] = "Width in pixel of a single screen";
+	helpLabels["resolution/height"] = "Height in pixel of a single screen";
+	helpLabels["layout/rows"] = "Number of screen rows making up the wall";
+	helpLabels["layout/columns"] = "Number of screen columns making up the wall";
+	helpLabels["displays/0/row"] = "Position (row) of the first screen, starts from the top";
+	helpLabels["displays/0/column"] = "Position (column) of the first screen, starts from the left";
+	helpLabels["alternate_hosts/0"] = "Alternate IP address of the server (used for SSL certificate management)";
+	helpLabels["remote_sites/0/name"] = "Name of a remote wall to collaborate with";
+	helpLabels["remote_sites/0/host"] = "Hostname of the remote wall";
+	helpLabels["remote_sites/0/port"] = "Port used by the remote wall";
+	helpLabels["remote_sites/0/secure"] = "Is the remote site using secure HTTPS or not";
+
+    function getUrlVars() {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+        function(m, key, value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
+
+    // Action name to return the file to the server
+    var parameters = getUrlVars();
+    var action     = parameters.action;
+
 	function addElementObject(container, id, value, prefix) {
 		var tr  = document.createElement('tr');
 		var td1 = document.createElement('td');
@@ -45,14 +85,19 @@
 		tr.appendChild(td2);
 		container.appendChild(tr);
 
+		var al = document.createElement('p');
 		if (id !== '') {
-			var al = document.createElement('p');
 			al.innerText = id.replace(/\//g, ' ');
-			al.style.fontWeight = "bold";
-			al.style.textTransform = "capitalize";
-			al.style.color = "#7689A9";
-			td1.appendChild(al);
+		} else {
+			al.innerText = "Main";			
 		}
+		al.style.fontWeight = "bold";
+		al.style.textTransform = "capitalize";
+		al.style.color = "#5a91be";
+		td1.appendChild(al);
+		al = document.createElement('p');
+		al.innerHTML = "&nbsp;";
+		td2.appendChild(al);
 
 		for (var key in value) {
 			var elt = value[key];
@@ -61,6 +106,8 @@
 				addElementString(container, name, elt);
 			} else if (typeof elt === "number") {
 				addElementInteger(container, name, elt);
+			} else if (typeof elt === "boolean") {
+				addElementBoolean(container, name, elt);
 			} else if (elt.constructor === Object) {
 				addElementObject(container, name, elt, prefix ? prefix + "_" + key : null);
 			} else if (elt.constructor === Array) {
@@ -81,8 +128,11 @@
 		al.innerText = id.replace(/\//g, ' ');
 		al.style.fontWeight = "bold";
 		al.style.textTransform = "capitalize";
-		al.style.color = "#7689A9";
+		al.style.color = "#5a91be";
 		td1.appendChild(al);
+		al = document.createElement('p');
+		al.innerHTML = "&nbsp;";
+		td2.appendChild(al);
 
 		for (var key in value) {
 			var elt = value[key];
@@ -91,6 +141,8 @@
 				addElementString(container, name, elt, id);
 			} else if (typeof elt === "number") {
 				addElementInteger(container, name, elt);
+			} else if (typeof elt === "boolean") {
+				addElementBoolean(container, name, elt);
 			} else if (elt.constructor === Object) {
 				addElementObject(container, name, elt, id);
 			} else if (elt.constructor === Array) {
@@ -124,17 +176,19 @@
 		td2.appendChild(ib);
 
 		// Help
-		// if (obj.description) {
-		// 	var hb = document.createElement('label');
-		// 	hb.setAttribute("for", id + "_help");
-		// 	hb.innerText = "";			
-		// 	container.appendChild(hb);
-		// 	var hh = document.createElement('input');
-		// 	hh.setAttribute("type", "text");
-		// 	hh.setAttribute("value", obj.description);
-		// 	hh.setAttribute("disabled", "true");
-		// 	container.appendChild(hh);
-		// }
+		if (helpLabels[id]) {
+			var hb = document.createElement('label');
+			hb.setAttribute("for", id + "_help");
+			hb.innerHTML = "&nbsp;";
+			hb.style.fontSize = 'small';
+			td1.appendChild(hb);
+			var hh = document.createElement('input');
+			hh.setAttribute("type", "text");
+			hh.setAttribute("value", helpLabels[id]);
+			hh.setAttribute("disabled", "true");
+			hh.style.fontSize = 'small';
+			td2.appendChild(hh);
+		}
 	}
 
 	function addElementInteger(container, id, value) {
@@ -163,36 +217,76 @@
 		td2.appendChild(ib);
 
 		// Help
-		// if (obj.description) {
-		// 	var hb = document.createElement('label');
-		// 	hb.setAttribute("for", id + "_help");
-		// 	hb.innerText = "";			
-		// 	container.appendChild(hb);
-		// 	var hh = document.createElement('input');
-		// 	hh.setAttribute("type", "text");
-		// 	hh.setAttribute("value", "some help...");
-		// 	hh.setAttribute("disabled", "true");
-		// 	container.appendChild(hh);
-		// }
+		if (helpLabels[id]) {
+			var hb = document.createElement('label');
+			hb.setAttribute("for", id + "_help");
+			hb.innerHTML = "&nbsp;";
+			hb.style.fontSize = 'small';
+			td1.appendChild(hb);
+			var hh = document.createElement('input');
+			hh.setAttribute("type", "text");
+			hh.setAttribute("value", helpLabels[id]);
+			hh.setAttribute("disabled", "true");
+			hh.style.fontSize = 'small';
+			td2.appendChild(hh);
+		}
+	}
+
+	function addElementBoolean(container, id, value) {
+		var tr  = document.createElement('tr');
+		var td1 = document.createElement('td');
+		var td2 = document.createElement('td');
+		tr.appendChild(td1);
+		tr.appendChild(td2);
+		container.appendChild(tr);
+
+		var lb = document.createElement('label');
+		lb.innerText = id.replace(/\//g, ' ');
+		lb.style.textTransform = "capitalize";
+		td1.appendChild(lb);
+
+		var fs = document.createElement('fieldset');
+		fs.setAttribute("data-role", "controlgroup");
+		td2.appendChild(fs);
+		lb = document.createElement('label');
+		lb.innerHTML = "&nbsp;";
+		lb.setAttribute("for", id);
+		td2.appendChild(lb);
+
+		var ib = document.createElement('input');
+		// ib.style.padding = "5px 5px";
+		ib.setAttribute("type", "checkbox");
+		ib.setAttribute("id",   id);
+		ib.setAttribute("name", id);
+		ib.setAttribute("data-mini", true);
+		if (value !== undefined && value === true) {
+			ib.setAttribute("checked", value);
+		}
+		fs.appendChild(ib);
+
+		// Help
+		if (helpLabels[id]) {
+			var hb = document.createElement('label');
+			hb.setAttribute("for", id + "_help");
+			hb.innerHTML = "&nbsp;";
+			hb.style.fontSize = 'small';
+			td1.appendChild(hb);
+			var hh = document.createElement('input');
+			hh.setAttribute("type", "text");
+			hh.setAttribute("value", helpLabels[id]);
+			hh.setAttribute("disabled", "true");
+			hh.style.fontSize = 'small';
+			td2.appendChild(hh);
+		}
 	}
 
 	function formBuild() {
 		console.log('Init');
 
-		// var xhr = new XMLHttpRequest();
-		// xhr.open("GET", "/scripts/schema.json", true);
-		// xhr.onreadystatechange = function() {
-		// 	if (xhr.readyState === 4 && xhr.status === 200) {
-		// 		// Process the schema
-		// 		var schema = JSON5.parse(xhr.responseText);
-		// 		console.log('schema', schema);
-		// 	}
-		// };
-		// xhr.send();
-
 		// Get the configuration
 		var dhr = new XMLHttpRequest();
-		dhr.open("GET", "/scripts/default-cfg.json", true);
+		// Pass the 'action', i.e. the file needed
+		dhr.open("GET", "/action/" + action, true);
 		dhr.onreadystatechange = function() {
 			if (dhr.readyState === 4 && dhr.status === 200) {
 				config = JSON5.parse(dhr.responseText);
@@ -271,13 +365,31 @@
 	    var values = {};
 	    $inputs.each(function() {
 	        values[this.name] = $(this).val();
-	    	if (this.type === "number") {
-	    		values[this.name] = parseFloat(values[this.name]);
+			if (this.type === "number") {
+				values[this.name] = parseFloat(values[this.name]);
 	    	}
+			if (this.type === "checkbox") {
+				values[this.name] = this.checked;
+			}
 	    });
 		var json = rebuildJson(values);
 
-	    console.log('json', JSON.stringify(json, null,4));
+		console.log('saving...');
+
+		// Create a PUT request to the SAGE2 server
+		var xhr = new XMLHttpRequest();
+		// Specify the destination filename
+		xhr.open("PUT", "/upload?action=" + action, true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				// All done
+				console.log("   File sent");
+				// Go back to main page
+				history.back();
+			}
+		};
+		// Send the content of the editor
+		xhr.send(JSON.stringify(json, null,4));
 	}
 	</script>
 

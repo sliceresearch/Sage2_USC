@@ -66,8 +66,28 @@ var Sagepointer         = require('./src/node-sagepointer');      // handles sag
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
 
-
+//
 // Globals
+//
+
+// Global variable for all media folders
+global.mediaFolders = {};
+// System folder, defined within SAGE2 installation
+mediaFolders.system =	{
+	name: "system",
+	path: "public/uploads/",
+	url:  "/uploads",
+	upload: false
+};
+// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
+mediaFolders.user =	{
+	name: "user",
+	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
+	url:  "/user",
+	upload: true
+};
+// Default upload folder
+var mainFolder = mediaFolders.user;
 
 // Session hash for security
 global.__SESSION_ID    = null;
@@ -92,22 +112,7 @@ var mediaBlockSize     = 128;
 var startTime          = Date.now();
 var pressingAlt        = true;
 
-// Global variable for all media folders
-global.mediaFolders = {};
-// System folder, defined within SAGE2 installation
-mediaFolders.system =	{
-	name: "system",
-	path: "public/uploads/",
-	url:  "/uploads",
-	upload: false
-};
-// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
-mediaFolders.user =	{
-	name: "user",
-	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
-	url:  "/user",
-	upload: true
-};
+
 // Add extra folders defined in the configuration file
 if (config.folders) {
 	config.folders.forEach(function(f) {
@@ -120,7 +125,6 @@ if (config.folders) {
 	});
 }
 
-var mainFolder       = mediaFolders.system;
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
 var sessionDirectory = path.join(publicDirectory, "sessions");
@@ -3256,9 +3260,9 @@ function loadConfiguration() {
 			console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
 		} else {
 			if (platform === "Windows") {
-				configFile = path.join("config", "defaultWin-cfg.json");
+				configFile = path.join(mainFolder.path, "config", "defaultWin-cfg.json");
 			} else {
-				configFile = path.join("config", "default-cfg.json");
+				configFile = path.join(mainFolder.path, "config", "default-cfg.json");
 			}
 			console.log(sageutils.header("SAGE2") + "Using default configuration file: " + configFile);
 		}
