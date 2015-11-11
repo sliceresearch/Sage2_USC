@@ -90,12 +90,12 @@ var welcome = SAGE2_App.extend({
 		} else {
 			text.attr({fill: "#FFFFFF"});
 		}
-		text.attr({fontFamily: 'HelveticaNeue-Medium,"Helvetica Neue Medium","Helvetica Neue",Helvetica,Arial,sans-serif'});
+		text.attr({fontFamily: 'Helvetica,Arial,sans-serif'});
 		if (stroke === 1) {
 			text.attr({paintOrder: 'stroke', stroke: '#000000'});
 			text.attr({strokeWidth: '0.15px', strokeLinecap: 'butt', strokeLinejoin: 'miter'});
 		} else if (stroke === 2) {
-			text.attr({fontFamily: 'HelveticaNeue-Light,"Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,sans-serif'});
+			text.attr({fontFamily: 'Helvetica,Arial,sans-serif'});
 		}
 		return text;
 	},
