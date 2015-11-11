@@ -236,9 +236,14 @@ Views.AppView = Backbone.View.extend({
         this.sendCall('command', [act, actions[act].command]);
     }
     else if ( actions[act].editor ) {
-        // the action is a command (as opposed to a script)
+        // the action is to edit a file
         console.log("Editor", actions[act].editor);
         this.sendEdit('editor', [act, actions[act].editor]);
+    }
+    else if ( actions[act].openurl ) {
+        // the action is to open a webpage
+        console.log("OpenURL", actions[act].openurl);
+        window.open(actions[act].openurl, "_parent");
     }
     else {
         // The action is a script on a machine (remote or local)

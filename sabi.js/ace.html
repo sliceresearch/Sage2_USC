@@ -15,7 +15,7 @@
 
     <style type="text/css" media="screen">
         h1 {
-            font-size: 18pt;
+            font-size: 16pt;
             color: #FFFFFF;
             font-family: Helvetica, sans-serif;
             font-weight: normal;
@@ -138,7 +138,7 @@
     var elt = document.getElementById('editor');
     elt.style.width    = '100%';
     elt.style.height   = (window.innerHeight - 120) + 'px';
-    elt.style.fontSize = '18px';
+    elt.style.fontSize = '16px';
 
     SAGE2_editor = ace.edit(elt);
     SAGE2_editor.setTheme("ace/theme/monokai");
@@ -154,9 +154,9 @@
     SAGE2_editor.setValue(content, -1);
     SAGE2_editor.gotoLine(0);
 
-    SAGE2_editor.getSession().on("change", function() {
-        // console.log('Change', SAGE2_editor.session.getLength());
-    });
+    // SAGE2_editor.getSession().on("change", function() {
+    //     console.log('Change', SAGE2_editor.session.getLength());
+    // });
 
     // SAGE2_editor.commands.addCommand({
     //     name: 'save',

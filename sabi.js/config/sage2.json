@@ -12,12 +12,12 @@
 		"pages" : [ "Page1" ]
 	},
 	"actions": {
-		"audio-main-volume": { "oscmessage" : "/level",  "server": "127.0.0.1:16003" },
 		"notepad-on":        { "command": "start notepad" },
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
 		"firefox-on":        { "command": "start firefox" },
 		"firefox-off":       { "command": "Taskkill /IM firefox.exe /F" },
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/default-cfg.json" },
+		"edit-form":         { "openurl":  "form.html" },
 		"MyBAT-on":          { "script":  "scripts/mybat.bat" },
 		"MyBAT-off":         { "script":  "scripts\\mybat_off.bat" }
 	},
@@ -39,7 +39,8 @@
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
 			"actions": [
-				{"title": "Wall configuration", "action": "edit-config", "theme":"a" },
+				{"title": "Wall configuration - basic", "action": "edit-form", "theme":"a" },
+				{"title": "Edit configuration - advanced", "action": "edit-config", "theme":"a" },
 				{"title": "Meeting access",     "action": "MyBAT-on", "theme":"a" },
 				{"title": "Admin password",     "action": "MyBAT-off", "theme":"a"}
 			]

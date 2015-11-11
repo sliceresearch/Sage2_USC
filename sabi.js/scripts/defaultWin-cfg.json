@@ -1,12 +1,12 @@
 {
-	name: "mysite",
+	name: "Windows",
 	host: "localhost",
 	port: 9090,
 	index_port: 9292,
 	background: {
 		color: "#333333",
 		watermark: {
-			svg: "images/sage2.svg",
+			svg: "images/EVL-LAVA.svg",
 			color: "rgba(255, 255, 255, 0.5)"
 		}
 	},
@@ -14,9 +14,9 @@
 		clock: 12,
 		show_version: true,
 		show_url: true,
-                maxWindowWidth: 8196,
-                maxWindowHeight: 8196,
-                noDropShadow: true
+		maxWindowWidth: 8196,
+		maxWindowHeight: 8196,
+		noDropShadow: true
 	},
 	resolution: {
 		width: 1920,
@@ -42,5 +42,9 @@
                         port: 443,
                         secure: true
                 }
-	]
+	],
+	dependencies: {
+		ImageMagick: "bin/",
+		FFMpeg: "bin/"
+    }
 }

@@ -210,6 +210,12 @@
 			saveForm(event);
 			event.preventDefault();
 		});
+		$("#cancel").click(function(event) {
+			// Go back to main page
+			//   window.open("/", "_parent");
+			history.back();
+			event.preventDefault();
+		});
 	}
 
 	// Horrible code (need general json-to-form code)
@@ -289,19 +295,23 @@
 
 	<div data-role="content">
 
-	<form id="myform" method="post" action="saveForm()">
+		<form id="myform" method="post" action="saveForm()">
 
-		<table id="container" style="width:100%;" cellpadding="0">
-		<colgroup>
-			<col style="width: 30%;max-width:150px"/>
-			<col style="width: auto;align:right"/>
-		</colgroup>
+			<table id="container" style="width:100%;" cellpadding="0">
+			<colgroup>
+				<col style="width: 30%;max-width:150px"/>
+				<col style="width: auto;align:right"/>
+			</colgroup>
 
-		</table>
+			</table>
 
- 		<input type="submit" value="Save" data-shadow="false" data-mini="true">
+			<input type="submit" value="Save" data-shadow="false" data-mini="true">
 
-	</form>
+		</form>
+
+		<p>
+			<a data-role="button" data-theme="b" data-mini="true" class="sabijs" id="cancel">Cancel</a>
+		</p>
 
 	</div>
 

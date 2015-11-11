@@ -112,6 +112,146 @@ var ConfigFile = argv.f;
 console.log('Reading configuration file:', ConfigFile);
 console.log('--------------------------------------------');
 
+//
+// SAGE2 Specifics:
+// create folders
+//
+if (ConfigFile.indexOf("sage2") >= 0) {
+	console.log('Checking SAGE2 folders...')
+	var media = path.join(homedir(), "Documents", "SAGE2_Media");
+	if (!folderExists(media)) {
+		mkdirParent(media);
+	}
+	var sessionDirectory = path.join(media, "sessions");
+	if (!folderExists(sessionDirectory)) {
+		mkdirParent(sessionDirectory);
+	}
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	newdirs.forEach(function(d) {
+		var newsubdir = path.join(media, d);
+		if (!folderExists(newsubdir)) {
+			mkdirParent(newsubdir);
+		}
+	});
+
+	// Copy a default configuration file
+	var configInput;
+	var configOuput = path.join(media, "config", "default-cfg.json");
+	if (!fileExists(configOuput)) {
+		if (platform === "Windows") {
+			configInput = path.join("scripts", "defaultWin-cfg.json");
+		} else {
+			configInput = path.join("scripts", "default-cfg.json");
+		}
+		// do the actual copy
+		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
+	}
+
+	console.log('   done')
+}
+
+
+//
+// Some utility functions
+//
+
+/**
+ * Creates recursively a series of folders if needed (synchronous function and throws error)
+ *
+ * @method mkdirParent
+ * @param dirPath {String} path to be created
+ * @return {String} null or directory created
+ */
+function mkdirParent(dirPath) {
+	var made = null;
+	dirPath = path.resolve(dirPath);
+	try {
+		fs.mkdirSync(dirPath);
+		made = dirPath;
+	}
+	catch (err0) {
+		switch (err0.code) {
+			case 'ENOENT' : {
+				made = mkdirParent(path.dirname(dirPath));
+				made = mkdirParent(dirPath);
+				break;
+			}
+			default: {
+				var stat;
+				try {
+					stat = fs.statSync(dirPath);
+				}
+				catch (err1) {
+					throw err0;
+				}
+				if (!stat.isDirectory()) {
+					throw err0;
+				}
+				made = dirPath;
+				break;
+			}
+		}
+	}
+	return made;
+}
+
+function folderExists(directory) {
+	try {
+		var res = fs.statSync(directory);
+		return res.isDirectory();
+	} catch (err) {
+		return false;
+	}
+}
+
+/**
+ * Test if file is exists
+ *
+ * @method fileExists
+ * @param filename {String} name of the file to be tested
+ * @return {Bool} true if exists
+ */
+function fileExists(filename) {
+	try {
+		var res = fs.statSync(filename);
+		return res.isFile();
+	} catch (err) {
+		return false;
+	}
+}
+
+// Github: sindresorhus/os-homedir
+function homedir() {
+	var env  = process.env;
+	var home = env.HOME;
+	var user = env.LOGNAME || env.USER || env.LNAME || env.USERNAME;
+
+	if (process.platform === 'win32') {
+		return env.USERPROFILE || env.HOMEDRIVE + env.HOMEPATH || home || null;
+	}
+
+	if (process.platform === 'darwin') {
+		return home || (user ? '/Users/' + user : null);
+	}
+
+	if (process.platform === 'linux') {
+		return home || (process.getuid() === 0 ? '/root' : (user ? '/home/' + user : null));
+	}
+
+	return home || null;
+}
+
+// Github: sindresorhus/untildify
+function untildify(str) {
+	var home = homedir();
+	if (typeof str !== 'string') {
+		throw new TypeError('Expected a string');
+	}
+
+	return home ? str.replace(/^~($|\/|\\)/, home + '$1') : str;
+}
+
+
 // ---------------------------------------------
 //  Read the configuration file
 // ---------------------------------------------
@@ -689,36 +829,6 @@ function processMacro(data) {
 	}
 }
 
-// Github: sindresorhus/os-homedir
-function homedir() {
-	var env  = process.env;
-	var home = env.HOME;
-	var user = env.LOGNAME || env.USER || env.LNAME || env.USERNAME;
-
-	if (process.platform === 'win32') {
-		return env.USERPROFILE || env.HOMEDRIVE + env.HOMEPATH || home || null;
-	}
-
-	if (process.platform === 'darwin') {
-		return home || (user ? '/Users/' + user : null);
-	}
-
-	if (process.platform === 'linux') {
-		return home || (process.getuid() === 0 ? '/root' : (user ? '/home/' + user : null));
-	}
-
-	return home || null;
-}
-
-// Github: sindresorhus/untildify
-function untildify(str) {
-	var home = homedir();
-	if (typeof str !== 'string') {
-		throw new TypeError('Expected a string');
-	}
-
-	return home ? str.replace(/^~($|\/|\\)/, home + '$1') : str;
-}
 
 function processEditor(data, socket) {
 	console.log("Editor for:", data);
