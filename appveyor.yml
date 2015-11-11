@@ -53,7 +53,7 @@ install:
   - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs > nul
   - copy gs\$_OUTDIR\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
-  - xcopy /S /I /Y gs\$_OUTDIR\lib lib
+  - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
   - rmdir /Q /S gs
   - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.2-5-portable-Q16-x64.zip
   - 7z x -y ImageMagick-6.9.2-5-portable-Q16-x64.zip -oim > nul
