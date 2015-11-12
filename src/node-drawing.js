@@ -271,6 +271,11 @@ DrawingManager.prototype.erase = function() {
 		}
 		if (inside) {
 			groupToDelete.push(this.drawState[i]);
+			for (var x in this.dictionaryId) {
+				if (this.drawState[i].id == this.dictionaryId[x]) {
+					this.realeaseId(x);
+				}
+			}
 			this.drawState.splice(i,1)
 		} else {
 			i += 1;
@@ -495,8 +500,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 4) {
 		// touch move
-		if (this.paintingMode == false && Math.max(w,h) > 200) {
+		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.actualAction = "erasing";
+			this.eraserTouchId = e.sourceId;
 		}
 
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
@@ -508,7 +514,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		}
 
-		if (this.actualAction == "erasing" && this.eraserTouchId == e.sourceId) {
+		if (this.eraserTouchId == e.sourceId) {
 			this.realeaseId(e.sourceId);
 			this.newEraserBox(posX,posY,w,h);
 			this.erase();
@@ -583,9 +589,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 	} else if (e.type == 6) {
 		// touch release
-		if (this.actualAction == "erasing" && this.eraserTouchId == e.sourceId) {
+		if (this.eraserTouchId == e.sourceId) {
 			this.actualAction = "drawing";
-			this.eraserTouchId == -1;
+			this.eraserTouchId = -1;
 		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
 			this.idMovingPalette = -1;
@@ -634,6 +640,22 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionEnd.y += dy;
 			this.moveSelectionBox();
 			this.selectionMove(dx, dy);
+			this.selectionTouchId = -1;
+			this.actualAction = "drawing";
+		} else if ((this.actualAction == "zoomingSelection") && (this.selectionTouchId == e.sourceId)) {
+			var dx = posX - this.selectionMovementStart['x'];
+			var dy = posY - this.selectionMovementStart['y'];
+			var oldW = this.selectionEnd.x - this.selectionStart.x;
+			var oldH = this.selectionEnd.y - this.selectionStart.y;
+			var newW = oldW + dx;
+			var newH = oldH + dy;
+			var sx = parseFloat(newW) / oldW;
+			var sy = parseFloat(newH) / oldH;
+			this.selectionMovementStart = {x: posX, y: posY};
+			this.selectionEnd.x += dx;
+			this.selectionEnd.y += dy;
+			this.moveSelectionBox();
+			this.selectionZoom(sx, sy);
 			this.selectionTouchId = -1;
 			this.actualAction = "drawing";
 		}
