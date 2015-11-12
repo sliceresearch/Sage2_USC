@@ -68,6 +68,9 @@ var http_auth = require('http-auth');
 // OSC library
 var osc = require('./src/node-osc/lib/osc.js');
 
+// htdigest password generation
+var htdigest = require('./src/htdigest.js').htdigest;
+
 // Blocking exec function
 //var exec  = require('exec-sync');
 
@@ -99,15 +102,20 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 // ---------------------------------------------
 
 console.log('--------------------------------------------');
-optimist = optimist.usage('Usage: $0 -f [json file]');
+optimist = optimist.usage('Usage: $0 -h -p password -f [json file]');
 if (platform === "Windows") {
 	optimist = optimist.default('f', path.join('config', 'windows.json'));
 } else {
 	optimist = optimist.default('f', path.join('config', 'sabi.json'));	
 }
+optimist = optimist.default('p', 'sage2');	
 optimist = optimist.describe('f', 'Load a configuration file');
-// optimist.showHelp();
+optimist = optimist.describe('p', 'Create a password for the sage2 user');
 var argv = optimist.argv;
+if (argv.h) {
+	optimist.showHelp();
+	process.exit();
+}
 var ConfigFile = argv.f;
 console.log('Reading configuration file:', ConfigFile);
 console.log('--------------------------------------------');
@@ -296,6 +304,14 @@ function sleep(milliseconds) {
 // ---------------------------------------------
 // Requesting new authentication instance.
 // ---------------------------------------------
+
+// Generate the password file
+if (argv.p) {
+	if (argv.p !== true) {
+		console.log('Setting a new password for http authorization sage2 user');
+		htdigest("users.htpasswd", "sabi", "sage2", argv.p);
+	}
+}
 
 var digest = http_auth.digest({
 	realm: "sabi",
