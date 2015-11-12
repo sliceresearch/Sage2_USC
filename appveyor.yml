@@ -75,6 +75,29 @@ install:
   - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
   # - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
   - 7z a -sfx7z.sfx sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
+  - mkdir SAGE2
+  - move .git SAGE2
+  - move VERSION.json SAGE2
+  - move sage2.bat SAGE2
+  - move sabi.bat SAGE2\Launcher.bat
+  - move AUTHORS SAGE2
+  - move sabi.js SAGE2
+  - move GO-scripts SAGE2
+  - move Gruntfile.js SAGE2
+  - move LICENSE.txt SAGE2
+  - move README.md SAGE2
+  - move bin SAGE2
+  - move lib SAGE2
+  - move config SAGE2
+  - move doc SAGE2
+  - move keys SAGE2
+  - move node_modules SAGE2
+  - move package.json SAGE2
+  - move public SAGE2
+  - move server.js SAGE2
+  - move src SAGE2
+  - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
+  - 7z a -sfx7z.sfx SAGE2-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION%
 
 build: off
 
