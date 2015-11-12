@@ -76,7 +76,9 @@ install:
   # - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
   - 7z a -sfx7z.sfx sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
   - mkdir SAGE2
+  - attrib -H .git
   - move .git SAGE2
+  - attrib +H SAGE2\.git
   - move VERSION.json SAGE2
   - move sage2.bat SAGE2
   - move sabi.bat SAGE2\Launcher.bat
