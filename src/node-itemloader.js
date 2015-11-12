@@ -263,8 +263,6 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, aUr
 	metadata.license     = "SAGE2-Software-License";
 	metadata.keywords    = ["image", "picture", "viewer"];
 
-	console.log(external_url);
-
 	var appInstance = {
 		id: null,
 		title: name,
