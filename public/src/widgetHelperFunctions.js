@@ -272,6 +272,7 @@ function addStyleElementForTitleColor(caption, color) {
 		dynamicStyleSheets[caption] = caption;
 		var sheet = document.createElement('style');
 		sheet.id = "title" + caption;
+		var percent = 10;
 		if (typeof color !== 'string'  && !(color instanceof String)) {
 			color = '#666666';
 		}
