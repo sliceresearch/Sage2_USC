@@ -248,7 +248,7 @@ DrawingManager.prototype.findMaxId = function() {
 DrawingManager.prototype.newEraserBox = function(x,y,w,h) {
 
 	// Create new Eraser box
-	this.eraserBox = {x:x - w/2,y:y - h/2,w:w,h:h};
+	this.eraserBox = {x: x - w / 2,y: y - h / 2,w: w,h: h};
 
 }
 
@@ -256,7 +256,7 @@ DrawingManager.prototype.erase = function() {
 	// Erases all the elements intersecting with the erase box
 	var i = 0;
 	var groupToDelete = [];
-	while(i < this.drawState.length) {
+	while (i < this.drawState.length) {
 		var draw = this.drawState[i]["options"]["points"];
 		var inside = false;
 		for (var j in draw) {
@@ -265,8 +265,8 @@ DrawingManager.prototype.erase = function() {
 				p.x < this.eraserBox.x + this.eraserBox.w  &&
 				p.y > this.eraserBox.y &&
 				p.y < this.eraserBox.y + this.eraserBox.h) {
-					inside = true;
-					break;
+				inside = true;
+				break;
 			}
 		}
 		if (inside) {
@@ -350,12 +350,13 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 }
-DrawingManager.prototype.touchNearBottom = function(x,y) 		{
+
+DrawingManager.prototype.touchNearBottom = function(x,y) {
 	var c = this.checkInvolvedClient(x,y);
 	if (c > -1) {
 		var startY = this.tilesPosition[c].startY;
 		var endY = this.tilesPosition[c].endY;
-		var w = endY-startY;
+		var w = endY - startY;
 		var activeArea = w * 0.1;
 		return y >= endY - activeArea;
 	}
@@ -456,8 +457,8 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		} else if (this.touchNearBottom(posX,posY)) {
 			this.movePaletteTo(this.paletteID
-								, posX 
-								, this.palettePosition.startY-58
+								, posX
+								, this.palettePosition.startY - 58
 								, this.palettePosition.endX - this.palettePosition.startX
 								, this.palettePosition.endY - this.palettePosition.startY);
 			return;
@@ -551,10 +552,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
 			if (this.selectionStart['x'] > posX) {
 				this.selectionStart['x'] = posX;
-			} else if(this.selectionEnd['x'] < posX){
+			} else if (this.selectionEnd['x'] < posX) {
 				this.selectionEnd['x'] = posX;
 			}else {
-				if (this.distance({x:posX,y:this.selectionStart.y},this.selectionStart) < this.distance({x:posX,y:this.selectionEnd.y},this.selectionEnd)) {
+				var d1 = this.distance({x: posX,y: this.selectionStart.y},this.selectionStart);
+				if (d1 < this.distance({x: posX,y: this.selectionEnd.y},this.selectionEnd)) {
 					this.selectionStart['x'] = posX;
 				} else {
 					this.selectionEnd['x'] = posX;
@@ -563,10 +565,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 			if (this.selectionStart['y'] > posY) {
 				this.selectionStart['y'] = posY;
-			} else if(this.selectionEnd['y'] < posY){
+			} else if (this.selectionEnd['y'] < posY) {
 				this.selectionEnd['y'] = posY;
 			}else {
-				if (this.distance({x:this.selectionStart.x,y:posY},this.selectionStart) < this.distance({x:this.selectionEnd.x,y:posY},this.selectionEnd)) {
+				var d1 = this.distance({x: this.selectionStart.x,y: posY},this.selectionStart);
+				if (d1 < this.distance({x: this.selectionEnd.x,y: posY},this.selectionEnd)) {
 					this.selectionStart['y'] = posY;
 				} else {
 					this.selectionEnd['y'] = posY;
@@ -592,10 +595,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 			if (this.selectionStart['x'] > posX) {
 				this.selectionStart['x'] = posX;
-			} else if(this.selectionEnd['x'] < posX){
+			} else if (this.selectionEnd['x'] < posX) {
 				this.selectionEnd['x'] = posX;
 			}else {
-				if (this.distance({x:posX,y:this.selectionStart.y},this.selectionStart) < this.distance({x:posX,y:this.selectionEnd.y},this.selectionEnd)) {
+				var d1 = this.distance({x: posX,y: this.selectionStart.y},this.selectionStart);
+				if (d1 < this.distance({x: posX,y: this.selectionEnd.y},this.selectionEnd)) {
 					this.selectionStart['x'] = posX;
 				} else {
 					this.selectionEnd['x'] = posX;
@@ -604,10 +608,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 			if (this.selectionStart['y'] > posY) {
 				this.selectionStart['y'] = posY;
-			} else if(this.selectionEnd['y'] < posY){
+			} else if (this.selectionEnd['y'] < posY) {
 				this.selectionEnd['y'] = posY;
 			}else {
-				if (this.distance({x:this.selectionStart.x,y:posY},this.selectionStart) < this.distance({x:this.selectionEnd.x,y:posY},this.selectionEnd)) {
+				var d1 = this.distance({x: this.selectionStart.x,y: posY},this.selectionStart)
+				if (d1 < this.distance({x: this.selectionEnd.x,y: posY},this.selectionEnd)) {
 					this.selectionStart['y'] = posY;
 				} else {
 					this.selectionEnd['y'] = posY;
