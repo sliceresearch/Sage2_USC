@@ -72,7 +72,7 @@ var osc = require('./src/node-osc/lib/osc.js');
 var htdigest = require('./src/htdigest.js').htdigest;
 
 // Blocking exec function
-//var exec  = require('exec-sync');
+// var exec  = require('exec-sync');
 
 // Serial port communication library
 var serialport = require("serialport");
@@ -327,7 +327,7 @@ function buildMainPage(cfg) {
 	var data = '';
 
 	// Generate the page
-	data += '<div data-role="page" id="MAIN" data-theme="a">\n';
+	data += '<div data-role="page" id="MAIN" data-theme="b">\n';
 
 	var numpages = cfg.main.pages.length;
 
@@ -412,7 +412,7 @@ function buildaPage(cfg, name) {
 		// Header
 		data += '<div data-role="header" data-position="fixed">\n';
 		data += '<h1>' + cfg[name].title + '</h1>';
-		data += '<a href="#navpanel" data-icon="bars" data-role="button" data-inline="true" data-iconpos="notext">Panel</a>\n';
+		// data += '<a href="#navpanel" data-icon="bars" data-role="button" data-inline="true" data-iconpos="notext">Panel</a>\n';
 		data += '</div>\n\n';
 
 		// Content of the page
@@ -421,6 +421,17 @@ function buildaPage(cfg, name) {
 
 
 	var groups = cfg[name].groups;
+
+	if (cfg[name].image) {
+		data += '<div style="text-align: center;">\n';
+		data += '<img src="' + cfg[name].image + '" ';
+		if (cfg.main.image_style) {
+			data += cfg.main.image_style;
+		}
+		data += '/>\n';
+		data += '</div>\n';
+	}
+
 	if (groups) {
 		for (p in groups) {
 			data += '<div data-role="collapsible" data-theme="b" data-content-theme="a" data-collapsed="false">\n';

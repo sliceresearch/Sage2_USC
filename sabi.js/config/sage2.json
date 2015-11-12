@@ -9,7 +9,7 @@
 		"footer" : "<h4>SAGE2 Control Interface</h4>",
 		"image" : "images/sage2.jpg",
 		"image_style" : "width=\"90%\" style=\"max-width:450px;margin: 0 auto;\"",
-		"pages" : [ "Page1" ]
+		"pages" : [ "SAGE2", "Admin" ]
 	},
 	"actions": {
 		"sage2-on":          { "script":  "scripts\\sage2_on.bat" },
@@ -17,8 +17,8 @@
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/defaultWin-cfg.json" },
 		"edit-form":         { "openurl":  "form.html?action=edit-config" },
 
-		"access":        { "command": "start notepad" },
-		"admin":         { "command": "start notepad" },
+		"access":            { "command": "start notepad" },
+		"admin":             { "command": "start notepad" },
 
 		"notepad-on":        { "command": "start notepad" },
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
@@ -26,29 +26,36 @@
 		"firefox-off":       { "command": "Taskkill /IM firefox.exe /F" }
 	},
 
-	"Page1" : {
-		"title" : "Page1 setup",
+	"SAGE2" : {
+		"title"  : "SAGE2",
 		"navbar" : "true",
-		"groups" : [ "group1", "group2"],
+		"image" : "images/sage2.jpg",
+		"groups" : [ "group1" ],
 		"group1" : { 
 			"title": "Launch SAGE2",
+			"description": "Start and stop SAGE2. You can also set a meeting access code to protect access to your meeting.",
 			"image": "images/display.png",
 			"actions": [
-				{"title": "Start meeting", "action": "sage2-on" },
-				{"title": "Close meeting", "action": "sage2-off", "theme":"a"}
+				{"title": "Start", "action": "sage2-on" },
+				{"title": "Stop", "action": "sage2-off"},
+				{"title": "Set Meeting Access", "action": "access"}
 			]
-		},
+		}
+	},
 
+	"Admin" : {
+		"title"  : "Admin",
+		"description": "",
+		"navbar" : "true",
+		"groups" : [ "group2" ],
 		"group2" : {
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
 			"actions": [
-				{"title": "Wall configuration - basic", "action": "edit-form", "theme":"a" },
-				{"title": "Wall configuration - expert", "action": "edit-config", "theme":"a" },
-				{"title": "Meeting access", "action": "access", "theme":"a" },
-				{"title": "Admin password", "action": "admin",  "theme":"a"}
+				{"title": "Wall configuration - basic", "action": "edit-form" },
+				{"title": "Wall configuration - expert", "action": "edit-config" },
+				{"title": "Set Admin Password", "action": "admin"}
 			]
 		}
-
 	}
 }
