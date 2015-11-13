@@ -274,10 +274,11 @@ var googlemaps = SAGE2_App.extend({
 			} else if (data.character === "w") {
 				// add/remove weather layer
 				this.toggleWeather();
-			} else if (data.character === 'x') {
-				// Press 'x' to close itself
-				this.close();
 			}
+			// else if (data.character === 'x') {
+			// 	// Press 'x' to close itself
+			// 	this.close();
+			// }
 			this.refresh(date);
 		} else if (eventType === "specialKey") {
 			if (data.code === 18 && data.state === "down") {      // alt
