@@ -145,10 +145,10 @@ var media_stream = SAGE2_App.extend({
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "keyboard") {
-			if (data.character === 'x') {
-				// Press 'x' to close itself
-				this.close();
-			}
+			// if (data.character === 'x') {
+			// 	// Press 'x' to close itself
+			// 	this.close();
+			// }
 		}
 	}
 

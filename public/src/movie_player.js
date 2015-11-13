@@ -206,7 +206,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	*/
 	event: function(eventType, position, user, data, date) {
 		if (eventType === "keyboard") {
-
 			if (data.character === " ") {
 				this.togglePlayPause(date);
 			} else if (data.character === "l") {
@@ -227,10 +226,11 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			} else if (data.character === "1" || data.character === "r") {
 				// 1 start of video
 				this.stopVideo();
-			} else if (data.character === 'q') {
-				// Press 'x' to close itself
-				this.close();
 			}
+			// else if (data.character === 'x') {
+			// 	// Press 'x' to close itself
+			// 	this.close();
+			// }
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "Loop":
