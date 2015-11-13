@@ -887,6 +887,9 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				animation: appData.application.animation,
 				metadata: appData.application.metadata,
 				sticky: appData.application.sticky,
+				plugin: appData.application.plugin,
+				file: appData.application.file,
+				sage2URL: appData.application.sage2URL,
 				date: new Date()
 			};
 			if (appData.application.application === "pdf_viewer") {
