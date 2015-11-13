@@ -74,11 +74,12 @@ var welcome = SAGE2_App.extend({
 		// Get a new image every 15min
 		if (isMaster && ((this.t - this.lastRequest) > 900)) {
 			// Generate a new random ID
-			this.state.imageID = this.getNewImageID();
 			var aUrl = 'https://www.gstatic.com/prettyearth/assets/data/' + this.state.imageID + '.json';
 			this.applicationRPC({image: true, url: aUrl}, "gotPicture", true);
 			// update the time
 			this.lastRequest = this.t;
+			// setup for next image
+			this.state.imageID = this.getNewImageID();
 		}
 	},
 
