@@ -177,8 +177,9 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	if (platform === "Windows" &&  !fileExists(pathToWinStartupFolder) ) {
 		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
-		sfpContents += 'start /MIN /D "%~dp0\\sabi.js" node server.js -f config/sage2.json %*';
-		fs.writeFileSync(startFilePath, sfpContents);
+		sfpContents += 'cd sabi.js\n';
+		sfpContents += 'start /MIN node server.js -f config/sage2.json %*';
+		fs.writeFileSync(pathToWinStartupFolder, sfpContents);
 
 		console.log('Delete this comment later: startup file does not exist, adding it. Contents:' + sfpContents);
 	}
