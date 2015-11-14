@@ -100,6 +100,10 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 //support variables for meetingID writing (passwd.json)
 var pathToSageUiPwdFile = path.join(homedir(), "Documents", "SAGE2_Media");
 	pathToSageUiPwdFile += "/passwd.json";
+var pathToWinDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
+var pathToMacDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
+var pathToWinStartupFolder = path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
+
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -148,17 +152,37 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 
 	// Copy a default configuration file
 	var configInput, configOuput;
-	if (!fileExists(configOuput)) {
-		if (platform === "Windows") {
-			configInput = path.join("scripts", "defaultWin-cfg.json");
-			configOuput = path.join(media, "config", "defaultWin-cfg.json");
-		} else {
-			configInput = path.join("scripts", "default-cfg.json");
-			configOuput = path.join(media, "config", "default-cfg.json");
-		}
+	if (platform === "Windows" && !fileExists(pathToWinDefaultConfig)) {
+		configInput = path.join("scripts", "defaultWin-cfg.json");
+		configOuput = pathToWinDefaultConfig;//path.join(media, "config", "defaultWin-cfg.json");
+		
+		console.log('Delete this comment later: config file does not exist tried to write to:' + configOuput);
+		console.log('    from file:' + configInput);
+
+		// do the actual copy
+		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
+	} else if ( platform === "Mac OS X" && !fileExists(pathToMacDefaultConfig) ) {
+		configInput = path.join("scripts", "default-cfg.json");
+		configOuput = pathToMacDefaultConfig;//path.join(media, "config", "default-cfg.json");
+
+		console.log('Delete this comment later: config file does not exist tried to write to:' + configOuput);
+		console.log('    from file:' + configInput);
+
 		// do the actual copy
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
 	}
+
+
+	//check for Windows startup file
+	if (platform === "Windows" &&  !fileExists(pathToWinStartupFolder) ) {
+		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
+		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
+		sfpContents += 'start /MIN /D "%~dp0\\sabi.js" node server.js -f config/sage2.json %*';
+		fs.writeFileSync(startFilePath, sfpContents);
+
+		console.log('Delete this comment later: startup file does not exist, adding it. Contents:' + sfpContents);
+	}
+
 
 	console.log('   done')
 }
