@@ -20,7 +20,7 @@
 		"access":            { "command": "start notepad" },
 		"admin":             { "command": "start notepad" },
 		"submitMA":          { "sendData": "forMA", "dataID":"inputMA", "sendPurpose":"makeNewMeetingID" },
-		"inputMA":			 { "ignore" : "Not sending"},
+		"inputMA":           { "ignore" : "Not sending"},
 
 		"notepad-on":        { "command": "start notepad" },
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
@@ -48,7 +48,7 @@
 			"description": "Allows changing the Meeting ID. SAGE2 must be restarted before changes take effect.",
 			"image": "images/settings.png",
 			"actions": [
-				{"title": "", "action": "inputMA", "role": "textInput", "placeholder":"Enter new MeetingID here"},
+				{"title": "", "action": "inputMA", "role": "inputPassword", "placeholder":"Enter new MeetingID here"},
 				{"title": "Set Meeting Access", "action": "submitMA"}
 			]
 		}

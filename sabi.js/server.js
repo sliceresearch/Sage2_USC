@@ -533,8 +533,16 @@ function buildaPage(cfg, name) {
 							data += 'data-theme="' + theme + '" class="sabijs" id="' + c.actions[a].action +'">\n';
 						}
 						data += '</div>\n';
-					} else if (role == "textInput") {
+					} else if (role == "inputText") {
 						data += '<p><input type="text" class="sabijs" placeholder="' + c.actions[a].placeholder + '" id="';
+						if (c.actions[a].macro) {
+							data += c.actions[a].macro +'">';
+						} else {
+							data += c.actions[a].action +'">';
+						}
+						data += '</input> </p>\n';
+					} else if (role == "inputPassword") {
+						data += '<p><input type="password" class="sabijs" placeholder="' + c.actions[a].placeholder + '" id="';
 						if (c.actions[a].macro) {
 							data += c.actions[a].macro +'">';
 						} else {
