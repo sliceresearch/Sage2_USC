@@ -100,7 +100,6 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 //support variables for meetingID writing (passwd.json)
 var pathToSageUiPwdFile = path.join(homedir(), "Documents", "SAGE2_Media");
 	pathToSageUiPwdFile += "/passwd.json";
-console.log("Delete me: path to passwd:" + pathToSageUiPwdFile);
 
 // ---------------------------------------------
 //  Parse command line arguments
