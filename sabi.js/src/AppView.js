@@ -245,6 +245,15 @@ Views.AppView = Backbone.View.extend({
         console.log("OpenURL", actions[act].openurl);
         window.open(actions[act].openurl, "_parent");
     }
+    else if (actions[act].ignore) { //dkedit
+        console.log("ignoring pressed event for:" + id);
+    }
+    else if (actions[act].sendData) {//dkedit
+      //going to overload the action with datasending.
+      var dataToSend = document.getElementById(actions[act].dataID).value;
+      console.log("Client side check for value collected plain:" + dataToSend + ". md5:" + md5(dataToSend));
+      this.sendCall( actions[act].sendPurpose, [ md5(dataToSend) ]);
+    }
     else {
         // The action is a script on a machine (remote or local)
         // if it's on a different server

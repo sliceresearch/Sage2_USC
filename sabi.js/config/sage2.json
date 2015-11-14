@@ -19,6 +19,8 @@
 
 		"access":            { "command": "start notepad" },
 		"admin":             { "command": "start notepad" },
+		"submitMA":          { "sendData": "forMA", "dataID":"inputMA", "sendPurpose":"makeNewMeetingID" },
+		"inputMA":			 { "ignore" : "Not sending"},
 
 		"notepad-on":        { "command": "start notepad" },
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
@@ -30,7 +32,7 @@
 		"title"  : "SAGE2",
 		"navbar" : "true",
 		"image" : "images/sage2.jpg",
-		"groups" : [ "group1" ],
+		"groups" : [ "group1", "setMA" ],
 		"group1" : { 
 			"title": "Launch SAGE2",
 			"description": "Start and stop SAGE2. You can also set a meeting access code to protect access to your meeting.",
@@ -39,6 +41,15 @@
 				{"title": "Start", "action": "sage2-on" },
 				{"title": "Stop", "action": "sage2-off"},
 				{"title": "Set Meeting Access", "action": "access"}
+			]
+		},
+		"setMA" : { 
+			"title": "Set Meeting Access",
+			"description": "Allows changing the Meeting ID. SAGE2 must be restarted before changes take effect.",
+			"image": "images/settings.png",
+			"actions": [
+				{"title": "", "action": "inputMA", "role": "textInput", "placeholder":"Enter new MeetingID here"},
+				{"title": "Set Meeting Access", "action": "submitMA"}
 			]
 		}
 	},
@@ -49,6 +60,15 @@
 		"navbar" : "true",
 		"groups" : [ "group2" ],
 		"group2" : {
+			"title": "Configure SAGE2",
+			"image": "images/settings.png",
+			"actions": [
+				{"title": "Wall configuration - basic", "action": "edit-form" },
+				{"title": "Wall configuration - expert", "action": "edit-config" },
+				{"title": "Set Admin Password", "action": "admin"}
+			]
+		},
+		"adminAccess" : {
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
 			"actions": [

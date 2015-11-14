@@ -29,6 +29,7 @@
 	<link   rel="stylesheet" href="src/App.css" />
 	<script src="src/AppView.js"></script>
 	<script src="src/AppModel.js"></script>
+	<script src="src/md5.js"></script>
 
 	
 </head>

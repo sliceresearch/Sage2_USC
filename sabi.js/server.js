@@ -97,6 +97,11 @@ var tcp_clients = [];
 
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 
+//support variables for meetingID writing (passwd.json)
+var pathToSageUiPwdFile = path.join(homedir(), "Documents", "SAGE2_Media");
+	pathToSageUiPwdFile += "/passwd.json";
+console.log("Delete me: path to passwd:" + pathToSageUiPwdFile);
+
 // ---------------------------------------------
 //  Parse command line arguments
 // ---------------------------------------------
@@ -504,6 +509,14 @@ function buildaPage(cfg, name) {
 							data += 'data-theme="' + theme + '" class="sabijs" id="' + c.actions[a].action +'">\n';
 						}
 						data += '</div>\n';
+					} else if (role == "textInput") {
+						data += '<p><input type="text" class="sabijs" placeholder="' + c.actions[a].placeholder + '" id="';
+						if (c.actions[a].macro) {
+							data += c.actions[a].macro +'">';
+						} else {
+							data += c.actions[a].action +'">';
+						}
+						data += '</input> </p>\n';
 					}
 
 				}
@@ -919,13 +932,23 @@ function processEditor(data, socket) {
 	}
 }
 
-function processRPC(data, socket) {
+function processRPC(data, socket) { //dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
+	var found = false; 
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
 		if (typeof func == "function") {
-			if (f == data.method) (func)(data,socket);
+			if (f == data.method) {
+				(func)(data,socket);
+				found = true;
+			}
 		}
+	}
+	if(!found && "makeNewMeetingID" === data.method) {
+
+		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
+		console.log('meetingID save double checking:' + jsonString);
+		fs.writeFileSync(pathToSageUiPwdFile, jsonString);
 	}
 }
 
