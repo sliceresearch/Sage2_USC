@@ -17,7 +17,6 @@
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/defaultWin-cfg.json" },
 		"edit-form":         { "openurl":  "form.html?action=edit-config" },
 
-		"access":            { "command": "start notepad" },
 		"admin":             { "command": "start notepad" },
 		"submitMA":          { "sendData": "forMA", "dataID":"inputMA", "sendPurpose":"makeNewMeetingID" },
 		"inputMA":           { "ignore" : "Not sending"},
@@ -39,8 +38,7 @@
 			"image": "images/display.png",
 			"actions": [
 				{"title": "Start", "action": "sage2-on" },
-				{"title": "Stop", "action": "sage2-off"},
-				{"title": "Set Meeting Access", "action": "access"}
+				{"title": "Stop",  "action": "sage2-off"}
 			]
 		},
 		"setMA" : { 
