@@ -15,7 +15,7 @@ set datadir=%APPDATA%\chrome\audio
 mkdir %datadir%
 start "" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --no-default-browser-check --new-window --disable-popup-blocking --no-first-run --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --window-size=600,300 --window-position=0,0 --user-data-dir=%datadir% http://localhost:9292/audioManager.html /B
 
-timeout 1
+timeout 3
 
 rem display 0
 set datadir=%APPDATA%\chrome\display0

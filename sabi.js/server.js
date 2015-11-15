@@ -98,12 +98,14 @@ var tcp_clients = [];
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 
 // Support variables for meetingID writing (passwd.json)
-var pathToSageUiPwdFile    = path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
-var pathToWinDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
-var pathToMacDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
-var pathToWinStartupFolder = path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
-var pathToSage2onbatScript = path.join("scripts", "sage2_on.bat");
-var needToRegenerateSageOnFile = false;
+var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
+var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
+var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
+var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
+var pathToSage2onbatScript		= path.join("scripts", "sage2_on.bat");
+var pathToGoWindowsCertGenFile	= "../keys/GO-windows.bat";
+var needToRegenerateSageOnFile	= true; //always check at least once
+var scriptExecutionFunction		= require('./src/script').Script;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -722,6 +724,7 @@ function process_request(cfg, req, res) {
 				// stream closed
 				console.log('HTTP>		PUT file has been written', filename, fileLength, 'bytes');
 				needToRegenerateSageOnFile = true;
+				updateCertificates();
 			});
 			// Getting data
 			req.on('data', function(chunk) {
@@ -1057,6 +1060,33 @@ function getMeetingIDFromPasswd() {
 	var configdata = fs.readFileSync( pathToSageUiPwdFile );
 	var cfg = JSON5.parse(configdata);
 	return cfg.pwd;
+}
+
+function updateCertificates() {
+	var pathToConfig; //config name differs depending on OS.
+	if (platform === "Windows") { pathToConfig = pathToWinDefaultConfig; }
+	else if (platform === "Mac OS X") { pathToConfig = pathToMacDefaultConfig; }
+	
+	if (!fileExists(pathToConfig)) {
+		console.log("Error, config doesn't exist.");
+		return null;
+	}
+
+	var configdata = fs.readFileSync( pathToWinDefaultConfig );
+	var cfg = JSON5.parse(configdata);
+	var host = cfg.host;
+	var alternate = cfg.alternate_hosts;
+
+	var rewriteContents = "REM Must be run as administrator\n";
+		rewriteContents += "pushd %~dp0\n";
+		rewriteContents += "call init_webserver.bat localhost\n";
+		rewriteContents += "call init_webserver.bat 127.0.0.1\n";
+		rewriteContents += "call init_webserver.bat " + host + "\n";
+		rewriteContents += "call init_webserver.bat " + alternate + "\n";
+		
+	fs.writeFileSync(pathToGoWindowsCertGenFile, rewriteContents);
+
+	scriptExecutionFunction( pathToGoWindowsCertGenFile, false);
 }
 
 function processSerialPort(data) {
