@@ -71,6 +71,7 @@ var SAGE2_App = Class.extend({
 
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
+		this.snmpResponseCallbackList = {};
 	},
 
 	/**
@@ -457,5 +458,31 @@ var SAGE2_App = Class.extend({
 			args = msg;
 		}
 		sage2Log({app: this.div.id, message: args});
+	},
+
+	/**
+	* Sends an snmp request to the server
+	* Accepts a request, information regarding the request, and a callback function for handling the response
+	*
+	* @method log
+	* @param request {String} snmp action to be carried out
+	* @param data {Object} information regarding the request
+	* @param callback {function} callback for processing response
+	*/
+	sendSNMPRequest: function(request, data, callback){
+		console.log(request);
+		if (this.snmpResponseCallbackList[request] === null || this.snmpResponseCallbackList[request] === undefined){
+			console.log(data);
+			wsio.emit('snmpRequest', {request:request,data:data,appId:this.id});
+			this.snmpResponseCallbackList[request] = callback;
+		}
+	},
+
+	processSNMPResponse: function(data){
+		var callback = this.snmpResponseCallbackList[data.request];
+		if (callback !== null && callback !== undefined){
+			callback(data.error,data.data);
+			delete this.snmpResponseCallbackList[data.request];
+		}
 	}
 });

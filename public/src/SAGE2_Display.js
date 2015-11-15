@@ -1051,6 +1051,11 @@ function setupListeners() {
 		console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
+
+	wsio.on('responseToSNMPRequest', function(data) {
+		var app = applications[data.appId];
+		app.processSNMPResponse(data);
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {

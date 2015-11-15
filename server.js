@@ -65,7 +65,7 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
-
+var snmpManager			= require('./src/node-snmp');			 // snmp functionality
 
 // Globals
 
@@ -419,6 +419,8 @@ var remoteSharingSessions      = {};
 // Sticky items and window position for new clones
 var stickyAppHandler     = new StickyItems();
 
+// Handles snmp requests from apps
+var snmp = new snmpManager();
 
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
@@ -692,6 +694,8 @@ function setupListeners(wsio) {
 	wsio.on('command',                              wsCommand);
 
 	wsio.on('createFolder',                         wsCreateFolder);
+
+	wsio.on('snmpRequest',							wsProcessSNMPRequest);
 }
 
 function initializeExistingControls(wsio) {
@@ -6884,4 +6888,13 @@ function showOrHideWidgetLinks(data) {
 			broadcast('hideWidgetToAppConnector', app);
 		}
 	}
+}
+
+
+function wsProcessSNMPRequest(wsio, data){
+	console.log(data);
+	var callback = function(data){
+		broadcast('responseToSNMPRequest', data);
+	};
+	snmp.process(data.request, data.appId, data.data, callback);
 }
