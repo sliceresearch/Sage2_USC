@@ -103,6 +103,7 @@ var pathToWinDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "c
 var pathToMacDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
 var pathToWinStartupFolder = path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
 var pathToSage2onbatScript = path.join("scripts", "sage2_on.bat");
+var needToRegenerateSageOnFile = false;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -713,6 +714,7 @@ function process_request(cfg, req, res) {
 			wstream.on('finish', function() {
 				// stream closed
 				console.log('HTTP>		PUT file has been written', filename, fileLength, 'bytes');
+				needToRegenerateSageOnFile = true;
 			});
 			// Getting data
 			req.on('data', function(chunk) {
@@ -962,10 +964,11 @@ function processEditor(data, socket) {
 function processRPC(data, socket) { //dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
-	if (data.value[0] === "sage2-on") {
+	if (data.value[0] === "sage2-on" && needToRegenerateSageOnFile) {
 		console.log('Delete this comment later: Intercepting sage2-on action.');
 		writeSageOnFileWithCorrectPortAndMeetingID();
 		console.log('Delete this comment later:');
+		needToRegenerateSageOnFile = false;
 	}
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
@@ -977,10 +980,10 @@ function processRPC(data, socket) { //dkedits made to account for makeNewMeeting
 		}
 	}
 	if (!found && "makeNewMeetingID" === data.method) {
-
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
 		fs.writeFileSync(pathToSageUiPwdFile, jsonString);
+		needToRegenerateSageOnFile = true;
 	}
 }
 
