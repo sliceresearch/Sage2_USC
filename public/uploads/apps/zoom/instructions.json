@@ -1,8 +1,8 @@
 {
 	"main_script": "zoom.js",
 	"icon": "zoom.png",
-	"width": 800,
-	"height": 400,
+	"width": 900,
+	"height": 506,
 	"resize": "free",
 	"dependencies": [
 		  "openseadragon.min.js"

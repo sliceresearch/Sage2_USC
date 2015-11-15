@@ -132,8 +132,10 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-		this.updateMapFromState();
-		this.refresh(date);
+		if (this.map !== undefined && this.map !== null) {
+			this.updateMapFromState();
+			this.refresh(date);
+		}
 	},
 
 	draw: function(date) {
@@ -262,6 +264,7 @@ var googlemaps = SAGE2_App.extend({
 				default:
 					console.log("No handler for:", data.identifier);
 			}
+			this.refresh(date);
 		} else if (eventType === "keyboard") {
 			if (data.character === "m") {
 				// change map type
@@ -272,7 +275,10 @@ var googlemaps = SAGE2_App.extend({
 				// add/remove weather layer
 				this.toggleWeather();
 			}
-
+			// else if (data.character === 'x') {
+			// 	// Press 'x' to close itself
+			// 	this.close();
+			// }
 			this.refresh(date);
 		} else if (eventType === "specialKey") {
 			if (data.code === 18 && data.state === "down") {      // alt

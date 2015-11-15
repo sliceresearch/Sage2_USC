@@ -1,6 +1,6 @@
 {
 	"name": "SAGE2",
-	"version": "0.3.0",
+	"version": "1.0.0",
 	"private": true,
 	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
 	"keywords": [
@@ -29,6 +29,10 @@
 		{
 			"name": "Krishna Bharadwaj",
 			"email": "krishnaknbharadwaj@gmail.com"
+		},
+		{
+			"name": "Dylan Kobayashi",
+			"email": "dylank@hawaii.edu"
 		},
 		{
 			"name": "Luc Renambot",
@@ -61,7 +65,8 @@
 		"semver": "latest",
 		"fsmonitor": "latest",
 		"cheerio": "latest",
-		"ytdl-core": "latest"
+		"ytdl-core": "latest",
+		"snmp-native": "latest"
 	},
 	"devDependencies": {
 		"grunt": "latest",

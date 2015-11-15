@@ -18,8 +18,8 @@
 		clock: 12,
 		show_url: true,
 		show_version: true,
-		maxWindowWidth : 8196,
-		maxWindowHeight : 8196,
+		maxWindowWidth : 8192,
+		maxWindowHeight : 8192,
 		noDropShadow: true
 	},
 	resolution: {

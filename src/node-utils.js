@@ -62,6 +62,7 @@ if (semver.gte(process.versions.node, '0.10.0')) {
  * @return {Bool} true if exists
  */
 function fileExists(filename) {
+
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
 		return fs.existsSync(filename);
 	} else {
@@ -396,6 +397,7 @@ function registerSAGE2(config) {
 	request({
 		rejectUnauthorized: false,
 		url: 'https://sage.evl.uic.edu/register',
+		// url: 'https://131.193.183.150/register',
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
@@ -415,6 +417,7 @@ function deregisterSAGE2(config, callback) {
 	request({
 		rejectUnauthorized: false,
 		url: 'https://sage.evl.uic.edu/unregister',
+		// url: 'https://131.193.183.150/unregister',
 		form: config,
 		method: "POST"},
 		function(err, response, body) {

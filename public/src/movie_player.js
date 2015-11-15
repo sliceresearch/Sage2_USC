@@ -123,7 +123,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @method togglePlayPause
 	*
 	*/
-	togglePlayPause: function(date){
+	togglePlayPause: function(date) {
 		if (this.state.paused === true) {
 			if (isMaster) {
 				// Trying to sync
@@ -150,7 +150,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @method toggleMute
 	*
 	*/
-	toggleMute: function(date){
+	toggleMute: function(date) {
 		if (this.state.muted === true) {
 			if (isMaster) {
 				wsio.emit('unmuteVideo', {id: this.div.id});
@@ -171,7 +171,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @method toggleLoop
 	*
 	*/
-	toggleLoop: function(date){
+	toggleLoop: function(date) {
 		if (this.state.looped === true) {
 			if (isMaster) {
 				wsio.emit('loopVideo', {id: this.div.id, loop: false});
@@ -186,7 +186,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.loopBtn.state = 1 - this.loopBtn.state;
 	},
 
-	stopVideo: function(){
+	stopVideo: function() {
 		if (isMaster) {
 			wsio.emit('stopVideo', {id: this.div.id});
 		}
@@ -205,30 +205,32 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
-		/*if (data.code === 17){
-			if (data.state === "down"){
-				this.ctrlDown = true;
-			}
-			else if (data.state === "up"){
-				this.ctrlDown = false;
-			}
-
-		}*/
 		if (eventType === "keyboard") {
-
 			if (data.character === " ") {
 				this.togglePlayPause(date);
 			} else if (data.character === "l") {
 				this.toggleLoop(date);
 			} else if (data.character === "m") {
-				this.toggleMute(date);
-			} else if (data.character === "r") {
+				// m mute
+				if (this.state.muted === true) {
+					if (isMaster) {
+						wsio.emit('unmuteVideo', {id: this.div.id});
+					}
+					this.state.muted = false;
+				} else {
+					if (isMaster) {
+						wsio.emit('muteVideo', {id: this.div.id});
+					}
+					this.state.muted = true;
+				}
+			} else if (data.character === "1" || data.character === "r") {
 				// 1 start of video
 				this.stopVideo();
-			} else if (data.character === 'q') {
-				// Press 'x' to close itself
-				this.close();
 			}
+			// else if (data.character === 'x') {
+			// 	// Press 'x' to close itself
+			// 	this.close();
+			// }
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "Loop":
@@ -269,6 +271,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				default:
 					console.log("No handler for:", data.identifier);
 			}
+			this.refresh(date);
 		}
 	}
 });

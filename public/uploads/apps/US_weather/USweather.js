@@ -583,6 +583,9 @@ var USweather = SAGE2_App.extend({
 		d3.json(this.resrcPath + "./us-states.json", this.jsonCallbackFunc);
 
 		this.gwin.appID = this.div.id;
+		// Looks like D3 (or DOM) doesn't like our remote ids
+		this.gwin.appID = this.gwin.appID.replace(/\+/g, '_');
+		this.gwin.appID = this.gwin.appID.replace(/:/g, '_');
 
 		this.maxFPS = 0.1;
 

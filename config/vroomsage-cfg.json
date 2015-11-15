@@ -19,7 +19,7 @@
 		show_url: true,
 		show_version: false,
 		maxWindowWidth : 16384,
-		maxWindowHeight : 8196,
+		maxWindowHeight : 8192,
 		noDropShadow: true,
 		titleBarHeight: 75,
 		titleTextSize:  60,

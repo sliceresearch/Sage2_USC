@@ -41,6 +41,9 @@ var image_viewer = SAGE2_App.extend({
 		// visible
 		this.vis = true;
 
+		// old image url
+		this.old_img_url = "";
+
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
 	},
@@ -62,12 +65,12 @@ var image_viewer = SAGE2_App.extend({
 	* @method updateAppFromState
 	*/
 	updateAppFromState: function() {
-		this.element.src  = cleanURL(this.state.src);
+		this.element.src  = cleanURL(this.state.src || this.state.img_url);
 
-		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
 		if (this.state.showExif === true) {
 			this.showLayer();
 		}
+
 		this.layer.style.top = this.state.top + "px";
 
 		// Fix iPhone picture: various orientations
@@ -91,6 +94,7 @@ var image_viewer = SAGE2_App.extend({
 		} else {
 			this.state.crct = true;
 		}
+		this.layer.style.top = this.state.top + "px";
 	},
 
 	/**
@@ -147,7 +151,7 @@ var image_viewer = SAGE2_App.extend({
 	* @method syntaxHighlight
 	* @param json {Object} object containing metadata
 	*/
-	syntaxHighlight: function(json, cb) {
+	syntaxHighlight: function(json) {
 		if (typeof json !== 'string') {
 			json = JSON.stringify(json, undefined, 4);
 		}
@@ -196,9 +200,9 @@ var image_viewer = SAGE2_App.extend({
 		}
 
 		// Press 'x' to close itself
-		if ((eventType === "keyboard") && data.character === 'x') {
-			this.close();
-		}
+		// if ((eventType === "keyboard") && data.character === 'x') {
+		// 	this.close();
+		// }
 
 		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {

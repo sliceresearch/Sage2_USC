@@ -36,6 +36,7 @@ var registry  = require('../src/node-registry');
 
 // Global variable to handle imageMagick configuration
 var imageMagick = null;
+var config = null;
 
 
 /**
@@ -141,6 +142,10 @@ var setupBinaries = function(imOptions, ffmpegOptions) {
 		ffmpeg.setFfmpegPath(ffmpegOptions.appPath  + 'ffmpeg');
 		ffmpeg.setFfprobePath(ffmpegOptions.appPath + 'ffprobe');
 	}
+};
+
+var initializeConfiguration = function(cfg) {
+	config = cfg;
 };
 
 
@@ -307,6 +312,59 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 	});
 };
 
+var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callback) {
+	// initial call, index is not specified
+	index = index || 0;
+	// are we done yet
+	if (index >= sizes.length) {
+		callback();
+		return;
+	}
+
+	var connected = "#379982";
+	var disconnected = "#AD2A2A";
+
+	if (config.ui.menubar &&
+		config.ui.menubar.remoteConnectedColor &&
+		config.ui.menubar.remoteConnectedColor[0] === "#") {
+		connected = config.ui.menubar.remoteConnectedColor;
+	}
+	if (config.ui.menubar &&
+		config.ui.menubar.remoteDisconnectedColor &&
+		config.ui.menubar.remoteDisconnectedColor[0] === "#") {
+		disconnected = config.ui.menubar.remoteDisconnectedColor;
+	}
+
+	var font = "Helvetica.ttf";
+	var fontSize = parseInt(0.1 * sizes[index], 10);
+	var finishedC = false;
+	var finishedD = false;
+	imageMagick(sizes[index], sizes[index], connected).fill("#FFFFFF").font(font, fontSize)
+		.drawText(0, 0, infile, "Center").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
+		if (err) {
+			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+			return;
+		}
+		finishedC = true;
+		if (finishedD === true) {
+			// recursive call to generate the next size
+			generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
+		}
+	});
+	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
+		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
+		if (err) {
+			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+			return;
+		}
+		finishedD = true;
+		if (finishedC === true) {
+			// recursive call to generate the next size
+			generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
+		}
+	});
+};
+
 var addFile = function(filename, exif, callback) {
 	if (exif.MIMEType === 'application/vnd.adobe.photoshop') {
 		exif.MIMEType = 'image/vnd.adobe.photoshop';
@@ -404,6 +462,16 @@ var addFile = function(filename, exif, callback) {
 				.toBuffer("histogram:info", primaryColorOfImage);
 			anAsset.exif.SAGE2thumbnail = rthumb;
 		}
+	} else if (exif.MIMEType === "application/remote_site") {
+		// Path for the node server
+		thumb  = path.join(AllAssets.root, 'assets', 'remote', exif.FileName);
+		// Path for the https server
+		rthumb = path.join(AllAssets.rel, 'assets', 'remote', exif.FileName);
+
+		generateRemoteSiteThumbnails(filename, thumb, [512, 256, 128], null, function() {
+			callback();
+		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
 	}
 	saveAssets();
 };
@@ -574,13 +642,17 @@ var exifAsync = function(cmds, cb) {
 					instructions.directory !== null && instructions.directory !== "") {
 				metadata.fileTypes = instructions.fileTypes;
 				metadata.directory = instructions.directory;
-				registry.register(app, instructions.fileTypes, instructions.directory, false);
 			} else {
 				metadata.fileTypes = [];
 			}
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
 			addFile(file, exif, function() {
+				if (metadata.fileTypes.length > 0) {
+					var s2url = getURL(file);
+					registry.register(s2url, instructions.fileTypes, instructions.directory, false);
+				}
+
 				if (cmds.length > 0) {
 					execNext();
 				} else {
@@ -676,7 +748,7 @@ var listApps = function() {
 
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'sessions', 'tmp' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'sessions', 'tmp', 'config' ];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -737,6 +809,8 @@ var refresh = function(root, callback) {
 
 var initialize = function(mainFolder, mediaFolders) {
 	if (AllAssets === null) {
+		var i;
+		var thelist = [];
 		// public_HTTPS/uploads/assets/assets.json
 		// list: {}, root: null
 
@@ -770,6 +844,12 @@ var initialize = function(mainFolder, mediaFolders) {
 			fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
 		}
 
+		// Make sure the asset/remote folder exists
+		var assetRemoteFolder = path.join(assetFolder, 'remote');
+		if (!sageutils.folderExists(assetRemoteFolder)) {
+			fs.mkdirSync(assetRemoteFolder);
+		}
+
 		AllAssets = {};
 		AllAssets.mainFolder = mainFolder;
 
@@ -799,6 +879,13 @@ var initialize = function(mainFolder, mediaFolders) {
 			if (root !== f.path) {
 				// Adding all the other folders (except the main one)
 				addAssetFolder(f.path);
+			}
+		}
+		for (i = 0; i < config.remote_sites.length; i++) {
+			if (config.remote_sites[i].name in AllAssets.list) {
+				AllAssets.list[config.remote_sites[i].name].Valid = true;
+			} else {
+				thelist.push(config.remote_sites[i].name);
 			}
 		}
 
@@ -939,4 +1026,5 @@ exports.getExifData   = getExifData;
 exports.getTag        = getTag;
 exports.getURL        = getURL;
 
-exports.setupBinaries = setupBinaries;
+exports.initializeConfiguration = initializeConfiguration;
+exports.setupBinaries           = setupBinaries;

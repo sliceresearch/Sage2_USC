@@ -79,13 +79,13 @@ RegistryManager.prototype.scanNativeApps = function() {
 	var nativeApps = json5.parse(jsonString);
 
 	if (nativeApps.applications !== undefined &&
-	nativeApps.applications !== null &&
-	Array.isArray(nativeApps.applications)) {
+		nativeApps.applications !== null &&
+		Array.isArray(nativeApps.applications)) {
 
 		for (var i = 0; i < nativeApps.applications.length; i++) {
 			var app = nativeApps.applications[i];
 			if (app.name  !== undefined && app.name  !== null && app.name !== "" &&
-			app.types !== undefined && app.types !== null && Array.isArray(app.types)) {
+				app.types !== undefined && app.types !== null && Array.isArray(app.types)) {
 				this.register(app.name, app.types, app.directory, true);
 			}
 		}

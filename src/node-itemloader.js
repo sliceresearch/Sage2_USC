@@ -222,11 +222,12 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: source,
+			img_url: source,
 			type: mime_type,
 			exif: exif_data,
 			top: 0,
-			showExif: false
+			showExif: false,
+			crct: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -270,11 +271,12 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, aUr
 		type: mime_type,
 		url: external_url,
 		data: {
-			src: external_url,
+			img_url: external_url,
 			type: mime_type,
 			exif: exif_data,
 			top: 0,
-			showExif: false
+			showExif: false,
+			crct: false
 		},
 		resrc: null,
 		left: this.titleBarHeight,
@@ -390,7 +392,8 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 					framerate: data.frame_rate,
 					display_aspect_ratio: data.display_aspect_ratio,
 					muted: false,
-					looped: false
+					looped: false,
+					playAfterSeek: false
 				},
 				resrc: null,
 				left:  _this.titleBarHeight,
@@ -481,10 +484,10 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 		}
 
 		var appUrl = getSAGE2URL(localPath);
-		var appPath = appName;
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
-		var appInstance = _this.readInstructionsFile(json_str, appPath, mime_type, app_external_url);
-		appInstance.data.file = aUrl;
+
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
 		callback(appInstance);
 	});
 };
@@ -752,34 +755,35 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		if (err1) {
 			throw err1;
 		}
+		// try to process all the files with exiftool
+		exiftool.file(localPath, function(err2, data) {
+			if (err2) {
+				console.log("internal error", err2);
+			} else {
+				assets.addFile(data.SourceFile, data, function() {
+					// get a valid URL for it
+					var aUrl = assets.getURL(data.SourceFile);
+					// calculate a complete URL with hostname
+					var external_url = url.resolve(_this.hostOrigin, aUrl);
 
-		if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
-			exiftool.file(localPath, function(err2, data) {
-				if (err2) {
-					console.log("internal error", err2);
-				} else {
-					assets.addFile(data.SourceFile, data, function() {
-						// get a valid URL for it
-						var aUrl = assets.getURL(data.SourceFile);
-						// calculate a complete URL with hostname
-						var external_url = url.resolve(_this.hostOrigin, aUrl);
-
-						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-								type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-							callback(appInstance, handle);
-						});
+					_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+							type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+						callback(appInstance, handle);
 					});
-				}
-			});
-		} else {
-			// get a valid URL for it
-			var aUrl = assets.getURL(localPath);
-			var external_url = null;
-			_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-					type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-				callback(appInstance, handle);
-			});
-		}
+				});
+			}
+		});
+		// if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
+		// } else {
+		// 	// get a valid URL for it
+		// 	var aUrl = assets.getURL(localPath);
+		// 	var external_url = null;
+		// 	console.log('Load', localPath, aUrl, mime_type, file.name, external_url)
+		// 	_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+		// 			type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+		// 		callback(appInstance, handle);
+		// 	});
+		// }
 	});
 };
 
@@ -883,6 +887,9 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				animation: appData.application.animation,
 				metadata: appData.application.metadata,
 				sticky: appData.application.sticky,
+				plugin: appData.application.plugin,
+				file: appData.application.file,
+				sage2URL: appData.application.sage2URL,
 				date: new Date()
 			};
 			if (appData.application.application === "pdf_viewer") {

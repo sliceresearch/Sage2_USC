@@ -67,29 +67,9 @@ var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
 var snmpManager			= require('./src/node-snmp');			 // snmp functionality
 
+//
 // Globals
-
-// Session hash for security
-global.__SESSION_ID    = null;
-
-var sage2Server        = null;
-var sage2ServerS       = null;
-var wsioServer         = null;
-var wsioServerS        = null;
-var SAGE2_version      = sageutils.getShortVersion();
-var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-var config             = loadConfiguration();
-var imageMagickOptions = {imageMagick: true};
-var ffmpegOptions      = {};
-var hostOrigin         = "";
-var SAGE2Items         = {};
-var users              = null;
-var appLoader          = null;
-var interactMgr        = new InteractableManager();
-var mediaBlockSize     = 128;
-var startTime          = Date.now();
-var pressingAlt        = true;
+//
 
 // Global variable for all media folders
 global.mediaFolders = {};
@@ -107,6 +87,33 @@ mediaFolders.user =	{
 	url:  "/user",
 	upload: true
 };
+// Default upload folder
+var mainFolder = mediaFolders.user;
+
+// Session hash for security
+global.__SESSION_ID    = null;
+
+var sage2Server        = null;
+var sage2ServerS       = null;
+var wsioServer         = null;
+var wsioServerS        = null;
+var SAGE2_version      = sageutils.getShortVersion();
+var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
+var config             = loadConfiguration();
+var imageMagickOptions = {imageMagick: true};
+var ffmpegOptions      = {};
+var hostOrigin         = "";
+var SAGE2Items         = {};
+var sharedApps         = {};
+var users              = null;
+var appLoader          = null;
+var interactMgr        = new InteractableManager();
+var mediaBlockSize     = 128;
+var startTime          = Date.now();
+var pressingAlt        = true;
+
+
 // Add extra folders defined in the configuration file
 if (config.folders) {
 	config.folders.forEach(function(f) {
@@ -119,7 +126,6 @@ if (config.folders) {
 	});
 }
 
-var mainFolder       = mediaFolders.system;
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
 var sessionDirectory = path.join(publicDirectory, "sessions");
@@ -142,7 +148,7 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -188,6 +194,7 @@ function initializeSage2Server() {
 		}
 	}
 	imageMagick = gm.subClass(imageMagickOptions);
+	assets.initializeConfiguration(config);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
 
 	// Set default host origin for this server
@@ -264,7 +271,8 @@ function initializeSage2Server() {
 	//   not protected by default
 	config.passordProtected = false;
 	// Check for the session password file
-	var passwordFile = path.join("keys", "passwd.json");
+	var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
+	var passwordFile = userDocPath + 'passwd.json';
 	if (typeof program.password  === "string" && program.password.length > 0) {
 		// Creating a new hash from the password
 		global.__SESSION_ID = md5.getHash(program.password);
@@ -294,7 +302,7 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp', 'config' ];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
@@ -412,7 +420,7 @@ var remoteInteraction = {};
 var mediaBlockStreams = {};
 var appUserColors     = {}; // a dict to keep track of app instance colors(for widget connectors)
 
-var remoteSharingRequestDialog = null;
+// var remoteSharingRequestDialog = null;
 var remoteSharingWaitDialog    = null;
 var remoteSharingSessions      = {};
 
@@ -561,6 +569,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeExistingSagePointers(wsio);
 		initializeExistingApps(wsio);
 		initializeRemoteServerInfo(wsio);
+		initializeExistingWallUI(wsio);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
@@ -621,6 +630,7 @@ function setupListeners(wsio) {
 
 	wsio.on('finishedRenderingAppFrame',            wsFinishedRenderingAppFrame);
 	wsio.on('updateAppState',                       wsUpdateAppState);
+	wsio.on('updateStateOptions',                   wsUpdateStateOptions);
 	wsio.on('appResize',                            wsAppResize);
 	wsio.on('appFullscreen',                        wsFullscreen);
 	wsio.on('broadcast',                            wsBroadcast);
@@ -655,6 +665,7 @@ function setupListeners(wsio) {
 	wsio.on('loopVideo',                            wsLoopVideo);
 
 	wsio.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+	wsio.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
 	wsio.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
 	wsio.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
 	wsio.on('stopMediaStream',                        wsStopMediaStream);
@@ -681,6 +692,7 @@ function setupListeners(wsio) {
 	wsio.on('finishApplicationResize',                wsFinishApplicationResize);
 	wsio.on('deleteApplication',                      wsDeleteApplication);
 	wsio.on('updateApplicationState',                 wsUpdateApplicationState);
+	wsio.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
 
 	wsio.on('addNewControl',                        wsAddNewControl);
 	wsio.on('closeAppFromControl',                  wsCloseAppFromControl);
@@ -752,6 +764,25 @@ function initializeExistingSagePointers(wsio) {
 			wsio.emit('createSagePointer', sagePointers[key]);
 			wsio.emit('changeSagePointerMode', {id: sagePointers[key].id, mode: remoteInteraction[key].interactionMode});
 		}
+	}
+}
+
+function initializeExistingWallUI(wsio) {
+	if (config.ui.reload_wallui_on_refresh === false) {
+		// console.log("WallUI reload on display client refresh: Disabled");
+		for (key in SAGE2Items.radialMenus.list) {
+			var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+			hideRadialMenu(menuInfo.id);
+		}
+		return;
+	}
+	// console.log("WallUI reload on display client refresh: Enabled (default)");
+	var key;
+	for (key in SAGE2Items.radialMenus.list) {
+		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+		broadcast('createRadialMenu', menuInfo);
+		broadcast('updateRadialMenu', menuInfo);
+		updateWallUIMediaBrowser(menuInfo.id);
 	}
 }
 
@@ -1298,12 +1329,37 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
-		mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
-		var portal = findApplicationPortal(app);
-		if (portal !== undefined && portal !== null && data.updateRemote === true) {
-			var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
-			remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.state, date: ts});
+		if (data.updateRemote === true) {
+			var ts;
+			var portal = findApplicationPortal(app);
+			if (portal !== undefined && portal !== null) {
+				ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+				remoteSharingSessions[portal.id].wsio.emit('updateApplicationState', {id: data.id, state: data.remoteState, date: ts});
+			} else if (sharedApps[data.id] !== undefined) {
+				var i;
+				for (i = 0; i < sharedApps[data.id].length; i++) {
+					// var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+					ts = Date.now();
+					sharedApps[data.id][i].wsio.emit('updateApplicationState',
+						{id: sharedApps[data.id][i].sharedId, state: data.remoteState, date: ts});
+				}
+			}
+		}
+	}
+}
+
+function wsUpdateStateOptions(wsio, data) {
+	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		if (sharedApps[data.id] !== undefined) {
+			var i;
+			for (i = 0; i < sharedApps[data.id].length; i++) {
+				// var ts = Date.now() + remoteSharingSessions[portal.id].timeOffset;
+				var ts = Date.now();
+				sharedApps[data.id][i].wsio.emit('updateApplicationStateOptions',
+					{id: sharedApps[data.id][i].sharedId, options: data.options, date: ts});
+			}
 		}
 	}
 }
@@ -2517,6 +2573,45 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 	});
 }
 
+function wsAddNewSharedElementFromRemoteServer(wsio, data) {
+	var i;
+
+	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
+		console.log(sageutils.header("Remote App>") + appInstance.title + " (" + appInstance.application + ")");
+
+		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
+			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
+			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
+			for (i = 0; i < clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					console.log(sageutils.header("Remote App>") + "render client: " + clients[i].id);
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+		} else {
+			appInstance.id = data.id;
+		}
+
+		mergeObjects(data.application.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+
+		handleNewApplication(appInstance, videohandle);
+
+		if (appInstance.animation) {
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i = 0; i < clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+		}
+
+		sharedApps[appInstance.id] = [{wsio: wsio, sharedId: data.remoteAppId}];
+
+		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", true);
+		broadcast('setAppSharingFlag', {id: appInstance.id, sharing: true});
+	});
+}
+
 function wsRequestNextRemoteFrame(wsio, data) {
 	var originId;
 	var portalCloneIdx = data.id.indexOf("_");
@@ -3058,6 +3153,13 @@ function wsUpdateApplicationState(wsio, data) {
 	}
 }
 
+function wsUpdateApplicationStateOptions(wsio, data) {
+	// should check timestamp first (data.date)
+	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		broadcast('loadApplicationOptions', {id: data.id, options: data.options});
+	}
+}
+
 
 // **************  Widget Control Messages *****************
 
@@ -3161,10 +3263,19 @@ function loadConfiguration() {
 		if (sageutils.fileExists(configFile)) {
 			console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
 		} else {
+			// Check in ~/Document/SAGE2_Media/config
 			if (platform === "Windows") {
-				configFile = path.join("config", "defaultWin-cfg.json");
+				configFile = path.join(mainFolder.path, "config", "defaultWin-cfg.json");
 			} else {
-				configFile = path.join("config", "default-cfg.json");
+				configFile = path.join(mainFolder.path, "config", "default-cfg.json");
+			}
+			// finally check in the internal folder
+			if (!sageutils.fileExists(configFile)) {
+				if (platform === "Windows") {
+					configFile = path.join("config", "defaultWin-cfg.json");
+				} else {
+					configFile = path.join("config", "default-cfg.json");
+				}
 			}
 			console.log(sageutils.header("SAGE2") + "Using default configuration file: " + configFile);
 		}
@@ -3676,8 +3787,7 @@ if (config.remote_sites) {
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new WebsocketIO(wsURL, false, function() {
 		console.log(sageutils.header("Remote") + "Connected to " + element.name);
-		remote.remoteAddress.address = element.host;
-		remote.remoteAddress.port = element.port;
+		remote.updateRemoteAddress(element.host, element.port);
 		var clientDescription = {
 			clientType: "remoteServer",
 			host: config.host,
@@ -3701,6 +3811,7 @@ function createRemoteConnection(wsURL, element, index) {
 
 		remote.on('addClient',                              wsAddClient);
 		remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+		remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
 		remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
 		remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
 		remote.on('stopMediaStream',                        wsStopMediaStream);
@@ -3728,6 +3839,7 @@ function createRemoteConnection(wsURL, element, index) {
 		remote.on('finishApplicationResize',                wsFinishApplicationResize);
 		remote.on('deleteApplication',                      wsDeleteApplication);
 		remote.on('updateApplicationState',                 wsUpdateApplicationState);
+		remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
 
 		remote.emit('addClient', clientDescription);
 		remoteSites[index].connected = true;
@@ -4440,6 +4552,9 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
+	// don't allow data-pushing
+
+	/*
 	switch (obj.id) {
 		case "dataSharingRequestDialog": {
 			break;
@@ -4487,6 +4602,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			requestNewDataSharingSession(obj.data);
 		}
 	}
+	*/
 }
 
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime,
@@ -4522,11 +4638,16 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 		h: dataSession.height + config.ui.titleBarHeight
 	};
 
-	var cornerSize = 0.2 * Math.min(geometry.w, geometry.h);
-	var buttonsWidth = (config.ui.titleBarHeight - 4) * (324.0 / 111.0);
-	var buttonsPad   = (config.ui.titleBarHeight - 4) * (10.0 / 111.0);
+	var cornerSize   = 0.2 * Math.min(geometry.w, geometry.h);
+	var oneButton    = Math.round(config.ui.titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = geometry.w - Math.round(2 * oneButton + buttonsPad);
+	/*
+	var buttonsWidth = (config.ui.titleBarHeight-4) * (324.0/111.0);
+	var buttonsPad   = (config.ui.titleBarHeight-4) * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = geometry.w - buttonsWidth;
+	*/
 
 	interactMgr.addGeometry(dataSession.id, "portals", "rectangle", geometry, true, zIndex, dataSession);
 
@@ -4555,8 +4676,9 @@ function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteW
 
 }
 
+// Disabling data sharing portal for now
+/*
 function requestNewDataSharingSession(remote) {
-	// Disabling data sharing portal for now
 	return;
 
 	if (remote.connected) {
@@ -4572,6 +4694,7 @@ function requestNewDataSharingSession(remote) {
 		console.log("Remote site " + remote.name + " is not currently connected");
 	}
 }
+*/
 
 function showWaitDialog(flag) {
 	interactMgr.editVisibility("dataSharingWaitDialog", "staticUI", flag);
@@ -4653,6 +4776,8 @@ function pointerPressOrReleaseOnWidget(uniqueID, pointerX, pointerY, data, obj, 
 					} else if (btn.id.indexOf("buttonCloseWidget") >= 0) {
 						addEventToUserLog(data.addr, {type: "widgetMenu", data: {action: "close", application:
 							{id: app.id, type: app.application}}, time: Date.now()});
+					} else if (btn.id.indexOf("buttonShareApp") >= 0) {
+						console.log("sharing app");
 					} else {
 						addEventToUserLog(data.addr, {type: "widgetAction", data: {application:
 							data.appId, widget: data.ctrlId}, time: Date.now()});
@@ -4725,23 +4850,25 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	}
 
 	switch (btn.id) {
-		case "titleBar": {
+		case "titleBar":
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
-		}
-		case "dragCorner": {
-			// Corner always active
-			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+		case "dragCorner":
+			if (remoteInteraction[uniqueID].windowManagementMode()) {
+				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			} else if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			}
 			break;
-		}
-		case "fullscreenButton": {
+		case "syncButton":
+			broadcast('toggleSyncOptions', {id: obj.data.id});
+			break;
+		case "fullscreenButton":
 			toggleApplicationFullscreen(uniqueID, obj.data, portalId);
 			break;
-		}
-		case "closeButton": {
+		case "closeButton":
 			deleteApplication(obj.data.id, portalId);
 			break;
-		}
 	}
 }
 
@@ -5505,10 +5632,39 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	// don't allow data-pushing
 	// dropSelectedItem(uniqueID, true);
 
+	/*
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
 	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
 		remote.wsio.emit('addNewElementFromRemoteServer', app.application);
+
+		var eLogData = {
+			host: remote.wsio.remoteAddress.address,
+			port: remote.wsio.remoteAddress.port,
+			application: {
+				id: app.application.id,
+				type: app.application.application
+			}
+		};
+		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+	}
+	*/
+
+	var remote = obj.data;
+	var app = dropSelectedItem(uniqueID, false, null);
+	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
+		var sharedId = app.application.id + "_" + config.host + ":" + config.port + "+" + remote.wsio.id;
+		if (sharedApps[app.application.id] === undefined) {
+			sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
+		} else {
+			sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
+		}
+
+		SAGE2Items.applications.editButtonVisibilityOnItem(app.application.id, "syncButton", true);
+
+		remote.wsio.emit('addNewSharedElementFromRemoteServer',
+			{application: app.application, id: sharedId, remoteAppId: app.application.id});
+		broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
 
 		var eLogData = {
 			host: remote.wsio.remoteAddress.address,
@@ -6517,22 +6673,30 @@ function handleNewApplication(appInstance, videohandle) {
 		w: appInstance.width, h: appInstance.height + config.ui.titleBarHeight},
 		true, zIndex, appInstance);
 
-	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
-	var buttonsWidth = config.ui.titleBarHeight * (324.0 / 111.0);
-	var buttonsPad   = config.ui.titleBarHeight * (10.0 / 111.0);
+	var cornerSize   = 0.2 * Math.min(appInstance.width, appInstance.height);
+	var oneButton    = Math.round(config.ui.titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = appInstance.width - Math.round(3 * oneButton + 2 * buttonsPad);
+	/*
+	var buttonsWidth = config.ui.titleBarHeight * (324.0/111.0);
+	var buttonsPad   = config.ui.titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appInstance.width - buttonsWidth;
+	*/
 
 	SAGE2Items.applications.addItem(appInstance);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle",
-			{x: 0, y: 0, w: appInstance.width, h: config.ui.titleBarHeight}, 0);
+		{x: 0, y: 0, w: appInstance.width, h: config.ui.titleBarHeight}, 0);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "syncButton", "rectangle",
+		{x: startButtons, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle",
-			{x: startButtons + buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle",
-			{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle",
-			{x: appInstance.width - cornerSize, y: appInstance.height + config.ui.titleBarHeight - cornerSize,
-			w: cornerSize, h: cornerSize}, 2);
+		{x: appInstance.width - cornerSize,
+		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
 }
@@ -6548,21 +6712,28 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		true, zIndex, appInstance);
 
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
-	var buttonsWidth = titleBarHeight * (324.0 / 111.0);
-	var buttonsPad   = titleBarHeight * (10.0 / 111.0);
+	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = appInstance.width - Math.round(3 * oneButton + 2 * buttonsPad);
+	/*
+	var buttonsWidth = titleBarHeight * (324.0/111.0);
+	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = appInstance.width - buttonsWidth;
+	*/
 
 	SAGE2Items.applications.addItem(appInstance);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "titleBar", "rectangle",
 		{x: 0, y: 0, w: appInstance.width, h: titleBarHeight}, 0);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "syncButton", "rectangle",
+		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "fullscreenButton", "rectangle",
-		{x: startButtons + buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle",
-		{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle",
-		{x: appInstance.width - cornerSize, y: appInstance.height + titleBarHeight - cornerSize,
-		w: cornerSize, h: cornerSize}, 2);
+		{x: appInstance.width - cornerSize, y: appInstance.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
 }
@@ -6580,17 +6751,24 @@ function handleApplicationResize(appId) {
 	}
 
 	var cornerSize = 0.2 * Math.min(app.width, app.height);
-	var buttonsWidth = titleBarHeight * (324.0 / 111.0);
-	var buttonsPad   = titleBarHeight * (10.0 / 111.0);
+	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = app.width - Math.round(3 * oneButton + 2 * buttonsPad);
+	/*
+	var buttonsWidth = titleBarHeight * (324.0/111.0);
+	var buttonsPad   = titleBarHeight * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = app.width - buttonsWidth;
+	*/
 
 	SAGE2Items.applications.editButtonOnItem(appId, "titleBar", "rectangle",
 		{x: 0, y: 0, w: app.width, h: titleBarHeight});
+	SAGE2Items.applications.editButtonOnItem(appId, "syncButton", "rectangle",
+		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "fullscreenButton", "rectangle",
-		{x: startButtons + buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "closeButton", "rectangle",
-		{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: titleBarHeight});
+		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle",
 		{x: app.width - cornerSize, y: app.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
 }
@@ -6605,20 +6783,25 @@ function handleDataSharingPortalResize(portalId) {
 	var portalWidth = SAGE2Items.portals.list[portalId].width;
 	var portalHeight = SAGE2Items.portals.list[portalId].height;
 
-	var cornerSize = 0.2 * Math.min(portalWidth, portalHeight);
-	var buttonsWidth = (config.ui.titleBarHeight - 4) * (324.0 / 111.0);
-	var buttonsPad   = (config.ui.titleBarHeight - 4) * (10.0 / 111.0);
+	var cornerSize   = 0.2 * Math.min(portalWidth, portalHeight);
+	var oneButton    = Math.round(config.ui.titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = portalWidth - Math.round(2 * oneButton + buttonsPad);
+	/*
+	var buttonsWidth = (config.ui.titleBarHeight-4) * (324.0/111.0);
+	var buttonsPad   = (config.ui.titleBarHeight-4) * ( 10.0/111.0);
 	var oneButton    = buttonsWidth / 2; // two buttons
 	var startButtons = portalWidth - buttonsWidth;
+	*/
 
 	SAGE2Items.portals.editButtonOnItem(portalId, "titleBar", "rectangle",
-			{x: 0, y: 0, w: portalWidth, h: config.ui.titleBarHeight});
+		{x: 0, y: 0, w: portalWidth, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "fullscreenButton", "rectangle",
-			{x: startButtons + buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight});
+		{x: startButtons, y: 0, w: oneButton, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "closeButton", "rectangle",
-			{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
+		{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "dragCorner", "rectangle",
-			{x: portalWidth - cornerSize, y: portalHeight + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
+		{x: portalWidth - cornerSize, y: portalHeight + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
 }
 
 function findInteractableManager(appId) {
@@ -6704,6 +6887,7 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 	}
 
 	if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] === undefined) {
+		// Create a new radial menu
 		var newRadialMenu = new Radialmenu(uniqueID, uniqueID, config);
 		newRadialMenu.generateGeometry(interactMgr, SAGE2Items.radialMenus);
 		newRadialMenu.setPosition(newMenuPos);
@@ -6713,10 +6897,11 @@ function createRadialMenu(uniqueID, pointerX, pointerY) {
 		// Open a 'media' radial menu
 		broadcast('createRadialMenu', newRadialMenu.getInfo());
 	} else if (validLocation && SAGE2Items.radialMenus.list[uniqueID + "_menu"] !== undefined) {
+		// Radial menu already exists for this pointer, move to new location instead
 		setRadialMenuPosition(uniqueID, pointerX, pointerY);
 		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
 	}
-	updateRadialMenu(uniqueID);
+	updateWallUIMediaBrowser(uniqueID);
 }
 
 /**
@@ -6735,7 +6920,7 @@ function moveRadialMenu(uniqueID, pointerX, pointerY) {
 		existingRadialMenu.setPosition({x: existingRadialMenu.left + pointerX, y: existingRadialMenu.top + pointerY});
 		existingRadialMenu.visible = true;
 
-		broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+		broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
 	}
 }
 
@@ -6758,7 +6943,7 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY) {
 			{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
 	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
-	broadcast('updateRadialMenu', existingRadialMenu.getInfo());
+	broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
 }
 
 /**
@@ -6773,7 +6958,7 @@ function showRadialMenu(uniqueID) {
 	if (radialMenu !== undefined) {
 		radialMenu.visible = true;
 		interactMgr.editVisibility(uniqueID + "_menu_radial", "radialMenus", true);
-		interactMgr.editVisibility(uniqueID + "_menu_thumbnail", "radialMenus", false);
+		interactMgr.editVisibility(uniqueID + "_menu_thumbnail", "radialMenus", radialMenu.isThumbnailWindowOpen());
 	}
 }
 
@@ -6788,9 +6973,10 @@ function hideRadialMenu(uniqueID) {
 	if (radialMenu !== undefined) {
 		radialMenu.hide();
 	}
+	broadcast('updateRadialMenu', radialMenu.getInfo());
 }
 
-function updateRadialMenu(uniqueID) {
+function updateWallUIMediaBrowser(uniqueID) {
 	var list = getSavedFilesList();
 
 	broadcast('updateRadialMenuDocs', {id: uniqueID, fileList: list});

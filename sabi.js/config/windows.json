@@ -1,0 +1,77 @@
+{
+    "global": {
+	"security"    : "true",
+	"server_port" : "10000", 
+	"tcp_port"    : "11000"
+    },
+    "main": {
+        "header" : "<h1>Test server</h1>",
+        "footer" : "<h4>sabi.js control interface</h4>",
+        "image" : "images/sabi_coffee_400.jpg",
+        "image_style" : "width=\"90%\" style=\"max-width:420px;align:center;margin: 0 auto;\"",
+        "pages" : [ "Page1", "Page2"  ]
+    },
+    "actions": {
+        "audio-main-volume": { "oscmessage" : "/level",  "server": "127.0.0.1:16003" },
+        "notepad-on":        { "command": "start notepad" },
+        "notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
+        "firefox-on":        { "command": "start firefox" },
+        "firefox-off":       { "command": "Taskkill /IM firefox.exe /F" },
+        "MyBAT-on":          { "script":  "scripts/mybat.bat" },
+        "MyBAT-off":         { "script":  "scripts\\mybat_off.bat" }
+    },
+
+    "Page1" : {
+        "title" : "Page1 setup",
+        "navbar" : "true",
+        "groups" : [ "group1", "group2", "group3"],
+        "group1" : { 
+            "title": "Group 1",
+            "image": "images/x11_small.png",
+            "actions": [
+                {"title": "Notepad ON",  "action": "notepad-on" },
+                {"title": "Notepad OFF", "action": "notepad-off", "theme":"b"},
+                {"title": "Firefox ON",   "action": "firefox-on" },
+                {"title": "Firefox OFF",  "action": "firefox-off", "theme":"b"}
+            ]
+        },
+        "group2" : {
+            "title": "Group 3",
+            "image": "images/omegalib_small.png",
+            "actions": [
+                {"title": "Script ON",   "action": "MyBAT-on", "theme":"a" },
+                {"title": "Script OFF",  "action": "MyBAT-off", "theme":"b"}
+           ]
+        },
+        "group3" : {
+            "title": "Group 2",
+            "image": "images/sage_small.jpg",
+            "actions": [
+                 {"title": "Volume",  "action": "audio-main-volume",  "role": "range", "minvalue": "0", "maxvalue": "100" }
+           ]
+        }
+    },
+
+    "Page2" : {
+        "title" : "Page2 testing",
+        "navbar" : "true",
+        "groups" : [ "group1", "group2"],
+        "group1" : { 
+            "title": "Group 1",
+            "image": "images/x11_small.png",
+            "actions": [
+                {"title": "Notepad ON", "action": "notepad-on"},
+                {"title": "Notepad OFF", "action": "notepad-off"}
+            ]
+        },
+        "group2" : {
+            "title": "Group 2",
+            "image": "images/sage_small.jpg",
+            "actions": [
+                 {"title": "Volume",  "action": "audio-main-volume",  "role": "range", "minvalue": "0", "maxvalue": "100" }
+           ]
+        }
+
+    }
+}
+
