@@ -15,12 +15,13 @@
 		"sage2-on":          { "script":  "scripts\\sage2_on.bat" },
 		"sage2-off":         { "script":  "scripts\\sage2_off.bat" },
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/defaultWin-cfg.json" },
-		"edit-form":         { "openurl":  "form.html?action=edit-config" },
+		"edit-form":         { "openurl": "form.html?action=edit-config" },
 
-		"access":            { "command": "start notepad" },
-		"admin":             { "command": "start notepad" },
-		"submitMA":          { "sendData": "forMA", "dataID":"inputMA", "sendPurpose":"makeNewMeetingID" },
-		"inputMA":			 { "ignore" : "Not sending"},
+		"submitMA":          { "sendData": "forMA", "dataID": "inputMA", "sendPurpose": "makeNewMeetingID" },
+		"inputMA":           { "ignore" :  "Not sending"},
+
+		"submitLP":          { "sendData": "forLP", "dataID": "inputLP", "sendPurpose": "makeNewLauncherPassword" },
+		"inputLP":           { "ignore" :  "Not sending"},
 
 		"notepad-on":        { "command": "start notepad" },
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
@@ -39,8 +40,7 @@
 			"image": "images/display.png",
 			"actions": [
 				{"title": "Start", "action": "sage2-on" },
-				{"title": "Stop", "action": "sage2-off"},
-				{"title": "Set Meeting Access", "action": "access"}
+				{"title": "Stop",  "action": "sage2-off"}
 			]
 		},
 		"setMA" : { 
@@ -48,33 +48,25 @@
 			"description": "Allows changing the Meeting ID. SAGE2 must be restarted before changes take effect.",
 			"image": "images/settings.png",
 			"actions": [
-				{"title": "", "action": "inputMA", "role": "textInput", "placeholder":"Enter new MeetingID here"},
-				{"title": "Set Meeting Access", "action": "submitMA"}
+				{"title": "", "action": "inputMA", "role": "inputPassword", "placeholder":"Enter new MeetingID here"},
+				{"title": "Set Meeting Access", "action": "submitMA", "theme": "b"}
 			]
 		}
 	},
 
 	"Admin" : {
 		"title"  : "Admin",
-		"description": "",
 		"navbar" : "true",
 		"groups" : [ "group2" ],
 		"group2" : {
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
+			"description": "Allows to edit your wall configuration. Simple edits can be done using a form in <em>basic</em> mode. You can also edit the file in <em>expert</em> mode. The launcher password can be changed in the form of sage2:sabi:xxxx.",
 			"actions": [
-				{"title": "Wall configuration - basic", "action": "edit-form" },
-				{"title": "Wall configuration - expert", "action": "edit-config" },
-				{"title": "Set Admin Password", "action": "admin"}
-			]
-		},
-		"adminAccess" : {
-			"title": "Configure SAGE2",
-			"image": "images/settings.png",
-			"actions": [
-				{"title": "Wall configuration - basic", "action": "edit-form" },
-				{"title": "Wall configuration - expert", "action": "edit-config" },
-				{"title": "Set Admin Password", "action": "admin"}
+				{"title": "Wall configuration - <em>basic</em>", "action": "edit-form" },
+				{"title": "Wall configuration -  <em>expert</em>", "action": "edit-config" },
+				{"title": "", "action": "inputLP", "role": "inputPassword", "placeholder":"Enter new laucher password"},
+				{"title": "Reset laucher password", "action": "submitLP", "theme": "b"}
 			]
 		}
 	}
