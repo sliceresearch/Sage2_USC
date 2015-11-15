@@ -69,7 +69,7 @@ var http_auth = require('http-auth');
 var osc = require('./src/node-osc/lib/osc.js');
 
 // htdigest password generation
-var htdigest = require('./src/htdigest.js').htdigest;
+var htdigest = require('./src/htdigest.js');
 
 // Blocking exec function
 // var exec  = require('exec-sync');
@@ -97,9 +97,8 @@ var tcp_clients = [];
 
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 
-//support variables for meetingID writing (passwd.json)
-var pathToSageUiPwdFile = path.join(homedir(), "Documents", "SAGE2_Media");
-	pathToSageUiPwdFile += "/passwd.json";
+// Support variables for meetingID writing (passwd.json)
+var pathToSageUiPwdFile    = path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
 var pathToWinDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToMacDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
 var pathToWinStartupFolder = path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
@@ -116,7 +115,7 @@ if (platform === "Windows") {
 } else {
 	optimist = optimist.default('f', path.join('config', 'sabi.json'));	
 }
-optimist = optimist.default('p', 'sage2');	
+// optimist = optimist.default('p', 'sage2');
 optimist = optimist.describe('f', 'Load a configuration file');
 optimist = optimist.describe('p', 'Create a password for the sage2 user');
 var argv = optimist.argv;
@@ -173,7 +172,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	}
 
 
-	//check for Windows startup file
+	// Check for Windows startup file
 	if (platform === "Windows" &&  !fileExists(pathToWinStartupFolder) ) {
 		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
@@ -183,7 +182,6 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 
 		console.log('Delete this comment later: startup file does not exist, adding it. Contents:' + sfpContents);
 	}
-
 
 	console.log('   done')
 }
@@ -338,7 +336,7 @@ function sleep(milliseconds) {
 if (argv.p) {
 	if (argv.p !== true) {
 		console.log('Setting a new password for http authorization sage2 user');
-		htdigest("users.htpasswd", "sabi", "sage2", argv.p);
+		htdigest.htdigest("users.htpasswd", "sabi", "sage2", argv.p);
 	}
 }
 
@@ -964,7 +962,7 @@ function processEditor(data, socket) {
 	}
 }
 
-function processRPC(data, socket) { //dkedits made to account for makeNewMeetingID
+function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
 	for (var f in AppRPC) {
@@ -976,11 +974,14 @@ function processRPC(data, socket) { //dkedits made to account for makeNewMeeting
 			}
 		}
 	}
-	if(!found && "makeNewMeetingID" === data.method) {
-
+	if (!found && data.method === "makeNewMeetingID") {
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
 		fs.writeFileSync(pathToSageUiPwdFile, jsonString);
+	}
+	if (!found && data.method === "makeNewLauncherPassword") {
+		console.log('Setting new launcher password', data.value[0]);
+		htdigest.htdigest_save("users.htpasswd", "sabi", "sage2", data.value[0]);
 	}
 }
 

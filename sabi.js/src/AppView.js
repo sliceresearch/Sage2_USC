@@ -249,10 +249,11 @@ Views.AppView = Backbone.View.extend({
         console.log("ignoring pressed event for:" + id);
     }
     else if (actions[act].sendData) {//dkedit
-      //going to overload the action with datasending.
+      // Going to overload the action with datasending.
       var dataToSend = document.getElementById(actions[act].dataID).value;
-      console.log("Client side check for value collected plain:" + dataToSend + ". md5:" + md5(dataToSend));
-      this.sendCall( actions[act].sendPurpose, [ md5(dataToSend) ]);
+      var encoded = md5(dataToSend);
+      console.log("Client side check for value collected plain:" + dataToSend + ". md5:" + encoded);
+      this.sendCall( actions[act].sendPurpose, [ encoded ]);
     }
     else {
         // The action is a script on a machine (remote or local)
@@ -267,7 +268,7 @@ Views.AppView = Backbone.View.extend({
           });
         }
         else {
-          //console.log("Should trigger:", actions[act].script);
+          // console.log("Should trigger:", actions[act].script);
           if (actions[act].return == "process")
             this.sendCallandProcess('action', [act, actions[act].script]);
           else
