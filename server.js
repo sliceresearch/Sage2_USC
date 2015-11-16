@@ -4822,24 +4822,24 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	// pointer press on app window
 	if (btn === null) {
-		if (remoteInteraction[uniqueID].appInteractionMode()) {
-			if (data.button === "right") {
-				var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
-				if (!elemCtrl) {
-					broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
-						user_label: sagePointers[uniqueID]? sagePointers[uniqueID].label : "", x: pointerX, y: pointerY, date: Date.now() });
-				} else if (elemCtrl.show === false) {
-					showControl(elemCtrl, uniqueID, pointerX, pointerY);
-					addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application:
-						{id: obj.id, type: obj.data.application}}, time: Date.now()});
-				} else {
-					moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
-				}
+		if (data.button === "right") {
+			var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
+			if (!elemCtrl) {
+				broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
+					user_label: sagePointers[uniqueID]? sagePointers[uniqueID].label : "", x: pointerX, y: pointerY, date: Date.now() });
+			} else if (elemCtrl.show === false) {
+				showControl(elemCtrl, uniqueID, pointerX, pointerY);
+				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application:
+					{id: obj.id, type: obj.data.application}}, time: Date.now()});
 			} else {
-				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
 			}
 		} else {
-			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			} else {
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 		}
 		return;
 	}
@@ -4849,11 +4849,12 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "dragCorner":
-			if (remoteInteraction[uniqueID].windowManagementMode()) {
-				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			} else if (remoteInteraction[uniqueID].appInteractionMode()) {
-				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-			}
+			// if (remoteInteraction[uniqueID].windowManagementMode()) {
+			// 	selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
+			// 	sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			// }
+			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "syncButton":
 			broadcast('toggleSyncOptions', {id: obj.data.id});
