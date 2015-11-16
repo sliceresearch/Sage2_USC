@@ -98,11 +98,14 @@ var tcp_clients = [];
 var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
 
 // Support variables for meetingID writing (passwd.json)
-var pathToSageUiPwdFile    = path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
-var pathToWinDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
-var pathToMacDefaultConfig = path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
-var pathToWinStartupFolder = path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
-
+var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
+var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
+var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
+var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
+var pathToSage2onbatScript		= path.join("scripts", "sage2_on.bat");
+var pathToGoWindowsCertGenFile	= "../keys/GO-windows.bat";
+var needToRegenerateSageOnFile	= true; //always check at least once
+var scriptExecutionFunction		= require('./src/script').Script;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -149,7 +152,12 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		}
 	});
 
-	// Copy a default configuration file
+
+	//
+	//Move files as required
+	//
+
+	// Copy a default configuration file over if there isn't one.
 	var configInput, configOuput;
 	if (platform === "Windows" && !fileExists(pathToWinDefaultConfig)) {
 		configInput = path.join("scripts", "defaultWin-cfg.json");
@@ -160,7 +168,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 
 		// do the actual copy
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
-	} else if ( platform === "Mac OS X" && !fileExists(pathToMacDefaultConfig) ) {
+	} else if (platform === "Mac OS X" && !fileExists(pathToMacDefaultConfig) ) {
 		configInput = path.join("scripts", "default-cfg.json");
 		configOuput = pathToMacDefaultConfig;//path.join(media, "config", "default-cfg.json");
 
@@ -171,7 +179,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
 	}
 
-	// Check for Windows startup file
+	//check for Windows startup file
 	if (platform === "Windows" &&  !fileExists(pathToWinStartupFolder)) {
 		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
@@ -715,6 +723,8 @@ function process_request(cfg, req, res) {
 			wstream.on('finish', function() {
 				// stream closed
 				console.log('HTTP>		PUT file has been written', filename, fileLength, 'bytes');
+				needToRegenerateSageOnFile = true;
+				updateCertificates();
 			});
 			// Getting data
 			req.on('data', function(chunk) {
@@ -964,6 +974,12 @@ function processEditor(data, socket) {
 function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
+	if (data.value[0] === "sage2-on" && needToRegenerateSageOnFile) {
+		console.log('Delete this comment later: Intercepting sage2-on action.');
+		writeSageOnFileWithCorrectPortAndMeetingID();
+		console.log('Delete this comment later:');
+		needToRegenerateSageOnFile = false;
+	}
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
 		if (typeof func == "function") {
@@ -977,11 +993,100 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
 		fs.writeFileSync(pathToSageUiPwdFile, jsonString);
+		needToRegenerateSageOnFile = true;
 	}
 	if (!found && data.method === "makeNewLauncherPassword") {
 		console.log('Setting new launcher password', data.value[0]);
 		htdigest.htdigest_save("users.htpasswd", "sabi", "sage2", data.value[0]);
 	}
+}
+
+function writeSageOnFileWithCorrectPortAndMeetingID() {
+	var port = getPortUsedInConfig();
+	var meetingID = getMeetingIDFromPasswd();
+
+	if (port === null) {
+		console.log("Error: null port value. Cannot write file new sage2_on file.");
+		return;
+	}
+	console.log('Delete this comment later:');
+	console.log('   Port:' + port);
+	console.log('   meetingID:' + meetingID);
+
+	if (!fileExists(pathToSage2onbatScript)) {
+		console.log("Error: sage2_on script missing");
+		return;
+	}
+
+	var scriptContents = fs.readFileSync( pathToSage2onbatScript, "utf8" );
+	console.log("scriptContents:" + scriptContents);
+	var rewriteContents = scriptContents.substring(0, scriptContents.indexOf("localhost:"));
+		rewriteContents += "localhost:" + port;
+	scriptContents = scriptContents.substring(scriptContents.indexOf("/audioManager"));
+		rewriteContents += scriptContents.substring(0, scriptContents.indexOf("audioManager.html"));
+		rewriteContents += "audioManager.html?hash="+meetingID;
+	scriptContents = scriptContents.substring(scriptContents.indexOf(" /B"));
+		rewriteContents += scriptContents.substring(0, scriptContents.indexOf("localhost:"));
+		rewriteContents += "localhost:" + port;
+	scriptContents = scriptContents.substring(scriptContents.indexOf("/display"));
+		rewriteContents += scriptContents.substring(0, scriptContents.indexOf("ID=0"));
+		if (meetingID === null) { rewriteContents += 'ID=0"'; }
+		else { rewriteContents += 'ID=0&hash='+meetingID+'"'; }
+	scriptContents = scriptContents.substring(scriptContents.indexOf(" /B"));
+		rewriteContents += scriptContents;
+
+	fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
+}
+
+function getPortUsedInConfig() {
+	var pathToConfig; //config name differs depending on OS.
+	if (platform === "Windows") { pathToConfig = pathToWinDefaultConfig; }
+	else if (platform === "Mac OS X") { pathToConfig = pathToMacDefaultConfig; }
+	
+	if (!fileExists(pathToConfig)) {
+		console.log("Error, config doesn't exist.");
+		return null;
+	}
+
+	var configdata = fs.readFileSync( pathToWinDefaultConfig );
+	var cfg = JSON5.parse(configdata);
+	return cfg.index_port;
+}
+
+function getMeetingIDFromPasswd() {
+	//if there is no passwd file, then there is no need to add a hash to address.
+	if (!fileExists(pathToSageUiPwdFile)) { return null; }
+	
+	var configdata = fs.readFileSync( pathToSageUiPwdFile );
+	var cfg = JSON5.parse(configdata);
+	return cfg.pwd;
+}
+
+function updateCertificates() {
+	var pathToConfig; //config name differs depending on OS.
+	if (platform === "Windows") { pathToConfig = pathToWinDefaultConfig; }
+	else if (platform === "Mac OS X") { pathToConfig = pathToMacDefaultConfig; }
+	
+	if (!fileExists(pathToConfig)) {
+		console.log("Error, config doesn't exist.");
+		return null;
+	}
+
+	var configdata = fs.readFileSync( pathToWinDefaultConfig );
+	var cfg = JSON5.parse(configdata);
+	var host = cfg.host;
+	var alternate = cfg.alternate_hosts;
+
+	var rewriteContents = "REM Must be run as administrator\n";
+		rewriteContents += "pushd %~dp0\n";
+		rewriteContents += "call init_webserver.bat localhost\n";
+		rewriteContents += "call init_webserver.bat 127.0.0.1\n";
+		rewriteContents += "call init_webserver.bat " + host + "\n";
+		rewriteContents += "call init_webserver.bat " + alternate + "\n";
+		
+	fs.writeFileSync(pathToGoWindowsCertGenFile, rewriteContents);
+
+	scriptExecutionFunction( pathToGoWindowsCertGenFile, false);
 }
 
 function processSerialPort(data) {
