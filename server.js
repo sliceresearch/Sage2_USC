@@ -301,7 +301,7 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'apps', 'tmp', 'config' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'apps', 'tmp', 'config' ];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
