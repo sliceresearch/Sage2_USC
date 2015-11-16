@@ -245,13 +245,13 @@ Views.AppView = Backbone.View.extend({
         console.log("OpenURL", actions[act].openurl);
         window.open(actions[act].openurl, "_parent");
     }
-    else if (actions[act].ignore) { //dkedit
+    else if (actions[act].ignore) { // dkedit
         console.log("ignoring pressed event for:" + id);
     }
-    else if (actions[act].sendData) {//dkedit
+    else if (actions[act].sendData) { // dkedit
       // Going to overload the action with datasending.
       var dataToSend = document.getElementById(actions[act].dataID).value;
-      var encoded = md5(dataToSend);
+      var encoded    = md5(dataToSend);
       console.log("Client side check for value collected plain:" + dataToSend + ". md5:" + encoded);
       this.sendCall( actions[act].sendPurpose, [ encoded ]);
     }
