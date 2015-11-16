@@ -65,8 +65,8 @@
 			"actions": [
 				{"title": "Wall configuration - <em>basic</em>", "action": "edit-form" },
 				{"title": "Wall configuration -  <em>expert</em>", "action": "edit-config" },
-				{"title": "", "action": "inputLP", "role": "inputPassword", "placeholder":"Enter new laucher password"},
-				{"title": "Reset laucher password", "action": "submitLP", "theme": "b"}
+				{"title": "", "action": "inputLP", "role": "inputPassword", "placeholder":"Enter new launcher password"},
+				{"title": "Reset launcher password", "action": "submitLP", "theme": "b"}
 			]
 		}
 	}
