@@ -620,7 +620,9 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
-	drawingManager.init(wsio);
+	if (wsio.clientType === "display") {
+		drawingManager.init(wsio);
+	}
 	// Check if there's a new pointer for a mobile client
 	if (data.browser && data.browser.isMobile && remoteInteraction[wsio.id]) {
 		// for mobile clients, default to window interaction mode

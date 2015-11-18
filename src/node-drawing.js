@@ -143,7 +143,7 @@ DrawingManager.prototype.removeWebSocket = function(wsio) {
 	var clientID = wsio.clientID;
 	var position = this.clientIDandSockets[clientID].indexOf(wsio);
 	if (position > -1) {
-		this.clientIDandSockets[clientID].splice(wsio, 1);
+		this.clientIDandSockets[clientID].splice(position, 1);
 		console.log("Socket removed from drawingManager");
 	} else {
 		console.log("Attempt to remove a socket from drawingManager, but not present");
@@ -195,7 +195,9 @@ DrawingManager.prototype.update = function(drawingObject, clientID) {
 	}
 
 	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
-
+	for (var ws in this.clientIDandSockets[-1]) {
+		this.drawingUpdate(this.clientIDandSockets[-1][ws], drawingObject);
+	}
 }
 
 DrawingManager.prototype.remove = function(group, clientID) {
@@ -205,7 +207,9 @@ DrawingManager.prototype.remove = function(group, clientID) {
 	}
 
 	// Send the object also to client -1, but not manipulated. Maybe create another udpate.
-
+	for (var ws in this.clientIDandSockets[-1]) {
+		this.drawingUpdate(this.clientIDandSockets[-1][ws], drawingObject);
+	}
 }
 
 DrawingManager.prototype.copy = function(a) {
@@ -358,7 +362,7 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 
 DrawingManager.prototype.touchNearBottom = function(x,y) {
 	var c = this.checkInvolvedClient(x,y);
-	if (c > -1) {
+	if (c!= null && (c > -1)) {
 		var startY = this.tilesPosition[c].startY;
 		var endY = this.tilesPosition[c].endY;
 		var w = endY - startY;
