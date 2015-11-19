@@ -577,7 +577,10 @@ function closeWebSocketClient(wsio) {
 	removeElement(clients, wsio);
 
 	// Unregistering the client from the drawingManager
-	drawingManager.removeWebSocket(wsio);
+	if (wsio.clientType === "display") {
+		drawingManager.removeWebSocket(wsio);
+	}
+	
 }
 
 function wsAddClient(wsio, data) {
