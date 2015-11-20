@@ -31,6 +31,9 @@ function DrawingManager(config) {
 	this.eraserBox = null;
 	this.eraserTouchId = -1;
 	this.interactMgr = null;
+	this.actionDoneStack = [{type: "drawing", data: [this.drawState[0].id]}];
+	this.actionRedoStack = [];
+	this.idAssociatedToAction = [];
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -166,13 +169,38 @@ DrawingManager.prototype.clearDrawingCanvas = function() {
 	this.initAll();
 }
 
+function isInside (s,arr) {
+	for (var i in arr) {
+		if (arr[i] == s) {
+			return true;
+		}
+	}
+	return false;
+}
+
 DrawingManager.prototype.undoLastDrawing = function() {
 	this.deleteSelectionBox();
-	var undone = this.drawState.pop();
+
+	var undone = this.actionDoneStack.pop();
 	if (undone) {
-		this.drawingsUndone.push(undone);
+		this.actionRedoStack.push(undone);
+
+		var type = undone.type;
+
+		if (type == "drawing") {
+			var i = 0
+			while (i < this.drawState.lenght) {
+				if (isInside(this.drawState[i].id, undone.data)) {
+					this.drawState.splice(i,1);
+				} else {
+					i++;
+				}
+			}
+		}
+
 		this.initAll();
 	}
+
 }
 
 DrawingManager.prototype.redoDrawing = function() {
@@ -354,11 +382,14 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
+	this.idAssociatedToAction[e.sourceId] = [drawingId];
+
 }
 
 DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	if (!this.existsId(e.sourceId)) {
 		this.newDrawingObjectFunc(e, posX, posY);
+		this.idAssociatedToAction[e.sourceId] = [drawingId];
 	}
 	var drawingId = this.dictionaryId[e.sourceId];
 	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"]
@@ -374,6 +405,7 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push(secondPart[0]);
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
+		this.idAssociatedToAction[e.sourceId].push(id);
 		var newDraw= {};
 		newDraw["type"]="path";
 		newDraw["style"]=this.newDrawingObject[drawingId]["style"];
@@ -385,17 +417,15 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		}
 }
 
-DrawingManager.prototype.removeLastPoints = function(e) {
+DrawingManager.prototype.saveActionToActionStack = function(e) {
 
 	if (!this.existsId(e.sourceId)) {
 		return;
 	}
-	
-	var drawingId = this.dictionaryId[e.sourceId];
-	var pointsSize = this.newDrawingObject[drawingId]["options"]["points"].length;
 
-	if (pointsSize > 5) {
-		this.newDrawingObject[drawingId]["options"]["points"].splice(pointsSize - 5, 5);
+	if (this.idAssociatedToAction[e.sourceId]) {
+		var newAction = {type: "drawing", data: this.idAssociatedToAction[e.sourceId]};
+		delete this.idAssociatedToAction[e.sourceId];
 	}
 
 }
@@ -705,7 +735,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if (!drawn) {
-			this.removeLastPoints(e);
+			this.saveActionToActionStack(e);
 			this.realeaseId(e.sourceId);
 			return;
 		}else {
