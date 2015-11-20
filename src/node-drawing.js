@@ -162,6 +162,7 @@ DrawingManager.prototype.removeWebSocket = function(wsio) {
 }
 
 DrawingManager.prototype.clearDrawingCanvas = function() {
+	this.actionDoneStack.push({type: "clearAll", data: this.copy(this.drawState)});
 	this.drawState = [];
 	this.deleteSelectionBox();
 	this.initAll();
@@ -181,33 +182,89 @@ DrawingManager.prototype.undoLastDrawing = function() {
 
 	var undone = this.actionDoneStack.pop();
 	if (undone) {
-		this.actionRedoStack.push(undone);
-
 		var type = undone.type;
 
 		if (type == "drawing") {
+			var undoneDrawings = [];
+			var groupDrawings = undone.data;
 			var i = 0
-			while (i < this.drawState.lenght) {
-				if (isInside(this.drawState[i].id, undone.data)) {
-					this.drawState.splice(i,1);
+			while (i < this.drawState.length) {
+				if (isInside(this.drawState[i].id, groupDrawings)) {
+					undoneDrawings.push(this.drawState.splice(i,1)[0]);
 				} else {
 					i++;
 				}
 			}
+
+			this.removeDrawingObject(undoneDrawings);
+			undone.data = undoneDrawings;
+		} else if (type == "clearAll") {
+			var redoState = this.copy(undone.data);
+			undone.data = this.drawState;
+			this.drawState = redoState;
+			this.initAll();
+		} else if (type == "erase") {
+			var eraseIdDrawings = [];
+			var groupDrawings = undone.data;
+			for (var i in groupDrawings) {
+				this.drawState.push(groupDrawings[i]);
+				eraseIdDrawings.push(groupDrawings[i].id);
+			}
+
+			this.updateWithGroupDrawingObject(groupDrawings);
+			undone.data = eraseIdDrawings;
+		} else if (type == "creatingSelection") {
+			this.deleteSelectionBox();
 		}
 
-		this.initAll();
+		this.actionRedoStack.push(undone);
 	}
 
 }
 
 DrawingManager.prototype.redoDrawing = function() {
-	var reDone = this.drawingsUndone.pop();
-	if (reDone) {
-		this.drawState.push(reDone);
-		var involvedClient = this.checkInvolvedClient(reDone.options.points[0].x, reDone.options.points[0].y);
-		var manipulatedObject = this.manipulateDrawingObject(reDone, involvedClient);
-		this.update(manipulatedObject, involvedClient);
+
+	var redone = this.actionRedoStack.pop();
+
+	if (redone) {
+		var type = redone.type;
+
+		if (type == "drawing") {
+
+			var undoneIdDrawings = [];
+			var groupDrawings = redone.data;
+			for (var i in groupDrawings) {
+				this.drawState.push(groupDrawings[i]);
+				undoneIdDrawings.push(groupDrawings[i].id);
+			}
+
+			this.updateWithGroupDrawingObject(groupDrawings);
+			redone.data = undoneIdDrawings;
+		} else if (type == "clearAll") {
+			var undoState = this.copy(redone.data);
+			redone.data = this.drawState;
+			this.drawState = undoState;
+			this.initAll();
+		} else if (type == "erase") {
+			var eraseDrawings = [];
+			var groupDrawings = redone.data;
+			while (i < this.drawState.length) {
+				if (isInside(this.drawState[i].id, groupDrawings)) {
+					eraseDrawings.push(eraseDrawings.push(this.drawState.splice(i,1)[0]));
+				} else {
+					i++;
+				}
+			}
+			this.removeDrawingObject(eraseDrawings);
+			redone.data = eraseDrawings;
+		} else if (type == "creatingSelection") {
+			this.selectionBox = redone['data']['selection'];
+			this.selectedDrawingObject = redone['data']['obj'];
+			this.drawState.push(this.selectionBox);
+			this.updateWithGroupDrawingObject([this.selectionBox]);
+		}
+
+		this.actionDoneStack.push(redone);
 	}
 }
 
@@ -321,7 +378,11 @@ DrawingManager.prototype.erase = function() {
 		}
 	}
 
-	this.removeDrawingObject(groupToDelete);
+	if (groupToDelete.length > 0) {
+		this.actionDoneStack.push({type: "erase", data: groupToDelete});
+		this.removeDrawingObject(groupToDelete);
+	}
+	
 }
 
 
@@ -415,16 +476,23 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		}
 }
 
-DrawingManager.prototype.saveActionToActionStack = function(e) {
+DrawingManager.prototype.saveActionToActionStack = function(e, type) {
 
 	if (!this.existsId(e.sourceId)) {
 		return;
 	}
 
-	if (this.idAssociatedToAction[e.sourceId]) {
-		var newAction = {type: "drawing", data: this.idAssociatedToAction[e.sourceId]};
-		delete this.idAssociatedToAction[e.sourceId];
+	if (type == "drawing") {
+		if (this.idAssociatedToAction[e.sourceId]) {
+			var newAction = {type: "drawing", data: this.idAssociatedToAction[e.sourceId]};
+			this.actionDoneStack.push(newAction);
+			delete this.idAssociatedToAction[e.sourceId];
+		}
+	} else if (type == "creatingSelection") {
+		var newAction = {type: "creatingSelection", data: {selection: this.selectionBox, obj: this.selectedDrawingObject}};
+		this.actionDoneStack.push(newAction);
 	}
+	
 
 }
 
@@ -491,13 +559,18 @@ DrawingManager.prototype.selectDrawingObjects = function() {
 
 DrawingManager.prototype.selectionMove = function(x, y) {
 
+	//var actionSelectionMove = {type: "selectionMove", data: {'x': x, 'y': y, obj: []}};
+
 	for (var drawingObj in this.selectedDrawingObject) {
-		var points = this.selectedDrawingObject[drawingObj]['options']['points'];
+		var obj = this.selectedDrawingObject[drawingObj];
+		//actionSelectionMove['data']['obj'].push(obj);
+		var points = obj['options']['points'];
 		for (var i in points) {
 			points[i]['x'] += x;
 			points[i]['y'] += y;
 		}
 	}
+
 
 	this.updateWithGroupDrawingObject(this.selectedDrawingObject);
 }
@@ -702,6 +775,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.moveSelectionBox();
 			drawn = true;
 			this.actualAction = "drawing";
+			this.saveActionToActionStack(e, "creatingSelection");
 
 		} else if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
 			var dx = posX - this.selectionMovementStart['x'];
@@ -737,7 +811,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				this.checkForApplications(this.idAssociatedToAction[e.sourceId][j]);
 			}
 
-			this.saveActionToActionStack(e);
+			this.saveActionToActionStack(e, "drawing");
 			this.realeaseId(e.sourceId);
 			return;
 		}
