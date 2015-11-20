@@ -711,6 +711,8 @@ function UIBuilder(json_cfg, clientID) {
 			this.drawingSvg = d3.select("#main").append("svg").attr("id","drawingSVG");
 			this.drawingSvg.attr("height",parseInt(this.main.style.height));
 			this.drawingSvg.attr("width",parseInt(this.main.style.width));
+			this.drawingSvg.style("position","absolute");
+			this.drawingSvg.style("z-index","3");
 		}
 		this.drawingSvg.selectAll("*").remove();
 		for (var d in data) {

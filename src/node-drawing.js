@@ -30,9 +30,11 @@ function DrawingManager(config) {
 	this.selectionBox = null;
 	this.eraserBox = null;
 	this.eraserTouchId = -1;
+	this.interactMgr = null;
 	this.actionDoneStack = [{type: "drawing", data: [this.drawState[0].id]}];
 	this.actionRedoStack = [];
 	this.idAssociatedToAction = [];
+	this.maxLineSize = 20;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -41,6 +43,10 @@ function DrawingManager(config) {
 	// style: {} Current style of the object to be drawn
 	// }
 
+}
+
+DrawingManager.prototype.linkInteractableManager = function(mngr) {
+	this.interactMgr = mngr;
 }
 
 DrawingManager.prototype.scalePoint = function(point,origin,scaleX,scaleY) {
@@ -123,6 +129,7 @@ DrawingManager.prototype.removeDrawingObject = function(group) {
 DrawingManager.prototype.enablePaintingMode = function() {
 	this.paintingMode = true;
 	this.sendModesToPalette();
+
 }
 
 DrawingManager.prototype.disablePaintingMode = function() {
@@ -448,10 +455,10 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 
-	if (this.newDrawingObject[drawingId]["options"]["points"].length >20) { 
+	if (this.newDrawingObject[drawingId]["options"]["points"].length >this.maxLineSize) { 
 		var l=this.newDrawingObject[drawingId]["options"]["points"].length; 
-		var secondPart = this.newDrawingObject[drawingId]["options"]["points"].splice(19,l);
-		this.newDrawingObject[drawingId]["options"]["points"].push(secondPart[0]);
+		var secondPart = this.newDrawingObject[drawingId]["options"]["points"].splice(this.maxLineSize - 1,l);
+		this.newDrawingObject[drawingId]["options"]["points"].push(this.copy(secondPart[0]));
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
 		this.idAssociatedToAction[e.sourceId].push(id);
@@ -797,10 +804,15 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if (!drawn) {
+			for (var j in this.idAssociatedToAction[e.sourceId]) {
+				this.checkForApplications(this.idAssociatedToAction[e.sourceId][j]);
+			}
+
 			this.saveActionToActionStack(e, "drawing");
 			this.realeaseId(e.sourceId);
 			return;
 		}
+
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
@@ -808,6 +820,30 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
 	this.update(manipulatedObject, involvedClient);
+}
+
+DrawingManager.prototype.checkForApplications = function (id) {
+	var drawing;
+	for (var i in this.drawState) {
+		if (this.drawState[i].id == id){
+			drawing = this.drawState[i];
+			break;
+		}
+	}
+	if (drawing) {
+		var app;
+		for (var i in drawing["options"]["points"]) {
+			var p = drawing["options"]["points"][i];
+			var obj = this.interactMgr.searchGeometry({x: p.x, y: p.y});
+			if (obj && obj.layerId == "applications") {
+				app = obj;
+				break;
+			}
+		}
+		if (app) {
+			drawing.linkedAppID = obj.id;
+		}
+	}
 }
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
@@ -855,6 +891,29 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.endY = data.endY;
 }
 
+DrawingManager.prototype.applicationMoved = function(id,newX,newY) {
+	var oldX = this.interactMgr.getObject(id,"applications").x1;
+	var oldY = this.interactMgr.getObject(id,"applications").y1;
+	var dx = newX - oldX;
+	var dy = newY - oldY;
+
+	var toMove = [];
+
+	for (var i in this.drawState) {
+		var draw = this.drawState[i];
+		if (draw.linkedAppID == id) {
+			toMove.push(draw);
+			for (var j in draw["options"]["points"]) {
+				var p = draw["options"]["points"][j];
+				p.x += dx;
+				p.y += dy;
+			}
+		}
+	}	
+	if (toMove != []) {
+		this.updateWithGroupDrawingObject(toMove);
+	}
+}
 
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 
