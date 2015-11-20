@@ -160,6 +160,15 @@ DrawingManager.prototype.clearDrawingCanvas = function() {
 	this.initAll();
 }
 
+function isInside (s,arr) {
+	for (var i in arr) {
+		if (arr[i] == s) {
+			return true;
+		}
+	}
+	return false;
+}
+
 DrawingManager.prototype.undoLastDrawing = function() {
 	this.deleteSelectionBox();
 
@@ -170,15 +179,14 @@ DrawingManager.prototype.undoLastDrawing = function() {
 		var type = undone.type;
 
 		if (type == "drawing") {
-
-			for (var i in this.drawState) {
-				
-				if (this.drawState[i].id in undone.data) {
+			var i = 0
+			while (i < this.drawState.lenght) {
+				if (isInside(this.drawState[i].id, undone.data)) {
 					this.drawState.splice(i,1);
+				} else {
+					i++;
 				}
-
 			}
-
 		}
 
 		this.initAll();
