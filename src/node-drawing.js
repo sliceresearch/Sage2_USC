@@ -388,6 +388,7 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push(secondPart[0]);
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
+		this.idAssociatedToAction[e.sourceId].push(id);
 		var newDraw= {};
 		newDraw["type"]="path";
 		newDraw["style"]=this.newDrawingObject[drawingId]["style"];
@@ -399,17 +400,20 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		}
 }
 
-DrawingManager.prototype.removeLastPoints = function(e) {
+DrawingManager.prototype.saveActionToActionStack = function(e) {
 
 	if (!this.existsId(e.sourceId)) {
 		return;
 	}
-	
-	var drawingId = this.dictionaryId[e.sourceId];
-	var pointsSize = this.newDrawingObject[drawingId]["options"]["points"].length;
 
-	if (pointsSize > 5) {
-		this.newDrawingObject[drawingId]["options"]["points"].splice(pointsSize - 5, 5);
+	for (var i in this.idAssociatedToAction) {
+
+		if (this.idAssociatedToAction[i].id == e.sourceId) {
+			var drawingLines = this.idAssociatedToAction.splice(i, 1);
+			var newAction = {type: "drawing", data: drawingLines.lines};
+			break;
+		}
+
 	}
 
 }
@@ -719,7 +723,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if (!drawn) {
-			this.removeLastPoints(e);
+			this.saveActionToActionStack(e);
 			this.realeaseId(e.sourceId);
 			return;
 		}
