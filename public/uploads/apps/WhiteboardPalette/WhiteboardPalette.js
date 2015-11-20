@@ -79,14 +79,14 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/screenshot.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 3},
-								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#77DD77",r: 4,c: 3,cSpan: 2,rSpan: 2},
-								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
-								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#779ECB",r: 6,c: 3,cSpan: 2,rSpan: 2},
-								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "#C23B22",r: 6,c: 5,cSpan: 2,rSpan: 2},
-								  {name: "Color",action: this.changeColor,parent: this,backgroundColor: "white",r: 8,c: 3,cSpan: 4,rSpan: 1},
-								  {name: "Color",action: this.colorPicker,parent: this,icon: path+"/color-picker.png",r: 9,c: 3,cSpan: 4,rSpan: 3},
+								  {name: "Color1",action: this.changeColor,parent: this,backgroundColor: "#77DD77",r: 4,c: 3,cSpan: 2,rSpan: 2},
+								  {name: "Color2",action: this.changeColor,parent: this,backgroundColor: "black",r: 4,c: 5,cSpan: 2,rSpan: 2},
+								  {name: "Color3",action: this.changeColor,parent: this,backgroundColor: "#779ECB",r: 6,c: 3,cSpan: 2,rSpan: 2},
+								  {name: "Color4",action: this.changeColor,parent: this,backgroundColor: "#C23B22",r: 6,c: 5,cSpan: 2,rSpan: 2},
+								  {name: "Color5",action: this.changeColor,parent: this,backgroundColor: "white",r: 8,c: 3,cSpan: 4,rSpan: 1},
+								  {name: "Color6",action: this.colorPicker,parent: this,icon: path+"/color-picker.png",r: 9,c: 3,cSpan: 4,rSpan: 3},
 								  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/up.png",r: 3,c: 5,cSpan: 2},
-								  {name: "Stroke",action: null,parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
+								  {name: "Stroke",action: function() {},parent: this,content: "circle",r: 0,c: 3,cSpan: 4,rSpan: 3},
 								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 3,c: 3,cSpan: 2},
 								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 0,c: 7,cSpan: 3,rSpan: 3},
 								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 3,c: 7,cSpan: 3,rSpan: 3},
@@ -163,7 +163,11 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			butt.x = x;
 			butt.w = buttW;
 
-			var rect=this.palette.append("rect").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).style("stroke",stroke);
+			var rect=this.palette.append("rect").attr("fill",bg)
+						.attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).style("stroke",stroke);
+			if (butt.name) {
+				rect.attr("id",butt.name);
+			}
 			if (butt.icon) {
 				this.palette.append("image").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).attr("xlink:href",butt.icon)
 			}
@@ -301,9 +305,17 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		// Make sure to delete stuff (timers, ...)
 	},
 	handlePaletteTouch: function(x,y){
+		var pressedColor = "white";
 		for (i in this.paletteButtons){
 			var butt = this.paletteButtons[i]
 			if (y>=butt.y & y<=butt.y+butt.h & x>=butt.x & x<=butt.x+butt.w){
+				// FeedBack
+				if (butt.name) {
+					var oldColor = d3.select("#"+butt.name).attr("fill");
+
+					d3.select("#"+butt.name).attr("fill",pressedColor).transition().duration(500).attr("fill",oldColor);
+				}
+
 				butt.action(x-butt.x,y-butt.y);
 				break;
 			}
