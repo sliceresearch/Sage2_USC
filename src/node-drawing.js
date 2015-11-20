@@ -918,13 +918,14 @@ DrawingManager.prototype.applicationMoved = function(id,newX,newY) {
 	}
 }
 
-DrawingManager.prototype.applicationResized = function(id,newW,newH) {
+DrawingManager.prototype.applicationResized = function(id,newW,newH,origin) {
 	var oldW = this.interactMgr.getObject(id,"applications").x2 - this.interactMgr.getObject(id,"applications").x1;
 	var oldH = this.interactMgr.getObject(id,"applications").y2 - this.interactMgr.getObject(id,"applications").y1;
-	var sx = newW - oldW;
-	var sy = newH - oldH;
-	var origin = {x: this.interactMgr.getObject(id,"applications").x1, y: this.interactMgr.getObject(id,"applications").y1};
-
+	var sx = newW / oldW;
+	var sy = newH / oldH;
+	if (!origin) {
+		var origin = {x: this.interactMgr.getObject(id,"applications").x1, y: this.interactMgr.getObject(id,"applications").y1};
+	}
 	var toMove = [];
 
 	for (var i in this.drawState) {
@@ -933,7 +934,7 @@ DrawingManager.prototype.applicationResized = function(id,newW,newH) {
 			toMove.push(draw);
 			for (var j in draw["options"]["points"]) {
 				var p = draw["options"]["points"][j];
-				p = this.scalePoint(p,this.selectionStart,sx,sy);
+				draw["options"]["points"][j] = this.scalePoint(p,origin,sx,sy);
 			}
 		}
 	}	
