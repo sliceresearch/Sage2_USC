@@ -30,7 +30,7 @@ function DrawingManager(config) {
 	this.selectionBox = null;
 	this.eraserBox = null;
 	this.eraserTouchId = -1;
-	this.actionDoneStack = [{type: "drawing", data: [drawState[0].id]}];
+	this.actionDoneStack = [{type: "drawing", data: [this.drawState[0].id]}];
 	this.actionRedoStack = [];
 	this.idAssociatedToAction = [];
 	// An object drawing is defined as follows:
@@ -365,14 +365,14 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
-	this.idAssociatedToAction.push(id: e.sourceId, lines: [drawingId]);
+	this.idAssociatedToAction[e.sourceId] = [drawingId];
 
 }
 
 DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	if (!this.existsId(e.sourceId)) {
 		this.newDrawingObjectFunc(e, posX, posY);
-		this.idAssociatedToAction.push(id: e.sourceId, lines: [drawingId]);
+		this.idAssociatedToAction[e.sourceId] = [drawingId];
 	}
 	var drawingId = this.dictionaryId[e.sourceId];
 	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"]
@@ -406,14 +406,9 @@ DrawingManager.prototype.saveActionToActionStack = function(e) {
 		return;
 	}
 
-	for (var i in this.idAssociatedToAction) {
-
-		if (this.idAssociatedToAction[i].id == e.sourceId) {
-			var drawingLines = this.idAssociatedToAction.splice(i, 1);
-			var newAction = {type: "drawing", data: drawingLines.lines};
-			break;
-		}
-
+	if (this.idAssociatedToAction[e.sourceId]) {
+		var newAction = {type: "drawing", data: this.idAssociatedToAction[e.sourceId]};
+		delete this.idAssociatedToAction[e.sourceId];
 	}
 
 }
