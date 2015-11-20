@@ -62,12 +62,14 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	createPalette: function() {
 		this.palette.selectAll("*").remove();
 		var path = this.resrcPath + "/images/";
+		var cancelColor = "#C23B22";
+		var acceptColor = "#77DD77";
 		if (this.paletteMode == "default") {
 
 			var nRows = 12;
 			var nCols = 10;
 
-			this.paletteButtons= [{name: "Clear",action: this.clearCanvas,icon: path+"/clear.png",parent: this,r: 0,c: 0,cSpan: 3,rSpan: 3},
+			this.paletteButtons= [{name: "Clear",action: this.areYouSureScreen,icon: path+"/clear.png",parent: this,r: 0,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "Undo",action: this.undoLast,icon: path+"/undo.png",parent: this,r: 3,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "Redo",action: this.redoLast,icon: path+"/redo.png",parent: this,r: 6,c: 0,cSpan: 3,rSpan: 3},
 								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/screenshot.png",parent: this,r: 9,c: 0,cSpan: 3,rSpan: 3},
@@ -90,7 +92,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  ];
 			var padding = 4
 		} else if(this.paletteMode == "colorPicker"){
-			var nRows = 15;
+			var nRows = 16;
 			var nCols = 100;
 			var padding = 0;
 
@@ -106,11 +108,27 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				this.paletteButtons.push({parent: this,action: this.changeLuminance,r: 7,c: i,rSpan: 2,v: v,
 											backgroundColor: hsvFromValues(this.hue,this.s,v),stroke: "transparent"}); 
 			}
+			
+			this.paletteButtons.push({parent: this,action: this.cancelPicker,r: 13,c: 10,cSpan: 35,rSpan: 2,v: v,
+											icon: path+"cancel.png",backgroundColor: cancelColor});
+			this.paletteButtons.push({parent: this,action: this.changeColor,r: 10,c: 35,cSpan: 30,rSpan: 2,v: v,
+											backgroundColor: hsvFromValues(this.hue,this.s,this.v),
+											selectedColor: hsvFromValues(this.hue,this.s,this.v)});
+			this.paletteButtons.push({parent: this,action: this.changeColor,r: 13,c: 55,cSpan: 35,rSpan: 2,v: v,
+											icon: path+"select.png",selectedColor: hsvFromValues(this.hue,this.s,this.v),
+											backgroundColor: acceptColor});
 
-			this.paletteButtons.push({parent: this,action: this.changeColor,r: 10,c: 20,cSpan: 60,rSpan: 4,v: v,
-											backgroundColor: hsvFromValues(this.hue,this.s,this.v)});
-
+		} else if(this.paletteMode == "sure"){
+			var nRows = 100;
+			var nCols = 100;
+			var padding = 0;
+			this.paletteButtons=[{parent: this,name: "sure",action: function() {},icon: path+"/areyousure.png",parent: this,r: 5,c: 5,cSpan: 90,rSpan: 20,
+								backgroundColor:"none",stroke:"transparent"},
+								{parent: this,name: "no",action: this.cancelPicker,icon: path+"/no.png",parent: this,r: 50,c: 5,cSpan: 40,rSpan: 20,backgroundColor: cancelColor},
+								{parent: this,name: "yes",action: this.clearCanvas,icon: path+"/yes.png",parent: this,r: 50,c: 55,cSpan: 40,rSpan: 20,backgroundColor: acceptColor}];
+			
 		}
+
 		var w=parseInt(this.palette.style("width"));
 		var h=parseInt(this.palette.style("height"));
 		
@@ -145,6 +163,14 @@ var WhiteboardPalette = SAGE2_App.extend( {
 					.attr("r",this.paintingMode? Math.min(buttH,buttW) / 2 - padding: this.strokeWidth)
 					.attr("cx",x+buttW/2).attr("cy",y+buttH/2).attr("fill",this.strokeColor)
 			}
+			if (butt.text) {
+				this.palette.append("text")
+							.attr("x",x+butt.w/2)
+							.attr("y",y+butt.h/2)
+							.style("dominant-baseline","middle")
+							.style("text-anchor","middle")
+							.text(butt.text);
+			}
 		}
 	},
 	colorPicker : function() {
@@ -161,6 +187,10 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	},
 	changeLuminance : function() {
 		this.parent.v = this.v;
+		this.parent.createPalette();
+	},
+	cancelPicker : function() {
+		this.parent.paletteMode = "default";
 		this.parent.createPalette();
 	},
 	takeScreenshot: function() {
@@ -192,14 +222,21 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		
 	},
 	changeColor: function() {
-		this.parent.strokeColor = this.backgroundColor;
+		this.parent.strokeColor = this.selectedColor || this.backgroundColor;
 		this.parent.sendStyleToServer("stroke",this.parent.strokeColor);
 		
 		
 	},
 	clearCanvas: function() {
 		wsio.emit("clearDrawingCanvas",null);
+		this.parent.paletteMode = "default";
+		this.parent.createPalette();
 	},
+	areYouSureScreen: function() {
+		this.parent.paletteMode = "sure";
+		this.parent.createPalette();
+	}
+	,
 	undoLast: function() {
 		wsio.emit("undoLastDrawing",null);
 	},
@@ -249,6 +286,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			var butt = this.paletteButtons[i]
 			if (y>=butt.y & y<=butt.y+butt.h & x>=butt.x & x<=butt.x+butt.w){
 				butt.action(x-butt.x,y-butt.y);
+				break;
 			}
 		}
 	}

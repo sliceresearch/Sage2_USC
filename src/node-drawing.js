@@ -381,6 +381,22 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["type"] = "path";
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
+
+	if (this.newDrawingObject[drawingId]["options"]["points"].length >20) { 
+		var l=this.newDrawingObject[drawingId]["options"]["points"].length; 
+		var secondPart = this.newDrawingObject[drawingId]["options"]["points"].splice(19,l);
+		this.newDrawingObject[drawingId]["options"]["points"].push(secondPart[0]);
+		this.realeaseId(e.sourceId);
+		var id = this.getNewId(e.sourceId);
+		var newDraw= {};
+		newDraw["type"]="path";
+		newDraw["style"]=this.newDrawingObject[drawingId]["style"];
+		newDraw["options"]={};
+		newDraw["options"]["points"] = secondPart;
+		newDraw["id"] = id;
+		this.drawState.push(newDraw);
+		this.newDrawingObject[id] = newDraw;
+		}
 }
 
 DrawingManager.prototype.removeLastPoints = function(e) {
