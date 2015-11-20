@@ -5,6 +5,12 @@
 // Copyright (c) 2015
 //
 // Color picker at http://jsfiddle.net/cessor/NnH5Q/
+// https://github.com/wbkd/d3-extended
+    d3.selection.prototype.moveToFront = function() {  
+      return this.each(function(){
+        this.parentNode.appendChild(this);
+      });
+    };
 
 function outerHTML(el) {
   var outer = document.createElement('div');
@@ -102,11 +108,14 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				var s = 100 / (nCols -4) * (i-2);
 				var v = 100 / (nCols -4) * (i-2);
 				this.paletteButtons.push({parent: this,action: this.changeHue,r: 1,c: i,rSpan: 2,hue: hue,
-											backgroundColor: hsvFromValues(hue,this.s,this.v),stroke: "transparent"});
+											backgroundColor: hsvFromValues(hue,this.s,this.v),stroke: "transparent",
+											selected: hue==this.hue?true:false});
 				this.paletteButtons.push({parent: this,action: this.changeSaturation,r: 4,c: i,rSpan: 2,s: s,
-											backgroundColor: hsvFromValues(this.hue,s,this.v),stroke: "transparent"}); 
+											backgroundColor: hsvFromValues(this.hue,s,this.v),stroke: "transparent",
+											selected: s==this.s?true:false}); 
 				this.paletteButtons.push({parent: this,action: this.changeLuminance,r: 7,c: i,rSpan: 2,v: v,
-											backgroundColor: hsvFromValues(this.hue,this.s,v),stroke: "transparent"}); 
+											backgroundColor: hsvFromValues(this.hue,this.s,v),stroke: "transparent",
+											selected: v==this.v?true:false}); 
 			}
 			
 			this.paletteButtons.push({parent: this,action: this.cancelPicker,r: 13,c: 10,cSpan: 35,rSpan: 2,v: v,
@@ -134,7 +143,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		
 		var colW = (w - ((nCols+ 2) * padding) )/ nCols
 		var rowH = (h - ((nRows+ 2) * padding) )/ nRows
-		
+		var toGoToFront =[]
 		var defaultBg = "gray"
 		var defaultStroke = "black"
 		for (i in this.paletteButtons) {
@@ -171,6 +180,16 @@ var WhiteboardPalette = SAGE2_App.extend( {
 							.style("text-anchor","middle")
 							.text(butt.text);
 			}
+			if (butt.selected) {
+				var selectedStroke = "white";
+				toGoToFront.push(this.palette.append("rect").attr("fill","none").attr("x",x-colW).attr("y",y-colW)
+							.attr("width",buttW+2*colW).attr("height",buttH+2*colW).style("stroke",selectedStroke)
+							.style("stroke-width",colW));
+			}
+		}
+
+		for (i in toGoToFront) {
+			var f = toGoToFront[i].moveToFront();
 		}
 	},
 	colorPicker : function() {
