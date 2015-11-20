@@ -34,6 +34,7 @@ function DrawingManager(config) {
 	this.actionDoneStack = [{type: "drawing", data: [this.drawState[0].id]}];
 	this.actionRedoStack = [];
 	this.idAssociatedToAction = [];
+	this.maxLineSize = 20;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -396,10 +397,10 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 
-	if (this.newDrawingObject[drawingId]["options"]["points"].length >20) { 
+	if (this.newDrawingObject[drawingId]["options"]["points"].length >this.maxLineSize) { 
 		var l=this.newDrawingObject[drawingId]["options"]["points"].length; 
-		var secondPart = this.newDrawingObject[drawingId]["options"]["points"].splice(19,l);
-		this.newDrawingObject[drawingId]["options"]["points"].push(secondPart[0]);
+		var secondPart = this.newDrawingObject[drawingId]["options"]["points"].splice(this.maxLineSize - 1,l);
+		this.newDrawingObject[drawingId]["options"]["points"].push(this.copy(secondPart[0]));
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
 		this.idAssociatedToAction[e.sourceId].push(id);
@@ -732,11 +733,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if (!drawn) {
-			this.saveActionToActionStack(e);
 			for (var j in this.idAssociatedToAction[e.sourceId]) {
 				this.checkForApplications(this.idAssociatedToAction[e.sourceId][j]);
 			}
-			
+
+			this.saveActionToActionStack(e);
 			this.realeaseId(e.sourceId);
 			return;
 		}
