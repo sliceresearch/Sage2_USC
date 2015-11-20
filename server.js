@@ -7082,5 +7082,5 @@ function wsProcessSNMPRequest(wsio, data){
 	var callback = function(data){
 		broadcast('responseToSNMPRequest', data);
 	};
-	snmp.process(data.request, data.appId, data.data, callback);
+	snmp.process(data.request, data.requestNumber, data.appId, data.data, callback);
 }

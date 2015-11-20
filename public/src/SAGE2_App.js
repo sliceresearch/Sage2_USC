@@ -788,18 +788,22 @@ var SAGE2_App = Class.extend({
 	*/
 	sendSNMPRequest: function(request, data, callback){
 		console.log(request);
+		var key;
 		if (this.snmpResponseCallbackList[request] === null || this.snmpResponseCallbackList[request] === undefined){
-			console.log(data);
-			wsio.emit('snmpRequest', {request:request,data:data,appId:this.id});
-			this.snmpResponseCallbackList[request] = callback;
+			this.snmpResponseCallbackList[request] = {};
 		}
+		key = Object.keys(this.snmpResponseCallbackList[request]).length;
+		data.requestNumber = key;
+		console.log(data);
+		wsio.emit('snmpRequest', {request:request, requestNumber:key, data:data,appId:this.id});
+		this.snmpResponseCallbackList[request][key] = callback;
 	},
 
 	processSNMPResponse: function(data){
-		var callback = this.snmpResponseCallbackList[data.request];
+		var callback = this.snmpResponseCallbackList[data.request][data.requestNumber];
 		if (callback !== null && callback !== undefined){
 			callback(data.error,data.data);
-			delete this.snmpResponseCallbackList[data.request];
+			delete this.snmpResponseCallbackList[data.request][data.requestNumber];
 		}
 	}
 });
