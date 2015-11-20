@@ -30,6 +30,9 @@ function DrawingManager(config) {
 	this.selectionBox = null;
 	this.eraserBox = null;
 	this.eraserTouchId = -1;
+	this.actionDoneStack = [{type: "drawing", data: [drawState[0].id]}];
+	this.actionRedoStack = [];
+	this.idAssociatedToAction = [];
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -159,11 +162,28 @@ DrawingManager.prototype.clearDrawingCanvas = function() {
 
 DrawingManager.prototype.undoLastDrawing = function() {
 	this.deleteSelectionBox();
-	var undone = this.drawState.pop();
+
+	var undone = this.actionDoneStack.pop();
 	if (undone) {
-		this.drawingsUndone.push(undone);
+		this.actionRedoStack.push(undone);
+
+		var type = undone.type;
+
+		if (type == "drawing") {
+
+			for (var i in this.drawState) {
+				
+				if (this.drawState[i].id in undone.data) {
+					this.drawState.splice(i,1);
+				}
+
+			}
+
+		}
+
 		this.initAll();
 	}
+
 }
 
 DrawingManager.prototype.redoDrawing = function() {
@@ -345,11 +365,14 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
+	this.idAssociatedToAction.push(id: e.sourceId, lines: [drawingId]);
+
 }
 
 DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	if (!this.existsId(e.sourceId)) {
 		this.newDrawingObjectFunc(e, posX, posY);
+		this.idAssociatedToAction.push(id: e.sourceId, lines: [drawingId]);
 	}
 	var drawingId = this.dictionaryId[e.sourceId];
 	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"]
