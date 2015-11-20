@@ -93,7 +93,7 @@ DrawingManager.prototype.init = function(wsio) {
 	}
 
 	this.drawingInit(wsio, this.drawState);
-	
+}
 
 DrawingManager.prototype.initAll = function() {
 
@@ -128,10 +128,7 @@ DrawingManager.prototype.removeDrawingObject = function(group) {
 DrawingManager.prototype.enablePaintingMode = function() {
 	this.paintingMode = true;
 	this.sendModesToPalette();
-	this.drawState.push({id: "drawing_2",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style});
-	this.checkForApplications("drawing_2");
-	console.log(this.drawState);
-}
+
 }
 
 DrawingManager.prototype.disablePaintingMode = function() {
@@ -736,11 +733,12 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 		if (!drawn) {
 			this.saveActionToActionStack(e);
+			for (var j in this.idAssociatedToAction[e.sourceId]) {
+				this.checkForApplications(this.idAssociatedToAction[e.sourceId][j]);
+			}
+			
 			this.realeaseId(e.sourceId);
 			return;
-		}else {
-			checkForApplications(this.dictionaryId[e.sourceId]);
-
 		}
 
 	}
