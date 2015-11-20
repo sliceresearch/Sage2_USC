@@ -256,7 +256,7 @@ DrawingManager.prototype.redoDrawing = function() {
 				}
 			}
 			this.removeDrawingObject(eraseDrawings);
-			redone.data = undoneDrawings;
+			redone.data = eraseDrawings;
 		} else if (type == "creatingSelection") {
 			this.selectionBox = redone['data']['selection'];
 			this.selectedDrawingObject = redone['data']['obj'];
@@ -378,8 +378,11 @@ DrawingManager.prototype.erase = function() {
 		}
 	}
 
-	this.actionDoneStack({type: "erase", data: groupToDelete});
-	this.removeDrawingObject(groupToDelete);
+	if (groupToDelete.length > 0) {
+		this.actionDoneStack({type: "erase", data: groupToDelete});
+		this.removeDrawingObject(groupToDelete);
+	}
+	
 }
 
 
