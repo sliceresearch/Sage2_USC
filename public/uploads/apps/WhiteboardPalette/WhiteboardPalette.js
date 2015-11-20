@@ -163,8 +163,11 @@ var WhiteboardPalette = SAGE2_App.extend( {
 			butt.x = x;
 			butt.w = buttW;
 
-			var rect=this.palette.append("rect").attr("fill",bg).attr("id",butt.name)
+			var rect=this.palette.append("rect").attr("fill",bg)
 						.attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).style("stroke",stroke);
+			if (butt.name) {
+				rect.attr("id",butt.name);
+			}
 			if (butt.icon) {
 				this.palette.append("image").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).attr("xlink:href",butt.icon)
 			}
