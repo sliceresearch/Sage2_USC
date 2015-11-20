@@ -5577,6 +5577,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(resizeApp.elemId);
+	drawingManager.applicationResized(moveApp.elemId, moveApp.elemWidth, moveApp.elemHeight + titleBarHeight);
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
