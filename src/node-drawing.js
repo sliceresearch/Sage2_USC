@@ -379,7 +379,7 @@ DrawingManager.prototype.erase = function() {
 	}
 
 	if (groupToDelete.length > 0) {
-		this.actionDoneStack({type: "erase", data: groupToDelete});
+		this.actionDoneStack.push({type: "erase", data: groupToDelete});
 		this.removeDrawingObject(groupToDelete);
 	}
 	
