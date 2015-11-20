@@ -30,6 +30,7 @@ function DrawingManager(config) {
 	this.selectionBox = null;
 	this.eraserBox = null;
 	this.eraserTouchId = -1;
+	this.interactMgr = null;
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -38,6 +39,10 @@ function DrawingManager(config) {
 	// style: {} Current style of the object to be drawn
 	// }
 
+}
+
+DrawingManager.prototype.linkInteractableManager = function(mngr) {
+	this.interactMgr = mngr;
 }
 
 DrawingManager.prototype.scalePoint = function(point,origin,scaleX,scaleY) {
@@ -85,7 +90,7 @@ DrawingManager.prototype.init = function(wsio) {
 	}
 
 	this.drawingInit(wsio, this.drawState);
-}
+	
 
 DrawingManager.prototype.initAll = function() {
 
@@ -120,6 +125,10 @@ DrawingManager.prototype.removeDrawingObject = function(group) {
 DrawingManager.prototype.enablePaintingMode = function() {
 	this.paintingMode = true;
 	this.sendModesToPalette();
+	this.drawState.push({id: "drawing_2",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style});
+	this.checkForApplications("drawing_2");
+	console.log(this.drawState);
+}
 }
 
 DrawingManager.prototype.disablePaintingMode = function() {
@@ -699,7 +708,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.removeLastPoints(e);
 			this.realeaseId(e.sourceId);
 			return;
+		}else {
+			checkForApplications(this.dictionaryId[e.sourceId]);
+
 		}
+
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
@@ -707,6 +720,30 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
 	this.update(manipulatedObject, involvedClient);
+}
+
+DrawingManager.prototype.checkForApplications = function (id) {
+	var drawing;
+	for (var i in this.drawState) {
+		if (this.drawState[i].id == id){
+			drawing = this.drawState[i];
+			break;
+		}
+	}
+	if (drawing) {
+		var app;
+		for (var i in drawing["options"]["points"]) {
+			var p = drawing["options"]["points"][i];
+			var obj = this.interactMgr.searchGeometry({x: p.x, y: p.y});
+			if (obj && obj.layerId == "applications") {
+				app = obj;
+				break;
+			}
+		}
+		if (app) {
+			drawing.linkedAppID = obj.id;
+		}
+	}
 }
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
@@ -754,6 +791,29 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.endY = data.endY;
 }
 
+DrawingManager.prototype.applicationMoved = function(id,newX,newY) {
+	var oldX = this.interactMgr.getObject(id,"applications").x1;
+	var oldY = this.interactMgr.getObject(id,"applications").y1;
+	var dx = newX - oldX;
+	var dy = newY - oldY;
+
+	var toMove = [];
+
+	for (var i in this.drawState) {
+		var draw = this.drawState[i];
+		if (draw.linkedAppID == id) {
+			toMove.push(draw);
+			for (var j in draw["options"]["points"]) {
+				var p = draw["options"]["points"][j];
+				p.x += dx;
+				p.y += dy;
+			}
+		}
+	}	
+	if (toMove != []) {
+		this.updateWithGroupDrawingObject(toMove);
+	}
+}
 
 DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 

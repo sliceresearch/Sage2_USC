@@ -93,6 +93,8 @@ var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
 
+
+
 // Global variable for all media folders
 global.mediaFolders = {};
 // System folder, defined within SAGE2 installation
@@ -370,6 +372,8 @@ function initializeSage2Server() {
 								saveDrawingSession,
 								loadDrawingSession
 								);
+	// Link the interactable manager to the drawing manager
+	drawingManager.linkInteractableManager(interactMgr);
 }
 
 function drawingInit(clientWebSocket, drawState) {
@@ -5531,6 +5535,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 				attachAppIfSticky(backgroundObj.data, moveApp.elemId);
 			}
 		}
+		drawingManager.applicationMoved(moveApp.elemId, moveApp.elemLeft, moveApp.elemTop);
 		im.editGeometry(moveApp.elemId, "applications", "rectangle",
 			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
 		broadcast('setItemPosition', moveApp);
