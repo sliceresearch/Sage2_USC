@@ -376,6 +376,21 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		}
 }
 
+DrawingManager.prototype.removeLastPoints = function(e) {
+
+	if (!this.existsId(e.sourceId)) {
+		return;
+	}
+	
+	var drawingId = this.dictionaryId[e.sourceId];
+	var pointsSize = this.newDrawingObject[drawingId]["options"]["points"].length;
+
+	if (pointsSize > 5) {
+		this.newDrawingObject[drawingId]["options"]["points"].splice(pointsSize - 5, 5);
+	}
+
+}
+
 DrawingManager.prototype.touchNearBottom = function(x,y) {
 	var c = this.checkInvolvedClient(x,y);
 	if (c!= null && (c > -1)) {
@@ -681,6 +696,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		if (!drawn) {
+			this.removeLastPoints(e);
 			this.realeaseId(e.sourceId);
 			return;
 		}
