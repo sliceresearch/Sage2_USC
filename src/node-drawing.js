@@ -36,6 +36,8 @@ function DrawingManager(config) {
 	this.idAssociatedToAction = [];
 	this.maxLineSize = 20;
 	this.movingSelectionStartingPosition = null;
+	this.resizeSelectionStart = null;
+	this.oldSelectionInfo = {};
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -182,17 +184,23 @@ DrawingManager.prototype.saveActionToActionStack = function(e, type, data) {
 
 	if (type == "drawing") {
 		if (this.idAssociatedToAction[e.sourceId]) {
-			var newAction = {type: "drawing", data: this.idAssociatedToAction[e.sourceId]};
+			if (this.oldSelectionInfo) {
+				var selection = {selection: this.oldSelectionInfo.selectionBox, start: this.oldSelectionInfo.selectionStart, end: this.oldSelectionInfo.selectionEnd, obj: this.oldSelectionInfo.selectedDrawingObject};
+			}
+			var newAction = {type: "drawing", data: {ids: this.idAssociatedToAction[e.sourceId], selection: selection, obj: []}};
 			this.actionDoneStack.push(newAction);
 			delete this.idAssociatedToAction[e.sourceId];
 		}
 	} else if (type == "creatingSelection") {
-		var newAction = {type: "creatingSelection", data: {selection: this.selectionBox, start: this.selectionStart, end: this.selectionEnd, obj: this.selectedDrawingObject}};
+		var selection = {selection: this.selectionBox, start: this.selectionStart, end: this.selectionEnd, obj: this.selectedDrawingObject};
+		var newAction = {type: "creatingSelection", data: selection};
 		this.actionDoneStack.push(newAction);
 	} else if (type == "erase") {
 		this.actionDoneStack.push({type: "erase", 'data': data});
 	} else if (type == "movingSelection") {
 		this.actionDoneStack.push({type: "movingSelection", 'data': data});
+	} else if (type == "zoomingSelection") {
+		this.actionDoneStack.push({type: "zoomingSelection", 'data': data});
 	}
 
 	this.actionRedoStack = [];
@@ -208,7 +216,7 @@ DrawingManager.prototype.undoLastDrawing = function() {
 
 		if (type == "drawing") {
 			var undoneDrawings = [];
-			var groupDrawings = undone.data;
+			var groupDrawings = undone['data']['ids'];
 			var i = 0
 			while (i < this.drawState.length) {
 				if (isInside(this.drawState[i].id, groupDrawings)) {
@@ -217,9 +225,21 @@ DrawingManager.prototype.undoLastDrawing = function() {
 					i++;
 				}
 			}
-
+			
+			/*var selectionData = undone['data']['selection'];
+			
+			if (selectionData.selection) {
+				console.log(selectionData.selection.start)
+				this.selectionBox = selectionData.selection;
+				this.selectedDrawingObject = selectionData.selection.obj;
+				this.selectionStart = selectionData.selection.start;
+				this.selectionEnd = selectionData.selection.end;
+				this.drawState.push(this.selectionBox);
+				this.updateWithGroupDrawingObject([this.selectionBox]);
+			}*/
+			
 			this.removeDrawingObject(undoneDrawings);
-			undone.data = undoneDrawings;
+			undone['data']['obj'] = undoneDrawings;
 		} else if (type == "clearAll") {
 			var redoState = this.copy(undone.data);
 			undone.data = this.drawState;
@@ -246,6 +266,18 @@ DrawingManager.prototype.undoLastDrawing = function() {
 			this.selectionEnd.y += - dy;
 			this.moveSelectionBox();
 			this.selectionMove(- dx, - dy);
+		} else if (type == "zoomingSelection") {
+			var sx = undone.data['sx'];
+			var sy = undone.data['sy'];
+			var swapEndX = this.selectionEnd.x;
+			var swapEndY = this.selectionEnd.y;
+			this.selectionStart = undone.data['selectionStart'];
+			this.selectionEnd['x'] = undone.data['selectionEnd'].x;
+			this.selectionEnd['y'] = undone.data['selectionEnd'].y;
+			undone.data['selectionEnd']['x'] = swapEndX;
+			undone.data['selectionEnd']['y'] = swapEndY;
+			this.moveSelectionBox();
+			this.selectionZoom(1/sx, 1/sy);
 		}
 
 		this.actionRedoStack.push(undone);
@@ -261,16 +293,11 @@ DrawingManager.prototype.redoDrawing = function() {
 		var type = redone.type;
 
 		if (type == "drawing") {
-
-			var undoneIdDrawings = [];
-			var groupDrawings = redone.data;
+			var groupDrawings = redone['data']['obj'];
 			for (var i in groupDrawings) {
 				this.drawState.push(groupDrawings[i]);
-				undoneIdDrawings.push(groupDrawings[i].id);
 			}
-
 			this.updateWithGroupDrawingObject(groupDrawings);
-			redone.data = undoneIdDrawings;
 		} else if (type == "clearAll") {
 			var undoState = this.copy(redone.data);
 			redone.data = this.drawState;
@@ -304,6 +331,18 @@ DrawingManager.prototype.redoDrawing = function() {
 			this.selectionEnd.y += dy;
 			this.moveSelectionBox();
 			this.selectionMove(dx, dy);
+		} else if (type == "zoomingSelection") {
+			var sx = redone.data['sx'];
+			var sy = redone.data['sy'];
+			var swapEndX = this.selectionEnd.x;
+			var swapEndY = this.selectionEnd.y;
+			this.selectionStart = redone.data['selectionStart'];
+			this.selectionEnd['x'] = redone.data['selectionEnd'].x;
+			this.selectionEnd['y'] = redone.data['selectionEnd'].y;
+			redone.data['selectionEnd']['x'] = swapEndX;
+			redone.data['selectionEnd']['y'] = swapEndY;
+			this.moveSelectionBox();
+			this.selectionZoom(sx, sy);
 		}
 
 		this.actionDoneStack.push(redone);
@@ -455,6 +494,9 @@ DrawingManager.prototype.moveSelectionBox = function() {
 DrawingManager.prototype.deleteSelectionBox = function() {
 
 	if (this.selectionBox) {
+		
+		this.oldSelectionInfo = {selectedDrawingObject: this.selectedDrawingObject, selectionStart: this.selectionStart, selectionEnd: this.selectionEnd, selectionBox: this.selectionBox};
+		
 		for (var drawingObj in this.drawState) {
 			var idx = this.drawState[drawingObj]['id'];
 			if (idx == this.selectionBox["id"]) {
@@ -646,6 +688,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionTouchId = e.sourceId;
 			if (this.touchInsideSelectionZoomBox(posX,posY)) {
 				this.actualAction = "zoomingSelection";
+				this.resizeSelectionStart = {w: this.selectionEnd.x - this.selectionStart.x, h: this.selectionEnd.y - this.selectionStart.y, selectionEnd: {x: this.selectionEnd.x, y: this.selectionEnd.y}};
 			} else {
 				this.actualAction = "movingSelection";
 				this.movingSelectionStartingPosition = {x: posX, y: posY};
@@ -834,6 +877,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionZoom(sx, sy);
 			this.selectionTouchId = -1;
 			this.actualAction = "drawing";
+			var completeResizeW = parseFloat(newW) / this.resizeSelectionStart.w;
+			var completeResizeH = parseFloat(newH) / this.resizeSelectionStart.h;
+			this.saveActionToActionStack(e.sourceId, "zoomingSelection",
+				{selectionStart: this.selectionStart, selectionEnd: this.resizeSelectionStart['selectionEnd'], sx: completeResizeW, sy: completeResizeH});
 		}
 
 		if (!drawn) {
