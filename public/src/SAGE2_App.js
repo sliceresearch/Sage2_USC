@@ -787,14 +787,14 @@ var SAGE2_App = Class.extend({
 	* @param callback {function} callback for processing response
 	*/
 	sendSNMPRequest: function(request, data, callback){
-		console.log(request);
+		//console.log(request);
 		var key;
 		if (this.snmpResponseCallbackList[request] === null || this.snmpResponseCallbackList[request] === undefined){
 			this.snmpResponseCallbackList[request] = {};
 		}
 		key = Object.keys(this.snmpResponseCallbackList[request]).length;
 		data.requestNumber = key;
-		console.log(data);
+		//console.log(data);
 		wsio.emit('snmpRequest', {request:request, requestNumber:key, data:data,appId:this.id});
 		this.snmpResponseCallbackList[request][key] = callback;
 	},
