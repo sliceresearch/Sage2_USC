@@ -33,15 +33,19 @@ var crypto = require('crypto');
 var fs     = require('fs');
 
 function md5(str) {
-      var hash;
-      hash = crypto.createHash('MD5');
-      hash.update(str);
-      return hash.digest('hex');
+	var hash;
+	hash = crypto.createHash('MD5');
+	hash.update(str);
+	return hash.digest('hex');
 }
 
 function encode(passwordFile, realm, username, password) {
 	return ("" + username + ":" + realm + ":") +
 		md5("" + username + ":" + realm + ":" + password);
+}
+
+function encode_pwd(passwordFile, realm, username, password) {
+	return ("" + username + ":" + realm + ":" + password);
 }
 
 function htdigest(passwordFile, realm, username, pwd) {
@@ -52,7 +56,16 @@ function htdigest(passwordFile, realm, username, pwd) {
 	return fs.writeFileSync(passwordFile, (newLines.join("\n")) + "\n", 'UTF-8');
 }
 
-exports.htdigest = htdigest;
+function htdigest_save(passwordFile, realm, username, pwd) {
+	var line, newLines, writeData;
+	writeData = encode_pwd(passwordFile, realm, username, pwd);
+	newLines = [];
+	newLines.push(writeData);
+	return fs.writeFileSync(passwordFile, (newLines.join("\n")) + "\n", 'UTF-8');
+}
+
+exports.htdigest      = htdigest;
+exports.htdigest_save = htdigest_save;
 
 // 
 // API: htdigest(passwordFile, realm, username, pwd

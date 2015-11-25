@@ -1211,7 +1211,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	var windowIconClose = document.createElement("img");
 	windowIconClose.id  = data.id + "_iconClose";
-	windowIconClose.src = "images/window-close.svg";
+	windowIconClose.src = "images/window-close3.svg";
 	windowIconClose.height = Math.round(titleBarHeight);
 	windowIconClose.style.position = "absolute";
 	windowIconClose.style.right    = "0px";

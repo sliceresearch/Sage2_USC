@@ -228,18 +228,18 @@ SAGE2DisplayUI.prototype.resizeAppWindows = function(event) {
 	for (key in this.applications) {
 		var appWindow = document.getElementById(key);
 		var appWindowTitle = document.getElementById(key + "_title");
-		var appWindowArea = document.getElementById(key + "_area");
+		var appWindowArea  = document.getElementById(key + "_area");
 
-		appWindow.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindow.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindow.style.height = Math.round((this.applications[key].height + this.config.ui.titleBarHeight) * this.scale) + "px";
-		appWindow.style.left = Math.round(this.applications[key].left * this.scale) + "px";
-		appWindow.style.top = Math.round(this.applications[key].top * this.scale) + "px";
+		appWindow.style.left   = Math.round(this.applications[key].left * this.scale) + "px";
+		appWindow.style.top    = Math.round(this.applications[key].top * this.scale) + "px";
 
-		appWindowTitle.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindowTitle.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 
-		appWindowArea.style.top = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-		appWindowArea.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		appWindowArea.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowArea.style.height = Math.round(this.applications[key].height * this.scale) + "px";
 	}
 };
@@ -337,11 +337,11 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	var appWindow = document.createElement('div');
 	appWindow.id = data.id;
-	appWindow.className = "appWindow";
-	appWindow.style.width = Math.round(data.width * this.scale) + "px";
+	appWindow.className    = "appWindow";
+	appWindow.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindow.style.height = Math.round((data.height + this.config.ui.titleBarHeight) * this.scale) + "px";
-	appWindow.style.left = Math.round(data.left * this.scale) + "px";
-	appWindow.style.top = Math.round(data.top * this.scale) + "px";
+	appWindow.style.left   = Math.round(data.left * this.scale) + "px";
+	appWindow.style.top    = Math.round(data.top * this.scale) + "px";
 	appWindow.style.zIndex = this.appCount;
 
 	var appWindowTitle = document.createElement('div');
