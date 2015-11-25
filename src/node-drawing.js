@@ -38,6 +38,7 @@ function DrawingManager(config) {
 	this.movingSelectionStartingPosition = null;
 	this.resizeSelectionStart = null;
 	this.oldSelectionInfo = {};
+	this.currentTouch = [];
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -659,6 +660,29 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	}
 
 	if (e.type == 5) {
+		if (this.currentTouch.length == 0) {
+			var touch = {x: posX, y: posY};
+			this.currentTouch[e.sourceId] = touch;
+		} else {
+			var enoughDistant = true;
+			
+			for (var id in this.currentTouch) {
+				
+				if (this.distance(this.currentTouch[id], {x: posX, y: posY}) < 900) {
+					enoughDistant = false;
+					break;
+				}
+				
+			}
+			
+			if (enoughDistant) {
+				var touch = {x: posX, y: posY};
+				this.currentTouch[e.sourceId] = touch;
+			} else {
+				return;
+			}
+		}
+		
 		// touch down
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
 			this.actualAction = "movingPalette";
@@ -710,6 +734,34 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 	} else if (e.type == 4) {
+		
+		if (this.currentTouch.length == 0) {
+			var touch = {x: posX, y: posY};
+			this.currentTouch[e.sourceId] = touch;
+		} else if (!this.currentTouch[e.sourceId]) {
+			
+			var enoughDistant = true;
+			
+			for (var id in this.currentTouch) {
+				
+				if (this.distance(this.currentTouch[id], {x: posX, y: posY}) < 900) {
+					enoughDistant = false;
+					break;
+				}
+				
+			}
+			
+			if (enoughDistant) {
+				var touch = {x: posX, y: posY};
+				this.currentTouch[e.sourceId] = touch;
+			} else {
+				return;
+			}
+			
+		} else {
+			this.currentTouch[e.sourceId] = {x: posX, y: posY};
+		}
+		
 		// touch move
 		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.actualAction = "erasing";
@@ -799,6 +851,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		this.updateDrawingObject(e, posX, posY);
 
 	} else if (e.type == 6) {
+		
+		if (this.currentTouch[e.sourceId]) {
+			delete this.currentTouch[e.sourceId];
+		}
+		
 		// touch release
 		if (this.idMovingPalette == e.sourceId) {
 			return;
