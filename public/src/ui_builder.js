@@ -678,6 +678,7 @@ function UIBuilder(json_cfg, clientID) {
 			}
 			this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
 		}
+		watermark.style['z-index']  = -1;
 		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
@@ -715,6 +716,13 @@ function UIBuilder(json_cfg, clientID) {
 			this.drawingSvg.style("z-index","3");
 		}
 		this.drawingSvg.selectAll("*").remove();
+		var r = this.drawingSvg.append("rect").attr("width",parseInt(this.main.style.width));
+		r.attr("height",parseInt(this.main.style.height)*0.1);
+		r.attr("y",parseInt(this.main.style.height)*0.9);
+		r.attr("fill","white").style("opacity",0.2)
+		this.drawingSvg.append("text").style("dominant-baseline","middle").style("text-anchor","middle").text("Tap here to recall the palette")
+			.attr("x",parseInt(this.main.style.width)*0.5).attr("y",parseInt(this.main.style.height)*0.925).attr("fill","white")
+			.style("font-family","arial").style("font-size","5vmin").style("opacity",0.2);
 		for (var d in data) {
 			var drawing = data[d];
 			this.drawObject(drawing);
@@ -765,6 +773,16 @@ function UIBuilder(json_cfg, clientID) {
 				var w = end.x - start.x;
 				var h = end.y - start.y;
 				newDraw.attr("x",start.x).attr("y",start.y).attr("width",w).attr("height",h);
+				
+				var lw = w*0.1;
+				var lh = h*0.1;
+				var lx= w-lw;
+				var ly=h-lh;
+				
+				d3.select("#drawingSVG").append("rect").attr("id",drawingObject.id+"b")
+					.attr("x",start.x+lx).attr("y",start.y+ly)
+					.attr("width",lw).attr("height",lh)
+					.attr("fill","white").style("opacity",0.2);
 			}
 
 
@@ -794,7 +812,7 @@ function UIBuilder(json_cfg, clientID) {
 
 				if (drawingObject.type == "circle") {
 					var point = drawingObject.options.points[0];
-					toUpdate.attr("cx",point.x).attr("cy",point.y).attr("r",r)
+					toUpdate.attr("cx",point.x).attr("cy",point.y)
 				}
 
 				if (drawingObject.type == "path") {
@@ -809,6 +827,7 @@ function UIBuilder(json_cfg, clientID) {
 				if (drawingObject.type == "rect") {
 
 					toUpdate.remove();
+					d3.select("#" + drawingObject.id+"b").remove();
 					this.drawObject(drawingObject);
 				}
 			}
