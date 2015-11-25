@@ -370,7 +370,8 @@ function initializeSage2Server() {
 								sendChangeToPalette,
 								movePaletteTo,
 								saveDrawingSession,
-								loadDrawingSession
+								loadDrawingSession,
+								sendSessionListToPalette
 								);
 	// Link the interactable manager to the drawing manager
 	drawingManager.linkInteractableManager(interactMgr);
@@ -418,6 +419,23 @@ function sendStyleToPalette(paletteID,style) {
 	};
 
 	broadcast('eventInItem', event);
+}
+
+function sendSessionListToPalette(paletteID, data) {
+	var ePosition = {x: 0 , y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "sessionsList",
+		position: ePosition,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+
 }
 
 function sendChangeToPalette(paletteID,data) {
@@ -751,6 +769,7 @@ function setupListeners(wsio) {
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
 	wsio.on('redoDrawing',							wsRedoDrawing);
 	wsio.on('loadDrawings',							wsLoadDrawings);
+	wsio.on('getSessionsList',						wsGetSessionsList);
 	wsio.on('saveDrawings',							wsSaveDrawings);
 	wsio.on('enablePaintingMode',					wsEnablePaintingMode);
 	wsio.on('disablePaintingMode',					wsDisablePaintingMode);
@@ -935,6 +954,11 @@ function wsRedoDrawing(wsio,data) {
 
 function wsLoadDrawings(wsio,data) {
 	drawingManager.loadDrawings(data);
+}
+
+function wsGetSessionsList(wsio,data) {
+	var allDrawings = getAllDrawingsessions();
+	drawingManager.gotSessionsList(allDrawings);
 }
 
 function wsSaveDrawings(wsio, data) {
@@ -1742,8 +1766,8 @@ function deleteSession(filename) {
 }
 
 function saveDrawingSession(data) {
-	// var now = new Date();
-	var filename = "drawingSession";
+	var now = new Date();
+	var filename = "drawingSession" + now;
 
 	var fullpath = path.join(sessionDirectory, filename);
 	// if it doesn't end in .json, add it
@@ -1758,6 +1782,17 @@ function saveDrawingSession(data) {
 	catch (err) {
 		console.log(sageutils.header("Session") + "error saving", err);
 	}
+}
+
+function getAllDrawingsessions() {
+	var allNames = fs.readdirSync(sessionDirectory);
+	var res= []
+	for (var i in allNames) {
+		if (allNames[i].indexOf("drawingSession") != -1) {
+			res.push(allNames[i]);
+		}
+	}
+	return res;
 }
 
 function loadDrawingSession(filename) {

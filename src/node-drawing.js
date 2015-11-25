@@ -1052,6 +1052,10 @@ DrawingManager.prototype.loadDrawings = function(data) {
 	this.loadSession(data);
 }
 
+DrawingManager.prototype.gotSessionsList = function(data) {
+	this.sendSessionListToPalette(this.paletteID, data);
+}
+
 DrawingManager.prototype.loadOldState = function(data) {
 	this.drawState = data || [];
 	this.lastId = this.findMaxId() + 1;
@@ -1067,7 +1071,8 @@ DrawingManager.prototype.setCallbacks = function(
 		sendChangeToPaletteCB,
 		movePaletteToCB,
 		saveSessionCB,
-		loadSessionCB
+		loadSessionCB,
+		sendSessionListCB
 	) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
@@ -1078,5 +1083,6 @@ DrawingManager.prototype.setCallbacks = function(
 	this.movePaletteTo = movePaletteToCB;
 	this.saveSession = saveSessionCB;
 	this.loadSession = loadSessionCB;
+	this.sendSessionListToPalette = sendSessionListCB; 
 };
 module.exports = DrawingManager;
