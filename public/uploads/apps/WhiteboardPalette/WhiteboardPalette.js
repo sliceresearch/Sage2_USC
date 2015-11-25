@@ -156,6 +156,26 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								{parent: this,name: "no",action: this.cancelPicker,icon: path+"/no.png",parent: this,r: 50,c: 5,cSpan: 40,rSpan: 20,backgroundColor: cancelColor},
 								{parent: this,name: "yes",action: this.clearCanvas,icon: path+"/yes.png",parent: this,r: 50,c: 55,cSpan: 40,rSpan: 20,backgroundColor: acceptColor}];
 			
+		} else if(this.paletteMode == "sessionsList"){
+			var nRows = 100;
+			var nCols = 100;
+			var padding = 0;
+
+
+
+			this.paletteButtons=[{parent: this,name: "list",action: function() {},parent: this,r: 5,c: 5,cSpan: 90,rSpan: 50,
+								backgroundColor:"white",stroke:"black"},
+								{parent: this,name: "cancel",action: this.cancelPicker,icon: path+"/cancel.png",parent: this,r: 70,c: 5,cSpan: 40,rSpan: 20,backgroundColor: cancelColor},
+								{parent: this,name: "load",action: this.loadSessionSelected,icon: path+"/select.png",parent: this,r: 70,c: 55,cSpan: 40,rSpan: 20,backgroundColor: acceptColor}];
+			
+			var dataShown = this.sessionsList.slice(0,10);
+
+			for (d in dataShown) {
+				var s = dataShown[d];
+				var selected = (this.sessionSelected == s);
+				this.paletteButtons.push({parent: this,name: "session",action: this.selectSession,r: 5+d*5,c: 5,cSpan: 90,rSpan: 5,
+								backgroundColor:selected?acceptColor:"white",stroke:"black",text:s});
+			}
 		}
 
 		var w=parseInt(this.palette.style("width"));
@@ -290,7 +310,17 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		wsio.emit("saveDrawings",null);
 	},
 	loadDrawings: function() {
-		wsio.emit("loadDrawings",null);
+		wsio.emit("getSessionsList",null);
+	},
+	loadSessionSelected: function() {
+		wsio.emit("loadDrawings",this.sessionSelected);
+		this.parent.paletteMode = "default";
+		this.parent.createPalette();
+	},
+	selectSession: function() {
+		this.parent.sessionSelected = this.text;
+		console.log(this.parent.sessionSelected);
+		this.parent.createPalette();
 	},
 	enablePaintingMode: function() {
 		wsio.emit("enablePaintingMode",null);
@@ -304,12 +334,12 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	load: function(date) {
 		console.log('WhiteboardPalette> Load with state value', this.state.value);
 		this.refresh(date);
-		this.updateTutorial();
+		// this.updateTutorial();
 	},
 
 	draw: function(date) {
 		console.log('WhiteboardPalette> Draw with state value', this.state.value);
-		this.updateTutorial();
+		// this.updateTutorial();
 	},
 
 	resize: function(date) {
@@ -353,7 +383,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				}
 
 				butt.action(x-butt.x,y-butt.y);
-				break;
+				
 			}
 		}
 	}
@@ -371,6 +401,12 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		}
 		else if (eventType === "modeChange") {
 			this.paintingMode = data.paintingMode;
+			this.createPalette();
+		}
+		else if (eventType === "sessionsList") {
+			this.paletteMode = "sessionsList";
+			this.sessionsList = data;
+			this.sessionSelected = this.sessionsList[0] || null;
 			this.createPalette();
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
