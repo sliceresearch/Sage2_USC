@@ -2073,7 +2073,6 @@ function wsLoadApplication(wsio, data) {
 	var appData = {application: "custom_app", filename: data.application};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
-
 		if (appInstance.animation) {
 			var i;
 			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
@@ -2155,6 +2154,18 @@ function wsLoadFileFromServer(wsio, data) {
 			}
 
 			appInstance.id = getUniqueAppId();
+
+			// Add the application in the list of renderSync if needed
+			if (appInstance.animation) {
+				var i;
+				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+				for (i = 0; i < clients.length; i++) {
+					if (clients[i].clientType === "display") {
+						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+					}
+				}
+			}
+
 			handleNewApplication(appInstance, videohandle);
 
 			addEventToUserLog(data.user, {type: "openFile", data:
