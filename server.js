@@ -6852,6 +6852,7 @@ if (config.experimental && config.experimental.omicron &&
 		pointerRelease,
 		pointerScrollStart,
 		pointerScroll,
+		pointerScrollEnd,
 		pointerDblClick,
 		pointerCloseGesture,
 		keyDown,
