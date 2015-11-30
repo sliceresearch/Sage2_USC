@@ -694,7 +694,7 @@ function RadialMenu() {
 	 * @method closeMenu
 	 */
 	this.closeMenu = function() {
-		console.log("radialMenu: closeMenu");
+		// console.log("radialMenu: closeMenu");
 		this.visible = false;
 
 		this.radialMenuDiv.style.display = "none";
@@ -739,7 +739,7 @@ function RadialMenu() {
 	 */
 	this.setMenu = function(type) {
 		if (type !== "radialMenu") {
-			console.log("radialMenu: setMenu " + type);
+			// console.log("radialMenu: setMenu " + type);
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
 			this.currentMenuState = type;
@@ -751,7 +751,7 @@ function RadialMenu() {
 			this.updateThumbnailPositions();
 			this.draw();
 		} else {
-			console.log("radialMenu: setMenu " + type);
+			// console.log("radialMenu: setMenu " + type);
 			this.currentMenuState = "radialMenu";
 			this.element.width = this.radialMenuSize.x;
 			this.element.height = this.radialMenuSize.y;
