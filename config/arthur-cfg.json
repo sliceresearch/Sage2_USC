@@ -1,11 +1,11 @@
 /*
-	based on default configuration of the server - Windows
+	default configuration of the server - Windows
 */
 {
-	name: "Arthur",
+	name: "Endeavour",
 	host: "nishimoto.evl.uic.edu",
 	port: 9090,
-	index_port: 9293,
+	index_port: 9292,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -16,26 +16,26 @@
 	ui: {
 		clock: 12,
 		show_version: false,
-		show_url: false,
-		widgetControlSize: 20,
+		show_url: true,
+		maxWindowWidth: 8192,
+		maxWindowHeight: 8192,
+		noDropShadow: true,
+		//widgetControlSize: 20,
 		auto_scale_ui: true,
 		calculate_viewing_distance: false,
-		reload_wallui_on_refresh: false
+		reload_wallui_on_refresh: true
+	},
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width:  0.646,  // in meter, pixel area
+		tile_height: 1.093,  // in meter, pixel area
+		tile_borders: [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 1.0668	// in meter
 	},
 	resolution: {
 		width: 2560,
 		height: 1600
-		//width: 1366,
-		//height: 768
-
-	},
-	dimensions: {
-		// dimensions of one tile (can be overriden in displays section)
-		tile_width:  0.68,  // in meter, pixel area
-		tile_height: 0.485,  // in meter, pixel area
-		tile_borders: { left: 0.023, right: 0.023, bottom: 0.05, top: 0.05 }, // mullions in meter
-		// prefered or common viewing distance to calculate UI sizes
-		viewing_distance: 3.5	// in meter
 	},
 	layout: {
 		rows: 1,
@@ -52,29 +52,34 @@
 	],
 	remote_sites: [
 		{
-			"name": "Cyber-Commons",
-			"host": "orion.evlrn.uic.edu",
-			"port": 443,
-			"secure": true
+			name: "Cyber-Commons",
+			host: "inferno.evlrn.uic.edu",
+			port: 443,
+			secure: true
 		},
 		{
-			"name": "CAVE2",
-			"host": "lyra.evl.uic.edu",
-			"port": 443,
-			"secure": true
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "CAVE2-Wall",
+			host: "orion.evlrn.uic.edu",
+			port: 443,
+			secure: true
 		}
 	],
-	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
-		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
-    },
 	// for experimental features: true/false
 	experimental: {
-		omicron: { // enable omicron input module
-			// Default SAGE2 input connection
-			enable: true,
-			host: "131.193.76.121",
-			dataPort: 30005,
+		webbrowser: false,  // enable the awesomium module
+	
+		omicron: // enable omicron input module
+		{
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			useSageInputServer: true,
+			dataPort: 30015,
 			
 			debug: false,
 			
@@ -83,13 +88,15 @@
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
 			
-			// Alternate input connection
-			// Note if the following is enabled the server will attempt
-			// to connect to the specified Omicron oinputserver
-			// (By default the server listens for an Omicron sageinputserver to connect to it)
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
 			useOinputserver: false,
-			inputServerIP: "131.193.76.121",
+			inputServerIP: "cave2tracker.evl.uic.edu",
 			msgPort: 28000
 		}
-	}
+	},
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+    }
 }

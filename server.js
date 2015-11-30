@@ -6831,7 +6831,8 @@ function findApplicationPortal(app) {
 
 // **************  Omicron section *****************
 var omicronRunning = false;
-if (config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true) {
+if (config.experimental && config.experimental.omicron &&
+	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
 	var omicronManager = new Omicron(config);
 
 	var closeGestureDelay = 1500;
