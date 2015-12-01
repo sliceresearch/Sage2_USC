@@ -70,6 +70,7 @@ loadImageIcon("images/ui/remote.svg");
 loadImageIcon("images/ui/pdfs.svg");
 loadImageIcon("images/ui/images.svg");
 loadImageIcon("images/ui/videos.svg");
+loadImageIcon("images/ui/xml.svg");
 loadImageIcon("images/ui/applauncher.svg");
 loadImageIcon("images/ui/loadsession.svg");
 loadImageIcon("images/ui/savesession.svg");
@@ -111,6 +112,7 @@ function RadialMenu() {
 	this.imageThumbnailButtons = [];
 	this.videoThumbnailButtons = [];
 	this.pdfThumbnailButtons = [];
+	this.xmlThumbnailButtons = [];
 	this.appThumbnailButtons = [];
 	this.sessionThumbnailButtons = [];
 
@@ -474,6 +476,8 @@ function RadialMenu() {
 				currentThumbnailButtons = this.imageThumbnailButtons;
 			} else if (this.currentMenuState === "pdfThumbnailWindow") {
 				currentThumbnailButtons = this.pdfThumbnailButtons;
+			} else if (this.currentMenuState === "xmlThumbnailWindow") {
+				currentThumbnailButtons = this.xmlThumbnailButtons;
 			} else if (this.currentMenuState === "videoThumbnailWindow") {
 				currentThumbnailButtons = this.videoThumbnailButtons;
 			} else if (this.currentMenuState === "applauncherThumbnailWindow") {
@@ -826,6 +830,8 @@ function RadialMenu() {
 				currentThumbnailButtons = this.imageThumbnailButtons;
 			} else if (this.currentMenuState === "pdfThumbnailWindow") {
 				currentThumbnailButtons = this.pdfThumbnailButtons;
+			} else if (this.currentMenuState === "xmlThumbnailWindow") {
+				currentThumbnailButtons = this.xmlThumbnailButtons;
 			} else if (this.currentMenuState === "videoThumbnailWindow") {
 				currentThumbnailButtons = this.videoThumbnailButtons;
 			} else if (this.currentMenuState === "applauncherThumbnailWindow") {
@@ -1013,12 +1019,14 @@ function RadialMenu() {
 		this.imageThumbnailButtons = [];
 		this.videoThumbnailButtons = [];
 		this.pdfThumbnailButtons = [];
+		this.xmlThumbnailButtons = [];
 		this.appThumbnailButtons = [];
 		this.sessionThumbnailButtons = [];
 
 		// Server file lists by type
 		var imageList = serverFileList.images;
 		var pdfList = serverFileList.pdfs;
+		var xmlList = serverFileList.xmls;
 		var videoList = serverFileList.videos;
 		var appList = serverFileList.applications;
 		var sessionList = serverFileList.sessions;
@@ -1029,6 +1037,40 @@ function RadialMenu() {
 		var invalidFilenameRegex = "[:#$%^&@]";
 		var data;
 		var curList;
+
+
+
+		if (xmlList !== null) {
+			for (i = 0; i < xmlList.length; i++) {
+				thumbnailButton = new ButtonWidget();
+				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
+				curList = xmlList[i];
+				data = {application: "xml_viewer", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				thumbnailButton.setData(data);
+				thumbnailButton.simpleTint = false;
+
+				thumbnailButton.setSize(this.imageThumbSize, this.imageThumbSize);
+				thumbnailButton.setHitboxSize(this.imageThumbSize, this.imageThumbSize);
+
+				// Thumbnail image
+				if (xmlList[i].exif.SAGE2thumbnail !== null) {
+					customIcon = new Image();
+					customIcon.lsrc = xmlList[i].exif.SAGE2thumbnail + "_256.jpg";
+					customIcon.src = xmlList[i].exif.SAGE2thumbnail + "_128.jpg";
+					thumbnailButton.setButtonImage(customIcon);
+				} else {
+					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/xmls.svg"]);
+				}
+				// File has a bad filename for thumbnails, set default icon
+				if (xmlList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
+					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/xmls.svg"]);
+				}
+
+				this.thumbnailButtons.push(thumbnailButton);
+				this.xmlThumbnailButtons.push(thumbnailButton);
+			}
+
+		}
 
 		if (imageList !== null) {
 			var validImages = 0;
@@ -1466,9 +1508,9 @@ function ButtonWidget() {
 			this.ctx.save();
 			this.ctx.translate(translate.x, translate.y);
 			this.ctx.drawImage(this.overlayImage, -this.width * this.overlayScale / 2,
-				-this.height * this.overlayScale / 2,
-				this.width * this.overlayScale,
-				this.height * this.overlayScale);
+					-this.height * this.overlayScale / 2,
+					this.width * this.overlayScale,
+					this.height * this.overlayScale);
 			this.ctx.restore();
 		}
 	};
@@ -1542,16 +1584,16 @@ function ButtonWidget() {
 				}
 			}
 			/*else if (this.state !== 2) {
-				if (this.state !== 1) {
-					this.state = 5;
-					if (this.useEventOverColor) {
-						this.ctx.redraw = true;
-					}
-				}
-				else {
-					this.state = 1;
-				}
-			}*/
+			  if (this.state !== 1) {
+			  this.state = 5;
+			  if (this.useEventOverColor) {
+			  this.ctx.redraw = true;
+			  }
+			  }
+			  else {
+			  this.state = 1;
+			  }
+			  }*/
 			return 1;
 		} else {
 			if (this.isLit === false) {

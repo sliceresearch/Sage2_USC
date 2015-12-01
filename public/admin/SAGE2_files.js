@@ -439,6 +439,23 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.Linearized || '';
 			metadata.config.elements.push({label: "Linearized", value: info});
 
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/xml') >= 0) { //Added by D.A.
+			if(_this.allFiles[elt.id].exif.FileName.split(".").pop() === "tkt") {
+				metadata.config.elements.push({label: "XML (Espresso Ticket)", type: "label"});
+				for (var key in _this.allFiles[elt.id].exif) {
+					if (key.match(/Orochi/)) {
+						info = _this.allFiles[elt.id].exif[key] || '';
+						metadata.config.elements.push({label: key, value: info});
+					}
+				}
+			} else {
+				metadata.config.elements.push({label: "XML", type: "label"});
+				for (var key in _this.allFiles[elt.id].exif) {
+					info = _this.allFiles[elt.id].exif[key] || '';
+					metadata.config.elements.push({label: key, value: info});
+				}
+			}
+
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/custom') >= 0) {
 			metadata.config.elements.push({label: "Application", type: "label"});
 
@@ -487,22 +504,22 @@ function FileManager(wsio, mydiv, uniqueID) {
 		if (appType === "application/custom") {
 			wsio.emit('loadApplication',
 					{application: tid,
-					user: _this.uniqueID,
-					position: position});
+user: _this.uniqueID,
+position: position});
 		} else {
 			// Opening a file
 			wsio.emit('loadFileFromServer',
 					{application: appType,
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+filename: tid,
+user: _this.uniqueID,
+position: position});
 		}
 	};
 
 	this.allTable.attachEvent("onItemDblClick", function(id, e, node) {
-		// Open the selected content on the wall
-		_this.openItem(id.row);
-	});
+			// Open the selected content on the wall
+			_this.openItem(id.row);
+			});
 
 	// this.allTable.attachEvent("onAfterSort", function(by, dir, func, obj) {
 	// 	console.log('Sorting done', by, dir, func);
@@ -510,20 +527,20 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// onItemClick onAfterSelect onBeforeSelect
 	this.tree.attachEvent("onSelectChange", function(evt) {
-		var treeSelection = _this.tree.getSelectedItem();
-		// If a media folder is selection
-		if (treeSelection) {
+			var treeSelection = _this.tree.getSelectedItem();
+			// If a media folder is selection
+			if (treeSelection) {
 			if (treeSelection.sage2URL) {
-				_this.allTable.filter(function(obj) {
-					// trying to match the base URL
-					return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
+			_this.allTable.filter(function(obj) {
+				// trying to match the base URL
+				return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
 				});
-				return;
+			return;
 			}
-		}
-		// Otherwise, regular search
-		updateSearch(evt[0]);
-	});
+			}
+			// Otherwise, regular search
+			updateSearch(evt[0]);
+			});
 
 	// this.tree.attachEvent("onItemClick", function(evt) {
 	// });
@@ -535,43 +552,43 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// target - the id of the drop target, null for drop on empty space
 	// start - the id from which DND was started
 	this.allTable.attachEvent("onBeforeDrag", function(context, ev) {
-		var elt;
-		context.html = "<div style='padding:8px;background:#d3e3ef'>";
-		if (context.source.length === 1) {
+			var elt;
+			context.html = "<div style='padding:8px;background:#d3e3ef'>";
+			if (context.source.length === 1) {
 			elt = _this.allFiles[context.start];
 			context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_128.jpg\" />';
 			context.html += '<br>' + elt.exif.FileName;
-		} else {
+			} else {
 			for (var i = 0; i < Math.min(context.source.length, 35); i++) {
-				elt = _this.allFiles[context.source[i]];
-				context.html += elt.exif.FileName + "<br>";
+			elt = _this.allFiles[context.source[i]];
+			context.html += elt.exif.FileName + "<br>";
 			}
-		}
-		context.html += "</div>";
-	});
+			}
+			context.html += "</div>";
+			});
 	this.allTable.attachEvent("onBeforeDrop", function(context, ev) {
-		console.log('onBeforeDrop', ev);
-		// No DnD
-		return false;
-	});
+			console.log('onBeforeDrop', ev);
+			// No DnD
+			return false;
+			});
 
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
-		// for (var i = 0; i < context.source.length; i++) {
-		// 	console.log('onBeforeDrop', context.source[i], context.target);
-		// }
-		// return true;
+			// for (var i = 0; i < context.source.length; i++) {
+			// 	console.log('onBeforeDrop', context.source[i], context.target);
+			// }
+			// return true;
 
-		// No DnD
-		return false;
-	});
+			// No DnD
+			return false;
+			});
 	this.tree.attachEvent("onAfterDrop", function(context, native_event) {
-		// console.log('onAfterDrop', context.source, context.target);
-	});
+			// console.log('onAfterDrop', context.source, context.target);
+			});
 
 	webix.event(this.allTable.$view, "drag", function(e) {
-		console.log('drag');
-		e.preventDefault();
-	});
+			console.log('drag');
+			e.preventDefault();
+			});
 
 	// HTML5 drag and drop
 	// var popup;
@@ -619,301 +636,307 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// });
 
 	webix.ui({
-		id: "uploadAPI",
-		view: "uploader",
-		upload: "/upload",  // POST url
-		on: {
-			onFileUpload: function(item) {
-				console.log('uploaded file', item.name);
-			},
-			onUploadComplete: function(item) {
-				var d = $$("uploadlist");
-				d.data.each(function(obj) {
-					// if all good, remove from list
-					if (obj.status === 'server') {
-						var it = d.getItemNode(obj.id);
-						it.style.color = "green";
-					}
-				});
-			},
-			onFileUploadError: function(item) {
-				console.log('onFileUploadError', item);
-			}
-		},
-		link: "uploadlist",
-		apiOnly: true
+id: "uploadAPI",
+view: "uploader",
+upload: "/upload",  // POST url
+on: {
+onFileUpload: function(item) {
+console.log('uploaded file', item.name);
+},
+onUploadComplete: function(item) {
+var d = $$("uploadlist");
+d.data.each(function(obj) {
+	// if all good, remove from list
+	if (obj.status === 'server') {
+	var it = d.getItemNode(obj.id);
+	it.style.color = "green";
+	}
 	});
-	$$("uploadAPI").addDropZone($$("uploadlist").$view);
-
-	this.tree.closeAll();
-	this.tree.open("treeroot");
-
-	webix.ui({
-		view: "contextmenu",
-		id: "cmenu",
-		data: ["Open", "Download", { $template: "Separator" }, "Delete"],
-		on: {
-			onItemClick: function(id) {
-				var i;
-				var context = this.getContext();
-				var list    = context.obj;
-				var listId  = context.id;
-				var dItems  = _this.allTable.getSelectedId(true);
-
-				if (id === "Download") {
-					downloadItem(list.getItem(listId).id);
-
-				} else if (id === "Open") {
-					var tbo = [];
-					if (dItems.length === 0) {
-						// If no selection, use the item under the context menu
-						tbo.push(list.getItem(listId).id);
-					} else {
-						// otherwise take all selected items
-						for (i = 0; i < dItems.length; i++) {
-							tbo.push(dItems[i].id);
-						}
-					}
-					// Open all the content one at a time
-					tbo.map(function(tid) {
-						_this.openItem(tid);
-					});
-
-				} else if (id === "Delete") {
-					var tbd = [];
-					var textTbd = "<ol style=\"list-style-position: inside;padding:10px;text-align:left;\">";
-					var numItems = 0;
-					if (dItems.length === 0) {
-						// If no selection, use the item under the context menu
-						tbd.push(list.getItem(listId).id);
-						textTbd += list.getItem(listId).id;
-						numItems = 1;
-					} else {
-						// otherwise take all selected items
-						for (i = 0; i < dItems.length; i++) {
-							tbd.push(dItems[i].id);
-							// Only list first 15 items...
-							if (i < 14) {
-								textTbd += '<li>' + dItems[i].id + '</li>';
-							} else if (i === 14) {
-								textTbd += '<li>...</li>';
-							}
-							numItems++;
-						}
-					}
-					textTbd += "</ol>";
-					webix.confirm({
-						title: "Confirm deletion - " + numItems + " item(s)",
-						width: "50%",
-						ok: "Yes",
-						cancel: "No",
-						text: textTbd,
-						callback: function(yesno) {
-							if (yesno) {
-								// for all elements
-								tbd.map(function(tid) {
-									// send delete message to server
-									wsio.emit('deleteElementFromStoredFiles',
-										{filename: tid});
-									_this.allTable.remove(tid);
-								});
-							}
-						}
-					});
-				}
-			}
-		}
+},
+onFileUploadError: function(item) {
+console.log('onFileUploadError', item);
+}
+},
+link: "uploadlist",
+	apiOnly: true
 	});
-	$$("cmenu").attachTo($$("all_table"));
-	// $$("cmenu").attachTo($$("tree1"));
+$$("uploadAPI").addDropZone($$("uploadlist").$view);
 
-	this.main.config.height = Math.round(window.innerHeight * 0.80);
-	this.main.show();
-	this.main.adjust();
+this.tree.closeAll();
+this.tree.open("treeroot");
 
+webix.ui({
+view: "contextmenu",
+id: "cmenu",
+data: ["Open", "Download", { $template: "Separator" }, "Delete"],
+on: {
+onItemClick: function(id) {
+var i;
+var context = this.getContext();
+var list    = context.obj;
+var listId  = context.id;
+var dItems  = _this.allTable.getSelectedId(true);
 
-	this.getApplicationFromId = function(id) {
-		// default answer
-		var response = "application/custom";
-		// Lookup the asset
-		var elt = this.allFiles[id];
-		// if found
-		if (elt) {
-			if (elt.exif.MIMEType.indexOf('image') >= 0) {
-				response = "image_viewer";
-			} else if (elt.exif.MIMEType.indexOf('pdf') >= 0) {
-				response = "pdf_viewer";
-			} else if (elt.exif.MIMEType.indexOf('video') >= 0) {
-				response = "movie_player";
-			}
-		}
-		// send the result
-		return response;
-	};
+if (id === "Download") {
+downloadItem(list.getItem(listId).id);
 
-	function sortByDate(a, b) {
-		// fileds are 'moment' objects
-		a = _this.allFiles[a.id].exif.FileModifyDate;
-		b = _this.allFiles[b.id].exif.FileModifyDate;
-		return a > b ? 1 : (a < b ? -1 : 0);
+} else if (id === "Open") {
+var tbo = [];
+if (dItems.length === 0) {
+// If no selection, use the item under the context menu
+tbo.push(list.getItem(listId).id);
+} else {
+	// otherwise take all selected items
+	for (i = 0; i < dItems.length; i++) {
+		tbo.push(dItems[i].id);
 	}
-	function sortBySize(a, b) {
-		// File size in byte
-		a = _this.allFiles[a.id].exif.FileSize;
-		b = _this.allFiles[b.id].exif.FileSize;
-		return a > b ? 1 : (a < b ? -1 : 0);
-	}
+}
+// Open all the content one at a time
+tbo.map(function(tid) {
+		_this.openItem(tid);
+		});
 
-	function downloadItem(elt) {
-		var url = _this.allFiles[elt].sage2URL;
-		if (url) {
-			// Open the file
-			// window.open(url, '_blank');
-
-			// Download the file
-			var link = document.createElement('a');
-			link.href = url;
-			if (link.download !== undefined) {
-				// Set HTML5 download attribute. This will prevent file from opening if supported.
-				var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
-				link.download = fileName;
+} else if (id === "Delete") {
+	var tbd = [];
+	var textTbd = "<ol style=\"list-style-position: inside;padding:10px;text-align:left;\">";
+	var numItems = 0;
+	if (dItems.length === 0) {
+		// If no selection, use the item under the context menu
+		tbd.push(list.getItem(listId).id);
+		textTbd += list.getItem(listId).id;
+		numItems = 1;
+	} else {
+		// otherwise take all selected items
+		for (i = 0; i < dItems.length; i++) {
+			tbd.push(dItems[i].id);
+			// Only list first 15 items...
+			if (i < 14) {
+				textTbd += '<li>' + dItems[i].id + '</li>';
+			} else if (i === 14) {
+				textTbd += '<li>...</li>';
 			}
-			// Dispatching click event
-			if (document.createEvent) {
-				var me = document.createEvent('MouseEvents');
-				me.initEvent('click', true, true);
-				link.dispatchEvent(me);
-				return true;
-			}
+			numItems++;
 		}
 	}
+	textTbd += "</ol>";
+	webix.confirm({
+title: "Confirm deletion - " + numItems + " item(s)",
+width: "50%",
+ok: "Yes",
+cancel: "No",
+text: textTbd,
+callback: function(yesno) {
+if (yesno) {
+// for all elements
+tbd.map(function(tid) {
+	// send delete message to server
+	wsio.emit('deleteElementFromStoredFiles',
+		{filename: tid});
+	_this.allTable.remove(tid);
+	});
+}
+}
+});
+}
+}
+}
+});
+$$("cmenu").attachTo($$("all_table"));
+// $$("cmenu").attachTo($$("tree1"));
 
-	function updateSearch(searchParam) {
-		if (searchParam === "Image") {
-			_this.allTable.filter(function(obj) {
+this.main.config.height = Math.round(window.innerHeight * 0.80);
+this.main.show();
+this.main.adjust();
+
+
+this.getApplicationFromId = function(id) {
+	// default answer
+	var response = "application/custom";
+	// Lookup the asset
+	var elt = this.allFiles[id];
+	// if found
+	if (elt) {
+		if (elt.exif.MIMEType.indexOf('image') >= 0) {
+			response = "image_viewer";
+		} else if (elt.exif.MIMEType.indexOf('pdf') >= 0) {
+			response = "pdf_viewer";
+		} else if (elt.exif.MIMEType.indexOf('xml') >= 0) {
+			response = "xml_viewer";
+		} else if (elt.exif.MIMEType.indexOf('video') >= 0) {
+			response = "movie_player";
+		}
+	}
+	// send the result
+	return response;
+};
+
+function sortByDate(a, b) {
+	// fileds are 'moment' objects
+	a = _this.allFiles[a.id].exif.FileModifyDate;
+	b = _this.allFiles[b.id].exif.FileModifyDate;
+	return a > b ? 1 : (a < b ? -1 : 0);
+}
+function sortBySize(a, b) {
+	// File size in byte
+	a = _this.allFiles[a.id].exif.FileSize;
+	b = _this.allFiles[b.id].exif.FileSize;
+	return a > b ? 1 : (a < b ? -1 : 0);
+}
+
+function downloadItem(elt) {
+	var url = _this.allFiles[elt].sage2URL;
+	if (url) {
+		// Open the file
+		// window.open(url, '_blank');
+
+		// Download the file
+		var link = document.createElement('a');
+		link.href = url;
+		if (link.download !== undefined) {
+			// Set HTML5 download attribute. This will prevent file from opening if supported.
+			var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+			link.download = fileName;
+		}
+		// Dispatching click event
+		if (document.createEvent) {
+			var me = document.createEvent('MouseEvents');
+			me.initEvent('click', true, true);
+			link.dispatchEvent(me);
+			return true;
+		}
+	}
+}
+
+function updateSearch(searchParam) {
+	if (searchParam === "Image") {
+		_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0;
-			});
-		} else if (searchParam === "PDF") {
-			_this.allTable.filter(function(obj) {
+				});
+	} else if (searchParam === "PDF") {
+		_this.allTable.filter(function(obj) {
 				return obj.type.toString() === "PDF";
-			});
-		} else if (searchParam === "Video") {
-			_this.allTable.filter(function(obj) {
+				});
+	} else if (searchParam === "Video") {
+		_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0;
-			});
-		} else if (searchParam === "App") {
-			_this.allTable.filter(function(obj) {
+				});
+	} else if (searchParam === "App") {
+		_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0;
-			});
-		} else if (searchParam === "Session") {
-			_this.allTable.filter(function(obj) {
+				});
+	} else if (searchParam === "Session") {
+		_this.allTable.filter(function(obj) {
 				return false;
-			});
-		} else if (searchParam === "Config") {
-			_this.allTable.filter(function(obj) {
+				});
+	} else if (searchParam === "Config") {
+		_this.allTable.filter(function(obj) {
 				return false;
-			});
-		} else if (searchParam === "treeroot") {
-			_this.allTable.filter();
-		} else {
-			console.log('Default search on:', searchParam);
-		}
+				});
+	} else if (searchParam === "treeroot") {
+		_this.allTable.filter();
+	} else {
+		console.log('Default search on:', searchParam);
+	}
+}
+
+// Server sends the media files list
+this.updateFiles = function(data) {
+	var i, f;
+
+	// Clean the main data structures
+	this.allFiles = {};
+	this.allTable.clearAll();
+
+	// Add all the files in
+	for (i = 0; i < data.images.length; i++) {
+		f = data.images[i];
+		this.allFiles[f.id] = f;
+	}
+	for (i = 0; i < data.videos.length; i++) {
+		f = data.videos[i];
+		this.allFiles[f.id] = f;
+	}
+	for (i = 0; i < data.pdfs.length; i++) {
+		f = data.pdfs[i];
+		this.allFiles[f.id] = f;
+	}
+	for (i = 0; i < data.xmls.length; i++) {
+		f = data.xmls[i];
+		this.allFiles[f.id] = f;
+	}
+	for (i = 0; i < data.applications.length; i++) {
+		f = data.applications[i];
+		this.allFiles[f.id] = f;
 	}
 
-	// Server sends the media files list
-	this.updateFiles = function(data) {
-		var i, f;
-
-		// Clean the main data structures
-		this.allFiles = {};
-		this.allTable.clearAll();
-
-		// Add all the files in
-		for (i = 0; i < data.images.length; i++) {
-			f = data.images[i];
-			this.allFiles[f.id] = f;
-		}
-		for (i = 0; i < data.videos.length; i++) {
-			f = data.videos[i];
-			this.allFiles[f.id] = f;
-		}
-		for (i = 0; i < data.pdfs.length; i++) {
-			f = data.pdfs[i];
-			this.allFiles[f.id] = f;
-		}
-		for (i = 0; i < data.applications.length; i++) {
-			f = data.applications[i];
-			this.allFiles[f.id] = f;
-		}
-
-		i = 0;
-		var mm, createDate;
-		for (var a in this.allFiles) {
-			f = this.allFiles[a];
-			// console.log('URL', f.sage2URL);
-			// if it's an app
-			if (f.exif.MIMEType.indexOf('application/custom') >= 0) {
-				mm = moment();
-				f.exif.FileModifyDate = mm;
-				f.exif.FileSize = 0;
-				f.exif.Creator = f.exif.metadata.author;
-				this.allTable.data.add({id: f.id,
+	i = 0;
+	var mm, createDate;
+	for (var a in this.allFiles) {
+		f = this.allFiles[a];
+		// console.log('URL', f.sage2URL);
+		// if it's an app
+		if (f.exif.MIMEType.indexOf('application/custom') >= 0) {
+			mm = moment();
+			f.exif.FileModifyDate = mm;
+			f.exif.FileSize = 0;
+			f.exif.Creator = f.exif.metadata.author;
+			this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago: mm.fromNow(),
 					type: "APP",
 					size: fileSizeIEC(f.exif.FileSize)
-				});
-			} else {
-				// Any other asset type
-				// Try to find creation
-				createDate = f.exif.CreateDate ||
-						f.exif.DateTimeOriginal ||
-						f.exif.ModifyDate ||
-						f.exif.FileModifyDate;
-				f.exif.FileModifyDate = createDate;
-				mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
-				f.exif.FileModifyDate = mm;
-				this.allTable.data.add({id: f.id,
+					});
+		} else {
+			// Any other asset type
+			// Try to find creation
+			createDate = f.exif.CreateDate ||
+				f.exif.DateTimeOriginal ||
+				f.exif.ModifyDate ||
+				f.exif.FileModifyDate;
+			f.exif.FileModifyDate = createDate;
+			mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+			f.exif.FileModifyDate = mm;
+			this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago: mm.fromNow(),
 					type: f.exif.FileType,
 					size: fileSizeIEC(f.exif.FileSize)
-				});
-			}
-			i++;
+					});
 		}
+		i++;
+	}
 
-		this.refresh();
-		// Sort the table by name
-		this.allTable.sort("name", "asc");
-	};
+	this.refresh();
+	// Sort the table by name
+	this.allTable.sort("name", "asc");
+};
 
-	this.refresh = function() {
-		this.tree.refresh();
-		this.allTable.refresh();
-		$$("multiview1").setValue("all_table");
-		this.main.adjust();
-	};
+this.refresh = function() {
+	this.tree.refresh();
+	this.allTable.refresh();
+	$$("multiview1").setValue("all_table");
+	this.main.adjust();
+};
 
-	// Server sends the wall configuration
-	this.serverConfiguration = function(data) {
-		// Add the media folders to the tree
-		var idx = 0;
-		for (var f in data.folders) {
-			var folder = data.folders[f];
-			// Build the tree item
-			//   folder Object {name: "system", path: "public/uploads/",
-			//                  url: "/uploads", upload: false}
-			var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
-					icon: "folder", sage2URL: folder.url, data: []};
-			// Add it at the top
-			this.tree.data.add(newElement, idx, "treeroot");
-			idx = idx + 1;
-		}
-		// refresh the tree
-		this.tree.refresh();
-	};
+// Server sends the wall configuration
+this.serverConfiguration = function(data) {
+	// Add the media folders to the tree
+	var idx = 0;
+	for (var f in data.folders) {
+		var folder = data.folders[f];
+		// Build the tree item
+		//   folder Object {name: "system", path: "public/uploads/",
+		//                  url: "/uploads", upload: false}
+		var newElement = {id: folder.name, value: folder.name + ":" + folder.url,
+			icon: "folder", sage2URL: folder.url, data: []};
+		// Add it at the top
+		this.tree.data.add(newElement, idx, "treeroot");
+		idx = idx + 1;
+	}
+	// refresh the tree
+	this.tree.refresh();
+};
 
 }

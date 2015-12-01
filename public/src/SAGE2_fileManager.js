@@ -58,6 +58,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{id: "Image:/", value: "Image", icon: "search", data: []},
 				{id: "Video:/", value: "Video", icon: "search", data: []},
 				{id: "PDF:/", value: "PDF", icon: "search", data: []},
+				{id: "XML:/", value: "XML", icon: "search", data: []},
 				{id: "App:/", value: "Application", icon: "search", data: []},
 				{id: "Session:/", value: "Session", icon: "search", data: []}
 			]
@@ -449,7 +450,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/pdf') >= 0) {
 			metadata.config.elements.push({label: "PDF", type: "label"});
-
 			info = _this.allFiles[elt.id].exif.Title || '';
 			metadata.config.elements.push({label: "Title", value: info});
 			info = _this.allFiles[elt.id].exif.PageCount || '';
@@ -469,6 +469,22 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.Linearized || '';
 			metadata.config.elements.push({label: "Linearized", value: info});
 
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/xml') >= 0) { 
+			if(_this.allFiles[elt.id].exif.FileName.split(".").pop() === "tkt") {
+				metadata.config.elements.push({label: "XML (Espresso Ticket)", type: "label"});
+				for (var key in _this.allFiles[elt.id].exif) {
+					if (key.match(/Orochi/)) {
+						info = _this.allFiles[elt.id].exif[key] || '';
+						metadata.config.elements.push({label: key, value: info});
+					}
+				}
+			} else {
+				metadata.config.elements.push({label: "XML", type: "label"});
+				for (var key in _this.allFiles[elt.id].exif) {
+					info = _this.allFiles[elt.id].exif[key] || '';
+					metadata.config.elements.push({label: key, value: info});
+				}
+			}
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/custom') >= 0) {
 			metadata.config.elements.push({label: "Application", type: "label"});
 
@@ -519,48 +535,48 @@ function FileManager(wsio, mydiv, uniqueID) {
 		if (appType === "application/custom") {
 			wsio.emit('loadApplication',
 					{application: tid,
-					user: _this.uniqueID,
-					position: position});
+user: _this.uniqueID,
+position: position});
 		} else if (appType === "sage2/session") {
 			wsio.emit('loadFileFromServer',
 					{application: 'load_session',
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+filename: tid,
+user: _this.uniqueID,
+position: position});
 		} else {
 			// Opening a file
 			wsio.emit('loadFileFromServer',
 					{application: appType,
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+filename: tid,
+user: _this.uniqueID,
+position: position});
 		}
 	};
 
 	this.allTable.attachEvent("onItemDblClick", function(id, e, node) {
-		// Open the selected content on the wall
-		_this.openItem(id.row);
-	});
+			// Open the selected content on the wall
+			_this.openItem(id.row);
+			});
 
 	// onItemClick onAfterSelect onBeforeSelect
 	this.tree.attachEvent("onSelectChange", function(evt) {
-		// Clear the search box
-		$$("search_text").setValue("");
-		// Get the selection
-		var treeSelection = _this.tree.getSelectedItem();
-		// If a media folder is selection
-		if (treeSelection) {
+			// Clear the search box
+			$$("search_text").setValue("");
+			// Get the selection
+			var treeSelection = _this.tree.getSelectedItem();
+			// If a media folder is selection
+			if (treeSelection) {
 			if (treeSelection.sage2URL) {
-				_this.allTable.filter(function(obj) {
-					// trying to match the base URL
-					return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
+			_this.allTable.filter(function(obj) {
+				// trying to match the base URL
+				return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
 				});
-				return;
+			return;
 			}
-		}
-		// Otherwise, regular search
-		updateSearch(evt[0]);
-	});
+			}
+			// Otherwise, regular search
+			updateSearch(evt[0]);
+			});
 
 	// this.tree.attachEvent("onItemClick", function(evt) {
 	// });
@@ -572,16 +588,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// target - the id of the drop target, null for drop on empty space
 	// start - the id from which DND was started
 	this.allTable.attachEvent("onBeforeDrag", function(context, ev) {
-		// Only drag-drop if multiple selected items,
-		//    or the source element is the same as the selected one (select and drag)
-		if (context.source.length > 1 ||
-			(_this.selectedItem && context.start === _this.selectedItem.id)) {
+			// Only drag-drop if multiple selected items,
+			//    or the source element is the same as the selected one (select and drag)
+			if (context.source.length > 1 ||
+				(_this.selectedItem && context.start === _this.selectedItem.id)) {
 			var elt;
 			context.html = "<div style='padding:8px;background:#d3e3ef'>";
 			if (context.source.length === 1) {
-				elt = _this.allFiles[context.start];
-				context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
-				context.html += '<br>' + elt.exif.FileName;
+			elt = _this.allFiles[context.start];
+			context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
+			context.html += '<br>' + elt.exif.FileName;
 			} else {
 				for (var i = 0; i < Math.min(context.source.length, 35); i++) {
 					elt = _this.allFiles[context.source[i]];
@@ -609,6 +625,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
 		if (context.target.startsWith("Image:")   ||
 			context.target.startsWith("PDF:")     ||
+			context.target.startsWith("XML:")     ||
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
 			context.target.startsWith("Session:") ||
@@ -759,6 +776,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 				response = "image_viewer";
 			} else if (elt.exif.MIMEType.indexOf('pdf') >= 0) {
 				response = "pdf_viewer";
+			} else if (elt.exif.MIMEType.indexOf('xml') >= 0) {
+				response = "xml_viewer";
 			} else if (elt.exif.MIMEType.indexOf('video') >= 0) {
 				response = "movie_player";
 			} else if (elt.exif.MIMEType.indexOf('sage2/session') >= 0) {
@@ -815,6 +834,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			_this.allTable.filter(function(obj) {
 				return obj.type.toString() === "PDF";
 			});
+		} else if (searchParam === "XML:/") {
+			_this.allTable.filter(function(obj) {
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('application/xml') >= 0;
+			});
 		} else if (searchParam === "Video:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0;
@@ -845,15 +868,20 @@ function FileManager(wsio, mydiv, uniqueID) {
 					return (obj.type.toString() === "PDF") &&
 							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
 				});
+			} else if (query[0] === "XML") { //Added by D.A.
+				_this.allTable.filter(function(obj) {
+						return (obj.type.toString() === "XML") &&
+						(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+						});
 			} else if (query[0] === "Video") {
 				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
+						return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
+						(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+						});
 			} else if (query[0] === "App") {
 				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+						return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
+						(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
 				});
 			} else if (query[0] === "Session") {
 				_this.allTable.filter(function(obj) {
@@ -922,6 +950,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		for (i = 0; i < data.pdfs.length; i++) {
 			f = data.pdfs[i];
+			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
+		}
+		for (i = 0; i < data.xmls.length; i++) {
+			f = data.xmls[i];
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
@@ -1132,6 +1165,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				(id.indexOf('Image:/') >= 0) ||
 				(id.indexOf('Video:/') >= 0) ||
 				(id.indexOf('PDF:/') >= 0) ||
+				(id.indexOf('XML:/') >= 0) ||
 				(id.indexOf('App:/') >= 0) ||
 				(id.indexOf('Session:/') >= 0)
 				) {

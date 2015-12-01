@@ -147,7 +147,7 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "xmls"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -1706,13 +1706,13 @@ function createAppFromDescription(app, callback) {
 	var appURL = url.parse(app.url);
 
 	if (appURL.hostname === config.host) {
-		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
+		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player" || app.application === "xml_viewer") {
 			appLoader.loadFileFromLocalStorage({application: app.application, filename: appURL.path}, cloneApp);
 		} else {
 			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: appURL.path}, cloneApp);
 		}
 	} else {
-		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
+		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player" || app.application === "xml_viewer") {
 			appLoader.loadFileFromWebURL({url: app.url, type: app.type}, cloneApp);
 		} else {
 			appLoader.loadApplicationFromRemoteServer(app, cloneApp);
@@ -3458,6 +3458,7 @@ function getSavedFilesList() {
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
+	var uploadedXmls   = assets.listXMLs();
 	var savedSessions  = listSessions();
 	var uploadedApps   = getApplications();
 
@@ -3465,9 +3466,10 @@ function getSavedFilesList() {
 	uploadedImages.sort(sageutils.compareFilename);
 	uploadedVideos.sort(sageutils.compareFilename);
 	uploadedPdfs.sort(sageutils.compareFilename);
+	uploadedXmls.sort(sageutils.compareFilename);
 	savedSessions.sort(sageutils.compareFilename);
 
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, xmls: uploadedXmls,
 				sessions: savedSessions, applications: uploadedApps};
 
 	return list;

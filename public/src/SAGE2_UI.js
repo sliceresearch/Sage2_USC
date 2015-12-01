@@ -213,6 +213,7 @@ function SAGE2_init() {
 		images: "image_viewer",
 		videos: "movie_player",
 		pdfs: "pdf_viewer",
+		xmls: "xml_viewer",
 		sessions: "load_session"
 	};
 
@@ -379,25 +380,29 @@ function setupListeners() {
 	wsio.on('storedFileList', function(data) {
 		document.getElementById('images-dir').checked   = false;
 		document.getElementById('pdfs-dir').checked     = false;
+		document.getElementById('xmls-dir').checked     = false;
 		document.getElementById('videos-dir').checked   = false;
 		document.getElementById('sessions-dir').checked = false;
 
 		var images   = document.getElementById('images');
 		var videos   = document.getElementById('videos');
 		var pdfs     = document.getElementById('pdfs');
+		var xmls     = document.getElementById('xmls');
 		var sessions = document.getElementById('sessions');
 
 		removeAllChildren(images);
 		removeAllChildren(videos);
 		removeAllChildren(pdfs);
+		removeAllChildren(xmls);
 		removeAllChildren(sessions);
 
 		var longestImageName   = createFileList(data, "images",   images);
 		var longestVideoName   = createFileList(data, "videos",   videos);
 		var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+		var longestXmlName     = createFileList(data, "xmls",     xmls);
 		var longestSessionName = createFileList(data, "sessions", sessions);
 
-		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName, longestXmlName);
 		document.getElementById('fileListElems').style.width = (longest + 60).toString() + "px";
 
 		// showDialog('mediaBrowserDialog');
