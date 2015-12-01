@@ -163,7 +163,7 @@ var googlemaps = SAGE2_App.extend({
 		for (var i = 0; i < tiles.length; i++) {
 			// get the URL
 			var src = tiles[i].src;
-			if (/googleapis.com\/vt\?pb=/.test(src)) {
+			if (/googleapis.com\/maps\/vt\?pb=/.test(src)) {
 				// add a date inthe URL will trigger a reload
 				var new_src = src.split("&ts")[0] + '&ts=' + (new Date()).getTime();
 				tiles[i].src = new_src;
