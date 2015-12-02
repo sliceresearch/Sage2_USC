@@ -1367,10 +1367,10 @@ function wsAppResize(wsio, data) {
 		var app = SAGE2Items.applications.list[data.id];
 
 		// Values in percent if smaller than 1
-		if (data.width > 0 && data.width < 1) {
+		if (data.width > 0 && data.width <= 1) {
 			data.width = Math.round(data.width * config.totalWidth);
 		}
-		if (data.height > 0 && data.height < 1) {
+		if (data.height > 0 && data.height <= 1) {
 			data.height = Math.round(data.height * config.totalHeight);
 		}
 
@@ -1436,10 +1436,10 @@ function wsAppMoveTo(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 		// Values in percent if smaller than 1
-		if (data.x > 0 && data.x < 1) {
+		if (data.x > 0 && data.x <= 1) {
 			data.x = Math.round(data.x * config.totalWidth);
 		}
-		if (data.y > 0 && data.y < 1) {
+		if (data.y > 0 && data.y <= 1) {
 			data.y = Math.round(data.y * config.totalHeight);
 		}
 		app.left = data.x;
