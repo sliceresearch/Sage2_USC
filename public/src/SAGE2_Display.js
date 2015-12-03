@@ -601,7 +601,9 @@ function setupListeners() {
 			var parentTransform = getTransform(selectedElem.parentNode);
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_x = Math.round(app.sage2_x);
 			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
 
@@ -732,7 +734,9 @@ function setupListeners() {
 			var parentTransform = getTransform(selectedElem.parentNode);
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_x = Math.round(app.sage2_x);
 			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
 
