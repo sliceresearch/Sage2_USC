@@ -368,6 +368,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	,
 
 	quit: function() {
+		wsio.emit("disableDrawingMode",{id: this.id});
 		// Make sure to delete stuff (timers, ...)
 	},
 	handlePaletteTouch: function(x,y){

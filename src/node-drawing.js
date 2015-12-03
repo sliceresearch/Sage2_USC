@@ -11,7 +11,7 @@ function DrawingManager(config) {
 	this.newDrawingObject = {};
 	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap": "round"};
 	this.selectionBoxStyle = {fill: "none", stroke: "white", "stroke-width": "5px","stroke-dasharray": "10,10"};
-	this.drawingMode = true;
+	this.drawingMode = false;
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
 	this.tilesPosition = [];
@@ -360,6 +360,11 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 	this.drawingMode = true;
 	this.paletteID = data.id;
 	this.sendStyleToPalette(this.paletteID,this.style);
+}
+DrawingManager.prototype.disableDrawingMode = function(data) {
+	console.log("Drawing mode disabled");
+	this.drawingMode = false;
+	this.paletteID = null;
 }
 
 DrawingManager.prototype.update = function(drawingObject, clientID) {

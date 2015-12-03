@@ -780,6 +780,7 @@ function setupListeners(wsio) {
 	// DrawingState messages, should they have their own section?
 	wsio.on('updatePalettePosition',				wsUpdatePalettePosition);
 	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
+	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -951,6 +952,10 @@ function wsUpdatePalettePosition(wsio, data) {
 function wsEnableDrawingMode(wsio, data) {
 	drawingManager.enableDrawingMode(data);
 }
+function wsDisableDrawingMode(wsio, data) {
+	drawingManager.disableDrawingMode(data);
+}
+
 
 function wsClearDrawingCanvas(wsio,data) {
 	drawingManager.clearDrawingCanvas();
