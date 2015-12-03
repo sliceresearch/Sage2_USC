@@ -34,7 +34,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		this.paletteMode = "colorPicker"
 		this.svg = d3.select(this.element).append("svg").attr("id","paletteSVG");
 		// Tutorial div over me
-		this.tutorial = d3.select("#main").append("div");
+		this.tutorial = d3.select("#main").append("div").style("visibility","hidden");
 		//this.tutorial.style("visibility","hidden");
 		this.tutorialImg = this.tutorial.append("img").style("width","100%").style("height","100%");
 		this.updateTutorial();
@@ -129,13 +129,13 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				var v = 100 / (nCols -4) * (i-2);
 				this.paletteButtons.push({parent: this,action: this.changeHue,r: 1,c: i,rSpan: 2,hue: hue,
 											backgroundColor: hsvFromValues(hue,this.s,this.v),stroke: "transparent",
-											selected: hue==this.hue?true:false});
+											selected: hue==this.hue?true:false,dragResponsive:true});
 				this.paletteButtons.push({parent: this,action: this.changeSaturation,r: 4,c: i,rSpan: 2,s: s,
 											backgroundColor: hsvFromValues(this.hue,s,this.v),stroke: "transparent",
-											selected: s==this.s?true:false}); 
+											selected: s==this.s?true:false,dragResponsive:true}); 
 				this.paletteButtons.push({parent: this,action: this.changeLuminance,r: 7,c: i,rSpan: 2,v: v,
 											backgroundColor: hsvFromValues(this.hue,this.s,v),stroke: "transparent",
-											selected: v==this.v?true:false}); 
+											selected: v==this.v?true:false,dragResponsive:true}); 
 			}
 			
 			this.paletteButtons.push({parent: this,action: this.cancelPicker,r: 13,c: 10,cSpan: 35,rSpan: 2,v: v,
@@ -313,7 +313,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		wsio.emit("getSessionsList",null);
 	},
 	loadSessionSelected: function() {
-		wsio.emit("loadDrawings",this.sessionSelected);
+		wsio.emit("loadDrawings",this.parent.sessionSelected);
 		this.parent.paletteMode = "default";
 		this.parent.createPalette();
 	},
@@ -372,13 +372,15 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	},
 	handlePaletteTouch: function(x,y){
 		var pressedColor = "white";
+		var defaultBg = "gray";
 		for (i in this.paletteButtons){
 			var butt = this.paletteButtons[i]
 			if (y>=butt.y & y<=butt.y+butt.h & x>=butt.x & x<=butt.x+butt.w){
 				// FeedBack
-				if (butt.name) {
-					var oldColor = d3.select("#"+butt.name).attr("fill");
 
+				if (butt.name) {
+					
+					var oldColor = butt.backgroundColor || defaultBg;	
 					d3.select("#"+butt.name).attr("fill",pressedColor).transition().duration(500).attr("fill",oldColor);
 				}
 
@@ -388,10 +390,28 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		}
 	}
 	,
+	handlePaletteDrag: function(x,y){
+		var pressedColor = "white";
+		for (i in this.paletteButtons){
+			var butt = this.paletteButtons[i]
+			if (y>=butt.y & y<=butt.y+butt.h & x>=butt.x & x<=butt.x+butt.w){
+				// FeedBack
+				if (butt.dragResponsive) {
+					butt.action(x-butt.x,y-butt.y);			
+				}
+
+				
+				
+			}
+		}
+	}
+	,
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			this.handlePaletteTouch(position.x,position.y);
+		}else if (eventType === "pointerDrag") {
+			this.handlePaletteDrag(position.x,position.y);
 		}
 		else if (eventType === "styleChange") {
 			this.strokeColor = data.style.stroke;

@@ -366,6 +366,7 @@ function initializeSage2Server() {
 								drawingUpdate,
 								drawingRemove,
 								sendTouchToPalette,
+								sendDragToPalette,
 								sendStyleToPalette,
 								sendChangeToPalette,
 								movePaletteTo,
@@ -396,6 +397,21 @@ function sendTouchToPalette(paletteID,x,y) {
 	var event = {
 		id: paletteID,
 		type: "pointerPress",
+		position: ePosition,
+		user: eUser,
+		data: {button: "left"},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+function sendDragToPalette(paletteID,x,y) {
+	var ePosition = {x: x , y: y};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "pointerDrag",
 		position: ePosition,
 		user: eUser,
 		data: {button: "left"},
@@ -1767,7 +1783,7 @@ function deleteSession(filename) {
 
 function saveDrawingSession(data) {
 	var now = new Date();
-	var filename = "drawingSession" + now;
+	var filename = "drawingSession" + now.getTime();
 
 	var fullpath = path.join(sessionDirectory, filename);
 	// if it doesn't end in .json, add it

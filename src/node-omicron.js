@@ -561,7 +561,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		console.log("pointer width/height ", touchWidth, touchHeight);
 	}
 
-	if (address.substring(0,address.indexOf(":")) == this.config.inputServerIP) {
+	if (address.substring(0,address.indexOf(":")) == this.config.inputServerIP && drawingManager.drawingMode) {
 		drawingManager.pointerEvent(e,sourceID,posX,posY,touchWidth,touchHeight);
 	}
 

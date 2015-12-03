@@ -767,6 +767,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.actualAction = "erasing";
 			this.eraserTouchId = e.sourceId;
 		}
+		if (this.touchInsidePalette(posX,posY)) {
+			this.sendDragToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
+			return;
+		}
 
 		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.movePaletteTo(this.paletteID
@@ -1124,6 +1128,7 @@ DrawingManager.prototype.setCallbacks = function(
 		drawingUpdateCB,
 		drawingRemoveCB,
 		sendTouchToPaletteCB,
+		sendDragToPaletteCB,
 		sendStyleToPaletteCB,
 		sendChangeToPaletteCB,
 		movePaletteToCB,
@@ -1135,6 +1140,7 @@ DrawingManager.prototype.setCallbacks = function(
 	this.drawingUpdate = drawingUpdateCB;
 	this.drawingRemove = drawingRemoveCB;
 	this.sendTouchToPalette = sendTouchToPaletteCB;
+	this.sendDragToPalette = sendDragToPaletteCB;
 	this.sendStyleToPalette = sendStyleToPaletteCB;
 	this.sendChangeToPalette = sendChangeToPaletteCB;
 	this.movePaletteTo = movePaletteToCB;
