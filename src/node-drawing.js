@@ -543,6 +543,7 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObjectFunc(e, posX, posY);
 		this.idAssociatedToAction[e.sourceId] = [drawingId];
 	}
+
 	var drawingId = this.dictionaryId[e.sourceId];
 	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"]
 					[this.newDrawingObject[drawingId]["options"]["points"].length - 1];
@@ -557,7 +558,9 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push(this.copy(secondPart[0]));
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
-		this.idAssociatedToAction[e.sourceId].push(id);
+		if (this.idAssociatedToAction[e.sourceId].) {
+			this.idAssociatedToAction[e.sourceId].push(id);
+		}
 		var newDraw = {};
 		newDraw["type"] = "path";
 		newDraw["style"] = this.newDrawingObject[drawingId]["style"];
@@ -729,7 +732,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			return;
 		} else if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.deleteSelectionBox();
-			this.actualAction = "erasing";
 			this.newEraserBox(posX,posY,w,h);
 			this.eraserTouchId = e.sourceId;
 			this.erase();
@@ -773,7 +775,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 		// touch move
 		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
-			this.actualAction = "erasing";
 			this.eraserTouchId = e.sourceId;
 		}
 		if (this.touchInsidePalette(posX,posY)) {
@@ -873,7 +874,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		if (this.idMovingPalette == e.sourceId) {
 			return;
 		} else if (this.eraserTouchId == e.sourceId) {
-			this.actualAction = "drawing";
 			this.eraserTouchId = -1;
 		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
