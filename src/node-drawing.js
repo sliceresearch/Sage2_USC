@@ -870,9 +870,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 		// touch release
-		if (this.idMovingPalette == e.sourceId) {
-			return;
-		} else if (this.eraserTouchId == e.sourceId) {
+		if (this.eraserTouchId == e.sourceId) {
 			this.actualAction = "drawing";
 			this.eraserTouchId = -1;
 		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
