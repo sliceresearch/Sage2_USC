@@ -708,6 +708,8 @@ function setupListeners(wsio) {
 	wsio.on('createFolder',                         wsCreateFolder);
 
 	wsio.on('snmpRequest',							wsProcessSNMPRequest);
+
+	wsio.on('requestSAGE2AppMonitoring',			wsRequestSAGE2AppMonitoring);
 }
 
 function initializeExistingControls(wsio) {
@@ -7078,9 +7080,13 @@ function showOrHideWidgetLinks(data) {
 
 
 function wsProcessSNMPRequest(wsio, data){
-	console.log(data);
+	//console.log(data);
 	var callback = function(data){
 		broadcast('responseToSNMPRequest', data);
 	};
 	snmp.process(data.request, data.requestNumber, data.appId, data.data, callback);
+}
+
+function wsRequestSAGE2AppMonitoring(wsio, data){
+	broadcast('enableSAGE2AppMonitoring', data);
 }
