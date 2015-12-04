@@ -41,6 +41,9 @@ var ui;
 var uiTimer = null;
 var uiTimerDelay;
 
+//Monitor applications and inter app communication
+var applicationMonitors = {};
+
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
 	if (wsio !== undefined) {
@@ -827,6 +830,13 @@ function setupListeners() {
 		var app  = applications[event_data.id];
 
 		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		//Send event data to every monitor app
+		for (var key in applicationMonitors){
+			if (applicationMonitors.hasOwnProperty(key)){
+				app = applicationMonitors[key];
+				app.SAGE2Event("monitor", {}, "", event_data, date);
+			}
+		}
 	});
 
 	wsio.on('requestNewControl', function(data) {
@@ -1099,6 +1109,10 @@ function setupListeners() {
 	wsio.on('responseToSNMPRequest', function(data) {
 		var app = applications[data.appId];
 		app.processSNMPResponse(data);
+	});
+
+	wsio.on('enableSAGE2AppMonitoring', function(data) {
+		applicationMonitors[data.appId] = applications[data.appId];
 	});
 
 	wsio.on('setAppSharingFlag', function(data) {

@@ -805,5 +805,9 @@ var SAGE2_App = Class.extend({
 			callback(data.error,data.data);
 			delete this.snmpResponseCallbackList[data.request][data.requestNumber];
 		}
+	},
+
+	requestAppMonitoring: function(){
+		wsio.emit('requestSAGE2AppMonitoring', {appId: this.id});
 	}
 });
