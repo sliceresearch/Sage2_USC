@@ -3691,6 +3691,12 @@ function uploadForm(req, res) {
 		if (field === 'dropY') {
 			position[1] = parseInt(parseFloat(value) * config.totalHeight, 10);
 		}
+		if (field === 'width') {
+			position[2] = parseInt(parseFloat(value) * config.totalWidth,  10);
+		}
+		if (field === 'height') {
+			position[3] = parseInt(parseFloat(value) * config.totalHeight,  10);
+		}
 	});
 
 	form.parse(req, function(err, fields, files) {
@@ -3734,7 +3740,15 @@ function manageUploadedFiles(files, position) {
 				return;
 			}
 
-			// Use the position from the drop location
+			// Use the size from the drop information
+			if (position[2] && position[2] !== 0) {
+				appInstance.width = parseFloat(position[2]);
+			}
+			if (position[3] && position[3] !== 0) {
+				appInstance.height = parseFloat(position[3]);
+			}
+
+			// Use the position from the drop information
 			if (position[0] !== 0 || position[1] !== 0) {
 				appInstance.left = position[0] - appInstance.width / 2;
 				if (appInstance.left < 0) {

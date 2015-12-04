@@ -34,6 +34,11 @@ var connection;
 var imageFilename;
 var wssURL;
 
+// Position on the wall
+var imageX = 0;
+var imageY = 0;
+var imageW = 0;
+var imageH = 0;
 
 function postForm(formData, callback) {
 	var httpsURL = wssURL.replace('wss', 'https');
@@ -45,6 +50,7 @@ function postForm(formData, callback) {
 	);
 }
 
+
 function uploadPictures() {
 	// Filling up the form structure
 	var formData = {
@@ -54,7 +60,11 @@ function uploadPictures() {
 				filename:    imageFilename,
 				contentType: 'image/jpg'
 			}
-		}
+		},
+		dropX:  imageX.toString(),
+		dropY:  imageY.toString(),
+		width:  imageW.toString(),
+		height: imageH.toString()
 	};
 
 	postForm(formData, function(err) {
@@ -64,7 +74,7 @@ function uploadPictures() {
 		}
 		console.log('Upload> success');
 		process.exit(0);
-		//setTimeout(function() { connection.emit('tileApplications'); }, 100);
+		// setTimeout(function() { connection.emit('tileApplications'); }, 100);
 	});
 }
 
@@ -89,7 +99,6 @@ function createRemoteConnection(wsURL) {
 
 		remote.on('initialize', function(wsio, data) {
 			console.log('Initialize> uniqueID', data.UID);
-			uploadPictures();
 		});
 
 		remote.on('setupSAGE2Version', function(wsio, data) {
@@ -98,6 +107,22 @@ function createRemoteConnection(wsURL) {
 
 		remote.on('setupDisplayConfiguration', function(wsio, data) {
 			console.log('SAGE2> display configuration', data.totalWidth, data.totalHeight);
+
+			// convert to percent value
+			if (imageX > 1) {
+				imageX = imageX / data.totalWidth;
+			}
+			if (imageY > 1) {
+				imageY = imageY / data.totalHeight;
+			}
+			if (imageW > 1) {
+				imageW = imageW / data.totalWidth;
+			}
+			if (imageH > 1) {
+				imageH = imageH / data.totalHeight;
+			}
+
+			uploadPictures();
 		});
 
 		remote.emit('addClient', clientDescription);
@@ -119,7 +144,7 @@ if (process.argv.length === 2) {
 	console.log('');
 	console.log('Usage> sage_upload.js <url> <filename>');
 	console.log('');
-	console.log('Example>     ./sage_upload.js localhost:9090 image.jpg');
+	console.log('Example>     ./sage_upload.js localhost:9090 image.jpg [x y] [width height]');
 	console.log('');
 	process.exit(0);
 }
@@ -128,7 +153,7 @@ if (process.argv.length === 3 && ( (process.argv[2] === '-h') || (process.argv[2
 	console.log('');
 	console.log('Usage> sage_upload.js <url> <filename>');
 	console.log('');
-	console.log('Example>     ./sage_upload.js localhost:9090 image.jpg');
+	console.log('Example>     ./sage_upload.js localhost:9090 image.jpg [x y] [width height]');
 	console.log('');
 	process.exit(0);
 }
@@ -155,6 +180,16 @@ if (process.argv.length >= 3) {
 
 if (process.argv.length >= 4) {
 	imageFilename = process.argv[3];
+}
+
+if (process.argv.length >= 6) {
+	imageX = parseFloat(process.argv[4]);
+	imageY = parseFloat(process.argv[5]);
+}
+
+if (process.argv.length >= 8) {
+	imageW = parseFloat(process.argv[6]);
+	imageH = parseFloat(process.argv[7]);
 }
 
 console.log('Client> uploading', imageFilename);
