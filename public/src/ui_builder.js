@@ -713,15 +713,18 @@ function UIBuilder(json_cfg, clientID) {
 			this.drawingSvg.attr("height",parseInt(this.main.style.height));
 			this.drawingSvg.attr("width",parseInt(this.main.style.width));
 			this.drawingSvg.style("position","absolute");
-			this.drawingSvg.style("z-index","3");
+			this.drawingSvg.style("z-index","3").style("visibility","hidden");
+
 		}
 		this.drawingSvg.selectAll("*").remove();
 		var r = this.drawingSvg.append("rect").attr("width",parseInt(this.main.style.width));
-		r.attr("height",parseInt(this.main.style.height)*0.1);
-		r.attr("y",parseInt(this.main.style.height)*0.9);
+		r.attr("height",parseInt(this.main.style.height) * 0.1);
+		r.attr("y",parseInt(this.main.style.height) * 0.9);
 		r.attr("fill","white").style("opacity",0.2)
-		this.drawingSvg.append("text").style("dominant-baseline","middle").style("text-anchor","middle").text("Tap here to recall the palette")
-			.attr("x",parseInt(this.main.style.width)*0.5).attr("y",parseInt(this.main.style.height)*0.925).attr("fill","white")
+		this.drawingSvg.append("text").style("dominant-baseline","middle").style("text-anchor","middle")
+			.text("Tap here to recall the palette")
+			.attr("x",parseInt(this.main.style.width) * 0.5).attr("y",parseInt(this.main.style.height) * 0.925)
+			.attr("fill","white")
 			.style("font-family","arial").style("font-size","5vmin").style("opacity",0.2);
 		for (var d in data) {
 			var drawing = data[d];
@@ -773,14 +776,14 @@ function UIBuilder(json_cfg, clientID) {
 				var w = end.x - start.x;
 				var h = end.y - start.y;
 				newDraw.attr("x",start.x).attr("y",start.y).attr("width",w).attr("height",h);
-				
-				var lw = w*0.1;
-				var lh = h*0.1;
-				var lx= w-lw;
-				var ly=h-lh;
-				
-				d3.select("#drawingSVG").append("rect").attr("id",drawingObject.id+"b")
-					.attr("x",start.x+lx).attr("y",start.y+ly)
+
+				var lw = w * 0.1;
+				var lh = h * 0.1;
+				var lx = w - lw;
+				var ly = h - lh;
+
+				d3.select("#drawingSVG").append("rect").attr("id",drawingObject.id + "b")
+					.attr("x",start.x + lx).attr("y",start.y + ly)
 					.attr("width",lw).attr("height",lh)
 					.attr("fill","white").style("opacity",0.2);
 			}
@@ -827,7 +830,7 @@ function UIBuilder(json_cfg, clientID) {
 				if (drawingObject.type == "rect") {
 
 					toUpdate.remove();
-					d3.select("#" + drawingObject.id+"b").remove();
+					d3.select("#" + drawingObject.id + "b").remove();
 					this.drawObject(drawingObject);
 				}
 			}

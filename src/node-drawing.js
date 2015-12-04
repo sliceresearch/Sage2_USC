@@ -172,7 +172,7 @@ DrawingManager.prototype.clearDrawingCanvas = function() {
 	this.initAll();
 }
 
-function isInside (s,arr) {
+function isInside(s,arr) {
 	for (var i in arr) {
 		if (arr[i] == s) {
 			return true;
@@ -186,22 +186,24 @@ DrawingManager.prototype.saveActionToActionStack = function(e, type, data) {
 	if (type == "drawing") {
 		if (this.idAssociatedToAction[e.sourceId]) {
 			if (this.oldSelectionInfo) {
-				var selection = {selection: this.oldSelectionInfo.selectionBox, start: this.oldSelectionInfo.selectionStart, end: this.oldSelectionInfo.selectionEnd, obj: this.oldSelectionInfo.selectedDrawingObject};
+				var selection = {selection: this.oldSelectionInfo.selectionBox, start: this.oldSelectionInfo.selectionStart,
+								end: this.oldSelectionInfo.selectionEnd, obj: this.oldSelectionInfo.selectedDrawingObject};
 			}
 			var newAction = {type: "drawing", data: {ids: this.idAssociatedToAction[e.sourceId], selection: selection, obj: []}};
 			this.actionDoneStack.push(newAction);
 			delete this.idAssociatedToAction[e.sourceId];
 		}
 	} else if (type == "creatingSelection") {
-		var selection = {selection: this.selectionBox, start: this.selectionStart, end: this.selectionEnd, obj: this.selectedDrawingObject};
+		var selection = {selection: this.selectionBox, start: this.selectionStart,
+						end: this.selectionEnd, obj: this.selectedDrawingObject};
 		var newAction = {type: "creatingSelection", data: selection};
 		this.actionDoneStack.push(newAction);
 	} else if (type == "erase") {
-		this.actionDoneStack.push({type: "erase", 'data': data});
+		this.actionDoneStack.push({type: "erase", data: data});
 	} else if (type == "movingSelection") {
-		this.actionDoneStack.push({type: "movingSelection", 'data': data});
+		this.actionDoneStack.push({type: "movingSelection", data: data});
 	} else if (type == "zoomingSelection") {
-		this.actionDoneStack.push({type: "zoomingSelection", 'data': data});
+		this.actionDoneStack.push({type: "zoomingSelection", data: data});
 	}
 
 	this.actionRedoStack = [];
@@ -226,9 +228,9 @@ DrawingManager.prototype.undoLastDrawing = function() {
 					i++;
 				}
 			}
-			
+
 			/*var selectionData = undone['data']['selection'];
-			
+
 			if (selectionData.selection) {
 				console.log(selectionData.selection.start)
 				this.selectionBox = selectionData.selection;
@@ -238,7 +240,7 @@ DrawingManager.prototype.undoLastDrawing = function() {
 				this.drawState.push(this.selectionBox);
 				this.updateWithGroupDrawingObject([this.selectionBox]);
 			}*/
-			
+
 			this.removeDrawingObject(undoneDrawings);
 			undone['data']['obj'] = undoneDrawings;
 		} else if (type == "clearAll") {
@@ -261,12 +263,12 @@ DrawingManager.prototype.undoLastDrawing = function() {
 		} else if (type == "movingSelection") {
 			var dx = undone.data['dx'];
 			var dy = undone.data['dy'];
-			this.selectionStart.x += - dx;
-			this.selectionStart.y += - dy;
-			this.selectionEnd.x += - dx;
-			this.selectionEnd.y += - dy;
+			this.selectionStart.x += -dx;
+			this.selectionStart.y += -dy;
+			this.selectionEnd.x += -dx;
+			this.selectionEnd.y += -dy;
 			this.moveSelectionBox();
-			this.selectionMove(- dx, - dy);
+			this.selectionMove(-dx, -dy);
 		} else if (type == "zoomingSelection") {
 			var sx = undone.data['sx'];
 			var sy = undone.data['sy'];
@@ -278,7 +280,7 @@ DrawingManager.prototype.undoLastDrawing = function() {
 			undone.data['selectionEnd']['x'] = swapEndX;
 			undone.data['selectionEnd']['y'] = swapEndY;
 			this.moveSelectionBox();
-			this.selectionZoom(1/sx, 1/sy);
+			this.selectionZoom(1 / sx, 1 / sy);
 		}
 
 		this.actionRedoStack.push(undone);
@@ -469,7 +471,7 @@ DrawingManager.prototype.erase = function() {
 		this.saveActionToActionStack(this.eraserTouchId, "erase", groupToDelete);
 		this.removeDrawingObject(groupToDelete);
 	}
-	
+
 }
 
 
@@ -500,9 +502,10 @@ DrawingManager.prototype.moveSelectionBox = function() {
 DrawingManager.prototype.deleteSelectionBox = function() {
 
 	if (this.selectionBox) {
-		
-		this.oldSelectionInfo = {selectedDrawingObject: this.selectedDrawingObject, selectionStart: this.selectionStart, selectionEnd: this.selectionEnd, selectionBox: this.selectionBox};
-		
+
+		this.oldSelectionInfo = {selectedDrawingObject: this.selectedDrawingObject, selectionStart: this.selectionStart,
+								selectionEnd: this.selectionEnd, selectionBox: this.selectionBox};
+
 		for (var drawingObj in this.drawState) {
 			var idx = this.drawState[drawingObj]['id'];
 			if (idx == this.selectionBox["id"]) {
@@ -548,27 +551,27 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
 	}
 
-	if (this.newDrawingObject[drawingId]["options"]["points"].length >this.maxLineSize) { 
-		var l=this.newDrawingObject[drawingId]["options"]["points"].length; 
+	if (this.newDrawingObject[drawingId]["options"]["points"].length > this.maxLineSize) {
+		var l = this.newDrawingObject[drawingId]["options"]["points"].length;
 		var secondPart = this.newDrawingObject[drawingId]["options"]["points"].splice(this.maxLineSize - 1,l);
 		this.newDrawingObject[drawingId]["options"]["points"].push(this.copy(secondPart[0]));
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
 		this.idAssociatedToAction[e.sourceId].push(id);
-		var newDraw= {};
-		newDraw["type"]="path";
-		newDraw["style"]=this.newDrawingObject[drawingId]["style"];
-		newDraw["options"]={};
+		var newDraw = {};
+		newDraw["type"] = "path";
+		newDraw["style"] = this.newDrawingObject[drawingId]["style"];
+		newDraw["options"] = {};
 		newDraw["options"]["points"] = secondPart;
 		newDraw["id"] = id;
 		this.drawState.push(newDraw);
 		this.newDrawingObject[id] = newDraw;
-		}
+	}
 }
 
 DrawingManager.prototype.touchNearBottom = function(x,y) {
 	var c = this.checkInvolvedClient(x,y);
-	if (c!= null && (c > -1)) {
+	if (c != null && (c > -1)) {
 		var startY = this.tilesPosition[c].startY;
 		var endY = this.tilesPosition[c].endY;
 		var w = endY - startY;
@@ -629,11 +632,11 @@ DrawingManager.prototype.selectDrawingObjects = function() {
 
 DrawingManager.prototype.selectionMove = function(x, y) {
 
-	//var actionSelectionMove = {type: "selectionMove", data: {'x': x, 'y': y, obj: []}};
+	// var actionSelectionMove = {type: "selectionMove", data: {'x': x, 'y': y, obj: []}};
 
 	for (var drawingObj in this.selectedDrawingObject) {
 		var obj = this.selectedDrawingObject[drawingObj];
-		//actionSelectionMove['data']['obj'].push(obj);
+		// actionSelectionMove['data']['obj'].push(obj);
 		var points = obj['options']['points'];
 		for (var i in points) {
 			points[i]['x'] += x;
@@ -670,16 +673,15 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.currentTouch[e.sourceId] = touch;
 		} else {
 			var enoughDistant = true;
-			
 			for (var id in this.currentTouch) {
-				
+
 				if (this.distance(this.currentTouch[id], {x: posX, y: posY}) < 900) {
 					enoughDistant = false;
 					break;
 				}
-				
+
 			}
-			
+
 			if (enoughDistant) {
 				var touch = {x: posX, y: posY};
 				this.currentTouch[e.sourceId] = touch;
@@ -687,7 +689,7 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 				return;
 			}
 		}
-		
+
 		// touch down
 		if (this.touchInsidePaletteTitleBar(posX,posY)) {
 			this.actualAction = "movingPalette";
@@ -717,7 +719,9 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			this.selectionTouchId = e.sourceId;
 			if (this.touchInsideSelectionZoomBox(posX,posY)) {
 				this.actualAction = "zoomingSelection";
-				this.resizeSelectionStart = {w: this.selectionEnd.x - this.selectionStart.x, h: this.selectionEnd.y - this.selectionStart.y, selectionEnd: {x: this.selectionEnd.x, y: this.selectionEnd.y}};
+				this.resizeSelectionStart = {w: this.selectionEnd.x - this.selectionStart.x,
+											h: this.selectionEnd.y - this.selectionStart.y,
+											selectionEnd: {x: this.selectionEnd.x, y: this.selectionEnd.y}};
 			} else {
 				this.actualAction = "movingSelection";
 				this.movingSelectionStartingPosition = {x: posX, y: posY};
@@ -739,34 +743,34 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		}
 
 	} else if (e.type == 4) {
-		
+
 		if (this.currentTouch.length == 0) {
 			var touch = {x: posX, y: posY};
 			this.currentTouch[e.sourceId] = touch;
 		} else if (!this.currentTouch[e.sourceId]) {
-			
+
 			var enoughDistant = true;
-			
+
 			for (var id in this.currentTouch) {
-				
+
 				if (this.distance(this.currentTouch[id], {x: posX, y: posY}) < 900) {
 					enoughDistant = false;
 					break;
 				}
-				
+
 			}
-			
+
 			if (enoughDistant) {
 				var touch = {x: posX, y: posY};
 				this.currentTouch[e.sourceId] = touch;
 			} else {
 				return;
 			}
-			
+
 		} else {
 			this.currentTouch[e.sourceId] = {x: posX, y: posY};
 		}
-		
+
 		// touch move
 		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
 			this.actualAction = "erasing";
@@ -860,11 +864,11 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 		this.updateDrawingObject(e, posX, posY);
 
 	} else if (e.type == 6) {
-		
+
 		if (this.currentTouch[e.sourceId]) {
 			delete this.currentTouch[e.sourceId];
 		}
-		
+
 		// touch release
 		if (this.idMovingPalette == e.sourceId) {
 			return;
@@ -946,7 +950,8 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			var completeResizeW = parseFloat(newW) / this.resizeSelectionStart.w;
 			var completeResizeH = parseFloat(newH) / this.resizeSelectionStart.h;
 			this.saveActionToActionStack(e.sourceId, "zoomingSelection",
-				{selectionStart: this.selectionStart, selectionEnd: this.resizeSelectionStart['selectionEnd'], sx: completeResizeW, sy: completeResizeH});
+				{selectionStart: this.selectionStart, selectionEnd: this.resizeSelectionStart['selectionEnd'],
+				sx: completeResizeW, sy: completeResizeH});
 		}
 
 		if (!drawn) {
@@ -969,10 +974,10 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 	this.update(manipulatedObject, involvedClient);
 }
 
-DrawingManager.prototype.checkForApplications = function (id) {
+DrawingManager.prototype.checkForApplications = function(id) {
 	var drawing;
 	for (var i in this.drawState) {
-		if (this.drawState[i].id == id){
+		if (this.drawState[i].id == id) {
 			drawing = this.drawState[i];
 			break;
 		}
@@ -1056,7 +1061,7 @@ DrawingManager.prototype.applicationMoved = function(id,newX,newY) {
 				p.y += dy;
 			}
 		}
-	}	
+	}
 	if (toMove != []) {
 		this.updateWithGroupDrawingObject(toMove);
 	}
@@ -1081,7 +1086,7 @@ DrawingManager.prototype.applicationResized = function(id,newW,newH,origin) {
 				draw["options"]["points"][j] = this.scalePoint(p,origin,sx,sy);
 			}
 		}
-	}	
+	}
 	if (toMove != []) {
 		this.updateWithGroupDrawingObject(toMove);
 	}
@@ -1151,6 +1156,6 @@ DrawingManager.prototype.setCallbacks = function(
 	this.movePaletteTo = movePaletteToCB;
 	this.saveSession = saveSessionCB;
 	this.loadSession = loadSessionCB;
-	this.sendSessionListToPalette = sendSessionListCB; 
+	this.sendSessionListToPalette = sendSessionListCB;
 };
 module.exports = DrawingManager;

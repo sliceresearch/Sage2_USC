@@ -618,7 +618,7 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		drawingManager.removeWebSocket(wsio);
 	}
-	
+
 }
 
 function wsAddClient(wsio, data) {
@@ -1807,7 +1807,7 @@ function saveDrawingSession(data) {
 
 function getAllDrawingsessions() {
 	var allNames = fs.readdirSync(sessionDirectory);
-	var res= []
+	var res = []
 	for (var i in allNames) {
 		if (allNames[i].indexOf("drawingSession") != -1) {
 			res.push(allNames[i]);

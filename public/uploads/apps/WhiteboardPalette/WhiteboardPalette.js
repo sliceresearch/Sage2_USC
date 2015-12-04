@@ -33,6 +33,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		this.SAGE2Init("div", data);
 		this.paletteMode = "colorPicker"
 		this.svg = d3.select(this.element).append("svg").attr("id","paletteSVG");
+		this.svg.style("visibility","visible");
 		// Tutorial div over me
 		this.tutorial = d3.select("#main").append("div").style("visibility","hidden");
 		//this.tutorial.style("visibility","hidden");
@@ -368,6 +369,8 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	,
 
 	quit: function() {
+		this.svg.style("visibility","hidden");
+		this.tutorial.remove();
 		wsio.emit("disableDrawingMode",{id: this.id});
 		// Make sure to delete stuff (timers, ...)
 	},
