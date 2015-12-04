@@ -558,7 +558,7 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 		this.newDrawingObject[drawingId]["options"]["points"].push(this.copy(secondPart[0]));
 		this.realeaseId(e.sourceId);
 		var id = this.getNewId(e.sourceId);
-		if (this.idAssociatedToAction[e.sourceId].) {
+		if (this.idAssociatedToAction[e.sourceId]) {
 			this.idAssociatedToAction[e.sourceId].push(id);
 		}
 		var newDraw = {};
