@@ -2040,6 +2040,8 @@ function clearDisplay() {
 	for (i = 0; i < all.length; i++) {
 		deleteApplication(all[i]);
 	}
+	// Reset the app_id counter to 0
+	getUniqueAppId(-1);
 }
 
 
@@ -3417,7 +3419,12 @@ function loadConfiguration() {
 
 var getUniqueAppId = (function() {
 	var count = 0;
-	return function() {
+	return function(param) {
+		// reset the counter
+		if (param && param === -1) {
+			count = 0;
+			return;
+		}
 		var id = "app_" + count.toString();
 		count++;
 		return id;
