@@ -731,7 +731,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 			}
 			return;
 		} else if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
-			this.deleteSelectionBox();
 			this.newEraserBox(posX,posY,w,h);
 			this.eraserTouchId = e.sourceId;
 			this.erase();
@@ -872,7 +871,6 @@ DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
 		// touch release
 		if (this.eraserTouchId == e.sourceId) {
-			this.actualAction = "drawing";
 			this.eraserTouchId = -1;
 		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
 			this.actualAction = "drawing";
