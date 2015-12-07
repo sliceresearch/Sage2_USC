@@ -1372,6 +1372,17 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
+	// if keystrokes not captured and pressing  down '?'
+	//    then show help
+	if (event.key === "?"  && event.type === "keydown" && !keyEvents) {
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
+	}
+
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {

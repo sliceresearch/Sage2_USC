@@ -532,7 +532,9 @@ function UIBuilder(json_cfg, clientID) {
 		var serverStatusDialog = this.buildMessageBox('serverStatusDialog', 'Server offline');
 		this.main.appendChild(serverStatusDialog);
 
-		var helpDialog = this.buildImageBox('helpDialog', '/images/cheat-sheet.jpg');
+		var helpDialog = this.buildImageBox('helpDialog',
+			'/images/cheat-sheet.jpg',
+			"Mouse and keyboard operations and shortcuts");
 		this.main.appendChild(helpDialog);
 
 		this.uiHidden = false;
@@ -601,8 +603,9 @@ function UIBuilder(json_cfg, clientID) {
 	* @method buildImageBox
 	* @param id {String} DOM id of the element created
 	* @param imgsrc {String} URL to the image
+	* @param title {String} text above the image
 	*/
-	this.buildImageBox = function(id, imgsrc) {
+	this.buildImageBox = function(id, imgsrc, title) {
 		// width of the image on the wall
 		var dw = this.json_cfg.totalWidth  * 0.50;
 
@@ -639,6 +642,15 @@ function UIBuilder(json_cfg, clientID) {
 		newDialogImage.style.height   = "auto";
 		newDialogCancel.appendChild(newDialogImage);
 
+		var newDialogWaitText = document.createElement("p");
+		newDialogWaitText.id  = id + "_text";
+		newDialogWaitText.textContent = title;
+		newDialogWaitText.style.fontSize = Math.round(1.8 * this.titleTextSize) + "px";
+		newDialogWaitText.style.color = "#FFFFFF";
+		newDialogWaitText.style.marginBottom = (this.titleBarHeight / 4).toString() + "px";
+		newDialogWaitText.style.textAlign  = "center";
+
+		newDialog.appendChild(newDialogWaitText);
 		newDialog.appendChild(newDialogCancel);
 		return newDialog;
 	};
