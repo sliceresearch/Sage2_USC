@@ -53,7 +53,6 @@
 		"imageinfo": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"node-demux": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
 		"rbush": "latest",
@@ -61,12 +60,15 @@
 		"sprint": "^0.3.1",
 		"twit": "latest",
 		"mv": "latest",
-		"websocketio": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
 		"cheerio": "latest",
 		"ytdl-core": "latest"
 	},
+	"bundledDependencies": [
+		"websocketio",
+		"node-demux"
+	],
 	"devDependencies": {
 		"grunt": "latest",
 		"grunt-cli": "latest",
