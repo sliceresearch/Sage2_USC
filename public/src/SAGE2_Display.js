@@ -301,6 +301,10 @@ function setupListeners() {
 		ui.addRemoteSite(data);
 	});
 
+	wsio.on('toggleHelp', function(data) {
+		ui.toggleHelp();
+	});
+
 	wsio.on('connectedToRemoteSite', function(data) {
 		if (window.ui) {
 			ui.connectedToRemoteSite(data);
