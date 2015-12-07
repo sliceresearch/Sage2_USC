@@ -529,55 +529,118 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.appendChild(dataSharingCancel);
 		this.main.appendChild(dataSharingWaitDialog);
 
-
-		var serverStatusDialog = document.createElement("div");
-		serverStatusDialog.id = "serverStatusDialog";
-		serverStatusDialog.style.position = "absolute";
-		serverStatusDialog.style.top  = (-this.offsetY + (2 * this.titleBarHeight)).toString() + "px";
-		serverStatusDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth / 2 -
-			13 * this.titleBarHeight)).toString() + "px";
-		serverStatusDialog.style.width  = (26 * this.titleBarHeight).toString() + "px";
-		serverStatusDialog.style.height = (8 * this.titleBarHeight).toString() + "px";
-		serverStatusDialog.style.webkitBoxSizing = "border-box";
-		serverStatusDialog.style.mozBoxSizing = "border-box";
-		serverStatusDialog.style.boxSizing = "border-box";
-		serverStatusDialog.style.backgroundColor =  "#666666";
-		serverStatusDialog.style.border  =  "2px solid #000000";
-		serverStatusDialog.style.padding = (this.titleBarHeight / 4).toString() + "px";
-		serverStatusDialog.style.zIndex  = 8999;
-		serverStatusDialog.style.display = "none";
-		var serverStatusWaitText = document.createElement("p");
-		serverStatusWaitText.id = "serverStatusDialog_text";
-		serverStatusWaitText.textContent = "SAGE2 message";
-		serverStatusWaitText.style.fontSize = Math.round(1.8 * this.titleTextSize) + "px";
-		serverStatusWaitText.style.color = "#FFFFFF";
-		serverStatusWaitText.style.marginBottom = (this.titleBarHeight / 4).toString() + "px";
-		var serverStatusCancel = document.createElement("div");
-		serverStatusCancel.id = "serverStatusDialog_cancel";
-		serverStatusCancel.style.position = "absolute";
-		serverStatusCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
-		serverStatusCancel.style.bottom = (this.titleBarHeight).toString() + "px";
-		serverStatusCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
-		serverStatusCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
-		serverStatusCancel.style.webkitBoxSizing = "border-box";
-		serverStatusCancel.style.mozBoxSizing    = "border-box";
-		serverStatusCancel.style.boxSizing       = "border-box";
-		serverStatusCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
-		serverStatusCancel.style.border =  "2px solid #000000";
-		serverStatusCancel.style.textAlign = "center";
-		serverStatusCancel.style.lineHeight = (3 * this.titleBarHeight).toString() + "px";
-		var serverStatusCancelText = document.createElement("p");
-		serverStatusCancelText.id = "serverStatusDialog_cancelText";
-		serverStatusCancelText.textContent = "Server offline";
-		serverStatusCancelText.style.fontSize = Math.round(2 * this.titleTextSize) + "px";
-		serverStatusCancelText.style.color = "#FFFFFF";
-		serverStatusCancel.appendChild(serverStatusCancelText);
-		serverStatusDialog.appendChild(serverStatusWaitText);
-		serverStatusDialog.appendChild(serverStatusCancel);
+		var serverStatusDialog = this.buildMessageBox('serverStatusDialog', 'Server offline');
 		this.main.appendChild(serverStatusDialog);
+
+		var helpDialog = this.buildImageBox('helpDialog', '/images/cheat-sheet.jpg');
+		this.main.appendChild(helpDialog);
 
 		this.uiHidden = false;
 		this.showInterface();
+	};
+
+	/**
+	* Builds a box to display a message
+	*
+	* @method buildMessageBox
+	* @param id {String} DOM id of the element created
+	* @param message {String} text to display
+	*/
+	this.buildMessageBox = function(id, message) {
+		var newDialog = document.createElement("div");
+		newDialog.id = id;
+		newDialog.style.position = "absolute";
+		newDialog.style.top  = (-this.offsetY + (2 * this.titleBarHeight)).toString() + "px";
+		newDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth / 2 -
+			13 * this.titleBarHeight)).toString() + "px";
+		newDialog.style.width  = (26 * this.titleBarHeight).toString() + "px";
+		newDialog.style.height = (8  * this.titleBarHeight).toString() + "px";
+		newDialog.style.webkitBoxSizing = "border-box";
+		newDialog.style.mozBoxSizing    = "border-box";
+		newDialog.style.boxSizing       = "border-box";
+		newDialog.style.backgroundColor =  "#666666";
+		newDialog.style.border  =  "2px solid #000000";
+		newDialog.style.padding = (this.titleBarHeight / 4).toString() + "px";
+		newDialog.style.zIndex  = 8999;
+		newDialog.style.display = "none";
+		var newDialogWaitText = document.createElement("p");
+		newDialogWaitText.id = id + "_text";
+		newDialogWaitText.textContent = "SAGE2 message";
+		newDialogWaitText.style.fontSize = Math.round(1.8 * this.titleTextSize) + "px";
+		newDialogWaitText.style.color = "#FFFFFF";
+		newDialogWaitText.style.marginBottom = (this.titleBarHeight / 4).toString() + "px";
+		var newDialogCancel = document.createElement("div");
+		newDialogCancel.id  = id + "_cancel";
+		newDialogCancel.style.position = "absolute";
+		newDialogCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.bottom = (this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.webkitBoxSizing = "border-box";
+		newDialogCancel.style.mozBoxSizing    = "border-box";
+		newDialogCancel.style.boxSizing       = "border-box";
+		newDialogCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		newDialogCancel.style.border     =  "2px solid #000000";
+		newDialogCancel.style.textAlign  = "center";
+		newDialogCancel.style.lineHeight = (3 * this.titleBarHeight).toString() + "px";
+		var newDialogCancelText = document.createElement("p");
+		newDialogCancelText.id = id + "_cancelText";
+		newDialogCancelText.textContent = message;
+		newDialogCancelText.style.fontSize = Math.round(2 * this.titleTextSize) + "px";
+		newDialogCancelText.style.color = "#FFFFFF";
+		newDialogCancel.appendChild(newDialogCancelText);
+
+		newDialog.appendChild(newDialogWaitText);
+		newDialog.appendChild(newDialogCancel);
+		return newDialog;
+	};
+
+	/**
+	* Builds a box to display an image
+	*
+	* @method buildImageBox
+	* @param id {String} DOM id of the element created
+	* @param imgsrc {String} URL to the image
+	*/
+	this.buildImageBox = function(id, imgsrc) {
+		// width of the image on the wall
+		var dw = this.json_cfg.totalWidth  * 0.50;
+
+		var newDialog = document.createElement("div");
+		newDialog.id = id;
+		newDialog.style.position = "absolute";
+		newDialog.style.top  = (-this.offsetY + (2 * this.titleBarHeight)).toString() + "px";
+		newDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth / 2 - dw / 2)).toString() + "px";
+		newDialog.style.width  = (dw).toString() + "px";
+		newDialog.style.webkitBoxSizing = "border-box";
+		newDialog.style.mozBoxSizing    = "border-box";
+		newDialog.style.boxSizing       = "border-box";
+		newDialog.style.backgroundColor =  "#666666";
+		newDialog.style.border  =  "2px solid #000000";
+		newDialog.style.padding = (this.titleBarHeight / 4).toString() + "px";
+		newDialog.style.zIndex  = 8999;
+		newDialog.style.display = "none";
+
+		var newDialogCancel = document.createElement("div");
+		newDialogCancel.id  = id + "_cancel";
+		newDialogCancel.style.webkitBoxSizing = "border-box";
+		newDialogCancel.style.mozBoxSizing    = "border-box";
+		newDialogCancel.style.boxSizing       = "border-box";
+		newDialogCancel.style.border          =  "2px solid #000000";
+
+		// Create a img element to display the image
+		var newDialogImage = document.createElement("img");
+		newDialogImage.id = id + "_img";
+		// set the path to the image file
+		newDialogImage.src = imgsrc;
+		// set the width to the parent div
+		newDialogImage.style.maxWidth = "100%";
+		// height auto adjusts
+		newDialogImage.style.height   = "auto";
+		newDialogCancel.appendChild(newDialogImage);
+
+		newDialog.appendChild(newDialogCancel);
+		return newDialog;
 	};
 
 	/**
@@ -605,6 +668,21 @@ function UIBuilder(json_cfg, clientID) {
 	this.showError = function() {
 		// show the div supporting the dialog
 		document.getElementById('serverStatusDialog').style.display = "block";
+	};
+
+	/**
+	* Show some help
+	*
+	* @method toggleHelp
+	*/
+	this.toggleHelp = function() {
+		// show the div supporting the help image
+		var diag = document.getElementById('helpDialog');
+		if (diag.style.display === "none") {
+			diag.style.display = "block";
+		} else {
+			diag.style.display = "none";
+		}
 	};
 
 	/**
