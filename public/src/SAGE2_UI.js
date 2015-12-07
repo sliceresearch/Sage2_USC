@@ -1374,7 +1374,7 @@ function escapeDialog(event) {
 function noBackspace(event) {
 	// if keystrokes not captured and pressing  down '?'
 	//    then show help
-	if (event.key === "?"  && event.type === "keydown" && !keyEvents) {
+	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
 		webix.modalbox({
 			title: "Mouse and keyboard operations and shortcuts",
 			buttons: ["Ok"],
