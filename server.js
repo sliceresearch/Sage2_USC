@@ -6481,6 +6481,11 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
+		// if in empty space:
+		// Pressing ? for help (with shift)
+		if (data.code === 63 && remoteInteraction[uniqueID].SHIFT) {
+			broadcast('toggleHelp', {});
+		}
 		return;
 	}
 
