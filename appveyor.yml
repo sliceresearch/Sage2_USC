@@ -28,6 +28,7 @@ init:
 
 install:
   - ps: Install-Product node 5.1.0 x64
+  - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
   - .\keys\GO-windows.bat
