@@ -63,7 +63,7 @@ if (nums[0] === 4 && nums[1] >=  2 && nums[2] >=  3) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 4.2.3+.");
 	target = "4.2.3";
 }
-// Node v5.0.0 and above
+// Node v5.1.0 and above
 if (nums[0] === 5 && nums[1] >=  1 && nums[2] >=  0) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 5.1.0+.");
 	target = "5.1.0";
