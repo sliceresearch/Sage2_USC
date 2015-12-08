@@ -59,12 +59,12 @@ if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  7) {
 	target = "0.12.7";
 }
 // Node v4.2.3 and above
-if (nums[0] === 4 && nums[1] >=  2 && nums[2] >=  3) {
+if (nums[0] === 4 && ((nums[1] === 2 && nums[2] >=  3) || (nums[1] > 2)) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 4.2.3+.");
 	target = "4.2.3";
 }
 // Node v5.1.0 and above
-if (nums[0] === 5 && nums[1] >=  1 && nums[2] >=  0) {
+if (nums[0] === 5 && ((nums[1] === 1 && nums[2] >=  0) || (nums[1] > 1)) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 5.1.0+.");
 	target = "5.1.0";
 }
