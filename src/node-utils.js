@@ -62,6 +62,7 @@ if (semver.gte(process.versions.node, '0.10.0')) {
  * @return {Bool} true if exists
  */
 function fileExists(filename) {
+
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
 		return fs.existsSync(filename);
 	} else {
@@ -225,7 +226,7 @@ function updateWithGIT(branch, callback) {
 	exec(cmd1, { cwd: dirroot, timeout: 5000}, function(err, stdout, stderr) {
 		// return the messages in the callback paramter
 		if (err) {
-			callback(stderr, null);
+			callback(stdout + ' : ' + stderr, null);
 		} else {
 			callback(null, stdout);
 		}
@@ -351,7 +352,8 @@ function checkPackages(inDevelopement) {
 	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
 		function(error, stdout, stderr) {
 			if (error) {
-				throw new Error("Error running npm");
+				console.log("NPM>	Error running update");
+				return;
 			}
 
 			var key;
@@ -395,6 +397,7 @@ function registerSAGE2(config) {
 	request({
 		rejectUnauthorized: false,
 		url: 'https://sage.evl.uic.edu/register',
+		// url: 'https://131.193.183.150/register',
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
@@ -414,6 +417,7 @@ function deregisterSAGE2(config, callback) {
 	request({
 		rejectUnauthorized: false,
 		url: 'https://sage.evl.uic.edu/unregister',
+		// url: 'https://131.193.183.150/unregister',
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
@@ -436,6 +440,17 @@ function encodeReservedURL(aUrl) {
 	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B")
 			.replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D")
 			.replace(/\?/g, "%3F").replace(/\@/g, "%40");
+}
+
+/**
+ * Return a safe URL string: make Windows path to URL
+ *
+ * @method encodeReservedPath
+ * @param aUrl {String} URL to be sanitized
+ * @return {String} cleanup version of the URL
+ */
+function encodeReservedPath(aPath) {
+	return encodeReservedURL(aPath.replace(/\\/g, "/"));
 }
 
 
@@ -503,7 +518,7 @@ function mkdirParent(dirPath) {
  * @param folders {Array} list of folders
  * @param callback {Function} to be called when a change is detected
  */
-function monitorFolders(folders, callback) {
+function monitorFolders(folders, excludes, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -517,7 +532,10 @@ function monitorFolders(folders, callback) {
 				// only matching: all true for now
 				matches:  function(relpath) {return true; },
 				// and excluding: nothing for now
-				excludes: function(relpath) {return false; }
+				excludes: function(relpath) {
+					return (excludes.indexOf(relpath) !== -1);
+					// return false;
+				}
 			});
 			// place the callback the change event
 			monitor.on('change', callback);
@@ -560,4 +578,6 @@ module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.encodeReservedURL = encodeReservedURL;
 module.exports.mkdirParent       = mkdirParent;
+
+module.exports.encodeReservedPath = encodeReservedPath;
 

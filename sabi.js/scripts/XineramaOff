@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# XineramaOff
+
+sudo /usr/local/bin/noXinerama
+

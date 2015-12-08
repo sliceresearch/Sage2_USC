@@ -1,6 +1,6 @@
 {
 	name: "Tommy",
-	host: "marrinan.evl.uic.edu",
+	host: "localhost",
 	port: 9090,
 	index_port: 9292,
 	background: {
@@ -22,39 +22,28 @@
 		menubar: {
 			backgroundColor: "rgba(12, 15, 40, 0.5)",
 			textColor: "rgba(235, 230, 175, 1.0)",
-			remoteConnectedColor: "rgba(97, 173, 226, 1.0)",
-			remoteDisconnectedColor: "rgba(64, 114, 149, 1.0)"
+			remoteConnectedColor: "#61ADE2",
+			remoteDisconnectedColor: "#647295"
 		}
 	},
 	resolution: {
-		width: 840,
+		width: 1680,
 		height: 840
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
-		"localhost",
 		"127.0.0.1"
 	],
 	remote_sites: [
-		{
-			name: "Desk",
-			host: "thor.evl.uic.edu",
-			port: 7070,
-			secure: true
-		},
 		{
 			name: "IceWall",
 			host: "thor.evl.uic.edu",
@@ -63,7 +52,7 @@
 		},
 		{
 			name: "Cyber-Commons",
-			host: "iridium.evl.uic.edu",
+			host: "inferno.evl.uic.edu",
 			port: 443,
 			secure: true
 		},
@@ -85,13 +74,5 @@
 			port: 443,
 			secure: true
 		}
-	],
-	apis: {
-		twitter: {
-			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
-			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
-			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
-			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
-		}
-	}
+	]
 }

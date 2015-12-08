@@ -183,24 +183,27 @@ InteractableManager.prototype.removeGeometry = function(id, layerId) {
 */
 InteractableManager.prototype.editGeometry = function(id, layerId, type, geometry) {
 	var pkg = this.interactableObjects[layerId][id];
+	if (pkg) {
+		this.layers[layerId].objects.remove(pkg);
 
-	this.layers[layerId].objects.remove(pkg);
+		pkg.type = type;
+		pkg.geometry = geometry;
+		if (type === "circle") {
+			pkg.x1 = geometry.x - geometry.r;
+			pkg.y1 = geometry.y - geometry.r;
+			pkg.x2 = geometry.x + geometry.r;
+			pkg.y2 = geometry.y + geometry.r;
+		} else {
+			pkg.x1 = geometry.x;
+			pkg.y1 = geometry.y;
+			pkg.x2 = geometry.x + geometry.w;
+			pkg.y2 = geometry.y + geometry.h;
+		}
 
-	pkg.type = type;
-	pkg.geometry = geometry;
-	if (type === "circle") {
-		pkg.x1 = geometry.x - geometry.r;
-		pkg.y1 = geometry.y - geometry.r;
-		pkg.x2 = geometry.x + geometry.r;
-		pkg.y2 = geometry.y + geometry.r;
+		this.layers[layerId].objects.insert(pkg);
 	} else {
-		pkg.x1 = geometry.x;
-		pkg.y1 = geometry.y;
-		pkg.x2 = geometry.x + geometry.w;
-		pkg.y2 = geometry.y + geometry.h;
+		console.trace('Warning: cannot edit geometry', id, layerId, type, geometry);
 	}
-
-	this.layers[layerId].objects.insert(pkg);
 };
 
 /**
@@ -374,7 +377,10 @@ InteractableManager.prototype.getObject = function(id, layerId) {
 InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreList) {
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {
-		results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
+		// just in case
+		if (this.layers[layerId]) {
+			results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
+		}
 	} else {
 		var i;
 		var tmp;

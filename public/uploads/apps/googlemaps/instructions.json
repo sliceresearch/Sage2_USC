@@ -1,12 +1,12 @@
 {
 	"main_script": "googlemaps.js",
-	"icon": "googlemaps.webp",
+	"icon": "googlemaps.png",
 	"width":  800,
 	"height": 600,
 	"resize": "free",
 	"dependencies": [
 		"googlemapsInit.js",
-		"https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googleMapsForSAGE2Init"
+		"https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather&callback=googleMapsForSAGE2Init"
 	],
 	"load": {
 		"mapType":   "hybrid",

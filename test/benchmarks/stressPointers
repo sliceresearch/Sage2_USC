@@ -9,6 +9,7 @@ count=$2
 for i in `seq 0 ${count}`
 do
 	node randomPointer.js $server &
+	sleep 1
 done
 
 

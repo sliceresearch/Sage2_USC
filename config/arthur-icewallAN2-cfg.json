@@ -9,11 +9,23 @@
 	"ui": {
 		"clock": 12,
 		"show_url": true,
-		"show_version": true
+		"show_version": true,
+		"widgetControlSize": 20,
+		"auto_scale_ui": true,
+		"calculate_viewing_distance": true
 	},
 	"resolution": {
 		"width": 768,
 		"height": 1360
+	},
+	// NEW ATTRIBUTES
+	"dimensions": {
+		// dimensions of one tile (can be overriden in displays section)
+		"tile_width":  0.646,  // in meter, pixel area
+		"tile_height": 1.093,  // in meter, pixel area
+		"tile_borders": { "left": 0.002, "right": 0.002, "bottom": 0.002, "top": 0.002 }, // mullions in meter
+		// prefered or common viewing distance to calculate UI sizes
+		"viewing_distance": 10.0668	// in meter
 	},
 	"layout": {
 		"rows": 1,
@@ -36,7 +48,25 @@
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
-    },
+	},
+	experimental: {
+		omicron: {
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			dataPort: 30005,
+
+			// Touch gestures
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			useOinputserver: false,
+			inputServerIP: "127.0.0.1",
+			msgPort: 28000
+		}
+	},
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",

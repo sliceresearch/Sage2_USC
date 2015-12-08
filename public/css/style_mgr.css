@@ -18,33 +18,28 @@
 * {
 	margin: 0;
 	padding: 0;
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	font-style: normal;
 }
 
 body {
 	text-align: center;
 }
 
-p, label, span {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
-}
 
 ul {
 	padding: 0;
 	margin-left: 20px;
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 }
 
 li {
 	list-style: disc outside none;
 	display: list-item;
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 }
 
 input, button {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 11px;
 }
 
@@ -166,8 +161,6 @@ dialog::backdrop {
 }
 
 #textWidthTest {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	position: absolute;
 	visibility: hidden;
 	height: auto;
@@ -188,10 +181,7 @@ footer {
 }
 
 footer li {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 10pt;
-	font-weight: normal;
-	font-style: normal;
 	list-style: none outside none;
 }
 
@@ -199,14 +189,14 @@ footer li {
 	display:inline-block;
     width:125px;
     text-align: right;
-    padding: 3px 5px 0px 0px;
+    padding: 3px 5px 0 0;
 }
 
 .sageLabel {
-	display:inline-block;
-    width:110px;
+	display: inline-block;
+    width: 110px;
     text-align: right;
-    padding: 3px 10px 3px 0px;
+    padding: 3px 10px 3px 0;
 }
 
 .fileItem {
@@ -216,8 +206,8 @@ footer li {
 .lb_blackoverlay {
 	display: none;
 	position: fixed;
-	top: 0%;
-	left: 0%;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	background-color: #000000;
@@ -247,17 +237,17 @@ footer li {
 
 /***********************************************/
 .css-treeview {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 11px;
 	-moz-user-select: none;
 	-webkit-user-select: none;
+	-ms-user-select: none;
 	user-select: none;
 }
 
 .css-treeview ul,
 .css-treeview li {
-	padding: 0px;
-	margin: 6px 3px 0px 3px;
+	padding: 0;
+	margin: 6px 3px 0 3px;
 	list-style: none;
 }
 
@@ -268,13 +258,12 @@ footer li {
 
 .css-treeview label {
 	cursor: pointer;
-	font-size: 12px;
 }
 
 .css-treeview input + label {
 	background: url('../images/dir-closed.png') no-repeat;
-    padding: 3px 0px 3px 42px;
-    background-position: 0px 0px;
+    padding: 3px 0 3px 42px;
+    background-position: 0 0;
 }
 
 .css-treeview input:checked + label {
@@ -282,13 +271,13 @@ footer li {
 }
 
 .css-treeview input ~ ul {
-	margin: 0px;
+	margin: 0;
 	display: none;
 }
 
 .css-treeview input ~ ul > li {
-	margin: 0px;
-	padding: 0px 0px 0px 46px;
+	margin: 0;
+	padding: 0 0 0 46px;
 }
 
 .css-treeview input:checked ~ ul {

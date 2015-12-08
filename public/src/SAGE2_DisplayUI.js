@@ -87,7 +87,7 @@ SAGE2DisplayUI.prototype.init = function(config, wsio) {
  * @method draw
  */
 SAGE2DisplayUI.prototype.draw = function() {
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	var ctx = sage2UI.getContext('2d');
 
 	ctx.clearRect(0, 0, sage2UI.width, sage2UI.height);
@@ -166,25 +166,40 @@ SAGE2DisplayUI.prototype.draw = function() {
  * @param ratio {Number} scale factor
  */
 SAGE2DisplayUI.prototype.resize = function(ratio) {
-	var displayUI        = document.getElementById('displayUI');
-	var sage2UI          = document.getElementById('sage2UI');
+	var displayUI        = document.getElementById('displayUIDiv');
+	var sage2UI          = document.getElementById('sage2UICanvas');
 	var applicationsDiv  = document.getElementById('applicationsDiv');
 
 	// Extra scaling factor
 	ratio = ratio || 1.0;
-
 	var menuScale = 1.0;
-	if (window.innerWidth < 856) {
-		menuScale = window.innerWidth / 856;
-	}
+	// var winWidth = window.innerWidth * ratio;
+	// if (window.innerWidth < 856) {
+	// 	menuScale = window.innerWidth / 856;
+	// }
 
-	var freeWidth   = window.innerWidth  - 26; // window width minus padding
-	var freeHeight  = window.innerHeight - 24 - (86 * menuScale); //  bottom margin, and bottom buttons
+	// window width minus padding
+	var freeWidth   = window.innerWidth  - 26;
+	//  bottom margin, and bottom buttons
+	//  height scaled by ratio (like half the screen height)
 	var sage2Aspect = this.config.totalWidth / this.config.totalHeight;
 
 	// Calculate new sizes
-	var drawWidth  = Math.floor(freeWidth * ratio);
-	var drawHeight = Math.floor(freeWidth * ratio / sage2Aspect);
+	var drawWidth  = Math.floor(freeWidth * 1);
+	var drawHeight = Math.floor(freeWidth * 1 / sage2Aspect);
+
+	if ((drawHeight / window.innerHeight) < ratio) {
+		// the UI is already smaller than needed
+		ratio = 1.0;
+		drawWidth  = Math.floor(freeWidth * ratio);
+		drawHeight = Math.floor(freeWidth * ratio / sage2Aspect);
+	}
+
+	var freeHeight  = (window.innerHeight * ratio) - 24 - (86 * menuScale);
+	if (freeHeight < 100) {
+		freeHeight = 100;
+	}
+
 	// Check if it fits
 	if (drawHeight >= freeHeight) {
 		drawHeight = Math.floor(freeHeight);
@@ -213,18 +228,18 @@ SAGE2DisplayUI.prototype.resizeAppWindows = function(event) {
 	for (key in this.applications) {
 		var appWindow = document.getElementById(key);
 		var appWindowTitle = document.getElementById(key + "_title");
-		var appWindowArea = document.getElementById(key + "_area");
+		var appWindowArea  = document.getElementById(key + "_area");
 
-		appWindow.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindow.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindow.style.height = Math.round((this.applications[key].height + this.config.ui.titleBarHeight) * this.scale) + "px";
-		appWindow.style.left = Math.round(this.applications[key].left * this.scale) + "px";
-		appWindow.style.top = Math.round(this.applications[key].top * this.scale) + "px";
+		appWindow.style.left   = Math.round(this.applications[key].left * this.scale) + "px";
+		appWindow.style.top    = Math.round(this.applications[key].top * this.scale) + "px";
 
-		appWindowTitle.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindowTitle.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 
-		appWindowArea.style.top = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-		appWindowArea.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		appWindowArea.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowArea.style.height = Math.round(this.applications[key].height * this.scale) + "px";
 	}
 };
@@ -322,11 +337,11 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	var appWindow = document.createElement('div');
 	appWindow.id = data.id;
-	appWindow.className = "appWindow";
-	appWindow.style.width = Math.round(data.width * this.scale) + "px";
+	appWindow.className    = "appWindow";
+	appWindow.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindow.style.height = Math.round((data.height + this.config.ui.titleBarHeight) * this.scale) + "px";
-	appWindow.style.left = Math.round(data.left * this.scale) + "px";
-	appWindow.style.top = Math.round(data.top * this.scale) + "px";
+	appWindow.style.left   = Math.round(data.left * this.scale) + "px";
+	appWindow.style.top    = Math.round(data.top * this.scale) + "px";
 	appWindow.style.zIndex = this.appCount;
 
 	var appWindowTitle = document.createElement('div');

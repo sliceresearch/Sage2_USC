@@ -10,7 +10,13 @@ module.exports = function(grunt) {
 			},
 			nodeFiles: {
 				files: {
-					src: ['server.js', 'src/*.js']
+					src: [
+						"server.js",
+						"webconStartServer.js",
+						"src/*.js",
+						"public/uploads/apps/welcome/plugin.js",
+						"public/uploads/apps/tweetcloud2/plugin.js",
+						]
 				},
 				options: { config: "build/.eslintrc" }
 			},
@@ -26,15 +32,21 @@ module.exports = function(grunt) {
 						"public/uploads/apps/car_threejs/car_threejs.js",
 						"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
 						"public/uploads/apps/clock_svg/clock_svg.js",
+						"public/uploads/apps/flow/flow.js",
+						"public/uploads/apps/flow/app.js",
+						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
 						"public/uploads/apps/photos/photos.js",
+						"public/uploads/apps/photos/photo_scrapbooks.js",
 						"public/uploads/apps/radar/radar.js",
 						"public/uploads/apps/stereo_image/stereo_image.js",
 						"public/uploads/apps/sticky_note/sticky_note.js",
 						"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
 						"public/uploads/apps/US_weather/USweather.js",
 						"public/uploads/apps/web_earth/web_earth.js",
+						"public/uploads/apps/welcome/welcome.js",
+						"public/uploads/apps/tweetcloud2/tweetcloud.js",
 						"public/uploads/apps/whiteboard/whiteboard.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
@@ -44,7 +56,13 @@ module.exports = function(grunt) {
 		},
 		jscs: {
 			serverFiles: {
-				src: ['server.js', 'src/*.js'],
+				src: [
+					"server.js",
+					"webconStartServer.js",
+					"src/*.js",
+					"public/uploads/apps/welcome/plugin.js",
+					"public/uploads/apps/tweetcloud2/plugin.js",
+					],
 			},
 			browserFiles: {
 				src: ['public/src/*.js', 'public/admin/*.js']
@@ -54,14 +72,19 @@ module.exports = function(grunt) {
 					"public/uploads/apps/car_threejs/car_threejs.js",
 					"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
 					"public/uploads/apps/clock_svg/clock_svg.js",
+					"public/uploads/apps/flow/flow.js",
+					"public/uploads/apps/flow/shared.js",
 					"public/uploads/apps/googlemaps/googlemaps.js",
 					"public/uploads/apps/notepad/notepad.js",
 					"public/uploads/apps/photos/photos.js",
+					"public/uploads/apps/photos/photo_scrapbooks.js",
 					"public/uploads/apps/radar/radar.js",
 					"public/uploads/apps/stereo_image/stereo_image.js",
 					"public/uploads/apps/sticky_note/sticky_note.js",
 					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
 					"public/uploads/apps/US_weather/USweather.js",
+					"public/uploads/apps/welcome/welcome.js",
+					"public/uploads/apps/tweetcloud2/tweetcloud.js",
 					"public/uploads/apps/web_earth/web_earth.js",
 					"public/uploads/apps/whiteboard/whiteboard.js",
 					"public/uploads/apps/zoom/zoom.js"
@@ -86,7 +109,7 @@ module.exports = function(grunt) {
 			compile: {
 				name: 'SAGE2',
 				description: 'A New Approach for Data Intensive Collaboration Using Scalable Resolution Shared Displays',
-				version: '0.3.0',
+				version: '1.0.0',
 				url: 'http://sage2.sagecommons.org',
 				options: {
 					linkNatives: "true",
@@ -150,7 +173,7 @@ module.exports = function(grunt) {
 	});
 
 	// Load the dependencies
-	grunt.loadNpmTasks('eslint-grunt');
+	grunt.loadNpmTasks('grunt-eslint');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');

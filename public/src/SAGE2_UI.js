@@ -50,6 +50,17 @@ if (!Function.prototype.bind) {
 		return fBound;
 	};
 }
+
+
+//
+// Polyfill for 'startsWith'
+//
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position) {
+		position = position || 0;
+		return this.indexOf(searchString, position) === position;
+	};
+}
 /* eslint-enable */
 //
 
@@ -119,8 +130,8 @@ function SAGE2_init() {
 		console.log("Websocket opened");
 
 		// Show and hide elements once connect to server
-		document.getElementById('loadingUI').style.display = "none";
-		document.getElementById('displayUI').style.display = "block";
+		document.getElementById('loadingUI').style.display     = "none";
+		document.getElementById('displayUIDiv').style.display  = "block";
 		document.getElementById('menuContainer').style.display = "block";
 
 		// Start an initial resize of the UI once we get a connection
@@ -135,7 +146,8 @@ function SAGE2_init() {
 				version: true,
 				time: false,
 				console: false
-			}
+			},
+			browser: __SAGE2__.browser
 		};
 		wsio.emit('addClient', clientDescription);
 
@@ -150,6 +162,9 @@ function SAGE2_init() {
 
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
+		// show a popup for a long time
+		showMessage("Server offline", 2147483647);
+		// try to reload every few seconds
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
 				clearInterval(refresh);
@@ -157,17 +172,21 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 
-	window.addEventListener('dragover', preventDefault, false);
-	window.addEventListener('dragend',  preventDefault, false);
-	window.addEventListener('drop',     preventDefault, false);
+	// window.addEventListener('dragover', preventDefault, false);
+	// window.addEventListener('dragend',  preventDefault, false);
+	// window.addEventListener('drop',     preventDefault, false);
 
 	sage2UI.addEventListener('dragover',  preventDefault, false);
-	sage2UI.addEventListener('dragend',   preventDefault, false);
 	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
 	sage2UI.addEventListener('dragleave', fileDragLeave,  false);
 	sage2UI.addEventListener('drop',      fileDrop,       false);
+
+	// Force click for Safari, events:
+	//   webkitmouseforcewillbegin webkitmouseforcechanged
+	//   webkitmouseforcedown webkitmouseforceup
+	sage2UI.addEventListener("webkitmouseforceup", forceClick, false);
 
 	if (webix) {
 		// disabling the webix touch managment for now
@@ -215,6 +234,19 @@ function SAGE2_init() {
 	});
 }
 
+// Show error message for 2 seconds (or time given as parameter)
+function showMessage(message, delay) {
+	var aMessage = webix.alert({
+		type:  "alert-error",
+		title: "SAGE2 Error",
+		ok:    "OK",
+		text:  message
+	});
+	setTimeout(function() {
+		webix.modalbox.hide(aMessage);
+	}, delay ? delay : 2000);
+}
+
 function setupListeners() {
 	wsio.on('initialize', function(data) {
 		interactor.setInteractionId(data.UID);
@@ -222,14 +254,25 @@ function setupListeners() {
 		pointerX    = 0;
 		pointerY    = 0;
 
+		var sage2UI = document.getElementById('sage2UICanvas');
+
 		// Build the file manager
 		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
-		webix.DragControl.addDrop("displayUI", {
+		webix.DragControl.addDrop("displayUIDiv", {
 			$drop: function(source, target, event) {
 				var dnd = webix.DragControl.getContext();
 				// Calculate the position of the drop
-				var x = event.layerX / event.target.clientWidth;
-				var y = event.layerY / event.target.clientHeight;
+				var x, y;
+				if (hasMouse) {
+					// Desktop
+					x = event.layerX / event.target.clientWidth;
+					y = event.layerY / event.target.clientHeight;
+				} else {
+					// Mobile: convert from touch screen coordinate to element
+					var bbox = sage2UI.getBoundingClientRect();
+					x = (fileManager.dragPosition.x - bbox.left) / sage2UI.clientWidth;
+					y = (fileManager.dragPosition.y - bbox.top)  / sage2UI.clientHeight;
+				}
 				// Open the files
 				for (var i = 0; i < dnd.source.length; i++) {
 					fileManager.openItem(dnd.source[i], [x, y]);
@@ -241,6 +284,9 @@ function setupListeners() {
 		wsio.emit('requestStoredFiles');
 	});
 
+	// Open a popup on message sent from server
+	wsio.on('errorMessage', showMessage);
+
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
 		displayUI.init(config, wsio);
@@ -251,7 +297,9 @@ function setupListeners() {
 		interactor.setPointerSensitivity(sage2Min / screenMin);
 
 		// Update the file manager
-		fileManager.serverConfiguration(config);
+		if (fileManager) {
+			fileManager.serverConfiguration(config);
+		}
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
@@ -365,7 +413,9 @@ function setupListeners() {
 
 	wsio.on('stopMediaCapture', function() {
 		if (interactor.mediaStream !== null) {
-			interactor.mediaStream.stop();
+			// interactor.mediaStream.stop();
+			var track = interactor.mediaStream.getTracks()[0];
+			track.stop();
 		}
 	});
 }
@@ -382,7 +432,7 @@ function SAGE2_resize(ratio) {
 
 	var fm = document.getElementById('fileManager');
 	if (fm.style.display === "block") {
-		ratio = 0.6;
+		ratio = 0.5;
 	}
 
 	resizeMenuUI(ratio);
@@ -522,7 +572,14 @@ function createFileList(list, type, parent) {
  * @param event {Event} event data
  */
 function preventDefault(event) {
-	event.preventDefault();
+	if (event.preventDefault) {
+		// required by FF + Safari
+		event.preventDefault();
+	}
+	// tells the browser what drop effect is allowed here
+	event.dataTransfer.dropEffect = 'copy';
+	// required by IE
+	return false;
 }
 
 /**
@@ -532,7 +589,9 @@ function preventDefault(event) {
  * @param event {Event} event data
  */
 function fileDragEnter(event) {
-	var sage2UI = document.getElementById('sage2UI');
+	event.preventDefault();
+
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "dashed";
 	displayUI.fileDrop = true;
 	displayUI.draw();
@@ -545,7 +604,9 @@ function fileDragEnter(event) {
  * @param event {Event} event data
  */
 function fileDragLeave(event) {
-	var sage2UI = document.getElementById('sage2UI');
+	event.preventDefault();
+
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -558,9 +619,12 @@ function fileDragLeave(event) {
  * @param event {Event} event data
  */
 function fileDrop(event) {
-	event.preventDefault();
+	if (event.preventDefault) {
+		event.preventDefault();
+	}
 
-	var sage2UI = document.getElementById('sage2UI');
+	// Update the UI
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -569,12 +633,29 @@ function fileDrop(event) {
 	var x = event.layerX / event.target.clientWidth;
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
+		// upload a file
 		displayUI.fileUpload = true;
 		displayUI.uploadPercent = 0;
 		interactor.uploadFiles(event.dataTransfer.files, x, y);
 	} else {
-		interactor.uploadURL(event.dataTransfer.getData("Url"), x, y);
+		// URLs and text and ...
+		if (event.dataTransfer.types) {
+			// types: text/uri-list  text/plain text/html ...
+			var content;
+			if (event.dataTransfer.types.indexOf('text/uri-list') >= 0) {
+				// choose uri as first choice
+				content = event.dataTransfer.getData('text/uri-list');
+			} else {
+				// default to text
+				content = event.dataTransfer.getData('text/plain');
+			}
+			interactor.uploadURL(content, x, y);
+			return false;
+		} else {
+			console.log("Your browser does not support the types property: drop aborted");
+		}
 	}
+	return false;
 }
 
 /**
@@ -610,7 +691,7 @@ function fileUploadFromUI() {
 	hideDialog('localfileDialog');
 
 	// Setup the progress bar
-	var sage2UI = document.getElementById('sage2UI');
+	var sage2UI = document.getElementById('sage2UICanvas');
 	sage2UI.style.borderStyle = "solid";
 	displayUI.fileDrop = false;
 	displayUI.draw();
@@ -630,14 +711,18 @@ function fileUploadFromUI() {
  * @param event {Event} event data
  */
 function pointerPress(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = true;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the click
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerPress(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the click
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerPress(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -649,14 +734,18 @@ function pointerPress(event) {
  * @param event {Event} event data
  */
 function pointerRelease(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		// pointerDown used to detect the drag event
 		pointerDown = false;
 		displayUI.pointerMove(pointerX, pointerY);
 
-		// then send the pointer release
-		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
-		displayUI.pointerRelease(btn);
+		// Dont send the middle click (only when pointer captured)
+		if (event.button !== 1) {
+			// then send the pointer release
+			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
+			displayUI.pointerRelease(btn);
+		}
+
 		event.preventDefault();
 	}
 }
@@ -669,19 +758,19 @@ function pointerRelease(event) {
  */
 function pointerMove(event) {
 	// listen for keyboard events if mouse moved over sage2UI
-	if (event.target.id === "sage2UI" && keyEvents === false) {
+	if (event.target.id === "sage2UICanvas" && keyEvents === false) {
 		document.addEventListener('keydown',  keyDown,  false);
 		document.addEventListener('keyup',    keyUp,    false);
 		document.addEventListener('keypress', keyPress, false);
 		keyEvents = true;
-	} else if (event.target.id !== "sage2UI" && keyEvents === true) {
+	} else if (event.target.id !== "sage2UICanvas" && keyEvents === true) {
 		document.removeEventListener('keydown',  keyDown,  false);
 		document.removeEventListener('keyup',    keyUp,    false);
 		document.removeEventListener('keypress', keyPress, false);
 		keyEvents = false;
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		var rect   = event.target.getBoundingClientRect();
 		var mouseX = event.clientX - rect.left;
 		var mouseY = event.clientY - rect.top;
@@ -766,7 +855,8 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse) {
+		if (!hasMouse && !__SAGE2__.browser.isIPad &&
+			!__SAGE2__.browser.isAndroidTablet) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
@@ -908,10 +998,11 @@ function handleClick(element) {
 		var metadata_text = document.getElementById('metadata_text');
 		metadata_text.textContent = selectedFileEntry.textContent;
 	} else if (element.id === "clearcontent") {
-		// Arrangement Button Chosen
+		// Remove all the running applications
 		wsio.emit('clearDisplay');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "tilecontent") {
+		// Layout the applications
 		wsio.emit('tileApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "savesession") {
@@ -948,7 +1039,7 @@ function pointerDblClick(event) {
  * @param element {Element} DOM element triggering the double click
  */
 function handleDblClick(element) {
-	if (element.id === "sage2UI") {
+	if (element.id === "sage2UICanvas") {
 		displayUI.pointerDblClick();
 		if (event.preventDefault) {
 			event.preventDefault();
@@ -971,9 +1062,41 @@ function handleDblClick(element) {
  * @param event {Event} event data
  */
 function pointerScroll(event) {
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		displayUI.pointerScroll(pointerX, pointerY, event.deltaY);
 		event.preventDefault();
+	}
+}
+
+/**
+ * Handler for force click event (safari)
+ *
+ * @method forceClick
+ * @param event {Event} event data
+ */
+function forceClick(event) {
+	// Check to see if the event has a force property
+	if ("webkitForce" in event) {
+		// Retrieve the force level
+		var forceLevel = event["webkitForce"];
+
+		// Retrieve the force thresholds for click and force click
+		var clickForce      = MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN;
+		var forceClickForce = MouseEvent.WEBKIT_FORCE_AT_FORCE_MOUSE_DOWN;
+
+		// Check for force level within the range of a normal click
+		if (forceLevel >= clickForce && forceLevel < forceClickForce) {
+			// Perform operations in response to a normal click
+			// Check for force level within the range of a force click
+		} else if (forceLevel >= forceClickForce) {
+			// Perform operations in response to a force click
+			var rect        = event.target.getBoundingClientRect();
+			var touchStartX = event.clientX - rect.left;
+			var touchStartY = event.clientY - rect.top;
+			// simulate backspace
+			displayUI.keyDown(touchStartX, touchStartY, 8);
+			displayUI.keyUp(touchStartX, touchStartY, 8);
+		}
 	}
 }
 
@@ -991,7 +1114,7 @@ function touchStart(event) {
 		touchTime = Date.now();
 	}
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (event.touches.length === 1) {
 			rect        = event.target.getBoundingClientRect();
 			touchStartX = event.touches[0].clientX - rect.left;
@@ -999,6 +1122,7 @@ function touchStart(event) {
 			displayUI.pointerMove(touchStartX, touchStartY);
 			displayUI.pointerPress("left");
 			touchHold = setTimeout(function() {
+				// simulate backspace
 				displayUI.keyDown(touchStartX, touchStartY, 8);
 				displayUI.keyUp(touchStartX, touchStartY, 8);
 			}, 1500);
@@ -1063,6 +1187,17 @@ function touchStart(event) {
 
 		event.preventDefault();
 		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// toggle the pointer between app and window mode
+		interactor.togglePointerMode();
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
+		// Send play commad, spacebar for PDF and movies
+		console.log('Send play')
+		interactor.sendPlay();
+		event.preventDefault();
+		event.stopPropagation();
 	} else {
 		event.stopPropagation();
 	}
@@ -1079,7 +1214,7 @@ function touchEnd(event) {
 	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
 	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			displayUI.pointerRelease("left");
 			if (touchTap === 2) {
@@ -1135,7 +1270,7 @@ function touchMove(event) {
 	var rect, touchX, touchY, newDist, wheelDelta;
 	var touch0X, touch0Y, touch1X, touch1Y;
 
-	if (event.target.id === "sage2UI") {
+	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
 			rect   = event.target.getBoundingClientRect();
 			touchX = event.touches[0].clientX - rect.left;
@@ -1202,6 +1337,14 @@ function touchMove(event) {
 		// nothing
 		event.preventDefault();
 		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddleButton") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileMiddle2Button") {
+		// nothing
+		event.preventDefault();
+		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileRightButton") {
 		// nothing
 		event.preventDefault();
@@ -1229,6 +1372,17 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
+	// if keystrokes not captured and pressing  down '?'
+	//    then show help
+	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
+	}
+
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {

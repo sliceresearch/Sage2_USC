@@ -40,7 +40,7 @@ function WebsocketIO(ws, strictSSL, openCallback) {
 
 	var _this = this;
 	this.messages = {};
-	if (this.ws.readyState === 1) {
+	if (this.ws.readyState === WebSocket.OPEN) {
 		this.remoteAddress = {address: this.ws._socket.remoteAddress, port: this.ws._socket.remotePort};
 		this.id = this.remoteAddress.address + ":" + this.remoteAddress.port;
 	}
@@ -132,7 +132,7 @@ WebsocketIO.prototype.on = function(name, callback) {
 * @param data {Object} data to be sent with the message
 */
 WebsocketIO.prototype.emit = function(name, data, attempts) {
-	if (this.ws.readyState === 1) {
+	if (this.ws.readyState === WebSocket.OPEN) {
 		if (name === null || name === "") {
 			console.log("WebsocketIO>\tError, no message name specified");
 			return;
@@ -150,7 +150,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 					_this.emit(name, data, attempts - 1);
 				});
 			} else {
-				console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+				console.log("WebsocketIO>\tWarning: recipient has no listener (" + name + ")");
 			}
 			return;
 		}
@@ -163,9 +163,8 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 			try {
 				this.ws.send(message, {binary: true, mask: false}, function(err) {
 					if (err) {
-						console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
+						console.log("WebsocketIO>\t---ERROR (ws.send1)---", name, err);
 					}
-					// else success
 				});
 			}
 			catch (e) {
@@ -180,9 +179,8 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 				var msgString = JSON.stringify(message);
 				this.ws.send(msgString, {binary: false, mask: false}, function(err) {
 					if (err) {
-						console.log("WebsocketIO>\t---ERROR (ws.send)---", name);
+						console.log("WebsocketIO>\t---ERROR (ws.send2)---", name, err);
 					}
-					// else success
 				});
 			}
 			catch (e) {
@@ -199,7 +197,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 * @param data {String} data to be sent as the message
 */
 WebsocketIO.prototype.emitString = function(name, dataString, attempts) {
-	if (this.ws.readyState === 1) {
+	if (this.ws.readyState === WebSocket.OPEN) {
 		var _this = this;
 		var alias = this.remoteListeners[name];
 		if (alias === undefined) {

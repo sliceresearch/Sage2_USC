@@ -19,13 +19,11 @@
 </script>
 
 <!-- SAGE2 code -->
-<script type="text/javascript" src="src/md5.js"></script>
-<script type="text/javascript" src="src/SAGE2_runtime.js"></script>
-<script type="text/javascript" src="src/SAGE2_Session.js"></script>
+<script async src="src/md5.js"></script>
+<script async src="src/SAGE2_runtime.js"></script>
+<script async src="src/SAGE2_Session.js"></script>
 
-<!-- <link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
- -->
- <link rel="stylesheet" type="text/css" href="admin/style.css" media="screen">
+<link rel="stylesheet" type="text/css" href="admin/style.css" media="screen">
 
 <style>
 h2 {
@@ -61,7 +59,7 @@ input {
 	color: #666666;
 }
 input:focus {
-    outline: #ADD8E6 solid;
+	outline: #ADD8E6 solid;
 }
 </style>
 
@@ -82,9 +80,9 @@ input:focus {
 		<section class="siteType">
 			<h2>Enter the meeting password:</h2>
 			<input type="password" id="sessionValue" size="40" tabindex="1">
-		    <button class="button_session" type="button" id="enterButton" onclick="buttonSubmit()">
-		    	Enter
-		    </button>
+			<button class="button_session" type="button" id="enterButton" onclick="buttonSubmit()">
+				Enter
+			</button>
 		</section>
 
 		<section>

@@ -1,0 +1,144 @@
+{
+	name: "Cybercommons",
+	host: "iridium.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		image: {
+			url: "images/background/chicago_skyline_iridium.jpg",
+			style: "fit"
+		},
+		watermark: {
+			svg: "images/EVL-logo.svg",
+			color: "rgba(255, 255, 255, 0.2)"
+		},
+		clip: true
+	},
+	ui: {
+		clock: 12,
+		show_url: true,
+		show_version: true,
+		maxWindowWidth : 8192,
+		maxWindowHeight : 8192,
+		noDropShadow: true,
+		auto_scale_ui: true,
+	},
+	resolution: {
+		width: 4098,
+		height: 768,
+	},
+	// NEW ATTRIBUTES
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width:  1.093  // in meter, pixel area
+		tile_height: 0.646  // in meter, pixel area
+		tile_borders: { left: 0.002, right: 0.002, bottom: 0.002, top: 0.002 }, // mullions in meter
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 3.5  // in meter
+	},
+	layout: {
+		rows: 3,
+		columns: 2
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+			// NEW ATTRIBUTES
+			resolution: {  // optional overide of the resolution for this tile
+				width:  1920,
+				height: 1080,
+			},
+			dimensions: {
+				tile_width:  1.093  // in meter, pixel area
+				tile_height: 0.646  // in meter, pixel area
+				tile_borders: { left: 0.001, right: 0.001, bottom: 0.001, top: 0.001 }, // mullions in meter
+			},
+			index:  2,          // optional index to map a display to a client (implicit right now)
+			active: false       // ability to 'disable' a screen, a hole in the wall
+			offset: [ 10, 10 ]  // 2D offset to create custom layout, unit in pixels or meters ??
+		},
+		{
+			row: 1,
+			column: 0
+		},
+		{
+			row: 2,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 1,
+			dimensions: {
+				width:  1.093  // in meter, pixel area
+				height: 0.646  // in meter, pixel area
+				tile_borders: { left: 0.001, right: 0.001, bottom: 0.001, top: 0.001 }, // mullions in meter
+			}
+		},
+		{
+			row: 1,
+			column: 1
+		},
+		{
+			row: 2,
+			column: 1
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1",
+		"131.193.183.199",
+		"iridium.evl.optiputer.net"
+	],
+	remote_sites: [
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443
+		},
+                {
+                        name: "LAVA1",
+                        host: "canoe-samoa.ics.hawaii.edu",
+                        port: 443
+                },
+                {
+                        name: "LAVA2",
+                        host: "canoe-lava-2.manoa.hawaii.edu",
+                        port: 443
+                },
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443
+		}
+	],
+	experimental: {
+		omicron: {
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			dataPort: 30005,
+
+			// Touch gestures
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			useOinputserver: false,
+			inputServerIP: "131.193.77.159",
+			msgPort: 28000
+		}
+	}
+}
+

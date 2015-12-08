@@ -37,6 +37,7 @@ function Interaction(config) {
 	this.selectTimeId    = {};
 	this.portal = null;
 	this.interactionMode = MODE.WINDOW_MANAGEMENT;
+	this.previousMode    = MODE.APP_INTERACTION;
 	this.configuration   = config;
 
 	this.CTRL  = false;
@@ -51,7 +52,6 @@ function Interaction(config) {
  */
 
 Interaction.prototype.selectMoveItem = function(moveItem, pointerX, pointerY) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
 	this.selectedMoveItem    = moveItem;
 	this.selectedMoveControl = null;
 	// this.selectedScrollItem  = null;
@@ -101,8 +101,6 @@ Interaction.prototype.releaseControl = function() {
  */
 
 Interaction.prototype.selectScrollItem = function(scrollItem) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
-
 	this.selectedMoveItem    = null;
 	this.selectedScrollItem  = scrollItem;
 	this.selectedResizeItem  = null;
@@ -114,8 +112,6 @@ Interaction.prototype.selectScrollItem = function(scrollItem) {
  */
 
 Interaction.prototype.releaseItem = function(valid) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	var updatedItem = null;
 	if (!valid && this.selectedMoveItem !== null) {
 		this.selectedMoveItem.left   = this.selectedMoveItem.previous_left;
@@ -147,8 +143,6 @@ Interaction.prototype.releaseItem = function(valid) {
  */
 
 Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	if (this.selectedMoveItem === null) {
 		return null;
 	}
@@ -253,8 +247,6 @@ Interaction.prototype.dropControl = function() {
  */
 
 Interaction.prototype.scrollSelectedItem = function(scale) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	if (this.selectedScrollItem === null) {
 		return null;
 	}
@@ -305,8 +297,6 @@ Interaction.prototype.setHoverCornerItem = function(item) {
  */
 
 Interaction.prototype.selectResizeItem = function(resizeItem, pointerX, pointerY) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return;
-
 	this.selectedMoveItem    = null;
 	// this.selectedScrollItem  = null;
 	this.selectedMoveControl = null;
@@ -320,8 +310,6 @@ Interaction.prototype.selectResizeItem = function(resizeItem, pointerX, pointerY
  */
 
 Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	if (this.selectedResizeItem === null) {
 		return null;
 	}
@@ -387,8 +375,6 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
  */
 
 Interaction.prototype.maximizeSelectedItem = function(item) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	if (item === null) {
 		return null;
 	}
@@ -439,8 +425,6 @@ Interaction.prototype.maximizeSelectedItem = function(item) {
 };
 
 Interaction.prototype.maximizeFullSelectedItem = function(item) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	if (item === null) {
 		return null;
 	}
@@ -474,10 +458,7 @@ Interaction.prototype.maximizeFullSelectedItem = function(item) {
 /**
  *@method restoreSelectedItem
  */
-
 Interaction.prototype.restoreSelectedItem = function(item) {
-	// if (this.interactionMode !== MODE.WINDOW_MANAGEMENT) return null;
-
 	if (item === null) {
 		return null;
 	}
@@ -496,7 +477,6 @@ Interaction.prototype.restoreSelectedItem = function(item) {
 /**
  *@method isWindowManagementMode
  */
-
 Interaction.prototype.isWindowManagementMode = function() {
 	return this.interactionMode === MODE.WINDOW_MANAGEMENT;
 };
@@ -504,7 +484,6 @@ Interaction.prototype.isWindowManagementMode = function() {
 /**
  *@method isAppInteractionMode
  */
-
 Interaction.prototype.isAppInteractionMode = function() {
 	return this.interactionMode === MODE.APP_INTERACTION;
 };
@@ -512,7 +491,6 @@ Interaction.prototype.isAppInteractionMode = function() {
 /**
  *@method selectWindowManagementMode
  */
-
 Interaction.prototype.selectWindowManagementMode = function() {
 	this.interactionMode = MODE.WINDOW_MANAGEMENT;
 
@@ -524,7 +502,6 @@ Interaction.prototype.selectWindowManagementMode = function() {
 /**
  *@method selectAppInteractionMode
  */
-
 Interaction.prototype.selectAppInteractionMode = function() {
 	this.interactionMode = MODE.APP_INTERACTION;
 
@@ -536,7 +513,6 @@ Interaction.prototype.selectAppInteractionMode = function() {
 /**
  *@method toggleModes
  */
-
 Interaction.prototype.toggleModes = function() {
 	if (this.interactionMode === MODE.WINDOW_MANAGEMENT) {
 		this.interactionMode = MODE.APP_INTERACTION;
@@ -552,7 +528,6 @@ Interaction.prototype.toggleModes = function() {
 /**
  *@method windowManagementMode
  */
-
 Interaction.prototype.windowManagementMode = function() {
 	return this.interactionMode === MODE.WINDOW_MANAGEMENT;
 };
@@ -560,7 +535,6 @@ Interaction.prototype.windowManagementMode = function() {
 /**
  *@method appInteractionMode
  */
-
 Interaction.prototype.appInteractionMode = function() {
 	return this.interactionMode === MODE.APP_INTERACTION;
 };
@@ -568,7 +542,6 @@ Interaction.prototype.appInteractionMode = function() {
 /**
  *@method setPreviousInteractionItem
  */
-
 Interaction.prototype.setPreviousInteractionItem = function(item) {
 	this.previousInteractionItem = item;
 };
@@ -576,9 +549,22 @@ Interaction.prototype.setPreviousInteractionItem = function(item) {
 /**
  *@method getPreviousInteractionItem
  */
-
 Interaction.prototype.getPreviousInteractionItem = function() {
 	return this.previousInteractionItem;
+};
+
+/**
+ *@method getPreviousMode
+ */
+Interaction.prototype.getPreviousMode = function() {
+	return this.previousMode;
+};
+
+/**
+ *@method getPreviousMode
+ */
+Interaction.prototype.saveMode = function() {
+	this.previousMode = this.interactionMode;
 };
 
 module.exports = Interaction;

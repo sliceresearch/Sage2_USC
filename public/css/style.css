@@ -14,8 +14,6 @@
 /* CSS Document */
 
 
-@import url('fonts.css');
-
 * {
 	margin: 0;
 	padding: 0;
@@ -39,8 +37,8 @@ body {
 
 #main {
 	position: absolute;
-	left: 0px;
-	top: 0px;
+	left: 0;
+	top: 0;
 	width: 100%;
 	height: 100%;
 }
@@ -87,14 +85,14 @@ body {
 }
 
 .widgetBackground{
-	fill: rgba(150,166,189,0.7);
+	fill: rgba(150,166,189,0.8);
 	stroke: rgba(230,230,230,1.0);
 	stroke-width: 1;
 }
 .widgetText {
 	text-anchor: middle;
 	font-family: Arimo, Helvetica, sans-serif;
-	fill: rgba(109,130,159,1.0);
+	fill: #495587;
 }
 
 .widgetLabel {
@@ -112,8 +110,8 @@ body {
 
 .dataSharingArea {
 	position: absolute;
-	left: 0px;
-	top: 0px;
+	left: 0;
+	top: 0;
 	overflow: hidden;
 	/*border: 4px solid #000000;*/
 	background-color: rgba(255, 255, 255, 0.75);
@@ -121,25 +119,29 @@ body {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	-webkit-transform-origin: 0% 0% 0;
-	-moz-transform-origin: 0% 0% 0;
-	transform-origin: 0% 0% 0;
+	-webkit-transform-origin: 0 0 0;
+	-moz-transform-origin: 0 0 0;
+	-o-transform-origin: 0 0 0;
+	-ms-transform-origin: 0 0 0;
+	transform-origin: 0 0 0;
 }
 
 .dataSharingOverlay {
 	position: absolute;
-	left: 0px;
-	top: 0px;
+	left: 0;
+	top: 0;
 	overflow: hidden;
-	-webkit-transform-origin: 0% 0% 0;
-	-moz-transform-origin: 0% 0% 0;
-	transform-origin: 0% 0% 0;
+	-webkit-transform-origin: 0 0 0;
+	-moz-transform-origin: 0 0 0;
+	-o-transform-origin: 0 0 0;
+	-ms-transform-origin: 0 0 0;
+	transform-origin: 0 0 0;
 }
 
 .dataSharingTitle {
 	position: absolute;
-	left: 0px;
-	top: 0px;
+	left: 0;
+	top: 0;
 	overflow: hidden;
 	border: 4px solid #000000;
 	border-bottom: none;
@@ -147,7 +149,61 @@ body {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	-webkit-transform-origin: 0% 0% 0;
-	-moz-transform-origin: 0% 0% 0;
-	transform-origin: 0% 0% 0;
+	-webkit-transform-origin: 0 0 0;
+	-moz-transform-origin: 0 0 0;
+	-o-transform-origin: 0 0 0;
+	-ms-transform-origin: 0 0 0;
+	transform-origin: 0 0 0;
+}
+
+.stateObject {
+	color: #FFFFFF;
+}
+
+.stateObject[state='hover'] {
+	color: #EECC00;
+}
+
+.stateObject[state='unsynced'] {
+	color: #727272;
+}
+
+.stateNumber {
+	color: #AF7DFF;
+}
+
+.stateNumber[synced=false] {
+	color: #727272;
+}
+
+.stateBoolean {
+	color: #FC1F70;
+}
+
+.stateBoolean[synced=false] {
+	color: #727272;
+}
+
+.stateString {
+	color: #E6DC6D;
+}
+
+.stateString[synced=false] {
+	color: #727272;
+}
+
+.stateNull {
+	color: #A4E402;
+}
+
+.stateNull[synced=false] {
+	color: #727272;
+}
+
+.stateArray {
+	color: #60D9F1;
+}
+
+.stateArray[synced=false] {
+	color: #727272;
 }

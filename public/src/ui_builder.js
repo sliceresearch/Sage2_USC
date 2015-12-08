@@ -52,6 +52,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.wallRatio      = null;
 	this.browserRatio   = null;
 	this.ratio          = "fit";
+	this.scale          = 1;
 
 	this.pointerItems   = {};
 	this.radialMenus    = {};
@@ -121,6 +122,12 @@ function UIBuilder(json_cfg, clientID) {
 					_this.bg.style.webkitTransform = "scale(" + (newr) + ")";
 					_this.bg.style.mozTransform    = "scale(" + (newr) + ")";
 					_this.bg.style.transform       = "scale(" + (newr) + ")";
+					_this.scale = newr;
+					// Rescale the box around the pointers
+					for (var key in _this.pointerItems) {
+						var ptr = _this.pointerItems[key];
+						ptr.updateBox(_this.scale);
+					}
 				}
 			};
 			window.onkeydown = function(event) {
@@ -131,6 +138,7 @@ function UIBuilder(json_cfg, clientID) {
 						_this.bg.style.mozTransform = "scale(1)";
 						_this.bg.style.transform = "scale(1)";
 						_this.ratio = "full";
+						_this.scale = 1;
 					} else if (_this.ratio === "full") {
 						var newr;
 						if (_this.wallRatio >= _this.browserRatio) {
@@ -138,10 +146,16 @@ function UIBuilder(json_cfg, clientID) {
 						} else {
 							newr = document.documentElement.clientHeight / wallHeight;
 						}
-						_this.bg.style.webkitTransform = "scale(" + (newr) + ")";
-						_this.bg.style.mozTransform    = "scale(" + (newr) + ")";
-						_this.bg.style.transform       = "scale(" + (newr) + ")";
+						_this.scale = newr;
+						_this.bg.style.webkitTransform = "scale(" + _this.scale + ")";
+						_this.bg.style.mozTransform    = "scale(" + _this.scale + ")";
+						_this.bg.style.transform       = "scale(" + _this.scale + ")";
 						_this.ratio = "fit";
+					}
+					// Rescale the box around the pointers
+					for (var key in _this.pointerItems) {
+						var ptr = _this.pointerItems[key];
+						ptr.updateBox(_this.scale);
 					}
 					// This somehow forces a reflow of the div and show the scrollbars as needed
 					// Needed with chrome v36
@@ -151,6 +165,8 @@ function UIBuilder(json_cfg, clientID) {
 			};
 			// show the cursor in this mode
 			document.body.style.cursor = "initial";
+			// Trigger an initial resize
+			window.onresize();
 		} else {
 			document.body.style.backgroundColor = "#000000";
 			this.bg.style.backgroundColor = this.json_cfg.background.color || "#333333";
@@ -162,7 +178,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.main.style.width  = this.json_cfg.resolution.width  + "px";
 			this.main.style.height = this.json_cfg.resolution.height + "px";
 
-			if (this.json_cfg.background.image !== undefined && this.json_cfg.background.image.url !== undefined) {
+			if (this.json_cfg.background.image !== undefined &&
+				this.json_cfg.background.image.url !== undefined &&
+				!__SAGE2__.browser.isMobile) {
 				var bgImg = new Image();
 				bgImg.addEventListener('load', function() {
 					if (_this.json_cfg.background.image.style === "tile") {
@@ -176,7 +194,7 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
-						_this.bg.style.backgroundRepeat   = "repeat-x repeat-y";
+						_this.bg.style.backgroundRepeat   = "repeat";
 						_this.bg.style.backgroundSize     = bgImg.naturalWidth + "px " + bgImg.naturalHeight + "px";
 
 						_this.main.style.top    = (-1 * top).toString()  + "px";
@@ -232,15 +250,6 @@ function UIBuilder(json_cfg, clientID) {
 		this.logoLoadedFunc = this.logoLoaded.bind(this);
 		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
 
-		var head = document.getElementsByTagName("head")[0];
-
-		// Load CSS style sheet
-		var fileref = document.createElement("link");
-		fileref.setAttribute("rel",   "stylesheet");
-		fileref.setAttribute("type",  "text/css");
-		fileref.setAttribute("media", "screen");
-		fileref.setAttribute("href",  this.csssheet);
-
 		if (this.clientID === -1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
@@ -252,8 +261,15 @@ function UIBuilder(json_cfg, clientID) {
 			this.pointerOffsetX = Math.round(0.27917 * this.pointerHeight);
 			this.pointerOffsetY = Math.round(0.24614 * this.pointerHeight);
 		} else {
-			this.offsetX = this.json_cfg.displays[this.clientID].column * this.json_cfg.resolution.width;
-			this.offsetY = this.json_cfg.displays[this.clientID].row * this.json_cfg.resolution.height;
+			// Position of the tile
+			var x = this.json_cfg.displays[this.clientID].column;
+			var y = this.json_cfg.displays[this.clientID].row;
+			// Calculate offsets for borders
+			var borderx  = (x + 1) * this.json_cfg.resolution.borders.left + x * this.json_cfg.resolution.borders.right;
+			var bordery  = (y + 1) * this.json_cfg.resolution.borders.top  + y * this.json_cfg.resolution.borders.bottom;
+			// Position offsets plus borders offsets
+			this.offsetX = x * this.json_cfg.resolution.width + borderx;
+			this.offsetY = y * this.json_cfg.resolution.height + bordery;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize * 3;
@@ -386,6 +402,10 @@ function UIBuilder(json_cfg, clientID) {
 				}
 				url += window.location.pathname;
 			}
+			// if a URL was specified, just use it
+			if (this.json_cfg.url) {
+				url = this.json_cfg.url;
+			}
 			// If the SAGE2 session is password protected, add a lock symbol
 			if (this.json_cfg.passordProtected) {
 				// not portable: machine.innerHTML = url + " &#128274;";
@@ -509,9 +529,130 @@ function UIBuilder(json_cfg, clientID) {
 		dataSharingWaitDialog.appendChild(dataSharingCancel);
 		this.main.appendChild(dataSharingWaitDialog);
 
-		head.appendChild(fileref);
+		var serverStatusDialog = this.buildMessageBox('serverStatusDialog', 'Server offline');
+		this.main.appendChild(serverStatusDialog);
+
+		var helpDialog = this.buildImageBox('helpDialog',
+			'/images/cheat-sheet.jpg',
+			"Mouse and keyboard operations and shortcuts");
+		this.main.appendChild(helpDialog);
+
 		this.uiHidden = false;
 		this.showInterface();
+	};
+
+	/**
+	* Builds a box to display a message
+	*
+	* @method buildMessageBox
+	* @param id {String} DOM id of the element created
+	* @param message {String} text to display
+	*/
+	this.buildMessageBox = function(id, message) {
+		var newDialog = document.createElement("div");
+		newDialog.id = id;
+		newDialog.style.position = "absolute";
+		newDialog.style.top  = (-this.offsetY + (2 * this.titleBarHeight)).toString() + "px";
+		newDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth / 2 -
+			13 * this.titleBarHeight)).toString() + "px";
+		newDialog.style.width  = (26 * this.titleBarHeight).toString() + "px";
+		newDialog.style.height = (8  * this.titleBarHeight).toString() + "px";
+		newDialog.style.webkitBoxSizing = "border-box";
+		newDialog.style.mozBoxSizing    = "border-box";
+		newDialog.style.boxSizing       = "border-box";
+		newDialog.style.backgroundColor =  "#666666";
+		newDialog.style.border  =  "2px solid #000000";
+		newDialog.style.padding = (this.titleBarHeight / 4).toString() + "px";
+		newDialog.style.zIndex  = 8999;
+		newDialog.style.display = "none";
+		var newDialogWaitText = document.createElement("p");
+		newDialogWaitText.id = id + "_text";
+		newDialogWaitText.textContent = "SAGE2 message";
+		newDialogWaitText.style.fontSize = Math.round(1.8 * this.titleTextSize) + "px";
+		newDialogWaitText.style.color = "#FFFFFF";
+		newDialogWaitText.style.marginBottom = (this.titleBarHeight / 4).toString() + "px";
+		var newDialogCancel = document.createElement("div");
+		newDialogCancel.id  = id + "_cancel";
+		newDialogCancel.style.position = "absolute";
+		newDialogCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.bottom = (this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.webkitBoxSizing = "border-box";
+		newDialogCancel.style.mozBoxSizing    = "border-box";
+		newDialogCancel.style.boxSizing       = "border-box";
+		newDialogCancel.style.backgroundColor =  "rgba(173, 42, 42, 1.0)";
+		newDialogCancel.style.border     =  "2px solid #000000";
+		newDialogCancel.style.textAlign  = "center";
+		newDialogCancel.style.lineHeight = (3 * this.titleBarHeight).toString() + "px";
+		var newDialogCancelText = document.createElement("p");
+		newDialogCancelText.id = id + "_cancelText";
+		newDialogCancelText.textContent = message;
+		newDialogCancelText.style.fontSize = Math.round(2 * this.titleTextSize) + "px";
+		newDialogCancelText.style.color = "#FFFFFF";
+		newDialogCancel.appendChild(newDialogCancelText);
+
+		newDialog.appendChild(newDialogWaitText);
+		newDialog.appendChild(newDialogCancel);
+		return newDialog;
+	};
+
+	/**
+	* Builds a box to display an image
+	*
+	* @method buildImageBox
+	* @param id {String} DOM id of the element created
+	* @param imgsrc {String} URL to the image
+	* @param title {String} text above the image
+	*/
+	this.buildImageBox = function(id, imgsrc, title) {
+		// width of the image on the wall
+		var dw = this.json_cfg.totalWidth  * 0.50;
+
+		var newDialog = document.createElement("div");
+		newDialog.id = id;
+		newDialog.style.position = "absolute";
+		newDialog.style.top  = (-this.offsetY + (2 * this.titleBarHeight)).toString() + "px";
+		newDialog.style.left = (-this.offsetX + (this.json_cfg.totalWidth / 2 - dw / 2)).toString() + "px";
+		newDialog.style.width  = (dw).toString() + "px";
+		newDialog.style.webkitBoxSizing = "border-box";
+		newDialog.style.mozBoxSizing    = "border-box";
+		newDialog.style.boxSizing       = "border-box";
+		newDialog.style.backgroundColor =  "#666666";
+		newDialog.style.border  =  "2px solid #000000";
+		newDialog.style.padding = (this.titleBarHeight / 4).toString() + "px";
+		newDialog.style.zIndex  = 8999;
+		newDialog.style.display = "none";
+
+		var newDialogCancel = document.createElement("div");
+		newDialogCancel.id  = id + "_cancel";
+		newDialogCancel.style.webkitBoxSizing = "border-box";
+		newDialogCancel.style.mozBoxSizing    = "border-box";
+		newDialogCancel.style.boxSizing       = "border-box";
+		newDialogCancel.style.border          =  "2px solid #000000";
+
+		// Create a img element to display the image
+		var newDialogImage = document.createElement("img");
+		newDialogImage.id = id + "_img";
+		// set the path to the image file
+		newDialogImage.src = imgsrc;
+		// set the width to the parent div
+		newDialogImage.style.maxWidth = "100%";
+		// height auto adjusts
+		newDialogImage.style.height   = "auto";
+		newDialogCancel.appendChild(newDialogImage);
+
+		var newDialogWaitText = document.createElement("p");
+		newDialogWaitText.id  = id + "_text";
+		newDialogWaitText.textContent = title;
+		newDialogWaitText.style.fontSize = Math.round(1.8 * this.titleTextSize) + "px";
+		newDialogWaitText.style.color = "#FFFFFF";
+		newDialogWaitText.style.marginBottom = (this.titleBarHeight / 4).toString() + "px";
+		newDialogWaitText.style.textAlign  = "center";
+
+		newDialog.appendChild(newDialogWaitText);
+		newDialog.appendChild(newDialogCancel);
+		return newDialog;
 	};
 
 	/**
@@ -529,6 +670,31 @@ function UIBuilder(json_cfg, clientID) {
 			now = format24Hr(val);
 		}
 		this.clock.textContent = now;
+	};
+
+	/**
+	* Show a dialog on the wall when there is an error
+	*
+	* @method showError
+	*/
+	this.showError = function() {
+		// show the div supporting the dialog
+		document.getElementById('serverStatusDialog').style.display = "block";
+	};
+
+	/**
+	* Show some help
+	*
+	* @method toggleHelp
+	*/
+	this.toggleHelp = function() {
+		// show the div supporting the help image
+		var diag = document.getElementById('helpDialog');
+		if (diag.style.display === "none") {
+			diag.style.display = "block";
+		} else {
+			diag.style.display = "none";
+		}
 	};
 
 	/**
@@ -710,6 +876,8 @@ function UIBuilder(json_cfg, clientID) {
 		this.pointerItems[pointerElem.id].setLabel(pointer_data.label);
 		this.pointerItems[pointerElem.id].setColor(pointer_data.color);
 		this.pointerItems[pointerElem.id].setSourceType(pointer_data.sourceType);
+		// Rescale the box around the pointer
+		this.pointerItems[pointerElem.id].updateBox(this.scale);
 
 		this.pointerItems[pointerElem.id].isShown = true;
 	};
@@ -800,6 +968,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			var menu = new RadialMenu();
 			menu.init(data, menuElem2, menuElem3);
+			menu.setState(data);
 
 			menuElem1.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem1.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString() + "px";
@@ -827,6 +996,7 @@ function UIBuilder(json_cfg, clientID) {
 				menuElem1.style.display = "block";
 				this.radialMenus[menuElem1.id].draw();
 			}
+
 		}
 	};
 
@@ -841,25 +1011,52 @@ function UIBuilder(json_cfg, clientID) {
 
 		if (menuElem !== null) {
 			var menu = this.radialMenus[menuElem.id];
-
-			menuElem.style.display = "block";
-			menu.thumbnailScrollWindowElement.style.display = "block";
-			if (menu.currentMenuState !== 'radialMenu') {
-				menu.thumbnailWindowDiv.style.display = "block";
+			menu.setState(data);
+			if (data.visible === false) {
+				menu.closeMenu();
 			} else {
-				menu.thumbnailWindowDiv.style.display = "none";
-				menu.draw();
+				menu.setState(data);
+
+				menuElem.style.display = "block";
+				menu.thumbnailScrollWindowElement.style.display = "block";
+				if (data.thumbnailWindowState  !== 'closed') {
+					menu.thumbnailWindowDiv.style.display = "block";
+				} else {
+					menu.thumbnailWindowDiv.style.display = "none";
+				}
+				menu.redraw();
+				menu.visible = true;
+
+				var rect = menuElem.getBoundingClientRect();
+				menu.moveMenu({x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY});
+
+				menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
+				menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
 			}
-			menu.visible = true;
+		} else {
+			// Show was called on non-existant menu (display client was likely reset)
+			this.createRadialMenu(data);
+		}
+	};
+
+	/**
+	* Update the radial menu position
+	*
+	* @method updateRadialMenuPosition
+	* @param data {Object} menu data
+	*/
+	this.updateRadialMenuPosition = function(data) {
+
+		var menuElem = document.getElementById(data.id + "_menu");
+
+		if (menuElem !== null) {
+			var menu = this.radialMenus[menuElem.id];
 
 			var rect = menuElem.getBoundingClientRect();
 			menu.moveMenu({x: data.x, y: data.y, windowX: rect.left, windowY: rect.top}, {x: this.offsetX, y: this.offsetY});
 
 			menuElem.style.left = (data.x - this.offsetX - menu.radialMenuCenter.x).toString() + "px";
 			menuElem.style.top  = (data.y - this.offsetY - menu.radialMenuCenter.y).toString()  + "px";
-		} else {
-			// Show was called on non-existant menu (display client was likely reset)
-			this.createRadialMenu(data);
 		}
 	};
 
@@ -883,6 +1080,8 @@ function UIBuilder(json_cfg, clientID) {
 					this.radialMenus[data.menuID + "_menu"].setToggleMenu(data.menuState.action.window + "ThumbnailWindow");
 				} else if (data.menuState.action.type === "close") {
 					this.radialMenus[data.menuID + "_menu"].closeMenu();
+				} else if (data.menuState.action.type === "toggleSubRadial") {
+					this.radialMenus[data.menuID + "_menu"].toggleSubRadialMenu(data.menuState.action.window);
 				}
 			}
 		} else {
@@ -914,7 +1113,7 @@ function UIBuilder(json_cfg, clientID) {
 		var menuElem = document.getElementById(data.id + "_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateFileList(data.fileList);
-			this.radialMenus[menuElem.id].draw();
+			this.radialMenus[menuElem.id].redraw();
 		}
 	};
 
@@ -925,11 +1124,10 @@ function UIBuilder(json_cfg, clientID) {
 	* @param data {Object} data
 	*/
 	this.updateRadialMenuApps = function(data) {
-		console.log("updateRadialMenuApps");
 		var menuElem = document.getElementById(data.id + "_menu");
 		if (menuElem !== null) {
 			this.radialMenus[menuElem.id].updateAppFileList(data.fileList);
-			this.radialMenus[menuElem.id].draw();
+			this.radialMenus[menuElem.id].redraw();
 		}
 	};
 

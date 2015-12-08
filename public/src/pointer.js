@@ -35,6 +35,7 @@ function Pointer() {
 	this.labelText          = null;
 	this.color              = null;
 	this.sourceType         = null;
+	this.labelBGWidth       = null;
 
 	/**
 	* Init method, creates a div to attach Snap rendering into it
@@ -71,11 +72,11 @@ function Pointer() {
 
 		var labelBGX = Math.round(height * 0.40);
 		var labelBGY = Math.round(height * 0.65);
-		var labelBGWidth  = Math.round(height * 1.00);
-		var labelBGHeight = Math.round(height * 0.275);
 		var labelTextX    = Math.round(height * 0.5425);
 		var labelTextY    = Math.round(height * 0.8475);
 		var labelTextSize = Math.round(0.17 * height);
+		var labelBGHeight = Math.round(height * 0.275);
+		this.labelBGWidth = Math.round(height * 1.00);
 
 		var _this = this;
 
@@ -139,7 +140,7 @@ function Pointer() {
 		});
 
 		// Black background, transparent
-		this.labelBG = this.snap.rect(labelBGX, labelBGY, labelBGWidth, labelBGHeight, labelBGHeight / 2, labelBGHeight / 2);
+		this.labelBG = this.snap.rect(labelBGX, labelBGY, this.labelBGWidth, labelBGHeight, labelBGHeight / 2, labelBGHeight / 2);
 		this.labelBG.attr({
 			fill: "rgba(0, 0, 0, 0.6)"
 		});
@@ -150,8 +151,10 @@ function Pointer() {
 			fontSize: labelTextSize + "px",
 			fontFamily: "Arimo"
 		});
+
 		// Get the size of the text and padding
-		this.labelBG.attr({width: this.labelText.node.getBoundingClientRect().width + labelBGHeight});
+		this.labelBGWidth = this.labelText.node.getBoundingClientRect().width + labelBGHeight;
+		this.labelBG.attr({width: this.labelBGWidth});
 	};
 
 	/**
@@ -175,7 +178,8 @@ function Pointer() {
 		this.labelText.attr({text: label});
 		var labelBGHeight = Math.round(this.snap.node.getBoundingClientRect().height * 0.275);
 		// Get the size of the text and padding
-		this.labelBG.attr({width: this.labelText.node.getBoundingClientRect().width + labelBGHeight});
+		this.labelBGWidth = this.labelText.node.getBoundingClientRect().width + labelBGHeight;
+		this.labelBG.attr({width: this.labelBGWidth});
 	};
 
 	/**
@@ -198,6 +202,16 @@ function Pointer() {
 	this.changeMode = function(mode) {
 		this.mode = mode;
 		this.updateIconColors();
+	};
+
+	/**
+	* Recalculate the boxe around the pointer label
+	*
+	* @method updateBox
+	* @param scle {Number} new scale for client -1
+	*/
+	this.updateBox = function(scale) {
+		this.labelBG.attr({width: this.labelBGWidth / scale});
 	};
 
 	/**
@@ -254,7 +268,7 @@ function Pointer() {
 			// window manipulation
 			if (this.mode === 0) {
 				if (this.winModeIconLoaded) {
-					this.winModeIcon.attr({display: "none"});
+					this.winModeIcon.attr({display: ""});
 				}
 				if (this.appModeIconLoaded) {
 					this.appModeIcon.attr({display: "none"});
@@ -265,9 +279,10 @@ function Pointer() {
 					this.winModeIcon.attr({display: "none"});
 				}
 				if (this.appModeIconLoaded) {
-					this.appModeIcon.attr({display: ""});
+					this.appModeIcon.attr({display: "none"});
 				}
 			}
+
 		}
 	};
 

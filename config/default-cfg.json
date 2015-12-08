@@ -15,8 +15,11 @@
 	},
 	ui: {
 		clock: 12,
-		show_version: true,
+		show_version: false,
 		show_url: true,
+                maxWindowWidth: 8192,
+                maxWindowHeight: 8192,
+                noDropShadow: true
 	},
 	resolution: {
 		width: 1920,

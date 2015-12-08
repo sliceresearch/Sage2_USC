@@ -112,21 +112,21 @@ var SAGE2WidgetButtonTypes = {
 	mute: function() {
 		this.img = "images/appUi/muteBtn.svg";
 		this.img2 = "images/appUi/soundBtn.svg";
-		this.state = 0;
+		this.state = 1;
 		this.textual = false;
 		this.animation = false;
 	},
 	loop: function() {
 		this.img = "images/appUi/loopBtn.svg";
 		this.img2 = "images/appUi/dontLoopBtn.svg";
-		this.state = 0;
+		this.state = 1;
 		this.textual = false;
 		this.animation = false;
 	},
 	"play-pause": function() {
 		this.img = "images/appUi/playBtn.svg";
-		this.img2 = "images/appUi/playBtn.svg";
-		this.state = 0;
+		this.img2 = "images/appUi/pauseBtn.svg";
+		this.state = 1;
 		this.textual = false;
 		this.animation = false;
 	},
