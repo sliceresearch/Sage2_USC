@@ -3,6 +3,7 @@ version: 1.0.{build}
 branches:
   only:
   - master
+  - dkbin
 
 # git clone of depth 1
 #clone_depth: 1
