@@ -103,9 +103,12 @@ var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "
 var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
 var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
 var pathToSage2onbatScript		= path.join("scripts", "sage2_on.bat");
+var pathToFindMonitorData		= path.join("scripts", "winScriptHelperWriteMonitorRes.exe");
+var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json");
 var pathToGoWindowsCertGenFile	= "../keys/GO-windows.bat";
 var needToRegenerateSageOnFile	= true; //always check at least once
 var scriptExecutionFunction		= require('./src/script').Script;
+var commandExecutionFunction	= require('./src/script').Command;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -725,6 +728,7 @@ function process_request(cfg, req, res) {
 				console.log('HTTP>		PUT file has been written', filename, fileLength, 'bytes');
 				needToRegenerateSageOnFile = true;
 				updateCertificates();
+				makeMonitorInfoFile();
 			});
 			// Getting data
 			req.on('data', function(chunk) {
@@ -976,8 +980,8 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 	var found = false; 
 	if (data.value[0] === "sage2-on" && needToRegenerateSageOnFile) {
 		console.log('Delete this comment later: Intercepting sage2-on action.');
+		updateConfigFileToAccountForMonitorsAndResolution();
 		writeSageOnFileWithCorrectPortAndMeetingID();
-		console.log('Delete this comment later:');
 		needToRegenerateSageOnFile = false;
 	}
 	for (var f in AppRPC) {
@@ -1002,6 +1006,55 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 }
 
 function writeSageOnFileWithCorrectPortAndMeetingID() {
+	var port 		= getPortUsedInConfig();
+	var meetingID 	= getMeetingIDFromPasswd();
+	var cfg 		= fs.readFileSync( pathToWinDefaultConfig, "utf8" );
+		cfg 		= JSON5.parse(cfg);
+	var monitorData = fs.readFileSync(pathToMonitorDataFile);
+		monitorData = JSON5.parse(monitorData);
+	var displayNumber = 0;
+
+	if (port === null) {
+		console.log("Error: null port value. Cannot write file new sage2_on file.");
+		return;
+	}
+
+	var rewriteContents;
+		rewriteContents = "@rem off\n\n";
+		rewriteContents += "This fill will be automatically regenerated through sabi usage.\n\n";
+		rewriteContents += "start /MIN /D .. sage2.bat\n\n";
+		rewriteContents += "timeout 2\n\n";
+		rewriteContents += "rem clear the chrome folders\n";
+		rewriteContents += "rmdir /q /s %APPDATA%\\chrome\n\n";
+
+		rewriteContents += "rem audio client\n";
+		rewriteContents += "set datadir=%APPDATA%\\chrome\\audio\n";
+		rewriteContents += "mkdir %datadir%\n";
+		rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" --no-default-browser-check --new-window --disable-popup-blocking --no-first-run --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --window-size=600,300 --window-position=0,0 --user-data-dir=%datadir% http://localhost:'
+		rewriteContents += port + '/audioManager.html?hash='+meetingID+' /B\n\n';
+		rewriteContents += "timeout 5\n\n";
+
+	for(var h = 0; h < cfg.layout.rows; h++) {
+		for(var w = 0; w < cfg.layout.columns; w++) {
+			displayNumber 	= (h * cfg.layout.columns + w);
+			rewriteContents += "timeout 2\n\n";	
+			rewriteContents += "rem display" + displayNumber + "\n";
+			rewriteContents += "set datadir=%APPDATA%\\chrome\\display" + displayNumber + "\n";
+			rewriteContents += "mkdir %datadir%\n";
+			rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ';
+			rewriteContents += '--no-default-browser-check --new-window --disable-popup-blocking --no-first-run ';
+			rewriteContents += '--enable-accelerated-compositing --allow-file-access-from-files ';
+			rewriteContents += '--disable-session-crashed-bubble --allow-running-insecure-content ';
+			rewriteContents += '--window-size=500,500 --window-position='+ (monitorData.tileCoordinates[displayNumber].col + 100) +','+ (monitorData.tileCoordinates[displayNumber].row + 100) +'  '; 
+			rewriteContents += '--start-fullscreen --user-data-dir=%datadir% ';
+			rewriteContents += '"http://localhost:'+port+'/display.html?clientID='+displayNumber+'&hash='+meetingID+'" /B\n\n';
+		}
+	}
+
+	fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
+}
+
+function oldwriteSageOnFileWithCorrectPortAndMeetingIDold() {
 	var port = getPortUsedInConfig();
 	var meetingID = getMeetingIDFromPasswd();
 
@@ -1038,6 +1091,37 @@ function writeSageOnFileWithCorrectPortAndMeetingID() {
 	fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
 }
 
+function updateConfigFileToAccountForMonitorsAndResolution() {
+	if(!fileExists(pathToMonitorDataFile)) {
+		console.log("Error, asynchronous file writer through script function");
+		process.exit();
+	}
+
+	var monitorData = fs.readFileSync(pathToMonitorDataFile);
+		monitorData = JSON5.parse(monitorData);
+	var cfg 		= fs.readFileSync(pathToWinDefaultConfig);
+		cfg 		= JSON5.parse(cfg);
+	var displays 	= [];
+	var tdisp;
+
+	var totalMonitors	= monitorData.tileWidth * monitorData.tileHeight;
+	cfg.layout.columns	= monitorData.tileWidth;
+	cfg.layout.rows		= monitorData.tileHeight;
+
+	for(var height = 0; height < cfg.layout.rows; height++){
+		for(var width = 0; width < cfg.layout.columns; width++){
+			tdisp = {};
+			tdisp.row = height;
+			tdisp.column = width;
+			displays.push(tdisp);
+		}
+	}
+
+	cfg.displays = displays;
+	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg));
+}
+
+
 function getPortUsedInConfig() {
 	var pathToConfig; //config name differs depending on OS.
 	if (platform === "Windows") { pathToConfig = pathToWinDefaultConfig; }
@@ -1072,7 +1156,7 @@ function updateCertificates() {
 		return null;
 	}
 
-	var configdata = fs.readFileSync( pathToWinDefaultConfig );
+	var configdata = fs.readFileSync(pathToWinDefaultConfig);
 	var cfg = JSON5.parse(configdata);
 	var host = cfg.host;
 	var alternate = cfg.alternate_hosts;
@@ -1087,6 +1171,10 @@ function updateCertificates() {
 	fs.writeFileSync(pathToGoWindowsCertGenFile, rewriteContents);
 
 	scriptExecutionFunction( pathToGoWindowsCertGenFile, false);
+}
+
+function makeMonitorInfoFile() {
+	commandExecutionFunction(pathToFindMonitorData, null);
 }
 
 function processSerialPort(data) {
