@@ -31,7 +31,8 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("div", data);
-		this.paletteMode = "colorPicker"
+		this.paletteMode = "default"
+		this.drawingMode = true;
 		this.svg = d3.select(this.element).append("svg").attr("id","paletteSVG");
 		this.drawingSVG = d3.select("#drawingSVG");
 		this.drawingSVG.style("visibility","visible");
@@ -95,11 +96,15 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  {name: "Color5",action: this.changeColor,parent: this,backgroundColor: "white",r: 17,c: 2,cSpan: 1,rSpan: 5},
 								  {name: "Color6",action: this.colorPicker,parent: this,icon: path+"/color-picker.png",r: 12,c: 3,cSpan: 3,rSpan: 10},
 								  
-								  {name: "selectionModeButton",action: this.selectionModeOnOff,parent: this,icon: path+"/selection.png",r: 24,c: 0,cSpan: 3,rSpan:10},
+								  {name: "selectionModeButton",action: this.selectionModeOnOff,parent: this,icon: path+"/selection.png",r: 24,c: 0,cSpan: 2,rSpan:10},
 								  {name: "enablePaint",
 								  			action: this.paintingMode? this.disablePaintingMode: this.enablePaintingMode,
 								  			parent: this,icon: this.paintingMode? path + "/paintActive.png": path + "/paintNonActive.png",
-								  r: 24,c: 3,cSpan: 3,rSpan: 10},
+								  r: 24,c: 2,cSpan: 2,rSpan: 10},
+								  {name: "enableDrawing",
+								  			action: this.drawingMode? this.disableDrawingMode: this.enableDrawingMode,
+								  			parent: this,icon: this.drawingMode? path + "/paintActive.png": path + "/paintNonActive.png",
+								  r: 24,c: 4,cSpan: 2,rSpan: 10},
 								  
 								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 36,c: 0,cSpan: 2,rSpan: 10},
 								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 36,c: 2,cSpan: 2,rSpan: 10},
@@ -330,6 +335,14 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	disablePaintingMode: function() {
 		wsio.emit("disablePaintingMode",null);
 	},
+	enableDrawingMode: function() {
+		wsio.emit("enableDrawingMode",{id : this.parent.id});
+		console.log("en")
+	},
+	disableDrawingMode: function() {
+		wsio.emit("disableDrawingMode",null);
+		console.log("dis")
+	},
 	selectionModeOnOff: function() {
 		wsio.emit("selectionModeOnOff",null);
 	},
@@ -415,6 +428,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			this.handlePaletteTouch(position.x,position.y);
+			console.log(position.x,position.y)
 		}else if (eventType === "pointerDrag") {
 			this.handlePaletteDrag(position.x,position.y);
 		}
@@ -426,6 +440,7 @@ var WhiteboardPalette = SAGE2_App.extend( {
 		}
 		else if (eventType === "modeChange") {
 			this.paintingMode = data.paintingMode;
+			this.drawingMode = data.drawingMode;
 			this.createPalette();
 		}
 		else if (eventType === "sessionsList") {

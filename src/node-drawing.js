@@ -362,11 +362,22 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 	this.drawingMode = true;
 	this.paletteID = data.id;
 	this.sendStyleToPalette(this.paletteID,this.style);
+	this.sendModesToPalette();
 }
+
+DrawingManager.prototype.reEnableDrawingMode = function(data) {
+	console.log("Drawing mode reEnabled");
+	this.drawingMode = true;
+	console.log(this.palettePosition);
+	this.sendStyleToPalette(this.paletteID,this.style);
+	this.sendModesToPalette();
+}
+
 DrawingManager.prototype.disableDrawingMode = function(data) {
 	console.log("Drawing mode disabled");
 	this.drawingMode = false;
-	this.paletteID = null;
+	// this.paletteID = null;
+	this.sendModesToPalette();
 }
 
 DrawingManager.prototype.update = function(drawingObject, clientID) {
@@ -997,10 +1008,10 @@ DrawingManager.prototype.checkForApplications = function(id) {
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
 
-	if (clientID == null) {
+	if (clientID == null || !drawingObject) {
 		return
 	}
-
+	
 	// Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
 	var manipulatedObject = JSON.parse(JSON.stringify(drawingObject));
 

@@ -561,10 +561,25 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		console.log("pointer width/height ", touchWidth, touchHeight);
 	}
 
-	if (address.substring(0,address.indexOf(":")) == this.config.inputServerIP && drawingManager.drawingMode) {
+	var isOInput = e.flags == 0;
+	
+	if (isOInput && drawingManager.drawingMode) {
 		drawingManager.pointerEvent(e,sourceID,posX,posY,touchWidth,touchHeight);
+		
+		return;
 	}
-
+	
+	// If the user touches on the palette with drawing disabled, enable it
+	if ((!drawingManager.drawingMode ) && drawingManager.touchInsidePalette(posX,posY) && e.type === 5
+		&& isOInput) {
+		drawingManager.reEnableDrawingMode();
+	}
+	
+	// If drawing don't do anything else
+	if (drawingManager.drawingMode) {
+		return;
+	}
+	
 	// TouchGestureManager Flags:
 	// 1 << 18 = User flag start (as of 8/3/14)
 	// User << 1 = Unprocessed
