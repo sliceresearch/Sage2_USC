@@ -6,7 +6,7 @@
 	"animation": true,
 	"resize": "free",
 	"dependencies": [
-		"scripts/three.min.js",
+		"/lib/three.min.js",
 		"scripts/OrbitControls.js",
 		"scripts/ctm/lzma.js",
 		"scripts/ctm/ctm.js",

@@ -37,7 +37,6 @@ function RadialMenu(id, ptrID, config) {
 	this.top   = 0;
 	this.visible = true;
 	this.wsio    = undefined;
-	this.thumbnailWindowOpen = false;
 
 	// Default
 	this.radialMenuScale = config.ui.widgetControlSize * 0.03;
@@ -123,7 +122,7 @@ function RadialMenu(id, ptrID, config) {
 	this.thumbnailWindowState = "closed"; // closed, images, pdfs, videos, applauncher, sessions
 	this.thumbnailWindowScrollPosition = 0;
 
-	this.buttonState = []; // idle, lit, over for every radial menu button
+	this.buttonStates = {}; // idle, lit, over for every radial menu button
 
 	this.radialButtons = {};
 
@@ -132,6 +131,8 @@ function RadialMenu(id, ptrID, config) {
 	this.menuRadius = 110;
 
 	this.pointersOnMenu = {}; // Stores the pointerIDs that are on the menu, but not on a button
+
+	this.showArrangementSubmenu = false;
 
 	// id - unique button id
 	// icon - button icon
@@ -213,7 +214,9 @@ RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 RadialMenu.prototype.getInfo = function() {
 	return {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
 			thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
-			visble: this.visible, layout: this.radialButtons };
+			visible: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState,
+			arrangementMenuState: this.showArrangementSubmenu
+			};
 };
 
 /**
@@ -226,7 +229,6 @@ RadialMenu.prototype.getInfo = function() {
 */
 RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, color) {
 	var buttonName = buttonID.substring((this.id + "_menu_radial_button_").length, buttonID.length);
-	var buttonStates = {};
 	var action;
 	var otherButtonName;
 
@@ -255,121 +257,47 @@ RadialMenu.prototype.onButtonEvent = function(buttonID, pointerID, buttonType, c
 							this.radialButtons[otherButtonName].state = 0;
 						}
 					}
-					buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
+					this.buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
 				}
 			}
 
 			// Set the visibility of the content window
-			this.interactMgr.editVisibility(this.id + "_menu_thumbnail", "radialMenus", this.thumbnailWindowState !== "closed");
+			this.interactMgr.editVisibility(this.id + "_menu_thumbnail", "radialMenus", (this.thumbnailWindowState !== "closed"));
 
 			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].window};
 		} else if (this.radialButtons[buttonName].action === "toggleSubRadial") { // Actions with parameters
 			// Radial submenus
 			action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
+			this.showArrangementSubmenu = !this.showArrangementSubmenu;
 		} else { // All no parameter actions
 			action = {type: this.radialButtons[buttonName].action};
 			// Close button
 			if (action.type === "close") {
 				this.hide();
 			}
-			// Save session button
-			if (action.type === "saveSession") {
-				// NOTE: This action is handled by the server radialMenuEvent()
-			}
-			// Tile content
-			if (action.type === "tileContent") {
-				// NOTE: This action is handled by the server radialMenuEvent()
-			}
-			// Clear all content button
-			if (action.type === "clearAllContent") {
-				// NOTE: This action is handled by the server radialMenuEvent()
+			if (this.showArrangementSubmenu === false) {
+				// Save session button
+				if (action.type === "saveSession") {
+					// NOTE: This action is handled by the server radialMenuEvent()
+					action.type = "none";
+				}
+				// Tile content
+				if (action.type === "tileContent") {
+					// NOTE: This action is handled by the server radialMenuEvent()
+					action.type = "none";
+				}
+				// Clear all content button
+				if (action.type === "clearAllContent") {
+					// NOTE: This action is handled by the server radialMenuEvent()
+					action.type = "none";
+				}
 			}
 		}
 	}
 
 	// Update the menu state
-	buttonStates[buttonName] = this.radialButtons[buttonName].state;
-	return {action: action, buttonState: buttonStates, color: color};
-	/*
-	if (pointerID in this.radialButtons[buttonName].pointers || buttonType === "pointerPress" ) {
-		console.log("Existing pointer event: "+pointerID + " on button " + buttonName +" buttonType: "+buttonType);
-		if (buttonType === "pointerPress") {
-			this.radialButtons[buttonName].state = 2;
-			//console.log("RadialMenu PointerPress by pointerID : "+pointerID + " on button " + buttonName);
-
-			// Process the button click
-			if (this.radialButtons[buttonName].action === "contentWindow") { // Actions with parameters
-
-				// Set thumbnail window and button lit state
-				if (this.thumbnailWindowState === this.radialButtons[buttonName].window) {
-					this.thumbnailWindowState = "closed";
-				} else {
-					this.thumbnailWindowState = this.radialButtons[buttonName].window;
-					this.radialButtons[buttonName].state = 5;
-				}
-
-				// Clear button lit state for other buttonState
-				for (otherButtonName in this.radialButtons) {
-					if (otherButtonName !== buttonName) {
-						console.log("Clear button state for "+ otherButtonName);
-						delete this.radialButtons[otherButtonName].pointers[pointerID];
-						if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
-							if (this.radialButtons[otherButtonName].state !== 0 &&
-								this.thumbnailWindowState !== this.radialButtons[otherButtonName].window) {
-								this.radialButtons[otherButtonName].state = 0;
-							}
-						}
-						buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
-					}
-				}
-				this.interactMgr.editVisibility(this.id + "_menu_thumbnail", "radialMenus", this.thumbnailWindowState !== "closed");
-
-				action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].window};
-			} else if (this.radialButtons[buttonName].action === "toggleRadial") { // Actions with parameters
-				action = {type: this.radialButtons[buttonName].action, window: this.radialButtons[buttonName].radial};
-			} else { // All no parameter actions
-				action = {type: this.radialButtons[buttonName].action};
-
-				if (action.type === "close") {
-					this.hide();
-				}
-			}
-		} else if (buttonType === "pointerRelease") {
-			if (this.radialButtons[buttonName].state !== 5) {
-				this.radialButtons[buttonName].state = 4;
-			}
-		}
-
-		buttonStates[buttonName] = this.radialButtons[buttonName].state;
-		return {action: action, buttonState: buttonStates, color: color};
-	} else {
-		// Clear ID from other buttons (in case pointer moved so fast, that a clear event on menu never happened)
-		for (otherButtonName in this.radialButtons) {
-			if (otherButtonName !== buttonName) {
-				delete this.radialButtons[otherButtonName].pointers[pointerID];
-				if (Object.keys(this.radialButtons[otherButtonName].pointers).length === 0) {
-					if (this.radialButtons[otherButtonName].state !== 0 &&
-						this.thumbnailWindowState !== this.radialButtons[otherButtonName].window) {
-						this.radialButtons[otherButtonName].state = 0;
-					}
-				}
-				buttonStates[otherButtonName] = this.radialButtons[otherButtonName].state;
-			}
-		}
-		// console.log("New pointer event: "+pointerID + " on button " + buttonName);
-		this.radialButtons[buttonName].pointers[pointerID] = "";
-		if (buttonType === "pointerMove" && this.radialButtons[buttonName].state !== 5) {
-			this.radialButtons[buttonName].state = 1;
-		} else if (buttonType === "pointerPress" && this.radialButtons[buttonName].state !== 5) {
-			this.radialButtons[buttonName].state = 2;
-		} else if (buttonType === "pointerRelease" && this.radialButtons[buttonName].state !== 5) {
-			this.radialButtons[buttonName].state = 4;
-		}
-		buttonStates[buttonName] = this.radialButtons[buttonName].state;
-		delete this.pointersOnMenu[pointerID];
-		return {buttonState: buttonStates};
-	}
-	*/
+	this.buttonStates[buttonName] = this.radialButtons[buttonName].state;
+	return {action: action, buttonState: this.buttonStates, color: color};
 };
 
 /**
@@ -413,6 +341,16 @@ RadialMenu.prototype.getShortButtonName = function(longName) {
 };
 
 /**
+* Returns if the thumbnail window is currently open
+*
+* @method isThumbnailWindowOpen
+* @return openState
+*/
+RadialMenu.prototype.isThumbnailWindowOpen = function() {
+	return this.thumbnailWindowState !== "closed";
+};
+
+/**
 *
 *
 * @method setScale
@@ -447,15 +385,7 @@ RadialMenu.prototype.hide = function() {
 		this.interactMgr.editVisibility(this.id + "_menu_radial_button_" + buttonName, "radialMenus", false);
 		this.radialButtons[buttonName].state = 0;
 	}
-};
-
-/**
-*
-*
-* @method openThumbnailWindow
-*/
-RadialMenu.prototype.openThumbnailWindow = function(data) {
-	this.thumbnailWindowOpen = data.thumbnailWindowOpen;
+	this.thumbnailWindowState = "closed";
 };
 
 /**
@@ -540,7 +470,7 @@ RadialMenu.prototype.isEventOnMenu = function(data) {
 				(data.y > this.top - this.radialMenuSize.y / 2) &&
 				(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
 			// Else if over thumbnail window bounding box
-			if (this.thumbnailWindowOpen === true) {
+			if (isThumbnailWindowOpen()) {
 				return true;
 			}
 		}
@@ -578,7 +508,7 @@ RadialMenu.prototype.onEvent = function(data) {
 			}
 
 			return true;
-		} else if (this.thumbnailWindowOpen === true &&
+		} else if (isThumbnailWindowOpen() &&
 				(data.x > this.left + this.radialMenuSize.x / 2) &&
 				(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
 				(data.y > this.top - this.radialMenuSize.y / 2) &&

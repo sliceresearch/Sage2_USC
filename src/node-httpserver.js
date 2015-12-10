@@ -180,7 +180,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 				// If no match, go back to password page
 				if (!sessionMatch) {
-					this.redirect(res, "session.html?page=" + req.url.substring(1));
+					this.redirect(res, "/session.html?page=" + req.url.substring(1));
 				}
 			}
 		}
@@ -280,7 +280,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			res.writeHead(404, {"Content-Type": "text/html"});
 			res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
 			res.write("<br><br><br>\n");
-			res.write("<b><a href=index.html>SAGE2 main page</a></b>\n");
+			res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
 			res.end();
 			return;
 		}

@@ -1,0 +1,19 @@
+
+# install node packages
+#
+npm install http-auth
+npm install htdigest
+npm install mime
+npm install serialport
+npm install socket.io
+npm install sprint
+npm install forever
+npm install optimist
+
+npm install socket.io-client
+npm install exec-sync
+npm install async
+
+
+# get a copy
+git archive --format=zip --remote=ssh://git@bitbucket.org/renambot/sabi.js.git --prefix=sabi.js/ --output="sabijs.zip" master

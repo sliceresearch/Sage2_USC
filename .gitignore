@@ -28,6 +28,9 @@ config/whiteboard-cfg.json
 # generated content
 doc/api
 
+# http cache
+public/sage2.appcache
+
 # Dependency directory
 node_modules
 public/uploads/assets

@@ -1,13 +1,13 @@
-version: 0.4.{build}
+version: 1.0.{build}
 
 branches:
   only:
   - master
 
 # git clone of depth 1
-clone_depth: 1
+#clone_depth: 1
 # specific to github and bitbucket: get a ZIP file using REST API
-#shallow_clone: true
+shallow_clone: true
 
 configuration: Release
 
@@ -15,7 +15,7 @@ platform: x64
 
 init:
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-2.8-win64-dev.7z
-  - 7z x ffmpeg-2.8-win64-dev.7z -o.
+  - 7z x ffmpeg-2.8-win64-dev.7z -o. > nul
   - mkdir C:\Dev\
   - mkdir C:\Dev\ffmpeg-win64-dev
   - move ffmpeg-2.8-win64-dev\lib C:\Dev\ffmpeg-win64-dev
@@ -27,7 +27,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Install-Product node 5.0.0 x64
+  - ps: Install-Product node 5.1.1 x64
+  - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
   - .\keys\GO-windows.bat
@@ -37,45 +38,75 @@ install:
   - npm install -g kthxbai
   - kthxbai
   - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-2.8-win64-shared.7z
-  - 7z x ffmpeg-2.8-win64-shared.7z -o.
+  - 7z x ffmpeg-2.8-win64-shared.7z -o.  > nul
   - copy ffmpeg-2.8-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
   - copy ffmpeg-2.8-win64-shared\bin\*.dll bin\
   - copy ffmpeg-2.8-win64-shared\bin\*.exe bin\
   - rmdir /Q /S ffmpeg-2.8-win64-shared
   - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.04.zip
-  - 7z x exiftool-10.04.zip
+  - 7z x exiftool-10.04.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
+  - move bin\sabi.bat sabi.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
   - curl -LsSO http://downloads.ghostscript.com/public/gs918w64.exe
-  - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs
+  - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs > nul
   - copy gs\$_OUTDIR\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
-  - xcopy /S /I /Y gs\$_OUTDIR\lib lib
+  - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.2-5-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.2-5-portable-Q16-x64.zip -oim
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.2-8-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.2-8-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
-  - curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
-  - 7z x -y git-win64-bin.zip
+  # - curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
+  # - 7z x -y git-win64-bin.zip > nul
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
   - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.exe
   - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.lib
   - cd ..
+  - cd sabi.js
+  - npm install --production --msvs_version=2013
+  - kthxbai
+  - cd ..
   - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
-  - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%.zip VERSION.json .git sage2.bat AUTHORS GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src
-
+  # - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
+  # - 7z a -sfx7z.sfx sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
+  - mkdir SAGE2
+  # - attrib -H .git
+  # - move .git SAGE2
+  # - attrib +H SAGE2\.git
+  - move VERSION.json SAGE2
+  - move sage2.bat SAGE2
+  - move sabi.bat SAGE2\Launcher.bat
+  - move AUTHORS SAGE2
+  - move sabi.js SAGE2
+  - move GO-scripts SAGE2
+  - move Gruntfile.js SAGE2
+  - move LICENSE.txt SAGE2
+  - move README.md SAGE2
+  - move bin SAGE2
+  - move lib SAGE2
+  - move config SAGE2
+  - move doc SAGE2
+  - move keys SAGE2
+  - move node_modules SAGE2
+  - move package.json SAGE2
+  - move public SAGE2
+  - move server.js SAGE2
+  - move src SAGE2
+  - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
+  - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
 
 build: off
 
 test: off
 
 artifacts:
-  - path: sage2-win64-$(APPVEYOR_BUILD_VERSION).zip
+  - path: sage2-win64-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH).exe
     name: sage2-win64
 
 deploy:

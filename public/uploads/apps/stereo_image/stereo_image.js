@@ -25,8 +25,45 @@ var stereo_image = SAGE2_App.extend({
 		var _this = this;
 		this.stereoImg = new Image();
 		this.stereoImg.addEventListener('load', function() {
+			// Image is now finished loading
 			_this.stereoImgLoaded = true;
-			_this.sendResize(_this.stereoImg.naturalWidth / 2, _this.stereoImg.naturalHeight);
+			// Resize to reasonable size
+			var wallRatio   = _this.config.totalWidth / _this.config.totalHeight;
+			// new double width
+			var iWidth      = _this.stereoImg.naturalWidth / 2;
+			var iHeight     = _this.stereoImg.naturalHeight;
+			var aspectRatio = iWidth / iHeight;
+			// Image wider than wall
+			if (iWidth > _this.config.totalWidth && aspectRatio >= wallRatio) {
+				// Image wider than wall
+				iWidth  = _this.config.totalWidth / 2;  // half width of wall
+				iHeight = iWidth / aspectRatio;
+			} else if (iHeight > _this.config.totalHeight && aspectRatio < wallRatio) {
+				// Image taller than wall
+				// Wall wider than image
+				iHeight = _this.config.totalHeight / 2;  // half height of wall
+				iWidth  = iHeight * aspectRatio;
+			}
+			// Check against min/max dimensions
+			if (iWidth < _this.config.minWindowWidth) {
+				iWidth  = _this.config.minWindowWidth;
+				iHeight = iWidth / aspectRatio;
+			}
+			if (iWidth > _this.config.maxWindowWidth) {
+				iWidth  = _this.config.maxWindowWidth;
+				iHeight = iWidth / aspectRatio;
+			}
+			if (iHeight < _this.config.minWindowHeight) {
+				iHeight = _this.config.minWindowHeight;
+				iWidth  = iHeight * aspectRatio;
+			}
+			if (iHeight > _this.config.maxWindowHeight) {
+				iHeight = _this.config.maxWindowHeight;
+				iWidth  = iHeight * aspectRatio;
+			}
+			// Ask for the new size
+			_this.sendResize(iWidth, iHeight);
+
 		}, false);
 		this.stereoImg.src = this.state.file;
 

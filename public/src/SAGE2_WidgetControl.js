@@ -360,8 +360,6 @@ SAGE2WidgetControl.prototype.computeSize = function() {
 /*
 *	Creates default close and radial menu buttons
 */
-
-
 SAGE2WidgetControl.prototype.addDefaultButtons = function(data) {
 	this.addButton({type: "closeApp", identifier: "CloseApp", position: data.sequence.closeApp});
 	this.addButton({type: "closeBar", identifier: "CloseWidget", position: data.sequence.closeBar});

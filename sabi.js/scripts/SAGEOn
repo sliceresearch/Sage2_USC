@@ -1,0 +1,32 @@
+#!/bin/sh
+
+cd $HOME
+./KILL_ALL
+
+#####  X setup #######
+xhost +local:
+xset  dpms force on
+xset -dpms
+######################
+
+cd $SAGE_DIRECTORY/bin
+sleep 1
+
+/bin/rm -f sage.log
+touch sage.log
+./fsManager &>> sage.log &
+
+sleep 3
+
+python appLauncher/appLauncher.py -v >> sage.log &
+
+sleep 2
+
+python ../dim/dim.pyc --shared_host Self:127.0.0.1 -v &
+
+sleep 2
+
+cd fileServer && python fileServer.py &
+
+#wait
+

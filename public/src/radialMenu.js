@@ -107,6 +107,13 @@ function RadialMenu() {
 	this.radialMenuButtons = {};
 	this.thumbnailWindows = {};
 
+	this.thumbnailButtons = [];
+	this.imageThumbnailButtons = [];
+	this.videoThumbnailButtons = [];
+	this.pdfThumbnailButtons = [];
+	this.appThumbnailButtons = [];
+	this.sessionThumbnailButtons = [];
+
 	/**
 	 * Helper function for creating radial menu buttons
 	 *
@@ -182,6 +189,7 @@ function RadialMenu() {
 		this.currentMenuState = "radialMenu";
 		this.currentRadialState = "radialMenu";
 
+		this.showArrangementSubmenu = false;
 		this.settingMenuOpen = false;
 
 		this.timer = 0;
@@ -395,7 +403,27 @@ function RadialMenu() {
 				this.ctx.stroke();
 			}
 		}
+		/*
+		for (i = 0; i < this.level2Buttons.length; i++) {
+			if (this.level2Buttons[i].isHidden() === false) {
+				this.ctx.beginPath();
 
+				// We are adding -Math.PI/2 since angle also accounts for the initial orientation of the button image
+				var centerButton = this.level1Buttons[i];
+				this.ctx.moveTo(centerButton.posX + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.cos(this.level2Buttons[i].angle - Math.PI / 2),
+					centerButton.posY + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.sin(this.level2Buttons[i].angle - Math.PI / 2));
+				this.ctx.lineTo(this.level2Buttons[i].posX + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.cos(this.level2Buttons[i].angle + Math.PI / 2),
+					this.level2Buttons[i].posY + (menuButtonSize / 4 * this.radialMenuScale) *
+					Math.sin(this.level2Buttons[i].angle + Math.PI / 2));
+				this.ctx.strokeStyle = "#ffffff";
+				this.ctx.lineWidth = 5 * this.radialMenuScale;
+				this.ctx.stroke();
+			}
+		}
+		*/
 		if (this.level0Buttons.length === 0) {
 			this.radialCenterButton.draw();
 		}
@@ -406,8 +434,10 @@ function RadialMenu() {
 			for (i = 0; i < this.level1Buttons.length; i++) {
 				this.level1Buttons[i].draw();
 			}
-			for (i = 0; i < this.level2Buttons.length; i++) {
-				this.level2Buttons[i].draw();
+			if (this.showArrangementSubmenu) {
+				for (i = 0; i < this.level2Buttons.length; i++) {
+					this.level2Buttons[i].draw();
+				}
 			}
 		}
 
@@ -540,7 +570,7 @@ function RadialMenu() {
 
 				// Generic
 				metadataTags[0] = { tag: metadata.FileName, longLabel: "File Name: " };
-				if( metadata.FileSize !== undefined ) {
+				if (metadata.FileSize !== undefined) {
 					metadataTags[1] = { tag: this.bytesToReadableString(metadata.FileSize), longLabel: "File Size: " };
 				}
 				metadataTags[2] = { tag: metadata.FileDate, longLabel: "File Date: " };
@@ -628,7 +658,7 @@ function RadialMenu() {
 								}
 							}
 							this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
-							if( line > 0 ) {
+							if (line > 0) {
 								metadataLine++;
 							}
 						}
@@ -646,13 +676,13 @@ function RadialMenu() {
 	 */
 	this.bytesToReadableString = function(bytes) {
 		var bytesInt = parseInt(bytes);
-		
-		if( bytesInt > Math.pow(1024, 3) ) {
-			return (bytesInt/Math.pow(1024, 3)).toFixed(2) + " GB"
-		} else if( bytesInt > Math.pow(1024, 2) ) {
-			return (bytesInt/Math.pow(1024, 2)).toFixed(2) + " MB"
-		} else if( bytesInt > Math.pow(1024, 1) ) {
-			return Math.round(bytesInt/Math.pow(1024, 1)) + " KB"
+
+		if (bytesInt > Math.pow(1024, 3)) {
+			return (bytesInt / Math.pow(1024, 3)).toFixed(2) + " GB"
+		} else if (bytesInt > Math.pow(1024, 2)) {
+			return (bytesInt / Math.pow(1024, 2)).toFixed(2) + " MB"
+		} else if (bytesInt > Math.pow(1024, 1)) {
+			return Math.round(bytesInt / Math.pow(1024, 1)) + " KB"
 		}
 
 		return bytes + " bytes"
@@ -664,13 +694,13 @@ function RadialMenu() {
 	 * @method closeMenu
 	 */
 	this.closeMenu = function() {
+		console.log("radialMenu: closeMenu");
 		this.visible = false;
 
 		this.radialMenuDiv.style.display = "none";
 		this.thumbnailWindowDiv.style.display = "none";
 
 		this.currentMenuState = "radialMenu";
-		this.resetRadialButtonLitState();
 	};
 
 	/**
@@ -679,6 +709,7 @@ function RadialMenu() {
 	 * @method setToggleMenu
 	 */
 	this.setToggleMenu = function(type) {
+		// console.log("radialMenu: setToggleMenu " + type);
 		if (this.currentMenuState !== type) {
 			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 
@@ -702,30 +733,41 @@ function RadialMenu() {
 	};
 
 	/**
-	 * Toggles a subradial menu
+	 * Sets the content window
 	 *
-	 * @method setToggleMenu
+	 * @method setMenu
 	 */
-	this.toggleSubRadialMenu = function(type) {
-		console.log("radialMenu: toggleSubRadialMenu");
-		console.log(type);
+	this.setMenu = function(type) {
+		if (type !== "radialMenu") {
+			console.log("radialMenu: setMenu " + type);
+			this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
+
+			this.currentMenuState = type;
+			this.element.width = this.thumbnailWindowSize.x + thumbnailPreviewWindowSize.x;
+			this.element.height = this.thumbnailWindowSize.y;
+			this.thumbnailScrollWindowElement.style.display = "block";
+			this.thumbnailWindowDiv.style.display = "block";
+			this.thumbScrollWindowctx.redraw = true;
+			this.updateThumbnailPositions();
+			this.draw();
+		} else {
+			console.log("radialMenu: setMenu " + type);
+			this.currentMenuState = "radialMenu";
+			this.element.width = this.radialMenuSize.x;
+			this.element.height = this.radialMenuSize.y;
+			this.thumbnailWindowDiv.style.display = "none";
+			this.draw();
+		}
 	};
 
 	/**
-	 * Helper function to quickly reset the radial menu button lit state
+	 * Toggles a subradial menu
 	 *
-	 * @method resetRadialButtonLitState
+	 * @method toggleSubRadialMenu
 	 */
-	this.resetRadialButtonLitState = function() {
-		// this.radialRemoteSitesButton.isLit = false;
-		// this.radialImageButton.isLit = false;
-		// this.radialPDFButton.isLit = false;
-		// this.radialVideoButton.isLit = false;
-		// this.radialAppButton.isLit = false;
-		// this.radialSessionButton.isLit = false;
-		// this.radialSaveSessionButton.isLit = false;
-		// this.radialCloseButton.isLit = false;
-		// this.radialSessionButton.isLit = false;
+	this.toggleSubRadialMenu = function(type) {
+		this.showArrangementSubmenu = !this.showArrangementSubmenu;
+		// console.log("radialMenu: toggleSubRadialMenu - " + this.showArrangementSubmenu);
 	};
 
 	/**
@@ -966,6 +1008,7 @@ function RadialMenu() {
 	 * @param serverFileList {} Server file list
 	 */
 	this.updateFileList = function(serverFileList) {
+
 		this.thumbnailButtons = [];
 		this.imageThumbnailButtons = [];
 		this.videoThumbnailButtons = [];
@@ -1236,6 +1279,34 @@ function RadialMenu() {
 		}
 	};
 
+	/**
+	 * Sets the state of the radial menu: buttons, content windows
+	 *
+	 * @method setState
+	 * @param stateData {} node-radialMenu.js getInfo()
+	 */
+	this.setState = function(stateData) {
+		// console.log("radialMenu: setState " + stateData.thumbnailWindowState);
+		// {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
+		// 	thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
+		// 	visble: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState }
+		// console.log(stateData);
+		this.showArrangementSubmenu = stateData.arrangementMenuState;
+
+		if (stateData.thumbnailWindowState === "image") {
+			this.setMenu("imageThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "pdf") {
+			this.setMenu("pdfThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "video") {
+			this.setMenu("videoThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "applauncher") {
+			this.setMenu("applauncherThumbnailWindow");
+		} else if (stateData.thumbnailWindowState === "session") {
+			this.setMenu("sessionThumbnailWindow");
+		}  else if (stateData.thumbnailWindowState === "closed") {
+			this.setMenu("radialMenu");
+		}
+	}
 }
 
 /**

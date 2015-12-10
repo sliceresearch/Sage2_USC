@@ -303,6 +303,10 @@ function setupListeners() {
 		ui.addRemoteSite(data);
 	});
 
+	wsio.on('toggleHelp', function(data) {
+		ui.toggleHelp();
+	});
+
 	wsio.on('connectedToRemoteSite', function(data) {
 		if (window.ui) {
 			ui.connectedToRemoteSite(data);
@@ -372,6 +376,10 @@ function setupListeners() {
 		ui.updateRadialMenu(menu_data);
 	});
 
+	wsio.on('updateRadialMenuPosition', function(menu_data) {
+		ui.updateRadialMenuPosition(menu_data);
+	});
+
 	wsio.on('radialMenuEvent', function(menu_data) {
 		ui.radialMenuEvent(menu_data);
 		resetIdle();
@@ -391,6 +399,31 @@ function setupListeners() {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
+		}
+	});
+
+	wsio.on('loadApplicationOptions', function(data) {
+		var fullSync = true;
+		var windowTitle = document.getElementById(data.id + "_title");
+		var windowIconSync = document.getElementById(data.id + "_iconSync");
+		var windowIconUnSync = document.getElementById(data.id + "_iconUnSync");
+		var app = applications[data.id];
+		if (app !== undefined && app !== null) {
+			app.SAGE2LoadOptions(data.options);
+
+			if (fullSync === true) {
+				if (data.options[Object.keys(data.options)[0]]._sync === true) {
+					windowTitle.style.backgroundColor = "#39C4A6";
+					windowIconSync.style.display = "block";
+					windowIconUnSync.style.display = "none";
+					console.log("sycned!");
+				} else {
+					windowTitle.style.backgroundColor = "#666666";
+					windowIconSync.style.display = "none";
+					windowIconUnSync.style.display = "block";
+					console.log("unsycned :(");
+				}
+			}
 		}
 	});
 
@@ -586,7 +619,9 @@ function setupListeners() {
 			var parentTransform = getTransform(selectedElem.parentNode);
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_x = Math.round(app.sage2_x);
 			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
 
@@ -685,6 +720,12 @@ function setupListeners() {
 		selectedElemTitle.style.transform       = translate;
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
+		var selectedElemState = document.getElementById(position_data.elemId + "_state");
+		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
+		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
+
+		var selectedElem = document.getElementById(position_data.elemId);
+
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
 		selectedElem.style.transform       = translate;
@@ -711,7 +752,9 @@ function setupListeners() {
 			var parentTransform = getTransform(selectedElem.parentNode);
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_x = Math.round(app.sage2_x);
 			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
 
@@ -890,7 +933,7 @@ function setupListeners() {
 								ctrl.animate({fill: fillVal}, 400, mina.bounce);
 							});
 						}
-					} else if (state === 1) {
+					}/* else if (state === 1) {
 						ctrlParent.select("#cover2").attr("visibility", "visible");
 						ctrlParent.select("#cover").attr("visibility", "hidden");
 						animationInfo.state = 0;
@@ -898,7 +941,7 @@ function setupListeners() {
 						ctrlParent.select("#cover").attr("visibility", "visible");
 						ctrlParent.select("#cover2").attr("visibility", "hidden");
 						animationInfo.state = 1;
-					}
+					}*/
 				} else {
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
 
@@ -942,6 +985,9 @@ function setupListeners() {
 						wsio.emit('hideWidgetFromControl', {instanceID: data.ctrl.instanceID});
 					}
 					break;
+				case "ShareApp":
+					console.log("SHARE APP");
+					break;
 				default:
 					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
 					break;
@@ -982,6 +1028,9 @@ function setupListeners() {
 	});
 
 	wsio.on('moveSliderKnob', function(data) {
+		// TODO: add `date` to `data` object
+		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
+
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
@@ -998,6 +1047,9 @@ function setupListeners() {
 	});
 
 	wsio.on('keyInTextInputWidget', function(data) {
+		// TODO: add `date` to `data` object
+		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
+
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl) {
 			var textInput = ctrl.parent();
@@ -1065,6 +1117,64 @@ function setupListeners() {
 		console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
+
+	wsio.on('setAppSharingFlag', function(data) {
+		var windowTitle = document.getElementById(data.id + "_title");
+		var windowIconSync = document.getElementById(data.id + "_iconSync");
+
+		if (data.sharing === true) {
+			windowTitle.style.backgroundColor = "#39C4A6";
+			windowIconSync.style.display = "block";
+		} else {
+			windowTitle.style.backgroundColor = "#666666";
+			windowIconSync.display = "none";
+		}
+	});
+
+	wsio.on('toggleSyncOptions', function(data) {
+		var fullSync = true;
+		var key;
+		var windowTitle = document.getElementById(data.id + "_title");
+		var windowIconSync = document.getElementById(data.id + "_iconSync");
+		var windowIconUnSync = document.getElementById(data.id + "_iconUnSync");
+		var windowState = document.getElementById(data.id + "_state");
+		if (fullSync === true) {
+			if (windowIconSync.style.display === "block") {
+				windowTitle.style.backgroundColor = "#666666";
+				windowIconSync.style.display = "none";
+				windowIconUnSync.style.display = "block";
+
+				for (key in applications[data.id].SAGE2StateOptions) {
+					applications[data.id].SAGE2StateSyncChildren(applications[data.id].SAGE2StateOptions[key]._name,
+						applications[data.id].SAGE2StateOptions, false);
+				}
+			} else {
+				windowTitle.style.backgroundColor = "#39C4A6";
+				windowIconSync.style.display = "block";
+				windowIconUnSync.style.display = "none";
+
+				for (key in applications[data.id].SAGE2StateOptions) {
+					applications[data.id].SAGE2StateSyncChildren(applications[data.id].SAGE2StateOptions[key]._name,
+						applications[data.id].SAGE2StateOptions, true);
+				}
+			}
+
+			if (isMaster) {
+				var stateOp = ignoreFields(applications[data.id].SAGE2StateOptions, ["_name", "_value"]);
+				wsio.emit('updateStateOptions', {id: data.id, options: stateOp});
+			}
+		} else {
+			if (applications[data.id].SAGE2StateSyncOptions.visible === false) {
+				applications[data.id].SAGE2StateSyncOptions.visible = true;
+				windowTitle.style.backgroundColor = "#666666";
+				windowState.style.display = "block";
+			} else {
+				applications[data.id].SAGE2StateSyncOptions.visible = false;
+				windowTitle.style.backgroundColor = "#39C4A6";
+				windowState.style.display = "none";
+			}
+		}
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
@@ -1093,12 +1203,41 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		windowTitle.style.display   = "none";
 	}
 
-	var windowIcons = document.createElement("img");
-	windowIcons.src = "images/layout3.svg";
-	windowIcons.height = Math.round(titleBarHeight);
-	windowIcons.style.position = "absolute";
-	windowIcons.style.right    = "0px";
-	windowTitle.appendChild(windowIcons);
+	var iconWidth = Math.round(titleBarHeight) * (300 / 235);
+	var iconSpace = 0.1 * iconWidth;
+	var windowIconSync = document.createElement("img");
+	windowIconSync.id  = data.id + "_iconSync";
+	windowIconSync.src = "images/window-sync.svg";
+	windowIconSync.height = Math.round(titleBarHeight);
+	windowIconSync.style.position = "absolute";
+	windowIconSync.style.right    = Math.round(2 * (iconWidth + iconSpace)) + "px";
+	windowIconSync.style.display  = "none";
+	windowTitle.appendChild(windowIconSync);
+
+	var windowIconUnSync = document.createElement("img");
+	windowIconUnSync.id  = data.id + "_iconUnSync";
+	windowIconUnSync.src = "images/window-unsync.svg";
+	windowIconUnSync.height = Math.round(titleBarHeight);
+	windowIconUnSync.style.position = "absolute";
+	windowIconUnSync.style.right    = Math.round(2 * (iconWidth + iconSpace)) + "px";
+	windowIconUnSync.style.display  = "none";
+	windowTitle.appendChild(windowIconUnSync);
+
+	var windowIconFullscreen = document.createElement("img");
+	windowIconFullscreen.id  = data.id + "_iconFullscreen";
+	windowIconFullscreen.src = "images/window-fullscreen.svg";
+	windowIconFullscreen.height = Math.round(titleBarHeight);
+	windowIconFullscreen.style.position = "absolute";
+	windowIconFullscreen.style.right    = Math.round(1 * (iconWidth + iconSpace)) + "px";
+	windowTitle.appendChild(windowIconFullscreen);
+
+	var windowIconClose = document.createElement("img");
+	windowIconClose.id  = data.id + "_iconClose";
+	windowIconClose.src = "images/window-close3.svg";
+	windowIconClose.height = Math.round(titleBarHeight);
+	windowIconClose.style.position = "absolute";
+	windowIconClose.style.right    = "0px";
+	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
@@ -1109,7 +1248,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowTitle.appendChild(titleText);
 
 	var windowItem = document.createElement("div");
-	windowItem.id  = data.id;
+	windowItem.id = data.id;
 	windowItem.className      = "windowItem";
 	windowItem.style.left     = (-offsetX).toString() + "px";
 	windowItem.style.top      = (titleBarHeight - offsetY).toString() + "px";
@@ -1124,6 +1263,27 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	if (ui.uiHidden === true) {
 		windowItem.classList.toggle("windowItemNoBorder");
 	}
+
+	var windowState = document.createElement("div");
+	windowState.id = data.id + "_state";
+	windowState.style.position = "absolute";
+	windowState.style.width  = data.width.toString() + "px";
+	windowState.style.height = data.height.toString() + "px";
+	windowState.style.backgroundColor = "rgba(0,0,0,0.8)";
+	windowState.style.lineHeight = Math.round(1.5 * titleTextSize) + "px";
+	windowState.style.zIndex = "100";
+	windowState.style.display = "none";
+
+	var windowStateContatiner = document.createElement("div");
+	windowStateContatiner.id = data.id + "_statecontainer";
+	windowStateContatiner.style.position = "absolute";
+	windowStateContatiner.style.top = "0px";
+	windowStateContatiner.style.left = "0px";
+	windowStateContatiner.style.webkitTransform = "translate(0px,0px)";
+	windowStateContatiner.style.mozTransform = "translate(0px,0px)";
+	windowStateContatiner.style.transform = "translate(0px,0px)";
+	windowState.appendChild(windowStateContatiner);
+	windowItem.appendChild(windowState);
 
 	var cornerSize = Math.min(data.width, data.height) / 5;
 	var dragCorner = document.createElement("div");
@@ -1191,6 +1351,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			// load existing app
 			var app = new window[data.application]();
 			app.init(init);
+			// app.SAGE2Load(app.state, date);
 			app.refresh(date);
 
 			applications[data.id] = app;
@@ -1240,7 +1401,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			});
 			js.type  = "text/javascript";
 			js.async = false;
-			if (data.resrc[idx].indexOf("http://") === 0 || data.resrc[idx].indexOf("https://") === 0) {
+			if (data.resrc[idx].indexOf("http://")  === 0 ||
+				data.resrc[idx].indexOf("https://") === 0 ||
+				data.resrc[idx].indexOf("/") === 0) {
 				js.src = data.resrc[idx];
 			} else {
 				js.src = url + "/" + data.resrc[idx];

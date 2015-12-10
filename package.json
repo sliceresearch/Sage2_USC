@@ -1,6 +1,6 @@
 {
 	"name": "SAGE2",
-	"version": "0.3.0",
+	"version": "1.0.0",
 	"private": true,
 	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
 	"keywords": [
@@ -31,6 +31,10 @@
 			"email": "krishnaknbharadwaj@gmail.com"
 		},
 		{
+			"name": "Dylan Kobayashi",
+			"email": "dylank@hawaii.edu"
+		},
+		{
 			"name": "Luc Renambot",
 			"email": "renambot@gmail.com"
 		}
@@ -49,7 +53,6 @@
 		"imageinfo": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"node-demux": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
 		"rbush": "latest",
@@ -57,12 +60,15 @@
 		"sprint": "^0.3.1",
 		"twit": "latest",
 		"mv": "latest",
-		"websocketio": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
 		"cheerio": "latest",
 		"ytdl-core": "latest"
 	},
+	"bundledDependencies": [
+		"websocketio",
+		"node-demux"
+	],
 	"devDependencies": {
 		"grunt": "latest",
 		"grunt-cli": "latest",

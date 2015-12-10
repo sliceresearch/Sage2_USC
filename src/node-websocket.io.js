@@ -150,7 +150,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 					_this.emit(name, data, attempts - 1);
 				});
 			} else {
-				console.log("WebsocketIO>\tWarning: not sending message, recipient has no listener (" + name + ")");
+				console.log("WebsocketIO>\tWarning: recipient has no listener (" + name + ")");
 			}
 			return;
 		}

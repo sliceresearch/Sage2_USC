@@ -74,11 +74,12 @@ var welcome = SAGE2_App.extend({
 		// Get a new image every 15min
 		if (isMaster && ((this.t - this.lastRequest) > 900)) {
 			// Generate a new random ID
-			this.state.imageID = this.getNewImageID();
 			var aUrl = 'https://www.gstatic.com/prettyearth/assets/data/' + this.state.imageID + '.json';
 			this.applicationRPC({image: true, url: aUrl}, "gotPicture", true);
 			// update the time
 			this.lastRequest = this.t;
+			// setup for next image
+			this.state.imageID = this.getNewImageID();
 		}
 	},
 
@@ -90,12 +91,12 @@ var welcome = SAGE2_App.extend({
 		} else {
 			text.attr({fill: "#FFFFFF"});
 		}
-		text.attr({fontFamily: 'HelveticaNeue-Medium,"Helvetica Neue Medium","Helvetica Neue",Helvetica,Arial,sans-serif'});
+		text.attr({fontFamily: 'Helvetica,Arial,sans-serif'});
 		if (stroke === 1) {
 			text.attr({paintOrder: 'stroke', stroke: '#000000'});
 			text.attr({strokeWidth: '0.15px', strokeLinecap: 'butt', strokeLinejoin: 'miter'});
 		} else if (stroke === 2) {
-			text.attr({fontFamily: 'HelveticaNeue-Light,"Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,sans-serif'});
+			text.attr({fontFamily: 'Helvetica,Arial,sans-serif'});
 		}
 		return text;
 	},

@@ -1,0 +1,55 @@
+{
+	"name": "sabi.js",
+	"version": "1.2.0",
+	"private": true,
+	"description": "control your devices through a HTML5/Node/Javascript framework",
+	"keywords": [
+	"sabi", "node", "control", "web", "device", "network", "commands"
+	],
+	"preferGlobal": false,
+	"homepage": "http://renambot.lakephoto.org/software/sabi-js/",
+	"author": "Luc Renambot <renambot@gmail.com> (http://renambot.lakephoto.org)",
+	"repository": {
+		"type": "git",
+		"url": "https://renambot@bitbucket.org/renambot/sabi.js.git"
+		},
+	"bugs": {
+		"email": "renambot@gmail.com"
+	},
+	"dependencies": {
+		"http-auth": "latest",
+		"json5": "latest",
+		"mime": "latest",
+		"socket.io": "latest",
+		"sprint": "latest",
+		"serialport": "latest",
+		"forever": "latest",
+		"optimist": "latest",
+		"socket.io-client": "latest"
+	},
+	"devDependencies": {
+		"jshint": "latest",
+		"eslint": "latest",
+		"mocha": "latest",
+		"mocha-jshint": "latest",
+		"istanbul": "latest",
+		"coveralls": "latest"
+	},
+	"engines": {
+		"node": ">=0.10.x"
+	},
+	"scripts": {
+		"test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --slow=5000 --timeout=7000 ./test/*.js",
+		"start": "./node_modules/forever/bin/forever start server.js",
+		"stop": "./node_modules/forever/bin/forever stopall",
+		"list": "./node_modules/forever/bin/forever list"
+	},
+	"licenses": [
+		{
+			"type": "BSD",
+			"url": "http://opensource.org/licenses/BSD-3-Clause"
+		}
+	],
+	"main": "server.js",
+	"license": "ISC"
+}

@@ -219,8 +219,8 @@
 			secure: true
 		},
 		{
-			name: "IceWall",
-			host: "thor.evl.uic.edu",
+			name: "BackWall",
+			host: "orion.evlrn.uic.edu",
 			port: 443,
 			secure: true
 		},
