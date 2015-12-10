@@ -111,8 +111,9 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/screenshot.png",parent: this,r: 36,c: 4,cSpan: 2,rSpan: 10},
 								  
 								  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/plus.png",r: 50,c: 5,cSpan: 1,rSpan:10},
-								  this.paintingMode?{name: "Stroke",action: function() {},parent: this,content: "circle",r: 50,c: 1,cSpan: 4,rSpan: 10}
-								  :{name: "Stroke",action: function() {},backgroundColor: this.strokeColor,parent: this,icon: path+"/spot1.png",stretch: true,r: 50,c: 1,cSpan: 4,rSpan: 10},
+								  this.paintingMode?{name: "Stroke",action: function() {},backgroundColor: this.strokeColor,parent: this,icon: path+"/spot1.png",stretch: true,r: 50,c: 1,cSpan: 4,rSpan: 10}
+								  :{name: "Stroke",action: function() {},parent: this,content: "circle",r: 50,c: 1,cSpan: 4,rSpan: 10}
+								  ,
 								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/minus.png",r: 50,c: 0,cSpan: 1,rSpan:10},
 								  
 								  {name: "Tutorial",action: function() {
