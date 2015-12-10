@@ -103,16 +103,17 @@ var WhiteboardPalette = SAGE2_App.extend( {
 								  r: 24,c: 2,cSpan: 2,rSpan: 10},
 								  {name: "enableDrawing",
 								  			action: this.drawingMode? this.disableDrawingMode: this.enableDrawingMode,
-								  			parent: this,icon: this.drawingMode? path + "/paintActive.png": path + "/paintNonActive.png",
+								  			parent: this,icon: this.drawingMode? path + "/enabled.png": path + "/disabled.png",
 								  r: 24,c: 4,cSpan: 2,rSpan: 10},
 								  
 								  {name: "SaveButton",action: this.saveDrawings,parent: this,icon: path+"/save.png",r: 36,c: 0,cSpan: 2,rSpan: 10},
 								  {name: "loadButton",action: this.loadDrawings,parent: this,icon: path+"/load.png",r: 36,c: 2,cSpan: 2,rSpan: 10},
 								  {name: "screenshot",action: this.takeScreenshot,icon: path+"/screenshot.png",parent: this,r: 36,c: 4,cSpan: 2,rSpan: 10},
 								  
-								  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/up.png",r: 50,c: 5,cSpan: 1,rSpan:10},
-								  {name: "Stroke",action: function() {},parent: this,content: "circle",r: 50,c: 1,cSpan: 4,rSpan: 10},
-								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/down.png",r: 50,c: 0,cSpan: 1,rSpan:10},
+								  {name: "StrokeUp",action: this.changeStroke,increment: 1,parent: this,icon: path+"/plus.png",r: 50,c: 5,cSpan: 1,rSpan:10},
+								  this.paintingMode?{name: "Stroke",action: function() {},parent: this,content: "circle",r: 50,c: 1,cSpan: 4,rSpan: 10}
+								  :{name: "Stroke",action: function() {},backgroundColor: this.strokeColor,parent: this,icon: path+"/spot1.png",stretch: true,r: 50,c: 1,cSpan: 4,rSpan: 10},
+								  {name: "StrokeDown",action: this.changeStroke,increment: -1,parent: this,icon: path+"/minus.png",r: 50,c: 0,cSpan: 1,rSpan:10},
 								  
 								  {name: "Tutorial",action: function() {
 										if (that.tutorial.style("visibility")== "visible") {
@@ -216,7 +217,10 @@ var WhiteboardPalette = SAGE2_App.extend( {
 				rect.attr("id",butt.name);
 			}
 			if (butt.icon) {
-				this.palette.append("image").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).attr("xlink:href",butt.icon)
+				var img = this.palette.append("image").attr("fill",bg).attr("x",x).attr("y",y).attr("width",buttW).attr("height",buttH).attr("xlink:href",butt.icon)
+				if (butt.stretch) {
+					img.attr("preserveAspectRatio","none")
+				}
 			}
 			if(butt.content=="circle") {
 				this.palette.append("circle")
