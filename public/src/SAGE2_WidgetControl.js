@@ -310,7 +310,8 @@ SAGE2WidgetControl.prototype.addColorPalette = function(data) {
 
 		if (data.colorList === null || data.colorList === undefined) {
 			return;
-		} else if (data.colorList.length === 0) {
+		}
+		if (data.colorList.length === 0) {
 			return;
 		}
 

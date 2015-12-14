@@ -237,9 +237,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 							template: function(obj) {
 									if (obj.image) {
 										return "<img src='" + obj.image + "_256.jpg'></img>";
-									} else {
-										return "";
 									}
+									return "";
 								}
 						}
 					]

@@ -564,9 +564,8 @@ var SAGE2_App = Class.extend({
 	isLayerHidden: function() {
 		if (this.layer) {
 			return (this.layer.style.display === "none");
-		} else {
-			return false;
 		}
+		return false;
 	},
 
 	/**

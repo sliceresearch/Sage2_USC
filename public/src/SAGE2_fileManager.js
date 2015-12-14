@@ -174,9 +174,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 							template: function(obj) {
 									if (obj.image) {
 										return "<img src='" + obj.image + "_256.jpg'></img>";
-									} else {
-										return "";
 									}
+									return "";
 								}
 						}
 					]
@@ -590,9 +589,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			context.html += "</div>";
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	});
 	// Track the position of the dragged item
 	this.allTable.$dragPos = function(pos, event, node) {
@@ -615,14 +613,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 			context.target.startsWith("Config:")) {
 			// No DnD on search icons
 			return false;
-		} else {
-			// Move each file selected one by one
-			context.source.map(function(elt) {
-				wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
-			});
-			// Dont do a real DnD, stop there
-			return false;
 		}
+		// Move each file selected one by one
+		context.source.map(function(elt) {
+			wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
+		});
+		// Dont do a real DnD, stop there
+		return false;
 	});
 
 	// Now, do the transfer
@@ -1005,9 +1002,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
 				});
 				return;
-			} else {
-				updateSearch(treeSelection.id);
 			}
+			updateSearch(treeSelection.id);
 		}
 
 	};

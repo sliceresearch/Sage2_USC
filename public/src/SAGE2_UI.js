@@ -651,9 +651,8 @@ function fileDrop(event) {
 			}
 			interactor.uploadURL(content, x, y);
 			return false;
-		} else {
-			console.log("Your browser does not support the types property: drop aborted");
 		}
+		console.log("Your browser does not support the types property: drop aborted");
 	}
 	return false;
 }
