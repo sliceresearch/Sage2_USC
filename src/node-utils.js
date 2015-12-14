@@ -62,18 +62,15 @@ if (semver.gte(process.versions.node, '0.10.0')) {
  * @return {Bool} true if exists
  */
 function fileExists(filename) {
-
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
 		return fs.existsSync(filename);
-	} else {
-		// Versions 1.x or above
-		try {
-			// fs.accessSync(filename, fs.R_OK);
-			var res = fs.statSync(filename);
-			return res.isFile();
-		} catch (err) {
-			return false;
-		}
+	}
+	// Versions 1.x or above
+	try {
+		var res = fs.statSync(filename);
+		return res.isFile();
+	} catch (err) {
+		return false;
 	}
 }
 
@@ -87,14 +84,13 @@ function fileExists(filename) {
 function folderExists(directory) {
 	if (_NODE_VERSION === 10 || _NODE_VERSION === 11) {
 		return fs.existsSync(directory);
-	} else {
-		// Versions 1.x or above
-		try {
-			var res = fs.statSync(directory);
-			return res.isDirectory();
-		} catch (err) {
-			return false;
-		}
+	}
+	// Versions 1.x or above
+	try {
+		var res = fs.statSync(directory);
+		return res.isDirectory();
+	} catch (err) {
+		return false;
 	}
 }
 
@@ -244,9 +240,8 @@ function updateWithGIT(branch, callback) {
 function header(h) {
 	if (h.length <= 6) {
 		return h + ">\t\t";
-	} else {
-		return h + ">\t";
 	}
+	return h + ">\t";
 }
 
 
@@ -259,14 +254,15 @@ function header(h) {
  * @param b {String} second string
  */
 function compareString(a, b) {
-	var nA = a.toLowerCase();
-	var nB = b.toLowerCase();
+	var nA  = a.toLowerCase();
+	var nB  = b.toLowerCase();
+	var res = 0;
 	if (nA < nB) {
-		return -1;
+		res = -1;
 	} else if (nA > nB) {
-		return 1;
+		res = 1;
 	}
-	return 0;
+	return res;
 }
 
 /**
@@ -278,14 +274,15 @@ function compareString(a, b) {
  * @param b {Object} second object
  */
 function compareFilename(a, b) {
-	var nA = a.exif.FileName.toLowerCase();
-	var nB = b.exif.FileName.toLowerCase();
+	var nA  = a.exif.FileName.toLowerCase();
+	var nB  = b.exif.FileName.toLowerCase();
+	var res = 0;
 	if (nA < nB) {
-		return -1;
+		res = -1;
 	} else if (nA > nB) {
-		return 1;
+		res = 1;
 	}
-	return 0;
+	return res;
 }
 
 /**
@@ -298,14 +295,15 @@ function compareFilename(a, b) {
  * @param b {Object} second object
  */
 function compareTitle(a, b) {
-	var nA = a.exif.metadata.title.toLowerCase();
-	var nB = b.exif.metadata.title.toLowerCase();
+	var nA  = a.exif.metadata.title.toLowerCase();
+	var nB  = b.exif.metadata.title.toLowerCase();
+	var res = 0;
 	if (nA < nB) {
-		return -1;
+		res = -1;
 	} else if (nA > nB) {
-		return 1;
+		res = 1;
 	}
-	return 0;
+	return res;
 }
 
 /**
