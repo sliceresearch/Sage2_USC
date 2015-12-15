@@ -48,24 +48,24 @@ else target = process.versions.node;
 
 // Parsing node version numbers
 var nums = target.split('.').map(function(n) { return parseInt(n, 10); });
-// Node v0.10.36 and above
-if (nums[0] === 0 && nums[1] === 10 && nums[2] >= 36) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.36+.");
-	target = "0.10.36";
+// Node v0.10.40 and above
+if (nums[0] === 0 && nums[1] === 10 && nums[2] >= 40) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.40+.");
+	target = "0.10.40";
 }
 // Node v0.12.7 and above
 if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  7) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.7+.");
 	target = "0.12.7";
 }
-// Node v4.0.0 and above
-if (nums[0] === 4 && nums[1] >=  0 && nums[2] >=  0) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 4.0.0+.");
-	target = "4.0.0";
+// Node v4.2.3 and above
+if (nums[0] === 4 && ((nums[1] === 2 && nums[2] >=  3) || (nums[1] > 2))) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 4.2.3+.");
+	target = "4.2.3";
 }
-// Node v5.0.0 and above
-if (nums[0] === 5 && nums[1] >=  0 && nums[2] >=  0) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 5.0.0+.");
+// Node v5.1.0 and above
+if (nums[0] === 5 && ((nums[1] === 1 && nums[2] >=  0) || (nums[1] > 1))) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 5.1.0+.");
 	target = "5.1.0";
 }
 

@@ -556,7 +556,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		if (this.state.colorspace === "RGBA" && (this.rgbaBuffer === undefined || this.rgbaBuffer === null)) {
 			this.log("no texture loaded");
 			return;
-		} else if (this.state.colorspace === "YUV420p" && (this.yuvBuffer === undefined || this.yuvBuffer === null)) {
+		}
+		if (this.state.colorspace === "YUV420p" && (this.yuvBuffer === undefined || this.yuvBuffer === null)) {
 			this.log("no texture loaded");
 			return;
 		}

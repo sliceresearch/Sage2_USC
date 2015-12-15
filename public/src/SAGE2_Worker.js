@@ -18,7 +18,8 @@ self.addEventListener('message', function(e) {
 		// Got the quit signal
 		self.close();
 		return;
-	} else if (e.data) {
+	}
+	if (e.data) {
 		// postMessage('ok');
 		return;
 	}

@@ -99,14 +99,12 @@ function fileSync(filename) {
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
-	} else {
-		if (result.stdout.length !== 0) {
-			var metadata = JSON.parse(result.stdout);
-			return {err: null, metadata: metadata[0]};
-		} else {
-			return {err: result.stderr.toString(), metadata: null};
-		}
 	}
+	if (result.stdout.length !== 0) {
+		var metadata = JSON.parse(result.stdout);
+		return {err: null, metadata: metadata[0]};
+	}
+	return {err: result.stderr.toString(), metadata: null};
 }
 
 /**
@@ -124,10 +122,9 @@ function bufferSync(source) {
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
-	} else {
-		var metadata = JSON.parse(result.stdout);
-		return {err: null, metadata: metadata[0]};
 	}
+	var metadata = JSON.parse(result.stdout);
+	return {err: null, metadata: metadata[0]};
 }
 
 /**

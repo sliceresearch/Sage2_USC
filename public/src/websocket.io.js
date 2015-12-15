@@ -93,9 +93,8 @@ function WebsocketIO(url) {
 				if (fName === "#WSIO#addListener") {
 					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
-				} else {
-					_this.messages[fName](msg.d);
 				}
+				_this.messages[fName](msg.d);
 			} else {
 				var uInt8 = new Uint8Array(message.data);
 				var func  = String.fromCharCode(uInt8[0]) +
