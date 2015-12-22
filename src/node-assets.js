@@ -543,45 +543,40 @@ var getDimensions = function(id) {
 	if (id in AllAssets.list) {
 		return {width:  AllAssets.list[id].exif.ImageWidth,
 				height: AllAssets.list[id].exif.ImageHeight };
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getTag = function(id, tag) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif[tag];
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getURL = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].sage2URL;
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getMimeType = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif.MIMEType;
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getExifData = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif;
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var exifAsync = function(cmds, cb) {
@@ -593,9 +588,8 @@ var exifAsync = function(cmds, cb) {
 			if (!sageutils.fileExists(instuctionsFile)) {
 				if (cmds.length > 0) {
 					return execNext();
-				} else {
-					return cb(null);
 				}
+				return cb(null);
 			}
 			instructions = json5.parse(fs.readFileSync(instuctionsFile, 'utf8'));
 			var appIcon = null;

@@ -208,21 +208,23 @@ SAGE2types.create    = function(val) {
 	if (_typeOf(val) === 'object') {
 		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng')) {
 			return new SAGE2types.LatLng(val.lat, val.lng);
-		} else {
-			return new SAGE2types.Object(val);
 		}
-	} else if (_typeOf(val) === 'array') {
+		return new SAGE2types.Object(val);
+	}
+	if (_typeOf(val) === 'array') {
 		return new SAGE2types.Array(val);
-	} else if (_typeOf(val) === 'number') {
+	}
+	if (_typeOf(val) === 'number') {
 		var v = parseInt(val);
 		if (v === val) {
 			return new SAGE2types.Int(val);
-		} else {
-			return new SAGE2types.Float(val);
 		}
-	} else if (_typeOf(val) === 'string') {
+		return new SAGE2types.Float(val);
+	}
+	if (_typeOf(val) === 'string') {
 		return new SAGE2types.String(val);
-	} else if (_typeOf(val) === 'date') {
+	}
+	if (_typeOf(val) === 'date') {
 		return new SAGE2types.Date(val);
 	}
 	return null;

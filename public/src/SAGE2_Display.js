@@ -72,27 +72,24 @@ function getBrowserPrefix() {
 function hiddenProperty(prefix) {
 	if (prefix) {
 		return prefix + 'Hidden';
-	} else {
-		return 'hidden';
 	}
+	return 'hidden';
 }
 
 // Get Browser Specific Visibility State
 function visibilityState(prefix) {
 	if (prefix) {
 		return prefix + 'VisibilityState';
-	} else {
-		return 'visibilityState';
 	}
+	return 'visibilityState';
 }
 
 // Get Browser Specific Event
 function visibilityEvent(prefix) {
 	if (prefix) {
 		return prefix + 'visibilitychange';
-	} else {
-		return 'visibilitychange';
 	}
+	return 'visibilitychange';
 }
 
 /**

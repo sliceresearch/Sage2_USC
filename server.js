@@ -1684,9 +1684,8 @@ function saveUserLog(filename) {
 		var ignoreIP = function(key, value) {
 			if (key === "ip") {
 				return undefined;
-			} else {
-				return value;
 			}
+			return value;
 		};
 
 		fs.writeFileSync(userLogName, json5.stringify(users, ignoreIP, 4));
@@ -3512,10 +3511,7 @@ function setupDisplayBackground() {
 	if (config.background.image !== undefined && config.background.image.url !== undefined) {
 		var bg_file = path.join(publicDirectory, config.background.image.url);
 
-		if (config.background.image.style === "tile") {
-			// do nothing
-			return;
-		} else if (config.background.image.style === "fit") {
+		if (config.background.image.style === "fit") {
 			exiftool.file(bg_file, function(err1, data) {
 				if (err1) {
 					console.log("Error processing background image:", bg_file, err1);
@@ -3539,6 +3535,8 @@ function setupDisplayBackground() {
 						});
 				}
 			});
+		} else if (config.background.image.style === "tile") {
+			// do nothing
 		} else {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
@@ -3644,12 +3642,11 @@ function setupHttpsOptions() {
 			rejectUnauthorized: false,
 			// callback to handle multi-homed machines
 			SNICallback: function(servername) {
-				if (certs.hasOwnProperty(servername)) {
-					return certs[servername];
-				} else {
+				if (!certs.hasOwnProperty(servername)) {
 					console.log(sageutils.header("SNI") + "Unknown host, cannot find a certificate for ", servername);
 					return null;
 				}
+				return certs[servername];
 			}
 		};
 	} else {
@@ -4282,9 +4279,8 @@ function findRemoteSiteByConnection(wsio) {
 	}
 	if (remoteIdx >= 0) {
 		return remoteSites[remoteIdx];
-	} else {
-		return null;
 	}
+	return null;
 }
 
 function hideControl(ctrl) {
@@ -4377,10 +4373,9 @@ function allTrueDict(dict, property) {
 	for (key in dict) {
 		if (property === undefined && dict[key] !== true) {
 			return false;
-		} else {
-			if (property !== undefined && dict[key][property] !== true) {
-				return false;
-			}
+		}
+		if (property !== undefined && dict[key][property] !== true) {
+			return false;
 		}
 	}
 	return true;
@@ -5154,7 +5149,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(scaledPt.x, scaledPt.y);
 		moveApplicationWindow(uniqueID, updatedMoveItem, moveAppPortal.id);
 		return;
-	} else if (resizeAppPortal !== null) {
+	}
+	if (resizeAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, resizeAppPortal.type, resizeAppPortal.geometry);
 		scaledPt = {x: localPt.x / resizeAppPortal.data.scale, y: (localPt.y - config.ui.titleBarHeight) / resizeAppPortal.data.scale};
 		remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition',
@@ -5178,14 +5174,16 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
 		}
 		return;
-	} else if (updatedResizeItem !== null) {
+	}
+	if (updatedResizeItem !== null) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedResizeItem.elemId)) {
 			moveAndResizeDataSharingPortalWindow(updatedResizeItem);
 		} else {
 			moveAndResizeApplicationWindow(updatedResizeItem, null);
 		}
 		return;
-	} else if (updatedControl !== null) {
+	}
+	if (updatedControl !== null) {
 		moveWidgetControls(uniqueID, updatedControl);
 		return;
 	}
@@ -5729,47 +5727,47 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 		if (portal !== undefined && portal !== null && portal.id === portalId) {
 			dropSelectedItem(uniqueID, true, portalId);
 			return;
-		} else {
-			var app = dropSelectedItem(uniqueID, false, null);
-			localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
-			var remote = remoteSharingSessions[obj.id];
-			createAppFromDescription(app.application, function(appInstance, videohandle) {
-				if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
-					appInstance.id = app.application.id + "_" + obj.data.id;
-				} else {
-					appInstance.id = getUniqueSharedAppId(obj.data.id);
-				}
-
-				appInstance.left = localPt.x / obj.data.scale;
-				appInstance.top = (localPt.y - config.ui.titleBarHeight) / obj.data.scale;
-				appInstance.width = app.previousPosition.width / obj.data.scale;
-				appInstance.height = app.previousPosition.height / obj.data.scale;
-
-				remoteSharingSessions[obj.data.id].appCount++;
-
-				// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
-				var i;
-				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-				for (i = 0; i < clients.length; i++) {
-					if (clients[i].clientType === "display") {
-						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
-					}
-				}
-				handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
-
-				remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
-
-				var eLogData = {
-					host: remote.portal.host,
-					port: remote.portal.port,
-					application: {
-						id: appInstance.id,
-						type: appInstance.application
-					}
-				};
-				addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
-			});
 		}
+
+		var app = dropSelectedItem(uniqueID, false, null);
+		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
+		var remote = remoteSharingSessions[obj.id];
+		createAppFromDescription(app.application, function(appInstance, videohandle) {
+			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
+				appInstance.id = app.application.id + "_" + obj.data.id;
+			} else {
+				appInstance.id = getUniqueSharedAppId(obj.data.id);
+			}
+
+			appInstance.left = localPt.x / obj.data.scale;
+			appInstance.top = (localPt.y - config.ui.titleBarHeight) / obj.data.scale;
+			appInstance.width = app.previousPosition.width / obj.data.scale;
+			appInstance.height = app.previousPosition.height / obj.data.scale;
+
+			remoteSharingSessions[obj.data.id].appCount++;
+
+			// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
+			var i;
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i = 0; i < clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+			handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
+
+			remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
+
+			var eLogData = {
+				host: remote.portal.host,
+				port: remote.portal.port,
+				application: {
+					id: appInstance.id,
+					type: appInstance.application
+				}
+			};
+			addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+		});
 	} else {
 		// console.log("pointer release on portal (no app selected):",
 		// 	remoteInteraction[uniqueID].windowManagementMode(),
