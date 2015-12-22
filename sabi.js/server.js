@@ -102,10 +102,12 @@ var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "pa
 var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
 var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
-var pathToSage2onbatScript		= path.join("scripts", "sage2_on.bat");
-var pathToFindMonitorData		= path.join("scripts", "winScriptHelperWriteMonitorRes.exe");
-var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json");
-var pathToGoWindowsCertGenFile	= "../keys/GO-windows.bat";
+var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json"); //gets written here due to nature of the winScriptHelperWriteMonitorRes.exe file.
+var pathToSabiConfigFolder		= path.join(homedir(), "Documents", "SAGE2_Media", "sabiConfig");
+var pathToFindMonitorData		= path.join(pathToSabiConfigFolder, "scripts", "winScriptHelperWriteMonitorRes.exe");
+var pathToSage2onbatScript		= path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
+var pathToGoWindowsCertGenFile	= path.join(pathToSabiConfigFolder, "scripts", "GO-windows.bat"); // "../keys/GO-windows.bat";
+var pathToActivateGoWindowsCert = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat" );
 var needToRegenerateSageOnFile	= true; //always check at least once
 var scriptExecutionFunction		= require('./src/script').Script;
 var commandExecutionFunction	= require('./src/script').Command;
@@ -147,7 +149,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	if (!folderExists(sessionDirectory)) {
 		mkdirParent(sessionDirectory);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "sabiConfig"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(media, d);
 		if (!folderExists(newsubdir)) {
@@ -187,13 +189,55 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
 		sfpContents += 'cd sabi.js\n';
-		sfpContents += 'start /MIN ..\\bin\\node server.js -f config/sage2.json %*';
+		sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';
 		fs.writeFileSync(pathToWinStartupFolder, sfpContents);
 
 		console.log('Startup file does not exist, adding it. Contents:' + sfpContents);
 	}
 
-	console.log('   done')
+	//copy over additional files to run the sabi interface.
+	var sabiMediaCopy;
+	var sabiMediaCheck = path.join(pathToSabiConfigFolder, "config");
+		if (!folderExists(sabiMediaCheck)) {
+			mkdirParent(sabiMediaCheck);
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "config", "sage2.json");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("config", "sage2.json");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts");
+		if (!folderExists(sabiMediaCheck)) {
+			mkdirParent(sabiMediaCheck);
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("scripts", "sage2_on.bat");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_off.bat");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("scripts", "sage2_off.bat");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "winScriptHelperWriteMonitorRes.exe");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("scripts", "winScriptHelperWriteMonitorRes.exe");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "GO-windows.bat");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("..", "keys", "GO-windows.bat");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	// sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat");
+	// 	if (!fileExists(sabiMediaCheck)) {
+	// 		sabiMediaCopy = path.join("scripts", "activateWindowsCertGenerator.bat");
+	// 		fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+	// 	}
+
+
+	console.log('   ...done checking SAGE2_Media');
 }
 
 
@@ -978,12 +1022,35 @@ function processEditor(data, socket) {
 function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
+
+	console.log();
+	console.log("before if sage2-on");
+	console.log();
+	sleep(2000); //remove this later
+
 	if (data.value[0] === "sage2-on" && needToRegenerateSageOnFile) {
 		console.log('Delete this comment later: Intercepting sage2-on action.');
 		updateConfigFileToAccountForMonitorsAndResolution();
 		writeSageOnFileWithCorrectPortAndMeetingID();
 		needToRegenerateSageOnFile = false;
 	}
+
+	console.log();
+	console.log("before prefix of script location");
+	console.log();
+	sleep(2000); //remove this later
+
+	//interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
+	if(data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
+		data.value[1] = pathToSabiConfigFolder + "\\" + data.value[1];
+	}
+
+
+	console.log();
+	console.log("before f in apprpc. location to activate:" + data.value[1]);
+	console.log();
+	sleep(2000); //remove this later
+
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
 		if (typeof func == "function") {
@@ -993,6 +1060,12 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 			}
 		}
 	}
+
+	console.log();
+	console.log("after f in apprpc");
+	console.log();
+	sleep(2000); //remove this later
+
 	if (!found && data.method === "makeNewMeetingID") {
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
@@ -1003,6 +1076,11 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 		console.log('Setting new launcher password', data.value[0]);
 		htdigest.htdigest_save("users.htpasswd", "sabi", "sage2", data.value[0]);
 	}
+
+	console.log();
+	console.log("end of processRPC");
+	console.log();
+	sleep(2000); //remove this later
 }
 
 function writeSageOnFileWithCorrectPortAndMeetingID() {
@@ -1162,15 +1240,18 @@ function updateCertificates() {
 	var alternate = cfg.alternate_hosts;
 
 	var rewriteContents = "REM Must be run as administrator\n";
-		rewriteContents += "pushd %~dp0\n";
+		//rewriteContents += "pushd %~dp0\n"; //Not sure what this does... it stores the directory the script is run from. But to retrieve the path, a popd must be used. No other scripts in the chain seem to use it.
 		rewriteContents += "call init_webserver.bat localhost\n";
 		rewriteContents += "call init_webserver.bat 127.0.0.1\n";
 		rewriteContents += "call init_webserver.bat " + host + "\n";
 		rewriteContents += "call init_webserver.bat " + alternate + "\n";
-		
 	fs.writeFileSync(pathToGoWindowsCertGenFile, rewriteContents);
 
-	scriptExecutionFunction( pathToGoWindowsCertGenFile, false);
+	var rewriteContents = "@echo off\n\n";
+		rewriteContents += 'start /MIN /D "..\\keys" ' + pathToGoWindowsCertGenFile;
+	fs.writeFileSync(pathToActivateGoWindowsCert, rewriteContents);
+
+	scriptExecutionFunction( pathToActivateGoWindowsCert, false);
 }
 
 function makeMonitorInfoFile() {
