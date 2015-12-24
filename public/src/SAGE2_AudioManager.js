@@ -235,7 +235,13 @@ function setupListeners() {
 		}
 	});
 
+	wsio.on('setVolume', function(data) {
+		console.log("setVolume ", data.id, " ", data.level);
+	        changeVideoVolume(data.id, data.level);
+	});
+
 	wsio.on('videoPlaying', function(data) {
+		console.log("videoPlaying");
 		var vid = document.getElementById(data.id);
 		if (vid) {
 			vid.play();
@@ -317,6 +323,7 @@ function setupListeners() {
 function changeVolume(event) {
 	var vol     = document.getElementById(event.target.id).value / 10;
 	var videoId = event.target.id.substring(0, event.target.id.length - 13);
+	wsio.emit("setVolume", {id: videoId, level: vol});
 	changeVideoVolume(videoId, vol);
 }
 
