@@ -1033,8 +1033,21 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 	return !(x_1 > x_2 + width_2 || x_1 + width_1 < x_2 || y_1 > y_2 + height_2 || y_1 + height_1 < y_2);
 }
 
-function wsUpdateMediaStreamFrame(wsio, data) {
+function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	var key;
+
+        // NB: Cloned code
+        var data;
+        if (dataOrBuffer.id !== undefined) {
+          //console.log("UpdateMediaStreamFrame: parameter is record");
+          data = dataOrBuffer;
+        } else {
+          //console.log("UpdateMediaStreamFrame: parameter is Buffer");
+          data = {}
+          // buffer: id, state-type, state-encoding, state-src
+          data.id = byteBufferToString(dataOrBuffer);
+        }
+
 	// Reset the 'ready' flag for every display client
 	for (key in SAGE2Items.renderSync[data.id].clients) {
 		SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
@@ -1080,7 +1093,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, config.resolution.width, config.resolution.height)) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 		} else {
 			// otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
@@ -1127,6 +1140,7 @@ function wsStopMediaStream(wsio, data) {
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
+        //console.log("ReceivedMediaStreamFrame");
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
