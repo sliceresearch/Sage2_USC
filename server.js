@@ -3677,7 +3677,16 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		// console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+		console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+	});
+
+	form.on('error', function(err) {
+		console.log(sageutils.header("Upload") + 'Request aborted');
+		try {
+			// Removing the temporary file
+			fs.unlinkSync(this.openedFiles[0].path);
+		} catch (err) {
+		}
 	});
 
 	form.on('field', function(field, value) {
@@ -3701,6 +3710,7 @@ function uploadForm(req, res) {
 			res.writeHead(500, {"Content-Type": "text/plain"});
 			res.write(err + "\n\n");
 			res.end();
+			return;
 		}
 		// build the reply to the upload
 		res.writeHead(200, {'Content-Type': 'application/json'});
