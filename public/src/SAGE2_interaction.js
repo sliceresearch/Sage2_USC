@@ -27,6 +27,7 @@ function SAGE2_interaction(wsio) {
 	this.wsio        = wsio;
 	this.uniqueID    = null;
 	this.sensitivity = null;
+	this.fileUploadStart    = null;
 	this.fileUploadProgress = null;
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
@@ -39,6 +40,7 @@ function SAGE2_interaction(wsio) {
 	this.pix           = null;
 	this.chunk         = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
+	this.array_xhr     = [];
 
 	// Event filtering for mouseMove
 	this.now = Date.now();
@@ -93,6 +95,16 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	* Set the start callback
+	*
+	* @method setFileUploadStartCallback
+	* @param callback {Function} upload start callback
+	*/
+	this.setFileUploadStartCallback = function(callback) {
+		this.fileUploadStart = callback;
+	};
+
+	/**
 	* Set the progress callback
 	*
 	* @method setFileUploadProgressCallback
@@ -110,6 +122,20 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.setFileUploadCompleteCallback = function(callback) {
 		this.fileUploadComplete = callback;
+	};
+
+	/**
+	* Cancel the file uploads by aborting the XMLHttpRequests
+	*
+	* @method cancelUploads
+	*/
+	this.cancelUploads = function() {
+		if (this.array_xhr.length > 0) {
+			for (var i = 0; i < this.array_xhr.length; i++) {
+				this.array_xhr[i].abort();
+			}
+			this.array_xhr.length = 0;
+		}
 	};
 
 	/**
@@ -167,6 +193,13 @@ function SAGE2_interaction(wsio) {
 			_this.wsio.emit('uploadedFile', {name: name, type: type});
 		};
 
+		if (this.fileUploadStart) {
+			this.fileUploadStart(files);
+		}
+
+		// Clear the upload array
+		this.array_xhr.length = 0;
+
 		for (var i = 0; i < files.length; i++) {
 			if (files[i].size <= this.maxUploadSize) {
 				var formdata = new FormData();
@@ -174,6 +207,8 @@ function SAGE2_interaction(wsio) {
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
 				var xhr = new XMLHttpRequest();
+				// add the request into the array
+				this.array_xhr.push(xhr);
 				xhr.open("POST", "upload", true);
 				xhr.upload.id = "file" + i.toString();
 				xhr.upload.addEventListener('progress', progressCallback, false);

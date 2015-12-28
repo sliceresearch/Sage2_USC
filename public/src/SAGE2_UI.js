@@ -153,6 +153,7 @@ function SAGE2_init() {
 
 		// Interaction object: file upload, desktop sharing, ...
 		interactor = new SAGE2_interaction(wsio);
+		interactor.setFileUploadStartCallback(fileUploadStart);
 		interactor.setFileUploadProgressCallback(fileUploadProgress);
 		interactor.setFileUploadCompleteCallback(fileUploadComplete);
 
@@ -634,7 +635,7 @@ function fileDrop(event) {
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
 		// upload a file
-		displayUI.fileUpload = true;
+		// displayUI.fileUpload = true;
 		displayUI.uploadPercent = 0;
 		interactor.uploadFiles(event.dataTransfer.files, x, y);
 	} else {
@@ -657,6 +658,82 @@ function fileDrop(event) {
 	return false;
 }
 
+var msgOpen = false;
+var uploadMessage, msgui;
+
+/**
+ * File upload start callback
+ *
+ * @method fileUploadStart
+ * @param files {Object} array-like that containing the file infos
+ */
+function fileUploadStart(files) {
+	// Template for a prograss bar form
+	var aTemplate = '<div style="padding:0; margin: 0;"class="webix_el_box">' +
+		'<div style="width:#proc#%" class="webix_accordionitem_header">&nbsp;</div></div>'
+	webix.protoUI({
+		name: "ProgressBar",
+		defaults: {
+			template: aTemplate,
+			data: {	proc: 0	},
+			borderles: true,
+			height: 25
+		},
+		setValue: function(val) {
+			if ((val < 0) || (val > 100)) {
+				throw "Invalid val: " + val + " need in range 0..100";
+			}
+			this.data.proc = val;
+			this.refresh();
+		}
+	}, webix.ui.template);
+
+	// Build the form with file names
+	var form = [];
+	var aTitle;
+	var panelHeight = 80;
+	if (files.length === 1) {
+		aTitle = "Uploading a file";
+		form.push({view: "label", align: "center", label: files[0].name});
+	} else {
+		aTitle = "Uploading " + files.length + " files";
+		panelHeight = 140;
+
+		for (var i = 0; i < Math.min(files.length, 3); i++) {
+			var aLabel = (i + 1).toString() + " - " + files[i].name;
+			form.push({view: "label", align: "left", label: aLabel});
+		}
+		if (files.length > 3) {
+			form.push({view: "label", align: "left", label: "..."});
+		}
+	}
+	// Add the progress bar element from template
+	form.push({id: 'progressBar', view: 'ProgressBar'});
+
+	// Create a modal window wit empty div
+	uploadMessage = webix.modalbox({
+		title: aTitle,
+		buttons: ["Cancel"],
+		margin: 25,
+		text: "<div id='box_content' style='width:100%; height:100%'></div>",
+		width: "80%",
+		position: "center",
+		callback: function(result) {
+			interactor.cancelUploads();
+			msgOpen = false;
+			webix.modalbox.hide(this);
+		}
+	});
+	// Add the form into the div
+	msgui = webix.ui({
+		container: "box_content",
+		height: panelHeight,
+		rows: form
+	});
+	// The dialog is now open
+	msgOpen = true;
+}
+
 /**
  * File upload progress callback
  *
@@ -664,8 +741,16 @@ function fileDrop(event) {
  * @param percent {Number} process
  */
 function fileUploadProgress(percent) {
-	displayUI.setUploadPercent(percent);
-	displayUI.draw();
+	// upadte the progress bar element
+	var pgbar = $$('progressBar');
+	var val   = percent * 100;
+	if (val > 100) {
+		val = 0;
+	}
+	pgbar.setValue(val);
+
+	// displayUI.setUploadPercent(percent);
+	// displayUI.draw();
 }
 
 /**
@@ -674,10 +759,15 @@ function fileUploadProgress(percent) {
  * @method fileUploadComplete
  */
 function fileUploadComplete() {
-	setTimeout(function() {
-		displayUI.fileUpload = false;
-		displayUI.draw();
-	}, 500);
+	// close the modal window if still open
+	if (msgOpen) {
+		webix.modalbox.hide(uploadMessage);
+	}
+
+	// setTimeout(function() {
+	// 	displayUI.fileUpload = false;
+	// 	displayUI.draw();
+	// }, 500);
 }
 
 /**
