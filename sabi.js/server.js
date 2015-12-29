@@ -236,6 +236,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	// 		fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
 	// 	}
 
+	makeMonitorInfoFile();
 
 	console.log('   ...done checking SAGE2_Media');
 }
@@ -346,7 +347,8 @@ function untildify(str) {
 //  Read the configuration file
 // ---------------------------------------------
 
-var configdata = fs.readFileSync(path.join(__dirname,ConfigFile));
+//var configdata = fs.readFileSync(path.join(__dirname,ConfigFile)); //causes a problem if config files are in SAGE2_Media
+var configdata = fs.readFileSync( ConfigFile );
 var cfg = JSON5.parse(configdata);
 
 // Get the port of the webserver from configuration file
@@ -1022,35 +1024,17 @@ function processEditor(data, socket) {
 function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
-
-	console.log();
-	console.log("before if sage2-on");
-	console.log();
-	sleep(2000); //remove this later
-
-	if (data.value[0] === "sage2-on" && needToRegenerateSageOnFile) {
+	if (data.value[0].indexOf("sage2-on") !== -1 && needToRegenerateSageOnFile) {
 		console.log('Delete this comment later: Intercepting sage2-on action.');
 		updateConfigFileToAccountForMonitorsAndResolution();
-		writeSageOnFileWithCorrectPortAndMeetingID();
+		console.log("After update config file before write sage on file");
+		writeSageOnFileWithCorrectPortAndMeetingID(data);
 		needToRegenerateSageOnFile = false;
 	}
-
-	console.log();
-	console.log("before prefix of script location");
-	console.log();
-	sleep(2000); //remove this later
-
 	//interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
 	if(data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
 		data.value[1] = pathToSabiConfigFolder + "\\" + data.value[1];
 	}
-
-
-	console.log();
-	console.log("before f in apprpc. location to activate:" + data.value[1]);
-	console.log();
-	sleep(2000); //remove this later
-
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
 		if (typeof func == "function") {
@@ -1060,12 +1044,6 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 			}
 		}
 	}
-
-	console.log();
-	console.log("after f in apprpc");
-	console.log();
-	sleep(2000); //remove this later
-
 	if (!found && data.method === "makeNewMeetingID") {
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
@@ -1076,14 +1054,9 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 		console.log('Setting new launcher password', data.value[0]);
 		htdigest.htdigest_save("users.htpasswd", "sabi", "sage2", data.value[0]);
 	}
-
-	console.log();
-	console.log("end of processRPC");
-	console.log();
-	sleep(2000); //remove this later
 }
 
-function writeSageOnFileWithCorrectPortAndMeetingID() {
+function writeSageOnFileWithCorrectPortAndMeetingID( data ) {
 	var port 		= getPortUsedInConfig();
 	var meetingID 	= getMeetingIDFromPasswd();
 	var cfg 		= fs.readFileSync( pathToWinDefaultConfig, "utf8" );
@@ -1097,39 +1070,66 @@ function writeSageOnFileWithCorrectPortAndMeetingID() {
 		return;
 	}
 
-	var rewriteContents;
-		rewriteContents = "@rem off\n\n";
-		rewriteContents += "This fill will be automatically regenerated through sabi usage.\n\n";
-		rewriteContents += "start /MIN /D .. sage2.bat\n\n";
-		rewriteContents += "timeout 2\n\n";
-		rewriteContents += "rem clear the chrome folders\n";
-		rewriteContents += "rmdir /q /s %APPDATA%\\chrome\n\n";
+	var onFileLocation = path.join(pathToSabiConfigFolder, data.value[1]);
 
-		rewriteContents += "rem audio client\n";
-		rewriteContents += "set datadir=%APPDATA%\\chrome\\audio\n";
-		rewriteContents += "mkdir %datadir%\n";
-		rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" --no-default-browser-check --new-window --disable-popup-blocking --no-first-run --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --window-size=600,300 --window-position=0,0 --user-data-dir=%datadir% http://localhost:'
-		rewriteContents += port + '/audioManager.html?hash='+meetingID+' /B\n\n';
-		rewriteContents += "timeout 5\n\n";
-
-	for(var h = 0; h < cfg.layout.rows; h++) {
-		for(var w = 0; w < cfg.layout.columns; w++) {
-			displayNumber 	= (h * cfg.layout.columns + w);
-			rewriteContents += "timeout 2\n\n";	
-			rewriteContents += "rem display" + displayNumber + "\n";
-			rewriteContents += "set datadir=%APPDATA%\\chrome\\display" + displayNumber + "\n";
+	if(onFileLocation === pathToSage2onbatScript) {
+		console.log( "Script to activate matches " + pathToSage2onbatScript );
+		console.log( "Going to overwrite it.");
+		var rewriteContents;
+			rewriteContents = "@rem off\n\n";
+			rewriteContents += "This fill will be automatically regenerated through sabi usage.\n\n";
+			rewriteContents += "start /MIN /D .. sage2.bat\n\n";
+			rewriteContents += "timeout 2\n\n";
+			rewriteContents += "rem clear the chrome folders\n";
+			rewriteContents += "rmdir /q /s %APPDATA%\\chrome\n\n";
+			rewriteContents += "rem audio client\n";
+			rewriteContents += "set datadir=%APPDATA%\\chrome\\audio\n";
 			rewriteContents += "mkdir %datadir%\n";
-			rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ';
-			rewriteContents += '--no-default-browser-check --new-window --disable-popup-blocking --no-first-run ';
-			rewriteContents += '--enable-accelerated-compositing --allow-file-access-from-files ';
-			rewriteContents += '--disable-session-crashed-bubble --allow-running-insecure-content ';
-			rewriteContents += '--window-size=500,500 --window-position='+ (monitorData.tileCoordinates[displayNumber].col + 100) +','+ (monitorData.tileCoordinates[displayNumber].row + 100) +'  '; 
-			rewriteContents += '--start-fullscreen --user-data-dir=%datadir% ';
-			rewriteContents += '"http://localhost:'+port+'/display.html?clientID='+displayNumber+'&hash='+meetingID+'" /B\n\n';
+			rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" --no-default-browser-check --new-window --disable-popup-blocking --no-first-run --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --window-size=600,300 --window-position=0,0 --user-data-dir=%datadir% http://localhost:'
+			rewriteContents += port + '/audioManager.html?hash='+meetingID+' /B\n\n';
+			rewriteContents += "timeout 5\n\n";
+		for(var h = 0; h < cfg.layout.rows; h++) {
+			for(var w = 0; w < cfg.layout.columns; w++) {
+				displayNumber 	= (h * cfg.layout.columns + w);
+				rewriteContents += "timeout 2\n\n";	
+				rewriteContents += "rem display" + displayNumber + "\n";
+				rewriteContents += "set datadir=%APPDATA%\\chrome\\display" + displayNumber + "\n";
+				rewriteContents += "mkdir %datadir%\n";
+				rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ';
+				rewriteContents += '--no-default-browser-check --new-window --disable-popup-blocking --no-first-run ';
+				rewriteContents += '--enable-accelerated-compositing --allow-file-access-from-files ';
+				rewriteContents += '--disable-session-crashed-bubble --allow-running-insecure-content ';
+				rewriteContents += '--window-size=500,500 --window-position='+ (monitorData.tileCoordinates[displayNumber].col + 100) +','+ (monitorData.tileCoordinates[displayNumber].row + 100) +'  '; 
+				rewriteContents += '--start-fullscreen --user-data-dir=%datadir% ';
+				rewriteContents += '"http://localhost:'+port+'/display.html?clientID='+displayNumber+'&hash='+meetingID+'" /B\n\n';
+			}
 		}
+		fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
+	}//end if onFileLocation === pathToSage2onbatScript
+	else {
+		console.log("Script doesn't match.");
+		console.log("Will only change value of port and meeting id.");
+
+		var originalFileContents = fs.readFileSync(pathToMonitorDataFile);
+		var rewriteContents = originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
+			rewriteContents += "localhost:" + port;
+			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
+			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("/") );
+			rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
+			rewriteContents += "hash=" + meetingID;
+			originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
+			while(originalFileContents.indexOf("localhost") !== -1) {
+				rewriteContents += originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
+				rewriteContents += "localhost:" + port;
+				originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
+				originalFileContents = originalFileContents.substring( originalFileContents.indexOf("/") );
+				rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
+				rewriteContents += "hash=" + meetingID;
+				originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
+			}
+			rewriteContents += originalFileContents;
 	}
 
-	fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
 }
 
 function oldwriteSageOnFileWithCorrectPortAndMeetingIDold() {
@@ -1255,6 +1255,7 @@ function updateCertificates() {
 }
 
 function makeMonitorInfoFile() {
+	console.log("Gathering monitor information");
 	commandExecutionFunction(pathToFindMonitorData, null);
 }
 
@@ -1316,9 +1317,16 @@ function processOSC(data) {
 sio.on('connection', function (socket) {
 	console.log("New connection from " + socket.request.connection.remoteAddress);
 
+	/*
 	// Send the name of the configuration file to the web client
 	//    the client will parse the file
 	socket.emit('start', ConfigFile);
+	*/
+	//Rather than send the name, send the contents. It has to get there anyway...
+	var cfg = fs.readFileSync( ConfigFile );
+	cfg = JSON5.parse(cfg);
+	socket.emit('start', cfg);
+
 
 	socket.on("RPC", function (data) {
 		processRPC(data, socket);
