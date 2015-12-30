@@ -107,7 +107,7 @@ install:
   - git config user.name "Lava Lab"
   - git commit -m "Forced overwrite from appveyor"
   #- git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
-  - git remote add origin "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
+  - git remote add origin "https://Lava%20Lab:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
   - git push -f origin master
   - cd ..
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
