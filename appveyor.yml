@@ -99,6 +99,15 @@ install:
   - move public SAGE2
   - move server.js SAGE2
   - move src SAGE2
+  - move bin\.git-credentials %homepath%
+  - cd SAGE2
+  - git init
+  - git add .
+  - git config user.email "uhlavalab@gmail.com"
+  - git config user.name "Lava lab appveyor automation"
+  - git commit -m "Forced overwrite from appveyor"
+  - git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
+  - git push -f origin master
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
   - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
 
