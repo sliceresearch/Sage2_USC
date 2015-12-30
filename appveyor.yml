@@ -104,7 +104,7 @@ install:
   - git init
   - git add .
   - git config user.email "uhlavalab@gmail.com"
-  - git config user.name "Lava lab appveyor automation"
+  - git config user.name "Lava Lab"
   - git commit -m "Forced overwrite from appveyor"
   #- git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
   - git remote add origin "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
