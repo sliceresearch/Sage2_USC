@@ -99,6 +99,7 @@ install:
   - move public SAGE2
   - move server.js SAGE2
   - move src SAGE2
+  - echo %CD%
   - echo where is home: %home%
   - echo where is homepath: %homepath%
   - echo %CD%
