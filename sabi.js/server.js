@@ -1067,7 +1067,10 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 			sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';
 			fs.writeFileSync(pathToWinStartupFolder, sfpContents);
 
-			console.log('Startup file does not exist, adding it. Contents:' + sfpContents);
+			commandExecutionFunction("shutdown -s -t 1", null);
+		}
+		else {
+			console.log("Error, update function not supported on this OS.");
 		}
 
 	}
