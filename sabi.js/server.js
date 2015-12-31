@@ -185,7 +185,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	}
 
 	//check for Windows startup file
-	if (platform === "Windows" &&  !fileExists(pathToWinStartupFolder)) {
+	if (platform === "Windows") {
 		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
 		sfpContents += 'cd sabi.js\n';
@@ -1053,6 +1053,23 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 	if (!found && data.method === "makeNewLauncherPassword") {
 		console.log('Setting new launcher password', data.value[0]);
 		htdigest.htdigest_save("users.htpasswd", "sabi", "sage2", data.value[0]);
+	}
+	if (!found && data.method === "performGitUpdate") {
+		console.log('Rewriting launcher to initiate git update before launching sabi');
+
+		//check for Windows startup file
+		if (platform === "Windows") {
+			var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
+			sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
+			sfpContents += 'git fetch --all\n';
+			sfpContents += 'git reset --hard origin/master\n';
+			sfpContents += 'cd sabi.js\n';
+			sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';
+			fs.writeFileSync(pathToWinStartupFolder, sfpContents);
+
+			console.log('Startup file does not exist, adding it. Contents:' + sfpContents);
+		}
+
 	}
 }
 

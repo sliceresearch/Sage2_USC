@@ -61,8 +61,8 @@ install:
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
-  # - curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
-  # - 7z x -y git-win64-bin.zip > nul
+  - curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
+  - 7z x -y git-win64-bin.zip > nul
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
