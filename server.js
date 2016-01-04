@@ -653,6 +653,8 @@ function setupListeners(wsio) {
 
 	wsio.on('openNewWebpage',                       wsOpenNewWebpage);
 
+	wsio.on('setVolume',				wsSetVolume);
+
 	wsio.on('playVideo',                            wsPlayVideo);
 	wsio.on('pauseVideo',                           wsPauseVideo);
 	wsio.on('stopVideo',                            wsStopVideo);
@@ -2499,6 +2501,15 @@ function wsOpenNewWebpage(wsio, data) {
 	}
 }
 
+// **************  Volume sync  ********************
+
+function wsSetVolume(wsio, data) {
+      if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+              return;
+      }
+      console.log("setVolume ", data.id, " ", data.level);
+      broadcast('setVolume',data);
+}
 
 // **************  Video / Audio Synchonization *****************
 
