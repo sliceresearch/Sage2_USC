@@ -1178,6 +1178,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
 		}
 	}
+	SAGE2Items.renderSync[data.id].sendNextFrame = true;
 
 	appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
@@ -1190,6 +1191,14 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	var i;
 	var key;
 	var id = byteBufferToString(buffer);
+
+	if (!SAGE2Items.renderSync[id].sendNextFrame) {
+		//console.log("drop frame");
+		return; 
+	} else {
+		//console.log("relay frame");
+	}
+	SAGE2Items.renderSync[id].sendNextFrame = false;
 
 	if (!SAGE2Items.applications.list.hasOwnProperty(id)) {
 		return;
@@ -1240,6 +1249,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		SAGE2Items.renderSync[data.id].sendNextFrame = true;
 		var i;
 		var key;
 		for (key in SAGE2Items.renderSync[data.id].clients) {
