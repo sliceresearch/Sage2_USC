@@ -382,6 +382,9 @@ var SAGE2_App = Class.extend({
 	},
 
 	SAGE2UpdateAppOption: function(name, parent, save) {
+                if (!(name in save)) {
+                       save[name] = {_name: name, _value: {textContent: ""}, _sync: true};
+                }
 		if (typeof parent[name] === "number") {
 			save[name]._value.textContent = parent[name].toString();
 		} else if (typeof parent[name] === "boolean") {
