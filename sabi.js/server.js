@@ -184,7 +184,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
 	}
 
-	//check for Windows startup file
+	//always ov
 	if (platform === "Windows") {
 		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
@@ -1024,7 +1024,7 @@ function processEditor(data, socket) {
 function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
-	if (data.value[0].indexOf("sage2-on") !== -1 && needToRegenerateSageOnFile) {
+	if (data.value[0].indexOf("sage2-on") !== -1) {
 		console.log('Delete this comment later: Intercepting sage2-on action.');
 		updateConfigFileToAccountForMonitorsAndResolution();
 		console.log("After update config file before write sage on file");
@@ -1130,7 +1130,7 @@ function writeSageOnFileWithCorrectPortAndMeetingID( data ) {
 		console.log("Script doesn't match.");
 		console.log("Will only change value of port and meeting id.");
 
-		var originalFileContents = fs.readFileSync(pathToMonitorDataFile);
+		var originalFileContents = fs.readFileSync(onFileLocation, "utf8");
 		var rewriteContents = originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
 			rewriteContents += "localhost:" + port;
 			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
@@ -1138,16 +1138,18 @@ function writeSageOnFileWithCorrectPortAndMeetingID( data ) {
 			rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
 			rewriteContents += "hash=" + meetingID;
 			originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
-			while(originalFileContents.indexOf("localhost") !== -1) {
-				rewriteContents += originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
-				rewriteContents += "localhost:" + port;
-				originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
-				originalFileContents = originalFileContents.substring( originalFileContents.indexOf("/") );
-				rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
-				rewriteContents += "hash=" + meetingID;
-				originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
-			}
-			rewriteContents += originalFileContents;
+		while(originalFileContents.indexOf("localhost") !== -1) {
+			rewriteContents += originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
+			rewriteContents += "localhost:" + port;
+			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
+			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("/") );
+			rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
+			rewriteContents += "hash=" + meetingID;
+			originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
+		}
+		rewriteContents += originalFileContents;
+			
+		fs.writeFileSync(onFileLocation, rewriteContents);
 	}
 
 }
