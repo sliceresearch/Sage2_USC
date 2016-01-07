@@ -4,8 +4,8 @@
 {
 	name: "Windows",
 	host: "localhost",
-	port: 9090,
-	index_port: 9292,
+	port: 9292,
+	secure_port: 9090,
 	background: {
 		color: "#333333",
 		watermark: {

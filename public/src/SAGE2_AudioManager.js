@@ -119,8 +119,10 @@ function setupListeners() {
 		var http_port;
 		var https_port;
 
-		http_port  = json_cfg.index_port === 80 ? "" : ":" + json_cfg.index_port;
-		https_port = json_cfg.port === 443 ? "" : ":" + json_cfg.port;
+		console.log(json_cfg);
+
+		http_port  = json_cfg.port === 80 ? "" : ":" + json_cfg.port;
+		https_port = json_cfg.secure_port === 443 ? "" : ":" + json_cfg.secure_port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
 		hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
 		for (i = 0; i < json_cfg.alternate_hosts.length; i++) {

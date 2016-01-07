@@ -394,8 +394,8 @@ function UIBuilder(json_cfg, clientID) {
 			if (iport !== 80) {
 				url += ":" + iport;
 			}
-			if (this.json_cfg.rproxy_index_port !== undefined) {
-				iport = this.json_cfg.rproxy_index_port;
+			if (this.json_cfg.rproxy_port !== undefined) {
+				iport = this.json_cfg.rproxy_port;
 				url = window.location.hostname;
 				if (iport !== 80) {
 					url += ":" + iport;
