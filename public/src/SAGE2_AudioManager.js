@@ -137,6 +137,7 @@ function setupListeners() {
 			jinggle_src.src = json_cfg.ui.startup_sound;
 		}
 		jinggle_elt.load();
+		jinggle_elt.volume = 0.3;
 		jinggle_elt.play();
 	});
 
@@ -153,7 +154,7 @@ function setupListeners() {
 				vid = document.createElement('audio');
 			}
 			vid.id  = data.id;
-			vid.volume = 0.8;
+			vid.volume = 0.1;
 			vid.firstPlay = true;
 			vid.startPaused = data.data.paused;
 			vid.style.display = "none";
@@ -212,7 +213,7 @@ function setupListeners() {
 			volumeSlider.min   = 0;
 			volumeSlider.max   = 10;
 			volumeSlider.step  = 1;
-			volumeSlider.value = 8;
+			volumeSlider.value = 1;
 			volumeSlider.addEventListener('input', changeVolume, false);
 			volume.appendChild(volumeMute);
 			volume.appendChild(volumeSlider);
@@ -239,6 +240,8 @@ function setupListeners() {
 
 	wsio.on('setVolume', function(data) {
 		console.log("setVolume ", data.id, " ", data.level);
+		var slider = document.getElementById(data.id + "_volumeSlider");
+		slider.value = data.level * 10;
 	        changeVideoVolume(data.id, data.level);
 	});
 
