@@ -3392,6 +3392,16 @@ function loadConfiguration() {
 		http_port = userConfig.port;
 		https_port = userConfig.secure_port;
 	}
+	var rproxy_port, rproxys_port;
+	if (userConfig.rproxy_secure_port === undefined) {
+		rproxy_port = userConfig.rproxy_index_port;
+		rproxys_port = userConfig.rproxy_port;
+		delete userConfig.rproxy_index_port;
+	}
+	else {
+		rproxy_port = userConfig.rproxy_port;
+		rproxys_port = userConfig.rproxy_secure_port;
+	}
 	// Set default values if missing
 	if (https_port === undefined) {
 		userConfig.secure_port = 443;
@@ -3403,6 +3413,8 @@ function loadConfiguration() {
 	} else {
 		userConfig.port = parseInt(http_port, 10);
 	}
+	userConfig.rproxy_port = parseInt(rproxy_port, 10) || undefined;
+	userConfig.rproxy_secure_port = parseInt(rproxys_port, 10) || undefined;
 
 	// Set the display clip value if missing (true by default)
 	if (userConfig.background.clip !== undefined) {
