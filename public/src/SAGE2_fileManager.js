@@ -718,7 +718,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					textTbd += "</ol>";
 					webix.confirm({
 						title: "Confirm deletion - " + numItems + " item(s)",
-						width: "50%",
+						width: "75%",
 						ok: "Yes",
 						cancel: "No",
 						text: textTbd,
