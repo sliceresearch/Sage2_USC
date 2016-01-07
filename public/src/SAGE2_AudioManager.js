@@ -238,6 +238,8 @@ function setupListeners() {
 
 	wsio.on('setVolume', function(data) {
 		console.log("setVolume ", data.id, " ", data.level);
+		var slider = document.getElementById(data.id + "_volumeSlider");
+		slider.value = data.level * 10;
 	        changeVideoVolume(data.id, data.level);
 	});
 
