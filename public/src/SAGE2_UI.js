@@ -108,7 +108,7 @@ function SAGE2_init() {
 				if (json_cfg.rproxy_port !== undefined) {
 					https_port = ":" + json_cfg.rproxy_port.toString();
 				} else {
-					https_port = ":" + json_cfg.port.toString();
+					https_port = ":" + json_cfg.secure_port.toString();
 				}
 				if (https_port === ":443") {
 					https_port = "";
