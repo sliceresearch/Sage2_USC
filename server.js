@@ -6404,7 +6404,9 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
 			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			// }
-			if (data.code === 8 || data.code === 46) { // backspace or delete
+                        if (obj.data.title.startsWith("vnc") || obj.data.title.startsWith("VNC")) {
+                                sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			} else if (data.code === 8 || data.code === 46) { // backspace or delete
 				deleteApplication(obj.data.id);
 
 				var eLogData = {
