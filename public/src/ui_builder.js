@@ -390,12 +390,12 @@ function UIBuilder(json_cfg, clientID) {
 
 		if (this.json_cfg.ui.show_url) {
 			var url   = this.json_cfg.host;
-			var iport = this.json_cfg.index_port;
+			var iport = this.json_cfg.port;
 			if (iport !== 80) {
 				url += ":" + iport;
 			}
-			if (this.json_cfg.rproxy_port !== undefined) {
-				iport = this.json_cfg.rproxy_port;
+			if (this.json_cfg.rproxy_secure_port !== undefined) {
+				iport = this.json_cfg.rproxy_secure_port;
 				url = window.location.hostname;
 				if (iport !== 80) {
 					url += ":" + iport;
