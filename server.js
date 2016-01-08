@@ -3387,8 +3387,7 @@ function loadConfiguration() {
 		http_port = userConfig.index_port;
 		https_port = userConfig.port;
 		delete userConfig.index_port;
-	}
-	else {
+	} else {
 		http_port = userConfig.port;
 		https_port = userConfig.secure_port;
 	}
@@ -3397,8 +3396,7 @@ function loadConfiguration() {
 		rproxy_port = userConfig.rproxy_index_port;
 		rproxys_port = userConfig.rproxy_port;
 		delete userConfig.rproxy_index_port;
-	}
-	else {
+	} else {
 		rproxy_port = userConfig.rproxy_port;
 		rproxys_port = userConfig.rproxy_secure_port;
 	}
@@ -3925,8 +3923,10 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" + config.host + ":" + config.secure_port);
-	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host + ":" + config.secure_port + "/admin/console.html");
+	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" +
+		config.host + ":" + config.secure_port);
+	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host +
+		":" + config.secure_port + "/admin/console.html");
 });
 
 // Place callback for errors in the 'listen' call for HTTP
