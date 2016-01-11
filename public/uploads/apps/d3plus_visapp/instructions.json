@@ -1,0 +1,22 @@
+{
+	"main_script": "d3plus_visapp.js",
+	"icon": "d3plus_visapp.png",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"resize": "free",
+	"dependencies": [
+		"scripts/d3.min.js",
+		"scripts/d3plus.full.min.js",
+		"scripts/d3plus.min.js"
+	],
+	"load": {
+		"value": 4
+	},
+	"title": "d3plus_visapp",
+	"version": "1.0.0",
+	"description": "SAGE2 application d3plus_visapp",
+	"keywords": [ "sage2", "d3plus_visapp" ],
+	"author": "Jillian Aurisano <jillian.aurisano@gmail.com>",
+	"license": "SAGE2-Software-License"
+}
