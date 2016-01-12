@@ -703,6 +703,8 @@ function setupListeners(wsio) {
 	wsio.on('command',                              wsCommand);
 
 	wsio.on('createFolder',                         wsCreateFolder);
+
+	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
 }
 
 function initializeExistingControls(wsio) {
@@ -1717,6 +1719,61 @@ function createAppFromDescription(app, callback) {
 			appLoader.loadApplicationFromRemoteServer(app, cloneApp);
 		}
 	}
+}
+
+function wsLaunchLinkedChildApp(wsio, data){
+	console.log("launching child app", data.application);
+
+	// appName = path.join(publicDirectory, "uploads", data.application);
+	var appName = "./public/uploads/" + data.application;
+	console.log(appName);
+	var appData = {application: "custom_app", filename: appName};
+
+	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+		if (appInstance.animation) {
+			var i;
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i = 0; i < clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+		}
+
+		// Get the drop position and convert it to wall coordinates
+		var position = data.position || [0, 0];
+		if (position[0] > 1) {
+			// value in pixels, used as origin
+			appInstance.left = position[0];
+		} else {
+			// value in percent
+			position[0] = Math.round(position[0] * config.totalWidth);
+			// Use the position as center of drop location
+			appInstance.left = position[0] - appInstance.width / 2;
+			if (appInstance.left < 0) {
+				appInstance.left = 0;
+			}
+		}
+		if (position[1] > 1) {
+			// value in pixels, used as origin
+			appInstance.top = position[1];
+		} else {
+			// value in percent
+			position[1] = Math.round(position[1] * config.totalHeight);
+			// Use the position as center of drop location
+			appInstance.top  = position[1] - appInstance.height / 2;
+			if (appInstance.top < 0) {
+				appInstance.top = 0;
+			}
+		}
+
+		handleNewApplication(appInstance, null);
+
+		addEventToUserLog(data.user, {type: "openApplication", data:
+			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+	});
+
 }
 
 function loadSession(filename) {
