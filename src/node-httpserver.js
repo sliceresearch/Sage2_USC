@@ -261,7 +261,6 @@ HttpServer.prototype.onreq = function(req, res) {
 					// Do not compress, just set file size
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
-					console.log('NO compression', pathname);
 					stream.pipe(res);
 				} else {
 					// Check for allowed compression
@@ -272,19 +271,16 @@ HttpServer.prototype.onreq = function(req, res) {
 						// Write the HTTP response header
 						res.writeHead(200, header);
 						// Pipe the file input onto the HTTP response
-						console.log('GZIP content', pathname);
 						stream.pipe(zlib.createGzip()).pipe(res);
 					} else if (acceptEncoding.match(/deflate/)) {
 						// Set the encoding to deflate
 						header["Content-Encoding"] = 'deflate';
 						res.writeHead(200, header);
-						console.log('DFLA content', pathname);
 						stream.pipe(zlib.createDeflate()).pipe(res);
 					} else {
 						// No HTTP compression, just set file size
 						header["Content-Length"] = total;
 						res.writeHead(200, header);
-						console.log('FLAT content', pathname);
 						stream.pipe(res);
 					}
 				}
