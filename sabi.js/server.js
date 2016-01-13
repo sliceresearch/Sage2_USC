@@ -108,6 +108,7 @@ var pathToFindMonitorData		= path.join(pathToSabiConfigFolder, "scripts", "winSc
 var pathToSage2onbatScript		= path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
 var pathToGoWindowsCertGenFile	= path.join(pathToSabiConfigFolder, "scripts", "GO-windows.bat"); // "../keys/GO-windows.bat";
 var pathToActivateGoWindowsCert = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat" );
+var pathToGitCredentials 		= path.join(homedir(), ".git-credentials");
 var needToRegenerateSageOnFile	= true; //always check at least once
 var scriptExecutionFunction		= require('./src/script').Script;
 var commandExecutionFunction	= require('./src/script').Command;
@@ -1057,10 +1058,25 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 	if (!found && data.method === "performGitUpdate") {
 		console.log('Rewriting launcher to initiate git update before launching sabi');
 
-		//check for Windows startup file
+		//if platform is windows
 		if (platform === "Windows") {
+
+			//first write the git-credentials file if the credentials are not there.
+			var gcf = "";
+			if ( fileExists( pathToGitCredentials ) ) {
+				gcf = fs.readFileSync( pathToGitCredentials, "utf8" );
+			}
+			var gcflava = "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org\n";
+			if ( gcf.indexOf( gcflava ) === -1 ) {
+				gcf += gcflava;
+				fs.writeFileSync( pathToGitCredentials, gcf );
+			}
+
+			//modify start up script for a one time git fetch and reset.
+			//one time because each startup of sabi will re
 			var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 			sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
+			sfpContents += 'git config credential.helper store';
 			sfpContents += 'git fetch --all\n';
 			sfpContents += 'git reset --hard origin/master\n';
 			sfpContents += 'cd sabi.js\n';
