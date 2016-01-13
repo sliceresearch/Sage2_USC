@@ -97,7 +97,7 @@ install:
   - move public SAGE2
   - move server.js SAGE2
   - move src SAGE2
-  #- move bin\.git-credentials ~\
+  #- move bin\.git-credentials  ~\
   - cd SAGE2
   - git init
   - git add .
