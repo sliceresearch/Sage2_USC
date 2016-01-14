@@ -108,7 +108,7 @@ var sharedApps         = {};
 var users              = null;
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
-var mediaBlockSize     = 128;
+var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var pressingAlt        = true;
 

@@ -255,8 +255,13 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 		size = Math.round(sizes[index] * aspect) + "x" + sizes[index];
 	}
 
-	var cmd = ffmpeg(infile);
-	cmd.on('end', function() {
+	ffmpeg(infile)
+	.on('error', function(err) {
+		console.log(sageutils.header("Assets") + 'Error processing ' + infile);
+		// recursive call to generate the next size
+		generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
+	})
+	.on('end', function() {
 		var tmpImg = outfile + '_' + size + '_1.jpg';
 		imageMagick(tmpImg).command("convert").in("-resize", sizes[index] + "x" + sizes[index])
 			.in("-gravity", "center").in("-background", "rgb(71,71,71)")
@@ -275,7 +280,8 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 			// recursive call to generate the next size
 			generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
 		});
-	}).screenshots({
+	})
+	.screenshots({
 		timestamps: ["10%"],
 		filename: path.basename(outfile) + "_%r_%i.jpg",
 		folder: path.dirname(outfile),
